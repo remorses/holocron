@@ -25,8 +25,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-UpdatesTitleFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+UpdatesTitleFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default UpdatesTitleFramerComponent

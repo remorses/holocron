@@ -39,9 +39,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -55,11 +53,7 @@ var transition2 = {
   type: 'spring',
 }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string'
@@ -78,11 +72,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -108,10 +98,7 @@ var getProps = ({
 }) => {
   return {
     ...props,
-    BgC3EyFez:
-      color2 ??
-      props.BgC3EyFez ??
-      'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
+    BgC3EyFez: color2 ?? props.BgC3EyFez ?? 'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
     BkVgYZ4LQ: role ?? props.BkVgYZ4LQ ?? 'E-commerce Owner',
     ELlerrEJz: name1 ?? props.ELlerrEJz ?? 'Luca Rossi',
     GCneHTBce: name2 ?? props.GCneHTBce ?? 'Alex Chen',
@@ -125,12 +112,8 @@ var getProps = ({
       props.Nmm1AYzfJ ??
       '\u201CMy shop now loads in under a second. Jet is the only tool I needed.\u201D',
     NnRAVynIX: role2 ?? props.NnRAVynIX ?? 'Founder @ Gropa',
-    oGqNJ1s9K:
-      color ??
-      props.oGqNJ1s9K ??
-      'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'gXOOgW_0x',
+    oGqNJ1s9K: color ?? props.oGqNJ1s9K ?? 'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'gXOOgW_0x',
     vrcKhHwBb: image2 ?? props.vrcKhHwBb,
   }
 }
@@ -202,12 +185,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-vy0o8s',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-vy0o8s', className, classNames)}
             data-framer-name={'Start'}
             layoutDependency={layoutDependency}
             layoutId={'gXOOgW_0x'}
@@ -231,10 +209,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             <ComponentViewportProvider
               height={300}
               width={`max(${componentViewport?.width || '100vw'}, 1px)`}
-              y={
-                (componentViewport?.y || 0) +
-                (0 + ((componentViewport?.height || 300) - 0 - 300) / 2)
-              }
+              y={(componentViewport?.y || 0) + (0 + ((componentViewport?.height || 300) - 0 - 300) / 2)}
               {...addPropertyOverrides(
                 {
                   y4G8oqwNh: {
@@ -298,18 +273,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             <ComponentViewportProvider
               height={300}
               width={componentViewport?.width || '100vw'}
-              y={
-                (componentViewport?.y || 0) +
-                (componentViewport?.height || 300) -
-                0
-              }
+              y={(componentViewport?.y || 0) + (componentViewport?.height || 300) - 0}
               {...addPropertyOverrides(
                 {
                   y4G8oqwNh: {
                     width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-                    y:
-                      (componentViewport?.y || 0) +
-                      (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
+                    y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
                   },
                   zhhN81oxS: {
                     y: (componentViewport?.y || 0) + -300,
@@ -360,18 +329,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             <ComponentViewportProvider
               height={300}
               width={componentViewport?.width || '100vw'}
-              y={
-                (componentViewport?.y || 0) +
-                (componentViewport?.height || 300) -
-                0
-              }
+              y={(componentViewport?.y || 0) + (componentViewport?.height || 300) - 0}
               {...addPropertyOverrides(
                 {
                   zhhN81oxS: {
                     width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-                    y:
-                      (componentViewport?.y || 0) +
-                      (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
+                    y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
                   },
                 },
                 baseVariant,
@@ -447,8 +410,7 @@ addPropertyControls(FramerW7wIBXQug, {
     type: ControlType.Enum,
   },
   Nmm1AYzfJ: {
-    defaultValue:
-      '\u201CMy shop now loads in under a second. Jet is the only tool I needed.\u201D',
+    defaultValue: '\u201CMy shop now loads in under a second. Jet is the only tool I needed.\u201D',
     displayTextArea: false,
     title: 'Testimonial',
     type: ControlType.String,
@@ -470,8 +432,7 @@ addPropertyControls(FramerW7wIBXQug, {
     type: ControlType.ResponsiveImage,
   },
   oGqNJ1s9K: {
-    defaultValue:
-      'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255)) /* {"name":"Blue"} */',
+    defaultValue: 'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255)) /* {"name":"Blue"} */',
     title: 'Color',
     type: ControlType.Color,
   },
@@ -499,8 +460,7 @@ addPropertyControls(FramerW7wIBXQug, {
     type: ControlType.ResponsiveImage,
   },
   BgC3EyFez: {
-    defaultValue:
-      'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224)) /* {"name":"Pink"} */',
+    defaultValue: 'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224)) /* {"name":"Pink"} */',
     title: 'Color 2',
     type: ControlType.Color,
   },
@@ -570,17 +530,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -628,9 +582,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

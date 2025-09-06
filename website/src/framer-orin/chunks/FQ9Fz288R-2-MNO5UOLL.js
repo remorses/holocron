@@ -406,8 +406,7 @@ var richText13 = /* @__PURE__ */ e(r.Fragment, {
       /* @__PURE__ */ e('li', {
         'data-preset-tag': 'p',
         children: /* @__PURE__ */ e('p', {
-          children:
-            'Skilled in automation tools (Docker, Kubernetes, Terraform)',
+          children: 'Skilled in automation tools (Docker, Kubernetes, Terraform)',
         }),
       }),
       /* @__PURE__ */ e('li', {
@@ -563,8 +562,7 @@ var richText18 = /* @__PURE__ */ e(r.Fragment, {
       /* @__PURE__ */ e('li', {
         'data-preset-tag': 'p',
         children: /* @__PURE__ */ e('p', {
-          children:
-            'Implement best practices for performance and accessibility',
+          children: 'Implement best practices for performance and accessibility',
         }),
       }),
       /* @__PURE__ */ e('li', {

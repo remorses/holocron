@@ -12,8 +12,7 @@ var fonts = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
         weight: '400',
       },
@@ -72,8 +71,7 @@ var fonts = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/DpPBYI0sL4fYLgAkX8KXOPVt7c.woff2',
         weight: '700',
       },
@@ -132,8 +130,7 @@ var fonts = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/H89BbHkbHDzlxZzxi8uPzTsp90.woff2',
         weight: '700',
       },
@@ -192,8 +189,7 @@ var fonts = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/CfMzU8w2e7tHgF4T4rATMPuWosA.woff2',
         weight: '400',
       },

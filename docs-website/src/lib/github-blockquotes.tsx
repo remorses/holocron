@@ -36,9 +36,7 @@ export const remarkGitHubBlockquotes = ({ legacyTitle = false } = {}) => {
           if (match) {
             isNext = false
             alertType = match[1].toLocaleLowerCase()
-            title = legacyTitle
-              ? match[2] || alertType.toLocaleUpperCase()
-              : alertType.toLocaleUpperCase()
+            title = legacyTitle ? match[2] || alertType.toLocaleUpperCase() : alertType.toLocaleUpperCase()
             if (text.includes('\n')) {
               item.children[0] = {
                 type: 'text',

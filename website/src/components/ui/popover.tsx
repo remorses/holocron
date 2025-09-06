@@ -3,15 +3,11 @@ import { Popover as PopoverPrimitive } from 'radix-ui'
 
 import { cn } from 'website/src/lib/utils'
 
-function Popover({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Root>) {
+function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot='popover' {...props} />
 }
 
-function PopoverTrigger({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
+function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot='popover-trigger' {...props} />
 }
 
@@ -37,17 +33,13 @@ function PopoverContent({
         {...props}
       >
         {props.children}
-        {showArrow && (
-          <PopoverPrimitive.Arrow className='fill-popover -my-px drop-shadow-[0_1px_0_var(--border)]' />
-        )}
+        {showArrow && <PopoverPrimitive.Arrow className='fill-popover -my-px drop-shadow-[0_1px_0_var(--border)]' />}
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   )
 }
 
-function PopoverAnchor({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot='popover-anchor' {...props} />
 }
 

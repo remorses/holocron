@@ -19,8 +19,7 @@ summary {
 
 @font-face {
   font-family: "Consolas";
-  src: url("https://cdn.jsdelivr.net/gh/your-org/fonts/consolas/Consolas-Regular.woff2")
-    format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/your-org/fonts/consolas/Consolas-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -30,8 +29,7 @@ summary {
   --color-fd-primary: hsl(220, 91%, 54%);
   --fd-layout-width: 1460px;
   --show-more-bg: var(--color-fd-background);
-  --font-mono:
-    "Consolas", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  --font-mono: "Consolas", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 }
 
 /* show added content as green in diff, improve for dark mode */
@@ -52,8 +50,7 @@ summary {
 .dark {
   ::highlight(llm-text-selection) {
     background: color-mix(in srgb, var(--color-fd-primary) 30%, transparent);
-    border: 1px solid
-      color-mix(in srgb, var(--color-fd-primary) 50%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-fd-primary) 50%, transparent);
   }
 }
 mark {

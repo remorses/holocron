@@ -28,8 +28,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-NavItemFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+NavItemFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default NavItemFramerComponent

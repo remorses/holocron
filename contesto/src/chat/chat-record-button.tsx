@@ -165,13 +165,7 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
                   </div>
 
                   <div className='flex gap-2'>
-                    <Button
-                      variant='default'
-                      size='sm'
-                      autoFocus
-                      className='rounded-full'
-                      onClick={stopRecording}
-                    >
+                    <Button variant='default' size='sm' autoFocus className='rounded-full' onClick={stopRecording}>
                       {/* <StopCircleIcon className='size-4 mr-1' /> */}
                       Stop Recording
                     </Button>
@@ -180,9 +174,7 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
               ) : (
                 <div className='flex flex-col items-center gap-3'>
                   <Loader2Icon className='size-8 text-primary animate-spin' />
-                  <div className='text-sm text-muted-foreground font-medium'>
-                    Transcribing audio...
-                  </div>
+                  <div className='text-sm text-muted-foreground font-medium'>Transcribing audio...</div>
                 </div>
               )}
             </div>

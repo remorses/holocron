@@ -24,8 +24,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-FeatureBulletFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+FeatureBulletFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default FeatureBulletFramerComponent

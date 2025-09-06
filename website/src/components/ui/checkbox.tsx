@@ -5,10 +5,7 @@ import * as React from 'react'
 
 import { cn } from 'website/src/lib/utils'
 
-function Checkbox({
-  className,
-  ...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
+function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (
     <CheckboxPrimitive.Root
       data-slot='checkbox'
@@ -18,18 +15,9 @@ function Checkbox({
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator
-        data-slot='checkbox-indicator'
-        className='grid place-content-center text-current'
-      >
+      <CheckboxPrimitive.Indicator data-slot='checkbox-indicator' className='grid place-content-center text-current'>
         {props.checked === 'indeterminate' ? (
-          <svg
-            width='9'
-            height='9'
-            viewBox='0 0 9 9'
-            fill='currentcolor'
-            xmlns='http://www.w3.org/2000/svg'
-          >
+          <svg width='9' height='9' viewBox='0 0 9 9' fill='currentcolor' xmlns='http://www.w3.org/2000/svg'>
             <path
               fillRule='evenodd'
               clipRule='evenodd'
@@ -37,13 +25,7 @@ function Checkbox({
             />
           </svg>
         ) : (
-          <svg
-            width='9'
-            height='9'
-            viewBox='0 0 9 9'
-            fill='currentcolor'
-            xmlns='http://www.w3.org/2000/svg'
-          >
+          <svg width='9' height='9' viewBox='0 0 9 9' fill='currentcolor' xmlns='http://www.w3.org/2000/svg'>
             <path
               fillRule='evenodd'
               clipRule='evenodd'

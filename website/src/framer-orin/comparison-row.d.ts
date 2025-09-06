@@ -38,8 +38,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-ComparisonRowFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+ComparisonRowFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default ComparisonRowFramerComponent

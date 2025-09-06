@@ -5,11 +5,7 @@ import { AnimatedGradientBackground, GodRaysComp } from './chunk-RQZ56BDS.js'
 import { stdin_default } from './chunk-LCDELW7M.js'
 
 // /:https://framerusercontent.com/modules/a82Rw7D0NQkSRrGgaN4T/4PfVyoa9JN7RdjGvgS3t/S73kH8mB9.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -56,9 +52,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
@@ -69,10 +63,7 @@ var QueryData = ({ query: query2, pageSize, children }) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -93,8 +84,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'L_tcvPgN5',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'L_tcvPgN5',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -107,16 +97,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    ZXLLKdK8xgo44S8TrN,
-    k2CHhHMepgo44S8TrN,
-    idgo44S8TrN,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, ZXLLKdK8xgo44S8TrN, k2CHhHMepgo44S8TrN, idgo44S8TrN, ...restProps } =
+    getProps(props)
   const {
     baseVariant,
     classNames,
@@ -138,29 +120,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const sharedStyleClassNames = []
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
   const isDisplayed = () => {
-    if (
-      [
-        'DkJYqhgVo',
-        'Xpe3HqTAH',
-        'EzLKPJMu8',
-        'mX8pCQxuV',
-        'T9igwG61s',
-      ].includes(baseVariant)
-    )
-      return false
+    if (['DkJYqhgVo', 'Xpe3HqTAH', 'EzLKPJMu8', 'mX8pCQxuV', 'T9igwG61s'].includes(baseVariant)) return false
     return true
   }
   const isDisplayed1 = () => {
-    if (
-      [
-        'DkJYqhgVo',
-        'Xpe3HqTAH',
-        'EzLKPJMu8',
-        'mX8pCQxuV',
-        'T9igwG61s',
-      ].includes(baseVariant)
-    )
-      return true
+    if (['DkJYqhgVo', 'Xpe3HqTAH', 'EzLKPJMu8', 'mX8pCQxuV', 'T9igwG61s'].includes(baseVariant)) return true
     return false
   }
   return /* @__PURE__ */ _jsx(LayoutGroup, {
@@ -173,19 +137,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-1swsbr1',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-1swsbr1', className, classNames),
           'data-framer-name': 'Radial',
           layoutDependency,
           layoutId: 'L_tcvPgN5',
           ref: refBinding,
           style: {
-            backgroundColor:
-              'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+            backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
             ...style,
           },
           ...addPropertyOverrides(
@@ -241,328 +199,291 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 children: (collection, paginationInfo, loadMore) =>
                   /* @__PURE__ */ _jsx(_Fragment, {
                     children: collection?.map(
-                      (
-                        {
-                          id: idgo44S8TrN2,
-                          k2CHhHMep: k2CHhHMepgo44S8TrN2,
-                          ZXLLKdK8x: ZXLLKdK8xgo44S8TrN2,
-                        },
-                        index,
-                      ) => {
+                      ({ id: idgo44S8TrN2, k2CHhHMep: k2CHhHMepgo44S8TrN2, ZXLLKdK8x: ZXLLKdK8xgo44S8TrN2 }, index) => {
                         ZXLLKdK8xgo44S8TrN2 ??= 0
                         k2CHhHMepgo44S8TrN2 ??= ''
                         return /* @__PURE__ */ _jsx(
                           LayoutGroup,
                           {
                             id: `go44S8TrN-${idgo44S8TrN2}`,
-                            children: /* @__PURE__ */ _jsx(
-                              PathVariablesContext.Provider,
-                              {
-                                value: {
-                                  k2CHhHMep: k2CHhHMepgo44S8TrN2,
-                                },
-                                children: /* @__PURE__ */ _jsx(motion.div, {
-                                  className: 'framer-4hhbz2',
-                                  'data-framer-name': 'Content',
-                                  layoutDependency,
-                                  layoutId: 'aMJQ3I8vO',
-                                  children: /* @__PURE__ */ _jsxs(motion.div, {
-                                    className: 'framer-2l5ilk',
-                                    'data-framer-name': 'BG',
-                                    layoutDependency,
-                                    layoutId: 'El4Ml2GSV',
-                                    style: {
-                                      filter: `hue-rotate(${ZXLLKdK8xgo44S8TrN2}deg)`,
-                                      mask: "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
-                                      WebkitFilter: `hue-rotate(${ZXLLKdK8xgo44S8TrN2}deg)`,
-                                      WebkitMask:
-                                        "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
-                                    },
-                                    variants: {
-                                      DkJYqhgVo: {
-                                        mask: "url('https://framerusercontent.com/images/d2XF9ufkkUPltjFDP7rAY9pOTQ.svg') alpha no-repeat bottom / cover add",
-                                        WebkitMask:
-                                          "url('https://framerusercontent.com/images/d2XF9ufkkUPltjFDP7rAY9pOTQ.svg') alpha no-repeat bottom / cover add",
-                                      },
-                                      EzLKPJMu8: {
-                                        mask: "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat bottom / 12.25px 12.25px add",
-                                        WebkitMask:
-                                          "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat bottom / 12.25px 12.25px add",
-                                      },
-                                      hbGvLF35h: {
-                                        mask: 'linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add',
-                                        WebkitMask:
-                                          'linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add',
-                                      },
-                                      me0hpdY6q: {
-                                        mask: "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat center / 11.025px 11.025px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.15) 100%) add",
-                                        WebkitMask:
-                                          "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat center / 11.025px 11.025px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.15) 100%) add",
-                                      },
-                                      mX8pCQxuV: {
-                                        mask: "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
-                                        WebkitMask:
-                                          "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
-                                      },
-                                      NEJfao5u7: {
-                                        mask: "url('https://framerusercontent.com/images/bbZHyFL3HDqc4KmWT0VIjrWzwtA.svg') alpha repeat center / 24.5px 24.5px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
-                                        WebkitMask:
-                                          "url('https://framerusercontent.com/images/bbZHyFL3HDqc4KmWT0VIjrWzwtA.svg') alpha repeat center / 24.5px 24.5px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
-                                      },
-                                      T9igwG61s: {
-                                        mask: "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
-                                        WebkitMask:
-                                          "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
-                                      },
-                                      Xpe3HqTAH: {
-                                        mask: "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 0%, rgb(0, 0, 0) 100%) add",
-                                        WebkitMask:
-                                          "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 0%, rgb(0, 0, 0) 100%) add",
-                                      },
-                                    },
-                                    children: [
-                                      isDisplayed() &&
-                                        /* @__PURE__ */ _jsx(
-                                          ComponentViewportProvider,
-                                          {
-                                            children: /* @__PURE__ */ _jsx(
-                                              SmartComponentScopedContainer,
-                                              {
-                                                className:
-                                                  'framer-1oadk8c-container',
-                                                'data-framer-name': 'Gradient',
-                                                isAuthoredByUser: true,
-                                                isModuleExternal: true,
-                                                layoutDependency,
-                                                layoutId: 'XLc4CnJeF-container',
-                                                name: 'Gradient',
-                                                nodeId: 'XLc4CnJeF',
-                                                rendersWithMotion: true,
-                                                scopeId: 'S73kH8mB9',
-                                                style: {
-                                                  filter:
-                                                    'brightness(1.5) contrast(0.85) hue-rotate(0deg)',
-                                                  WebkitFilter:
-                                                    'brightness(1.5) contrast(0.85) hue-rotate(0deg)',
-                                                },
-                                                children: /* @__PURE__ */ _jsx(
-                                                  AnimatedGradientBackground,
-                                                  {
-                                                    color1: 'rgb(0, 230, 197)',
-                                                    color2: 'rgb(50, 82, 77)',
-                                                    color3:
-                                                      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                                                    colorMode: 'custom',
-                                                    distortion: 12,
-                                                    height: '100%',
-                                                    id: 'XLc4CnJeF',
-                                                    layoutId: 'XLc4CnJeF',
-                                                    name: 'Gradient',
-                                                    noise: {
-                                                      opacity: 1,
-                                                      scale: 0.2,
-                                                    },
-                                                    offset: 0,
-                                                    preset: 'Pulse',
-                                                    preview: false,
-                                                    proportion: 35,
-                                                    radius: '0px',
-                                                    rotation: 0,
-                                                    scale: 1,
-                                                    shape: 'Checks',
-                                                    shapeSize: 10,
-                                                    softness: 100,
-                                                    speed: 20,
-                                                    style: {
-                                                      height: '100%',
-                                                      width: '100%',
-                                                    },
-                                                    swirl: 80,
-                                                    swirlIterations: 10,
-                                                    width: '100%',
-                                                    ...addPropertyOverrides(
-                                                      {
-                                                        hbGvLF35h: {
-                                                          distortion: 7,
-                                                          offset: -471,
-                                                          preset: 'custom',
-                                                          proportion: 100,
-                                                          rotation: -232,
-                                                          scale: 0.5,
-                                                          shape: 'Edge',
-                                                          shapeSize: 0,
-                                                          speed: 44,
-                                                          swirl: 66,
-                                                          swirlIterations: 4,
-                                                        },
-                                                        me0hpdY6q: {
-                                                          distortion: 58,
-                                                          offset: -1e3,
-                                                          preset: 'custom',
-                                                          proportion: 77,
-                                                          rotation: -318,
-                                                          scale: 0.64,
-                                                          shape: 'Stripes',
-                                                          shapeSize: 0,
-                                                          softness: 0,
-                                                          speed: 24,
-                                                          swirl: 17,
-                                                          swirlIterations: 0,
-                                                        },
-                                                        NEJfao5u7: {
-                                                          distortion: 7,
-                                                          offset: -471,
-                                                          preset: 'custom',
-                                                          proportion: 100,
-                                                          rotation: -232,
-                                                          scale: 0.5,
-                                                          shape: 'Edge',
-                                                          shapeSize: 0,
-                                                          speed: 44,
-                                                          swirl: 66,
-                                                          swirlIterations: 4,
-                                                        },
-                                                      },
-                                                      baseVariant,
-                                                      gestureVariant,
-                                                    ),
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                      isDisplayed1() &&
-                                        /* @__PURE__ */ _jsx(
-                                          ComponentViewportProvider,
-                                          {
-                                            children: /* @__PURE__ */ _jsx(
-                                              SmartComponentScopedContainer,
-                                              {
-                                                className:
-                                                  'framer-gk7bor-container',
-                                                isAuthoredByUser: true,
-                                                isModuleExternal: true,
-                                                layoutDependency,
-                                                layoutId: 'dQze_pOCl-container',
-                                                nodeId: 'dQze_pOCl',
-                                                rendersWithMotion: true,
-                                                scopeId: 'S73kH8mB9',
-                                                style: {
-                                                  filter: 'none',
-                                                  WebkitFilter: 'none',
-                                                },
-                                                variants: {
-                                                  EzLKPJMu8: {
-                                                    filter: 'brightness(1.3)',
-                                                    WebkitFilter:
-                                                      'brightness(1.3)',
-                                                  },
-                                                  mX8pCQxuV: {
-                                                    filter: 'none',
-                                                    WebkitFilter: 'none',
-                                                  },
-                                                  T9igwG61s: {
-                                                    filter: 'none',
-                                                    WebkitFilter: 'none',
-                                                  },
-                                                },
-                                                children: /* @__PURE__ */ _jsx(
-                                                  GodRaysComp,
-                                                  {
-                                                    canvasPreview: true,
-                                                    center: {
-                                                      intensity: 0.57,
-                                                      size: 0.8,
-                                                    },
-                                                    colorBack:
-                                                      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                                                    colors: [
-                                                      'rgb(0, 230, 197)',
-                                                      'rgb(50, 82, 77)',
-                                                    ],
-                                                    colorsMode: 'Custom',
-                                                    density: 0.5,
-                                                    frequency: 0,
-                                                    height: '100%',
-                                                    id: 'dQze_pOCl',
-                                                    layoutId: 'dQze_pOCl',
-                                                    noise: {
-                                                      opacity: 1,
-                                                      scale: 0.2,
-                                                    },
-                                                    offsetX: 0,
-                                                    offsetY: 0.49,
-                                                    preset: 'Custom',
-                                                    speed: 5,
-                                                    spotty: 2.5,
-                                                    style: {
-                                                      height: '100%',
-                                                      width: '100%',
-                                                    },
-                                                    width: '100%',
-                                                    ...addPropertyOverrides(
-                                                      {
-                                                        DkJYqhgVo: {
-                                                          canvasPreview: false,
-                                                          center: {
-                                                            intensity: 0.47,
-                                                            size: 0.8,
-                                                          },
-                                                          density: 1,
-                                                          offsetY: 0.54,
-                                                          spotty: 0.8,
-                                                        },
-                                                        EzLKPJMu8: {
-                                                          canvasPreview: false,
-                                                          center: {
-                                                            intensity: 0,
-                                                            size: 0.4,
-                                                          },
-                                                          density: 1,
-                                                          frequency: 0.5,
-                                                          offsetY: 0,
-                                                          speed: 2.7,
-                                                          spotty: 0,
-                                                        },
-                                                        mX8pCQxuV: {
-                                                          canvasPreview: false,
-                                                          frequency: 0.1,
-                                                          offsetY: 0,
-                                                          spotty: 5,
-                                                        },
-                                                        T9igwG61s: {
-                                                          canvasPreview: false,
-                                                          frequency: 0.1,
-                                                          offsetY: 1.2,
-                                                          spotty: 5,
-                                                        },
-                                                        Xpe3HqTAH: {
-                                                          canvasPreview: false,
-                                                          center: {
-                                                            intensity: 0,
-                                                            size: 1,
-                                                          },
-                                                          density: 0.87,
-                                                          frequency: 0.5,
-                                                          offsetY: 0.96,
-                                                          spotty: 0.05,
-                                                        },
-                                                      },
-                                                      baseVariant,
-                                                      gestureVariant,
-                                                    ),
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                    ],
-                                  }),
-                                }),
+                            children: /* @__PURE__ */ _jsx(PathVariablesContext.Provider, {
+                              value: {
+                                k2CHhHMep: k2CHhHMepgo44S8TrN2,
                               },
-                            ),
+                              children: /* @__PURE__ */ _jsx(motion.div, {
+                                className: 'framer-4hhbz2',
+                                'data-framer-name': 'Content',
+                                layoutDependency,
+                                layoutId: 'aMJQ3I8vO',
+                                children: /* @__PURE__ */ _jsxs(motion.div, {
+                                  className: 'framer-2l5ilk',
+                                  'data-framer-name': 'BG',
+                                  layoutDependency,
+                                  layoutId: 'El4Ml2GSV',
+                                  style: {
+                                    filter: `hue-rotate(${ZXLLKdK8xgo44S8TrN2}deg)`,
+                                    mask: "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
+                                    WebkitFilter: `hue-rotate(${ZXLLKdK8xgo44S8TrN2}deg)`,
+                                    WebkitMask:
+                                      "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
+                                  },
+                                  variants: {
+                                    DkJYqhgVo: {
+                                      mask: "url('https://framerusercontent.com/images/d2XF9ufkkUPltjFDP7rAY9pOTQ.svg') alpha no-repeat bottom / cover add",
+                                      WebkitMask:
+                                        "url('https://framerusercontent.com/images/d2XF9ufkkUPltjFDP7rAY9pOTQ.svg') alpha no-repeat bottom / cover add",
+                                    },
+                                    EzLKPJMu8: {
+                                      mask: "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat bottom / 12.25px 12.25px add",
+                                      WebkitMask:
+                                        "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat bottom / 12.25px 12.25px add",
+                                    },
+                                    hbGvLF35h: {
+                                      mask: 'linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add',
+                                      WebkitMask:
+                                        'linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add',
+                                    },
+                                    me0hpdY6q: {
+                                      mask: "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat center / 11.025px 11.025px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.15) 100%) add",
+                                      WebkitMask:
+                                        "url('https://framerusercontent.com/images/Qlr86YxOhkbg8aI52mf4pdEUo.svg') alpha repeat center / 11.025px 11.025px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.15) 100%) add",
+                                    },
+                                    mX8pCQxuV: {
+                                      mask: "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
+                                      WebkitMask:
+                                        "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
+                                    },
+                                    NEJfao5u7: {
+                                      mask: "url('https://framerusercontent.com/images/bbZHyFL3HDqc4KmWT0VIjrWzwtA.svg') alpha repeat center / 24.5px 24.5px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
+                                      WebkitMask:
+                                        "url('https://framerusercontent.com/images/bbZHyFL3HDqc4KmWT0VIjrWzwtA.svg') alpha repeat center / 24.5px 24.5px add, linear-gradient(0deg, rgba(0,0,0,0) 46%, rgba(0, 0, 0, 0.7) 100%) add",
+                                    },
+                                    T9igwG61s: {
+                                      mask: "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
+                                      WebkitMask:
+                                        "url('https://framerusercontent.com/images/wXfPnAG6IQ4o58FxYzivkDBPUo.svg') alpha repeat center / 17.15px 17.15px add, linear-gradient(0deg, rgba(0,0,0,0) 35%, rgba(0, 0, 0, 0.7) 100%) add",
+                                    },
+                                    Xpe3HqTAH: {
+                                      mask: "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 0%, rgb(0, 0, 0) 100%) add",
+                                      WebkitMask:
+                                        "url('https://framerusercontent.com/images/sFTsu8Q2Rvnhi1JLZnQmdLe8T0s.svg') alpha no-repeat bottom / cover add, linear-gradient(0deg, rgba(0,0,0,0) 0%, rgb(0, 0, 0) 100%) add",
+                                    },
+                                  },
+                                  children: [
+                                    isDisplayed() &&
+                                      /* @__PURE__ */ _jsx(ComponentViewportProvider, {
+                                        children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                                          className: 'framer-1oadk8c-container',
+                                          'data-framer-name': 'Gradient',
+                                          isAuthoredByUser: true,
+                                          isModuleExternal: true,
+                                          layoutDependency,
+                                          layoutId: 'XLc4CnJeF-container',
+                                          name: 'Gradient',
+                                          nodeId: 'XLc4CnJeF',
+                                          rendersWithMotion: true,
+                                          scopeId: 'S73kH8mB9',
+                                          style: {
+                                            filter: 'brightness(1.5) contrast(0.85) hue-rotate(0deg)',
+                                            WebkitFilter: 'brightness(1.5) contrast(0.85) hue-rotate(0deg)',
+                                          },
+                                          children: /* @__PURE__ */ _jsx(AnimatedGradientBackground, {
+                                            color1: 'rgb(0, 230, 197)',
+                                            color2: 'rgb(50, 82, 77)',
+                                            color3: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                                            colorMode: 'custom',
+                                            distortion: 12,
+                                            height: '100%',
+                                            id: 'XLc4CnJeF',
+                                            layoutId: 'XLc4CnJeF',
+                                            name: 'Gradient',
+                                            noise: {
+                                              opacity: 1,
+                                              scale: 0.2,
+                                            },
+                                            offset: 0,
+                                            preset: 'Pulse',
+                                            preview: false,
+                                            proportion: 35,
+                                            radius: '0px',
+                                            rotation: 0,
+                                            scale: 1,
+                                            shape: 'Checks',
+                                            shapeSize: 10,
+                                            softness: 100,
+                                            speed: 20,
+                                            style: {
+                                              height: '100%',
+                                              width: '100%',
+                                            },
+                                            swirl: 80,
+                                            swirlIterations: 10,
+                                            width: '100%',
+                                            ...addPropertyOverrides(
+                                              {
+                                                hbGvLF35h: {
+                                                  distortion: 7,
+                                                  offset: -471,
+                                                  preset: 'custom',
+                                                  proportion: 100,
+                                                  rotation: -232,
+                                                  scale: 0.5,
+                                                  shape: 'Edge',
+                                                  shapeSize: 0,
+                                                  speed: 44,
+                                                  swirl: 66,
+                                                  swirlIterations: 4,
+                                                },
+                                                me0hpdY6q: {
+                                                  distortion: 58,
+                                                  offset: -1e3,
+                                                  preset: 'custom',
+                                                  proportion: 77,
+                                                  rotation: -318,
+                                                  scale: 0.64,
+                                                  shape: 'Stripes',
+                                                  shapeSize: 0,
+                                                  softness: 0,
+                                                  speed: 24,
+                                                  swirl: 17,
+                                                  swirlIterations: 0,
+                                                },
+                                                NEJfao5u7: {
+                                                  distortion: 7,
+                                                  offset: -471,
+                                                  preset: 'custom',
+                                                  proportion: 100,
+                                                  rotation: -232,
+                                                  scale: 0.5,
+                                                  shape: 'Edge',
+                                                  shapeSize: 0,
+                                                  speed: 44,
+                                                  swirl: 66,
+                                                  swirlIterations: 4,
+                                                },
+                                              },
+                                              baseVariant,
+                                              gestureVariant,
+                                            ),
+                                          }),
+                                        }),
+                                      }),
+                                    isDisplayed1() &&
+                                      /* @__PURE__ */ _jsx(ComponentViewportProvider, {
+                                        children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                                          className: 'framer-gk7bor-container',
+                                          isAuthoredByUser: true,
+                                          isModuleExternal: true,
+                                          layoutDependency,
+                                          layoutId: 'dQze_pOCl-container',
+                                          nodeId: 'dQze_pOCl',
+                                          rendersWithMotion: true,
+                                          scopeId: 'S73kH8mB9',
+                                          style: {
+                                            filter: 'none',
+                                            WebkitFilter: 'none',
+                                          },
+                                          variants: {
+                                            EzLKPJMu8: {
+                                              filter: 'brightness(1.3)',
+                                              WebkitFilter: 'brightness(1.3)',
+                                            },
+                                            mX8pCQxuV: {
+                                              filter: 'none',
+                                              WebkitFilter: 'none',
+                                            },
+                                            T9igwG61s: {
+                                              filter: 'none',
+                                              WebkitFilter: 'none',
+                                            },
+                                          },
+                                          children: /* @__PURE__ */ _jsx(GodRaysComp, {
+                                            canvasPreview: true,
+                                            center: {
+                                              intensity: 0.57,
+                                              size: 0.8,
+                                            },
+                                            colorBack:
+                                              'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                                            colors: ['rgb(0, 230, 197)', 'rgb(50, 82, 77)'],
+                                            colorsMode: 'Custom',
+                                            density: 0.5,
+                                            frequency: 0,
+                                            height: '100%',
+                                            id: 'dQze_pOCl',
+                                            layoutId: 'dQze_pOCl',
+                                            noise: {
+                                              opacity: 1,
+                                              scale: 0.2,
+                                            },
+                                            offsetX: 0,
+                                            offsetY: 0.49,
+                                            preset: 'Custom',
+                                            speed: 5,
+                                            spotty: 2.5,
+                                            style: {
+                                              height: '100%',
+                                              width: '100%',
+                                            },
+                                            width: '100%',
+                                            ...addPropertyOverrides(
+                                              {
+                                                DkJYqhgVo: {
+                                                  canvasPreview: false,
+                                                  center: {
+                                                    intensity: 0.47,
+                                                    size: 0.8,
+                                                  },
+                                                  density: 1,
+                                                  offsetY: 0.54,
+                                                  spotty: 0.8,
+                                                },
+                                                EzLKPJMu8: {
+                                                  canvasPreview: false,
+                                                  center: {
+                                                    intensity: 0,
+                                                    size: 0.4,
+                                                  },
+                                                  density: 1,
+                                                  frequency: 0.5,
+                                                  offsetY: 0,
+                                                  speed: 2.7,
+                                                  spotty: 0,
+                                                },
+                                                mX8pCQxuV: {
+                                                  canvasPreview: false,
+                                                  frequency: 0.1,
+                                                  offsetY: 0,
+                                                  spotty: 5,
+                                                },
+                                                T9igwG61s: {
+                                                  canvasPreview: false,
+                                                  frequency: 0.1,
+                                                  offsetY: 1.2,
+                                                  spotty: 5,
+                                                },
+                                                Xpe3HqTAH: {
+                                                  canvasPreview: false,
+                                                  center: {
+                                                    intensity: 0,
+                                                    size: 1,
+                                                  },
+                                                  density: 0.87,
+                                                  frequency: 0.5,
+                                                  offsetY: 0.96,
+                                                  spotty: 0.05,
+                                                },
+                                              },
+                                              baseVariant,
+                                              gestureVariant,
+                                            ),
+                                          }),
+                                        }),
+                                      }),
+                                  ],
+                                }),
+                              }),
+                            }),
                           },
                           idgo44S8TrN2,
                         )
@@ -618,14 +539,8 @@ addPropertyControls(FramerS73kH8mB9, {
     type: ControlType.Enum,
   },
 })
-addFonts(
-  FramerS73kH8mB9,
-  [
-    { explicitInter: true, fonts: [] },
-    ...AnimatedGradientBackgroundFonts,
-    ...GodRaysFonts,
-  ],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts(FramerS73kH8mB9, [{ explicitInter: true, fonts: [] }, ...AnimatedGradientBackgroundFonts, ...GodRaysFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 export { stdin_default2 as stdin_default }

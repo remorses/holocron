@@ -51,7 +51,5 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const orgId = org.orgId
 
-  throw redirect(
-    href('/org/:orgId/onboarding-from-github', { orgId }) + url.search,
-  )
+  throw redirect(href('/org/:orgId/onboarding-from-github', { orgId }) + url.search)
 }

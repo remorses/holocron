@@ -36,24 +36,16 @@ const mediaExtensions = [
   'zip',
 ]
 
-const docsMiddleware: Route.unstable_MiddlewareFunction = async (
-  { request },
-  next,
-) => {
+const docsMiddleware: Route.unstable_MiddlewareFunction = async ({ request }, next) => {
   const url = new URL(request.url)
   const path = withoutBasePath(url.pathname)
   const host = url.hostname
 
   if (path.endsWith('.md') || path.endsWith('.mdx')) {
     const showLineNumbers =
-      url.searchParams.get('showLineNumbers') != null &&
-      url.searchParams.get('showLineNumbers') !== 'false'
-    const startLine = url.searchParams.get('startLine')
-      ? parseInt(url.searchParams.get('startLine')!, 10)
-      : undefined
-    const endLine = url.searchParams.get('endLine')
-      ? parseInt(url.searchParams.get('endLine')!, 10)
-      : undefined
+      url.searchParams.get('showLineNumbers') != null && url.searchParams.get('showLineNumbers') !== 'false'
+    const startLine = url.searchParams.get('startLine') ? parseInt(url.searchParams.get('startLine')!, 10) : undefined
+    const endLine = url.searchParams.get('endLine') ? parseInt(url.searchParams.get('endLine')!, 10) : undefined
 
     const result = await serveRawMarkdown({
       domain: host,
@@ -75,9 +67,7 @@ const docsMiddleware: Route.unstable_MiddlewareFunction = async (
     }
   }
 
-  const hasMediaExtension = mediaExtensions.some((ext) =>
-    path.endsWith('.' + ext),
-  )
+  const hasMediaExtension = mediaExtensions.some((ext) => path.endsWith('.' + ext))
   if (hasMediaExtension) {
     return await imageLoader({ request })
   }
@@ -85,9 +75,7 @@ const docsMiddleware: Route.unstable_MiddlewareFunction = async (
   return next()
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
-  docsMiddleware,
-]
+export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [docsMiddleware]
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -98,10 +86,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
 
         {process.env.NODE_ENV === 'development' && (
-          <script
-            crossOrigin='anonymous'
-            src='//unpkg.com/react-scan/dist/auto.global.js'
-          />
+          <script crossOrigin='anonymous' src='//unpkg.com/react-scan/dist/auto.global.js' />
         )}
         <Links />
       </head>

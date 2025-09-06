@@ -31,8 +31,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-AnimatedBackgroundsFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+AnimatedBackgroundsFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default AnimatedBackgroundsFramerComponent

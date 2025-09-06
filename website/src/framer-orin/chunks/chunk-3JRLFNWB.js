@@ -44,23 +44,15 @@ function prefixMatch(options) {
 }
 function completeFromList(list) {
   let options = list.map((o) => (typeof o == 'string' ? { label: o } : o))
-  let [validFor, match] = options.every((o) => /^\w+$/.test(o.label))
-    ? [/\w*$/, /\w+$/]
-    : prefixMatch(options)
+  let [validFor, match] = options.every((o) => /^\w+$/.test(o.label)) ? [/\w*$/, /\w+$/] : prefixMatch(options)
   return (context) => {
     let token = context.matchBefore(match)
-    return token || context.explicit
-      ? { from: token ? token.from : context.pos, options, validFor }
-      : null
+    return token || context.explicit ? { from: token ? token.from : context.pos, options, validFor } : null
   }
 }
 function ifNotIn(nodes, source) {
   return (context) => {
-    for (
-      let pos = syntaxTree(context.state).resolveInner(context.pos, -1);
-      pos;
-      pos = pos.parent
-    ) {
+    for (let pos = syntaxTree(context.state).resolveInner(context.pos, -1); pos; pos = pos.parent) {
       if (nodes.indexOf(pos.name) > -1) return null
       if (pos.type.isTop) break
     }
@@ -113,13 +105,12 @@ var baseTheme = /* @__PURE__ */ EditorView.baseTheme({
   '&dark .cm-tooltip-autocomplete-disabled ul li[aria-selected]': {
     background: '#444',
   },
-  '.cm-completionListIncompleteTop:before, .cm-completionListIncompleteBottom:after':
-    {
-      content: '"\xB7\xB7\xB7"',
-      opacity: 0.5,
-      display: 'block',
-      textAlign: 'center',
-    },
+  '.cm-completionListIncompleteTop:before, .cm-completionListIncompleteBottom:after': {
+    content: '"\xB7\xB7\xB7"',
+    opacity: 0.5,
+    display: 'block',
+    textAlign: 'center',
+  },
   '.cm-tooltip.cm-completionInfo': {
     position: 'absolute',
     padding: '3px 9px',
@@ -186,9 +177,7 @@ var FieldRange = class {
   map(changes) {
     let from = changes.mapPos(this.from, -1, MapMode.TrackDel)
     let to = changes.mapPos(this.to, 1, MapMode.TrackDel)
-    return from == null || to == null
-      ? null
-      : new FieldRange(this.field, from, to)
+    return from == null || to == null ? null : new FieldRange(this.field, from, to)
   }
   constructor(field, from, to) {
     this.field = field
@@ -214,12 +203,7 @@ var Snippet = class {
       pos += line.length + 1
     }
     let ranges = this.fieldPositions.map(
-      (pos2) =>
-        new FieldRange(
-          pos2.field,
-          lineStart[pos2.line] + pos2.from,
-          lineStart[pos2.line] + pos2.to,
-        ),
+      (pos2) => new FieldRange(pos2.field, lineStart[pos2.line] + pos2.from, lineStart[pos2.line] + pos2.to),
     )
     return { text, ranges }
   }
@@ -234,36 +218,20 @@ var Snippet = class {
           name = m[2] || m[3] || '',
           found = -1
         for (let i = 0; i < fields.length; i++) {
-          if (
-            seq != null
-              ? fields[i].seq == seq
-              : name
-                ? fields[i].name == name
-                : false
-          )
-            found = i
+          if (seq != null ? fields[i].seq == seq : name ? fields[i].name == name : false) found = i
         }
         if (found < 0) {
           let i = 0
-          while (
-            i < fields.length &&
-            (seq == null || (fields[i].seq != null && fields[i].seq < seq))
-          )
-            i++
+          while (i < fields.length && (seq == null || (fields[i].seq != null && fields[i].seq < seq))) i++
           fields.splice(i, 0, { seq, name })
           found = i
           for (let pos of positions) if (pos.field >= found) pos.field++
         }
-        positions.push(
-          new FieldPos(found, lines.length, m.index, m.index + name.length),
-        )
+        positions.push(new FieldPos(found, lines.length, m.index, m.index + name.length))
         line = line.slice(0, m.index) + name + line.slice(m.index + m[0].length)
       }
       for (let esc; (esc = /\\([{}])/.exec(line)); ) {
-        line =
-          line.slice(0, esc.index) +
-          esc[1] +
-          line.slice(esc.index + esc[0].length)
+        line = line.slice(0, esc.index) + esc[1] + line.slice(esc.index + esc[0].length)
         for (let pos of positions)
           if (pos.line == lines.length && pos.from > esc.index) {
             pos.from--
@@ -304,20 +272,13 @@ var ActiveSnippet = class {
   }
   selectionInsideField(sel) {
     return sel.ranges.every((range) =>
-      this.ranges.some(
-        (r) =>
-          r.field == this.active && r.from <= range.from && r.to >= range.to,
-      ),
+      this.ranges.some((r) => r.field == this.active && r.from <= range.from && r.to >= range.to),
     )
   }
   constructor(ranges, active) {
     this.ranges = ranges
     this.active = active
-    this.deco = Decoration.set(
-      ranges.map((r) =>
-        (r.from == r.to ? fieldMarker : fieldRange).range(r.from, r.to),
-      ),
-    )
+    this.deco = Decoration.set(ranges.map((r) => (r.from == r.to ? fieldMarker : fieldRange).range(r.from, r.to)))
   }
 }
 var setActive = /* @__PURE__ */ StateEffect.define({
@@ -333,23 +294,16 @@ var snippetState = /* @__PURE__ */ StateField.define({
   update(value, tr) {
     for (let effect of tr.effects) {
       if (effect.is(setActive)) return effect.value
-      if (effect.is(moveToField) && value)
-        return new ActiveSnippet(value.ranges, effect.value)
+      if (effect.is(moveToField) && value) return new ActiveSnippet(value.ranges, effect.value)
     }
     if (value && tr.docChanged) value = value.map(tr.changes)
-    if (value && tr.selection && !value.selectionInsideField(tr.selection))
-      value = null
+    if (value && tr.selection && !value.selectionInsideField(tr.selection)) value = null
     return value
   },
-  provide: (f) =>
-    EditorView.decorations.from(f, (val) => (val ? val.deco : Decoration.none)),
+  provide: (f) => EditorView.decorations.from(f, (val) => (val ? val.deco : Decoration.none)),
 })
 function fieldSelection(ranges, field) {
-  return EditorSelection.create(
-    ranges
-      .filter((r) => r.field == field)
-      .map((r) => EditorSelection.range(r.from, r.to)),
-  )
+  return EditorSelection.create(ranges.filter((r) => r.field == field).map((r) => EditorSelection.range(r.from, r.to)))
 }
 function snippet(template) {
   let snippet2 = Snippet.parse(template)
@@ -365,14 +319,7 @@ function snippet(template) {
       let active = new ActiveSnippet(ranges, 0)
       let effects = (spec.effects = [setActive.of(active)])
       if (editor.state.field(snippetState, false) === void 0)
-        effects.push(
-          StateEffect.appendConfig.of([
-            snippetState,
-            addSnippetKeymap,
-            snippetPointerHandler,
-            baseTheme,
-          ]),
-        )
+        effects.push(StateEffect.appendConfig.of([snippetState, addSnippetKeymap, snippetPointerHandler, baseTheme]))
     }
     editor.dispatch(editor.state.update(spec))
   }
@@ -386,9 +333,7 @@ function moveField(dir) {
     dispatch(
       state.update({
         selection: fieldSelection(active.ranges, next),
-        effects: setActive.of(
-          last ? null : new ActiveSnippet(active.ranges, next),
-        ),
+        effects: setActive.of(last ? null : new ActiveSnippet(active.ranges, next)),
       }),
     )
     return true
@@ -412,9 +357,7 @@ var snippetKeymap = /* @__PURE__ */ Facet.define({
   },
 })
 var addSnippetKeymap = /* @__PURE__ */ Prec.highest(
-  /* @__PURE__ */ keymap.compute([snippetKeymap], (state) =>
-    state.facet(snippetKeymap),
-  ),
+  /* @__PURE__ */ keymap.compute([snippetKeymap], (state) => state.facet(snippetKeymap)),
 )
 function snippetCompletion(template, completion) {
   return Object.assign(Object.assign({}, completion), {
@@ -425,19 +368,13 @@ var snippetPointerHandler = /* @__PURE__ */ EditorView.domEventHandlers({
   mousedown(event, view) {
     let active = view.state.field(snippetState, false),
       pos
-    if (
-      !active ||
-      (pos = view.posAtCoords({ x: event.clientX, y: event.clientY })) == null
-    )
-      return false
+    if (!active || (pos = view.posAtCoords({ x: event.clientX, y: event.clientY })) == null) return false
     let match = active.ranges.find((r) => r.from <= pos && r.to >= pos)
     if (!match || match.field == active.active) return false
     view.dispatch({
       selection: fieldSelection(active.ranges, match.field),
       effects: setActive.of(
-        active.ranges.some((r) => r.field > match.field)
-          ? new ActiveSnippet(active.ranges, match.field)
-          : null,
+        active.ranges.some((r) => r.field > match.field) ? new ActiveSnippet(active.ranges, match.field) : null,
       ),
     })
     return true
@@ -464,11 +401,8 @@ var bracketState = /* @__PURE__ */ StateField.define({
   update(value, tr) {
     if (tr.selection) {
       let lineStart = tr.state.doc.lineAt(tr.selection.main.head).from
-      let prevLineStart = tr.startState.doc.lineAt(
-        tr.startState.selection.main.head,
-      ).from
-      if (lineStart != tr.changes.mapPos(prevLineStart, -1))
-        value = RangeSet.empty
+      let prevLineStart = tr.startState.doc.lineAt(tr.startState.selection.main.head).from
+      if (lineStart != tr.changes.mapPos(prevLineStart, -1)) value = RangeSet.empty
     }
     value = value.map(tr.changes)
     for (let effect of tr.effects)
@@ -491,30 +425,22 @@ function closing(ch) {
 function config(state, pos) {
   return state.languageDataAt('closeBrackets', pos)[0] || defaults
 }
-var android =
-  typeof __unframerNavigator == 'object' &&
-  /* @__PURE__ */ /Android\b/.test(__unframerNavigator.userAgent)
-var inputHandler = /* @__PURE__ */ EditorView.inputHandler.of(
-  (view, from, to, insert) => {
-    if (
-      (android ? view.composing : view.compositionStarted) ||
-      view.state.readOnly
-    )
-      return false
-    let sel = view.state.selection.main
-    if (
-      insert.length > 2 ||
-      (insert.length == 2 && codePointSize(codePointAt(insert, 0)) == 1) ||
-      from != sel.from ||
-      to != sel.to
-    )
-      return false
-    let tr = insertBracket(view.state, insert)
-    if (!tr) return false
-    view.dispatch(tr)
-    return true
-  },
-)
+var android = typeof __unframerNavigator == 'object' && /* @__PURE__ */ /Android\b/.test(__unframerNavigator.userAgent)
+var inputHandler = /* @__PURE__ */ EditorView.inputHandler.of((view, from, to, insert) => {
+  if ((android ? view.composing : view.compositionStarted) || view.state.readOnly) return false
+  let sel = view.state.selection.main
+  if (
+    insert.length > 2 ||
+    (insert.length == 2 && codePointSize(codePointAt(insert, 0)) == 1) ||
+    from != sel.from ||
+    to != sel.to
+  )
+    return false
+  let tr = insertBracket(view.state, insert)
+  if (!tr) return false
+  view.dispatch(tr)
+  return true
+})
 var deleteBracketPair = ({ state, dispatch }) => {
   if (state.readOnly) return false
   let conf = config(state, state.selection.main.head)
@@ -524,10 +450,7 @@ var deleteBracketPair = ({ state, dispatch }) => {
       if (range.empty) {
         let before = prevChar(state.doc, range.head)
         for (let token of tokens) {
-          if (
-            token == before &&
-            nextChar(state.doc, range.head) == closing(codePointAt(token, 0))
-          )
+          if (token == before && nextChar(state.doc, range.head) == closing(codePointAt(token, 0)))
             return {
               changes: {
                 from: range.head - token.length,
@@ -558,8 +481,7 @@ function insertBracket(state, bracket) {
       return closed == tok
         ? handleSame(state, tok, tokens.indexOf(tok + tok + tok) > -1, conf)
         : handleOpen(state, tok, closed, conf.before || defaults.before)
-    if (bracket == closed && closedBracketAt(state, state.selection.main.from))
-      return handleClose(state, tok, closed)
+    if (bracket == closed && closedBracketAt(state, state.selection.main.from)) return handleClose(state, tok, closed)
   }
   return null
 }
@@ -576,9 +498,7 @@ function nextChar(doc, pos) {
 }
 function prevChar(doc, pos) {
   let prev = doc.sliceString(pos - 2, pos)
-  return codePointSize(codePointAt(prev, 0)) == prev.length
-    ? prev
-    : prev.slice(1)
+  return codePointSize(codePointAt(prev, 0)) == prev.length ? prev : prev.slice(1)
 }
 function handleOpen(state, open, close, closeBefore) {
   let dont = null,
@@ -590,10 +510,7 @@ function handleOpen(state, open, close, closeBefore) {
             { insert: close, from: range.to },
           ],
           effects: closeBracketEffect.of(range.to + open.length),
-          range: EditorSelection.range(
-            range.anchor + open.length,
-            range.head + open.length,
-          ),
+          range: EditorSelection.range(range.anchor + open.length, range.head + open.length),
         }
       let next = nextChar(state.doc, range.head)
       if (!next || /\s/.test(next) || closeBefore.indexOf(next) > -1)
@@ -643,10 +560,7 @@ function handleSame(state, token, allowTriple, config2) {
             { insert: token, from: range.to },
           ],
           effects: closeBracketEffect.of(range.to + token.length),
-          range: EditorSelection.range(
-            range.anchor + token.length,
-            range.head + token.length,
-          ),
+          range: EditorSelection.range(range.anchor + token.length, range.head + token.length),
         }
       let pos = range.head,
         next = nextChar(state.doc, pos),
@@ -659,9 +573,7 @@ function handleSame(state, token, allowTriple, config2) {
             range: EditorSelection.cursor(pos + token.length),
           }
         } else if (closedBracketAt(state, pos)) {
-          let isTriple =
-            allowTriple &&
-            state.sliceDoc(pos, pos + token.length * 3) == token + token + token
+          let isTriple = allowTriple && state.sliceDoc(pos, pos + token.length * 3) == token + token + token
           let content = isTriple ? token + token + token : token
           return {
             changes: {
@@ -675,11 +587,7 @@ function handleSame(state, token, allowTriple, config2) {
       } else if (
         allowTriple &&
         state.sliceDoc(pos - 2 * token.length, pos) == token + token &&
-        (start = canStartStringAt(
-          state,
-          pos - 2 * token.length,
-          stringPrefixes,
-        )) > -1 &&
+        (start = canStartStringAt(state, pos - 2 * token.length, stringPrefixes)) > -1 &&
         nodeStart(state, start)
       ) {
         return {
@@ -691,10 +599,7 @@ function handleSame(state, token, allowTriple, config2) {
           range: EditorSelection.cursor(pos + token.length),
         }
       } else if (state.charCategorizer(pos)(next) != CharCategory.Word) {
-        if (
-          canStartStringAt(state, pos, stringPrefixes) > -1 &&
-          !probablyInString(state, pos, token, stringPrefixes)
-        )
+        if (canStartStringAt(state, pos, stringPrefixes) > -1 && !probablyInString(state, pos, token, stringPrefixes))
           return {
             changes: { insert: token + token, from: pos },
             effects: closeBracketEffect.of(pos + token.length),
@@ -718,25 +623,12 @@ function probablyInString(state, pos, quoteToken, prefixes) {
   let node = syntaxTree(state).resolveInner(pos, -1)
   let maxPrefix = prefixes.reduce((m, p) => Math.max(m, p.length), 0)
   for (let i = 0; i < 5; i++) {
-    let start = state.sliceDoc(
-      node.from,
-      Math.min(node.to, node.from + quoteToken.length + maxPrefix),
-    )
+    let start = state.sliceDoc(node.from, Math.min(node.to, node.from + quoteToken.length + maxPrefix))
     let quotePos = start.indexOf(quoteToken)
-    if (
-      !quotePos ||
-      (quotePos > -1 && prefixes.indexOf(start.slice(0, quotePos)) > -1)
-    ) {
+    if (!quotePos || (quotePos > -1 && prefixes.indexOf(start.slice(0, quotePos)) > -1)) {
       let first = node.firstChild
-      while (
-        first &&
-        first.from == node.from &&
-        first.to - first.from > quoteToken.length + quotePos
-      ) {
-        if (
-          state.sliceDoc(first.to - quoteToken.length, first.to) == quoteToken
-        )
-          return false
+      while (first && first.from == node.from && first.to - first.from > quoteToken.length + quotePos) {
+        if (state.sliceDoc(first.to - quoteToken.length, first.to) == quoteToken) return false
         first = first.firstChild
       }
       return true
@@ -752,19 +644,10 @@ function canStartStringAt(state, pos, prefixes) {
   if (charCat(state.sliceDoc(pos - 1, pos)) != CharCategory.Word) return pos
   for (let prefix of prefixes) {
     let start = pos - prefix.length
-    if (
-      state.sliceDoc(start, pos) == prefix &&
-      charCat(state.sliceDoc(start - 1, start)) != CharCategory.Word
-    )
+    if (state.sliceDoc(start, pos) == prefix && charCat(state.sliceDoc(start - 1, start)) != CharCategory.Word)
       return start
   }
   return -1
 }
 
-export {
-  completeFromList,
-  ifNotIn,
-  snippetCompletion,
-  closeBrackets,
-  closeBracketsKeymap,
-}
+export { completeFromList, ifNotIn, snippetCompletion, closeBrackets, closeBracketsKeymap }

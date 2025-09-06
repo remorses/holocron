@@ -1,62 +1,28 @@
 'use client'
 
 import { createIdGenerator, isToolUIPart, UIMessage, FileUIPart } from 'ai'
-import {
-  ChatAssistantMessage,
-  ChatErrorMessage,
-  ChatUserMessage,
-} from 'contesto/src/chat/chat-message'
+import { ChatAssistantMessage, ChatErrorMessage, ChatUserMessage } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { isDocsJson } from 'docs-website/src/lib/utils'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 
-import {
-  CSSProperties,
-  startTransition,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { CSSProperties, startTransition, useEffect, useMemo, useState } from 'react'
 
-import {
-  Dot,
-  ToolPreviewContainer,
-} from 'docs-website/src/components/chat-tool-previews'
+import { Dot, ToolPreviewContainer } from 'docs-website/src/components/chat-tool-previews'
 
 import { Button } from 'website/src/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from 'website/src/components/ui/popover'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from 'website/src/components/ui/tooltip'
+import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from 'website/src/components/ui/tooltip'
 import { DiffStats, PrButton, SaveChangesButton } from './chat-buttons'
 import { WelcomeMessage } from './chat-welcome'
 
-import {
-  ToolPartInputStreaming,
-  ToolPartOutputAvailable,
-  uiStreamToUIMessages,
-} from 'contesto/src/lib/process-chat'
+import { ToolPartInputStreaming, ToolPartOutputAvailable, uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import { useShouldHideBrowser } from '../lib/hooks'
-import {
-  apiClient,
-  apiClientWithDurableFetch,
-  durableFetchClient,
-} from '../lib/spiceflow-client'
+import { apiClient, apiClientWithDurableFetch, durableFetchClient } from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 
 import { jsxDedent, RenderFormPreview } from 'contesto'
-import {
-  ChatProvider,
-  ChatState,
-  useChatContext,
-  useChatState,
-} from 'contesto/src/chat/chat-provider'
+import { ChatProvider, ChatState, useChatContext, useChatState } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
@@ -75,22 +41,10 @@ import {
   throttle,
   truncateText,
 } from 'docs-website/src/lib/utils'
-import {
-  ArrowUpIcon,
-  FilePlus2Icon,
-  ImageIcon,
-  ListTreeIcon,
-  PaletteIcon,
-} from 'lucide-react'
+import { ArrowUpIcon, FilePlus2Icon, ImageIcon, ListTreeIcon, PaletteIcon } from 'lucide-react'
 import React from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
-import {
-  useLoaderData,
-  useLocation,
-  useParams,
-  useRevalidator,
-  useRouteLoaderData,
-} from 'react-router'
+import { useLoaderData, useLocation, useParams, useRevalidator, useRouteLoaderData } from 'react-router'
 import { AnimatePresence, motion } from 'unframer'
 import {
   Command,
@@ -102,12 +56,7 @@ import {
 } from 'website/src/components/ui/command'
 import { docsRpcClient } from '../lib/docs-setstate'
 import { WebsiteUIMessage } from '../lib/types'
-import {
-  cn,
-  safeJsoncParse,
-  transcribeAudio,
-  uploadFileToSite,
-} from '../lib/utils'
+import { cn, safeJsoncParse, transcribeAudio, uploadFileToSite } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.branch.$branchId.chat.$chatId._index'
 import type { Route as BranchRoute } from '../routes/org.$orgId.branch.$branchId'
 import { TruncatedText } from './truncated-text'
@@ -150,8 +99,7 @@ const setDocsJsonState = ({ values, githubFolder, previousValues }) => {
 
 function ChatForm({ children, disabled }) {
   const { chatId } = useParams()
-  const { siteBranch, githubFolder } =
-    useLoaderData() as Route.ComponentProps['loaderData']
+  const { siteBranch, githubFolder } = useLoaderData() as Route.ComponentProps['loaderData']
   const { submit, messages, setMessages, setDraftText } = useChatContext()
 
   const formMethods = useForm({
@@ -164,11 +112,7 @@ function ChatForm({ children, disabled }) {
   const isOnboardingChat = useShouldHideBrowser()
 
   const docsJsonString = useWebsiteState((state) => {
-    return (
-      Object.entries(state.filesInDraft || {}).find(([key]) =>
-        isDocsJson(key),
-      )?.[1]?.content || ''
-    )
+    return Object.entries(state.filesInDraft || {}).find(([key]) => isDocsJson(key))?.[1]?.content || ''
   })
 
   const currentDocsJson = useMemo(() => {
@@ -202,13 +146,7 @@ function ChatForm({ children, disabled }) {
     })
 
     return unSub
-  }, [
-    disabled,
-    formMethods.subscribe,
-    isOnboardingChat,
-    currentDocsJson,
-    githubFolder,
-  ])
+  }, [disabled, formMethods.subscribe, isOnboardingChat, currentDocsJson, githubFolder])
 
   // reset the form values on the first visit with the docs json values. it also resets the form values when the docs json file is updated via the strReplaceEditor tool
   useEffect(() => {
@@ -246,11 +184,7 @@ function ChatForm({ children, disabled }) {
   )
 }
 
-export default function Chat({
-  ref,
-}: {
-  ref?: React.RefObject<HTMLDivElement>
-}) {
+export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> }) {
   const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
   const { chat, siteId, branchId } = loaderData
   const revalidator = useRevalidator()
@@ -276,13 +210,7 @@ export default function Chat({
 
         const message: UIMessage = {
           ...rest,
-          parts: [
-            ...textParts,
-            ...reasoningParts,
-            ...toolParts,
-            ...sourceUrlParts,
-            ...fileParts,
-          ]
+          parts: [...textParts, ...reasoningParts, ...toolParts, ...sourceUrlParts, ...fileParts]
             .flat()
             .sort((a, b) => a.index - b.index)
             // add step start messages. required for claude
@@ -305,11 +233,7 @@ export default function Chat({
     return state
   }, [loaderData.chatId, searchParams])
 
-  const submitMessages = async ({
-    messages,
-    setMessages,
-    abortController,
-  }: ChatState) => {
+  const submitMessages = async ({ messages, setMessages, abortController }: ChatState) => {
     const generateId = createIdGenerator()
 
     const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
@@ -319,24 +243,23 @@ export default function Chat({
     // Set generating state to true when starting
     useWebsiteState.setState({ isChatGenerating: true })
 
-    const { data: generator, error } =
-      await apiClientWithDurableFetch.api.generateMessage.post(
-        {
-          messages: messages as WebsiteUIMessage[],
-          siteId,
-          branchId,
-          currentSlug,
-          filesInDraft,
-          githubFolder,
-          chatId: chat.chatId,
+    const { data: generator, error } = await apiClientWithDurableFetch.api.generateMessage.post(
+      {
+        messages: messages as WebsiteUIMessage[],
+        siteId,
+        branchId,
+        currentSlug,
+        filesInDraft,
+        githubFolder,
+        chatId: chat.chatId,
+      },
+      {
+        query: {
+          lastMessageId: messages[messages.length - 1]?.id,
         },
-        {
-          query: {
-            lastMessageId: messages[messages.length - 1]?.id,
-          },
-          fetch: { signal: abortController.signal },
-        },
-      )
+        fetch: { signal: abortController.signal },
+      },
+    )
     if (error) {
       // Set generating state to false on error
       useWebsiteState.setState({ isChatGenerating: false })
@@ -362,9 +285,7 @@ export default function Chat({
 
     let isPostMessageBusy = false
 
-    const onToolOutput = async (
-      toolPart: ToolPartOutputAvailable<WebsiteUIMessage>,
-    ) => {
+    const onToolOutput = async (toolPart: ToolPartOutputAvailable<WebsiteUIMessage>) => {
       const args: Partial<EditToolParamSchema> = toolPart.input as any
 
       if (toolPart.type === 'tool-strReplaceEditor') {
@@ -427,10 +348,7 @@ export default function Chat({
         }
 
         const targetSlug = toolPart.output?.slug
-        if (
-          typeof targetSlug === 'string' &&
-          targetSlug !== location.pathname
-        ) {
+        if (typeof targetSlug === 'string' && targetSlug !== location.pathname) {
           try {
             useWebsiteState.setState({
               currentSlug,
@@ -450,54 +368,48 @@ export default function Chat({
     // Use throttle instead of debounce to ensure the function executes at regular intervals
     // and doesn't delay beyond the throttle period, which could cause it to override
     // the output-available call that comes later
-    const onToolInputStreaming = throttle(
-      100,
-      async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
-        if (toolPart.type === 'tool-strReplaceEditor') {
-          const args: Partial<EditToolParamSchema> = toolPart.input as any
-          if (args?.command === 'view') {
-            return
-          }
-          if (!isStrReplaceParameterComplete(args)) {
-            return
-          }
-          const currentSlug = generateSlugFromPath(
-            args.path || '',
-            githubFolder,
-          )
-
-          if (isPostMessageBusy) return
-          // Create a temporary FileSystemEmulator for preview
-          let updatedPagesCopy = { ...filesInDraft }
-          const previewFileSystem = new FileSystemEmulator({
-            filesInDraft: updatedPagesCopy,
-            baseDir: githubFolder || undefined,
-            getPageContent,
-          })
-          const localExecute = createEditExecute({
-            fileSystem: previewFileSystem,
-          })
-          await localExecute(args as any)
-          isPostMessageBusy = true
-          try {
-            docsRpcClient
-              .setDocsState({
-                state: {
-                  filesInDraft: updatedPagesCopy,
-                  currentSlug,
-                  isMarkdownStreaming: true,
-                },
-              })
-              .catch((e) => {
-                console.error(e)
-              })
-              .finally(() => {
-                isPostMessageBusy = false
-              })
-          } catch (e) {}
+    const onToolInputStreaming = throttle(100, async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
+      if (toolPart.type === 'tool-strReplaceEditor') {
+        const args: Partial<EditToolParamSchema> = toolPart.input as any
+        if (args?.command === 'view') {
+          return
         }
-      },
-    )
+        if (!isStrReplaceParameterComplete(args)) {
+          return
+        }
+        const currentSlug = generateSlugFromPath(args.path || '', githubFolder)
+
+        if (isPostMessageBusy) return
+        // Create a temporary FileSystemEmulator for preview
+        let updatedPagesCopy = { ...filesInDraft }
+        const previewFileSystem = new FileSystemEmulator({
+          filesInDraft: updatedPagesCopy,
+          baseDir: githubFolder || undefined,
+          getPageContent,
+        })
+        const localExecute = createEditExecute({
+          fileSystem: previewFileSystem,
+        })
+        await localExecute(args as any)
+        isPostMessageBusy = true
+        try {
+          docsRpcClient
+            .setDocsState({
+              state: {
+                filesInDraft: updatedPagesCopy,
+                currentSlug,
+                isMarkdownStreaming: true,
+              },
+            })
+            .catch((e) => {
+              console.error(e)
+            })
+            .finally(() => {
+              isPostMessageBusy = false
+            })
+        } catch (e) {}
+      }
+    })
 
     try {
       for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>({
@@ -523,10 +435,7 @@ export default function Chat({
   }
 
   return (
-    <ChatProvider
-      generateMessages={submitMessages}
-      initialValue={initialChatState}
-    >
+    <ChatProvider generateMessages={submitMessages} initialValue={initialChatState}>
       <div
         style={
           {
@@ -584,20 +493,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
           if (part.type === 'file') {
             const isImage = part.mediaType?.startsWith('image/')
             if (isImage) {
-              return (
-                <img
-                  key={index}
-                  src={part.url}
-                  alt={part.filename}
-                  className='max-w-sm rounded-lg mt-2'
-                />
-              )
+              return <img key={index} src={part.url} alt={part.filename} className='max-w-sm rounded-lg mt-2' />
             }
             return (
-              <div
-                key={index}
-                className='flex items-center gap-2 mt-2 p-2 bg-muted rounded'
-              >
+              <div key={index} className='flex items-center gap-2 mt-2 p-2 bg-muted rounded'>
                 <span className='text-sm'>{part.filename}</span>
               </div>
             )
@@ -615,10 +514,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     <ChatForm disabled={messages[messages.length - 1]?.id !== message.id}>
       <ChatAssistantMessage style={{ minHeight }} message={message}>
         {message.parts.map((part, index) => {
-          if (
-            part.type === 'tool-renderForm' &&
-            part.state === 'output-available'
-          ) {
+          if (part.type === 'tool-renderForm' && part.state === 'output-available') {
             return (
               <RenderFormPreview
                 key={index}
@@ -645,10 +541,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
               </ToolPreviewContainer>
             )
           }
-          if (
-            part.type === 'tool-updateHolocronJsonc' &&
-            part.state === 'output-available'
-          ) {
+          if (part.type === 'tool-updateHolocronJsonc' && part.state === 'output-available') {
             return (
               <RenderFormPreview
                 message={message}
@@ -727,9 +620,7 @@ function ContextButton({
                     }}
                     className='max-w-full my-[2px]'
                   >
-                    <span className='truncate'>
-                      {option.startsWith('@') ? option.slice(1) : option}
-                    </span>
+                    <span className='truncate'>{option.startsWith('@') ? option.slice(1) : option}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -742,13 +633,7 @@ function ContextButton({
 }
 
 function Footer() {
-  const {
-    isGenerating: isPending,
-    draftText: text,
-    stop,
-    submit,
-    messages,
-  } = useChatContext()
+  const { isGenerating: isPending, draftText: text, stop, submit, messages } = useChatContext()
   const { chat, chatId, githubFolder, prUrl, projectPagesFilenames, branchId } =
     useLoaderData() as Route.ComponentProps['loaderData']
   const branchData = useRouteLoaderData(
@@ -785,19 +670,11 @@ function Footer() {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
   return (
-    <motion.div
-      layoutId='textarea'
-      className='sticky bottom-0 pt-4 z-50 w-full'
-    >
+    <motion.div layoutId='textarea' className='sticky bottom-0 pt-4 z-50 w-full'>
       <div className='space-y-3'>
         <div className='flex flex-col gap-2 '>
           <div className='flex gap-1 empty:hidden justify-start items-center bg-root-background p-1 rounded-md'>
-            {showCreatePR && (
-              <DiffStats
-                filesInDraft={filesInDraft}
-                hasNonPushedChanges={hasNonPushedChanges}
-              />
-            )}
+            {showCreatePR && <DiffStats filesInDraft={filesInDraft} hasNonPushedChanges={hasNonPushedChanges} />}
             {prUrl && (
               <a
                 href={prUrl}
@@ -817,9 +694,7 @@ function Footer() {
             <div className='flex'>
               <ContextButton
                 textareaRef={textareaRef}
-                contextOptions={
-                  projectPagesFilenames?.map((f) => `@${f}`) || []
-                }
+                contextOptions={projectPagesFilenames?.map((f) => `@${f}`) || []}
               />
             </div>
             <ChatTextarea
@@ -863,11 +738,7 @@ function Footer() {
               {/* Right buttons */}
               <div className='flex items-center gap-2'>
                 {isPending ? (
-                  <Button
-                    className='rounded-full h-8'
-                    onClick={stop}
-                    variant='outline'
-                  >
+                  <Button className='rounded-full h-8' onClick={stop} variant='outline'>
                     Stop
                   </Button>
                 ) : (

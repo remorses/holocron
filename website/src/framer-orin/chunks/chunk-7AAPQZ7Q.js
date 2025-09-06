@@ -7,24 +7,12 @@ import {
   stdin_default3 as stdin_default4,
 } from './chunk-7D6ZUPOD.js'
 import { className, css, fonts } from './chunk-OUEV7UWA.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunk-EAOTBDPC.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunk-EAOTBDPC.js'
 import { stdin_default } from './chunk-5PWCC3XC.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunk-QKWA2WC3.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunk-QKWA2WC3.js'
 
 // /:https://framerusercontent.com/modules/JdAv8LktxFPdRh5qre9F/BX5koLUX9pltoOHhPXsw/u9g7Rra_M.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -45,12 +33,7 @@ import {
   withCSS,
   withFX,
 } from 'unframer'
-import {
-  AnimatePresence,
-  LayoutGroup,
-  motion,
-  MotionConfigContext,
-} from 'unframer'
+import { AnimatePresence, LayoutGroup, motion, MotionConfigContext } from 'unframer'
 import * as React from 'react'
 import { useRef as useRef2 } from 'react'
 var MainSiteGridBorderFonts = getFonts(stdin_default)
@@ -60,14 +43,7 @@ var MotionDivWithFX = withFX(motion.div)
 var ComparisonInfoIconFonts = getFonts(stdin_default4)
 var ComparisonInfoIconControls = getPropertyControls(stdin_default4)
 var MainSiteGridBorderControls = getPropertyControls(stdin_default)
-var cycleOrder = [
-  'nfivJgRFp',
-  'UccUI26Fx',
-  'euJaCXI3W',
-  'aQVtlUK3s',
-  'EzI3rHVQa',
-  'pgC0zQJoP',
-]
+var cycleOrder = ['nfivJgRFp', 'UccUI26Fx', 'euJaCXI3W', 'aQVtlUK3s', 'EzI3rHVQa', 'pgC0zQJoP']
 var serializationHash = 'framer-IJiRQ'
 var variantClassNames = {
   aQVtlUK3s: 'framer-v-13tefsr',
@@ -79,9 +55,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
@@ -159,10 +133,7 @@ var Overlay = ({ children, blockDocumentScrolling, enabled = true }) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -189,31 +160,16 @@ var humanReadableVariantMap = {
   Info: 'UccUI26Fx',
   Name: 'nfivJgRFp',
 }
-var getProps = ({
-  border,
-  category,
-  height,
-  icon,
-  id,
-  info,
-  select,
-  title,
-  tooltip,
-  width,
-  ...props
-}) => {
+var getProps = ({ border, category, height, icon, id, info, select, title, tooltip, width, ...props }) => {
   return {
     ...props,
     de67ue1JD: category ?? props.de67ue1JD,
     K8gRRrBIN: tooltip ?? props.K8gRRrBIN,
-    p7K7zqxnH:
-      humanReadableEnumMap1[border] ?? border ?? props.p7K7zqxnH ?? 'yzIFdYlxZ',
-    pb9vTViC1:
-      humanReadableEnumMap[select] ?? select ?? props.pb9vTViC1 ?? 'oYA80aR0m',
+    p7K7zqxnH: humanReadableEnumMap1[border] ?? border ?? props.p7K7zqxnH ?? 'yzIFdYlxZ',
+    pb9vTViC1: humanReadableEnumMap[select] ?? select ?? props.pb9vTViC1 ?? 'oYA80aR0m',
     SBuEMRmew: icon ?? props.SBuEMRmew,
     SjyXrqb3O: info ?? props.SjyXrqb3O ?? 'Up to 10',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'nfivJgRFp',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'nfivJgRFp',
     xvf4zUcWM: title ?? props.xvf4zUcWM ?? 'Number of websites',
   }
 }
@@ -270,12 +226,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
     if (['euJaCXI3W', 'pgC0zQJoP'].includes(baseVariant)) return false
     return true
   }
-  const padding = numberToPixelString(
-    convertFromBoolean(de67ue1JD, activeLocale),
-  )
-  const padding1 = numberToPixelString(
-    convertFromBoolean1(de67ue1JD, activeLocale),
-  )
+  const padding = numberToPixelString(convertFromBoolean(de67ue1JD, activeLocale))
+  const padding1 = numberToPixelString(convertFromBoolean1(de67ue1JD, activeLocale))
   const visible = negate(de67ue1JD)
   const visible1 = negate(SBuEMRmew)
   const isDisplayed1 = (value, value1) => {
@@ -303,12 +255,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-tsvahb',
-            className4,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-tsvahb', className4, classNames),
           'data-framer-name': 'Name',
           layoutDependency,
           layoutId: 'nfivJgRFp',
@@ -457,16 +404,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       layoutDependency,
                       layoutId: 'lRt43iP6i',
                       style: {
-                        '--extracted-1eung3n':
-                          'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                        '--extracted-1eung3n': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                         '--framer-link-text-color': 'rgb(0, 153, 255)',
                         '--framer-link-text-decoration': 'underline',
                       },
                       text: xvf4zUcWM,
                       variants: {
                         aQVtlUK3s: {
-                          '--extracted-r6o4lv':
-                            'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                          '--extracted-r6o4lv': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                         },
                       },
                       verticalAlignment: 'top',
@@ -496,166 +441,128 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       blockDocumentScrolling: false,
                       children: (overlay) =>
                         /* @__PURE__ */ _jsx(_Fragment, {
-                          children: /* @__PURE__ */ _jsx(
-                            ComponentViewportProvider,
-                            {
-                              height: 24,
-                              width: '24px',
-                              ...addPropertyOverrides(
-                                {
-                                  aQVtlUK3s: {
-                                    height: 18,
-                                    width: '18.7826px',
-                                  },
-                                  EzI3rHVQa: {
-                                    y:
-                                      (componentViewport?.y || 0) +
-                                      (12 +
-                                        ((componentViewport?.height || 90) -
-                                          24 -
-                                          96) /
-                                          2) +
-                                      36,
-                                  },
-                                  UccUI26Fx: {
-                                    y:
-                                      (componentViewport?.y || 0) +
-                                      (20 +
-                                        ((componentViewport?.height || 90) -
-                                          40 -
-                                          105) /
-                                          2) +
-                                      40.5,
-                                  },
+                          children: /* @__PURE__ */ _jsx(ComponentViewportProvider, {
+                            height: 24,
+                            width: '24px',
+                            ...addPropertyOverrides(
+                              {
+                                aQVtlUK3s: {
+                                  height: 18,
+                                  width: '18.7826px',
                                 },
-                                baseVariant,
-                                gestureVariant,
-                              ),
-                              children: /* @__PURE__ */ _jsxs(
-                                SmartComponentScopedContainer,
-                                {
-                                  className: 'framer-1n7u87h-container',
-                                  id: `${layoutId}-1n7u87h`,
-                                  layoutDependency,
-                                  layoutId: 'AU7MXAi4A-container',
-                                  nodeId: 'AU7MXAi4A',
-                                  ref: ref1,
-                                  rendersWithMotion: true,
-                                  scopeId: 'u9g7Rra_M',
-                                  children: [
-                                    /* @__PURE__ */ _jsx(stdin_default3, {
-                                      gqg_nvVwg: false,
-                                      height: '100%',
-                                      id: 'AU7MXAi4A',
-                                      layoutId: 'AU7MXAi4A',
-                                      nc3N4L5qA: nc3N4L5qAtxyyif({
-                                        overlay,
-                                      }),
-                                      style: {
-                                        height: '100%',
-                                        width: '100%',
+                                EzI3rHVQa: {
+                                  y:
+                                    (componentViewport?.y || 0) +
+                                    (12 + ((componentViewport?.height || 90) - 24 - 96) / 2) +
+                                    36,
+                                },
+                                UccUI26Fx: {
+                                  y:
+                                    (componentViewport?.y || 0) +
+                                    (20 + ((componentViewport?.height || 90) - 40 - 105) / 2) +
+                                    40.5,
+                                },
+                              },
+                              baseVariant,
+                              gestureVariant,
+                            ),
+                            children: /* @__PURE__ */ _jsxs(SmartComponentScopedContainer, {
+                              className: 'framer-1n7u87h-container',
+                              id: `${layoutId}-1n7u87h`,
+                              layoutDependency,
+                              layoutId: 'AU7MXAi4A-container',
+                              nodeId: 'AU7MXAi4A',
+                              ref: ref1,
+                              rendersWithMotion: true,
+                              scopeId: 'u9g7Rra_M',
+                              children: [
+                                /* @__PURE__ */ _jsx(stdin_default3, {
+                                  gqg_nvVwg: false,
+                                  height: '100%',
+                                  id: 'AU7MXAi4A',
+                                  layoutId: 'AU7MXAi4A',
+                                  nc3N4L5qA: nc3N4L5qAtxyyif({
+                                    overlay,
+                                  }),
+                                  style: {
+                                    height: '100%',
+                                    width: '100%',
+                                  },
+                                  variant: overlay.visible ? 'wAbf6XDVH' : 'N9BS4mTvb',
+                                  width: '100%',
+                                  ...addPropertyOverrides(
+                                    {
+                                      aQVtlUK3s: {
+                                        gqg_nvVwg: true,
                                       },
-                                      variant: overlay.visible
-                                        ? 'wAbf6XDVH'
-                                        : 'N9BS4mTvb',
-                                      width: '100%',
-                                      ...addPropertyOverrides(
-                                        {
-                                          aQVtlUK3s: {
-                                            gqg_nvVwg: true,
-                                          },
+                                    },
+                                    baseVariant,
+                                    gestureVariant,
+                                  ),
+                                }),
+                                /* @__PURE__ */ _jsx(AnimatePresence, {
+                                  children:
+                                    overlay.visible &&
+                                    /* @__PURE__ */ _jsx(Floating, {
+                                      alignment: 'center',
+                                      anchorRef: ref1,
+                                      className: cx(scopingClassNames, classNames),
+                                      collisionDetection: true,
+                                      collisionDetectionPadding: 20,
+                                      'data-framer-portal-id': `${layoutId}-1n7u87h`,
+                                      offsetX: 0,
+                                      offsetY: -16,
+                                      onDismiss: overlay.hide,
+                                      placement: 'top',
+                                      safeArea: true,
+                                      zIndex: 11,
+                                      children: /* @__PURE__ */ _jsx(MotionDivWithFX, {
+                                        __perspectiveFX: false,
+                                        __smartComponentFX: true,
+                                        __targetOpacity: 1,
+                                        animate: animation1,
+                                        className: 'framer-1kr9y2d',
+                                        exit: animation,
+                                        initial: animation2,
+                                        layoutDependency,
+                                        layoutId: 'nbhx5RqYC',
+                                        ref: ref2,
+                                        role: 'dialog',
+                                        style: {
+                                          borderBottomLeftRadius: 10,
+                                          borderBottomRightRadius: 10,
+                                          borderTopLeftRadius: 10,
+                                          borderTopRightRadius: 10,
+                                          boxShadow: '0px 10px 20px 0px rgba(0, 0, 0, 0.05)',
                                         },
-                                        baseVariant,
-                                        gestureVariant,
-                                      ),
-                                    }),
-                                    /* @__PURE__ */ _jsx(AnimatePresence, {
-                                      children:
-                                        overlay.visible &&
-                                        /* @__PURE__ */ _jsx(Floating, {
-                                          alignment: 'center',
-                                          anchorRef: ref1,
-                                          className: cx(
-                                            scopingClassNames,
-                                            classNames,
-                                          ),
-                                          collisionDetection: true,
-                                          collisionDetectionPadding: 20,
-                                          'data-framer-portal-id': `${layoutId}-1n7u87h`,
-                                          offsetX: 0,
-                                          offsetY: -16,
-                                          onDismiss: overlay.hide,
-                                          placement: 'top',
-                                          safeArea: true,
-                                          zIndex: 11,
-                                          children: /* @__PURE__ */ _jsx(
-                                            MotionDivWithFX,
-                                            {
-                                              __perspectiveFX: false,
-                                              __smartComponentFX: true,
-                                              __targetOpacity: 1,
-                                              animate: animation1,
-                                              className: 'framer-1kr9y2d',
-                                              exit: animation,
-                                              initial: animation2,
-                                              layoutDependency,
-                                              layoutId: 'nbhx5RqYC',
-                                              ref: ref2,
-                                              role: 'dialog',
+                                        children: /* @__PURE__ */ _jsx(ComponentViewportProvider, {
+                                          width: '195px',
+                                          children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                                            className: 'framer-m7c4dc-container',
+                                            inComponentSlot: true,
+                                            layoutDependency,
+                                            layoutId: 'W8MvuaNy0-container',
+                                            nodeId: 'W8MvuaNy0',
+                                            rendersWithMotion: true,
+                                            scopeId: 'u9g7Rra_M',
+                                            children: /* @__PURE__ */ _jsx(stdin_default2, {
+                                              height: '100%',
+                                              id: 'W8MvuaNy0',
+                                              K2SanH58l: K8gRRrBIN,
+                                              layoutId: 'W8MvuaNy0',
                                               style: {
-                                                borderBottomLeftRadius: 10,
-                                                borderBottomRightRadius: 10,
-                                                borderTopLeftRadius: 10,
-                                                borderTopRightRadius: 10,
-                                                boxShadow:
-                                                  '0px 10px 20px 0px rgba(0, 0, 0, 0.05)',
+                                                width: '100%',
                                               },
-                                              children: /* @__PURE__ */ _jsx(
-                                                ComponentViewportProvider,
-                                                {
-                                                  width: '195px',
-                                                  children:
-                                                    /* @__PURE__ */ _jsx(
-                                                      SmartComponentScopedContainer,
-                                                      {
-                                                        className:
-                                                          'framer-m7c4dc-container',
-                                                        inComponentSlot: true,
-                                                        layoutDependency,
-                                                        layoutId:
-                                                          'W8MvuaNy0-container',
-                                                        nodeId: 'W8MvuaNy0',
-                                                        rendersWithMotion: true,
-                                                        scopeId: 'u9g7Rra_M',
-                                                        children:
-                                                          /* @__PURE__ */ _jsx(
-                                                            stdin_default2,
-                                                            {
-                                                              height: '100%',
-                                                              id: 'W8MvuaNy0',
-                                                              K2SanH58l:
-                                                                K8gRRrBIN,
-                                                              layoutId:
-                                                                'W8MvuaNy0',
-                                                              style: {
-                                                                width: '100%',
-                                                              },
-                                                              width: '100%',
-                                                            },
-                                                          ),
-                                                      },
-                                                    ),
-                                                },
-                                              ),
-                                            },
-                                          ),
+                                              width: '100%',
+                                            }),
+                                          }),
                                         }),
+                                      }),
                                     }),
-                                  ],
-                                },
-                              ),
-                            },
-                          ),
+                                }),
+                              ],
+                            }),
+                          }),
                         }),
                     }),
                   isDisplayed3(SBuEMRmew) &&
@@ -666,42 +573,35 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             height: 24,
                             y:
                               (componentViewport?.y || 0) +
-                              (12 +
-                                ((componentViewport?.height || 90) - 24 - 96) /
-                                  2) +
+                              (12 + ((componentViewport?.height || 90) - 24 - 96) / 2) +
                               36,
                           },
                           UccUI26Fx: {
                             height: 24,
                             y:
                               (componentViewport?.y || 0) +
-                              (20 +
-                                ((componentViewport?.height || 90) - 40 - 105) /
-                                  2) +
+                              (20 + ((componentViewport?.height || 90) - 40 - 105) / 2) +
                               40.5,
                           },
                         },
                         baseVariant,
                         gestureVariant,
                       ),
-                      children: /* @__PURE__ */ _jsx(
-                        SmartComponentScopedContainer,
-                        {
-                          className: 'framer-12hxeua-container',
-                          layoutDependency,
-                          layoutId: 'vGCFrINyT-container',
-                          nodeId: 'vGCFrINyT',
-                          rendersWithMotion: true,
-                          scopeId: 'u9g7Rra_M',
-                          children: /* @__PURE__ */ _jsx(stdin_default4, {
-                            height: '100%',
-                            id: 'vGCFrINyT',
-                            layoutId: 'vGCFrINyT',
-                            variant: pb9vTViC1,
-                            width: '100%',
-                          }),
-                        },
-                      ),
+                      children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                        className: 'framer-12hxeua-container',
+                        layoutDependency,
+                        layoutId: 'vGCFrINyT-container',
+                        nodeId: 'vGCFrINyT',
+                        rendersWithMotion: true,
+                        scopeId: 'u9g7Rra_M',
+                        children: /* @__PURE__ */ _jsx(stdin_default4, {
+                          height: '100%',
+                          id: 'vGCFrINyT',
+                          layoutId: 'vGCFrINyT',
+                          variant: pb9vTViC1,
+                          width: '100%',
+                        }),
+                      }),
                     }),
                 ],
               }),
@@ -736,22 +636,8 @@ Frameru9g7Rra_M.displayName = 'Comparison Cell'
 Frameru9g7Rra_M.defaultProps = { height: 90, width: 292 }
 addPropertyControls(Frameru9g7Rra_M, {
   variant: {
-    options: [
-      'nfivJgRFp',
-      'UccUI26Fx',
-      'euJaCXI3W',
-      'aQVtlUK3s',
-      'EzI3rHVQa',
-      'pgC0zQJoP',
-    ],
-    optionTitles: [
-      'Name',
-      'Info',
-      'Empty',
-      'Name Mobile',
-      'Info Mobile',
-      'Empty Mobile',
-    ],
+    options: ['nfivJgRFp', 'UccUI26Fx', 'euJaCXI3W', 'aQVtlUK3s', 'EzI3rHVQa', 'pgC0zQJoP'],
+    optionTitles: ['Name', 'Info', 'Empty', 'Name Mobile', 'Info Mobile', 'Empty Mobile'],
     title: 'Variant',
     type: ControlType.Enum,
   },
@@ -809,8 +695,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

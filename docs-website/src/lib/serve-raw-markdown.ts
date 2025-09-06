@@ -111,12 +111,7 @@ export async function serveRawMarkdown({
     ])
     const markdown = indexPage?.content?.markdown || null
     if (markdown) {
-      const formattedMarkdown = formatFileWithLines(
-        markdown,
-        showLineNumbers,
-        startLine,
-        endLine,
-      )
+      const formattedMarkdown = formatFileWithLines(markdown, showLineNumbers, startLine, endLine)
       const cacheTag = getCacheTagForPage({
         branchId: siteBranch.branchId,
         slug: indexPage?.slug || '/',
@@ -131,12 +126,7 @@ export async function serveRawMarkdown({
     return null
   }
 
-  const formattedMarkdown = formatFileWithLines(
-    page.content?.markdown || '',
-    showLineNumbers,
-    startLine,
-    endLine,
-  )
+  const formattedMarkdown = formatFileWithLines(page.content?.markdown || '', showLineNumbers, startLine, endLine)
   const cacheTag = getCacheTagForPage({
     branchId: siteBranch.branchId,
     slug: page.slug,
@@ -145,12 +135,7 @@ export async function serveRawMarkdown({
   return { markdown: formattedMarkdown, cacheTag }
 }
 
-function formatFileWithLines(
-  contents: string,
-  showLineNumbers: boolean,
-  startLine?: number,
-  endLine?: number,
-): string {
+function formatFileWithLines(contents: string, showLineNumbers: boolean, startLine?: number, endLine?: number): string {
   const lines = contents.split('\n')
 
   // Filter lines by range if specified
@@ -170,8 +155,7 @@ function formatFileWithLines(
   const hasContentBelow = actualEnd < lines.length
 
   // Show line numbers if requested or if line ranges are specified
-  const shouldShowLineNumbers =
-    showLineNumbers || startLine !== undefined || endLine !== undefined
+  const shouldShowLineNumbers = showLineNumbers || startLine !== undefined || endLine !== undefined
 
   // Add line numbers if requested
   if (shouldShowLineNumbers) {

@@ -128,9 +128,7 @@ export function cleanMarkdownContent(content: string): string {
           const headerText = token.header
             .map((cell: any) => {
               if (cell.tokens) {
-                return cell.tokens
-                  .map((t: any) => walkTokens(t, depth))
-                  .join(' ')
+                return cell.tokens.map((t: any) => walkTokens(t, depth)).join(' ')
               }
               return cell.text || ''
             })
@@ -142,9 +140,7 @@ export function cleanMarkdownContent(content: string): string {
                 row
                   .map((cell: any) => {
                     if (cell.tokens) {
-                      return cell.tokens
-                        .map((t: any) => walkTokens(t, depth))
-                        .join(' ')
+                      return cell.tokens.map((t: any) => walkTokens(t, depth)).join(' ')
                     }
                     return cell.text || ''
                   })

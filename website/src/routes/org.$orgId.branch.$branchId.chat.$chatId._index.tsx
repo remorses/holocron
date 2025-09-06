@@ -1,26 +1,11 @@
 import { prisma } from 'db'
 import { useCallback, useImperativeHandle, useState } from 'react'
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '../components/ui/popover'
+import { Popover, PopoverTrigger, PopoverContent } from '../components/ui/popover'
 import { AlertCircle, X } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '../components/ui/tooltip'
+import { Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip'
 import memoize from 'micro-memoize'
 import { useEffect, useMemo, useRef } from 'react'
-import {
-  useLoaderData,
-  useRouteLoaderData,
-  Link,
-  useParams,
-  useRevalidator,
-  useSearchParams,
-} from 'react-router'
+import { useLoaderData, useRouteLoaderData, Link, useParams, useRevalidator, useSearchParams } from 'react-router'
 import { ChatLeftSidebar } from '../components/left-sidebar'
 import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
@@ -29,12 +14,7 @@ import { createIframeRpcClient, docsRpcClient } from '../lib/docs-setstate'
 import { parse } from 'cookie'
 import { PREFERS_EDITOR_VIEW_COOKIE } from '../lib/constants'
 
-import {
-  State,
-  useWebsiteState,
-  WebsiteStateProvider,
-  useFilesInDraftAutoSave,
-} from '../lib/state'
+import { State, useWebsiteState, WebsiteStateProvider, useFilesInDraftAutoSave } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.branch.$branchId.chat.$chatId._index'
 import type { Route as BranchRoute } from './org.$orgId.branch.$branchId'
@@ -44,13 +24,7 @@ import { ChatProvider, ChatState } from 'contesto/src/chat/chat-provider'
 import { env, supportEmail } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { GithubIcon, Mail } from 'lucide-react'
 import { useShouldHideBrowser, useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
@@ -63,10 +37,7 @@ import { getFilesForSource } from 'docs-website/src/lib/source.server'
 
 export type { Route }
 
-export async function loader({
-  request,
-  params: { orgId, branchId, chatId },
-}: Route.LoaderArgs) {
+export async function loader({ request, params: { orgId, branchId, chatId } }: Route.LoaderArgs) {
   // Check if request is aborted early
   if (request.signal.aborted) {
     throw new Error('Request aborted')
@@ -200,12 +171,8 @@ export async function loader({
       if (process.env.NODE_ENV === 'development') {
         orderLocalhost = -1
       }
-      const aIsLocalhost = a.host.includes('localhost')
-        ? orderLocalhost
-        : -orderLocalhost
-      const bIsLocalhost = b.host.includes('localhost')
-        ? orderLocalhost
-        : -orderLocalhost
+      const aIsLocalhost = a.host.includes('localhost') ? orderLocalhost : -orderLocalhost
+      const bIsLocalhost = b.host.includes('localhost') ? orderLocalhost : -orderLocalhost
       return aIsLocalhost - bIsLocalhost
     })[0]?.host
 
@@ -223,9 +190,7 @@ export async function loader({
   // Read cookie to determine default tab preference
   const cookies = parse(request.headers.get('Cookie') || '')
   const prefersEditorView = cookies[PREFERS_EDITOR_VIEW_COOKIE] === 'true'
-  const initialActiveTab: 'preview' | 'editor' = prefersEditorView
-    ? 'editor'
-    : 'preview'
+  const initialActiveTab: 'preview' | 'editor' = prefersEditorView ? 'editor' : 'preview'
 
   return {
     chatId,
@@ -243,10 +208,7 @@ export async function loader({
   }
 }
 
-export default function Page({
-  loaderData,
-  params: { branchId, orgId },
-}: Route.ComponentProps) {
+export default function Page({ loaderData, params: { branchId, orgId } }: Route.ComponentProps) {
   const { chat } = loaderData
 
   const initialState = useMemo<State>(
@@ -286,15 +248,12 @@ function ChatContent() {
 }
 
 function RightSide() {
-  const { chat, iframeUrl, host, siteBranch, initialActiveTab } =
-    useLoaderData<typeof loader>()
+  const { chat, iframeUrl, host, siteBranch, initialActiveTab } = useLoaderData<typeof loader>()
   const branchData = useRouteLoaderData(
     'routes/org.$orgId.branch.$branchId',
   ) as BranchRoute.ComponentProps['loaderData']
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const [activeTab, setActiveTab] = useState<'preview' | 'editor'>(
-    initialActiveTab,
-  )
+  const [activeTab, setActiveTab] = useState<'preview' | 'editor'>(initialActiveTab)
   const previewMode = activeTab
 
   useEffect(() => {
@@ -338,11 +297,7 @@ function RightSide() {
         sentFirstMessage = true
       })
       const waitForFirstMessage = (event) => {
-        if (
-          iframeRef.current &&
-          !sentFirstMessage &&
-          event.source === iframeRef.current.contentWindow
-        ) {
+        if (iframeRef.current && !sentFirstMessage && event.source === iframeRef.current.contentWindow) {
           docsRpcClient.setDocsState({ state })
           window.removeEventListener('message', waitForFirstMessage)
         }
@@ -358,11 +313,7 @@ function RightSide() {
   )
 
   return (
-    <Tabs
-      value={activeTab}
-      onValueChange={handleTabChange}
-      className='flex flex-col gap-4 h-full'
-    >
+    <Tabs value={activeTab} onValueChange={handleTabChange} className='flex flex-col gap-4 h-full'>
       <div className='flex gap-2'>
         <TabsList className=''>
           <TabsTrigger value='preview'>Browser Preview</TabsTrigger>
@@ -434,9 +385,7 @@ function VisibilitySwitch() {
   const [errorMessage, setErrorMessage] = useState('')
 
   // Only show visibility switch for org members
-  const isOrgMember =
-    session?.userId &&
-    site?.org?.users?.some((u) => u.userId === session?.userId)
+  const isOrgMember = session?.userId && site?.org?.users?.some((u) => u.userId === session?.userId)
   if (!isOrgMember) {
     return null
   }
@@ -474,12 +423,7 @@ function VisibilitySwitch() {
     >
       <PopoverTrigger asChild>
         <div>
-          <Select
-            value={visibility}
-            onValueChange={handleVisibilityChange}
-            disabled={isUpdating}
-            variant='ghost'
-          >
+          <Select value={visibility} onValueChange={handleVisibilityChange} disabled={isUpdating} variant='ghost'>
             <Tooltip>
               <TooltipTrigger asChild>
                 <SelectTrigger className='w-[110px] h-8'>
@@ -500,10 +444,7 @@ function VisibilitySwitch() {
         </div>
       </PopoverTrigger>
 
-      <InlineErrorMessagePopoverContent
-        errorMessage={errorMessage}
-        onClear={() => setErrorMessage('')}
-      />
+      <InlineErrorMessagePopoverContent errorMessage={errorMessage} onClear={() => setErrorMessage('')} />
     </Popover>
   )
 }
@@ -544,17 +485,10 @@ function GithubRepoButton() {
   const repoUrl = `https://github.com/${githubOwner}/${githubRepo}${githubFolder ? '/' + githubFolder.replace(/^\/+/, '') : ''}`
 
   const hasSyncInfo =
-    siteBranch?.lastGithubSyncAt &&
-    siteBranch?.lastGithubSyncCommit &&
-    branchData.site.githubInstallations?.length
+    siteBranch?.lastGithubSyncAt && siteBranch?.lastGithubSyncCommit && branchData.site.githubInstallations?.length
 
   const syncInfo = (() => {
-    if (
-      !hasSyncInfo ||
-      !siteBranch?.lastGithubSyncAt ||
-      !siteBranch?.lastGithubSyncCommit
-    )
-      return null
+    if (!hasSyncInfo || !siteBranch?.lastGithubSyncAt || !siteBranch?.lastGithubSyncCommit) return null
 
     const timeAgo = formatDistanceToNow(new Date(siteBranch.lastGithubSyncAt), {
       addSuffix: true,
@@ -579,9 +513,7 @@ function GithubRepoButton() {
         <TooltipContent className='max-w-xs'>
           <div className='space-y-1'>
             <div className='font-medium'>GitHub Repository</div>
-            <div className='text-xs text-muted-foreground'>
-              Last sync: {syncInfo.timeAgo}
-            </div>
+            <div className='text-xs text-muted-foreground'>Last sync: {syncInfo.timeAgo}</div>
             <div className='text-xs'>
               Commit:{' '}
               <a
@@ -601,13 +533,7 @@ function GithubRepoButton() {
   )
 }
 
-function InlineErrorMessagePopoverContent({
-  errorMessage,
-  onClear,
-}: {
-  errorMessage: string
-  onClear: () => void
-}) {
+function InlineErrorMessagePopoverContent({ errorMessage, onClear }: { errorMessage: string; onClear: () => void }) {
   if (!errorMessage) return null
   return (
     <>
@@ -643,9 +569,9 @@ function GitHubSyncButton() {
   const branchData = useRouteLoaderData(
     'routes/org.$orgId.branch.$branchId',
   ) as BranchRoute.ComponentProps['loaderData']
-  const chatData = useRouteLoaderData(
-    'routes/org.$orgId.branch.$branchId.chat.$chatId._index',
-  ) as Route.ComponentProps['loaderData'] | undefined
+  const chatData = useRouteLoaderData('routes/org.$orgId.branch.$branchId.chat.$chatId._index') as
+    | Route.ComponentProps['loaderData']
+    | undefined
   const githubBranch = chatData?.siteBranch?.githubBranch
 
   const [errorMessage, setErrorMessage] = useState('')
@@ -685,12 +611,7 @@ function GitHubSyncButton() {
       <PopoverTrigger asChild>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              isLoading={isLoading}
-              onClick={sync}
-              variant='secondary'
-              disabled={isLoading}
-            >
+            <Button isLoading={isLoading} onClick={sync} variant='secondary' disabled={isLoading}>
               Sync With GitHub
             </Button>
           </TooltipTrigger>
@@ -698,10 +619,7 @@ function GitHubSyncButton() {
         </Tooltip>
       </PopoverTrigger>
 
-      <InlineErrorMessagePopoverContent
-        errorMessage={errorMessage}
-        onClear={() => setErrorMessage('')}
-      />
+      <InlineErrorMessagePopoverContent errorMessage={errorMessage} onClear={() => setErrorMessage('')} />
     </Popover>
   )
 }
@@ -711,9 +629,9 @@ function InstallGithubAppToolbar() {
   const branchData = useRouteLoaderData(
     'routes/org.$orgId.branch.$branchId',
   ) as BranchRoute.ComponentProps['loaderData']
-  const chatData = useRouteLoaderData(
-    'routes/org.$orgId.branch.$branchId.chat.$chatId._index',
-  ) as Route.ComponentProps['loaderData'] | undefined
+  const chatData = useRouteLoaderData('routes/org.$orgId.branch.$branchId.chat.$chatId._index') as
+    | Route.ComponentProps['loaderData']
+    | undefined
 
   const githubOwner = branchData.site.githubOwner
   const isChatGenerating = useWebsiteState((state) => state.isChatGenerating)

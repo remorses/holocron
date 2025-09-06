@@ -2,10 +2,7 @@
 import { cva } from 'class-variance-authority'
 import { cn } from 'docs-website/src/lib/cn'
 import { buttonVariants } from 'fumadocs-ui/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-} from 'fumadocs-ui/components/ui/collapsible'
+import { Collapsible, CollapsibleContent } from 'fumadocs-ui/components/ui/collapsible'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 import { type SyntheticEvent, useEffect, useState, useTransition } from 'react'
 import { useLocation } from 'react-router'
@@ -36,11 +33,7 @@ interface Result extends Feedback {
   response?: ActionResponse
 }
 
-export function Rate({
-  onRateAction,
-}: {
-  onRateAction: (url: string, feedback: Feedback) => Promise<ActionResponse>
-}) {
+export function Rate({ onRateAction }: { onRateAction: (url: string, feedback: Feedback) => Promise<ActionResponse> }) {
   const location = useLocation()
   const url = location?.pathname || ''
   const [previous, setPrevious] = useState<Result | null>(null)
@@ -166,11 +159,7 @@ export function Rate({
                 }
               }}
             />
-            {error && (
-              <div className='text-red-500 text-sm bg-red-50 p-2 rounded border'>
-                {error}
-              </div>
-            )}
+            {error && <div className='text-red-500 text-sm bg-red-50 p-2 rounded border'>{error}</div>}
             <button
               type='submit'
               className={cn(buttonVariants({ color: 'outline' }), 'w-fit px-3')}

@@ -35,9 +35,7 @@ export function UploadButton({
         throw new Error('No branch available for upload')
       }
 
-      const filename = encodeURIComponent(
-        slugKebabCaseKeepExtension(`${v4()}-${file.name || 'image'}`),
-      )
+      const filename = encodeURIComponent(slugKebabCaseKeepExtension(`${v4()}-${file.name || 'image'}`))
       const contentType = file.type
       const { error, data } = await apiClient.api.createUploadSignedUrl.post({
         siteId,

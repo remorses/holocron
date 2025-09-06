@@ -44,14 +44,10 @@ const importResult = await importFromGitHub({
 const importTime = (Date.now() - importStartTime) / 1000
 console.log(`✅ Import completed in ${importTime.toFixed(2)} seconds`)
 console.log(`📁 Files imported: ${importResult.filesImported}`)
-console.log(
-  `💾 Total size: ${(importResult.totalSizeBytes / 1024 / 1024).toFixed(2)} MB`,
-)
+console.log(`💾 Total size: ${(importResult.totalSizeBytes / 1024 / 1024).toFixed(2)} MB`)
 
 if (importResult.filesImported === 0) {
-  console.error(
-    '❌ No files were imported. Please check the repository and path.',
-  )
+  console.error('❌ No files were imported. Please check the repository and path.')
   process.exit(1)
 }
 
@@ -59,9 +55,7 @@ if (importResult.filesImported === 0) {
 const stats = await dataset.getDatasetSize({ datasetId })
 console.log(`📈 Sections created: ${stats.sectionCount}`)
 
-console.log(
-  `⏱️  Total setup time: ${((Date.now() - upsertStartTime) / 1000).toFixed(2)} seconds`,
-)
+console.log(`⏱️  Total setup time: ${((Date.now() - upsertStartTime) / 1000).toFixed(2)} seconds`)
 
 // Define search queries to benchmark
 const searchQueries = [
@@ -80,9 +74,7 @@ try {
     query: searchQueries[0].query,
     perPage: 10,
   })
-  console.log(
-    `✅ Search working! Found ${testResult.results.length} results for "${searchQueries[0].query}"`,
-  )
+  console.log(`✅ Search working! Found ${testResult.results.length} results for "${searchQueries[0].query}"`)
   if (testResult.results.length > 0) {
     console.log(
       `   First result: ${testResult.results[0].filename} - ${testResult.results[0].snippet.substring(0, 50)}...`,
@@ -102,9 +94,7 @@ for (const { query, description } of searchQueries) {
       query,
       perPage: 20,
     })
-    console.log(
-      `  "${query}" (${description}): ${result.results.length} results`,
-    )
+    console.log(`  "${query}" (${description}): ${result.results.length} results`)
   } catch (error: any) {
     console.error(`  "${query}": ERROR - ${error.message}`)
   }
@@ -156,9 +146,7 @@ for (const result of results) {
 // Calculate and show overall average
 const overallAvg = results.reduce((sum, r) => sum + r.avg, 0) / results.length
 console.log('------------------|----------|----------|----------')
-console.log(
-  `Overall Average   | ${overallAvg.toFixed(2).padStart(8)} |          |`,
-)
+console.log(`Overall Average   | ${overallAvg.toFixed(2).padStart(8)} |          |`)
 
 // Cleanup
 console.log('\n🧹 Cleaning up...')

@@ -36,9 +36,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -57,11 +55,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -71,8 +65,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'oYA80aR0m',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'oYA80aR0m',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -121,12 +114,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1dbsmb9',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1dbsmb9', className, classNames)}
             data-framer-name={'Checkmark'}
             layoutDependency={layoutDependency}
             layoutId={'oYA80aR0m'}
@@ -153,8 +141,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutId: 'U4L2cGmDC',
                 name: 'Checkmark',
                 style: {
-                  '--13bnw74':
-                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                  '--13bnw74': 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                 },
               })}
             {isDisplayed1() &&
@@ -166,8 +153,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutId: 'L8YMkR14s',
                 name: 'X',
                 style: {
-                  '--13bnw74':
-                    'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                  '--13bnw74': 'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
                 },
               })}
           </motion.div>
@@ -261,17 +247,11 @@ stdin_default3.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -319,9 +299,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

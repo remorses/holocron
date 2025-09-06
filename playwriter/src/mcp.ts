@@ -211,9 +211,7 @@ async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
           if (response) {
             entry.status = response.status()
             entry.duration = Date.now() - startTime
-            entry.size = response.headers()['content-length']
-              ? parseInt(response.headers()['content-length'])
-              : 0
+            entry.size = response.headers()['content-length'] ? parseInt(response.headers()['content-length']) : 0
 
             // Get or create requests array for this page
             let pageRequests = state.networkRequests.get(page)
@@ -252,135 +250,122 @@ const server = new McpServer({
 })
 
 // Tool 1: New Page - Creates a new browser page
-server.tool(
-  'new_page',
-  'Create a new browser page in the shared Chrome instance',
-  {},
-  async () => {
-    try {
-      const { browser, page } = await ensureConnection()
+server.tool('new_page', 'Create a new browser page in the shared Chrome instance', {}, async () => {
+  try {
+    const { browser, page } = await ensureConnection()
 
-      // Always create a new page
-      const context = browser.contexts()[0] || (await browser.newContext())
-      const newPage = await context.newPage()
+    // Always create a new page
+    const context = browser.contexts()[0] || (await browser.newContext())
+    const newPage = await context.newPage()
 
-      // Set user agent on new page
-      const { default: UserAgent } = await import('user-agents')
-      const userAgent = new UserAgent({
-        platform: 'MacIntel',
-        deviceCategory: 'desktop',
-      })
-      await newPage.setExtraHTTPHeaders({
-        'User-Agent': userAgent.toString(),
-      })
+    // Set user agent on new page
+    const { default: UserAgent } = await import('user-agents')
+    const userAgent = new UserAgent({
+      platform: 'MacIntel',
+      deviceCategory: 'desktop',
+    })
+    await newPage.setExtraHTTPHeaders({
+      'User-Agent': userAgent.toString(),
+    })
 
-      // Update state to use the new page
-      state.page = newPage
+    // Update state to use the new page
+    state.page = newPage
 
-      // Set up event listeners on the new page
-      newPage.on('console', (msg) => {
-        // Get or create logs array for this page
-        let pageLogs = state.consoleLogs.get(newPage)
-        if (!pageLogs) {
-          pageLogs = []
-          state.consoleLogs.set(newPage, pageLogs)
-        }
+    // Set up event listeners on the new page
+    newPage.on('console', (msg) => {
+      // Get or create logs array for this page
+      let pageLogs = state.consoleLogs.get(newPage)
+      if (!pageLogs) {
+        pageLogs = []
+        state.consoleLogs.set(newPage, pageLogs)
+      }
 
-        // Add new log
-        pageLogs.push({
-          type: msg.type(),
-          text: msg.text(),
-          timestamp: Date.now(),
-          location: msg.location(),
-        })
-
-        // Keep only last 1000 logs
-        if (pageLogs.length > 1000) {
-          pageLogs.shift()
-        }
+      // Add new log
+      pageLogs.push({
+        type: msg.type(),
+        text: msg.text(),
+        timestamp: Date.now(),
+        location: msg.location(),
       })
 
-      // Clean up logs and network requests when page is closed
-      newPage.on('close', () => {
-        state.consoleLogs.delete(newPage)
-        state.networkRequests.delete(newPage)
-      })
+      // Keep only last 1000 logs
+      if (pageLogs.length > 1000) {
+        pageLogs.shift()
+      }
+    })
 
-      newPage.on('request', (request) => {
-        const startTime = Date.now()
-        const entry: Partial<NetworkRequest> = {
-          url: request.url(),
-          method: request.method(),
-          headers: request.headers(),
-          timestamp: startTime,
-        }
+    // Clean up logs and network requests when page is closed
+    newPage.on('close', () => {
+      state.consoleLogs.delete(newPage)
+      state.networkRequests.delete(newPage)
+    })
 
-        request
-          .response()
-          .then((response) => {
-            if (response) {
-              entry.status = response.status()
-              entry.duration = Date.now() - startTime
-              entry.size = response.headers()['content-length']
-                ? parseInt(response.headers()['content-length'])
-                : 0
+    newPage.on('request', (request) => {
+      const startTime = Date.now()
+      const entry: Partial<NetworkRequest> = {
+        url: request.url(),
+        method: request.method(),
+        headers: request.headers(),
+        timestamp: startTime,
+      }
 
-              // Get or create requests array for this page
-              let pageRequests = state.networkRequests.get(newPage)
-              if (!pageRequests) {
-                pageRequests = []
-                state.networkRequests.set(newPage, pageRequests)
-              }
+      request
+        .response()
+        .then((response) => {
+          if (response) {
+            entry.status = response.status()
+            entry.duration = Date.now() - startTime
+            entry.size = response.headers()['content-length'] ? parseInt(response.headers()['content-length']) : 0
 
-              // Add new request
-              pageRequests.push(entry as NetworkRequest)
-
-              // Keep only last 1000 requests
-              if (pageRequests.length > 1000) {
-                pageRequests.shift()
-              }
+            // Get or create requests array for this page
+            let pageRequests = state.networkRequests.get(newPage)
+            if (!pageRequests) {
+              pageRequests = []
+              state.networkRequests.set(newPage, pageRequests)
             }
-          })
-          .catch(() => {
-            // Handle response errors silently
-          })
-      })
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Created new page. URL: ${newPage.url()}. Total pages: ${context.pages().length}`,
-          },
-        ],
-      }
-    } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Failed to create new page: ${error.message}`,
-          },
-        ],
-        isError: true,
-      }
+            // Add new request
+            pageRequests.push(entry as NetworkRequest)
+
+            // Keep only last 1000 requests
+            if (pageRequests.length > 1000) {
+              pageRequests.shift()
+            }
+          }
+        })
+        .catch(() => {
+          // Handle response errors silently
+        })
+    })
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Created new page. URL: ${newPage.url()}. Total pages: ${context.pages().length}`,
+        },
+      ],
     }
-  },
-)
+  } catch (error: any) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Failed to create new page: ${error.message}`,
+        },
+      ],
+      isError: true,
+    }
+  }
+})
 
 // Tool 2: Console Logs
 server.tool(
   'console_logs',
   'Retrieve console messages from the page',
   {
-    limit: z
-      .number()
-      .default(50)
-      .describe('Maximum number of messages to return'),
-    type: z
-      .enum(['log', 'info', 'warning', 'error', 'debug'])
-      .optional()
-      .describe('Filter by message type'),
+    limit: z.number().default(50).describe('Maximum number of messages to return'),
+    type: z.enum(['log', 'info', 'warning', 'error', 'debug']).optional().describe('Filter by message type'),
     offset: z.number().default(0).describe('Start from this index'),
   },
   async ({ limit, type, offset }) => {
@@ -446,18 +431,9 @@ server.tool(
   'network_history',
   'Get history of network requests',
   {
-    limit: z
-      .number()
-      .default(50)
-      .describe('Maximum number of requests to return'),
-    urlPattern: z
-      .string()
-      .optional()
-      .describe('Filter by URL pattern (supports wildcards)'),
-    method: z
-      .enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
-      .optional()
-      .describe('Filter by HTTP method'),
+    limit: z.number().default(50).describe('Maximum number of requests to return'),
+    urlPattern: z.string().optional().describe('Filter by URL pattern (supports wildcards)'),
+    method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']).optional().describe('Filter by HTTP method'),
     statusCode: z
       .object({
         min: z.number().optional(),
@@ -465,10 +441,7 @@ server.tool(
       })
       .optional()
       .describe('Filter by status code range'),
-    includeBody: z
-      .boolean()
-      .default(false)
-      .describe('Include request/response bodies'),
+    includeBody: z.boolean().default(false).describe('Include request/response bodies'),
   },
   async ({ limit, urlPattern, method, statusCode, includeBody }) => {
     try {
@@ -535,62 +508,54 @@ server.tool(
 )
 
 // Tool 4: Accessibility Snapshot - Get page accessibility tree as JSON
-server.tool(
-  'accessibility_snapshot',
-  'Get the accessibility snapshot of the current page as JSON',
-  {},
-  async ({}) => {
-    try {
-      const { page } = await ensureConnection()
+server.tool('accessibility_snapshot', 'Get the accessibility snapshot of the current page as JSON', {}, async ({}) => {
+  try {
+    const { page } = await ensureConnection()
 
-      // Check if the method exists
-      if (typeof (page as any)._snapshotForAI !== 'function') {
-        // Fall back to regular accessibility snapshot
-        const snapshot = await page.accessibility.snapshot({
-          interestingOnly: true,
-          root: undefined,
-        })
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(snapshot, null, 2),
-            },
-          ],
-        }
-      }
-
-      const snapshot = await (page as any)._snapshotForAI()
+    // Check if the method exists
+    if (typeof (page as any)._snapshotForAI !== 'function') {
+      // Fall back to regular accessibility snapshot
+      const snapshot = await page.accessibility.snapshot({
+        interestingOnly: true,
+        root: undefined,
+      })
 
       return {
         content: [
           {
             type: 'text',
-            text: snapshot,
+            text: JSON.stringify(snapshot, null, 2),
           },
         ],
-      }
-    } catch (error: any) {
-      console.error('Accessibility snapshot error:', error)
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Failed to get accessibility snapshot: ${error.message}`,
-          },
-        ],
-        isError: true,
       }
     }
-  },
-)
+
+    const snapshot = await (page as any)._snapshotForAI()
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: snapshot,
+        },
+      ],
+    }
+  } catch (error: any) {
+    console.error('Accessibility snapshot error:', error)
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Failed to get accessibility snapshot: ${error.message}`,
+        },
+      ],
+      isError: true,
+    }
+  }
+})
 
 // Tool 5: Execute - Run arbitrary JavaScript code with page and context in scope
-const promptContent = fs.readFileSync(
-  path.join(path.dirname(new URL(import.meta.url).pathname), 'prompt.md'),
-  'utf-8',
-)
+const promptContent = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), 'prompt.md'), 'utf-8')
 
 server.tool(
   'execute',
@@ -601,10 +566,7 @@ server.tool(
       .describe(
         'JavaScript code to execute with page and context in scope. Should be one line, using ; to execute multiple statements. To execute complex actions call execute multiple times. ',
       ),
-    timeout: z
-      .number()
-      .default(3000)
-      .describe('Timeout in milliseconds for code execution (default: 3000ms)'),
+    timeout: z.number().default(3000).describe('Timeout in milliseconds for code execution (default: 3000ms)'),
   },
   async ({ code, timeout }) => {
     const { page } = await ensureConnection()
@@ -649,11 +611,7 @@ server.tool(
       const result = await Promise.race([
         executeCode(page, context, customConsole),
         new Promise((_, reject) =>
-          setTimeout(
-            () =>
-              reject(new Error(`Code execution timed out after ${timeout}ms`)),
-            timeout,
-          ),
+          setTimeout(() => reject(new Error(`Code execution timed out after ${timeout}ms`)), timeout),
         ),
       ])
 

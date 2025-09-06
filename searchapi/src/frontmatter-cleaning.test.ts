@@ -72,12 +72,8 @@ This section mentions cleaning in the content.
         `)
 
     // Find the frontmatter section
-    const frontmatterSection = searchResults.results.find(
-      (r) => r.sectionSlug === '',
-    )
-    const contentSection = searchResults.results.find(
-      (r) => r.sectionSlug === 'content-about-cleaning',
-    )
+    const frontmatterSection = searchResults.results.find((r) => r.sectionSlug === '')
+    const contentSection = searchResults.results.find((r) => r.sectionSlug === 'content-about-cleaning')
 
     // Verify frontmatter has proper cleanedSnippet with extracted text values
     expect(frontmatterSection).toBeDefined()
@@ -85,9 +81,7 @@ This section mentions cleaning in the content.
       `"Test Page About Cleaning This page tests frontmatter cleaning test cleaning frontmatter Test Author"`,
     )
     expect(frontmatterSection?.snippet).toContain('---')
-    expect(frontmatterSection?.snippet).toContain(
-      'title: Test Page About Cleaning',
-    )
+    expect(frontmatterSection?.snippet).toContain('title: Test Page About Cleaning')
 
     // Verify content section has proper cleanedSnippet
     expect(contentSection).toBeDefined()
@@ -172,12 +166,8 @@ Regular content with structures mentioned.
         `)
 
     // Verify both sections are found
-    const frontmatterSection = searchResults.results.find(
-      (r) => r.sectionSlug === '',
-    )
-    const contentSection = searchResults.results.find(
-      (r) => r.sectionSlug === 'main-content',
-    )
+    const frontmatterSection = searchResults.results.find((r) => r.sectionSlug === '')
+    const contentSection = searchResults.results.find((r) => r.sectionSlug === 'main-content')
 
     // Frontmatter should have cleaned content with extracted YAML values
     expect(frontmatterSection).toBeDefined()
@@ -235,9 +225,7 @@ This section should still be searchable even though frontmatter is invalid.
     )
 
     // Find the content section
-    const contentSection = contentResults.results.find(
-      (r) => r.sectionSlug === 'valid-content-section',
-    )
+    const contentSection = contentResults.results.find((r) => r.sectionSlug === 'valid-content-section')
 
     // Frontmatter with invalid YAML should have empty cleanedSnippet
     expect(invalidYamlFrontmatter).toBeDefined()

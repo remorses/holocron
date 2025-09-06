@@ -3,9 +3,7 @@ import { createElement, ReactSVGElement } from 'react'
 
 export function getIconJsx({ provider = 'lucide', key }) {
   if (provider !== 'lucide') {
-    console.error(
-      `Provider "${provider}" is not supported. Only 'lucide' is supported at this time.`,
-    )
+    console.error(`Provider "${provider}" is not supported. Only 'lucide' is supported at this time.`)
     return null
   }
   if (!key) return null

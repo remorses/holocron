@@ -4,29 +4,17 @@ import { createTrackedSelector } from 'react-tracked'
 
 import * as Ariakit from '@ariakit/react'
 import { create } from 'zustand'
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useEffect,
-  useRef,
-  useLayoutEffect,
-} from 'react'
+import { createContext, useContext, useMemo, useEffect, useRef, useLayoutEffect } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 import { ComboboxStore } from '@ariakit/react'
 
 import * as cookie from 'cookie'
 
-const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(
-  null,
-)
+const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(null)
 
 import { shallow } from 'zustand/shallow'
 import { flushSync } from 'react-dom'
-import {
-  CONTESTO_DRAFT_MESSAGE_KEY,
-  CONTESTO_SUBMIT_ON_LOAD,
-} from '../lib/constants.js'
+import { CONTESTO_DRAFT_MESSAGE_KEY, CONTESTO_SUBMIT_ON_LOAD } from '../lib/constants.js'
 
 function useShallowStable<T>(value: T): T {
   const ref = useRef(value)
@@ -54,9 +42,7 @@ const ChatProvider = (props: {
       },
       stop() {
         // console.trace('stop')
-        store
-          .getState()
-          .abortController.abort('called stop() to stop ai generation')
+        store.getState().abortController.abort('called stop() to stop ai generation')
       },
       setDraftText(text) {
         store.setState({ draftText: text })
@@ -87,20 +73,13 @@ const ChatProvider = (props: {
     const generateId = createIdGenerator()
     const assistantMessageId = generateId()
     let userMessageId = generateId()
-    const {
-      draftText: draftText = '',
-      messages,
-      isGenerating,
-      attachedFiles = [],
-    } = store.getState()
+    const { draftText: draftText = '', messages, isGenerating, attachedFiles = [] } = store.getState()
     if (isGenerating) {
       return
     }
 
     if (!draftText.trim() && attachedFiles.length === 0) {
-      const lastUserMessage = [...messages]
-        .reverse()
-        .find((msg) => msg.role === 'user')
+      const lastUserMessage = [...messages].reverse().find((msg) => msg.role === 'user')
       userMessageId = lastUserMessage?.id || userMessageId
       flushSync(() => {
         store.setState({
@@ -152,18 +131,14 @@ const ChatProvider = (props: {
     }
 
     requestAnimationFrame(() => {
-      const messageElement = document.querySelector(
-        `[data-message-id="${userMessageId}"]`,
-      )
+      const messageElement = document.querySelector(`[data-message-id="${userMessageId}"]`)
       if (messageElement) {
         messageElement.scrollIntoView({
           behavior: 'smooth',
           block: 'start',
         })
       } else {
-        console.warn(
-          `Message element with id ${userMessageId} not found for scrolling`,
-        )
+        console.warn(`Message element with id ${userMessageId} not found for scrolling`)
       }
     })
 
@@ -181,10 +156,7 @@ const ChatProvider = (props: {
       let messagesWithoutAssistant = currentMessages.slice(0, -1)
       store.setState({
         messages: messagesWithoutAssistant,
-        assistantErrorMessage:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred',
+        assistantErrorMessage: error instanceof Error ? error.message : 'An unexpected error occurred',
       })
     } finally {
       store.setState({
@@ -208,22 +180,16 @@ const ChatProvider = (props: {
   useLayoutEffect(() => {
     console.log(`chat remounted, scrolling into the user message`)
     const messages = stableInitialState.messages || []
-    const lastUserMessage = [...messages]
-      .reverse()
-      .find((msg) => msg.role === 'user')
+    const lastUserMessage = [...messages].reverse().find((msg) => msg.role === 'user')
     const userMessageId = lastUserMessage?.id
-    const messageElement = document.querySelector(
-      `[data-message-id="${userMessageId}"]`,
-    )
+    const messageElement = document.querySelector(`[data-message-id="${userMessageId}"]`)
     if (messageElement) {
       messageElement.scrollIntoView({
         behavior: 'instant',
         block: 'start',
       })
     } else {
-      console.warn(
-        `Message element with id ${userMessageId} not found for scrolling initial message`,
-      )
+      console.warn(`Message element with id ${userMessageId} not found for scrolling initial message`)
     }
   }, [])
 
@@ -253,23 +219,17 @@ const ChatProvider = (props: {
     const unsubscribe = store.subscribe((state, prevState) => {
       if (state.draftText !== prevState.draftText) {
         const encodedDraft = encodeURIComponent(state.draftText || '')
-        document.cookie = cookie.serialize(
-          CONTESTO_DRAFT_MESSAGE_KEY,
-          encodedDraft,
-          {
-            path: '/',
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-          },
-        )
+        document.cookie = cookie.serialize(CONTESTO_DRAFT_MESSAGE_KEY, encodedDraft, {
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        })
       }
     })
 
     return unsubscribe
   }, [store, props.initialValue.draftText])
 
-  return (
-    <ChatContext.Provider value={store}>{props.children}</ChatContext.Provider>
-  )
+  return <ChatContext.Provider value={store}>{props.children}</ChatContext.Provider>
 }
 
 export let useChatContext = () => {
@@ -282,9 +242,7 @@ export let useChatContext = () => {
   return trackedSelector()
 }
 
-let useChatState = ((
-  selector: Parameters<UseBoundStore<StoreApi<ChatState>>>[0],
-) => {
+let useChatState = ((selector: Parameters<UseBoundStore<StoreApi<ChatState>>>[0]) => {
   const store = useContext(ChatContext)
   if (store === null) {
     throw new Error('Missing provider for chat context')

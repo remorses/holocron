@@ -4,12 +4,7 @@ import * as SliderPrimitive from '@radix-ui/react-slider'
 import * as React from 'react'
 
 import { cn } from 'website/src/lib/utils'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from 'website/src/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from 'website/src/components/ui/tooltip'
 
 function Slider({
   className,
@@ -25,11 +20,7 @@ function Slider({
   tooltipContent?: (value: number) => React.ReactNode
 }) {
   const [internalValues, setInternalValues] = React.useState<number[]>(
-    Array.isArray(value)
-      ? value
-      : Array.isArray(defaultValue)
-        ? defaultValue
-        : [min, max],
+    Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max],
   )
 
   React.useEffect(() => {
@@ -115,9 +106,7 @@ function Slider({
       >
         <SliderPrimitive.Range
           data-slot='slider-range'
-          className={cn(
-            'bg-primary absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full',
-          )}
+          className={cn('bg-primary absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full')}
         />
       </SliderPrimitive.Track>
       {internalValues.map((value, index) => (

@@ -35,10 +35,7 @@ function RollingText({
   let absoluteLineHeightPx
   if (typeof rawLineHeight === 'number') {
     absoluteLineHeightPx = fontSizeNum * rawLineHeight
-  } else if (
-    typeof rawLineHeight === 'string' &&
-    rawLineHeight.includes('em')
-  ) {
+  } else if (typeof rawLineHeight === 'string' && rawLineHeight.includes('em')) {
     const emValue = parseFloat(rawLineHeight) || 1.2
     absoluteLineHeightPx = fontSizeNum * emValue
   } else if (typeof rawLineHeight === 'string') {
@@ -48,9 +45,7 @@ function RollingText({
     absoluteLineHeightPx = fontSizeNum * 1.2
   }
   const absoluteLineHeightStr =
-    typeof absoluteLineHeightPx === 'number'
-      ? `${absoluteLineHeightPx}px`
-      : absoluteLineHeightPx
+    typeof absoluteLineHeightPx === 'number' ? `${absoluteLineHeightPx}px` : absoluteLineHeightPx
   const yOffset = `-${absoluteLineHeightStr}`
   const variableFontStyles = variable
     ? {
@@ -88,8 +83,7 @@ function RollingText({
     boxSizing: 'border-box',
   }
   const spanVariants = { initial: { y: '0%' }, roll: { y: yOffset } }
-  const baseDuration =
-    typeof transition?.duration === 'number' ? transition.duration : 0.5
+  const baseDuration = typeof transition?.duration === 'number' ? transition.duration : 0.5
   const staggerFactor = stagger / 100
   const animateState = state === 'Roll' ? 'roll' : 'initial'
   return /* @__PURE__ */ _jsxs('div', {
@@ -100,10 +94,7 @@ function RollingText({
         style: variableFontStyles,
         children: [...text].map((str, index) => {
           const charIndex = reverse ? text.length - 1 - index : index
-          const delay =
-            text.length > 0
-              ? (baseDuration / text.length) * charIndex * staggerFactor
-              : 0
+          const delay = text.length > 0 ? (baseDuration / text.length) * charIndex * staggerFactor : 0
           const motionSpanStyle = {
             display: 'block',
             ...font,

@@ -5,13 +5,7 @@
  * tool documentation with chat examples.
  */
 
-import {
-  MCPPage,
-  MCPTool,
-  createSampleMCPTool,
-  createSampleChatExample,
-  sampleTools,
-} from './index'
+import { MCPPage, MCPTool, createSampleMCPTool, createSampleChatExample, sampleTools } from './index'
 import { getContext } from 'fumadocs-openapi/render/api-page'
 import { processDocument } from 'fumadocs-openapi/utils/process-document'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
@@ -26,14 +20,7 @@ export async function CompleteMCPToolExample() {
   const tool = createSampleMCPTool()
   const chatExample = createSampleChatExample()
 
-  return (
-    <MCPPage
-      tool={tool}
-      serverUrl='mcp://localhost:3000'
-      hasHead={true}
-      chatExample={chatExample}
-    />
-  )
+  return <MCPPage tool={tool} serverUrl='mcp://localhost:3000' hasHead={true} chatExample={chatExample} />
 }
 
 /**
@@ -85,8 +72,7 @@ export async function IndividualMCPToolExample() {
           toolCallId: 'call_1',
           toolName: 'read_file',
           output: {
-            content:
-              '{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}',
+            content: '{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}',
             size: 75,
           } as any,
         },
@@ -258,14 +244,7 @@ export async function CustomMCPToolExample() {
     },
   ]
 
-  return (
-    <MCPPage
-      tool={customTool}
-      serverUrl='mcp://api.example.com'
-      hasHead={true}
-      chatExample={customChatExample}
-    />
-  )
+  return <MCPPage tool={customTool} serverUrl='mcp://api.example.com' hasHead={true} chatExample={customChatExample} />
 }
 
 /**
@@ -343,8 +322,7 @@ export async function MCPServerResponseExample() {
           toolName: 'create_file',
           input: {
             path: './README.md',
-            content:
-              '# My Project\n\nThis is a sample project.\n\n## Getting Started\n\nTo get started...',
+            content: '# My Project\n\nThis is a sample project.\n\n## Getting Started\n\nTo get started...',
             overwrite: false,
           },
         },
@@ -367,18 +345,12 @@ export async function MCPServerResponseExample() {
     },
     {
       role: 'assistant',
-      content:
-        'Successfully created README.md! The file is 75 bytes and contains basic project information.',
+      content: 'Successfully created README.md! The file is 75 bytes and contains basic project information.',
     },
   ]
 
   return (
-    <MCPPage
-      tool={mcpServerTool}
-      serverUrl='mcp://filesystem.local'
-      hasHead={true}
-      chatExample={serverChatExample}
-    />
+    <MCPPage tool={mcpServerTool} serverUrl='mcp://filesystem.local' hasHead={true} chatExample={serverChatExample} />
   )
 }
 

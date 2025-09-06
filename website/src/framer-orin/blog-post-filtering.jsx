@@ -15,42 +15,22 @@ import {
 import { stdin_default as stdin_default3 } from './chunks/chunk-P5EPUU77.js'
 import './chunks/chunk-FBRPPHGN.js'
 import { stdin_default as stdin_default4 } from './chunks/chunk-EMZQEU5F.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-QHS5OC7F.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-QHS5OC7F.js'
 import { className, css, fonts } from './chunks/chunk-OUEV7UWA.js'
 import './chunks/chunk-6NFSISF2.js'
 import { Dither } from './chunks/chunk-25LPWLWQ.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunks/chunk-EAOTBDPC.js'
-import {
-  className as className5,
-  css as css5,
-  fonts as fonts5,
-} from './chunks/chunk-HYTEZIGR.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunks/chunk-EAOTBDPC.js'
+import { className as className5, css as css5, fonts as fonts5 } from './chunks/chunk-HYTEZIGR.js'
 import { stdin_default as stdin_default2 } from './chunks/chunk-5PWCC3XC.js'
 import { DashedBorderFrame } from './chunks/chunk-R527CHIA.js'
-import {
-  className as className4,
-  css as css4,
-  fonts as fonts4,
-} from './chunks/chunk-QKWA2WC3.js'
+import { className as className4, css as css4, fonts as fonts4 } from './chunks/chunk-QKWA2WC3.js'
 
 // virtual:blog-post-filtering
 import { Fragment as Fragment5 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/8oLcJiqBC1WI0eCJ0n2O/8u3NfB4Z0CCrolnq7zej/v8T4hRpu9.js
-import {
-  jsx as _jsx4,
-  jsxs as _jsxs4,
-  Fragment as _Fragment3,
-} from 'react/jsx-runtime'
+import { jsx as _jsx4, jsxs as _jsxs4, Fragment as _Fragment3 } from 'react/jsx-runtime'
 import {
   addFonts as addFonts4,
   addPropertyControls as addPropertyControls4,
@@ -74,21 +54,12 @@ import {
   useVariantState as useVariantState4,
   withCSS as withCSS4,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup4,
-  motion as motion4,
-  MotionConfigContext as MotionConfigContext4,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup4, motion as motion4, MotionConfigContext as MotionConfigContext4 } from 'unframer'
 import * as React4 from 'react'
 import { useRef as useRef4 } from 'react'
 
 // /:https://framerusercontent.com/modules/jyf9CHwKjeFqcEaDuO4g/wQHwKQ0C4mIQM5sy0tx7/U6USRjo97.js
-import {
-  addPropertyControls as e5,
-  ControlType as l2,
-  QueryCache as t4,
-  QueryEngine as a2,
-} from 'unframer'
+import { addPropertyControls as e5, ControlType as l2, QueryCache as t4, QueryEngine as a2 } from 'unframer'
 
 // /:https://framerusercontent.com/modules/jyf9CHwKjeFqcEaDuO4g/wQHwKQ0C4mIQM5sy0tx7/U6USRjo97-0.js
 import { ControlType as v } from 'unframer'
@@ -166,15 +137,13 @@ var f = u({
               if (!(!t6 || false !== t6.batch)) return 1
               var e7 = t6 && t6.maxBatchSize
               if (void 0 === e7) return 1 / 0
-              if ('number' != typeof e7 || e7 < 1)
-                throw TypeError('maxBatchSize must be a positive number: ' + e7)
+              if ('number' != typeof e7 || e7 < 1) throw TypeError('maxBatchSize must be a positive number: ' + e7)
               return e7
             })(e6)),
             (this._batchScheduleFn = (function (t6) {
               var e7 = t6 && t6.batchScheduleFn
               if (void 0 === e7) return i2
-              if ('function' != typeof e7)
-                throw TypeError('batchScheduleFn must be a function: ' + e7)
+              if ('function' != typeof e7) throw TypeError('batchScheduleFn must be a function: ' + e7)
               return e7
             })(e6)),
             (this._cacheKeyFn = (function (t6) {
@@ -183,8 +152,7 @@ var f = u({
                 return function (t7) {
                   return t7
                 }
-              if ('function' != typeof e7)
-                throw TypeError('cacheKeyFn must be a function: ' + e7)
+              if ('function' != typeof e7) throw TypeError('cacheKeyFn must be a function: ' + e7)
               return e7
             })(e6)),
             (this._cacheMap = (function (t6) {
@@ -192,15 +160,10 @@ var f = u({
               var e7 = t6 && t6.cacheMap
               if (void 0 === e7) return /* @__PURE__ */ new Map()
               if (null !== e7) {
-                var r3 = ['get', 'set', 'delete', 'clear'].filter(
-                  function (t7) {
-                    return e7 && 'function' != typeof e7[t7]
-                  },
-                )
-                if (0 !== r3.length)
-                  throw TypeError(
-                    'Custom cacheMap missing methods: ' + r3.join(', '),
-                  )
+                var r3 = ['get', 'set', 'delete', 'clear'].filter(function (t7) {
+                  return e7 && 'function' != typeof e7[t7]
+                })
+                if (0 !== r3.length) throw TypeError('Custom cacheMap missing methods: ' + r3.join(', '))
               }
               return e7
             })(e6)),
@@ -211,19 +174,10 @@ var f = u({
         return (
           (e52.load = function (t5) {
             if (null == t5)
-              throw TypeError(
-                'The loader.load() function must be called with a value, but got: ' +
-                  String(t5) +
-                  '.',
-              )
+              throw TypeError('The loader.load() function must be called with a value, but got: ' + String(t5) + '.')
             var e6 = (function (t6) {
                 var e7 = t6._batch
-                if (
-                  null !== e7 &&
-                  !e7.hasDispatched &&
-                  e7.keys.length < t6._maxBatchSize
-                )
-                  return e7
+                if (null !== e7 && !e7.hasDispatched && e7.keys.length < t6._maxBatchSize) return e7
                 var r4 = {
                   hasDispatched: false,
                   keys: [],
@@ -278,9 +232,7 @@ var f = u({
                         a22(e8)
                         for (var r6 = 0; r6 < e8.callbacks.length; r6++) {
                           var n4 = t8[r6]
-                          n4 instanceof Error
-                            ? e8.callbacks[r6].reject(n4)
-                            : e8.callbacks[r6].resolve(n4)
+                          n4 instanceof Error ? e8.callbacks[r6].reject(n4) : e8.callbacks[r6].resolve(n4)
                         }
                       }).catch(function (r6) {
                         s22(t7, e8, r6)
@@ -314,11 +266,7 @@ var f = u({
           }),
           (e52.loadMany = function (t5) {
             if (!o2(t5))
-              throw TypeError(
-                'The loader.loadMany() function must be called with Array<key> but got: ' +
-                  t5 +
-                  '.',
-              )
+              throw TypeError('The loader.loadMany() function must be called with Array<key> but got: ' + t5 + '.')
             for (var e6 = [], r3 = 0; r3 < t5.length; r3++)
               e6.push(
                 this.load(t5[r3]).catch(function (t6) {
@@ -345,9 +293,7 @@ var f = u({
               var n3,
                 i3 = this._cacheKeyFn(t5)
               void 0 === r3.get(i3) &&
-                (e6 instanceof Error
-                  ? (n3 = Promise.reject(e6)).catch(function () {})
-                  : (n3 = Promise.resolve(e6)),
+                (e6 instanceof Error ? (n3 = Promise.reject(e6)).catch(function () {}) : (n3 = Promise.resolve(e6)),
                 r3.set(i3, n3))
             }
             return this
@@ -372,22 +318,17 @@ var f = u({
               }
     function s22(t42, e52, r3) {
       a22(e52)
-      for (var n3 = 0; n3 < e52.keys.length; n3++)
-        t42.clear(e52.keys[n3]), e52.callbacks[n3].reject(r3)
+      for (var n3 = 0; n3 < e52.keys.length; n3++) t42.clear(e52.keys[n3]), e52.callbacks[n3].reject(r3)
     }
     function a22(t42) {
-      if (t42.cacheHits)
-        for (var e52 = 0; e52 < t42.cacheHits.length; e52++)
-          t42.cacheHits[e52]()
+      if (t42.cacheHits) for (var e52 = 0; e52 < t42.cacheHits.length; e52++) t42.cacheHits[e52]()
     }
     function o2(t42) {
       return (
         'object' == typeof t42 &&
         null !== t42 &&
         'number' == typeof t42.length &&
-        (0 === t42.length ||
-          (t42.length > 0 &&
-            Object.prototype.hasOwnProperty.call(t42, t42.length - 1)))
+        (0 === t42.length || (t42.length > 0 && Object.prototype.hasOwnProperty.call(t42, t42.length - 1)))
       )
     }
     e42.exports = n22
@@ -511,10 +452,7 @@ function p(t32) {
 var m = 'undefined' != typeof window
 var w = m && 'function' == typeof window.requestIdleCallback
 function I(t32, ...e42) {
-  if (!t32)
-    throw Error(
-      'Assertion Error' + (e42.length > 0 ? ': ' + e42.join(' ') : ''),
-    )
+  if (!t32) throw Error('Assertion Error' + (e42.length > 0 ? ': ' + e42.join(' ') : ''))
 }
 function b(t32) {
   throw Error(`Unexpected value: ${t32}`)
@@ -549,8 +487,7 @@ var M = {
   BigInt64: BigInt(2) ** BigInt(63) - BigInt(1),
 }
 function T(t32, e42, r22, n22) {
-  I(t32 >= e42, t32, 'outside lower bound for', n22),
-    I(t32 <= r22, t32, 'outside upper bound for', n22)
+  I(t32 >= e42, t32, 'outside lower bound for', n22), I(t32 <= r22, t32, 'outside upper bound for', n22)
 }
 var F = class {
   getOffset() {
@@ -571,23 +508,17 @@ var F = class {
   writeUint8(t32) {
     T(t32, E.Uint8, M.Uint8, 'Uint8')
     let e42 = d.Uint8
-    this.ensureLength(e42),
-      this.view.setUint8(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setUint8(this.offset, t32), (this.offset += e42)
   }
   writeUint16(t32) {
     T(t32, E.Uint16, M.Uint16, 'Uint16')
     let e42 = d.Uint16
-    this.ensureLength(e42),
-      this.view.setUint16(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setUint16(this.offset, t32), (this.offset += e42)
   }
   writeUint32(t32) {
     T(t32, E.Uint32, M.Uint32, 'Uint32')
     let e42 = d.Uint32
-    this.ensureLength(e42),
-      this.view.setUint32(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setUint32(this.offset, t32), (this.offset += e42)
   }
   writeUint64(t32) {
     T(t32, E.Uint64, M.Uint64, 'Uint64')
@@ -597,30 +528,22 @@ var F = class {
   writeBigUint64(t32) {
     T(t32, E.BigUint64, M.BigUint64, 'BigUint64')
     let e42 = d.BigUint64
-    this.ensureLength(e42),
-      this.view.setBigUint64(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setBigUint64(this.offset, t32), (this.offset += e42)
   }
   writeInt8(t32) {
     T(t32, E.Int8, M.Int8, 'Int8')
     let e42 = d.Int8
-    this.ensureLength(e42),
-      this.view.setInt8(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setInt8(this.offset, t32), (this.offset += e42)
   }
   writeInt16(t32) {
     T(t32, E.Int16, M.Int16, 'Int16')
     let e42 = d.Int16
-    this.ensureLength(e42),
-      this.view.setInt16(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setInt16(this.offset, t32), (this.offset += e42)
   }
   writeInt32(t32) {
     T(t32, E.Int32, M.Int32, 'Int32')
     let e42 = d.Int32
-    this.ensureLength(e42),
-      this.view.setInt32(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setInt32(this.offset, t32), (this.offset += e42)
   }
   writeInt64(t32) {
     T(t32, E.Int64, M.Int64, 'Int64')
@@ -630,27 +553,19 @@ var F = class {
   writeBigInt64(t32) {
     T(t32, E.BigInt64, M.BigInt64, 'BigInt64')
     let e42 = d.BigInt64
-    this.ensureLength(e42),
-      this.view.setBigInt64(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setBigInt64(this.offset, t32), (this.offset += e42)
   }
   writeFloat32(t32) {
     let e42 = d.Float32
-    this.ensureLength(e42),
-      this.view.setFloat32(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setFloat32(this.offset, t32), (this.offset += e42)
   }
   writeFloat64(t32) {
     let e42 = d.Float64
-    this.ensureLength(e42),
-      this.view.setFloat64(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setFloat64(this.offset, t32), (this.offset += e42)
   }
   writeBytes(t32) {
     let e42 = t32.length
-    this.ensureLength(e42),
-      this.bytes.set(t32, this.offset),
-      (this.offset += e42)
+    this.ensureLength(e42), this.bytes.set(t32, this.offset), (this.offset += e42)
   }
   encodeString(t32) {
     let e42 = this.encodedStrings.get(t32)
@@ -684,12 +599,7 @@ function A(t32) {
 var O = class t2 {
   static fromString(e42) {
     let [r22, n22, i2] = e42.split('/').map(Number)
-    return (
-      I(N(r22), 'Invalid chunkId'),
-      I(N(n22), 'Invalid offset'),
-      I(N(i2), 'Invalid length'),
-      new t2(r22, n22, i2)
-    )
+    return I(N(r22), 'Invalid chunkId'), I(N(n22), 'Invalid offset'), I(N(i2), 'Invalid length'), new t2(r22, n22, i2)
   }
   toString() {
     return `${this.chunkId}/${this.offset}/${this.length}`
@@ -701,9 +611,7 @@ var O = class t2 {
     return new t2(r22, n22, i2)
   }
   write(t32) {
-    t32.writeUint16(this.chunkId),
-      t32.writeUint32(this.offset),
-      t32.writeUint32(this.length)
+    t32.writeUint16(this.chunkId), t32.writeUint32(this.offset), t32.writeUint32(this.length)
   }
   compare(t32) {
     return this.chunkId < t32.chunkId
@@ -766,8 +674,7 @@ function R(e42) {
   }
 }
 function q(e42, r22) {
-  for (let n22 of (e42.writeUint16(r22.value.length), r22.value))
-    t.write(e42, n22)
+  for (let n22 of (e42.writeUint16(r22.value.length), r22.value)) t.write(e42, n22)
 }
 function _(e42, r22, n22) {
   let i2 = e42.value.length,
@@ -888,8 +795,7 @@ function ta(e42) {
 }
 function to(e42, r22) {
   let n22 = Object.entries(r22.value)
-  for (let [r3, i2] of (e42.writeUint16(n22.length), n22))
-    e42.writeString(r3), t.write(e42, i2)
+  for (let [r3, i2] of (e42.writeUint16(n22.length), n22)) e42.writeString(r3), t.write(e42, i2)
 }
 function tu(e42, r22, n22) {
   let i2 = Object.keys(e42.value).sort(),
@@ -948,9 +854,7 @@ function tp(t32, e42) {
 function tv(t32, e42, r22) {
   let n22 = t32.value,
     i2 = e42.value
-  return (0 === r22.type &&
-    ((n22 = t32.value.toLowerCase()), (i2 = e42.value.toLowerCase())),
-  n22 < i2)
+  return (0 === r22.type && ((n22 = t32.value.toLowerCase()), (i2 = e42.value.toLowerCase())), n22 < i2)
     ? -1
     : n22 > i2
       ? 1
@@ -1119,13 +1023,9 @@ var tb = class e2 {
   }
   serialize() {
     let e42 = new F()
-    for (let t32 of (e42.writeJson(this.options.collation),
-    e42.writeUint8(this.fieldNames.length),
-    this.fieldNames))
+    for (let t32 of (e42.writeJson(this.options.collation), e42.writeUint8(this.fieldNames.length), this.fieldNames))
       e42.writeString(t32)
-    for (let r22 of (this.sortEntries(),
-    e42.writeUint32(this.entries.length),
-    this.entries)) {
+    for (let r22 of (this.sortEntries(), e42.writeUint32(this.entries.length), this.entries)) {
       let { values: n22, pointer: i2 } = r22
       for (let r3 of n22) t.write(e42, r3)
       i2.write(e42)
@@ -1180,18 +1080,15 @@ async function tE(t32, e42) {
   let r22 = tF(e42),
     n22 = [],
     i2 = 0
-  for (let t42 of r22)
-    n22.push(`${t42.from}-${t42.to - 1}`), (i2 += t42.to - t42.from)
+  for (let t42 of r22) n22.push(`${t42.from}-${t42.to - 1}`), (i2 += t42.to - t42.from)
   let s22 = new URL(t32),
     a22 = n22.join(',')
   s22.searchParams.set('range', a22)
   let o2 = await tL(s22)
-  if (200 !== o2.status)
-    throw Error(`Request failed: ${o2.status} ${o2.statusText}`)
+  if (200 !== o2.status) throw Error(`Request failed: ${o2.status} ${o2.statusText}`)
   let u22 = await o2.arrayBuffer(),
     l22 = new Uint8Array(u22)
-  if (l22.length !== i2)
-    throw Error('Request failed: Unexpected response length')
+  if (l22.length !== i2) throw Error('Request failed: Unexpected response length')
   let h22 = new tM(),
     c22 = 0
   for (let t42 of r22) {
@@ -1280,11 +1177,7 @@ var tN = class {
     return I(t32, 'Failed to load model'), tb.deserialize(t32)
   }
   async getModel() {
-    return (
-      (this.modelPromise ??= this.loadModel()),
-      (this.model ??= await this.modelPromise),
-      this.model
-    )
+    return (this.modelPromise ??= this.loadModel()), (this.model ??= await this.modelPromise), this.model
   }
   async lookupItems(t32) {
     I(t32.length === this.fields.length, 'Invalid query length')
@@ -1373,11 +1266,7 @@ var tN = class {
       if (t42?.type !== v.String || e42.value?.type !== v.String) return false
       let r3 = t42.value,
         n22 = e42.value.value
-      return (
-        0 === this.collation.type &&
-          ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())),
-        r3.includes(n22)
-      )
+      return 0 === this.collation.type && ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())), r3.includes(n22)
     })
   }
   queryStartsWith(t32, e42, r22) {
@@ -1385,11 +1274,7 @@ var tN = class {
       if (t42?.type !== v.String || e42.value?.type !== v.String) return false
       let r3 = t42.value,
         n22 = e42.value.value
-      return (
-        0 === this.collation.type &&
-          ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())),
-        r3.startsWith(n22)
-      )
+      return 0 === this.collation.type && ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())), r3.startsWith(n22)
     })
   }
   queryEndsWith(t32, e42, r22) {
@@ -1397,11 +1282,7 @@ var tN = class {
       if (t42?.type !== v.String || e42.value?.type !== v.String) return false
       let r3 = t42.value,
         n22 = e42.value.value
-      return (
-        0 === this.collation.type &&
-          ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())),
-        r3.endsWith(n22)
-      )
+      return 0 === this.collation.type && ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())), r3.endsWith(n22)
     })
   }
   /**
@@ -1516,9 +1397,7 @@ var tN = class {
           name: t42,
         })
     }
-    ;(this.schema = e42),
-      (this.fields = r22),
-      (this.collation = this.options.collation)
+    ;(this.schema = e42), (this.fields = r22), (this.collation = this.options.collation)
   }
 }
 var tA = class e3 {
@@ -1533,8 +1412,7 @@ var tA = class e3 {
     return n22
   }
   write(e42) {
-    for (let [r22, n22] of (e42.writeUint16(this.fields.size), this.fields))
-      e42.writeString(r22), t.write(e42, n22)
+    for (let [r22, n22] of (e42.writeUint16(this.fields.size), this.fields)) e42.writeString(r22), t.write(e42, n22)
   }
   getData() {
     let t32 = {}
@@ -1555,8 +1433,7 @@ var tO = class {
   scanItems() {
     return (
       (this.itemsPromise ??= tL(this.url).then(async (t32) => {
-        if (!t32.ok)
-          throw Error(`Request failed: ${t32.status} ${t32.statusText}`)
+        if (!t32.ok) throw Error(`Request failed: ${t32.status} ${t32.statusText}`)
         let e42 = await t32.arrayBuffer(),
           r22 = new Uint8Array(e42),
           n22 = new y(r22),
@@ -2119,9 +1996,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -2161,11 +2036,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -2177,8 +2048,7 @@ var getProps = ({ click, fill, height, id, width, ...props }) => {
   return {
     ...props,
     mNGMgQNvI: fill ?? props.mNGMgQNvI,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'VjG2AvVMi',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'VjG2AvVMi',
     Wld3NDzSj: click ?? props.Wld3NDzSj,
   }
 }
@@ -2192,15 +2062,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className8,
-    layoutId,
-    variant,
-    Wld3NDzSj,
-    mNGMgQNvI,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className8, layoutId, variant, Wld3NDzSj, mNGMgQNvI, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -2249,12 +2111,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             <motion.button
               {...restProps}
               {...gestureHandlers}
-              className={cx(
-                scopingClassNames,
-                'framer-u4pidu',
-                className8,
-                classNames,
-              )}
+              className={cx(scopingClassNames, 'framer-u4pidu', className8, classNames)}
               data-framer-name={'Default'}
               data-highlight={true}
               data-reset={'button'}
@@ -2263,8 +2120,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               onTap={onTapn9xadi}
               ref={refBinding}
               style={{
-                backgroundColor:
-                  'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
+                backgroundColor: 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
                 borderBottomLeftRadius: 100,
                 borderBottomRightRadius: 100,
                 borderTopLeftRadius: 100,
@@ -2273,8 +2129,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               }}
               variants={{
                 'VjG2AvVMi-hover': {
-                  backgroundColor:
-                    'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                  backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 },
               }}
               {...addPropertyOverrides(
@@ -2337,9 +2192,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     }}
                   >
                     <RollingText
-                      color={
-                        'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                      }
+                      color={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                       font={{
                         fontFamily: '"Raveo Variable Variable", sans-serif',
                         fontSize: '14px',
@@ -2403,9 +2256,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     }}
                   >
                     <RollingText
-                      color={
-                        'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                      }
+                      color={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                       font={{
                         fontFamily: '"Raveo Variable Variable", sans-serif',
                         fontSize: '14px',
@@ -2469,9 +2320,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       direction: 'clockwise',
                       speed: 2,
                     }}
-                    borderColor={
-                      'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'
-                    }
+                    borderColor={'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'}
                     borderRadius={20}
                     borderWidth={1}
                     bottom={true}
@@ -2587,11 +2436,7 @@ addFonts(
 )
 
 // /:https://framerusercontent.com/modules/4nOcwHUM5S2jH239lOGL/uKkWSTxpzWLUwEgIqAlN/Eu9Lomn1l.js
-import {
-  jsx as _jsx2,
-  jsxs as _jsxs2,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx2, jsxs as _jsxs2, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts as addFonts2,
   addPropertyControls as addPropertyControls2,
@@ -2613,24 +2458,17 @@ import {
   withCodeBoundaryForOverrides,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 var MainSiteGridBorderFonts = getFonts2(stdin_default2)
 var DitherFonts = getFonts2(Dither)
 var TagFonts = getFonts2(stdin_default5)
-var RichTextWithTruncateTwoLines1je5ulx = withCodeBoundaryForOverrides(
-  RichText,
-  {
-    nodeId: 'vM0WvaMXr',
-    override: withTruncateTwoLines,
-    scopeId: 'Eu9Lomn1l',
-  },
-)
+var RichTextWithTruncateTwoLines1je5ulx = withCodeBoundaryForOverrides(RichText, {
+  nodeId: 'vM0WvaMXr',
+  override: withTruncateTwoLines,
+  scopeId: 'Eu9Lomn1l',
+})
 var CardSelectorFonts = getFonts2(stdin_default4)
 var enabledGestures2 = {
   kLecDBvZb: {
@@ -2650,9 +2488,7 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = {
@@ -2660,11 +2496,7 @@ var transition12 = {
   type: 'tween',
 }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string'
@@ -2705,11 +2537,7 @@ var Transition2 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext2.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext2.Provider>
-  )
+  return <MotionConfigContext2.Provider value={contextValue}>{children}</MotionConfigContext2.Provider>
 }
 var Variants2 = motion2.create(React2.Fragment)
 var humanReadableVariantMap2 = {
@@ -2741,12 +2569,8 @@ var getProps2 = ({
       'Discover how lightning-fast load times can boost your SEO, improve user experience, and drive real business results\u2014plus actionable tips to speed up your site today.',
     OnZMqQ_GH: pixel ?? props.OnZMqQ_GH ?? 1,
     prpswvXWg: dithering ?? props.prpswvXWg ?? true,
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'kLecDBvZb',
-    wJ9vmGd0H:
-      title ??
-      props.wJ9vmGd0H ??
-      'Why Website Speed Matters More Than Ever in 2025',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'kLecDBvZb',
+    wJ9vmGd0H: title ?? props.wJ9vmGd0H ?? 'Why Website Speed Matters More Than Ever in 2025',
     YCvL6Ce3i: link ?? props.YCvL6Ce3i,
     yqQ5nv2LT: date ?? props.yqQ5nv2LT ?? '1970-01-01T00:00:00.000Z',
     zSyHvqwA8: category ?? props.zSyHvqwA8 ?? ['AmoaEAHNI'],
@@ -2799,14 +2623,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
     variantClassNames: variantClassNames2,
   })
   const layoutDependency = createLayoutDependency2(props, variants)
-  const sharedStyleClassNames = [
-    className6,
-    className2,
-    className5,
-    className3,
-    className4,
-    className,
-  ]
+  const sharedStyleClassNames = [className6, className2, className5, className3, className4, className]
   const scopingClassNames = cx2(serializationHash2, ...sharedStyleClassNames)
   const isDisplayed = () => {
     if (gestureVariant === 'sO_8WI4ey-hover') return false
@@ -2819,12 +2636,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
     <LayoutGroup2 id={layoutId ?? defaultLayoutId}>
       <Variants2 animate={variants} initial={false}>
         <Transition2 value={transition12}>
-          <Link
-            href={YCvL6Ce3i}
-            motionChild={true}
-            nodeId={'kLecDBvZb'}
-            scopeId={'Eu9Lomn1l'}
-          >
+          <Link href={YCvL6Ce3i} motionChild={true} nodeId={'kLecDBvZb'} scopeId={'Eu9Lomn1l'}>
             <motion2.a
               {...restProps}
               {...gestureHandlers}
@@ -2839,12 +2651,10 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
               }}
               variants={{
                 'kLecDBvZb-hover': {
-                  backgroundColor:
-                    'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
+                  backgroundColor: 'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
                 },
                 'sO_8WI4ey-hover': {
-                  backgroundColor:
-                    'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
+                  backgroundColor: 'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
                 },
               }}
               {...addPropertyOverrides2(
@@ -2951,13 +2761,9 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       intensity: 10,
                       interval: 0.08,
                     }}
-                    backgroundColor={
-                      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))'
-                    }
+                    backgroundColor={'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))'}
                     brightness={-46}
-                    dotColor={
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                    }
+                    dotColor={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                     enabled={prpswvXWg}
                     glow={2}
                     height={'100%'}
@@ -3017,8 +2823,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                     layoutId={'Ai8O10dJM'}
                     style={{
                       mask: 'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%) add',
-                      WebkitMask:
-                        'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%) add',
+                      WebkitMask: 'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%) add',
                     }}
                   >
                     <ChildrenCanSuspend>
@@ -3087,19 +2892,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                           <_Fragment>
                             {collection?.map(
                               (
-                                {
-                                  eQ710bws0: eQ710bws0Ai8O10dJM2,
-                                  id: idAi8O10dJM2,
-                                  PfZk8Jfkg: PfZk8JfkgAi8O10dJM2,
-                                },
+                                { eQ710bws0: eQ710bws0Ai8O10dJM2, id: idAi8O10dJM2, PfZk8Jfkg: PfZk8JfkgAi8O10dJM2 },
                                 index,
                               ) => {
                                 PfZk8JfkgAi8O10dJM2 ??= ''
                                 eQ710bws0Ai8O10dJM2 ??= ''
                                 return (
-                                  <LayoutGroup2
-                                    id={`Ai8O10dJM-${idAi8O10dJM2}`}
-                                  >
+                                  <LayoutGroup2 id={`Ai8O10dJM-${idAi8O10dJM2}`}>
                                     <PathVariablesContext.Provider
                                       value={{
                                         eQ710bws0: eQ710bws0Ai8O10dJM2,
@@ -3115,13 +2914,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           y={
                                             (componentViewport?.y || 0) +
                                             0 +
-                                            (((componentViewport?.height ||
-                                              998) -
-                                              0 -
-                                              1243.2) /
-                                              2 +
-                                              900 +
-                                              0) +
+                                            (((componentViewport?.height || 998) - 0 - 1243.2) / 2 + 900 + 0) +
                                             0 +
                                             0 +
                                             36 +
@@ -3135,13 +2928,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 y:
                                                   (componentViewport?.y || 0) +
                                                   0 +
-                                                  (((componentViewport?.height ||
-                                                    380.5) -
-                                                    0 -
-                                                    1078) /
-                                                    2 +
-                                                    900 +
-                                                    0) +
+                                                  (((componentViewport?.height || 380.5) - 0 - 1078) / 2 + 900 + 0) +
                                                   0 +
                                                   0 +
                                                   24 +
@@ -3153,13 +2940,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 y:
                                                   (componentViewport?.y || 0) +
                                                   0 +
-                                                  (((componentViewport?.height ||
-                                                    589) -
-                                                    0 -
-                                                    1139) /
-                                                    2 +
-                                                    900 +
-                                                    0) +
+                                                  (((componentViewport?.height || 589) - 0 - 1139) / 2 + 900 + 0) +
                                                   0 +
                                                   0 +
                                                   36 +
@@ -3171,13 +2952,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 y:
                                                   (componentViewport?.y || 0) +
                                                   0 +
-                                                  (((componentViewport?.height ||
-                                                    607.5) -
-                                                    0 -
-                                                    1221.2) /
-                                                    2 +
-                                                    900 +
-                                                    0) +
+                                                  (((componentViewport?.height || 607.5) - 0 - 1221.2) / 2 + 900 + 0) +
                                                   0 +
                                                   0 +
                                                   24 +
@@ -3191,9 +2966,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           )}
                                         >
                                           <SmartComponentScopedContainer2
-                                            className={
-                                              'framer-1r65oqg-container'
-                                            }
+                                            className={'framer-1r65oqg-container'}
                                             layoutDependency={layoutDependency}
                                             layoutId={'Ye2WumYd2-container'}
                                             nodeId={'Ye2WumYd2'}
@@ -3273,9 +3046,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                     '--framer-text-alignment': 'left',
                                   }}
                                 >
-                                  {
-                                    'Why Website Speed Matters More Than Ever in 2025'
-                                  }
+                                  {'Why Website Speed Matters More Than Ever in 2025'}
                                 </motion2.h5>
                               </React2.Fragment>
                             ),
@@ -3290,9 +3061,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                     '--framer-text-alignment': 'left',
                                   }}
                                 >
-                                  {
-                                    'Why Website Speed Matters More Than Ever in 2025'
-                                  }
+                                  {'Why Website Speed Matters More Than Ever in 2025'}
                                 </motion2.h3>
                               </React2.Fragment>
                             ),
@@ -3589,8 +3358,7 @@ addFonts2(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -3664,11 +3432,7 @@ addFonts2(
 )
 
 // /:https://framerusercontent.com/modules/C0Hpfq1U2sSgqnWkBI4g/Ingiwol58ZmqvNBYC9wF/gsyoMJmGK.js
-import {
-  jsx as _jsx3,
-  jsxs as _jsxs3,
-  Fragment as _Fragment2,
-} from 'react/jsx-runtime'
+import { jsx as _jsx3, jsxs as _jsxs3, Fragment as _Fragment2 } from 'react/jsx-runtime'
 import {
   addFonts as addFonts3,
   addPropertyControls as addPropertyControls3,
@@ -3685,11 +3449,7 @@ import {
   useVariantState as useVariantState3,
   withCSS as withCSS3,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup3,
-  motion as motion3,
-  MotionConfigContext as MotionConfigContext3,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup3, motion as motion3, MotionConfigContext as MotionConfigContext3 } from 'unframer'
 import * as React3 from 'react'
 import { useRef as useRef3 } from 'react'
 var cycleOrder3 = ['jI3lXvfwB', 'glnbGf7rs', 'ixRhMbHd3']
@@ -3701,9 +3461,7 @@ var variantClassNames3 = {
 }
 function addPropertyOverrides3(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition13 = {
@@ -3739,11 +3497,7 @@ var Transition3 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext3.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext3.Provider>
-  )
+  return <MotionConfigContext3.Provider value={contextValue}>{children}</MotionConfigContext3.Provider>
 }
 var Variants3 = motion3.create(React3.Fragment)
 var humanReadableVariantMap3 = {
@@ -3751,24 +3505,14 @@ var humanReadableVariantMap3 = {
   Medium: 'glnbGf7rs',
   Small: 'jI3lXvfwB',
 }
-var getProps3 = ({
-  all,
-  category,
-  click,
-  height,
-  id,
-  selected,
-  width,
-  ...props
-}) => {
+var getProps3 = ({ all, category, click, height, id, selected, width, ...props }) => {
   return {
     ...props,
     l1TEzbs0n: all ?? props.l1TEzbs0n,
     NjOVpa_TO: selected ?? props.NjOVpa_TO ?? true,
     p8V_eFaKn: category ?? props.p8V_eFaKn ?? 'AmoaEAHNI',
     RQ9Znex6B: click ?? props.RQ9Znex6B,
-    variant:
-      humanReadableVariantMap3[props.variant] ?? props.variant ?? 'jI3lXvfwB',
+    variant: humanReadableVariantMap3[props.variant] ?? props.variant ?? 'jI3lXvfwB',
   }
 }
 var createLayoutDependency3 = (props, variants) => {
@@ -3816,8 +3560,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
     variantClassNames: variantClassNames3,
   })
   const layoutDependency = createLayoutDependency3(props, variants)
-  const { activeVariantCallback, delay } =
-    useActiveVariantCallback2(baseVariant)
+  const { activeVariantCallback, delay } = useActiveVariantCallback2(baseVariant)
   const onTap13tf130 = activeVariantCallback(async (...args) => {
     setGestureState({
       isPressed: false,
@@ -3839,12 +3582,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
           <motion3.button
             {...restProps}
             {...gestureHandlers}
-            className={cx3(
-              scopingClassNames,
-              'framer-1u0v3fy',
-              className8,
-              classNames,
-            )}
+            className={cx3(scopingClassNames, 'framer-1u0v3fy', className8, classNames)}
             data-framer-name={'Small'}
             data-highlight={true}
             data-reset={'button'}
@@ -3948,19 +3686,13 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                           <_Fragment2>
                             {collection?.map(
                               (
-                                {
-                                  eQ710bws0: eQ710bws0CAFoFkLya2,
-                                  id: idCAFoFkLya2,
-                                  PfZk8Jfkg: PfZk8JfkgCAFoFkLya2,
-                                },
+                                { eQ710bws0: eQ710bws0CAFoFkLya2, id: idCAFoFkLya2, PfZk8Jfkg: PfZk8JfkgCAFoFkLya2 },
                                 index,
                               ) => {
                                 PfZk8JfkgCAFoFkLya2 ??= ''
                                 eQ710bws0CAFoFkLya2 ??= ''
                                 return (
-                                  <LayoutGroup3
-                                    id={`CAFoFkLya-${idCAFoFkLya2}`}
-                                  >
+                                  <LayoutGroup3 id={`CAFoFkLya-${idCAFoFkLya2}`}>
                                     <PathVariablesContext2.Provider
                                       value={{
                                         eQ710bws0: eQ710bws0CAFoFkLya2,
@@ -3981,10 +3713,8 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                           style={{
                                             '--extracted-r6o4lv':
                                               'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           text={PfZk8JfkgCAFoFkLya2}
                                           verticalAlignment={'top'}
@@ -3992,13 +3722,10 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                         >
                                           <React3.Fragment>
                                             <motion3.p
-                                              className={
-                                                'framer-styles-preset-2pjocb'
-                                              }
+                                              className={'framer-styles-preset-2pjocb'}
                                               data-styles-preset={'Dkr92TfXs'}
                                               style={{
-                                                '--framer-text-alignment':
-                                                  'center',
+                                                '--framer-text-alignment': 'center',
                                                 '--framer-text-color':
                                                   'var(--extracted-r6o4lv, var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0)))',
                                               }}
@@ -4074,19 +3801,13 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                           <_Fragment2>
                             {collection1?.map(
                               (
-                                {
-                                  eQ710bws0: eQ710bws0sHtFhPi2T2,
-                                  id: idsHtFhPi2T2,
-                                  PfZk8Jfkg: PfZk8JfkgsHtFhPi2T2,
-                                },
+                                { eQ710bws0: eQ710bws0sHtFhPi2T2, id: idsHtFhPi2T2, PfZk8Jfkg: PfZk8JfkgsHtFhPi2T2 },
                                 index1,
                               ) => {
                                 PfZk8JfkgsHtFhPi2T2 ??= ''
                                 eQ710bws0sHtFhPi2T2 ??= ''
                                 return (
-                                  <LayoutGroup3
-                                    id={`sHtFhPi2T-${idsHtFhPi2T2}`}
-                                  >
+                                  <LayoutGroup3 id={`sHtFhPi2T-${idsHtFhPi2T2}`}>
                                     <PathVariablesContext2.Provider
                                       value={{
                                         eQ710bws0: eQ710bws0sHtFhPi2T2,
@@ -4107,10 +3828,8 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                           style={{
                                             '--extracted-r6o4lv':
                                               'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           text={PfZk8JfkgsHtFhPi2T2}
                                           verticalAlignment={'top'}
@@ -4118,13 +3837,10 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                         >
                                           <React3.Fragment>
                                             <motion3.p
-                                              className={
-                                                'framer-styles-preset-2pjocb'
-                                              }
+                                              className={'framer-styles-preset-2pjocb'}
                                               data-styles-preset={'Dkr92TfXs'}
                                               style={{
-                                                '--framer-text-alignment':
-                                                  'center',
+                                                '--framer-text-alignment': 'center',
                                                 '--framer-text-color':
                                                   'var(--extracted-r6o4lv, var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)))',
                                               }}
@@ -4163,8 +3879,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                     layoutDependency={layoutDependency}
                     layoutId={'fLiXx4Qid'}
                     style={{
-                      '--extracted-r6o4lv':
-                        'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                      '--extracted-r6o4lv': 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                       '--framer-link-text-color': 'rgb(0, 153, 255)',
                       '--framer-link-text-decoration': 'underline',
                     }}
@@ -4195,8 +3910,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                     layoutDependency={layoutDependency}
                     layoutId={'EfxEWbtkb'}
                     style={{
-                      '--extracted-r6o4lv':
-                        'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                      '--extracted-r6o4lv': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                       '--framer-link-text-color': 'rgb(0, 153, 255)',
                       '--framer-link-text-decoration': 'underline',
                     }}
@@ -4293,8 +4007,7 @@ addFonts3(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -4364,15 +4077,7 @@ var FilterButtonsFonts = getFonts3(stdin_default9)
 var BlogCardsFonts = getFonts3(stdin_default8)
 var LoadMoreButtonFonts = getFonts3(stdin_default7)
 var BlogCardsControls = getPropertyControls(stdin_default8)
-var cycleOrder4 = [
-  'e8m0X_S6R',
-  't9RFcWOby',
-  'BJVrur1V7',
-  'Uf1CifnIK',
-  'A3FRclnj3',
-  'YlW93TqBk',
-  'RBuiTaWLD',
-]
+var cycleOrder4 = ['e8m0X_S6R', 't9RFcWOby', 'BJVrur1V7', 'Uf1CifnIK', 'A3FRclnj3', 'YlW93TqBk', 'RBuiTaWLD']
 var serializationHash4 = 'framer-BztTn'
 var variantClassNames4 = {
   A3FRclnj3: 'framer-v-1w9irbp',
@@ -4385,9 +4090,7 @@ var variantClassNames4 = {
 }
 function addPropertyOverrides4(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition14 = {
@@ -4438,11 +4141,7 @@ var negate3 = (value) => {
   return !value
 }
 var toResponsiveImage2 = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string'
@@ -4453,20 +4152,17 @@ var toResponsiveImage2 = (value) => {
 }
 var transformTemplate12 = (_2, t5) => `translateX(-50%) ${t5}`
 var loaderVariants = (repeaterState, variants, currentVariant) => {
-  if (repeaterState.currentPage >= repeaterState.totalPages)
-    return variants.disabled ?? currentVariant
+  if (repeaterState.currentPage >= repeaterState.totalPages) return variants.disabled ?? currentVariant
   if (repeaterState.isLoading) return variants.loading ?? currentVariant
   return currentVariant
 }
 var QueryData3 = ({ query: query14, pageSize, children }) => {
-  const { paginatedQuery, paginationInfo, loadMore } =
-    useLoadMorePaginatedQuery(query14, pageSize, 'W7eJr31LE')
+  const { paginatedQuery, paginationInfo, loadMore } = useLoadMorePaginatedQuery(query14, pageSize, 'W7eJr31LE')
   const data = useQueryData3(paginatedQuery)
   return children(data, paginationInfo, loadMore)
 }
 var QueryData1 = ({ query: query14, pageSize, children }) => {
-  const { paginatedQuery, paginationInfo, loadMore } =
-    useLoadMorePaginatedQuery(query14, pageSize, 'aQgBpTQ2U')
+  const { paginatedQuery, paginationInfo, loadMore } = useLoadMorePaginatedQuery(query14, pageSize, 'aQgBpTQ2U')
   const data = useQueryData3(paginatedQuery)
   return children(data, paginationInfo, loadMore)
 }
@@ -4480,11 +4176,7 @@ var Transition4 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext4.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext4.Provider>
-  )
+  return <MotionConfigContext4.Provider value={contextValue}>{children}</MotionConfigContext4.Provider>
 }
 var Variants4 = motion4.create(React4.Fragment)
 var humanReadableEnumMap = {
@@ -4506,13 +4198,8 @@ var getProps4 = ({ cardVariant, height, id, phone, width, ...props }) => {
   return {
     ...props,
     M1RddftRK: phone ?? props.M1RddftRK,
-    mCxvwbme7:
-      humanReadableEnumMap[cardVariant] ??
-      cardVariant ??
-      props.mCxvwbme7 ??
-      'sO_8WI4ey',
-    variant:
-      humanReadableVariantMap4[props.variant] ?? props.variant ?? 'e8m0X_S6R',
+    mCxvwbme7: humanReadableEnumMap[cardVariant] ?? cardVariant ?? props.mCxvwbme7 ?? 'sO_8WI4ey',
+    variant: humanReadableVariantMap4[props.variant] ?? props.variant ?? 'e8m0X_S6R',
   }
 }
 var createLayoutDependency4 = (props, variants) => {
@@ -4568,8 +4255,7 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
     variantClassNames: variantClassNames4,
   })
   const layoutDependency = createLayoutDependency4(props, variants)
-  const { activeVariantCallback, delay } =
-    useActiveVariantCallback3(baseVariant)
+  const { activeVariantCallback, delay } = useActiveVariantCallback3(baseVariant)
   const RQ9Znex6Bnc7yvh = activeVariantCallback(async (...args) => {
     setVariant('e8m0X_S6R')
   })
@@ -4597,9 +4283,7 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
     })
   const sharedStyleClassNames = [className7]
   const scopingClassNames = cx4(serializationHash4, ...sharedStyleClassNames)
-  const padding = numberToPixelString(
-    convertFromBoolean2(M1RddftRK, activeLocale),
-  )
+  const padding = numberToPixelString(convertFromBoolean2(M1RddftRK, activeLocale))
   const stackDirection = convertFromBoolean1(M1RddftRK, activeLocale)
   const stackDistribution = convertFromBoolean22(M1RddftRK, activeLocale)
   const stackAlignment = convertFromBoolean3(M1RddftRK, activeLocale)
@@ -4613,12 +4297,7 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
           <motion4.div
             {...restProps}
             {...gestureHandlers}
-            className={cx4(
-              scopingClassNames,
-              'framer-1yognnj',
-              className8,
-              classNames,
-            )}
+            className={cx4(scopingClassNames, 'framer-1yognnj', className8, classNames)}
             data-framer-name={'All'}
             layoutDependency={layoutDependency}
             layoutId={'e8m0X_S6R'}
@@ -4660,9 +4339,7 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                 '--10ocmuz': padding,
               }}
             >
-              <ComponentViewportProvider3
-                width={componentViewport?.width || '100vw'}
-              >
+              <ComponentViewportProvider3 width={componentViewport?.width || '100vw'}>
                 <SmartComponentScopedContainer3
                   className={'framer-u81vva-container'}
                   layoutDependency={layoutDependency}
@@ -4696,8 +4373,7 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'MFew_u0uF'}
                   style={{
-                    '--1chm22c':
-                      stackDirection === 'column' ? void 0 : '1 0 0px',
+                    '--1chm22c': stackDirection === 'column' ? void 0 : '1 0 0px',
                     '--1dp6oge': stackDirection,
                     '--1e7ln2p': stackAlignment,
                     '--iuul6o': stackDistribution,
@@ -6340,22 +6016,15 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                                             width={`max(max(max(${componentViewport?.width || '100vw'} / 0, 1px) / 2, 50px), 1px)`}
                                           >
                                             <SmartComponentScopedContainer3
-                                              className={
-                                                'framer-kfz6ra-container'
-                                              }
-                                              layoutDependency={
-                                                layoutDependency
-                                              }
+                                              className={'framer-kfz6ra-container'}
+                                              layoutDependency={layoutDependency}
                                               layoutId={'YJIf0__C4-container'}
                                               nodeId={'YJIf0__C4'}
                                               rendersWithMotion={true}
                                               scopeId={'v8T4hRpu9'}
                                             >
                                               {_jsx4(stdin_default8, {
-                                                dYNQYhs4O:
-                                                  toResponsiveImage2(
-                                                    w5G5UUdgaW7eJr31LE2,
-                                                  ),
+                                                dYNQYhs4O: toResponsiveImage2(w5G5UUdgaW7eJr31LE2),
                                                 height: '100%',
                                                 HY563EiAe: jLRUx0vmTW7eJr31LE2,
                                                 id: 'YJIf0__C4',
@@ -6374,28 +6043,22 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                                                 ...addPropertyOverrides4(
                                                   {
                                                     A3FRclnj3: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks[4],
+                                                      YCvL6Ce3i: resolvedLinks[4],
                                                     },
                                                     BJVrur1V7: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks[2],
+                                                      YCvL6Ce3i: resolvedLinks[2],
                                                     },
                                                     RBuiTaWLD: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks[6],
+                                                      YCvL6Ce3i: resolvedLinks[6],
                                                     },
                                                     t9RFcWOby: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks[1],
+                                                      YCvL6Ce3i: resolvedLinks[1],
                                                     },
                                                     Uf1CifnIK: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks[3],
+                                                      YCvL6Ce3i: resolvedLinks[3],
                                                     },
                                                     YlW93TqBk: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks[5],
+                                                      YCvL6Ce3i: resolvedLinks[5],
                                                     },
                                                   },
                                                   baseVariant,
@@ -6412,10 +6075,7 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                               )
                             },
                           )}
-                          <ComponentViewportProvider3
-                            height={40}
-                            width={'108px'}
-                          >
+                          <ComponentViewportProvider3 height={40} width={'108px'}>
                             <SmartComponentScopedContainer3
                               as={'li'}
                               className={'framer-1xu37kb-container'}
@@ -7807,22 +7467,15 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                                             width={`max(max(max(${componentViewport?.width || '100vw'} / 0, 1px), 50px), 1px)`}
                                           >
                                             <SmartComponentScopedContainer3
-                                              className={
-                                                'framer-175kx2j-container'
-                                              }
-                                              layoutDependency={
-                                                layoutDependency
-                                              }
+                                              className={'framer-175kx2j-container'}
+                                              layoutDependency={layoutDependency}
                                               layoutId={'HAdVvA1_D-container'}
                                               nodeId={'HAdVvA1_D'}
                                               rendersWithMotion={true}
                                               scopeId={'v8T4hRpu9'}
                                             >
                                               {_jsx4(stdin_default8, {
-                                                dYNQYhs4O:
-                                                  toResponsiveImage2(
-                                                    w5G5UUdgaaQgBpTQ2U2,
-                                                  ),
+                                                dYNQYhs4O: toResponsiveImage2(w5G5UUdgaaQgBpTQ2U2),
                                                 height: '100%',
                                                 HY563EiAe: jLRUx0vmTaQgBpTQ2U2,
                                                 id: 'HAdVvA1_D',
@@ -7841,28 +7494,22 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                                                 ...addPropertyOverrides4(
                                                   {
                                                     A3FRclnj3: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks1[4],
+                                                      YCvL6Ce3i: resolvedLinks1[4],
                                                     },
                                                     BJVrur1V7: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks1[2],
+                                                      YCvL6Ce3i: resolvedLinks1[2],
                                                     },
                                                     RBuiTaWLD: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks1[6],
+                                                      YCvL6Ce3i: resolvedLinks1[6],
                                                     },
                                                     t9RFcWOby: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks1[1],
+                                                      YCvL6Ce3i: resolvedLinks1[1],
                                                     },
                                                     Uf1CifnIK: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks1[3],
+                                                      YCvL6Ce3i: resolvedLinks1[3],
                                                     },
                                                     YlW93TqBk: {
-                                                      YCvL6Ce3i:
-                                                        resolvedLinks1[5],
+                                                      YCvL6Ce3i: resolvedLinks1[5],
                                                     },
                                                   },
                                                   baseVariant,
@@ -7879,10 +7526,7 @@ var Component4 = /* @__PURE__ */ React4.forwardRef(function (props, ref) {
                               )
                             },
                           )}
-                          <ComponentViewportProvider3
-                            height={40}
-                            width={'108px'}
-                          >
+                          <ComponentViewportProvider3 height={40} width={'108px'}>
                             <SmartComponentScopedContainer3
                               as={'li'}
                               className={'framer-b47f22-container'}
@@ -7957,24 +7601,8 @@ Framerv8T4hRpu9.defaultProps = {
 }
 addPropertyControls4(Framerv8T4hRpu9, {
   variant: {
-    options: [
-      'e8m0X_S6R',
-      't9RFcWOby',
-      'BJVrur1V7',
-      'Uf1CifnIK',
-      'A3FRclnj3',
-      'YlW93TqBk',
-      'RBuiTaWLD',
-    ],
-    optionTitles: [
-      'All',
-      'Category 01',
-      'Category 02',
-      'Category 03',
-      'Category 04',
-      'Category 05',
-      'Category 06',
-    ],
+    options: ['e8m0X_S6R', 't9RFcWOby', 'BJVrur1V7', 'Uf1CifnIK', 'A3FRclnj3', 'YlW93TqBk', 'RBuiTaWLD'],
+    optionTitles: ['All', 'Category 01', 'Category 02', 'Category 03', 'Category 04', 'Category 05', 'Category 06'],
     title: 'Variant',
     type: ControlType4.Enum,
   },
@@ -8001,8 +7629,7 @@ addFonts4(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -8121,17 +7748,11 @@ stdin_default10.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default10}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default10} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -8179,9 +7800,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

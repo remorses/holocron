@@ -6,11 +6,7 @@ import { stdin_default as stdin_default3 } from './chunk-ALVRX4HO.js'
 import { stdin_default } from './chunk-LCDELW7M.js'
 
 // /:https://framerusercontent.com/modules/ehQ7jcIEZbuHNn06qzQy/Cwz23yDcGtDd3VZgezRD/Ewozog559.js
-import {
-  jsx as _jsx2,
-  jsxs as _jsxs2,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx2, jsxs as _jsxs2, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts as addFonts2,
   addPropertyControls as addPropertyControls2,
@@ -29,11 +25,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 
@@ -65,19 +57,13 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { duration: 0, type: 'tween' }
 var transition2 = { bounce: 0, delay: 0, duration: 0.6, type: 'spring' }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string' ? { src: value } : void 0
@@ -85,10 +71,7 @@ var toResponsiveImage = (value) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -118,10 +101,7 @@ var getProps = ({
 }) => {
   return {
     ...props,
-    BgC3EyFez:
-      color2 ??
-      props.BgC3EyFez ??
-      'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
+    BgC3EyFez: color2 ?? props.BgC3EyFez ?? 'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
     BkVgYZ4LQ: role ?? props.BkVgYZ4LQ ?? 'E-commerce Owner',
     ELlerrEJz: name1 ?? props.ELlerrEJz ?? 'Luca Rossi',
     GCneHTBce: name2 ?? props.GCneHTBce ?? 'Alex Chen',
@@ -135,12 +115,8 @@ var getProps = ({
       props.Nmm1AYzfJ ??
       '\u201CMy shop now loads in under a second. Jet is the only tool I needed.\u201D',
     NnRAVynIX: role2 ?? props.NnRAVynIX ?? 'Founder @ Gropa',
-    oGqNJ1s9K:
-      color ??
-      props.oGqNJ1s9K ??
-      'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'gXOOgW_0x',
+    oGqNJ1s9K: color ?? props.oGqNJ1s9K ?? 'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'gXOOgW_0x',
     vrcKhHwBb: image2 ?? props.vrcKhHwBb,
   }
 }
@@ -209,12 +185,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-vy0o8s',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-vy0o8s', className, classNames),
           'data-framer-name': 'Start',
           layoutDependency,
           layoutId: 'gXOOgW_0x',
@@ -232,9 +203,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
               height: 300,
               width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-              y:
-                (componentViewport?.y || 0) +
-                (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
+              y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
               ...addPropertyOverrides(
                 {
                   y4G8oqwNh: {
@@ -296,17 +265,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
               height: 300,
               width: componentViewport?.width || '100vw',
-              y:
-                (componentViewport?.y || 0) +
-                (componentViewport?.height || 300) -
-                0,
+              y: (componentViewport?.y || 0) + (componentViewport?.height || 300) - 0,
               ...addPropertyOverrides(
                 {
                   y4G8oqwNh: {
                     width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-                    y:
-                      (componentViewport?.y || 0) +
-                      (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
+                    y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
                   },
                   zhhN81oxS: {
                     y: (componentViewport?.y || 0) + -300,
@@ -351,17 +315,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
               height: 300,
               width: componentViewport?.width || '100vw',
-              y:
-                (componentViewport?.y || 0) +
-                (componentViewport?.height || 300) -
-                0,
+              y: (componentViewport?.y || 0) + (componentViewport?.height || 300) - 0,
               ...addPropertyOverrides(
                 {
                   zhhN81oxS: {
                     width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-                    y:
-                      (componentViewport?.y || 0) +
-                      (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
+                    y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 300) - 0 - 300) / 2),
                   },
                 },
                 baseVariant,
@@ -428,8 +387,7 @@ addPropertyControls(FramerW7wIBXQug, {
     type: ControlType.Enum,
   },
   Nmm1AYzfJ: {
-    defaultValue:
-      '\u201CMy shop now loads in under a second. Jet is the only tool I needed.\u201D',
+    defaultValue: '\u201CMy shop now loads in under a second. Jet is the only tool I needed.\u201D',
     displayTextArea: false,
     title: 'Testimonial',
     type: ControlType.String,
@@ -448,8 +406,7 @@ addPropertyControls(FramerW7wIBXQug, {
   },
   KKdiRFJu2: { title: 'Image', type: ControlType.ResponsiveImage },
   oGqNJ1s9K: {
-    defaultValue:
-      'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255)) /* {"name":"Blue"} */',
+    defaultValue: 'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255)) /* {"name":"Blue"} */',
     title: 'Color',
     type: ControlType.Color,
   },
@@ -474,30 +431,19 @@ addPropertyControls(FramerW7wIBXQug, {
   },
   vrcKhHwBb: { title: 'Image 2', type: ControlType.ResponsiveImage },
   BgC3EyFez: {
-    defaultValue:
-      'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224)) /* {"name":"Pink"} */',
+    defaultValue: 'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224)) /* {"name":"Pink"} */',
     title: 'Color 2',
     type: ControlType.Color,
   },
 })
-addFonts(
-  FramerW7wIBXQug,
-  [{ explicitInter: true, fonts: [] }, ...SmallTestimonialCardFonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts(FramerW7wIBXQug, [{ explicitInter: true, fonts: [] }, ...SmallTestimonialCardFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 // /:https://framerusercontent.com/modules/ehQ7jcIEZbuHNn06qzQy/Cwz23yDcGtDd3VZgezRD/Ewozog559.js
 var TestimonialCyclerFonts = getFonts2(stdin_default4)
 var MainSiteGridBorderFonts = getFonts2(stdin_default3)
-var cycleOrder2 = [
-  'xLhVUZ25C',
-  'YySLLH5rq',
-  'RNJCv8iJf',
-  'Smu7ookYD',
-  'jtg905av8',
-  'w7tZ2TZvX',
-  'fzFe80Ulh',
-]
+var cycleOrder2 = ['xLhVUZ25C', 'YySLLH5rq', 'RNJCv8iJf', 'Smu7ookYD', 'jtg905av8', 'w7tZ2TZvX', 'fzFe80Ulh']
 var serializationHash2 = 'framer-UgDr4'
 var variantClassNames2 = {
   fzFe80Ulh: 'framer-v-1414b56',
@@ -510,18 +456,12 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = { bounce: 0, delay: 0, duration: 0.6, type: 'spring' }
 var toResponsiveImage2 = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string' ? { src: value } : void 0
@@ -533,10 +473,7 @@ var QueryData = ({ query: query2, pageSize, children }) => {
 var Transition2 = ({ value, children }) => {
   const config = React2.useContext(MotionConfigContext2)
   const transition = value ?? config.transition
-  const contextValue = React2.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React2.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx2(MotionConfigContext2.Provider, {
     value: contextValue,
     children,
@@ -556,10 +493,8 @@ var humanReadableVariantMap2 = {
 var getProps2 = ({ direction, height, id, width, ...props }) => {
   return {
     ...props,
-    CHO3qLUnq:
-      humanReadableEnumMap[direction] ?? direction ?? props.CHO3qLUnq ?? 'row',
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'xLhVUZ25C',
+    CHO3qLUnq: humanReadableEnumMap[direction] ?? direction ?? props.CHO3qLUnq ?? 'row',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'xLhVUZ25C',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -667,12 +602,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx2(motion2.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx2(
-            scopingClassNames,
-            'framer-1weut7u',
-            className,
-            classNames,
-          ),
+          className: cx2(scopingClassNames, 'framer-1weut7u', className, classNames),
           'data-framer-name': 'Default',
           'data-highlight': true,
           layoutDependency,
@@ -897,391 +827,286 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                           LayoutGroup2,
                           {
                             id: `Nj08Q11J1-${idNj08Q11J12}`,
-                            children: /* @__PURE__ */ _jsx2(
-                              PathVariablesContext.Provider,
-                              {
-                                value: {
-                                  k2CHhHMep: k2CHhHMepNj08Q11J12,
-                                },
-                                children: /* @__PURE__ */ _jsxs2(motion2.div, {
-                                  className: 'framer-lxavfw',
-                                  'data-framer-name': 'Content',
-                                  layoutDependency,
-                                  layoutId: 'JEl08Sldu',
-                                  style: {
-                                    '--3m0f6q': CHO3qLUnq,
-                                    '--ysm8iw':
-                                      CHO3qLUnq === 'column' ? '100%' : '1px',
-                                    '--zw2j0h':
-                                      CHO3qLUnq === 'column'
-                                        ? void 0
-                                        : '1 0 0px',
-                                  },
-                                  children: [
-                                    /* @__PURE__ */ _jsxs2(motion2.div, {
-                                      className: 'framer-1r4pjuz',
-                                      'data-framer-name': 'Block',
-                                      layoutDependency,
-                                      layoutId: 'Z0jRxziHo',
-                                      children: [
-                                        /* @__PURE__ */ _jsx2(
-                                          ComponentViewportProvider2,
-                                          {
-                                            height: 300,
-                                            width: `max(max(max(${componentViewport?.width || '100vw'}, 1px), 300px), 1px)`,
-                                            children: /* @__PURE__ */ _jsx2(
-                                              SmartComponentScopedContainer2,
-                                              {
-                                                className:
-                                                  'framer-1k3jwp-container',
-                                                layoutDependency,
-                                                layoutId: 'XhDgTqgsx-container',
-                                                nodeId: 'XhDgTqgsx',
-                                                rendersWithMotion: true,
-                                                scopeId: 'Ewozog559',
-                                                children: /* @__PURE__ */ _jsx2(
-                                                  stdin_default4,
-                                                  {
-                                                    BgC3EyFez:
-                                                      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-                                                    BkVgYZ4LQ:
-                                                      NfB1UzrnJNj08Q11J12,
-                                                    ELlerrEJz:
-                                                      TuYPxBrSWNj08Q11J12,
-                                                    GCneHTBce:
-                                                      byPYaEtXNNj08Q11J12,
-                                                    h0NtaiGHO:
-                                                      H7i_trW1TNj08Q11J12,
-                                                    height: '100%',
-                                                    id: 'XhDgTqgsx',
-                                                    KKdiRFJu2:
-                                                      toResponsiveImage2(
-                                                        llvUD7hlGNj08Q11J12,
-                                                      ),
-                                                    layoutId: 'XhDgTqgsx',
-                                                    Nmm1AYzfJ:
-                                                      yuC4XDeYJNj08Q11J12,
-                                                    NnRAVynIX:
-                                                      NgWTJk4RyNj08Q11J12,
-                                                    oGqNJ1s9K:
-                                                      'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
-                                                    style: {
-                                                      width: '100%',
-                                                    },
-                                                    variant: 'gXOOgW_0x',
-                                                    vrcKhHwBb:
-                                                      toResponsiveImage2(
-                                                        kpyQ6bs8ONj08Q11J12,
-                                                      ),
-                                                    width: '100%',
-                                                    ...addPropertyOverrides2(
-                                                      {
-                                                        fzFe80Ulh: {
-                                                          variant: 'zhhN81oxS',
-                                                        },
-                                                        jtg905av8: {
-                                                          variant: 'zhhN81oxS',
-                                                        },
-                                                        RNJCv8iJf: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                        Smu7ookYD: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                        w7tZ2TZvX: {
-                                                          variant: 'zhhN81oxS',
-                                                        },
-                                                        YySLLH5rq: {
-                                                          GCneHTBce:
-                                                            'Alex Chen',
-                                                          h0NtaiGHO:
-                                                            '\u201CJet transformed our entire workflow. We\xA0cut load times by\xA080% and our development team couldn\u2019t be\xA0happier.\u201D',
-                                                          NnRAVynIX:
-                                                            'Founder @ Gropa',
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                      },
-                                                      baseVariant,
-                                                      gestureVariant,
-                                                    ),
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                        /* @__PURE__ */ _jsx2(
-                                          ComponentViewportProvider2,
-                                          {
-                                            height: 300,
-                                            width: `max(max(${componentViewport?.width || '100vw'}, 1px), 300px)`,
-                                            children: /* @__PURE__ */ _jsx2(
-                                              SmartComponentScopedContainer2,
-                                              {
-                                                className:
-                                                  'framer-1hi3u90-container',
-                                                layoutDependency,
-                                                layoutId: 'W7E1cK3fC-container',
-                                                nodeId: 'W7E1cK3fC',
-                                                rendersWithMotion: true,
-                                                scopeId: 'Ewozog559',
-                                                children: /* @__PURE__ */ _jsx2(
-                                                  stdin_default3,
-                                                  {
-                                                    height: '100%',
-                                                    id: 'W7E1cK3fC',
-                                                    layoutId: 'W7E1cK3fC',
-                                                    style: {
-                                                      height: '100%',
-                                                      width: '100%',
-                                                    },
-                                                    variant: 'yzIFdYlxZ',
-                                                    width: '100%',
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                      ],
-                                    }),
-                                    /* @__PURE__ */ _jsxs2(motion2.div, {
-                                      className: 'framer-16zz3xs',
-                                      'data-framer-name': 'Block',
-                                      layoutDependency,
-                                      layoutId: 'YVMd0gRVz',
-                                      children: [
-                                        /* @__PURE__ */ _jsx2(
-                                          ComponentViewportProvider2,
-                                          {
-                                            height: 300,
-                                            width: `max(max(max(${componentViewport?.width || '100vw'}, 1px), 300px), 1px)`,
-                                            children: /* @__PURE__ */ _jsx2(
-                                              SmartComponentScopedContainer2,
-                                              {
-                                                className:
-                                                  'framer-1wcupz7-container',
-                                                layoutDependency,
-                                                layoutId: 'EPRQr7q9D-container',
-                                                nodeId: 'EPRQr7q9D',
-                                                rendersWithMotion: true,
-                                                scopeId: 'Ewozog559',
-                                                children: /* @__PURE__ */ _jsx2(
-                                                  stdin_default4,
-                                                  {
-                                                    BgC3EyFez:
-                                                      'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
-                                                    BkVgYZ4LQ:
-                                                      q2DHWSlV9Nj08Q11J12,
-                                                    ELlerrEJz:
-                                                      SZ_8Zgyp2Nj08Q11J12,
-                                                    GCneHTBce:
-                                                      flXDvqvp1Nj08Q11J12,
-                                                    h0NtaiGHO:
-                                                      O1798XzTkNj08Q11J12,
-                                                    height: '100%',
-                                                    id: 'EPRQr7q9D',
-                                                    KKdiRFJu2:
-                                                      toResponsiveImage2(
-                                                        xVYukB5Q3Nj08Q11J12,
-                                                      ),
-                                                    layoutId: 'EPRQr7q9D',
-                                                    Nmm1AYzfJ:
-                                                      M1UAamizWNj08Q11J12,
-                                                    NnRAVynIX:
-                                                      wY0zwKrMaNj08Q11J12,
-                                                    oGqNJ1s9K:
-                                                      'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
-                                                    style: {
-                                                      width: '100%',
-                                                    },
-                                                    variant: 'gXOOgW_0x',
-                                                    vrcKhHwBb:
-                                                      toResponsiveImage2(
-                                                        LuYDPuKBzNj08Q11J12,
-                                                      ),
-                                                    width: '100%',
-                                                    ...addPropertyOverrides2(
-                                                      {
-                                                        fzFe80Ulh: {
-                                                          variant: 'zhhN81oxS',
-                                                        },
-                                                        jtg905av8: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                        RNJCv8iJf: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                        Smu7ookYD: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                        w7tZ2TZvX: {
-                                                          variant: 'zhhN81oxS',
-                                                        },
-                                                      },
-                                                      baseVariant,
-                                                      gestureVariant,
-                                                    ),
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                        /* @__PURE__ */ _jsx2(
-                                          ComponentViewportProvider2,
-                                          {
-                                            height: 300,
-                                            width: `max(max(${componentViewport?.width || '100vw'}, 1px), 300px)`,
-                                            children: /* @__PURE__ */ _jsx2(
-                                              SmartComponentScopedContainer2,
-                                              {
-                                                className:
-                                                  'framer-k2v6xt-container',
-                                                layoutDependency,
-                                                layoutId: 'YD4Imwq0W-container',
-                                                nodeId: 'YD4Imwq0W',
-                                                rendersWithMotion: true,
-                                                scopeId: 'Ewozog559',
-                                                children: /* @__PURE__ */ _jsx2(
-                                                  stdin_default3,
-                                                  {
-                                                    height: '100%',
-                                                    id: 'YD4Imwq0W',
-                                                    layoutId: 'YD4Imwq0W',
-                                                    style: {
-                                                      height: '100%',
-                                                      width: '100%',
-                                                    },
-                                                    variant: 'yzIFdYlxZ',
-                                                    width: '100%',
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                      ],
-                                    }),
-                                    /* @__PURE__ */ _jsxs2(motion2.div, {
-                                      className: 'framer-2prfki',
-                                      'data-framer-name': 'Block',
-                                      layoutDependency,
-                                      layoutId: 'BGCQku3yZ',
-                                      children: [
-                                        /* @__PURE__ */ _jsx2(
-                                          ComponentViewportProvider2,
-                                          {
-                                            height: 300,
-                                            width: `max(max(max(${componentViewport?.width || '100vw'}, 1px), 300px), 1px)`,
-                                            children: /* @__PURE__ */ _jsx2(
-                                              SmartComponentScopedContainer2,
-                                              {
-                                                className:
-                                                  'framer-1wewufd-container',
-                                                layoutDependency,
-                                                layoutId: 'zomra0Jbm-container',
-                                                nodeId: 'zomra0Jbm',
-                                                rendersWithMotion: true,
-                                                scopeId: 'Ewozog559',
-                                                children: /* @__PURE__ */ _jsx2(
-                                                  stdin_default4,
-                                                  {
-                                                    BgC3EyFez:
-                                                      'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
-                                                    BkVgYZ4LQ:
-                                                      MfMhQ7cacNj08Q11J12,
-                                                    ELlerrEJz:
-                                                      bers9njmGNj08Q11J12,
-                                                    GCneHTBce:
-                                                      vtZpVVuA1Nj08Q11J12,
-                                                    h0NtaiGHO:
-                                                      Si62PCRt7Nj08Q11J12,
-                                                    height: '100%',
-                                                    id: 'zomra0Jbm',
-                                                    KKdiRFJu2:
-                                                      toResponsiveImage2(
-                                                        F0AbKKPkWNj08Q11J12,
-                                                      ),
-                                                    layoutId: 'zomra0Jbm',
-                                                    Nmm1AYzfJ:
-                                                      LJBepPQgVNj08Q11J12,
-                                                    NnRAVynIX:
-                                                      O4aLJMP8XNj08Q11J12,
-                                                    oGqNJ1s9K:
-                                                      'var(--token-dcd7ab3c-f32b-409a-9ff2-c162bb1c4a45, rgb(224, 205, 58))',
-                                                    style: {
-                                                      width: '100%',
-                                                    },
-                                                    variant: 'gXOOgW_0x',
-                                                    vrcKhHwBb:
-                                                      toResponsiveImage2(
-                                                        rJ8CzM6QANj08Q11J12,
-                                                      ),
-                                                    width: '100%',
-                                                    ...addPropertyOverrides2(
-                                                      {
-                                                        fzFe80Ulh: {
-                                                          variant: 'zhhN81oxS',
-                                                        },
-                                                        jtg905av8: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                        Smu7ookYD: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                        w7tZ2TZvX: {
-                                                          variant: 'y4G8oqwNh',
-                                                        },
-                                                      },
-                                                      baseVariant,
-                                                      gestureVariant,
-                                                    ),
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                        /* @__PURE__ */ _jsx2(
-                                          ComponentViewportProvider2,
-                                          {
-                                            height: 300,
-                                            width: `max(max(${componentViewport?.width || '100vw'}, 1px), 300px)`,
-                                            children: /* @__PURE__ */ _jsx2(
-                                              SmartComponentScopedContainer2,
-                                              {
-                                                className:
-                                                  'framer-1p2x36j-container',
-                                                layoutDependency,
-                                                layoutId: 'hLE5ZLhhH-container',
-                                                nodeId: 'hLE5ZLhhH',
-                                                rendersWithMotion: true,
-                                                scopeId: 'Ewozog559',
-                                                children: /* @__PURE__ */ _jsx2(
-                                                  stdin_default3,
-                                                  {
-                                                    height: '100%',
-                                                    id: 'hLE5ZLhhH',
-                                                    layoutId: 'hLE5ZLhhH',
-                                                    style: {
-                                                      height: '100%',
-                                                      width: '100%',
-                                                    },
-                                                    variant: 'yzIFdYlxZ',
-                                                    width: '100%',
-                                                  },
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                      ],
-                                    }),
-                                  ],
-                                }),
+                            children: /* @__PURE__ */ _jsx2(PathVariablesContext.Provider, {
+                              value: {
+                                k2CHhHMep: k2CHhHMepNj08Q11J12,
                               },
-                            ),
+                              children: /* @__PURE__ */ _jsxs2(motion2.div, {
+                                className: 'framer-lxavfw',
+                                'data-framer-name': 'Content',
+                                layoutDependency,
+                                layoutId: 'JEl08Sldu',
+                                style: {
+                                  '--3m0f6q': CHO3qLUnq,
+                                  '--ysm8iw': CHO3qLUnq === 'column' ? '100%' : '1px',
+                                  '--zw2j0h': CHO3qLUnq === 'column' ? void 0 : '1 0 0px',
+                                },
+                                children: [
+                                  /* @__PURE__ */ _jsxs2(motion2.div, {
+                                    className: 'framer-1r4pjuz',
+                                    'data-framer-name': 'Block',
+                                    layoutDependency,
+                                    layoutId: 'Z0jRxziHo',
+                                    children: [
+                                      /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
+                                        height: 300,
+                                        width: `max(max(max(${componentViewport?.width || '100vw'}, 1px), 300px), 1px)`,
+                                        children: /* @__PURE__ */ _jsx2(SmartComponentScopedContainer2, {
+                                          className: 'framer-1k3jwp-container',
+                                          layoutDependency,
+                                          layoutId: 'XhDgTqgsx-container',
+                                          nodeId: 'XhDgTqgsx',
+                                          rendersWithMotion: true,
+                                          scopeId: 'Ewozog559',
+                                          children: /* @__PURE__ */ _jsx2(stdin_default4, {
+                                            BgC3EyFez:
+                                              'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                                            BkVgYZ4LQ: NfB1UzrnJNj08Q11J12,
+                                            ELlerrEJz: TuYPxBrSWNj08Q11J12,
+                                            GCneHTBce: byPYaEtXNNj08Q11J12,
+                                            h0NtaiGHO: H7i_trW1TNj08Q11J12,
+                                            height: '100%',
+                                            id: 'XhDgTqgsx',
+                                            KKdiRFJu2: toResponsiveImage2(llvUD7hlGNj08Q11J12),
+                                            layoutId: 'XhDgTqgsx',
+                                            Nmm1AYzfJ: yuC4XDeYJNj08Q11J12,
+                                            NnRAVynIX: NgWTJk4RyNj08Q11J12,
+                                            oGqNJ1s9K:
+                                              'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
+                                            style: {
+                                              width: '100%',
+                                            },
+                                            variant: 'gXOOgW_0x',
+                                            vrcKhHwBb: toResponsiveImage2(kpyQ6bs8ONj08Q11J12),
+                                            width: '100%',
+                                            ...addPropertyOverrides2(
+                                              {
+                                                fzFe80Ulh: {
+                                                  variant: 'zhhN81oxS',
+                                                },
+                                                jtg905av8: {
+                                                  variant: 'zhhN81oxS',
+                                                },
+                                                RNJCv8iJf: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                                Smu7ookYD: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                                w7tZ2TZvX: {
+                                                  variant: 'zhhN81oxS',
+                                                },
+                                                YySLLH5rq: {
+                                                  GCneHTBce: 'Alex Chen',
+                                                  h0NtaiGHO:
+                                                    '\u201CJet transformed our entire workflow. We\xA0cut load times by\xA080% and our development team couldn\u2019t be\xA0happier.\u201D',
+                                                  NnRAVynIX: 'Founder @ Gropa',
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                              },
+                                              baseVariant,
+                                              gestureVariant,
+                                            ),
+                                          }),
+                                        }),
+                                      }),
+                                      /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
+                                        height: 300,
+                                        width: `max(max(${componentViewport?.width || '100vw'}, 1px), 300px)`,
+                                        children: /* @__PURE__ */ _jsx2(SmartComponentScopedContainer2, {
+                                          className: 'framer-1hi3u90-container',
+                                          layoutDependency,
+                                          layoutId: 'W7E1cK3fC-container',
+                                          nodeId: 'W7E1cK3fC',
+                                          rendersWithMotion: true,
+                                          scopeId: 'Ewozog559',
+                                          children: /* @__PURE__ */ _jsx2(stdin_default3, {
+                                            height: '100%',
+                                            id: 'W7E1cK3fC',
+                                            layoutId: 'W7E1cK3fC',
+                                            style: {
+                                              height: '100%',
+                                              width: '100%',
+                                            },
+                                            variant: 'yzIFdYlxZ',
+                                            width: '100%',
+                                          }),
+                                        }),
+                                      }),
+                                    ],
+                                  }),
+                                  /* @__PURE__ */ _jsxs2(motion2.div, {
+                                    className: 'framer-16zz3xs',
+                                    'data-framer-name': 'Block',
+                                    layoutDependency,
+                                    layoutId: 'YVMd0gRVz',
+                                    children: [
+                                      /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
+                                        height: 300,
+                                        width: `max(max(max(${componentViewport?.width || '100vw'}, 1px), 300px), 1px)`,
+                                        children: /* @__PURE__ */ _jsx2(SmartComponentScopedContainer2, {
+                                          className: 'framer-1wcupz7-container',
+                                          layoutDependency,
+                                          layoutId: 'EPRQr7q9D-container',
+                                          nodeId: 'EPRQr7q9D',
+                                          rendersWithMotion: true,
+                                          scopeId: 'Ewozog559',
+                                          children: /* @__PURE__ */ _jsx2(stdin_default4, {
+                                            BgC3EyFez:
+                                              'var(--token-70af50e6-b68b-4785-a006-3affe73027af, rgb(41, 194, 255))',
+                                            BkVgYZ4LQ: q2DHWSlV9Nj08Q11J12,
+                                            ELlerrEJz: SZ_8Zgyp2Nj08Q11J12,
+                                            GCneHTBce: flXDvqvp1Nj08Q11J12,
+                                            h0NtaiGHO: O1798XzTkNj08Q11J12,
+                                            height: '100%',
+                                            id: 'EPRQr7q9D',
+                                            KKdiRFJu2: toResponsiveImage2(xVYukB5Q3Nj08Q11J12),
+                                            layoutId: 'EPRQr7q9D',
+                                            Nmm1AYzfJ: M1UAamizWNj08Q11J12,
+                                            NnRAVynIX: wY0zwKrMaNj08Q11J12,
+                                            oGqNJ1s9K:
+                                              'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
+                                            style: {
+                                              width: '100%',
+                                            },
+                                            variant: 'gXOOgW_0x',
+                                            vrcKhHwBb: toResponsiveImage2(LuYDPuKBzNj08Q11J12),
+                                            width: '100%',
+                                            ...addPropertyOverrides2(
+                                              {
+                                                fzFe80Ulh: {
+                                                  variant: 'zhhN81oxS',
+                                                },
+                                                jtg905av8: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                                RNJCv8iJf: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                                Smu7ookYD: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                                w7tZ2TZvX: {
+                                                  variant: 'zhhN81oxS',
+                                                },
+                                              },
+                                              baseVariant,
+                                              gestureVariant,
+                                            ),
+                                          }),
+                                        }),
+                                      }),
+                                      /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
+                                        height: 300,
+                                        width: `max(max(${componentViewport?.width || '100vw'}, 1px), 300px)`,
+                                        children: /* @__PURE__ */ _jsx2(SmartComponentScopedContainer2, {
+                                          className: 'framer-k2v6xt-container',
+                                          layoutDependency,
+                                          layoutId: 'YD4Imwq0W-container',
+                                          nodeId: 'YD4Imwq0W',
+                                          rendersWithMotion: true,
+                                          scopeId: 'Ewozog559',
+                                          children: /* @__PURE__ */ _jsx2(stdin_default3, {
+                                            height: '100%',
+                                            id: 'YD4Imwq0W',
+                                            layoutId: 'YD4Imwq0W',
+                                            style: {
+                                              height: '100%',
+                                              width: '100%',
+                                            },
+                                            variant: 'yzIFdYlxZ',
+                                            width: '100%',
+                                          }),
+                                        }),
+                                      }),
+                                    ],
+                                  }),
+                                  /* @__PURE__ */ _jsxs2(motion2.div, {
+                                    className: 'framer-2prfki',
+                                    'data-framer-name': 'Block',
+                                    layoutDependency,
+                                    layoutId: 'BGCQku3yZ',
+                                    children: [
+                                      /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
+                                        height: 300,
+                                        width: `max(max(max(${componentViewport?.width || '100vw'}, 1px), 300px), 1px)`,
+                                        children: /* @__PURE__ */ _jsx2(SmartComponentScopedContainer2, {
+                                          className: 'framer-1wewufd-container',
+                                          layoutDependency,
+                                          layoutId: 'zomra0Jbm-container',
+                                          nodeId: 'zomra0Jbm',
+                                          rendersWithMotion: true,
+                                          scopeId: 'Ewozog559',
+                                          children: /* @__PURE__ */ _jsx2(stdin_default4, {
+                                            BgC3EyFez:
+                                              'var(--token-1e61b8ec-fb03-4d71-8889-99c84f72af30, rgb(216, 92, 224))',
+                                            BkVgYZ4LQ: MfMhQ7cacNj08Q11J12,
+                                            ELlerrEJz: bers9njmGNj08Q11J12,
+                                            GCneHTBce: vtZpVVuA1Nj08Q11J12,
+                                            h0NtaiGHO: Si62PCRt7Nj08Q11J12,
+                                            height: '100%',
+                                            id: 'zomra0Jbm',
+                                            KKdiRFJu2: toResponsiveImage2(F0AbKKPkWNj08Q11J12),
+                                            layoutId: 'zomra0Jbm',
+                                            Nmm1AYzfJ: LJBepPQgVNj08Q11J12,
+                                            NnRAVynIX: O4aLJMP8XNj08Q11J12,
+                                            oGqNJ1s9K:
+                                              'var(--token-dcd7ab3c-f32b-409a-9ff2-c162bb1c4a45, rgb(224, 205, 58))',
+                                            style: {
+                                              width: '100%',
+                                            },
+                                            variant: 'gXOOgW_0x',
+                                            vrcKhHwBb: toResponsiveImage2(rJ8CzM6QANj08Q11J12),
+                                            width: '100%',
+                                            ...addPropertyOverrides2(
+                                              {
+                                                fzFe80Ulh: {
+                                                  variant: 'zhhN81oxS',
+                                                },
+                                                jtg905av8: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                                Smu7ookYD: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                                w7tZ2TZvX: {
+                                                  variant: 'y4G8oqwNh',
+                                                },
+                                              },
+                                              baseVariant,
+                                              gestureVariant,
+                                            ),
+                                          }),
+                                        }),
+                                      }),
+                                      /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
+                                        height: 300,
+                                        width: `max(max(${componentViewport?.width || '100vw'}, 1px), 300px)`,
+                                        children: /* @__PURE__ */ _jsx2(SmartComponentScopedContainer2, {
+                                          className: 'framer-1p2x36j-container',
+                                          layoutDependency,
+                                          layoutId: 'hLE5ZLhhH-container',
+                                          nodeId: 'hLE5ZLhhH',
+                                          rendersWithMotion: true,
+                                          scopeId: 'Ewozog559',
+                                          children: /* @__PURE__ */ _jsx2(stdin_default3, {
+                                            height: '100%',
+                                            id: 'hLE5ZLhhH',
+                                            layoutId: 'hLE5ZLhhH',
+                                            style: {
+                                              height: '100%',
+                                              width: '100%',
+                                            },
+                                            variant: 'yzIFdYlxZ',
+                                            width: '100%',
+                                          }),
+                                        }),
+                                      }),
+                                    ],
+                                  }),
+                                ],
+                              }),
+                            }),
                           },
                           idNj08Q11J12,
                         )
@@ -1312,15 +1137,7 @@ FramerEwozog559.displayName = 'Testimonials Cycler (6)'
 FramerEwozog559.defaultProps = { height: 300, width: 1350 }
 addPropertyControls2(FramerEwozog559, {
   variant: {
-    options: [
-      'xLhVUZ25C',
-      'YySLLH5rq',
-      'RNJCv8iJf',
-      'Smu7ookYD',
-      'jtg905av8',
-      'w7tZ2TZvX',
-      'fzFe80Ulh',
-    ],
+    options: ['xLhVUZ25C', 'YySLLH5rq', 'RNJCv8iJf', 'Smu7ookYD', 'jtg905av8', 'w7tZ2TZvX', 'fzFe80Ulh'],
     optionTitles: [
       'Default',
       'Swtich (First)',
@@ -1345,11 +1162,7 @@ addPropertyControls2(FramerEwozog559, {
 })
 addFonts2(
   FramerEwozog559,
-  [
-    { explicitInter: true, fonts: [] },
-    ...TestimonialCyclerFonts,
-    ...MainSiteGridBorderFonts,
-  ],
+  [{ explicitInter: true, fonts: [] }, ...TestimonialCyclerFonts, ...MainSiteGridBorderFonts],
   { supportsExplicitInterCodegen: true },
 )
 

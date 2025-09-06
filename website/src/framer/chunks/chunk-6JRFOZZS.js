@@ -33,19 +33,14 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -59,10 +54,8 @@ var humanReadableVariantMap = {
 var getProps = ({ content, height, id, width, ...props }) => {
   return {
     ...props,
-    iodpfCerq:
-      content ?? props.iodpfCerq ?? 'Access to 10+ blockchain networks',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'gSVRLaDmC',
+    iodpfCerq: content ?? props.iodpfCerq ?? 'Access to 10+ blockchain networks',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'gSVRLaDmC',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -75,14 +68,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    iodpfCerq,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className2, layoutId, variant, iodpfCerq, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -113,12 +99,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-8hq6hr',
-            className2,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-8hq6hr', className2, classNames),
           'data-framer-name': 'Check items - White',
           layoutDependency,
           layoutId: 'gSVRLaDmC',
@@ -236,8 +217,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

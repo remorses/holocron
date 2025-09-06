@@ -36,9 +36,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -48,11 +46,7 @@ var transition1 = {
   type: 'spring',
 }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string'
@@ -71,11 +65,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -85,12 +75,8 @@ var humanReadableVariantMap = {
 var getProps = ({ accent, height, id, image, width, ...props }) => {
   return {
     ...props,
-    imLhjL0oq:
-      accent ??
-      props.imLhjL0oq ??
-      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'vQWJZxw25',
+    imLhjL0oq: accent ?? props.imLhjL0oq ?? 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'vQWJZxw25',
     woptWnw2I: image ??
       props.woptWnw2I ?? {
         pixelHeight: 950,
@@ -111,15 +97,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    woptWnw2I,
-    imLhjL0oq,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, woptWnw2I, imLhjL0oq, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -147,12 +125,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1we6ti7',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1we6ti7', className, classNames)}
             data-framer-name={'Greyscale'}
             layoutDependency={layoutDependency}
             layoutId={'vQWJZxw25'}
@@ -199,9 +172,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     intensity: 40,
                     interval: 0.08,
                   }}
-                  backgroundColor={
-                    'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))'
-                  }
+                  backgroundColor={'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))'}
                   brightness={-20}
                   dotColor={imLhjL0oq}
                   enabled={true}
@@ -256,8 +227,7 @@ addPropertyControls(FramerHfbBMQhra, {
     type: ControlType.ResponsiveImage,
   },
   imLhjL0oq: {
-    defaultValue:
-      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)) /* {"name":"Accent"} */',
+    defaultValue: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)) /* {"name":"Accent"} */',
     description: 'Accent color you wanna switch the image to.',
     title: 'Accent',
     type: ControlType.Color,
@@ -326,17 +296,11 @@ stdin_default.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -384,9 +348,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

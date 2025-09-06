@@ -60,9 +60,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -76,10 +74,7 @@ var transition2 = { bounce: 0.1, delay: 0, duration: 0.3, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -97,24 +92,14 @@ var humanReadableVariantMap = {
   Border: 'feWXGq4P4',
   Orange: 'BEo_V2OAz',
 }
-var getProps = ({
-  buttonLink,
-  click,
-  height,
-  id,
-  newTab,
-  title,
-  width,
-  ...props
-}) => {
+var getProps = ({ buttonLink, click, height, id, newTab, title, width, ...props }) => {
   return {
     ...props,
     b7sws2Xmf: newTab ?? props.b7sws2Xmf ?? true,
     gDhgzsvqf: buttonLink ?? props.gDhgzsvqf,
     LPw9Av7yM: click ?? props.LPw9Av7yM,
     nx2tuureE: title ?? props.nx2tuureE ?? 'Text',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'z1bsEAxC0',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'z1bsEAxC0',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -168,10 +153,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const sharedStyleClassNames = [className]
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
   const isDisplayed = () => {
-    if (['feWXGq4P4-hover', 'ZNBPrWTXF-hover'].includes(gestureVariant))
-      return false
-    if (['feWXGq4P4', 'ZNBPrWTXF', 'F7eWAlrXR'].includes(baseVariant))
-      return false
+    if (['feWXGq4P4-hover', 'ZNBPrWTXF-hover'].includes(gestureVariant)) return false
+    if (['feWXGq4P4', 'ZNBPrWTXF', 'F7eWAlrXR'].includes(baseVariant)) return false
     return true
   }
   const isDisplayed1 = () => {
@@ -225,8 +208,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               '--border-style': 'solid',
               '--border-top-width': '0px',
               backdropFilter: 'none',
-              backgroundColor:
-                'var(--token-faa915f5-e04b-4515-a52f-9a2bba33b6ba, rgba(255, 255, 255, 0.85))',
+              backgroundColor: 'var(--token-faa915f5-e04b-4515-a52f-9a2bba33b6ba, rgba(255, 255, 255, 0.85))',
               borderBottomLeftRadius: 20,
               borderBottomRightRadius: 20,
               borderTopLeftRadius: 20,
@@ -242,22 +224,18 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 '--border-right-width': '0px',
                 '--border-top-width': '0px',
                 backdropFilter: 'none',
-                backgroundColor:
-                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                 boxShadow: 'none',
                 WebkitBackdropFilter: 'none',
               },
               'dpEXmejGI-hover': {
-                backgroundColor:
-                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
               },
               'ecVjHfi7D-hover': {
-                backgroundColor:
-                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
               },
               'feWXGq4P4-hover': {
-                backgroundColor:
-                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
               },
               'z1bsEAxC0-hover': {
                 '--border-bottom-width': '0px',
@@ -265,20 +243,17 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 '--border-right-width': '0px',
                 '--border-top-width': '0px',
                 backdropFilter: 'none',
-                backgroundColor:
-                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                 boxShadow: 'none',
                 WebkitBackdropFilter: 'none',
               },
               'ZNBPrWTXF-hover': {
-                backgroundColor:
-                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                 boxShadow:
                   'inset 0px 0px 25px 0px var(--token-faa915f5-e04b-4515-a52f-9a2bba33b6ba, rgba(255, 255, 255, 0.85))',
               },
               BEo_V2OAz: {
-                backgroundColor:
-                  'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
               },
               dpEXmejGI: {
                 '--border-bottom-width': '0px',
@@ -299,8 +274,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 '--border-right-width': '0px',
                 '--border-top-width': '0px',
                 backdropFilter: 'none',
-                backgroundColor:
-                  'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                 borderBottomLeftRadius: 27,
                 borderBottomRightRadius: 27,
                 borderTopLeftRadius: 27,
@@ -310,15 +284,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               },
               F7eWAlrXR: {
                 '--border-bottom-width': '1px',
-                '--border-color':
-                  'var(--token-2f086888-2254-42af-8805-28fc6ecd4e26, rgba(255, 255, 255, 0.38))',
+                '--border-color': 'var(--token-2f086888-2254-42af-8805-28fc6ecd4e26, rgba(255, 255, 255, 0.38))',
                 '--border-left-width': '1px',
                 '--border-right-width': '1px',
                 '--border-style': 'solid',
                 '--border-top-width': '1px',
                 backdropFilter: 'blur(5px)',
-                backgroundColor:
-                  'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
+                backgroundColor: 'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
                 borderBottomLeftRadius: 27,
                 borderBottomRightRadius: 27,
                 borderTopLeftRadius: 27,
@@ -329,15 +301,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               },
               feWXGq4P4: {
                 '--border-bottom-width': '1px',
-                '--border-color':
-                  'var(--token-2f086888-2254-42af-8805-28fc6ecd4e26, rgba(255, 255, 255, 0.38))',
+                '--border-color': 'var(--token-2f086888-2254-42af-8805-28fc6ecd4e26, rgba(255, 255, 255, 0.38))',
                 '--border-left-width': '1px',
                 '--border-right-width': '1px',
                 '--border-style': 'solid',
                 '--border-top-width': '1px',
                 backdropFilter: 'blur(5px)',
-                backgroundColor:
-                  'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
+                backgroundColor: 'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
                 boxShadow:
                   'inset 0px 0px 6px 3px var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
                 WebkitBackdropFilter: 'blur(5px)',
@@ -361,8 +331,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 '--border-right-width': '0px',
                 '--border-top-width': '0px',
                 backdropFilter: 'none',
-                backgroundColor:
-                  'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                 borderBottomLeftRadius: 27,
                 borderBottomRightRadius: 27,
                 borderTopLeftRadius: 27,
@@ -372,15 +341,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               },
               ZNBPrWTXF: {
                 '--border-bottom-width': '1px',
-                '--border-color':
-                  'var(--token-2f086888-2254-42af-8805-28fc6ecd4e26, rgba(255, 255, 255, 0.38))',
+                '--border-color': 'var(--token-2f086888-2254-42af-8805-28fc6ecd4e26, rgba(255, 255, 255, 0.38))',
                 '--border-left-width': '1px',
                 '--border-right-width': '1px',
                 '--border-style': 'solid',
                 '--border-top-width': '1px',
                 backdropFilter: 'blur(5px)',
-                backgroundColor:
-                  'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
+                backgroundColor: 'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
                 borderBottomLeftRadius: 27,
                 borderBottomRightRadius: 27,
                 borderTopLeftRadius: 27,
@@ -467,27 +434,22 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     layoutDependency,
                     layoutId: 'oxCwbrk97',
                     style: {
-                      '--extracted-r6o4lv':
-                        'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
+                      '--extracted-r6o4lv': 'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
                       '--framer-paragraph-spacing': '0px',
                     },
                     text: nx2tuureE,
                     variants: {
                       'BEo_V2OAz-hover': {
-                        '--extracted-r6o4lv':
-                          'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                        '--extracted-r6o4lv': 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                       },
                       'ecVjHfi7D-hover': {
-                        '--extracted-r6o4lv':
-                          'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                        '--extracted-r6o4lv': 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                       },
                       'feWXGq4P4-hover': {
-                        '--extracted-r6o4lv':
-                          'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                        '--extracted-r6o4lv': 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                       },
                       'ZNBPrWTXF-hover': {
-                        '--extracted-r6o4lv':
-                          'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                        '--extracted-r6o4lv': 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                       },
                     },
                     verticalAlignment: 'top',
@@ -613,55 +575,48 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     layoutDependency,
                     layoutId: 'dXvAkUtn8',
                     style: {
-                      backgroundColor:
-                        'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
+                      backgroundColor: 'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
                       mask: 'radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 97.73191159909909%, rgba(0,0,0,0) 100%) add',
                       WebkitMask:
                         'radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 97.73191159909909%, rgba(0,0,0,0) 100%) add',
                     },
                     variants: {
                       'dpEXmejGI-hover': {
-                        backgroundColor:
-                          'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                        backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                       },
                       'z1bsEAxC0-hover': {
-                        backgroundColor:
-                          'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                        backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                       },
                     },
                     children: [
                       isDisplayed1() &&
                         /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                          children: /* @__PURE__ */ _jsx(
-                            SmartComponentScopedContainer,
-                            {
-                              className: 'framer-1u8ax46-container',
-                              isAuthoredByUser: true,
-                              isModuleExternal: true,
-                              layoutDependency,
-                              layoutId: 'Q1hZfs0NF-container',
-                              nodeId: 'Q1hZfs0NF',
-                              rendersWithMotion: true,
-                              scopeId: 'AZKPdPAzc',
-                              children: /* @__PURE__ */ _jsx(Icon, {
-                                color:
-                                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                          children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                            className: 'framer-1u8ax46-container',
+                            isAuthoredByUser: true,
+                            isModuleExternal: true,
+                            layoutDependency,
+                            layoutId: 'Q1hZfs0NF-container',
+                            nodeId: 'Q1hZfs0NF',
+                            rendersWithMotion: true,
+                            scopeId: 'AZKPdPAzc',
+                            children: /* @__PURE__ */ _jsx(Icon, {
+                              color: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                              height: '100%',
+                              iconSearch: 'arrow',
+                              iconSelection: 'ArrowRight',
+                              id: 'Q1hZfs0NF',
+                              layoutId: 'Q1hZfs0NF',
+                              mirrored: false,
+                              selectByList: true,
+                              style: {
                                 height: '100%',
-                                iconSearch: 'arrow',
-                                iconSelection: 'ArrowRight',
-                                id: 'Q1hZfs0NF',
-                                layoutId: 'Q1hZfs0NF',
-                                mirrored: false,
-                                selectByList: true,
-                                style: {
-                                  height: '100%',
-                                  width: '100%',
-                                },
-                                weight: 'regular',
                                 width: '100%',
-                              }),
-                            },
-                          ),
+                              },
+                              weight: 'regular',
+                              width: '100%',
+                            }),
+                          }),
                         }),
                       isDisplayed2() &&
                         /* @__PURE__ */ _jsxs(motion.div, {
@@ -671,68 +626,60 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           layoutId: 'MSIFSU3L5',
                           children: [
                             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                              children: /* @__PURE__ */ _jsx(
-                                SmartComponentScopedContainer,
-                                {
-                                  className: 'framer-1pmu0co-container',
-                                  isAuthoredByUser: true,
-                                  isModuleExternal: true,
-                                  layoutDependency,
-                                  layoutId: 'Rc1FHc916-container',
-                                  nodeId: 'Rc1FHc916',
-                                  rendersWithMotion: true,
-                                  scopeId: 'AZKPdPAzc',
-                                  children: /* @__PURE__ */ _jsx(Icon, {
-                                    color:
-                                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                              children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                                className: 'framer-1pmu0co-container',
+                                isAuthoredByUser: true,
+                                isModuleExternal: true,
+                                layoutDependency,
+                                layoutId: 'Rc1FHc916-container',
+                                nodeId: 'Rc1FHc916',
+                                rendersWithMotion: true,
+                                scopeId: 'AZKPdPAzc',
+                                children: /* @__PURE__ */ _jsx(Icon, {
+                                  color: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                                  height: '100%',
+                                  iconSearch: 'arrow',
+                                  iconSelection: 'ArrowRight',
+                                  id: 'Rc1FHc916',
+                                  layoutId: 'Rc1FHc916',
+                                  mirrored: false,
+                                  selectByList: true,
+                                  style: {
                                     height: '100%',
-                                    iconSearch: 'arrow',
-                                    iconSelection: 'ArrowRight',
-                                    id: 'Rc1FHc916',
-                                    layoutId: 'Rc1FHc916',
-                                    mirrored: false,
-                                    selectByList: true,
-                                    style: {
-                                      height: '100%',
-                                      width: '100%',
-                                    },
-                                    weight: 'regular',
                                     width: '100%',
-                                  }),
-                                },
-                              ),
+                                  },
+                                  weight: 'regular',
+                                  width: '100%',
+                                }),
+                              }),
                             }),
                             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                              children: /* @__PURE__ */ _jsx(
-                                SmartComponentScopedContainer,
-                                {
-                                  className: 'framer-1farou4-container',
-                                  isAuthoredByUser: true,
-                                  isModuleExternal: true,
-                                  layoutDependency,
-                                  layoutId: 'RjiLvifHt-container',
-                                  nodeId: 'RjiLvifHt',
-                                  rendersWithMotion: true,
-                                  scopeId: 'AZKPdPAzc',
-                                  children: /* @__PURE__ */ _jsx(Icon, {
-                                    color:
-                                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                              children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                                className: 'framer-1farou4-container',
+                                isAuthoredByUser: true,
+                                isModuleExternal: true,
+                                layoutDependency,
+                                layoutId: 'RjiLvifHt-container',
+                                nodeId: 'RjiLvifHt',
+                                rendersWithMotion: true,
+                                scopeId: 'AZKPdPAzc',
+                                children: /* @__PURE__ */ _jsx(Icon, {
+                                  color: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                                  height: '100%',
+                                  iconSearch: 'arrow',
+                                  iconSelection: 'ArrowRight',
+                                  id: 'RjiLvifHt',
+                                  layoutId: 'RjiLvifHt',
+                                  mirrored: false,
+                                  selectByList: true,
+                                  style: {
                                     height: '100%',
-                                    iconSearch: 'arrow',
-                                    iconSelection: 'ArrowRight',
-                                    id: 'RjiLvifHt',
-                                    layoutId: 'RjiLvifHt',
-                                    mirrored: false,
-                                    selectByList: true,
-                                    style: {
-                                      height: '100%',
-                                      width: '100%',
-                                    },
-                                    weight: 'regular',
                                     width: '100%',
-                                  }),
-                                },
-                              ),
+                                  },
+                                  weight: 'regular',
+                                  width: '100%',
+                                }),
+                              }),
                             }),
                           ],
                         }),
@@ -825,8 +772,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

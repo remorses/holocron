@@ -30,16 +30,7 @@ import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/qfpuzKSVCQltye3gKF5y/FKbbJ5c7eT3v7WzeqOam/EHAmB9Kst.js
 import { jsx as _jsx, jsxs as _jsxs } from 'react/jsx-runtime'
-import {
-  addFonts,
-  cx,
-  SVG,
-  useComponentViewport,
-  useLocaleInfo,
-  useVariantState,
-  withCSS,
-  withFX,
-} from 'unframer'
+import { addFonts, cx, SVG, useComponentViewport, useLocaleInfo, useVariantState, withCSS, withFX } from 'unframer'
 import { LayoutGroup, motion, MotionConfigContext } from 'unframer'
 import * as React from 'react'
 import { useRef } from 'react'
@@ -83,11 +74,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var getProps = ({ height, id, width, ...props }) => {
@@ -132,12 +119,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-8jf4p1',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-8jf4p1', className, classNames)}
             data-border={true}
             data-framer-name={'Variant 1'}
             layoutDependency={layoutDependency}
@@ -145,8 +127,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             ref={refBinding}
             style={{
               '--border-bottom-width': '1px',
-              '--border-color':
-                'var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
+              '--border-color': 'var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
               '--border-left-width': '1px',
               '--border-right-width': '1px',
               '--border-style': 'solid',
@@ -174,23 +155,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               layoutDependency={layoutDependency}
               layoutId={'Q7HpbOQyi'}
               style={{
-                backgroundColor:
-                  'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                 borderBottomLeftRadius: 24,
                 borderBottomRightRadius: 24,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
-                boxShadow:
-                  '0px 0px 20px 1px var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                boxShadow: '0px 0px 20px 1px var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
               }}
               transformTemplate={transformTemplate1}
             />
             <SVG
               className={'framer-giyfwl'}
               data-framer-name={'Group 92'}
-              fill={
-                'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))'
-              }
+              fill={'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))'}
               intrinsicHeight={43}
               intrinsicWidth={44}
               layoutDependency={layoutDependency}
@@ -203,9 +180,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             <SVG
               className={'framer-12u9amq'}
               data-framer-name={'Group 91'}
-              fill={
-                'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))'
-              }
+              fill={'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))'}
               intrinsicHeight={44}
               intrinsicWidth={44}
               layoutDependency={layoutDependency}
@@ -259,9 +234,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -292,17 +265,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

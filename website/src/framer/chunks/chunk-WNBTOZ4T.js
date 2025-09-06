@@ -24,12 +24,7 @@ import { useRef } from 'react'
 
 // /:https://framerusercontent.com/modules/eCYfwTJuTZO4b5rxdDoK/aFLaVPWBgTp6W98Ky992/doBuay73R.js
 import { fontStore } from 'unframer'
-fontStore.loadFonts([
-  'Inter-Medium',
-  'Inter-Bold',
-  'Inter-BoldItalic',
-  'Inter-MediumItalic',
-])
+fontStore.loadFonts(['Inter-Medium', 'Inter-Bold', 'Inter-BoldItalic', 'Inter-MediumItalic'])
 var fonts2 = [
   {
     explicitInter: true,
@@ -38,8 +33,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/5A3Ce6C9YYmCjpQx9M4inSaKU.woff2',
         weight: '500',
       },
@@ -98,8 +92,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/DpPBYI0sL4fYLgAkX8KXOPVt7c.woff2',
         weight: '700',
       },
@@ -158,8 +151,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/H89BbHkbHDzlxZzxi8uPzTsp90.woff2',
         weight: '700',
       },
@@ -218,8 +210,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/khkJkwSL66WFg8SX6Wa726c.woff2',
         weight: '500',
       },
@@ -291,19 +282,14 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.1, delay: 0, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -318,10 +304,8 @@ var getProps = ({ content, height, id, title, width, ...props }) => {
       content ??
       props.lr9MckAMy ??
       'You can cancel your plan whenever you\u2019d like. You\u2019ll be downgraded to the free plan. You won\u2019t be locked out of any projects that have paid plans.',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'sTHF6uWTY',
-    xyvbwpR7S:
-      title ?? props.xyvbwpR7S ?? 'Which pricing plan is right for me?',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'sTHF6uWTY',
+    xyvbwpR7S: title ?? props.xyvbwpR7S ?? 'Which pricing plan is right for me?',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -334,15 +318,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className3,
-    layoutId,
-    variant,
-    xyvbwpR7S,
-    lr9MckAMy,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className3, layoutId, variant, xyvbwpR7S, lr9MckAMy, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -390,12 +366,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-msoe5i',
-            className3,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-msoe5i', className3, classNames),
           'data-border': true,
           'data-framer-name': 'Open',
           'data-highlight': true,
@@ -405,14 +376,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           ref: refBinding,
           style: {
             '--border-bottom-width': '1px',
-            '--border-color':
-              'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
+            '--border-color': 'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
             '--border-left-width': '1px',
             '--border-right-width': '1px',
             '--border-style': 'solid',
             '--border-top-width': '1px',
-            backgroundColor:
-              'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
+            backgroundColor: 'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
             borderBottomLeftRadius: 15,
             borderBottomRightRadius: 15,
             borderTopLeftRadius: 15,
@@ -464,8 +433,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       layoutDependency,
                       layoutId: 'SvzGO_htu',
                       style: {
-                        '--extracted-1lwpl3i':
-                          'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                        '--extracted-1lwpl3i': 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                       },
                       text: xyvbwpR7S,
                       verticalAlignment: 'top',
@@ -508,8 +476,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             layoutDependency,
                             layoutId: 'ReAljwNkQ',
                             style: {
-                              backgroundColor:
-                                'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                              backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                               borderBottomLeftRadius: 1,
                               borderBottomRightRadius: 1,
                               borderTopLeftRadius: 1,
@@ -522,8 +489,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               layoutDependency,
                               layoutId: 'ndQUEohey',
                               style: {
-                                backgroundColor:
-                                  'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                                backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                                 borderBottomLeftRadius: 1,
                                 borderBottomRightRadius: 1,
                                 borderTopLeftRadius: 1,
@@ -619,8 +585,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

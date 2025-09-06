@@ -74,17 +74,10 @@ export default defineConfig({
 
     // tsconfigPaths(),
     viteExternalsPlugin({
-      externals: [
-        'pg',
-        'shiki',
-        'json-schema-library',
-        '@lancedb/lancedb',
-        'isolated-vm',
-      ],
+      externals: ['pg', 'shiki', 'json-schema-library', '@lancedb/lancedb', 'isolated-vm'],
     }),
     tailwindcss(),
-    process.env.ANALYZE &&
-      analyzer({ openAnalyzer: false, analyzerMode: 'static' }),
+    process.env.ANALYZE && analyzer({ openAnalyzer: false, analyzerMode: 'static' }),
     reactRouterServerPlugin({ port: process.env.PORT || '7777' }),
     enablePreserveModulesPlugin(),
   ],

@@ -11,11 +11,7 @@ import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/4cY6qejLlJm0KeIp2opX/2lsxN1XrOEnO1dRFz6YA/pgSSHeBXt.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -44,9 +40,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -67,11 +61,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -85,8 +75,7 @@ var getProps = ({ agency, height, id, pro, starter, width, ...props }) => {
     LrWwynB5Z: starter ?? props.LrWwynB5Z,
     nLafIFKo_: pro ?? props.nLafIFKo_,
     oi7GANdWW: agency ?? props.oi7GANdWW,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'LabXLIX6k',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'LabXLIX6k',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -172,12 +161,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1voxkno',
-              className2,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1voxkno', className2, classNames)}
             data-framer-name={'Starter'}
             layoutDependency={layoutDependency}
             layoutId={'LabXLIX6k'}
@@ -314,10 +298,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           layoutDependency={layoutDependency}
                                           layoutId={'cJAyrBf_e'}
                                           style={{
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           tabIndex={-1}
                                           text={EjvpS99sbEQr2WxjHK2}
@@ -326,9 +308,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         >
                                           <React.Fragment>
                                             <motion.div
-                                              className={
-                                                'framer-styles-preset-2pjocb'
-                                              }
+                                              className={'framer-styles-preset-2pjocb'}
                                               data-styles-preset={'Dkr92TfXs'}
                                             >
                                               {'Starter'}
@@ -355,10 +335,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           layoutDependency={layoutDependency}
                                           layoutId={'qASsSXDb4'}
                                           style={{
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           tabIndex={-1}
                                           text={zQUY1GxFMEQr2WxjHK2}
@@ -367,9 +345,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         >
                                           <React.Fragment>
                                             <motion.div
-                                              className={
-                                                'framer-styles-preset-2pjocb'
-                                              }
+                                              className={'framer-styles-preset-2pjocb'}
                                               data-styles-preset={'Dkr92TfXs'}
                                             >
                                               {'Pro'}
@@ -396,10 +372,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           layoutDependency={layoutDependency}
                                           layoutId={'I07BxMvXO'}
                                           style={{
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           tabIndex={-1}
                                           text={RSURoJJLqEQr2WxjHK2}
@@ -408,9 +382,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         >
                                           <React.Fragment>
                                             <motion.div
-                                              className={
-                                                'framer-styles-preset-2pjocb'
-                                              }
+                                              className={'framer-styles-preset-2pjocb'}
                                               data-styles-preset={'Dkr92TfXs'}
                                             >
                                               {'Agency'}
@@ -443,10 +415,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         style={{
                                           '--extracted-r6o4lv':
                                             'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-                                          '--framer-link-text-color':
-                                            'rgb(0, 153, 255)',
-                                          '--framer-link-text-decoration':
-                                            'underline',
+                                          '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                          '--framer-link-text-decoration': 'underline',
                                         }}
                                         text={EjvpS99sbEQr2WxjHK2}
                                         variants={{
@@ -467,12 +437,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               children: (
                                                 <React.Fragment>
                                                   <motion.p
-                                                    className={
-                                                      'framer-styles-preset-2pjocb'
-                                                    }
-                                                    data-styles-preset={
-                                                      'Dkr92TfXs'
-                                                    }
+                                                    className={'framer-styles-preset-2pjocb'}
+                                                    data-styles-preset={'Dkr92TfXs'}
                                                     style={{
                                                       '--framer-text-color':
                                                         'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
@@ -487,12 +453,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               children: (
                                                 <React.Fragment>
                                                   <motion.p
-                                                    className={
-                                                      'framer-styles-preset-2pjocb'
-                                                    }
-                                                    data-styles-preset={
-                                                      'Dkr92TfXs'
-                                                    }
+                                                    className={'framer-styles-preset-2pjocb'}
+                                                    data-styles-preset={'Dkr92TfXs'}
                                                     style={{
                                                       '--framer-text-color':
                                                         'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
@@ -510,9 +472,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       >
                                         <React.Fragment>
                                           <motion.p
-                                            className={
-                                              'framer-styles-preset-2pjocb'
-                                            }
+                                            className={'framer-styles-preset-2pjocb'}
                                             data-styles-preset={'Dkr92TfXs'}
                                             style={{
                                               '--framer-text-color':
@@ -541,10 +501,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         style={{
                                           '--extracted-r6o4lv':
                                             'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
-                                          '--framer-link-text-color':
-                                            'rgb(0, 153, 255)',
-                                          '--framer-link-text-decoration':
-                                            'underline',
+                                          '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                          '--framer-link-text-decoration': 'underline',
                                         }}
                                         text={zQUY1GxFMEQr2WxjHK2}
                                         variants={{
@@ -561,12 +519,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               children: (
                                                 <React.Fragment>
                                                   <motion.p
-                                                    className={
-                                                      'framer-styles-preset-2pjocb'
-                                                    }
-                                                    data-styles-preset={
-                                                      'Dkr92TfXs'
-                                                    }
+                                                    className={'framer-styles-preset-2pjocb'}
+                                                    data-styles-preset={'Dkr92TfXs'}
                                                     style={{
                                                       '--framer-text-color':
                                                         'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
@@ -584,9 +538,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       >
                                         <React.Fragment>
                                           <motion.p
-                                            className={
-                                              'framer-styles-preset-2pjocb'
-                                            }
+                                            className={'framer-styles-preset-2pjocb'}
                                             data-styles-preset={'Dkr92TfXs'}
                                             style={{
                                               '--framer-text-color':
@@ -615,10 +567,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         style={{
                                           '--extracted-r6o4lv':
                                             'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
-                                          '--framer-link-text-color':
-                                            'rgb(0, 153, 255)',
-                                          '--framer-link-text-decoration':
-                                            'underline',
+                                          '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                          '--framer-link-text-decoration': 'underline',
                                         }}
                                         text={RSURoJJLqEQr2WxjHK2}
                                         variants={{
@@ -635,12 +585,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               children: (
                                                 <React.Fragment>
                                                   <motion.p
-                                                    className={
-                                                      'framer-styles-preset-2pjocb'
-                                                    }
-                                                    data-styles-preset={
-                                                      'Dkr92TfXs'
-                                                    }
+                                                    className={'framer-styles-preset-2pjocb'}
+                                                    data-styles-preset={'Dkr92TfXs'}
                                                     style={{
                                                       '--framer-text-color':
                                                         'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
@@ -658,9 +604,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       >
                                         <React.Fragment>
                                           <motion.p
-                                            className={
-                                              'framer-styles-preset-2pjocb'
-                                            }
+                                            className={'framer-styles-preset-2pjocb'}
                                             data-styles-preset={'Dkr92TfXs'}
                                             style={{
                                               '--framer-text-color':
@@ -745,8 +689,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -862,17 +805,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -920,9 +857,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

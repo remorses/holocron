@@ -6,12 +6,7 @@ const nextConfig: NextConfig = {
     externalDir: true,
   },
   // Transpile workspace packages
-  transpilePackages: [
-    'fumadocs-core',
-    'fumadocs-ui',
-    'fumadocs-openapi',
-    'fumadocs-mcp',
-  ],
+  transpilePackages: ['fumadocs-core', 'fumadocs-ui', 'fumadocs-openapi', 'fumadocs-mcp'],
   // Handle ESM modules
   webpack: (config) => {
     config.resolve.extensionAlias = {

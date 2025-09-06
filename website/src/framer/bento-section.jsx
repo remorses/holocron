@@ -23,11 +23,7 @@
 }} Props
 
  */
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-KYATNZPG.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-KYATNZPG.js'
 import { className, css, fonts } from './chunks/chunk-6G2SY433.js'
 import { stdin_default } from './chunks/chunk-EHCTMXQN.js'
 import { routes } from './chunks/chunk-75FLX355.js'
@@ -63,12 +59,7 @@ import { useRef as useRef2 } from 'react'
 
 // /:https://framerusercontent.com/modules/qChC6uUSa3iaM7qswL3T/AmJ6xHVLFWlKrPvhdmNL/xCHeW6IN4.js
 import { fontStore } from 'unframer'
-fontStore.loadFonts([
-  'Inter-Medium',
-  'Inter-Bold',
-  'Inter-BoldItalic',
-  'Inter-MediumItalic',
-])
+fontStore.loadFonts(['Inter-Medium', 'Inter-Bold', 'Inter-BoldItalic', 'Inter-MediumItalic'])
 var fonts3 = [
   {
     explicitInter: true,
@@ -77,8 +68,7 @@ var fonts3 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/5A3Ce6C9YYmCjpQx9M4inSaKU.woff2',
         weight: '500',
       },
@@ -137,8 +127,7 @@ var fonts3 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/DpPBYI0sL4fYLgAkX8KXOPVt7c.woff2',
         weight: '700',
       },
@@ -197,8 +186,7 @@ var fonts3 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/H89BbHkbHDzlxZzxi8uPzTsp90.woff2',
         weight: '700',
       },
@@ -257,8 +245,7 @@ var fonts3 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/khkJkwSL66WFg8SX6Wa726c.woff2',
         weight: '500',
       },
@@ -337,9 +324,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -520,11 +505,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -535,8 +516,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'YCffmP9Vu',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'YCffmP9Vu',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -549,13 +529,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className4,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className4, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -584,12 +558,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1rornw0',
-              className4,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1rornw0', className4, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'YCffmP9Vu'}
@@ -707,14 +676,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutId={'gMYEVbeIe'}
                   style={{
                     '--border-bottom-width': '1px',
-                    '--border-color':
-                      'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
+                    '--border-color': 'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
                     '--border-left-width': '1px',
                     '--border-right-width': '1px',
                     '--border-style': 'solid',
                     '--border-top-width': '1px',
-                    backgroundColor:
-                      'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
+                    backgroundColor: 'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
                     borderBottomLeftRadius: 10,
                     borderBottomRightRadius: 10,
                     borderTopLeftRadius: 10,
@@ -802,9 +769,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               '--framer-text-alignment': 'left',
                             }}
                           >
-                            {
-                              'Deliver docs that load instantly and scale with your project.'
-                            }
+                            {'Deliver docs that load instantly and scale with your project.'}
                           </motion.p>
                         </React.Fragment>
                       </RichText>
@@ -901,8 +866,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               layoutDependency={layoutDependency}
                               layoutId={'nsA6dJAaZ'}
                               style={{
-                                backgroundColor:
-                                  'var(--token-ebf207fb-f9e0-4c9c-91c0-517fa05c795c, rgb(184, 92, 0))',
+                                backgroundColor: 'var(--token-ebf207fb-f9e0-4c9c-91c0-517fa05c795c, rgb(184, 92, 0))',
                                 mask: 'radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 99.99%, rgba(0,0,0,0) 100%) add',
                                 opacity: 0.35,
                                 WebkitMask:
@@ -915,8 +879,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               layoutDependency={layoutDependency}
                               layoutId={'OlhtG9J9C'}
                               style={{
-                                backgroundColor:
-                                  'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
+                                backgroundColor: 'var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0))',
                                 mask: 'radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 99.99%, rgba(0,0,0,0) 100%) add',
                                 opacity: 0.4,
                                 WebkitMask:
@@ -971,14 +934,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutId={'mw5J9pyso'}
                   style={{
                     '--border-bottom-width': '1px',
-                    '--border-color':
-                      'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
+                    '--border-color': 'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
                     '--border-left-width': '1px',
                     '--border-right-width': '1px',
                     '--border-style': 'solid',
                     '--border-top-width': '1px',
-                    backgroundColor:
-                      'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
+                    backgroundColor: 'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
                     borderBottomLeftRadius: 10,
                     borderBottomRightRadius: 10,
                     borderTopLeftRadius: 10,
@@ -1083,9 +1044,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               '--framer-text-alignment': 'left',
                             }}
                           >
-                            {
-                              'Personalize your docs with flexible layouts and color schemes.'
-                            }
+                            {'Personalize your docs with flexible layouts and color schemes.'}
                           </motion.p>
                         </React.Fragment>
                       </RichText>
@@ -1131,18 +1090,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             intrinsicHeight: 252,
                             intrinsicWidth: 686,
                             loading: getLoadingLazyAtYPosition(
-                              (componentViewport?.y || 0) +
-                                150 +
-                                0 +
-                                0 +
-                                86.2 +
-                                0 +
-                                0 +
-                                20 +
-                                0 +
-                                143 +
-                                24.7 +
-                                -53,
+                              (componentViewport?.y || 0) + 150 + 0 + 0 + 86.2 + 0 + 0 + 20 + 0 + 143 + 24.7 + -53,
                             ),
                             pixelHeight: 504,
                             pixelWidth: 1372,
@@ -1194,12 +1142,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   loading: getLoadingLazyAtYPosition(
                                     (componentViewport?.y || 0) +
                                       100 +
-                                      (((componentViewport?.height || 200) -
-                                        100 -
-                                        1531.2) /
-                                        2 +
-                                        0 +
-                                        0) +
+                                      (((componentViewport?.height || 200) - 100 - 1531.2) / 2 + 0 + 0) +
                                       0 +
                                       86.2 +
                                       0 +
@@ -1246,14 +1189,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutId={'quFoE1rJS'}
                   style={{
                     '--border-bottom-width': '1px',
-                    '--border-color':
-                      'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
+                    '--border-color': 'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
                     '--border-left-width': '1px',
                     '--border-right-width': '1px',
                     '--border-style': 'solid',
                     '--border-top-width': '1px',
-                    backgroundColor:
-                      'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
+                    backgroundColor: 'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
                     borderBottomLeftRadius: 10,
                     borderBottomRightRadius: 10,
                     borderTopLeftRadius: 10,
@@ -1358,9 +1299,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               '--framer-text-alignment': 'left',
                             }}
                           >
-                            {
-                              'Integrates seamlessly with your workflow and tools.'
-                            }
+                            {'Integrates seamlessly with your workflow and tools.'}
                           </motion.p>
                         </React.Fragment>
                       </RichText>
@@ -1482,12 +1421,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   loading: getLoadingLazyAtYPosition(
                                     (componentViewport?.y || 0) +
                                       100 +
-                                      (((componentViewport?.height || 200) -
-                                        100 -
-                                        1531.2) /
-                                        2 +
-                                        0 +
-                                        0) +
+                                      (((componentViewport?.height || 200) - 100 - 1531.2) / 2 + 0 + 0) +
                                       0 +
                                       86.2 +
                                       0 +
@@ -1534,14 +1468,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutId={'VZwLs_hxB'}
                   style={{
                     '--border-bottom-width': '1px',
-                    '--border-color':
-                      'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
+                    '--border-color': 'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
                     '--border-left-width': '1px',
                     '--border-right-width': '1px',
                     '--border-style': 'solid',
                     '--border-top-width': '1px',
-                    backgroundColor:
-                      'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
+                    backgroundColor: 'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
                     borderBottomLeftRadius: 10,
                     borderBottomRightRadius: 10,
                     borderTopLeftRadius: 10,
@@ -1646,9 +1578,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               '--framer-text-alignment': 'left',
                             }}
                           >
-                            {
-                              'Keep your documentation up-to-date with minimal effort.'
-                            }
+                            {'Keep your documentation up-to-date with minimal effort.'}
                           </motion.p>
                         </React.Fragment>
                       </RichText>
@@ -1983,8 +1913,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -2065,9 +1994,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -2098,17 +2025,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

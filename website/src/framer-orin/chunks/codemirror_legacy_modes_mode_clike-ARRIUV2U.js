@@ -12,16 +12,8 @@ function Context(indented, column, type, info, align, prev) {
 }
 function pushContext(state, col, type, info) {
   var indent = state.indented
-  if (state.context && state.context.type == 'statement' && type != 'statement')
-    indent = state.context.indented
-  return (state.context = new Context(
-    indent,
-    col,
-    type,
-    info,
-    null,
-    state.context,
-  ))
+  if (state.context && state.context.type == 'statement' && type != 'statement') indent = state.context.indented
+  return (state.context = new Context(indent, col, type, info, null, state.context))
 }
 function popContext(state) {
   var t = state.context.type
@@ -30,10 +22,8 @@ function popContext(state) {
 }
 function typeBefore(stream, state, pos) {
   if (state.prevToken == 'variable' || state.prevToken == 'type') return true
-  if (/\S(?:[^- ]>|[*\]])\s*$|\*$/.test(stream.string.slice(0, pos)))
-    return true
-  if (state.typeAtEndOfLine && stream.column() == stream.indentation())
-    return true
+  if (/\S(?:[^- ]>|[*\]])\s*$|\*$/.test(stream.string.slice(0, pos))) return true
+  if (state.typeAtEndOfLine && stream.column() == stream.indentation()) return true
 }
 function isTopScope(context) {
   for (;;) {
@@ -58,9 +48,7 @@ function clike(parserConfig) {
     namespaceSeparator = parserConfig.namespaceSeparator,
     isPunctuationChar = parserConfig.isPunctuationChar || /[\[\]{}\(\),;\:\.]/,
     numberStart = parserConfig.numberStart || /[\d\.]/,
-    number =
-      parserConfig.number ||
-      /^(?:0x[a-f\d]+|0b[01]+|(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)(u|ll?|l|f)?/i,
+    number = parserConfig.number || /^(?:0x[a-f\d]+|0b[01]+|(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)(u|ll?|l|f)?/i,
     isOperatorChar = parserConfig.isOperatorChar || /[+\-*&%=<>!?|\/]/,
     isIdentifierChar = parserConfig.isIdentifierChar || /[\w\$_\xa1-\uffff]/,
     isReservedIdentifier = parserConfig.isReservedIdentifier || false
@@ -99,8 +87,7 @@ function clike(parserConfig) {
       return 'operator'
     }
     stream.eatWhile(isIdentifierChar)
-    if (namespaceSeparator)
-      while (stream.match(namespaceSeparator)) stream.eatWhile(isIdentifierChar)
+    if (namespaceSeparator) while (stream.match(namespaceSeparator)) stream.eatWhile(isIdentifierChar)
     var cur = stream.current()
     if (contains(keywords, cur)) {
       if (contains(blockKeywords, cur)) curPunc = 'newstatement'
@@ -108,10 +95,7 @@ function clike(parserConfig) {
       return 'keyword'
     }
     if (contains(types, cur)) return 'type'
-    if (
-      contains(builtin, cur) ||
-      (isReservedIdentifier && isReservedIdentifier(cur))
-    ) {
+    if (contains(builtin, cur) || (isReservedIdentifier && isReservedIdentifier(cur))) {
       if (contains(blockKeywords, cur)) curPunc = 'newstatement'
       return 'builtin'
     }
@@ -147,11 +131,7 @@ function clike(parserConfig) {
     return 'comment'
   }
   function maybeEOL(stream, state) {
-    if (
-      parserConfig.typeFirstDefinitions &&
-      stream.eol() &&
-      isTopScope(state.context)
-    )
+    if (parserConfig.typeFirstDefinitions && stream.eol() && isTopScope(state.context))
       state.typeAtEndOfLine = typeBefore(stream, state, stream.pos)
   }
   return {
@@ -180,11 +160,7 @@ function clike(parserConfig) {
       var style = (state.tokenize || tokenBase)(stream, state)
       if (style == 'comment' || style == 'meta') return style
       if (ctx.align == null) ctx.align = true
-      if (
-        curPunc == ';' ||
-        curPunc == ':' ||
-        (curPunc == ',' && stream.match(/^\s*(?:\/\/.*)?$/, false))
-      )
+      if (curPunc == ';' || curPunc == ':' || (curPunc == ',' && stream.match(/^\s*(?:\/\/.*)?$/, false)))
         while (state.context.type == 'statement') popContext(state)
       else if (curPunc == '{') pushContext(state, stream.column(), '}')
       else if (curPunc == '[') pushContext(state, stream.column(), ']')
@@ -221,21 +197,13 @@ function clike(parserConfig) {
       return style
     },
     indent: function (state, textAfter, context) {
-      if (
-        (state.tokenize != tokenBase && state.tokenize != null) ||
-        state.typeAtEndOfLine
-      )
-        return null
+      if ((state.tokenize != tokenBase && state.tokenize != null) || state.typeAtEndOfLine) return null
       var ctx = state.context,
         firstChar = textAfter && textAfter.charAt(0)
       var closing = firstChar == ctx.type
       if (ctx.type == 'statement' && firstChar == '}') ctx = ctx.prev
       if (parserConfig.dontIndentStatements)
-        while (
-          ctx.type == 'statement' &&
-          parserConfig.dontIndentStatements.test(ctx.info)
-        )
-          ctx = ctx.prev
+        while (ctx.type == 'statement' && parserConfig.dontIndentStatements.test(ctx.info)) ctx = ctx.prev
       if (hooks.indent) {
         var hook = hooks.indent(state, ctx, textAfter, context.unit)
         if (typeof hook == 'number') return hook
@@ -245,27 +213,17 @@ function clike(parserConfig) {
         while (ctx.type != 'top' && ctx.type != '}') ctx = ctx.prev
         return ctx.indented
       }
-      if (ctx.type == 'statement')
-        return (
-          ctx.indented +
-          (firstChar == '{' ? 0 : statementIndentUnit || context.unit)
-        )
-      if (ctx.align && (!dontAlignCalls || ctx.type != ')'))
-        return ctx.column + (closing ? 0 : 1)
-      if (ctx.type == ')' && !closing)
-        return ctx.indented + (statementIndentUnit || context.unit)
+      if (ctx.type == 'statement') return ctx.indented + (firstChar == '{' ? 0 : statementIndentUnit || context.unit)
+      if (ctx.align && (!dontAlignCalls || ctx.type != ')')) return ctx.column + (closing ? 0 : 1)
+      if (ctx.type == ')' && !closing) return ctx.indented + (statementIndentUnit || context.unit)
       return (
         ctx.indented +
         (closing ? 0 : context.unit) +
-        (!closing && switchBlock && !/^(?:case|default)\b/.test(textAfter)
-          ? context.unit
-          : 0)
+        (!closing && switchBlock && !/^(?:case|default)\b/.test(textAfter) ? context.unit : 0)
       )
     },
     languageData: {
-      indentOnInput: indentSwitch
-        ? /^\s*(?:case .*?:|default:|\{\}?|\})$/
-        : /^\s*[{}]$/,
+      indentOnInput: indentSwitch ? /^\s*(?:case .*?:|default:|\{\}?|\})$/ : /^\s*[{}]$/,
       commentTokens: { line: '//', block: { open: '/*', close: '*/' } },
       autocomplete: Object.keys(keywords)
         .concat(Object.keys(types))
@@ -296,9 +254,7 @@ var objCKeywords =
   'bycopy byref in inout oneway out self super atomic nonatomic retain copy readwrite readonly strong weak assign typeof nullable nonnull null_resettable _cmd @interface @implementation @end @protocol @encode @property @synthesize @dynamic @class @public @package @private @protected @required @optional @try @catch @finally @import @selector @encode @defs @synchronized @autoreleasepool @compatibility_alias @available'
 var objCBuiltins =
   'FOUNDATION_EXPORT FOUNDATION_EXTERN NS_INLINE NS_FORMAT_FUNCTION  NS_RETURNS_RETAINEDNS_ERROR_ENUM NS_RETURNS_NOT_RETAINED NS_RETURNS_INNER_POINTER NS_DESIGNATED_INITIALIZER NS_ENUM NS_OPTIONS NS_REQUIRES_NIL_TERMINATION NS_ASSUME_NONNULL_BEGIN NS_ASSUME_NONNULL_END NS_SWIFT_NAME NS_REFINED_FOR_SWIFT'
-var basicCTypes = words(
-  'int long char short double float unsigned signed void bool',
-)
+var basicCTypes = words('int long char short double float unsigned signed void bool')
 var basicObjCTypes = words('SEL instancetype id Class Protocol BOOL')
 function cTypes(identifier) {
   return contains(basicCTypes, identifier) || /.+_t$/.test(identifier)
@@ -425,9 +381,7 @@ var cpp = clike({
       if (
         style == 'variable' &&
         stream.peek() == '(' &&
-        (state.prevToken == ';' ||
-          state.prevToken == null ||
-          state.prevToken == '}') &&
+        (state.prevToken == ';' || state.prevToken == null || state.prevToken == '}') &&
         cppLooksLikeConstructor(stream.current())
       )
         return 'def'
@@ -447,8 +401,7 @@ var java = clike({
   defKeywords: words('class interface enum @interface'),
   typeFirstDefinitions: true,
   atoms: words('true false null'),
-  number:
-    /^(?:0x[a-f\d_]+|0b[01_]+|(?:[\d_]+\.?\d*|\.\d+)(?:e[-+]?[\d_]+)?)(u|ll?|l|f)?/i,
+  number: /^(?:0x[a-f\d_]+|0b[01_]+|(?:[\d_]+\.?\d*|\.\d+)(?:e[-+]?[\d_]+)?)(u|ll?|l|f)?/i,
   hooks: {
     '@': function (stream) {
       if (stream.match('interface', false)) return false
@@ -470,9 +423,7 @@ var csharp = clike({
   types: words(
     'Action Boolean Byte Char DateTime DateTimeOffset Decimal Double Func Guid Int16 Int32 Int64 Object SByte Single String Task TimeSpan UInt16 UInt32 UInt64 bool byte char decimal double short int long object sbyte float string ushort uint ulong',
   ),
-  blockKeywords: words(
-    'catch class do else finally for foreach if struct switch try while',
-  ),
+  blockKeywords: words('catch class do else finally for foreach if struct switch try while'),
   defKeywords: words('class interface namespace struct var'),
   typeFirstDefinitions: true,
   atoms: words('true false null'),
@@ -528,9 +479,7 @@ var scala = clike({
     'AnyVal App Application Array BufferedIterator BigDecimal BigInt Char Console Either Enumeration Equiv Error Exception Fractional Function IndexedSeq Int Integral Iterable Iterator List Map Numeric Nil NotNull Option Ordered Ordering PartialFunction PartialOrdering Product Proxy Range Responder Seq Serializable Set Specializable Stream StringBuilder StringContext Symbol Throwable Traversable TraversableOnce Tuple Unit Vector Boolean Byte Character CharSequence Class ClassLoader Cloneable Comparable Compiler Double Exception Float Integer Long Math Number Object Package Pair Process Runtime Runnable SecurityManager Short StackTraceElement StrictMath String StringBuffer System Thread ThreadGroup ThreadLocal Throwable Triple Void',
   ),
   multiLineStrings: true,
-  blockKeywords: words(
-    'catch class enum do else finally for forSome if match switch try while',
-  ),
+  blockKeywords: words('catch class enum do else finally for forSome if match switch try while'),
   defKeywords: words('class enum def object package trait type val var'),
   atoms: words('true false null'),
   indentStatements: false,
@@ -554,14 +503,7 @@ var scala = clike({
     '=': function (stream, state) {
       var cx = state.context
       if (cx.type == '}' && cx.align && stream.eat('>')) {
-        state.context = new Context(
-          cx.indented,
-          cx.column,
-          cx.type,
-          cx.info,
-          null,
-          cx.prev,
-        )
+        state.context = new Context(cx.indented, cx.column, cx.type, cx.info, null, cx.prev)
         return 'operator'
       } else {
         return false
@@ -612,11 +554,8 @@ var kotlin = clike({
   intendSwitch: false,
   indentStatements: false,
   multiLineStrings: true,
-  number:
-    /^(?:0x[a-f\d_]+|0b[01_]+|(?:[\d_]+(\.\d+)?|\.\d+)(?:e[-+]?[\d_]+)?)(u|ll?|l|f)?/i,
-  blockKeywords: words(
-    'catch class do else finally for if where try while enum',
-  ),
+  number: /^(?:0x[a-f\d_]+|0b[01_]+|(?:[\d_]+(\.\d+)?|\.\d+)(?:e[-+]?[\d_]+)?)(u|ll?|l|f)?/i,
+  blockKeywords: words('catch class do else finally for if where try while enum'),
   defKeywords: words('class val var object interface fun'),
   atoms: words('true false null this'),
   hooks: {
@@ -638,21 +577,15 @@ var kotlin = clike({
     },
     indent: function (state, ctx, textAfter, indentUnit) {
       var firstChar = textAfter && textAfter.charAt(0)
-      if ((state.prevToken == '}' || state.prevToken == ')') && textAfter == '')
-        return state.indented
+      if ((state.prevToken == '}' || state.prevToken == ')') && textAfter == '') return state.indented
       if (
-        (state.prevToken == 'operator' &&
-          textAfter != '}' &&
-          state.context.type != '}') ||
+        (state.prevToken == 'operator' && textAfter != '}' && state.context.type != '}') ||
         (state.prevToken == 'variable' && firstChar == '.') ||
         ((state.prevToken == '}' || state.prevToken == ')') && firstChar == '.')
       )
         return indentUnit * 2 + ctx.indented
       if (ctx.align && ctx.type == '}')
-        return (
-          ctx.indented +
-          (state.context.type == (textAfter || '').charAt(0) ? 0 : indentUnit)
-        )
+        return ctx.indented + (state.context.type == (textAfter || '').charAt(0) ? 0 : indentUnit)
     },
   },
   languageData: {
@@ -664,9 +597,7 @@ var shader = clike({
   keywords: words(
     'sampler1D sampler2D sampler3D samplerCube sampler1DShadow sampler2DShadow const attribute uniform varying break continue discard return for while do if else struct in out inout',
   ),
-  types: words(
-    'float int bool void vec2 vec3 vec4 ivec2 ivec3 ivec4 bvec2 bvec3 bvec4 mat2 mat3 mat4',
-  ),
+  types: words('float int bool void vec2 vec3 vec4 ivec2 ivec3 ivec4 bvec2 bvec3 bvec4 mat2 mat3 mat4'),
   blockKeywords: words('for while do if else struct'),
   builtin: words(
     'radians degrees sin cos tan asin acos atan pow exp log exp2 sqrt inversesqrt abs sign floor ceil fract mod min max clamp mix step smoothstep length distance dot cross normalize ftransform faceforward reflect refract matrixCompMult lessThan lessThanEqual greaterThan greaterThanEqual equal notEqual any all not texture1D texture1DProj texture1DLod texture1DProjLod texture2D texture2DProj texture2DLod texture2DProjLod texture3D texture3DProj texture3DLod texture3DProjLod textureCube textureCubeLod shadow1D shadow2D shadow1DProj shadow2DProj shadow1DLod shadow2DLod shadow1DProjLod shadow2DProjLod dFdx dFdy fwidth noise1 noise2 noise3 noise4',
@@ -693,13 +624,8 @@ var objectiveC = clike({
   keywords: words(cKeywords + ' ' + objCKeywords),
   types: objCTypes,
   builtin: words(objCBuiltins),
-  blockKeywords: words(
-    cBlockKeywords +
-      ' @synthesize @try @catch @finally @autoreleasepool @synchronized',
-  ),
-  defKeywords: words(
-    cDefKeywords + ' @interface @implementation @protocol @class',
-  ),
+  blockKeywords: words(cBlockKeywords + ' @synthesize @try @catch @finally @autoreleasepool @synchronized'),
+  defKeywords: words(cDefKeywords + ' @interface @implementation @protocol @class'),
   dontIndentStatements: /^@.*$/,
   typeFirstDefinitions: true,
   atoms: words('YES NO NULL Nil nil true false nullptr'),
@@ -712,13 +638,9 @@ var objectiveCpp = clike({
   types: objCTypes,
   builtin: words(objCBuiltins),
   blockKeywords: words(
-    cBlockKeywords +
-      ' @synthesize @try @catch @finally @autoreleasepool @synchronized class try catch',
+    cBlockKeywords + ' @synthesize @try @catch @finally @autoreleasepool @synchronized class try catch',
   ),
-  defKeywords: words(
-    cDefKeywords +
-      ' @interface @implementation @protocol @class class namespace',
-  ),
+  defKeywords: words(cDefKeywords + ' @interface @implementation @protocol @class class namespace'),
   dontIndentStatements: /^@.*$|^template$/,
   typeFirstDefinitions: true,
   atoms: words('YES NO NULL Nil nil true false nullptr'),
@@ -744,9 +666,7 @@ var objectiveCpp = clike({
       if (
         style == 'variable' &&
         stream.peek() == '(' &&
-        (state.prevToken == ';' ||
-          state.prevToken == null ||
-          state.prevToken == '}') &&
+        (state.prevToken == ';' || state.prevToken == null || state.prevToken == '}') &&
         cppLooksLikeConstructor(stream.current())
       )
         return 'def'
@@ -773,11 +693,7 @@ function tokenCeylonString(type) {
       next,
       end = false
     while (!stream.eol()) {
-      if (
-        !escaped &&
-        stream.match('"') &&
-        (type == 'single' || stream.match('""'))
-      ) {
+      if (!escaped && stream.match('"') && (type == 'single' || stream.match('""'))) {
         end = true
         break
       }
@@ -805,17 +721,14 @@ var ceylon = clike({
   blockKeywords: words(
     'case catch class dynamic else finally for function if interface module new object switch try while',
   ),
-  defKeywords: words(
-    'class dynamic function interface module object package value',
-  ),
+  defKeywords: words('class dynamic function interface module object package value'),
   builtin: words(
     'abstract actual aliased annotation by default deprecated doc final formal late license native optional sealed see serializable shared suppressWarnings tagged throws variable',
   ),
   isPunctuationChar: /[\[\]{}\(\),;\:\.`]/,
   isOperatorChar: /[+\-*&%=<>!?|^~:\/]/,
   numberStart: /[\d#$]/,
-  number:
-    /^(?:#[\da-fA-F_]+|\$[01_]+|[\d_]+[kMGTPmunpf]?|[\d_]+\.[\d_]+(?:[eE][-+]?\d+|[kMGTPmunpf]|)|)/i,
+  number: /^(?:#[\da-fA-F_]+|\$[01_]+|[\d_]+[kMGTPmunpf]?|[\d_]+\.[\d_]+(?:[eE][-+]?\d+|[kMGTPmunpf]|)|)/i,
   multiLineStrings: true,
   typeFirstDefinitions: true,
   atoms: words('true false null larger smaller equal empty finished'),
@@ -827,9 +740,7 @@ var ceylon = clike({
       return 'meta'
     },
     '"': function (stream, state) {
-      state.tokenize = tokenCeylonString(
-        stream.match('""') ? 'triple' : 'single',
-      )
+      state.tokenize = tokenCeylonString(stream.match('""') ? 'triple' : 'single')
       return state.tokenize(stream, state)
     },
     '`': function (stream, state) {
@@ -853,9 +764,7 @@ var ceylon = clike({
   },
 })
 function pushInterpolationStack(state) {
-  ;(state.interpolationStack || (state.interpolationStack = [])).push(
-    state.tokenize,
-  )
+  ;(state.interpolationStack || (state.interpolationStack = [])).push(state.tokenize)
 }
 function popInterpolationStack(state) {
   return (state.interpolationStack || (state.interpolationStack = [])).pop()
@@ -878,11 +787,7 @@ function tokenDartString(quote, stream, state, raw) {
         return 'string'
       }
       var next = stream2.next()
-      if (
-        next == quote &&
-        !escaped &&
-        (!tripleQuoted || stream2.match(quote + quote))
-      ) {
+      if (next == quote && !escaped && (!tripleQuoted || stream2.match(quote + quote))) {
         state2.tokenize = null
         break
       }

@@ -9,58 +9,26 @@ import micromatch from 'micromatch'
 import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { DocumentRecord, ProcessorData } from 'docs-website/src/lib/mdx-heavy'
-import {
-  StructuredData,
-  Heading,
-  StructuredContent,
-} from 'docs-website/src/lib/remark-structure'
+import { StructuredData, Heading, StructuredContent } from 'docs-website/src/lib/remark-structure'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { MdastToJsx } from 'safe-mdx'
 import { mdxComponents } from 'docs-website/src/components/mdx-components'
-import {
-  getKeyForMediaAsset,
-  getPresignedUrl,
-  s3,
-} from 'docs-website/src/lib/s3'
-import {
-  deduplicateBy,
-  generateSlugFromPath,
-  isDocsJson,
-} from 'docs-website/src/lib/utils'
+import { getKeyForMediaAsset, getPresignedUrl, s3 } from 'docs-website/src/lib/s3'
+import { deduplicateBy, generateSlugFromPath, isDocsJson } from 'docs-website/src/lib/utils'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import path from 'path'
 import type { SearchApiFile } from 'searchapi/sdk'
 import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
 import { env } from './env'
 import { notifyError } from './errors'
-import {
-  getCacheTagForPage,
-  getCacheTagForMediaAsset,
-} from 'docs-website/src/lib/cache-tags'
-import {
-  addFrontSlashToPath,
-  checkGitHubIsInstalled,
-  getOctokit,
-  getRepoFiles,
-  isMarkdown,
-} from './github.server'
-import {
-  mdxRegex,
-  yieldTasksInParallel,
-  processGeneratorConcurrentlyInOrder,
-} from './utils'
+import { getCacheTagForPage, getCacheTagForMediaAsset } from 'docs-website/src/lib/cache-tags'
+import { addFrontSlashToPath, checkGitHubIsInstalled, getOctokit, getRepoFiles, isMarkdown } from './github.server'
+import { mdxRegex, yieldTasksInParallel, processGeneratorConcurrentlyInOrder } from './utils'
 import { imageDimensionsFromData } from 'image-dimensions'
-import {
-  applyJsonCComments,
-  extractJsonCComments,
-  JsonCComments,
-} from './json-c-comments'
+import { applyJsonCComments, extractJsonCComments, JsonCComments } from './json-c-comments'
 import { client as searchApi } from 'docs-website/src/lib/search-api'
 
-export function gitBlobSha(
-  content: string | Buffer,
-  algo: 'sha1' | 'sha256' = 'sha1',
-): string {
+export function gitBlobSha(content: string | Buffer, algo: 'sha1' | 'sha256' = 'sha1'): string {
   const body = Buffer.isBuffer(content) ? content : Buffer.from(content, 'utf8')
 
   // Build the canonical Git header:  `blob <size>\0`
@@ -181,9 +149,7 @@ export async function* assetsFromFilesList({
     docsJsonComments = defaultDocsJsonComments
   }
   // First handle meta.json files
-  const metaFiles = files.filter((file) =>
-    file.relativePath.endsWith('meta.json'),
-  )
+  const metaFiles = files.filter((file) => file.relativePath.endsWith('meta.json'))
   for (const file of metaFiles) {
     yield {
       type: 'metaFile',
@@ -221,9 +187,7 @@ export async function* assetsFromFilesList({
 
   // Handle styles.css
   const stylesCssFile = files.find(
-    (file) =>
-      file.relativePath === 'styles.css' ||
-      file.relativePath.endsWith('/styles.css'),
+    (file) => file.relativePath === 'styles.css' || file.relativePath.endsWith('/styles.css'),
   )
   if (stylesCssFile) {
     yield {
@@ -300,9 +264,7 @@ export async function syncSite({
       pathForMatching = pathForMatching.substring(1)
     }
     if (githubFolder && githubFolder !== '/' && githubFolder !== '') {
-      const folderPrefix = githubFolder.startsWith('/')
-        ? githubFolder.substring(1)
-        : githubFolder
+      const folderPrefix = githubFolder.startsWith('/') ? githubFolder.substring(1) : githubFolder
       if (pathForMatching.startsWith(folderPrefix + '/')) {
         pathForMatching = pathForMatching.substring(folderPrefix.length + 1)
       } else if (pathForMatching.startsWith(folderPrefix)) {
@@ -395,15 +357,11 @@ export async function syncSite({
 
       // Remove internal domains that are no longer in the configuration
       const internalDomainsToRemove = branchDomains.filter(
-        (domain) =>
-          domain.domainType === 'internalDomain' &&
-          !configuredHosts.has(domain.host),
+        (domain) => domain.domainType === 'internalDomain' && !configuredHosts.has(domain.host),
       )
 
       if (internalDomainsToRemove.length > 0) {
-        console.log(
-          `Removing ${internalDomainsToRemove.length} internal domains that are no longer configured`,
-        )
+        console.log(`Removing ${internalDomainsToRemove.length} internal domains that are no longer configured`)
         for (const domain of internalDomainsToRemove) {
           await prisma.domain.delete({
             where: {
@@ -419,14 +377,10 @@ export async function syncSite({
         })
       }
 
-      const domainsToConnect = jsonData.domains.filter(
-        (domain: string) => !existingHosts.has(domain),
-      )
+      const domainsToConnect = jsonData.domains.filter((domain: string) => !existingHosts.has(domain))
 
       if (domainsToConnect.length > 0) {
-        console.log(
-          `Connecting ${domainsToConnect.length} new domains for site ${siteId}`,
-        )
+        console.log(`Connecting ${domainsToConnect.length} new domains for site ${siteId}`)
         for (const host of domainsToConnect) {
           const domainTaken = await prisma.domain.findFirst({
             where: { host },
@@ -437,25 +391,19 @@ export async function syncSite({
             continue
           }
           const domainType: DomainType =
-            host.endsWith('.' + env.APPS_DOMAIN) || host.endsWith('.localhost')
-              ? 'internalDomain'
-              : 'customDomain'
+            host.endsWith('.' + env.APPS_DOMAIN) || host.endsWith('.localhost') ? 'internalDomain' : 'customDomain'
           if (domainType === 'customDomain') {
             const zoneId = getZoneIdForDomain(host)
             const cloudflareClient = new CloudflareClient({
               zoneId,
             })
-            const takenInCloudflare = await cloudflareClient
-              .get(host)
-              .catch((e) => {
-                notifyError(e, `Cloudflare domain check for ${host}`)
-                return null
-              })
+            const takenInCloudflare = await cloudflareClient.get(host).catch((e) => {
+              notifyError(e, `Cloudflare domain check for ${host}`)
+              return null
+            })
             if (takenInCloudflare) console.log(takenInCloudflare)
             if (takenInCloudflare?.id) {
-              console.log(
-                `Domain ${host} is already taken in Cloudflare, skipping.`,
-              )
+              console.log(`Domain ${host} is already taken in Cloudflare, skipping.`)
               continue
             }
           }
@@ -474,13 +422,8 @@ export async function syncSite({
               },
             })
           } catch (e) {
-            if (
-              typeof e?.message === 'string' &&
-              e.message.includes('409 Conflict')
-            ) {
-              console.log(
-                `stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`,
-              )
+            if (typeof e?.message === 'string' && e.message.includes('409 Conflict')) {
+              console.log(`stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`)
             } else {
               throw e
             }
@@ -526,27 +469,15 @@ export async function syncSite({
     }
 
     // Check if this is an image file based on extension
-    const isImage = [
-      '.jpg',
-      '.jpeg',
-      '.png',
-      '.gif',
-      '.bmp',
-      '.webp',
-      '.tif',
-      '.tiff',
-      '.avif',
-    ].some((ext) => asset.githubPath.toLowerCase().endsWith(ext))
+    const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tif', '.tiff', '.avif'].some((ext) =>
+      asset.githubPath.toLowerCase().endsWith(ext),
+    )
 
     async function uploadAndGetMetadata() {
       if (!downloadUrl) return imageMetadata
 
       // Skip downloading/uploading if the downloadUrl is from our own uploads base URL
-      if (
-        downloadUrl &&
-        isValidUrl(downloadUrl) &&
-        downloadUrl.startsWith(env.UPLOADS_BASE_URL!)
-      ) {
+      if (downloadUrl && isValidUrl(downloadUrl) && downloadUrl.startsWith(env.UPLOADS_BASE_URL!)) {
         console.log(
           `Skipping upload for asset ${slug} as it is already hosted at UPLOADS_BASE_URL (${env.UPLOADS_BASE_URL})`,
         )
@@ -557,9 +488,7 @@ export async function syncSite({
 
       const ok = readable.statusCode >= 200 && readable.statusCode < 300
       if (!ok) {
-        throw new Error(
-          `Failed to download asset ${readable.statusCode} ${slug}`,
-        )
+        throw new Error(`Failed to download asset ${readable.statusCode} ${slug}`)
       }
       if (!readable.body) {
         throw new Error(`Failed to get body for asset ${slug}`)
@@ -723,8 +652,7 @@ export async function syncSite({
       }
     } catch (error: any) {
       markdown = ''
-      const line =
-        'line' in error && typeof error.line === 'number' ? error.line : 1
+      const line = 'line' in error && typeof error.line === 'number' ? error.line : 1
       // Determine error type based on the extension
       const errorType = extension === 'mdx' ? 'mdxParse' : 'mdParse'
       errors.push({
@@ -743,14 +671,11 @@ export async function syncSite({
       }
     }
 
-    const nonRecoverableErrors = errors.filter(
-      (e) => e.errorType === 'mdParse' || e.errorType === 'mdxParse',
-    )
+    const nonRecoverableErrors = errors.filter((e) => e.errorType === 'mdParse' || e.errorType === 'mdxParse')
 
     // When there are parse errors, set githubSha to null
     // This avoids creating unnecessary blob entries for error pages
-    const effectiveGithubSha =
-      nonRecoverableErrors.length > 0 ? null : asset.githubSha
+    const effectiveGithubSha = nonRecoverableErrors.length > 0 ? null : asset.githubSha
 
     const pageInput: Prisma.MarkdownPageUncheckedCreateInput = {
       slug: slug,
@@ -776,9 +701,7 @@ export async function syncSite({
       })
     }
 
-    console.log(
-      `Upserting page with slug: ${slug}, title: ${data.frontmatter.title}...`,
-    )
+    console.log(`Upserting page with slug: ${slug}, title: ${data.frontmatter.title}...`)
 
     errors = deduplicateBy(errors, (x) => String(x.line || 0))
 
@@ -878,16 +801,12 @@ export async function syncSite({
     })
     cacheTagsToInvalidate.push(pageCacheTag)
 
-    console.log(
-      ` -> Upserted page: ${data.title} (ID: ${slug}, path: ${asset.githubPath})`,
-    )
+    console.log(` -> Upserted page: ${data.title} (ID: ${slug}, path: ${asset.githubPath})`)
 
     return filesToSync
   }
 
-  async function syncDeletedAsset(
-    asset: AssetForSync,
-  ): Promise<SearchApiFile[]> {
+  async function syncDeletedAsset(asset: AssetForSync): Promise<SearchApiFile[]> {
     if (asset.type !== 'deletedAsset') return []
 
     console.log(`Processing deleted asset: ${asset.githubPath}`)
@@ -907,9 +826,7 @@ export async function syncSite({
     })
 
     if (pagesToDelete.length > 0) {
-      console.log(
-        `Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`,
-      )
+      console.log(`Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`)
 
       // Add cache tags for invalidation
       for (const page of pagesToDelete) {
@@ -930,9 +847,7 @@ export async function syncSite({
         },
       })
 
-      console.log(
-        `Deleted ${deleteResult.count} pages from database for path ${asset.githubPath}`,
-      )
+      console.log(`Deleted ${deleteResult.count} pages from database for path ${asset.githubPath}`)
     }
 
     // Delete media assets with this githubPath
@@ -944,9 +859,7 @@ export async function syncSite({
     })
 
     if (mediaDeleteResult.count > 0) {
-      console.log(
-        `Deleted ${mediaDeleteResult.count} media assets for path ${asset.githubPath}`,
-      )
+      console.log(`Deleted ${mediaDeleteResult.count} media assets for path ${asset.githubPath}`)
     }
 
     // Delete meta files with this githubPath
@@ -958,66 +871,52 @@ export async function syncSite({
     })
 
     if (metaDeleteResult.count > 0) {
-      console.log(
-        `Deleted ${metaDeleteResult.count} meta files for path ${asset.githubPath}`,
-      )
+      console.log(`Deleted ${metaDeleteResult.count} meta files for path ${asset.githubPath}`)
     }
 
     return []
   }
 
   // Process all assets concurrently using processGeneratorConcurrentlyInOrder
-  for await (const chunks of processGeneratorConcurrentlyInOrder(
-    files,
-    concurrencyLimit,
-    async (asset) => {
-      await semaphore.acquire()
+  for await (const chunks of processGeneratorConcurrentlyInOrder(files, concurrencyLimit, async (asset) => {
+    await semaphore.acquire()
+    try {
       try {
-        try {
-          // Check if the file should be ignored (except for deletedAsset and docsJson)
-          if (
-            asset.type !== 'deletedAsset' &&
-            asset.type !== 'docsJson' &&
-            'githubPath' in asset
-          ) {
-            if (shouldIgnoreFile(asset.githubPath)) {
-              console.log(
-                `Ignoring file ${asset.githubPath} due to ignore patterns`,
-              )
-              return []
-            }
-          }
-
-          switch (asset.type) {
-            case 'metaFile':
-              return await syncMetaFile(asset)
-            case 'docsJson':
-              return await syncDocsJson(asset)
-            case 'stylesCss':
-              return await syncStylesCss(asset)
-            case 'mediaAsset':
-              return await syncMediaAsset(asset)
-            case 'page':
-              return await syncPage(asset)
-            case 'deletedAsset':
-              return await syncDeletedAsset(asset)
-            default:
-              return []
-          }
-        } catch (e: any) {
-          if (
-            e.message.includes('lone leading surrogate in hex escape at line ')
-          ) {
-            console.error(e)
+        // Check if the file should be ignored (except for deletedAsset and docsJson)
+        if (asset.type !== 'deletedAsset' && asset.type !== 'docsJson' && 'githubPath' in asset) {
+          if (shouldIgnoreFile(asset.githubPath)) {
+            console.log(`Ignoring file ${asset.githubPath} due to ignore patterns`)
             return []
           }
-          throw e
         }
-      } finally {
-        semaphore.release()
+
+        switch (asset.type) {
+          case 'metaFile':
+            return await syncMetaFile(asset)
+          case 'docsJson':
+            return await syncDocsJson(asset)
+          case 'stylesCss':
+            return await syncStylesCss(asset)
+          case 'mediaAsset':
+            return await syncMediaAsset(asset)
+          case 'page':
+            return await syncPage(asset)
+          case 'deletedAsset':
+            return await syncDeletedAsset(asset)
+          default:
+            return []
+        }
+      } catch (e: any) {
+        if (e.message.includes('lone leading surrogate in hex escape at line ')) {
+          console.error(e)
+          return []
+        }
+        throw e
       }
-    },
-  )) {
+    } finally {
+      semaphore.release()
+    }
+  })) {
     allFilesToSync.push(...chunks)
   }
 
@@ -1081,9 +980,7 @@ export async function syncSite({
     for (const [zoneId, domains] of zoneIdToDomains) {
       if (zoneId) {
         // Only invalidate if zone ID is not empty
-        console.log(
-          `Invalidating cache for zone ${zoneId} (domains: ${domains.join(', ')})`,
-        )
+        console.log(`Invalidating cache for zone ${zoneId} (domains: ${domains.join(', ')})`)
         const cloudflareClient = new CloudflareClient({ zoneId })
         await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
       }
@@ -1157,13 +1054,7 @@ export async function* filesFromGithub({
   const octokit = await getOctokit({ installationId })
   const timeId = Date.now()
 
-  const [
-    repoResult,
-    ok,
-    existingPages,
-    existingMediaAssets,
-    existingMetaFiles,
-  ] = await Promise.all([
+  const [repoResult, ok, existingPages, existingMediaAssets, existingMetaFiles] = await Promise.all([
     !branch &&
       octokit.rest.repos.get({
         owner,
@@ -1228,15 +1119,8 @@ export async function* filesFromGithub({
         console.log(`Skipping file ${file.path} because sha is missing`)
         return false
       }
-      if (
-        !(
-          pathWithFrontSlash?.startsWith(basePath + '/') ||
-          pathWithFrontSlash === basePath
-        )
-      ) {
-        console.log(
-          `Skipping file ${file.path} because path does not start with basePath (${basePath})`,
-        )
+      if (!(pathWithFrontSlash?.startsWith(basePath + '/') || pathWithFrontSlash === basePath)) {
+        console.log(`Skipping file ${file.path} because path does not start with basePath (${basePath})`)
         return false
       }
       if (
@@ -1245,9 +1129,7 @@ export async function* filesFromGithub({
         !isDocsJsonFile(pathWithFrontSlash) &&
         !isStylesCssFile(pathWithFrontSlash)
       ) {
-        console.log(
-          `Skipping file ${file.path} because it is not a markdown, meta, docs json, or styles.css file`,
-        )
+        console.log(`Skipping file ${file.path} because it is not a markdown, meta, docs json, or styles.css file`)
         return false
       }
       if (forceFullSync) return true
@@ -1340,11 +1222,7 @@ export async function* filesFromGithub({
   }
   const onlyMetaFiles = files
     .filter((x) => {
-      if (
-        x.content == null ||
-        !x?.pathWithFrontSlash?.startsWith(basePath) ||
-        !isMetaFile(x.pathWithFrontSlash)
-      ) {
+      if (x.content == null || !x?.pathWithFrontSlash?.startsWith(basePath) || !isMetaFile(x.pathWithFrontSlash)) {
         return false
       }
       return true
@@ -1366,11 +1244,7 @@ export async function* filesFromGithub({
 
   // Process docs json file (root only)
   const docsJsonFile = files.find((x) => {
-    if (
-      x.content == null ||
-      !x?.pathWithFrontSlash?.startsWith(basePath) ||
-      !isDocsJsonFile(x.pathWithFrontSlash)
-    ) {
+    if (x.content == null || !x?.pathWithFrontSlash?.startsWith(basePath) || !isDocsJsonFile(x.pathWithFrontSlash)) {
       return false
     }
     if (forceFullSync) return true
@@ -1389,11 +1263,7 @@ export async function* filesFromGithub({
 
   // Process styles.css file (root only)
   const stylesCssFile = files.find((x) => {
-    if (
-      x.content == null ||
-      !x?.pathWithFrontSlash?.startsWith(basePath) ||
-      !isStylesCssFile(x.pathWithFrontSlash)
-    ) {
+    if (x.content == null || !x?.pathWithFrontSlash?.startsWith(basePath) || !isStylesCssFile(x.pathWithFrontSlash)) {
       return false
     }
     if (forceFullSync) return true
@@ -1422,9 +1292,7 @@ export async function* filesFromGithub({
       return false
     }
     if (!isMarkdown(x.pathWithFrontSlash)) {
-      console.log(
-        `Skipping file ${x.githubPath} because it is not a markdown file`,
-      )
+      console.log(`Skipping file ${x.githubPath} because it is not a markdown file`)
       return false
     }
     return true
@@ -1439,9 +1307,7 @@ export async function* filesFromGithub({
   let totalPages = onlyMarkdown.length
   let pagesToSync = onlyMarkdown
   if (onlyGithubPaths.size) {
-    pagesToSync = onlyMarkdown.filter((x) =>
-      onlyGithubPaths.has(x.pathWithFrontSlash),
-    )
+    pagesToSync = onlyMarkdown.filter((x) => onlyGithubPaths.has(x.pathWithFrontSlash))
   }
   for (const x of pagesToSync) {
     if (x?.content == null) {
@@ -1450,21 +1316,10 @@ export async function* filesFromGithub({
 
     const pathWithFrontSlash = x.pathWithFrontSlash
     let content = x.content
-    let extension: MarkdownExtension = path
-      .extname(x.pathWithFrontSlash)
-      ?.endsWith('mdx')
-      ? 'mdx'
-      : 'md'
+    let extension: MarkdownExtension = path.extname(x.pathWithFrontSlash)?.endsWith('mdx') ? 'mdx' : 'md'
     const slug = generateSlugFromPath(pathWithFrontSlash, basePath)
     if (slugsFound.has(slug)) {
-      console.log(
-        'duplicate slug found',
-        slug,
-        'in',
-        owner + '/' + repo,
-        'at',
-        pathWithFrontSlash,
-      )
+      console.log('duplicate slug found', slug, 'in', owner + '/' + repo, 'at', pathWithFrontSlash)
       continue
     }
     slugsFound.add(slug)

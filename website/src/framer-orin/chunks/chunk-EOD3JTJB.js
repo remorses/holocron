@@ -22,11 +22,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 
@@ -57,18 +53,12 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0, delay: 0, duration: 1, type: 'spring' }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string' ? { src: value } : void 0
@@ -76,10 +66,7 @@ var toResponsiveImage = (value) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -90,12 +77,8 @@ var humanReadableVariantMap = { Colored: 'f8QjOj4Bd', Greyscale: 'vQWJZxw25' }
 var getProps = ({ accent, height, id, image, width, ...props }) => {
   return {
     ...props,
-    imLhjL0oq:
-      accent ??
-      props.imLhjL0oq ??
-      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'vQWJZxw25',
+    imLhjL0oq: accent ?? props.imLhjL0oq ?? 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'vQWJZxw25',
     woptWnw2I: image ??
       props.woptWnw2I ?? {
         pixelHeight: 950,
@@ -116,15 +99,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    woptWnw2I,
-    imLhjL0oq,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, woptWnw2I, imLhjL0oq, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -155,22 +130,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-1we6ti7',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-1we6ti7', className, classNames),
           'data-framer-name': 'Greyscale',
           layoutDependency,
           layoutId: 'vQWJZxw25',
           ref: refBinding,
           style: { ...style },
-          ...addPropertyOverrides(
-            { f8QjOj4Bd: { 'data-framer-name': 'Colored' } },
-            baseVariant,
-            gestureVariant,
-          ),
+          ...addPropertyOverrides({ f8QjOj4Bd: { 'data-framer-name': 'Colored' } }, baseVariant, gestureVariant),
           children: /* @__PURE__ */ _jsx(ComponentViewportProvider, {
             children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
               className: 'framer-1aroym4-container',
@@ -199,8 +165,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   intensity: 40,
                   interval: 0.08,
                 },
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 brightness: -20,
                 dotColor: imLhjL0oq,
                 enabled: true,
@@ -248,18 +213,13 @@ addPropertyControls(FramerHfbBMQhra, {
     type: ControlType.ResponsiveImage,
   },
   imLhjL0oq: {
-    defaultValue:
-      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)) /* {"name":"Accent"} */',
+    defaultValue: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)) /* {"name":"Accent"} */',
     description: 'Accent color you wanna switch the image to.',
     title: 'Accent',
     type: ControlType.Color,
   },
 })
-addFonts(
-  FramerHfbBMQhra,
-  [{ explicitInter: true, fonts: [] }, ...DitherFonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts(FramerHfbBMQhra, [{ explicitInter: true, fonts: [] }, ...DitherFonts], { supportsExplicitInterCodegen: true })
 
 // /:https://framerusercontent.com/modules/xVwsjtJJXcl6gF86oy19/KNjyjF0iH9OM6WxyzEL3/p17lTwFRt.js
 var MainSiteGridBorderFonts = getFonts2(stdin_default)
@@ -273,18 +233,12 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var toResponsiveImage2 = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string' ? { src: value } : void 0
@@ -292,10 +246,7 @@ var toResponsiveImage2 = (value) => {
 var Transition2 = ({ value, children }) => {
   const config = React2.useContext(MotionConfigContext2)
   const transition = value ?? config.transition
-  const contextValue = React2.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React2.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx2(MotionConfigContext2.Provider, {
     value: contextValue,
     children,
@@ -304,22 +255,11 @@ var Transition2 = ({ value, children }) => {
 var Variants2 = motion2.create(React2.Fragment)
 var humanReadableEnumMap = { Colored: 'f8QjOj4Bd', Greyscale: 'vQWJZxw25' }
 var humanReadableVariantMap2 = { Default: 'qaycOHEbc', Phone: 'Dn4XiRqix' }
-var getProps2 = ({
-  accent,
-  border,
-  dottedBG,
-  height,
-  id,
-  image,
-  mode,
-  width,
-  ...props
-}) => {
+var getProps2 = ({ accent, border, dottedBG, height, id, image, mode, width, ...props }) => {
   return {
     ...props,
     gDJCoNC4_: border ?? props.gDJCoNC4_ ?? true,
-    iamrOxJRN:
-      humanReadableEnumMap[mode] ?? mode ?? props.iamrOxJRN ?? 'f8QjOj4Bd',
+    iamrOxJRN: humanReadableEnumMap[mode] ?? mode ?? props.iamrOxJRN ?? 'f8QjOj4Bd',
     iT60Ap0nX: image ??
       props.iT60Ap0nX ?? {
         pixelHeight: 950,
@@ -328,13 +268,9 @@ var getProps2 = ({
         srcSet:
           'https://framerusercontent.com/images/RHF09bh9OF0yV05ZFVU6gym0UA.png?scale-down-to=512 512w,https://framerusercontent.com/images/RHF09bh9OF0yV05ZFVU6gym0UA.png 950w',
       },
-    OcQdifm7Y:
-      accent ??
-      props.OcQdifm7Y ??
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+    OcQdifm7Y: accent ?? props.OcQdifm7Y ?? 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
     s1C6xyggO: dottedBG ?? props.s1C6xyggO,
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'qaycOHEbc',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'qaycOHEbc',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -347,18 +283,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo2()
   const componentViewport = useComponentViewport2()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    iT60Ap0nX,
-    OcQdifm7Y,
-    iamrOxJRN,
-    gDJCoNC4_,
-    s1C6xyggO,
-    ...restProps
-  } = getProps2(props)
+  const { style, className, layoutId, variant, iT60Ap0nX, OcQdifm7Y, iamrOxJRN, gDJCoNC4_, s1C6xyggO, ...restProps } =
+    getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -389,58 +315,43 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion2.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx2(
-            scopingClassNames,
-            'framer-9taq9z',
-            className,
-            classNames,
-          ),
+          className: cx2(scopingClassNames, 'framer-9taq9z', className, classNames),
           'data-framer-name': 'Default',
           layoutDependency,
           layoutId: 'qaycOHEbc',
           ref: refBinding,
           style: { ...style },
-          ...addPropertyOverrides2(
-            { Dn4XiRqix: { 'data-framer-name': 'Phone' } },
-            baseVariant,
-            gestureVariant,
-          ),
+          ...addPropertyOverrides2({ Dn4XiRqix: { 'data-framer-name': 'Phone' } }, baseVariant, gestureVariant),
           children: [
             gDJCoNC4_ &&
               /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
                 height: (componentViewport?.height || 650) - 0,
                 width: componentViewport?.width || '100vw',
                 y: (componentViewport?.y || 0) + 0,
-                children: /* @__PURE__ */ _jsx2(
-                  SmartComponentScopedContainer2,
-                  {
-                    className: 'framer-14ner8x-container',
-                    layoutDependency,
-                    layoutId: 'EvuAseTM6-container',
-                    nodeId: 'EvuAseTM6',
-                    rendersWithMotion: true,
-                    scopeId: 'p17lTwFRt',
-                    children: /* @__PURE__ */ _jsx2(stdin_default, {
+                children: /* @__PURE__ */ _jsx2(SmartComponentScopedContainer2, {
+                  className: 'framer-14ner8x-container',
+                  layoutDependency,
+                  layoutId: 'EvuAseTM6-container',
+                  nodeId: 'EvuAseTM6',
+                  rendersWithMotion: true,
+                  scopeId: 'p17lTwFRt',
+                  children: /* @__PURE__ */ _jsx2(stdin_default, {
+                    height: '100%',
+                    id: 'EvuAseTM6',
+                    layoutId: 'EvuAseTM6',
+                    style: {
                       height: '100%',
-                      id: 'EvuAseTM6',
-                      layoutId: 'EvuAseTM6',
-                      style: {
-                        height: '100%',
-                        width: '100%',
-                      },
-                      variant: 'yzIFdYlxZ',
                       width: '100%',
-                    }),
-                  },
-                ),
+                    },
+                    variant: 'yzIFdYlxZ',
+                    width: '100%',
+                  }),
+                }),
               }),
             /* @__PURE__ */ _jsx2(ComponentViewportProvider2, {
               height: 516,
               width: `min(${componentViewport?.width || '100vw'} - 68px, 440px)`,
-              y:
-                (componentViewport?.y || 0) +
-                34 +
-                (((componentViewport?.height || 650) - 68 - 516) / 2 + 0 + 0),
+              y: (componentViewport?.y || 0) + 34 + (((componentViewport?.height || 650) - 68 - 516) / 2 + 0 + 0),
               ...addPropertyOverrides2(
                 {
                   Dn4XiRqix: {
@@ -461,8 +372,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 scopeId: 'p17lTwFRt',
                 style: {
                   mask: 'linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%) add',
-                  WebkitMask:
-                    'linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%) add',
+                  WebkitMask: 'linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%) add',
                 },
                 children: /* @__PURE__ */ _jsx2(stdin_default2, {
                   height: '100%',
@@ -487,8 +397,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
               layoutDependency,
               layoutId: 'NybQiies0',
               style: {
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
               },
             }),
             s1C6xyggO &&
@@ -497,9 +406,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   alt: '',
                   backgroundSize: 0.7,
                   fit: 'tile',
-                  loading: getLoadingLazyAtYPosition(
-                    (componentViewport?.y || 0) + 0,
-                  ),
+                  loading: getLoadingLazyAtYPosition((componentViewport?.y || 0) + 0),
                   pixelHeight: 100,
                   pixelWidth: 100,
                   positionX: 'left',
@@ -514,8 +421,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 style: {
                   mask: 'linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%) add',
                   opacity: 0.15,
-                  WebkitMask:
-                    'linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%) add',
+                  WebkitMask: 'linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%) add',
                 },
               }),
           ],
@@ -552,8 +458,7 @@ addPropertyControls2(Framerp17lTwFRt, {
     type: ControlType2.ResponsiveImage,
   },
   OcQdifm7Y: {
-    defaultValue:
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
+    defaultValue: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
     description: 'Accent color you wanna switch the image to.',
     title: 'Accent',
     type: ControlType2.Color,
@@ -576,14 +481,8 @@ addPropertyControls2(Framerp17lTwFRt, {
     type: ControlType2.Boolean,
   },
 })
-addFonts2(
-  Framerp17lTwFRt,
-  [
-    { explicitInter: true, fonts: [] },
-    ...MainSiteGridBorderFonts,
-    ...IllustrationBaseFonts,
-  ],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts2(Framerp17lTwFRt, [{ explicitInter: true, fonts: [] }, ...MainSiteGridBorderFonts, ...IllustrationBaseFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 export { stdin_default3 as stdin_default }

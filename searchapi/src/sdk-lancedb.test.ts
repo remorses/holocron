@@ -196,9 +196,7 @@ Please observe API rate limits.
 
     // Verify search results contain the query term
     const hasSDK = searchResult.results.some(
-      (r) =>
-        r.snippet.toLowerCase().includes('sdk') ||
-        r.cleanedSnippet.toLowerCase().includes('sdk'),
+      (r) => r.snippet.toLowerCase().includes('sdk') || r.cleanedSnippet.toLowerCase().includes('sdk'),
     )
     expect(hasSDK).toBe(true)
   })
@@ -282,10 +280,7 @@ Please observe API rate limits.
       getAllFiles: true,
     })
     expect(remainingFiles.files).toHaveLength(2)
-    expect(remainingFiles.files.map((f) => f.filename).sort()).toEqual([
-      'README.md',
-      'api-docs.mdx',
-    ])
+    expect(remainingFiles.files.map((f) => f.filename).sort()).toEqual(['README.md', 'api-docs.mdx'])
   })
 
   test('should handle file updates', async () => {
@@ -404,9 +399,7 @@ Please observe API rate limits.
       page: 0,
       perPage: 10,
     })
-    expect(searchResult.results.some((r) => r.filename === 'dup.md')).toBe(
-      false,
-    )
+    expect(searchResult.results.some((r) => r.filename === 'dup.md')).toBe(false)
 
     const betaResults = await client.searchSections({
       datasetId,
@@ -414,9 +407,7 @@ Please observe API rate limits.
       page: 0,
       perPage: 10,
     })
-    const dupSections = betaResults.results.filter(
-      (r) => r.filename === 'dup.md',
-    )
+    const dupSections = betaResults.results.filter((r) => r.filename === 'dup.md')
     expect(dupSections).toHaveLength(1)
   })
 })

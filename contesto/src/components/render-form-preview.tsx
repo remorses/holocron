@@ -24,12 +24,7 @@ type RenderFieldProps = {
   uploadFunction?: (file: File) => Promise<string>
 }
 
-function RenderField({
-  field,
-  disabled,
-  messageId,
-  uploadFunction,
-}: RenderFieldProps) {
+function RenderField({ field, disabled, messageId, uploadFunction }: RenderFieldProps) {
   const form = useFormContext()
   const { control, getValues, register, setValue } = form
 
@@ -179,19 +174,12 @@ function RenderField({
                   const radioId = `${messageId}-${field.name}-${opt.value}`
                   return (
                     <div key={radioId} className='flex items-start gap-2'>
-                      <RadioGroupItem
-                        value={opt.value}
-                        id={radioId}
-                        disabled={disabled}
-                      />
+                      <RadioGroupItem value={opt.value} id={radioId} disabled={disabled} />
                       <div className='grow'>
                         <div className='grid grow gap-2'>
                           <Label htmlFor={radioId}>{opt.label}</Label>
                           {opt.description && (
-                            <p
-                              id={`${radioId}-description`}
-                              className='text-muted-foreground text-xs'
-                            >
+                            <p id={`${radioId}-description`} className='text-muted-foreground text-xs'>
                               {opt.description}
                             </p>
                           )}
@@ -229,9 +217,7 @@ function RenderField({
                   }
                   disabled={disabled}
                 />
-                <div className='text-xs text-muted-foreground text-center'>
-                  {ctl.value}
-                </div>
+                <div className='text-xs text-muted-foreground text-center'>{ctl.value}</div>
               </div>
             )
           }}
@@ -275,15 +261,7 @@ function RenderField({
         />
       )
     case 'date_picker':
-      return (
-        <Input
-          key={key}
-          type='date'
-          {...(name && register(name))}
-          disabled={disabled}
-          className='bg-muted'
-        />
-      )
+      return <Input key={key} type='date' {...(name && register(name))} disabled={disabled} className='bg-muted' />
     case 'image_upload':
       return (
         <Controller
@@ -294,13 +272,9 @@ function RenderField({
           render={({ field: { value, onChange } }) => (
             <>
               <UploadButton
-                onUploadFinished={
-                  disabled ? () => {} : ({ src }) => onChange(src)
-                }
+                onUploadFinished={disabled ? () => {} : ({ src }) => onChange(src)}
                 disabled={disabled}
-                uploadFunction={
-                  uploadFunction || (async (file) => URL.createObjectURL(file))
-                }
+                uploadFunction={uploadFunction || (async (file) => URL.createObjectURL(file))}
               />
             </>
           )}
@@ -350,11 +324,7 @@ export function RenderFormPreview({
   const disabled = messages[messages.length - 1]?.id !== message.id
 
   if (!args?.fields || args.fields.length === 0) {
-    return (
-      <div className='text-muted-foreground text-sm'>
-        No form fields to display
-      </div>
-    )
+    return <div className='text-muted-foreground text-sm'>No form fields to display</div>
   }
 
   // Group fields by consecutive groupTitle
@@ -363,11 +333,7 @@ export function RenderFormPreview({
   args.fields.forEach((field, index) => {
     const lastGroup = fieldGroups[fieldGroups.length - 1]
 
-    if (
-      lastGroup &&
-      lastGroup.title === field?.groupTitle &&
-      field?.groupTitle !== null
-    ) {
+    if (lastGroup && lastGroup.title === field?.groupTitle && field?.groupTitle !== null) {
       // Add to existing group if same title
       lastGroup.fields.push(field as any)
     } else {
@@ -391,30 +357,19 @@ export function RenderFormPreview({
         if (group.title) {
           return (
             <div key={`group-${groupIndex}`} className='flex flex-col gap-6'>
-              <h3 className='font-medium text-sm text-muted-foreground'>
-                {group.title}
-              </h3>
+              <h3 className='font-medium text-sm text-muted-foreground'>{group.title}</h3>
               <div className='flex flex-col gap-6 rounded border-border'>
                 {group.fields.map((f) => (
                   <div key={f.name} className='flex flex-col gap-6'>
                     {f.type !== 'button' && f.type !== 'color_picker' && (
                       <label className='font-medium text-sm'>
                         {f.label}
-                        {f.required && (
-                          <span className='text-red-500 ml-1'>*</span>
-                        )}
+                        {f.required && <span className='text-red-500 ml-1'>*</span>}
                       </label>
                     )}
-                    <RenderField
-                      field={f}
-                      disabled={disabled}
-                      messageId={message.id}
-                      uploadFunction={uploadFunction}
-                    />
+                    <RenderField field={f} disabled={disabled} messageId={message.id} uploadFunction={uploadFunction} />
                     {f.description && f.type !== 'button' && (
-                      <p className='text-xs text-muted-foreground'>
-                        {f.description}
-                      </p>
+                      <p className='text-xs text-muted-foreground'>{f.description}</p>
                     )}
                   </div>
                 ))}
@@ -430,31 +385,19 @@ export function RenderFormPreview({
                   {f.required && <span className='text-red-500 ml-1'>*</span>}
                 </label>
               )}
-              <RenderField
-                disabled={disabled}
-                messageId={message.id}
-                field={f}
-                uploadFunction={uploadFunction}
-              />
-              {f.description && f.type !== 'button' && (
-                <p className='text-xs text-muted-foreground'>{f.description}</p>
-              )}
+              <RenderField disabled={disabled} messageId={message.id} field={f} uploadFunction={uploadFunction} />
+              {f.description && f.type !== 'button' && <p className='text-xs text-muted-foreground'>{f.description}</p>}
             </div>
           ))
         }
       })}
-      {showSubmitButton &&
-        args.fields.some((f) => f && f.type !== 'button') && (
-          <div>
-            <Button
-              type='submit'
-              className='w-full'
-              disabled={disabled || isGenerating}
-            >
-              {isGenerating ? 'Loading...' : 'Submit'}
-            </Button>
-          </div>
-        )}
+      {showSubmitButton && args.fields.some((f) => f && f.type !== 'button') && (
+        <div>
+          <Button type='submit' className='w-full' disabled={disabled || isGenerating}>
+            {isGenerating ? 'Loading...' : 'Submit'}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

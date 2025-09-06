@@ -15,15 +15,11 @@ var SVG = /* @__PURE__ */ forwardRef2((props, ref) => {
 var getProps = ({ color, height, id, width, ...props }) => {
   return {
     ...props,
-    PnLINQYrT:
-      color ??
-      props.PnLINQYrT ??
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+    PnLINQYrT: color ?? props.PnLINQYrT ?? 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
   }
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-  const { style, className, layoutId, variant, PnLINQYrT, ...restProps } =
-    getProps(props)
+  const { style, className, layoutId, variant, PnLINQYrT, ...restProps } = getProps(props)
   return /* @__PURE__ */ _jsx(SVG, {
     ...restProps,
     className: cx('framer-UZeKl', className),
@@ -39,8 +35,7 @@ var Icon = withCSS(Component, css, 'framer-UZeKl')
 var stdin_default = Icon
 addPropertyControls(Icon, {
   PnLINQYrT: {
-    defaultValue:
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
+    defaultValue: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
     hidden: false,
     title: 'Color',
     type: ControlType.Color,
@@ -67,15 +62,11 @@ var SVG2 = /* @__PURE__ */ forwardRef4((props, ref) => {
 var getProps2 = ({ color, height, id, width, ...props }) => {
   return {
     ...props,
-    PnLINQYrT:
-      color ??
-      props.PnLINQYrT ??
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+    PnLINQYrT: color ?? props.PnLINQYrT ?? 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
   }
 }
 var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
-  const { style, className, layoutId, variant, PnLINQYrT, ...restProps } =
-    getProps2(props)
+  const { style, className, layoutId, variant, PnLINQYrT, ...restProps } = getProps2(props)
   return /* @__PURE__ */ _jsx2(SVG2, {
     ...restProps,
     className: cx2('framer-6HUMt', className),
@@ -91,8 +82,7 @@ var Icon2 = withCSS2(Component2, css2, 'framer-6HUMt')
 var stdin_default2 = Icon2
 addPropertyControls2(Icon2, {
   PnLINQYrT: {
-    defaultValue:
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
+    defaultValue: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
     hidden: false,
     title: 'Color',
     type: ControlType2.Color,

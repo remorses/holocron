@@ -51,10 +51,7 @@ async function extractTestData(ast: Root) {
     })
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error(
-      'extractTestData error for AST:',
-      JSON.stringify(ast, null, 2),
-    )
+    console.error('extractTestData error for AST:', JSON.stringify(ast, null, 2))
     throw err
   }
 }
@@ -106,11 +103,7 @@ describe('markRemarkAstAdditions', () => {
     const old = await parseWithPositions('First paragraph')
     const new_ = await parseWithPositions('First paragraph\n\nSecond paragraph')
 
-    diffMarkdowns(
-      'First paragraph',
-      'First paragraph\n\nSecond paragraph',
-      new_,
-    )
+    diffMarkdowns('First paragraph', 'First paragraph\n\nSecond paragraph', new_)
 
     expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -136,18 +129,10 @@ describe('markRemarkAstAdditions', () => {
   })
 
   test('detects link title changes', async () => {
-    const old = await parseWithPositions(
-      '[Link](https://example.com "Old Title")',
-    )
-    const new_ = await parseWithPositions(
-      '[Link](https://example.com "New Title")',
-    )
+    const old = await parseWithPositions('[Link](https://example.com "Old Title")')
+    const new_ = await parseWithPositions('[Link](https://example.com "New Title")')
 
-    diffMarkdowns(
-      '[Link](https://example.com "Old Title")',
-      '[Link](https://example.com "New Title")',
-      new_,
-    )
+    diffMarkdowns('[Link](https://example.com "Old Title")', '[Link](https://example.com "New Title")', new_)
 
     expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -178,11 +163,7 @@ describe('markRemarkAstAdditions', () => {
     const old = await parseWithPositions('```js\nconsole.log("hello")\n```')
     const new_ = await parseWithPositions('```ts\nconsole.log("hello")\n```')
 
-    diffMarkdowns(
-      '```js\nconsole.log("hello")\n```',
-      '```ts\nconsole.log("hello")\n```',
-      new_,
-    )
+    diffMarkdowns('```js\nconsole.log("hello")\n```', '```ts\nconsole.log("hello")\n```', new_)
 
     expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -253,15 +234,9 @@ describe('markRemarkAstAdditions', () => {
 
   test('detects table structure changes', async () => {
     const old = await parseWithPositions('| A | B |\n|---|---|\n| 1 | 2 |')
-    const new_ = await parseWithPositions(
-      '| A | B | C |\n|---|---|---|\n| 1 | 2 | 3 |',
-    )
+    const new_ = await parseWithPositions('| A | B | C |\n|---|---|---|\n| 1 | 2 | 3 |')
 
-    diffMarkdowns(
-      '| A | B |\n|---|---|\n| 1 | 2 |',
-      '| A | B | C |\n|---|---|---|\n| 1 | 2 | 3 |',
-      new_,
-    )
+    diffMarkdowns('| A | B |\n|---|---|\n| 1 | 2 |', '| A | B | C |\n|---|---|---|\n| 1 | 2 | 3 |', new_)
 
     expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -287,12 +262,8 @@ describe('markRemarkAstAdditions', () => {
   })
 
   test.todo('preserves React identity for unchanged nodes', async () => {
-    const old = await parseWithPositions(
-      '# Unchanged\n\nSame text\n\n## Also unchanged',
-    )
-    const new_ = await parseWithPositions(
-      '# Unchanged\n\nSame text\n\n## Also unchanged\n\nNew paragraph',
-    )
+    const old = await parseWithPositions('# Unchanged\n\nSame text\n\n## Also unchanged')
+    const new_ = await parseWithPositions('# Unchanged\n\nSame text\n\n## Also unchanged\n\nNew paragraph')
 
     // Store references to original nodes
     const oldHeading = old.children[0]
@@ -315,9 +286,7 @@ describe('markRemarkAstAdditions', () => {
 
     expect({
       unchangedNodesPreserved:
-        new_.children[0] === oldHeading &&
-        new_.children[1] === oldParagraph &&
-        new_.children[2] === oldSecondHeading,
+        new_.children[0] === oldHeading && new_.children[1] === oldParagraph && new_.children[2] === oldSecondHeading,
       newNodeAdded: new_.children.length === 4,
     }).toMatchInlineSnapshot(`
           {
@@ -439,15 +408,9 @@ const new = "code"
 
   test('handles thematic break additions', async () => {
     const old = await parseWithPositions('Paragraph one\n\nParagraph two')
-    const new_ = await parseWithPositions(
-      'Paragraph one\n\n---\n\nParagraph two',
-    )
+    const new_ = await parseWithPositions('Paragraph one\n\n---\n\nParagraph two')
 
-    diffMarkdowns(
-      'Paragraph one\n\nParagraph two',
-      'Paragraph one\n\n---\n\nParagraph two',
-      new_,
-    )
+    diffMarkdowns('Paragraph one\n\nParagraph two', 'Paragraph one\n\n---\n\nParagraph two', new_)
 
     expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -460,18 +423,10 @@ const new = "code"
   })
 
   test('handles list item checkbox changes', async () => {
-    const old = await parseWithPositions(
-      'todos\n\n- [ ] Unchecked\n- [x] Checked',
-    )
-    const new_ = await parseWithPositions(
-      'todos\n\n- [x] Checked\n- [ ] Unchecked',
-    )
+    const old = await parseWithPositions('todos\n\n- [ ] Unchecked\n- [x] Checked')
+    const new_ = await parseWithPositions('todos\n\n- [x] Checked\n- [ ] Unchecked')
 
-    diffMarkdowns(
-      'todos\n\n- [ ] Unchecked\n- [x] Checked',
-      'todos\n\n- [x] Checked\n- [ ] Unchecked',
-      new_,
-    )
+    diffMarkdowns('todos\n\n- [ ] Unchecked\n- [x] Checked', 'todos\n\n- [x] Checked\n- [ ] Unchecked', new_)
 
     expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -520,15 +475,9 @@ const new = "code"
 
   test('detects added code blocks', async () => {
     const old = await parseWithPositions('# Hello\n\nSome text.')
-    const new_ = await parseWithPositions(
-      '# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```',
-    )
+    const new_ = await parseWithPositions('# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```')
 
-    diffMarkdowns(
-      '# Hello\n\nSome text.',
-      '# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```',
-      new_,
-    )
+    diffMarkdowns('# Hello\n\nSome text.', '# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```', new_)
 
     expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>

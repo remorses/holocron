@@ -40,9 +40,7 @@ export async function processTarArchive({
     !contentType.includes('tar') &&
     !contentType.includes('octet-stream')
   ) {
-    throw new Error(
-      `Invalid content type: ${contentType}. Expected tar.gz archive. URL: ${url}`,
-    )
+    throw new Error(`Invalid content type: ${contentType}. Expected tar.gz archive. URL: ${url}`)
   }
 
   console.log(`[import-tar] Fetching tar archive from ${url}`)
@@ -74,9 +72,7 @@ export async function processTarArchive({
     if (path && !relativePath.startsWith(path)) return
 
     // Check if file has supported extension
-    const hasSuportedExtension = SUPPORTED_EXTENSIONS.some((ext) =>
-      relativePath.endsWith(ext),
-    )
+    const hasSuportedExtension = SUPPORTED_EXTENSIONS.some((ext) => relativePath.endsWith(ext))
     if (!hasSuportedExtension) return
 
     // Read the file content
@@ -93,9 +89,7 @@ export async function processTarArchive({
     allEntries.push({ relativePath, buffer })
   })
 
-  console.log(
-    `[import-tar] Collected ${allEntries.length} files from tar archive`,
-  )
+  console.log(`[import-tar] Collected ${allEntries.length} files from tar archive`)
 
   // Process files in batches
   // LanceDB recommends 10k-100k rows per batch for optimal performance
@@ -115,9 +109,7 @@ export async function processTarArchive({
 
         // Remove path prefix if specified
         const filename =
-          path && relativePath.startsWith(path)
-            ? relativePath.slice(path.length).replace(/^\//, '')
-            : relativePath
+          path && relativePath.startsWith(path) ? relativePath.slice(path.length).replace(/^\//, '') : relativePath
 
         batch.push({
           filename,
@@ -133,18 +125,14 @@ export async function processTarArchive({
         totalSizeBytes += buffer.byteLength
       } catch (error) {
         // Skip files that can't be decoded as UTF-8
-        console.warn(
-          `[import-tar] Skipping file ${relativePath}: ${error.message}`,
-        )
+        console.warn(`[import-tar] Skipping file ${relativePath}: ${error.message}`)
       }
     }
 
     // Upload this batch
     if (batch.length > 0) {
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1
-      console.log(
-        `[import-tar] Uploading batch ${batchNumber} (${batch.length} files)...`,
-      )
+      console.log(`[import-tar] Uploading batch ${batchNumber} (${batch.length} files)...`)
 
       const batchStartTime = Date.now()
       await stub.upsertFiles({

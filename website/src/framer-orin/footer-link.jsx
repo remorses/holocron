@@ -44,9 +44,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var convertFromEnum = (value, activeLocale) => {
@@ -94,11 +92,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableEnumMap = {
@@ -110,27 +104,15 @@ var humanReadableVariantMap = {
   Default: 'asFeoYqIX',
   Title: 'GQwpl0mWS',
 }
-var getProps = ({
-  height,
-  id,
-  label,
-  link,
-  side,
-  tag,
-  tagContent,
-  width,
-  ...props
-}) => {
+var getProps = ({ height, id, label, link, side, tag, tagContent, width, ...props }) => {
   return {
     ...props,
     atIhs9Ic6: tag ?? props.atIhs9Ic6,
     Bw9RlIaqy: label ?? props.Bw9RlIaqy ?? 'Terms and conditions',
     iuQZf5epy: link ?? props.iuQZf5epy,
-    Lhr2MMFwB:
-      humanReadableEnumMap[side] ?? side ?? props.Lhr2MMFwB ?? 'F5Cl_LIpf',
+    Lhr2MMFwB: humanReadableEnumMap[side] ?? side ?? props.Lhr2MMFwB ?? 'F5Cl_LIpf',
     tcFAa5qmY: tagContent ?? props.tcFAa5qmY ?? 'HIRING',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'asFeoYqIX',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'asFeoYqIX',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -143,18 +125,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    Bw9RlIaqy,
-    iuQZf5epy,
-    Lhr2MMFwB,
-    atIhs9Ic6,
-    tcFAa5qmY,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, Bw9RlIaqy, iuQZf5epy, Lhr2MMFwB, atIhs9Ic6, tcFAa5qmY, ...restProps } =
+    getProps(props)
   const {
     baseVariant,
     classNames,
@@ -177,9 +149,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const sharedStyleClassNames = []
   const padding = numberToPixelString(convertFromEnum(Lhr2MMFwB, activeLocale))
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
-  const padding1 = numberToPixelString(
-    convertFromEnum1(Lhr2MMFwB, activeLocale),
-  )
+  const padding1 = numberToPixelString(convertFromEnum1(Lhr2MMFwB, activeLocale))
   return (
     <LayoutGroup id={layoutId ?? defaultLayoutId}>
       <Variants animate={variants} initial={false}>
@@ -238,9 +208,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   scopeId={'uiyUZ81sH'}
                 >
                   <TextGlitch
-                    color={
-                      'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'
-                    }
+                    color={'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'}
                     duration={300}
                     font={{
                       fontFamily: '"Raveo Variable Variable", sans-serif',
@@ -257,9 +225,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     scrambleChars={
                       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
                     }
-                    scrambleColor={
-                      'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'
-                    }
+                    scrambleColor={'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'}
                     scramblePercent={20}
                     speed={50}
                     text={Bw9RlIaqy}
@@ -271,13 +237,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     {...addPropertyOverrides(
                       {
                         'asFeoYqIX-hover': {
-                          color:
-                            'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                          color: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                           glitch: true,
                         },
                         GQwpl0mWS: {
-                          color:
-                            'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                          color: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                         },
                       },
                       baseVariant,
@@ -299,9 +263,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     scopeId={'uiyUZ81sH'}
                   >
                     <TextShimmer
-                      color={
-                        'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))'
-                      }
+                      color={'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))'}
                       content={tcFAa5qmY}
                       delay={2}
                       direction={'right'}
@@ -317,9 +279,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       id={'mQ_VAlIpA'}
                       layoutId={'mQ_VAlIpA'}
                       rotation={100}
-                      shimmer={
-                        'var(--token-54d5892b-0224-424e-b224-359f05491e1f, rgba(0, 0, 0, 0.75))'
-                      }
+                      shimmer={'var(--token-54d5892b-0224-424e-b224-359f05491e1f, rgba(0, 0, 0, 0.75))'}
                       size={30}
                       speed={10}
                       tag={'p'}
@@ -485,17 +445,11 @@ stdin_default.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -543,9 +497,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

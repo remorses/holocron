@@ -32,14 +32,7 @@ import { LayoutGroup, motion, MotionConfigContext } from 'unframer'
 import * as React from 'react'
 import { useRef } from 'react'
 var AspectRatioLogoFonts = getFonts(AspectRatioLogo)
-var cycleOrder = [
-  'rJpeO5TfG',
-  'HfzpqW5M7',
-  'v60ZzFMlS',
-  'Vm1pdYezD',
-  'zi7jTfbgd',
-  'mGnwAZdNT',
-]
+var cycleOrder = ['rJpeO5TfG', 'HfzpqW5M7', 'v60ZzFMlS', 'Vm1pdYezD', 'zi7jTfbgd', 'mGnwAZdNT']
 var serializationHash = 'framer-N0mec'
 var variantClassNames = {
   HfzpqW5M7: 'framer-v-10n9i3e',
@@ -51,9 +44,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -76,11 +67,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -94,8 +81,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'rJpeO5TfG',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'rJpeO5TfG',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -162,12 +148,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-8wrhca',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-8wrhca', className, classNames)}
             data-framer-name={'1'}
             layoutDependency={layoutDependency}
             layoutId={'rJpeO5TfG'}
@@ -461,14 +442,7 @@ Framerv13l90nXX.defaultProps = {
 }
 addPropertyControls(Framerv13l90nXX, {
   variant: {
-    options: [
-      'rJpeO5TfG',
-      'HfzpqW5M7',
-      'v60ZzFMlS',
-      'Vm1pdYezD',
-      'zi7jTfbgd',
-      'mGnwAZdNT',
-    ],
+    options: ['rJpeO5TfG', 'HfzpqW5M7', 'v60ZzFMlS', 'Vm1pdYezD', 'zi7jTfbgd', 'mGnwAZdNT'],
     optionTitles: ['1', '2', '3', '4', '5', '6'],
     title: 'Variant',
     type: ControlType.Enum,
@@ -537,17 +511,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -595,9 +563,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

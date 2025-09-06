@@ -13,20 +13,7 @@ export interface Props {
   width?: any
   height?: any
   layoutId?: string
-  variant?:
-    | 'Default'
-    | '1'
-    | '2'
-    | '3'
-    | '4'
-    | '5'
-    | '6'
-    | '7'
-    | '8'
-    | '9'
-    | '10'
-    | '11'
-    | '12'
+  variant?: 'Default' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12'
   question?: string
   answer?: string
   question2?: string
@@ -60,8 +47,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-AccordionsBlockFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+AccordionsBlockFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default AccordionsBlockFramerComponent

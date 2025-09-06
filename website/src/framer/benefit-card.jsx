@@ -46,9 +46,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -79,17 +77,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

@@ -283,8 +283,7 @@ describe('applyJsonCComments', () => {
 
     const comments = {
       config: '// Configuration object\n// Contains important settings',
-      'config.important':
-        '// This is very important\n// Do not change without permission',
+      'config.important': '// This is very important\n// Do not change without permission',
     }
 
     const result = applyJsonCComments(obj, comments, 2)
@@ -318,8 +317,7 @@ describe('applyJsonCComments', () => {
 }`
 
     // Extract comments and data
-    const { comments: extractedComments, data: obj } =
-      extractJsonCComments(originalJsonC)
+    const { comments: extractedComments, data: obj } = extractJsonCComments(originalJsonC)
 
     // Apply comments back
     const result = applyJsonCComments(obj, extractedComments, 4)

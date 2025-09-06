@@ -37,15 +37,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
     path: '/webhooks-worker',
     request: webhookWorkerRequestSchema,
     async handler({ request }) {
-      const {
-        SERVICE_SECRET,
-        installationId,
-        owner,
-        repoName,
-        repoId,
-        githubBranch,
-        commits,
-      } = await request.json()
+      const { SERVICE_SECRET, installationId, owner, repoName, repoId, githubBranch, commits } = await request.json()
 
       if (SERVICE_SECRET !== env.SERVICE_SECRET) {
         throw new Error('Invalid secret')
@@ -82,8 +74,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
 type WebhookWorkerRequest = z.infer<typeof webhookWorkerRequestSchema>
 
 async function updatePagesFromCommits(args: WebhookWorkerRequest) {
-  const { installationId, owner, repoName, repoId, githubBranch, commits } =
-    args
+  const { installationId, owner, repoName, repoId, githubBranch, commits } = args
   const latestCommit = commits[commits.length - 1]
 
   // Check if the repository exists in the database before creating pending check
@@ -101,9 +92,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
   })
 
   if (!repoExists) {
-    logger.log(
-      `Repository ${owner}/${repoName} is not connected to the database, skipping webhook processing`,
-    )
+    logger.log(`Repository ${owner}/${repoName} is not connected to the database, skipping webhook processing`)
     return
   }
 
@@ -141,9 +130,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
       const newBranch = await tryCreateBranchFromDocsJson(args)
 
       if (!newBranch) {
-        logger.log(
-          `No ${DOCS_JSON_BASENAME} with available domain found for ${githubBranch}`,
-        )
+        logger.log(`No ${DOCS_JSON_BASENAME} with available domain found for ${githubBranch}`)
         // Report failure for unknown branch
         await reportFailureToGithub({
           installationId,
@@ -212,8 +199,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
 }
 
 async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
-  const { installationId, owner, repoName, repoId, githubBranch, commits } =
-    args
+  const { installationId, owner, repoName, repoId, githubBranch, commits } = args
   const octokit = await getOctokit({ installationId })
 
   const docsJsonFiles: string[] = []
@@ -248,14 +234,8 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
     const content = Buffer.from(data.content, 'base64').toString('utf-8')
     const docsJson: DocsJsonType = safeJsoncParse(content, {})
 
-    if (
-      !docsJson.domains ||
-      !Array.isArray(docsJson.domains) ||
-      docsJson.domains.length === 0
-    ) {
-      logger.log(
-        `${DOCS_JSON_BASENAME} found but no valid domains field in ${githubBranch}`,
-      )
+    if (!docsJson.domains || !Array.isArray(docsJson.domains) || docsJson.domains.length === 0) {
+      logger.log(`${DOCS_JSON_BASENAME} found but no valid domains field in ${githubBranch}`)
       return null
     }
 
@@ -270,14 +250,10 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
     })
 
     const takenDomains = existingDomains.map((d) => d.host)
-    const availableDomains = domains.filter(
-      (domain) => !takenDomains.includes(domain),
-    )
+    const availableDomains = domains.filter((domain) => !takenDomains.includes(domain))
 
     if (availableDomains.length === 0) {
-      logger.log(
-        `All domains ${domains.join(', ')} are already taken, cannot create branch ${githubBranch}`,
-      )
+      logger.log(`All domains ${domains.join(', ')} are already taken, cannot create branch ${githubBranch}`)
       return null
     }
 
@@ -326,9 +302,7 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
       },
     })
 
-    logger.log(
-      `Created new branch ${githubBranch} with available domains ${availableDomains.join(', ')}`,
-    )
+    logger.log(`Created new branch ${githubBranch} with available domains ${availableDomains.join(', ')}`)
     return newBranch
   } catch (error) {
     logger.error(`Error creating branch from ${DOCS_JSON_BASENAME}:`, error)
@@ -465,12 +439,7 @@ async function reportErrorsToGithub({
 
     // Get the first internal domain for the website URL
     const websiteUrl = (() => {
-      if (
-        siteBranch &&
-        siteBranch.domains &&
-        siteBranch.domains.length > 0 &&
-        siteBranch.domains[0].host
-      ) {
+      if (siteBranch && siteBranch.domains && siteBranch.domains.length > 0 && siteBranch.domains[0].host) {
         return `https://${siteBranch.domains[0].host}`
       }
       return DEFAULT_DOCS_URL
@@ -494,9 +463,7 @@ async function reportErrorsToGithub({
     }
 
     // Check if all errors are recoverable render errors
-    const nonRenderErrors = syncErrors.filter(
-      (error) => error.errorType !== 'render',
-    )
+    const nonRenderErrors = syncErrors.filter((error) => error.errorType !== 'render')
     const hasOnlyRenderErrors = nonRenderErrors.length === 0
 
     // Convert sync errors to GitHub annotations (max 50 per request)
@@ -504,10 +471,7 @@ async function reportErrorsToGithub({
       path: error.page.githubPath,
       start_line: error.line,
       end_line: error.line,
-      annotation_level:
-        error.errorType === 'render'
-          ? ('warning' as const)
-          : ('failure' as const),
+      annotation_level: error.errorType === 'render' ? ('warning' as const) : ('failure' as const),
       message: `${error.errorType}: ${error.errorMessage}`,
     }))
 
@@ -555,9 +519,7 @@ async function reportErrorsToGithub({
       })
     }
 
-    logger.log(
-      `Reported ${syncErrors.length} errors to GitHub Checks API for commit ${commitSha}`,
-    )
+    logger.log(`Reported ${syncErrors.length} errors to GitHub Checks API for commit ${commitSha}`)
   } catch (error) {
     logger.error('Failed to report errors to GitHub Checks API:', error)
     notifyError(error, 'GitHub Checks API error reporting')

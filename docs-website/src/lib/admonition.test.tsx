@@ -33,11 +33,7 @@ describe('admonitions', () => {
         mdast={data?.ast}
         components={{
           Callout({ children, type }) {
-            return (
-              <div className={`callout callout-${type ?? 'note'}`}>
-                {children}
-              </div>
-            )
+            return <div className={`callout callout-${type ?? 'note'}`}>{children}</div>
           },
         }}
       />,

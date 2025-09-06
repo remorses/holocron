@@ -13,13 +13,7 @@ export interface Props {
   width?: any
   height?: any
   layoutId?: string
-  variant?:
-    | 'Name'
-    | 'Info'
-    | 'Empty'
-    | 'Name Mobile'
-    | 'Info Mobile'
-    | 'Empty Mobile'
+  variant?: 'Name' | 'Info' | 'Empty' | 'Name Mobile' | 'Info Mobile' | 'Empty Mobile'
   category?: boolean
   title?: string
   tooltip?: string
@@ -45,8 +39,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-ComparisonCellFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+ComparisonCellFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default ComparisonCellFramerComponent

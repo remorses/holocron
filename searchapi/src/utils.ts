@@ -1,7 +1,4 @@
-export function findLineNumberInContent(
-  content: string,
-  snippet: string,
-): number | null {
+export function findLineNumberInContent(content: string, snippet: string): number | null {
   if (snippet.length < 3) {
     return null
   }

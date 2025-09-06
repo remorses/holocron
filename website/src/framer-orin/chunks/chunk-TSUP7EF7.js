@@ -36,9 +36,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
@@ -49,10 +47,7 @@ var QueryData = ({ query: query2, pageSize, children }) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -64,8 +59,7 @@ var getProps = ({ click, height, id, width, ...props }) => {
   return {
     ...props,
     KvhM2k7WB: click ?? props.KvhM2k7WB,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'ry1TL0nCL',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'ry1TL0nCL',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -144,11 +138,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             onTap: onTaplgcjvr,
             ref: refBinding,
             style: { ...style },
-            ...addPropertyOverrides(
-              { FcCTKt2S9: { 'data-framer-name': 'Logo mark' } },
-              baseVariant,
-              gestureVariant,
-            ),
+            ...addPropertyOverrides({ FcCTKt2S9: { 'data-framer-name': 'Logo mark' } }, baseVariant, gestureVariant),
             children: /* @__PURE__ */ _jsx(motion.div, {
               className: 'framer-1fqelop',
               'data-framer-name': 'Customization Frame',
@@ -220,68 +210,53 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             LayoutGroup,
                             {
                               id: `TOtFpMtAw-${idTOtFpMtAw2}`,
-                              children: /* @__PURE__ */ _jsx(
-                                PathVariablesContext.Provider,
-                                {
-                                  value: {
-                                    k2CHhHMep: k2CHhHMepTOtFpMtAw2,
-                                  },
-                                  children: /* @__PURE__ */ _jsx(motion.div, {
-                                    className: 'framer-1rsdn2a',
-                                    'data-framer-name': 'Content',
-                                    layoutDependency,
-                                    layoutId: 'OHrM1XKdO',
-                                    children: /* @__PURE__ */ _jsx(
-                                      ComponentViewportProvider,
-                                      {
-                                        children: /* @__PURE__ */ _jsx(
-                                          SmartComponentScopedContainer,
-                                          {
-                                            className:
-                                              'framer-16hrkv2-container',
-                                            draggable: 'false',
-                                            isAuthoredByUser: true,
-                                            isModuleExternal: true,
-                                            layoutDependency,
-                                            layoutId: 'gI9CyG8Z9-container',
-                                            nodeId: 'gI9CyG8Z9',
-                                            rendersWithMotion: true,
-                                            scopeId: 'CO1ETPl7X',
-                                            style: {
-                                              filter: 'invert(0)',
-                                              WebkitFilter: 'invert(0)',
-                                            },
-                                            children: /* @__PURE__ */ _jsx(
-                                              AspectRatioLogo,
-                                              {
-                                                fixedHeight: 24,
-                                                height: '100%',
-                                                id: 'gI9CyG8Z9',
-                                                invertColors:
-                                                  nry0JnSv2TOtFpMtAw2,
-                                                layoutId: 'gI9CyG8Z9',
-                                                logoFile: gYAtMCnvHTOtFpMtAw2,
-                                                noColor: d9UHM1Pl5TOtFpMtAw2,
-                                                width: '100%',
-                                                ...addPropertyOverrides(
-                                                  {
-                                                    FcCTKt2S9: {
-                                                      logoFile:
-                                                        o67aZ_FyRTOtFpMtAw2,
-                                                    },
-                                                  },
-                                                  baseVariant,
-                                                  gestureVariant,
-                                                ),
-                                              },
-                                            ),
-                                          },
-                                        ),
-                                      },
-                                    ),
-                                  }),
+                              children: /* @__PURE__ */ _jsx(PathVariablesContext.Provider, {
+                                value: {
+                                  k2CHhHMep: k2CHhHMepTOtFpMtAw2,
                                 },
-                              ),
+                                children: /* @__PURE__ */ _jsx(motion.div, {
+                                  className: 'framer-1rsdn2a',
+                                  'data-framer-name': 'Content',
+                                  layoutDependency,
+                                  layoutId: 'OHrM1XKdO',
+                                  children: /* @__PURE__ */ _jsx(ComponentViewportProvider, {
+                                    children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                                      className: 'framer-16hrkv2-container',
+                                      draggable: 'false',
+                                      isAuthoredByUser: true,
+                                      isModuleExternal: true,
+                                      layoutDependency,
+                                      layoutId: 'gI9CyG8Z9-container',
+                                      nodeId: 'gI9CyG8Z9',
+                                      rendersWithMotion: true,
+                                      scopeId: 'CO1ETPl7X',
+                                      style: {
+                                        filter: 'invert(0)',
+                                        WebkitFilter: 'invert(0)',
+                                      },
+                                      children: /* @__PURE__ */ _jsx(AspectRatioLogo, {
+                                        fixedHeight: 24,
+                                        height: '100%',
+                                        id: 'gI9CyG8Z9',
+                                        invertColors: nry0JnSv2TOtFpMtAw2,
+                                        layoutId: 'gI9CyG8Z9',
+                                        logoFile: gYAtMCnvHTOtFpMtAw2,
+                                        noColor: d9UHM1Pl5TOtFpMtAw2,
+                                        width: '100%',
+                                        ...addPropertyOverrides(
+                                          {
+                                            FcCTKt2S9: {
+                                              logoFile: o67aZ_FyRTOtFpMtAw2,
+                                            },
+                                          },
+                                          baseVariant,
+                                          gestureVariant,
+                                        ),
+                                      }),
+                                    }),
+                                  }),
+                                }),
+                              }),
                             },
                             idTOtFpMtAw2,
                           )
@@ -318,10 +293,8 @@ addPropertyControls(FramerCO1ETPl7X, {
   },
   KvhM2k7WB: { title: 'Click', type: ControlType.EventHandler },
 })
-addFonts(
-  FramerCO1ETPl7X,
-  [{ explicitInter: true, fonts: [] }, ...AspectRatioLogoFonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts(FramerCO1ETPl7X, [{ explicitInter: true, fonts: [] }, ...AspectRatioLogoFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 export { stdin_default2 as stdin_default }

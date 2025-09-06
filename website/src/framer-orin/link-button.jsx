@@ -38,11 +38,7 @@ import * as React from 'react'
 import { forwardRef as forwardRef2 } from 'react'
 var SVG = /* @__PURE__ */ forwardRef2((props, ref) => {
   const { animated, layoutId, children, ...rest } = props
-  return animated ? (
-    <motion.div {...rest} layoutId={layoutId} ref={ref} />
-  ) : (
-    <div {...rest} ref={ref} />
-  )
+  return animated ? <motion.div {...rest} layoutId={layoutId} ref={ref} /> : <div {...rest} ref={ref} />
 })
 var getProps = ({ color, height, id, width, ...props }) => {
   return {
@@ -51,8 +47,7 @@ var getProps = ({ color, height, id, width, ...props }) => {
   }
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-  const { style, className, layoutId, variant, HN7TZix3o, ...restProps } =
-    getProps(props)
+  const { style, className, layoutId, variant, HN7TZix3o, ...restProps } = getProps(props)
   return (
     <SVG
       {...restProps}
@@ -101,9 +96,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -124,11 +117,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion2.create(React2.Fragment)
 var humanReadableVariantMap = {
@@ -140,8 +129,7 @@ var getProps2 = ({ height, id, label, link, width, ...props }) => {
     ...props,
     lEpcO9Z5J: link ?? props.lEpcO9Z5J,
     v5GqrO6jM: label ?? props.v5GqrO6jM ?? 'Back',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'C75ZaKEQi',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'C75ZaKEQi',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -154,15 +142,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    v5GqrO6jM,
-    lEpcO9Z5J,
-    ...restProps
-  } = getProps2(props)
+  const { style, className, layoutId, variant, v5GqrO6jM, lEpcO9Z5J, ...restProps } = getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -188,13 +168,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
     <LayoutGroup id={layoutId ?? defaultLayoutId}>
       <Variants animate={variants} initial={false}>
         <Transition value={transition1}>
-          <Link
-            href={lEpcO9Z5J}
-            motionChild={true}
-            nodeId={'C75ZaKEQi'}
-            openInNewTab={false}
-            scopeId={'T9Ghiu5oW'}
-          >
+          <Link href={lEpcO9Z5J} motionChild={true} nodeId={'C75ZaKEQi'} openInNewTab={false} scopeId={'T9Ghiu5oW'}>
             <motion2.a
               {...restProps}
               {...gestureHandlers}
@@ -228,8 +202,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'mJllyQKxH'}
                 style={{
-                  backgroundColor:
-                    'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
+                  backgroundColor: 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
                   borderBottomLeftRadius: '50%',
                   borderBottomRightRadius: '50%',
                   borderTopLeftRadius: '50%',
@@ -238,8 +211,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 }}
                 variants={{
                   'C75ZaKEQi-hover': {
-                    backgroundColor:
-                      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                    backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                     rotate: 0,
                   },
                   eqE432IsG: {
@@ -253,8 +225,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'p0Kyf7_2W',
                   style: {
-                    '--13bnw74':
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    '--13bnw74': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   },
                   transformTemplate: transformTemplate1,
                   ...addPropertyOverrides(
@@ -276,8 +247,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'Mli4AM5yl',
                   style: {
-                    '--13bnw74':
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    '--13bnw74': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   },
                   transformTemplate: transformTemplate2,
                   ...addPropertyOverrides(
@@ -318,9 +288,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                         direction: 'clockwise',
                         speed: 2,
                       }}
-                      borderColor={
-                        'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'
-                      }
+                      borderColor={'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'}
                       borderRadius={13}
                       borderWidth={1}
                       bottom={true}
@@ -370,8 +338,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutId={'b4gbCBIh6'}
                   style={{
                     '--extracted-lqlgq3': '"opsz" 14, "wght" 550',
-                    '--extracted-tcooor':
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    '--extracted-tcooor': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                     '--framer-link-text-color': 'rgb(0, 153, 255)',
                     '--framer-link-text-decoration': 'underline',
                     opacity: 0,
@@ -385,11 +352,9 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       style={{
                         '--font-selector':
                           'Qkk7UmF2ZW8gVmFyaWFibGUvdmFyaWFibGUvdjBWRj1JbTl3YzNvaUlERTBMQ0FpZDJkb2RDSWdOVFV3',
-                        '--framer-font-family':
-                          '"Raveo Variable Variable", sans-serif',
+                        '--framer-font-family': '"Raveo Variable Variable", sans-serif',
                         '--framer-font-size': '14px',
-                        '--framer-font-variation-axes':
-                          'var(--extracted-lqlgq3, "opsz" 14, "wght" 550)',
+                        '--framer-font-variation-axes': 'var(--extracted-lqlgq3, "opsz" 14, "wght" 550)',
                         '--framer-font-weight': '1000',
                         '--framer-letter-spacing': '-0.01em',
                         '--framer-text-alignment': 'right',
@@ -413,9 +378,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                     scopeId={'T9Ghiu5oW'}
                   >
                     <TextGlitch
-                      color={
-                        'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'
-                      }
+                      color={'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'}
                       duration={350}
                       font={{
                         fontFamily: '"Raveo Variable Variable", sans-serif',
@@ -432,9 +395,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       scrambleChars={
                         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
                       }
-                      scrambleColor={
-                        'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'
-                      }
+                      scrambleColor={'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))'}
                       scramblePercent={70}
                       speed={50}
                       text={v5GqrO6jM}
@@ -446,19 +407,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       {...addPropertyOverrides(
                         {
                           'C75ZaKEQi-hover': {
-                            color:
-                              'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                            color: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                             glitch: true,
                           },
                           'eqE432IsG-hover': {
-                            color:
-                              'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                            color: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                             glitch: true,
                           },
                           eqE432IsG: {
                             font: {
-                              fontFamily:
-                                '"Raveo Variable Variable", sans-serif',
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
                               fontSize: '14px',
                               fontStyle: 'normal',
                               fontWeight: 1e3,
@@ -617,17 +575,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -675,9 +627,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

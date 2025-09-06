@@ -10,9 +10,7 @@ describe('marked.lexer', () => {
             Paragraph text.
         `)
     const tokens = marked.lexer(markdown)
-    expect(
-      tokens.map((token) => JSON.stringify(token.raw)),
-    ).toMatchInlineSnapshot(`
+    expect(tokens.map((token) => JSON.stringify(token.raw))).toMatchInlineSnapshot(`
               [
                 ""# Heading\\n\\n"",
                 ""Paragraph text."",
@@ -40,9 +38,7 @@ describe('marked.lexer', () => {
           > This is a paragraph <Inline/>
       `)
     const tokens = marked.lexer(markdown)
-    expect(
-      tokens.map((token) => JSON.stringify(token.raw)),
-    ).toMatchInlineSnapshot(`
+    expect(tokens.map((token) => JSON.stringify(token.raw))).toMatchInlineSnapshot(`
               [
                 ""# Example MDX\\n\\n"",
                 ""<Alert type=\\"info\\">\\n\\n"",
@@ -73,9 +69,7 @@ describe('marked.lexer', () => {
           \`\`\`
         `)
     const tokens = marked.lexer(markdown)
-    expect(
-      tokens.map((token) => [token.type, JSON.stringify(token.raw)]),
-    ).toMatchInlineSnapshot(`
+    expect(tokens.map((token) => [token.type, JSON.stringify(token.raw)])).toMatchInlineSnapshot(`
               [
                 [
                   "heading",

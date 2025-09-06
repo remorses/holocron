@@ -3,14 +3,7 @@ import { google } from '@ai-sdk/google'
 import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import { groq } from '@ai-sdk/groq'
-import {
-  UIMessage,
-  streamText,
-  tool,
-  stepCountIs,
-  convertToModelMessages,
-  smoothStream,
-} from 'ai'
+import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages, smoothStream } from 'ai'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
 import { Spiceflow } from 'spiceflow'
@@ -20,10 +13,7 @@ import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { preventProcessExitIfBusy } from 'spiceflow'
 import { notifyError } from './errors'
 import { getFilesForSource } from './source.server'
-import {
-  searchDocsWithSearchApi,
-  formatSearchApiSearchResults,
-} from './search-api-search'
+import { searchDocsWithSearchApi, formatSearchApiSearchResults } from './search-api-search'
 import { getFumadocsSource } from './source'
 import {
   searchDocsInputSchema,
@@ -38,12 +28,7 @@ import {
   type SelectTextInput,
 } from 'website/src/lib/shared-docs-tools'
 import { cleanSlug } from './slug-utils'
-import {
-  createEditTool,
-  editToolParamsSchema,
-  fileUpdateSchema,
-  type FileUpdate,
-} from './edit-tool'
+import { createEditTool, editToolParamsSchema, fileUpdateSchema, type FileUpdate } from './edit-tool'
 import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 import { printDirectoryTree } from './directory-tree'
 
@@ -60,20 +45,10 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
       locale: z.string(),
       currentSlug: z.string(),
       currentOrigin: z.string(),
-      filesInDraft: z
-        .record(z.string(), fileUpdateSchema)
-        .optional()
-        .default({}),
+      filesInDraft: z.record(z.string(), fileUpdateSchema).optional().default({}),
     }),
     async *handler({ request, waitUntil, state: {} }) {
-      const {
-        messages,
-        currentSlug,
-        locale,
-        chatId,
-        currentOrigin,
-        filesInDraft = {},
-      } = await request.json()
+      const { messages, currentSlug, locale, chatId, currentOrigin, filesInDraft = {} } = await request.json()
       const url = new URL(request.url)
       const domain = url.hostname.split(':')[0]
 
@@ -171,9 +146,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
             return JSON.stringify(metaFile.jsonData, null, 2)
           }
 
-          const error = new Error(
-            `File ${githubPath} not found in draft or database`,
-          )
+          const error = new Error(`File ${githubPath} not found in draft or database`)
           console.error(error)
           throw error
         },
@@ -238,9 +211,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
 
               const response = await fetch(fullUrl)
               if (!response.ok) {
-                console.log(
-                  `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`,
-                )
+                console.log(`Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`)
                 return `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`
               }
 
@@ -253,14 +224,10 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
               } else if (contentType.includes('text/html')) {
                 const html = await response.text()
                 // Return first 2000 characters to avoid overwhelming context
-                return html.length > 2000
-                  ? html.substring(0, 2000) + '...'
-                  : html
+                return html.length > 2000 ? html.substring(0, 2000) + '...' : html
               } else {
                 const text = await response.text()
-                return text.length > 2000
-                  ? text.substring(0, 2000) + '...'
-                  : text
+                return text.length > 2000 ? text.substring(0, 2000) + '...' : text
               }
             } catch (error) {
               console.log(`Error fetching ${fullUrl} ${error.message}`)
@@ -344,9 +311,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
             role: 'system',
             content: agentPromptTemplate({ linksText }),
           },
-          ...convertToModelMessages(
-            messages.filter((x) => x.role !== 'system'),
-          ),
+          ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
         ],
         stopWhen: stepCountIs(100),
         providerOptions: {
@@ -361,9 +326,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
 
       const lastUserMessage = messages.findLast((x) => x.role === 'user')
 
-      yield* readableStreamToAsyncIterable(
-        result.toUIMessageStream({ originalMessages: messages }),
-      )
+      yield* readableStreamToAsyncIterable(result.toUIMessageStream({ originalMessages: messages }))
     },
   })
   .onError(({ error }) => {

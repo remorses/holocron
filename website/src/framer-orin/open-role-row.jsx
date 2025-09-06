@@ -84,11 +84,7 @@ import * as React from 'react'
 import { forwardRef as forwardRef2 } from 'react'
 var SVG = /* @__PURE__ */ forwardRef2((props, ref) => {
   const { animated, layoutId, children, ...rest } = props
-  return animated ? (
-    <motion.div {...rest} layoutId={layoutId} ref={ref} />
-  ) : (
-    <div {...rest} ref={ref} />
-  )
+  return animated ? <motion.div {...rest} layoutId={layoutId} ref={ref} /> : <div {...rest} ref={ref} />
 })
 var getProps = ({ color, height, id, width, ...props }) => {
   return {
@@ -97,14 +93,7 @@ var getProps = ({ color, height, id, width, ...props }) => {
   }
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-  const {
-    style,
-    className: className3,
-    layoutId,
-    variant,
-    HN7TZix3o,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className3, layoutId, variant, HN7TZix3o, ...restProps } = getProps(props)
   return (
     <SVG
       {...restProps}
@@ -149,9 +138,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -170,35 +157,21 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion2.create(React2.Fragment)
 var humanReadableVariantMap = {
   Default: 'UzJC6N9Ch',
   Phone: 'WMQzUS7Cd',
 }
-var getProps2 = ({
-  department,
-  height,
-  id,
-  link,
-  location,
-  role,
-  width,
-  ...props
-}) => {
+var getProps2 = ({ department, height, id, link, location, role, width, ...props }) => {
   return {
     ...props,
     DnB5b3eSM: department ?? props.DnB5b3eSM ?? 'Engineering',
     hHNuVxWLo: role ?? props.hHNuVxWLo ?? 'Frontend Developer',
     LkxeW1DFf: location ?? props.LkxeW1DFf ?? 'Remote (EU time)',
     mgdveCRuW: link ?? props.mgdveCRuW,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'UzJC6N9Ch',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'UzJC6N9Ch',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -255,12 +228,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
     <LayoutGroup id={layoutId ?? defaultLayoutId}>
       <Variants animate={variants} initial={false}>
         <Transition value={transition1}>
-          <Link
-            href={mgdveCRuW}
-            motionChild={true}
-            nodeId={'UzJC6N9Ch'}
-            scopeId={'p6lzpvbG5'}
-          >
+          <Link href={mgdveCRuW} motionChild={true} nodeId={'UzJC6N9Ch'} scopeId={'p6lzpvbG5'}>
             <motion2.a
               {...restProps}
               {...gestureHandlers}
@@ -276,8 +244,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
               }}
               variants={{
                 'UzJC6N9Ch-hover': {
-                  backgroundColor:
-                    'var(--token-11d9ea5f-97fd-4136-81df-b44c454e15b1, rgb(12, 12, 12))',
+                  backgroundColor: 'var(--token-11d9ea5f-97fd-4136-81df-b44c454e15b1, rgb(12, 12, 12))',
                 },
               }}
               {...addPropertyOverrides(
@@ -306,8 +273,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'ZngfMXsEv'}
                   style={{
-                    '--extracted-r6o4lv':
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    '--extracted-r6o4lv': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                     '--framer-link-text-color': 'rgb(0, 153, 255)',
                     '--framer-link-text-decoration': 'underline',
                   }}
@@ -335,8 +301,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'eArIhFdEw'}
                   style={{
-                    '--extracted-r6o4lv':
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    '--extracted-r6o4lv': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                     '--framer-link-text-color': 'rgb(0, 153, 255)',
                     '--framer-link-text-decoration': 'underline',
                   }}
@@ -363,8 +328,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'LKNP8iVWw'}
                   style={{
-                    '--extracted-r6o4lv':
-                      'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                    '--extracted-r6o4lv': 'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
                     '--framer-link-text-color': 'rgb(0, 153, 255)',
                     '--framer-link-text-decoration': 'underline',
                   }}
@@ -399,8 +363,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'hZzDChhNs'}
                   style={{
-                    '--extracted-r6o4lv':
-                      'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                    '--extracted-r6o4lv': 'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
                     '--framer-link-text-color': 'rgb(0, 153, 255)',
                     '--framer-link-text-decoration': 'underline',
                   }}
@@ -456,13 +419,11 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       layoutDependency,
                       layoutId: 'ybf2kAiHt',
                       style: {
-                        '--13bnw74':
-                          'var(--token-311dfa1b-5054-44c6-8b55-ece1611bbe6a, rgba(255, 255, 255, 0.3))',
+                        '--13bnw74': 'var(--token-311dfa1b-5054-44c6-8b55-ece1611bbe6a, rgba(255, 255, 255, 0.3))',
                       },
                       variants: {
                         'UzJC6N9Ch-hover': {
-                          '--13bnw74':
-                            'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                          '--13bnw74': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                         },
                       },
                     })}
@@ -517,8 +478,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                     layoutDependency,
                     layoutId: 'f4mYuiH34',
                     style: {
-                      '--13bnw74':
-                        'var(--token-311dfa1b-5054-44c6-8b55-ece1611bbe6a, rgba(255, 255, 255, 0.3))',
+                      '--13bnw74': 'var(--token-311dfa1b-5054-44c6-8b55-ece1611bbe6a, rgba(255, 255, 255, 0.3))',
                     },
                   })}
                 </motion2.div>
@@ -598,8 +558,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -718,17 +677,11 @@ stdin_default3.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -776,9 +729,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

@@ -18,9 +18,7 @@ describe('schema-path-utils', () => {
 
   describe('extractPaths', () => {
     test('extracts paths from DocsConfigSchema', () => {
-      const paths = extractNamePathsFromSchema(
-        docsConfigJsonSchema as any as JSONSchema7,
-      )
+      const paths = extractNamePathsFromSchema(docsConfigJsonSchema as any as JSONSchema7)
       expect(paths).toMatchInlineSnapshot(`
               [
                 "siteId",

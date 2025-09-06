@@ -10,10 +10,7 @@ var yaml = {
     var ch = stream.peek()
     var esc = state.escaped
     state.escaped = false
-    if (
-      ch == '#' &&
-      (stream.pos == 0 || /\s/.test(stream.string.charAt(stream.pos - 1)))
-    ) {
+    if (ch == '#' && (stream.pos == 0 || /\s/.test(stream.string.charAt(stream.pos - 1)))) {
       stream.skipToEnd()
       return 'comment'
     }
@@ -67,22 +64,14 @@ var yaml = {
       if (state.inlinePairs == 0 && stream.match(/^\s*-?[0-9\.\,]+\s?$/)) {
         return 'number'
       }
-      if (
-        state.inlinePairs > 0 &&
-        stream.match(/^\s*-?[0-9\.\,]+\s?(?=(,|}))/)
-      ) {
+      if (state.inlinePairs > 0 && stream.match(/^\s*-?[0-9\.\,]+\s?(?=(,|}))/)) {
         return 'number'
       }
       if (stream.match(keywordRegex)) {
         return 'keyword'
       }
     }
-    if (
-      !state.pair &&
-      stream.match(
-        /^\s*(?:[,\[\]{}&*!|>'"%@`][^\s'":]|[^,\[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/,
-      )
-    ) {
+    if (!state.pair && stream.match(/^\s*(?:[,\[\]{}&*!|>'"%@`][^\s'":]|[^,\[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/)) {
       state.pair = true
       state.keyCol = stream.indentation()
       return 'atom'

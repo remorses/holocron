@@ -1,17 +1,35 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/latest/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false,
+    "ignoreUnknown": true,
     "maxSize": 2097152,
+    "includes": [
+      "cli/**",
+      "cloudflare-tunnel/**",
+      "contesto/**",
+      "db/**",
+      "docs-website/**",
+      "docs/**",
+      "mcp/**",
+      "mcp-demo/**",
+      "playwriter/**",
+      "searchapi/**",
+      "website/**",
+      "*.json",
+      "*.js",
+      "*.ts",
+      "*.tsx",
+      "*.jsx"
+    ],
     "experimentalScannerIgnores": [
       "*.astro",
       "docs/**",
-      "fumadocs/**",
+      "fumadocs",
       "pnpm-lock.yaml",
       "**/framer-orin/**",
       "**/framer/**",
@@ -32,7 +50,7 @@
     "formatWithErrors": false,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 80,
+    "lineWidth": 120,
     "lineEnding": "lf",
     "attributePosition": "auto"
   },

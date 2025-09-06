@@ -6,9 +6,7 @@ import camelCase from 'camelcase'
 import dedent from 'string-dedent'
 
 export const interpreterToolParamsSchema = z.object({
-  title: z
-    .string()
-    .describe('A descriptive very short title for this code execution'),
+  title: z.string().describe('A descriptive very short title for this code execution'),
   code: z
     .string()
     .describe(
@@ -17,9 +15,7 @@ export const interpreterToolParamsSchema = z.object({
   timeout: z.number().min(100).max(300000).describe('Timeout in milliseconds'),
 })
 
-export type InterpreterToolParamSchema = z.infer<
-  typeof interpreterToolParamsSchema
->
+export type InterpreterToolParamSchema = z.infer<typeof interpreterToolParamsSchema>
 
 export interface CreateInterpreterToolOptions {
   tools?: Record<string, Tool<any, any>>
@@ -32,9 +28,7 @@ function indentString(str: string, indent: string = '  '): string {
     .join('\n')
 }
 
-async function generateToolsTypeDefinition(
-  tools: Record<string, Tool<any, any>>,
-): Promise<string> {
+async function generateToolsTypeDefinition(tools: Record<string, Tool<any, any>>): Promise<string> {
   const toolMethods: string[] = []
 
   for (const [name, toolDef] of Object.entries(tools)) {
@@ -49,13 +43,9 @@ async function generateToolsTypeDefinition(
         if ('_def' in toolDef.inputSchema) {
           const zodSchema = toolDef.inputSchema as any
           const jsonSchema = toJSONSchema(zodSchema) as any
-          const typeScript = await compile(
-            jsonSchema,
-            `${camelCaseName}Input`,
-            {
-              strictIndexSignatures: false,
-            },
-          )
+          const typeScript = await compile(jsonSchema, `${camelCaseName}Input`, {
+            strictIndexSignatures: false,
+          })
 
           const match = typeScript.match(/export interface \w+ ({[\s\S]*?})/m)
           if (match) {
@@ -64,9 +54,7 @@ async function generateToolsTypeDefinition(
         }
       }
 
-      toolMethods.push(
-        `${camelCaseName}: (args: ${inputType}) => Promise<any>;`,
-      )
+      toolMethods.push(`${camelCaseName}: (args: ${inputType}) => Promise<any>;`)
     } catch {
       toolMethods.push(`${camelCaseName}: (args: any) => Promise<any>;`)
     }
@@ -104,16 +92,12 @@ async function generateToolsTypeDefinition(
     `
 }
 
-export async function createInterpreterTool(
-  options?: CreateInterpreterToolOptions,
-) {
+export async function createInterpreterTool(options?: CreateInterpreterToolOptions) {
   const tools = options?.tools || {}
 
   const availableTools = Object.entries(tools)
     .filter(([_, toolDef]) => toolDef.execute)
-    .filter(
-      ([_, toolDef]) => toolDef.inputSchema !== interpreterToolParamsSchema,
-    )
+    .filter(([_, toolDef]) => toolDef.inputSchema !== interpreterToolParamsSchema)
     .map(([name]) => name)
 
   let toolsDescription = ''
@@ -173,57 +157,48 @@ export async function createInterpreterTool(
         await jail.set('_urlConstructor', urlConstructor)
 
         // Set up tools
-        const toolExecutors: Record<
-          string,
-          ivm.Reference<(args: any) => Promise<any>>
-        > = {}
+        const toolExecutors: Record<string, ivm.Reference<(args: any) => Promise<any>>> = {}
         for (const [name, toolDef] of Object.entries(tools)) {
           if (toolDef.execute) {
             const camelCaseName = camelCase(name)
-            toolExecutors[camelCaseName] = new ivm.Reference(
-              async (args: any) => {
-                try {
-                  // Validate input using the tool's inputSchema if it's a Zod schema
-                  if (toolDef.inputSchema && 'parse' in toolDef.inputSchema) {
-                    try {
-                      const validated = toolDef.inputSchema.parse(args)
-                      args = validated
-                    } catch (error: any) {
-                      return {
-                        __error: true,
-                        message: `Invalid input for tool ${name}: ${error.message}`,
-                      }
-                    }
-                  }
-
-                  // Execute the tool
-                  const result = await toolDef.execute!(args, secondArg)
-
-                  // Handle async iterables
-                  if (
-                    result &&
-                    typeof result === 'object' &&
-                    Symbol.asyncIterator in result
-                  ) {
-                    const chunks: any[] = []
-                    for await (const chunk of result as AsyncIterable<any>) {
-                      chunks.push(chunk)
-                    }
+            toolExecutors[camelCaseName] = new ivm.Reference(async (args: any) => {
+              try {
+                // Validate input using the tool's inputSchema if it's a Zod schema
+                if (toolDef.inputSchema && 'parse' in toolDef.inputSchema) {
+                  try {
+                    const validated = toolDef.inputSchema.parse(args)
+                    args = validated
+                  } catch (error: any) {
                     return {
-                      __result: true,
-                      value: chunks.length === 1 ? chunks[0] : chunks,
+                      __error: true,
+                      message: `Invalid input for tool ${name}: ${error.message}`,
                     }
-                  }
-
-                  return { __result: true, value: result }
-                } catch (error: any) {
-                  return {
-                    __error: true,
-                    message: error.message || String(error),
                   }
                 }
-              },
-            )
+
+                // Execute the tool
+                const result = await toolDef.execute!(args, secondArg)
+
+                // Handle async iterables
+                if (result && typeof result === 'object' && Symbol.asyncIterator in result) {
+                  const chunks: any[] = []
+                  for await (const chunk of result as AsyncIterable<any>) {
+                    chunks.push(chunk)
+                  }
+                  return {
+                    __result: true,
+                    value: chunks.length === 1 ? chunks[0] : chunks,
+                  }
+                }
+
+                return { __result: true, value: result }
+              } catch (error: any) {
+                return {
+                  __error: true,
+                  message: error.message || String(error),
+                }
+              }
+            })
           }
         }
 
@@ -319,8 +294,7 @@ export async function createInterpreterTool(
       } catch (error: any) {
         const errorMessage = `Error: ${error.message || String(error)}`
         const stackTrace = error.stack ? `\nStack trace:\n${error.stack}` : ''
-        const logsOutput =
-          logs.length > 0 ? `Logs before error:\n${logs.join('\n')}\n\n` : ''
+        const logsOutput = logs.length > 0 ? `Logs before error:\n${logs.join('\n')}\n\n` : ''
         return `${logsOutput}${errorMessage}${stackTrace}`
       }
     },

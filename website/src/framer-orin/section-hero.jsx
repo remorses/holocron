@@ -4,11 +4,7 @@
 'use client'
 
 import { stdin_default as stdin_default5 } from './chunks/chunk-UOEHJQUC.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-RMRVFPD5.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-RMRVFPD5.js'
 import { stdin_default as stdin_default4 } from './chunks/chunk-VEZBNO3L.js'
 import './chunks/chunk-PXXZXDF5.js'
 import { stdin_default as stdin_default3 } from './chunks/chunk-Z55KA7XF.js'
@@ -26,11 +22,7 @@ import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/LhbyWlaLtc9uM2zl7De3/Y7M2JRJs9Ma7BGdK5PcW/f0mnhjcpz.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -58,11 +50,10 @@ import * as React from 'react'
 import { useRef } from 'react'
 var MainSiteGridBorderFonts = getFonts(stdin_default2)
 var AnnouncementPillFonts = getFonts(stdin_default5)
-var SmartComponentScopedContainerWithFXWithOptimizedAppearEffect =
-  withOptimizedAppearEffect(withFX(SmartComponentScopedContainer))
-var MotionDivWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
-  withFX(motion.div),
+var SmartComponentScopedContainerWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
+  withFX(SmartComponentScopedContainer),
 )
+var MotionDivWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(withFX(motion.div))
 var ButtonFonts = getFonts(stdin_default4)
 var AnimatedBackgroundsFonts = getFonts(stdin_default3)
 var cycleOrder = ['iyBppi0Uh', 'fI2C184uJ', 'n393jI7Y9']
@@ -74,9 +65,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -197,11 +186,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -212,8 +197,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'iyBppi0Uh',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'iyBppi0Uh',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -273,12 +257,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-bj6sxe',
-              className3,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-bj6sxe', className3, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'iyBppi0Uh'}
@@ -436,12 +415,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   y={
                                     (componentViewport?.y || 0) +
                                     65 +
-                                    (((componentViewport?.height || 785) -
-                                      65 -
-                                      900) /
-                                      2 +
-                                      0 +
-                                      0) +
+                                    (((componentViewport?.height || 785) - 65 - 900) / 2 + 0 + 0) +
                                     -1
                                   }
                                   {...addPropertyOverrides(
@@ -450,12 +424,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         y:
                                           (componentViewport?.y || 0) +
                                           65 +
-                                          (((componentViewport?.height || 809) -
-                                            65 -
-                                            900) /
-                                            2 +
-                                            0 +
-                                            0) +
+                                          (((componentViewport?.height || 809) - 65 - 900) / 2 + 0 + 0) +
                                           -1,
                                       },
                                     },
@@ -519,13 +488,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           y={
                                             (componentViewport?.y || 0) +
                                             65 +
-                                            (((componentViewport?.height ||
-                                              785) -
-                                              65 -
-                                              900) /
-                                              2 +
-                                              0 +
-                                              0) +
+                                            (((componentViewport?.height || 785) - 65 - 900) / 2 + 0 + 0) +
                                             0 +
                                             0 +
                                             100 +
@@ -537,13 +500,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                 y:
                                                   (componentViewport?.y || 0) +
                                                   65 +
-                                                  (((componentViewport?.height ||
-                                                    809) -
-                                                    65 -
-                                                    900) /
-                                                    2 +
-                                                    0 +
-                                                    0) +
+                                                  (((componentViewport?.height || 809) - 65 - 900) / 2 + 0 + 0) +
                                                   0 +
                                                   0 +
                                                   100 +
@@ -559,9 +516,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                             __smartComponentFX={true}
                                             __targetOpacity={1}
                                             animate={animation}
-                                            className={
-                                              'framer-561euo-container'
-                                            }
+                                            className={'framer-561euo-container'}
                                             data-framer-appear-id={'561euo'}
                                             initial={animation1}
                                             layoutDependency={layoutDependency}
@@ -620,10 +575,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       layoutDependency={layoutDependency}
                                       layoutId={'WqyE90geF'}
                                       style={{
-                                        '--framer-link-text-color':
-                                          'rgb(0, 153, 255)',
-                                        '--framer-link-text-decoration':
-                                          'underline',
+                                        '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                        '--framer-link-text-decoration': 'underline',
                                       }}
                                       text={mr74aiMKliyBppi0Uh2}
                                       verticalAlignment={'top'}
@@ -631,17 +584,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     >
                                       <React.Fragment>
                                         <motion.h1
-                                          className={
-                                            'framer-styles-preset-18nb0d4'
-                                          }
+                                          className={'framer-styles-preset-18nb0d4'}
                                           data-styles-preset={'k0A1rfDDo'}
                                           style={{
                                             '--framer-text-alignment': 'center',
                                           }}
                                         >
-                                          {
-                                            'Lightning fast sites. In a single click.'
-                                          }
+                                          {'Lightning fast sites. In a single click.'}
                                         </motion.h1>
                                       </React.Fragment>
                                     </RichText>
@@ -654,10 +603,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       style={{
                                         '--extracted-r6o4lv':
                                           'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
-                                        '--framer-link-text-color':
-                                          'rgb(0, 153, 255)',
-                                        '--framer-link-text-decoration':
-                                          'underline',
+                                        '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                        '--framer-link-text-decoration': 'underline',
                                       }}
                                       text={WPTnX4lTjiyBppi0Uh2}
                                       verticalAlignment={'top'}
@@ -665,9 +612,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     >
                                       <React.Fragment>
                                         <motion.p
-                                          className={
-                                            'framer-styles-preset-d4fts2'
-                                          }
+                                          className={'framer-styles-preset-d4fts2'}
                                           data-styles-preset={'bRzBDjLMv'}
                                           style={{
                                             '--framer-text-alignment': 'center',
@@ -675,9 +620,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
                                           }}
                                         >
-                                          {
-                                            'No code, no hassle. Jet simply keeps your website blazing fast 24/7.'
-                                          }
+                                          {'No code, no hassle. Jet simply keeps your website blazing fast 24/7.'}
                                         </motion.p>
                                       </React.Fragment>
                                     </RichText>
@@ -719,21 +662,16 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           z6_IOgF5CtbGzANQI92 ??= ''
                                           pNnBqAykXtbGzANQI92 ??= ''
                                           return (
-                                            <LayoutGroup
-                                              id={`tbGzANQI9-${idtbGzANQI92}`}
-                                            >
+                                            <LayoutGroup id={`tbGzANQI9-${idtbGzANQI92}`}>
                                               <PathVariablesContext.Provider
                                                 value={{
-                                                  k2CHhHMep:
-                                                    k2CHhHMeptbGzANQI92,
+                                                  k2CHhHMep: k2CHhHMeptbGzANQI92,
                                                 }}
                                               >
                                                 <motion.div
                                                   className={'framer-1q3xiou'}
                                                   data-framer-name={'Content'}
-                                                  layoutDependency={
-                                                    layoutDependency
-                                                  }
+                                                  layoutDependency={layoutDependency}
                                                   layoutId={'JW8K61LlE'}
                                                 >
                                                   <ResolveLinks
@@ -741,22 +679,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                       {
                                                         href: YgaTnNHoktbGzANQI92,
                                                         implicitPathVariables: {
-                                                          k2CHhHMep:
-                                                            k2CHhHMeptbGzANQI92,
+                                                          k2CHhHMep: k2CHhHMeptbGzANQI92,
                                                         },
                                                       },
                                                       {
                                                         href: YgaTnNHoktbGzANQI92,
                                                         implicitPathVariables: {
-                                                          k2CHhHMep:
-                                                            k2CHhHMeptbGzANQI92,
+                                                          k2CHhHMep: k2CHhHMeptbGzANQI92,
                                                         },
                                                       },
                                                       {
                                                         href: YgaTnNHoktbGzANQI92,
                                                         implicitPathVariables: {
-                                                          k2CHhHMep:
-                                                            k2CHhHMeptbGzANQI92,
+                                                          k2CHhHMep: k2CHhHMeptbGzANQI92,
                                                         },
                                                       },
                                                     ]}
@@ -765,14 +700,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                       <ComponentViewportProvider
                                                         height={40}
                                                         y={
-                                                          (componentViewport?.y ||
-                                                            0) +
+                                                          (componentViewport?.y || 0) +
                                                           65 +
-                                                          (((componentViewport?.height ||
-                                                            785) -
-                                                            65 -
-                                                            900) /
-                                                            2 +
+                                                          (((componentViewport?.height || 785) - 65 - 900) / 2 +
                                                             0 +
                                                             0) +
                                                           0 +
@@ -788,14 +718,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                           {
                                                             n393jI7Y9: {
                                                               y:
-                                                                (componentViewport?.y ||
-                                                                  0) +
+                                                                (componentViewport?.y || 0) +
                                                                 65 +
-                                                                (((componentViewport?.height ||
-                                                                  809) -
-                                                                  65 -
-                                                                  900) /
-                                                                  2 +
+                                                                (((componentViewport?.height || 809) - 65 - 900) / 2 +
                                                                   0 +
                                                                   0) +
                                                                 0 +
@@ -813,57 +738,39 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                         )}
                                                       >
                                                         <SmartComponentScopedContainer
-                                                          className={
-                                                            'framer-wul49k-container'
-                                                          }
-                                                          layoutDependency={
-                                                            layoutDependency
-                                                          }
-                                                          layoutId={
-                                                            'pHajcgW4O-container'
-                                                          }
+                                                          className={'framer-wul49k-container'}
+                                                          layoutDependency={layoutDependency}
+                                                          layoutId={'pHajcgW4O-container'}
                                                           nodeId={'pHajcgW4O'}
-                                                          rendersWithMotion={
-                                                            true
-                                                          }
+                                                          rendersWithMotion={true}
                                                           scopeId={'f0mnhjcpz'}
                                                         >
-                                                          {_jsx(
-                                                            stdin_default4,
-                                                            {
-                                                              D9dBYabSn: false,
+                                                          {_jsx(stdin_default4, {
+                                                            D9dBYabSn: false,
+                                                            height: '100%',
+                                                            id: 'pHajcgW4O',
+                                                            layoutId: 'pHajcgW4O',
+                                                            OLHf8SPKb: resolvedLinks1[0],
+                                                            qCxNvGxTB: 'Default',
+                                                            SMZpJms0Q: FTxL_5biptbGzANQI92,
+                                                            style: {
                                                               height: '100%',
-                                                              id: 'pHajcgW4O',
-                                                              layoutId:
-                                                                'pHajcgW4O',
-                                                              OLHf8SPKb:
-                                                                resolvedLinks1[0],
-                                                              qCxNvGxTB:
-                                                                'Default',
-                                                              SMZpJms0Q:
-                                                                FTxL_5biptbGzANQI92,
-                                                              style: {
-                                                                height: '100%',
-                                                              },
-                                                              variant:
-                                                                'UItccn4nC',
-                                                              width: '100%',
-                                                              ...addPropertyOverrides(
-                                                                {
-                                                                  fI2C184uJ: {
-                                                                    OLHf8SPKb:
-                                                                      resolvedLinks1[1],
-                                                                  },
-                                                                  n393jI7Y9: {
-                                                                    OLHf8SPKb:
-                                                                      resolvedLinks1[2],
-                                                                  },
-                                                                },
-                                                                baseVariant,
-                                                                gestureVariant,
-                                                              ),
                                                             },
-                                                          )}
+                                                            variant: 'UItccn4nC',
+                                                            width: '100%',
+                                                            ...addPropertyOverrides(
+                                                              {
+                                                                fI2C184uJ: {
+                                                                  OLHf8SPKb: resolvedLinks1[1],
+                                                                },
+                                                                n393jI7Y9: {
+                                                                  OLHf8SPKb: resolvedLinks1[2],
+                                                                },
+                                                              },
+                                                              baseVariant,
+                                                              gestureVariant,
+                                                            ),
+                                                          })}
                                                         </SmartComponentScopedContainer>
                                                       </ComponentViewportProvider>
                                                     )}
@@ -873,22 +780,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                       {
                                                         href: pNnBqAykXtbGzANQI92,
                                                         implicitPathVariables: {
-                                                          k2CHhHMep:
-                                                            k2CHhHMeptbGzANQI92,
+                                                          k2CHhHMep: k2CHhHMeptbGzANQI92,
                                                         },
                                                       },
                                                       {
                                                         href: pNnBqAykXtbGzANQI92,
                                                         implicitPathVariables: {
-                                                          k2CHhHMep:
-                                                            k2CHhHMeptbGzANQI92,
+                                                          k2CHhHMep: k2CHhHMeptbGzANQI92,
                                                         },
                                                       },
                                                       {
                                                         href: pNnBqAykXtbGzANQI92,
                                                         implicitPathVariables: {
-                                                          k2CHhHMep:
-                                                            k2CHhHMeptbGzANQI92,
+                                                          k2CHhHMep: k2CHhHMeptbGzANQI92,
                                                         },
                                                       },
                                                     ]}
@@ -897,14 +801,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                       <ComponentViewportProvider
                                                         height={40}
                                                         y={
-                                                          (componentViewport?.y ||
-                                                            0) +
+                                                          (componentViewport?.y || 0) +
                                                           65 +
-                                                          (((componentViewport?.height ||
-                                                            785) -
-                                                            65 -
-                                                            900) /
-                                                            2 +
+                                                          (((componentViewport?.height || 785) - 65 - 900) / 2 +
                                                             0 +
                                                             0) +
                                                           0 +
@@ -920,14 +819,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                           {
                                                             n393jI7Y9: {
                                                               y:
-                                                                (componentViewport?.y ||
-                                                                  0) +
+                                                                (componentViewport?.y || 0) +
                                                                 65 +
-                                                                (((componentViewport?.height ||
-                                                                  809) -
-                                                                  65 -
-                                                                  900) /
-                                                                  2 +
+                                                                (((componentViewport?.height || 809) - 65 - 900) / 2 +
                                                                   0 +
                                                                   0) +
                                                                 0 +
@@ -945,57 +839,39 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                         )}
                                                       >
                                                         <SmartComponentScopedContainer
-                                                          className={
-                                                            'framer-1ofpc5l-container'
-                                                          }
-                                                          layoutDependency={
-                                                            layoutDependency
-                                                          }
-                                                          layoutId={
-                                                            'y2gjYvtLW-container'
-                                                          }
+                                                          className={'framer-1ofpc5l-container'}
+                                                          layoutDependency={layoutDependency}
+                                                          layoutId={'y2gjYvtLW-container'}
                                                           nodeId={'y2gjYvtLW'}
-                                                          rendersWithMotion={
-                                                            true
-                                                          }
+                                                          rendersWithMotion={true}
                                                           scopeId={'f0mnhjcpz'}
                                                         >
-                                                          {_jsx(
-                                                            stdin_default4,
-                                                            {
-                                                              D9dBYabSn: false,
+                                                          {_jsx(stdin_default4, {
+                                                            D9dBYabSn: false,
+                                                            height: '100%',
+                                                            id: 'y2gjYvtLW',
+                                                            layoutId: 'y2gjYvtLW',
+                                                            OLHf8SPKb: resolvedLinks2[0],
+                                                            qCxNvGxTB: 'Default',
+                                                            SMZpJms0Q: z6_IOgF5CtbGzANQI92,
+                                                            style: {
                                                               height: '100%',
-                                                              id: 'y2gjYvtLW',
-                                                              layoutId:
-                                                                'y2gjYvtLW',
-                                                              OLHf8SPKb:
-                                                                resolvedLinks2[0],
-                                                              qCxNvGxTB:
-                                                                'Default',
-                                                              SMZpJms0Q:
-                                                                z6_IOgF5CtbGzANQI92,
-                                                              style: {
-                                                                height: '100%',
-                                                              },
-                                                              variant:
-                                                                'svyJsdYyH',
-                                                              width: '100%',
-                                                              ...addPropertyOverrides(
-                                                                {
-                                                                  fI2C184uJ: {
-                                                                    OLHf8SPKb:
-                                                                      resolvedLinks2[1],
-                                                                  },
-                                                                  n393jI7Y9: {
-                                                                    OLHf8SPKb:
-                                                                      resolvedLinks2[2],
-                                                                  },
-                                                                },
-                                                                baseVariant,
-                                                                gestureVariant,
-                                                              ),
                                                             },
-                                                          )}
+                                                            variant: 'svyJsdYyH',
+                                                            width: '100%',
+                                                            ...addPropertyOverrides(
+                                                              {
+                                                                fI2C184uJ: {
+                                                                  OLHf8SPKb: resolvedLinks2[1],
+                                                                },
+                                                                n393jI7Y9: {
+                                                                  OLHf8SPKb: resolvedLinks2[2],
+                                                                },
+                                                              },
+                                                              baseVariant,
+                                                              gestureVariant,
+                                                            ),
+                                                          })}
                                                         </SmartComponentScopedContainer>
                                                       </ComponentViewportProvider>
                                                     )}
@@ -1014,12 +890,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     y={
                                       (componentViewport?.y || 0) +
                                       65 +
-                                      (((componentViewport?.height || 785) -
-                                        65 -
-                                        900) /
-                                        2 +
-                                        0 +
-                                        0) +
+                                      (((componentViewport?.height || 785) - 65 - 900) / 2 + 0 + 0) +
                                       0 +
                                       0 +
                                       0
@@ -1030,13 +901,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           y:
                                             (componentViewport?.y || 0) +
                                             65 +
-                                            (((componentViewport?.height ||
-                                              809) -
-                                              65 -
-                                              900) /
-                                              2 +
-                                              0 +
-                                              0) +
+                                            (((componentViewport?.height || 809) - 65 - 900) / 2 + 0 + 0) +
                                             0 +
                                             0 +
                                             0,
@@ -1074,12 +939,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   y={
                                     (componentViewport?.y || 0) +
                                     65 +
-                                    (((componentViewport?.height || 785) -
-                                      65 -
-                                      900) /
-                                      2 +
-                                      0 +
-                                      0) +
+                                    (((componentViewport?.height || 785) - 65 - 900) / 2 + 0 + 0) +
                                     0
                                   }
                                   {...addPropertyOverrides(
@@ -1088,12 +948,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         y:
                                           (componentViewport?.y || 0) +
                                           65 +
-                                          (((componentViewport?.height || 809) -
-                                            65 -
-                                            900) /
-                                            2 +
-                                            0 +
-                                            0) +
+                                          (((componentViewport?.height || 809) - 65 - 900) / 2 + 0 + 0) +
                                           0,
                                       },
                                     },
@@ -1199,8 +1054,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -1357,9 +1211,7 @@ function SectionHeroFramerComponent({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
@@ -1415,9 +1267,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
@@ -1479,17 +1329,11 @@ ComponentWithRoot.Responsive = function ({ locale, variants, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default6}
-        variants={variants || defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default6} variants={variants || defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

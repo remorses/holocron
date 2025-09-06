@@ -1,15 +1,8 @@
 import { ulid } from 'ulid'
-import {
-  defaultDocsJsonComments,
-  defaultStartingHolocronJson,
-} from 'docs-website/src/lib/docs-json-examples'
+import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
 
 import { Prisma, prisma, Site } from 'db'
-import {
-  getKeyForMediaAsset,
-  getPresignedUrl,
-  s3,
-} from 'docs-website/src/lib/s3'
+import { getKeyForMediaAsset, getPresignedUrl, s3 } from 'docs-website/src/lib/s3'
 import { preventProcessExitIfBusy, Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
 import { openapi } from 'spiceflow/openapi'
@@ -18,19 +11,12 @@ import { z } from 'zod'
 import { getSession } from './better-auth'
 import { env } from './env'
 import { AppError, notifyError } from './errors'
-import {
-  createPullRequestSuggestion,
-  getOctokit,
-  pushToPrOrBranch,
-} from './github.server'
+import { createPullRequestSuggestion, getOctokit, pushToPrOrBranch } from './github.server'
 import { filesFromGithub, assetsFromFilesList, syncSite } from './sync'
 
 import { createHash } from 'crypto'
 import { fileUpdateSchema } from 'docs-website/src/lib/edit-tool'
-import {
-  generateMessageApp,
-  getPageContent,
-} from './spiceflow-generate-message'
+import { generateMessageApp, getPageContent } from './spiceflow-generate-message'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { openai } from '@ai-sdk/openai'
 import { experimental_transcribe as transcribe } from 'ai'
@@ -122,8 +108,7 @@ export const app = new Spiceflow({ basePath: '/api' })
 
       const site = branch.site
       const isPublic = site.visibility === 'public'
-      const isOrgMember =
-        userId && site.org.users.some((u) => u.userId === userId)
+      const isOrgMember = userId && site.org.users.some((u) => u.userId === userId)
 
       // For private sites, require user to be org member
       if (!isPublic && !isOrgMember) {
@@ -193,12 +178,9 @@ export const app = new Spiceflow({ basePath: '/api' })
       const branchId = branch.branchId
       const orgId = site.orgId
       const name = site.name
-      const installation = site.githubInstallations.find(
-        (x) => x.appId === env.GITHUB_APP_ID,
-      )
+      const installation = site.githubInstallations.find((x) => x.appId === env.GITHUB_APP_ID)
       const installationId = installation?.installationId
-      if (!installationId)
-        throw new AppError(`no installationId found for site`)
+      if (!installationId) throw new AppError(`no installationId found for site`)
       const githubFolder = site.githubFolder || ''
       const pages = filesFromGithub({
         installationId,
@@ -419,9 +401,7 @@ export const app = new Spiceflow({ basePath: '/api' })
       })
 
       if (recentFeedbackCount >= 5) {
-        throw new AppError(
-          'You have reached the feedback limit. Please try again later (max 5 feedbacks per hour).',
-        )
+        throw new AppError('You have reached the feedback limit. Please try again later (max 5 feedbacks per hour).')
       }
 
       // if (!userId) {
@@ -454,9 +434,7 @@ export const app = new Spiceflow({ basePath: '/api' })
       const DocsCategory = 'Docs Feedback'
       let discussionUrl = `https://github.com/${site.githubOwner}/${site.githubRepo}/discussions`
 
-      const githubInstallation = site.githubInstallations.find(
-        (x) => x.appId === env.GITHUB_APP_ID,
-      )
+      const githubInstallation = site.githubInstallations.find((x) => x.appId === env.GITHUB_APP_ID)
       // Create GitHub discussion using GraphQL API
       if (githubInstallation?.github?.oauthToken) {
         try {
@@ -484,33 +462,23 @@ export const app = new Spiceflow({ basePath: '/api' })
                     `)
 
           const repository = repositoryInfo.repository
-          const category = repository.discussionCategories.nodes.find(
-            (cat) => cat.name === DocsCategory,
-          )
+          const category = repository.discussionCategories.nodes.find((cat) => cat.name === DocsCategory)
 
           if (!category) {
-            console.warn(
-              `Discussion category "${DocsCategory}" not found in repository`,
-            )
+            console.warn(`Discussion category "${DocsCategory}" not found in repository`)
             // Fall back to creating issue instead
             const issueTitle = `Documentation feedback: ${url}`
             const issueBody = `**Feedback Type:** ${opinion}\n**Page URL:** ${url}\n**User Message:**\n\n${message}\n\n> Forwarded from user feedback on docs site.`
 
             if (!site.githubOwner || !site.githubRepo) {
-              throw new AppError(
-                'GitHub owner and repo must be set for the site',
-              )
+              throw new AppError('GitHub owner and repo must be set for the site')
             }
             const { data: issue } = await octokit.rest.issues.create({
               owner: site.githubOwner,
               repo: site.githubRepo,
               title: issueTitle,
               body: issueBody,
-              labels: [
-                'documentation',
-                'feedback',
-                opinion === 'bad' ? 'bug' : 'enhancement',
-              ],
+              labels: ['documentation', 'feedback', opinion === 'bad' ? 'bug' : 'enhancement'],
             })
 
             discussionUrl = issue.html_url
@@ -568,10 +536,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
           }
         } catch (error) {
-          console.error(
-            'Failed to create GitHub discussion for feedback:',
-            error,
-          )
+          console.error('Failed to create GitHub discussion for feedback:', error)
           // Don't throw error - feedback will still be saved
         }
       }
@@ -894,17 +859,8 @@ export const app = new Spiceflow({ basePath: '/api' })
       siteId: z.string().optional(),
     }),
     async handler({ request, state: { userId } }) {
-      let {
-        name,
-        files,
-        orgId,
-        githubOwner,
-        githubRepo,
-        githubRepoId,
-        githubBranch,
-        githubFolder,
-        siteId,
-      } = await request.json()
+      let { name, files, orgId, githubOwner, githubRepo, githubRepoId, githubBranch, githubFolder, siteId } =
+        await request.json()
 
       if (!userId) {
         throw new AppError('User not authenticated')
@@ -1025,10 +981,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
         const domains =
           process.env.NODE_ENV === 'development'
-            ? [
-                `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.localhost`,
-                internalHost,
-              ]
+            ? [`${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.localhost`, internalHost]
             : [internalHost]
         docsJson = {
           ...defaultStartingHolocronJson,
@@ -1383,9 +1336,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         },
       })
 
-      console.log(
-        `Database cleanup: deleted ${deleteResult.count} orphaned MarkdownBlob records`,
-      )
+      console.log(`Database cleanup: deleted ${deleteResult.count} orphaned MarkdownBlob records`)
 
       return {
         success: true,

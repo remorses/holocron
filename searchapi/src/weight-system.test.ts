@@ -126,9 +126,7 @@ Even more rocket content here.
     expect(searchResults.results.length).toBeGreaterThan(0)
     if (searchResults.results.length > 1) {
       // First result should have higher score
-      expect(searchResults.results[0].score).toBeGreaterThan(
-        searchResults.results[1].score,
-      )
+      expect(searchResults.results[0].score).toBeGreaterThan(searchResults.results[1].score)
     }
   })
 
@@ -219,15 +217,9 @@ This is even deeper about testing.
         `)
 
     // Verify sections are returned in order of heading level (weight)
-    const h1Result = searchResults.results.find(
-      (r) => r.sectionSlug === 'primary-topic-about-testing',
-    )
-    const h2Result = searchResults.results.find(
-      (r) => r.sectionSlug === 'secondary-topic-about-testing',
-    )
-    const h3Result = searchResults.results.find(
-      (r) => r.sectionSlug === 'tertiary-topic-about-testing',
-    )
+    const h1Result = searchResults.results.find((r) => r.sectionSlug === 'primary-topic-about-testing')
+    const h2Result = searchResults.results.find((r) => r.sectionSlug === 'secondary-topic-about-testing')
+    const h3Result = searchResults.results.find((r) => r.sectionSlug === 'tertiary-topic-about-testing')
 
     if (h1Result && h2Result) {
       expect(h1Result.score).toBeGreaterThan(h2Result.score)
@@ -327,9 +319,7 @@ More content about weights.
         `)
 
     // All frontmatter sections should have weight 2.0
-    const frontmatterSections = searchResults.results.filter(
-      (r) => r.sectionSlug === '',
-    )
+    const frontmatterSections = searchResults.results.filter((r) => r.sectionSlug === '')
 
     for (const section of frontmatterSections) {
       expect(section.score).toBe(2.0)

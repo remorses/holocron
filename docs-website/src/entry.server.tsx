@@ -19,17 +19,14 @@ export default async function handleRequest(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   loadContext: AppLoadContext,
 ) {
-  const body = await dom.renderToReadableStream(
-    <ServerRouter context={reactRouterContext} url={request.url} />,
-    {
-      signal: request.signal,
-      onError(error: unknown) {
-        // Log streaming rendering errors from inside the shell
-        console.error(error)
-        responseStatusCode = 500
-      },
+  const body = await dom.renderToReadableStream(<ServerRouter context={reactRouterContext} url={request.url} />, {
+    signal: request.signal,
+    onError(error: unknown) {
+      // Log streaming rendering errors from inside the shell
+      console.error(error)
+      responseStatusCode = 500
     },
-  )
+  })
 
   if (isbot(request.headers.get('user-agent') || '')) {
     await body.allReady

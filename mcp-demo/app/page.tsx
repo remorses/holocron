@@ -77,8 +77,7 @@ const realMCPTools: Tool[] = [
       properties: {
         path: {
           type: 'string',
-          description:
-            'Absolute or relative path where the file should be written',
+          description: 'Absolute or relative path where the file should be written',
           examples: ['/tmp/output.txt', './config.json', 'docs/README.md'],
         },
         content: {
@@ -105,8 +104,7 @@ const realMCPTools: Tool[] = [
         },
         created: {
           type: 'boolean',
-          description:
-            'Whether a new file was created (true) or existing file was overwritten (false)',
+          description: 'Whether a new file was created (true) or existing file was overwritten (false)',
         },
         timestamp: {
           type: 'string',
@@ -142,8 +140,7 @@ const realMCPTools: Tool[] = [
         },
         detailed: {
           type: 'boolean',
-          description:
-            'Show detailed information including size, permissions, and modification time',
+          description: 'Show detailed information including size, permissions, and modification time',
           default: false,
         },
       },
@@ -297,17 +294,11 @@ const realMCPTools: Tool[] = [
         command: {
           type: 'string',
           description: 'The shell command to execute',
-          examples: [
-            'ls -la',
-            'npm run build',
-            'git status',
-            'python --version',
-          ],
+          examples: ['ls -la', 'npm run build', 'git status', 'python --version'],
         },
         working_directory: {
           type: 'string',
-          description:
-            'Directory to run the command in (defaults to current directory)',
+          description: 'Directory to run the command in (defaults to current directory)',
         },
         timeout: {
           type: 'integer',
@@ -365,8 +356,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
   read_file: [
     {
       role: 'user',
-      content:
-        'Can you read the package.json file and tell me what scripts are available?',
+      content: 'Can you read the package.json file and tell me what scripts are available?',
     },
     {
       role: 'assistant',

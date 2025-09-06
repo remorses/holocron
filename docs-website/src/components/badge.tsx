@@ -23,8 +23,7 @@ export function Badge({
   className,
   color,
   ...props
-}: Omit<HTMLAttributes<HTMLSpanElement>, 'color'> &
-  VariantProps<typeof badgeVariants>) {
+}: Omit<HTMLAttributes<HTMLSpanElement>, 'color'> & VariantProps<typeof badgeVariants>) {
   return (
     <span
       className={cn(

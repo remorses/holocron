@@ -18,11 +18,7 @@ import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/SFy9ugyYsybBimL7iXNq/kMiyEuTHmbuCm1eG2VCj/UtWzKbS7T.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -55,9 +51,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -80,11 +74,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -95,8 +85,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'aH1mMlkxX',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'aH1mMlkxX',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -173,12 +162,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-a5q75j',
-              className2,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-a5q75j', className2, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'aH1mMlkxX'}
@@ -423,12 +407,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   y={
                                     (componentViewport?.y || 0) +
                                     100 +
-                                    (((componentViewport?.height || 200) -
-                                      100 -
-                                      410) /
-                                      2 +
-                                      0 +
-                                      0) +
+                                    (((componentViewport?.height || 200) - 100 - 410) / 2 + 0 + 0) +
                                     0
                                   }
                                   {...addPropertyOverrides(
@@ -438,12 +417,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         y:
                                           (componentViewport?.y || 0) +
                                           100 +
-                                          (((componentViewport?.height || 200) -
-                                            100 -
-                                            542.2) /
-                                            2 +
-                                            0 +
-                                            0) +
+                                          (((componentViewport?.height || 200) - 100 - 542.2) / 2 + 0 + 0) +
                                           0,
                                       },
                                     },
@@ -484,12 +458,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     y={
                                       (componentViewport?.y || 0) +
                                       100 +
-                                      (((componentViewport?.height || 200) -
-                                        100 -
-                                        410) /
-                                        2 +
-                                        0 +
-                                        0) +
+                                      (((componentViewport?.height || 200) - 100 - 410) / 2 + 0 + 0) +
                                       0 +
                                       0
                                     }
@@ -504,13 +473,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           y:
                                             (componentViewport?.y || 0) +
                                             100 +
-                                            (((componentViewport?.height ||
-                                              200) -
-                                              100 -
-                                              542.2) /
-                                              2 +
-                                              0 +
-                                              0) +
+                                            (((componentViewport?.height || 200) - 100 - 542.2) / 2 + 0 + 0) +
                                             0 +
                                             0 +
                                             0,
@@ -554,12 +517,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         y={
                                           (componentViewport?.y || 0) +
                                           100 +
-                                          (((componentViewport?.height || 200) -
-                                            100 -
-                                            410) /
-                                            2 +
-                                            0 +
-                                            0) +
+                                          (((componentViewport?.height || 200) - 100 - 410) / 2 + 0 + 0) +
                                           0 +
                                           0 +
                                           0 +
@@ -604,10 +562,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       layoutDependency={layoutDependency}
                                       layoutId={'NrUs9fN0p'}
                                       style={{
-                                        '--framer-link-text-color':
-                                          'rgb(0, 153, 255)',
-                                        '--framer-link-text-decoration':
-                                          'underline',
+                                        '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                        '--framer-link-text-decoration': 'underline',
                                       }}
                                       verticalAlignment={'top'}
                                       withExternalLayout={true}
@@ -617,20 +573,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                             children: (
                                               <React.Fragment>
                                                 <motion.h2
-                                                  className={
-                                                    'framer-styles-preset-1kz9fdj'
-                                                  }
-                                                  data-styles-preset={
-                                                    'VD0pGC38J'
-                                                  }
+                                                  className={'framer-styles-preset-1kz9fdj'}
+                                                  data-styles-preset={'VD0pGC38J'}
                                                   style={{
-                                                    '--framer-text-alignment':
-                                                      'center',
+                                                    '--framer-text-alignment': 'center',
                                                   }}
                                                 >
-                                                  {
-                                                    'Frequently asked questions.'
-                                                  }
+                                                  {'Frequently asked questions.'}
                                                 </motion.h2>
                                               </React.Fragment>
                                             ),
@@ -642,9 +591,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     >
                                       <React.Fragment>
                                         <motion.h2
-                                          className={
-                                            'framer-styles-preset-1kz9fdj'
-                                          }
+                                          className={'framer-styles-preset-1kz9fdj'}
                                           data-styles-preset={'VD0pGC38J'}
                                           style={{
                                             '--framer-text-alignment': 'left',
@@ -662,12 +609,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   y={
                                     (componentViewport?.y || 0) +
                                     100 +
-                                    (((componentViewport?.height || 200) -
-                                      100 -
-                                      410) /
-                                      2 +
-                                      0 +
-                                      0) +
+                                    (((componentViewport?.height || 200) - 100 - 410) / 2 + 0 + 0) +
                                     0
                                   }
                                   {...addPropertyOverrides(
@@ -680,12 +622,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         y:
                                           (componentViewport?.y || 0) +
                                           100 +
-                                          (((componentViewport?.height || 200) -
-                                            100 -
-                                            542.2) /
-                                            2 +
-                                            0 +
-                                            0) +
+                                          (((componentViewport?.height || 200) - 100 - 542.2) / 2 + 0 + 0) +
                                           0 +
                                           132.2,
                                       },
@@ -808,8 +745,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -928,17 +864,11 @@ stdin_default4.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default4}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default4} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -986,9 +916,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

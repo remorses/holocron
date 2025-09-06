@@ -33,12 +33,7 @@ const testCases: TestCase[] = [
       // Check that some common files exist (index.md, index.mdx, or README.md)
       const createdPaths = Object.keys(result.filesInDraft)
       expect(
-        createdPaths.some(
-          (p) =>
-            p.includes('index.md') ||
-            p.includes('index.mdx') ||
-            p.includes('README.md'),
-        ),
+        createdPaths.some((p) => p.includes('index.md') || p.includes('index.mdx') || p.includes('README.md')),
       ).toBe(true)
     },
   },
@@ -82,9 +77,7 @@ const testCases: TestCase[] = [
       expect(createdPaths.some((p) => p.includes('index.mdx'))).toBe(true)
 
       // Check that the content includes the title
-      const indexFile = Object.entries(result.filesInDraft).find(([path]) =>
-        path.includes('index.mdx'),
-      )
+      const indexFile = Object.entries(result.filesInDraft).find(([path]) => path.includes('index.mdx'))
       if (indexFile) {
         expect(indexFile[1].content).toContain('Welcome')
       }
@@ -95,16 +88,13 @@ const testCases: TestCase[] = [
     messages: [
       {
         role: 'user',
-        content:
-          'create API documentation with endpoints for users and products',
+        content: 'create API documentation with endpoints for users and products',
       },
     ],
     onFinish: (result) => {
       // Check that API docs were created
       const createdPaths = Object.keys(result.filesInDraft)
-      expect(createdPaths.some((p) => p.toLowerCase().includes('api'))).toBe(
-        true,
-      )
+      expect(createdPaths.some((p) => p.toLowerCase().includes('api'))).toBe(true)
 
       // Check content mentions users and products
       // const apiFiles = Object.entries(result.filesInDraft).filter(
@@ -177,25 +167,15 @@ const testCases: TestCase[] = [
     ],
     onFinish: (result) => {
       // Check that no file paths start with /
-      const filesWithSlash = Object.keys(result.filesInDraft).filter((path) =>
-        path.startsWith('/'),
-      )
-      expect(
-        filesWithSlash,
-        `Files should not start with slash: ${filesWithSlash.join(', ')}`,
-      ).toHaveLength(0)
+      const filesWithSlash = Object.keys(result.filesInDraft).filter((path) => path.startsWith('/'))
+      expect(filesWithSlash, `Files should not start with slash: ${filesWithSlash.join(', ')}`).toHaveLength(0)
 
       // Check that files were updated
       const updatedFiles = Object.entries(result.filesInDraft)
       expect(updatedFiles.length).toBeGreaterThan(0)
 
       // Track which original files have icons
-      const originalFiles = [
-        'index.mdx',
-        'getting-started.mdx',
-        'api/overview.mdx',
-        'guides/configuration.mdx',
-      ]
+      const originalFiles = ['index.mdx', 'getting-started.mdx', 'api/overview.mdx', 'guides/configuration.mdx']
       const filesWithIcons: string[] = []
       const filesWithoutIcons: string[] = []
       const invalidIcons: Record<string, string> = {}
@@ -233,14 +213,10 @@ const testCases: TestCase[] = [
       console.log('Invalid icons:', invalidIcons)
 
       // All original files should have valid icons
-      expect(
-        filesWithoutIcons,
-        `These files are missing icons: ${filesWithoutIcons.join(', ')}`,
-      ).toHaveLength(0)
-      expect(
-        Object.keys(invalidIcons),
-        `These files have invalid icons: ${JSON.stringify(invalidIcons)}`,
-      ).toHaveLength(0)
+      expect(filesWithoutIcons, `These files are missing icons: ${filesWithoutIcons.join(', ')}`).toHaveLength(0)
+      expect(Object.keys(invalidIcons), `These files have invalid icons: ${JSON.stringify(invalidIcons)}`).toHaveLength(
+        0,
+      )
       expect(
         filesWithIcons.length,
         `Only ${filesWithIcons.length}/${originalFiles.length} files have valid icons`,
@@ -260,16 +236,8 @@ describe.concurrent('generateMessageStream', ({}) => {
         const sanitizedName = name.replace(/\s+/g, '-')
 
         // Paths for snapshot files
-        const messagePath = path.join(
-          __dirname,
-          'snapshots',
-          `${sanitizedName}-message.md`,
-        )
-        const filesPath = path.join(
-          __dirname,
-          'snapshots',
-          `${sanitizedName}-files.md`,
-        )
+        const messagePath = path.join(__dirname, 'snapshots', `${sanitizedName}-message.md`)
+        const filesPath = path.join(__dirname, 'snapshots', `${sanitizedName}-files.md`)
         // Ensure the parent directory exists
         fs.mkdirSync(path.dirname(filesPath), {
           recursive: true,
@@ -329,10 +297,6 @@ test('system message input', async () => {
   })
 
   // Save system messages as snapshots
-  await expect(onboardingSystemMessage).toMatchFileSnapshot(
-    './snapshots/system-message-onboarding.md',
-  )
-  await expect(regularSystemMessage).toMatchFileSnapshot(
-    './snapshots/system-message-regular.md',
-  )
+  await expect(onboardingSystemMessage).toMatchFileSnapshot('./snapshots/system-message-onboarding.md')
+  await expect(regularSystemMessage).toMatchFileSnapshot('./snapshots/system-message-regular.md')
 })

@@ -1,8 +1,7 @@
 import { z } from 'zod'
 import { toJSONSchema } from 'zod'
 import * as schemaLib from 'json-schema-library'
-const compileSchema =
-  schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
+const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 import { describe, expect, test } from 'vitest'
 import { getTypeForNameInSchema, RenderFormParameters } from 'contesto'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
@@ -36,18 +35,14 @@ describe('compileSchema with union in array', () => {
   const compiled = compileSchema(schema)
 
   test('should resolve pointer to field existing in only some unions: sms', () => {
-    expect(
-      getTypeForNameInSchema('container.0.sms', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.sms', compiled)).toMatchInlineSnapshot(`
               {
                 "type": "string",
               }
             `)
   })
   test('should resolve pointer to field existing in only some unions: type', () => {
-    expect(
-      getTypeForNameInSchema('container.0.type', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.type', compiled)).toMatchInlineSnapshot(`
               {
                 "const": "push",
                 "type": "string",
@@ -55,9 +50,7 @@ describe('compileSchema with union in array', () => {
             `)
   })
   test('should resolve pointer to field existing in only some unions: email', () => {
-    expect(
-      getTypeForNameInSchema('container.0.email', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.email', compiled)).toMatchInlineSnapshot(`
               {
                 "type": "string",
               }
@@ -65,9 +58,7 @@ describe('compileSchema with union in array', () => {
   })
 
   test('should resolve pointer to field existing in only some unions: push', () => {
-    expect(
-      getTypeForNameInSchema('container.0.push', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.push', compiled)).toMatchInlineSnapshot(`
               {
                 "type": "boolean",
               }
@@ -76,9 +67,7 @@ describe('compileSchema with union in array', () => {
 
   // This showcases when a field does not exist, or only in some unions
   test('should resolve pointer to a non-existent field', () => {
-    expect(
-      getTypeForNameInSchema('container.0.notarealfield', compiled),
-    ).toBeUndefined()
+    expect(getTypeForNameInSchema('container.0.notarealfield', compiled)).toBeUndefined()
   })
 })
 
@@ -103,9 +92,7 @@ describe('compileSchema with array union of string or object', () => {
   const compiled = compileSchema(schema)
 
   test('should resolve pointer to field in string-or-object union: type', () => {
-    expect(
-      getTypeForNameInSchema('container.0.type', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.type', compiled)).toMatchInlineSnapshot(`
               {
                 "const": "complex",
                 "type": "string",
@@ -114,9 +101,7 @@ describe('compileSchema with array union of string or object', () => {
   })
 
   test('should resolve pointer to nested field in union: nested.foo', () => {
-    expect(
-      getTypeForNameInSchema('container.0.nested.foo', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.nested.foo', compiled)).toMatchInlineSnapshot(`
               {
                 "maximum": 9007199254740991,
                 "minimum": -9007199254740991,
@@ -126,9 +111,7 @@ describe('compileSchema with array union of string or object', () => {
   })
 
   test('should resolve pointer to nested field in union: nested.bar', () => {
-    expect(
-      getTypeForNameInSchema('container.0.nested.bar', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.nested.bar', compiled)).toMatchInlineSnapshot(`
               {
                 "type": "string",
               }
@@ -136,9 +119,7 @@ describe('compileSchema with array union of string or object', () => {
   })
 
   test('should resolve pointer to the nested object itself', () => {
-    expect(
-      getTypeForNameInSchema('container.0.nested', compiled),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('container.0.nested', compiled)).toMatchInlineSnapshot(`
               {
                 "additionalProperties": false,
                 "properties": {
@@ -165,9 +146,7 @@ describe('DocsConfigSchema', () => {
   const compiledDocsJsonSchema = compileSchema(docsJsonSchema)
 
   test('name', () => {
-    expect(
-      getTypeForNameInSchema('name', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('name', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "Project or product name. This will be used in holocron dashboard to list the user websites. It has no other use case than that.",
                 "minLength": 1,
@@ -177,9 +156,7 @@ describe('DocsConfigSchema', () => {
   })
 
   test('description', () => {
-    expect(
-      getTypeForNameInSchema('description', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('description', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "default SEO description for pages that do not have a description frontmatter",
                 "type": "string",
@@ -189,9 +166,7 @@ describe('DocsConfigSchema', () => {
 
   // logo
   test('logo.light', () => {
-    expect(
-      getTypeForNameInSchema('logo.light', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('logo.light', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Logo for light mode",
             "type": "string",
@@ -199,9 +174,7 @@ describe('DocsConfigSchema', () => {
         `)
   })
   test('logo.dark', () => {
-    expect(
-      getTypeForNameInSchema('logo.dark', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('logo.dark', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Logo for dark mode",
             "type": "string",
@@ -209,9 +182,7 @@ describe('DocsConfigSchema', () => {
         `)
   })
   test('logo.href', () => {
-    expect(
-      getTypeForNameInSchema('logo.href', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('logo.href', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Logo click target URL",
             "format": "uri",
@@ -222,9 +193,7 @@ describe('DocsConfigSchema', () => {
 
   // favicon
   test('favicon.light', () => {
-    expect(
-      getTypeForNameInSchema('favicon.light', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('favicon.light', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Favicon for light mode",
             "type": "string",
@@ -232,9 +201,7 @@ describe('DocsConfigSchema', () => {
         `)
   })
   test('favicon.dark', () => {
-    expect(
-      getTypeForNameInSchema('favicon.dark', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('favicon.dark', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Favicon for dark mode",
             "type": "string",
@@ -244,9 +211,7 @@ describe('DocsConfigSchema', () => {
 
   // Navbar: links[0] fields
   test('navbar.links.0.label', () => {
-    expect(
-      getTypeForNameInSchema('navbar.links.0.label', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.links.0.label', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "Link text",
                 "type": "string",
@@ -254,9 +219,7 @@ describe('DocsConfigSchema', () => {
             `)
   })
   test('navbar.links.0.href', () => {
-    expect(
-      getTypeForNameInSchema('navbar.links.0.href', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.links.0.href', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "Link URL",
                 "format": "uri",
@@ -265,9 +228,7 @@ describe('DocsConfigSchema', () => {
             `)
   })
   test('navbar.links.0.icon', () => {
-    expect(
-      getTypeForNameInSchema('navbar.links.0.icon', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.links.0.icon', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "Optional icon",
                 "type": "string",
@@ -277,9 +238,7 @@ describe('DocsConfigSchema', () => {
 
   // Navbar: primary CTA union tests
   test('navbar.primary.type', () => {
-    expect(
-      getTypeForNameInSchema('navbar.primary.type', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.primary.type', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "const": "github",
                 "description": "CTA type GitHub",
@@ -288,9 +247,7 @@ describe('DocsConfigSchema', () => {
             `)
   })
   test('navbar.primary.label', () => {
-    expect(
-      getTypeForNameInSchema('navbar.primary.label', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.primary.label', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "Button label",
                 "type": "string",
@@ -298,9 +255,7 @@ describe('DocsConfigSchema', () => {
             `)
   })
   test('navbar.primary.href', () => {
-    expect(
-      getTypeForNameInSchema('navbar.primary.href', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.primary.href', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "GitHub repo URL",
                 "format": "uri",
@@ -311,9 +266,7 @@ describe('DocsConfigSchema', () => {
   // Github union
   test('navbar.primary.type_github', () => {
     // For github union: the type property
-    expect(
-      getTypeForNameInSchema('navbar.primary.type', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.primary.type', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "const": "github",
                 "description": "CTA type GitHub",
@@ -322,9 +275,7 @@ describe('DocsConfigSchema', () => {
             `)
   })
   test('navbar.primary.href_github', () => {
-    expect(
-      getTypeForNameInSchema('navbar.primary.href', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('navbar.primary.href', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "GitHub repo URL",
                 "format": "uri",
@@ -335,9 +286,7 @@ describe('DocsConfigSchema', () => {
 
   // Footer.socials - a dynamic additional property, test schema for value type
   test('footer.socials.somekey', () => {
-    expect(
-      getTypeForNameInSchema('footer.socials.somekey', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('footer.socials.somekey', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "format": "uri",
                 "type": "string",
@@ -347,9 +296,7 @@ describe('DocsConfigSchema', () => {
 
   // Footer.links[0]
   test('footer.links.0.header', () => {
-    expect(
-      getTypeForNameInSchema('footer.links.0.header', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('footer.links.0.header', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "Column header",
                 "type": "string",
@@ -357,12 +304,7 @@ describe('DocsConfigSchema', () => {
             `)
   })
   test('footer.links.0.items.0.label', () => {
-    expect(
-      getTypeForNameInSchema(
-        'footer.links.0.items.0.label',
-        compiledDocsJsonSchema,
-      ),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('footer.links.0.items.0.label', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Item text",
             "type": "string",
@@ -370,12 +312,7 @@ describe('DocsConfigSchema', () => {
         `)
   })
   test('footer.links.0.items.0.href', () => {
-    expect(
-      getTypeForNameInSchema(
-        'footer.links.0.items.0.href',
-        compiledDocsJsonSchema,
-      ),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('footer.links.0.items.0.href', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Item link URL",
             "format": "uri",
@@ -386,9 +323,7 @@ describe('DocsConfigSchema', () => {
 
   // Banner
   test('banner.content', () => {
-    expect(
-      getTypeForNameInSchema('banner.content', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('banner.content', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
           {
             "description": "Banner HTML/MDX content",
             "minLength": 1,
@@ -397,9 +332,7 @@ describe('DocsConfigSchema', () => {
         `)
   })
   test('banner.dismissible', () => {
-    expect(
-      getTypeForNameInSchema('banner.dismissible', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('banner.dismissible', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "description": "Whether the banner can be dismissed",
                 "type": "boolean",
@@ -409,9 +342,7 @@ describe('DocsConfigSchema', () => {
 
   // Contextual.options[0]
   test('contextual.options.0', () => {
-    expect(
-      getTypeForNameInSchema('contextual.options.0', compiledDocsJsonSchema),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('contextual.options.0', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "enum": [
                   "copy",
@@ -426,12 +357,7 @@ describe('DocsConfigSchema', () => {
 
   // cssVariables: arbitrary properties, each string
   test('cssVariables.light.someVar', () => {
-    expect(
-      getTypeForNameInSchema(
-        'cssVariables.light.someVar',
-        compiledDocsJsonSchema,
-      ),
-    ).toMatchInlineSnapshot(`
+    expect(getTypeForNameInSchema('cssVariables.light.someVar', compiledDocsJsonSchema)).toMatchInlineSnapshot(`
               {
                 "type": "string",
               }

@@ -237,11 +237,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
    * @param index - Index of current node in parent's children
    * @returns Number of extra nodes added (for split text nodes)
    */
-  function walk(
-    node: Node,
-    parent: Parent | null = null,
-    index: number | null = null,
-  ): number {
+  function walk(node: Node, parent: Parent | null = null, index: number | null = null): number {
     // Skip nodes without position information
     if (
       !node ||

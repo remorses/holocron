@@ -746,13 +746,8 @@ function tokenSOMETHING(stream, state, string) {
 }
 function tokenPerl(stream, state) {
   if (stream.eatSpace()) return null
-  if (state.chain)
-    return tokenChain(stream, state, state.chain, state.style, state.tail)
-  if (
-    stream.match(
-      /^(\-?((\d[\d_]*)?\.\d+(e[+-]?\d+)?|\d+\.\d*)|0x[\da-fA-F_]+|0b[01_]+|\d[\d_]*(e[+-]?\d+)?)/,
-    )
-  )
+  if (state.chain) return tokenChain(stream, state, state.chain, state.style, state.tail)
+  if (stream.match(/^(\-?((\d[\d_]*)?\.\d+(e[+-]?\d+)?|\d+\.\d*)|0x[\da-fA-F_]+|0b[01_]+|\d[\d_]*(e[+-]?\d+)?)/))
     return 'number'
   if (stream.match(/^<<(?=[_a-zA-Z])/)) {
     stream.eatWhile(/\w/)
@@ -796,13 +791,7 @@ function tokenPerl(stream, state) {
         }
         if (/[\^'"!~\/]/.test(c)) {
           eatSuffix(stream, 1)
-          return tokenChain(
-            stream,
-            state,
-            [stream.eat(c)],
-            RXstyle,
-            RXmodifiers,
-          )
+          return tokenChain(stream, state, [stream.eat(c)], RXstyle, RXmodifiers)
         }
       } else if (c == 'q') {
         c = look(stream, 1)
@@ -868,13 +857,7 @@ function tokenPerl(stream, state) {
         }
         if (/[\^'"!~\/]/.test(c)) {
           eatSuffix(stream, 1)
-          return tokenChain(
-            stream,
-            state,
-            [stream.eat(c)],
-            RXstyle,
-            RXmodifiers,
-          )
+          return tokenChain(stream, state, [stream.eat(c)], RXstyle, RXmodifiers)
         }
       } else if (/[\^'"!~\/(\[{<]/.test(c)) {
         if (c == '(') {
@@ -927,14 +910,10 @@ function tokenPerl(stream, state) {
     if (!c) {
       c = stream.eat(/[(\[{<\^'"!~\/]/)
       if (c) {
-        if (c == '[')
-          return tokenChain(stream, state, [']', ']'], RXstyle, RXmodifiers)
-        if (c == '{')
-          return tokenChain(stream, state, ['}', '}'], RXstyle, RXmodifiers)
-        if (c == '<')
-          return tokenChain(stream, state, ['>', '>'], RXstyle, RXmodifiers)
-        if (c == '(')
-          return tokenChain(stream, state, [')', ')'], RXstyle, RXmodifiers)
+        if (c == '[') return tokenChain(stream, state, [']', ']'], RXstyle, RXmodifiers)
+        if (c == '{') return tokenChain(stream, state, ['}', '}'], RXstyle, RXmodifiers)
+        if (c == '<') return tokenChain(stream, state, ['>', '>'], RXstyle, RXmodifiers)
+        if (c == '(') return tokenChain(stream, state, [')', ')'], RXstyle, RXmodifiers)
         return tokenChain(stream, state, [c, c], RXstyle, RXmodifiers)
       }
     }
@@ -944,14 +923,10 @@ function tokenPerl(stream, state) {
     if (!c) {
       c = stream.eat(/[(\[{<\^'"!~\/]/)
       if (c) {
-        if (c == '[')
-          return tokenChain(stream, state, [']', ']'], RXstyle, RXmodifiers)
-        if (c == '{')
-          return tokenChain(stream, state, ['}', '}'], RXstyle, RXmodifiers)
-        if (c == '<')
-          return tokenChain(stream, state, ['>', '>'], RXstyle, RXmodifiers)
-        if (c == '(')
-          return tokenChain(stream, state, [')', ')'], RXstyle, RXmodifiers)
+        if (c == '[') return tokenChain(stream, state, [']', ']'], RXstyle, RXmodifiers)
+        if (c == '{') return tokenChain(stream, state, ['}', '}'], RXstyle, RXmodifiers)
+        if (c == '<') return tokenChain(stream, state, ['>', '>'], RXstyle, RXmodifiers)
+        if (c == '(') return tokenChain(stream, state, [')', ')'], RXstyle, RXmodifiers)
         return tokenChain(stream, state, [c, c], RXstyle, RXmodifiers)
       }
     }
@@ -963,14 +938,10 @@ function tokenPerl(stream, state) {
       if (c) {
         c = stream.eat(/[(\[{<\^'"!~\/]/)
         if (c) {
-          if (c == '[')
-            return tokenChain(stream, state, [']', ']'], RXstyle, RXmodifiers)
-          if (c == '{')
-            return tokenChain(stream, state, ['}', '}'], RXstyle, RXmodifiers)
-          if (c == '<')
-            return tokenChain(stream, state, ['>', '>'], RXstyle, RXmodifiers)
-          if (c == '(')
-            return tokenChain(stream, state, [')', ')'], RXstyle, RXmodifiers)
+          if (c == '[') return tokenChain(stream, state, [']', ']'], RXstyle, RXmodifiers)
+          if (c == '{') return tokenChain(stream, state, ['}', '}'], RXstyle, RXmodifiers)
+          if (c == '<') return tokenChain(stream, state, ['>', '>'], RXstyle, RXmodifiers)
+          if (c == '(') return tokenChain(stream, state, [')', ')'], RXstyle, RXmodifiers)
           return tokenChain(stream, state, [c, c], RXstyle, RXmodifiers)
         }
       }
@@ -985,19 +956,14 @@ function tokenPerl(stream, state) {
   }
   if (ch == '$') {
     var p = stream.pos
-    if (
-      stream.eatWhile(/\d/) ||
-      (stream.eat('{') && stream.eatWhile(/\d/) && stream.eat('}'))
-    )
-      return 'builtin'
+    if (stream.eatWhile(/\d/) || (stream.eat('{') && stream.eatWhile(/\d/) && stream.eat('}'))) return 'builtin'
     else stream.pos = p
   }
   if (/[$@%]/.test(ch)) {
     var p = stream.pos
     if (
       (stream.eat('^') && stream.eat(/[A-Z]/)) ||
-      (!/[@$%&]/.test(look(stream, -2)) &&
-        stream.eat(/[=|\\\-#?@;:&`~\^!\[\]*'"$+.,\/<>()]/))
+      (!/[@$%&]/.test(look(stream, -2)) && stream.eat(/[=|\\\-#?@;:&`~\^!\[\]*'"$+.,\/<>()]/))
     ) {
       var c = stream.current()
       if (PERL[c]) return 'builtin'
@@ -1005,10 +971,7 @@ function tokenPerl(stream, state) {
     stream.pos = p
   }
   if (/[$@%&]/.test(ch)) {
-    if (
-      stream.eatWhile(/[\w$]/) ||
-      (stream.eat('{') && stream.eatWhile(/[\w$]/) && stream.eat('}'))
-    ) {
+    if (stream.eatWhile(/[\w$]/) || (stream.eat('{') && stream.eatWhile(/[\w$]/) && stream.eat('}'))) {
       var c = stream.current()
       if (PERL[c]) return 'builtin'
       else return 'variable'
@@ -1039,11 +1002,7 @@ function tokenPerl(stream, state) {
   }
   if (/\w/.test(ch)) {
     var p = stream.pos
-    if (
-      look(stream, -2) == '{' &&
-      (look(stream, 0) == '}' ||
-        (stream.eatWhile(/\w/) && look(stream, 0) == '}'))
-    )
+    if (look(stream, -2) == '{' && (look(stream, 0) == '}' || (stream.eatWhile(/\w/) && look(stream, 0) == '}')))
       return 'string'
     else stream.pos = p
   }

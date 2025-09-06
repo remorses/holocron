@@ -53,11 +53,7 @@ var literalTokens = new ExternalTokenizer((input, stack) => {
         do {
           input.advance()
         } while (isNum_(input.next))
-      } else if (
-        input.next == Dot ||
-        input.next > 127 ||
-        /\w/.test(String.fromCharCode(input.next))
-      ) {
+      } else if (input.next == Dot || input.next > 127 || /\w/.test(String.fromCharCode(input.next))) {
         return
       }
     }
@@ -72,10 +68,7 @@ var literalTokens = new ExternalTokenizer((input, stack) => {
     }
     if (input.next == _f) {
       let after = input.peek(1)
-      if (
-        (after == Zero + 3 && input.peek(2) == Zero + 2) ||
-        (after == Zero + 6 && input.peek(2) == Zero + 4)
-      ) {
+      if ((after == Zero + 3 && input.peek(2) == Zero + 2) || (after == Zero + 6 && input.peek(2) == Zero + 4)) {
         input.advance(3)
         isFloat = true
       } else {
@@ -117,12 +110,10 @@ var tpDelim = new ExternalTokenizer((input) => {
   else if (input.next == GreaterThan) input.acceptToken(tpClose, 1)
 })
 var rustHighlighting = styleTags({
-  'const macro_rules struct union enum type fn impl trait let static':
-    tags.definitionKeyword,
+  'const macro_rules struct union enum type fn impl trait let static': tags.definitionKeyword,
   'mod use crate': tags.moduleKeyword,
   'pub unsafe async mut extern default move': tags.modifier,
-  'for if else loop while match continue break return await':
-    tags.controlKeyword,
+  'for if else loop while match continue break return await': tags.controlKeyword,
   'as in ref': tags.operatorKeyword,
   'where _ crate super dyn': tags.keyword,
   self: tags.self,
@@ -133,21 +124,15 @@ var rustHighlighting = styleTags({
   Identifier: tags.variableName,
   'CallExpression/Identifier': tags.function(tags.variableName),
   BoundIdentifier: tags.definition(tags.variableName),
-  'FunctionItem/BoundIdentifier': tags.function(
-    tags.definition(tags.variableName),
-  ),
+  'FunctionItem/BoundIdentifier': tags.function(tags.definition(tags.variableName)),
   LoopLabel: tags.labelName,
   FieldIdentifier: tags.propertyName,
-  'CallExpression/FieldExpression/FieldIdentifier': tags.function(
-    tags.propertyName,
-  ),
+  'CallExpression/FieldExpression/FieldIdentifier': tags.function(tags.propertyName),
   Lifetime: tags.special(tags.variableName),
   ScopeIdentifier: tags.namespace,
   TypeIdentifier: tags.typeName,
-  'MacroInvocation/Identifier MacroInvocation/ScopedIdentifier/Identifier':
-    tags.macroName,
-  'MacroInvocation/TypeIdentifier MacroInvocation/ScopedIdentifier/TypeIdentifier':
-    tags.macroName,
+  'MacroInvocation/Identifier MacroInvocation/ScopedIdentifier/Identifier': tags.macroName,
+  'MacroInvocation/TypeIdentifier MacroInvocation/ScopedIdentifier/TypeIdentifier': tags.macroName,
   '"!"': tags.macroName,
   UpdateOp: tags.updateOperator,
   LineComment: tags.lineComment,
@@ -358,8 +343,7 @@ var rustLanguage = /* @__PURE__ */ LRLanguage.define({
       }),
       /* @__PURE__ */ foldNodeProp.add((type) => {
         if (/(Block|edTokens|List)$/.test(type.name)) return foldInside
-        if (type.name == 'BlockComment')
-          return (tree) => ({ from: tree.from + 2, to: tree.to - 2 })
+        if (type.name == 'BlockComment') return (tree) => ({ from: tree.from + 2, to: tree.to - 2 })
         return void 0
       }),
     ],

@@ -23,9 +23,7 @@ type StepState = 'active' | 'completed' | 'inactive' | 'loading'
 
 // Contexts
 const StepperContext = createContext<StepperContextValue | undefined>(undefined)
-const StepItemContext = createContext<StepItemContextValue | undefined>(
-  undefined,
-)
+const StepItemContext = createContext<StepItemContextValue | undefined>(undefined)
 
 const useStepper = () => {
   const context = useContext(StepperContext)
@@ -113,19 +111,12 @@ function StepperItem({
 }: StepperItemProps) {
   const { activeStep } = useStepper()
 
-  const state: StepState =
-    completed || step < activeStep
-      ? 'completed'
-      : activeStep === step
-        ? 'active'
-        : 'inactive'
+  const state: StepState = completed || step < activeStep ? 'completed' : activeStep === step ? 'active' : 'inactive'
 
   const isLoading = loading && step === activeStep
 
   return (
-    <StepItemContext.Provider
-      value={{ step, state, isDisabled: disabled, isLoading }}
-    >
+    <StepItemContext.Provider value={{ step, state, isDisabled: disabled, isLoading }}>
       <div
         data-slot='stepper-item'
         className={cn(
@@ -143,17 +134,11 @@ function StepperItem({
 }
 
 // StepperTrigger
-interface StepperTriggerProps
-  extends React.ButtonHTMLAttributes<HTMLDivElement> {
+interface StepperTriggerProps extends React.ButtonHTMLAttributes<HTMLDivElement> {
   asChild?: boolean
 }
 
-function StepperTrigger({
-  asChild = false,
-  className,
-  children,
-  ...props
-}: StepperTriggerProps) {
+function StepperTrigger({ asChild = false, className, children, ...props }: StepperTriggerProps) {
   const { setActiveStep } = useStepper()
   const { step, isDisabled } = useStepItem()
 
@@ -187,12 +172,7 @@ interface StepperIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean
 }
 
-function StepperIndicator({
-  asChild = false,
-  className,
-  children,
-  ...props
-}: StepperIndicatorProps) {
+function StepperIndicator({ asChild = false, className, children, ...props }: StepperIndicatorProps) {
   const { state, step, isLoading } = useStepItem()
 
   return (
@@ -219,11 +199,7 @@ function StepperIndicator({
           />
           {isLoading && (
             <span className='absolute transition-all'>
-              <LoaderCircleIcon
-                className='animate-spin'
-                size={14}
-                aria-hidden='true'
-              />
+              <LoaderCircleIcon className='animate-spin' size={14} aria-hidden='true' />
             </span>
           )}
         </>
@@ -233,38 +209,17 @@ function StepperIndicator({
 }
 
 // StepperTitle
-function StepperTitle({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLHeadingElement>) {
-  return (
-    <h3
-      data-slot='stepper-title'
-      className={cn('text-sm font-medium', className)}
-      {...props}
-    />
-  )
+function StepperTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+  return <h3 data-slot='stepper-title' className={cn('text-sm font-medium', className)} {...props} />
 }
 
 // StepperDescription
-function StepperDescription({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLParagraphElement>) {
-  return (
-    <p
-      data-slot='stepper-description'
-      className={cn('text-muted-foreground text-sm', className)}
-      {...props}
-    />
-  )
+function StepperDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
+  return <p data-slot='stepper-description' className={cn('text-muted-foreground text-sm', className)} {...props} />
 }
 
 // StepperSeparator
-function StepperSeparator({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+function StepperSeparator({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       data-slot='stepper-separator'
@@ -277,12 +232,4 @@ function StepperSeparator({
   )
 }
 
-export {
-  Stepper,
-  StepperDescription,
-  StepperIndicator,
-  StepperItem,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-}
+export { Stepper, StepperDescription, StepperIndicator, StepperItem, StepperSeparator, StepperTitle, StepperTrigger }

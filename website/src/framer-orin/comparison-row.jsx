@@ -47,9 +47,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -89,11 +87,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableEnumMap = {
@@ -135,21 +129,13 @@ var getProps = ({
     Iil1FPHfK: free ?? props.Iil1FPHfK ?? true,
     M7IAJ75gF: icon2 ?? props.M7IAJ75gF,
     NFzNLobU4: info3 ?? props.NFzNLobU4 ?? 'Unlimited',
-    OiSdtnqT3:
-      rowColor ??
-      props.OiSdtnqT3 ??
-      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+    OiSdtnqT3: rowColor ?? props.OiSdtnqT3 ?? 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
     pvYqJYSDU: icon1 ?? props.pvYqJYSDU,
     rj8xax8sg: info1 ?? props.rj8xax8sg ?? '1',
     u56V5UFsy: humanReadableEnumMap[select2] ?? select2 ?? props.u56V5UFsy,
-    uDXPtqrDU:
-      humanReadableEnumMap[select1] ??
-      select1 ??
-      props.uDXPtqrDU ??
-      'oYA80aR0m',
+    uDXPtqrDU: humanReadableEnumMap[select1] ?? select1 ?? props.uDXPtqrDU ?? 'oYA80aR0m',
     uJq0Eb7Lj: agency ?? props.uJq0Eb7Lj ?? true,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'kH0tmb9bN',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'kH0tmb9bN',
     vlTAMwD0_: humanReadableEnumMap[select3] ?? select3 ?? props.vlTAMwD0_,
     xK9ydj3FQ: icon3 ?? props.xK9ydj3FQ,
     YzwcYg05D: title ?? props.YzwcYg05D ?? 'General',
@@ -215,12 +201,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1huv8d1',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1huv8d1', className, classNames)}
             data-framer-name={'Category Row'}
             layoutDependency={layoutDependency}
             layoutId={'kH0tmb9bN'}
@@ -245,11 +226,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               width={`max(${componentViewport?.width || '100vw'}, 1px)`}
               y={
                 (componentViewport?.y || 0) +
-                (0 +
-                  ((componentViewport?.height || 90) -
-                    0 -
-                    ((componentViewport?.height || 90) - 0) * 1) /
-                    2)
+                (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
               }
               {...addPropertyOverrides(
                 {
@@ -257,11 +234,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     height: ((componentViewport?.height || 64) - 0) * 1,
                     y:
                       (componentViewport?.y || 0) +
-                      (0 +
-                        ((componentViewport?.height || 64) -
-                          0 -
-                          ((componentViewport?.height || 64) - 0) * 1) /
-                          2),
+                      (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                   },
                 },
                 baseVariant,
@@ -312,11 +285,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 width={`max(${componentViewport?.width || '100vw'}, 1px)`}
                 y={
                   (componentViewport?.y || 0) +
-                  (0 +
-                    ((componentViewport?.height || 90) -
-                      0 -
-                      ((componentViewport?.height || 90) - 0) * 1) /
-                      2)
+                  (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
                 }
                 {...addPropertyOverrides(
                   {
@@ -324,11 +293,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: ((componentViewport?.height || 64) - 0) * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        (0 +
-                          ((componentViewport?.height || 64) -
-                            0 -
-                            ((componentViewport?.height || 64) - 0) * 1) /
-                            2),
+                        (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                     },
                   },
                   baseVariant,
@@ -382,11 +347,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 width={`max(${componentViewport?.width || '100vw'}, 1px)`}
                 y={
                   (componentViewport?.y || 0) +
-                  (0 +
-                    ((componentViewport?.height || 90) -
-                      0 -
-                      ((componentViewport?.height || 90) - 0) * 1) /
-                      2)
+                  (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
                 }
                 {...addPropertyOverrides(
                   {
@@ -394,11 +355,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: ((componentViewport?.height || 64) - 0) * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        (0 +
-                          ((componentViewport?.height || 64) -
-                            0 -
-                            ((componentViewport?.height || 64) - 0) * 1) /
-                            2),
+                        (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                     },
                   },
                   baseVariant,
@@ -452,11 +409,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 width={`max(${componentViewport?.width || '100vw'}, 1px)`}
                 y={
                   (componentViewport?.y || 0) +
-                  (0 +
-                    ((componentViewport?.height || 90) -
-                      0 -
-                      ((componentViewport?.height || 90) - 0) * 1) /
-                      2)
+                  (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
                 }
                 {...addPropertyOverrides(
                   {
@@ -464,11 +417,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: ((componentViewport?.height || 64) - 0) * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        (0 +
-                          ((componentViewport?.height || 64) -
-                            0 -
-                            ((componentViewport?.height || 64) - 0) * 1) /
-                            2),
+                        (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                     },
                   },
                   baseVariant,
@@ -636,8 +585,7 @@ addPropertyControls(Framerc72Om5BsH, {
     type: ControlType.Boolean,
   },
   OiSdtnqT3: {
-    defaultValue:
-      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0)) /* {"name":"Black 00"} */',
+    defaultValue: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0)) /* {"name":"Black 00"} */',
     title: 'Row Color',
     type: ControlType.Color,
   },
@@ -707,17 +655,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -765,9 +707,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

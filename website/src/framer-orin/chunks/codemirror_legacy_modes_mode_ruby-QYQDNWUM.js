@@ -69,19 +69,7 @@ var keywordList = [
   '__dir__',
 ]
 var keywords = wordObj(keywordList)
-var indentWords = wordObj([
-  'def',
-  'class',
-  'case',
-  'for',
-  'while',
-  'until',
-  'module',
-  'catch',
-  'loop',
-  'proc',
-  'begin',
-])
+var indentWords = wordObj(['def', 'class', 'case', 'for', 'while', 'until', 'module', 'catch', 'loop', 'proc', 'begin'])
 var dedentWords = wordObj(['end', 'until'])
 var opening = { '[': ']', '{': '}', '(': ')' }
 var closing = { ']': '[', '}': '{', ')': '(' }
@@ -99,14 +87,9 @@ function tokenBase(stream, state) {
   var ch = stream.next(),
     m
   if (ch == '`' || ch == "'" || ch == '"') {
-    return chain(
-      readQuoted(ch, 'string', ch == '"' || ch == '`'),
-      stream,
-      state,
-    )
+    return chain(readQuoted(ch, 'string', ch == '"' || ch == '`'), stream, state)
   } else if (ch == '/') {
-    if (regexpAhead(stream))
-      return chain(readQuoted(ch, 'string.special', true), stream, state)
+    if (regexpAhead(stream)) return chain(readQuoted(ch, 'string.special', true), stream, state)
     else return 'operator'
   } else if (ch == '%') {
     var style = 'string',
@@ -125,10 +108,7 @@ function tokenBase(stream, state) {
   } else if (ch == '#') {
     stream.skipToEnd()
     return 'comment'
-  } else if (
-    ch == '<' &&
-    (m = stream.match(/^<([-~])[\`\"\']?([a-zA-Z_?]\w*)[\`\"\']?(?:;|$)/))
-  ) {
+  } else if (ch == '<' && (m = stream.match(/^<([-~])[\`\"\']?([a-zA-Z_?]\w*)[\`\"\']?(?:;|$)/))) {
     return chain(readHereDoc(m[2], m[1]), stream, state)
   } else if (ch == '0') {
     if (stream.eat('x')) stream.eatWhile(/[\da-fA-F]/)
@@ -144,10 +124,8 @@ function tokenBase(stream, state) {
     else stream.next()
     return 'string'
   } else if (ch == ':') {
-    if (stream.eat("'"))
-      return chain(readQuoted("'", 'atom', false), stream, state)
-    if (stream.eat('"'))
-      return chain(readQuoted('"', 'atom', true), stream, state)
+    if (stream.eat("'")) return chain(readQuoted("'", 'atom', false), stream, state)
+    if (stream.eat('"')) return chain(readQuoted('"', 'atom', true), stream, state)
     if (stream.eat(/[\<\>]/)) {
       stream.eat(/[\<\>]/)
       return 'atom'
@@ -179,10 +157,7 @@ function tokenBase(stream, state) {
     stream.eat(/[\?\!]/)
     if (stream.eat(':')) return 'atom'
     return 'variable'
-  } else if (
-    ch == '|' &&
-    (state.varList || state.lastTok == '{' || state.lastTok == 'do')
-  ) {
+  } else if (ch == '|' && (state.varList || state.lastTok == '{' || state.lastTok == 'do')) {
     curPunc = '|'
     return null
   } else if (/[\(\)\[\]{}\\;]/.test(ch)) {
@@ -231,9 +206,7 @@ function tokenBaseUntilBrace(depth) {
         state.tokenize.pop()
         return state.tokenize[state.tokenize.length - 1](stream, state)
       } else {
-        state.tokenize[state.tokenize.length - 1] = tokenBaseUntilBrace(
-          depth - 1,
-        )
+        state.tokenize[state.tokenize.length - 1] = tokenBaseUntilBrace(depth - 1)
       }
     } else if (stream.peek() == '{') {
       state.tokenize[state.tokenize.length - 1] = tokenBaseUntilBrace(depth + 1)
@@ -325,22 +298,15 @@ var ruby = {
             ? 'keyword'
             : /^[A-Z]/.test(word)
               ? 'tag'
-              : state.lastTok == 'def' ||
-                  state.lastTok == 'class' ||
-                  state.varList
+              : state.lastTok == 'def' || state.lastTok == 'class' || state.varList
                 ? 'def'
                 : 'variable'
       if (style == 'keyword') {
         thisTok = word
         if (indentWords.propertyIsEnumerable(word)) kwtype = 'indent'
         else if (dedentWords.propertyIsEnumerable(word)) kwtype = 'dedent'
-        else if (
-          (word == 'if' || word == 'unless') &&
-          stream.column() == stream.indentation()
-        )
-          kwtype = 'indent'
-        else if (word == 'do' && state.context.indented < state.indented)
-          kwtype = 'indent'
+        else if ((word == 'if' || word == 'unless') && stream.column() == stream.indentation()) kwtype = 'indent'
+        else if (word == 'do' && state.context.indented < state.indented) kwtype = 'indent'
       }
     }
     if (curPunc || (style && style != 'comment')) state.lastTok = thisTok
@@ -351,13 +317,8 @@ var ruby = {
         type: curPunc || style,
         indented: state.indented,
       }
-    else if (
-      (kwtype == 'dedent' || /[\)\]\}]/.test(curPunc)) &&
-      state.context.prev
-    )
-      state.context = state.context.prev
-    if (stream.eol())
-      state.continuedLine = curPunc == '\\' || style == 'operator'
+    else if ((kwtype == 'dedent' || /[\)\]\}]/.test(curPunc)) && state.context.prev) state.context = state.context.prev
+    if (stream.eol()) state.continuedLine = curPunc == '\\' || style == 'operator'
     return style
   },
   indent: function (state, textAfter, cx) {
@@ -366,11 +327,8 @@ var ruby = {
     var ct = state.context
     var closed =
       ct.type == closing[firstChar] ||
-      (ct.type == 'keyword' &&
-        /^(?:end|until|else|elsif|when|rescue)\b/.test(textAfter))
-    return (
-      ct.indented + (closed ? 0 : cx.unit) + (state.continuedLine ? cx.unit : 0)
-    )
+      (ct.type == 'keyword' && /^(?:end|until|else|elsif|when|rescue)\b/.test(textAfter))
+    return ct.indented + (closed ? 0 : cx.unit) + (state.continuedLine ? cx.unit : 0)
   },
   languageData: {
     indentOnInput: /^\s*(?:end|rescue|elsif|else|\})$/,

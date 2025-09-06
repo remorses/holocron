@@ -47,11 +47,7 @@ export function ShowMore({
           }
         }}
       >
-        <div
-          className={cn(!isExpanded && needsExpansion && 'pointer-events-none')}
-        >
-          {children}
-        </div>
+        <div className={cn(!isExpanded && needsExpansion && 'pointer-events-none')}>{children}</div>
         {!isExpanded && needsExpansion && (
           <div className='absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-(--show-more-bg) to-transparent pointer-events-none' />
         )}
@@ -65,12 +61,7 @@ export function ShowMore({
             className='flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors'
           >
             <span>{isExpanded ? 'Show less' : 'Show more'}</span>
-            <ChevronDownIcon
-              className={cn(
-                'size-4 transition-transform',
-                isExpanded && 'rotate-180',
-              )}
-            />
+            <ChevronDownIcon className={cn('size-4 transition-transform', isExpanded && 'rotate-180')} />
           </button>
         </div>
       )}

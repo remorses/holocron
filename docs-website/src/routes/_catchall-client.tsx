@@ -11,14 +11,7 @@ import { RootProvider } from 'fumadocs-ui/provider/base'
 import { GithubIcon, XIcon } from 'lucide-react'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
-import {
-  lazy,
-  startTransition,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from 'react'
+import { lazy, startTransition, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import {
   Outlet,
   useLoaderData,
@@ -39,12 +32,7 @@ import { useShallow } from 'zustand/react/shallow'
 import type { Route } from './_catchall'
 
 import { DocsJsonType } from '../lib/docs-json'
-import {
-  DocsState,
-  IframeRpcMessage,
-  useDocsState,
-  usePersistentDocsState,
-} from '../lib/docs-state'
+import { DocsState, IframeRpcMessage, useDocsState, usePersistentDocsState } from '../lib/docs-state'
 import { useDocsJson } from '../lib/hooks'
 import { useDebouncedEffect } from '../lib/hooks-debounced'
 import JSONC from 'tiny-jsonc'
@@ -74,10 +62,7 @@ function ChatDrawerWrapper() {
 
 const openapiPath = `/api-reference`
 
-const allowedOrigins = [
-  env.NEXT_PUBLIC_URL!.replace(/\/$/, ''),
-  'http://localhost:7664',
-]
+const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, ''), 'http://localhost:7664']
 
 let onFirstStateMessage = () => {}
 const firstStateReceived = new Promise<void>((resolve) => {
@@ -117,11 +102,7 @@ async function iframeMessagesHandling() {
   async function onParentPostMessage(e: MessageEvent) {
     onFirstStateMessage()
     if (!allowedOrigins.includes(e.origin)) {
-      console.warn(
-        `ignoring message from disallowed origin: ${e.origin}`,
-        allowedOrigins,
-        e.data,
-      )
+      console.warn(`ignoring message from disallowed origin: ${e.origin}`, allowedOrigins, e.data)
       return
     }
     try {
@@ -320,10 +301,7 @@ export function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
       : ''
 
   // Don't render if both empty
-  if (
-    (!light || Object.keys(light).length === 0) &&
-    (!dark || Object.keys(dark).length === 0)
-  ) {
+  if ((!light || Object.keys(light).length === 0) && (!dark || Object.keys(dark).length === 0)) {
     return null
   }
 
@@ -402,12 +380,7 @@ export function ClientApp() {
             }),
           }}
         >
-          <ThemeProvider
-            attribute='class'
-            defaultTheme='system'
-            enableSystem
-            disableTransitionOnChange
-          >
+          <ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
             {cssStyles && (
               <style
                 dangerouslySetInnerHTML={{
@@ -433,13 +406,7 @@ export function ClientApp() {
   )
 }
 
-function DocsLayoutWrapper({
-  children,
-  docsJson,
-}: {
-  children: React.ReactNode
-  docsJson: DocsJsonType
-}) {
+function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; docsJson: DocsJsonType }) {
   const loaderData = useLoaderData<Route.ComponentProps['loaderData']>() || {}
   const { i18n, previewWebsocketId, openapiUrl } = loaderData
 
@@ -447,8 +414,7 @@ function DocsLayoutWrapper({
   const filesInDraft = useDocsState((state) => state.filesInDraft)
 
   const tree = useMemo(() => {
-    const { files, i18n, openapiUrl, githubFolder, processedOpenAPI } =
-      loaderData
+    const { files, i18n, openapiUrl, githubFolder, processedOpenAPI } = loaderData
     if (processedOpenAPI?.document) {
       const pageTree = getPageTreeForOpenAPI({
         docsJson,
@@ -598,9 +564,7 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
     globalNavigate(url.pathname + url.search)
   }
 
-  const websocketServerPreviewConnected = useDocsState(
-    (state) => state.websocketServerPreviewConnected,
-  )
+  const websocketServerPreviewConnected = useDocsState((state) => state.websocketServerPreviewConnected)
 
   const shouldShow = useSyncExternalStore(
     noop,
@@ -640,8 +604,7 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
 
 function UserBanner({ docsJson }: { docsJson?: any }) {
   const [dismissed, setDismissed] = useState(false)
-  const { bannerAst } =
-    useLoaderData<Route.ComponentProps['loaderData']>() || {}
+  const { bannerAst } = useLoaderData<Route.ComponentProps['loaderData']>() || {}
   const banner = docsJson?.banner
 
   if (!banner || dismissed) return null
@@ -649,12 +612,7 @@ function UserBanner({ docsJson }: { docsJson?: any }) {
   return (
     <div className='relative bg-fd-primary/10 border border-fd-primary/20 rounded-lg p-4 mb-4'>
       <div className='prose prose-sm text-fd-foreground'>
-        <Markdown
-          markdown={banner.content}
-          ast={bannerAst}
-          isStreaming={false}
-          components={mdxComponents}
-        />
+        <Markdown markdown={banner.content} ast={bannerAst} isStreaming={false} components={mdxComponents} />
       </div>
       {banner.dismissible && (
         <button
@@ -664,18 +622,8 @@ function UserBanner({ docsJson }: { docsJson?: any }) {
           className='absolute top-2 right-2 p-1 rounded hover:bg-fd-primary/20 transition-colors'
           aria-label='Dismiss banner'
         >
-          <svg
-            className='w-4 h-4'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M6 18L18 6M6 6l12 12'
-            />
+          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
           </svg>
         </button>
       )}
@@ -691,9 +639,7 @@ function Logo({ docsJson = {} as DocsJsonType }) {
 
   if (!docsJson.logo) {
     return (
-      <span className='font-medium [.uwu_&]:hidden max-md:hidden'>
-        {docsJson?.name || name || 'Documentation'}
-      </span>
+      <span className='font-medium [.uwu_&]:hidden max-md:hidden'>{docsJson?.name || name || 'Documentation'}</span>
     )
   }
 
@@ -713,27 +659,15 @@ function Logo({ docsJson = {} as DocsJsonType }) {
   return (
     <div className='flex gap-2 grow items-center'>
       {logoImageUrl && (
-        <img
-          alt='logo'
-          src={logoImageUrl}
-          suppressHydrationWarning
-          className='h-8 [.uwu_&]:block'
-          aria-label='logo'
-        />
+        <img alt='logo' src={logoImageUrl} suppressHydrationWarning className='h-8 [.uwu_&]:block' aria-label='logo' />
       )}
-      {logoText && (
-        <span className='font-medium text-lg max-md:hidden'>{logoText}</span>
-      )}
+      {logoText && <span className='font-medium text-lg max-md:hidden'>{logoText}</span>}
     </div>
   )
 }
 
 // Custom React Router Provider with preserved search params
-function CustomReactRouterProvider({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function CustomReactRouterProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const params = useParams()
@@ -771,13 +705,7 @@ function CustomReactRouterProvider({
         }
       },
       Link({ href, prefetch, ...props }: any) {
-        return (
-          <PreservedSearchLink
-            to={href}
-            prefetch={prefetch ? 'intent' : 'none'}
-            {...props}
-          />
-        )
+        return <PreservedSearchLink to={href} prefetch={prefetch ? 'intent' : 'none'} {...props} />
       },
     }),
     [location.pathname, params, preservedNavigate, revalidator],

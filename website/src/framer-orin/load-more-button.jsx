@@ -49,9 +49,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -91,11 +89,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -107,8 +101,7 @@ var getProps = ({ click, fill, height, id, width, ...props }) => {
   return {
     ...props,
     mNGMgQNvI: fill ?? props.mNGMgQNvI,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'VjG2AvVMi',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'VjG2AvVMi',
     Wld3NDzSj: click ?? props.Wld3NDzSj,
   }
 }
@@ -122,15 +115,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    Wld3NDzSj,
-    mNGMgQNvI,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, Wld3NDzSj, mNGMgQNvI, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -179,12 +164,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             <motion.button
               {...restProps}
               {...gestureHandlers}
-              className={cx(
-                scopingClassNames,
-                'framer-u4pidu',
-                className,
-                classNames,
-              )}
+              className={cx(scopingClassNames, 'framer-u4pidu', className, classNames)}
               data-framer-name={'Default'}
               data-highlight={true}
               data-reset={'button'}
@@ -193,8 +173,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               onTap={onTapn9xadi}
               ref={refBinding}
               style={{
-                backgroundColor:
-                  'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
+                backgroundColor: 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
                 borderBottomLeftRadius: 100,
                 borderBottomRightRadius: 100,
                 borderTopLeftRadius: 100,
@@ -203,8 +182,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               }}
               variants={{
                 'VjG2AvVMi-hover': {
-                  backgroundColor:
-                    'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                  backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 },
               }}
               {...addPropertyOverrides(
@@ -267,9 +245,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     }}
                   >
                     <RollingText
-                      color={
-                        'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                      }
+                      color={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                       font={{
                         fontFamily: '"Raveo Variable Variable", sans-serif',
                         fontSize: '14px',
@@ -333,9 +309,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     }}
                   >
                     <RollingText
-                      color={
-                        'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                      }
+                      color={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                       font={{
                         fontFamily: '"Raveo Variable Variable", sans-serif',
                         fontSize: '14px',
@@ -399,9 +373,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       direction: 'clockwise',
                       speed: 2,
                     }}
-                    borderColor={
-                      'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'
-                    }
+                    borderColor={'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'}
                     borderRadius={20}
                     borderWidth={1}
                     bottom={true}
@@ -567,17 +539,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -625,9 +591,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

@@ -171,13 +171,8 @@ function Dither(props) {
         ctx.imageSmoothingEnabled = false
         ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const brightAdjusted = DitherProcessor.adjustBrightness(
-          imageData,
-          animatedValuesRef.current.brightness,
-        )
-        const adjustedThreshold = Math.round(
-          (props.threshold * props.midtones) / 50,
-        )
+        const brightAdjusted = DitherProcessor.adjustBrightness(imageData, animatedValuesRef.current.brightness)
+        const adjustedThreshold = Math.round((props.threshold * props.midtones) / 50)
         let processedData
         switch (props.algorithm) {
           case 'floyd-steinberg':
@@ -220,10 +215,7 @@ function Dither(props) {
               props.dotColor,
             )
         }
-        const glowProcessed = DitherProcessor.applyGlow(
-          processedData,
-          animatedValuesRef.current.glow,
-        )
+        const glowProcessed = DitherProcessor.applyGlow(processedData, animatedValuesRef.current.glow)
         ctx.putImageData(glowProcessed, 0, 0)
       } catch (err) {
         console.error('Failed to process image', err)
@@ -444,9 +436,7 @@ var DitherProcessor = class {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4
-        const luminance = Math.round(
-          0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2],
-        )
+        const luminance = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2])
         const useDotColor = luminance > threshold
         const targetColor = useDotColor ? dotColorRgb : bgColor
         const errorR = data[idx] - targetColor.r
@@ -496,9 +486,7 @@ var DitherProcessor = class {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4
-        const gray = Math.round(
-          0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2],
-        )
+        const gray = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2])
         const bayerValue = bayerMatrix[y % 4][x % 4]
         const adjustedThreshold = threshold + (bayerValue - 7.5) * 16
         const useDotColor = gray > adjustedThreshold
@@ -520,9 +508,7 @@ var DitherProcessor = class {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4
-        const gray = Math.round(
-          0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2],
-        )
+        const gray = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2])
         const randomNoise = (Math.random() - 0.5) * 100
         const adjustedThreshold = threshold + randomNoise
         const useDotColor = gray > adjustedThreshold
@@ -544,9 +530,7 @@ var DitherProcessor = class {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4
-        const luminance = Math.round(
-          0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2],
-        )
+        const luminance = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2])
         const useDotColor = luminance > threshold
         const targetColor = useDotColor ? dotColorRgb : bgColor
         const errorR = data[idx] - targetColor.r
@@ -570,14 +554,8 @@ var DitherProcessor = class {
           if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
             const newIdx = (newY * width + newX) * 4
             data[newIdx] = Math.min(255, Math.max(0, data[newIdx] + errorR / 8))
-            data[newIdx + 1] = Math.min(
-              255,
-              Math.max(0, data[newIdx + 1] + errorG / 8),
-            )
-            data[newIdx + 2] = Math.min(
-              255,
-              Math.max(0, data[newIdx + 2] + errorB / 8),
-            )
+            data[newIdx + 1] = Math.min(255, Math.max(0, data[newIdx + 1] + errorG / 8))
+            data[newIdx + 2] = Math.min(255, Math.max(0, data[newIdx + 2] + errorB / 8))
           }
         }
       }

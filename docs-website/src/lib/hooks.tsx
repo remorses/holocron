@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import JSONC from 'tiny-jsonc'
 import { Route } from '../routes/_catchall'
 import { useLoaderData, useRouteLoaderData } from 'react-router'
@@ -43,10 +37,7 @@ export function usePrevious<T>(value: T): T | undefined {
   return ref.current
 }
 export function useDocsJson(): DocsJsonType {
-  const { docsJson } =
-    (useRouteLoaderData(
-      'routes/_catchall',
-    ) as Route.ComponentProps['loaderData']) || {}
+  const { docsJson } = (useRouteLoaderData('routes/_catchall') as Route.ComponentProps['loaderData']) || {}
 
   // Check for state overrides for docsJson
   const docsJsonString = useDocsState((state) => {

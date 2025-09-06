@@ -74,32 +74,23 @@ var baseParser = /* @__PURE__ */ parser.configure({
 })
 var exprMixed = { parser: exprParser }
 var textParser = /* @__PURE__ */ baseParser.configure({
-  wrap: /* @__PURE__ */ parseMixed((node, input) =>
-    node.name == 'InterpolationContent' ? exprMixed : null,
-  ),
+  wrap: /* @__PURE__ */ parseMixed((node, input) => (node.name == 'InterpolationContent' ? exprMixed : null)),
 })
 var attrParser = /* @__PURE__ */ baseParser.configure({
-  wrap: /* @__PURE__ */ parseMixed((node, input) =>
-    node.name == 'AttributeScript' ? exprMixed : null,
-  ),
+  wrap: /* @__PURE__ */ parseMixed((node, input) => (node.name == 'AttributeScript' ? exprMixed : null)),
   top: 'Attribute',
 })
 var textMixed = { parser: textParser }
 var attrMixed = { parser: attrParser }
 var baseHTML = /* @__PURE__ */ html()
 function makeVue(base) {
-  return base.configure(
-    { dialect: 'selfClosing', wrap: parseMixed(mixVue) },
-    'vue',
-  )
+  return base.configure({ dialect: 'selfClosing', wrap: parseMixed(mixVue) }, 'vue')
 }
 var vueLanguage = /* @__PURE__ */ makeVue(baseHTML.language)
 function mixVue(node, input) {
   switch (node.name) {
     case 'Attribute':
-      return /^(@|:|v-)/.test(input.read(node.from, node.from + 2))
-        ? attrMixed
-        : null
+      return /^(@|:|v-)/.test(input.read(node.from, node.from + 2)) ? attrMixed : null
     case 'Text':
       return textMixed
   }
@@ -108,22 +99,14 @@ function mixVue(node, input) {
 function vue(config = {}) {
   let base = baseHTML
   if (config.base) {
-    if (
-      config.base.language.name != 'html' ||
-      !(config.base.language instanceof LRLanguage)
-    )
-      throw new RangeError(
-        'The base option must be the result of calling html(...)',
-      )
+    if (config.base.language.name != 'html' || !(config.base.language instanceof LRLanguage))
+      throw new RangeError('The base option must be the result of calling html(...)')
     base = config.base
   }
-  return new LanguageSupport(
-    base.language == baseHTML.language ? vueLanguage : makeVue(base.language),
-    [
-      base.support,
-      base.language.data.of({ closeBrackets: { brackets: ['{', '"'] } }),
-    ],
-  )
+  return new LanguageSupport(base.language == baseHTML.language ? vueLanguage : makeVue(base.language), [
+    base.support,
+    base.language.data.of({ closeBrackets: { brackets: ['{', '"'] } }),
+  ])
 }
 var __FramerMetadata__ = {
   exports: {

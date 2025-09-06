@@ -58,10 +58,7 @@ export function slugKebabCaseKeepExtension(str: string): string {
 
 export const mdxRegex = /\.mdx?$/
 
-export async function* yieldTasksInParallel<T>(
-  concurrency = Infinity,
-  tasks: Array<() => Promise<T>>,
-) {
+export async function* yieldTasksInParallel<T>(concurrency = Infinity, tasks: Array<() => Promise<T>>) {
   const queue = tasks.slice() // ✓ don’t mutate caller’s array
   const pending = queue
     .splice(0, concurrency) // start the first batch
@@ -106,10 +103,7 @@ export function groupByN<T>(arr: T[], n: number): T[][] {
   return result
 }
 
-export function debounce<T extends (...args: any[]) => any>(
-  delay: number,
-  fn: T,
-): T {
+export function debounce<T extends (...args: any[]) => any>(delay: number, fn: T): T {
   let timeoutId: ReturnType<typeof setTimeout> | undefined
   let pendingPromise: Promise<any> | null = null
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
@@ -164,9 +158,7 @@ export async function* processGeneratorConcurrentlyInOrder<T, R>(
 
 export async function uploadFileToSite(file: File, siteId: string) {
   const idGenerator = createIdGenerator()
-  const filename = encodeURIComponent(
-    slugKebabCaseKeepExtension(`${idGenerator()}-${file.name || 'file'}`),
-  )
+  const filename = encodeURIComponent(slugKebabCaseKeepExtension(`${idGenerator()}-${file.name || 'file'}`))
   const contentType = file.type || 'application/octet-stream'
 
   const { error, data } = await apiClient.api.createUploadSignedUrl.post({

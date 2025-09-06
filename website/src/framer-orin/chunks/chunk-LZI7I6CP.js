@@ -37,15 +37,7 @@ var enabledGestures = {
   svyJsdYyH: { hover: true },
   UItccn4nC: { hover: true },
 }
-var cycleOrder = [
-  'svyJsdYyH',
-  'UItccn4nC',
-  'rwbKBWJRY',
-  'IAsy97Er5',
-  'pdooW3wnZ',
-  'fSd_0l8pb',
-  'ks076Zojt',
-]
+var cycleOrder = ['svyJsdYyH', 'UItccn4nC', 'rwbKBWJRY', 'IAsy97Er5', 'pdooW3wnZ', 'fSd_0l8pb', 'ks076Zojt']
 var serializationHash = 'framer-Wt2Bl'
 var variantClassNames = {
   fSd_0l8pb: 'framer-v-ky9yjg',
@@ -58,9 +50,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
@@ -70,10 +60,7 @@ var negate = (value) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -90,27 +77,15 @@ var humanReadableVariantMap = {
   Primary: 'UItccn4nC',
   Secondary: 'svyJsdYyH',
 }
-var getProps = ({
-  click,
-  fill,
-  height,
-  id,
-  label,
-  link,
-  state,
-  width,
-  ...props
-}) => {
+var getProps = ({ click, fill, height, id, label, link, state, width, ...props }) => {
   return {
     ...props,
     D9dBYabSn: fill ?? props.D9dBYabSn,
     OLHf8SPKb: link ?? props.OLHf8SPKb,
     PcYKtiAUC: click ?? props.PcYKtiAUC,
-    qCxNvGxTB:
-      humanReadableEnumMap[state] ?? state ?? props.qCxNvGxTB ?? 'Default',
+    qCxNvGxTB: humanReadableEnumMap[state] ?? state ?? props.qCxNvGxTB ?? 'Default',
     SMZpJms0Q: label ?? props.SMZpJms0Q ?? 'Get started',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'svyJsdYyH',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'svyJsdYyH',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -123,18 +98,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    SMZpJms0Q,
-    OLHf8SPKb,
-    D9dBYabSn,
-    qCxNvGxTB,
-    PcYKtiAUC,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, SMZpJms0Q, OLHf8SPKb, D9dBYabSn, qCxNvGxTB, PcYKtiAUC, ...restProps } =
+    getProps(props)
   const {
     baseVariant,
     classNames,
@@ -166,19 +131,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
   const visible = negate(D9dBYabSn)
   const isDisplayed = () => {
-    if (
-      [
-        'UItccn4nC-hover',
-        'IAsy97Er5-hover',
-        'fSd_0l8pb-hover',
-        'pdooW3wnZ-hover',
-      ].includes(gestureVariant)
-    )
+    if (['UItccn4nC-hover', 'IAsy97Er5-hover', 'fSd_0l8pb-hover', 'pdooW3wnZ-hover'].includes(gestureVariant))
       return false
-    if (
-      ['UItccn4nC', 'IAsy97Er5', 'pdooW3wnZ', 'fSd_0l8pb'].includes(baseVariant)
-    )
-      return false
+    if (['UItccn4nC', 'IAsy97Er5', 'pdooW3wnZ', 'fSd_0l8pb'].includes(baseVariant)) return false
     return true
   }
   return /* @__PURE__ */ _jsx(LayoutGroup, {
@@ -206,8 +161,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             onTap: onTap184xdhl,
             ref: refBinding,
             style: {
-              backgroundColor:
-                'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
+              backgroundColor: 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
               borderBottomLeftRadius: 20,
               borderBottomRightRadius: 20,
               borderTopLeftRadius: 20,
@@ -226,8 +180,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 WebkitFilter: 'brightness(0.8)',
               },
               'ks076Zojt-hover': {
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 filter: 'none',
                 WebkitFilter: 'none',
               },
@@ -236,14 +189,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 WebkitFilter: 'brightness(0.8)',
               },
               'rwbKBWJRY-hover': {
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 filter: 'none',
                 WebkitFilter: 'none',
               },
               'svyJsdYyH-hover': {
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
               },
               'UItccn4nC-hover': {
                 filter: 'brightness(0.8)',
@@ -253,8 +204,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 backgroundColor: 'rgb(255, 255, 255)',
               },
               IAsy97Er5: {
-                backgroundColor:
-                  'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                 borderBottomLeftRadius: 6,
                 borderBottomRightRadius: 6,
                 borderTopLeftRadius: 6,
@@ -321,396 +271,366 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             children: [
               visible &&
                 /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                  children: /* @__PURE__ */ _jsx(
-                    SmartComponentScopedContainer,
-                    {
-                      className: 'framer-zpabgk-container',
-                      'data-framer-name': 'Fit',
-                      isAuthoredByUser: true,
-                      isModuleExternal: true,
-                      layoutDependency,
-                      layoutId: 'KJk_ORIjP-container',
+                  children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                    className: 'framer-zpabgk-container',
+                    'data-framer-name': 'Fit',
+                    isAuthoredByUser: true,
+                    isModuleExternal: true,
+                    layoutDependency,
+                    layoutId: 'KJk_ORIjP-container',
+                    name: 'Fit',
+                    nodeId: 'KJk_ORIjP',
+                    rendersWithMotion: true,
+                    scopeId: 'wLxpqDnwB',
+                    children: /* @__PURE__ */ _jsx(RollingText, {
+                      color: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                      font: {
+                        fontFamily: '"Raveo Variable Variable", sans-serif',
+                        fontSize: '14px',
+                        fontStyle: 'normal',
+                        fontWeight: 1e3,
+                        letterSpacing: '0px',
+                        lineHeight: '1.7em',
+                      },
+                      height: '100%',
+                      id: 'KJk_ORIjP',
+                      layoutId: 'KJk_ORIjP',
                       name: 'Fit',
-                      nodeId: 'KJk_ORIjP',
-                      rendersWithMotion: true,
-                      scopeId: 'wLxpqDnwB',
-                      children: /* @__PURE__ */ _jsx(RollingText, {
-                        color:
-                          'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
-                        font: {
-                          fontFamily: '"Raveo Variable Variable", sans-serif',
-                          fontSize: '14px',
-                          fontStyle: 'normal',
-                          fontWeight: 1e3,
-                          letterSpacing: '0px',
-                          lineHeight: '1.7em',
-                        },
+                      padding: '0px 18px 0px 18px',
+                      reverse: false,
+                      stagger: 25,
+                      state: qCxNvGxTB,
+                      style: {
                         height: '100%',
-                        id: 'KJk_ORIjP',
-                        layoutId: 'KJk_ORIjP',
-                        name: 'Fit',
-                        padding: '0px 18px 0px 18px',
-                        reverse: false,
-                        stagger: 25,
-                        state: qCxNvGxTB,
-                        style: {
-                          height: '100%',
-                        },
-                        tag: 'p',
-                        text: SMZpJms0Q,
-                        textTransform: 'none',
-                        transition: {
-                          bounce: 0,
-                          delay: 0,
-                          duration: 0.4,
-                          type: 'spring',
-                        },
-                        variable: {
-                          optical: 14,
-                          weight: 550,
-                        },
-                        width: '100%',
-                        ...addPropertyOverrides(
-                          {
-                            'fSd_0l8pb-hover': {
-                              state: 'Roll',
-                            },
-                            'IAsy97Er5-hover': {
-                              state: 'Roll',
-                            },
-                            'ks076Zojt-hover': {
-                              state: 'Roll',
-                            },
-                            'pdooW3wnZ-hover': {
-                              state: 'Roll',
-                            },
-                            'rwbKBWJRY-hover': {
-                              state: 'Roll',
-                            },
-                            'svyJsdYyH-hover': {
-                              state: 'Roll',
-                            },
-                            'UItccn4nC-hover': {
-                              state: 'Roll',
-                            },
-                            fSd_0l8pb: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.7em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            IAsy97Er5: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.2em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            ks076Zojt: {
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.7em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            pdooW3wnZ: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '28px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '-0.02em',
-                                lineHeight: '1.7em',
-                              },
-                              padding: '0px 28px 0px 28px',
-                            },
-                            rwbKBWJRY: {
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.8em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            UItccn4nC: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                            },
+                      },
+                      tag: 'p',
+                      text: SMZpJms0Q,
+                      textTransform: 'none',
+                      transition: {
+                        bounce: 0,
+                        delay: 0,
+                        duration: 0.4,
+                        type: 'spring',
+                      },
+                      variable: {
+                        optical: 14,
+                        weight: 550,
+                      },
+                      width: '100%',
+                      ...addPropertyOverrides(
+                        {
+                          'fSd_0l8pb-hover': {
+                            state: 'Roll',
                           },
-                          baseVariant,
-                          gestureVariant,
-                        ),
-                      }),
-                    },
-                  ),
+                          'IAsy97Er5-hover': {
+                            state: 'Roll',
+                          },
+                          'ks076Zojt-hover': {
+                            state: 'Roll',
+                          },
+                          'pdooW3wnZ-hover': {
+                            state: 'Roll',
+                          },
+                          'rwbKBWJRY-hover': {
+                            state: 'Roll',
+                          },
+                          'svyJsdYyH-hover': {
+                            state: 'Roll',
+                          },
+                          'UItccn4nC-hover': {
+                            state: 'Roll',
+                          },
+                          fSd_0l8pb: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.7em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          IAsy97Er5: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.2em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          ks076Zojt: {
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.7em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          pdooW3wnZ: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '28px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '-0.02em',
+                              lineHeight: '1.7em',
+                            },
+                            padding: '0px 28px 0px 28px',
+                          },
+                          rwbKBWJRY: {
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.8em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          UItccn4nC: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          },
+                        },
+                        baseVariant,
+                        gestureVariant,
+                      ),
+                    }),
+                  }),
                 }),
               D9dBYabSn &&
                 /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                  children: /* @__PURE__ */ _jsx(
-                    SmartComponentScopedContainer,
-                    {
-                      className: 'framer-m5wg9d-container',
-                      'data-framer-name': 'Fill',
-                      isAuthoredByUser: true,
-                      isModuleExternal: true,
-                      layoutDependency,
-                      layoutId: 'wDswxR602-container',
+                  children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                    className: 'framer-m5wg9d-container',
+                    'data-framer-name': 'Fill',
+                    isAuthoredByUser: true,
+                    isModuleExternal: true,
+                    layoutDependency,
+                    layoutId: 'wDswxR602-container',
+                    name: 'Fill',
+                    nodeId: 'wDswxR602',
+                    rendersWithMotion: true,
+                    scopeId: 'wLxpqDnwB',
+                    children: /* @__PURE__ */ _jsx(RollingText, {
+                      color: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                      font: {
+                        fontFamily: '"Raveo Variable Variable", sans-serif',
+                        fontSize: '14px',
+                        fontStyle: 'normal',
+                        fontWeight: 1e3,
+                        letterSpacing: '0px',
+                        lineHeight: '1.7em',
+                      },
+                      height: '100%',
+                      id: 'wDswxR602',
+                      layoutId: 'wDswxR602',
                       name: 'Fill',
-                      nodeId: 'wDswxR602',
-                      rendersWithMotion: true,
-                      scopeId: 'wLxpqDnwB',
-                      children: /* @__PURE__ */ _jsx(RollingText, {
-                        color:
-                          'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
-                        font: {
-                          fontFamily: '"Raveo Variable Variable", sans-serif',
-                          fontSize: '14px',
-                          fontStyle: 'normal',
-                          fontWeight: 1e3,
-                          letterSpacing: '0px',
-                          lineHeight: '1.7em',
-                        },
+                      padding: '0px 18px 0px 18px',
+                      reverse: false,
+                      stagger: 25,
+                      state: qCxNvGxTB,
+                      style: {
                         height: '100%',
-                        id: 'wDswxR602',
-                        layoutId: 'wDswxR602',
-                        name: 'Fill',
-                        padding: '0px 18px 0px 18px',
-                        reverse: false,
-                        stagger: 25,
-                        state: qCxNvGxTB,
-                        style: {
-                          height: '100%',
-                          width: '100%',
-                        },
-                        tag: 'p',
-                        text: SMZpJms0Q,
-                        textTransform: 'none',
-                        transition: {
-                          bounce: 0,
-                          delay: 0,
-                          duration: 0.4,
-                          type: 'spring',
-                        },
-                        variable: {
-                          optical: 14,
-                          weight: 550,
-                        },
                         width: '100%',
-                        ...addPropertyOverrides(
-                          {
-                            'fSd_0l8pb-hover': {
-                              state: 'Roll',
-                            },
-                            'IAsy97Er5-hover': {
-                              state: 'Roll',
-                            },
-                            'ks076Zojt-hover': {
-                              state: 'Roll',
-                            },
-                            'pdooW3wnZ-hover': {
-                              state: 'Roll',
-                            },
-                            'rwbKBWJRY-hover': {
-                              state: 'Roll',
-                            },
-                            'svyJsdYyH-hover': {
-                              state: 'Roll',
-                            },
-                            'UItccn4nC-hover': {
-                              state: 'Roll',
-                            },
-                            fSd_0l8pb: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.7em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            IAsy97Er5: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.2em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            ks076Zojt: {
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.7em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            pdooW3wnZ: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '28px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '-0.02em',
-                                lineHeight: '1.7em',
-                              },
-                              padding: '0px 28px 0px 28px',
-                            },
-                            rwbKBWJRY: {
-                              font: {
-                                fontFamily:
-                                  '"Raveo Variable Variable", sans-serif',
-                                fontSize: '12px',
-                                fontStyle: 'normal',
-                                fontWeight: 1e3,
-                                letterSpacing: '0px',
-                                lineHeight: '1.8em',
-                              },
-                              padding: '0px 12px 0px 12px',
-                            },
-                            UItccn4nC: {
-                              color:
-                                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                            },
+                      },
+                      tag: 'p',
+                      text: SMZpJms0Q,
+                      textTransform: 'none',
+                      transition: {
+                        bounce: 0,
+                        delay: 0,
+                        duration: 0.4,
+                        type: 'spring',
+                      },
+                      variable: {
+                        optical: 14,
+                        weight: 550,
+                      },
+                      width: '100%',
+                      ...addPropertyOverrides(
+                        {
+                          'fSd_0l8pb-hover': {
+                            state: 'Roll',
                           },
-                          baseVariant,
-                          gestureVariant,
-                        ),
-                      }),
-                    },
-                  ),
+                          'IAsy97Er5-hover': {
+                            state: 'Roll',
+                          },
+                          'ks076Zojt-hover': {
+                            state: 'Roll',
+                          },
+                          'pdooW3wnZ-hover': {
+                            state: 'Roll',
+                          },
+                          'rwbKBWJRY-hover': {
+                            state: 'Roll',
+                          },
+                          'svyJsdYyH-hover': {
+                            state: 'Roll',
+                          },
+                          'UItccn4nC-hover': {
+                            state: 'Roll',
+                          },
+                          fSd_0l8pb: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.7em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          IAsy97Er5: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.2em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          ks076Zojt: {
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.7em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          pdooW3wnZ: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '28px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '-0.02em',
+                              lineHeight: '1.7em',
+                            },
+                            padding: '0px 28px 0px 28px',
+                          },
+                          rwbKBWJRY: {
+                            font: {
+                              fontFamily: '"Raveo Variable Variable", sans-serif',
+                              fontSize: '12px',
+                              fontStyle: 'normal',
+                              fontWeight: 1e3,
+                              letterSpacing: '0px',
+                              lineHeight: '1.8em',
+                            },
+                            padding: '0px 12px 0px 12px',
+                          },
+                          UItccn4nC: {
+                            color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          },
+                        },
+                        baseVariant,
+                        gestureVariant,
+                      ),
+                    }),
+                  }),
                 }),
               isDisplayed() &&
                 /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                  children: /* @__PURE__ */ _jsx(
-                    SmartComponentScopedContainer,
-                    {
-                      className: 'framer-1s7vqp7-container',
-                      isAuthoredByUser: true,
-                      isModuleExternal: true,
-                      layoutDependency,
-                      layoutId: 'mPPkWa11v-container',
-                      nodeId: 'mPPkWa11v',
-                      rendersWithMotion: true,
-                      scopeId: 'wLxpqDnwB',
-                      style: { opacity: 0 },
-                      variants: {
-                        'ks076Zojt-hover': {
-                          opacity: 1,
-                        },
-                        'rwbKBWJRY-hover': {
-                          opacity: 1,
-                        },
-                        'svyJsdYyH-hover': {
-                          opacity: 1,
-                        },
+                  children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                    className: 'framer-1s7vqp7-container',
+                    isAuthoredByUser: true,
+                    isModuleExternal: true,
+                    layoutDependency,
+                    layoutId: 'mPPkWa11v-container',
+                    nodeId: 'mPPkWa11v',
+                    rendersWithMotion: true,
+                    scopeId: 'wLxpqDnwB',
+                    style: { opacity: 0 },
+                    variants: {
+                      'ks076Zojt-hover': {
+                        opacity: 1,
                       },
-                      children: /* @__PURE__ */ _jsx(DashedBorderFrame, {
-                        animation: {
-                          animated: false,
-                          direction: 'clockwise',
-                          speed: 2,
-                        },
-                        borderColor:
-                          'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))',
-                        borderRadius: 20,
-                        borderWidth: 1,
-                        bottom: true,
-                        dashLength: 8,
-                        gapLength: 6,
+                      'rwbKBWJRY-hover': {
+                        opacity: 1,
+                      },
+                      'svyJsdYyH-hover': {
+                        opacity: 1,
+                      },
+                    },
+                    children: /* @__PURE__ */ _jsx(DashedBorderFrame, {
+                      animation: {
+                        animated: false,
+                        direction: 'clockwise',
+                        speed: 2,
+                      },
+                      borderColor: 'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))',
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      bottom: true,
+                      dashLength: 8,
+                      gapLength: 6,
+                      height: '100%',
+                      id: 'mPPkWa11v',
+                      layoutId: 'mPPkWa11v',
+                      left: true,
+                      right: true,
+                      style: {
                         height: '100%',
-                        id: 'mPPkWa11v',
-                        layoutId: 'mPPkWa11v',
-                        left: true,
-                        right: true,
-                        style: {
-                          height: '100%',
-                          width: '100%',
-                        },
-                        top: true,
                         width: '100%',
-                        ...addPropertyOverrides(
-                          {
-                            'ks076Zojt-hover': {
-                              animation: {
-                                animated: true,
-                                direction: 'clockwise',
-                                speed: 2,
-                              },
-                            },
-                            'rwbKBWJRY-hover': {
-                              animation: {
-                                animated: true,
-                                direction: 'clockwise',
-                                speed: 2,
-                              },
-                            },
-                            'svyJsdYyH-hover': {
-                              animation: {
-                                animated: true,
-                                direction: 'clockwise',
-                                speed: 2,
-                              },
-                            },
-                            ks076Zojt: {
-                              borderRadius: 15,
-                            },
-                            rwbKBWJRY: {
-                              borderRadius: 6,
-                              dashLength: 6,
-                              gapLength: 4,
+                      },
+                      top: true,
+                      width: '100%',
+                      ...addPropertyOverrides(
+                        {
+                          'ks076Zojt-hover': {
+                            animation: {
+                              animated: true,
+                              direction: 'clockwise',
+                              speed: 2,
                             },
                           },
-                          baseVariant,
-                          gestureVariant,
-                        ),
-                      }),
-                    },
-                  ),
+                          'rwbKBWJRY-hover': {
+                            animation: {
+                              animated: true,
+                              direction: 'clockwise',
+                              speed: 2,
+                            },
+                          },
+                          'svyJsdYyH-hover': {
+                            animation: {
+                              animated: true,
+                              direction: 'clockwise',
+                              speed: 2,
+                            },
+                          },
+                          ks076Zojt: {
+                            borderRadius: 15,
+                          },
+                          rwbKBWJRY: {
+                            borderRadius: 6,
+                            dashLength: 6,
+                            gapLength: 4,
+                          },
+                        },
+                        baseVariant,
+                        gestureVariant,
+                      ),
+                    }),
+                  }),
                 }),
             ],
           }),
@@ -737,15 +657,7 @@ FramerwLxpqDnwB.displayName = 'Button'
 FramerwLxpqDnwB.defaultProps = { height: 40, width: 111 }
 addPropertyControls(FramerwLxpqDnwB, {
   variant: {
-    options: [
-      'svyJsdYyH',
-      'UItccn4nC',
-      'rwbKBWJRY',
-      'IAsy97Er5',
-      'pdooW3wnZ',
-      'fSd_0l8pb',
-      'ks076Zojt',
-    ],
+    options: ['svyJsdYyH', 'UItccn4nC', 'rwbKBWJRY', 'IAsy97Er5', 'pdooW3wnZ', 'fSd_0l8pb', 'ks076Zojt'],
     optionTitles: [
       'Secondary',
       'Primary',
@@ -774,8 +686,7 @@ addPropertyControls(FramerwLxpqDnwB, {
   qCxNvGxTB: RollingTextControls?.['state'] && {
     ...RollingTextControls['state'],
     defaultValue: 'Default',
-    description:
-      'Used for triggering rolling of text when used within another component.',
+    description: 'Used for triggering rolling of text when used within another component.',
     hidden: void 0,
     title: 'State',
   },

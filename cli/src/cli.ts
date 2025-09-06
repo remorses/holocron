@@ -110,24 +110,18 @@ async function findProjectFiles(workingDir: string = process.cwd()) {
 
   try {
     // Find files using globby
-    const filePaths = await globby(
-      ['**/*.{md,mdx}', 'meta.json', 'styles.css'],
-      {
-        ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
-        gitignore: true,
-        absolute: true,
-      },
-    )
+    const filePaths = await globby(['**/*.{md,mdx}', 'meta.json', 'styles.css'], {
+      ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
+      gitignore: true,
+      absolute: true,
+    })
 
     // Find media files separately
-    const mediaFilePaths = await globby(
-      [`**/*.{${MEDIA_EXTENSIONS.join(',')}}`],
-      {
-        ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
-        gitignore: true,
-        absolute: true,
-      },
-    )
+    const mediaFilePaths = await globby([`**/*.{${MEDIA_EXTENSIONS.join(',')}}`], {
+      ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
+      gitignore: true,
+      absolute: true,
+    })
 
     // Read file contents for text files
     const files = await Promise.all(
@@ -186,11 +180,7 @@ async function uploadMediaFiles({
   })
 
   if (error || !data?.success) {
-    console.error(
-      pc.red(
-        'Failed to get upload URLs: ' + (error?.message || 'Unknown error'),
-      ),
-    )
+    console.error(pc.red('Failed to get upload URLs: ' + (error?.message || 'Unknown error')))
     return []
   }
 
@@ -215,11 +205,7 @@ async function uploadMediaFiles({
       })
 
       if (!response.ok) {
-        console.error(
-          pc.red(
-            `Failed to upload ${path.basename(filePath)}: ${response.statusText}`,
-          ),
-        )
+        console.error(pc.red(`Failed to upload ${path.basename(filePath)}: ${response.statusText}`))
         return null
       }
 
@@ -237,9 +223,7 @@ async function uploadMediaFiles({
   const uploadResults = await Promise.all(uploadPromises)
   const successfulUploads = uploadResults.filter(Boolean)
 
-  console.log(
-    pc.green(`Successfully uploaded ${successfulUploads.length} media files`),
-  )
+  console.log(pc.green(`Successfully uploaded ${successfulUploads.length} media files`))
   return successfulUploads
 }
 
@@ -262,9 +246,7 @@ async function determineTemplateDownload({
 
   if (markdownFileCount === 0) {
     if (!isInteractive) {
-      console.error(
-        'Error: No markdown files found in non-interactive environment',
-      )
+      console.error('Error: No markdown files found in non-interactive environment')
       console.error('Use --from-template to download starter template files')
       console.error('Usage: holocron init --from-template')
       process.exit(1)
@@ -273,15 +255,12 @@ async function determineTemplateDownload({
     const response = await prompts({
       type: 'confirm',
       name: 'downloadTemplate',
-      message:
-        'No markdown files found. Do you want to download the starter template files in the current directory?',
+      message: 'No markdown files found. Do you want to download the starter template files in the current directory?',
       initial: true,
     })
 
     if (!response.downloadTemplate) {
-      console.log(
-        'Cannot initialize a holocron project without markdown files.',
-      )
+      console.log('Cannot initialize a holocron project without markdown files.')
       process.exit(1)
     }
 
@@ -290,12 +269,8 @@ async function determineTemplateDownload({
 
   if (markdownFileCount < 1) {
     if (!isInteractive) {
-      console.error(
-        `Error: Found ${markdownFileCount} markdown file(s), but at least 1 is required`,
-      )
-      console.error(
-        'Use --from-template to download starter template files, or add more markdown files',
-      )
+      console.error(`Error: Found ${markdownFileCount} markdown file(s), but at least 1 is required`)
+      console.error('Use --from-template to download starter template files, or add more markdown files')
       console.error('Usage: holocron init --from-template')
       process.exit(1)
     }
@@ -368,10 +343,7 @@ cli
       const docsJsonPath = path.resolve(DOCS_JSON_BASENAME)
       let existingDocsJson = undefined as DocsJsonType | undefined
       try {
-        const existingContent = await fs.promises.readFile(
-          docsJsonPath,
-          'utf-8',
-        )
+        const existingContent = await fs.promises.readFile(docsJsonPath, 'utf-8')
         existingDocsJson = JSONC.parse(existingContent)
       } catch (error) {
         // File doesn't exist or invalid JSON, continue with new site creation
@@ -380,9 +352,7 @@ cli
       const config = getUserConfig()
 
       if (!config || !config.apiKey || !config.orgs?.length) {
-        console.log(
-          pc.red('\nYou need to be logged in to initialize a project.'),
-        )
+        console.log(pc.red('\nYou need to be logged in to initialize a project.'))
         console.log(pc.cyan('Please run: holocron login'))
         process.exit(1)
       }
@@ -396,9 +366,7 @@ cli
         if (githubInfo?.name) {
           siteName = githubInfo.name
         } else if (!isTTY) {
-          console.error(
-            'Error: --name is required in non-interactive environments',
-          )
+          console.error('Error: --name is required in non-interactive environments')
           console.error('Usage: holocron init --name "My Site Name"')
           process.exit(1)
         } else {
@@ -453,13 +421,10 @@ cli
       const gitBranch = await getCurrentGitBranch()
 
       // Find files using globby
-      let { filePaths, files, mediaFilePaths, githubFolder } =
-        await findProjectFiles()
+      let { filePaths, files, mediaFilePaths, githubFolder } = await findProjectFiles()
 
       // Check markdown files and handle different scenarios
-      const markdownFiles = filePaths.filter(
-        (file) => file.endsWith('.md') || file.endsWith('.mdx'),
-      )
+      const markdownFiles = filePaths.filter((file) => file.endsWith('.md') || file.endsWith('.mdx'))
 
       const shouldDownloadTemplate = await determineTemplateDownload({
         markdownFileCount: markdownFiles.length,
@@ -473,17 +438,12 @@ cli
         // Download starter template
         const { data, error } = await apiClient.api.getStarterTemplate.get()
         if (error || !data?.success) {
-          console.error(
-            'Failed to download starter template:',
-            error?.message || 'Unknown error',
-          )
+          console.error('Failed to download starter template:', error?.message || 'Unknown error')
           process.exit(1)
         }
 
         // Write starter template files to filesystem
-        console.log(
-          pc.blue(`Writing ${data.files.length} starter template files...`),
-        )
+        console.log(pc.blue(`Writing ${data.files.length} starter template files...`))
         for (const file of data.files) {
           const filePath = file.filePath
           const dirPath = path.dirname(filePath)
@@ -499,9 +459,7 @@ cli
               console.log(pc.gray(`  → Downloading ${filePath}`))
               const response = await fetch((file as any).downloadUrl)
               if (!response.ok) {
-                console.error(
-                  `Failed to download ${filePath}: ${response.statusText}`,
-                )
+                console.error(`Failed to download ${filePath}: ${response.statusText}`)
                 continue
               }
               const buffer = await response.arrayBuffer()
@@ -588,19 +546,13 @@ cli
       })
 
       if (error || !data?.success) {
-        console.error(
-          pc.red(
-            'Failed to create site: ' + (error?.message || 'Unknown error'),
-          ),
-        )
+        console.error(pc.red('Failed to create site: ' + (error?.message || 'Unknown error')))
         process.exit(1)
       }
 
       // Upload media files if any exist
       if (mediaFilePaths.length > 0) {
-        console.log(
-          pc.blue(`\nUploading ${mediaFilePaths.length} media files...`),
-        )
+        console.log(pc.blue(`\nUploading ${mediaFilePaths.length} media files...`))
         await uploadMediaFiles({ mediaFilePaths, siteId: data.siteId })
       }
 
@@ -627,14 +579,8 @@ cli
         }
 
         console.log(errorTable.toString())
-        console.log(
-          pc.red(
-            `\nFound ${errors.length} error(s) in your documentation files.`,
-          ),
-        )
-        console.log(
-          pc.yellow('Fix the issues above and run the command again.\n'),
-        )
+        console.log(pc.red(`\nFound ${errors.length} error(s) in your documentation files.`))
+        console.log(pc.yellow('Fix the issues above and run the command again.\n'))
       }
 
       // Save docs json locally
@@ -642,9 +588,7 @@ cli
 
       // Create success table
       const isUpdate = existingDocsJson?.siteId
-      console.log(
-        pc.green(`\nSite ${isUpdate ? 'updated' : 'created'} successfully!\n`),
-      )
+      console.log(pc.green(`\nSite ${isUpdate ? 'updated' : 'created'} successfully!\n`))
 
       const table = new Table({
         head: ['Property', 'Value'],
@@ -657,10 +601,7 @@ cli
 
       // Extract website URL from docsJson
       const domains = data.docsJson?.domains || []
-      const websiteUrl =
-        domains.length > 0
-          ? `https://${domains[0]}`
-          : 'No domain configured yet'
+      const websiteUrl = domains.length > 0 ? `https://${domains[0]}` : 'No domain configured yet'
 
       table.push(
         ['Site Name', siteName],
@@ -669,10 +610,7 @@ cli
           'Files Uploaded',
           `${filePaths.length} text files${mediaFilePaths.length > 0 ? `, ${mediaFilePaths.length} media files` : ''}`,
         ],
-        [
-          'GitHub',
-          `${data.githubOwner}/${data.githubRepo}/${data.githubFolder}`,
-        ],
+        ['GitHub', `${data.githubOwner}/${data.githubRepo}/${data.githubFolder}`],
         ['Branch', gitBranch || 'main'],
       )
 
@@ -680,12 +618,8 @@ cli
 
       console.log(pc.cyan('\nNext steps:'))
       console.log(pc.gray('   1. ') + pc.cyan('Run: holocron dev'))
-      console.log(
-        pc.gray('   2. ') + pc.cyan('Open your browser to preview changes'),
-      )
-      console.log(
-        pc.gray('   3. ') + pc.cyan('Push to GitHub to deploy automatically\n'),
-      )
+      console.log(pc.gray('   2. ') + pc.cyan('Open your browser to preview changes'))
+      console.log(pc.gray('   3. ') + pc.cyan('Push to GitHub to deploy automatically\n'))
     } catch (error) {
       console.error(pc.red('\nError initializing project:'))
       console.error(pc.red(error))
@@ -700,17 +634,11 @@ cli
     // Check if there's an existing user logged in
     const existingConfig = getUserConfig()
     if (existingConfig?.userEmail) {
-      console.log(
-        pc.yellow(
-          `\nNote: You are currently logged in as ${existingConfig.userEmail}`,
-        ),
-      )
+      console.log(pc.yellow(`\nNote: You are currently logged in as ${existingConfig.userEmail}`))
       console.log(pc.gray('This will replace the existing login.\n'))
     }
 
-    const cliSessionSecret = Array.from({ length: 6 }, () =>
-      randomInt(0, 10),
-    ).join('')
+    const cliSessionSecret = Array.from({ length: 6 }, () => randomInt(0, 10)).join('')
 
     // Display ASCII art for holocron
     console.log('\n')
@@ -726,9 +654,7 @@ cli
         ].join('\n'),
       ),
     )
-    console.log(
-      pc.gray('\n                      Documentation that just works'),
-    )
+    console.log(pc.gray('\n                      Documentation that just works'))
     console.log('\n' + pc.gray('═'.repeat(70)))
     console.log(pc.bold('                             CLI LOGIN'))
     console.log(pc.gray('═'.repeat(70)))
@@ -740,20 +666,13 @@ cli
     const contentWidth = formattedCode.length + padding * 2
 
     console.log(`\n    ╔${'═'.repeat(contentWidth)}╗`)
-    console.log(
-      `    ║${' '.repeat(padding)}${formattedCode}${' '.repeat(padding)}║`,
-    )
+    console.log(`    ║${' '.repeat(padding)}${formattedCode}${' '.repeat(padding)}║`)
     console.log(`    ╚${'═'.repeat(contentWidth)}╝`)
-    console.log(
-      pc.yellow('\nMake sure this code matches the one shown in your browser.'),
-    )
+    console.log(pc.yellow('\nMake sure this code matches the one shown in your browser.'))
     console.log(pc.gray('═'.repeat(50)))
 
     const loginUrl = new URL(`${url}/login`)
-    loginUrl.searchParams.set(
-      'callbackUrl',
-      `/after-cli-login?cliSessionSecret=${cliSessionSecret}`,
-    )
+    loginUrl.searchParams.set('callbackUrl', `/after-cli-login?cliSessionSecret=${cliSessionSecret}`)
     const fullUrl = loginUrl.toString()
 
     console.log(pc.gray(`\nReady to open: ${fullUrl}`))
@@ -762,9 +681,7 @@ cli
 
     if (!options.noBrowser && !isTTY) {
       console.log('\nNon-interactive environment detected.')
-      console.log(
-        'Please manually open the URL above in your browser to continue.',
-      )
+      console.log('Please manually open the URL above in your browser to continue.')
       shouldOpenBrowser = false
     } else if (!options.noBrowser && isTTY) {
       const response = await prompts({
@@ -775,9 +692,7 @@ cli
       })
 
       if (!response.openBrowser) {
-        console.log(
-          '\nLogin cancelled. You can manually open the URL above to continue.',
-        )
+        console.log('\nLogin cancelled. You can manually open the URL above to continue.')
         process.exit(0)
       }
     }
@@ -806,25 +721,14 @@ cli
             userEmail: data.userEmail,
             orgs: data.orgs || [],
             // Reset websocketIds when logging in as a new user
-            websocketIds:
-              existingConfig?.userId === data.userId
-                ? existingConfig.websocketIds
-                : undefined,
+            websocketIds: existingConfig?.userId === data.userId ? existingConfig.websocketIds : undefined,
           }
 
-          await fs.promises.writeFile(
-            configPath,
-            JSON.stringify(config, null, 2),
-          )
+          await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2))
 
-          if (
-            existingConfig?.userEmail &&
-            existingConfig.userEmail !== data.userEmail
-          ) {
+          if (existingConfig?.userEmail && existingConfig.userEmail !== data.userEmail) {
             console.log(pc.green('\nLogin successful!'))
-            console.log(
-              pc.gray(`Replaced previous login (${existingConfig.userEmail})`),
-            )
+            console.log(pc.gray(`Replaced previous login (${existingConfig.userEmail})`))
           } else {
             console.log(pc.green('\nLogin successful!'))
           }
@@ -865,11 +769,7 @@ cli
     // Calculate githubFolder relative to repo root
     const githubFolder = path.posix.relative(repoRoot, dir) || '.'
 
-    console.log(
-      pc.blue(
-        `Finding files inside ${dir}, relative to ${githubFolder || '.'}`,
-      ),
-    )
+    console.log(pc.blue(`Finding files inside ${dir}, relative to ${githubFolder || '.'}`))
     try {
       // Create watcher for file changes (chokidar v4 doesn't support globs)
       const watcher = chokidar.watch(dir, {
@@ -892,9 +792,7 @@ cli
             isDocsJson(filePath) ||
             filePath.endsWith('styles.css')
 
-          const isMediaFile = MEDIA_EXTENSIONS.some((ext) =>
-            filePath.toLowerCase().endsWith(`.${ext}`),
-          )
+          const isMediaFile = MEDIA_EXTENSIONS.some((ext) => filePath.toLowerCase().endsWith(`.${ext}`))
 
           if (isTextFile || isMediaFile) {
             // console.log(filePath)
@@ -913,17 +811,11 @@ cli
         process.exit(1)
       }
 
-      console.log(
-        pc.gray(
-          `Found ${filePaths.length} file${filePaths.length === 1 ? '' : 's'}`,
-        ),
-      )
+      console.log(pc.gray(`Found ${filePaths.length} file${filePaths.length === 1 ? '' : 's'}`))
       const docsJson = await readTopLevelDocsJson(dir)
       if (!docsJson) {
         console.error(
-          pc.red(
-            `${DOCS_JSON_BASENAME} file not found at the project root. Use holocron init to create a new project`,
-          ),
+          pc.red(`${DOCS_JSON_BASENAME} file not found at the project root. Use holocron init to create a new project`),
         )
         process.exit(1)
       }
@@ -942,11 +834,7 @@ cli
         return 0
       })[0]
       if (!previewDomain) {
-        console.error(
-          pc.red(
-            `This ${DOCS_JSON_BASENAME} has no domains, cannot preview the website`,
-          ),
-        )
+        console.error(pc.red(`This ${DOCS_JSON_BASENAME} has no domains, cannot preview the website`))
         process.exit(1)
       }
       // const githubBranch = getCurrentGitBranch()
@@ -974,8 +862,7 @@ cli
       }
 
       const previewUrl = new URL(
-        previewDomain.includes('.localhost:') ||
-          previewDomain.endsWith('.localhost')
+        previewDomain.includes('.localhost:') || previewDomain.endsWith('.localhost')
           ? `http://${previewDomain}:7777`
           : `https://${previewDomain}`,
       )
@@ -989,19 +876,12 @@ cli
             const fullPath = path.resolve(dir, filePath)
 
             // Check if it's a media file
-            const isMediaFile = MEDIA_EXTENSIONS.some((ext) =>
-              filePath.toLowerCase().endsWith(`.${ext}`),
-            )
+            const isMediaFile = MEDIA_EXTENSIONS.some((ext) => filePath.toLowerCase().endsWith(`.${ext}`))
 
             // For media files, use empty content (they're handled separately)
-            const content = isMediaFile
-              ? ''
-              : await fs.promises.readFile(fullPath, 'utf-8')
+            const content = isMediaFile ? '' : await fs.promises.readFile(fullPath, 'utf-8')
 
-            const githubPath = path.posix.join(
-              githubFolder,
-              path.posix.relative(dir, filePath.replace(/\\/g, '/')),
-            )
+            const githubPath = path.posix.join(githubFolder, path.posix.relative(dir, filePath.replace(/\\/g, '/')))
             return [
               githubPath,
               {
@@ -1024,21 +904,9 @@ cli
         const data = safeParseJson(string)
         // send the full state only on first message from the browser
         if (data?.type !== 'ready') return
-        console.log(
-          pc.green(
-            `Browser connected, showing a preview of your local changes`,
-          ),
-        )
-        console.log(
-          pc.gray(
-            `To deploy your changes to the production website simply push the changes on GitHub`,
-          ),
-        )
-        console.log(
-          pc.gray(
-            `Holocron will detect the updates and deploy a new version of the site`,
-          ),
-        )
+        console.log(pc.green(`Browser connected, showing a preview of your local changes`))
+        console.log(pc.gray(`To deploy your changes to the production website simply push the changes on GitHub`))
+        console.log(pc.gray(`Holocron will detect the updates and deploy a new version of the site`))
 
         // Send initial files state after browser is connected
         for (const [key, value] of Object.entries(filesInDraft)) {
@@ -1052,25 +920,15 @@ cli
       })
 
       // Watch for file changes and additions
-      const handleFileUpdate = async (
-        filePath: string,
-        revalidate: boolean,
-      ) => {
+      const handleFileUpdate = async (filePath: string, revalidate: boolean) => {
         const fullPath = path.resolve(dir, filePath)
 
         // Check if it's a media file
-        const isMediaFile = MEDIA_EXTENSIONS.some((ext) =>
-          filePath.toLowerCase().endsWith(`.${ext}`),
-        )
+        const isMediaFile = MEDIA_EXTENSIONS.some((ext) => filePath.toLowerCase().endsWith(`.${ext}`))
 
         // For media files, use empty content (they're handled separately)
-        const content = isMediaFile
-          ? ''
-          : await fs.promises.readFile(fullPath, 'utf-8')
-        const githubPath = path.posix.join(
-          githubFolder,
-          path.posix.relative(dir, filePath.replace(/\\/g, '/')),
-        )
+        const content = isMediaFile ? '' : await fs.promises.readFile(fullPath, 'utf-8')
+        const githubPath = path.posix.join(githubFolder, path.posix.relative(dir, filePath.replace(/\\/g, '/')))
 
         // Update the local filesInDraft
         filesInDraft[githubPath] = {
@@ -1093,10 +951,7 @@ cli
       watcher.on('change', (x) => handleFileUpdate(x, false))
 
       watcher.on('unlink', (filePath) => {
-        const githubPath = path.posix.join(
-          githubFolder,
-          path.posix.relative(dir, filePath.replace(/\\/g, '/')),
-        )
+        const githubPath = path.posix.join(githubFolder, path.posix.relative(dir, filePath.replace(/\\/g, '/')))
         // Handle file deletion
         if (filesInDraft[githubPath]) {
           delete filesInDraft[githubPath]
@@ -1127,10 +982,7 @@ cli
 
 cli
   .command('sync', 'Sync current branch with GitHub')
-  .option(
-    '--force',
-    'Force sync even with uncommitted changes or unpushed commits',
-  )
+  .option('--force', 'Force sync even with uncommitted changes or unpushed commits')
   .action(async (options) => {
     try {
       const config = getUserConfig()
@@ -1145,11 +997,7 @@ cli
       const gitBranch = await getCurrentGitBranch()
       if (!gitBranch) {
         console.error(pc.red('Error: Cannot determine current git branch'))
-        console.error(
-          pc.yellow(
-            'Make sure you are in a git repository with a valid branch',
-          ),
-        )
+        console.error(pc.yellow('Make sure you are in a git repository with a valid branch'))
         process.exit(1)
       }
 
@@ -1163,70 +1011,43 @@ cli
 
       if (!options.force && gitStatus.hasUncommittedChanges) {
         console.error(pc.red('Error: You have uncommitted changes'))
-        console.error(
-          pc.yellow(
-            'The sync command only syncs files that are already pushed to GitHub',
-          ),
-        )
-        console.error(
-          pc.yellow(
-            'Please commit and push your changes first before running sync',
-          ),
-        )
+        console.error(pc.yellow('The sync command only syncs files that are already pushed to GitHub'))
+        console.error(pc.yellow('Please commit and push your changes first before running sync'))
         console.error(pc.yellow('Or use --force to sync anyway'))
         process.exit(1)
       }
 
       if (!options.force && gitStatus.hasUnpushedCommits) {
         console.error(pc.red('Error: You have unpushed commits'))
-        console.error(
-          pc.yellow(
-            'The sync command only syncs files that are already pushed to GitHub',
-          ),
-        )
-        console.error(
-          pc.yellow('Please push your commits first before running sync'),
-        )
+        console.error(pc.yellow('The sync command only syncs files that are already pushed to GitHub'))
+        console.error(pc.yellow('Please push your commits first before running sync'))
         console.error(pc.yellow('Or use --force to sync anyway'))
         process.exit(1)
       }
 
-      if (
-        options.force &&
-        (gitStatus.hasUncommittedChanges || gitStatus.hasUnpushedCommits)
-      ) {
+      if (options.force && (gitStatus.hasUncommittedChanges || gitStatus.hasUnpushedCommits)) {
         console.log(pc.yellow('Warning: Force syncing with local changes'))
       }
 
       // Get GitHub info to validate this is a GitHub repo
       const githubInfo = getGitHubInfo()
       if (!githubInfo) {
-        console.error(
-          pc.red('Error: Cannot determine GitHub repository information'),
-        )
-        console.error(
-          pc.yellow(
-            'Make sure you are in a GitHub repository with a valid remote origin',
-          ),
-        )
+        console.error(pc.red('Error: Cannot determine GitHub repository information'))
+        console.error(pc.yellow('Make sure you are in a GitHub repository with a valid remote origin'))
         process.exit(1)
       }
 
       // Read docs json to get siteId
       const docsJson = await readTopLevelDocsJson(process.cwd())
       if (!docsJson?.siteId) {
-        console.error(
-          pc.red(`Error: ${DOCS_JSON_BASENAME} not found or missing siteId`),
-        )
+        console.error(pc.red(`Error: ${DOCS_JSON_BASENAME} not found or missing siteId`))
         console.error(pc.cyan('Run "holocron init" to initialize this project'))
         process.exit(1)
       }
 
       const siteId = docsJson.siteId
 
-      console.log(
-        pc.blue(`Syncing branch "${gitBranch}" for site ${siteId}...`),
-      )
+      console.log(pc.blue(`Syncing branch "${gitBranch}" for site ${siteId}...`))
 
       // Call the sync API
       const { data, error } = await apiClient.api.githubSync.post({
@@ -1235,9 +1056,7 @@ cli
       })
 
       if (error) {
-        console.error(
-          pc.red('Sync failed: ' + (error.message || 'Unknown error')),
-        )
+        console.error(pc.red('Sync failed: ' + (error.message || 'Unknown error')))
         process.exit(1)
       }
 
@@ -1272,9 +1091,7 @@ cli
       // Read docs json to get siteId
       const docsJson = await readTopLevelDocsJson(process.cwd())
       if (!docsJson?.siteId) {
-        console.error(
-          pc.red(`Error: ${DOCS_JSON_BASENAME} not found or missing siteId`),
-        )
+        console.error(pc.red(`Error: ${DOCS_JSON_BASENAME} not found or missing siteId`))
         console.error(pc.cyan('Run "holocron init" to initialize this project'))
         process.exit(1)
       }
@@ -1285,11 +1102,7 @@ cli
       // Confirmation prompt unless --confirm flag is used
       if (!options.confirm) {
         if (!isTTY) {
-          console.error(
-            pc.red(
-              'Error: --confirm is required in non-interactive environments',
-            ),
-          )
+          console.error(pc.red('Error: --confirm is required in non-interactive environments'))
           console.error(pc.cyan('Usage: holocron delete --confirm'))
           process.exit(1)
         }
@@ -1315,9 +1128,7 @@ cli
       })
 
       if (error) {
-        console.error(
-          pc.red('Delete failed: ' + (error.message || 'Unknown error')),
-        )
+        console.error(pc.red('Delete failed: ' + (error.message || 'Unknown error')))
         process.exit(1)
       }
 
@@ -1351,9 +1162,7 @@ cli.command('logout', 'Delete user token and config').action(async () => {
       console.log(pc.yellow('Already logged out.'))
     }
   } catch (error) {
-    console.error(
-      pc.red('Error during logout: ' + ((error as Error).message || error)),
-    )
+    console.error(pc.red('Error during logout: ' + ((error as Error).message || error)))
     process.exit(1)
   }
 })

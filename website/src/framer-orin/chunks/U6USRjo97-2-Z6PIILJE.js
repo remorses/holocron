@@ -48,11 +48,7 @@ import { ComponentPresetsConsumer as r2 } from 'unframer'
 import * as t2 from 'react'
 
 // /:https://framerusercontent.com/modules/pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import { motion } from 'unframer'
 
 // /:https://framerusercontent.com/modules/SWAtenub3goqbKHfvwGg/1dCB1yMDMTFvIuREJ6ud/codesandbox_sandpack_react.js
@@ -73,9 +69,7 @@ import {
 // /:https://framerusercontent.com/modules/aYGJCvSFoantRUzfEvdJ/tG3poD3JG0A2FUJhBjua/codesandbox_nodebox.js
 function _check_private_redeclaration(obj, privateCollection) {
   if (privateCollection.has(obj)) {
-    throw new TypeError(
-      'Cannot initialize the same private elements twice on an object',
-    )
+    throw new TypeError('Cannot initialize the same private elements twice on an object')
   }
 }
 function _class_apply_descriptor_get(receiver, descriptor) {
@@ -96,9 +90,7 @@ function _class_apply_descriptor_set(receiver, descriptor, value) {
 }
 function _class_extract_field_descriptor(receiver, privateMap, action) {
   if (!privateMap.has(receiver)) {
-    throw new TypeError(
-      'attempted to ' + action + ' private field on non-instance',
-    )
+    throw new TypeError('attempted to ' + action + ' private field on non-instance')
   }
   return privateMap.get(receiver)
 }
@@ -155,11 +147,7 @@ var __defNormalProp = (obj, key, value) =>
     : (obj[key] = value)
 var __commonJS = (cb, mod) =>
   function __require() {
-    return (
-      mod ||
-        (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod),
-      mod.exports
-    )
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports
   }
 var __copyProps = (to, from, except, desc) => {
   if ((from && typeof from === 'object') || typeof from === 'function') {
@@ -175,9 +163,7 @@ var __copyProps = (to, from, except, desc) => {
 var __toESM = (mod, isNodeMode, target) => (
   (target = mod != null ? __create(__getProtoOf(mod)) : {}),
   __copyProps(
-    isNodeMode || !mod || !mod.__esModule
-      ? __defProp(target, 'default', { value: mod, enumerable: true })
-      : target,
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, 'default', { value: mod, enumerable: true }) : target,
     mod,
   )
 )
@@ -193,8 +179,7 @@ var __privateGet = (obj, member, getter) => {
   return getter ? getter.call(obj) : member.get(obj)
 }
 var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError('Cannot add the same private member more than once')
+  if (member.has(obj)) throw TypeError('Cannot add the same private member more than once')
   member instanceof WeakSet ? member.add(obj) : member.set(obj, value)
 }
 var __privateSet = (obj, member, value, setter) => {
@@ -207,10 +192,7 @@ var __privateMethod = (obj, member, method) => {
   return method
 }
 var require_pad = __commonJS({
-  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/lib/pad.js'(
-    exports,
-    module,
-  ) {
+  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/lib/pad.js'(exports, module) {
     module.exports = function pad(num, size) {
       var s2 = '000000000' + num
       return s2.substr(s2.length - size)
@@ -218,20 +200,14 @@ var require_pad = __commonJS({
   },
 })
 var require_fingerprint_browser = __commonJS({
-  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/lib/fingerprint.browser.js'(
-    exports,
-    module,
-  ) {
+  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/lib/fingerprint.browser.js'(exports, module) {
     module.exports = function fingerprint() {
       return Math.random().toString(16).slice(2)
     }
   },
 })
 var require_getRandomValue_browser = __commonJS({
-  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/lib/getRandomValue.browser.js'(
-    exports,
-    module,
-  ) {
+  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/lib/getRandomValue.browser.js'(exports, module) {
     var getRandomValue
     var crypto2 =
       (typeof window !== 'undefined' && (window.crypto || window.msCrypto)) ||
@@ -249,10 +225,7 @@ var require_getRandomValue_browser = __commonJS({
   },
 })
 var require_cuid = __commonJS({
-  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/index.js'(
-    exports,
-    module,
-  ) {
+  '../../node_modules/.pnpm/cuid@2.1.8/node_modules/cuid/index.js'(exports, module) {
     var fingerprint = require_fingerprint_browser()
     var pad = require_pad()
     var getRandomValue = require_getRandomValue_browser()
@@ -261,10 +234,7 @@ var require_cuid = __commonJS({
     var base = 36
     var discreteValues = Math.pow(base, blockSize)
     function randomBlock() {
-      return pad(
-        ((getRandomValue() * discreteValues) << 0).toString(base),
-        blockSize,
-      )
+      return pad(((getRandomValue() * discreteValues) << 0).toString(base), blockSize)
     }
     function safeCounter() {
       c3 = c3 < discreteValues ? c3 : 0
@@ -324,11 +294,7 @@ var require_createDeferredExecutor = __commonJS({
             executor.state = 'fulfilled'
             return value
           }
-          return resolve(
-            data instanceof Promise
-              ? data
-              : Promise.resolve(data).then(onFulfilled),
-          )
+          return resolve(data instanceof Promise ? data : Promise.resolve(data).then(onFulfilled))
         }
         executor.reject = (reason) => {
           if (executor.state !== 'pending') {
@@ -365,26 +331,16 @@ var require_DeferredPromise = __commonJS({
           return _class_private_field_get(this, _executor).rejectionReason
         }
         then(onFulfilled, onRejected) {
-          return _class_private_method_get(this, _decorate, decorate).call(
-            this,
-            super.then(onFulfilled, onRejected),
-          )
+          return _class_private_method_get(this, _decorate, decorate).call(this, super.then(onFulfilled, onRejected))
         }
         catch(onRejected) {
-          return _class_private_method_get(this, _decorate, decorate).call(
-            this,
-            super.catch(onRejected),
-          )
+          return _class_private_method_get(this, _decorate, decorate).call(this, super.catch(onRejected))
         }
         finally(onfinally) {
-          return _class_private_method_get(this, _decorate, decorate).call(
-            this,
-            super.finally(onfinally),
-          )
+          return _class_private_method_get(this, _decorate, decorate).call(this, super.finally(onfinally))
         }
         constructor(executor = null) {
-          const deferredExecutor = (0,
-          createDeferredExecutor_1.createDeferredExecutor)()
+          const deferredExecutor = (0, createDeferredExecutor_1.createDeferredExecutor)()
           super((originalResolve, originalReject) => {
             deferredExecutor(originalResolve, originalReject)
             executor === null || executor === void 0
@@ -424,12 +380,7 @@ var require_build = __commonJS({
         ? function (o2, m2, k2, k22) {
             if (k22 === void 0) k22 = k2
             var desc = Object.getOwnPropertyDescriptor(m2, k2)
-            if (
-              !desc ||
-              ('get' in desc
-                ? !m2.__esModule
-                : desc.writable || desc.configurable)
-            ) {
+            if (!desc || ('get' in desc ? !m2.__esModule : desc.writable || desc.configurable)) {
               desc = {
                 enumerable: true,
                 get: function () {
@@ -447,11 +398,7 @@ var require_build = __commonJS({
       (exports && exports.__exportStar) ||
       function (m2, exports2) {
         for (var p2 in m2)
-          if (
-            p2 !== 'default' &&
-            !Object.prototype.hasOwnProperty.call(exports2, p2)
-          )
-            __createBinding(exports2, m2, p2)
+          if (p2 !== 'default' && !Object.prototype.hasOwnProperty.call(exports2, p2)) __createBinding(exports2, m2, p2)
       }
     Object.defineProperty(exports, '__esModule', { value: true })
     __exportStar(require_createDeferredExecutor(), exports)
@@ -483,9 +430,7 @@ var require_MemoryLeakError = __commonJS({
   },
 })
 var require_Emitter = __commonJS({
-  '../../node_modules/.pnpm/strict-event-emitter@0.4.3/node_modules/strict-event-emitter/lib/Emitter.js'(
-    exports,
-  ) {
+  '../../node_modules/.pnpm/strict-event-emitter@0.4.3/node_modules/strict-event-emitter/lib/Emitter.js'(exports) {
     'use strict'
     Object.defineProperty(exports, '__esModule', { value: true })
     exports.Emitter = void 0
@@ -516,28 +461,15 @@ var require_Emitter = __commonJS({
         return Array.from(__privateGet(this, _events).keys())
       }
       emit(eventName, ...data) {
-        const listeners = __privateMethod(
-          this,
-          _getListeners,
-          getListeners_fn,
-        ).call(this, eventName)
+        const listeners = __privateMethod(this, _getListeners, getListeners_fn).call(this, eventName)
         listeners.forEach((listener) => {
           listener.apply(this, data)
         })
         return listeners.length > 0
       }
       addListener(eventName, listener) {
-        __privateMethod(this, _internalEmit, internalEmit_fn).call(
-          this,
-          'newListener',
-          eventName,
-          listener,
-        )
-        const nextListeners = __privateMethod(
-          this,
-          _getListeners,
-          getListeners_fn,
-        )
+        __privateMethod(this, _internalEmit, internalEmit_fn).call(this, 'newListener', eventName, listener)
+        const nextListeners = __privateMethod(this, _getListeners, getListeners_fn)
           .call(this, eventName)
           .concat(listener)
         __privateGet(this, _events).set(eventName, nextListeners)
@@ -562,19 +494,11 @@ var require_Emitter = __commonJS({
       once(eventName, listener) {
         return this.addListener(
           eventName,
-          __privateMethod(this, _wrapOnceListener, wrapOnceListener_fn).call(
-            this,
-            eventName,
-            listener,
-          ),
+          __privateMethod(this, _wrapOnceListener, wrapOnceListener_fn).call(this, eventName, listener),
         )
       }
       prependListener(eventName, listener) {
-        const listeners = __privateMethod(
-          this,
-          _getListeners,
-          getListeners_fn,
-        ).call(this, eventName)
+        const listeners = __privateMethod(this, _getListeners, getListeners_fn).call(this, eventName)
         if (listeners.length > 0) {
           const nextListeners = [listener].concat(listeners)
           __privateGet(this, _events).set(eventName, nextListeners)
@@ -586,32 +510,15 @@ var require_Emitter = __commonJS({
       prependOnceListener(eventName, listener) {
         return this.prependListener(
           eventName,
-          __privateMethod(this, _wrapOnceListener, wrapOnceListener_fn).call(
-            this,
-            eventName,
-            listener,
-          ),
+          __privateMethod(this, _wrapOnceListener, wrapOnceListener_fn).call(this, eventName, listener),
         )
       }
       removeListener(eventName, listener) {
-        const listeners = __privateMethod(
-          this,
-          _getListeners,
-          getListeners_fn,
-        ).call(this, eventName)
+        const listeners = __privateMethod(this, _getListeners, getListeners_fn).call(this, eventName)
         if (listeners.length > 0) {
-          __privateMethod(this, _removeListener, removeListener_fn).call(
-            this,
-            listeners,
-            listener,
-          )
+          __privateMethod(this, _removeListener, removeListener_fn).call(this, listeners, listener)
           __privateGet(this, _events).set(eventName, listeners)
-          __privateMethod(this, _internalEmit, internalEmit_fn).call(
-            this,
-            'removeListener',
-            eventName,
-            listener,
-          )
+          __privateMethod(this, _internalEmit, internalEmit_fn).call(this, 'removeListener', eventName, listener)
         }
         return this
       }
@@ -627,18 +534,10 @@ var require_Emitter = __commonJS({
         return this
       }
       listeners(eventName) {
-        return Array.from(
-          __privateMethod(this, _getListeners, getListeners_fn).call(
-            this,
-            eventName,
-          ),
-        )
+        return Array.from(__privateMethod(this, _getListeners, getListeners_fn).call(this, eventName))
       }
       listenerCount(eventName) {
-        return __privateMethod(this, _getListeners, getListeners_fn).call(
-          this,
-          eventName,
-        ).length
+        return __privateMethod(this, _getListeners, getListeners_fn).call(this, eventName).length
       }
       rawListeners(eventName) {
         return this.listeners(eventName)
@@ -689,9 +588,7 @@ var require_Emitter = __commonJS({
   },
 })
 var require_lib = __commonJS({
-  '../../node_modules/.pnpm/strict-event-emitter@0.4.3/node_modules/strict-event-emitter/lib/index.js'(
-    exports,
-  ) {
+  '../../node_modules/.pnpm/strict-event-emitter@0.4.3/node_modules/strict-event-emitter/lib/index.js'(exports) {
     'use strict'
     var __createBinding =
       (exports && exports.__createBinding) ||
@@ -699,12 +596,7 @@ var require_lib = __commonJS({
         ? function (o2, m2, k2, k22) {
             if (k22 === void 0) k22 = k2
             var desc = Object.getOwnPropertyDescriptor(m2, k2)
-            if (
-              !desc ||
-              ('get' in desc
-                ? !m2.__esModule
-                : desc.writable || desc.configurable)
-            ) {
+            if (!desc || ('get' in desc ? !m2.__esModule : desc.writable || desc.configurable)) {
               desc = {
                 enumerable: true,
                 get: function () {
@@ -722,11 +614,7 @@ var require_lib = __commonJS({
       (exports && exports.__exportStar) ||
       function (m2, exports2) {
         for (var p2 in m2)
-          if (
-            p2 !== 'default' &&
-            !Object.prototype.hasOwnProperty.call(exports2, p2)
-          )
-            __createBinding(exports2, m2, p2)
+          if (p2 !== 'default' && !Object.prototype.hasOwnProperty.call(exports2, p2)) __createBinding(exports2, m2, p2)
       }
     Object.defineProperty(exports, '__esModule', { value: true })
     __exportStar(require_Emitter(), exports)
@@ -761,18 +649,15 @@ function format(message, ...positionals) {
     return message
   }
   let positionalIndex = 0
-  let formattedMessage = message.replace(
-    POSITIONALS_EXP,
-    (match, isEscaped, _, flag) => {
-      const positional = positionals[positionalIndex]
-      const value = serializePositional(positional, flag)
-      if (!isEscaped) {
-        positionalIndex++
-        return value
-      }
-      return match
-    },
-  )
+  let formattedMessage = message.replace(POSITIONALS_EXP, (match, isEscaped, _, flag) => {
+    const positional = positionals[positionalIndex]
+    const value = serializePositional(positional, flag)
+    if (!isEscaped) {
+      positionalIndex++
+      return value
+    }
+    return match
+  })
   if (positionalIndex < positionals.length) {
     formattedMessage += ` ${positionals.slice(positionalIndex).join(' ')}`
   }
@@ -836,10 +721,7 @@ function createDebug(scope) {
         return ''
       }
       const cleanMessage = message.replace(/\[.+\]:/, '')
-      console.debug(
-        `${COLOR_SCOPE[scope]}${scope}:${direction()}${DEFAULT}:${cleanMessage}`,
-        ...data,
-      )
+      console.debug(`${COLOR_SCOPE[scope]}${scope}:${direction()}${DEFAULT}:${cleanMessage}`, ...data)
     }
   }
 }
@@ -849,9 +731,7 @@ var MessageSender = class {
     const handshakePromise = new import_deferred_promise.DeferredPromise()
     await this.receiverReadyPromise
     debug('[message-sender]: sending handshake')
-    this.target.postMessage({ type: 'internal/handshake' }, '*', [
-      this.channel.port2,
-    ])
+    this.target.postMessage({ type: 'internal/handshake' }, '*', [this.channel.port2])
     this.on('internal/handshake/done', () => {
       handshakePromise.resolve()
       clearTimeout(rejectionTimeout)
@@ -885,20 +765,12 @@ var MessageSender = class {
       type: event,
       payload: { operationId, payload },
     })
-    debug(
-      '[message-sender]: adding done listener for "%s" (%s)',
-      event,
-      operationId,
-    )
+    debug('[message-sender]: adding done listener for "%s" (%s)', event, operationId)
     const handleOperationDone = (doneEvent) => {
       const { data: data2 } = doneEvent
       if (data2.operationId === operationId) {
         const listenerPayload = data2.listenerPayload || {}
-        debug(
-          '[message-sender]: resolving "%s (%s) promise!',
-          event,
-          operationId,
-        )
+        debug('[message-sender]: resolving "%s (%s) promise!', event, operationId)
         operationPromise.resolve({
           ...listenerPayload,
           operationId: data2.operationId,
@@ -908,25 +780,15 @@ var MessageSender = class {
     const handleOperationFailed = (failEvent) => {
       const { data: data2 } = failEvent
       if (data2.operationId === operationId) {
-        debug(
-          '[message-sender]: rejecting "%s (%s) promise!',
-          event,
-          operationId,
-        )
+        debug('[message-sender]: rejecting "%s (%s) promise!', event, operationId)
         operationPromise.reject(data2.error)
       }
     }
     this.on('internal/operation/done', handleOperationDone)
     this.on('internal/operation/failed', handleOperationFailed)
     return operationPromise.finally(() => {
-      this.emitter.removeEventListener(
-        'internal/operation/done',
-        handleOperationDone,
-      )
-      this.emitter.removeEventListener(
-        'internal/operation/failed',
-        handleOperationFailed,
-      )
+      this.emitter.removeEventListener('internal/operation/done', handleOperationDone)
+      this.emitter.removeEventListener('internal/operation/failed', handleOperationFailed)
     })
   }
   constructor(target) {
@@ -953,14 +815,8 @@ var MessageSender = class {
     this.receiverPort.onmessage = (evt) => {
       const data = evt.data
       if (data.type != null) {
-        debug(
-          '[message-sender]: emitting "%s" event...',
-          data.type,
-          data.payload,
-        )
-        this.emitter.dispatchEvent(
-          new MessageEvent(data.type, { data: data.payload }),
-        )
+        debug('[message-sender]: emitting "%s" event...', data.type, data.payload)
+        this.emitter.dispatchEvent(new MessageEvent(data.type, { data: data.payload }))
       }
     }
   }
@@ -972,13 +828,11 @@ var FileSystemApi = class {
     await this.channel.send('fs/init', { files })
   }
   async readFile(path, encoding) {
-    const response = await this.channel
-      .send('fs/readFile', { path, encoding })
-      .catch((error) => {
-        throw new Error(format('Failed to read file at path "%s"', path), {
-          cause: error,
-        })
+    const response = await this.channel.send('fs/readFile', { path, encoding }).catch((error) => {
+      throw new Error(format('Failed to read file at path "%s"', path), {
+        cause: error,
       })
+    })
     if (!response) {
       throw new Error('File not found')
     }
@@ -993,31 +847,25 @@ var FileSystemApi = class {
     } else if (typeof options === 'string') {
       encoding = options
     }
-    await this.channel
-      .send('fs/writeFile', { path, content, encoding, recursive })
-      .catch((error) => {
-        throw new Error(format('Failed to write file at path "%s"', path), {
-          cause: error,
-        })
+    await this.channel.send('fs/writeFile', { path, content, encoding, recursive }).catch((error) => {
+      throw new Error(format('Failed to write file at path "%s"', path), {
+        cause: error,
       })
+    })
   }
   async readdir(path) {
-    const response = await this.channel
-      .send('fs/readdir', { path })
-      .catch((error) => {
-        throw new Error(format('Failed to read directory at path "%s"', path), {
-          cause: error,
-        })
+    const response = await this.channel.send('fs/readdir', { path }).catch((error) => {
+      throw new Error(format('Failed to read directory at path "%s"', path), {
+        cause: error,
       })
+    })
     if (!response) {
       throw new Error('Directory not found')
     }
     return response.data
   }
   async mkdir(path, options) {
-    const recursive = !!(options === null || options === void 0
-      ? void 0
-      : options.recursive)
+    const recursive = !!(options === null || options === void 0 ? void 0 : options.recursive)
     await this.channel.send('fs/mkdir', { path, recursive }).catch((error) => {
       throw new Error(format('Failed to make directory at path "%s"', path), {
         cause: error,
@@ -1025,13 +873,11 @@ var FileSystemApi = class {
     })
   }
   async stat(path) {
-    const response = await this.channel
-      .send('fs/stat', { path })
-      .catch((error) => {
-        throw new Error(format('Failed to stat file at path "%s"', path), {
-          cause: error,
-        })
+    const response = await this.channel.send('fs/stat', { path }).catch((error) => {
+      throw new Error(format('Failed to stat file at path "%s"', path), {
+        cause: error,
       })
+    })
     if (!response) {
       throw new Error('File not found')
     }
@@ -1039,13 +885,11 @@ var FileSystemApi = class {
   }
   async rm(path, options) {
     const { force, recursive } = options || {}
-    await this.channel
-      .send('fs/rm', { path, force, recursive })
-      .catch((error) => {
-        throw new Error(format('Failed to remove file at path "%s"', path), {
-          cause: error,
-        })
+    await this.channel.send('fs/rm', { path, force, recursive }).catch((error) => {
+      throw new Error(format('Failed to remove file at path "%s"', path), {
+        cause: error,
       })
+    })
   }
   async watch(includes, excludes, listener) {
     const watcherId = (0, import_cuid2.default)()
@@ -1092,19 +936,13 @@ var ShellProcess = class {
     })
   }
   async runCommand(command2, args, options = {}) {
-    invariant(
-      !this.id,
-      'Failed to run "runCommand" on a ShellProcess: there is already a process running.',
-    )
+    invariant(!this.id, 'Failed to run "runCommand" on a ShellProcess: there is already a process running.')
     const shellInfo = await this.channel.send('shell/runCommand', {
       command: command2,
       args,
       options,
     })
-    invariant(
-      shellInfo,
-      'Failed to run "runCommand" on a ShellProcess: was not able to retrieve a running process.',
-    )
+    invariant(shellInfo, 'Failed to run "runCommand" on a ShellProcess: was not able to retrieve a running process.')
     this.id = shellInfo.id
     this.state = 'running'
     return shellInfo
@@ -1128,10 +966,7 @@ var ShellProcess = class {
     }
   }
   async kill() {
-    invariant(
-      this.id,
-      'Failed to run "kill" on a ShellProcess: there is no process running. Did you forget to run it?',
-    )
+    invariant(this.id, 'Failed to run "kill" on a ShellProcess: there is no process running. Did you forget to run it?')
     this.state = 'idle'
     await this.channel.send('shell/exit', { id: this.id }).catch((error) => {
       throw new Error(format('Failed to kill shell with ID "%s"', this.id), {
@@ -1153,9 +988,7 @@ var ShellProcess = class {
     this.stdin = {
       write: (data) => {
         if (!this.id) {
-          throw new Error(
-            'Failed to write to stdin, no process is currently running',
-          )
+          throw new Error('Failed to write to stdin, no process is currently running')
         }
         return this.channel.send('shell/stdin', {
           data,
@@ -1174,19 +1007,17 @@ var PreviewApi = class {
     const rejectTimeout = setTimeout(() => {
       readyPromise.reject()
     }, timeout)
-    const previewInformation = await this.channel
-      .send('preview/get/info', payload)
-      .catch((error) => {
-        readyPromise.reject(
-          new Error(
-            format(
-              'Failed to look up preview information for shell ID "%s" (port: %d)',
-              payload.sourceShellId,
-              payload.port,
-            ),
+    const previewInformation = await this.channel.send('preview/get/info', payload).catch((error) => {
+      readyPromise.reject(
+        new Error(
+          format(
+            'Failed to look up preview information for shell ID "%s" (port: %d)',
+            payload.sourceShellId,
+            payload.port,
           ),
-        )
-      })
+        ),
+      )
+    })
     const foundPreview = previewInformation && predicate(previewInformation)
     if (foundPreview) {
       readyPromise.resolve({
@@ -1209,24 +1040,18 @@ var PreviewApi = class {
     })
   }
   async getByShellId(sourceShellId, timeout) {
-    return this.waitFor(
-      { sourceShellId },
-      (data) => data.sourceShellId === sourceShellId,
-      timeout,
-    ).catch((error) => {
+    return this.waitFor({ sourceShellId }, (data) => data.sourceShellId === sourceShellId, timeout).catch((error) => {
       throw new Error(format('Failed to get shell by ID "%s"', sourceShellId), {
         cause: error,
       })
     })
   }
   async waitForPort(port, timeout) {
-    return this.waitFor({ port }, (data) => data.port === port, timeout).catch(
-      (error) => {
-        throw new Error(format('Failed to await port %d', port), {
-          cause: error,
-        })
-      },
-    )
+    return this.waitFor({ port }, (data) => data.port === port, timeout).catch((error) => {
+      throw new Error(format('Failed to await port %d', port), {
+        cause: error,
+      })
+    })
   }
   constructor(channel) {
     this.channel = channel
@@ -1241,9 +1066,7 @@ var Nodebox = class {
     const connectionPromise = new import_deferred_promise3.DeferredPromise()
     if (!this.url) {
       connectionPromise.reject(
-        new Error(
-          'Nodebox URL is missing. Did you forget to provide it when creating this Nodebox instance?',
-        ),
+        new Error('Nodebox URL is missing. Did you forget to provide it when creating this Nodebox instance?'),
       )
     }
     invariant(
@@ -1346,18 +1169,10 @@ var __esm = (fn, res) =>
   }
 var __commonJS2 = (cb, mod) =>
   function __require() {
-    return (
-      mod ||
-        (0, cb[__getOwnPropNames2(cb)[0]])(
-          (mod = { exports: {} }).exports,
-          mod,
-        ),
-      mod.exports
-    )
+    return mod || (0, cb[__getOwnPropNames2(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports
   }
 var __export = (target, all) => {
-  for (var name in all)
-    __defProp2(target, name, { get: all[name], enumerable: true })
+  for (var name in all) __defProp2(target, name, { get: all[name], enumerable: true })
 }
 var __copyProps2 = (to, from, except, desc) => {
   if ((from && typeof from === 'object') || typeof from === 'function') {
@@ -1377,9 +1192,7 @@ var __toESM2 = (mod, isNodeMode, target) => (
     // file that has been converted to a CommonJS file using a Babel-
     // compatible transform (i.e. "__esModule" has not been set), then set
     // "default" to the CommonJS "module.exports" for node compatibility.
-    isNodeMode || !mod || !mod.__esModule
-      ? __defProp2(target, 'default', { value: mod, enumerable: true })
-      : target,
+    isNodeMode || !mod || !mod.__esModule ? __defProp2(target, 'default', { value: mod, enumerable: true }) : target,
     mod,
   )
 )
@@ -1409,18 +1222,15 @@ function format2(message, ...positionals) {
     return message
   }
   let positionalIndex = 0
-  let formattedMessage = message.replace(
-    POSITIONALS_EXP2,
-    (match, isEscaped, _, flag) => {
-      const positional = positionals[positionalIndex]
-      const value = serializePositional2(positional, flag)
-      if (!isEscaped) {
-        positionalIndex++
-        return value
-      }
-      return match
-    },
-  )
+  let formattedMessage = message.replace(POSITIONALS_EXP2, (match, isEscaped, _, flag) => {
+    const positional = positionals[positionalIndex]
+    const value = serializePositional2(positional, flag)
+    if (!isEscaped) {
+      positionalIndex++
+      return value
+    }
+    return match
+  })
   if (positionalIndex < positionals.length) {
     formattedMessage += ` ${positionals.slice(positionalIndex).join(' ')}`
   }
@@ -1470,15 +1280,12 @@ var init_lib = __esm({
 })
 function __extends(d2, b2) {
   if (typeof b2 !== 'function' && b2 !== null)
-    throw new TypeError(
-      'Class extends value ' + String(b2) + ' is not a constructor or null',
-    )
+    throw new TypeError('Class extends value ' + String(b2) + ' is not a constructor or null')
   extendStatics(d2, b2)
   function __() {
     this.constructor = d2
   }
-  d2.prototype =
-    b2 === null ? Object.create(b2) : ((__.prototype = b2.prototype), new __())
+  d2.prototype = b2 === null ? Object.create(b2) : ((__.prototype = b2.prototype), new __())
 }
 function __awaiter(thisArg, _arguments, P2, generator) {
   function adopt(value) {
@@ -1504,9 +1311,7 @@ function __awaiter(thisArg, _arguments, P2, generator) {
       }
     }
     function step(result) {
-      result.done
-        ? resolve(result.value)
-        : adopt(result.value).then(fulfilled, rejected)
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected)
     }
     step((generator = generator.apply(thisArg, _arguments || [])).next())
   })
@@ -1546,11 +1351,7 @@ function __generator(thisArg, body) {
           ((f2 = 1),
           y2 &&
             (t3 =
-              op[0] & 2
-                ? y2['return']
-                : op[0]
-                  ? y2['throw'] || ((t3 = y2['return']) && t3.call(y2), 0)
-                  : y2.next) &&
+              op[0] & 2 ? y2['return'] : op[0] ? y2['throw'] || ((t3 = y2['return']) && t3.call(y2), 0) : y2.next) &&
             !(t3 = t3.call(y2, op[1])).done)
         )
           return t3
@@ -1573,10 +1374,7 @@ function __generator(thisArg, body) {
             _.trys.pop()
             continue
           default:
-            if (
-              !((t3 = _.trys), (t3 = t3.length > 0 && t3[t3.length - 1])) &&
-              (op[0] === 6 || op[0] === 2)
-            ) {
+            if (!((t3 = _.trys), (t3 = t3.length > 0 && t3[t3.length - 1])) && (op[0] === 6 || op[0] === 2)) {
               _ = 0
               continue
             }
@@ -1661,33 +1459,17 @@ function addPackageJSONIfNeeded(files, dependencies, devDependencies, entry2) {
   }
   if (packageJsonFile) {
     var packageJsonContent = JSON.parse(packageJsonFile.code)
-    nullthrows(
-      !(!dependencies && !packageJsonContent.dependencies),
-      ENTRY_ERROR_MESSAGE,
-    )
+    nullthrows(!(!dependencies && !packageJsonContent.dependencies), ENTRY_ERROR_MESSAGE)
     if (dependencies) {
       packageJsonContent.dependencies = __assign(
-        __assign(
-          {},
-          (_a22 = packageJsonContent.dependencies) !== null && _a22 !== void 0
-            ? _a22
-            : {},
-        ),
+        __assign({}, (_a22 = packageJsonContent.dependencies) !== null && _a22 !== void 0 ? _a22 : {}),
         dependencies !== null && dependencies !== void 0 ? dependencies : {},
       )
     }
     if (devDependencies) {
       packageJsonContent.devDependencies = __assign(
-        __assign(
-          {},
-          (_b22 = packageJsonContent.devDependencies) !== null &&
-            _b22 !== void 0
-            ? _b22
-            : {},
-        ),
-        devDependencies !== null && devDependencies !== void 0
-          ? devDependencies
-          : {},
+        __assign({}, (_b22 = packageJsonContent.devDependencies) !== null && _b22 !== void 0 ? _b22 : {}),
+        devDependencies !== null && devDependencies !== void 0 ? devDependencies : {},
       )
     }
     if (entry2) {
@@ -1717,12 +1499,7 @@ function extractErrorDetails(msg) {
   }
   var errorInCode = getErrorInOriginalCode(relevantStackFrame)
   var errorLocation = getErrorLocation(relevantStackFrame)
-  var errorMessage = formatErrorMessage(
-    relevantStackFrame._originalFileName,
-    msg.message,
-    errorLocation,
-    errorInCode,
-  )
+  var errorMessage = formatErrorMessage(relevantStackFrame._originalFileName, msg.message, errorLocation, errorInCode)
   return {
     message: errorMessage,
     title: msg.title,
@@ -1741,14 +1518,11 @@ function getRelevantStackFrame(frames) {
 }
 function getErrorLocation(errorFrame) {
   return errorFrame
-    ? ' ('
-        .concat(errorFrame._originalLineNumber, ':')
-        .concat(errorFrame._originalColumnNumber, ')')
+    ? ' ('.concat(errorFrame._originalLineNumber, ':').concat(errorFrame._originalColumnNumber, ')')
     : ''
 }
 function getErrorInOriginalCode(errorFrame) {
-  var lastScriptLine =
-    errorFrame._originalScriptCode[errorFrame._originalScriptCode.length - 1]
+  var lastScriptLine = errorFrame._originalScriptCode[errorFrame._originalScriptCode.length - 1]
   var numberOfLineNumberCharacters = lastScriptLine.lineNumber.toString().length
   var leadingCharacterOffset = 2
   var barSeparatorCharacterOffset = 3
@@ -1763,9 +1537,7 @@ function getErrorInOriginalCode(errorFrame) {
       scriptLine.lineNumber.toString().length === numberOfLineNumberCharacters
         ? ''.concat(scriptLine.lineNumber)
         : ' '.concat(scriptLine.lineNumber)
-    var extraLine = scriptLine.highlight
-      ? '\n' + ' '.repeat(extraLineLeadingSpaces) + '^'
-      : ''
+    var extraLine = scriptLine.highlight ? '\n' + ' '.repeat(extraLineLeadingSpaces) + '^' : ''
     return (
       result + // accumulator
       '\n' +
@@ -1779,11 +1551,7 @@ function getErrorInOriginalCode(errorFrame) {
   }, '')
 }
 function formatErrorMessage(filePath, message, location2, errorInCode) {
-  return ''
-    .concat(filePath, ': ')
-    .concat(message)
-    .concat(location2, '\n')
-    .concat(errorInCode)
+  return ''.concat(filePath, ': ').concat(message).concat(location2, '\n').concat(errorInCode)
 }
 var extendStatics
 var __assign
@@ -1803,8 +1571,7 @@ var init_utils_52664384 = __esm({
             d22.__proto__ = b22
           }) ||
         function (d22, b22) {
-          for (var p2 in b22)
-            if (Object.prototype.hasOwnProperty.call(b22, p2)) d22[p2] = b22[p2]
+          for (var p2 in b22) if (Object.prototype.hasOwnProperty.call(b22, p2)) d22[p2] = b22[p2]
         }
       return extendStatics(d2, b2)
     }
@@ -1814,8 +1581,7 @@ var init_utils_52664384 = __esm({
         function __assign22(t3) {
           for (var s2, i3 = 1, n2 = arguments.length; i3 < n2; i3++) {
             s2 = arguments[i3]
-            for (var p2 in s2)
-              if (Object.prototype.hasOwnProperty.call(s2, p2)) t3[p2] = s2[p2]
+            for (var p2 in s2) if (Object.prototype.hasOwnProperty.call(s2, p2)) t3[p2] = s2[p2]
           }
           return t3
         }
@@ -1958,10 +1724,7 @@ var init_base_80a1f760 = __esm({
             this.updateSandbox()
           }
         }
-        SandpackClient2.prototype.updateSandbox = function (
-          _sandboxSetup,
-          _isInitializationCompile,
-        ) {
+        SandpackClient2.prototype.updateSandbox = function (_sandboxSetup, _isInitializationCompile) {
           if (_sandboxSetup === void 0) {
             _sandboxSetup = this.sandboxSetup
           }
@@ -2022,10 +1785,7 @@ function tokenize(input) {
   }
   function parseArgument() {
     var value = ''
-    while (
-      (isArgument(input[current]) || isAlpha(input[current])) &&
-      current < input.length
-    ) {
+    while ((isArgument(input[current]) || isAlpha(input[current])) && current < input.length) {
       value += input[current]
       current++
     }
@@ -2195,10 +1955,7 @@ var init_consoleHook_59e792cb = __esm({
       } catch (e2) {
         throw createError('Could not parse package.json file: ' + e2.message)
       }
-      invariant2(
-        scripts2,
-        'Failed to start. Please provide a `start` or `dev` script on the package.json',
-      )
+      invariant2(scripts2, 'Failed to start. Please provide a `start` or `dev` script on the package.json')
       var _loop_1 = function (index2) {
         if (possibleKeys[index2] in scripts2) {
           var script = possibleKeys[index2]
@@ -2214,10 +1971,7 @@ var init_consoleHook_59e792cb = __esm({
             if (item.type === TokenType.Command && commandNotFoundYet) {
               command_1 = item.value
             }
-            if (
-              item.type === TokenType.Argument ||
-              (!commandNotFoundYet && item.type === TokenType.Command)
-            ) {
+            if (item.type === TokenType.Argument || (!commandNotFoundYet && item.type === TokenType.Command)) {
               args_1.push(item.value)
             }
           })
@@ -2228,9 +1982,7 @@ var init_consoleHook_59e792cb = __esm({
         var state_1 = _loop_1(index)
         if (typeof state_1 === 'object') return state_1.value
       }
-      throw createError(
-        'Failed to start. Please provide a `start` or `dev` script on the package.json',
-      )
+      throw createError('Failed to start. Please provide a `start` or `dev` script on the package.json')
     }
     getMessageFromError = function (error) {
       if (typeof error === 'string') return error
@@ -2252,10 +2004,7 @@ function loadPreviewIframe(iframe, url) {
     var contentWindow, TIME_OUT, MAX_MANY_TIRES, tries, timeout
     return __generator(this, function (_a22) {
       contentWindow = iframe.contentWindow
-      nullthrows(
-        contentWindow,
-        'Failed to await preview iframe: no content window found',
-      )
+      nullthrows(contentWindow, 'Failed to await preview iframe: no content window found')
       TIME_OUT = 9e4
       MAX_MANY_TIRES = 20
       tries = 0
@@ -2436,9 +2185,7 @@ var init_node = __esm({
           code: 'exports.activate = '.concat(code),
           scope: { channelId },
         }
-        ;(_b22 = iframe.contentWindow) === null || _b22 === void 0
-          ? void 0
-          : _b22.postMessage(message, '*')
+        ;(_b22 = iframe.contentWindow) === null || _b22 === void 0 ? void 0 : _b22.postMessage(message, '*')
       })
     }
     SandpackNode =
@@ -2547,8 +2294,7 @@ var init_node = __esm({
               switch (_b22.label) {
                 case 0:
                   packageJsonContent = readBuffer(files['/package.json'])
-                  this.emulatorCommand =
-                    findStartScriptPackageJson(packageJsonContent)
+                  this.emulatorCommand = findStartScriptPackageJson(packageJsonContent)
                   this.emulatorShellProcess = this.emulator.shell.create()
                   return [
                     4,
@@ -2557,9 +2303,7 @@ var init_node = __esm({
                         type: 'action',
                         action: 'notification',
                         notificationType: 'error',
-                        title: createError(
-                          'Error: process.exit('.concat(exitCode, ') called.'),
-                        ),
+                        title: createError('Error: process.exit('.concat(exitCode, ') called.')),
                       })
                     }),
                   ]
@@ -2569,20 +2313,13 @@ var init_node = __esm({
                     4,
                     this.emulatorShellProcess.on('progress', function (data) {
                       var _a3, _b222
-                      if (
-                        data.state === 'command_running' ||
-                        data.state === 'starting_command'
-                      ) {
+                      if (data.state === 'command_running' || data.state === 'starting_command') {
                         _this.dispatch({
                           type: 'shell/progress',
                           data: __assign(__assign({}, data), {
                             command: [
-                              (_a3 = _this.emulatorCommand) === null ||
-                              _a3 === void 0
-                                ? void 0
-                                : _a3[0],
-                              (_b222 = _this.emulatorCommand) === null ||
-                              _b222 === void 0
+                              (_a3 = _this.emulatorCommand) === null || _a3 === void 0 ? void 0 : _a3[0],
+                              (_b222 = _this.emulatorCommand) === null || _b222 === void 0
                                 ? void 0
                                 : _b222[1].join(' '),
                             ].join(' '),
@@ -2611,13 +2348,7 @@ var init_node = __esm({
                       payload: { data, type: 'err' },
                     })
                   })
-                  return [
-                    4,
-                    (_a22 = this.emulatorShellProcess).runCommand.apply(
-                      _a22,
-                      this.emulatorCommand,
-                    ),
-                  ]
+                  return [4, (_a22 = this.emulatorShellProcess).runCommand.apply(_a22, this.emulatorCommand)]
                 case 3:
                   return [2, _b22.sent()]
               }
@@ -2636,11 +2367,7 @@ var init_node = __esm({
                 case 1:
                   url = _b22.sent().url
                   this.iframePreviewUrl =
-                    url +
-                    ((_a22 = this.options.startRoute) !== null &&
-                    _a22 !== void 0
-                      ? _a22
-                      : '')
+                    url + ((_a22 = this.options.startRoute) !== null && _a22 !== void 0 ? _a22 : '')
                   return [2]
               }
             })
@@ -2650,27 +2377,17 @@ var init_node = __esm({
           var _a22
           if (typeof selector === 'string') {
             var element = document.querySelector(selector)
-            nullthrows(
-              element,
-              "The element '".concat(selector, "' was not found"),
-            )
+            nullthrows(element, "The element '".concat(selector, "' was not found"))
             this.iframe = document.createElement('iframe')
-            element === null || element === void 0
-              ? void 0
-              : element.appendChild(this.iframe)
+            element === null || element === void 0 ? void 0 : element.appendChild(this.iframe)
           } else {
             this.iframe = selector
           }
           setPreviewIframeProperties(this.iframe, this.options)
-          nullthrows(
-            this.iframe.parentNode,
-            'The given iframe does not have a parent.',
-          )
+          nullthrows(this.iframe.parentNode, 'The given iframe does not have a parent.')
           this.emulatorIframe = document.createElement('iframe')
           this.emulatorIframe.classList.add('sp-bridge-frame')
-          ;(_a22 = this.iframe.parentNode) === null || _a22 === void 0
-            ? void 0
-            : _a22.appendChild(this.emulatorIframe)
+          ;(_a22 = this.iframe.parentNode) === null || _a22 === void 0 ? void 0 : _a22.appendChild(this.emulatorIframe)
         }
         SandpackNode2.prototype.setLocationURLIntoIFrame = function () {
           return __awaiter(this, void 0, void 0, function () {
@@ -2678,10 +2395,7 @@ var init_node = __esm({
               switch (_a22.label) {
                 case 0:
                   if (!this.iframePreviewUrl) return [3, 2]
-                  return [
-                    4,
-                    loadPreviewIframe(this.iframe, this.iframePreviewUrl),
-                  ]
+                  return [4, loadPreviewIframe(this.iframe, this.iframePreviewUrl)]
                 case 1:
                   _a22.sent()
                   _a22.label = 2
@@ -2713,19 +2427,14 @@ var init_node = __esm({
                     if (event.data.type === PREVIEW_LOADED_MESSAGE_TYPE) {
                       injectScriptToIframe(_this.iframe, _this.messageChannelId)
                     }
-                    if (
-                      event.data.type === 'urlchange' &&
-                      event.data.channelId === _this.messageChannelId
-                    ) {
+                    if (event.data.type === 'urlchange' && event.data.channelId === _this.messageChannelId) {
                       _this.dispatch({
                         type: 'urlchange',
                         url: event.data.url,
                         back: event.data.back,
                         forward: event.data.forward,
                       })
-                    } else if (
-                      event.data.channelId === _this.messageChannelId
-                    ) {
+                    } else if (event.data.channelId === _this.messageChannelId) {
                       _this.dispatch(event.data)
                     }
                   })
@@ -2733,15 +2442,7 @@ var init_node = __esm({
                     4,
                     this.emulator.fs.watch(
                       ['*'],
-                      [
-                        '.next',
-                        'node_modules',
-                        'build',
-                        'dist',
-                        'vendor',
-                        '.config',
-                        '.vuepress',
-                      ],
+                      ['.next', 'node_modules', 'build', 'dist', 'vendor', '.config', '.vuepress'],
                       function (message) {
                         return __awaiter(_this, void 0, void 0, function () {
                           var event, path, type, _a3, content, newContent, err_2
@@ -2750,12 +2451,7 @@ var init_node = __esm({
                               case 0:
                                 if (!message) return [2]
                                 event = message
-                                path =
-                                  'newPath' in event
-                                    ? event.newPath
-                                    : 'path' in event
-                                      ? event.path
-                                      : ''
+                                path = 'newPath' in event ? event.newPath : 'path' in event ? event.path : ''
                                 return [4, this.emulator.fs.stat(path)]
                               case 1:
                                 type = _b22.sent().type
@@ -2778,10 +2474,7 @@ var init_node = __esm({
                                 }
                                 return [3, 9]
                               case 3:
-                                return [
-                                  4,
-                                  this.emulator.fs.readFile(event.path, 'utf8'),
-                                ]
+                                return [4, this.emulator.fs.readFile(event.path, 'utf8')]
                               case 4:
                                 content = _b22.sent()
                                 this.dispatch({
@@ -2789,10 +2482,7 @@ var init_node = __esm({
                                   path: event.path,
                                   content,
                                 })
-                                this._modulesCache.set(
-                                  event.path,
-                                  writeBuffer(content),
-                                )
+                                this._modulesCache.set(event.path, writeBuffer(content))
                                 return [3, 9]
                               case 5:
                                 this.dispatch({
@@ -2807,13 +2497,7 @@ var init_node = __esm({
                                   path: event.oldPath,
                                 })
                                 this._modulesCache.delete(event.oldPath)
-                                return [
-                                  4,
-                                  this.emulator.fs.readFile(
-                                    event.newPath,
-                                    'utf8',
-                                  ),
-                                ]
+                                return [4, this.emulator.fs.readFile(event.newPath, 'utf8')]
                               case 7:
                                 newContent = _b22.sent()
                                 this.dispatch({
@@ -2821,10 +2505,7 @@ var init_node = __esm({
                                   path: event.newPath,
                                   content: newContent,
                                 })
-                                this._modulesCache.set(
-                                  event.newPath,
-                                  writeBuffer(newContent),
-                                )
+                                this._modulesCache.set(event.newPath, writeBuffer(newContent))
                                 return [3, 9]
                               case 8:
                                 return [3, 9]
@@ -2860,8 +2541,7 @@ var init_node = __esm({
             return __generator(this, function (_b22) {
               switch (_b22.label) {
                 case 0:
-                  if (!(this.emulatorShellProcess && this.emulatorCommand))
-                    return [3, 3]
+                  if (!(this.emulatorShellProcess && this.emulatorCommand)) return [3, 3]
                   this.dispatch({
                     type: 'start',
                     firstLoad: true,
@@ -2870,17 +2550,12 @@ var init_node = __esm({
                   return [4, this.emulatorShellProcess.kill()]
                 case 1:
                   _b22.sent()
-                  ;(_a22 = this.iframe) === null || _a22 === void 0
-                    ? void 0
-                    : _a22.removeAttribute('attr')
+                  ;(_a22 = this.iframe) === null || _a22 === void 0 ? void 0 : _a22.removeAttribute('attr')
                   this.emulator.fs.rm('/node_modules/.vite', {
                     recursive: true,
                     force: true,
                   })
-                  return [
-                    4,
-                    this.compile(Object.fromEntries(this._modulesCache)),
-                  ]
+                  return [4, this.compile(Object.fromEntries(this._modulesCache))]
                 case 2:
                   _b22.sent()
                   _b22.label = 3
@@ -2894,18 +2569,11 @@ var init_node = __esm({
           var _this = this
           var _a22
           var modules = fromBundlerFilesToFS(setup.files)
-          if (
-            ((_a22 = this.emulatorShellProcess) === null || _a22 === void 0
-              ? void 0
-              : _a22.state) === 'running'
-          ) {
+          if (((_a22 = this.emulatorShellProcess) === null || _a22 === void 0 ? void 0 : _a22.state) === 'running') {
             Object.entries(modules).forEach(function (_a3) {
               var key = _a3[0],
                 value = _a3[1]
-              if (
-                !_this._modulesCache.get(key) ||
-                readBuffer(value) !== readBuffer(_this._modulesCache.get(key))
-              ) {
+              if (!_this._modulesCache.get(key) || readBuffer(value) !== readBuffer(_this._modulesCache.get(key))) {
                 _this.emulator.fs.writeFile(key, value, {
                   recursive: true,
                 })
@@ -2957,10 +2625,8 @@ var init_node = __esm({
                   _d.sent()
                   return [3, 8]
                 case 4:
-                  ;(_b22 =
-                    (_a22 = this.iframe) === null || _a22 === void 0
-                      ? void 0
-                      : _a22.contentWindow) === null || _b22 === void 0
+                  ;(_b22 = (_a22 = this.iframe) === null || _a22 === void 0 ? void 0 : _a22.contentWindow) === null ||
+                  _b22 === void 0
                     ? void 0
                     : _b22.postMessage(message, '*')
                   return [3, 8]
@@ -3001,18 +2667,10 @@ var require_main = __commonJS2({
     var __hasOwnProp22 = Object.prototype.hasOwnProperty
     var __commonJS22 = (cb, mod) =>
       function __require() {
-        return (
-          mod ||
-            (0, cb[__getOwnPropNames22(cb)[0]])(
-              (mod = { exports: {} }).exports,
-              mod,
-            ),
-          mod.exports
-        )
+        return mod || (0, cb[__getOwnPropNames22(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports
       }
     var __export2 = (target, all) => {
-      for (var name in all)
-        __defProp22(target, name, { get: all[name], enumerable: true })
+      for (var name in all) __defProp22(target, name, { get: all[name], enumerable: true })
     }
     var __copyProps22 = (to, from, except, desc) => {
       if ((from && typeof from === 'object') || typeof from === 'function') {
@@ -3020,8 +2678,7 @@ var require_main = __commonJS2({
           if (!__hasOwnProp22.call(to, key) && key !== except)
             __defProp22(to, key, {
               get: () => from[key],
-              enumerable:
-                !(desc = __getOwnPropDesc22(from, key)) || desc.enumerable,
+              enumerable: !(desc = __getOwnPropDesc22(from, key)) || desc.enumerable,
             })
       }
       return to
@@ -3042,13 +2699,9 @@ var require_main = __commonJS2({
         mod,
       )
     )
-    var __toCommonJS = (mod) =>
-      __copyProps22(__defProp22({}, '__esModule', { value: true }), mod)
+    var __toCommonJS = (mod) => __copyProps22(__defProp22({}, '__esModule', { value: true }), mod)
     var require_db2 = __commonJS22({
-      'node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/db.json'(
-        exports2,
-        module2,
-      ) {
+      'node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/db.json'(exports2, module2) {
         module2.exports = {
           'application/1d-interleaved-parityfec': { source: 'iana' },
           'application/3gpdash-qoe-report+xml': {
@@ -6727,10 +6380,11 @@ var require_main = __commonJS2({
             extensions: ['osm'],
           },
           'application/vnd.opentimestamps.ots': { source: 'iana' },
-          'application/vnd.openxmlformats-officedocument.custom-properties+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.customxmlproperties+xml':
-            { source: 'iana', compressible: true },
+          'application/vnd.openxmlformats-officedocument.custom-properties+xml': { source: 'iana', compressible: true },
+          'application/vnd.openxmlformats-officedocument.customxmlproperties+xml': {
+            source: 'iana',
+            compressible: true,
+          },
           'application/vnd.openxmlformats-officedocument.drawing+xml': {
             source: 'iana',
             compressible: true,
@@ -6739,113 +6393,208 @@ var require_main = __commonJS2({
             source: 'iana',
             compressible: true,
           },
-          'application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.drawingml.diagramcolors+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.drawingml.diagramdata+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.drawingml.diagramlayout+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.drawingml.diagramstyle+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.extended-properties+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.commentauthors+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.comments+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.handoutmaster+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.notesmaster+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.notesslide+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-            {
-              source: 'iana',
-              compressible: false,
-              extensions: ['pptx'],
-            },
-          'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.presprops+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.slide':
-            { source: 'iana', extensions: ['sldx'] },
-          'application/vnd.openxmlformats-officedocument.presentationml.slide+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.slidelayout+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.slidemaster+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.slideshow':
-            { source: 'iana', extensions: ['ppsx'] },
-          'application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.slideupdateinfo+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.tablestyles+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.tags+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.template':
-            { source: 'iana', extensions: ['potx'] },
-          'application/vnd.openxmlformats-officedocument.presentationml.template.main+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.presentationml.viewprops+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.calcchain+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.externallink+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcachedefinition+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcacherecords+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.pivottable+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.querytable+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionheaders+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionlog+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedstrings+xml':
-            { source: 'iana', compressible: true },
+          'application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.drawingml.diagramcolors+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.drawingml.diagramdata+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.drawingml.diagramlayout+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.drawingml.diagramstyle+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.extended-properties+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.commentauthors+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.comments+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.handoutmaster+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.notesmaster+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.notesslide+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
+            source: 'iana',
+            compressible: false,
+            extensions: ['pptx'],
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.presprops+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.slide': {
+            source: 'iana',
+            extensions: ['sldx'],
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.slide+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.slidelayout+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.slidemaster+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.slideshow': {
+            source: 'iana',
+            extensions: ['ppsx'],
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.slideupdateinfo+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.tablestyles+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.tags+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.template': {
+            source: 'iana',
+            extensions: ['potx'],
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.template.main+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.presentationml.viewprops+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.calcchain+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.externallink+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcachedefinition+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcacherecords+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.pivottable+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.querytable+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionheaders+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionlog+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedstrings+xml': {
+            source: 'iana',
+            compressible: true,
+          },
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
             source: 'iana',
             compressible: false,
             extensions: ['xlsx'],
           },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetmetadata+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.tablesinglecells+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.template':
-            { source: 'iana', extensions: ['xltx'] },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.usernames+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.volatiledependencies+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml':
-            { source: 'iana', compressible: true },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetmetadata+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.tablesinglecells+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.template': {
+            source: 'iana',
+            extensions: ['xltx'],
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.usernames+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.volatiledependencies+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml': {
+            source: 'iana',
+            compressible: true,
+          },
           'application/vnd.openxmlformats-officedocument.theme+xml': {
             source: 'iana',
             compressible: true,
@@ -6857,44 +6606,71 @@ var require_main = __commonJS2({
           'application/vnd.openxmlformats-officedocument.vmldrawing': {
             source: 'iana',
           },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-            {
-              source: 'iana',
-              compressible: false,
-              extensions: ['docx'],
-            },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.fonttable+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.template':
-            { source: 'iana', extensions: ['dotx'] },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml':
-            { source: 'iana', compressible: true },
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.websettings+xml':
-            { source: 'iana', compressible: true },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
+            source: 'iana',
+            compressible: false,
+            extensions: ['docx'],
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.fonttable+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.template': {
+            source: 'iana',
+            extensions: ['dotx'],
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml': {
+            source: 'iana',
+            compressible: true,
+          },
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.websettings+xml': {
+            source: 'iana',
+            compressible: true,
+          },
           'application/vnd.openxmlformats-package.core-properties+xml': {
             source: 'iana',
             compressible: true,
           },
-          'application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml':
-            { source: 'iana', compressible: true },
+          'application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml': {
+            source: 'iana',
+            compressible: true,
+          },
           'application/vnd.openxmlformats-package.relationships+xml': {
             source: 'iana',
             compressible: true,
@@ -7754,17 +7530,7 @@ var require_main = __commonJS2({
           },
           'application/x-director': {
             source: 'apache',
-            extensions: [
-              'dir',
-              'dcr',
-              'dxr',
-              'cst',
-              'cct',
-              'cxt',
-              'w3d',
-              'fgd',
-              'swa',
-            ],
+            extensions: ['dir', 'dcr', 'dxr', 'cst', 'cct', 'cxt', 'w3d', 'fgd', 'swa'],
           },
           'application/x-doom': {
             source: 'apache',
@@ -9114,16 +8880,7 @@ var require_main = __commonJS2({
           'text/plain': {
             source: 'iana',
             compressible: true,
-            extensions: [
-              'txt',
-              'text',
-              'conf',
-              'def',
-              'list',
-              'log',
-              'in',
-              'ini',
-            ],
+            extensions: ['txt', 'text', 'conf', 'def', 'list', 'log', 'in', 'ini'],
           },
           'text/provenance-notation': {
             source: 'iana',
@@ -9529,10 +9286,7 @@ var require_main = __commonJS2({
       },
     })
     var require_mime_db2 = __commonJS22({
-      'node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/index.js'(
-        exports2,
-        module2,
-      ) {
+      'node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/index.js'(exports2, module2) {
         module2.exports = require_db2()
       },
     })
@@ -9550,11 +9304,7 @@ var require_main = __commonJS2({
     var entries2 = Object.entries(import_mime_db2.default)
     for (const [mimetype2, entry2] of entries2) {
       const extensions2 = entry2.extensions
-      if (
-        extensions2 === null || extensions2 === void 0
-          ? void 0
-          : extensions2.length
-      ) {
+      if (extensions2 === null || extensions2 === void 0 ? void 0 : extensions2.length) {
         for (const ext2 of extensions2) {
           extensionMap2.set(ext2, mimetype2)
         }
@@ -9589,9 +9339,7 @@ var require_main = __commonJS2({
       async getIndexAtPath(filepath) {
         for (const index of this.indexFiles) {
           try {
-            const content = await this.getFileContent(
-              joinFilepath(filepath, index),
-            )
+            const content = await this.getFileContent(joinFilepath(filepath, index))
             return content
           } catch (err) {}
         }
@@ -9603,9 +9351,7 @@ var require_main = __commonJS2({
         }
         const [previewRoot, port] = await this.initPromise
         try {
-          const filepath = normalizeFilepath(
-            new URL(request.url, previewRoot).pathname,
-          )
+          const filepath = normalizeFilepath(new URL(request.url, previewRoot).pathname)
           let body = null
           const headers = {}
           try {
@@ -9671,10 +9417,7 @@ var require_main = __commonJS2({
         return new Promise((resolve) => {
           const port = channel.port1
           port.onmessage = (evt) => {
-            if (
-              typeof evt.data === 'object' &&
-              evt.data.$channel === CHANNEL_NAME2
-            ) {
+            if (typeof evt.data === 'object' && evt.data.$channel === CHANNEL_NAME2) {
               switch (evt.data.$type) {
                 case 'preview/ready':
                   resolve([previewUrl.toString(), port, iframe])
@@ -9721,8 +9464,7 @@ var require_main = __commonJS2({
         this.getFileContent = options.getFileContent
         var _options_indexFiles
         this.indexFiles =
-          (_options_indexFiles = options.indexFiles) !== null &&
-          _options_indexFiles !== void 0
+          (_options_indexFiles = options.indexFiles) !== null && _options_indexFiles !== void 0
             ? _options_indexFiles
             : ['index.html', 'index.html']
       }
@@ -9783,39 +9525,35 @@ var init_index_599aeaf7 = __esm({
           _this.files = /* @__PURE__ */ new Map()
           _this.status = 'initializing'
           _this.emitter = new EventEmitter()
-          _this.previewController =
-            new import_static_browser_server.PreviewController({
-              baseUrl:
-                (_a22 = options.bundlerURL) !== null && _a22 !== void 0
-                  ? _a22
-                  : 'https://preview.sandpack-static-server.codesandbox.io',
-              // filepath is always normalized to start with / and not end with a slash
-              getFileContent: function (filepath) {
-                var content = _this.files.get(filepath)
-                if (!content) {
-                  throw new Error('File not found')
+          _this.previewController = new import_static_browser_server.PreviewController({
+            baseUrl:
+              (_a22 = options.bundlerURL) !== null && _a22 !== void 0
+                ? _a22
+                : 'https://preview.sandpack-static-server.codesandbox.io',
+            // filepath is always normalized to start with / and not end with a slash
+            getFileContent: function (filepath) {
+              var content = _this.files.get(filepath)
+              if (!content) {
+                throw new Error('File not found')
+              }
+              if (filepath.endsWith('.html') || filepath.endsWith('.htm')) {
+                try {
+                  content = validateHtml(content)
+                  content = _this.injectProtocolScript(content)
+                  content = _this.injectExternalResources(content, options.externalResources)
+                  content = _this.injectScriptIntoHead(content, {
+                    script: consoleHook,
+                    scope: {
+                      channelId: generateRandomId(),
+                    },
+                  })
+                } catch (err) {
+                  console.error('Runtime injection failed', err)
                 }
-                if (filepath.endsWith('.html') || filepath.endsWith('.htm')) {
-                  try {
-                    content = validateHtml(content)
-                    content = _this.injectProtocolScript(content)
-                    content = _this.injectExternalResources(
-                      content,
-                      options.externalResources,
-                    )
-                    content = _this.injectScriptIntoHead(content, {
-                      script: consoleHook,
-                      scope: {
-                        channelId: generateRandomId(),
-                      },
-                    })
-                  } catch (err) {
-                    console.error('Runtime injection failed', err)
-                  }
-                }
-                return content
-              },
-            })
+              }
+              return content
+            },
+          })
           if (typeof selector === 'string') {
             _this.selector = selector
             var element = document.querySelector(selector)
@@ -9842,18 +9580,11 @@ var init_index_599aeaf7 = __esm({
           _this.updateSandbox()
           return _this
         }
-        SandpackStatic2.prototype.injectContentIntoHead = function (
-          content,
-          contentToInsert,
-        ) {
+        SandpackStatic2.prototype.injectContentIntoHead = function (content, contentToInsert) {
           var _a22
           content = readBuffer2(content)
           content =
-            (_a22 = insertHtmlAfterRegex(
-              /<head[^<>]*>/g,
-              content,
-              '\n' + contentToInsert,
-            )) !== null && _a22 !== void 0
+            (_a22 = insertHtmlAfterRegex(/<head[^<>]*>/g, content, '\n' + contentToInsert)) !== null && _a22 !== void 0
               ? _a22
               : contentToInsert + '\n' + content
           return content
@@ -9863,37 +9594,26 @@ var init_index_599aeaf7 = __esm({
             '<script>\n  window.addEventListener("message", (message) => {\n    if(message.data.type === "refresh") {\n      window.location.reload();\n    }\n  })\n<\/script>'
           return this.injectContentIntoHead(content, scriptToInsert)
         }
-        SandpackStatic2.prototype.injectExternalResources = function (
-          content,
-          externalResources,
-        ) {
+        SandpackStatic2.prototype.injectExternalResources = function (content, externalResources) {
           if (externalResources === void 0) {
             externalResources = []
           }
           var tagsToInsert = externalResources
             .map(function (resource) {
               var match = resource.match(/\.([^.]*)$/)
-              var fileType =
-                match === null || match === void 0 ? void 0 : match[1]
+              var fileType = match === null || match === void 0 ? void 0 : match[1]
               if (fileType === 'css' || resource.includes('fonts.googleapis')) {
                 return '<link rel="stylesheet" href="'.concat(resource, '">')
               }
               if (fileType === 'js') {
                 return '<script src="'.concat(resource, '"><\/script>')
               }
-              throw new Error(
-                'Unable to determine file type for external resource: '.concat(
-                  resource,
-                ),
-              )
+              throw new Error('Unable to determine file type for external resource: '.concat(resource))
             })
             .join('\n')
           return this.injectContentIntoHead(content, tagsToInsert)
         }
-        SandpackStatic2.prototype.injectScriptIntoHead = function (
-          content,
-          opts,
-        ) {
+        SandpackStatic2.prototype.injectScriptIntoHead = function (content, opts) {
           var script = opts.script,
             _a22 = opts.scope,
             scope = _a22 === void 0 ? {} : _a22
@@ -9903,10 +9623,7 @@ var init_index_599aeaf7 = __esm({
             .trim()
           return this.injectContentIntoHead(content, scriptToInsert)
         }
-        SandpackStatic2.prototype.updateSandbox = function (
-          setup,
-          _isInitializationCompile,
-        ) {
+        SandpackStatic2.prototype.updateSandbox = function (setup, _isInitializationCompile) {
           if (setup === void 0) {
             setup = this.sandboxSetup
           }
@@ -9962,9 +9679,7 @@ var init_index_599aeaf7 = __esm({
               this.compile(message.modules)
               break
             default:
-              ;(_a22 = this.iframe.contentWindow) === null || _a22 === void 0
-                ? void 0
-                : _a22.postMessage(message, '*')
+              ;(_a22 = this.iframe.contentWindow) === null || _a22 === void 0 ? void 0 : _a22.postMessage(message, '*')
               this.emitter.dispatch(message)
           }
         }
@@ -13165,54 +12880,86 @@ var require_db = __commonJS2({
         source: 'iana',
         compressible: true,
       },
-      'application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.drawingml.diagramcolors+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.drawingml.diagramdata+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.drawingml.diagramlayout+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.drawingml.diagramstyle+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml': { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.drawingml.diagramcolors+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.drawingml.diagramdata+xml': { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.drawingml.diagramlayout+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.drawingml.diagramstyle+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-officedocument.extended-properties+xml': {
         source: 'iana',
         compressible: true,
       },
-      'application/vnd.openxmlformats-officedocument.presentationml.commentauthors+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.comments+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.handoutmaster+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.notesmaster+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.notesslide+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-        { source: 'iana', compressible: false, extensions: ['pptx'] },
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.presprops+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.presentationml.commentauthors+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.comments+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.handoutmaster+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.notesmaster+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.notesslide+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
+        source: 'iana',
+        compressible: false,
+        extensions: ['pptx'],
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.presprops+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-officedocument.presentationml.slide': {
         source: 'iana',
         extensions: ['sldx'],
       },
-      'application/vnd.openxmlformats-officedocument.presentationml.slide+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.slidelayout+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.slidemaster+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.slideshow':
-        { source: 'iana', extensions: ['ppsx'] },
-      'application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.slideupdateinfo+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.tablestyles+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.presentationml.slide+xml': { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.presentationml.slidelayout+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.slidemaster+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.slideshow': {
+        source: 'iana',
+        extensions: ['ppsx'],
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.slideupdateinfo+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.tablestyles+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-officedocument.presentationml.tags+xml': {
         source: 'iana',
         compressible: true,
@@ -13221,65 +12968,108 @@ var require_db = __commonJS2({
         source: 'iana',
         extensions: ['potx'],
       },
-      'application/vnd.openxmlformats-officedocument.presentationml.template.main+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.presentationml.viewprops+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.calcchain+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.externallink+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcachedefinition+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcacherecords+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.pivottable+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.querytable+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionheaders+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionlog+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedstrings+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.presentationml.template.main+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.presentationml.viewprops+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.calcchain+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.externallink+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcachedefinition+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcacherecords+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.pivottable+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.querytable+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionheaders+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.revisionlog+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedstrings+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
         source: 'iana',
         compressible: false,
         extensions: ['xlsx'],
       },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetmetadata+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetmetadata+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml': { source: 'iana', compressible: true },
       'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml': {
         source: 'iana',
         compressible: true,
       },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.tablesinglecells+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.tablesinglecells+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-officedocument.spreadsheetml.template': {
         source: 'iana',
         extensions: ['xltx'],
       },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.usernames+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.volatiledependencies+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.usernames+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.volatiledependencies+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-officedocument.theme+xml': {
         source: 'iana',
         compressible: true,
@@ -13291,40 +13081,71 @@ var require_db = __commonJS2({
       'application/vnd.openxmlformats-officedocument.vmldrawing': {
         source: 'iana',
       },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        { source: 'iana', compressible: false, extensions: ['docx'] },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.fonttable+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.template':
-        { source: 'iana', extensions: ['dotx'] },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml':
-        { source: 'iana', compressible: true },
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.websettings+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
+        source: 'iana',
+        compressible: false,
+        extensions: ['docx'],
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.fonttable+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.template': {
+        source: 'iana',
+        extensions: ['dotx'],
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml': {
+        source: 'iana',
+        compressible: true,
+      },
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.websettings+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-package.core-properties+xml': {
         source: 'iana',
         compressible: true,
       },
-      'application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml':
-        { source: 'iana', compressible: true },
+      'application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml': {
+        source: 'iana',
+        compressible: true,
+      },
       'application/vnd.openxmlformats-package.relationships+xml': {
         source: 'iana',
         compressible: true,
@@ -14063,17 +13884,7 @@ var require_db = __commonJS2({
       },
       'application/x-director': {
         source: 'apache',
-        extensions: [
-          'dir',
-          'dcr',
-          'dxr',
-          'cst',
-          'cct',
-          'cxt',
-          'w3d',
-          'fgd',
-          'swa',
-        ],
+        extensions: ['dir', 'dcr', 'dxr', 'cst', 'cct', 'cxt', 'w3d', 'fgd', 'swa'],
       },
       'application/x-doom': { source: 'apache', extensions: ['wad'] },
       'application/x-dtbncx+xml': {
@@ -15600,10 +15411,7 @@ function getTemplate(pkg, modules) {
   ) {
     return '@dojo/cli-create-app'
   }
-  if (
-    totalDependencies.indexOf('@nestjs/core') > -1 ||
-    totalDependencies.indexOf('@nestjs/common') > -1
-  ) {
+  if (totalDependencies.indexOf('@nestjs/core') > -1 || totalDependencies.indexOf('@nestjs/common') > -1) {
     return 'nest'
   }
   if (totalDependencies.indexOf('react-styleguidist') > -1) {
@@ -15621,10 +15429,7 @@ function getTemplate(pkg, modules) {
   if (totalDependencies.indexOf('preact-cli') > -1) {
     return 'preact-cli'
   }
-  if (
-    totalDependencies.indexOf('@sveltech/routify') > -1 ||
-    totalDependencies.indexOf('@roxi/routify') > -1
-  ) {
+  if (totalDependencies.indexOf('@sveltech/routify') > -1 || totalDependencies.indexOf('@roxi/routify') > -1) {
     return 'node'
   }
   if (totalDependencies.indexOf('vite') > -1) {
@@ -15642,15 +15447,7 @@ function getTemplate(pkg, modules) {
   if (totalDependencies.indexOf('cx') > -1) {
     return 'cxjs'
   }
-  var nodeDeps = [
-    'express',
-    'koa',
-    'nodemon',
-    'ts-node',
-    '@tensorflow/tfjs-node',
-    'webpack-dev-server',
-    'snowpack',
-  ]
+  var nodeDeps = ['express', 'koa', 'nodemon', 'ts-node', '@tensorflow/tfjs-node', 'webpack-dev-server', 'snowpack']
   if (
     totalDependencies.some(function (dep) {
       return nodeDeps.indexOf(dep) > -1
@@ -15708,47 +15505,44 @@ var init_runtime = __esm({
           this.type = type
           this.handleMessage = handleMessage
           this.protocol = protocol
-          this._disposeMessageListener = this.protocol.channelListen(
-            function (msg) {
-              return __awaiter(_this, void 0, void 0, function () {
-                var message, result, response, err_1, response
-                return __generator(this, function (_a22) {
-                  switch (_a22.label) {
-                    case 0:
-                      if (!(msg.type === this.getTypeId() && msg.method))
-                        return [3, 4]
-                      message = msg
-                      _a22.label = 1
-                    case 1:
-                      _a22.trys.push([1, 3, , 4])
-                      return [4, this.handleMessage(message)]
-                    case 2:
-                      result = _a22.sent()
-                      response = {
-                        type: this.getTypeId(),
-                        msgId: message.msgId,
-                        result,
-                      }
-                      this.protocol.dispatch(response)
-                      return [3, 4]
-                    case 3:
-                      err_1 = _a22.sent()
-                      response = {
-                        type: this.getTypeId(),
-                        msgId: message.msgId,
-                        error: {
-                          message: err_1.message,
-                        },
-                      }
-                      this.protocol.dispatch(response)
-                      return [3, 4]
-                    case 4:
-                      return [2]
-                  }
-                })
+          this._disposeMessageListener = this.protocol.channelListen(function (msg) {
+            return __awaiter(_this, void 0, void 0, function () {
+              var message, result, response, err_1, response
+              return __generator(this, function (_a22) {
+                switch (_a22.label) {
+                  case 0:
+                    if (!(msg.type === this.getTypeId() && msg.method)) return [3, 4]
+                    message = msg
+                    _a22.label = 1
+                  case 1:
+                    _a22.trys.push([1, 3, , 4])
+                    return [4, this.handleMessage(message)]
+                  case 2:
+                    result = _a22.sent()
+                    response = {
+                      type: this.getTypeId(),
+                      msgId: message.msgId,
+                      result,
+                    }
+                    this.protocol.dispatch(response)
+                    return [3, 4]
+                  case 3:
+                    err_1 = _a22.sent()
+                    response = {
+                      type: this.getTypeId(),
+                      msgId: message.msgId,
+                      error: {
+                        message: err_1.message,
+                      },
+                    }
+                    this.protocol.dispatch(response)
+                    return [3, 4]
+                  case 4:
+                    return [2]
+                }
               })
-            },
-          )
+            })
+          })
         }
         Protocol2.prototype.getTypeId = function () {
           return 'protocol-'.concat(this.type)
@@ -15800,10 +15594,7 @@ var init_runtime = __esm({
           if (!this.frameWindow) {
             return
           }
-          this.frameWindow.postMessage(
-            __assign({ $id: this.channelId, codesandbox: true }, message),
-            this.origin,
-          )
+          this.frameWindow.postMessage(__assign({ $id: this.channelId, codesandbox: true }, message), this.origin)
         }
         IFrameProtocol2.prototype.globalListen = function (listener) {
           var _this = this
@@ -15862,11 +15653,7 @@ var init_runtime = __esm({
       }
       extensions = entry.extensions
       if (extensions.length) {
-        for (
-          _b = 0, extensions_1 = extensions;
-          _b < extensions_1.length;
-          _b++
-        ) {
+        for (_b = 0, extensions_1 = extensions; _b < extensions_1.length; _b++) {
           ext = extensions_1[_b]
           extensionMap.set(ext, mimetype)
         }
@@ -15877,11 +15664,7 @@ var init_runtime = __esm({
     MAX_CLIENT_DEPENDENCY_COUNT = 50
     SUFFIX_PLACEHOLDER = '-{{suffix}}'
     BUNDLER_URL = 'https://'
-      .concat(
-        (_a = '2.19.8') === null || _a === void 0
-          ? void 0
-          : _a.replace(/\./g, '-'),
-      )
+      .concat((_a = '2.19.8') === null || _a === void 0 ? void 0 : _a.replace(/\./g, '-'))
       .concat(SUFFIX_PLACEHOLDER, '-sandpack.codesandbox.io/')
     SandpackRuntime =
       /** @class */
@@ -15921,10 +15704,7 @@ var init_runtime = __esm({
           if (typeof selector === 'string') {
             _this.selector = selector
             var element = document.querySelector(selector)
-            nullthrows(
-              element,
-              "The element '".concat(selector, "' was not found"),
-            )
+            nullthrows(element, "The element '".concat(selector, "' was not found"))
             _this.element = element
             _this.iframe = document.createElement('iframe')
             _this.initializeElement()
@@ -15943,76 +15723,59 @@ var init_runtime = __esm({
             )
           }
           _this.setLocationURLIntoIFrame()
-          _this.iframeProtocol = new IFrameProtocol(
-            _this.iframe,
-            _this.bundlerURL,
-          )
-          _this.unsubscribeGlobalListener = _this.iframeProtocol.globalListen(
-            function (mes) {
-              if (mes.type !== 'initialized' || !_this.iframe.contentWindow) {
-                return
-              }
-              _this.iframeProtocol.register()
-              if (_this.options.fileResolver) {
-                _this.fileResolverProtocol = new Protocol(
-                  'fs',
-                  function (data) {
-                    return __awaiter(_this, void 0, void 0, function () {
-                      return __generator(this, function (_a22) {
-                        if (data.method === 'isFile') {
-                          return [
-                            2,
-                            this.options.fileResolver.isFile(data.params[0]),
-                          ]
-                        } else if (data.method === 'readFile') {
-                          return [
-                            2,
-                            this.options.fileResolver.readFile(data.params[0]),
-                          ]
-                        } else {
-                          throw new Error('Method not supported')
-                        }
-                      })
+          _this.iframeProtocol = new IFrameProtocol(_this.iframe, _this.bundlerURL)
+          _this.unsubscribeGlobalListener = _this.iframeProtocol.globalListen(function (mes) {
+            if (mes.type !== 'initialized' || !_this.iframe.contentWindow) {
+              return
+            }
+            _this.iframeProtocol.register()
+            if (_this.options.fileResolver) {
+              _this.fileResolverProtocol = new Protocol(
+                'fs',
+                function (data) {
+                  return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_a22) {
+                      if (data.method === 'isFile') {
+                        return [2, this.options.fileResolver.isFile(data.params[0])]
+                      } else if (data.method === 'readFile') {
+                        return [2, this.options.fileResolver.readFile(data.params[0])]
+                      } else {
+                        throw new Error('Method not supported')
+                      }
                     })
-                  },
-                  _this.iframeProtocol,
-                )
+                  })
+                },
+                _this.iframeProtocol,
+              )
+            }
+            _this.updateSandbox(_this.sandboxSetup, true)
+          })
+          _this.unsubscribeChannelListener = _this.iframeProtocol.channelListen(function (mes) {
+            switch (mes.type) {
+              case 'start': {
+                _this.errors = []
+                break
               }
-              _this.updateSandbox(_this.sandboxSetup, true)
-            },
-          )
-          _this.unsubscribeChannelListener = _this.iframeProtocol.channelListen(
-            function (mes) {
-              switch (mes.type) {
-                case 'start': {
-                  _this.errors = []
-                  break
-                }
-                case 'status': {
-                  _this.status = mes.status
-                  break
-                }
-                case 'action': {
-                  if (mes.action === 'show-error') {
-                    _this.errors = __spreadArray(
-                      __spreadArray([], _this.errors, true),
-                      [extractErrorDetails(mes)],
-                      false,
-                    )
-                  }
-                  break
-                }
-                case 'done': {
-                  _this.status = 'done'
-                  break
-                }
-                case 'state': {
-                  _this.bundlerState = mes.state
-                  break
-                }
+              case 'status': {
+                _this.status = mes.status
+                break
               }
-            },
-          )
+              case 'action': {
+                if (mes.action === 'show-error') {
+                  _this.errors = __spreadArray(__spreadArray([], _this.errors, true), [extractErrorDetails(mes)], false)
+                }
+                break
+              }
+              case 'done': {
+                _this.status = 'done'
+                break
+              }
+              case 'state': {
+                _this.bundlerState = mes.state
+                break
+              }
+            }
+          })
           if (options.experimental_enableServiceWorker) {
             _this.serviceWorkerHandshake()
           }
@@ -16026,10 +15789,7 @@ var init_runtime = __esm({
           }
           if (this.options.teamId) {
             bundlerURL =
-              bundlerURL.replace(
-                'https://',
-                'https://' + this.options.teamId + '-',
-              ) + '?cache='.concat(Date.now())
+              bundlerURL.replace('https://', 'https://' + this.options.teamId + '-') + '?cache='.concat(Date.now())
           }
           if (this.options.experimental_enableServiceWorker) {
             var suffixes = []
@@ -16037,8 +15797,7 @@ var init_runtime = __esm({
             bundlerURL = bundlerURL.replace(
               SUFFIX_PLACEHOLDER,
               '-'.concat(
-                (_a22 = this.options.experimental_stableServiceWorkerId) !==
-                  null && _a22 !== void 0
+                (_a22 = this.options.experimental_stableServiceWorkerId) !== null && _a22 !== void 0
                   ? _a22
                   : suffixes.join('-'),
               ),
@@ -16057,10 +15816,7 @@ var init_runtime = __esm({
           }
           var port = channel.port1
           port.onmessage = function (evt) {
-            if (
-              typeof evt.data === 'object' &&
-              evt.data.$channel === CHANNEL_NAME
-            ) {
+            if (typeof evt.data === 'object' && evt.data.$channel === CHANNEL_NAME) {
               switch (evt.data.$type) {
                 case 'preview/ready':
                   break
@@ -16080,10 +15836,7 @@ var init_runtime = __esm({
           }
           this.iframe.addEventListener('load', sendMessage)
         }
-        SandpackRuntime2.prototype.handleWorkerRequest = function (
-          request,
-          port,
-        ) {
+        SandpackRuntime2.prototype.handleWorkerRequest = function (request, port) {
           return __awaiter(this, void 0, void 0, function () {
             var notFound,
               filepath_1,
@@ -16166,9 +15919,7 @@ var init_runtime = __esm({
           var urlSource = this.options.startRoute
             ? new URL(this.options.startRoute, this.bundlerURL).toString()
             : this.bundlerURL
-          ;(_a22 = this.iframe.contentWindow) === null || _a22 === void 0
-            ? void 0
-            : _a22.location.replace(urlSource)
+          ;(_a22 = this.iframe.contentWindow) === null || _a22 === void 0 ? void 0 : _a22.location.replace(urlSource)
           this.iframe.src = urlSource
         }
         SandpackRuntime2.prototype.destroy = function () {
@@ -16182,18 +15933,12 @@ var init_runtime = __esm({
             this.updateSandbox()
           }
         }
-        SandpackRuntime2.prototype.updateSandbox = function (
-          sandboxSetup,
-          isInitializationCompile,
-        ) {
+        SandpackRuntime2.prototype.updateSandbox = function (sandboxSetup, isInitializationCompile) {
           var _a22, _b22, _c2, _d
           if (sandboxSetup === void 0) {
             sandboxSetup = this.sandboxSetup
           }
-          this.sandboxSetup = __assign(
-            __assign({}, this.sandboxSetup),
-            sandboxSetup,
-          )
+          this.sandboxSetup = __assign(__assign({}, this.sandboxSetup), sandboxSetup)
           var files = this.getFiles()
           var modules = Object.keys(files).reduce(function (prev, next) {
             var _a3
@@ -16217,14 +15962,9 @@ var init_runtime = __esm({
           try {
             packageJSON = JSON.parse(files['/package.json'].code)
           } catch (e2) {
-            console.error(
-              createError('could not parse package.json file: ' + e2.message),
-            )
+            console.error(createError('could not parse package.json file: ' + e2.message))
           }
-          var normalizedModules = Object.keys(files).reduce(function (
-            prev,
-            next,
-          ) {
+          var normalizedModules = Object.keys(files).reduce(function (prev, next) {
             var _a3
             return __assign(
               __assign({}, prev),
@@ -16246,34 +15986,16 @@ var init_runtime = __esm({
               reactDevTools: this.options.reactDevTools,
               externalResources: this.options.externalResources || [],
               hasFileResolver: Boolean(this.options.fileResolver),
-              disableDependencyPreprocessing:
-                this.sandboxSetup.disableDependencyPreprocessing,
-              experimental_enableServiceWorker:
-                this.options.experimental_enableServiceWorker,
-              template:
-                this.sandboxSetup.template ||
-                getTemplate(packageJSON, normalizedModules),
+              disableDependencyPreprocessing: this.sandboxSetup.disableDependencyPreprocessing,
+              experimental_enableServiceWorker: this.options.experimental_enableServiceWorker,
+              template: this.sandboxSetup.template || getTemplate(packageJSON, normalizedModules),
               showOpenInCodeSandbox:
-                (_a22 = this.options.showOpenInCodeSandbox) !== null &&
-                _a22 !== void 0
-                  ? _a22
-                  : true,
-              showErrorScreen:
-                (_b22 = this.options.showErrorScreen) !== null &&
-                _b22 !== void 0
-                  ? _b22
-                  : true,
-              showLoadingScreen:
-                (_c2 = this.options.showLoadingScreen) !== null &&
-                _c2 !== void 0
-                  ? _c2
-                  : false,
+                (_a22 = this.options.showOpenInCodeSandbox) !== null && _a22 !== void 0 ? _a22 : true,
+              showErrorScreen: (_b22 = this.options.showErrorScreen) !== null && _b22 !== void 0 ? _b22 : true,
+              showLoadingScreen: (_c2 = this.options.showLoadingScreen) !== null && _c2 !== void 0 ? _c2 : false,
               skipEval: this.options.skipEval || false,
               clearConsoleDisabled: !this.options.clearConsoleOnFirstCompile,
-              logLevel:
-                (_d = this.options.logLevel) !== null && _d !== void 0
-                  ? _d
-                  : SandpackLogLevel.Info,
+              logLevel: (_d = this.options.logLevel) !== null && _d !== void 0 ? _d : SandpackLogLevel.Info,
               customNpmRegistries: this.options.customNpmRegistries,
               teamId: this.options.teamId,
               sandboxId: this.options.sandboxId,
@@ -16306,17 +16028,14 @@ var init_runtime = __esm({
               _a22),
             )
           }, {})
-          return fetch(
-            'https://codesandbox.io/api/v1/sandboxes/define?json=1',
-            {
-              method: 'POST',
-              body: JSON.stringify({ files: paramFiles }),
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
+          return fetch('https://codesandbox.io/api/v1/sandboxes/define?json=1', {
+            method: 'POST',
+            body: JSON.stringify({ files: paramFiles }),
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
             },
-          )
+          })
             .then(function (x2) {
               return x2.json()
             })
@@ -16324,9 +16043,7 @@ var init_runtime = __esm({
               return {
                 sandboxId: res.sandbox_id,
                 editorUrl: 'https://codesandbox.io/s/'.concat(res.sandbox_id),
-                embedUrl: 'https://codesandbox.io/embed/'.concat(
-                  res.sandbox_id,
-                ),
+                embedUrl: 'https://codesandbox.io/embed/'.concat(res.sandbox_id),
               }
             })
         }
@@ -16347,10 +16064,7 @@ var init_runtime = __esm({
           this.iframe.style.width = this.options.width || '100%'
           this.iframe.style.height = this.options.height || '100%'
           this.iframe.style.overflow = 'hidden'
-          nullthrows(
-            this.element.parentNode,
-            'The given iframe does not have a parent.',
-          )
+          nullthrows(this.element.parentNode, 'The given iframe does not have a parent.')
           this.element.parentNode.replaceChild(this.iframe, this.element)
         }
         return SandpackRuntime2
@@ -16370,10 +16084,7 @@ function loadSandpackClient(iframeSelector, sandboxSetup, options) {
     return __generator(this, function (_c2) {
       switch (_c2.label) {
         case 0:
-          template =
-            (_a22 = sandboxSetup.template) !== null && _a22 !== void 0
-              ? _a22
-              : 'parcel'
+          template = (_a22 = sandboxSetup.template) !== null && _a22 !== void 0 ? _a22 : 'parcel'
           _b22 = template
           switch (_b22) {
             case 'node':
@@ -16430,11 +16141,7 @@ var toggleComment = (target) => {
   let { state } = target,
     line = state.doc.lineAt(state.selection.main.from),
     config = getConfig(target.state, line.from)
-  return config.line
-    ? toggleLineComment(target)
-    : config.block
-      ? toggleBlockCommentByLine(target)
-      : false
+  return config.line ? toggleLineComment(target) : config.block ? toggleBlockCommentByLine(target) : false
 }
 function command(f2, option) {
   return ({ state, dispatch }) => {
@@ -16504,8 +16211,7 @@ function selectedLineRanges(state) {
     let fromLine = state.doc.lineAt(r3.from)
     let toLine = r3.to <= fromLine.to ? fromLine : state.doc.lineAt(r3.to)
     let last = ranges.length - 1
-    if (last >= 0 && ranges[last].to > fromLine.from)
-      ranges[last].to = toLine.to
+    if (last >= 0 && ranges[last].to > fromLine.from) ranges[last].to = toLine.to
     else
       ranges.push({
         from: fromLine.from + /^\s*/.exec(fromLine.text)[0].length,
@@ -16517,9 +16223,7 @@ function selectedLineRanges(state) {
 function changeBlockComment(option, state, ranges = state.selection.ranges) {
   let tokens = ranges.map((r3) => getConfig(state, r3.from).block)
   if (!tokens.every((c3) => c3)) return null
-  let comments = ranges.map((r3, i3) =>
-    findBlockComment(state, tokens[i3], r3.from, r3.to),
-  )
+  let comments = ranges.map((r3, i3) => findBlockComment(state, tokens[i3], r3.from, r3.to))
   if (option != 2 && !comments.every((c3) => c3)) {
     return {
       changes: state.changes(
@@ -16567,8 +16271,7 @@ function changeLineComment(option, state, ranges = state.selection.ranges) {
         prevLine = line.from
         let indent = /^\s*/.exec(line.text)[0].length
         let empty = indent == line.length
-        let comment =
-          line.text.slice(indent, indent + token.length) == token ? indent : -1
+        let comment = line.text.slice(indent, indent + token.length) == token ? indent : -1
         if (indent < line.text.length && indent < minIndent) minIndent = indent
         lines.push({
           line,
@@ -16583,19 +16286,14 @@ function changeLineComment(option, state, ranges = state.selection.ranges) {
     }
     if (minIndent < 1e9) {
       for (let i3 = startI; i3 < lines.length; i3++)
-        if (lines[i3].indent < lines[i3].line.text.length)
-          lines[i3].indent = minIndent
+        if (lines[i3].indent < lines[i3].line.text.length) lines[i3].indent = minIndent
     }
     if (lines.length == startI + 1) lines[startI].single = true
   }
-  if (
-    option != 2 &&
-    lines.some((l2) => l2.comment < 0 && (!l2.empty || l2.single))
-  ) {
+  if (option != 2 && lines.some((l2) => l2.comment < 0 && (!l2.empty || l2.single))) {
     let changes = []
     for (let { line, token, indent, empty, single } of lines)
-      if (single || !empty)
-        changes.push({ from: line.from + indent, insert: token + ' ' })
+      if (single || !empty) changes.push({ from: line.from + indent, insert: token + ' ' })
     let changeSet = state.changes(changes)
     return {
       changes: changeSet,
@@ -16647,18 +16345,13 @@ var historyField_ = /* @__PURE__ */ StateField.define({
     let config = tr.state.facet(historyConfig)
     let fromHist = tr.annotation(fromHistory)
     if (fromHist) {
-      let selection = tr.docChanged
-        ? EditorSelection.single(changeEnd(tr.changes))
-        : void 0
+      let selection = tr.docChanged ? EditorSelection.single(changeEnd(tr.changes)) : void 0
       let item = HistEvent.fromTransaction(tr, selection),
         from = fromHist.side
       let other = from == 0 ? state.undone : state.done
       if (item) other = updateBranch(other, other.length, config.minDepth, item)
       else other = addSelection(other, tr.startState.selection)
-      return new HistoryState(
-        from == 0 ? fromHist.rest : other,
-        from == 0 ? other : fromHist.rest,
-      )
+      return new HistoryState(from == 0 ? fromHist.rest : other, from == 0 ? other : fromHist.rest)
     }
     let isolate = tr.annotation(isolateHistory)
     if (isolate == 'full' || isolate == 'before') state = state.isolate()
@@ -16668,13 +16361,7 @@ var historyField_ = /* @__PURE__ */ StateField.define({
     let time = tr.annotation(Transaction.time),
       userEvent = tr.annotation(Transaction.userEvent)
     if (event) state = state.addChanges(event, time, userEvent, config, tr)
-    else if (tr.selection)
-      state = state.addSelection(
-        tr.startState.selection,
-        time,
-        userEvent,
-        config.newGroupDelay,
-      )
+    else if (tr.selection) state = state.addSelection(tr.startState.selection, time, userEvent, config.newGroupDelay)
     if (isolate == 'full' || isolate == 'after') state = state.isolate()
     return state
   },
@@ -16685,10 +16372,7 @@ var historyField_ = /* @__PURE__ */ StateField.define({
     }
   },
   fromJSON(json) {
-    return new HistoryState(
-      json.done.map(HistEvent.fromJSON),
-      json.undone.map(HistEvent.fromJSON),
-    )
+    return new HistoryState(json.done.map(HistEvent.fromJSON), json.undone.map(HistEvent.fromJSON))
   },
 })
 function history2(config = {}) {
@@ -16697,12 +16381,7 @@ function history2(config = {}) {
     historyConfig.of(config),
     EditorView.domEventHandlers({
       beforeinput(e2, view) {
-        let command2 =
-          e2.inputType == 'historyUndo'
-            ? undo
-            : e2.inputType == 'historyRedo'
-              ? redo
-              : null
+        let command2 = e2.inputType == 'historyUndo' ? undo : e2.inputType == 'historyRedo' ? redo : null
         if (!command2) return false
         e2.preventDefault()
         return command2(view)
@@ -16727,25 +16406,14 @@ var undoSelection = /* @__PURE__ */ cmd(0, true)
 var redoSelection = /* @__PURE__ */ cmd(1, true)
 var HistEvent = class {
   setSelAfter(after) {
-    return new HistEvent(
-      this.changes,
-      this.effects,
-      this.mapped,
-      this.startSelection,
-      after,
-    )
+    return new HistEvent(this.changes, this.effects, this.mapped, this.startSelection, after)
   }
   toJSON() {
     var _a3, _b3, _c2
     return {
-      changes:
-        (_a3 = this.changes) === null || _a3 === void 0 ? void 0 : _a3.toJSON(),
-      mapped:
-        (_b3 = this.mapped) === null || _b3 === void 0 ? void 0 : _b3.toJSON(),
-      startSelection:
-        (_c2 = this.startSelection) === null || _c2 === void 0
-          ? void 0
-          : _c2.toJSON(),
+      changes: (_a3 = this.changes) === null || _a3 === void 0 ? void 0 : _a3.toJSON(),
+      mapped: (_b3 = this.mapped) === null || _b3 === void 0 ? void 0 : _b3.toJSON(),
+      startSelection: (_c2 = this.startSelection) === null || _c2 === void 0 ? void 0 : _c2.toJSON(),
       selectionsAfter: this.selectionsAfter.map((s2) => s2.toJSON()),
     }
   }
@@ -16808,8 +16476,7 @@ function isAdjacent(a2, b2) {
 }
 function eqSelectionShape(a2, b2) {
   return (
-    a2.ranges.length == b2.ranges.length &&
-    a2.ranges.filter((r3, i3) => r3.empty != b2.ranges[i3].empty).length === 0
+    a2.ranges.length == b2.ranges.length && a2.ranges.filter((r3, i3) => r3.empty != b2.ranges[i3].empty).length === 0
   )
 }
 function conc(a2, b2) {
@@ -16822,25 +16489,16 @@ function addSelection(branch, selection) {
     return [HistEvent.selection([selection])]
   } else {
     let lastEvent = branch[branch.length - 1]
-    let sels = lastEvent.selectionsAfter.slice(
-      Math.max(0, lastEvent.selectionsAfter.length - MaxSelectionsPerEvent),
-    )
+    let sels = lastEvent.selectionsAfter.slice(Math.max(0, lastEvent.selectionsAfter.length - MaxSelectionsPerEvent))
     if (sels.length && sels[sels.length - 1].eq(selection)) return branch
     sels.push(selection)
-    return updateBranch(
-      branch,
-      branch.length - 1,
-      1e9,
-      lastEvent.setSelAfter(sels),
-    )
+    return updateBranch(branch, branch.length - 1, 1e9, lastEvent.setSelAfter(sels))
   }
 }
 function popSelection(branch) {
   let last = branch[branch.length - 1]
   let newBranch = branch.slice()
-  newBranch[branch.length - 1] = last.setSelAfter(
-    last.selectionsAfter.slice(0, last.selectionsAfter.length - 1),
-  )
+  newBranch[branch.length - 1] = last.setSelAfter(last.selectionsAfter.slice(0, last.selectionsAfter.length - 1))
   return newBranch
 }
 function addMappingToBranch(branch, mapping) {
@@ -16863,9 +16521,7 @@ function addMappingToBranch(branch, mapping) {
 }
 function mapEvent(event, mapping, extraSelections) {
   let selections = conc(
-    event.selectionsAfter.length
-      ? event.selectionsAfter.map((s2) => s2.map(mapping))
-      : none,
+    event.selectionsAfter.length ? event.selectionsAfter.map((s2) => s2.map(mapping)) : none,
     extraSelections,
   )
   if (!event.changes) return HistEvent.selection(selections)
@@ -16917,9 +16573,7 @@ var HistoryState = class {
     return new HistoryState(done, none, time, userEvent)
   }
   addSelection(selection, time, userEvent, newGroupDelay) {
-    let last = this.done.length
-      ? this.done[this.done.length - 1].selectionsAfter
-      : none
+    let last = this.done.length ? this.done[this.done.length - 1].selectionsAfter : none
     if (
       last.length > 0 &&
       time - this.prevTime < newGroupDelay &&
@@ -16929,12 +16583,7 @@ var HistoryState = class {
       eqSelectionShape(last[last.length - 1], selection)
     )
       return this
-    return new HistoryState(
-      addSelection(this.done, selection),
-      this.undone,
-      time,
-      userEvent,
-    )
+    return new HistoryState(addSelection(this.done, selection), this.undone, time, userEvent)
   }
   addMapping(mapping) {
     return new HistoryState(
@@ -17014,9 +16663,7 @@ function rangeEnd(range, forward) {
   return EditorSelection.cursor(forward ? range.to : range.from)
 }
 function cursorByChar(view, forward) {
-  return moveSel(view, (range) =>
-    range.empty ? view.moveByChar(range, forward) : rangeEnd(range, forward),
-  )
+  return moveSel(view, (range) => (range.empty ? view.moveByChar(range, forward) : rangeEnd(range, forward)))
 }
 function ltrAtCursor(view) {
   return view.textDirectionAt(view.state.selection.main.head) == Direction.LTR
@@ -17024,20 +16671,14 @@ function ltrAtCursor(view) {
 var cursorCharLeft = (view) => cursorByChar(view, !ltrAtCursor(view))
 var cursorCharRight = (view) => cursorByChar(view, ltrAtCursor(view))
 function cursorByGroup(view, forward) {
-  return moveSel(view, (range) =>
-    range.empty ? view.moveByGroup(range, forward) : rangeEnd(range, forward),
-  )
+  return moveSel(view, (range) => (range.empty ? view.moveByGroup(range, forward) : rangeEnd(range, forward)))
 }
 var cursorGroupLeft = (view) => cursorByGroup(view, !ltrAtCursor(view))
 var cursorGroupRight = (view) => cursorByGroup(view, ltrAtCursor(view))
 function interestingNode(state, node, bracketProp) {
   if (node.type.prop(bracketProp)) return true
   let len = node.to - node.from
-  return (
-    (len &&
-      (len > 2 || /[^\s,.;:]/.test(state.sliceDoc(node.from, node.to)))) ||
-    node.firstChild
-  )
+  return (len && (len > 2 || /[^\s,.;:]/.test(state.sliceDoc(node.from, node.to)))) || node.firstChild
 }
 function moveBySyntax(state, start, forward) {
   let pos = syntaxTree(state).resolveInner(start.head)
@@ -17053,26 +16694,20 @@ function moveBySyntax(state, start, forward) {
     newPos
   if (
     bracket &&
-    (match = forward
-      ? matchBrackets(state, pos.from, 1)
-      : matchBrackets(state, pos.to, -1)) &&
+    (match = forward ? matchBrackets(state, pos.from, 1) : matchBrackets(state, pos.to, -1)) &&
     match.matched
   )
     newPos = forward ? match.end.to : match.end.from
   else newPos = forward ? pos.to : pos.from
   return EditorSelection.cursor(newPos, forward ? -1 : 1)
 }
-var cursorSyntaxLeft = (view) =>
-  moveSel(view, (range) => moveBySyntax(view.state, range, !ltrAtCursor(view)))
-var cursorSyntaxRight = (view) =>
-  moveSel(view, (range) => moveBySyntax(view.state, range, ltrAtCursor(view)))
+var cursorSyntaxLeft = (view) => moveSel(view, (range) => moveBySyntax(view.state, range, !ltrAtCursor(view)))
+var cursorSyntaxRight = (view) => moveSel(view, (range) => moveBySyntax(view.state, range, ltrAtCursor(view)))
 function cursorByLine(view, forward) {
   return moveSel(view, (range) => {
     if (!range.empty) return rangeEnd(range, forward)
     let moved = view.moveVertically(range, forward)
-    return moved.head != range.head
-      ? moved
-      : view.moveToLineBoundary(range, forward)
+    return moved.head != range.head ? moved : view.moveToLineBoundary(range, forward)
   })
 }
 var cursorLineUp = (view) => cursorByLine(view, false)
@@ -17086,15 +16721,9 @@ function pageInfo(view) {
     for (let source of view.state.facet(EditorView.scrollMargins)) {
       let margins = source(view)
       if (margins === null || margins === void 0 ? void 0 : margins.top)
-        marginTop = Math.max(
-          margins === null || margins === void 0 ? void 0 : margins.top,
-          marginTop,
-        )
+        marginTop = Math.max(margins === null || margins === void 0 ? void 0 : margins.top, marginTop)
       if (margins === null || margins === void 0 ? void 0 : margins.bottom)
-        marginBottom = Math.max(
-          margins === null || margins === void 0 ? void 0 : margins.bottom,
-          marginBottom,
-        )
+        marginBottom = Math.max(margins === null || margins === void 0 ? void 0 : margins.bottom, marginBottom)
     }
     height = view.scrollDOM.clientHeight - marginTop - marginBottom
   } else {
@@ -17111,9 +16740,7 @@ function cursorByPage(view, forward) {
   let page = pageInfo(view)
   let { state } = view,
     selection = updateSel(state.selection, (range) => {
-      return range.empty
-        ? view.moveVertically(range, forward, page.height)
-        : rangeEnd(range, forward)
+      return range.empty ? view.moveVertically(range, forward, page.height) : rangeEnd(range, forward)
     })
   if (selection.eq(state.selection)) return false
   let effect
@@ -17139,30 +16766,17 @@ function moveByLineBoundary(view, start, forward) {
   if (moved.head == start.head && moved.head != (forward ? line.to : line.from))
     moved = view.moveToLineBoundary(start, forward, false)
   if (!forward && moved.head == line.from && line.length) {
-    let space = /^\s*/.exec(
-      view.state.sliceDoc(line.from, Math.min(line.from + 100, line.to)),
-    )[0].length
-    if (space && start.head != line.from + space)
-      moved = EditorSelection.cursor(line.from + space)
+    let space = /^\s*/.exec(view.state.sliceDoc(line.from, Math.min(line.from + 100, line.to)))[0].length
+    if (space && start.head != line.from + space) moved = EditorSelection.cursor(line.from + space)
   }
   return moved
 }
-var cursorLineBoundaryForward = (view) =>
-  moveSel(view, (range) => moveByLineBoundary(view, range, true))
-var cursorLineBoundaryBackward = (view) =>
-  moveSel(view, (range) => moveByLineBoundary(view, range, false))
-var cursorLineBoundaryLeft = (view) =>
-  moveSel(view, (range) => moveByLineBoundary(view, range, !ltrAtCursor(view)))
-var cursorLineBoundaryRight = (view) =>
-  moveSel(view, (range) => moveByLineBoundary(view, range, ltrAtCursor(view)))
-var cursorLineStart = (view) =>
-  moveSel(view, (range) =>
-    EditorSelection.cursor(view.lineBlockAt(range.head).from, 1),
-  )
-var cursorLineEnd = (view) =>
-  moveSel(view, (range) =>
-    EditorSelection.cursor(view.lineBlockAt(range.head).to, -1),
-  )
+var cursorLineBoundaryForward = (view) => moveSel(view, (range) => moveByLineBoundary(view, range, true))
+var cursorLineBoundaryBackward = (view) => moveSel(view, (range) => moveByLineBoundary(view, range, false))
+var cursorLineBoundaryLeft = (view) => moveSel(view, (range) => moveByLineBoundary(view, range, !ltrAtCursor(view)))
+var cursorLineBoundaryRight = (view) => moveSel(view, (range) => moveByLineBoundary(view, range, ltrAtCursor(view)))
+var cursorLineStart = (view) => moveSel(view, (range) => EditorSelection.cursor(view.lineBlockAt(range.head).from, 1))
+var cursorLineEnd = (view) => moveSel(view, (range) => EditorSelection.cursor(view.lineBlockAt(range.head).to, -1))
 function toMatchingBracket(state, dispatch, extend) {
   let found = false,
     selection = updateSel(state.selection, (range) => {
@@ -17170,31 +16784,21 @@ function toMatchingBracket(state, dispatch, extend) {
         matchBrackets(state, range.head, -1) ||
         matchBrackets(state, range.head, 1) ||
         (range.head > 0 && matchBrackets(state, range.head - 1, 1)) ||
-        (range.head < state.doc.length &&
-          matchBrackets(state, range.head + 1, -1))
+        (range.head < state.doc.length && matchBrackets(state, range.head + 1, -1))
       if (!matching || !matching.end) return range
       found = true
-      let head =
-        matching.start.from == range.head ? matching.end.to : matching.end.from
-      return extend
-        ? EditorSelection.range(range.anchor, head)
-        : EditorSelection.cursor(head)
+      let head = matching.start.from == range.head ? matching.end.to : matching.end.from
+      return extend ? EditorSelection.range(range.anchor, head) : EditorSelection.cursor(head)
     })
   if (!found) return false
   dispatch(setSel(state, selection))
   return true
 }
-var cursorMatchingBracket = ({ state, dispatch }) =>
-  toMatchingBracket(state, dispatch, false)
+var cursorMatchingBracket = ({ state, dispatch }) => toMatchingBracket(state, dispatch, false)
 function extendSel(view, how) {
   let selection = updateSel(view.state.selection, (range) => {
     let head = how(range)
-    return EditorSelection.range(
-      range.anchor,
-      head.head,
-      head.goalColumn,
-      head.bidiLevel || void 0,
-    )
+    return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || void 0)
   })
   if (selection.eq(view.state.selection)) return false
   view.dispatch(setSel(view.state, selection))
@@ -17210,42 +16814,24 @@ function selectByGroup(view, forward) {
 }
 var selectGroupLeft = (view) => selectByGroup(view, !ltrAtCursor(view))
 var selectGroupRight = (view) => selectByGroup(view, ltrAtCursor(view))
-var selectSyntaxLeft = (view) =>
-  extendSel(view, (range) =>
-    moveBySyntax(view.state, range, !ltrAtCursor(view)),
-  )
-var selectSyntaxRight = (view) =>
-  extendSel(view, (range) => moveBySyntax(view.state, range, ltrAtCursor(view)))
+var selectSyntaxLeft = (view) => extendSel(view, (range) => moveBySyntax(view.state, range, !ltrAtCursor(view)))
+var selectSyntaxRight = (view) => extendSel(view, (range) => moveBySyntax(view.state, range, ltrAtCursor(view)))
 function selectByLine(view, forward) {
   return extendSel(view, (range) => view.moveVertically(range, forward))
 }
 var selectLineUp = (view) => selectByLine(view, false)
 var selectLineDown = (view) => selectByLine(view, true)
 function selectByPage(view, forward) {
-  return extendSel(view, (range) =>
-    view.moveVertically(range, forward, pageInfo(view).height),
-  )
+  return extendSel(view, (range) => view.moveVertically(range, forward, pageInfo(view).height))
 }
 var selectPageUp = (view) => selectByPage(view, false)
 var selectPageDown = (view) => selectByPage(view, true)
-var selectLineBoundaryForward = (view) =>
-  extendSel(view, (range) => moveByLineBoundary(view, range, true))
-var selectLineBoundaryBackward = (view) =>
-  extendSel(view, (range) => moveByLineBoundary(view, range, false))
-var selectLineBoundaryLeft = (view) =>
-  extendSel(view, (range) =>
-    moveByLineBoundary(view, range, !ltrAtCursor(view)),
-  )
-var selectLineBoundaryRight = (view) =>
-  extendSel(view, (range) => moveByLineBoundary(view, range, ltrAtCursor(view)))
-var selectLineStart = (view) =>
-  extendSel(view, (range) =>
-    EditorSelection.cursor(view.lineBlockAt(range.head).from),
-  )
-var selectLineEnd = (view) =>
-  extendSel(view, (range) =>
-    EditorSelection.cursor(view.lineBlockAt(range.head).to),
-  )
+var selectLineBoundaryForward = (view) => extendSel(view, (range) => moveByLineBoundary(view, range, true))
+var selectLineBoundaryBackward = (view) => extendSel(view, (range) => moveByLineBoundary(view, range, false))
+var selectLineBoundaryLeft = (view) => extendSel(view, (range) => moveByLineBoundary(view, range, !ltrAtCursor(view)))
+var selectLineBoundaryRight = (view) => extendSel(view, (range) => moveByLineBoundary(view, range, ltrAtCursor(view)))
+var selectLineStart = (view) => extendSel(view, (range) => EditorSelection.cursor(view.lineBlockAt(range.head).from))
+var selectLineEnd = (view) => extendSel(view, (range) => EditorSelection.cursor(view.lineBlockAt(range.head).to))
 var cursorDocStart = ({ state, dispatch }) => {
   dispatch(setSel(state, { anchor: 0 }))
   return true
@@ -17296,9 +16882,7 @@ var selectParentSyntax = ({ state, dispatch }) => {
       !(
         (context.from < range.from && context.to >= range.to) ||
         (context.to > range.to && context.from <= range.from) ||
-        !((_a3 = context.parent) === null || _a3 === void 0
-          ? void 0
-          : _a3.parent)
+        !((_a3 = context.parent) === null || _a3 === void 0 ? void 0 : _a3.parent)
       )
     )
       context = context.parent
@@ -17311,8 +16895,7 @@ var simplifySelection = ({ state, dispatch }) => {
   let cur = state.selection,
     selection = null
   if (cur.ranges.length > 1) selection = EditorSelection.create([cur.main])
-  else if (!cur.main.empty)
-    selection = EditorSelection.create([EditorSelection.cursor(cur.main.head)])
+  else if (!cur.main.empty) selection = EditorSelection.create([EditorSelection.cursor(cur.main.head)])
   if (!selection) return false
   dispatch(setSel(state, selection))
   return true
@@ -17338,28 +16921,21 @@ function deleteBy(target, by) {
       from = skipAtomic(target, from, false)
       to = skipAtomic(target, to, true)
     }
-    return from == to
-      ? { range }
-      : { changes: { from, to }, range: EditorSelection.cursor(from) }
+    return from == to ? { range } : { changes: { from, to }, range: EditorSelection.cursor(from) }
   })
   if (changes.changes.empty) return false
   target.dispatch(
     state.update(changes, {
       scrollIntoView: true,
       userEvent: event,
-      effects:
-        event == 'delete.selection'
-          ? EditorView.announce.of(state.phrase('Selection deleted'))
-          : void 0,
+      effects: event == 'delete.selection' ? EditorView.announce.of(state.phrase('Selection deleted')) : void 0,
     }),
   )
   return true
 }
 function skipAtomic(target, pos, forward) {
   if (target instanceof EditorView)
-    for (let ranges of target.state
-      .facet(EditorView.atomicRanges)
-      .map((f2) => f2(target)))
+    for (let ranges of target.state.facet(EditorView.atomicRanges).map((f2) => f2(target)))
       ranges.between(pos, pos, (from, to) => {
         if (from < pos && to > pos) pos = forward ? to : from
       })
@@ -17380,15 +16956,11 @@ var deleteByChar = (target, forward) =>
       if (before[before.length - 1] == '	') return pos - 1
       let col = countColumn(before, state.tabSize),
         drop = col % getIndentUnit(state) || getIndentUnit(state)
-      for (let i3 = 0; i3 < drop && before[before.length - 1 - i3] == ' '; i3++)
-        pos--
+      for (let i3 = 0; i3 < drop && before[before.length - 1 - i3] == ' '; i3++) pos--
       targetPos = pos
     } else {
-      targetPos =
-        findClusterBreak(line.text, pos - line.from, forward, forward) +
-        line.from
-      if (targetPos == pos && line.number != (forward ? state.doc.lines : 1))
-        targetPos += forward ? 1 : -1
+      targetPos = findClusterBreak(line.text, pos - line.from, forward, forward) + line.from
+      if (targetPos == pos && line.number != (forward ? state.doc.lines : 1)) targetPos += forward ? 1 : -1
     }
     return targetPos
   })
@@ -17402,16 +16974,11 @@ var deleteByGroup = (target, forward) =>
     let categorize = state.charCategorizer(pos)
     for (let cat = null; ; ) {
       if (pos == (forward ? line.to : line.from)) {
-        if (pos == start && line.number != (forward ? state.doc.lines : 1))
-          pos += forward ? 1 : -1
+        if (pos == start && line.number != (forward ? state.doc.lines : 1)) pos += forward ? 1 : -1
         break
       }
-      let next =
-        findClusterBreak(line.text, pos - line.from, forward) + line.from
-      let nextChar = line.text.slice(
-        Math.min(pos, next) - line.from,
-        Math.max(pos, next) - line.from,
-      )
+      let next = findClusterBreak(line.text, pos - line.from, forward) + line.from
+      let nextChar = line.text.slice(Math.min(pos, next) - line.from, Math.max(pos, next) - line.from)
       let nextCat = categorize(nextChar)
       if (cat != null && nextCat != cat) break
       if (nextChar != ' ' || pos != start) cat = nextCat
@@ -17449,18 +17016,11 @@ var splitLine = ({ state, dispatch }) => {
 var transposeChars = ({ state, dispatch }) => {
   if (state.readOnly) return false
   let changes = state.changeByRange((range) => {
-    if (!range.empty || range.from == 0 || range.from == state.doc.length)
-      return { range }
+    if (!range.empty || range.from == 0 || range.from == state.doc.length) return { range }
     let pos = range.from,
       line = state.doc.lineAt(pos)
-    let from =
-      pos == line.from
-        ? pos - 1
-        : findClusterBreak(line.text, pos - line.from, false) + line.from
-    let to =
-      pos == line.to
-        ? pos + 1
-        : findClusterBreak(line.text, pos - line.from, true) + line.from
+    let from = pos == line.from ? pos - 1 : findClusterBreak(line.text, pos - line.from, false) + line.from
+    let to = pos == line.to ? pos + 1 : findClusterBreak(line.text, pos - line.from, true) + line.from
     return {
       changes: {
         from,
@@ -17485,8 +17045,7 @@ function selectedLineBlocks(state) {
   for (let range of state.selection.ranges) {
     let startLine = state.doc.lineAt(range.from),
       endLine = state.doc.lineAt(range.to)
-    if (!range.empty && range.to == endLine.from)
-      endLine = state.doc.lineAt(range.to - 1)
+    if (!range.empty && range.to == endLine.from) endLine = state.doc.lineAt(range.to - 1)
     if (upto >= startLine.number) {
       let prev = blocks[blocks.length - 1]
       prev.to = endLine.to
@@ -17511,10 +17070,7 @@ function moveLine(state, dispatch, forward) {
     let nextLine = state.doc.lineAt(forward ? block.to + 1 : block.from - 1)
     let size = nextLine.length + 1
     if (forward) {
-      changes.push(
-        { from: block.to, to: nextLine.to },
-        { from: block.from, insert: nextLine.text + state.lineBreak },
-      )
+      changes.push({ from: block.to, to: nextLine.to }, { from: block.from, insert: nextLine.text + state.lineBreak })
       for (let r3 of block.ranges)
         ranges.push(
           EditorSelection.range(
@@ -17523,12 +17079,8 @@ function moveLine(state, dispatch, forward) {
           ),
         )
     } else {
-      changes.push(
-        { from: nextLine.from, to: block.from },
-        { from: block.to, insert: state.lineBreak + nextLine.text },
-      )
-      for (let r3 of block.ranges)
-        ranges.push(EditorSelection.range(r3.anchor - size, r3.head - size))
+      changes.push({ from: nextLine.from, to: block.from }, { from: block.to, insert: state.lineBreak + nextLine.text })
+      for (let r3 of block.ranges) ranges.push(EditorSelection.range(r3.anchor - size, r3.head - size))
     }
   }
   if (!changes.length) return false
@@ -17580,9 +17132,7 @@ var deleteLine = (view) => {
         return { from, to }
       }),
     )
-  let selection = updateSel(state.selection, (range) =>
-    view.moveVertically(range, true),
-  ).map(changes)
+  let selection = updateSel(state.selection, (range) => view.moveVertically(range, true)).map(changes)
   view.dispatch({
     changes,
     selection,
@@ -17592,8 +17142,7 @@ var deleteLine = (view) => {
   return true
 }
 function isBetweenBrackets(state, pos) {
-  if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
-    return { from: pos, to: pos }
+  if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1))) return { from: pos, to: pos }
   let context = syntaxTree(state).resolveInner(pos)
   let before = context.childBefore(pos),
     after = context.childAfter(pos),
@@ -17625,27 +17174,18 @@ function newlineAndIndent(atEof) {
         simulateDoubleBreak: !!explode,
       })
       let indent = getIndentation(cx, from)
-      if (indent == null)
-        indent = /^\s*/.exec(state.doc.lineAt(from).text)[0].length
+      if (indent == null) indent = /^\s*/.exec(state.doc.lineAt(from).text)[0].length
       while (to < line.to && /\s/.test(line.text[to - line.from])) to++
       if (explode) ({ from, to } = explode)
-      else if (
-        from > line.from &&
-        from < line.from + 100 &&
-        !/\S/.test(line.text.slice(0, from))
-      )
-        from = line.from
+      else if (from > line.from && from < line.from + 100 && !/\S/.test(line.text.slice(0, from))) from = line.from
       let insert = ['', indentString(state, indent)]
-      if (explode)
-        insert.push(indentString(state, cx.lineIndent(line.from, -1)))
+      if (explode) insert.push(indentString(state, cx.lineIndent(line.from, -1)))
       return {
         changes: { from, to, insert: Text.of(insert) },
         range: EditorSelection.cursor(from + 1 + insert[1].length),
       }
     })
-    dispatch(
-      state.update(changes, { scrollIntoView: true, userEvent: 'input' }),
-    )
+    dispatch(state.update(changes, { scrollIntoView: true, userEvent: 'input' }))
     return true
   }
 }
@@ -17664,10 +17204,7 @@ function changeBySelectedLine(state, f2) {
     let changeSet = state.changes(changes)
     return {
       changes,
-      range: EditorSelection.range(
-        changeSet.mapPos(range.anchor, 1),
-        changeSet.mapPos(range.head, 1),
-      ),
+      range: EditorSelection.range(changeSet.mapPos(range.anchor, 1), changeSet.mapPos(range.head, 1)),
     }
   })
 }
@@ -17695,8 +17232,7 @@ var indentSelection = ({ state, dispatch }) => {
       })
     }
   })
-  if (!changes.changes.empty)
-    dispatch(state.update(changes, { userEvent: 'indent' }))
+  if (!changes.changes.empty) dispatch(state.update(changes, { userEvent: 'indent' }))
   return true
 }
 var indentMore = ({ state, dispatch }) => {
@@ -17723,16 +17259,8 @@ var indentLess = ({ state, dispatch }) => {
         if (!space) return
         let col = countColumn(space, state.tabSize),
           keep = 0
-        let insert = indentString(
-          state,
-          Math.max(0, col - getIndentUnit(state)),
-        )
-        while (
-          keep < space.length &&
-          keep < insert.length &&
-          space.charCodeAt(keep) == insert.charCodeAt(keep)
-        )
-          keep++
+        let insert = indentString(state, Math.max(0, col - getIndentUnit(state)))
+        while (keep < space.length && keep < insert.length && space.charCodeAt(keep) == insert.charCodeAt(keep)) keep++
         changes.push({
           from: line.from + keep,
           to: line.from + space.length,
@@ -17891,14 +17419,7 @@ var __getProtoOf3 = Object.getPrototypeOf
 var __hasOwnProp3 = Object.prototype.hasOwnProperty
 var __commonJS3 = (cb, mod) =>
   function __require() {
-    return (
-      mod ||
-        (0, cb[__getOwnPropNames3(cb)[0]])(
-          (mod = { exports: {} }).exports,
-          mod,
-        ),
-      mod.exports
-    )
+    return mod || (0, cb[__getOwnPropNames3(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports
   }
 var __copyProps3 = (to, from, except, desc) => {
   if ((from && typeof from === 'object') || typeof from === 'function') {
@@ -17918,9 +17439,7 @@ var __toESM3 = (mod, isNodeMode, target) => (
     // file that has been converted to a CommonJS file using a Babel-
     // compatible transform (i.e. "__esModule" has not been set), then set
     // "default" to the CommonJS "module.exports" for node compatibility.
-    isNodeMode || !mod || !mod.__esModule
-      ? __defProp3(target, 'default', { value: mod, enumerable: true })
-      : target,
+    isNodeMode || !mod || !mod.__esModule ? __defProp3(target, 'default', { value: mod, enumerable: true }) : target,
     mod,
   )
 )
@@ -18056,15 +17575,7 @@ var require_lib2 = __commonJS3({
           key: 'escapeForHtml',
           value: function escapeForHtml(txt) {
             return txt.replace(/[&<>\"]/gm, function (str) {
-              return str == '&'
-                ? '&amp;'
-                : str == '"'
-                  ? '&quot;'
-                  : str == '<'
-                    ? '&lt;'
-                    : str == '>'
-                      ? '&gt;'
-                      : ''
+              return str == '&' ? '&amp;' : str == '"' ? '&quot;' : str == '<' ? '&lt;' : str == '>' ? '&gt;' : ''
             })
           },
         },
@@ -18132,8 +17643,7 @@ var require_lib2 = __commonJS3({
           key: 'processChunkJson',
           value: function processChunkJson(text, options, markup) {
             options = typeof options == 'undefined' ? {} : options
-            var use_classes = (options.use_classes =
-              typeof options.use_classes != 'undefined' && options.use_classes)
+            var use_classes = (options.use_classes = typeof options.use_classes != 'undefined' && options.use_classes)
             var key = (options.key = use_classes ? 'class' : 'color')
             var result = {
               content: text,
@@ -18150,9 +17660,7 @@ var require_lib2 = __commonJS3({
                 return !result.content
               },
             }
-            var matches = text.match(
-              /^([!\x3c-\x3f]*)([\d;]*)([\x20-\x2c]*[\x40-\x7e])([\s\S]*)/m,
-            )
+            var matches = text.match(/^([!\x3c-\x3f]*)([\d;]*)([\x20-\x2c]*[\x40-\x7e])([\s\S]*)/m)
             if (!matches) return result
             var orig_txt = (result.content = matches[4])
             var nums = matches[2].split(';')
@@ -18234,9 +17742,7 @@ var require_lib2 = __commonJS3({
                         var klass =
                           palette_index >= 16
                             ? 'ansi-palette-' + palette_index
-                            : ANSI_COLORS[palette_index > 7 ? 1 : 0][
-                                palette_index % 8
-                              ]['class']
+                            : ANSI_COLORS[palette_index > 7 ? 1 : 0][palette_index % 8]['class']
                         if (is_foreground) {
                           self2.fg = klass
                         } else {
@@ -18248,14 +17754,7 @@ var require_lib2 = __commonJS3({
                     var r3 = parseInt(nums.shift())
                     var g2 = parseInt(nums.shift())
                     var b2 = parseInt(nums.shift())
-                    if (
-                      r3 >= 0 &&
-                      r3 <= 255 &&
-                      g2 >= 0 &&
-                      g2 <= 255 &&
-                      b2 >= 0 &&
-                      b2 <= 255
-                    ) {
+                    if (r3 >= 0 && r3 <= 255 && g2 >= 0 && g2 <= 255 && b2 >= 0 && b2 <= 255) {
                       var color2 = r3 + ', ' + g2 + ', ' + b2
                       if (!use_classes) {
                         if (is_foreground) {
@@ -18277,11 +17776,7 @@ var require_lib2 = __commonJS3({
                 }
               }
             }
-            if (
-              self2.fg === null &&
-              self2.bg === null &&
-              self2.decorations.length === 0
-            ) {
+            if (self2.fg === null && self2.bg === null && self2.decorations.length === 0) {
               return result
             } else {
               var styles = []
@@ -18305,29 +17800,25 @@ var require_lib2 = __commonJS3({
             options = options || {}
             var jsonChunk = this.processChunkJson(text, options, markup)
             var use_classes = options.use_classes
-            jsonChunk.decorations = jsonChunk.decorations.filter(
-              function (decoration) {
-                if (decoration === 'reverse') {
-                  if (!jsonChunk.fg) {
-                    jsonChunk.fg =
-                      ANSI_COLORS[0][7][use_classes ? 'class' : 'color']
-                  }
-                  if (!jsonChunk.bg) {
-                    jsonChunk.bg =
-                      ANSI_COLORS[0][0][use_classes ? 'class' : 'color']
-                  }
-                  var tmpFg = jsonChunk.fg
-                  jsonChunk.fg = jsonChunk.bg
-                  jsonChunk.bg = tmpFg
-                  var tmpFgTrue = jsonChunk.fg_truecolor
-                  jsonChunk.fg_truecolor = jsonChunk.bg_truecolor
-                  jsonChunk.bg_truecolor = tmpFgTrue
-                  jsonChunk.isInverted = true
-                  return false
+            jsonChunk.decorations = jsonChunk.decorations.filter(function (decoration) {
+              if (decoration === 'reverse') {
+                if (!jsonChunk.fg) {
+                  jsonChunk.fg = ANSI_COLORS[0][7][use_classes ? 'class' : 'color']
                 }
-                return true
-              },
-            )
+                if (!jsonChunk.bg) {
+                  jsonChunk.bg = ANSI_COLORS[0][0][use_classes ? 'class' : 'color']
+                }
+                var tmpFg = jsonChunk.fg
+                jsonChunk.fg = jsonChunk.bg
+                jsonChunk.bg = tmpFg
+                var tmpFgTrue = jsonChunk.fg_truecolor
+                jsonChunk.fg_truecolor = jsonChunk.bg_truecolor
+                jsonChunk.bg_truecolor = tmpFgTrue
+                jsonChunk.isInverted = true
+                return false
+              }
+              return true
+            })
             if (options.json) {
               return jsonChunk
             }
@@ -18346,13 +17837,7 @@ var require_lib2 = __commonJS3({
               var key = void 0
               for (key in data2) {
                 if (data2.hasOwnProperty(key)) {
-                  fragments.push(
-                    'data-' +
-                      key +
-                      '="' +
-                      _this2.escapeForHtml(data2[key]) +
-                      '"',
-                  )
+                  fragments.push('data-' + key + '="' + _this2.escapeForHtml(data2[key]) + '"')
                 }
               }
               return fragments.length > 0 ? ' ' + fragments.join(' ') : ''
@@ -18449,12 +17934,9 @@ var require_escape_carriage = __commonJS3({
       if (!/\r/.test(txt)) return txt
       txt = txt.replace(/\r+\n/gm, '\n')
       while (/\r./.test(txt)) {
-        txt = txt.replace(
-          /^([^\r\n]*)\r+([^\r\n]+)/gm,
-          function (_, base, insert) {
-            return insert + base.slice(insert.length)
-          },
-        )
+        txt = txt.replace(/^([^\r\n]*)\r+([^\r\n]+)/gm, function (_, base, insert) {
+          return insert + base.slice(insert.length)
+        })
       }
       return txt
     }
@@ -18484,11 +17966,7 @@ var require_escape_carriage = __commonJS3({
       if (!/\n/.test(txt)) return escapeSingleLineSafe(txt)
       txt = txt.replace(/\r+\n/gm, '\n')
       var idx = txt.lastIndexOf('\n')
-      return (
-        escapeCarriageReturn2(txt.slice(0, idx)) +
-        '\n' +
-        escapeSingleLineSafe(txt.slice(idx + 1))
-      )
+      return escapeCarriageReturn2(txt.slice(0, idx)) + '\n' + escapeSingleLineSafe(txt.slice(idx + 1))
     }
     module.exports = escapeCarriageReturn2
     module.exports.escapeCarriageReturn = escapeCarriageReturn2
@@ -18499,10 +17977,8 @@ var require_lz_string = __commonJS3({
   '../../node_modules/lz-string/libs/lz-string.js'(exports, module) {
     var LZString2 = (function () {
       var f2 = String.fromCharCode
-      var keyStrBase64 =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
-      var keyStrUriSafe =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$'
+      var keyStrBase64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+      var keyStrUriSafe = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$'
       var baseReverseDic = {}
       function getBaseValue(alphabet, character) {
         if (!baseReverseDic[alphabet]) {
@@ -18549,23 +18025,15 @@ var require_lz_string = __commonJS3({
         decompressFromUTF16: function (compressed) {
           if (compressed == null) return ''
           if (compressed == '') return null
-          return LZString3._decompress(
-            compressed.length,
-            16384,
-            function (index) {
-              return compressed.charCodeAt(index) - 32
-            },
-          )
+          return LZString3._decompress(compressed.length, 16384, function (index) {
+            return compressed.charCodeAt(index) - 32
+          })
         },
         //compress into uint8array (UCS-2 big endian format)
         compressToUint8Array: function (uncompressed) {
           var compressed = LZString3.compress(uncompressed)
           var buf = new Uint8Array(compressed.length * 2)
-          for (
-            var i22 = 0, TotalLen = compressed.length;
-            i22 < TotalLen;
-            i22++
-          ) {
+          for (var i22 = 0, TotalLen = compressed.length; i22 < TotalLen; i22++) {
             var current_value = compressed.charCodeAt(i22)
             buf[i22 * 2] = current_value >>> 8
             buf[i22 * 2 + 1] = current_value % 256
@@ -18627,30 +18095,15 @@ var require_lz_string = __commonJS3({
             ii
           for (ii = 0; ii < uncompressed.length; ii += 1) {
             context_c = uncompressed.charAt(ii)
-            if (
-              !Object.prototype.hasOwnProperty.call(
-                context_dictionary,
-                context_c,
-              )
-            ) {
+            if (!Object.prototype.hasOwnProperty.call(context_dictionary, context_c)) {
               context_dictionary[context_c] = context_dictSize++
               context_dictionaryToCreate[context_c] = true
             }
             context_wc = context_w + context_c
-            if (
-              Object.prototype.hasOwnProperty.call(
-                context_dictionary,
-                context_wc,
-              )
-            ) {
+            if (Object.prototype.hasOwnProperty.call(context_dictionary, context_wc)) {
               context_w = context_wc
             } else {
-              if (
-                Object.prototype.hasOwnProperty.call(
-                  context_dictionaryToCreate,
-                  context_w,
-                )
-              ) {
+              if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
                 if (context_w.charCodeAt(0) < 256) {
                   for (i22 = 0; i22 < context_numBits; i22++) {
                     context_data_val = context_data_val << 1
@@ -18730,12 +18183,7 @@ var require_lz_string = __commonJS3({
             }
           }
           if (context_w !== '') {
-            if (
-              Object.prototype.hasOwnProperty.call(
-                context_dictionaryToCreate,
-                context_w,
-              )
-            ) {
+            if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
               if (context_w.charCodeAt(0) < 256) {
                 for (i22 = 0; i22 < context_numBits; i22++) {
                   context_data_val = context_data_val << 1
@@ -18835,13 +18283,9 @@ var require_lz_string = __commonJS3({
         decompress: function (compressed) {
           if (compressed == null) return ''
           if (compressed == '') return null
-          return LZString3._decompress(
-            compressed.length,
-            32768,
-            function (index) {
-              return compressed.charCodeAt(index)
-            },
-          )
+          return LZString3._decompress(compressed.length, 32768, function (index) {
+            return compressed.charCodeAt(index)
+          })
         },
         _decompress: function (length, resetValue, getNextValue) {
           var dictionary = [],
@@ -19151,10 +18595,7 @@ var i = {
   transition: 'transitions',
   zIndex: 'zIndices',
 }
-var o = (e2, t22) =>
-  'function' == typeof t22
-    ? { '()': Function.prototype.toString.call(t22) }
-    : t22
+var o = (e2, t22) => ('function' == typeof t22 ? { '()': Function.prototype.toString.call(t22) } : t22)
 var l = () => {
   const e2 = /* @__PURE__ */ Object.create(null)
   return (t22, n2, ...r3) => {
@@ -19163,18 +18604,15 @@ var l = () => {
   }
 }
 var s = Symbol.for('sxs.internal')
-var a = (e2, t22) =>
-  Object.defineProperties(e2, Object.getOwnPropertyDescriptors(t22))
+var a = (e2, t22) => Object.defineProperties(e2, Object.getOwnPropertyDescriptors(t22))
 var c = (e2) => {
   for (const t22 in e2) return true
   return false
 }
 var { hasOwnProperty: d } = Object.prototype
-var g = (e2) =>
-  e2.includes('-') ? e2 : e2.replace(/[A-Z]/g, (e22) => '-' + e22.toLowerCase())
+var g = (e2) => (e2.includes('-') ? e2 : e2.replace(/[A-Z]/g, (e22) => '-' + e22.toLowerCase()))
 var p = /\s+(?![^()]*\))/
-var u = (e2) => (t22) =>
-  e2(...('string' == typeof t22 ? String(t22).split(p) : [t22]))
+var u = (e2) => (t22) => e2(...('string' == typeof t22 ? String(t22).split(p) : [t22]))
 var h = {
   appearance: (e2) => ({ WebkitAppearance: e2, appearance: e2 }),
   backfaceVisibility: (e2) => ({
@@ -19192,9 +18630,7 @@ var h = {
     content:
       e2.includes('"') ||
       e2.includes("'") ||
-      /^([A-Za-z]+\([^]*|[^]*-quote|inherit|initial|none|normal|revert|unset)$/.test(
-        e2,
-      )
+      /^([A-Za-z]+\([^]*|[^]*-quote|inherit|initial|none|normal|revert|unset)$/.test(e2)
         ? e2
         : `"${e2}"`,
   }),
@@ -19231,10 +18667,7 @@ var m = (e2, t22) =>
           e22.push(
             ...t22.map((e3) =>
               e3.includes('&')
-                ? e3.replace(
-                    /&/g,
-                    /[ +>|~]/.test(n2) && /&.*&/.test(e3) ? `:is(${n2})` : n2,
-                  )
+                ? e3.replace(/&/g, /[ +>|~]/.test(n2) && /&.*&/.test(e3) ? `:is(${n2})` : n2)
                 : n2 + ' ' + e3,
             ),
           ),
@@ -19271,18 +18704,14 @@ var S = {
 }
 var k = (e2) => (e2 ? e2 + '-' : '')
 var y = (e2, t22, n2) =>
-  e2.replace(
-    /([+-])?((?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)?(\$|--)([$\w-]+)/g,
-    (e22, r3, i22, o2, l2) =>
-      ('$' == o2) == !!i22
-        ? e22
-        : (r3 || '--' == o2 ? 'calc(' : '') +
-          'var(--' +
-          ('$' === o2
-            ? k(t22) + (l2.includes('$') ? '' : k(n2)) + l2.replace(/\$/g, '-')
-            : l2) +
-          ')' +
-          (r3 || '--' == o2 ? '*' + (r3 || '') + (i22 || '1') + ')' : ''),
+  e2.replace(/([+-])?((?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)?(\$|--)([$\w-]+)/g, (e22, r3, i22, o2, l2) =>
+    ('$' == o2) == !!i22
+      ? e22
+      : (r3 || '--' == o2 ? 'calc(' : '') +
+        'var(--' +
+        ('$' === o2 ? k(t22) + (l2.includes('$') ? '' : k(n2)) + l2.replace(/\$/g, '-') : l2) +
+        ')' +
+        (r3 || '--' == o2 ? '*' + (r3 || '') + (i22 || '1') + ')' : ''),
   )
 var B = /\s*,\s*(?![^()]*\))/
 var $ = Object.prototype.toString
@@ -19295,14 +18724,8 @@ var x = (e2, t22, n2, r3, i22) => {
         const x2 = 64 === c22.charCodeAt(0),
           z2 = x2 && Array.isArray(e3[c22]) ? e3[c22] : [e3[c22]]
         for (d2 of z2) {
-          const e4 = /[A-Z]/.test((S2 = c22))
-              ? S2
-              : S2.replace(/-[^]/g, (e5) => e5[1].toUpperCase()),
-            z3 =
-              'object' == typeof d2 &&
-              d2 &&
-              d2.toString === $ &&
-              (!r3.utils[e4] || !t3.length)
+          const e4 = /[A-Z]/.test((S2 = c22)) ? S2 : S2.replace(/-[^]/g, (e5) => e5[1].toUpperCase()),
+            z3 = 'object' == typeof d2 && d2 && d2.toString === $ && (!r3.utils[e4] || !t3.length)
           if (e4 in r3.utils && !z3) {
             const t4 = r3.utils[e4]
             if (t4 !== l2) {
@@ -19318,10 +18741,7 @@ var x = (e2, t22, n2, r3, i22) => {
           }
           if (
             (x2 &&
-              ((u2 =
-                c22.slice(1) in r3.media
-                  ? '@media ' + r3.media[c22.slice(1)]
-                  : c22),
+              ((u2 = c22.slice(1) in r3.media ? '@media ' + r3.media[c22.slice(1)] : c22),
               (c22 = u2.replace(
                 /\(\s*([\w-]+)\s*(=|<|<=|>|>=)\s*([\w-]+)\s*(?:(<|<=|>|>=)\s*([\w-]+)\s*)?\)/g,
                 (e5, t4, n4, r4, i3, o3) => {
@@ -19330,19 +18750,11 @@ var x = (e2, t22, n2, r3, i22) => {
                     [a3, c3] = l3 ? [r4, t4] : [t4, r4]
                   return (
                     '(' +
-                    ('=' === n4[0]
-                      ? ''
-                      : ('>' === n4[0]) === l3
-                        ? 'max-'
-                        : 'min-') +
+                    ('=' === n4[0] ? '' : ('>' === n4[0]) === l3 ? 'max-' : 'min-') +
                     a3 +
                     ':' +
                     ('=' !== n4[0] && 1 === n4.length
-                      ? c3.replace(
-                          f,
-                          (e6, t5, r5) =>
-                            Number(t5) + s3 * ('>' === n4 ? 1 : -1) + r5,
-                        )
+                      ? c3.replace(f, (e6, t5, r5) => Number(t5) + s3 * ('>' === n4 ? 1 : -1) + r5)
                       : c3) +
                     (i3
                       ? ') and (' +
@@ -19350,11 +18762,7 @@ var x = (e2, t22, n2, r3, i22) => {
                         a3 +
                         ':' +
                         (1 === i3.length
-                          ? o3.replace(
-                              f,
-                              (e6, t5, n5) =>
-                                Number(t5) + s3 * ('>' === i3 ? -1 : 1) + n5,
-                            )
+                          ? o3.replace(f, (e6, t5, n5) => Number(t5) + s3 * ('>' === i3 ? -1 : 1) + n5)
                           : o3)
                       : '') +
                     ')'
@@ -19368,10 +18776,7 @@ var x = (e2, t22, n2, r3, i22) => {
             void 0 !== o2 && i22(I(...o2)), (o2 = void 0), a2(d2, r4, e5)
           } else
             void 0 === o2 && (o2 = [[], t3, n3]),
-              (c22 =
-                x2 || 36 !== c22.charCodeAt(0)
-                  ? c22
-                  : `--${k(r3.prefix)}${c22.slice(1).replace(/\$/g, '-')}`),
+              (c22 = x2 || 36 !== c22.charCodeAt(0) ? c22 : `--${k(r3.prefix)}${c22.slice(1).replace(/\$/g, '-')}`),
               (d2 = z3
                 ? d2
                 : 'number' == typeof d2
@@ -19528,8 +18933,7 @@ var W = (e2) =>
   ((e22) => {
     let t22,
       n2 = ''
-    for (t22 = Math.abs(e22); t22 > 52; t22 = (t22 / 52) | 0)
-      n2 = z(t22 % 52) + n2
+    for (t22 = Math.abs(e22); t22 > 52; t22 = (t22 / 52) | 0) n2 = z(t22 % 52) + n2
     return z(t22 % 52) + n2
   })(
     ((e22, t22) => {
@@ -19538,15 +18942,7 @@ var W = (e2) =>
       return e22
     })(5381, JSON.stringify(e2)) >>> 0,
   )
-var j = [
-  'themed',
-  'global',
-  'styled',
-  'onevar',
-  'resonevar',
-  'allvar',
-  'inline',
-]
+var j = ['themed', 'global', 'styled', 'onevar', 'resonevar', 'allvar', 'inline']
 var E = (e2) => {
   if (e2.href && !e2.href.startsWith(location.origin)) return false
   try {
@@ -19567,8 +18963,7 @@ var T = (e2) => {
           if (e22[r4 - 1] && (o2 = e22[r4 - 1].cssText).startsWith('--sxs')) {
             if (!n3.cssRules.length) return ''
             for (const e3 in t22.rules)
-              if (t22.rules[e3].group === n3)
-                return `--sxs{--sxs:${[...t22.rules[e3].cache].join(' ')}}${i22}`
+              if (t22.rules[e3].group === n3) return `--sxs{--sxs:${[...t22.rules[e3].cache].join(' ')}}${i22}`
             return n3.cssRules.length ? `${o2}${i22}` : ''
           }
           return i22
@@ -19579,8 +18974,7 @@ var T = (e2) => {
       if (t22) {
         const { rules: e22, sheet: n3 } = t22
         if (!n3.deleteRule) {
-          for (; 3 === Object(Object(n3.cssRules)[0]).type; )
-            n3.cssRules.splice(0, 1)
+          for (; 3 === Object(Object(n3.cssRules)[0]).type; ) n3.cssRules.splice(0, 1)
           n3.cssRules = []
         }
         for (const t3 in e22) delete e22[t3]
@@ -19622,24 +19016,15 @@ var T = (e2) => {
             this.cssRules.splice(
               t4,
               0,
-              i3(
-                e3,
-                { import: 3, undefined: 1 }[
-                  (e3.toLowerCase().match(/^@([a-z]+)/) || [])[1]
-                ] || 4,
-              ),
+              i3(e3, { import: 3, undefined: 1 }[(e3.toLowerCase().match(/^@([a-z]+)/) || [])[1]] || 4),
             )
           },
           get cssText() {
-            return '@media{}' === e22
-              ? `@media{${[].map.call(this.cssRules, (e3) => e3.cssText).join('')}}`
-              : e22
+            return '@media{}' === e22 ? `@media{${[].map.call(this.cssRules, (e3) => e3.cssText).join('')}}` : e22
           },
         })
         t22 = {
-          sheet: e2
-            ? (e2.head || e2).appendChild(document.createElement('style')).sheet
-            : i3('', 'text/css'),
+          sheet: e2 ? (e2.head || e2).appendChild(document.createElement('style')).sheet : i3('', 'text/css'),
           rules: {},
           reset: r3,
           toString: n2,
@@ -19684,19 +19069,14 @@ var C = (e2, t22) =>
           null == r3.type && (r3.type = t3[s].type)
           for (const e22 of t3[s].composers) r3.composers.add(e22)
         } else
-          t3.constructor !== Object || t3.$$typeof
-            ? null == r3.type && (r3.type = t3)
-            : r3.composers.add(P(t3, e2))
+          t3.constructor !== Object || t3.$$typeof ? null == r3.type && (r3.type = t3) : r3.composers.add(P(t3, e2))
     return (
       null == r3.type && (r3.type = 'span'),
       r3.composers.size || r3.composers.add(['PJLV', {}, [], [], {}, []]),
       L(e2, r3, t22)
     )
   })
-var P = (
-  { variants: e2, compoundVariants: t22, defaultVariants: n2, ...r3 },
-  i22,
-) => {
+var P = ({ variants: e2, compoundVariants: t22, defaultVariants: n2, ...r3 }, i22) => {
   const o2 = `${k(i22.prefix)}c-${W(r3)}`,
     l2 = [],
     s2 = [],
@@ -19762,8 +19142,7 @@ var L = (e2, t22, n2) => {
           let t3 = s2[e22]
           'object' == typeof t3 && t3
             ? (u2[e22] = { '@initial': o2[e22], ...t3 })
-            : ((t3 = String(t3)),
-              (u2[e22] = 'undefined' !== t3 || l2.has(e22) ? t3 : o2[e22]))
+            : ((t3 = String(t3)), (u2[e22] = 'undefined' !== t3 || l2.has(e22) ? t3 : o2[e22]))
         } else u2[e22] = o2[e22]
       const h2 = /* @__PURE__ */ new Set([...i22])
       for (const [r4, i3, o3, l3] of t22.composers) {
@@ -19838,8 +19217,7 @@ var O = (e2) => {
     '' === t22 && (t22 = o2), n2.push(o2), i22.push(...s2)
     for (const e22 in l2) {
       const t3 = l2[e22]
-      ;(void 0 === r3[e22] || 'undefined' !== t3 || s2.includes(t3)) &&
-        (r3[e22] = t3)
+      ;(void 0 === r3[e22] || 'undefined' !== t3 || s2.includes(t3)) && (r3[e22] = t3)
     }
   }
   return [t22, n2, r3, new Set(i22)]
@@ -19864,19 +19242,13 @@ var A = (e2, t22, n2, r3) => {
             if (r4 === String(i3[l3])) {
               if ('@initial' !== l3) {
                 const e4 = l3.slice(1)
-                ;(t3 = t3 || []).push(
-                  e4 in n2 ? n2[e4] : l3.replace(/^@media ?/, ''),
-                ),
-                  (c22 = true)
+                ;(t3 = t3 || []).push(e4 in n2 ? n2[e4] : l3.replace(/^@media ?/, '')), (c22 = true)
               }
               ;(a2 += o3), (e3 = true)
             }
             ++o3
           }
-          if (
-            (t3 && t3.length && (l2 = { ['@media ' + t3.join(', ')]: l2 }), !e3)
-          )
-            continue e
+          if ((t3 && t3.length && (l2 = { ['@media ' + t3.join(', ')]: l2 }), !e3)) continue e
         }
       }
     }
@@ -19894,8 +19266,7 @@ var N = (e2, t22) =>
         let n3 = W(r4)
         if (!t22.rules.global.cache.has(n3)) {
           if ((t22.rules.global.cache.add(n3), '@import' in r4)) {
-            let e22 =
-              [].indexOf.call(t22.sheet.cssRules, t22.rules.themed.group) - 1
+            let e22 = [].indexOf.call(t22.sheet.cssRules, t22.rules.themed.group) - 1
             for (let n4 of [].concat(r4['@import']))
               (n4 = n4.includes('"') || n4.includes("'") ? n4 : `"${n4}"`),
                 t22.sheet.insertRule(`@import ${n4};`, e22++)
@@ -19985,15 +19356,9 @@ var X = (e2) => {
   let t22 = false
   const n2 = Z(e2, (e22) => {
     t22 = true
-    const n3 =
-        'prefix' in (e22 = ('object' == typeof e22 && e22) || {})
-          ? String(e22.prefix)
-          : '',
+    const n3 = 'prefix' in (e22 = ('object' == typeof e22 && e22) || {}) ? String(e22.prefix) : '',
       r3 = ('object' == typeof e22.media && e22.media) || {},
-      o2 =
-        'object' == typeof e22.root
-          ? e22.root || null
-          : globalThis.document || null,
+      o2 = 'object' == typeof e22.root ? e22.root || null : globalThis.document || null,
       l2 = ('object' == typeof e22.theme && e22.theme) || {},
       s2 = {
         prefix: n3,
@@ -20109,15 +19474,11 @@ function dequal2(foo, bar) {
     'intersectionRatio' in window.IntersectionObserverEntry.prototype
   ) {
     if (!('isIntersecting' in window.IntersectionObserverEntry.prototype)) {
-      Object.defineProperty(
-        window.IntersectionObserverEntry.prototype,
-        'isIntersecting',
-        {
-          get: function () {
-            return this.intersectionRatio > 0
-          },
+      Object.defineProperty(window.IntersectionObserverEntry.prototype, 'isIntersecting', {
+        get: function () {
+          return this.intersectionRatio > 0
         },
-      )
+      })
     }
     return
   }
@@ -20130,18 +19491,14 @@ function dequal2(foo, bar) {
     this.target = entry2.target
     this.rootBounds = ensureDOMRect(entry2.rootBounds)
     this.boundingClientRect = ensureDOMRect(entry2.boundingClientRect)
-    this.intersectionRect = ensureDOMRect(
-      entry2.intersectionRect || getEmptyRect(),
-    )
+    this.intersectionRect = ensureDOMRect(entry2.intersectionRect || getEmptyRect())
     this.isIntersecting = !!entry2.intersectionRect
     var targetRect = this.boundingClientRect
     var targetArea = targetRect.width * targetRect.height
     var intersectionRect = this.intersectionRect
     var intersectionArea = intersectionRect.width * intersectionRect.height
     if (targetArea) {
-      this.intersectionRatio = Number(
-        (intersectionArea / targetArea).toFixed(4),
-      )
+      this.intersectionRatio = Number((intersectionArea / targetArea).toFixed(4))
     } else {
       this.intersectionRatio = this.isIntersecting ? 1 : 0
     }
@@ -20154,10 +19511,7 @@ function dequal2(foo, bar) {
     if (options.root && options.root.nodeType != 1) {
       throw new Error('root must be an Element')
     }
-    this._checkForIntersections = throttle(
-      this._checkForIntersections.bind(this),
-      this.THROTTLE_TIMEOUT,
-    )
+    this._checkForIntersections = throttle(this._checkForIntersections.bind(this), this.THROTTLE_TIMEOUT)
     this._callback = callback
     this._observationTargets = []
     this._queuedEntries = []
@@ -20181,10 +19535,7 @@ function dequal2(foo, bar) {
         if (!boundingClientRect || !intersectionRect) {
           crossOriginRect = getEmptyRect()
         } else {
-          crossOriginRect = convertFromParentRect(
-            boundingClientRect,
-            intersectionRect,
-          )
+          crossOriginRect = convertFromParentRect(boundingClientRect, intersectionRect)
         }
         registry.forEach(function (observer) {
           observer._checkForIntersections()
@@ -20198,11 +19549,9 @@ function dequal2(foo, bar) {
     crossOriginRect = null
   }
   IntersectionObserver2.prototype.observe = function (target) {
-    var isTargetAlreadyObserved = this._observationTargets.some(
-      function (item) {
-        return item.element == target
-      },
-    )
+    var isTargetAlreadyObserved = this._observationTargets.some(function (item) {
+      return item.element == target
+    })
     if (isTargetAlreadyObserved) {
       return
     }
@@ -20238,9 +19587,7 @@ function dequal2(foo, bar) {
     if (!Array.isArray(threshold)) threshold = [threshold]
     return threshold.sort().filter(function (t22, i22, a2) {
       if (typeof t22 != 'number' || isNaN(t22) || t22 < 0 || t22 > 1) {
-        throw new Error(
-          'threshold must be a number between 0 and 1 inclusively',
-        )
+        throw new Error('threshold must be a number between 0 and 1 inclusively')
       }
       return t22 !== a2[i22 - 1]
     })
@@ -20360,9 +19707,7 @@ function dequal2(foo, bar) {
       var rootContainsTarget = this._rootContainsTarget(target)
       var oldEntry = item.entry
       var intersectionRect =
-        rootIsInDom &&
-        rootContainsTarget &&
-        this._computeTargetAndRootIntersection(target, targetRect, rootRect)
+        rootIsInDom && rootContainsTarget && this._computeTargetAndRootIntersection(target, targetRect, rootRect)
       var newEntry = (item.entry = new IntersectionObserverEntry({
         time: now(),
         target,
@@ -20386,28 +19731,20 @@ function dequal2(foo, bar) {
       this._callback(this.takeRecords(), this)
     }
   }
-  IntersectionObserver2.prototype._computeTargetAndRootIntersection = function (
-    target,
-    targetRect,
-    rootRect,
-  ) {
+  IntersectionObserver2.prototype._computeTargetAndRootIntersection = function (target, targetRect, rootRect) {
     if (window.getComputedStyle(target).display == 'none') return
     var intersectionRect = targetRect
     var parent2 = getParentNode(target)
     var atRoot = false
     while (!atRoot && parent2) {
       var parentRect = null
-      var parentComputedStyle =
-        parent2.nodeType == 1 ? window.getComputedStyle(parent2) : {}
+      var parentComputedStyle = parent2.nodeType == 1 ? window.getComputedStyle(parent2) : {}
       if (parentComputedStyle.display == 'none') return null
       if (parent2 == this.root || parent2.nodeType == 9) {
         atRoot = true
         if (parent2 == this.root || parent2 == document2) {
           if (crossOriginUpdater && !this.root) {
-            if (
-              !crossOriginRect ||
-              (crossOriginRect.width == 0 && crossOriginRect.height == 0)
-            ) {
+            if (!crossOriginRect || (crossOriginRect.width == 0 && crossOriginRect.height == 0)) {
               parent2 = null
               parentRect = null
               intersectionRect = null
@@ -20420,9 +19757,7 @@ function dequal2(foo, bar) {
         } else {
           var frame = getParentNode(parent2)
           var frameRect = frame && getBoundingClientRect(frame)
-          var frameIntersect =
-            frame &&
-            this._computeTargetAndRootIntersection(frame, frameRect, rootRect)
+          var frameIntersect = frame && this._computeTargetAndRootIntersection(frame, frameRect, rootRect)
           if (frameRect && frameIntersect) {
             parent2 = frame
             parentRect = convertFromParentRect(frameRect, frameIntersect)
@@ -20433,11 +19768,7 @@ function dequal2(foo, bar) {
         }
       } else {
         var doc = parent2.ownerDocument
-        if (
-          parent2 != doc.body &&
-          parent2 != doc.documentElement &&
-          parentComputedStyle.overflow != 'visible'
-        ) {
+        if (parent2 != doc.body && parent2 != doc.documentElement && parentComputedStyle.overflow != 'visible') {
           parentRect = getBoundingClientRect(parent2)
         }
       }
@@ -20469,9 +19800,7 @@ function dequal2(foo, bar) {
   }
   IntersectionObserver2.prototype._expandRectByRootMargin = function (rect) {
     var margins = this._rootMarginValues.map(function (margin, i22) {
-      return margin.unit == 'px'
-        ? margin.value
-        : (margin.value * (i22 % 2 ? rect.width : rect.height)) / 100
+      return margin.unit == 'px' ? margin.value : (margin.value * (i22 % 2 ? rect.width : rect.height)) / 100
     })
     var newRect = {
       top: rect.top - margins[0],
@@ -20483,23 +19812,13 @@ function dequal2(foo, bar) {
     newRect.height = newRect.bottom - newRect.top
     return newRect
   }
-  IntersectionObserver2.prototype._hasCrossedThreshold = function (
-    oldEntry,
-    newEntry,
-  ) {
-    var oldRatio =
-      oldEntry && oldEntry.isIntersecting ? oldEntry.intersectionRatio || 0 : -1
-    var newRatio = newEntry.isIntersecting
-      ? newEntry.intersectionRatio || 0
-      : -1
+  IntersectionObserver2.prototype._hasCrossedThreshold = function (oldEntry, newEntry) {
+    var oldRatio = oldEntry && oldEntry.isIntersecting ? oldEntry.intersectionRatio || 0 : -1
+    var newRatio = newEntry.isIntersecting ? newEntry.intersectionRatio || 0 : -1
     if (oldRatio === newRatio) return
     for (var i22 = 0; i22 < this.thresholds.length; i22++) {
       var threshold = this.thresholds[i22]
-      if (
-        threshold == oldRatio ||
-        threshold == newRatio ||
-        threshold < oldRatio !== threshold < newRatio
-      ) {
+      if (threshold == oldRatio || threshold == newRatio || threshold < oldRatio !== threshold < newRatio) {
         return true
       }
     }
@@ -20509,8 +19828,7 @@ function dequal2(foo, bar) {
   }
   IntersectionObserver2.prototype._rootContainsTarget = function (target) {
     return (
-      containsDeep(this.root || document2, target) &&
-      (!this.root || this.root.ownerDocument == target.ownerDocument)
+      containsDeep(this.root || document2, target) && (!this.root || this.root.ownerDocument == target.ownerDocument)
     )
   }
   IntersectionObserver2.prototype._registerInstance = function () {
@@ -20557,11 +19875,7 @@ function dequal2(foo, bar) {
     var right = Math.min(rect1.right, rect2.right)
     var width = right - left
     var height = bottom - top
-    return (
-      (width >= 0 &&
-        height >= 0 && { top, bottom, left, right, width, height }) ||
-      null
-    )
+    return (width >= 0 && height >= 0 && { top, bottom, left, right, width, height }) || null
   }
   function getBoundingClientRect(el) {
     var rect
@@ -20643,11 +19957,7 @@ function dequal2(foo, bar) {
   window.IntersectionObserverEntry = IntersectionObserverEntry
 })()
 var usePassiveLayoutEffect =
-  React[
-    typeof document !== 'undefined' && document.createElement !== void 0
-      ? 'useLayoutEffect'
-      : 'useEffect'
-  ]
+  React[typeof document !== 'undefined' && document.createElement !== void 0 ? 'useLayoutEffect' : 'useEffect']
 var module_default = usePassiveLayoutEffect
 function useIntersectionObserver(target, options = {}) {
   const {
@@ -20685,13 +19995,7 @@ function useIntersectionObserver(target, options = {}) {
       threshold,
     })
     setObserver(observer2)
-  }, [
-    root,
-    rootMargin,
-    pollInterval,
-    useMutationObserver,
-    JSON.stringify(threshold),
-  ])
+  }, [root, rootMargin, pollInterval, useMutationObserver, JSON.stringify(threshold)])
   module_default(() => {
     const targetEl = target && 'current' in target ? target.current : target
     if (!observer || !targetEl) return
@@ -20750,9 +20054,7 @@ function getIntersectionObserver(options) {
     base = {}
     _intersectionObserver.set(root, base)
   }
-  return !base[key]
-    ? (base[key] = createIntersectionObserver(options))
-    : base[key]
+  return !base[key] ? (base[key] = createIntersectionObserver(options)) : base[key]
 }
 var module_default2 = useIntersectionObserver
 var import_anser = __toESM3(require_lib2(), 1)
@@ -20764,8 +20066,7 @@ var __assign2 = function () {
     function __assign22(t22) {
       for (var s2, i22 = 1, n2 = arguments.length; i22 < n2; i22++) {
         s2 = arguments[i22]
-        for (var p2 in s2)
-          if (Object.prototype.hasOwnProperty.call(s2, p2)) t22[p2] = s2[p2]
+        for (var p2 in s2) if (Object.prototype.hasOwnProperty.call(s2, p2)) t22[p2] = s2[p2]
       }
       return t22
     }
@@ -20773,20 +20074,10 @@ var __assign2 = function () {
 }
 function __rest(s2, e2) {
   var t22 = {}
-  for (var p2 in s2)
-    if (Object.prototype.hasOwnProperty.call(s2, p2) && e2.indexOf(p2) < 0)
-      t22[p2] = s2[p2]
+  for (var p2 in s2) if (Object.prototype.hasOwnProperty.call(s2, p2) && e2.indexOf(p2) < 0) t22[p2] = s2[p2]
   if (s2 != null && typeof Object.getOwnPropertySymbols === 'function')
-    for (
-      var i22 = 0, p2 = Object.getOwnPropertySymbols(s2);
-      i22 < p2.length;
-      i22++
-    ) {
-      if (
-        e2.indexOf(p2[i22]) < 0 &&
-        Object.prototype.propertyIsEnumerable.call(s2, p2[i22])
-      )
-        t22[p2[i22]] = s2[p2[i22]]
+    for (var i22 = 0, p2 = Object.getOwnPropertySymbols(s2); i22 < p2.length; i22++) {
+      if (e2.indexOf(p2[i22]) < 0 && Object.prototype.propertyIsEnumerable.call(s2, p2[i22])) t22[p2[i22]] = s2[p2[i22]]
     }
   return t22
 }
@@ -20814,9 +20105,7 @@ function __awaiter2(thisArg, _arguments, P2, generator) {
       }
     }
     function step(result) {
-      result.done
-        ? resolve(result.value)
-        : adopt(result.value).then(fulfilled, rejected)
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected)
     }
     step((generator = generator.apply(thisArg, _arguments || [])).next())
   })
@@ -20856,11 +20145,7 @@ function __generator2(thisArg, body) {
           ((f2 = 1),
           y2 &&
             (t22 =
-              op[0] & 2
-                ? y2['return']
-                : op[0]
-                  ? y2['throw'] || ((t22 = y2['return']) && t22.call(y2), 0)
-                  : y2.next) &&
+              op[0] & 2 ? y2['return'] : op[0] ? y2['throw'] || ((t22 = y2['return']) && t22.call(y2), 0) : y2.next) &&
             !(t22 = t22.call(y2, op[1])).done)
         )
           return t22
@@ -20883,11 +20168,7 @@ function __generator2(thisArg, body) {
             _.trys.pop()
             continue
           default:
-            if (
-              !((t22 = _.trys),
-              (t22 = t22.length > 0 && t22[t22.length - 1])) &&
-              (op[0] === 6 || op[0] === 2)
-            ) {
+            if (!((t22 = _.trys), (t22 = t22.length > 0 && t22[t22.length - 1])) && (op[0] === 6 || op[0] === 2)) {
               _ = 0
               continue
             }
@@ -21038,10 +20319,7 @@ var SANDPACK_THEMES = {
   auto:
     typeof window !== 'undefined'
       ? (
-          (_a$a =
-            window === null || window === void 0
-              ? void 0
-              : window.matchMedia) === null || _a$a === void 0
+          (_a$a = window === null || window === void 0 ? void 0 : window.matchMedia) === null || _a$a === void 0
             ? void 0
             : _a$a.call(window, '(prefers-color-scheme: dark)').matches
         )
@@ -21054,22 +20332,15 @@ var getFileName = function (filePath) {
   return filePath.slice(lastIndexOfSlash + 1)
 }
 var calculateNearestUniquePath = function (currentPath, otherPaths) {
-  var currentPathParts = (
-    currentPath[0] === '/' ? currentPath.slice(1) : currentPath
-  ).split('/')
+  var currentPathParts = (currentPath[0] === '/' ? currentPath.slice(1) : currentPath).split('/')
   var resultPathParts = []
   if (currentPathParts.length === 1) {
     resultPathParts.unshift(currentPathParts[0])
   } else {
     for (var fileIndex = 0; fileIndex < otherPaths.length; fileIndex++) {
       var otherPathParts = otherPaths[fileIndex].split('/')
-      for (
-        var partsFromEnd = 1;
-        partsFromEnd <= currentPathParts.length;
-        partsFromEnd++
-      ) {
-        var currentPathPart =
-          currentPathParts[currentPathParts.length - partsFromEnd]
+      for (var partsFromEnd = 1; partsFromEnd <= currentPathParts.length; partsFromEnd++) {
+        var currentPathPart = currentPathParts[currentPathParts.length - partsFromEnd]
         var otherPathPart = otherPathParts[otherPathParts.length - partsFromEnd]
         if (resultPathParts.length < partsFromEnd) {
           resultPathParts.unshift(currentPathPart)
@@ -21097,11 +20368,7 @@ var isDarkColor = function (color2) {
     g2 = parseInt(color2.substr(3, 2), 16)
     b2 = parseInt(color2.substr(5, 2), 16)
   } else {
-    var rgbValues = color2
-      .replace('rgb(', '')
-      .replace('rgba(', '')
-      .replace(')', '')
-      .split(',')
+    var rgbValues = color2.replace('rgb(', '').replace('rgba(', '').replace(')', '').split(',')
     if (rgbValues.length < 3) {
       return true
     }
@@ -21131,10 +20398,7 @@ var keyframes = _a$9.keyframes
 var defaultVariables = {
   space: new Array(11).fill(' ').reduce(function (acc, _, index) {
     var _a22
-    return __assign2(
-      __assign2({}, acc),
-      ((_a22 = {}), (_a22[index + 1] = ''.concat((index + 1) * 4, 'px')), _a22),
-    )
+    return __assign2(__assign2({}, acc), ((_a22 = {}), (_a22[index + 1] = ''.concat((index + 1) * 4, 'px')), _a22))
   }, {}),
   border: { radius: '4px' },
   layout: { height: '300px', headerHeight: '40px' },
@@ -21147,8 +20411,7 @@ var standardizeStitchesTheme = function (theme) {
     var _b22
     var tokenName = _a22[0],
       tokenValue = _a22[1]
-    var newValues =
-      ((_b22 = {}), (_b22['color-'.concat(tokenName)] = tokenValue), _b22)
+    var newValues = ((_b22 = {}), (_b22['color-'.concat(tokenName)] = tokenValue), _b22)
     if (typeof tokenValue === 'object') {
       newValues = Object.entries(tokenValue).reduce(function (valueAcc, _a3) {
         var _b3
@@ -21156,9 +20419,7 @@ var standardizeStitchesTheme = function (theme) {
           styleValue = _a3[1]
         return __assign2(
           __assign2({}, valueAcc),
-          ((_b3 = {}),
-          (_b3[''.concat(styleProp, '-').concat(tokenName)] = styleValue),
-          _b3),
+          ((_b3 = {}), (_b3[''.concat(styleProp, '-').concat(tokenName)] = styleValue), _b3),
         )
       }, {})
     }
@@ -21179,9 +20440,7 @@ var standardizeTheme = function (inputTheme) {
   if (typeof inputTheme === 'string') {
     var predefinedTheme = SANDPACK_THEMES[inputTheme]
     if (!predefinedTheme) {
-      throw new Error(
-        "[sandpack-react]: invalid theme '".concat(inputTheme, "' provided."),
-      )
+      throw new Error("[sandpack-react]: invalid theme '".concat(inputTheme, "' provided."))
     }
     return {
       theme: predefinedTheme,
@@ -21191,10 +20450,7 @@ var standardizeTheme = function (inputTheme) {
   }
   var mode = isDarkColor(
     (_b22 =
-      (_a22 =
-        inputTheme === null || inputTheme === void 0
-          ? void 0
-          : inputTheme.colors) === null || _a22 === void 0
+      (_a22 = inputTheme === null || inputTheme === void 0 ? void 0 : inputTheme.colors) === null || _a22 === void 0
         ? void 0
         : _a22.surface1) !== null && _b22 !== void 0
       ? _b22
@@ -21205,35 +20461,22 @@ var standardizeTheme = function (inputTheme) {
   var baseTheme = mode === 'dark' ? defaultDark : defaultLight
   var colorsByMode = __assign2(
     __assign2({}, baseTheme.colors),
-    (_c2 =
-      inputTheme === null || inputTheme === void 0
-        ? void 0
-        : inputTheme.colors) !== null && _c2 !== void 0
+    (_c2 = inputTheme === null || inputTheme === void 0 ? void 0 : inputTheme.colors) !== null && _c2 !== void 0
       ? _c2
       : {},
   )
   var syntaxByMode = __assign2(
     __assign2({}, baseTheme.syntax),
-    (_d =
-      inputTheme === null || inputTheme === void 0
-        ? void 0
-        : inputTheme.syntax) !== null && _d !== void 0
+    (_d = inputTheme === null || inputTheme === void 0 ? void 0 : inputTheme.syntax) !== null && _d !== void 0
       ? _d
       : {},
   )
   var fontByMode = __assign2(
     __assign2({}, baseTheme.font),
-    (_e =
-      inputTheme === null || inputTheme === void 0
-        ? void 0
-        : inputTheme.font) !== null && _e !== void 0
-      ? _e
-      : {},
+    (_e = inputTheme === null || inputTheme === void 0 ? void 0 : inputTheme.font) !== null && _e !== void 0 ? _e : {},
   )
   var theme = { colors: colorsByMode, syntax: syntaxByMode, font: fontByMode }
-  var id = inputTheme
-    ? simpleHashFunction(JSON.stringify(theme))
-    : defaultLightThemeKey
+  var id = inputTheme ? simpleHashFunction(JSON.stringify(theme)) : defaultLightThemeKey
   return { theme, id: 'sp-'.concat(id), mode }
 }
 var simpleHashFunction = function (str) {
@@ -21262,11 +20505,7 @@ var useClassNames = function () {
     var custom = ''.concat(THEME_PREFIX, '-').concat(customClassName)
     return joinClassNames.apply(
       void 0,
-      __spreadArray2(
-        __spreadArray2([], allClassNames, false),
-        [custom, contextClassNames[custom]],
-        false,
-      ),
+      __spreadArray2(__spreadArray2([], allClassNames, false), [custom, contextClassNames[custom]], false),
     )
   }
 }
@@ -21333,13 +20572,9 @@ var SandpackThemeProvider = function (_a22) {
         var matches = _a3.matches
         setPreferredTheme(matches ? 'dark' : 'light')
       }
-      window
-        .matchMedia('(prefers-color-scheme: dark)')
-        .addEventListener('change', colorSchemeChange)
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', colorSchemeChange)
       return function () {
-        window
-          .matchMedia('(prefers-color-scheme: dark)')
-          .removeEventListener('change', colorSchemeChange)
+        window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', colorSchemeChange)
       }
     },
     [themeFromProps],
@@ -21350,11 +20585,7 @@ var SandpackThemeProvider = function (_a22) {
       'div',
       __assign2(
         {
-          className: classNames('wrapper', [
-            themeClassName,
-            wrapperClassName$3({ variant: mode }),
-            className,
-          ]),
+          className: classNames('wrapper', [themeClassName, wrapperClassName$3({ variant: mode }), className]),
         },
         props,
         { children },
@@ -21780,12 +21011,7 @@ export default app`,
             checkJs: true,
             isolatedModules: true,
           },
-          include: [
-            'src/**/*.d.ts',
-            'src/**/*.ts',
-            'src/**/*.js',
-            'src/**/*.svelte',
-          ],
+          include: ['src/**/*.d.ts', 'src/**/*.ts', 'src/**/*.js', 'src/**/*.svelte'],
           references: [{ path: './tsconfig.node.json' }],
         },
         null,
@@ -21906,12 +21132,7 @@ createApp(App).mount('#app')
             skipLibCheck: true,
             noEmit: true,
           },
-          include: [
-            'src/**/*.ts',
-            'src/**/*.d.ts',
-            'src/**/*.tsx',
-            'src/**/*.vue',
-          ],
+          include: ['src/**/*.ts', 'src/**/*.d.ts', 'src/**/*.tsx', 'src/**/*.vue'],
           references: [{ path: './tsconfig.node.json' }],
         },
         null,
@@ -22299,13 +21520,7 @@ createApp(App).mount('#app')
           paths: { '@/*': ['src/*'] },
           lib: ['esnext', 'dom', 'dom.iterable', 'scripthost'],
         },
-        include: [
-          'src/**/*.ts',
-          'src/**/*.tsx',
-          'src/**/*.vue',
-          'tests/**/*.ts',
-          'tests/**/*.tsx',
-        ],
+        include: ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.vue', 'tests/**/*.ts', 'tests/**/*.tsx'],
         exclude: ['node_modules'],
       }),
     },
@@ -22359,22 +21574,12 @@ var getSandpackStateFromProps = function (props) {
     files: normalizedFilesPath,
   })
   var visibleFiles = normalizePath(
-    (_b22 =
-      (_a22 = props.options) === null || _a22 === void 0
-        ? void 0
-        : _a22.visibleFiles) !== null && _b22 !== void 0
+    (_b22 = (_a22 = props.options) === null || _a22 === void 0 ? void 0 : _a22.visibleFiles) !== null && _b22 !== void 0
       ? _b22
       : [],
   )
-  var activeFile = (
-    (_c2 = props.options) === null || _c2 === void 0
-      ? void 0
-      : _c2.activeFile
-  )
-    ? resolveFile(
-        (_d = props.options) === null || _d === void 0 ? void 0 : _d.activeFile,
-        projectSetup.files,
-      )
+  var activeFile = ((_c2 = props.options) === null || _c2 === void 0 ? void 0 : _c2.activeFile)
+    ? resolveFile((_d = props.options) === null || _d === void 0 ? void 0 : _d.activeFile, projectSetup.files)
     : void 0
   if (visibleFiles.length === 0 && normalizedFilesPath) {
     Object.keys(normalizedFilesPath).forEach(function (filePath) {
@@ -22457,16 +21662,11 @@ var combineTemplateFilesToSetup = function (_a22) {
     if (!customSetup) {
       var defaultTemplate = SANDBOX_TEMPLATES.vanilla
       return __assign2(__assign2({}, defaultTemplate), {
-        files: __assign2(
-          __assign2({}, defaultTemplate.files),
-          convertedFilesToBundlerFiles(files),
-        ),
+        files: __assign2(__assign2({}, defaultTemplate.files), convertedFilesToBundlerFiles(files)),
       })
     }
     if (!files || Object.keys(files).length === 0) {
-      throw new Error(
-        '[sandpack-react]: without a template, you must pass at least one file',
-      )
+      throw new Error('[sandpack-react]: without a template, you must pass at least one file')
     }
     return __assign2(__assign2({}, customSetup), {
       files: convertedFilesToBundlerFiles(files),
@@ -22474,9 +21674,7 @@ var combineTemplateFilesToSetup = function (_a22) {
   }
   var baseTemplate = SANDBOX_TEMPLATES[template]
   if (!baseTemplate) {
-    throw new Error(
-      '[sandpack-react]: invalid template "'.concat(template, '" provided'),
-    )
+    throw new Error('[sandpack-react]: invalid template "'.concat(template, '" provided'))
   }
   if (!customSetup && !files) {
     return baseTemplate
@@ -22486,35 +21684,23 @@ var combineTemplateFilesToSetup = function (_a22) {
      * The input setup might have files in the simple form Record<string, string>
      * so we convert them to the sandbox template format
      */
-    files: convertedFilesToBundlerFiles(
-      __assign2(__assign2({}, baseTemplate.files), files),
-    ),
+    files: convertedFilesToBundlerFiles(__assign2(__assign2({}, baseTemplate.files), files)),
     /**
      * Merge template dependencies and user custom dependencies.
      * As a rule, the custom dependencies must overwrite the template ones.
      */
     dependencies: __assign2(
       __assign2({}, baseTemplate.dependencies),
-      customSetup === null || customSetup === void 0
-        ? void 0
-        : customSetup.dependencies,
+      customSetup === null || customSetup === void 0 ? void 0 : customSetup.dependencies,
     ),
     devDependencies: __assign2(
       __assign2({}, baseTemplate.devDependencies),
-      customSetup === null || customSetup === void 0
-        ? void 0
-        : customSetup.devDependencies,
+      customSetup === null || customSetup === void 0 ? void 0 : customSetup.devDependencies,
     ),
-    entry: normalizePath(
-      customSetup === null || customSetup === void 0
-        ? void 0
-        : customSetup.entry,
-    ),
+    entry: normalizePath(customSetup === null || customSetup === void 0 ? void 0 : customSetup.entry),
     main: baseTemplate.main,
     environment:
-      (customSetup === null || customSetup === void 0
-        ? void 0
-        : customSetup.environment) || baseTemplate.environment,
+      (customSetup === null || customSetup === void 0 ? void 0 : customSetup.environment) || baseTemplate.environment,
   }
 }
 var convertedFilesToBundlerFiles = function (files) {
@@ -22533,9 +21719,7 @@ var useAppState = function (props, files) {
     state = _a22[0],
     setState = _a22[1]
   var originalStateFromProps = getSandpackStateFromProps(props)
-  var editorState = dequal2(originalStateFromProps.files, files)
-    ? 'pristine'
-    : 'dirty'
+  var editorState = dequal2(originalStateFromProps.files, files) ? 'pristine' : 'dirty'
   if (editorState !== state.editorState) {
     setState(function (prev) {
       return __assign2(__assign2({}, prev), { editorState })
@@ -22566,19 +21750,10 @@ var useAsyncSandpackId = function (files) {
                   return path + '|' + code
                 })
                 .join('|||')
-              return [
-                4,
-                generateShortId(allCode + reactDomId_1 + sandpackClientVersion),
-              ]
+              return [4, generateShortId(allCode + reactDomId_1 + sandpackClientVersion)]
             case 1:
               sha = _a22.sent()
-              return [
-                2,
-                ensureLength(
-                  sha.replace(/:/g, 'sp').replace(/[^a-zA-Z]/g, ''),
-                  MAX_ID_LENGTH,
-                ),
-              ]
+              return [2, ensureLength(sha.replace(/:/g, 'sp').replace(/[^a-zA-Z]/g, ''), MAX_ID_LENGTH)]
           }
         })
       })
@@ -22621,23 +21796,16 @@ var useClient = function (_a22, filesState) {
     teamId = _a22.teamId,
     sandboxId = _a22.sandboxId
   options !== null && options !== void 0 ? options : (options = {})
-  customSetup !== null && customSetup !== void 0
-    ? customSetup
-    : (customSetup = {})
-  var initModeFromProps =
-    (options === null || options === void 0 ? void 0 : options.initMode) ||
-    'lazy'
+  customSetup !== null && customSetup !== void 0 ? customSetup : (customSetup = {})
+  var initModeFromProps = (options === null || options === void 0 ? void 0 : options.initMode) || 'lazy'
   var _e = useState3({
-      startRoute:
-        options === null || options === void 0 ? void 0 : options.startRoute,
+      startRoute: options === null || options === void 0 ? void 0 : options.startRoute,
       bundlerState: void 0,
       error: null,
       initMode: initModeFromProps,
       reactDevTools: void 0,
       status: (
-        (_b22 =
-          options === null || options === void 0 ? void 0 : options.autorun) !==
-          null && _b22 !== void 0
+        (_b22 = options === null || options === void 0 ? void 0 : options.autorun) !== null && _b22 !== void 0
           ? _b22
           : true
       )
@@ -22661,13 +21829,7 @@ var useClient = function (_a22, filesState) {
   var createClient = useCallback2(
     function (iframe, clientId, clientPropsOverride) {
       return __awaiter2(void 0, void 0, void 0, function () {
-        var timeOut,
-          shouldSetTimeout,
-          getStableServiceWorkerId,
-          client,
-          _a3,
-          _b3,
-          globalListeners
+        var timeOut, shouldSetTimeout, getStableServiceWorkerId, client, _a3, _b3, globalListeners
         var _c3
         var _d2, _e2, _f
         return __generator2(this, function (_g) {
@@ -22677,14 +21839,10 @@ var useClient = function (_a22, filesState) {
                 clients.current[clientId].destroy()
               }
               options !== null && options !== void 0 ? options : (options = {})
-              customSetup !== null && customSetup !== void 0
-                ? customSetup
-                : (customSetup = {})
+              customSetup !== null && customSetup !== void 0 ? customSetup : (customSetup = {})
               timeOut =
-                (_d2 =
-                  options === null || options === void 0
-                    ? void 0
-                    : options.bundlerTimeOut) !== null && _d2 !== void 0
+                (_d2 = options === null || options === void 0 ? void 0 : options.bundlerTimeOut) !== null &&
+                _d2 !== void 0
                   ? _d2
                   : BUNDLER_TIMEOUT
               if (timeoutHook.current) {
@@ -22744,30 +21902,22 @@ var useClient = function (_a22, filesState) {
                 bundlerURL: options.bundlerURL,
                 startRoute:
                   (_e2 =
-                    clientPropsOverride === null ||
-                    clientPropsOverride === void 0
+                    clientPropsOverride === null || clientPropsOverride === void 0
                       ? void 0
-                      : clientPropsOverride.startRoute) !== null &&
-                  _e2 !== void 0
+                      : clientPropsOverride.startRoute) !== null && _e2 !== void 0
                     ? _e2
                     : options.startRoute,
                 fileResolver: options.fileResolver,
-                skipEval:
-                  (_f = options.skipEval) !== null && _f !== void 0
-                    ? _f
-                    : false,
+                skipEval: (_f = options.skipEval) !== null && _f !== void 0 ? _f : false,
                 logLevel: options.logLevel,
                 showOpenInCodeSandbox: false,
                 showErrorScreen: true,
                 showLoadingScreen: false,
                 reactDevTools: state.reactDevTools,
                 customNpmRegistries:
-                  customSetup === null || customSetup === void 0
-                    ? void 0
-                    : customSetup.npmRegistries,
+                  customSetup === null || customSetup === void 0 ? void 0 : customSetup.npmRegistries,
                 teamId,
-                experimental_enableServiceWorker: !!(options === null ||
-                options === void 0
+                experimental_enableServiceWorker: !!(options === null || options === void 0
                   ? void 0
                   : options.experimental_enableServiceWorker),
               }
@@ -22778,9 +21928,7 @@ var useClient = function (_a22, filesState) {
                 _a3.apply(
                   void 0,
                   _b3.concat([
-                    ((_c3.experimental_stableServiceWorkerId = _g.sent()),
-                    (_c3.sandboxId = sandboxId),
-                    _c3),
+                    ((_c3.experimental_stableServiceWorkerId = _g.sent()), (_c3.sandboxId = sandboxId), _c3),
                   ]),
                 ),
               ]
@@ -22789,17 +21937,13 @@ var useClient = function (_a22, filesState) {
               if (typeof unsubscribe.current !== 'function') {
                 unsubscribe.current = client.listen(handleMessage)
               }
-              unsubscribeClientListeners.current[clientId] =
-                unsubscribeClientListeners.current[clientId] || {}
+              unsubscribeClientListeners.current[clientId] = unsubscribeClientListeners.current[clientId] || {}
               if (queuedListeners.current[clientId]) {
-                Object.keys(queuedListeners.current[clientId]).forEach(
-                  function (listenerId) {
-                    var listener = queuedListeners.current[clientId][listenerId]
-                    var unsubscribe2 = client.listen(listener)
-                    unsubscribeClientListeners.current[clientId][listenerId] =
-                      unsubscribe2
-                  },
-                )
+                Object.keys(queuedListeners.current[clientId]).forEach(function (listenerId) {
+                  var listener = queuedListeners.current[clientId][listenerId]
+                  var unsubscribe2 = client.listen(listener)
+                  unsubscribeClientListeners.current[clientId][listenerId] = unsubscribe2
+                })
                 queuedListeners.current[clientId] = {}
               }
               globalListeners = Object.entries(queuedListeners.current.global)
@@ -22807,8 +21951,7 @@ var useClient = function (_a22, filesState) {
                 var listenerId = _a4[0],
                   listener = _a4[1]
                 var unsubscribe2 = client.listen(listener)
-                unsubscribeClientListeners.current[clientId][listenerId] =
-                  unsubscribe2
+                unsubscribeClientListeners.current[clientId][listenerId] = unsubscribe2
               })
               clients.current[clientId] = client
               return [2]
@@ -22844,14 +21987,7 @@ var useClient = function (_a22, filesState) {
                       return __generator2(this, function (_d2) {
                         switch (_d2.label) {
                           case 0:
-                            return [
-                              4,
-                              createClient(
-                                iframe,
-                                clientId,
-                                clientPropsOverride,
-                              ),
-                            ]
+                            return [4, createClient(iframe, clientId, clientPropsOverride)]
                           case 1:
                             _d2.sent()
                             return [2]
@@ -22891,30 +22027,22 @@ var useClient = function (_a22, filesState) {
     function () {
       var _a3, _b3, _c3
       var autorun =
-        (_a3 =
-          options === null || options === void 0 ? void 0 : options.autorun) !==
-          null && _a3 !== void 0
+        (_a3 = options === null || options === void 0 ? void 0 : options.autorun) !== null && _a3 !== void 0
           ? _a3
           : true
       if (!autorun) {
         return
       }
       var observerOptions =
-        (_b3 =
-          options === null || options === void 0
-            ? void 0
-            : options.initModeObserverOptions) !== null && _b3 !== void 0
+        (_b3 = options === null || options === void 0 ? void 0 : options.initModeObserverOptions) !== null &&
+        _b3 !== void 0
           ? _b3
           : { rootMargin: '1000px 0px' }
       if (intersectionObserver.current && lazyAnchorRef.current) {
-        ;(_c3 = intersectionObserver.current) === null || _c3 === void 0
-          ? void 0
-          : _c3.unobserve(lazyAnchorRef.current)
+        ;(_c3 = intersectionObserver.current) === null || _c3 === void 0 ? void 0 : _c3.unobserve(lazyAnchorRef.current)
       }
       if (lazyAnchorRef.current && state.initMode === 'lazy') {
-        intersectionObserver.current = new IntersectionObserver(function (
-          entries2,
-        ) {
+        intersectionObserver.current = new IntersectionObserver(function (entries2) {
           var _a4, _b4
           if (
             entries2.some(function (entry2) {
@@ -22927,8 +22055,7 @@ var useClient = function (_a22, filesState) {
               }) &&
               lazyAnchorRef.current
             ) {
-              ;(_a4 = intersectionObserverCallback.current) === null ||
-              _a4 === void 0
+              ;(_a4 = intersectionObserverCallback.current) === null || _a4 === void 0
                 ? void 0
                 : _a4.call(intersectionObserverCallback, entries2)
               ;(_b4 = intersectionObserver.current) === null || _b4 === void 0
@@ -22939,12 +22066,9 @@ var useClient = function (_a22, filesState) {
         }, observerOptions)
         intersectionObserver.current.observe(lazyAnchorRef.current)
       } else if (lazyAnchorRef.current && state.initMode === 'user-visible') {
-        intersectionObserver.current = new IntersectionObserver(function (
-          entries2,
-        ) {
+        intersectionObserver.current = new IntersectionObserver(function (entries2) {
           var _a4
-          ;(_a4 = intersectionObserverCallback.current) === null ||
-          _a4 === void 0
+          ;(_a4 = intersectionObserverCallback.current) === null || _a4 === void 0
             ? void 0
             : _a4.call(intersectionObserverCallback, entries2)
         }, observerOptions)
@@ -22955,9 +22079,7 @@ var useClient = function (_a22, filesState) {
     },
     [
       options === null || options === void 0 ? void 0 : options.autorun,
-      options === null || options === void 0
-        ? void 0
-        : options.initModeObserverOptions,
+      options === null || options === void 0 ? void 0 : options.initModeObserverOptions,
       runSandpack,
       state.initMode,
       unregisterAllClients,
@@ -22991,9 +22113,7 @@ var useClient = function (_a22, filesState) {
     var client = clients.current[clientId]
     if (client) {
       client.destroy()
-      ;(_a3 = client.iframe.contentWindow) === null || _a3 === void 0
-        ? void 0
-        : _a3.location.replace('about:blank')
+      ;(_a3 = client.iframe.contentWindow) === null || _a3 === void 0 ? void 0 : _a3.location.replace('about:blank')
       client.iframe.removeAttribute('src')
       delete clients.current[clientId]
     } else {
@@ -23003,10 +22123,7 @@ var useClient = function (_a22, filesState) {
       clearTimeout(timeoutHook.current)
     }
     var unsubscribeQueuedClients = Object.values(
-      (_b3 = unsubscribeClientListeners.current[clientId]) !== null &&
-        _b3 !== void 0
-        ? _b3
-        : {},
+      (_b3 = unsubscribeClientListeners.current[clientId]) !== null && _b3 !== void 0 ? _b3 : {},
     )
     unsubscribeQueuedClients.forEach(function (listenerOfClient) {
       var listenerFunctions = Object.values(listenerOfClient)
@@ -23030,10 +22147,7 @@ var useClient = function (_a22, filesState) {
           bundlerState: msg.state,
         })
       })
-    } else if (
-      (msg.type === 'done' && !msg.compilatonError) ||
-      msg.type === 'connected'
-    ) {
+    } else if ((msg.type === 'done' && !msg.compilatonError) || msg.type === 'connected') {
       if (timeoutHook.current) {
         clearTimeout(timeoutHook.current)
       }
@@ -23049,11 +22163,7 @@ var useClient = function (_a22, filesState) {
           error: extractErrorDetails(msg),
         })
       })
-    } else if (
-      msg.type === 'action' &&
-      msg.action === 'notification' &&
-      msg.notificationType === 'error'
-    ) {
+    } else if (msg.type === 'action' && msg.action === 'notification' && msg.notificationType === 'error') {
       setState(function (prev) {
         return __assign2(__assign2({}, prev), {
           error: { message: msg.title },
@@ -23067,24 +22177,14 @@ var useClient = function (_a22, filesState) {
     })
   }
   var recompileMode =
-    (_c2 =
-      options === null || options === void 0
-        ? void 0
-        : options.recompileMode) !== null && _c2 !== void 0
+    (_c2 = options === null || options === void 0 ? void 0 : options.recompileMode) !== null && _c2 !== void 0
       ? _c2
       : 'delayed'
   var recompileDelay =
-    (_d =
-      options === null || options === void 0
-        ? void 0
-        : options.recompileDelay) !== null && _d !== void 0
-      ? _d
-      : 200
+    (_d = options === null || options === void 0 ? void 0 : options.recompileDelay) !== null && _d !== void 0 ? _d : 200
   var dispatchMessage = function (message, clientId) {
     if (state.status !== 'running') {
-      console.warn(
-        '[sandpack-react]: dispatch cannot be called while in idle mode',
-      )
+      console.warn('[sandpack-react]: dispatch cannot be called while in idle mode')
       return
     }
     if (clientId) {
@@ -23102,17 +22202,13 @@ var useClient = function (_a22, filesState) {
         return unsubscribeListener
       } else {
         var listenerId_1 = generateRandomId2()
-        queuedListeners.current[clientId] =
-          queuedListeners.current[clientId] || {}
-        unsubscribeClientListeners.current[clientId] =
-          unsubscribeClientListeners.current[clientId] || {}
+        queuedListeners.current[clientId] = queuedListeners.current[clientId] || {}
+        unsubscribeClientListeners.current[clientId] = unsubscribeClientListeners.current[clientId] || {}
         queuedListeners.current[clientId][listenerId_1] = listener
         var unsubscribeListener = function () {
           if (queuedListeners.current[clientId][listenerId_1]) {
             delete queuedListeners.current[clientId][listenerId_1]
-          } else if (
-            unsubscribeClientListeners.current[clientId][listenerId_1]
-          ) {
+          } else if (unsubscribeClientListeners.current[clientId][listenerId_1]) {
             unsubscribeClientListeners.current[clientId][listenerId_1]()
             delete unsubscribeClientListeners.current[clientId][listenerId_1]
           }
@@ -23123,27 +22219,20 @@ var useClient = function (_a22, filesState) {
       var listenerId_2 = generateRandomId2()
       queuedListeners.current.global[listenerId_2] = listener
       var clientsList = Object.values(clients.current)
-      var currentClientUnsubscribeListeners_1 = clientsList.map(
-        function (client) {
-          return client.listen(listener)
-        },
-      )
+      var currentClientUnsubscribeListeners_1 = clientsList.map(function (client) {
+        return client.listen(listener)
+      })
       var unsubscribeListener = function () {
         currentClientUnsubscribeListeners_1.forEach(function (unsubscribe2) {
           return unsubscribe2()
         })
         delete queuedListeners.current.global[listenerId_2]
-        Object.values(unsubscribeClientListeners.current).forEach(
-          function (client) {
-            var _a3
-            ;(_a3 =
-              client === null || client === void 0
-                ? void 0
-                : client[listenerId_2]) === null || _a3 === void 0
-              ? void 0
-              : _a3.call(client)
-          },
-        )
+        Object.values(unsubscribeClientListeners.current).forEach(function (client) {
+          var _a3
+          ;(_a3 = client === null || client === void 0 ? void 0 : client[listenerId_2]) === null || _a3 === void 0
+            ? void 0
+            : _a3.call(client)
+        })
       }
       return unsubscribeListener
     }
@@ -23278,10 +22367,7 @@ var useFiles = function (props) {
           _a3),
         )
       } else if (typeof pathOrFiles === 'object') {
-        files = __assign2(
-          __assign2({}, files),
-          convertedFilesToBundlerFiles(pathOrFiles),
-        )
+        files = __assign2(__assign2({}, files), convertedFilesToBundlerFiles(pathOrFiles))
       }
       return __assign2(__assign2({}, prev), {
         files: normalizePath(files),
@@ -23296,11 +22382,7 @@ var useFiles = function (props) {
           rest = __rest(_a3, ['visibleFiles'])
         var newPaths = visibleFiles.includes(path)
           ? visibleFiles
-          : __spreadArray2(
-              __spreadArray2([], visibleFiles, true),
-              [path],
-              false,
-            )
+          : __spreadArray2(__spreadArray2([], visibleFiles, true), [path], false)
         return __assign2(__assign2({}, rest), {
           activeFile: path,
           visibleFiles: newPaths,
@@ -23389,10 +22471,7 @@ var useFiles = function (props) {
         }
         return __assign2(__assign2({}, rest), {
           visibleFiles: remainingVisibleFiles,
-          activeFile:
-            path === activeFile
-              ? remainingVisibleFiles[remainingVisibleFiles.length - 1]
-              : activeFile,
+          activeFile: path === activeFile ? remainingVisibleFiles[remainingVisibleFiles.length - 1] : activeFile,
           files: newFiles,
           shouldUpdatePreview,
         })
@@ -23430,25 +22509,18 @@ var SandpackProvider = function (props) {
   return jsx(Sandpack$1.Provider, {
     value: __assign2(
       __assign2(
-        __assign2(
-          __assign2(__assign2(__assign2({}, fileState), clientState), appState),
-          fileOperations,
-        ),
+        __assign2(__assign2(__assign2(__assign2({}, fileState), clientState), appState), fileOperations),
         clientOperations,
       ),
       {
         autoReload:
-          (_b22 =
-            (_a22 = props.options) === null || _a22 === void 0
-              ? void 0
-              : _a22.autoReload) !== null && _b22 !== void 0
+          (_b22 = (_a22 = props.options) === null || _a22 === void 0 ? void 0 : _a22.autoReload) !== null &&
+          _b22 !== void 0
             ? _b22
             : true,
         teamId: props === null || props === void 0 ? void 0 : props.teamId,
         exportOptions:
-          (_c2 =
-            props === null || props === void 0 ? void 0 : props.customSetup) ===
-            null || _c2 === void 0
+          (_c2 = props === null || props === void 0 ? void 0 : props.customSetup) === null || _c2 === void 0
             ? void 0
             : _c2.exportOptions,
         listen: addListener,
@@ -23456,8 +22528,7 @@ var SandpackProvider = function (props) {
       },
     ),
     children: jsx(ClassNamesProvider, {
-      classes:
-        options === null || options === void 0 ? void 0 : options.classes,
+      classes: options === null || options === void 0 ? void 0 : options.classes,
       children: jsx(SandpackThemeProvider, {
         className,
         style,
@@ -23471,9 +22542,7 @@ var SandpackConsumer = Sandpack$1.Consumer
 function useSandpack() {
   var sandpack = React3.useContext(Sandpack$1)
   if (sandpack === null) {
-    throw new Error(
-      '[sandpack-react]: "useSandpack" must be wrapped by a "SandpackProvider"',
-    )
+    throw new Error('[sandpack-react]: "useSandpack" must be wrapped by a "SandpackProvider"')
   }
   var dispatch = sandpack.dispatch,
     listen = sandpack.listen,
@@ -23484,15 +22553,10 @@ var useActiveCode = function () {
   var _a22, _b22, _c2
   var sandpack = useSandpack().sandpack
   return {
-    code:
-      (_a22 = sandpack.files[sandpack.activeFile]) === null || _a22 === void 0
-        ? void 0
-        : _a22.code,
+    code: (_a22 = sandpack.files[sandpack.activeFile]) === null || _a22 === void 0 ? void 0 : _a22.code,
     readOnly:
-      (_c2 =
-        (_b22 = sandpack.files[sandpack.activeFile]) === null || _b22 === void 0
-          ? void 0
-          : _b22.readOnly) !== null && _c2 !== void 0
+      (_c2 = (_b22 = sandpack.files[sandpack.activeFile]) === null || _b22 === void 0 ? void 0 : _b22.readOnly) !==
+        null && _c2 !== void 0
         ? _c2
         : false,
     updateCode: sandpack.updateCurrentFile,
@@ -23670,10 +22734,7 @@ var FileTabs = function (_a22) {
     setIsHoveredIndex = _b22[1]
   var getTriggerText = function (currentPath) {
     var documentFileName = getFileName(currentPath)
-    var pathsWithDuplicateFileNames = visibleFiles.reduce(function (
-      prev,
-      curr,
-    ) {
+    var pathsWithDuplicateFileNames = visibleFiles.reduce(function (prev, curr) {
       if (curr === currentPath) {
         return prev
       }
@@ -23687,10 +22748,7 @@ var FileTabs = function (_a22) {
     if (pathsWithDuplicateFileNames.length === 0) {
       return documentFileName
     } else {
-      return calculateNearestUniquePath(
-        currentPath,
-        pathsWithDuplicateFileNames,
-      )
+      return calculateNearestUniquePath(currentPath, pathsWithDuplicateFileNames)
     }
   }
   var onKeyDown = function (_a3) {
@@ -23703,10 +22761,7 @@ var FileTabs = function (_a22) {
         {
           var leftSibling = target.previousElementSibling
           if (leftSibling) {
-            ;(_b3 = leftSibling.querySelector('button')) === null ||
-            _b3 === void 0
-              ? void 0
-              : _b3.focus()
+            ;(_b3 = leftSibling.querySelector('button')) === null || _b3 === void 0 ? void 0 : _b3.focus()
             setActiveFile(visibleFiles[index - 1])
           }
         }
@@ -23715,10 +22770,7 @@ var FileTabs = function (_a22) {
         {
           var rightSibling = target.nextElementSibling
           if (rightSibling) {
-            ;(_c2 = rightSibling.querySelector('button')) === null ||
-            _c2 === void 0
-              ? void 0
-              : _c2.focus()
+            ;(_c2 = rightSibling.querySelector('button')) === null || _c2 === void 0 ? void 0 : _c2.focus()
             setActiveFile(visibleFiles[index + 1])
           }
         }
@@ -23726,18 +22778,14 @@ var FileTabs = function (_a22) {
       case 'Home': {
         var parent_1 = target.parentElement
         var firstChild = parent_1.firstElementChild
-        ;(_d = firstChild.querySelector('button')) === null || _d === void 0
-          ? void 0
-          : _d.focus()
+        ;(_d = firstChild.querySelector('button')) === null || _d === void 0 ? void 0 : _d.focus()
         setActiveFile(visibleFiles[0])
         break
       }
       case 'End': {
         var parent_2 = target.parentElement
         var lastChild = parent_2.lastElementChild
-        ;(_e = lastChild.querySelector('button')) === null || _e === void 0
-          ? void 0
-          : _e.focus()
+        ;(_e = lastChild.querySelector('button')) === null || _e === void 0 ? void 0 : _e.focus()
         setActiveFile(visibleFiles[-1])
         break
       }
@@ -23754,17 +22802,13 @@ var FileTabs = function (_a22) {
       {
         children: jsx('div', {
           'aria-label': 'Select active file',
-          className: classNames('tabs-scrollable-container', [
-            tabsScrollableClassName,
-          ]),
+          className: classNames('tabs-scrollable-container', [tabsScrollableClassName]),
           role: 'tablist',
           children: visibleFiles.map(function (filePath, index) {
             return jsxs(
               'div',
               {
-                'aria-controls': ''
-                  .concat(filePath, '-')
-                  .concat(activeFileUniqueId, '-tab-panel'),
+                'aria-controls': ''.concat(filePath, '-').concat(activeFileUniqueId, '-tab-panel'),
                 'aria-selected': filePath === activeFile,
                 className: classNames('tab-container', [tabContainer]),
                 onKeyDown: function (e2) {
@@ -23779,14 +22823,9 @@ var FileTabs = function (_a22) {
                 role: 'tab',
                 children: [
                   jsx('button', {
-                    className: classNames('tab-button', [
-                      buttonClassName,
-                      tabButton,
-                    ]),
+                    className: classNames('tab-button', [buttonClassName, tabButton]),
                     'data-active': filePath === activeFile,
-                    id: ''
-                      .concat(filePath, '-')
-                      .concat(activeFileUniqueId, '-tab'),
+                    id: ''.concat(filePath, '-').concat(activeFileUniqueId, '-tab'),
                     onClick: function () {
                       return setActiveFile(filePath)
                     },
@@ -23798,18 +22837,13 @@ var FileTabs = function (_a22) {
                   closableTabs &&
                     visibleFiles.length > 1 &&
                     jsx('span', {
-                      className: classNames('close-button', [
-                        closeButtonClassName,
-                      ]),
+                      className: classNames('close-button', [closeButtonClassName]),
                       onClick: function (ev) {
                         ev.stopPropagation()
                         sandpack.closeFile(filePath)
                       },
                       style: {
-                        visibility:
-                          filePath === activeFile || hoveredIndex === index
-                            ? 'visible'
-                            : 'hidden',
+                        visibility: filePath === activeFile || hoveredIndex === index ? 'visible' : 'hidden',
                       },
                       tabIndex: filePath === activeFile ? 0 : -1,
                       children: jsx(CloseIcon, {}),
@@ -23887,13 +22921,7 @@ var SandpackStack = function (_a22) {
   var className = _a22.className,
     props = __rest(_a22, ['className'])
   var classNames = useClassNames()
-  return jsx(
-    'div',
-    __assign2(
-      { className: classNames('stack', [stackClassName, className]) },
-      props,
-    ),
-  )
+  return jsx('div', __assign2({ className: classNames('stack', [stackClassName, className]) }, props))
 }
 var useSandpackTheme = function () {
   var _a22 = React3.useContext(SandpackThemeContext),
@@ -23916,11 +22944,7 @@ var shallowEqual = function (a2, b2) {
 var getCodeMirrorPosition = function (doc, _a22) {
   var line = _a22.line,
     column = _a22.column
-  return (
-    doc.line(line).from +
-    (column !== null && column !== void 0 ? column : 0) -
-    1
-  )
+  return doc.line(line).from + (column !== null && column !== void 0 ? column : 0) - 1
 }
 var getEditorTheme = function () {
   return EditorView.theme({
@@ -24041,16 +23065,9 @@ var getLanguageFromFile = function (filePath, fileType, additionalLanguages) {
     var extensionDotIndex = filePath.lastIndexOf('.')
     extension = filePath.slice(extensionDotIndex + 1)
   }
-  for (
-    var _i2 = 0, additionalLanguages_1 = additionalLanguages;
-    _i2 < additionalLanguages_1.length;
-    _i2++
-  ) {
+  for (var _i2 = 0, additionalLanguages_1 = additionalLanguages; _i2 < additionalLanguages_1.length; _i2++) {
     var additionalLanguage = additionalLanguages_1[_i2]
-    if (
-      extension === additionalLanguage.name ||
-      additionalLanguage.extensions.includes(extension || '')
-    ) {
+    if (extension === additionalLanguage.name || additionalLanguage.extensions.includes(extension || '')) {
       return additionalLanguage.name
     }
   }
@@ -24081,11 +23098,7 @@ var getCodeMirrorLanguage = function (extension, additionalLanguages) {
     html: html(),
     css: css(),
   }
-  for (
-    var _i2 = 0, additionalLanguages_2 = additionalLanguages;
-    _i2 < additionalLanguages_2.length;
-    _i2++
-  ) {
+  for (var _i2 = 0, additionalLanguages_2 = additionalLanguages; _i2 < additionalLanguages_2.length; _i2++) {
     var additionalLanguage = additionalLanguages_2[_i2]
     if (extension === additionalLanguage.name) {
       return additionalLanguage.language
@@ -24130,17 +23143,12 @@ function highlightDecorators(positions) {
           var _a22, _b22, _c2
           var lineDeco2 = Decoration.line({
             attributes: {
-              class:
-                (_a22 = item.className) !== null && _a22 !== void 0 ? _a22 : '',
+              class: (_a22 = item.className) !== null && _a22 !== void 0 ? _a22 : '',
             },
           })
           var markDeco = Decoration.mark({
-            class:
-              (_b22 = item.className) !== null && _b22 !== void 0 ? _b22 : '',
-            attributes:
-              (_c2 = item.elementAttributes) !== null && _c2 !== void 0
-                ? _c2
-                : void 0,
+            class: (_b22 = item.className) !== null && _b22 !== void 0 ? _b22 : '',
+            attributes: (_c2 = item.elementAttributes) !== null && _c2 !== void 0 ? _c2 : void 0,
           })
           var positionLineStart =
             getCodeMirrorPosition(view.state.doc, {
@@ -24272,10 +23280,7 @@ var useSyntaxHighlight = function (_a22) {
     addElement(from, '')
     addElement(to, className)
   })
-  if (
-    offSet < code.length &&
-    (code === null || code === void 0 ? void 0 : code.includes('\n'))
-  ) {
+  if (offSet < code.length && (code === null || code === void 0 ? void 0 : code.includes('\n'))) {
     codeElementsRender.push('\n\n')
   }
   return codeElementsRender
@@ -24345,15 +23350,8 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
     },
     [initMode, isIntersecting],
   )
-  var languageExtension = getLanguageFromFile(
-    filePath,
-    fileType,
-    additionalLanguages,
-  )
-  var langSupport = getCodeMirrorLanguage(
-    languageExtension,
-    additionalLanguages,
-  )
+  var languageExtension = getLanguageFromFile(filePath, fileType, additionalLanguages)
+  var langSupport = getCodeMirrorLanguage(languageExtension, additionalLanguages)
   var highlightTheme = getSyntaxHighlight(theme)
   var syntaxHighlightRender = useSyntaxHighlight({
     langSupport,
@@ -24370,11 +23368,7 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
     },
     [decorators],
   )
-  var useStaticReadOnly =
-    readOnly &&
-    (decorators === null || decorators === void 0
-      ? void 0
-      : decorators.length) === 0
+  var useStaticReadOnly = readOnly && (decorators === null || decorators === void 0 ? void 0 : decorators.length) === 0
   React3.useEffect(
     function () {
       if (!wrapper.current || !shouldInitEditor || useStaticReadOnly) {
@@ -24394,17 +23388,13 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
       view.contentDOM.setAttribute('data-lt-active', 'false')
       view.contentDOM.setAttribute(
         'aria-label',
-        filePath
-          ? 'Code Editor for '.concat(getFileName(filePath))
-          : 'Code Editor',
+        filePath ? 'Code Editor for '.concat(getFileName(filePath)) : 'Code Editor',
       )
       view.contentDOM.setAttribute('tabIndex', '-1')
       cmView.current = view
       return function () {
         var _a3
-        ;(_a3 = cmView.current) === null || _a3 === void 0
-          ? void 0
-          : _a3.destroy()
+        ;(_a3 = cmView.current) === null || _a3 === void 0 ? void 0 : _a3.destroy()
       }
     },
     [shouldInitEditor, readOnly, useStaticReadOnly],
@@ -24426,10 +23416,7 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
                 return key === 'Tab'
               })
               return (_b3 =
-                (_a3 =
-                  customKey === null || customKey === void 0
-                    ? void 0
-                    : customKey.run) === null || _a3 === void 0
+                (_a3 = customKey === null || customKey === void 0 ? void 0 : customKey.run) === null || _a3 === void 0
                   ? void 0
                   : _a3.call(customKey, view)) !== null && _b3 !== void 0
                 ? _b3
@@ -24449,10 +23436,7 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
                 return key === 'Shift-Tab'
               })
               return (_b3 =
-                (_a3 =
-                  customKey === null || customKey === void 0
-                    ? void 0
-                    : customKey.run) === null || _a3 === void 0
+                (_a3 = customKey === null || customKey === void 0 ? void 0 : customKey.run) === null || _a3 === void 0
                   ? void 0
                   : _a3.call(customKey, view)) !== null && _b3 !== void 0
                 ? _b3
@@ -24472,21 +23456,13 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
           { key: 'mod-Backspace', run: deleteGroupBackward },
         ]
         var extensionList = __spreadArray2(
-          __spreadArray2(
-            [highlightSpecialChars(), history2(), closeBrackets()],
-            extensions2,
-            true,
-          ),
+          __spreadArray2([highlightSpecialChars(), history2(), closeBrackets()], extensions2, true),
           [
             keymap.of(
               __spreadArray2(
                 __spreadArray2(
                   __spreadArray2(
-                    __spreadArray2(
-                      __spreadArray2([], closeBracketsKeymap, true),
-                      defaultKeymap,
-                      true,
-                    ),
+                    __spreadArray2(__spreadArray2([], closeBracketsKeymap, true), defaultKeymap, true),
                     historyKeymap,
                     true,
                   ),
@@ -24504,9 +23480,7 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
               if (update.docChanged) {
                 var newCode = update.state.doc.toString()
                 setInternalCode(newCode)
-                onCodeUpdate === null || onCodeUpdate === void 0
-                  ? void 0
-                  : onCodeUpdate(newCode)
+                onCodeUpdate === null || onCodeUpdate === void 0 ? void 0 : onCodeUpdate(newCode)
               }
             }),
           ],
@@ -24558,9 +23532,7 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
           effects: StateEffect.appendConfig.of(extensions2),
         })
         view.dispatch({
-          effects: StateEffect.appendConfig.of(
-            keymap.of(__spreadArray2([], extensionsKeymap, true)),
-          ),
+          effects: StateEffect.appendConfig.of(keymap.of(__spreadArray2([], extensionsKeymap, true))),
         })
         prevExtension.current = extensions2
         prevExtensionKeymap.current = extensionsKeymap
@@ -24569,11 +23541,7 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
     [extensions2, extensionsKeymap],
   )
   React3.useEffect(function () {
-    if (
-      cmView.current &&
-      editorState === 'dirty' &&
-      window.matchMedia('(min-width: 768px)').matches
-    ) {
+    if (cmView.current && editorState === 'dirty' && window.matchMedia('(min-width: 768px)').matches) {
       cmView.current.contentDOM.focus()
     }
   }, [])
@@ -24682,16 +23650,9 @@ var CodeMirror = /* @__PURE__ */ React3.forwardRef(function (_a22, ref) {
   return jsx('div', {
     ref: combinedRef,
     'aria-autocomplete': 'list',
-    'aria-label': filePath
-      ? 'Code Editor for '.concat(getFileName(filePath))
-      : 'Code Editor',
+    'aria-label': filePath ? 'Code Editor for '.concat(getFileName(filePath)) : 'Code Editor',
     'aria-multiline': 'true',
-    className: classNames('cm', [
-      classNames(editorState),
-      classNames(languageExtension),
-      cmClassName,
-      tokensClassName,
-    ]),
+    className: classNames('cm', [classNames(editorState), classNames(languageExtension), cmClassName, tokensClassName]),
     onKeyDown: handleContainerKeyDown,
     role: 'textbox',
     tabIndex: 0,
@@ -24746,10 +23707,7 @@ var SandpackCodeEditor = /* @__PURE__ */ forwardRef2(function (_a22, ref) {
   var activeFile = sandpack.activeFile,
     status = sandpack.status,
     editorState = sandpack.editorState
-  var shouldShowTabs =
-    showTabs !== null && showTabs !== void 0
-      ? showTabs
-      : sandpack.visibleFiles.length > 1
+  var shouldShowTabs = showTabs !== null && showTabs !== void 0 ? showTabs : sandpack.visibleFiles.length > 1
   var classNames = useClassNames()
   var handleCodeUpdate = function (newCode, shouldUpdatePreview) {
     if (shouldUpdatePreview === void 0) {
@@ -24764,13 +23722,9 @@ var SandpackCodeEditor = /* @__PURE__ */ forwardRef2(function (_a22, ref) {
       children: [
         shouldShowTabs && jsx(FileTabs, { activeFileUniqueId, closableTabs }),
         jsxs('div', {
-          'aria-labelledby': ''
-            .concat(activeFile, '-')
-            .concat(activeFileUniqueId, '-tab'),
+          'aria-labelledby': ''.concat(activeFile, '-').concat(activeFileUniqueId, '-tab'),
           className: classNames('code-editor', [editorClassName]),
-          id: ''
-            .concat(activeFile, '-')
-            .concat(activeFileUniqueId, '-tab-panel'),
+          id: ''.concat(activeFile, '-').concat(activeFileUniqueId, '-tab-panel'),
           role: 'tabpanel',
           children: [
             jsx(
@@ -24786,12 +23740,7 @@ var SandpackCodeEditor = /* @__PURE__ */ forwardRef2(function (_a22, ref) {
                 initMode: initMode || sandpack.initMode,
                 onCodeUpdate: function (newCode) {
                   var _a3
-                  return handleCodeUpdate(
-                    newCode,
-                    (_a3 = sandpack.autoReload) !== null && _a3 !== void 0
-                      ? _a3
-                      : true,
-                  )
+                  return handleCodeUpdate(newCode, (_a3 = sandpack.autoReload) !== null && _a3 !== void 0 ? _a3 : true)
                 },
                 readOnly: readOnly || readOnlyFile,
                 showInlineErrors,
@@ -24801,9 +23750,7 @@ var SandpackCodeEditor = /* @__PURE__ */ forwardRef2(function (_a22, ref) {
               },
               activeFile,
             ),
-            showRunButton && (!sandpack.autoReload || status === 'idle')
-              ? jsx(RunButton$1, {})
-              : null,
+            showRunButton && (!sandpack.autoReload || status === 'idle') ? jsx(RunButton$1, {}) : null,
           ],
         }),
       ],
@@ -25339,19 +24286,13 @@ var __unframerNavigator = typeof window !== 'undefined' ? navigator : void 0
 var Browser
 ;(function (Browser2) {
   var isBrowser = (Browser2.isBrowser = () => typeof window === 'object')
-  var isTouch = (Browser2.isTouch = () =>
-    'ontouchstart' in window || __unframerNavigator.maxTouchPoints > 0)
-  var isChrome = (Browser2.isChrome = () =>
-    __unframerNavigator.userAgent.toLowerCase().includes('chrome/'))
-  var isWebKit = (Browser2.isWebKit = () =>
-    __unframerNavigator.userAgent.toLowerCase().includes('applewebkit/'))
+  var isTouch = (Browser2.isTouch = () => 'ontouchstart' in window || __unframerNavigator.maxTouchPoints > 0)
+  var isChrome = (Browser2.isChrome = () => __unframerNavigator.userAgent.toLowerCase().includes('chrome/'))
+  var isWebKit = (Browser2.isWebKit = () => __unframerNavigator.userAgent.toLowerCase().includes('applewebkit/'))
   var isSafari = (Browser2.isSafari = () => isWebKit() && !isChrome())
-  var isSafariDesktop = (Browser2.isSafariDesktop = () =>
-    isSafari() && !isTouch())
-  var isWindows = (Browser2.isWindows = () =>
-    /Win/.test(__unframerNavigator.platform))
-  var isMacOS = (Browser2.isMacOS = () =>
-    /Mac/.test(__unframerNavigator.platform))
+  var isSafariDesktop = (Browser2.isSafariDesktop = () => isSafari() && !isTouch())
+  var isWindows = (Browser2.isWindows = () => /Win/.test(__unframerNavigator.platform))
+  var isMacOS = (Browser2.isMacOS = () => /Mac/.test(__unframerNavigator.platform))
 })(Browser || (Browser = {}))
 
 // /:https://framerusercontent.com/modules/19BkzxjVBT3VP0Ykl3DY/3DPoanIA3vfPHW40mbKX/types.js
@@ -25513,9 +24454,7 @@ function useBorder(props, collapseEqualBorders = true) {
     borderTopWidth = 0,
   } = normalizeBorderProperties(props)
   const isMixedBorderWidth =
-    borderTopWidth !== borderBottomWidth ||
-    borderTopWidth !== borderLeftWidth ||
-    borderTopWidth !== borderRightWidth
+    borderTopWidth !== borderBottomWidth || borderTopWidth !== borderLeftWidth || borderTopWidth !== borderRightWidth
   let borderTop
   let borderBottom
   let borderLeft
@@ -25528,12 +24467,7 @@ function useBorder(props, collapseEqualBorders = true) {
     borderBottom = borderBottomWidth
     borderLeft = borderLeftWidth
   }
-  if (
-    collapseEqualBorders &&
-    borderTop === borderBottom &&
-    borderTop === borderLeft &&
-    borderTop === borderRight
-  ) {
+  if (collapseEqualBorders && borderTop === borderBottom && borderTop === borderLeft && borderTop === borderRight) {
     style.border = `${borderTop}px ${borderStyle} ${borderColor}`
   } else {
     style.borderStyle = borderStyle
@@ -25583,59 +24517,27 @@ function titleCase(value) {
   return groups.map(capitalizeFirstLetter).join(' ')
 }
 function useRadius(props) {
-  const {
-    borderRadius,
-    isMixedBorderRadius,
-    topLeftRadius,
-    topRightRadius,
-    bottomRightRadius,
-    bottomLeftRadius,
-  } = props
+  const { borderRadius, isMixedBorderRadius, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius } =
+    props
   const radiusValue = useMemo2(
     () =>
       isMixedBorderRadius
         ? `${topLeftRadius}px ${topRightRadius}px ${bottomRightRadius}px ${bottomLeftRadius}px`
         : `${borderRadius}px`,
-    [
-      borderRadius,
-      isMixedBorderRadius,
-      topLeftRadius,
-      topRightRadius,
-      bottomRightRadius,
-      bottomLeftRadius,
-    ],
+    [borderRadius, isMixedBorderRadius, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius],
   )
   return radiusValue
 }
 function usePadding(props) {
-  const {
-    padding,
-    paddingBottom,
-    paddingLeft,
-    paddingPerSide,
-    paddingRight,
-    paddingTop,
-  } = props
+  const { padding, paddingBottom, paddingLeft, paddingPerSide, paddingRight, paddingTop } = props
   const paddingValue = useMemo2(
-    () =>
-      paddingPerSide
-        ? `${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`
-        : `${padding}px`,
-    [
-      padding,
-      paddingBottom,
-      paddingLeft,
-      paddingPerSide,
-      paddingRight,
-      paddingTop,
-    ],
+    () => (paddingPerSide ? `${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px` : `${padding}px`),
+    [padding, paddingBottom, paddingLeft, paddingPerSide, paddingRight, paddingTop],
   )
   return paddingValue
 }
 function useIsOnCanvas() {
-  const [onCanvas] = useState4(
-    () => RenderTarget.current() === RenderTarget.canvas,
-  )
+  const [onCanvas] = useState4(() => RenderTarget.current() === RenderTarget.canvas)
   return onCanvas
 }
 function isObject(value) {
@@ -25654,11 +24556,7 @@ function isDarkColor2(color2) {
     b2 = parseInt(color2.substr(5, 2), 16)
   } else {
     color2 = Color.isP3String(color2) ? clampRGB(color2) : color2
-    const rgbValues = color2
-      .replace('rgb(', '')
-      .replace('rgba(', '')
-      .replace(')', '')
-      .split(',')
+    const rgbValues = color2.replace('rgb(', '').replace('rgba(', '').replace(')', '').split(',')
     if (rgbValues.length < 3) {
       return true
     }
@@ -25708,33 +24606,23 @@ var vue = new SuspenseValue(async () => {
   return language.vue()
 })
 var scala = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_clike-ARRIUV2U.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_clike-ARRIUV2U.js')
   return new LanguageSupport(StreamLanguage.define(language.scala))
 })
 var c2 = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_clike-ARRIUV2U.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_clike-ARRIUV2U.js')
   return new LanguageSupport(StreamLanguage.define(language.c))
 })
 var csharp = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_clike-ARRIUV2U.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_clike-ARRIUV2U.js')
   return new LanguageSupport(StreamLanguage.define(language.csharp))
 })
 var kotlin = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_clike-ARRIUV2U.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_clike-ARRIUV2U.js')
   return new LanguageSupport(StreamLanguage.define(language.kotlin))
 })
 var objectiveC = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_clike-ARRIUV2U.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_clike-ARRIUV2U.js')
   return new LanguageSupport(StreamLanguage.define(language.objectiveC))
 })
 var go = new SuspenseValue(async () => {
@@ -25742,63 +24630,43 @@ var go = new SuspenseValue(async () => {
   return new LanguageSupport(StreamLanguage.define(language.go))
 })
 var haskell = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_haskell-ABI2SUWQ.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_haskell-ABI2SUWQ.js')
   return new LanguageSupport(StreamLanguage.define(language.haskell))
 })
 var julia = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_julia-BJUXIFFD.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_julia-BJUXIFFD.js')
   return new LanguageSupport(StreamLanguage.define(language.julia))
 })
 var lua = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_lua-KKAYNKZO.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_lua-KKAYNKZO.js')
   return new LanguageSupport(StreamLanguage.define(language.lua))
 })
 var nginx = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_nginx-275HNMLF.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_nginx-275HNMLF.js')
   return new LanguageSupport(StreamLanguage.define(language.nginx))
 })
 var octave = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_octave-OJIOKWQ6.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_octave-OJIOKWQ6.js')
   return new LanguageSupport(StreamLanguage.define(language.octave))
 })
 var perl = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_perl-COA3GSH2.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_perl-COA3GSH2.js')
   return new LanguageSupport(StreamLanguage.define(language.perl))
 })
 var ruby = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_ruby-QYQDNWUM.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_ruby-QYQDNWUM.js')
   return new LanguageSupport(StreamLanguage.define(language.ruby))
 })
 var shell = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_shell-DMEVYPT4.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_shell-DMEVYPT4.js')
   return new LanguageSupport(StreamLanguage.define(language.shell))
 })
 var swift = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_swift-XOW3XLBD.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_swift-XOW3XLBD.js')
   return new LanguageSupport(StreamLanguage.define(language.swift))
 })
 var yaml = new SuspenseValue(async () => {
-  const language = await import(
-    './codemirror_legacy_modes_mode_yaml-COX3VY5N.js'
-  )
+  const language = await import('./codemirror_legacy_modes_mode_yaml-COX3VY5N.js')
   return new LanguageSupport(StreamLanguage.define(language.yaml))
 })
 function useLanguageAsync(name) {
@@ -26684,15 +25552,12 @@ function getVariablesForTheme(theme, background2, mode) {
     }
   }
   if (background2) {
-    result[`--cb-colors-surface1-${mode}`] =
-      `var(--cb-custom-background, ${background2})`
+    result[`--cb-colors-surface1-${mode}`] = `var(--cb-custom-background, ${background2})`
     result['--cb-background-rgb'] = clampRGB2(background2)
   } else {
     background2 = result[`--cb-colors-surface1-${mode}`]
   }
-  result[`--cb-color-scheme-${mode}`] = isDarkColor2(background2)
-    ? 'dark'
-    : 'light'
+  result[`--cb-color-scheme-${mode}`] = isDarkColor2(background2) ? 'dark' : 'light'
   return result
 }
 
@@ -26794,23 +25659,14 @@ var CodeBlock = withCSS(function CodeBlock2(props) {
     background: background2,
   } = props
   const variableTheme = getVariableTheme(font)
-  const lightThemeVariables2 = getVariablesForTheme(
-    themeMode === 'Dynamic' ? lightTheme : theme,
-    background2,
-    'light',
-  )
-  const darkThemeVariables2 = getVariablesForTheme(
-    themeMode === 'Dynamic' ? darkTheme : theme,
-    background2,
-    'dark',
-  )
+  const lightThemeVariables2 = getVariablesForTheme(themeMode === 'Dynamic' ? lightTheme : theme, background2, 'light')
+  const darkThemeVariables2 = getVariablesForTheme(themeMode === 'Dynamic' ? darkTheme : theme, background2, 'dark')
   const additionalLanguage = useLanguageAsync(language)
   const extension = getFileExtensions(language)[0]
   const onCanvas = useIsOnCanvas()
   const borderStyles = useBorder(border || {}, false)
   const borderRadius = useRadius(props)
-  const hasBorderRadius =
-    borderRadius !== '0px 0px 0px 0px' && borderRadius !== '0px'
+  const hasBorderRadius = borderRadius !== '0px 0px 0px 0px' && borderRadius !== '0px'
   const fileName = `example.${extension}`
   const padding = usePadding(props)
   return /* @__PURE__ */ _jsxs(motion.div, {
@@ -26857,9 +25713,7 @@ var CodeBlock = withCSS(function CodeBlock2(props) {
             },
             readOnly: true,
             showReadOnly: false,
-            additionalLanguages: additionalLanguage
-              ? [additionalLanguage]
-              : void 0,
+            additionalLanguages: additionalLanguage ? [additionalLanguage] : void 0,
           }),
         }),
       }),
@@ -26939,12 +25793,7 @@ addPropertyControls(CodeBlock, {
     type: ControlType.FusedNumber,
     toggleKey: 'isMixedBorderRadius',
     toggleTitles: ['Radius', 'Radius per corner'],
-    valueKeys: [
-      'topLeftRadius',
-      'topRightRadius',
-      'bottomRightRadius',
-      'bottomLeftRadius',
-    ],
+    valueKeys: ['topLeftRadius', 'topRightRadius', 'bottomRightRadius', 'bottomLeftRadius'],
     valueLabels: ['TL', 'TR', 'BR', 'BL'],
     min: 0,
     defaultValue: 15,
@@ -27132,8 +25981,7 @@ var richText = /* @__PURE__ */ i2(t2.Fragment, {
       className: 'framer-text-module',
       style: { height: 'auto', width: '100%' },
       children: /* @__PURE__ */ e(r2, {
-        componentIdentifier:
-          'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
+        componentIdentifier: 'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
         children: (i22) =>
           /* @__PURE__ */ e(stdin_default, {
             ...i22,
@@ -27294,8 +26142,7 @@ var richText1 = /* @__PURE__ */ i2(t2.Fragment, {
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'Compress and convert images to next-gen formats (WebP, AVIF)',
+            children: 'Compress and convert images to next-gen formats (WebP, AVIF)',
           }),
         }),
         /* @__PURE__ */ e('li', {
@@ -27323,8 +26170,7 @@ var richText1 = /* @__PURE__ */ i2(t2.Fragment, {
       className: 'framer-text-module',
       style: { height: 'auto', width: '100%' },
       children: /* @__PURE__ */ e(r2, {
-        componentIdentifier:
-          'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
+        componentIdentifier: 'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
         children: (i22) =>
           /* @__PURE__ */ e(stdin_default, {
             ...i22,
@@ -27362,29 +26208,25 @@ var richText2 = /* @__PURE__ */ i2(t2.Fragment, {
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'Large, uncompressed images were slowing down key landing pages.',
+            children: 'Large, uncompressed images were slowing down key landing pages.',
           }),
         }),
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'Bloated JavaScript and CSS files increased load times, especially for returning visitors.',
+            children: 'Bloated JavaScript and CSS files increased load times, especially for returning visitors.',
           }),
         }),
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'The lack of a global CDN meant international shoppers experienced even longer delays.',
+            children: 'The lack of a global CDN meant international shoppers experienced even longer delays.',
           }),
         }),
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'No real-time monitoring made it hard to spot and fix slowdowns quickly.',
+            children: 'No real-time monitoring made it hard to spot and fix slowdowns quickly.',
           }),
         }),
       ],
@@ -27516,8 +26358,7 @@ var richText2 = /* @__PURE__ */ i2(t2.Fragment, {
     }),
     /* @__PURE__ */ e('blockquote', {
       children: /* @__PURE__ */ e('p', {
-        children:
-          'Jet\u2019s one-click optimization turned our sluggish site into a conversion machine.',
+        children: 'Jet\u2019s one-click optimization turned our sluggish site into a conversion machine.',
       }),
     }),
     /* @__PURE__ */ e('h3', {
@@ -27531,8 +26372,7 @@ var richText2 = /* @__PURE__ */ i2(t2.Fragment, {
       className: 'framer-text-module',
       style: { height: 'auto', width: '100%' },
       children: /* @__PURE__ */ e(r2, {
-        componentIdentifier:
-          'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
+        componentIdentifier: 'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
         children: (i22) =>
           /* @__PURE__ */ e(stdin_default, {
             ...i22,
@@ -27711,22 +26551,19 @@ var richText3 = /* @__PURE__ */ i2(t2.Fragment, {
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'Minimize third-party scripts and keep JavaScript lean for better FID.',
+            children: 'Minimize third-party scripts and keep JavaScript lean for better FID.',
           }),
         }),
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'Reserve space for images and ads to avoid unexpected layout shifts (better CLS).',
+            children: 'Reserve space for images and ads to avoid unexpected layout shifts (better CLS).',
           }),
         }),
         /* @__PURE__ */ e('li', {
           'data-preset-tag': 'p',
           children: /* @__PURE__ */ e('p', {
-            children:
-              'Use a performance monitoring tool to track these metrics in real time.\xA0',
+            children: 'Use a performance monitoring tool to track these metrics in real time.\xA0',
           }),
         }),
       ],
@@ -27736,8 +26573,7 @@ var richText3 = /* @__PURE__ */ i2(t2.Fragment, {
       className: 'framer-text-module',
       style: { height: 'auto', width: '100%' },
       children: /* @__PURE__ */ e(r2, {
-        componentIdentifier:
-          'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
+        componentIdentifier: 'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
         children: (i22) =>
           /* @__PURE__ */ e(stdin_default, {
             ...i22,
@@ -27847,8 +26683,7 @@ var richText4 = /* @__PURE__ */ i2(t2.Fragment, {
     }),
     /* @__PURE__ */ e('blockquote', {
       children: /* @__PURE__ */ e('p', {
-        children:
-          'Jet\u2019s built-in CDN means our site is fast for visitors everywhere, all the time.',
+        children: 'Jet\u2019s built-in CDN means our site is fast for visitors everywhere, all the time.',
       }),
     }),
     /* @__PURE__ */ e('h3', { children: 'Example: CDN integration code' }),
@@ -27860,8 +26695,7 @@ var richText4 = /* @__PURE__ */ i2(t2.Fragment, {
       className: 'framer-text-module',
       style: { height: 'auto', width: '100%' },
       children: /* @__PURE__ */ e(r2, {
-        componentIdentifier:
-          'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
+        componentIdentifier: 'module:pVk4QsoHxASnVtUBp6jr/HTBsNkEMAb7TUGaO3DBy/CodeBlock.js:default',
         children: (i22) =>
           /* @__PURE__ */ e(stdin_default, {
             ...i22,
@@ -28033,8 +26867,7 @@ var richText5 = /* @__PURE__ */ i2(t2.Fragment, {
     }),
     /* @__PURE__ */ e('blockquote', {
       children: /* @__PURE__ */ e('p', {
-        children:
-          'With Jet, I spend less time fixing and more time creating. Everything just works.',
+        children: 'With Jet, I spend less time fixing and more time creating. Everything just works.',
       }),
     }),
     /* @__PURE__ */ e('h2', { children: 'The Jet difference' }),
@@ -28073,15 +26906,7 @@ var __FramerMetadata__ = {
     __FramerMetadata__: { type: 'variable' },
   },
 }
-export {
-  __FramerMetadata__,
-  richText,
-  richText1,
-  richText2,
-  richText3,
-  richText4,
-  richText5,
-}
+export { __FramerMetadata__, richText, richText1, richText2, richText3, richText4, richText5 }
 /*! Bundled license information:
 
 static-browser-server/out/lib/main.js:

@@ -22,11 +22,7 @@ export function createIframeRpcClient({
   >()
   const usedIdempotenceIds = new Set<string>()
 
-  docsRpcClient.setDocsState = async ({
-    idempotenceKey,
-    state,
-    revalidate,
-  }): Promise<any> => {
+  docsRpcClient.setDocsState = async ({ idempotenceKey, state, revalidate }): Promise<any> => {
     console.log(`sending state to docs iframe`, state)
     // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
     // Here, we just need to postMessage, which is allowed on cross-origin frames.
@@ -50,9 +46,7 @@ export function createIframeRpcClient({
     return new Promise((resolve, reject) => {
       // If idempotenceId is specified and already used, return resolved promise immediately
       if (idempotenceKey && usedIdempotenceIds.has(idempotenceKey)) {
-        console.log(
-          `Idempotence ID ${idempotenceKey} already used, skipping docs state set state`,
-        )
+        console.log(`Idempotence ID ${idempotenceKey} already used, skipping docs state set state`)
         return Promise.resolve(undefined)
       }
       const timeout = setTimeout(() => {

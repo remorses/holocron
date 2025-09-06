@@ -3,23 +3,11 @@ import { RadioGroup as RadioGroupPrimitive } from 'radix-ui'
 
 import { cn } from '../../lib/cn.js'
 
-function RadioGroup({
-  className,
-  ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Root>) {
-  return (
-    <RadioGroupPrimitive.Root
-      data-slot='radio-group'
-      className={cn('grid gap-3', className)}
-      {...props}
-    />
-  )
+function RadioGroup({ className, ...props }: React.ComponentProps<typeof RadioGroupPrimitive.Root>) {
+  return <RadioGroupPrimitive.Root data-slot='radio-group' className={cn('grid gap-3', className)} {...props} />
 }
 
-function RadioGroupItem({
-  className,
-  ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
+function RadioGroupItem({ className, ...props }: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
   return (
     <RadioGroupPrimitive.Item
       data-slot='radio-group-item'
@@ -30,13 +18,7 @@ function RadioGroupItem({
       {...props}
     >
       <RadioGroupPrimitive.Indicator className='flex items-center justify-center text-current'>
-        <svg
-          width='6'
-          height='6'
-          viewBox='0 0 6 6'
-          fill='currentcolor'
-          xmlns='http://www.w3.org/2000/svg'
-        >
+        <svg width='6' height='6' viewBox='0 0 6 6' fill='currentcolor' xmlns='http://www.w3.org/2000/svg'>
           <circle cx='3' cy='3' r='3' />
         </svg>
       </RadioGroupPrimitive.Indicator>

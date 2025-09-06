@@ -18,11 +18,7 @@ export function useNProgress() {
    */
   const state = useMemo<'idle' | 'loading'>(
     function getGlobalState() {
-      const states = [
-        transition.state,
-        revalidator.state,
-        ...fetchers.map((fetcher) => fetcher.state),
-      ]
+      const states = [transition.state, revalidator.state, ...fetchers.map((fetcher) => fetcher.state)]
       if (states.every((state) => state === 'idle')) return 'idle'
       return 'loading'
     },

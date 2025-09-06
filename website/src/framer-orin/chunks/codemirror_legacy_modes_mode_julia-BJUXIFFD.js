@@ -67,8 +67,7 @@ var operators = wordRegexp(
   '',
 )
 var delimiters = /^[;,()[\]{}]/
-var identifiers =
-  /^[_A-Za-z\u00A1-\u2217\u2219-\uFFFF][\w\u00A1-\u2217\u2219-\uFFFF]*!*/
+var identifiers = /^[_A-Za-z\u00A1-\u2217\u2219-\uFFFF][\w\u00A1-\u2217\u2219-\uFFFF]*!*/
 var chars = wordRegexp([octChar, hexChar, sChar, uChar], "'")
 var openersList = [
   'begin',
@@ -245,11 +244,7 @@ function tokenBase(stream, state) {
     if (stream.match(/^0o[0-7_]+/i)) {
       numberLiteral = true
     }
-    if (
-      stream.match(
-        /^(?:(?:\d[_\d]*)?\.(?!\.)(?:\d[_\d]*)?|\d[_\d]*\.(?!\.)(?:\d[_\d]*))?([Eef][\+\-]?[_\d]+)?/i,
-      )
-    ) {
+    if (stream.match(/^(?:(?:\d[_\d]*)?\.(?!\.)(?:\d[_\d]*)?|\d[_\d]*\.(?!\.)(?:\d[_\d]*))?([Eef][\+\-]?[_\d]+)?/i)) {
       numberLiteral = true
     }
     if (stream.match(/^\d[_\d]*(e[\+\-]?\d+)?/i)) {

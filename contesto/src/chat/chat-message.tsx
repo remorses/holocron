@@ -1,20 +1,8 @@
-import {
-  RiBookLine,
-  RiCheckLine,
-  RiCodeSSlashLine,
-  RiEditLine,
-  RiLoopRightFill,
-  RiRefreshLine,
-} from '@remixicon/react'
+import { RiBookLine, RiCheckLine, RiCodeSSlashLine, RiEditLine, RiLoopRightFill, RiRefreshLine } from '@remixicon/react'
 import { UIMessage } from 'ai'
 import { memo, RefObject, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '../components/ui/tooltip.js'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip.js'
 import { cn } from '../lib/cn.js'
 
 import { Button } from '../components/ui/button.js'
@@ -61,18 +49,12 @@ function isMessageAlmostEmpty(message: UIMessage) {
   if (message.parts.length >= 3) {
     return false
   }
-  const allText = message.parts.every(
-    (x) =>
-      x.type === 'reasoning' || x.type === 'text' || x.type === 'step-start',
-  )
+  const allText = message.parts.every((x) => x.type === 'reasoning' || x.type === 'text' || x.type === 'step-start')
 
   if (!allText) {
     return false
   }
-  const content = message.parts.reduce(
-    (acc, part) => acc + ((part as any)['text'] || ''),
-    '',
-  )
+  const content = message.parts.reduce((acc, part) => acc + ((part as any)['text'] || ''), '')
   if (content.length < 10) {
     return true
   }
@@ -94,9 +76,7 @@ export const ChatAssistantMessage = memo(function ChatMessage({
   const isChatGenerating = useChatState((x) => x.isGenerating)
   const isLastAssistantMessage = useChatState(
     (x) =>
-      x.messages.length > 0 &&
-      x.messages[x.messages.length - 1]?.id === message.id &&
-      message.role === 'assistant',
+      x.messages.length > 0 && x.messages[x.messages.length - 1]?.id === message.id && message.role === 'assistant',
   )
 
   // if (
@@ -117,9 +97,7 @@ export const ChatAssistantMessage = memo(function ChatMessage({
         className,
       )}
     >
-      <div
-        className={cn('max-w-full relative group/message', 'space-y-4 w-full')}
-      >
+      <div className={cn('max-w-full relative group/message', 'space-y-4 w-full')}>
         {children}
         {isLastAssistantMessage && isChatGenerating && <ChatLoadingSpinner />}
       </div>
@@ -127,11 +105,7 @@ export const ChatAssistantMessage = memo(function ChatMessage({
   )
 })
 
-const EditingUserMessage = memo(function EditingUserMessage({
-  message,
-}: {
-  message: UIMessage
-}) {
+const EditingUserMessage = memo(function EditingUserMessage({ message }: { message: UIMessage }) {
   const [editText, setEditText] = useState(() => {
     return message.parts
       .filter((part) => part.type === 'text')
@@ -150,18 +124,14 @@ const EditingUserMessage = memo(function EditingUserMessage({
       if (msg.id === message.id) {
         return {
           ...msg,
-          parts: msg.parts.map((part) =>
-            part.type === 'text' ? { ...part, text: editText } : part,
-          ),
+          parts: msg.parts.map((part) => (part.type === 'text' ? { ...part, text: editText } : part)),
           content: editText,
         }
       }
       return msg
     })
 
-    const messageIndex = updatedMessages.findIndex(
-      (msg) => msg.id === message.id,
-    )
+    const messageIndex = updatedMessages.findIndex((msg) => msg.id === message.id)
     const messagesUpToEdit = updatedMessages.slice(0, messageIndex + 1)
 
     flushSync(() => {
@@ -182,11 +152,7 @@ const EditingUserMessage = memo(function EditingUserMessage({
       className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'
     >
       <div className='max-w-full relative group/message  grow px-4 py-3 rounded-xl'>
-        <motion.div
-          className='inset-0 bg-muted absolute rounded-xl'
-          layout
-          layoutId={message.id}
-        />
+        <motion.div className='inset-0 bg-muted absolute rounded-xl' layout layoutId={message.id} />
         <motion.div
           layout='position'
           layoutId={`content-${message.id}`}
@@ -214,11 +180,7 @@ const EditingUserMessage = memo(function EditingUserMessage({
               autoFocus
             />
             <div className='flex items-center gap-2 justify-end'>
-              <Button
-                size='sm'
-                onClick={handleEditSave}
-                disabled={!editText.trim()}
-              >
+              <Button size='sm' onClick={handleEditSave} disabled={!editText.trim()}>
                 Save
               </Button>
             </div>
@@ -259,9 +221,7 @@ export function ChatUserMessage({
 
   const shouldTruncate = messageContent.length > CHARACTER_LIMIT
   const displayContent =
-    shouldTruncate && !isExpanded
-      ? messageContent.slice(0, CHARACTER_LIMIT) + '...'
-      : messageContent
+    shouldTruncate && !isExpanded ? messageContent.slice(0, CHARACTER_LIMIT) + '...' : messageContent
 
   useEffect(() => {
     if (messageRef.current) {
@@ -293,18 +253,11 @@ export function ChatUserMessage({
     <article
       ref={messageRef}
       data-message-id={message.id}
-      className={cn(
-        'flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end',
-        className,
-      )}
+      className={cn('flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end', className)}
       style={scrollStyle}
     >
       <div className='flex flex-col max-w-[80%] relative group/message  px-4 py-2 rounded-xl'>
-        <motion.div
-          className='inset-0 bg-muted absolute rounded-xl'
-          layout
-          layoutId={message.id}
-        />
+        <motion.div className='inset-0 bg-muted absolute rounded-xl' layout layoutId={message.id} />
         <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -328,16 +281,9 @@ export function ChatUserMessage({
           className='full isolate flex flex-col whitespace-pre-wrap max-w-full'
         >
           <div className='flex flex-col gap-2'>
-            <div>
-              {shouldTruncate && !isExpanded ? displayContent : children}
-            </div>
+            <div>{shouldTruncate && !isExpanded ? displayContent : children}</div>
             {shouldTruncate && (
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={handleToggleExpanded}
-                className='text-xs underline'
-              >
+              <Button variant='ghost' size='sm' onClick={handleToggleExpanded} className='text-xs underline'>
                 {isExpanded ? 'Show less' : 'Read more'}
               </Button>
             )}
@@ -352,10 +298,7 @@ type ActionButtonProps = {
   icon: React.ReactNode
   label: string
 }
-const ActionButton = memo(function ActionButton({
-  icon,
-  label,
-}: ActionButtonProps) {
+const ActionButton = memo(function ActionButton({ icon, label }: ActionButtonProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -392,9 +335,7 @@ function truncateText(text: string, maxLength: number = 500): string {
 }
 
 export function ChatErrorMessage() {
-  const error = truncateText(
-    useChatState((x) => x?.assistantErrorMessage) || '',
-  )
+  const error = truncateText(useChatState((x) => x?.assistantErrorMessage) || '')
 
   const handleRetry = () => {
     // Clear the error and retry - the user message is already in the messages
@@ -410,12 +351,8 @@ export function ChatErrorMessage() {
         <div className='bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-lg p-4'>
           <div className='flex items-start gap-3'>
             <div className='flex-1 select-text'>
-              <h4 className=' font-medium text-red-800 dark:text-red-200 mb-1'>
-                Failed to generate response
-              </h4>
-              <p className='break-all text-red-700 dark:text-red-300'>
-                {error}
-              </p>
+              <h4 className=' font-medium text-red-800 dark:text-red-200 mb-1'>Failed to generate response</h4>
+              <p className='break-all text-red-700 dark:text-red-300'>{error}</p>
             </div>
             <Button
               variant='outline'

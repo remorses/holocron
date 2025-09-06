@@ -8,14 +8,7 @@ import {
   type SelectTextInput,
 } from 'website/src/lib/shared-docs-tools'
 
-export type {
-  DocsTools,
-  SearchDocsInput,
-  GoToPageInput,
-  GetCurrentPageInput,
-  FetchUrlInput,
-  SelectTextInput,
-}
+export type { DocsTools, SearchDocsInput, GoToPageInput, GetCurrentPageInput, FetchUrlInput, SelectTextInput }
 
 export type DocsUIMessage = UIMessage<never, never, DocsTools>
 

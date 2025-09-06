@@ -16,14 +16,7 @@ import {
 import { LayoutGroup, motion, MotionConfigContext } from 'unframer'
 import * as React from 'react'
 import { useRef } from 'react'
-var cycleOrder = [
-  'hZMrdHfki',
-  'X1CwKrPjM',
-  'LdpJM6G2s',
-  'hdexXEO_X',
-  'QYQ1r9X7u',
-  'mWhcw8lXH',
-]
+var cycleOrder = ['hZMrdHfki', 'X1CwKrPjM', 'LdpJM6G2s', 'hdexXEO_X', 'QYQ1r9X7u', 'mWhcw8lXH']
 var serializationHash = 'framer-vPHsY'
 var variantClassNames = {
   hdexXEO_X: 'framer-v-1y0us3z',
@@ -35,19 +28,14 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -65,8 +53,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'hZMrdHfki',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'hZMrdHfki',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -101,8 +88,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const sharedStyleClassNames = []
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
   const isDisplayed = () => {
-    if (['hdexXEO_X', 'QYQ1r9X7u', 'mWhcw8lXH'].includes(baseVariant))
-      return false
+    if (['hdexXEO_X', 'QYQ1r9X7u', 'mWhcw8lXH'].includes(baseVariant)) return false
     return true
   }
   return /* @__PURE__ */ _jsx(LayoutGroup, {
@@ -115,12 +101,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-106y44h',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-106y44h', className, classNames),
           'data-framer-name': 'Desktop',
           layoutDependency,
           layoutId: 'hZMrdHfki',
@@ -151,8 +132,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'OFusGUOsV',
                   style: {
-                    backgroundColor:
-                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     opacity: 0.2,
                   },
                 }),
@@ -162,8 +142,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency,
                 layoutId: 'RqJ0samWc',
                 style: {
-                  backgroundColor:
-                    'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                  backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                   opacity: 0.2,
                 },
               }),
@@ -174,8 +153,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'DSOxXLMJ5',
                   style: {
-                    backgroundColor:
-                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     opacity: 0.2,
                   },
                 }),
@@ -185,8 +163,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency,
                 layoutId: 'vH4_08rzf',
                 style: {
-                  backgroundColor:
-                    'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                  backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                   opacity: 0.2,
                 },
               }),
@@ -196,8 +173,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency,
                 layoutId: 'Yk74iHPEU',
                 style: {
-                  backgroundColor:
-                    'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                  backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                   opacity: 0.2,
                 },
               }),
@@ -207,8 +183,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'IQcm3TYpa',
                   style: {
-                    backgroundColor:
-                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     opacity: 0.2,
                   },
                 }),
@@ -218,8 +193,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'HBvGm1UMm',
                   style: {
-                    backgroundColor:
-                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     opacity: 0.2,
                   },
                 }),
@@ -229,8 +203,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'TaAk36PWZ',
                   style: {
-                    backgroundColor:
-                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     opacity: 0.2,
                   },
                 }),
@@ -240,8 +213,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'vquTPMqYh',
                   style: {
-                    backgroundColor:
-                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     opacity: 0.2,
                   },
                 }),
@@ -280,22 +252,8 @@ Framertj5pC5lGW.displayName = 'Grid'
 Framertj5pC5lGW.defaultProps = { height: 905, width: 1200 }
 addPropertyControls(Framertj5pC5lGW, {
   variant: {
-    options: [
-      'hZMrdHfki',
-      'X1CwKrPjM',
-      'LdpJM6G2s',
-      'hdexXEO_X',
-      'QYQ1r9X7u',
-      'mWhcw8lXH',
-    ],
-    optionTitles: [
-      'Desktop',
-      'Tablet',
-      'Phone',
-      'Desktop-line',
-      'Tablet-line',
-      'Phone-Line',
-    ],
+    options: ['hZMrdHfki', 'X1CwKrPjM', 'LdpJM6G2s', 'hdexXEO_X', 'QYQ1r9X7u', 'mWhcw8lXH'],
+    optionTitles: ['Desktop', 'Tablet', 'Phone', 'Desktop-line', 'Tablet-line', 'Phone-Line'],
     title: 'Variant',
     type: ControlType.Enum,
   },

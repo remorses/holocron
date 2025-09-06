@@ -5,8 +5,7 @@ const WS_URL = 'wss://preview.holocron.so/_tunnel'
 
 describe.concurrent('Tunnel WebSocket', () => {
   // Generate unique IDs for each test to avoid conflicts
-  const getTunnelId = () =>
-    `test-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const getTunnelId = () => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
   test('upstream and client can exchange messages', async () => {
     const tunnelId = getTunnelId()
@@ -109,13 +108,11 @@ describe.concurrent('Tunnel WebSocket', () => {
     // Try to connect second upstream - should be rejected
     const upstream2 = new WebSocket(`${WS_URL}/upstream?id=${tunnelId}`)
 
-    const closePromise = new Promise<{ code: number; reason: string }>(
-      (resolve) => {
-        upstream2.on('close', (code, reason) => {
-          resolve({ code, reason: reason.toString() })
-        })
-      },
-    )
+    const closePromise = new Promise<{ code: number; reason: string }>((resolve) => {
+      upstream2.on('close', (code, reason) => {
+        resolve({ code, reason: reason.toString() })
+      })
+    })
 
     // Wait for the second connection to be closed
     const closeEvent = await closePromise

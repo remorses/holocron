@@ -63,9 +63,7 @@ export async function getFilesForSource({
 
   if (draftFiles.length > 0) {
     for (const draftFile of draftFiles) {
-      const existingFileIndex = files.findIndex(
-        (f) => f.path === draftFile.path,
-      )
+      const existingFileIndex = files.findIndex((f) => f.path === draftFile.path)
 
       if (existingFileIndex >= 0) {
         files[existingFileIndex] = draftFile
@@ -111,10 +109,7 @@ export function removeGithubFolder(path: string, githubFolder: string): string {
  * Convert filesInDraft to VirtualFile array for use with getFumadocsSource
  * Used in test utilities where we don't have database access
  */
-export function getFilesFromFilesInDraft(
-  filesInDraft: FilesInDraft,
-  githubFolder: string = '',
-): Array<MyVirtualFile> {
+export function getFilesFromFilesInDraft(filesInDraft: FilesInDraft, githubFolder: string = ''): Array<MyVirtualFile> {
   const files: MyVirtualFile[] = []
 
   for (const [githubPath, draft] of Object.entries(filesInDraft)) {
@@ -132,9 +127,7 @@ export function getFilesFromFilesInDraft(
     if (isPage) {
       let data: ProcessorDataFrontmatter = {}
       try {
-        data =
-          frontMatter<ProcessorDataFrontmatter>(draft.content || '')
-            .attributes || {}
+        data = frontMatter<ProcessorDataFrontmatter>(draft.content || '').attributes || {}
       } catch {}
       files.push({
         path: normalizedPath,

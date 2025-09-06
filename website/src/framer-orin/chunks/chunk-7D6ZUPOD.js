@@ -30,10 +30,7 @@ var transformTemplate1 = (_, t) => `translateX(-50%) ${t}`
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -43,10 +40,7 @@ var Variants = motion.create(React.Fragment)
 var getProps = ({ height, id, tooltip, width, ...props }) => {
   return {
     ...props,
-    K2SanH58l:
-      tooltip ??
-      props.K2SanH58l ??
-      'Manage multiple domains with a single account.',
+    K2SanH58l: tooltip ?? props.K2SanH58l ?? 'Manage multiple domains with a single account.',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -59,14 +53,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    K2SanH58l,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className2, layoutId, variant, K2SanH58l, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -96,12 +83,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-88l3dt',
-            className2,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-88l3dt', className2, classNames),
           'data-framer-name': 'Default',
           layoutDependency,
           layoutId: 'EIDFb81rg',
@@ -133,8 +115,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               layoutDependency,
               layoutId: 'oo4WmgA7q',
               style: {
-                '--extracted-r6o4lv':
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                '--extracted-r6o4lv': 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 '--framer-link-text-color': 'rgb(0, 153, 255)',
                 '--framer-link-text-decoration': 'underline',
               },
@@ -189,8 +170,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -266,11 +246,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 var IconFonts = getFonts(stdin_default2)
@@ -282,9 +258,7 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = { duration: 0, type: 'tween' }
@@ -295,10 +269,7 @@ var transformTemplate12 = (_, t) => `translate(-50%, -50%) ${t}`
 var Transition2 = ({ value, children }) => {
   const config = React2.useContext(MotionConfigContext2)
   const transition = value ?? config.transition
-  const contextValue = React2.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React2.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx2(MotionConfigContext2.Provider, {
     value: contextValue,
     children,
@@ -311,8 +282,7 @@ var getProps2 = ({ height, hover, id, smallIcon, width, ...props }) => {
     ...props,
     gqg_nvVwg: smallIcon ?? props.gqg_nvVwg,
     nc3N4L5qA: hover ?? props.nc3N4L5qA,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'N9BS4mTvb',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'N9BS4mTvb',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -325,15 +295,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo2()
   const componentViewport = useComponentViewport2()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    nc3N4L5qA,
-    gqg_nvVwg,
-    ...restProps
-  } = getProps2(props)
+  const { style, className: className2, layoutId, variant, nc3N4L5qA, gqg_nvVwg, ...restProps } = getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -373,12 +335,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs2(motion2.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx2(
-            scopingClassNames,
-            'framer-ozmiqv',
-            className2,
-            classNames,
-          ),
+          className: cx2(scopingClassNames, 'framer-ozmiqv', className2, classNames),
           'data-border': true,
           'data-framer-name': 'Default',
           'data-highlight': true,
@@ -388,8 +345,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
           ref: refBinding,
           style: {
             '--border-bottom-width': '1px',
-            '--border-color':
-              'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
+            '--border-color': 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
             '--border-left-width': '1px',
             '--border-right-width': '1px',
             '--border-style': 'solid',
@@ -403,15 +359,10 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
           },
           variants: {
             wAbf6XDVH: {
-              backgroundColor:
-                'var(--token-361e1224-4029-4612-a297-51f349511b71, rgba(255, 255, 255, 0.1))',
+              backgroundColor: 'var(--token-361e1224-4029-4612-a297-51f349511b71, rgba(255, 255, 255, 0.1))',
             },
           },
-          ...addPropertyOverrides(
-            { wAbf6XDVH: { 'data-framer-name': 'Hover' } },
-            baseVariant,
-            gestureVariant,
-          ),
+          ...addPropertyOverrides({ wAbf6XDVH: { 'data-framer-name': 'Hover' } }, baseVariant, gestureVariant),
           children: [
             visible &&
               /* @__PURE__ */ _jsx2(stdin_default2, {
@@ -420,8 +371,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 layoutDependency,
                 layoutId: 'LpniIIvv8',
                 style: {
-                  '--13bnw74':
-                    'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                  '--13bnw74': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                 },
               }),
             gqg_nvVwg &&
@@ -433,8 +383,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 layoutId: 'GBuds_0Au',
                 name: 'Icon Smaller',
                 style: {
-                  '--13bnw74':
-                    'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                  '--13bnw74': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                 },
                 transformTemplate: transformTemplate12,
               }),
@@ -488,11 +437,7 @@ import {
   useVariantState as useVariantState3,
   withCSS as withCSS3,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup3,
-  motion as motion3,
-  MotionConfigContext as MotionConfigContext3,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup3, motion as motion3, MotionConfigContext as MotionConfigContext3 } from 'unframer'
 import * as React3 from 'react'
 import { useRef as useRef3 } from 'react'
 var IconFonts2 = getFonts2(stdin_default)
@@ -505,19 +450,14 @@ var variantClassNames3 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition13 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var Transition3 = ({ value, children }) => {
   const config = React3.useContext(MotionConfigContext3)
   const transition = value ?? config.transition
-  const contextValue = React3.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React3.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx3(MotionConfigContext3.Provider, {
     value: contextValue,
     children,
@@ -528,8 +468,7 @@ var humanReadableVariantMap2 = { Checkmark: 'oYA80aR0m', X: 'H0qPPLZAy' }
 var getProps3 = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'oYA80aR0m',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'oYA80aR0m',
   }
 }
 var createLayoutDependency3 = (props, variants) => {
@@ -542,13 +481,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
   const defaultLayoutId = React3.useId()
   const { activeLocale, setLocale } = useLocaleInfo3()
   const componentViewport = useComponentViewport3()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps3(props)
+  const { style, className: className2, layoutId, variant, ...restProps } = getProps3(props)
   const {
     baseVariant,
     classNames,
@@ -587,22 +520,13 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs3(motion3.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx3(
-            scopingClassNames,
-            'framer-1dbsmb9',
-            className2,
-            classNames,
-          ),
+          className: cx3(scopingClassNames, 'framer-1dbsmb9', className2, classNames),
           'data-framer-name': 'Checkmark',
           layoutDependency,
           layoutId: 'oYA80aR0m',
           ref: refBinding,
           style: { ...style },
-          ...addPropertyOverrides2(
-            { H0qPPLZAy: { 'data-framer-name': 'X' } },
-            baseVariant,
-            gestureVariant,
-          ),
+          ...addPropertyOverrides2({ H0qPPLZAy: { 'data-framer-name': 'X' } }, baseVariant, gestureVariant),
           children: [
             isDisplayed() &&
               /* @__PURE__ */ _jsx3(stdin_default, {
@@ -613,8 +537,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                 layoutId: 'U4L2cGmDC',
                 name: 'Checkmark',
                 style: {
-                  '--13bnw74':
-                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                  '--13bnw74': 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                 },
               }),
             isDisplayed1() &&
@@ -626,8 +549,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                 layoutId: 'L8YMkR14s',
                 name: 'X',
                 style: {
-                  '--13bnw74':
-                    'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                  '--13bnw74': 'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
                 },
               }),
           ],
@@ -654,14 +576,8 @@ addPropertyControls3(FramerORQkizUX8, {
     type: ControlType3.Enum,
   },
 })
-addFonts3(
-  FramerORQkizUX8,
-  [{ explicitInter: true, fonts: [] }, ...IconFonts2, ...Icon1Fonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts3(FramerORQkizUX8, [{ explicitInter: true, fonts: [] }, ...IconFonts2, ...Icon1Fonts], {
+  supportsExplicitInterCodegen: true,
+})
 
-export {
-  stdin_default4 as stdin_default,
-  stdin_default5 as stdin_default2,
-  stdin_default6 as stdin_default3,
-}
+export { stdin_default4 as stdin_default, stdin_default5 as stdin_default2, stdin_default6 as stdin_default3 }

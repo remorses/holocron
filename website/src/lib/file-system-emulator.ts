@@ -9,9 +9,7 @@ export interface FileSystemEmulatorOptions {
 
 export class FileSystemEmulator {
   private filesInDraft: Record<string, FileUpdate>
-  private getPageContent: (
-    githubPath: string,
-  ) => Promise<string | undefined | void>
+  private getPageContent: (githubPath: string) => Promise<string | undefined | void>
   private onFilesDraftChange?: () => void | Promise<void>
   private originalContent = new Map<string, string>()
   private baseDir?: string
@@ -26,9 +24,7 @@ export class FileSystemEmulator {
   private validatePath(path: string): void {
     if (this.baseDir) {
       if (!path.startsWith(this.baseDir)) {
-        throw new Error(
-          `Path should always start with baseDir: ${this.baseDir}`,
-        )
+        throw new Error(`Path should always start with baseDir: ${this.baseDir}`)
       }
     }
   }
@@ -99,9 +95,7 @@ export class FileSystemEmulator {
     await this.notifyChange()
   }
 
-  async writeBatch(
-    files: Array<{ path: string; content: string }>,
-  ): Promise<void> {
+  async writeBatch(files: Array<{ path: string; content: string }>): Promise<void> {
     for (const { path } of files) {
       this.validatePath(path)
     }
@@ -203,9 +197,7 @@ export class FileSystemEmulator {
     await this.notifyChange()
   }
 
-  async moveBatch(
-    moves: Array<{ oldPath: string; newPath: string }>,
-  ): Promise<void> {
+  async moveBatch(moves: Array<{ oldPath: string; newPath: string }>): Promise<void> {
     // Validate all paths first
     for (const { oldPath, newPath } of moves) {
       this.validatePath(oldPath)
@@ -248,9 +240,7 @@ export class FileSystemEmulator {
 
   async listFiles(): Promise<string[]> {
     // Get all paths from filesInDraft that aren't deleted
-    const draftPaths = Object.keys(this.filesInDraft).filter(
-      (path) => this.filesInDraft[path].content !== null,
-    )
+    const draftPaths = Object.keys(this.filesInDraft).filter((path) => this.filesInDraft[path].content !== null)
 
     // Also include original files that aren't in draft or aren't deleted
     const allPaths = new Set(draftPaths)

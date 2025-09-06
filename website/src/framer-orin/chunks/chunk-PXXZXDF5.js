@@ -8,19 +8,7 @@ import { addPropertyControls, ControlType } from 'unframer'
 function getUniqueClassName() {
   return 'text-shimmer-' + Math.random().toString(36).substr(2, 9)
 }
-function TextShimmer({
-  font,
-  content,
-  color,
-  shimmer,
-  size,
-  speed,
-  userSelect,
-  rotation,
-  delay,
-  tag,
-  direction,
-}) {
+function TextShimmer({ font, content, color, shimmer, size, speed, userSelect, rotation, delay, tag, direction }) {
   const classNameRef = useRef(getUniqueClassName())
   const Tag = tag
   const backgroundSize = `200% 200%`
@@ -74,17 +62,7 @@ function TextShimmer({
         styleEl.parentNode.removeChild(styleEl)
       }
     }
-  }, [
-    shimmer,
-    rotation,
-    gradientFirst,
-    gradientLast,
-    backgroundSize,
-    animationDuration,
-    delay,
-    direction,
-    keyframes,
-  ])
+  }, [shimmer, rotation, gradientFirst, gradientLast, backgroundSize, animationDuration, delay, direction, keyframes])
   return /* @__PURE__ */ _jsxs('div', {
     style: {
       userSelect: userSelect ? 'auto' : 'none',
@@ -200,8 +178,7 @@ addPropertyControls(TextShimmer, {
     segmentedControlDirection: 'horizontal',
     options: ['h1', 'h2', 'h3', 'p'],
     optionTitles: ['H1', 'H2', 'H3', 'P'],
-    description:
-      'More components at [Framer University](https://frameruni.link/cc).',
+    description: 'More components at [Framer University](https://frameruni.link/cc).',
   },
 })
 

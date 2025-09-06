@@ -7,11 +7,7 @@ import { getSession } from '../lib/better-auth'
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { env } from '../lib/env'
 import { AppError } from '../lib/errors'
-import {
-  getOctokit,
-  pushToPrOrBranch,
-  createPullRequestSuggestion,
-} from '../lib/github.server'
+import { getOctokit, pushToPrOrBranch, createPullRequestSuggestion } from '../lib/github.server'
 import { applyJsonCComments, JsonCComments } from '../lib/json-c-comments'
 import type { Route } from './+types/org.$orgId.branch.$branchId.chat.$chatId.create-pr'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
@@ -58,9 +54,7 @@ async function createPrSuggestionForChat({
   if (!site.githubOwner || !site.githubRepo) {
     throw new AppError('GitHub owner and repo must be set for the site')
   }
-  const githubInstallation = site.githubInstallations.find(
-    (x) => x.appId === env.GITHUB_APP_ID,
-  )
+  const githubInstallation = site.githubInstallations.find((x) => x.appId === env.GITHUB_APP_ID)
   if (!githubInstallation) {
     throw new AppError('GitHub installation for site not found')
   }
@@ -119,9 +113,8 @@ async function createPrSuggestionForChat({
     fork: false,
     title: chat.title || 'Update documentation',
     body:
-      ('description' in chat
-        ? (chat as { description?: string }).description
-        : undefined) ?? 'Updated content from Holocron assistant.',
+      ('description' in chat ? (chat as { description?: string }).description : undefined) ??
+      'Updated content from Holocron assistant.',
   })
   await prisma.chat.update({
     where: { chatId, userId },
@@ -133,10 +126,7 @@ async function createPrSuggestionForChat({
   return { prUrl: url, action: 'created' }
 }
 
-export async function loader({
-  request,
-  params: { chatId },
-}: Route.LoaderArgs) {
+export async function loader({ request, params: { chatId } }: Route.LoaderArgs) {
   const { userId } = await getSession({ request })
 
   const prPromise = createPrSuggestionForChat({

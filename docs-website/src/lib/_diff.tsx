@@ -192,11 +192,7 @@ function diffText(newText: Text, oldTree: Root): void {
 function findSameSpotText(target: Text, tree: Root): Text | null {
   let result: Text | null = null
   visit(tree, (n: MdContent | Parent) => {
-    if (
-      !result &&
-      n.type === 'text' &&
-      n.position?.start?.offset === target.position?.start?.offset
-    ) {
+    if (!result && n.type === 'text' && n.position?.start?.offset === target.position?.start?.offset) {
       result = n as Text
     }
   })
@@ -224,11 +220,7 @@ export const useAddedHighlighter = ({
     if (!host || !CSS.highlights) return
 
     /* collect all added nodes except opt-outs */
-    const added: HTMLElement[] = Array.from(
-      host.querySelectorAll<HTMLElement>(
-        '[data-added]:not([data-no-highlight])',
-      ),
-    )
+    const added: HTMLElement[] = Array.from(host.querySelectorAll<HTMLElement>('[data-added]:not([data-no-highlight])'))
 
     if (!added.length) return
 

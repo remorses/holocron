@@ -30,9 +30,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -55,11 +53,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -69,8 +63,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'jcOPzl09p',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'jcOPzl09p',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -115,12 +108,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1ohvp48',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1ohvp48', className, classNames)}
             data-framer-name={'Hidden'}
             layoutDependency={layoutDependency}
             layoutId={'jcOPzl09p'}
@@ -131,8 +119,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             }}
             variants={{
               CCKwLQUhX: {
-                backgroundColor:
-                  'var(--token-22e7e14f-1f70-49cd-ae98-e88c20549e6b, rgba(255, 255, 255, 0.03))',
+                backgroundColor: 'var(--token-22e7e14f-1f70-49cd-ae98-e88c20549e6b, rgba(255, 255, 255, 0.03))',
               },
             }}
             {...addPropertyOverrides(
@@ -153,8 +140,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'BXS5UucFu'}
                   style={{
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   }}
                 />
               </Transition>
@@ -167,8 +153,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'x8yAn3j5q'}
                   style={{
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   }}
                 />
               </Transition>
@@ -181,8 +166,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'MUY7JFEse'}
                   style={{
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   }}
                 />
               </Transition>
@@ -195,8 +179,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'yVYxnkOcO'}
                   style={{
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   }}
                 />
               </Transition>
@@ -295,17 +278,11 @@ stdin_default.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -353,9 +330,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

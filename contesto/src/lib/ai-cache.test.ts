@@ -45,9 +45,7 @@ describe(
         prompt: 'What is the capital of France?',
       })
 
-      expect(result.text).toMatchInlineSnapshot(
-        `"The capital of France is Paris."`,
-      )
+      expect(result.text).toMatchInlineSnapshot(`"The capital of France is Paris."`)
     })
 
     it('should cache and return the same result for generateObject', async () => {

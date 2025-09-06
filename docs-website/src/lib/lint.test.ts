@@ -1,9 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import {
-  validateMarkdownLinks,
-  formatErrorWithContext,
-  createFormattedError,
-} from './lint'
+import { validateMarkdownLinks, formatErrorWithContext, createFormattedError } from './lint'
 import { getProcessor } from './mdx-heavy'
 
 describe('validateMarkdownLinks', () => {
@@ -123,13 +119,7 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
 - [API Reference](/api/reference)
 `
     const tree = processor.parse({ value: content })
-    const validSlugs = [
-      '/',
-      '/docs',
-      '/docs/getting-started',
-      '/docs/installation',
-      '/api/reference',
-    ]
+    const validSlugs = ['/', '/docs', '/docs/getting-started', '/docs/installation', '/api/reference']
 
     const errors = await validateMarkdownLinks(tree, { validSlugs })
 
@@ -148,14 +138,7 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
 - [Escape attempt](../../outside)
 `
     const tree = processor.parse({ value: content })
-    const validSlugs = [
-      '/',
-      '/docs',
-      '/docs/guide',
-      '/docs/guide/sibling',
-      '/docs/guide/child/page',
-      '/docs/other',
-    ]
+    const validSlugs = ['/', '/docs', '/docs/guide', '/docs/guide/sibling', '/docs/guide/child/page', '/docs/other']
 
     const errors = await validateMarkdownLinks(tree, {
       validSlugs,
@@ -353,14 +336,9 @@ And another [invalid link](../escape) that goes outside.`
     const linkError = new Error('Found 2 invalid links in the markdown') as any
     linkError.line = 3
     linkError.column = 11
-    linkError.reason =
-      'Line 3: "/docs/missing" - Link not found\nLine 5: "../escape" - Path escapes root'
+    linkError.reason = 'Line 3: "/docs/missing" - Link not found\nLine 5: "../escape" - Path escapes root'
 
-    const formatted = formatErrorWithContext(
-      linkError,
-      content,
-      'Link Validation Error',
-    )
+    const formatted = formatErrorWithContext(linkError, content, 'Link Validation Error')
 
     expect(formatted).toMatchInlineSnapshot(`
           "Link Validation Error at line 3, column 11:
@@ -394,11 +372,7 @@ Some more content here`
     mdxError.column = 26
     mdxError.reason = 'Expected "}" but found "syntax"'
 
-    const formatted = formatErrorWithContext(
-      mdxError,
-      content,
-      'MDX Compilation Error',
-    )
+    const formatted = formatErrorWithContext(mdxError, content, 'MDX Compilation Error')
 
     expect(formatted).toMatchInlineSnapshot(`
           "MDX Compilation Error at line 7, column 26:
@@ -425,17 +399,11 @@ Some more content here`
   "invalid": true,
 }`
 
-    const jsonError = new Error(
-      'Unexpected token } in JSON at position 52',
-    ) as any
+    const jsonError = new Error('Unexpected token } in JSON at position 52') as any
     jsonError.line = 5
     jsonError.column = 1
 
-    const formatted = formatErrorWithContext(
-      jsonError,
-      content,
-      'JSON Parse Error',
-    )
+    const formatted = formatErrorWithContext(jsonError, content, 'JSON Parse Error')
 
     expect(formatted).toMatchInlineSnapshot(`
           "JSON Parse Error at line 5, column 1:

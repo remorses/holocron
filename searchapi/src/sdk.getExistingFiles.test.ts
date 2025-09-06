@@ -45,10 +45,7 @@ describe('getExistingFiles', () => {
   })
 
   it('should find existing files with correct SHA', async () => {
-    const result = await client.getExistingFiles(table!, [
-      'file1.md',
-      'file2.md',
-    ])
+    const result = await client.getExistingFiles(table!, ['file1.md', 'file2.md'])
 
     expect(result.size).toBe(2)
     expect(result.has('file1.md')).toBe(true)
@@ -62,39 +59,27 @@ describe('getExistingFiles', () => {
   })
 
   it('should handle filenames with special characters', async () => {
-    const result = await client.getExistingFiles(table!, [
-      "file-with-quote'.md",
-    ])
+    const result = await client.getExistingFiles(table!, ["file-with-quote'.md"])
 
     expect(result.size).toBe(1)
     expect(result.has("file-with-quote'.md")).toBe(true)
   })
 
   it('should handle filenames with paths', async () => {
-    const result = await client.getExistingFiles(table!, [
-      'special/path/file.md',
-    ])
+    const result = await client.getExistingFiles(table!, ['special/path/file.md'])
 
     expect(result.size).toBe(1)
     expect(result.has('special/path/file.md')).toBe(true)
   })
 
   it('should return empty map for non-existent files', async () => {
-    const result = await client.getExistingFiles(table!, [
-      'non-existent-file.md',
-      'another-missing.md',
-    ])
+    const result = await client.getExistingFiles(table!, ['non-existent-file.md', 'another-missing.md'])
 
     expect(result.size).toBe(0)
   })
 
   it('should handle mix of existing and non-existent files', async () => {
-    const result = await client.getExistingFiles(table!, [
-      'file1.md',
-      'non-existent.md',
-      'file2.md',
-      'missing.md',
-    ])
+    const result = await client.getExistingFiles(table!, ['file1.md', 'non-existent.md', 'file2.md', 'missing.md'])
 
     expect(result.size).toBe(2)
     expect(result.has('file1.md')).toBe(true)
@@ -175,10 +160,7 @@ describe('getExistingFiles', () => {
     const dedupTable = await db.openTable(tableName)
 
     // Verify files exist
-    const existing = await client.getExistingFiles(dedupTable, [
-      'dedup1.md',
-      'dedup2.md',
-    ])
+    const existing = await client.getExistingFiles(dedupTable, ['dedup1.md', 'dedup2.md'])
     expect(existing.size).toBe(2)
 
     const originalSha1 = existing.get('dedup1.md')
@@ -204,10 +186,7 @@ describe('getExistingFiles', () => {
 
     // Get fresh table reference and verify SHAs
     const freshDedupTable = await db.openTable(tableName)
-    const finalFiles = await client.getExistingFiles(freshDedupTable, [
-      'dedup1.md',
-      'dedup2.md',
-    ])
+    const finalFiles = await client.getExistingFiles(freshDedupTable, ['dedup1.md', 'dedup2.md'])
     expect(finalFiles.size).toBe(2)
 
     const finalSha1 = finalFiles.get('dedup1.md')

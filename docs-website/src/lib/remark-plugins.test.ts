@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { remark } from 'remark'
 import remarkMdx from 'remark-mdx'
-import {
-  remarkCodeGroup,
-  remarkSingleAccordionItems,
-  remarkMermaidCode,
-} from './remark-plugins'
+import { remarkCodeGroup, remarkSingleAccordionItems, remarkMermaidCode } from './remark-plugins'
 
 describe('remarkCodeGroup', () => {
   test('transforms simple CodeGroup with two code blocks', async () => {

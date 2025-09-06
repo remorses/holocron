@@ -30,19 +30,14 @@ const adjustNodePositions = (node: any, offset: number): any => {
   if (!node) return node
 
   // Adjust position if it exists
-  if (
-    node.position?.start?.offset !== undefined &&
-    node.position?.end?.offset !== undefined
-  ) {
+  if (node.position?.start?.offset !== undefined && node.position?.end?.offset !== undefined) {
     node.position.start.offset += offset
     node.position.end.offset += offset
   }
 
   // Recursively adjust children
   if (node.children && Array.isArray(node.children)) {
-    node.children = node.children.map((child: any) =>
-      adjustNodePositions(child, offset),
-    )
+    node.children = node.children.map((child: any) => adjustNodePositions(child, offset))
   }
 
   return node
@@ -87,28 +82,24 @@ export const parseMarkdownIncremental = async ({
     }
 
     // Process nodes and recursively adjust all positions
-    const adjustedNodes = ast.children.map((node) =>
-      adjustNodePositions(node, offset),
-    )
+    const adjustedNodes = ast.children.map((node) => adjustNodePositions(node, offset))
     children.push(...adjustedNodes)
     break
   }
 
   /* ③ refresh cache (skip the live tail) --------------------------- */
   if (children.length > trailingNodes) {
-    children
-      .slice(0, trailingNodes ? -trailingNodes : undefined)
-      .forEach((node) => {
-        const start = node.position?.start.offset
-        const end = node.position?.end.offset
-        const slice = text.slice(start, end)
-        cache.set(start, {
-          len: slice.length,
-          hash: quickHash(slice),
-          end,
-          nodes: [node],
-        })
+    children.slice(0, trailingNodes ? -trailingNodes : undefined).forEach((node) => {
+      const start = node.position?.start.offset
+      const end = node.position?.end.offset
+      const slice = text.slice(start, end)
+      cache.set(start, {
+        len: slice.length,
+        hash: quickHash(slice),
+        end,
+        nodes: [node],
       })
+    })
   }
   // If cache is too big, remove some items (simple LRU: delete lowest keys first)
   const MAX_CACHE_SIZE = 300

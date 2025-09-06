@@ -10421,15 +10421,7 @@
           "external": true
         }
       ],
-      "exports": [
-        "__FramerMetadata__",
-        "richText",
-        "richText1",
-        "richText2",
-        "richText3",
-        "richText4",
-        "richText5"
-      ],
+      "exports": ["__FramerMetadata__", "richText", "richText1", "richText2", "richText3", "richText4", "richText5"],
       "entryPoint": "/:https://framerusercontent.com/modules/jyf9CHwKjeFqcEaDuO4g/wQHwKQ0C4mIQM5sy0tx7/U6USRjo97-2.js",
       "inputs": {
         "/:https://framerusercontent.com/modules/jyf9CHwKjeFqcEaDuO4g/wQHwKQ0C4mIQM5sy0tx7/U6USRjo97-2.js": {
@@ -10839,13 +10831,7 @@
           "kind": "import-statement"
         }
       ],
-      "exports": [
-        "css",
-        "html",
-        "htmlLanguage",
-        "javascript",
-        "javascriptLanguage"
-      ],
+      "exports": ["css", "html", "htmlLanguage", "javascript", "javascriptLanguage"],
       "inputs": {
         "/:https://framerusercontent.com/modules/2B1yVjX9TEUbuHzHLnih/slPptusM3aarmySLiAK2/lezer_javascript.js": {
           "bytesInOutput": 70312
@@ -10879,13 +10865,7 @@
           "kind": "import-statement"
         }
       ],
-      "exports": [
-        "__FramerMetadata__",
-        "globalCompletion",
-        "localCompletionSource",
-        "python",
-        "pythonLanguage"
-      ],
+      "exports": ["__FramerMetadata__", "globalCompletion", "localCompletionSource", "python", "pythonLanguage"],
       "entryPoint": "/:https://framerusercontent.com/modules/NlaGw745MKw3pDtavCDw/xGaFw5cOVjKh18HQenoz/codemirror_lang_python.js",
       "inputs": {
         "/:https://framerusercontent.com/modules/EjGlVHogpfm3jPPe6dpv/eQhPEFC9g4r1lCZecWdn/lezer_python.js": {
@@ -10904,13 +10884,7 @@
           "kind": "import-statement"
         }
       ],
-      "exports": [
-        "closeBrackets",
-        "closeBracketsKeymap",
-        "completeFromList",
-        "ifNotIn",
-        "snippetCompletion"
-      ],
+      "exports": ["closeBrackets", "closeBracketsKeymap", "completeFromList", "ifNotIn", "snippetCompletion"],
       "inputs": {
         "/:https://framerusercontent.com/modules/iHAg5NNDzB38uLRZmObL/Tp4ybLDPsW6vDjKld7g7/codemirror_autocomplete.js": {
           "bytesInOutput": 20220
@@ -19519,13 +19493,7 @@
           "external": true
         }
       ],
-      "exports": [
-        "className",
-        "css",
-        "fonts",
-        "stdin_default",
-        "withTruncateTwoLines"
-      ],
+      "exports": ["className", "css", "fonts", "stdin_default", "withTruncateTwoLines"],
       "inputs": {
         "/:https://framerusercontent.com/modules/GDNbeQ8e9n1gs046ehLa/IUNBVKEsyb4dHZK2YOT8/TextTruncate.js": {
           "bytesInOutput": 442

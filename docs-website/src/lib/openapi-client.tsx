@@ -12,13 +12,12 @@ import { ProcessorDataFrontmatter } from './mdx-heavy'
 import { attachFile } from './source'
 
 export function getOperations(openapiDocument) {
-  const ops: { path: string; method: string }[] = Object.entries(
-    openapiDocument.paths ?? {},
-  ).flatMap(([path, pathItem]) =>
-    Object.entries(pathItem ?? {}).map(([method]) => ({
-      path,
-      method,
-    })),
+  const ops: { path: string; method: string }[] = Object.entries(openapiDocument.paths ?? {}).flatMap(
+    ([path, pathItem]) =>
+      Object.entries(pathItem ?? {}).map(([method]) => ({
+        path,
+        method,
+      })),
   )
   return ops
 }
@@ -47,10 +46,7 @@ export function getPageTreeForOpenAPI({
         if (!operation) return
         const pageItem: PageTree.Item = {
           type: 'page',
-          name:
-            operation.summary ??
-            pathItem.summary ??
-            idToTitle(operation.operationId ?? 'unknown'),
+          name: operation.summary ?? pathItem.summary ?? idToTitle(operation.operationId ?? 'unknown'),
           url: `${openapiPath}/${path}/${method}`,
         }
 

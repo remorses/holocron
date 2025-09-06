@@ -20,11 +20,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 
@@ -58,9 +54,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { duration: 0, type: 'tween' }
@@ -68,10 +62,7 @@ var transition2 = { bounce: 0, delay: 0, duration: 0.6, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -94,12 +85,9 @@ var humanReadableVariantMap = {
 var getProps = ({ first, height, id, second, width, ...props }) => {
   return {
     ...props,
-    NqY05iV4n:
-      humanReadableEnumMap[first] ?? first ?? props.NqY05iV4n ?? 'rJpeO5TfG',
-    rHuoAV0dr:
-      humanReadableEnumMap[second] ?? second ?? props.rHuoAV0dr ?? 'HfzpqW5M7',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'DxGh2S0TN',
+    NqY05iV4n: humanReadableEnumMap[first] ?? first ?? props.NqY05iV4n ?? 'rJpeO5TfG',
+    rHuoAV0dr: humanReadableEnumMap[second] ?? second ?? props.rHuoAV0dr ?? 'HfzpqW5M7',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'DxGh2S0TN',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -112,15 +100,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    NqY05iV4n,
-    rHuoAV0dr,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, NqY05iV4n, rHuoAV0dr, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -159,12 +139,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-7k6x9y',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-7k6x9y', className, classNames),
           'data-framer-name': 'Start',
           layoutDependency,
           layoutId: 'DxGh2S0TN',
@@ -182,9 +157,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
               height: 86,
               width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-              y:
-                (componentViewport?.y || 0) +
-                (0 + ((componentViewport?.height || 86) - 0 - 86) / 2),
+              y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 86) - 0 - 86) / 2),
               ...addPropertyOverrides(
                 {
                   d71W4Mz7B: {
@@ -242,17 +215,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
               height: 86,
               width: `calc(${componentViewport?.width || '100vw'} + 0.5px)`,
-              y:
-                (componentViewport?.y || 0) +
-                (componentViewport?.height || 86) -
-                0,
+              y: (componentViewport?.y || 0) + (componentViewport?.height || 86) - 0,
               ...addPropertyOverrides(
                 {
                   IFOx9Xaf0: {
                     width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-                    y:
-                      (componentViewport?.y || 0) +
-                      (0 + ((componentViewport?.height || 86) - 0 - 86) / 2),
+                    y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 86) - 0 - 86) / 2),
                   },
                 },
                 baseVariant,
@@ -296,17 +264,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             /* @__PURE__ */ _jsx(ComponentViewportProvider, {
               height: 86,
               width: componentViewport?.width || '100vw',
-              y:
-                (componentViewport?.y || 0) +
-                (componentViewport?.height || 86) -
-                0,
+              y: (componentViewport?.y || 0) + (componentViewport?.height || 86) - 0,
               ...addPropertyOverrides(
                 {
                   d71W4Mz7B: {
                     width: `max(${componentViewport?.width || '100vw'}, 1px)`,
-                    y:
-                      (componentViewport?.y || 0) +
-                      (0 + ((componentViewport?.height || 86) - 0 - 86) / 2),
+                    y: (componentViewport?.y || 0) + (0 + ((componentViewport?.height || 86) - 0 - 86) / 2),
                   },
                   IFOx9Xaf0: {
                     width: `calc(${componentViewport?.width || '100vw'} + 0.5px)`,
@@ -393,23 +356,13 @@ addPropertyControls(FramerwQCKhuIfN, {
     title: 'Second',
   },
 })
-addFonts(
-  FramerwQCKhuIfN,
-  [{ explicitInter: true, fonts: [] }, ...LogoHolderFonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts(FramerwQCKhuIfN, [{ explicitInter: true, fonts: [] }, ...LogoHolderFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 // /:https://framerusercontent.com/modules/1kTFgFAv9rLtxtBkZLlm/jVKiGWZLXuwIRbb8gwcY/bSbaQF5JR.js
 var LogoCyclerFonts = getFonts2(stdin_default2)
-var cycleOrder2 = [
-  'w2RwDIkD_',
-  'Bgj5vcB9R',
-  'ENxI1fTef',
-  'H0uCvXcBc',
-  'H2Lf9qqsI',
-  'U0VMwKLQ7',
-  'IewdqgJpV',
-]
+var cycleOrder2 = ['w2RwDIkD_', 'Bgj5vcB9R', 'ENxI1fTef', 'H0uCvXcBc', 'H2Lf9qqsI', 'U0VMwKLQ7', 'IewdqgJpV']
 var serializationHash2 = 'framer-cdPbY'
 var variantClassNames2 = {
   Bgj5vcB9R: 'framer-v-18gqyot',
@@ -422,19 +375,14 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = { bounce: 0, delay: 0, duration: 0.6, type: 'spring' }
 var Transition2 = ({ value, children }) => {
   const config = React2.useContext(MotionConfigContext2)
   const transition = value ?? config.transition
-  const contextValue = React2.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React2.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx2(MotionConfigContext2.Provider, {
     value: contextValue,
     children,
@@ -454,10 +402,8 @@ var humanReadableVariantMap2 = {
 var getProps2 = ({ direction, height, id, width, ...props }) => {
   return {
     ...props,
-    CHO3qLUnq:
-      humanReadableEnumMap2[direction] ?? direction ?? props.CHO3qLUnq ?? 'row',
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'w2RwDIkD_',
+    CHO3qLUnq: humanReadableEnumMap2[direction] ?? direction ?? props.CHO3qLUnq ?? 'row',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'w2RwDIkD_',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -470,8 +416,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo2()
   const componentViewport = useComponentViewport2()
-  const { style, className, layoutId, variant, CHO3qLUnq, ...restProps } =
-    getProps2(props)
+  const { style, className, layoutId, variant, CHO3qLUnq, ...restProps } = getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -533,12 +478,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs2(motion2.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx2(
-            scopingClassNames,
-            'framer-4dcn3a',
-            className,
-            classNames,
-          ),
+          className: cx2(scopingClassNames, 'framer-4dcn3a', className, classNames),
           'data-framer-name': 'Default',
           'data-highlight': true,
           layoutDependency,
@@ -712,15 +652,7 @@ FramerbSbaQF5JR.displayName = 'Trusted by Logo Cycler (6)'
 FramerbSbaQF5JR.defaultProps = { height: 86, width: 609 }
 addPropertyControls2(FramerbSbaQF5JR, {
   variant: {
-    options: [
-      'w2RwDIkD_',
-      'Bgj5vcB9R',
-      'ENxI1fTef',
-      'H0uCvXcBc',
-      'H2Lf9qqsI',
-      'U0VMwKLQ7',
-      'IewdqgJpV',
-    ],
+    options: ['w2RwDIkD_', 'Bgj5vcB9R', 'ENxI1fTef', 'H0uCvXcBc', 'H2Lf9qqsI', 'U0VMwKLQ7', 'IewdqgJpV'],
     optionTitles: [
       'Default',
       'Swtich (First)',
@@ -743,10 +675,8 @@ addPropertyControls2(FramerbSbaQF5JR, {
     type: ControlType2.Enum,
   },
 })
-addFonts2(
-  FramerbSbaQF5JR,
-  [{ explicitInter: true, fonts: [] }, ...LogoCyclerFonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts2(FramerbSbaQF5JR, [{ explicitInter: true, fonts: [] }, ...LogoCyclerFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 export { stdin_default3 as stdin_default }

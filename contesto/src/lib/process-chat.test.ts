@@ -1,20 +1,10 @@
 import { describe, test, expect, vi } from 'vitest'
-import {
-  createIdGenerator,
-  streamText,
-  wrapLanguageModel,
-  generateText,
-  UIMessage,
-  tool,
-} from 'ai'
+import { createIdGenerator, streamText, wrapLanguageModel, generateText, UIMessage, tool } from 'ai'
 import { z } from 'zod/v4'
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import { uiStreamToUIMessages } from './process-chat.js'
 import { createAiCacheMiddleware } from './ai-cache.js'
-import {
-  asyncIterableToReadableStream,
-  readableStreamToAsyncIterable,
-} from './utils.js'
+import { asyncIterableToReadableStream, readableStreamToAsyncIterable } from './utils.js'
 
 describe('process-chat', () => {
   test('should convert simple streamText to messages', async () => {
@@ -206,8 +196,7 @@ describe('process-chat', () => {
 
     const result = streamText({
       model,
-      prompt:
-        'Generate a simple JSON response with a greeting message. Just respond with {"message": "hello"}',
+      prompt: 'Generate a simple JSON response with a greeting message. Just respond with {"message": "hello"}',
     })
 
     const uiStream = result.toUIMessageStream()
@@ -398,9 +387,7 @@ describe('process-chat', () => {
     expect(Array.isArray(message.parts)).toBe(true)
 
     // Check that there's at least one tool part
-    const toolParts = message.parts.filter((part) =>
-      part.type.startsWith('tool-'),
-    )
+    const toolParts = message.parts.filter((part) => part.type.startsWith('tool-'))
     expect(toolParts.length).toBeGreaterThan(0)
     expect(toolParts[0]).toHaveProperty('type')
     expect(toolParts[0].type).toMatch(/^tool-/)
@@ -444,9 +431,7 @@ describe('process-chat', () => {
     const getCurrentTime = tool({
       description: 'Get the current time in a specific timezone',
       inputSchema: z.object({
-        timezone: z
-          .string()
-          .describe('The timezone to get the time for, e.g., "UTC"'),
+        timezone: z.string().describe('The timezone to get the time for, e.g., "UTC"'),
       }),
       execute: async ({ timezone }) => {
         return `Current time is 2024-01-01T12:00:00.000Z in ${timezone}`
@@ -484,9 +469,7 @@ describe('process-chat', () => {
     expect(Array.isArray(message.parts)).toBe(true)
 
     // Check that there's at least one tool part
-    const toolParts = message.parts.filter((part) =>
-      part.type.startsWith('tool-'),
-    )
+    const toolParts = message.parts.filter((part) => part.type.startsWith('tool-'))
     expect(toolParts.length).toBeGreaterThan(0)
     expect(toolParts[0]).toHaveProperty('type')
     expect(toolParts[0].type).toMatch(/^tool-/)
@@ -540,16 +523,13 @@ describe('process-chat', () => {
           reasoningSummary: 'detailed',
         } satisfies OpenAIResponsesProviderOptions,
       },
-      prompt:
-        'What is 122+67? do your calculations in the reasoning, only show me the result',
+      prompt: 'What is 122+67? do your calculations in the reasoning, only show me the result',
     })
 
     // Use a tee to duplicate the stream, convert one to async generator and to array if desired
     const [uiStream1, uiStream2] = result.toUIMessageStream().tee() // tee returns a [ReadableStream, ReadableStream]
 
-    const parts = await Array.fromAsync(
-      readableStreamToAsyncIterable(uiStream2),
-    )
+    const parts = await Array.fromAsync(readableStreamToAsyncIterable(uiStream2))
 
     const uiStream = uiStream1
     let counter = 0
@@ -651,9 +631,7 @@ describe('process-chat', () => {
     const getCurrentTime = tool({
       description: 'Get the current time in a specific timezone',
       inputSchema: z.object({
-        timezone: z
-          .string()
-          .describe('The timezone to get the time for, e.g., "UTC"'),
+        timezone: z.string().describe('The timezone to get the time for, e.g., "UTC"'),
       }),
       execute: async ({ timezone }) => {
         return `Current time is 2024-01-01T12:00:00.000Z in ${timezone}`
@@ -757,9 +735,7 @@ describe('process-chat', () => {
     const generateId = createIdGenerator()
 
     // Capture console errors to verify error was logged
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     let receivedUpdate = false
     const messages: UIMessage[] = []
@@ -813,9 +789,7 @@ describe('process-chat', () => {
     const generateId = createIdGenerator()
 
     // Capture console errors
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     let updateCount = 0
     const messages: UIMessage[] = []
@@ -840,9 +814,7 @@ describe('process-chat', () => {
     // Verify the message has the expected parts (start-step, finish-step, start-step)
     const assistantMessage = lastMessages.find((m) => m.role === 'assistant')
     expect(assistantMessage).toBeDefined()
-    expect(assistantMessage?.parts.some((p) => p.type === 'step-start')).toBe(
-      true,
-    )
+    expect(assistantMessage?.parts.some((p) => p.type === 'step-start')).toBe(true)
 
     // Verify the error was logged
     expect(consoleErrorSpy).toHaveBeenCalledWith(

@@ -393,13 +393,7 @@ describe('createInterpreterTool', () => {
     const mockEditor = tool({
       description: 'Edit files',
       inputSchema: z.object({
-        command: z.enum([
-          'view',
-          'create',
-          'str_replace',
-          'insert',
-          'undo_edit',
-        ]),
+        command: z.enum(['view', 'create', 'str_replace', 'insert', 'undo_edit']),
         path: z.string(),
         file_text: z.string().optional(),
         insert_line: z.number().int().optional().describe('description here'),

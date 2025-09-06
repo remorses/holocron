@@ -13,14 +13,7 @@ export interface Props {
   width?: any
   height?: any
   layoutId?: string
-  variant?:
-    | 'Default'
-    | 'Cycle (1)'
-    | 'Cycle (2)'
-    | 'Cycle (3)'
-    | 'Cycle (4)'
-    | 'Cycle (5)'
-    | 'Cycle (6)'
+  variant?: 'Default' | 'Cycle (1)' | 'Cycle (2)' | 'Cycle (3)' | 'Cycle (4)' | 'Cycle (5)' | 'Cycle (6)'
 }
 
 const CareerBenefitsAnimationFramerComponent = (props: Props) => any
@@ -29,8 +22,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-CareerBenefitsAnimationFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+CareerBenefitsAnimationFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default CareerBenefitsAnimationFramerComponent

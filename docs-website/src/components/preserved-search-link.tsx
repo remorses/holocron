@@ -1,17 +1,8 @@
 import { ComponentProps } from 'react'
-import {
-  Link,
-  useNavigate,
-  useSearchParams,
-  To,
-  NavigateOptions,
-} from 'react-router'
+import { Link, useNavigate, useSearchParams, To, NavigateOptions } from 'react-router'
 import { withBasePath } from 'docs-website/src/lib/utils'
 
-export function PreservedSearchLink({
-  to,
-  ...props
-}: ComponentProps<typeof Link>) {
+export function PreservedSearchLink({ to, ...props }: ComponentProps<typeof Link>) {
   const [searchParams] = useSearchParams()
   const currentSearch = searchParams.toString()
 
@@ -24,11 +15,7 @@ export function PreservedSearchLink({
     if (typeof to === 'object' && to !== null && 'pathname' in to) {
       return {
         ...to,
-        search: to.search
-          ? `${to.search}&${currentSearch}`
-          : currentSearch
-            ? `?${currentSearch}`
-            : undefined,
+        search: to.search ? `${to.search}&${currentSearch}` : currentSearch ? `?${currentSearch}` : undefined,
       }
     }
 
@@ -50,20 +37,14 @@ export const usePreservedNavigate = () => {
 
     if (typeof to === 'string') {
       const separator = to.includes('?') ? '&' : '?'
-      const preservedTo = currentSearch
-        ? `${to}${separator}${currentSearch}`
-        : to
+      const preservedTo = currentSearch ? `${to}${separator}${currentSearch}` : to
       return navigate(preservedTo, options)
     }
 
     if (typeof to === 'object' && to !== null && 'pathname' in to) {
       const preservedTo = {
         ...to,
-        search: to.search
-          ? `${to.search}&${currentSearch}`
-          : currentSearch
-            ? `?${currentSearch}`
-            : undefined,
+        search: to.search ? `${to.search}&${currentSearch}` : currentSearch ? `?${currentSearch}` : undefined,
       }
       return navigate(preservedTo, options)
     }
@@ -72,10 +53,7 @@ export const usePreservedNavigate = () => {
   }
 }
 
-type GlobalNavigateFunction = (
-  to: string | number,
-  options?: NavigateOptions,
-) => void
+type GlobalNavigateFunction = (to: string | number, options?: NavigateOptions) => void
 
 export let globalNavigate: GlobalNavigateFunction = (to, options) => {
   if (typeof to === 'number') {
@@ -89,8 +67,7 @@ export let globalNavigate: GlobalNavigateFunction = (to, options) => {
     const url = to.startsWith('/') ? withBasePath(to) : to
     window.location.href = `${url}${separator}${currentSearch.slice(1)}`
   } else {
-    const url =
-      typeof to === 'string' && to.startsWith('/') ? withBasePath(to) : to
+    const url = typeof to === 'string' && to.startsWith('/') ? withBasePath(to) : to
     window.location.href = url
   }
 }

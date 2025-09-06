@@ -37,9 +37,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var convertFromBoolean = (value, activeLocale) => {
@@ -70,11 +68,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var getProps = ({ height, icon, id, left, link, width, ...props }) => {
@@ -95,16 +89,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    c2VqnRFYq,
-    Uw8EvMv3n,
-    fJM58pn7n,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, c2VqnRFYq, Uw8EvMv3n, fJM58pn7n, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -124,21 +109,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   })
   const layoutDependency = createLayoutDependency(props, variants)
   const sharedStyleClassNames = []
-  const padding = numberToPixelString(
-    convertFromBoolean(fJM58pn7n, activeLocale),
-  )
+  const padding = numberToPixelString(convertFromBoolean(fJM58pn7n, activeLocale))
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
   const Icon = c2VqnRFYq
   return (
     <LayoutGroup id={layoutId ?? defaultLayoutId}>
       <Variants animate={variants} initial={false}>
         <Transition value={transition1}>
-          <Link
-            href={Uw8EvMv3n}
-            motionChild={true}
-            nodeId={'b18YwARAu'}
-            scopeId={'Yk1yNOa0m'}
-          >
+          <Link href={Uw8EvMv3n} motionChild={true} nodeId={'b18YwARAu'} scopeId={'Yk1yNOa0m'}>
             <motion.a
               {...restProps}
               {...gestureHandlers}
@@ -168,14 +146,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'tPeNeA2fA'}
                 style={{
-                  '--1ya7007':
-                    'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                  '--1ya7007': 'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
                   scale: 1,
                 }}
                 variants={{
                   'b18YwARAu-hover': {
-                    '--1ya7007':
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    '--1ya7007': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                     scale: 1.075,
                   },
                 }}
@@ -283,17 +259,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -341,9 +311,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

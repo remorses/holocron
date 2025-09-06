@@ -34,9 +34,7 @@ export async function createTransport(args: string[]): Promise<{
   }
 }
 
-export async function createMCPClient(
-  options?: CreateTransportOptions,
-): Promise<{
+export async function createMCPClient(options?: CreateTransportOptions): Promise<{
   client: Client
   stderr: string
   cleanup: () => Promise<void>

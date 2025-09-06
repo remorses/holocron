@@ -102,22 +102,17 @@ export class CloudflareClient {
   }
 
   private fetch = async (path: string, init?: RequestInit): Promise<any> => {
-    const res = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${this.zoneId}${path}`,
-      {
-        ...init,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-          ...init?.headers,
-        },
+    const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${this.zoneId}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+        ...init?.headers,
       },
-    )
+    })
     if (!res.ok) {
       console.error(await res.text())
-      throw new AppError(
-        `Cloudflare API request failed: ${res.status} ${res.statusText}`,
-      )
+      throw new AppError(`Cloudflare API request failed: ${res.status} ${res.statusText}`)
     }
     return res.json()
   }
@@ -139,9 +134,7 @@ export class CloudflareClient {
     }[] = []
     for (const batch of batches) {
       if (batch.length > 0) {
-        console.log(
-          `Cloudflare: invalidating cache for ${batch.length} tag(s): ${batch.join(', ')}`,
-        )
+        console.log(`Cloudflare: invalidating cache for ${batch.length} tag(s): ${batch.join(', ')}`)
         const res = await this.fetch('/purge_cache', {
           method: 'POST',
           body: JSON.stringify({
@@ -153,9 +146,7 @@ export class CloudflareClient {
     }
     return results
   }
-  async createDomain(
-    domain: string,
-  ): Promise<CloudflareCustomHostnameResponse> {
+  async createDomain(domain: string): Promise<CloudflareCustomHostnameResponse> {
     if (domain.endsWith('.localhost')) {
       console.log(`skipping creating domain ${domain} in cloudflare`)
       return {} as any

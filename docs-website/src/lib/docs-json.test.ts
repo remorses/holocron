@@ -30,8 +30,7 @@ describe.skip(
         messages: [
           {
             role: 'user',
-            content:
-              'Generate an example json object for this schema that showcases the schema features',
+            content: 'Generate an example json object for this schema that showcases the schema features',
           },
         ],
         temperature: 0.2,

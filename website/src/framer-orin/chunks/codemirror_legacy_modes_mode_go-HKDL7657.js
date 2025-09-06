@@ -153,13 +153,7 @@ function Context(indented, column, type, align, prev) {
   this.prev = prev
 }
 function pushContext(state, col, type) {
-  return (state.context = new Context(
-    state.indented,
-    col,
-    type,
-    null,
-    state.context,
-  ))
+  return (state.context = new Context(state.indented, col, type, null, state.context))
 }
 function popContext(state) {
   if (!state.context.prev) return
@@ -203,8 +197,7 @@ var go = {
     if (state.tokenize != tokenBase && state.tokenize != null) return null
     var ctx = state.context,
       firstChar = textAfter && textAfter.charAt(0)
-    if (ctx.type == 'case' && /^(?:case|default)\b/.test(textAfter))
-      return ctx.indented
+    if (ctx.type == 'case' && /^(?:case|default)\b/.test(textAfter)) return ctx.indented
     var closing = firstChar == ctx.type
     if (ctx.align) return ctx.column + (closing ? 0 : 1)
     else return ctx.indented + (closing ? 0 : cx.unit)

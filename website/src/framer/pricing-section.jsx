@@ -29,16 +29,8 @@ import './chunks/chunk-IETFVNRG.js'
 import './chunks/chunk-BTSBQWPZ.js'
 import { className, css, fonts } from './chunks/chunk-EWWPQ2JC.js'
 import './chunks/chunk-YL4V4VZK.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunks/chunk-KYATNZPG.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-6G2SY433.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunks/chunk-KYATNZPG.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-6G2SY433.js'
 import { stdin_default } from './chunks/chunk-EHCTMXQN.js'
 import { routes } from './chunks/chunk-75FLX355.js'
 
@@ -61,11 +53,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 
@@ -94,14 +82,7 @@ import { useRef } from 'react'
 var MotionDivWithFX = withFX(motion.div)
 var PricingCardFonts = getFonts(stdin_default2)
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer)
-var cycleOrder = [
-  'IVokfViMV',
-  'DApkxFVK9',
-  'pA3iaclt6',
-  'tctCf_6zV',
-  'AgRpmg7x2',
-  'ykEExBqq2',
-]
+var cycleOrder = ['IVokfViMV', 'DApkxFVK9', 'pA3iaclt6', 'tctCf_6zV', 'AgRpmg7x2', 'ykEExBqq2']
 var serializationHash = 'framer-9bSfM'
 var variantClassNames = {
   AgRpmg7x2: 'framer-v-10qugzq',
@@ -113,9 +94,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -191,11 +170,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -209,8 +184,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'IVokfViMV',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'IVokfViMV',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -223,13 +197,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className4,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className4, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -276,12 +244,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1yqo1s5',
-              className4,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1yqo1s5', className4, classNames)}
             data-framer-name={' Desktop Monthly'}
             layoutDependency={layoutDependency}
             layoutId={'IVokfViMV'}
@@ -407,8 +370,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               layoutDependency={layoutDependency}
               layoutId={'ThZX5sC51'}
               style={{
-                backgroundColor:
-                  'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
+                backgroundColor: 'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
                 borderBottomLeftRadius: 18,
                 borderBottomRightRadius: 18,
                 borderTopLeftRadius: 18,
@@ -473,15 +435,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'fjzawuBMy'}
                   style={{
-                    '--extracted-1lwpl3i':
-                      'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
+                    '--extracted-1lwpl3i': 'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
                     '--framer-link-text-color': 'rgb(0, 153, 255)',
                     '--framer-link-text-decoration': 'underline',
                   }}
                   variants={{
                     DApkxFVK9: {
-                      '--extracted-1lwpl3i':
-                        'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                      '--extracted-1lwpl3i': 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     },
                   }}
                   verticalAlignment={'top'}
@@ -507,10 +467,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       tctCf_6zV: {
                         children: (
                           <React.Fragment>
-                            <motion.h5
-                              className={'framer-styles-preset-1x4srpb'}
-                              data-styles-preset={'WGktsHNSh'}
-                            >
+                            <motion.h5 className={'framer-styles-preset-1x4srpb'} data-styles-preset={'WGktsHNSh'}>
                               {'Monthly'}
                             </motion.h5>
                           </React.Fragment>
@@ -519,10 +476,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       ykEExBqq2: {
                         children: (
                           <React.Fragment>
-                            <motion.h5
-                              className={'framer-styles-preset-1x4srpb'}
-                              data-styles-preset={'WGktsHNSh'}
-                            >
+                            <motion.h5 className={'framer-styles-preset-1x4srpb'} data-styles-preset={'WGktsHNSh'}>
                               {'Monthly'}
                             </motion.h5>
                           </React.Fragment>
@@ -551,8 +505,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'yzCbPYPiu'}
                   style={{
-                    backgroundColor:
-                      'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                     borderBottomLeftRadius: 15,
                     borderBottomRightRadius: 15,
                     borderTopLeftRadius: 15,
@@ -606,16 +559,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   }}
                   variants={{
                     DApkxFVK9: {
-                      '--extracted-1lwpl3i':
-                        'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
+                      '--extracted-1lwpl3i': 'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
                     },
                     tctCf_6zV: {
-                      '--extracted-1lwpl3i':
-                        'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
+                      '--extracted-1lwpl3i': 'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
                     },
                     ykEExBqq2: {
-                      '--extracted-1lwpl3i':
-                        'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
+                      '--extracted-1lwpl3i': 'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))',
                     },
                   }}
                   verticalAlignment={'top'}
@@ -676,10 +626,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   )}
                 >
                   <React.Fragment>
-                    <motion.h5
-                      className={'framer-styles-preset-1x4srpb'}
-                      data-styles-preset={'WGktsHNSh'}
-                    >
+                    <motion.h5 className={'framer-styles-preset-1x4srpb'} data-styles-preset={'WGktsHNSh'}>
                       {'Yearly'}
                     </motion.h5>
                   </React.Fragment>
@@ -715,9 +662,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 y={
                   (componentViewport?.y || 0) +
                   220 +
-                  (((componentViewport?.height || 910) - 240 - 753.2) / 2 +
-                    200.2 +
-                    70) +
+                  (((componentViewport?.height || 910) - 240 - 753.2) / 2 + 200.2 + 70) +
                   0
                 }
                 {...addPropertyOverrides(
@@ -727,10 +672,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         120 +
-                        (((componentViewport?.height || 200) - 140 - 1220.2) /
-                          2 +
-                          200.2 +
-                          44) +
+                        (((componentViewport?.height || 200) - 140 - 1220.2) / 2 + 200.2 + 44) +
                         0 +
                         0,
                     },
@@ -739,10 +681,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         150 +
-                        (((componentViewport?.height || 840) - 170 - 753.2) /
-                          2 +
-                          200.2 +
-                          70) +
+                        (((componentViewport?.height || 840) - 170 - 753.2) / 2 + 200.2 + 70) +
                         0,
                     },
                     tctCf_6zV: {
@@ -750,10 +689,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         150 +
-                        (((componentViewport?.height || 840) - 170 - 753.2) /
-                          2 +
-                          200.2 +
-                          70) +
+                        (((componentViewport?.height || 840) - 170 - 753.2) / 2 + 200.2 + 70) +
                         0,
                     },
                     ykEExBqq2: {
@@ -761,10 +697,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         120 +
-                        (((componentViewport?.height || 200) - 140 - 1220.2) /
-                          2 +
-                          200.2 +
-                          44) +
+                        (((componentViewport?.height || 200) - 140 - 1220.2) / 2 + 200.2 + 44) +
                         0 +
                         0,
                     },
@@ -858,9 +791,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 y={
                   (componentViewport?.y || 0) +
                   220 +
-                  (((componentViewport?.height || 910) - 240 - 753.2) / 2 +
-                    200.2 +
-                    70) +
+                  (((componentViewport?.height || 910) - 240 - 753.2) / 2 + 200.2 + 70) +
                   0
                 }
                 {...addPropertyOverrides(
@@ -870,10 +801,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         120 +
-                        (((componentViewport?.height || 200) - 140 - 1220.2) /
-                          2 +
-                          200.2 +
-                          44) +
+                        (((componentViewport?.height || 200) - 140 - 1220.2) / 2 + 200.2 + 44) +
                         0 +
                         493,
                     },
@@ -882,10 +810,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         150 +
-                        (((componentViewport?.height || 840) - 170 - 753.2) /
-                          2 +
-                          200.2 +
-                          70) +
+                        (((componentViewport?.height || 840) - 170 - 753.2) / 2 + 200.2 + 70) +
                         0,
                     },
                     tctCf_6zV: {
@@ -893,10 +818,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         150 +
-                        (((componentViewport?.height || 840) - 170 - 753.2) /
-                          2 +
-                          200.2 +
-                          70) +
+                        (((componentViewport?.height || 840) - 170 - 753.2) / 2 + 200.2 + 70) +
                         0,
                     },
                     ykEExBqq2: {
@@ -904,10 +826,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       y:
                         (componentViewport?.y || 0) +
                         120 +
-                        (((componentViewport?.height || 200) - 140 - 1220.2) /
-                          2 +
-                          200.2 +
-                          44) +
+                        (((componentViewport?.height || 200) - 140 - 1220.2) / 2 + 200.2 + 44) +
                         0 +
                         493,
                     },
@@ -1034,14 +953,7 @@ FramerOrSFgvSXl.defaultProps = {
 }
 addPropertyControls(FramerOrSFgvSXl, {
   variant: {
-    options: [
-      'IVokfViMV',
-      'DApkxFVK9',
-      'pA3iaclt6',
-      'tctCf_6zV',
-      'AgRpmg7x2',
-      'ykEExBqq2',
-    ],
+    options: ['IVokfViMV', 'DApkxFVK9', 'pA3iaclt6', 'tctCf_6zV', 'AgRpmg7x2', 'ykEExBqq2'],
     optionTitles: [
       ' Desktop Monthly',
       'Desktop Annual',
@@ -1064,8 +976,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -1144,9 +1055,7 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = {
@@ -1165,11 +1074,7 @@ var Transition2 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext2.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext2.Provider>
-  )
+  return <MotionConfigContext2.Provider value={contextValue}>{children}</MotionConfigContext2.Provider>
 }
 var Variants2 = motion2.create(React2.Fragment)
 var humanReadableVariantMap2 = {
@@ -1180,8 +1085,7 @@ var humanReadableVariantMap2 = {
 var getProps2 = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'zo40Q3o2F',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'zo40Q3o2F',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -1194,13 +1098,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo2()
   const componentViewport = useComponentViewport2()
-  const {
-    style,
-    className: className4,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps2(props)
+  const { style, className: className4, layoutId, variant, ...restProps } = getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -1228,12 +1126,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
           <motion2.section
             {...restProps}
             {...gestureHandlers}
-            className={cx2(
-              scopingClassNames,
-              'framer-hfxmnv',
-              className4,
-              classNames,
-            )}
+            className={cx2(scopingClassNames, 'framer-hfxmnv', className4, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'zo40Q3o2F'}
@@ -1257,20 +1150,11 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
             <ComponentViewportProvider2
               height={910}
               width={componentViewport?.width || '100vw'}
-              y={
-                (componentViewport?.y || 0) +
-                0 +
-                (((componentViewport?.height || 910) - 0 - 910) / 2 + 0 + 0)
-              }
+              y={(componentViewport?.y || 0) + 0 + (((componentViewport?.height || 910) - 0 - 910) / 2 + 0 + 0)}
               {...addPropertyOverrides2(
                 {
                   N1_cwUnSS: {
-                    y:
-                      (componentViewport?.y || 0) +
-                      0 +
-                      (((componentViewport?.height || 840) - 0 - 910) / 2 +
-                        0 +
-                        0),
+                    y: (componentViewport?.y || 0) + 0 + (((componentViewport?.height || 840) - 0 - 910) / 2 + 0 + 0),
                   },
                   NgJxe3Ari: {
                     y: (componentViewport?.y || 0) + 0 + 0,
@@ -1431,9 +1315,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -1464,17 +1346,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default4}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default4} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

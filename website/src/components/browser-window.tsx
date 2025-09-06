@@ -1,13 +1,7 @@
 import { RefreshCwIcon } from 'lucide-react'
 import { cn } from 'website/src/lib/utils'
 
-export function BrowserWindow({
-  children,
-  className = '',
-  onRefresh,
-  onSearchBarClick,
-  url,
-}) {
+export function BrowserWindow({ children, className = '', onRefresh, onSearchBarClick, url }) {
   const host = new URL(url).host
   return (
     <figure
@@ -18,18 +12,8 @@ export function BrowserWindow({
         className,
       )}
     >
-      <div
-        className={cn(
-          'rounded-t-md relative py-2 pl-24 items-center',
-          'flex bg-muted dark:bg-muted',
-        )}
-      >
-        <div
-          className={cn(
-            'top-2/4 space-x-2 left-4 flex absolute -translate-y-1',
-            '[&>span]:w-3 [&>span]:h-3',
-          )}
-        >
+      <div className={cn('rounded-t-md relative py-2 pl-24 items-center', 'flex bg-muted dark:bg-muted')}>
+        <div className={cn('top-2/4 space-x-2 left-4 flex absolute -translate-y-1', '[&>span]:w-3 [&>span]:h-3')}>
           <span className=' bg-muted-foreground/40 rounded-full dark:bg-muted-foreground/40' />
           <span className=' bg-muted-foreground/40 rounded-full dark:bg-muted-foreground/40' />
           <span className=' bg-muted-foreground/40 rounded-full dark:bg-muted-foreground/40' />
@@ -58,14 +42,7 @@ export function BrowserWindow({
         />
         <div className='pr-4'></div>
       </div>
-      <div
-        className={cn(
-          'rounded-b-md relative overflow-hidden flex-col',
-          'flex-1',
-        )}
-      >
-        {children}
-      </div>
+      <div className={cn('rounded-b-md relative overflow-hidden flex-col', 'flex-1')}>{children}</div>
     </figure>
   )
 }

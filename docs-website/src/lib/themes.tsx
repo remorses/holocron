@@ -6,9 +6,7 @@ const themeModulesRaw = import.meta.glob('../themes/*.css', {
 })
 
 // Transform to use theme names as keys instead of file paths
-const themeModules: Record<string, string> = Object.entries(
-  themeModulesRaw,
-).reduce(
+const themeModules: Record<string, string> = Object.entries(themeModulesRaw).reduce(
   (acc, [path, content]) => {
     const match = path.match(/\/([^/]+)\.css$/)
     if (match && match[1]) {

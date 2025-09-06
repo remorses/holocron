@@ -34,8 +34,7 @@ export async function loader({ request }) {
 
   // Check if login was initiated from landing page form
   const cookies = cookie.parse(request.headers.get('Cookie') || '')
-  const isFromLandingPage =
-    cookies[DID_USER_CLICK_LANDING_PAGE_PROMPT] === 'true'
+  const isFromLandingPage = cookies[DID_USER_CLICK_LANDING_PAGE_PROMPT] === 'true'
 
   let org = await prisma.org.findFirst({
     where: {
@@ -91,8 +90,7 @@ export async function loader({ request }) {
     },
   })
 
-  const onboardingUrl =
-    href('/org/:orgId/onboarding', { orgId }) + (url.search || '')
+  const onboardingUrl = href('/org/:orgId/onboarding', { orgId }) + (url.search || '')
   if (!site) {
     return redirect(onboardingUrl)
   }

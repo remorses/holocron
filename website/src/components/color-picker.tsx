@@ -14,10 +14,7 @@ export function ColorPicker({ onChange, value, children, defaultValue }) {
       <PopoverTrigger>
         <Button className='flex gap-2'>
           {children}
-          <div
-            style={{ background: value }}
-            className='w-4 h-4 shadow rounded '
-          ></div>
+          <div style={{ background: value }} className='w-4 h-4 shadow rounded '></div>
         </Button>
       </PopoverTrigger>
 

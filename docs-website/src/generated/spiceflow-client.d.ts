@@ -87,13 +87,7 @@ export declare const apiClient: {
           | undefined,
       ) => Promise<
         import('spiceflow/client').SpiceflowClient.ClientResponse<{
-          200: AsyncGenerator<
-            import('ai').InferUIMessageChunk<
-              import('./types').WebsiteUIMessage
-            >,
-            void,
-            unknown
-          >
+          200: AsyncGenerator<import('ai').InferUIMessageChunk<import('./types').WebsiteUIMessage>, void, unknown>
         }>
       >
     }
@@ -589,13 +583,7 @@ export declare function createApiClient(
           | undefined,
       ) => Promise<
         import('spiceflow/client').SpiceflowClient.ClientResponse<{
-          200: AsyncGenerator<
-            import('ai').InferUIMessageChunk<
-              import('./types').WebsiteUIMessage
-            >,
-            void,
-            unknown
-          >
+          200: AsyncGenerator<import('ai').InferUIMessageChunk<import('./types').WebsiteUIMessage>, void, unknown>
         }>
       >
     }
@@ -1089,13 +1077,7 @@ export declare const apiClientWithDurableFetch: {
           | undefined,
       ) => Promise<
         import('spiceflow/client').SpiceflowClient.ClientResponse<{
-          200: AsyncGenerator<
-            import('ai').InferUIMessageChunk<
-              import('./types').WebsiteUIMessage
-            >,
-            void,
-            unknown
-          >
+          200: AsyncGenerator<import('ai').InferUIMessageChunk<import('./types').WebsiteUIMessage>, void, unknown>
         }>
       >
     }

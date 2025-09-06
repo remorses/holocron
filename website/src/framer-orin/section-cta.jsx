@@ -48,9 +48,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -69,11 +67,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -84,8 +78,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'AWfpblPJ4',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'AWfpblPJ4',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -126,12 +119,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1103fnk',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1103fnk', className, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'AWfpblPJ4'}
@@ -162,12 +150,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 height={382}
                 width={`min(${componentViewport?.width || '100vw'} - 32px, 1200px)`}
                 y={
-                  (componentViewport?.y || 0) +
-                  100 +
-                  (((componentViewport?.height || 200) - 100 - 382) / 2 +
-                    0 +
-                    0) +
-                  0
+                  (componentViewport?.y || 0) + 100 + (((componentViewport?.height || 200) - 100 - 382) / 2 + 0 + 0) + 0
                 }
               >
                 <SmartComponentScopedContainer
@@ -195,12 +178,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 height={382}
                 width={`max(min(${componentViewport?.width || '100vw'} - 32px, 1200px), 1px)`}
                 y={
-                  (componentViewport?.y || 0) +
-                  100 +
-                  (((componentViewport?.height || 200) - 100 - 382) / 2 +
-                    0 +
-                    0) +
-                  0
+                  (componentViewport?.y || 0) + 100 + (((componentViewport?.height || 200) - 100 - 382) / 2 + 0 + 0) + 0
                 }
               >
                 <SmartComponentScopedContainer
@@ -332,17 +310,11 @@ stdin_default3.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -390,9 +362,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

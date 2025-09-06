@@ -34,9 +34,7 @@ export const fileUpdateSchema = z.object({
 })
 export type FileUpdate = z.infer<typeof fileUpdateSchema>
 
-export function isStrReplaceParameterComplete(
-  args: Partial<EditToolParamSchema>,
-) {
+export function isStrReplaceParameterComplete(args: Partial<EditToolParamSchema>) {
   if (!args) return false
   const { command, path, file_text, insert_line, new_str, old_str } = args
 
@@ -51,19 +49,9 @@ export function isStrReplaceParameterComplete(
     case 'create':
       return typeof file_text === 'string' && file_text.length > 0
     case 'insert':
-      return (
-        typeof insert_line === 'number' &&
-        insert_line >= 1 &&
-        typeof new_str === 'string' &&
-        new_str.length > 0
-      )
+      return typeof insert_line === 'number' && insert_line >= 1 && typeof new_str === 'string' && new_str.length > 0
     case 'str_replace':
-      return (
-        typeof old_str === 'string' &&
-        old_str.length > 0 &&
-        typeof new_str === 'string' &&
-        new_str.length > 0
-      )
+      return typeof old_str === 'string' && old_str.length > 0 && typeof new_str === 'string' && new_str.length > 0
     default:
       return false
   }
@@ -71,33 +59,21 @@ export function isStrReplaceParameterComplete(
 
 // Export callback argument types
 export type ValidateNewContentArgs = { githubPath: string; content: string }
-export type ValidateNewContentResult =
-  | { error?: string; warning?: string }
-  | undefined
+export type ValidateNewContentResult = { error?: string; warning?: string } | undefined
 export type GetPageContentArgs = { githubPath: string }
 
 export function createEditExecute({
   fileSystem,
   validateNewContent,
 }: {
-  validateNewContent?: (
-    x: ValidateNewContentArgs,
-  ) => Promise<ValidateNewContentResult>
+  validateNewContent?: (x: ValidateNewContentArgs) => Promise<ValidateNewContentResult>
   fileSystem: FileSystemEmulator
 }) {
   const previousEdits = [] as FileUpdate[]
   const filesInDraft = fileSystem.getFilesInDraft()
 
   return async function execute(params: EditToolParamSchema) {
-    const {
-      command,
-      path,
-      file_text,
-      insert_line,
-      new_str,
-      old_str,
-      view_range,
-    } = params
+    const { command, path, file_text, insert_line, new_str, old_str, view_range } = params
 
     // TODO if a file contents changed since the last read, I should tell the model. so it does not try to update the file with string replacements that are no longer there
 
@@ -122,11 +98,7 @@ export function createEditExecute({
 
         const lines = content.split('\n')
 
-        if (
-          view_range &&
-          Array.isArray(view_range) &&
-          view_range.length === 2
-        ) {
+        if (view_range && Array.isArray(view_range) && view_range.length === 2) {
           const [start, end] = view_range
           const startIdx = Math.max(start - 1, 0)
           const endIdx = end === -1 ? lines.length : Math.min(end, lines.length)
@@ -285,8 +257,7 @@ export function createEditExecute({
         if (typeof insert_line !== 'number' || insert_line < 1) {
           return {
             success: false,
-            error:
-              '`insert_line` (must be >= 1) is required for insert command.',
+            error: '`insert_line` (must be >= 1) is required for insert command.',
           }
         }
         if (typeof new_str !== 'string') {
@@ -390,9 +361,7 @@ export function createEditTool({
   model,
 }: {
   fileSystem: FileSystemEmulator
-  validateNewContent?: (
-    x: ValidateNewContentArgs,
-  ) => Promise<ValidateNewContentResult>
+  validateNewContent?: (x: ValidateNewContentArgs) => Promise<ValidateNewContentResult>
   model?: { provider?: string }
 }) {
   const execute = createEditExecute({
@@ -409,9 +378,7 @@ export function createEditTool({
   }
 
   // For OpenAI models, convert optionals to nullables
-  const schema = model?.provider?.startsWith('openai')
-    ? optionalToNullable(editToolParamsSchema)
-    : editToolParamsSchema
+  const schema = model?.provider?.startsWith('openai') ? optionalToNullable(editToolParamsSchema) : editToolParamsSchema
 
   return tool({
     onInputDelta(options) {},
@@ -444,9 +411,7 @@ export const editToolParamsSchema = z.object({
    */
   file_text: z
     .string()
-    .describe(
-      'Required parameter of `create` command, with the content of the file to be created.',
-    )
+    .describe('Required parameter of `create` command, with the content of the file to be created.')
     .optional(),
   /**
    * Required parameter of `insert` command. The `new_str` will be inserted AFTER the line `insert_line` of `path`.
@@ -472,9 +437,7 @@ export const editToolParamsSchema = z.object({
    */
   old_str: z
     .string()
-    .describe(
-      'Required parameter of `str_replace` command containing the string in `path` to replace.',
-    )
+    .describe('Required parameter of `str_replace` command containing the string in `path` to replace.')
     .optional(),
   /**
    * Optional parameter of `view` command when `path` points to a file. If none is given, the full file is shown. If provided, the file will be shown in the indicated line number range, e.g. [11, 12] will show lines 11 and 12. Indexing at 1 to start. Setting `[start_line, -1]` shows all lines from `start_line` to the end of the file.

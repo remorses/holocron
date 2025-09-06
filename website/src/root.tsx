@@ -22,24 +22,17 @@ export function meta() {
   ]
 }
 
-const redirectMiddleware: Route.unstable_MiddlewareFunction = async (
-  { request },
-  next,
-) => {
+const redirectMiddleware: Route.unstable_MiddlewareFunction = async ({ request }, next) => {
   const url = new URL(request.url)
 
   const host = url.hostname
   if (host === 'fumabase.com') {
-    throw redirect(
-      new URL(url.pathname + url.search, env.PUBLIC_URL).toString(),
-    )
+    throw redirect(new URL(url.pathname + url.search, env.PUBLIC_URL).toString())
   }
   return next()
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
-  redirectMiddleware,
-]
+export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [redirectMiddleware]
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -49,16 +42,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <Meta />
         {process.env.NODE_ENV === 'development' && (
-          <script
-            crossOrigin='anonymous'
-            src='//unpkg.com/react-scan/dist/auto.global.js'
-          />
+          <script crossOrigin='anonymous' src='//unpkg.com/react-scan/dist/auto.global.js' />
         )}
         <Links />
-        <script
-          defer
-          src='https://assets.onedollarstats.com/stonks.js'
-        ></script>
+        <script defer src='https://assets.onedollarstats.com/stonks.js'></script>
       </head>
       <body className='h-full flex flex-col grow dark:bg-root-background '>
         {children}
@@ -88,8 +75,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
   const titleClass = 'text-3xl font-semibold mb-3 text-primary'
   const messageClass = 'text-base mb-2 text-muted-foreground'
-  const preClass =
-    'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+  const preClass = 'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
   const linkClass = 'text-primary hover:underline mt-4'
 
   const supportEmail = 'tommy@holocron.so'

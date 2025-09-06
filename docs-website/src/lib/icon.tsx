@@ -37,11 +37,7 @@ function EmptyIcon() {
 
 export function DynamicIcon({ icon: name, ...rest }: DynamicIconProps) {
   return (
-    <Suspense
-      fallback={
-        <span className='block w-4 h-4 rounded transition-opacity opacity-0' />
-      }
-    >
+    <Suspense fallback={<span className='block w-4 h-4 rounded transition-opacity opacity-0' />}>
       <DynamicIconInner icon={name} {...rest} />
     </Suspense>
   )

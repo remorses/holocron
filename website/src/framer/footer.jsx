@@ -24,17 +24,9 @@
 
  */
 import { stdin_default } from './chunks/chunk-FWELEOPG.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunks/chunk-M65DCHB6.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunks/chunk-M65DCHB6.js'
 import { className, css, fonts } from './chunks/chunk-EWWPQ2JC.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-6G2SY433.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-6G2SY433.js'
 import { routes } from './chunks/chunk-75FLX355.js'
 
 // virtual:footer
@@ -68,25 +60,12 @@ import { useRef } from 'react'
 import { jsx as _jsx } from 'react/jsx-runtime'
 import { addPropertyControls, ControlType } from 'unframer'
 function AutoYearCopyright(props) {
-  const {
-    companyName,
-    rightsText,
-    showSymbol,
-    showTrademark,
-    trademarkType,
-    yearPlacement,
-    font,
-    color,
-    fontSize,
-  } = props
+  const { companyName, rightsText, showSymbol, showTrademark, trademarkType, yearPlacement, font, color, fontSize } =
+    props
   const currentYear = /* @__PURE__ */ new Date().getFullYear()
   const symbol = showSymbol === 'yes' ? '\xA9' : ''
   const trademarkOptionActive = showTrademark === 'yes'
-  const trademarkSymbol = trademarkOptionActive
-    ? trademarkType === 'trademark'
-      ? '\u2122'
-      : '\xAE'
-    : ''
+  const trademarkSymbol = trademarkOptionActive ? (trademarkType === 'trademark' ? '\u2122' : '\xAE') : ''
   let finalCompanyName = companyName.trim()
   let finalRightsText = rightsText.trim()
   let dotAfterCompanyName = ''
@@ -98,16 +77,13 @@ function AutoYearCopyright(props) {
     finalRightsText = `${currentYear}. ${finalRightsText}`
   } else if (yearPlacement === 'afterRightsText' && finalRightsText) {
     finalRightsText += ` ${currentYear}`
-    dotAfterCompanyName =
-      !trademarkOptionActive && finalCompanyName && finalRightsText ? '.' : ''
+    dotAfterCompanyName = !trademarkOptionActive && finalCompanyName && finalRightsText ? '.' : ''
   } else if (!finalCompanyName && !finalRightsText) {
     finalCompanyName = `${currentYear}`
   }
   finalCompanyName += trademarkSymbol ? `${trademarkSymbol}` : ''
   let displayText = symbol ? `${symbol} ` : ''
-  displayText += finalCompanyName
-    ? `${finalCompanyName}${dotAfterCompanyName}`
-    : ''
+  displayText += finalCompanyName ? `${finalCompanyName}${dotAfterCompanyName}` : ''
   if (finalCompanyName && finalRightsText) displayText += ' '
   displayText += finalRightsText
   const textStyle = {
@@ -175,18 +151,8 @@ addPropertyControls(AutoYearCopyright, {
   },
   yearPlacement: {
     type: ControlType.Enum,
-    options: [
-      'beforeCompanyName',
-      'afterCompanyName',
-      'beforeRightsText',
-      'afterRightsText',
-    ],
-    optionTitles: [
-      'Before Company',
-      'After Company',
-      'Before Rights',
-      'After Rights',
-    ],
+    options: ['beforeCompanyName', 'afterCompanyName', 'beforeRightsText', 'afterRightsText'],
+    optionTitles: ['Before Company', 'After Company', 'Before Rights', 'After Rights'],
     defaultValue: 'afterRightsText',
     displaySegmentedControl: true,
     segmentedControlDirection: 'vertical',
@@ -219,9 +185,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -240,11 +204,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -255,8 +215,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'ZFXaVsx1C',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'ZFXaVsx1C',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -269,13 +228,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className5,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className5, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -307,12 +260,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.footer
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-49t8a3',
-              className5,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-49t8a3', className5, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'ZFXaVsx1C'}
@@ -341,8 +289,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               layoutDependency={layoutDependency}
               layoutId={'LeOKj7GvR'}
               style={{
-                backgroundColor:
-                  'var(--token-8e5d2111-03fd-4926-9cea-98bf1e41078f, rgb(23, 23, 23))',
+                backgroundColor: 'var(--token-8e5d2111-03fd-4926-9cea-98bf1e41078f, rgb(23, 23, 23))',
               }}
             >
               <motion.div
@@ -378,9 +325,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         height={19}
                         y={
                           (componentViewport?.y || 0) +
-                          (0 +
-                            ((componentViewport?.height || 138) - 0 - 320.8) /
-                              2) +
+                          (0 + ((componentViewport?.height || 138) - 0 - 320.8) / 2) +
                           50 +
                           0 +
                           0 +
@@ -394,11 +339,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               width: '33px',
                               y:
                                 (componentViewport?.y || 0) +
-                                (0 +
-                                  ((componentViewport?.height || 200) -
-                                    0 -
-                                    377.2) /
-                                    2) +
+                                (0 + ((componentViewport?.height || 200) - 0 - 377.2) / 2) +
                                 70 +
                                 0 +
                                 0 +
@@ -410,11 +351,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             x4xSNS1KU: {
                               y:
                                 (componentViewport?.y || 0) +
-                                (0 +
-                                  ((componentViewport?.height || 128) -
-                                    0 -
-                                    310.8) /
-                                    2) +
+                                (0 + ((componentViewport?.height || 128) - 0 - 310.8) / 2) +
                                 50 +
                                 0 +
                                 0 +
@@ -482,10 +419,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           GlazZkpnx: {
                             children: (
                               <React.Fragment>
-                                <motion.p
-                                  className={'framer-styles-preset-4mzurx'}
-                                  data-styles-preset={'C5Bqm4Y89'}
-                                >
+                                <motion.p className={'framer-styles-preset-4mzurx'} data-styles-preset={'C5Bqm4Y89'}>
                                   <Link
                                     href={{
                                       hash: ':DLscFvTjv',
@@ -515,10 +449,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       )}
                     >
                       <React.Fragment>
-                        <motion.p
-                          className={'framer-styles-preset-4mzurx'}
-                          data-styles-preset={'C5Bqm4Y89'}
-                        >
+                        <motion.p className={'framer-styles-preset-4mzurx'} data-styles-preset={'C5Bqm4Y89'}>
                           <Link
                             href={{
                               hash: ':DLscFvTjv',
@@ -531,10 +462,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             scopeId={'ZxU1ZqLuB'}
                             smoothScroll={false}
                           >
-                            <motion.a
-                              className={'framer-styles-preset-1i37dfc'}
-                              data-styles-preset={'uT5gCl_8P'}
-                            >
+                            <motion.a className={'framer-styles-preset-1i37dfc'} data-styles-preset={'uT5gCl_8P'}>
                               {'Home'}
                             </motion.a>
                           </Link>
@@ -554,10 +482,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           GlazZkpnx: {
                             children: (
                               <React.Fragment>
-                                <motion.p
-                                  className={'framer-styles-preset-4mzurx'}
-                                  data-styles-preset={'C5Bqm4Y89'}
-                                >
+                                <motion.p className={'framer-styles-preset-4mzurx'} data-styles-preset={'C5Bqm4Y89'}>
                                   <Link
                                     href={{
                                       hash: ':YCffmP9Vu',
@@ -587,10 +512,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       )}
                     >
                       <React.Fragment>
-                        <motion.p
-                          className={'framer-styles-preset-4mzurx'}
-                          data-styles-preset={'C5Bqm4Y89'}
-                        >
+                        <motion.p className={'framer-styles-preset-4mzurx'} data-styles-preset={'C5Bqm4Y89'}>
                           <Link
                             href={{
                               webPageId: 'ePrr9Htzz',
@@ -602,10 +524,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             scopeId={'ZxU1ZqLuB'}
                             smoothScroll={false}
                           >
-                            <motion.a
-                              className={'framer-styles-preset-1i37dfc'}
-                              data-styles-preset={'uT5gCl_8P'}
-                            >
+                            <motion.a className={'framer-styles-preset-1i37dfc'} data-styles-preset={'uT5gCl_8P'}>
                               {'Documentation'}
                             </motion.a>
                           </Link>
@@ -622,10 +541,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       withExternalLayout={true}
                     >
                       <React.Fragment>
-                        <motion.p
-                          className={'framer-styles-preset-4mzurx'}
-                          data-styles-preset={'C5Bqm4Y89'}
-                        >
+                        <motion.p className={'framer-styles-preset-4mzurx'} data-styles-preset={'C5Bqm4Y89'}>
                           {'X / Twitter'}
                         </motion.p>
                       </React.Fragment>
@@ -643,10 +559,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           GlazZkpnx: {
                             children: (
                               <React.Fragment>
-                                <motion.p
-                                  className={'framer-styles-preset-4mzurx'}
-                                  data-styles-preset={'C5Bqm4Y89'}
-                                >
+                                <motion.p className={'framer-styles-preset-4mzurx'} data-styles-preset={'C5Bqm4Y89'}>
                                   <Link
                                     href={{
                                       hash: ':xUtGk5_gl',
@@ -676,10 +589,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       )}
                     >
                       <React.Fragment>
-                        <motion.p
-                          className={'framer-styles-preset-4mzurx'}
-                          data-styles-preset={'C5Bqm4Y89'}
-                        >
+                        <motion.p className={'framer-styles-preset-4mzurx'} data-styles-preset={'C5Bqm4Y89'}>
                           <Link
                             href={{
                               hash: ':xUtGk5_gl',
@@ -692,10 +602,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             scopeId={'ZxU1ZqLuB'}
                             smoothScroll={false}
                           >
-                            <motion.a
-                              className={'framer-styles-preset-1i37dfc'}
-                              data-styles-preset={'uT5gCl_8P'}
-                            >
+                            <motion.a className={'framer-styles-preset-1i37dfc'} data-styles-preset={'uT5gCl_8P'}>
                               {'FAQ'}
                             </motion.a>
                           </Link>
@@ -761,10 +668,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         withExternalLayout={true}
                       >
                         <React.Fragment>
-                          <motion.p
-                            className={'framer-styles-preset-1x4srpb'}
-                            data-styles-preset={'WGktsHNSh'}
-                          >
+                          <motion.p className={'framer-styles-preset-1x4srpb'} data-styles-preset={'WGktsHNSh'}>
                             {'\xA9 2024 Holocron. All rights reserved.'}
                           </motion.p>
                         </React.Fragment>
@@ -800,9 +704,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           as={'a'}
                           className={'framer-ldtcww framer-1e73it6'}
                           data-framer-name={'X'}
-                          fill={
-                            'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))'
-                          }
+                          fill={'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))'}
                           intrinsicHeight={41}
                           intrinsicWidth={44}
                           layoutDependency={layoutDependency}
@@ -827,9 +729,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           as={'a'}
                           className={'framer-1lhdk5f framer-1e73it6'}
                           data-framer-name={'Ins'}
-                          fill={
-                            'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))'
-                          }
+                          fill={'var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))'}
                           intrinsicHeight={48}
                           intrinsicWidth={49}
                           layoutDependency={layoutDependency}
@@ -853,8 +753,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'L3N_dhzz_'}
                 style={{
-                  backgroundColor:
-                    'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
+                  backgroundColor: 'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
                 }}
               />
               <motion.div
@@ -863,8 +762,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'VBGpKvy3v'}
                 style={{
-                  backgroundColor:
-                    'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
+                  backgroundColor: 'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
                 }}
               />
             </motion.div>
@@ -939,8 +837,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -1023,9 +920,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -1056,17 +951,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

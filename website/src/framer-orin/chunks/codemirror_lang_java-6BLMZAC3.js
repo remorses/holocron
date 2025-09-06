@@ -23,8 +23,7 @@ var javaHighlighting = styleTags({
   'new super assert open to with void': tags.keyword,
   'class interface extends implements enum var': tags.definitionKeyword,
   'module package import': tags.moduleKeyword,
-  'switch while for if else case default do break continue return try catch finally throw':
-    tags.controlKeyword,
+  'switch while for if else case default do break continue return try catch finally throw': tags.controlKeyword,
   ['requires exports opens uses provides public private protected static transitive abstract final strictfp synchronized native transient volatile throws']:
     tags.modifier,
   IntegerLiteral: tags.integer,
@@ -228,9 +227,7 @@ var javaLanguage = /* @__PURE__ */ LRLanguage.define({
           let after = context.textAfter,
             closed = /^\s*\}/.test(after),
             isCase = /^\s*(case|default)\b/.test(after)
-          return (
-            context.baseIndent + (closed ? 0 : isCase ? 1 : 2) * context.unit
-          )
+          return context.baseIndent + (closed ? 0 : isCase ? 1 : 2) * context.unit
         },
         Block: /* @__PURE__ */ delimitedIndent({ closing: '}' }),
         BlockComment: () => null,

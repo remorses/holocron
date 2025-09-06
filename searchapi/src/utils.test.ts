@@ -13,10 +13,7 @@ line 4 final line`
   })
 
   it('should return 2 for content on second line', () => {
-    const result = findLineNumberInContent(
-      sampleContent,
-      'line 2 has some text',
-    )
+    const result = findLineNumberInContent(sampleContent, 'line 2 has some text')
     expect(result).toBe(2)
   })
 

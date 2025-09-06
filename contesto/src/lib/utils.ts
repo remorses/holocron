@@ -1,9 +1,7 @@
 import memoizePkg from 'micro-memoize'
 const memoize = memoizePkg['default'] || memoizePkg
 
-export async function* readableStreamToAsyncIterable<T>(
-  stream: ReadableStream<T>,
-): AsyncIterableIterator<T> {
+export async function* readableStreamToAsyncIterable<T>(stream: ReadableStream<T>): AsyncIterableIterator<T> {
   const reader = stream.getReader()
   try {
     while (true) {
@@ -44,9 +42,7 @@ export { memoize }
  * Clones any AsyncIterable<T> using ReadableStream.tee().
  */
 
-export function teeAsyncIterable<T>(
-  iterable: AsyncIterable<T>,
-): [AsyncIterableIterator<T>, AsyncIterableIterator<T>] {
+export function teeAsyncIterable<T>(iterable: AsyncIterable<T>): [AsyncIterableIterator<T>, AsyncIterableIterator<T>] {
   const srcIter = iterable[Symbol.asyncIterator]()
 
   // Wrap the source iterator in a stream.
@@ -74,10 +70,7 @@ export function teeAsyncIterable<T>(
   const [s1, s2] = srcStream.tee()
   return [readableStreamToAsyncIterable(s1), readableStreamToAsyncIterable(s2)]
 }
-export async function* throttleGenerator<T>(
-  generator: AsyncIterable<T>,
-  delayMs: number = 16,
-): AsyncIterable<T> {
+export async function* throttleGenerator<T>(generator: AsyncIterable<T>, delayMs: number = 16): AsyncIterable<T> {
   let buffer: T[] = []
   let lastYield = 0
 

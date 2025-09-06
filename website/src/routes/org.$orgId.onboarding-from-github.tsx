@@ -1,20 +1,9 @@
 import { ulid } from 'ulid'
 import { prisma } from 'db'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
-import {
-  defaultDocsJsonComments,
-  defaultStartingHolocronJson,
-} from 'docs-website/src/lib/docs-json-examples'
+import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
-import {
-  Form,
-  href,
-  Link,
-  redirect,
-  useActionData,
-  useLoaderData,
-  useNavigation,
-} from 'react-router'
+import { Form, href, Link, redirect, useActionData, useLoaderData, useNavigation } from 'react-router'
 import { useState } from 'react'
 import { apiClient } from '../lib/spiceflow-client'
 import { useQuery } from '@tanstack/react-query'
@@ -69,9 +58,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   let installationId: number | null = null
 
   if (githubDataStr && currentStep === 1) {
-    const data: GithubLoginRequestData = JSON.parse(
-      decodeURIComponent(githubDataStr),
-    )
+    const data: GithubLoginRequestData = JSON.parse(decodeURIComponent(githubDataStr))
     githubAccountLogin = data.githubAccountLogin
 
     // Get the GitHub installation
@@ -166,9 +153,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       throw new Error('Missing GitHub login data')
     }
 
-    const data: GithubLoginRequestData = JSON.parse(
-      decodeURIComponent(githubDataStr),
-    )
+    const data: GithubLoginRequestData = JSON.parse(decodeURIComponent(githubDataStr))
     const githubAccountLogin = data.githubAccountLogin
 
     // Parse repo name and owner
@@ -200,9 +185,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     const userName = slugKebabCaseKeepExtension(repo || 'holocron-site')
     const internalHost = `${userName}-${randomHash}.${env.APPS_DOMAIN}`
     const domains =
-      process.env.NODE_ENV === 'development'
-        ? [`${userName}-${randomHash}.localhost`, internalHost]
-        : [internalHost]
+      process.env.NODE_ENV === 'development' ? [`${userName}-${randomHash}.localhost`, internalHost] : [internalHost]
 
     // Create the site
     const site = await prisma.site.create({
@@ -261,9 +244,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
 
     // Add the docsJson file to the sync manually (to avoid branch protection issues)
-    const docsJsonPath = basePath
-      ? `${basePath}/${DOCS_JSON_BASENAME}`
-      : DOCS_JSON_BASENAME
+    const docsJsonPath = basePath ? `${basePath}/${DOCS_JSON_BASENAME}` : DOCS_JSON_BASENAME
     const docsJsonContent = JSON.stringify(docsJson, null, 2)
 
     // Create an async generator that includes the docsJson file
@@ -351,17 +332,8 @@ export async function action({ request, params }: Route.ActionArgs) {
   return null
 }
 
-export default function OnboardingFromGithub({
-  loaderData,
-}: Route.ComponentProps) {
-  const {
-    currentStep,
-    repos,
-    githubAccountLogin,
-    orgId,
-    name,
-    installationId,
-  } = loaderData
+export default function OnboardingFromGithub({ loaderData }: Route.ComponentProps) {
+  const { currentStep, repos, githubAccountLogin, orgId, name, installationId } = loaderData
   const [showAlternative, setShowAlternative] = useState(false)
   const [selectedRepo, setSelectedRepo] = useState(repos[0]?.full_name || '')
   const [selectedBranch, setSelectedBranch] = useState('main')
@@ -401,8 +373,7 @@ export default function OnboardingFromGithub({
   const nextStep = currentStep >= 1 ? 1 : currentStep + 1
   githubInstallUrl.searchParams.set(
     'next',
-    href('/org/:orgId/onboarding-from-github', { orgId }) +
-      `?currentStep=${nextStep}`,
+    href('/org/:orgId/onboarding-from-github', { orgId }) + `?currentStep=${nextStep}`,
   )
 
   const navigation = useNavigation()
@@ -412,34 +383,21 @@ export default function OnboardingFromGithub({
     <div className='flex flex-col h-full grow justify-center gap-12 max-w-2xl mx-auto p-8'>
       <div className='space-y-4'>
         <div>
-          <h1 className='text-2xl capitalize font-bold text-white'>
-            Hello, {name}
-          </h1>
-          <p className='text-gray-400'>
-            Let's sync your documentation from an existing GitHub repository
-          </p>
+          <h1 className='text-2xl capitalize font-bold text-white'>Hello, {name}</h1>
+          <p className='text-gray-400'>Let's sync your documentation from an existing GitHub repository</p>
         </div>
       </div>
 
       <div className='space-y-8'>
-        <Stepper
-          className='lg:min-w-[500px]'
-          defaultValue={currentStep + 1}
-          orientation='vertical'
-        >
-          <StepperItem
-            step={1}
-            className='relative items-start not-last:flex-1'
-          >
+        <Stepper className='lg:min-w-[500px]' defaultValue={currentStep + 1} orientation='vertical'>
+          <StepperItem step={1} className='relative items-start not-last:flex-1'>
             <StepperTrigger className={`items-start rounded last:pb-0 pb-12`}>
               <StepperIndicator />
               <div className='mt-0.5 space-y-0.5 px-2 text-left'>
                 <StepperTitle>Sign in with GitHub</StepperTitle>
                 {currentStep === 0 && (
                   <>
-                    <StepperDescription>
-                      To get started, log in with your GitHub account
-                    </StepperDescription>
+                    <StepperDescription>To get started, log in with your GitHub account</StepperDescription>
                     <div className='pt-4'>
                       {!showAlternative ? (
                         <>
@@ -463,8 +421,7 @@ export default function OnboardingFromGithub({
                         <div className='space-y-4'>
                           <div className='p-4 bg-gray-800/50 rounded-lg border'>
                             <p className='text-sm text-gray-300 mb-3'>
-                              Run this command to download a template docs
-                              folder and deploy it:
+                              Run this command to download a template docs folder and deploy it:
                             </p>
                             <div className='bg-black/50 p-3 rounded font-mono text-sm text-green-400'>
                               npx -y @holocron.so/cli init
@@ -502,17 +459,12 @@ export default function OnboardingFromGithub({
             <StepperSeparator className='absolute inset-y-0 top-[calc(1.5rem+0.125rem)] left-3 -order-1 m-0 -translate-x-1/2 group-data-[orientation=horizontal]/stepper:w-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=horizontal]/stepper:flex-none group-data-[orientation=vertical]/stepper:h-[calc(100%-1.5rem-0.25rem)]' />
           </StepperItem>
 
-          <StepperItem
-            step={2}
-            className='relative items-start not-last:flex-1'
-          >
+          <StepperItem step={2} className='relative items-start not-last:flex-1'>
             <StepperTrigger className='items-start rounded pb-12 last:pb-0'>
               <StepperIndicator />
               <div className='mt-0.5 space-y-0.5 px-2 text-left'>
                 <StepperTitle>Choose repository</StepperTitle>
-                <StepperDescription>
-                  Select an existing repository to sync your documentation from
-                </StepperDescription>
+                <StepperDescription>Select an existing repository to sync your documentation from</StepperDescription>
                 {currentStep == 1 && (
                   <div className='pt-4'>
                     <Form method='post' className='flex flex-col gap-4'>
@@ -533,10 +485,7 @@ export default function OnboardingFromGithub({
                             <option value=''>No repositories found</option>
                           ) : (
                             repos.map((repo) => (
-                              <option
-                                key={repo.full_name}
-                                value={repo.full_name}
-                              >
+                              <option key={repo.full_name} value={repo.full_name}>
                                 {repo.full_name} {repo.private && '(private)'}
                               </option>
                             ))
@@ -544,8 +493,7 @@ export default function OnboardingFromGithub({
                         </SelectNative>
                         {repos.length === 0 && (
                           <p className='text-sm text-red-500'>
-                            No repositories accessible. Please configure
-                            repository access in your GitHub App settings.
+                            No repositories accessible. Please configure repository access in your GitHub App settings.
                           </p>
                         )}
                       </div>
@@ -590,22 +538,16 @@ export default function OnboardingFromGithub({
                           title='Base path can only contain letters, numbers, hyphens, underscores, and slashes'
                         />
                         <p className='text-sm text-muted-foreground'>
-                          Specify a subdirectory if your docs are not in the
-                          repository root
+                          Specify a subdirectory if your docs are not in the repository root
                         </p>
                       </div>
 
-                      <Button
-                        isLoading={isLoading}
-                        type='submit'
-                        disabled={repos.length === 0 || !selectedRepo}
-                      >
+                      <Button isLoading={isLoading} type='submit' disabled={repos.length === 0 || !selectedRepo}>
                         Create Site
                       </Button>
                       <p className='text-sm text-muted-foreground'>
-                        Creating the site will open a pull request to add a{' '}
-                        {DOCS_JSON_BASENAME} configuration file to your
-                        repository
+                        Creating the site will open a pull request to add a {DOCS_JSON_BASENAME} configuration file to
+                        your repository
                       </p>
                     </Form>
                   </div>

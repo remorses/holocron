@@ -37,25 +37,14 @@ function TodoItem({
         // onChange={(e) => onChange?.(e.target.checked)}
         className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2'
       />
-      <div className={clsx(checked && 'line-through text-gray-500')}>
-        {children}
-      </div>
+      <div className={clsx(checked && 'line-through text-gray-500')}>{children}</div>
     </div>
   )
 }
 
-function Columns({
-  children,
-  cols = 2,
-}: {
-  children?: React.ReactNode
-  cols?: number
-}) {
+function Columns({ children, cols = 2 }: { children?: React.ReactNode; cols?: number }) {
   return (
-    <div
-      className={`grid gap-4 my-4`}
-      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-    >
+    <div className={`grid gap-4 my-4`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
       {children}
     </div>
   )
@@ -69,39 +58,20 @@ function Embed({ src, children }: { src: string; children?: string }) {
   const caption = children || 'Embedded Content'
   return (
     <div className='my-4 p-4 border border-gray-200 rounded-md bg-gray-50'>
-      <iframe
-        src={src}
-        title={caption}
-        className='w-full h-[400px] border-none'
-        allowFullScreen
-      />
+      <iframe src={src} title={caption} className='w-full h-[400px] border-none' allowFullScreen />
       <div className='mt-2 text-sm text-gray-500 text-center'>{caption}</div>
     </div>
   )
 }
 
-function File({
-  url,
-  name,
-  children,
-}: {
-  url: string
-  name?: string
-  children?: string
-}) {
+function File({ url, name, children }: { url: string; name?: string; children?: string }) {
   const displayText = children || name || 'Download File'
   return (
     <div className='my-4 p-4 border border-gray-200 rounded-md bg-gray-50'>
-      <a
-        href={url}
-        download={name || true}
-        className='block no-underline text-blue-500 font-medium'
-      >
+      <a href={url} download={name || true} className='block no-underline text-blue-500 font-medium'>
         {displayText}
       </a>
-      {name && children && name !== children && (
-        <div className='mt-2 text-sm text-gray-500'>{name}</div>
-      )}
+      {name && children && name !== children && <div className='mt-2 text-sm text-gray-500'>{name}</div>}
     </div>
   )
 }
@@ -113,9 +83,7 @@ function Audio({ src, children }: { src: string; children?: string }) {
         <source src={src} />
         Your browser does not support the audio element.
       </audio>
-      {children && (
-        <div className='mt-2 text-sm text-gray-500 text-center'>{children}</div>
-      )}
+      {children && <div className='mt-2 text-sm text-gray-500 text-center'>{children}</div>}
     </div>
   )
 }
@@ -138,9 +106,7 @@ function Video({ src, children }: { src: string; children?: string }) {
         allowFullScreen
         className='absolute top-0 left-0 w-full h-full border-0'
       />
-      {children && (
-        <div className='text-center text-sm text-gray-500 mt-2'>{children}</div>
-      )}
+      {children && <div className='text-center text-sm text-gray-500 mt-2'>{children}</div>}
     </div>
   )
 }
@@ -181,14 +147,7 @@ function MintlifyCard({
 }: {
   title: string
   icon?: string
-  iconType?:
-    | 'regular'
-    | 'solid'
-    | 'light'
-    | 'thin'
-    | 'sharp-solid'
-    | 'duotone'
-    | 'brands'
+  iconType?: 'regular' | 'solid' | 'light' | 'thin' | 'sharp-solid' | 'duotone' | 'brands'
   color?: string
   href?: string
   horizontal?: boolean
@@ -237,43 +196,19 @@ function ParamField({
 }) {
   const paramName = path || body || query || header || 'parameter'
   const paramType = type || 'string'
-  const location = path
-    ? 'path'
-    : body
-      ? 'body'
-      : query
-        ? 'query'
-        : header
-          ? 'header'
-          : 'parameter'
+  const location = path ? 'path' : body ? 'body' : query ? 'query' : header ? 'header' : 'parameter'
 
   return (
     <div className='border border-border rounded-lg p-4 mb-4'>
       <div className='flex items-center gap-2 mb-2'>
-        <code className='text-sm font-mono bg-muted px-2 py-1 rounded'>
-          {paramName}
-        </code>
+        <code className='text-sm font-mono bg-muted px-2 py-1 rounded'>{paramName}</code>
         <span className='text-xs text-muted-foreground'>{location}</span>
-        {required && (
-          <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded'>
-            required
-          </span>
-        )}
-        {deprecated && (
-          <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded'>
-            deprecated
-          </span>
-        )}
+        {required && <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded'>required</span>}
+        {deprecated && <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded'>deprecated</span>}
         <span className='text-xs text-muted-foreground'>{paramType}</span>
-        {defaultValue && (
-          <span className='text-xs text-muted-foreground'>
-            default: {defaultValue}
-          </span>
-        )}
+        {defaultValue && <span className='text-xs text-muted-foreground'>default: {defaultValue}</span>}
       </div>
-      {children && (
-        <div className='text-sm text-muted-foreground'>{children}</div>
-      )}
+      {children && <div className='text-sm text-muted-foreground'>{children}</div>}
     </div>
   )
 }
@@ -302,43 +237,23 @@ function ResponseField({
       <div className='flex items-center gap-2 mb-1'>
         {pre &&
           pre.map((label, i) => (
-            <span
-              key={i}
-              className='text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded'
-            >
+            <span key={i} className='text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded'>
               {label}
             </span>
           ))}
         <code className='text-sm font-mono'>{name}</code>
-        {required && (
-          <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded'>
-            required
-          </span>
-        )}
-        {deprecated && (
-          <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded'>
-            deprecated
-          </span>
-        )}
+        {required && <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded'>required</span>}
+        {deprecated && <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded'>deprecated</span>}
         <span className='text-xs text-muted-foreground'>{type}</span>
-        {defaultValue && (
-          <span className='text-xs text-muted-foreground'>
-            default: {defaultValue}
-          </span>
-        )}
+        {defaultValue && <span className='text-xs text-muted-foreground'>default: {defaultValue}</span>}
         {post &&
           post.map((label, i) => (
-            <span
-              key={i}
-              className='text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded'
-            >
+            <span key={i} className='text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded'>
               {label}
             </span>
           ))}
       </div>
-      {children && (
-        <div className='text-sm text-muted-foreground'>{children}</div>
-      )}
+      {children && <div className='text-sm text-muted-foreground'>{children}</div>}
     </div>
   )
 }
@@ -355,14 +270,10 @@ function Frame({
   return (
     <div
       data-name='frame'
-      className={clsx(
-        'frame p-2 not-prose relative bg-gray-50/50 rounded-2xl overflow-hidden dark:bg-gray-800/25',
-      )}
+      className={clsx('frame p-2 not-prose relative bg-gray-50/50 rounded-2xl overflow-hidden dark:bg-gray-800/25')}
       style={style}
     >
-      <div className='relative rounded-xl overflow-hidden flex justify-center'>
-        {children}
-      </div>
+      <div className='relative rounded-xl overflow-hidden flex justify-center'>{children}</div>
       {caption && (
         <div className='relative rounded-2xl flex justify-center mt-3 pt-0 px-8 pb-2 text-sm text-gray-700 dark:text-gray-400'>
           {typeof caption === 'string' ? <p>{caption}</p> : caption}
@@ -373,14 +284,7 @@ function Frame({
   )
 }
 
-function Tab({
-  children,
-  title,
-  ...props
-}: {
-  children: React.ReactNode
-  title?: string
-}) {
+function Tab({ children, title, ...props }: { children: React.ReactNode; title?: string }) {
   return (
     <TabsComponents.Tab value={title} {...props}>
       {children}
@@ -411,10 +315,7 @@ function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
       }
       // Try to use .props.title or .props.value if available
       const asElement = child as any
-      const tabTitle =
-        (asElement?.props?.title as string) ??
-        (asElement?.props?.value as string) ??
-        `Tab ${idx + 1}`
+      const tabTitle = (asElement?.props?.title as string) ?? (asElement?.props?.value as string) ?? `Tab ${idx + 1}`
 
       return (
         <Tab title={tabTitle} key={asElement?.key ?? idx}>
@@ -433,14 +334,9 @@ function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
       if (
         asElement &&
         asElement.props &&
-        (typeof asElement.props.title === 'string' ||
-          typeof asElement.props.value === 'string')
+        (typeof asElement.props.title === 'string' || typeof asElement.props.value === 'string')
       ) {
-        titles.push(
-          (asElement.props.title as string) ??
-            (asElement.props.value as string) ??
-            `Tab ${idx + 1}`,
-        )
+        titles.push((asElement.props.title as string) ?? (asElement.props.value as string) ?? `Tab ${idx + 1}`)
       } else {
         titles.push(`Tab ${idx + 1}`)
       }

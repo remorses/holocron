@@ -143,8 +143,7 @@ var operators = '+-/*%=|&<>~^?!'
 var punc = ':;,.(){}[]'
 var binary = /^\-?0b[01][01_]*/
 var octal = /^\-?0o[0-7][0-7_]*/
-var hexadecimal =
-  /^\-?0x[\dA-Fa-f][\dA-Fa-f_]*(?:(?:\.[\dA-Fa-f][\dA-Fa-f_]*)?[Pp]\-?\d[\d_]*)?/
+var hexadecimal = /^\-?0x[\dA-Fa-f][\dA-Fa-f_]*(?:(?:\.[\dA-Fa-f][\dA-Fa-f_]*)?[Pp]\-?\d[\d_]*)?/
 var decimal = /^\-?\d[\d_]*(?:\.\d[\d_]*)?(?:[Ee]\-?\d[\d_]*)?/
 var identifier = /^\$\d+|(`?)[_A-Za-z][_A-Za-z$0-9]*\1/
 var property = /^\.(?:\$\d+|(`?)[_A-Za-z][_A-Za-z$0-9]*\1)/
@@ -260,9 +259,7 @@ function Context(prev, align, indented) {
   this.indented = indented
 }
 function pushContext(state, stream) {
-  var align = stream.match(/^\s*($|\/[\/\*]|[)}\]])/, false)
-    ? null
-    : stream.column() + 1
+  var align = stream.match(/^\s*($|\/[\/\*]|[)}\]])/, false) ? null : stream.column() + 1
   state.context = new Context(state.context, align, state.indented)
 }
 function popContext(state) {

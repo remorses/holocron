@@ -4,11 +4,7 @@
 'use client'
 
 import { stdin_default as stdin_default3 } from './chunks/chunk-4DXVMHPR.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-T7POLAZE.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-T7POLAZE.js'
 import { className, css, fonts } from './chunks/chunk-QOHV43H4.js'
 import { Dither } from './chunks/chunk-25LPWLWQ.js'
 import { stdin_default as stdin_default2 } from './chunks/chunk-ALVRX4HO.js'
@@ -20,11 +16,7 @@ import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/x6BUmxXaPfD8e3d6k1SN/RCOXFBFKU6YLAuw9E6Mb/OWWvy730z.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -62,9 +54,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -89,11 +79,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var transition3 = {
   bounce: 0,
@@ -102,11 +88,7 @@ var transition3 = {
   type: 'spring',
 }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string'
@@ -129,8 +111,7 @@ var getProps = ({ height, id, name1, profile, role, width, ...props }) => {
     ...props,
     ftGgnt190: profile ?? props.ftGgnt190,
     rAtxE3u9_: name1 ?? props.rAtxE3u9_ ?? 'Grace Lee',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'bkwUSIZfN',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'bkwUSIZfN',
     YQeJCLEeL: role ?? props.YQeJCLEeL ?? 'SEO Strategist',
   }
 }
@@ -185,12 +166,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1if0q3c',
-              className3,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1if0q3c', className3, classNames)}
             data-framer-name={'Default'}
             layoutDependency={layoutDependency}
             layoutId={'bkwUSIZfN'}
@@ -232,10 +208,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     vRBOwXOG0: {
                       children: (
                         <React.Fragment>
-                          <motion.p
-                            className={'framer-styles-preset-2pjocb'}
-                            data-styles-preset={'Dkr92TfXs'}
-                          >
+                          <motion.p className={'framer-styles-preset-2pjocb'} data-styles-preset={'Dkr92TfXs'}>
                             {'Grace Lee'}
                           </motion.p>
                         </React.Fragment>
@@ -247,10 +220,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 )}
               >
                 <React.Fragment>
-                  <motion.h3
-                    className={'framer-styles-preset-yplpmu'}
-                    data-styles-preset={'nmO3BT1ni'}
-                  >
+                  <motion.h3 className={'framer-styles-preset-yplpmu'} data-styles-preset={'nmO3BT1ni'}>
                     {'Grace Lee'}
                   </motion.h3>
                 </React.Fragment>
@@ -280,8 +250,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     layoutDependency={layoutDependency}
                     layoutId={'KBNoighML'}
                     style={{
-                      '--extracted-r6o4lv':
-                        'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                      '--extracted-r6o4lv': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                       opacity: 0,
                     }}
                     variants={{
@@ -526,11 +495,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     <_Fragment>
                       {collection?.map(
                         (
-                          {
-                            id: idrr81LuVlm2,
-                            k2CHhHMep: k2CHhHMeprr81LuVlm2,
-                            RuahOgRY1: RuahOgRY1rr81LuVlm2,
-                          },
+                          { id: idrr81LuVlm2, k2CHhHMep: k2CHhHMeprr81LuVlm2, RuahOgRY1: RuahOgRY1rr81LuVlm2 },
                           index,
                         ) => {
                           RuahOgRY1rr81LuVlm2 ??= '#09F'
@@ -562,8 +527,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                         filter: 'grayscale(1)',
                                         mask: 'linear-gradient(15deg, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 62%) add',
                                         WebkitFilter: 'grayscale(1)',
-                                        WebkitMask:
-                                          'linear-gradient(15deg, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 62%) add',
+                                        WebkitMask: 'linear-gradient(15deg, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 62%) add',
                                       }}
                                       variants={{
                                         'bkwUSIZfN-hover': {
@@ -695,8 +659,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -816,17 +779,11 @@ stdin_default4.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default4}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default4} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -874,9 +831,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

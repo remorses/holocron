@@ -4,16 +4,8 @@
 import { stdin_default as stdin_default2 } from './chunk-6JRFOZZS.js'
 import { stdin_default } from './chunk-IETFVNRG.js'
 import { className, css, fonts } from './chunk-EWWPQ2JC.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunk-YL4V4VZK.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunk-KYATNZPG.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunk-YL4V4VZK.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunk-KYATNZPG.js'
 
 // /:https://framerusercontent.com/modules/oHcDgoBu7W1WZetGartF/RKSkGoB35YOIrvRe7yi2/phelvgUdB.js
 import { jsx as _jsx, jsxs as _jsxs } from 'react/jsx-runtime'
@@ -39,12 +31,7 @@ import { useRef } from 'react'
 
 // /:https://framerusercontent.com/modules/sbS3h33FWpc4cYsOV2cT/Fjg85X9Rd8JqscfCWSFa/GGhJExkGo.js
 import { fontStore } from 'unframer'
-fontStore.loadFonts([
-  'Inter-Medium',
-  'Inter-Bold',
-  'Inter-BoldItalic',
-  'Inter-MediumItalic',
-])
+fontStore.loadFonts(['Inter-Medium', 'Inter-Bold', 'Inter-BoldItalic', 'Inter-MediumItalic'])
 var fonts4 = [
   {
     explicitInter: true,
@@ -53,8 +40,7 @@ var fonts4 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/5A3Ce6C9YYmCjpQx9M4inSaKU.woff2',
         weight: '500',
       },
@@ -113,8 +99,7 @@ var fonts4 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/DpPBYI0sL4fYLgAkX8KXOPVt7c.woff2',
         weight: '700',
       },
@@ -173,8 +158,7 @@ var fonts4 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/H89BbHkbHDzlxZzxi8uPzTsp90.woff2',
         weight: '700',
       },
@@ -233,8 +217,7 @@ var fonts4 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/khkJkwSL66WFg8SX6Wa726c.woff2',
         weight: '500',
       },
@@ -311,19 +294,14 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.1, delay: 0, duration: 0.2, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -347,29 +325,14 @@ var humanReadableVariantMap = {
   'Vision Plan - annually': 'jP1r_QuMF',
   'Vision Plan - monthly': 'LcAiuOOWL',
 }
-var getProps = ({
-  annuallyPricing,
-  billed,
-  height,
-  id,
-  monthlyPricing,
-  planName,
-  variant1,
-  width,
-  ...props
-}) => {
+var getProps = ({ annuallyPricing, billed, height, id, monthlyPricing, planName, variant1, width, ...props }) => {
   return {
     ...props,
     dqz2r1gEM: planName ?? props.dqz2r1gEM ?? 'Core',
     f7mp_22az: annuallyPricing ?? props.f7mp_22az ?? '$2,099',
-    OICrdaUZ6:
-      humanReadableEnumMap[variant1] ??
-      variant1 ??
-      props.OICrdaUZ6 ??
-      'dpEXmejGI',
+    OICrdaUZ6: humanReadableEnumMap[variant1] ?? variant1 ?? props.OICrdaUZ6 ?? 'dpEXmejGI',
     srqLYGrcB: monthlyPricing ?? props.srqLYGrcB ?? '$99',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'YwPwI4IFu',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'YwPwI4IFu',
     ZCGe0yfvE: billed ?? props.ZCGe0yfvE ?? 'Billed monthly',
   }
 }
@@ -441,12 +404,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-7wxwyy',
-            className5,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-7wxwyy', className5, classNames),
           'data-border': true,
           'data-framer-name': 'Core Plan - monthly',
           layoutDependency,
@@ -454,8 +412,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           ref: refBinding,
           style: {
             '--border-bottom-width': '1px',
-            '--border-color':
-              'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
+            '--border-color': 'var(--token-a389eb76-d675-4e61-8c10-0746feafc510, rgba(138, 138, 138, 0.3))',
             '--border-left-width': '1px',
             '--border-right-width': '1px',
             '--border-style': 'solid',
@@ -463,8 +420,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             backdropFilter: 'blur(1px)',
             background:
               'linear-gradient(0deg, var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28)) 0%, var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28)) 100%)',
-            backgroundColor:
-              'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
+            backgroundColor: 'var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28))',
             borderBottomLeftRadius: 20,
             borderBottomRightRadius: 20,
             borderTopLeftRadius: 20,
@@ -475,25 +431,21 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           },
           variants: {
             jP1r_QuMF: {
-              '--border-color':
-                'var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
+              '--border-color': 'var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
               backdropFilter: 'blur(10px)',
               background:
                 'linear-gradient(0deg, var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0)) 0%, var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0)) 92.60099943693693%)',
               backgroundColor: 'rgba(0, 0, 0, 0)',
-              boxShadow:
-                '0px 0px 15px 0px var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
+              boxShadow: '0px 0px 15px 0px var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
               WebkitBackdropFilter: 'blur(10px)',
             },
             LcAiuOOWL: {
-              '--border-color':
-                'var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
+              '--border-color': 'var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
               backdropFilter: 'blur(10px)',
               background:
                 'linear-gradient(0deg, var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0)) 0%, var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0)) 92.60099943693693%)',
               backgroundColor: 'rgba(0, 0, 0, 0)',
-              boxShadow:
-                '0px 0px 15px 0px var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
+              boxShadow: '0px 0px 15px 0px var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
               WebkitBackdropFilter: 'blur(10px)',
             },
             oDvSBxhMF: { boxShadow: 'none' },
@@ -525,8 +477,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               '--border-right-width': '0px',
               '--border-style': 'solid',
               '--border-top-width': '0px',
-              backgroundColor:
-                'var(--token-e6cc12f6-2333-405c-a82f-b6c94880d746, rgba(46, 46, 46, 0.4))',
+              backgroundColor: 'var(--token-e6cc12f6-2333-405c-a82f-b6c94880d746, rgba(46, 46, 46, 0.4))',
               borderBottomLeftRadius: 16,
               borderBottomRightRadius: 16,
               borderTopLeftRadius: 16,
@@ -535,8 +486,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             variants: {
               jP1r_QuMF: {
                 '--border-bottom-width': '1px',
-                '--border-color':
-                  'var(--token-f799a2df-306e-498f-bee9-a5591c59bc52, rgba(87, 44, 28, 0.7))',
+                '--border-color': 'var(--token-f799a2df-306e-498f-bee9-a5591c59bc52, rgba(87, 44, 28, 0.7))',
                 '--border-left-width': '1px',
                 '--border-right-width': '1px',
                 '--border-style': 'solid',
@@ -544,8 +494,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               },
               LcAiuOOWL: {
                 '--border-bottom-width': '1px',
-                '--border-color':
-                  'var(--token-f799a2df-306e-498f-bee9-a5591c59bc52, rgba(87, 44, 28, 0.7))',
+                '--border-color': 'var(--token-f799a2df-306e-498f-bee9-a5591c59bc52, rgba(87, 44, 28, 0.7))',
                 '--border-left-width': '1px',
                 '--border-right-width': '1px',
                 '--border-style': 'solid',
@@ -656,20 +605,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   isDisplayed1() &&
                                     /* @__PURE__ */ _jsx(RichText, {
                                       __fromCanvasComponent: true,
-                                      children: /* @__PURE__ */ _jsx(
-                                        React.Fragment,
-                                        {
-                                          children: /* @__PURE__ */ _jsx(
-                                            motion.h4,
-                                            {
-                                              className:
-                                                'framer-styles-preset-1lh0g4l',
-                                              'data-styles-preset': 'GGhJExkGo',
-                                              children: '$99',
-                                            },
-                                          ),
-                                        },
-                                      ),
+                                      children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                        children: /* @__PURE__ */ _jsx(motion.h4, {
+                                          className: 'framer-styles-preset-1lh0g4l',
+                                          'data-styles-preset': 'GGhJExkGo',
+                                          children: '$99',
+                                        }),
+                                      }),
                                       className: 'framer-1quybxg',
                                       'data-framer-name': 'Price',
                                       fonts: ['Inter'],
@@ -754,206 +696,148 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         /* @__PURE__ */ _jsx(ComponentViewportProvider, {
                           height: 24,
                           width: `calc(${componentViewport?.width || '100vw'} - 50px)`,
-                          y:
-                            (componentViewport?.y || 0) +
-                            5 +
-                            0 +
-                            20 +
-                            0 +
-                            0 +
-                            244.6 +
-                            0 +
-                            0 +
-                            0 +
-                            0,
-                          children: /* @__PURE__ */ _jsx(
-                            SmartComponentScopedContainer,
-                            {
-                              className: 'framer-1sz41x4-container',
-                              layoutDependency,
-                              layoutId: 'CcuNC0_w2-container',
-                              nodeId: 'CcuNC0_w2',
-                              rendersWithMotion: true,
-                              scopeId: 'phelvgUdB',
-                              children: /* @__PURE__ */ _jsx(stdin_default2, {
-                                height: '100%',
-                                id: 'CcuNC0_w2',
-                                iodpfCerq: '0.2% platform fee',
-                                layoutId: 'CcuNC0_w2',
-                                style: {
-                                  width: '100%',
-                                },
-                                variant: 'gSVRLaDmC',
+                          y: (componentViewport?.y || 0) + 5 + 0 + 20 + 0 + 0 + 244.6 + 0 + 0 + 0 + 0,
+                          children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                            className: 'framer-1sz41x4-container',
+                            layoutDependency,
+                            layoutId: 'CcuNC0_w2-container',
+                            nodeId: 'CcuNC0_w2',
+                            rendersWithMotion: true,
+                            scopeId: 'phelvgUdB',
+                            children: /* @__PURE__ */ _jsx(stdin_default2, {
+                              height: '100%',
+                              id: 'CcuNC0_w2',
+                              iodpfCerq: '0.2% platform fee',
+                              layoutId: 'CcuNC0_w2',
+                              style: {
                                 width: '100%',
-                                ...addPropertyOverrides(
-                                  {
-                                    jP1r_QuMF: {
-                                      iodpfCerq:
-                                        '0.2%\u20130.4% management fee',
-                                      variant: 'GH92NKo0U',
-                                    },
-                                    LcAiuOOWL: {
-                                      iodpfCerq:
-                                        '0.2%\u20130.4% management fee',
-                                      variant: 'GH92NKo0U',
-                                    },
+                              },
+                              variant: 'gSVRLaDmC',
+                              width: '100%',
+                              ...addPropertyOverrides(
+                                {
+                                  jP1r_QuMF: {
+                                    iodpfCerq: '0.2%\u20130.4% management fee',
+                                    variant: 'GH92NKo0U',
                                   },
-                                  baseVariant,
-                                  gestureVariant,
-                                ),
-                              }),
-                            },
-                          ),
+                                  LcAiuOOWL: {
+                                    iodpfCerq: '0.2%\u20130.4% management fee',
+                                    variant: 'GH92NKo0U',
+                                  },
+                                },
+                                baseVariant,
+                                gestureVariant,
+                              ),
+                            }),
+                          }),
                         }),
                         /* @__PURE__ */ _jsx(ComponentViewportProvider, {
                           height: 24,
                           width: `calc(${componentViewport?.width || '100vw'} - 50px)`,
-                          y:
-                            (componentViewport?.y || 0) +
-                            5 +
-                            0 +
-                            20 +
-                            0 +
-                            0 +
-                            244.6 +
-                            0 +
-                            0 +
-                            0 +
-                            38,
-                          children: /* @__PURE__ */ _jsx(
-                            SmartComponentScopedContainer,
-                            {
-                              className: 'framer-1edyykr-container',
-                              layoutDependency,
-                              layoutId: 'xmOi0HhyU-container',
-                              nodeId: 'xmOi0HhyU',
-                              rendersWithMotion: true,
-                              scopeId: 'phelvgUdB',
-                              children: /* @__PURE__ */ _jsx(stdin_default2, {
-                                height: '100%',
-                                id: 'xmOi0HhyU',
-                                iodpfCerq: 'Automated data syncing',
-                                layoutId: 'xmOi0HhyU',
-                                style: {
-                                  width: '100%',
-                                },
-                                variant: 'gSVRLaDmC',
+                          y: (componentViewport?.y || 0) + 5 + 0 + 20 + 0 + 0 + 244.6 + 0 + 0 + 0 + 38,
+                          children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                            className: 'framer-1edyykr-container',
+                            layoutDependency,
+                            layoutId: 'xmOi0HhyU-container',
+                            nodeId: 'xmOi0HhyU',
+                            rendersWithMotion: true,
+                            scopeId: 'phelvgUdB',
+                            children: /* @__PURE__ */ _jsx(stdin_default2, {
+                              height: '100%',
+                              id: 'xmOi0HhyU',
+                              iodpfCerq: 'Automated data syncing',
+                              layoutId: 'xmOi0HhyU',
+                              style: {
                                 width: '100%',
-                                ...addPropertyOverrides(
-                                  {
-                                    jP1r_QuMF: {
-                                      iodpfCerq: 'Advanced AI strategies',
-                                    },
-                                    LcAiuOOWL: {
-                                      iodpfCerq: 'Advanced AI strategies',
-                                    },
+                              },
+                              variant: 'gSVRLaDmC',
+                              width: '100%',
+                              ...addPropertyOverrides(
+                                {
+                                  jP1r_QuMF: {
+                                    iodpfCerq: 'Advanced AI strategies',
                                   },
-                                  baseVariant,
-                                  gestureVariant,
-                                ),
-                              }),
-                            },
-                          ),
+                                  LcAiuOOWL: {
+                                    iodpfCerq: 'Advanced AI strategies',
+                                  },
+                                },
+                                baseVariant,
+                                gestureVariant,
+                              ),
+                            }),
+                          }),
                         }),
                         /* @__PURE__ */ _jsx(ComponentViewportProvider, {
                           height: 24,
                           width: `calc(${componentViewport?.width || '100vw'} - 50px)`,
-                          y:
-                            (componentViewport?.y || 0) +
-                            5 +
-                            0 +
-                            20 +
-                            0 +
-                            0 +
-                            244.6 +
-                            0 +
-                            0 +
-                            0 +
-                            76,
-                          children: /* @__PURE__ */ _jsx(
-                            SmartComponentScopedContainer,
-                            {
-                              className: 'framer-1fc3or4-container',
-                              layoutDependency,
-                              layoutId: 'mn0NLZNjo-container',
-                              nodeId: 'mn0NLZNjo',
-                              rendersWithMotion: true,
-                              scopeId: 'phelvgUdB',
-                              children: /* @__PURE__ */ _jsx(stdin_default2, {
-                                height: '100%',
-                                id: 'mn0NLZNjo',
-                                iodpfCerq: 'Real-time analytics dashboard',
-                                layoutId: 'mn0NLZNjo',
-                                style: {
-                                  width: '100%',
-                                },
-                                variant: 'gSVRLaDmC',
+                          y: (componentViewport?.y || 0) + 5 + 0 + 20 + 0 + 0 + 244.6 + 0 + 0 + 0 + 76,
+                          children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                            className: 'framer-1fc3or4-container',
+                            layoutDependency,
+                            layoutId: 'mn0NLZNjo-container',
+                            nodeId: 'mn0NLZNjo',
+                            rendersWithMotion: true,
+                            scopeId: 'phelvgUdB',
+                            children: /* @__PURE__ */ _jsx(stdin_default2, {
+                              height: '100%',
+                              id: 'mn0NLZNjo',
+                              iodpfCerq: 'Real-time analytics dashboard',
+                              layoutId: 'mn0NLZNjo',
+                              style: {
                                 width: '100%',
-                                ...addPropertyOverrides(
-                                  {
-                                    jP1r_QuMF: {
-                                      iodpfCerq: '2.75% cash interest',
-                                    },
-                                    LcAiuOOWL: {
-                                      iodpfCerq: '2.75% cash interest',
-                                    },
+                              },
+                              variant: 'gSVRLaDmC',
+                              width: '100%',
+                              ...addPropertyOverrides(
+                                {
+                                  jP1r_QuMF: {
+                                    iodpfCerq: '2.75% cash interest',
                                   },
-                                  baseVariant,
-                                  gestureVariant,
-                                ),
-                              }),
-                            },
-                          ),
+                                  LcAiuOOWL: {
+                                    iodpfCerq: '2.75% cash interest',
+                                  },
+                                },
+                                baseVariant,
+                                gestureVariant,
+                              ),
+                            }),
+                          }),
                         }),
                         /* @__PURE__ */ _jsx(ComponentViewportProvider, {
                           height: 24,
                           width: `calc(${componentViewport?.width || '100vw'} - 50px)`,
-                          y:
-                            (componentViewport?.y || 0) +
-                            5 +
-                            0 +
-                            20 +
-                            0 +
-                            0 +
-                            244.6 +
-                            0 +
-                            0 +
-                            0 +
-                            114,
-                          children: /* @__PURE__ */ _jsx(
-                            SmartComponentScopedContainer,
-                            {
-                              className: 'framer-j4qo4x-container',
-                              layoutDependency,
-                              layoutId: 'T7twxlc0g-container',
-                              nodeId: 'T7twxlc0g',
-                              rendersWithMotion: true,
-                              scopeId: 'phelvgUdB',
-                              children: /* @__PURE__ */ _jsx(stdin_default2, {
-                                height: '100%',
-                                id: 'T7twxlc0g',
-                                iodpfCerq: 'Priority email support',
-                                layoutId: 'T7twxlc0g',
-                                style: {
-                                  width: '100%',
-                                },
-                                variant: 'gSVRLaDmC',
+                          y: (componentViewport?.y || 0) + 5 + 0 + 20 + 0 + 0 + 244.6 + 0 + 0 + 0 + 114,
+                          children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                            className: 'framer-j4qo4x-container',
+                            layoutDependency,
+                            layoutId: 'T7twxlc0g-container',
+                            nodeId: 'T7twxlc0g',
+                            rendersWithMotion: true,
+                            scopeId: 'phelvgUdB',
+                            children: /* @__PURE__ */ _jsx(stdin_default2, {
+                              height: '100%',
+                              id: 'T7twxlc0g',
+                              iodpfCerq: 'Priority email support',
+                              layoutId: 'T7twxlc0g',
+                              style: {
                                 width: '100%',
-                                ...addPropertyOverrides(
-                                  {
-                                    jP1r_QuMF: {
-                                      iodpfCerq: 'Investment team access',
-                                    },
-                                    LcAiuOOWL: {
-                                      iodpfCerq: 'Investment team access',
-                                    },
+                              },
+                              variant: 'gSVRLaDmC',
+                              width: '100%',
+                              ...addPropertyOverrides(
+                                {
+                                  jP1r_QuMF: {
+                                    iodpfCerq: 'Investment team access',
                                   },
-                                  baseVariant,
-                                  gestureVariant,
-                                ),
-                              }),
-                            },
-                          ),
+                                  LcAiuOOWL: {
+                                    iodpfCerq: 'Investment team access',
+                                  },
+                                },
+                                baseVariant,
+                                gestureVariant,
+                              ),
+                            }),
+                          }),
                         }),
                         isDisplayed2() &&
                           /* @__PURE__ */ _jsx(ComponentViewportProvider, {
@@ -962,61 +846,36 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                 jP1r_QuMF: {
                                   height: 24,
                                   width: `calc(${componentViewport?.width || '100vw'} - 50px)`,
-                                  y:
-                                    (componentViewport?.y || 0) +
-                                    5 +
-                                    0 +
-                                    20 +
-                                    0 +
-                                    0 +
-                                    244.6 +
-                                    0 +
-                                    0 +
-                                    0 +
-                                    152,
+                                  y: (componentViewport?.y || 0) + 5 + 0 + 20 + 0 + 0 + 244.6 + 0 + 0 + 0 + 152,
                                 },
                                 LcAiuOOWL: {
                                   height: 24,
                                   width: `calc(${componentViewport?.width || '100vw'} - 50px)`,
-                                  y:
-                                    (componentViewport?.y || 0) +
-                                    5 +
-                                    0 +
-                                    20 +
-                                    0 +
-                                    0 +
-                                    244.6 +
-                                    0 +
-                                    0 +
-                                    0 +
-                                    152,
+                                  y: (componentViewport?.y || 0) + 5 + 0 + 20 + 0 + 0 + 244.6 + 0 + 0 + 0 + 152,
                                 },
                               },
                               baseVariant,
                               gestureVariant,
                             ),
-                            children: /* @__PURE__ */ _jsx(
-                              SmartComponentScopedContainer,
-                              {
-                                className: 'framer-11nn7kn-container',
-                                layoutDependency,
-                                layoutId: 'JJNycWw9B-container',
-                                nodeId: 'JJNycWw9B',
-                                rendersWithMotion: true,
-                                scopeId: 'phelvgUdB',
-                                children: /* @__PURE__ */ _jsx(stdin_default2, {
-                                  height: '100%',
-                                  id: 'JJNycWw9B',
-                                  iodpfCerq: 'Priority support & onboarding',
-                                  layoutId: 'JJNycWw9B',
-                                  style: {
-                                    width: '100%',
-                                  },
-                                  variant: 'gSVRLaDmC',
+                            children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                              className: 'framer-11nn7kn-container',
+                              layoutDependency,
+                              layoutId: 'JJNycWw9B-container',
+                              nodeId: 'JJNycWw9B',
+                              rendersWithMotion: true,
+                              scopeId: 'phelvgUdB',
+                              children: /* @__PURE__ */ _jsx(stdin_default2, {
+                                height: '100%',
+                                id: 'JJNycWw9B',
+                                iodpfCerq: 'Priority support & onboarding',
+                                layoutId: 'JJNycWw9B',
+                                style: {
                                   width: '100%',
-                                }),
-                              },
-                            ),
+                                },
+                                variant: 'gSVRLaDmC',
+                                width: '100%',
+                              }),
+                            }),
                           }),
                       ],
                     }),
@@ -1075,21 +934,17 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                 layoutId: 'pOswveyUV',
                                 children: /* @__PURE__ */ _jsx(RichText, {
                                   __fromCanvasComponent: true,
-                                  children: /* @__PURE__ */ _jsx(
-                                    React.Fragment,
-                                    {
-                                      children: /* @__PURE__ */ _jsx(motion.p, {
-                                        className:
-                                          'framer-styles-preset-1x4srpb',
-                                        'data-styles-preset': 'WGktsHNSh',
-                                        style: {
-                                          '--framer-text-color':
-                                            'var(--extracted-r6o4lv, var(--token-298b4add-111d-4ff0-82fc-7d5e99a4405b, rgb(204, 61, 0)))',
-                                        },
-                                        children: 'Best value',
-                                      }),
-                                    },
-                                  ),
+                                  children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                    children: /* @__PURE__ */ _jsx(motion.p, {
+                                      className: 'framer-styles-preset-1x4srpb',
+                                      'data-styles-preset': 'WGktsHNSh',
+                                      style: {
+                                        '--framer-text-color':
+                                          'var(--extracted-r6o4lv, var(--token-298b4add-111d-4ff0-82fc-7d5e99a4405b, rgb(204, 61, 0)))',
+                                      },
+                                      children: 'Best value',
+                                    }),
+                                  }),
                                   className: 'framer-137lvl7',
                                   'data-framer-name': 'Heading',
                                   fonts: ['Inter'],
@@ -1126,20 +981,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   children: [
                                     /* @__PURE__ */ _jsx(RichText, {
                                       __fromCanvasComponent: true,
-                                      children: /* @__PURE__ */ _jsx(
-                                        React.Fragment,
-                                        {
-                                          children: /* @__PURE__ */ _jsx(
-                                            motion.h4,
-                                            {
-                                              className:
-                                                'framer-styles-preset-1lh0g4l',
-                                              'data-styles-preset': 'GGhJExkGo',
-                                              children: '$99',
-                                            },
-                                          ),
-                                        },
-                                      ),
+                                      children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                        children: /* @__PURE__ */ _jsx(motion.h4, {
+                                          className: 'framer-styles-preset-1lh0g4l',
+                                          'data-styles-preset': 'GGhJExkGo',
+                                          children: '$99',
+                                        }),
+                                      }),
                                       className: 'framer-tvt5fl',
                                       'data-framer-name': 'Price',
                                       fonts: ['Inter'],
@@ -1166,20 +1014,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               isDisplayed2() &&
                                 /* @__PURE__ */ _jsx(RichText, {
                                   __fromCanvasComponent: true,
-                                  children: /* @__PURE__ */ _jsx(
-                                    React.Fragment,
-                                    {
-                                      children: /* @__PURE__ */ _jsx(
-                                        motion.h2,
-                                        {
-                                          className:
-                                            'framer-styles-preset-163xgy6',
-                                          'data-styles-preset': 'EEpMe6lZZ',
-                                          children: '$99',
-                                        },
-                                      ),
-                                    },
-                                  ),
+                                  children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                    children: /* @__PURE__ */ _jsx(motion.h2, {
+                                      className: 'framer-styles-preset-163xgy6',
+                                      'data-styles-preset': 'EEpMe6lZZ',
+                                      children: '$99',
+                                    }),
+                                  }),
                                   className: 'framer-1jsm3st',
                                   'data-framer-name': 'Price',
                                   fonts: ['Inter'],
@@ -1351,12 +1192,7 @@ FramerphelvgUdB.defaultProps = { height: 483, width: 370 }
 addPropertyControls(FramerphelvgUdB, {
   variant: {
     options: ['YwPwI4IFu', 'LcAiuOOWL', 'oDvSBxhMF', 'jP1r_QuMF'],
-    optionTitles: [
-      'Core Plan - monthly',
-      'Vision Plan - monthly',
-      'Core Plan - annually',
-      'Vision Plan - annually',
-    ],
+    optionTitles: ['Core Plan - monthly', 'Vision Plan - monthly', 'Core Plan - annually', 'Vision Plan - annually'],
     title: 'Variant',
     type: ControlType.Enum,
   },
@@ -1402,8 +1238,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

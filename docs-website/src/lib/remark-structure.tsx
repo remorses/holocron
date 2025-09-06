@@ -1,11 +1,7 @@
 import { StructureOptions } from 'fumadocs-core/mdx-plugins/remark-structure'
 import Slugger from 'github-slugger'
 import type { Nodes, Root, RootContent, Content } from 'mdast'
-import type {
-  MdxJsxAttribute,
-  MdxJsxExpressionAttribute,
-  MdxJsxFlowElement,
-} from 'mdast-util-mdx-jsx'
+import type { MdxJsxAttribute, MdxJsxExpressionAttribute, MdxJsxFlowElement } from 'mdast-util-mdx-jsx'
 import type { Processor, Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
 
@@ -46,17 +42,13 @@ export function flattenNode(node: any): string {
 
   // Handle links - include href for context along with child text
   if (node.type === 'link' && node.url) {
-    const childText = node.children
-      ? node.children.map((child: any) => flattenNode(child)).join('')
-      : ''
+    const childText = node.children ? node.children.map((child: any) => flattenNode(child)).join('') : ''
     return `${childText} ${node.url}`.trim()
   }
 
   // Handle link references - include identifier for context
   if (node.type === 'linkReference' && node.identifier) {
-    const childText = node.children
-      ? node.children.map((child: any) => flattenNode(child)).join('')
-      : ''
+    const childText = node.children ? node.children.map((child: any) => flattenNode(child)).join('') : ''
     return `${childText} ${node.identifier}`.trim()
   }
 
@@ -119,13 +111,7 @@ export function flattenNode(node: any): string {
 export function remarkStructure(
   this: Processor,
   {
-    types = [
-      'heading',
-      'paragraph',
-      'blockquote',
-      'tableCell',
-      'mdxJsxFlowElement',
-    ],
+    types = ['heading', 'paragraph', 'blockquote', 'tableCell', 'mdxJsxFlowElement'],
     allowedMdxAttributes = (node) => {
       if (!node.name) return false
 
@@ -135,8 +121,7 @@ export function remarkStructure(
 ): Transformer<Root, Root> {
   if (Array.isArray(allowedMdxAttributes)) {
     const arr = allowedMdxAttributes
-    allowedMdxAttributes = (_node, attribute) =>
-      attribute.type === 'mdxJsxAttribute' && arr.includes(attribute.name)
+    allowedMdxAttributes = (_node, attribute) => attribute.type === 'mdxJsxAttribute' && arr.includes(attribute.name)
   }
 
   if (Array.isArray(types)) {
@@ -201,23 +186,13 @@ export function remarkStructure(
       if (element.type === 'mdxJsxFlowElement' && element.name) {
         data.contents.push(
           ...element.attributes.flatMap((attribute) => {
-            const value =
-              typeof attribute.value === 'string'
-                ? attribute.value
-                : attribute.value?.value
+            const value = typeof attribute.value === 'string' ? attribute.value : attribute.value?.value
             if (!value || value.length === 0) return []
-            if (
-              allowedMdxAttributes &&
-              !allowedMdxAttributes(element, attribute)
-            )
-              return []
+            if (allowedMdxAttributes && !allowedMdxAttributes(element, attribute)) return []
 
             return {
               heading: lastHeading,
-              content:
-                attribute.type === 'mdxJsxAttribute'
-                  ? `${attribute.name}: ${value}`
-                  : value,
+              content: attribute.type === 'mdxJsxAttribute' ? `${attribute.name}: ${value}` : value,
               line: element.position?.start?.line,
             }
           }),

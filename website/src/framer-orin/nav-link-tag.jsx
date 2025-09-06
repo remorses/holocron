@@ -10,11 +10,7 @@ import {
   fonts as fonts3,
   stdin_default,
 } from './chunks/chunk-RB4I7FZC.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-4FCC2HBB.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-4FCC2HBB.js'
 import { className, css, fonts } from './chunks/chunk-OUEV7UWA.js'
 
 // virtual:nav-link-tag
@@ -22,11 +18,7 @@ import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/7ZpeFLhdzpNKWdTs02hp/6JXcYZKxK1BdIrlSdr97/xN9fPUCLr.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -59,9 +51,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -87,11 +77,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -103,8 +89,7 @@ var getProps = ({ height, id, jobsCount, label, width, ...props }) => {
   return {
     ...props,
     szddn_HYc: jobsCount ?? props.szddn_HYc,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'By6YV2LCZ',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'By6YV2LCZ',
     xaZ_KKZMG: label ?? props.xaZ_KKZMG ?? 'NEW',
   }
 }
@@ -158,12 +143,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-xabskk',
-              className4,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-xabskk', className4, classNames)}
             data-framer-name={'Default'}
             layoutDependency={layoutDependency}
             layoutId={'By6YV2LCZ'}
@@ -178,8 +158,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             }}
             variants={{
               BhZiciee_: {
-                backgroundColor:
-                  'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                backgroundColor: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
               },
               uRGLXyHq_: {
                 backgroundColor: 'rgba(0, 0, 0, 0)',
@@ -208,8 +187,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               layoutDependency={layoutDependency}
               layoutId={'n6hhNro_s'}
               style={{
-                backgroundColor:
-                  'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                backgroundColor: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                 opacity: 0.1,
               }}
             />
@@ -278,9 +256,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     ljOVMfd7CmxeRHLioC2 ??= ''
                                     tittXOToGmxeRHLioC2 ??= ''
                                     return (
-                                      <LayoutGroup
-                                        id={`mxeRHLioC-${idmxeRHLioC2}`}
-                                      >
+                                      <LayoutGroup id={`mxeRHLioC-${idmxeRHLioC2}`}>
                                         <PathVariablesContext.Provider
                                           value={{
                                             ljOVMfd7C: ljOVMfd7CmxeRHLioC2,
@@ -298,12 +274,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                             scopeId={'xN9fPUCLr'}
                                           >
                                             <motion.a
-                                              className={
-                                                'framer-1gdm1ey framer-10u6ba4'
-                                              }
-                                              layoutDependency={
-                                                layoutDependency
-                                              }
+                                              className={'framer-1gdm1ey framer-10u6ba4'}
+                                              layoutDependency={layoutDependency}
                                               layoutId={'LxTdgJsEt'}
                                             >
                                               <RichText
@@ -311,9 +283,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                 className={'framer-17twrpx'}
                                                 data-framer-name={'Role'}
                                                 fonts={['Inter']}
-                                                layoutDependency={
-                                                  layoutDependency
-                                                }
+                                                layoutDependency={layoutDependency}
                                                 layoutId={'xksCo6_j5'}
                                                 text={tittXOToGmxeRHLioC2}
                                                 verticalAlignment={'top'}
@@ -321,12 +291,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               >
                                                 <React.Fragment>
                                                   <motion.p
-                                                    className={
-                                                      'framer-styles-preset-2pjocb'
-                                                    }
-                                                    data-styles-preset={
-                                                      'Dkr92TfXs'
-                                                    }
+                                                    className={'framer-styles-preset-2pjocb'}
+                                                    data-styles-preset={'Dkr92TfXs'}
                                                   >
                                                     {'Marketing Lead'}
                                                   </motion.p>
@@ -354,9 +320,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       letterSpacing: '0em',
                       lineHeight: '1.6em',
                     }}
-                    fontColor={
-                      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))'
-                    }
+                    fontColor={'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))'}
                     height={'100%'}
                     id={'D_Eo1DOLa'}
                     layoutId={'D_Eo1DOLa'}
@@ -366,8 +330,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     {...addPropertyOverrides(
                       {
                         BhZiciee_: {
-                          fontColor:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          fontColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                         },
                         uRGLXyHq_: {
                           font: {
@@ -395,16 +358,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'KJ0vou17m'}
                 style={{
-                  '--extracted-r6o4lv':
-                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                  '--extracted-r6o4lv': 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                   '--framer-link-text-color': 'rgb(0, 153, 255)',
                   '--framer-link-text-decoration': 'underline',
                 }}
                 text={xaZ_KKZMG}
                 variants={{
                   BhZiciee_: {
-                    '--extracted-r6o4lv':
-                      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                    '--extracted-r6o4lv': 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                   },
                 }}
                 verticalAlignment={'top'}
@@ -470,8 +431,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               layoutId={'KqQXSqQpu'}
               style={{
                 '--border-bottom-width': '1px',
-                '--border-color':
-                  'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                '--border-color': 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                 '--border-left-width': '1px',
                 '--border-right-width': '1px',
                 '--border-style': 'solid',
@@ -535,8 +495,7 @@ addPropertyControls(FramerxN9fPUCLr, {
   },
   szddn_HYc: {
     defaultValue: false,
-    description:
-      'Set to "yes" if you want to show the number of available jobs. (Used on the Careers link)',
+    description: 'Set to "yes" if you want to show the number of available jobs. (Used on the Careers link)',
     title: 'Jobs Count',
     type: ControlType.Boolean,
   },
@@ -558,8 +517,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -677,17 +635,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -735,9 +687,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

@@ -5,11 +5,7 @@
 import { jsx as _jsx2 } from 'react/jsx-runtime'
 import * as React2 from 'react'
 import { useState, useEffect, useRef } from 'react'
-import {
-  addPropertyControls,
-  ControlType as ControlType2,
-  RenderTarget,
-} from 'unframer'
+import { addPropertyControls, ControlType as ControlType2, RenderTarget } from 'unframer'
 import { motion } from 'unframer'
 
 // /:https://framer.com/m/framer/icon-nullstate.js@0.7.0
@@ -109,11 +105,7 @@ var Icon = (React3) => {
       ],
     ])
     IconInner = React3.forwardRef((props, ref) =>
-      /* @__PURE__ */ React3.createElement(
-        'g',
-        { ref, ...props },
-        Component.get(props.weight),
-      ),
+      /* @__PURE__ */ React3.createElement('g', { ref, ...props }, Component.get(props.weight)),
     )
   }
   return IconInner
@@ -130,28 +122,15 @@ var defaultEvents = {
   onMouseEnter: { type: ControlType.EventHandler },
   onMouseLeave: { type: ControlType.EventHandler },
 }
-var findByArray = (arr, search) =>
-  arr.find((a) => a.toLowerCase().includes(search))
-function useIconSelection(
-  iconKeys2,
-  selectByList,
-  iconSearch = '',
-  iconSelection,
-  lowercaseIconKeyPairs2,
-) {
+var findByArray = (arr, search) => arr.find((a) => a.toLowerCase().includes(search))
+function useIconSelection(iconKeys2, selectByList, iconSearch = '', iconSelection, lowercaseIconKeyPairs2) {
   const iconSearchResult = useMemo(() => {
-    if (
-      iconSearch == null ||
-      (iconSearch === null || iconSearch === void 0
-        ? void 0
-        : iconSearch.length) === 0
-    )
+    if (iconSearch == null || (iconSearch === null || iconSearch === void 0 ? void 0 : iconSearch.length) === 0)
       return null
     const iconSearchTerm = iconSearch.toLowerCase().replace(/-|\s/g, '')
     var _iconSearchTerm
     const searchResult =
-      (_iconSearchTerm = lowercaseIconKeyPairs2[iconSearchTerm]) !== null &&
-      _iconSearchTerm !== void 0
+      (_iconSearchTerm = lowercaseIconKeyPairs2[iconSearchTerm]) !== null && _iconSearchTerm !== void 0
         ? _iconSearchTerm
         : findByArray(iconKeys2, iconSearchTerm)
     return searchResult
@@ -1678,16 +1657,8 @@ function Icon2(props) {
     mirrored,
   } = props
   const isMounted = useRef(false)
-  const iconKey = useIconSelection(
-    iconKeys,
-    selectByList,
-    iconSearch,
-    iconSelection,
-    lowercaseIconKeyPairs,
-  )
-  const [SelectedIcon, setSelectedIcon] = useState(
-    iconKey === 'Home' ? House_default(React2) : null,
-  )
+  const iconKey = useIconSelection(iconKeys, selectByList, iconSearch, iconSelection, lowercaseIconKeyPairs)
+  const [SelectedIcon, setSelectedIcon] = useState(iconKey === 'Home' ? House_default(React2) : null)
   async function importModule() {
     try {
       const version = '0.0.57'
@@ -1767,8 +1738,7 @@ addPropertyControls(Icon2, {
     defaultValue: Icon2.defaultProps.iconSelection,
     title: 'Name',
     hidden: ({ selectByList }) => !selectByList,
-    description:
-      'Find every icon name on the [Phosphor site](https://phosphoricons.com/)',
+    description: 'Find every icon name on the [Phosphor site](https://phosphoricons.com/)',
   },
   iconSearch: {
     type: ControlType2.String,
@@ -1784,9 +1754,7 @@ addPropertyControls(Icon2, {
   weight: {
     type: ControlType2.Enum,
     title: 'Weight',
-    optionTitles: weightOptions.map(
-      (piece) => piece.charAt(0).toUpperCase() + piece.slice(1),
-    ),
+    optionTitles: weightOptions.map((piece) => piece.charAt(0).toUpperCase() + piece.slice(1)),
     options: weightOptions,
     defaultValue: Icon2.defaultProps.weight,
   },

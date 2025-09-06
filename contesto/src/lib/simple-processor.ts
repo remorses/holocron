@@ -7,10 +7,7 @@ import stringify from 'remark-stringify'
 import remarkMdx from 'remark-mdx'
 import { memoize } from './utils.js'
 
-export const simplerProcessor = remark()
-  .use(remarkGfm)
-  .use(remarkMdx)
-  .use(stringify) as any as Processor
+export const simplerProcessor = remark().use(remarkGfm).use(remarkMdx).use(stringify) as any as Processor
 
 type ProcessorData = { ast: any }
 

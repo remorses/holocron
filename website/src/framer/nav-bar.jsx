@@ -23,17 +23,9 @@
 }} Props
 
  */
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-QAV64ZEM.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-QAV64ZEM.js'
 import { stdin_default as stdin_default2 } from './chunks/chunk-FWELEOPG.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunks/chunk-M65DCHB6.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunks/chunk-M65DCHB6.js'
 import { stdin_default } from './chunks/chunk-IETFVNRG.js'
 import './chunks/chunk-BTSBQWPZ.js'
 import { className, css, fonts } from './chunks/chunk-EWWPQ2JC.js'
@@ -64,11 +56,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 
@@ -111,11 +99,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var getProps = ({ height, id, width, ...props }) => {
@@ -133,13 +117,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className4,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className4, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -166,12 +144,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-j724qj',
-              className4,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-j724qj', className4, classNames)}
             data-framer-name={'Variant 1'}
             layoutDependency={layoutDependency}
             layoutId={'chDyeH5Qc'}
@@ -182,10 +155,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           >
             <ComponentViewportProvider
               height={19}
-              y={
-                (componentViewport?.y || 0) +
-                (0 + ((componentViewport?.height || 21) - 0 - 19) / 2)
-              }
+              y={(componentViewport?.y || 0) + (0 + ((componentViewport?.height || 21) - 0 - 19) / 2)}
             >
               <SmartComponentScopedContainer
                 className={'framer-v7q3dv-container'}
@@ -217,10 +187,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               withExternalLayout={true}
             >
               <React.Fragment>
-                <motion.p
-                  className={'framer-styles-preset-b7mi5l'}
-                  data-styles-preset={'cq4N7Obrm'}
-                >
+                <motion.p className={'framer-styles-preset-b7mi5l'} data-styles-preset={'cq4N7Obrm'}>
                   {'Holocron'}
                 </motion.p>
               </React.Fragment>
@@ -256,8 +223,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -325,13 +291,7 @@ addFonts(
 // /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/Ny7mCXIE4KbbQbX3eNXd/XmsKfRWHg.js
 var LogoFonts = getFonts2(stdin_default3)
 var ComponentButtonFonts = getFonts2(stdin_default)
-var cycleOrder = [
-  'c6mQiEUZR',
-  'oVqk5DKpt',
-  'ypBE0GADG',
-  'lTFPk57AC',
-  'FSWJCj0iy',
-]
+var cycleOrder = ['c6mQiEUZR', 'oVqk5DKpt', 'ypBE0GADG', 'lTFPk57AC', 'FSWJCj0iy']
 var serializationHash2 = 'framer-hQg3C'
 var variantClassNames2 = {
   c6mQiEUZR: 'framer-v-1d9x1ba',
@@ -342,9 +302,7 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = {
@@ -374,11 +332,7 @@ var Transition2 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext2.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext2.Provider>
-  )
+  return <MotionConfigContext2.Provider value={contextValue}>{children}</MotionConfigContext2.Provider>
 }
 var Variants2 = motion2.create(React2.Fragment)
 var humanReadableVariantMap = {
@@ -391,8 +345,7 @@ var humanReadableVariantMap = {
 var getProps2 = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'c6mQiEUZR',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'c6mQiEUZR',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -405,13 +358,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo2()
   const componentViewport = useComponentViewport2()
-  const {
-    style,
-    className: className4,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps2(props)
+  const { style, className: className4, layoutId, variant, ...restProps } = getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -452,10 +399,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const sharedStyleClassNames = [className, className3]
   const scopingClassNames = cx2(serializationHash2, ...sharedStyleClassNames)
   const isDisplayed = () => {
-    if (
-      ['oVqk5DKpt', 'ypBE0GADG', 'lTFPk57AC', 'FSWJCj0iy'].includes(baseVariant)
-    )
-      return true
+    if (['oVqk5DKpt', 'ypBE0GADG', 'lTFPk57AC', 'FSWJCj0iy'].includes(baseVariant)) return true
     return false
   }
   const isDisplayed1 = () => {
@@ -494,12 +438,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
           <motion2.nav
             {...restProps}
             {...gestureHandlers}
-            className={cx2(
-              scopingClassNames,
-              'framer-1d9x1ba',
-              className4,
-              classNames,
-            )}
+            className={cx2(scopingClassNames, 'framer-1d9x1ba', className4, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'c6mQiEUZR'}
@@ -514,8 +453,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
             variants={{
               FSWJCj0iy: {
                 backdropFilter: 'blur(5px)',
-                background:
-                  'linear-gradient(180deg, rgb(0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)',
+                background: 'linear-gradient(180deg, rgb(0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)',
                 WebkitBackdropFilter: 'blur(5px)',
               },
               lTFPk57AC: {
@@ -524,8 +462,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
               },
               ypBE0GADG: {
                 backdropFilter: 'blur(5px)',
-                background:
-                  'linear-gradient(180deg, rgb(0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)',
+                background: 'linear-gradient(180deg, rgb(0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)',
                 WebkitBackdropFilter: 'blur(5px)',
               },
             }}
@@ -604,11 +541,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                           FSWJCj0iy: {
                             y:
                               (componentViewport?.y || 0) +
-                              (18 +
-                                ((componentViewport?.height || 200) -
-                                  36 -
-                                  249.4) /
-                                  2) +
+                              (18 + ((componentViewport?.height || 200) - 36 - 249.4) / 2) +
                               0 +
                               0 +
                               4 +
@@ -617,9 +550,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                           lTFPk57AC: {
                             y:
                               (componentViewport?.y || 0) +
-                              (18 +
-                                ((componentViewport?.height || 200) - 36 - 29) /
-                                  2) +
+                              (18 + ((componentViewport?.height || 200) - 36 - 29) / 2) +
                               0 +
                               4 +
                               0,
@@ -627,9 +558,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                           oVqk5DKpt: {
                             y:
                               (componentViewport?.y || 0) +
-                              (0 +
-                                ((componentViewport?.height || 70) - 0 - 34) /
-                                  2) +
+                              (0 + ((componentViewport?.height || 70) - 0 - 34) / 2) +
                               0 +
                               6.5 +
                               0,
@@ -637,11 +566,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                           ypBE0GADG: {
                             y:
                               (componentViewport?.y || 0) +
-                              (18 +
-                                ((componentViewport?.height || 304) -
-                                  36 -
-                                  254.4) /
-                                  2) +
+                              (18 + ((componentViewport?.height || 304) - 36 - 254.4) / 2) +
                               0 +
                               0 +
                               6.5 +
@@ -703,8 +628,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                         layoutDependency={layoutDependency}
                         layoutId={'Sum7UAgQW'}
                         style={{
-                          backgroundColor:
-                            'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                          backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                           borderBottomLeftRadius: 2,
                           borderBottomRightRadius: 2,
                           borderTopLeftRadius: 2,
@@ -717,8 +641,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       layoutDependency={layoutDependency}
                       layoutId={'xuvtMdSO2'}
                       style={{
-                        backgroundColor:
-                          'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                        backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                         borderBottomLeftRadius: 2,
                         borderBottomRightRadius: 2,
                         borderTopLeftRadius: 2,
@@ -742,8 +665,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       layoutDependency={layoutDependency}
                       layoutId={'krrURf65f'}
                       style={{
-                        backgroundColor:
-                          'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
+                        backgroundColor: 'var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))',
                         borderBottomLeftRadius: 2,
                         borderBottomRightRadius: 2,
                         borderTopLeftRadius: 2,
@@ -863,10 +785,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       )}
                     >
                       <React2.Fragment>
-                        <motion2.p
-                          className={'framer-styles-preset-1x4srpb'}
-                          data-styles-preset={'WGktsHNSh'}
-                        >
+                        <motion2.p className={'framer-styles-preset-1x4srpb'} data-styles-preset={'WGktsHNSh'}>
                           <Link
                             href={{
                               webPageId: 'p4p9Y1lWb',
@@ -878,10 +797,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                             scopeId={'XmsKfRWHg'}
                             smoothScroll={false}
                           >
-                            <motion2.a
-                              className={'framer-styles-preset-1i37dfc'}
-                              data-styles-preset={'uT5gCl_8P'}
-                            >
+                            <motion2.a className={'framer-styles-preset-1i37dfc'} data-styles-preset={'uT5gCl_8P'}>
                               {'Dashboard'}
                             </motion2.a>
                           </Link>
@@ -974,10 +890,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       )}
                     >
                       <React2.Fragment>
-                        <motion2.h6
-                          className={'framer-styles-preset-1x4srpb'}
-                          data-styles-preset={'WGktsHNSh'}
-                        >
+                        <motion2.h6 className={'framer-styles-preset-1x4srpb'} data-styles-preset={'WGktsHNSh'}>
                           <Link
                             href={{
                               webPageId: 'ePrr9Htzz',
@@ -990,10 +903,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                             scopeId={'XmsKfRWHg'}
                             smoothScroll={true}
                           >
-                            <motion2.a
-                              className={'framer-styles-preset-1i37dfc'}
-                              data-styles-preset={'uT5gCl_8P'}
-                            >
+                            <motion2.a className={'framer-styles-preset-1i37dfc'} data-styles-preset={'uT5gCl_8P'}>
                               {'Documentation'}
                             </motion2.a>
                           </Link>
@@ -1086,10 +996,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                       )}
                     >
                       <React2.Fragment>
-                        <motion2.p
-                          className={'framer-styles-preset-1x4srpb'}
-                          data-styles-preset={'WGktsHNSh'}
-                        >
+                        <motion2.p className={'framer-styles-preset-1x4srpb'} data-styles-preset={'WGktsHNSh'}>
                           <Link
                             href={{
                               hash: ':rmeeJSz78',
@@ -1102,10 +1009,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                             scopeId={'XmsKfRWHg'}
                             smoothScroll={true}
                           >
-                            <motion2.a
-                              className={'framer-styles-preset-1i37dfc'}
-                              data-styles-preset={'uT5gCl_8P'}
-                            >
+                            <motion2.a className={'framer-styles-preset-1i37dfc'} data-styles-preset={'uT5gCl_8P'}>
                               {'FAQ'}
                             </motion2.a>
                           </Link>
@@ -1141,22 +1045,14 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   {(resolvedLinks) => (
                     <ComponentViewportProvider2
                       height={40}
-                      y={
-                        (componentViewport?.y || 0) +
-                        (0 + ((componentViewport?.height || 70) - 0 - 40) / 2) +
-                        0
-                      }
+                      y={(componentViewport?.y || 0) + (0 + ((componentViewport?.height || 70) - 0 - 40) / 2) + 0}
                       {...addPropertyOverrides(
                         {
                           FSWJCj0iy: {
                             width: `max(${componentViewport?.width || '100vw'} - 40px, 1px)`,
                             y:
                               (componentViewport?.y || 0) +
-                              (18 +
-                                ((componentViewport?.height || 200) -
-                                  36 -
-                                  249.4) /
-                                  2) +
+                              (18 + ((componentViewport?.height || 200) - 36 - 249.4) / 2) +
                               0 +
                               209.4,
                           },
@@ -1164,11 +1060,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                             width: `max(${componentViewport?.width || '100vw'} - 80px, 1px)`,
                             y:
                               (componentViewport?.y || 0) +
-                              (18 +
-                                ((componentViewport?.height || 304) -
-                                  36 -
-                                  254.4) /
-                                  2) +
+                              (18 + ((componentViewport?.height || 304) - 36 - 254.4) / 2) +
                               0 +
                               214.4,
                           },
@@ -1273,13 +1165,7 @@ FramerXmsKfRWHg.defaultProps = {
 addPropertyControls(FramerXmsKfRWHg, {
   variant: {
     options: ['c6mQiEUZR', 'oVqk5DKpt', 'ypBE0GADG', 'lTFPk57AC', 'FSWJCj0iy'],
-    optionTitles: [
-      'Desktop',
-      'Tablet - Close',
-      'Tablet - Open',
-      'Phone -Close',
-      'Phone - Open',
-    ],
+    optionTitles: ['Desktop', 'Tablet - Close', 'Tablet - Open', 'Phone -Close', 'Phone - Open'],
     title: 'Variant',
     type: ControlType.Enum,
   },
@@ -1294,8 +1180,7 @@ addFonts2(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -1376,9 +1261,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -1409,17 +1292,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default4}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default4} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

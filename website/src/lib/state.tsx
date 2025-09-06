@@ -16,8 +16,9 @@ export type State = {
   isChatGenerating?: boolean
 }
 
-export const [WebsiteStateProvider, useWebsiteState] =
-  createZustandContext<State>((initial) => create((set) => ({ ...initial })))
+export const [WebsiteStateProvider, useWebsiteState] = createZustandContext<State>((initial) =>
+  create((set) => ({ ...initial })),
+)
 
 if (typeof window !== 'undefined') {
   window['useWebsiteState'] = useWebsiteState
@@ -77,11 +78,10 @@ export function useFilesInDraftAutoSave(chatId: string | undefined) {
           savingRef.current = true
           try {
             const currentFilesInDraft = useWebsiteState.getState().filesInDraft
-            const { data, error } =
-              await apiClient.api.updateChatFilesInDraft.post({
-                chatId,
-                filesInDraft: currentFilesInDraft,
-              })
+            const { data, error } = await apiClient.api.updateChatFilesInDraft.post({
+              chatId,
+              filesInDraft: currentFilesInDraft,
+            })
 
             if (error) {
               console.error('Failed to auto-save filesInDraft:', error)

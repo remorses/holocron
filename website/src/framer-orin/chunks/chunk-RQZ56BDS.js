@@ -8,13 +8,7 @@ import { useInView } from 'unframer'
 
 // /:https://framerusercontent.com/modules/tinL9yUCRdYMMSkYrF00/5r5kMzvOdzXsRZCqA5qG/Bundle.js
 import * as e from 'react'
-import {
-  forwardRef as t,
-  useState as n,
-  useRef as i,
-  useEffect as r,
-  memo as o,
-} from 'react'
+import { forwardRef as t, useState as n, useRef as i, useEffect as r, memo as o } from 'react'
 import { jsx as a } from 'react/jsx-runtime'
 var __unframerNavigator = typeof window !== 'undefined' ? navigator : void 0
 function _define_property(obj, key, value) {
@@ -53,11 +47,7 @@ var s = class {
       'isSafari',
       (function () {
         const e3 = __unframerNavigator.userAgent.toLowerCase()
-        return (
-          e3.includes('safari') &&
-          !e3.includes('chrome') &&
-          !e3.includes('android')
-        )
+        return e3.includes('safari') && !e3.includes('chrome') && !e3.includes('android')
       })(),
     )
     _define_property(this, 'initProgram', () => {
@@ -73,16 +63,8 @@ var s = class {
           e4.linkProgram(o3),
           !e4.getProgramParameter(o3, e4.LINK_STATUS))
         )
-          return (
-            e4.deleteProgram(o3), e4.deleteShader(i3), e4.deleteShader(r3), null
-          )
-        return (
-          e4.detachShader(o3, i3),
-          e4.detachShader(o3, r3),
-          e4.deleteShader(i3),
-          e4.deleteShader(r3),
-          o3
-        )
+          return e4.deleteProgram(o3), e4.deleteShader(i3), e4.deleteShader(r3), null
+        return e4.detachShader(o3, i3), e4.detachShader(o3, r3), e4.deleteShader(i3), e4.deleteShader(r3), o3
       })(this.gl, l, this.fragmentShader)
       e3 && (this.program = e3)
     })
@@ -105,10 +87,7 @@ var s = class {
         u_resolution: this.gl.getUniformLocation(this.program, 'u_resolution'),
       }
       Object.entries(this.providedUniforms).forEach(([t3, n3]) => {
-        if (
-          ((e3[t3] = this.gl.getUniformLocation(this.program, t3)),
-          n3 instanceof HTMLImageElement)
-        ) {
+        if (((e3[t3] = this.gl.getUniformLocation(this.program, t3)), n3 instanceof HTMLImageElement)) {
           const n4 = `${t3}_aspect_ratio`
           e3[n4] = this.gl.getUniformLocation(this.program, n4)
         }
@@ -122,19 +101,13 @@ var s = class {
     _define_property(this, 'setupResizeObserver', () => {
       ;(this.resizeObserver = new ResizeObserver(([e4]) => {
         e4?.borderBoxSize[0] &&
-          ((this.parentWidth = e4.borderBoxSize[0].inlineSize),
-          (this.parentHeight = e4.borderBoxSize[0].blockSize)),
+          ((this.parentWidth = e4.borderBoxSize[0].inlineSize), (this.parentHeight = e4.borderBoxSize[0].blockSize)),
           this.handleResize()
       })),
         this.resizeObserver.observe(this.parentElement),
-        visualViewport?.addEventListener(
-          'resize',
-          this.handleVisualViewportChange,
-        )
+        visualViewport?.addEventListener('resize', this.handleVisualViewportChange)
       const e3 = this.parentElement.getBoundingClientRect()
-      ;(this.parentWidth = e3.width),
-        (this.parentHeight = e3.height),
-        this.handleResize()
+      ;(this.parentWidth = e3.width), (this.parentHeight = e3.height), this.handleResize()
     })
     _define_property(this, 'resizeRafId', null)
     _define_property(this, 'handleVisualViewportChange', () => {
@@ -148,9 +121,7 @@ var s = class {
     _define_property(this, 'handleResize', () => {
       null !== this.resizeRafId && cancelAnimationFrame(this.resizeRafId)
       const e3 = visualViewport?.scale ?? 1,
-        t3 = visualViewport
-          ? visualViewport.width * visualViewport.scale
-          : window.innerWidth,
+        t3 = visualViewport ? visualViewport.width * visualViewport.scale : window.innerWidth,
         n3 = Math.round((1e4 * window.outerWidth) / t3) / 1e4,
         i3 = this.isSafari ? devicePixelRatio : devicePixelRatio / n3,
         r3 = Math.max(i3, this.minPixelRatio) * n3 * e3,
@@ -160,9 +131,7 @@ var s = class {
         l2 = r3 * Math.min(1, s3),
         c2 = Math.round(this.parentWidth * l2),
         u2 = Math.round(this.parentHeight * l2)
-      ;(this.canvasElement.width === c2 &&
-        this.canvasElement.height === u2 &&
-        this.renderScale === l2) ||
+      ;(this.canvasElement.width === c2 && this.canvasElement.height === u2 && this.renderScale === l2) ||
         ((this.renderScale = l2),
         (this.canvasElement.width = c2),
         (this.canvasElement.height = u2),
@@ -178,65 +147,29 @@ var s = class {
         0 !== this.speed && (this.totalFrameTime += t3 * this.speed),
         this.gl.clear(this.gl.COLOR_BUFFER_BIT),
         this.gl.useProgram(this.program),
-        this.gl.uniform1f(
-          this.uniformLocations.u_time,
-          1e-3 * this.totalFrameTime,
-        ),
+        this.gl.uniform1f(this.uniformLocations.u_time, 1e-3 * this.totalFrameTime),
         this.resolutionChanged &&
-          (this.gl.uniform2f(
-            this.uniformLocations.u_resolution,
-            this.gl.canvas.width,
-            this.gl.canvas.height,
-          ),
-          this.gl.uniform1f(
-            this.uniformLocations.u_pixelRatio,
-            this.renderScale,
-          ),
+          (this.gl.uniform2f(this.uniformLocations.u_resolution, this.gl.canvas.width, this.gl.canvas.height),
+          this.gl.uniform1f(this.uniformLocations.u_pixelRatio, this.renderScale),
           (this.resolutionChanged = false)),
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6),
         0 !== this.speed ? this.requestRender() : (this.rafId = null)
     })
     _define_property(this, 'requestRender', () => {
-      null !== this.rafId && cancelAnimationFrame(this.rafId),
-        (this.rafId = requestAnimationFrame(this.render))
+      null !== this.rafId && cancelAnimationFrame(this.rafId), (this.rafId = requestAnimationFrame(this.render))
     })
     _define_property(this, 'setTextureUniform', (e3, t3) => {
       if (!t3.complete || 0 === t3.naturalWidth)
-        throw new Error(
-          `Paper Shaders: image for uniform ${e3} must be fully loaded`,
-        )
+        throw new Error(`Paper Shaders: image for uniform ${e3} must be fully loaded`)
       const n3 = this.textures.get(e3)
       n3 && this.gl.deleteTexture(n3)
       const i3 = this.gl.createTexture()
       this.gl.bindTexture(this.gl.TEXTURE_2D, i3),
-        this.gl.texParameteri(
-          this.gl.TEXTURE_2D,
-          this.gl.TEXTURE_WRAP_S,
-          this.gl.REPEAT,
-        ),
-        this.gl.texParameteri(
-          this.gl.TEXTURE_2D,
-          this.gl.TEXTURE_WRAP_T,
-          this.gl.REPEAT,
-        ),
-        this.gl.texParameteri(
-          this.gl.TEXTURE_2D,
-          this.gl.TEXTURE_MIN_FILTER,
-          this.gl.LINEAR,
-        ),
-        this.gl.texParameteri(
-          this.gl.TEXTURE_2D,
-          this.gl.TEXTURE_MAG_FILTER,
-          this.gl.LINEAR,
-        ),
-        this.gl.texImage2D(
-          this.gl.TEXTURE_2D,
-          0,
-          this.gl.RGBA,
-          this.gl.RGBA,
-          this.gl.UNSIGNED_BYTE,
-          t3,
-        )
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT),
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.REPEAT),
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR),
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR),
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, t3)
       if (this.gl.getError() !== this.gl.NO_ERROR || null === i3) return
       this.textures.set(e3, i3)
       const r3 = this.uniformLocations[e3]
@@ -292,19 +225,14 @@ var s = class {
     })
     _define_property(this, 'getCurrentFrameTime', () => this.totalFrameTime)
     _define_property(this, 'setFrame', (e3) => {
-      ;(this.totalFrameTime = e3),
-        (this.lastRenderTime = performance.now()),
-        this.render(performance.now())
+      ;(this.totalFrameTime = e3), (this.lastRenderTime = performance.now()), this.render(performance.now())
     })
     _define_property(this, 'setSpeed', (e3 = 1) => {
       ;(this.speed = e3),
         null === this.rafId &&
           0 !== e3 &&
-          ((this.lastRenderTime = performance.now()),
-          (this.rafId = requestAnimationFrame(this.render))),
-        null !== this.rafId &&
-          0 === e3 &&
-          (cancelAnimationFrame(this.rafId), (this.rafId = null))
+          ((this.lastRenderTime = performance.now()), (this.rafId = requestAnimationFrame(this.render))),
+        null !== this.rafId && 0 === e3 && (cancelAnimationFrame(this.rafId), (this.rafId = null))
     })
     _define_property(this, 'setUniforms', (e3) => {
       ;(this.providedUniforms = { ...this.providedUniforms, ...e3 }),
@@ -313,8 +241,7 @@ var s = class {
     })
     _define_property(this, 'dispose', () => {
       ;(this.hasBeenDisposed = true),
-        null !== this.rafId &&
-          (cancelAnimationFrame(this.rafId), (this.rafId = null)),
+        null !== this.rafId && (cancelAnimationFrame(this.rafId), (this.rafId = null)),
         this.gl &&
           this.program &&
           (this.textures.forEach((e3) => {
@@ -328,25 +255,15 @@ var s = class {
           this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, null),
           this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null),
           this.gl.getError()),
-        this.resizeObserver &&
-          (this.resizeObserver.disconnect(), (this.resizeObserver = null)),
-        visualViewport?.removeEventListener(
-          'resize',
-          this.handleVisualViewportChange,
-        ),
+        this.resizeObserver && (this.resizeObserver.disconnect(), (this.resizeObserver = null)),
+        visualViewport?.removeEventListener('resize', this.handleVisualViewportChange),
         (this.uniformLocations = {}),
         (this.parentElement.paperShaderMount = void 0)
     })
-    if (!(e2 instanceof HTMLElement))
-      throw new Error('Paper Shaders: parent element must be an HTMLElement')
-    if (
-      ((this.parentElement = e2),
-      !document.querySelector('style[data-paper-shaders]'))
-    ) {
+    if (!(e2 instanceof HTMLElement)) throw new Error('Paper Shaders: parent element must be an HTMLElement')
+    if (((this.parentElement = e2), !document.querySelector('style[data-paper-shaders]'))) {
       const e3 = document.createElement('style')
-      ;(e3.innerHTML = u),
-        e3.setAttribute('data-paper-shaders', ''),
-        document.head.prepend(e3)
+      ;(e3.innerHTML = u), e3.setAttribute('data-paper-shaders', ''), document.head.prepend(e3)
     }
     const l1 = document.createElement('canvas')
     ;(this.canvasElement = l1),
@@ -357,8 +274,7 @@ var s = class {
       (this.minPixelRatio = a2),
       (this.maxPixelCount = s2)
     const c1 = l1.getContext('webgl2', i2)
-    if (!c1)
-      throw new Error('Paper Shaders: WebGL is not supported in this browser')
+    if (!c1) throw new Error('Paper Shaders: WebGL is not supported in this browser')
     ;(this.gl = c1),
       this.initProgram(),
       this.setupPositionAttribute(),
@@ -377,9 +293,7 @@ function c(e2, t2, n2) {
   return i2
     ? (e2.shaderSource(i2, n2),
       e2.compileShader(i2),
-      e2.getShaderParameter(i2, e2.COMPILE_STATUS)
-        ? i2
-        : (e2.deleteShader(i2), null))
+      e2.getShaderParameter(i2, e2.COMPILE_STATUS) ? i2 : (e2.deleteShader(i2), null))
     : null
 }
 var u =
@@ -534,8 +448,7 @@ void main() {
 }
 `
 function m(e2) {
-  if (Array.isArray(e2))
-    return 4 === e2.length ? e2 : 3 === e2.length ? [...e2, 1] : g
+  if (Array.isArray(e2)) return 4 === e2.length ? e2 : 3 === e2.length ? [...e2, 1] : g
   if ('string' != typeof e2) return g
   let t2,
     n2,
@@ -557,9 +470,7 @@ function m(e2) {
     })(e2)
   else if (e2.startsWith('rgb'))
     [t2, n2, i2, r2] = (function (e3) {
-      const t3 = e3.match(
-        /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+))?\s*\)$/i,
-      )
+      const t3 = e3.match(/^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+))?\s*\)$/i)
       return t3
         ? [
             parseInt(t3[1] ?? '0') / 255,
@@ -582,26 +493,16 @@ function m(e2) {
         const e4 = (e5, t5, n5) => (
             n5 < 0 && (n5 += 1),
             n5 > 1 && (n5 -= 1),
-            n5 < 1 / 6
-              ? e5 + 6 * (t5 - e5) * n5
-              : n5 < 0.5
-                ? t5
-                : n5 < 2 / 3
-                  ? e5 + (t5 - e5) * (2 / 3 - n5) * 6
-                  : e5
+            n5 < 1 / 6 ? e5 + 6 * (t5 - e5) * n5 : n5 < 0.5 ? t5 : n5 < 2 / 3 ? e5 + (t5 - e5) * (2 / 3 - n5) * 6 : e5
           ),
           t4 = s2 < 0.5 ? s2 * (1 + a2) : s2 + a2 - s2 * a2,
           n4 = 2 * s2 - t4
-        ;(l2 = e4(n4, t4, o2 + 1 / 3)),
-          (c2 = e4(n4, t4, o2)),
-          (u2 = e4(n4, t4, o2 - 1 / 3))
+        ;(l2 = e4(n4, t4, o2 + 1 / 3)), (c2 = e4(n4, t4, o2)), (u2 = e4(n4, t4, o2 - 1 / 3))
       }
       return [l2, c2, u2, r3]
     })(
       (function (e3) {
-        const t3 = e3.match(
-          /^hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([0-9.]+))?\s*\)$/i,
-        )
+        const t3 = e3.match(/^hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([0-9.]+))?\s*\)$/i)
         return t3
           ? [
               parseInt(t3[1] ?? '0'),
@@ -648,8 +549,7 @@ function x(t2) {
       t2.every((e2) => null == e2)
         ? null
         : (e2) => {
-            n2.current && (n2.current(), (n2.current = void 0)),
-              null != e2 && (n2.current = i2(e2))
+            n2.current && (n2.current(), (n2.current = void 0)), null != e2 && (n2.current = i2(e2))
           },
     t2,
   )
@@ -674,11 +574,7 @@ async function _(e2) {
           const o2 = new Image()
           ;((e4) => {
             try {
-              return (
-                !e4.startsWith('/') &&
-                new URL(e4, window.location.origin).origin !==
-                  window.location.origin
-              )
+              return !e4.startsWith('/') && new URL(e4, window.location.origin).origin !== window.location.origin
             } catch {
               return false
             }
@@ -719,10 +615,7 @@ var S = /* @__PURE__ */ t(function (
       () => (
         (async () => {
           const n2 = await _(t2)
-          v2.current &&
-            !g2.current &&
-            ((g2.current = new s(v2.current, e2, n2, o2, l2, c2, u2, h2)),
-            m2(true))
+          v2.current && !g2.current && ((g2.current = new s(v2.current, e2, n2, o2, l2, c2, u2, h2)), m2(true))
         })(),
         () => {
           g2.current?.dispose(), (g2.current = null)
@@ -751,11 +644,7 @@ var B = {
   offsetX: -0.4,
   offsetY: -0.4,
   colorBack: 'hsla(215, 100%, 11%, 1)',
-  colors: [
-    'hsla(45, 100%, 70%, 1)',
-    'hsla(10, 100%, 80%, 1)',
-    'hsla(178, 100%, 83%, 1)',
-  ],
+  colors: ['hsla(45, 100%, 70%, 1)', 'hsla(10, 100%, 80%, 1)', 'hsla(178, 100%, 83%, 1)'],
   frequency: 6,
   spotty: 0.28,
   midIntensity: 1,
@@ -840,14 +729,7 @@ addPropertyControls(GodRaysComp, {
   preset: {
     type: ControlType.Enum,
     title: 'Preset',
-    options: [
-      'Time Travel',
-      'Kinetic Field',
-      'Highway',
-      'Ocean',
-      'Flowers',
-      'Custom',
-    ],
+    options: ['Time Travel', 'Kinetic Field', 'Highway', 'Ocean', 'Flowers', 'Custom'],
     defaultValue: 'Time Travel',
   },
   colorsMode: {
@@ -972,8 +854,7 @@ addPropertyControls(GodRaysComp, {
     type: ControlType.Boolean,
     title: 'Preview',
     defaultValue: true,
-    description:
-      'More components at [Framer University](https://frameruni.link/cc).',
+    description: 'More components at [Framer University](https://frameruni.link/cc).',
   },
 })
 GodRaysComp.defaultProps = {
@@ -1007,18 +888,11 @@ function GodRaysComp(props) {
       : activePreset
         ? activePreset.colors.map(parseFramerColor)
         : props.colors.map(parseFramerColor)
-  const finalSpeed =
-    !props.canvasPreview && isOnFramerCanvas
-      ? 0
-      : activePreset
-        ? activePreset.speed
-        : props.speed
+  const finalSpeed = !props.canvasPreview && isOnFramerCanvas ? 0 : activePreset ? activePreset.speed : props.speed
   const frequency = activePreset ? activePreset.frequency : props.frequency
   const spotty = activePreset ? activePreset.spotty : props.spotty
   const midSize = activePreset ? activePreset.center.size : props.center.size
-  const midIntensity = activePreset
-    ? activePreset.center.intensity
-    : props.center.intensity
+  const midIntensity = activePreset ? activePreset.center.intensity : props.center.intensity
   const density = activePreset ? activePreset.density : props.density
   const speed = isInView ? finalSpeed : 0
   const offsetX = activePreset ? activePreset.offsetX : props.offsetX
@@ -1059,13 +933,7 @@ function GodRaysComp(props) {
 var Presets = {
   'Kinetic Field': {
     background: 'rgb(0,0,0)',
-    colors: [
-      'rgb(254, 128, 66)',
-      'rgb(253, 251, 154)',
-      'rgb(123, 76, 70)',
-      'rgb(43, 21, 23)',
-      'rgb(180, 43, 27)',
-    ],
+    colors: ['rgb(254, 128, 66)', 'rgb(253, 251, 154)', 'rgb(123, 76, 70)', 'rgb(43, 21, 23)', 'rgb(180, 43, 27)'],
     frequency: 0,
     spotty: 5,
     center: { size: 1, intensity: 1 },
@@ -1076,13 +944,7 @@ var Presets = {
   },
   'Time Travel': {
     background: 'rgb(0,0,0)',
-    colors: [
-      'rgb(17, 44, 113)',
-      'rgb(187, 99, 255)',
-      'rgb(86, 225, 233)',
-      'rgb(91, 88, 235)',
-      'rgb(10, 35, 83)',
-    ],
+    colors: ['rgb(17, 44, 113)', 'rgb(187, 99, 255)', 'rgb(86, 225, 233)', 'rgb(91, 88, 235)', 'rgb(10, 35, 83)'],
     frequency: 0.5,
     spotty: 0,
     center: { size: 0.7, intensity: 0.33 },
@@ -1148,24 +1010,17 @@ import {
   RenderTarget as RenderTarget3,
   useIsStaticRenderer,
 } from 'unframer'
-import {
-  useEffect as useEffect2,
-  useRef as useRef3,
-  useMemo as useMemo3,
-} from 'react'
+import { useEffect as useEffect2, useRef as useRef3, useMemo as useMemo3 } from 'react'
 
 // /:https://framerusercontent.com/modules/k76epLFsVsF4jlsF5pgg/vhK3G0ntf62fqS2tFDno/useColors.js
 import { RenderTarget as RenderTarget2 } from 'unframer'
 import { useEffect, useState, useMemo as useMemo2 } from 'react'
-var cssVariableRegex =
-  /var\s*\(\s*(--[\w-]+)(?:\s*,\s*((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*))?\s*\)/
+var cssVariableRegex = /var\s*\(\s*(--[\w-]+)(?:\s*,\s*((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*))?\s*\)/
 function useColors(...colors) {
   const isCanvas = RenderTarget2.current() === RenderTarget2.canvas
   const isOptimizing = typeof window === 'undefined'
   const darkMode = useDarkMode()
-  const [styleValues, setStyleValues] = useState(() =>
-    extractStyleValues(colors.map(extractCSSVariableName)),
-  )
+  const [styleValues, setStyleValues] = useState(() => extractStyleValues(colors.map(extractCSSVariableName)))
   useEffect(() => {
     if (!isCanvas) return
     const div = document.body.querySelector('main > div')
@@ -1176,10 +1031,7 @@ function useColors(...colors) {
     observer.observe(div, { attributes: true, attributeFilter: ['style'] })
     return () => observer.disconnect()
   }, colors)
-  const variableNames = useMemo2(
-    () => colors.map(extractCSSVariableName),
-    [colors],
-  )
+  const variableNames = useMemo2(() => colors.map(extractCSSVariableName), [colors])
   if (isOptimizing) {
     return colors.map((color) => extractDefaultValue(color))
   }
@@ -1193,11 +1045,7 @@ function useColors(...colors) {
     const variableName = variableNames[i2]
     const colorValues = styleValues[variableName]
     if (variableName && colorValues) {
-      values.push(
-        darkMode
-          ? colorValues.dark || colorValues.light || color
-          : colorValues.light || color,
-      )
+      values.push(darkMode ? colorValues.dark || colorValues.light || color : colorValues.light || color)
     } else {
       values.push(color)
     }
@@ -1224,10 +1072,7 @@ function extractStyleValues(variableNames) {
     lightVars = parseVariables(light)
     darkVars = parseVariables(dark)
   }
-  const allVarNames = /* @__PURE__ */ new Set([
-    ...Object.keys(lightVars),
-    ...Object.keys(darkVars),
-  ])
+  const allVarNames = /* @__PURE__ */ new Set([...Object.keys(lightVars), ...Object.keys(darkVars)])
   allVarNames.forEach((varName) => {
     result[varName] = {
       light: lightVars[varName] || '',
@@ -1271,15 +1116,11 @@ function extractColorStyles() {
         if (!isDark && !isLight) continue
         if (isDark) {
           if (!darkSection) {
-            darkSection = css
-              .substring(css.indexOf('{') + 1, css.lastIndexOf('}'))
-              .trim()
+            darkSection = css.substring(css.indexOf('{') + 1, css.lastIndexOf('}')).trim()
           }
         } else {
           if (!lightSection) {
-            lightSection = css
-              .substring(css.indexOf('{') + 1, css.lastIndexOf('}'))
-              .trim()
+            lightSection = css.substring(css.indexOf('{') + 1, css.lastIndexOf('}')).trim()
           }
         }
         if (darkSection && lightSection) break
@@ -1290,9 +1131,7 @@ function extractColorStyles() {
   return { light: lightSection, dark: darkSection }
 }
 function useDarkMode() {
-  const isPreview =
-    typeof window !== 'undefined' &&
-    window.location.origin.endsWith('framercanvas.com')
+  const isPreview = typeof window !== 'undefined' && window.location.origin.endsWith('framercanvas.com')
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') {
       return false
@@ -1384,14 +1223,7 @@ function _define_property2(obj, key, value) {
   return obj
 }
 var ShaderMount = class {
-  constructor(
-    canvas,
-    fragmentShader,
-    uniforms = {},
-    webGlContextAttributes,
-    speed = 1,
-    seed = 0,
-  ) {
+  constructor(canvas, fragmentShader, uniforms = {}, webGlContextAttributes, speed = 1, seed = 0) {
     _define_property2(this, 'canvas', void 0)
     _define_property2(this, 'gl', void 0)
     _define_property2(this, 'program', null)
@@ -1405,38 +1237,20 @@ var ShaderMount = class {
     _define_property2(this, 'hasBeenDisposed', false)
     _define_property2(this, 'resolutionChanged', true)
     _define_property2(this, 'initWebGL', () => {
-      const program = createProgram(
-        this.gl,
-        vertexShaderSource,
-        this.fragmentShader,
-      )
+      const program = createProgram(this.gl, vertexShaderSource, this.fragmentShader)
       if (!program) return
       this.program = program
       this.setupPositionAttribute()
       this.setupUniforms()
     })
     _define_property2(this, 'setupPositionAttribute', () => {
-      const positionAttributeLocation = this.gl.getAttribLocation(
-        this.program,
-        'a_position',
-      )
+      const positionAttributeLocation = this.gl.getAttribLocation(this.program, 'a_position')
       const positionBuffer = this.gl.createBuffer()
       this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
       const positions = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]
-      this.gl.bufferData(
-        this.gl.ARRAY_BUFFER,
-        new Float32Array(positions),
-        this.gl.STATIC_DRAW,
-      )
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(positions), this.gl.STATIC_DRAW)
       this.gl.enableVertexAttribArray(positionAttributeLocation)
-      this.gl.vertexAttribPointer(
-        positionAttributeLocation,
-        2,
-        this.gl.FLOAT,
-        false,
-        0,
-        0,
-      )
+      this.gl.vertexAttribPointer(positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0)
     })
     _define_property2(this, 'setupUniforms', () => {
       this.uniformLocations = {
@@ -1444,10 +1258,7 @@ var ShaderMount = class {
         u_pixelRatio: this.gl.getUniformLocation(this.program, 'u_pixelRatio'),
         u_resolution: this.gl.getUniformLocation(this.program, 'u_resolution'),
         ...Object.fromEntries(
-          Object.keys(this.providedUniforms).map((key) => [
-            key,
-            this.gl.getUniformLocation(this.program, key),
-          ]),
+          Object.keys(this.providedUniforms).map((key) => [key, this.gl.getUniformLocation(this.program, key)]),
         ),
       }
     })
@@ -1478,20 +1289,10 @@ var ShaderMount = class {
       }
       this.gl.clear(this.gl.COLOR_BUFFER_BIT)
       this.gl.useProgram(this.program)
-      this.gl.uniform1f(
-        this.uniformLocations.u_time,
-        this.totalAnimationTime * 1e-3,
-      )
+      this.gl.uniform1f(this.uniformLocations.u_time, this.totalAnimationTime * 1e-3)
       if (this.resolutionChanged) {
-        this.gl.uniform2f(
-          this.uniformLocations.u_resolution,
-          this.gl.canvas.width,
-          this.gl.canvas.height,
-        )
-        this.gl.uniform1f(
-          this.uniformLocations.u_pixelRatio,
-          window.devicePixelRatio,
-        )
+        this.gl.uniform2f(this.uniformLocations.u_resolution, this.gl.canvas.width, this.gl.canvas.height)
+        this.gl.uniform1f(this.uniformLocations.u_pixelRatio, window.devicePixelRatio)
         this.resolutionChanged = false
       }
       this.gl.drawArrays(this.gl.TRIANGLES, 0, 6)
@@ -1529,9 +1330,7 @@ var ShaderMount = class {
                 } else if (value.length === 16) {
                   this.gl.uniformMatrix4fv(location, false, value)
                 } else {
-                  console.warn(
-                    `Unsupported uniform array length: ${value.length}`,
-                  )
+                  console.warn(`Unsupported uniform array length: ${value.length}`)
                 }
             }
           } else if (typeof value === 'number') {
@@ -1615,9 +1414,7 @@ function createShader(gl, type, source) {
   gl.shaderSource(shader, source)
   gl.compileShader(shader)
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error(
-      'An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader),
-    )
+    console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader))
     gl.deleteShader(shader)
     return null
   }
@@ -1625,11 +1422,7 @@ function createShader(gl, type, source) {
 }
 function createProgram(gl, vertexShaderSource2, fragmentShaderSource) {
   const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource2)
-  const fragmentShader = createShader(
-    gl,
-    gl.FRAGMENT_SHADER,
-    fragmentShaderSource,
-  )
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource)
   if (!vertexShader || !fragmentShader) return null
   const program = gl.createProgram()
   if (!program) return null
@@ -1637,10 +1430,7 @@ function createProgram(gl, vertexShaderSource2, fragmentShaderSource) {
   gl.attachShader(program, fragmentShader)
   gl.linkProgram(program)
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.error(
-      'Unable to initialize the shader program: ' +
-        gl.getProgramInfoLog(program),
-    )
+    console.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(program))
     gl.deleteProgram(program)
     gl.deleteShader(vertexShader)
     gl.deleteShader(fragmentShader)
@@ -1822,9 +1612,7 @@ function hexToRgba(hex) {
   return [r2, g2, b2, a2]
 }
 function parseRgba(rgba) {
-  const match = rgba.match(
-    /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+))?\s*\)$/i,
-  )
+  const match = rgba.match(/^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+))?\s*\)$/i)
   if (!match) return [0, 0, 0, 1]
   return [
     parseInt(match[1] ?? '0') / 255,
@@ -1834,9 +1622,7 @@ function parseRgba(rgba) {
   ]
 }
 function parseHsla(hsla) {
-  const match = hsla.match(
-    /^hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([0-9.]+))?\s*\)$/i,
-  )
+  const match = hsla.match(/^hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([0-9.]+))?\s*\)$/i)
   if (!match) return [0, 0, 0, 1]
   return [
     parseInt(match[1] ?? '0'),
@@ -1862,10 +1648,7 @@ function hslaToRgba(hsla) {
       if (t2 < 2 / 3) return p22 + (q2 - p22) * (2 / 3 - t2) * 6
       return p22
     }
-    const q =
-      lDecimal < 0.5
-        ? lDecimal * (1 + sDecimal)
-        : lDecimal + sDecimal - lDecimal * sDecimal
+    const q = lDecimal < 0.5 ? lDecimal * (1 + sDecimal) : lDecimal + sDecimal - lDecimal * sDecimal
     const p2 = 2 * lDecimal - q
     r2 = hue2rgb(p2, q, hDecimal + 1 / 3)
     g2 = hue2rgb(p2, q, hDecimal)
@@ -1979,17 +1762,9 @@ var templates = {
 function AnimatedGradientBackground(props) {
   const isStaticRenderer = useIsStaticRenderer()
   const isCanvas = RenderTarget3.current() === RenderTarget3.canvas
-  const useCustomColors =
-    props.preset === 'custom' || props.colorMode === 'custom'
-  const values =
-    props.preset === 'custom'
-      ? props
-      : templates[props.preset] || Object.values(templates)[0]
-  const [color1, color2, color3] = useColors(
-    props.color1,
-    props.color2,
-    props.color3,
-  )
+  const useCustomColors = props.preset === 'custom' || props.colorMode === 'custom'
+  const values = props.preset === 'custom' ? props : templates[props.preset] || Object.values(templates)[0]
+  const [color1, color2, color3] = useColors(props.color1, props.color2, props.color3)
   const ref = useRef3(null)
   const isInView = useInView2(ref, { once: false, amount: 0.1 })
   const currentSpeed = useMemo3(() => {
@@ -2058,20 +1833,17 @@ addPropertyControls2(AnimatedGradientBackground, {
   color1: {
     type: ControlType2.Color,
     defaultValue: '#262626',
-    hidden: (props) =>
-      props.preset !== 'custom' && props.colorMode === 'preset',
+    hidden: (props) => props.preset !== 'custom' && props.colorMode === 'preset',
   },
   color2: {
     type: ControlType2.Color,
     defaultValue: '#75c1f0',
-    hidden: (props) =>
-      props.preset !== 'custom' && props.colorMode === 'preset',
+    hidden: (props) => props.preset !== 'custom' && props.colorMode === 'preset',
   },
   color3: {
     type: ControlType2.Color,
     defaultValue: '#ffffff',
-    hidden: (props) =>
-      props.preset !== 'custom' && props.colorMode === 'preset',
+    hidden: (props) => props.preset !== 'custom' && props.colorMode === 'preset',
   },
   noise: {
     type: ControlType2.Object,
@@ -2207,24 +1979,14 @@ var Warp = (props) => {
     return {
       u_scale: props.scale ?? defaultPreset.params.scale,
       u_rotation: props.rotation ?? defaultPreset.params.rotation,
-      u_color1: getShaderColorFromString(
-        props.color1,
-        defaultPreset.params.color1,
-      ),
-      u_color2: getShaderColorFromString(
-        props.color2,
-        defaultPreset.params.color2,
-      ),
-      u_color3: getShaderColorFromString(
-        props.color3,
-        defaultPreset.params.color2,
-      ),
+      u_color1: getShaderColorFromString(props.color1, defaultPreset.params.color1),
+      u_color2: getShaderColorFromString(props.color2, defaultPreset.params.color2),
+      u_color3: getShaderColorFromString(props.color3, defaultPreset.params.color2),
       u_proportion: props.proportion ?? defaultPreset.params.proportion,
       u_softness: props.softness ?? defaultPreset.params.softness,
       u_distortion: props.distortion ?? defaultPreset.params.distortion,
       u_swirl: props.swirl ?? defaultPreset.params.swirl,
-      u_swirlIterations:
-        props.swirlIterations ?? defaultPreset.params.swirlIterations,
+      u_swirlIterations: props.swirlIterations ?? defaultPreset.params.swirlIterations,
       u_shapeScale: props.shapeScale ?? defaultPreset.params.shapeScale,
       u_shape: props.shape ?? defaultPreset.params.shape,
     }
@@ -2249,15 +2011,7 @@ var Warp = (props) => {
     uniforms,
   })
 }
-var ShaderMount2 = ({
-  ref,
-  fragmentShader,
-  style,
-  uniforms = {},
-  webGlContextAttributes,
-  speed = 1,
-  seed = 0,
-}) => {
+var ShaderMount2 = ({ ref, fragmentShader, style, uniforms = {}, webGlContextAttributes, speed = 1, seed = 0 }) => {
   const canvasRef = ref ?? useRef3(null)
   const shaderMountRef = useRef3(null)
   useEffect2(() => {

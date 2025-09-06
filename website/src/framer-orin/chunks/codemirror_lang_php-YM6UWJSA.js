@@ -170,9 +170,7 @@ function isIdentifierStart(ch) {
   return ch == 95 || ch >= 128 || isASCIILetter(ch)
 }
 function isHex(ch) {
-  return (
-    (ch >= 48 && ch <= 55) || (ch >= 97 && ch <= 102) || (ch >= 65 && ch <= 70)
-  )
+  return (ch >= 48 && ch <= 55) || (ch >= 97 && ch <= 102) || (ch >= 65 && ch <= 70)
 }
 var castTypes = {
   int: true,
@@ -200,8 +198,7 @@ var expression = new ExternalTokenizer((input) => {
       peek++
     }
     while (isSpace(input.peek(peek))) peek++
-    if (input.peek(peek) == 41 && castTypes[name.toLowerCase()])
-      input.acceptToken(castOpen)
+    if (input.peek(peek) == 41 && castTypes[name.toLowerCase()]) input.acceptToken(castOpen)
   } else if (input.next == 60 && input.peek(1) == 60 && input.peek(2) == 60) {
     for (let i = 0; i < 3; i++) input.advance()
     while (input.next == 32 || input.next == 9) input.advance()
@@ -211,11 +208,7 @@ var expression = new ExternalTokenizer((input) => {
     let tag = String.fromCharCode(input.next)
     for (;;) {
       input.advance()
-      if (
-        !isIdentifierStart(input.next) &&
-        !(input.next >= 48 && input.next <= 55)
-      )
-        break
+      if (!isIdentifierStart(input.next) && !(input.next >= 48 && input.next <= 55)) break
       tag += String.fromCharCode(input.next)
     }
     if (quoted) {
@@ -246,11 +239,7 @@ var eofToken = new ExternalTokenizer((input) => {
   if (input.next < 0) input.acceptToken(eof)
 })
 var semicolon = new ExternalTokenizer((input, stack) => {
-  if (
-    input.next == 63 &&
-    stack.canShift(automaticSemicolon) &&
-    input.peek(1) == 62
-  )
+  if (input.next == 63 && stack.canShift(automaticSemicolon) && input.peek(1) == 62)
     input.acceptToken(automaticSemicolon)
 })
 function scanEscape(input) {
@@ -292,8 +281,7 @@ var interpolated = new ExternalTokenizer((input, stack) => {
     if (
       input.next == 34 ||
       input.next < 0 ||
-      (input.next == 36 &&
-        (isIdentifierStart(input.peek(1)) || input.peek(1) == 123)) ||
+      (input.next == 36 && (isIdentifierStart(input.peek(1)) || input.peek(1) == 123)) ||
       (input.next == 123 && input.peek(1) == 36)
     ) {
       break
@@ -306,13 +294,8 @@ var interpolated = new ExternalTokenizer((input, stack) => {
     } else if (
       !content &&
       (input.next == 91 ||
-        (input.next == 45 &&
-          input.peek(1) == 62 &&
-          isIdentifierStart(input.peek(2))) ||
-        (input.next == 63 &&
-          input.peek(1) == 45 &&
-          input.peek(2) == 62 &&
-          isIdentifierStart(input.peek(3)))) &&
+        (input.next == 45 && input.peek(1) == 62 && isIdentifierStart(input.peek(2))) ||
+        (input.next == 63 && input.peek(1) == 45 && input.peek(2) == 62 && isIdentifierStart(input.peek(3)))) &&
       stack.canShift(afterInterpolation)
     ) {
       break
@@ -325,11 +308,9 @@ var phpHighlighting = styleTags({
   'Visibility abstract final static': tags.modifier,
   'for foreach while do if else elseif switch try catch finally return throw break continue default case':
     tags.controlKeyword,
-  'endif endfor endforeach endswitch endwhile declare enddeclare goto match':
-    tags.controlKeyword,
+  'endif endfor endforeach endswitch endwhile declare enddeclare goto match': tags.controlKeyword,
   'and or xor yield unset clone instanceof insteadof': tags.operatorKeyword,
-  'function fn class trait implements extends const enum global interface use var':
-    tags.definitionKeyword,
+  'function fn class trait implements extends const enum global interface use var': tags.definitionKeyword,
   'include include_once require require_once namespace': tags.moduleKeyword,
   'new from echo print array list as': tags.keyword,
   null: tags.null,
@@ -343,13 +324,9 @@ var phpHighlighting = styleTags({
   'MemberExpression/Name': tags.propertyName,
   'MemberExpression/VariableName': tags.special(tags.propertyName),
   'ScopedExpression/ClassMemberName/Name': tags.propertyName,
-  'ScopedExpression/ClassMemberName/VariableName': tags.special(
-    tags.propertyName,
-  ),
+  'ScopedExpression/ClassMemberName/VariableName': tags.special(tags.propertyName),
   'CallExpression/MemberExpression/Name': tags.function(tags.propertyName),
-  'CallExpression/ScopedExpression/ClassMemberName/Name': tags.function(
-    tags.propertyName,
-  ),
+  'CallExpression/ScopedExpression/ClassMemberName/Name': tags.function(tags.propertyName),
   'MethodDeclaration/Name': tags.function(tags.definition(tags.variableName)),
   'FunctionDefinition/Name': tags.function(tags.definition(tags.variableName)),
   'ClassDeclaration/Name': tags.definition(tags.className),
@@ -507,9 +484,7 @@ var phpLanguage = /* @__PURE__ */ LRLanguage.define({
           let after = context.textAfter,
             closed = /^\s*\}/.test(after),
             isCase = /^\s*(case|default)\b/.test(after)
-          return (
-            context.baseIndent + (closed ? 0 : isCase ? 1 : 2) * context.unit
-          )
+          return context.baseIndent + (closed ? 0 : isCase ? 1 : 2) * context.unit
         },
         ColonBlock: (cx) => cx.baseIndent + cx.unit,
         'Block EnumBody DeclarationList': /* @__PURE__ */ delimitedIndent({
@@ -522,8 +497,7 @@ var phpLanguage = /* @__PURE__ */ LRLanguage.define({
         }),
       }),
       /* @__PURE__ */ foldNodeProp.add({
-        'Block EnumBody DeclarationList SwitchBody ArrayExpression ValueList':
-          foldInside,
+        'Block EnumBody DeclarationList SwitchBody ArrayExpression ValueList': foldInside,
         ColonBlock(tree) {
           return { from: tree.from + 1, to: tree.to }
         },
@@ -535,8 +509,7 @@ var phpLanguage = /* @__PURE__ */ LRLanguage.define({
   }),
   languageData: {
     commentTokens: { block: { open: '/*', close: '*/' }, line: '//' },
-    indentOnInput:
-      /^\s*(?:case |default:|end(?:if|for(?:each)?|switch|while)|else(?:if)?|\{|\})$/,
+    indentOnInput: /^\s*(?:case |default:|end(?:if|for(?:each)?|switch|while)|else(?:if)?|\{|\})$/,
     wordChars: '$',
     closeBrackets: { stringPrefixes: ['b', 'B'] },
   },

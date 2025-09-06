@@ -111,9 +111,7 @@ describe('MCP Server Tests', () => {
       typeof initialSnapshot === 'object' && initialSnapshot.content?.[0]?.text
         ? tryJsonParse(initialSnapshot.content[0].text)
         : initialSnapshot
-    expect(initialData).toMatchFileSnapshot(
-      'snapshots/hacker-news-initial-accessibility.md',
-    )
+    expect(initialData).toMatchFileSnapshot('snapshots/hacker-news-initial-accessibility.md')
     expect(initialData).toContain('table')
     expect(initialData).toContain('Hacker News')
 
@@ -145,9 +143,7 @@ describe('MCP Server Tests', () => {
       typeof focusedSnapshot === 'object' && focusedSnapshot.content?.[0]?.text
         ? tryJsonParse(focusedSnapshot.content[0].text)
         : focusedSnapshot
-    expect(focusedData).toMatchFileSnapshot(
-      'snapshots/hacker-news-focused-accessibility.md',
-    )
+    expect(focusedData).toMatchFileSnapshot('snapshots/hacker-news-focused-accessibility.md')
 
     // Verify the snapshot contains expected content
     expect(focusedData).toBeDefined()
@@ -176,9 +172,7 @@ describe('MCP Server Tests', () => {
       typeof tabbedSnapshot === 'object' && tabbedSnapshot.content?.[0]?.text
         ? tryJsonParse(tabbedSnapshot.content[0].text)
         : tabbedSnapshot
-    expect(tabbedData).toMatchFileSnapshot(
-      'snapshots/hacker-news-tabbed-accessibility.md',
-    )
+    expect(tabbedData).toMatchFileSnapshot('snapshots/hacker-news-tabbed-accessibility.md')
 
     // Verify the snapshot is different
     expect(tabbedData).toBeDefined()
@@ -215,9 +209,7 @@ describe('MCP Server Tests', () => {
 
     // Save snapshot
     const data =
-      typeof snapshot === 'object' && snapshot.content?.[0]?.text
-        ? tryJsonParse(snapshot.content[0].text)
-        : snapshot
+      typeof snapshot === 'object' && snapshot.content?.[0]?.text ? tryJsonParse(snapshot.content[0].text) : snapshot
     expect(data).toMatchFileSnapshot('snapshots/shadcn-ui-accessibility.md')
     expect(data).toContain('shadcn')
 

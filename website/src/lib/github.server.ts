@@ -8,10 +8,7 @@ import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 
 type OctokitRest = Octokit['rest']
 
-const installationsCache = new Map<
-  number,
-  { octokit: Octokit; timestamp: number }
->()
+const installationsCache = new Map<number, { octokit: Octokit; timestamp: number }>()
 
 const repoFilesCache = new Map<string, { data: any; timestamp: number }>()
 
@@ -20,9 +17,7 @@ function handleOctokitError(installationId) {
     // TODO handle This installation has been suspended errors, delete the installation from db
 
     if (e.message.includes('This installation has been suspended')) {
-      console.log(
-        `deleting suspended github app for installation ${installationId}`,
-      )
+      console.log(`deleting suspended github app for installation ${installationId}`)
       await prisma.githubInstallation.updateMany({
         where: {
           installationId: installationId,
@@ -85,9 +80,7 @@ export async function getOctokit({ installationId }): Promise<Octokit> {
   const app = getGithubApp()
 
   // https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation
-  const octokit = await app
-    .getInstallationOctokit(installationId)
-    .catch(handleOctokitError(installationId))
+  const octokit = await app.getInstallationOctokit(installationId).catch(handleOctokitError(installationId))
   // installationsCache.set(installationId, { octokit, timestamp: Date.now() })
   return octokit
 }
@@ -108,12 +101,7 @@ export async function getRepoFiles({
   branch: string
   commitSha?: string
   baseUrl?: string
-  fetchBlob: (p: {
-    path?: string
-    sha?: string
-    type?: string
-    mode?: string
-  }) => boolean
+  fetchBlob: (p: { path?: string; sha?: string; type?: string; mode?: string }) => boolean
   signal?: AbortSignal
 }) {
   if (!commitSha) {
@@ -310,10 +298,7 @@ export async function upsertGithubFile({
       committer: committer,
     })
     .catch((e) => {
-      notifyError(
-        e,
-        `Could not update github file ${owner}/${repo}/${githubBranch}, path ${githubPath} `,
-      )
+      notifyError(e, `Could not update github file ${owner}/${repo}/${githubBranch}, path ${githubPath} `)
       return { data: null }
     })
   if (!data) {
@@ -336,15 +321,7 @@ export function addFrontSlashToPath(path?: string) {
 
 // Credit to https://dev.to/lucis/how-to-push-files-programatically-to-a-repository-using-octokit-with-typescript-1nj0
 
-export async function doesRepoExist({
-  octokit,
-  owner,
-  repo,
-}: {
-  octokit: OctokitRest
-  owner: string
-  repo: string
-}) {
+export async function doesRepoExist({ octokit, owner, repo }: { octokit: OctokitRest; owner: string; repo: string }) {
   try {
     const res = await octokit.repos.get({
       owner,
@@ -356,9 +333,7 @@ export async function doesRepoExist({
     if (error.status === 404) {
       return null
     } else {
-      throw new Error(
-        `Error checking repository ${owner}/${repo}: ${error.message}`,
-      )
+      throw new Error(`Error checking repository ${owner}/${repo}: ${error.message}`)
     }
   }
 }
@@ -394,16 +369,12 @@ export async function createNewRepo({
 
   console.log(`uploading files to github ${owner}/${repo}`)
   console.log(`creating repo for ${isGithubOrg ? 'org' : 'user'} ${owner}`)
-  const create = async (
-    args: Parameters<typeof octokit.repos.createInOrg>[0],
-  ) => {
+  const create = async (args: Parameters<typeof octokit.repos.createInOrg>[0]) => {
     if (isGithubOrg) {
       return await octokit.repos.createInOrg(args)
     } else {
       if (!oauthToken) {
-        throw new AppError(
-          `Cannot create repo for user without Github token, reconnect Github`,
-        )
+        throw new AppError(`Cannot create repo for user without Github token, reconnect Github`)
       }
       // const app = getGithubApp()
       // const res = await app.oauth.refreshToken({
@@ -579,10 +550,7 @@ const createTreeWithUpdates = async ({
             tree_sha: parentTreeSha,
             recursive: 'true',
           })
-          .then(
-            ({ data }) =>
-              new Set(data.tree.map((item) => item.path).filter(Boolean)),
-          )
+          .then(({ data }) => new Set(data.tree.map((item) => item.path).filter(Boolean)))
       : new Set<string>()
 
   const tree: {
@@ -721,14 +689,7 @@ export async function changeGithubTree({
   return { branch, parentCommit: currentCommit, commitUrl }
 }
 
-async function pushChangesToBranch({
-  files,
-  owner,
-  repo,
-  branch,
-  baseBranch = 'main',
-  octokit,
-}) {
+async function pushChangesToBranch({ files, owner, repo, branch, baseBranch = 'main', octokit }) {
   // 1. Get the commit we will build on
   let parentCommitSha, parentTreeSha
   try {
@@ -757,9 +718,7 @@ async function pushChangesToBranch({
 
   // 2. Create blobs → new tree (handling deletions)
   const filesToCreate = files.filter((f) => f.content !== null)
-  const filesToRemove = files
-    .filter((f) => f.content === null)
-    .map((f) => ({ filePath: f.filePath }))
+  const filesToRemove = files.filter((f) => f.content === null).map((f) => ({ filePath: f.filePath }))
 
   const newTree = await createTreeWithUpdates({
     octokit,
@@ -926,9 +885,7 @@ async function checkOrCreateFork({
       })
     } catch (e) {
       notifyError(e, 'mergeUpstream')
-      throw new AppError(
-        `Failed syncing your fork ${forkData.owner}/${forkData.repo} with the upstream repo.`,
-      )
+      throw new AppError(`Failed syncing your fork ${forkData.owner}/${forkData.repo} with the upstream repo.`)
     }
 
     return {
@@ -939,9 +896,7 @@ async function checkOrCreateFork({
 
   // TODO: race until the repo is created
   const createdFork = await octokit.rest.repos.createFork(upstream)
-  console.info(
-    `Created fork: ${createdFork.data.owner.login}/${createdFork.data.name}`,
-  )
+  console.info(`Created fork: ${createdFork.data.owner.login}/${createdFork.data.name}`)
   let n = 0
   while (n < 20) {
     n++
@@ -995,9 +950,7 @@ export async function createPullRequestSuggestion({
       throw new AppError(`No file path for ${JSON.stringify(f)}`)
     }
   }
-  console.log(
-    `creating pr for ${owner}/${repo} branch ${branch}, fork? ${fork}`,
-  )
+  console.log(`creating pr for ${owner}/${repo} branch ${branch}, fork? ${fork}`)
 
   const branchName = `holocron/${Date.now()}`
 
@@ -1096,9 +1049,7 @@ export async function pushToPrOrBranch({
 
     // Separate files to create/update from files to delete
     const filesToCreate = files.filter((x) => x.content != null)
-    const filesToRemove = files
-      .filter((x) => x.content == null)
-      .map((x) => ({ filePath: x.filePath }))
+    const filesToRemove = files.filter((x) => x.content == null).map((x) => ({ filePath: x.filePath }))
 
     const { commitUrl } = await changeGithubTree({
       owner,
@@ -1181,10 +1132,7 @@ export async function pushToPrOrBranch({
       ref: `heads/${branch}`,
     })
     .catch((e) => {
-      if (
-        e instanceof RequestError &&
-        e.message.toLowerCase().includes('does not exist')
-      ) {
+      if (e instanceof RequestError && e.message.toLowerCase().includes('does not exist')) {
         return {}
       }
       throw e
@@ -1206,9 +1154,7 @@ export async function pushToPrOrBranch({
     })
   } catch (e) {
     const fastForwardErr =
-      e instanceof RequestError &&
-      (e.status === 422 || e.status === 409) &&
-      /fast forward/i.test(e.message)
+      e instanceof RequestError && (e.status === 422 || e.status === 409) && /fast forward/i.test(e.message)
 
     if (!fastForwardErr) throw e // different problem → bubble up
 
@@ -1313,9 +1259,7 @@ export async function getRepoFilesWithCache({
           size: x.size || 0,
         }
       })
-    console.log(
-      `found ${nodes.length} markdown files in repo ${githubOwner}/${githubRepo}`,
-    )
+    console.log(`found ${nodes.length} markdown files in repo ${githubOwner}/${githubRepo}`)
     const res = {
       nodes,
       allAssetPaths,

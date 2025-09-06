@@ -8,10 +8,7 @@ export const loader = async ({ params }: Route.LoaderArgs) => {
   const iconJsx = getIconJsx({ provider, key: icon })
 
   if (!iconJsx) {
-    throw new Response(
-      `Icon not found: provider="${provider}" icon="${icon}"`,
-      { status: 404 },
-    )
+    throw new Response(`Icon not found: provider="${provider}" icon="${icon}"`, { status: 404 })
   }
 
   const svgString = renderToString(iconJsx)

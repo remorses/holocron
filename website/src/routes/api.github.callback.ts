@@ -67,15 +67,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // console.log('account', account)
 
-  const accountLogin =
-    account && 'login' in account
-      ? account.login
-      : account!.slug.replace(/\//g, '-')
+  const accountLogin = account && 'login' in account ? account.login : account!.slug.replace(/\//g, '-')
 
-  let accountType: GithubAccountType =
-    account && 'type' in account && account.type === 'User'
-      ? 'USER'
-      : 'ORGANIZATION'
+  let accountType: GithubAccountType = account && 'type' in account && account.type === 'User' ? 'USER' : 'ORGANIZATION'
 
   let members = [] as string[]
   if (accountType === 'ORGANIZATION') {
@@ -140,17 +134,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const data: GithubLoginRequestData = {
     githubAccountLogin: accountLogin,
   }
-  const githubDataCookie = cookie.serialize(
-    GITHUB_LOGIN_DATA_COOKIE,
-    encodeURIComponent(JSON.stringify(data)),
-    {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 5, // 5 minutes
-      path: '/',
-    },
-  )
+  const githubDataCookie = cookie.serialize(GITHUB_LOGIN_DATA_COOKIE, encodeURIComponent(JSON.stringify(data)), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 5, // 5 minutes
+    path: '/',
+  })
 
   // Redirect to the next URL from state
   let redirectUrl = new URL(afterInstallUrl, env.PUBLIC_URL)

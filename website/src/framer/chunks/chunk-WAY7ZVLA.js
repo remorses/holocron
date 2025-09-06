@@ -23,12 +23,7 @@ import { useRef } from 'react'
 
 // /:https://framerusercontent.com/modules/4nqAoFXPgtOrbSZrUaDM/2pKMgJmwHAib1DUoteJk/MTx6M3nmj.js
 import { fontStore } from 'unframer'
-fontStore.loadFonts([
-  'Inter-Medium',
-  'Inter-Bold',
-  'Inter-BoldItalic',
-  'Inter-MediumItalic',
-])
+fontStore.loadFonts(['Inter-Medium', 'Inter-Bold', 'Inter-BoldItalic', 'Inter-MediumItalic'])
 var fonts2 = [
   {
     explicitInter: true,
@@ -37,8 +32,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/5A3Ce6C9YYmCjpQx9M4inSaKU.woff2',
         weight: '500',
       },
@@ -97,8 +91,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/DpPBYI0sL4fYLgAkX8KXOPVt7c.woff2',
         weight: '700',
       },
@@ -157,8 +150,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/H89BbHkbHDzlxZzxi8uPzTsp90.woff2',
         weight: '700',
       },
@@ -217,8 +209,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/khkJkwSL66WFg8SX6Wa726c.woff2',
         weight: '500',
       },
@@ -292,19 +283,14 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -316,8 +302,7 @@ var getProps = ({ amount, height, id, text, width, ...props }) => {
   return {
     ...props,
     IOMocQpEh: amount ?? props.IOMocQpEh ?? '$250M+',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'TwYCDqD7T',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'TwYCDqD7T',
     vCgcTaJbS: text ?? props.vCgcTaJbS ?? 'Assets Managed',
   }
 }
@@ -331,15 +316,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className3,
-    layoutId,
-    variant,
-    IOMocQpEh,
-    vCgcTaJbS,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className3, layoutId, variant, IOMocQpEh, vCgcTaJbS, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -370,22 +347,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-uh467t',
-            className3,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-uh467t', className3, classNames),
           'data-framer-name': 'Desktop',
           layoutDependency,
           layoutId: 'TwYCDqD7T',
           ref: refBinding,
           style: { ...style },
-          ...addPropertyOverrides(
-            { zcYR2_vFP: { 'data-framer-name': 'Phone' } },
-            baseVariant,
-            gestureVariant,
-          ),
+          ...addPropertyOverrides({ zcYR2_vFP: { 'data-framer-name': 'Phone' } }, baseVariant, gestureVariant),
           children: [
             /* @__PURE__ */ _jsx(RichText, {
               __fromCanvasComponent: true,
@@ -500,8 +468,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

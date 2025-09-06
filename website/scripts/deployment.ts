@@ -1,9 +1,4 @@
-import {
-  deployFly,
-  getCurrentStage,
-  getDopplerEnv,
-  shell,
-} from '@xmorse/deployment-utils'
+import { deployFly, getCurrentStage, getDopplerEnv, shell } from '@xmorse/deployment-utils'
 import { qstash } from 'website/src/lib/qstash'
 import { app } from 'website/src/lib/spiceflow'
 // import './openapi'
@@ -13,9 +8,7 @@ async function main() {
   const isProduction = stage === 'production'
 
   if (stage !== 'production' && stage !== 'preview') {
-    console.warn(
-      `skipping deployment because stage is ${stage}. Only production and preview are supported.`,
-    )
+    console.warn(`skipping deployment because stage is ${stage}. Only production and preview are supported.`)
     return
   }
 
@@ -33,10 +26,7 @@ async function main() {
 
   if (isProduction) {
     await qstash.schedules.create({
-      destination: new URL(
-        app.safePath('/api/databaseNightlyCleanup'),
-        env.PUBLIC_URL,
-      ).toString(),
+      destination: new URL(app.safePath('/api/databaseNightlyCleanup'), env.PUBLIC_URL).toString(),
       cron: '*/10 * * * *',
       scheduleId: 'nightly-page-blobs-cleanup',
       method: 'POST',
@@ -45,10 +35,7 @@ async function main() {
   }
 
   const port = 7664
-  const appName =
-    stage === 'production'
-      ? 'fumabase-website-prod'
-      : 'fumabase-website-preview'
+  const appName = stage === 'production' ? 'fumabase-website-prod' : 'fumabase-website-preview'
 
   await deployFly({
     appName,

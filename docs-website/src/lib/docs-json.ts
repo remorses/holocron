@@ -10,8 +10,7 @@ import { WEBSITE_DOMAIN } from './env.js'
 const Color = z
   .string()
   .regex(/^(#|rgb|rgba|hsl|hsla)\b/i, {
-    message:
-      'Must be a valid color: value must start with #, rgb, rgba, hsl, or hsla',
+    message: 'Must be a valid color: value must start with #, rgb, rgba, hsl, or hsla',
   })
   .describe('Hex, rgb, rgba, hsl, or hsla color string')
 
@@ -33,9 +32,7 @@ const LogoSchema = z
     text: z
       .string()
       .optional()
-      .describe(
-        'Text to show next to the logo image, for cases where the logo is just a icon image',
-      ),
+      .describe('Text to show next to the logo image, for cases where the logo is just a icon image'),
   })
   .strict()
   .describe('Logo object for both modes')
@@ -52,10 +49,7 @@ const RedirectSchema = z
   .object({
     source: z.string().describe('Original path to redirect from'),
     destination: z.string().describe('Destination path or URL'),
-    permanent: z
-      .boolean()
-      .optional()
-      .describe('Use HTTP 301 if true, else 302'),
+    permanent: z.boolean().optional().describe('Use HTTP 301 if true, else 302'),
   })
   .strict()
   .describe('Redirect rule')
@@ -63,10 +57,7 @@ const RedirectSchema = z
 const BannerSchema = z
   .object({
     content: z.string().min(1).describe('Banner HTML/MDX content'),
-    dismissible: z
-      .boolean()
-      .optional()
-      .describe('Whether the banner can be dismissed'),
+    dismissible: z.boolean().optional().describe('Whether the banner can be dismissed'),
   })
   .strict()
   .describe('Global banner configuration')
@@ -90,21 +81,11 @@ const ContextualSchema = z
 
 const NavigationAnchorItem = z
   .object({
-    anchor: z
-      .string()
-      .min(1)
-      .describe('Anchor name/section for this navigation entry'),
+    anchor: z.string().min(1).describe('Anchor name/section for this navigation entry'),
     icon: IconNameSchema.optional().describe('Optional icon for this section'),
     color: ColorMode.optional().describe('Optional custom color'),
-    hidden: z
-      .boolean()
-      .optional()
-      .describe('Whether the anchor/section is hidden by default'),
-    href: z
-      .string()
-      .url()
-      .optional()
-      .describe('Optional link or path for this anchor'),
+    hidden: z.boolean().optional().describe('Whether the anchor/section is hidden by default'),
+    href: z.string().url().optional().describe('Optional link or path for this anchor'),
   })
   .strict()
   .describe('Anchor item for navigation')
@@ -164,15 +145,8 @@ const FooterLinkColumn = z
 
 const FooterSchema = z
   .object({
-    socials: z
-      .record(z.string(), z.string().url())
-      .optional()
-      .describe('Social media links'),
-    links: z
-      .array(FooterLinkColumn)
-      .min(1)
-      .optional()
-      .describe('Footer link sections'),
+    socials: z.record(z.string(), z.string().url()).optional().describe('Social media links'),
+    links: z.array(FooterLinkColumn).min(1).optional().describe('Footer link sections'),
   })
   .strict()
   .describe('Footer configuration')
@@ -188,10 +162,7 @@ const SearchSchema = z
 const SeoSchema = z
   .object({
     metatags: z.record(z.string(), z.string()).describe('Additional meta tags'),
-    indexing: z
-      .enum(['navigable', 'all'])
-      .optional()
-      .describe('SEO indexing mode'),
+    indexing: z.enum(['navigable', 'all']).optional().describe('SEO indexing mode'),
   })
   .strict()
   .describe('SEO configuration')
@@ -203,11 +174,7 @@ const NavigationTabSchema = z
       .object({
         tab: z.string().describe('Tab label'),
         openapi: z.string().describe('OpenAPI spec file path'),
-        renderer: z
-          .enum(['fumadocs', 'scalar'])
-          .default('fumadocs')
-          .optional()
-          .describe('API documentation renderer'),
+        renderer: z.enum(['fumadocs', 'scalar']).default('fumadocs').optional().describe('API documentation renderer'),
       })
       .strict()
       .describe('OpenAPI tab configuration'),
@@ -223,10 +190,7 @@ const NavigationTabSchema = z
 
 // === API ===
 const OpenApiRef = z
-  .union([
-    z.string().describe('URL or path'),
-    z.array(z.string().describe('List of URLs or paths')),
-  ])
+  .union([z.string().describe('URL or path'), z.array(z.string().describe('List of URLs or paths'))])
   .describe('Reference to OpenAPI resources')
 
 const ApiSchema = z
@@ -239,18 +203,13 @@ const ApiSchema = z
 
     params: z
       .object({
-        expanded: z
-          .enum(['all', 'closed'])
-          .optional()
-          .describe('Params expansion state'),
+        expanded: z.enum(['all', 'closed']).optional().describe('Params expansion state'),
       })
       .strict()
       .optional(),
     playground: z
       .object({
-        display: z
-          .enum(['interactive', 'simple', 'none'])
-          .describe('Playground UI mode'),
+        display: z.enum(['interactive', 'simple', 'none']).describe('Playground UI mode'),
         proxy: z.boolean().optional().describe('Use proxy for requests'),
       })
       .strict()
@@ -266,9 +225,7 @@ const ApiSchema = z
       .object({
         auth: z
           .object({
-            method: z
-              .enum(['bearer', 'basic', 'key', 'cobo'])
-              .describe('Auth method'),
+            method: z.enum(['bearer', 'basic', 'key', 'cobo']).describe('Auth method'),
             name: z.string().describe('Auth header/key name'),
           })
           .strict()
@@ -287,17 +244,13 @@ const ApiSchema = z
 // === Integrations ===
 const IntegrationsSchema = z
   .object({
-    amplitude: z
-      .object({ apiKey: z.string().describe('Amplitude API key') })
-      .optional(),
+    amplitude: z.object({ apiKey: z.string().describe('Amplitude API key') }).optional(),
     clearbit: z
       .object({
         publicApiKey: z.string().describe('Clearbit public key'),
       })
       .optional(),
-    fathom: z
-      .object({ siteId: z.string().describe('Fathom site ID') })
-      .optional(),
+    fathom: z.object({ siteId: z.string().describe('Fathom site ID') }).optional(),
     frontchat: z
       .object({
         snippetId: z.string().min(6).describe('Frontchat snippet ID'),
@@ -310,34 +263,21 @@ const IntegrationsSchema = z
       .optional(),
     gtm: z.object({ tagId: z.string().describe('GTM Tag ID') }).optional(),
     heap: z.object({ appId: z.string().describe('Heap App ID') }).optional(),
-    hotjar: z
-      .object({ hjid: z.string(), hjsv: z.string() })
-      .optional()
-      .describe('Hotjar site and snippet version'),
-    intercom: z
-      .object({ appId: z.string().min(6).describe('Intercom App ID') })
-      .optional(),
+    hotjar: z.object({ hjid: z.string(), hjsv: z.string() }).optional().describe('Hotjar site and snippet version'),
+    intercom: z.object({ appId: z.string().min(6).describe('Intercom App ID') }).optional(),
     koala: z
       .object({
         publicApiKey: z.string().min(2).describe('Koala public key'),
       })
       .optional(),
-    logrocket: z
-      .object({ appId: z.string().describe('LogRocket App ID') })
-      .optional(),
-    mixpanel: z
-      .object({ projectToken: z.string().describe('Mixpanel token') })
-      .optional(),
+    logrocket: z.object({ appId: z.string().describe('LogRocket App ID') }).optional(),
+    mixpanel: z.object({ projectToken: z.string().describe('Mixpanel token') }).optional(),
     osano: z
       .object({
         scriptSource: z
           .string()
           .url()
-          .refine(
-            (val) =>
-              val.startsWith('https://cmp.osano.com/') &&
-              val.endsWith('/osano.js'),
-          )
+          .refine((val) => val.startsWith('https://cmp.osano.com/') && val.endsWith('/osano.js'))
           .describe('Osano script URL'),
       })
       .optional(),
@@ -354,12 +294,8 @@ const IntegrationsSchema = z
         server: z.string().optional().describe('Plausible server URL'),
       })
       .optional(),
-    segment: z
-      .object({ key: z.string().describe('Segment write key') })
-      .optional(),
-    telemetry: z
-      .object({ enabled: z.boolean().describe('Enable telemetry') })
-      .optional(),
+    segment: z.object({ key: z.string().describe('Segment write key') }).optional(),
+    telemetry: z.object({ enabled: z.boolean().describe('Enable telemetry') }).optional(),
     cookies: z
       .object({
         key: z.string().describe('Cookie name'),
@@ -384,11 +320,7 @@ const CSSVariablesSchema = z
 // === Main holocron.jsonc schema ===
 export const DocsConfigSchema = z
   .object({
-    $schema: z
-      .string()
-      .url()
-      .optional()
-      .describe('Schema URL for IDE autocomplete'),
+    $schema: z.string().url().optional().describe('Schema URL for IDE autocomplete'),
     siteId: z
       .string()
       .describe(
@@ -405,32 +337,22 @@ export const DocsConfigSchema = z
     description: z
       .string()
       .optional()
-      .describe(
-        'default SEO description for pages that do not have a description frontmatter',
-      ),
-    logo: LogoSchema.optional().describe(
-      'Logo config, shown in the top left in the navbar',
-    ),
+      .describe('default SEO description for pages that do not have a description frontmatter'),
+    logo: LogoSchema.optional().describe('Logo config, shown in the top left in the navbar'),
     favicon: FaviconSchema.optional().describe('Favicon config'),
     // api: ApiSchema.optional().describe('API reference settings'),
     navbar: NavbarSchema.optional().describe('Top navbar settings'),
     tabs: z
       .array(NavigationTabSchema)
       .optional()
-      .describe(
-        'Navigation tabs. This setting is still experimental and discouraged. It does not work currently',
-      ),
+      .describe('Navigation tabs. This setting is still experimental and discouraged. It does not work currently'),
 
-    footer: FooterSchema.optional().describe(
-      'Footer content, shown at the bottom of the website in all pages',
-    ),
+    footer: FooterSchema.optional().describe('Footer content, shown at the bottom of the website in all pages'),
     // search: SearchSchema.optional().describe('Search behavior'),
     // // TODO
     seo: SeoSchema.optional().describe('SEO meta & indexing settings'),
     redirects: z.array(RedirectSchema).optional().describe('Redirect rules'),
-    banner: BannerSchema.optional().describe(
-      'Site-wide banner for announcements or news',
-    ),
+    banner: BannerSchema.optional().describe('Site-wide banner for announcements or news'),
     // errors: ErrorsSchema.optional().describe('Error page config'),
     contextual: ContextualSchema.optional().describe(
       'Contextual actions shown in the buttons at the top of a docs page',
@@ -446,9 +368,7 @@ export const DocsConfigSchema = z
     hideSidebar: z
       .boolean()
       .optional()
-      .describe(
-        'Hide the sidebar completely from the documentation site. This should be rare',
-      ),
+      .describe('Hide the sidebar completely from the documentation site. This should be rare'),
     ignore: z
       .array(z.string())
       .optional()
@@ -464,9 +384,7 @@ export const DocsConfigSchema = z
     disableEditButton: z
       .boolean()
       .optional()
-      .describe(
-        'Whether to disable the edit button and Monaco editor functionality',
-      ),
+      .describe('Whether to disable the edit button and Monaco editor functionality'),
   })
   .strict()
 
@@ -474,6 +392,4 @@ export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 
 export const docsJsonSchema = toJSONSchema(DocsConfigSchema, {})
 
-export const exampleNamePathsForDocsJson = extractNamePathsFromSchema(
-  docsJsonSchema as any,
-)
+export const exampleNamePathsForDocsJson = extractNamePathsFromSchema(docsJsonSchema as any)

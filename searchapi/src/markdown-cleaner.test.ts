@@ -209,9 +209,7 @@ description: This file only has frontmatter
 ---`
 
     const result3 = cleanMarkdownContent(frontmatterOnly)
-    expect(result3).toMatchInlineSnapshot(
-      `"Just Frontmatter This file only has frontmatter"`,
-    )
+    expect(result3).toMatchInlineSnapshot(`"Just Frontmatter This file only has frontmatter"`)
 
     // Test multiple dashes in frontmatter
     const frontmatterWithDashes = `---

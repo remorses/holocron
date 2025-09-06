@@ -15,26 +15,17 @@ type Attachment = {
 }
 
 export default {
-  async fetch(
-    req: CFRequest,
-    env: Env,
-    ctx?: ExecutionContext,
-  ): Promise<Response> {
+  async fetch(req: CFRequest, env: Env, ctx?: ExecutionContext): Promise<Response> {
     // Answer CORS pre-flights (OPTIONS) immediately
-    if (req.method === 'OPTIONS')
-      return addCors(new Response(null, { status: 204 }))
+    if (req.method === 'OPTIONS') return addCors(new Response(null, { status: 204 }))
 
     const url = new URL(req.url)
 
     // Intercept only the tunnel path
     if (url.pathname.startsWith('/_tunnel/')) {
       url.pathname = url.pathname.replace('/_tunnel', '')
-      const id = env.TUNNEL_DO.idFromName(
-        url.searchParams.get('id') ?? 'default',
-      )
-      const res = await env.TUNNEL_DO.get(id).fetch(
-        new Request(url.toString(), req),
-      )
+      const id = env.TUNNEL_DO.idFromName(url.searchParams.get('id') ?? 'default')
+      const res = await env.TUNNEL_DO.get(id).fetch(new Request(url.toString(), req))
       return addCors(res)
     }
 
@@ -53,8 +44,7 @@ export class Tunnel {
   }
 
   async fetch(req: Request) {
-    if (req.headers.get('Upgrade') !== 'websocket')
-      return addCors(new Response('Upgrade required', { status: 400 }))
+    if (req.headers.get('Upgrade') !== 'websocket') return addCors(new Response('Upgrade required', { status: 400 }))
 
     const url = new URL(req.url)
     const role = url.pathname.startsWith('/upstream') ? 'up' : 'down'
@@ -107,12 +97,7 @@ export class Tunnel {
     }
   }
 
-  async webSocketClose(
-    ws: WebSocket,
-    code: number,
-    reason: string,
-    wasClean: boolean,
-  ) {
+  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
     const attachment = ws.deserializeAttachment() as Attachment | undefined
 
     if (attachment?.role === 'up') {

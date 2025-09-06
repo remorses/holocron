@@ -5,11 +5,7 @@ import { className, css, fonts } from './chunk-T7POLAZE.js'
 import { stdin_default } from './chunk-LCDELW7M.js'
 
 // /:https://framerusercontent.com/modules/5La1nooSGq6Eg3yT6LRo/us6QkWrKmGmezIy7EiAG/pgSSHeBXt.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -38,9 +34,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { duration: 0, type: 'tween' }
@@ -51,10 +45,7 @@ var QueryData = ({ query: query2, pageSize, children }) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -72,8 +63,7 @@ var getProps = ({ agency, height, id, pro, starter, width, ...props }) => {
     LrWwynB5Z: starter ?? props.LrWwynB5Z,
     nLafIFKo_: pro ?? props.nLafIFKo_,
     oi7GANdWW: agency ?? props.oi7GANdWW,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'LabXLIX6k',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'LabXLIX6k',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -162,12 +152,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-1voxkno',
-            className2,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-1voxkno', className2, classNames),
           'data-framer-name': 'Starter',
           layoutDependency,
           layoutId: 'LabXLIX6k',
@@ -244,476 +229,346 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           LayoutGroup,
                           {
                             id: `EQr2WxjHK-${idEQr2WxjHK2}`,
-                            children: /* @__PURE__ */ _jsx(
-                              PathVariablesContext.Provider,
-                              {
-                                value: {
-                                  k2CHhHMep: k2CHhHMepEQr2WxjHK2,
-                                },
-                                children: /* @__PURE__ */ _jsxs(motion.div, {
-                                  className: 'framer-1thgos8',
-                                  'data-framer-name': 'Content',
-                                  layoutDependency,
-                                  layoutId: 'BII6WFIHy',
-                                  children: [
-                                    /* @__PURE__ */ _jsxs(motion.div, {
-                                      className: 'framer-1ache31',
-                                      'data-framer-name': 'Helper',
-                                      layoutDependency,
-                                      layoutId: 'cvHtv1wRn',
-                                      children: [
-                                        /* @__PURE__ */ _jsx(motion.div, {
-                                          className: 'framer-1qhgbvc',
-                                          'data-framer-name': 'BG',
-                                          layoutDependency,
-                                          layoutId: 'KUuzpSKxG',
-                                          style: {
-                                            backgroundColor:
-                                              'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-                                            borderBottomLeftRadius: 10,
-                                            borderBottomRightRadius: 10,
-                                            borderTopLeftRadius: 10,
-                                            borderTopRightRadius: 10,
-                                            opacity: 0.2,
-                                          },
-                                        }),
-                                        isDisplayed() &&
-                                          /* @__PURE__ */ _jsx(motion.div, {
-                                            className: 'framer-1yn2mxx',
-                                            'data-framer-name': 'Starter',
-                                            layoutDependency,
-                                            layoutId: 'vHAVhfUuH',
-                                            style: {
-                                              opacity: 0,
-                                            },
-                                            children: /* @__PURE__ */ _jsx(
-                                              RichText,
-                                              {
-                                                __fromCanvasComponent: true,
-                                                children: /* @__PURE__ */ _jsx(
-                                                  React.Fragment,
-                                                  {
-                                                    children:
-                                                      /* @__PURE__ */ _jsx(
-                                                        motion.div,
-                                                        {
-                                                          className:
-                                                            'framer-styles-preset-2pjocb',
-                                                          'data-styles-preset':
-                                                            'Dkr92TfXs',
-                                                          children: 'Starter',
-                                                        },
-                                                      ),
-                                                  },
-                                                ),
-                                                className: 'framer-13aniqa',
-                                                'data-nosnippet': true,
-                                                fonts: ['Inter'],
-                                                layoutDependency,
-                                                layoutId: 'cJAyrBf_e',
-                                                style: {
-                                                  '--framer-link-text-color':
-                                                    'rgb(0, 153, 255)',
-                                                  '--framer-link-text-decoration':
-                                                    'underline',
-                                                },
-                                                tabIndex: -1,
-                                                text: EjvpS99sbEQr2WxjHK2,
-                                                verticalAlignment: 'top',
-                                                withExternalLayout: true,
-                                              },
-                                            ),
-                                          }),
-                                        isDisplayed1() &&
-                                          /* @__PURE__ */ _jsx(motion.div, {
-                                            className: 'framer-49a6tc',
-                                            'data-framer-name': 'Pro',
-                                            layoutDependency,
-                                            layoutId: 'F3hTS_Srg',
-                                            style: {
-                                              opacity: 0,
-                                            },
-                                            children: /* @__PURE__ */ _jsx(
-                                              RichText,
-                                              {
-                                                __fromCanvasComponent: true,
-                                                children: /* @__PURE__ */ _jsx(
-                                                  React.Fragment,
-                                                  {
-                                                    children:
-                                                      /* @__PURE__ */ _jsx(
-                                                        motion.div,
-                                                        {
-                                                          className:
-                                                            'framer-styles-preset-2pjocb',
-                                                          'data-styles-preset':
-                                                            'Dkr92TfXs',
-                                                          children: 'Pro',
-                                                        },
-                                                      ),
-                                                  },
-                                                ),
-                                                className: 'framer-igbsei',
-                                                'data-nosnippet': true,
-                                                fonts: ['Inter'],
-                                                layoutDependency,
-                                                layoutId: 'qASsSXDb4',
-                                                style: {
-                                                  '--framer-link-text-color':
-                                                    'rgb(0, 153, 255)',
-                                                  '--framer-link-text-decoration':
-                                                    'underline',
-                                                },
-                                                tabIndex: -1,
-                                                text: zQUY1GxFMEQr2WxjHK2,
-                                                verticalAlignment: 'top',
-                                                withExternalLayout: true,
-                                              },
-                                            ),
-                                          }),
-                                        isDisplayed2() &&
-                                          /* @__PURE__ */ _jsx(motion.div, {
-                                            className: 'framer-gq6heh',
-                                            'data-framer-name': 'Agency',
-                                            layoutDependency,
-                                            layoutId: 'Q5xYSftZ1',
-                                            style: {
-                                              opacity: 0,
-                                            },
-                                            children: /* @__PURE__ */ _jsx(
-                                              RichText,
-                                              {
-                                                __fromCanvasComponent: true,
-                                                children: /* @__PURE__ */ _jsx(
-                                                  React.Fragment,
-                                                  {
-                                                    children:
-                                                      /* @__PURE__ */ _jsx(
-                                                        motion.div,
-                                                        {
-                                                          className:
-                                                            'framer-styles-preset-2pjocb',
-                                                          'data-styles-preset':
-                                                            'Dkr92TfXs',
-                                                          children: 'Agency',
-                                                        },
-                                                      ),
-                                                  },
-                                                ),
-                                                className: 'framer-1a6wt9x',
-                                                'data-nosnippet': true,
-                                                fonts: ['Inter'],
-                                                layoutDependency,
-                                                layoutId: 'I07BxMvXO',
-                                                style: {
-                                                  '--framer-link-text-color':
-                                                    'rgb(0, 153, 255)',
-                                                  '--framer-link-text-decoration':
-                                                    'underline',
-                                                },
-                                                tabIndex: -1,
-                                                text: RSURoJJLqEQr2WxjHK2,
-                                                verticalAlignment: 'top',
-                                                withExternalLayout: true,
-                                              },
-                                            ),
-                                          }),
-                                      ],
-                                    }),
-                                    /* @__PURE__ */ _jsxs(motion.div, {
-                                      className: 'framer-1qu1ub',
-                                      'data-framer-name': 'Content',
-                                      layoutDependency,
-                                      layoutId: 'oeRraaulR',
-                                      children: [
-                                        /* @__PURE__ */ _jsx(motion.div, {
-                                          className: 'framer-1ijhlql',
-                                          'data-framer-name': 'Item',
-                                          'data-highlight': true,
-                                          layoutDependency,
-                                          layoutId: 'VQI52Om6m',
-                                          onTap: onTapppcay1,
-                                          children: /* @__PURE__ */ _jsx(
-                                            RichText,
-                                            {
-                                              __fromCanvasComponent: true,
-                                              children: /* @__PURE__ */ _jsx(
-                                                React.Fragment,
-                                                {
-                                                  children:
-                                                    /* @__PURE__ */ _jsx(
-                                                      motion.p,
-                                                      {
-                                                        className:
-                                                          'framer-styles-preset-2pjocb',
-                                                        'data-styles-preset':
-                                                          'Dkr92TfXs',
-                                                        style: {
-                                                          '--framer-text-color':
-                                                            'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
-                                                        },
-                                                        children: 'Starter',
-                                                      },
-                                                    ),
-                                                },
-                                              ),
-                                              className: 'framer-1dlapw4',
-                                              fonts: ['Inter'],
-                                              layoutDependency,
-                                              layoutId: 'beCi2Vbly',
-                                              style: {
-                                                '--extracted-r6o4lv':
-                                                  'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-                                                '--framer-link-text-color':
-                                                  'rgb(0, 153, 255)',
-                                                '--framer-link-text-decoration':
-                                                  'underline',
-                                              },
-                                              text: EjvpS99sbEQr2WxjHK2,
-                                              variants: {
-                                                aIEggWqAx: {
-                                                  '--extracted-r6o4lv':
-                                                    'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
-                                                },
-                                                VNY_jqTjA: {
-                                                  '--extracted-r6o4lv':
-                                                    'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
-                                                },
-                                              },
-                                              verticalAlignment: 'top',
-                                              withExternalLayout: true,
-                                              ...addPropertyOverrides(
-                                                {
-                                                  aIEggWqAx: {
-                                                    children:
-                                                      /* @__PURE__ */ _jsx(
-                                                        React.Fragment,
-                                                        {
-                                                          children:
-                                                            /* @__PURE__ */ _jsx(
-                                                              motion.p,
-                                                              {
-                                                                className:
-                                                                  'framer-styles-preset-2pjocb',
-                                                                'data-styles-preset':
-                                                                  'Dkr92TfXs',
-                                                                style: {
-                                                                  '--framer-text-color':
-                                                                    'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
-                                                                },
-                                                                children:
-                                                                  'Starter',
-                                                              },
-                                                            ),
-                                                        },
-                                                      ),
-                                                  },
-                                                  VNY_jqTjA: {
-                                                    children:
-                                                      /* @__PURE__ */ _jsx(
-                                                        React.Fragment,
-                                                        {
-                                                          children:
-                                                            /* @__PURE__ */ _jsx(
-                                                              motion.p,
-                                                              {
-                                                                className:
-                                                                  'framer-styles-preset-2pjocb',
-                                                                'data-styles-preset':
-                                                                  'Dkr92TfXs',
-                                                                style: {
-                                                                  '--framer-text-color':
-                                                                    'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
-                                                                },
-                                                                children:
-                                                                  'Starter',
-                                                              },
-                                                            ),
-                                                        },
-                                                      ),
-                                                  },
-                                                },
-                                                baseVariant,
-                                                gestureVariant,
-                                              ),
-                                            },
-                                          ),
-                                        }),
-                                        /* @__PURE__ */ _jsx(motion.div, {
-                                          className: 'framer-dagdq3',
-                                          'data-framer-name': 'Item',
-                                          'data-highlight': true,
-                                          layoutDependency,
-                                          layoutId: 'mpHG_VJX5',
-                                          onTap: onTap16mesxw,
-                                          children: /* @__PURE__ */ _jsx(
-                                            RichText,
-                                            {
-                                              __fromCanvasComponent: true,
-                                              children: /* @__PURE__ */ _jsx(
-                                                React.Fragment,
-                                                {
-                                                  children:
-                                                    /* @__PURE__ */ _jsx(
-                                                      motion.p,
-                                                      {
-                                                        className:
-                                                          'framer-styles-preset-2pjocb',
-                                                        'data-styles-preset':
-                                                          'Dkr92TfXs',
-                                                        style: {
-                                                          '--framer-text-color':
-                                                            'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
-                                                        },
-                                                        children: 'Pro',
-                                                      },
-                                                    ),
-                                                },
-                                              ),
-                                              className: 'framer-1czo7n2',
-                                              fonts: ['Inter'],
-                                              layoutDependency,
-                                              layoutId: 'Pph0Uo8tR',
-                                              style: {
-                                                '--extracted-r6o4lv':
-                                                  'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
-                                                '--framer-link-text-color':
-                                                  'rgb(0, 153, 255)',
-                                                '--framer-link-text-decoration':
-                                                  'underline',
-                                              },
-                                              text: zQUY1GxFMEQr2WxjHK2,
-                                              variants: {
-                                                VNY_jqTjA: {
-                                                  '--extracted-r6o4lv':
-                                                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-                                                },
-                                              },
-                                              verticalAlignment: 'top',
-                                              withExternalLayout: true,
-                                              ...addPropertyOverrides(
-                                                {
-                                                  VNY_jqTjA: {
-                                                    children:
-                                                      /* @__PURE__ */ _jsx(
-                                                        React.Fragment,
-                                                        {
-                                                          children:
-                                                            /* @__PURE__ */ _jsx(
-                                                              motion.p,
-                                                              {
-                                                                className:
-                                                                  'framer-styles-preset-2pjocb',
-                                                                'data-styles-preset':
-                                                                  'Dkr92TfXs',
-                                                                style: {
-                                                                  '--framer-text-color':
-                                                                    'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
-                                                                },
-                                                                children: 'Pro',
-                                                              },
-                                                            ),
-                                                        },
-                                                      ),
-                                                  },
-                                                },
-                                                baseVariant,
-                                                gestureVariant,
-                                              ),
-                                            },
-                                          ),
-                                        }),
-                                        /* @__PURE__ */ _jsx(motion.div, {
-                                          className: 'framer-17wv7zn',
-                                          'data-framer-name': 'Item',
-                                          'data-highlight': true,
-                                          layoutDependency,
-                                          layoutId: 'z3jnBxI2g',
-                                          onTap: onTap1iin8be,
-                                          children: /* @__PURE__ */ _jsx(
-                                            RichText,
-                                            {
-                                              __fromCanvasComponent: true,
-                                              children: /* @__PURE__ */ _jsx(
-                                                React.Fragment,
-                                                {
-                                                  children:
-                                                    /* @__PURE__ */ _jsx(
-                                                      motion.p,
-                                                      {
-                                                        className:
-                                                          'framer-styles-preset-2pjocb',
-                                                        'data-styles-preset':
-                                                          'Dkr92TfXs',
-                                                        style: {
-                                                          '--framer-text-color':
-                                                            'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
-                                                        },
-                                                        children: 'Agency',
-                                                      },
-                                                    ),
-                                                },
-                                              ),
-                                              className: 'framer-18o3du7',
-                                              fonts: ['Inter'],
-                                              layoutDependency,
-                                              layoutId: 'Ri7Cm1vo9',
-                                              style: {
-                                                '--extracted-r6o4lv':
-                                                  'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
-                                                '--framer-link-text-color':
-                                                  'rgb(0, 153, 255)',
-                                                '--framer-link-text-decoration':
-                                                  'underline',
-                                              },
-                                              text: RSURoJJLqEQr2WxjHK2,
-                                              variants: {
-                                                aIEggWqAx: {
-                                                  '--extracted-r6o4lv':
-                                                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
-                                                },
-                                              },
-                                              verticalAlignment: 'top',
-                                              withExternalLayout: true,
-                                              ...addPropertyOverrides(
-                                                {
-                                                  aIEggWqAx: {
-                                                    children:
-                                                      /* @__PURE__ */ _jsx(
-                                                        React.Fragment,
-                                                        {
-                                                          children:
-                                                            /* @__PURE__ */ _jsx(
-                                                              motion.p,
-                                                              {
-                                                                className:
-                                                                  'framer-styles-preset-2pjocb',
-                                                                'data-styles-preset':
-                                                                  'Dkr92TfXs',
-                                                                style: {
-                                                                  '--framer-text-color':
-                                                                    'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
-                                                                },
-                                                                children:
-                                                                  'Agency',
-                                                              },
-                                                            ),
-                                                        },
-                                                      ),
-                                                  },
-                                                },
-                                                baseVariant,
-                                                gestureVariant,
-                                              ),
-                                            },
-                                          ),
-                                        }),
-                                      ],
-                                    }),
-                                  ],
-                                }),
+                            children: /* @__PURE__ */ _jsx(PathVariablesContext.Provider, {
+                              value: {
+                                k2CHhHMep: k2CHhHMepEQr2WxjHK2,
                               },
-                            ),
+                              children: /* @__PURE__ */ _jsxs(motion.div, {
+                                className: 'framer-1thgos8',
+                                'data-framer-name': 'Content',
+                                layoutDependency,
+                                layoutId: 'BII6WFIHy',
+                                children: [
+                                  /* @__PURE__ */ _jsxs(motion.div, {
+                                    className: 'framer-1ache31',
+                                    'data-framer-name': 'Helper',
+                                    layoutDependency,
+                                    layoutId: 'cvHtv1wRn',
+                                    children: [
+                                      /* @__PURE__ */ _jsx(motion.div, {
+                                        className: 'framer-1qhgbvc',
+                                        'data-framer-name': 'BG',
+                                        layoutDependency,
+                                        layoutId: 'KUuzpSKxG',
+                                        style: {
+                                          backgroundColor:
+                                            'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                                          borderBottomLeftRadius: 10,
+                                          borderBottomRightRadius: 10,
+                                          borderTopLeftRadius: 10,
+                                          borderTopRightRadius: 10,
+                                          opacity: 0.2,
+                                        },
+                                      }),
+                                      isDisplayed() &&
+                                        /* @__PURE__ */ _jsx(motion.div, {
+                                          className: 'framer-1yn2mxx',
+                                          'data-framer-name': 'Starter',
+                                          layoutDependency,
+                                          layoutId: 'vHAVhfUuH',
+                                          style: {
+                                            opacity: 0,
+                                          },
+                                          children: /* @__PURE__ */ _jsx(RichText, {
+                                            __fromCanvasComponent: true,
+                                            children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                              children: /* @__PURE__ */ _jsx(motion.div, {
+                                                className: 'framer-styles-preset-2pjocb',
+                                                'data-styles-preset': 'Dkr92TfXs',
+                                                children: 'Starter',
+                                              }),
+                                            }),
+                                            className: 'framer-13aniqa',
+                                            'data-nosnippet': true,
+                                            fonts: ['Inter'],
+                                            layoutDependency,
+                                            layoutId: 'cJAyrBf_e',
+                                            style: {
+                                              '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                              '--framer-link-text-decoration': 'underline',
+                                            },
+                                            tabIndex: -1,
+                                            text: EjvpS99sbEQr2WxjHK2,
+                                            verticalAlignment: 'top',
+                                            withExternalLayout: true,
+                                          }),
+                                        }),
+                                      isDisplayed1() &&
+                                        /* @__PURE__ */ _jsx(motion.div, {
+                                          className: 'framer-49a6tc',
+                                          'data-framer-name': 'Pro',
+                                          layoutDependency,
+                                          layoutId: 'F3hTS_Srg',
+                                          style: {
+                                            opacity: 0,
+                                          },
+                                          children: /* @__PURE__ */ _jsx(RichText, {
+                                            __fromCanvasComponent: true,
+                                            children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                              children: /* @__PURE__ */ _jsx(motion.div, {
+                                                className: 'framer-styles-preset-2pjocb',
+                                                'data-styles-preset': 'Dkr92TfXs',
+                                                children: 'Pro',
+                                              }),
+                                            }),
+                                            className: 'framer-igbsei',
+                                            'data-nosnippet': true,
+                                            fonts: ['Inter'],
+                                            layoutDependency,
+                                            layoutId: 'qASsSXDb4',
+                                            style: {
+                                              '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                              '--framer-link-text-decoration': 'underline',
+                                            },
+                                            tabIndex: -1,
+                                            text: zQUY1GxFMEQr2WxjHK2,
+                                            verticalAlignment: 'top',
+                                            withExternalLayout: true,
+                                          }),
+                                        }),
+                                      isDisplayed2() &&
+                                        /* @__PURE__ */ _jsx(motion.div, {
+                                          className: 'framer-gq6heh',
+                                          'data-framer-name': 'Agency',
+                                          layoutDependency,
+                                          layoutId: 'Q5xYSftZ1',
+                                          style: {
+                                            opacity: 0,
+                                          },
+                                          children: /* @__PURE__ */ _jsx(RichText, {
+                                            __fromCanvasComponent: true,
+                                            children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                              children: /* @__PURE__ */ _jsx(motion.div, {
+                                                className: 'framer-styles-preset-2pjocb',
+                                                'data-styles-preset': 'Dkr92TfXs',
+                                                children: 'Agency',
+                                              }),
+                                            }),
+                                            className: 'framer-1a6wt9x',
+                                            'data-nosnippet': true,
+                                            fonts: ['Inter'],
+                                            layoutDependency,
+                                            layoutId: 'I07BxMvXO',
+                                            style: {
+                                              '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                              '--framer-link-text-decoration': 'underline',
+                                            },
+                                            tabIndex: -1,
+                                            text: RSURoJJLqEQr2WxjHK2,
+                                            verticalAlignment: 'top',
+                                            withExternalLayout: true,
+                                          }),
+                                        }),
+                                    ],
+                                  }),
+                                  /* @__PURE__ */ _jsxs(motion.div, {
+                                    className: 'framer-1qu1ub',
+                                    'data-framer-name': 'Content',
+                                    layoutDependency,
+                                    layoutId: 'oeRraaulR',
+                                    children: [
+                                      /* @__PURE__ */ _jsx(motion.div, {
+                                        className: 'framer-1ijhlql',
+                                        'data-framer-name': 'Item',
+                                        'data-highlight': true,
+                                        layoutDependency,
+                                        layoutId: 'VQI52Om6m',
+                                        onTap: onTapppcay1,
+                                        children: /* @__PURE__ */ _jsx(RichText, {
+                                          __fromCanvasComponent: true,
+                                          children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                            children: /* @__PURE__ */ _jsx(motion.p, {
+                                              className: 'framer-styles-preset-2pjocb',
+                                              'data-styles-preset': 'Dkr92TfXs',
+                                              style: {
+                                                '--framer-text-color':
+                                                  'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
+                                              },
+                                              children: 'Starter',
+                                            }),
+                                          }),
+                                          className: 'framer-1dlapw4',
+                                          fonts: ['Inter'],
+                                          layoutDependency,
+                                          layoutId: 'beCi2Vbly',
+                                          style: {
+                                            '--extracted-r6o4lv':
+                                              'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
+                                          },
+                                          text: EjvpS99sbEQr2WxjHK2,
+                                          variants: {
+                                            aIEggWqAx: {
+                                              '--extracted-r6o4lv':
+                                                'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                                            },
+                                            VNY_jqTjA: {
+                                              '--extracted-r6o4lv':
+                                                'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                                            },
+                                          },
+                                          verticalAlignment: 'top',
+                                          withExternalLayout: true,
+                                          ...addPropertyOverrides(
+                                            {
+                                              aIEggWqAx: {
+                                                children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                                  children: /* @__PURE__ */ _jsx(motion.p, {
+                                                    className: 'framer-styles-preset-2pjocb',
+                                                    'data-styles-preset': 'Dkr92TfXs',
+                                                    style: {
+                                                      '--framer-text-color':
+                                                        'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
+                                                    },
+                                                    children: 'Starter',
+                                                  }),
+                                                }),
+                                              },
+                                              VNY_jqTjA: {
+                                                children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                                  children: /* @__PURE__ */ _jsx(motion.p, {
+                                                    className: 'framer-styles-preset-2pjocb',
+                                                    'data-styles-preset': 'Dkr92TfXs',
+                                                    style: {
+                                                      '--framer-text-color':
+                                                        'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
+                                                    },
+                                                    children: 'Starter',
+                                                  }),
+                                                }),
+                                              },
+                                            },
+                                            baseVariant,
+                                            gestureVariant,
+                                          ),
+                                        }),
+                                      }),
+                                      /* @__PURE__ */ _jsx(motion.div, {
+                                        className: 'framer-dagdq3',
+                                        'data-framer-name': 'Item',
+                                        'data-highlight': true,
+                                        layoutDependency,
+                                        layoutId: 'mpHG_VJX5',
+                                        onTap: onTap16mesxw,
+                                        children: /* @__PURE__ */ _jsx(RichText, {
+                                          __fromCanvasComponent: true,
+                                          children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                            children: /* @__PURE__ */ _jsx(motion.p, {
+                                              className: 'framer-styles-preset-2pjocb',
+                                              'data-styles-preset': 'Dkr92TfXs',
+                                              style: {
+                                                '--framer-text-color':
+                                                  'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
+                                              },
+                                              children: 'Pro',
+                                            }),
+                                          }),
+                                          className: 'framer-1czo7n2',
+                                          fonts: ['Inter'],
+                                          layoutDependency,
+                                          layoutId: 'Pph0Uo8tR',
+                                          style: {
+                                            '--extracted-r6o4lv':
+                                              'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
+                                          },
+                                          text: zQUY1GxFMEQr2WxjHK2,
+                                          variants: {
+                                            VNY_jqTjA: {
+                                              '--extracted-r6o4lv':
+                                                'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                                            },
+                                          },
+                                          verticalAlignment: 'top',
+                                          withExternalLayout: true,
+                                          ...addPropertyOverrides(
+                                            {
+                                              VNY_jqTjA: {
+                                                children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                                  children: /* @__PURE__ */ _jsx(motion.p, {
+                                                    className: 'framer-styles-preset-2pjocb',
+                                                    'data-styles-preset': 'Dkr92TfXs',
+                                                    style: {
+                                                      '--framer-text-color':
+                                                        'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
+                                                    },
+                                                    children: 'Pro',
+                                                  }),
+                                                }),
+                                              },
+                                            },
+                                            baseVariant,
+                                            gestureVariant,
+                                          ),
+                                        }),
+                                      }),
+                                      /* @__PURE__ */ _jsx(motion.div, {
+                                        className: 'framer-17wv7zn',
+                                        'data-framer-name': 'Item',
+                                        'data-highlight': true,
+                                        layoutDependency,
+                                        layoutId: 'z3jnBxI2g',
+                                        onTap: onTap1iin8be,
+                                        children: /* @__PURE__ */ _jsx(RichText, {
+                                          __fromCanvasComponent: true,
+                                          children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                            children: /* @__PURE__ */ _jsx(motion.p, {
+                                              className: 'framer-styles-preset-2pjocb',
+                                              'data-styles-preset': 'Dkr92TfXs',
+                                              style: {
+                                                '--framer-text-color':
+                                                  'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
+                                              },
+                                              children: 'Agency',
+                                            }),
+                                          }),
+                                          className: 'framer-18o3du7',
+                                          fonts: ['Inter'],
+                                          layoutDependency,
+                                          layoutId: 'Ri7Cm1vo9',
+                                          style: {
+                                            '--extracted-r6o4lv':
+                                              'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
+                                          },
+                                          text: RSURoJJLqEQr2WxjHK2,
+                                          variants: {
+                                            aIEggWqAx: {
+                                              '--extracted-r6o4lv':
+                                                'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                                            },
+                                          },
+                                          verticalAlignment: 'top',
+                                          withExternalLayout: true,
+                                          ...addPropertyOverrides(
+                                            {
+                                              aIEggWqAx: {
+                                                children: /* @__PURE__ */ _jsx(React.Fragment, {
+                                                  children: /* @__PURE__ */ _jsx(motion.p, {
+                                                    className: 'framer-styles-preset-2pjocb',
+                                                    'data-styles-preset': 'Dkr92TfXs',
+                                                    style: {
+                                                      '--framer-text-color':
+                                                        'var(--extracted-r6o4lv, var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)))',
+                                                    },
+                                                    children: 'Agency',
+                                                  }),
+                                                }),
+                                              },
+                                            },
+                                            baseVariant,
+                                            gestureVariant,
+                                          ),
+                                        }),
+                                      }),
+                                    ],
+                                  }),
+                                ],
+                              }),
+                            }),
                           },
                           idEQr2WxjHK2,
                         )
@@ -771,8 +626,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

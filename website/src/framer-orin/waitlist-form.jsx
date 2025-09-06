@@ -13,11 +13,7 @@ import { Fragment as Fragment3 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/lhovZstAJk48aaciqLMc/1MhTMzwwQRuzJ9IIgl1H/lncz8qZqS.js
-import {
-  jsx as _jsx2,
-  jsxs as _jsxs2,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx2, jsxs as _jsxs2, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts as addFonts2,
   addPropertyControls as addPropertyControls2,
@@ -35,11 +31,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 
@@ -69,13 +61,7 @@ var enabledGestures = {
     hover: true,
   },
 }
-var cycleOrder = [
-  'b7eOTPEdT',
-  'KtJXuTrAP',
-  'JsFnc46Fk',
-  'cq4TYNeCx',
-  'EYtyXzZeq',
-]
+var cycleOrder = ['b7eOTPEdT', 'KtJXuTrAP', 'JsFnc46Fk', 'cq4TYNeCx', 'EYtyXzZeq']
 var serializationHash = 'framer-P7oOA'
 var variantClassNames = {
   b7eOTPEdT: 'framer-v-qmgsm0',
@@ -86,9 +72,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -130,11 +114,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -144,24 +124,14 @@ var humanReadableVariantMap = {
   Loading: 'KtJXuTrAP',
   Success: 'JsFnc46Fk',
 }
-var getProps = ({
-  additional,
-  error,
-  height,
-  id,
-  label,
-  success,
-  width,
-  ...props
-}) => {
+var getProps = ({ additional, error, height, id, label, success, width, ...props }) => {
   return {
     ...props,
     puP6A2dz_: additional ?? props.puP6A2dz_,
     SB93GG782: success ?? props.SB93GG782 ?? 'Thanks for your application!',
     SMZpJms0Q: label ?? props.SMZpJms0Q ?? 'Apply for',
     v5N8mGmrX: error ?? props.v5N8mGmrX ?? 'Something went wrong',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'b7eOTPEdT',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'b7eOTPEdT',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -218,12 +188,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.button
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-qmgsm0',
-              className2,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-qmgsm0', className2, classNames)}
             data-framer-name={'Default'}
             data-reset={'button'}
             draggable={'false'}
@@ -232,8 +197,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             ref={refBinding}
             style={{
               backdropFilter: 'blur(2px)',
-              backgroundColor:
-                'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+              backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
               borderBottomLeftRadius: 20,
               borderBottomRightRadius: 20,
               borderTopLeftRadius: 20,
@@ -293,8 +257,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'RUU3Zske0'}
                 style={{
-                  '--13bnw74':
-                    'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                  '--13bnw74': 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                   opacity: 0,
                 }}
                 transformTemplate={transformTemplate1}
@@ -352,8 +315,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'l39ioVxkt'}
                 style={{
-                  '--extracted-r6o4lv':
-                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                  '--extracted-r6o4lv': 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                   '--framer-link-text-color': 'rgb(0, 153, 255)',
                   '--framer-link-text-decoration': 'underline',
                 }}
@@ -413,8 +375,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'uEmIec4Jw'}
                 style={{
-                  '--extracted-r6o4lv':
-                    'var(--token-1e8433a6-dbc9-469b-bb1a-972dd419d298, rgb(219, 44, 44))',
+                  '--extracted-r6o4lv': 'var(--token-1e8433a6-dbc9-469b-bb1a-972dd419d298, rgb(219, 44, 44))',
                   '--framer-link-text-color': 'rgb(0, 153, 255)',
                   '--framer-link-text-decoration': 'underline',
                 }}
@@ -499,8 +460,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency={layoutDependency}
                 layoutId={'Hk7Q00Vrg'}
                 style={{
-                  '--extracted-r6o4lv':
-                    'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                  '--extracted-r6o4lv': 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                   '--framer-link-text-color': 'rgb(0, 153, 255)',
                   '--framer-link-text-decoration': 'underline',
                 }}
@@ -530,8 +490,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency={layoutDependency}
                   layoutId={'ixuBEVFZz'}
                   style={{
-                    '--extracted-r6o4lv':
-                      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                    '--extracted-r6o4lv': 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                     '--framer-link-text-color': 'rgb(0, 153, 255)',
                     '--framer-link-text-decoration': 'underline',
                   }}
@@ -560,8 +519,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               layoutDependency={layoutDependency}
               layoutId={'OK4Q3x2f1'}
               style={{
-                backgroundColor:
-                  'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                backgroundColor: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                 borderBottomLeftRadius: 100,
                 borderBottomRightRadius: 100,
                 borderTopLeftRadius: 100,
@@ -644,8 +602,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -722,9 +679,7 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = {
@@ -755,11 +710,7 @@ var Transition2 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext2.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext2.Provider>
-  )
+  return <MotionConfigContext2.Provider value={contextValue}>{children}</MotionConfigContext2.Provider>
 }
 var transformTemplate12 = (_, t) => `translateY(-50%) ${t}`
 var formVariants = (form, variants, currentVariant) => {
@@ -784,8 +735,7 @@ var getProps2 = ({ height, id, label, width, ...props }) => {
   return {
     ...props,
     skL1oWl_l: label ?? props.skL1oWl_l ?? 'Join now',
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'oWEros5wR',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'oWEros5wR',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -798,14 +748,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo2()
   const componentViewport = useComponentViewport2()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    skL1oWl_l,
-    ...restProps
-  } = getProps2(props)
+  const { style, className: className2, layoutId, variant, skL1oWl_l, ...restProps } = getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -847,12 +790,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
           <motion2.div
             {...restProps}
             {...gestureHandlers}
-            className={cx2(
-              scopingClassNames,
-              'framer-1wutwn6',
-              className2,
-              classNames,
-            )}
+            className={cx2(scopingClassNames, 'framer-1wutwn6', className2, classNames)}
             data-framer-name={'Default'}
             layoutDependency={layoutDependency}
             layoutId={'oWEros5wR'}
@@ -887,9 +825,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
             )}
           >
             <FormContainer
-              action={
-                'https://api.framer.com/forms/v1/forms/a838b13d-4495-43f7-ba24-fd42090d36c1/submit'
-              }
+              action={'https://api.framer.com/forms/v1/forms/a838b13d-4495-43f7-ba24-fd42090d36c1/submit'}
               className={'framer-uk1nxd'}
               data-highlight={true}
               layoutDependency={layoutDependency}
@@ -973,10 +909,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                             style={{
                               '--framer-input-background':
                                 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
-                              '--framer-input-border-radius-bottom-left':
-                                '38px',
-                              '--framer-input-border-radius-bottom-right':
-                                '38px',
+                              '--framer-input-border-radius-bottom-left': '38px',
+                              '--framer-input-border-radius-bottom-right': '38px',
                               '--framer-input-border-radius-top-left': '38px',
                               '--framer-input-border-radius-top-right': '38px',
                               '--framer-input-box-shadow':
@@ -1239,17 +1173,11 @@ stdin_default3.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -1297,9 +1225,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

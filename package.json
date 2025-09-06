@@ -10,7 +10,7 @@
     "typecheck": "pnpm -r --parallel --no-bail --stream typecheck",
     "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
     "release": "pnpm build && changeset",
-    "format": "biome format --write ."
+    "format": "biome format --write . --skip-parse-errors"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.3",

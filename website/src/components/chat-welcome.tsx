@@ -34,12 +34,8 @@ function TodoItem({
       }}
     >
       <span className='inline-block group-hover:text-purple-400 text-purple-200'>
-        <span className={cn('inline group-hover:hidden ')}>
-          {isFirst ? '⎿ [ ] ' : '   [ ] '}
-        </span>
-        <span className={cn('hidden group-hover:inline ')}>
-          {isFirst ? '⎿ [x] ' : '   [x] '}
-        </span>
+        <span className={cn('inline group-hover:hidden ')}>{isFirst ? '⎿ [ ] ' : '   [ ] '}</span>
+        <span className={cn('hidden group-hover:inline ')}>{isFirst ? '⎿ [x] ' : '   [x] '}</span>
       </span>
       {userMessage}
     </button>
@@ -67,9 +63,7 @@ function TodosActions() {
   const greeting = isOnboardingChat
     ? 'Hi! I am Holocron, your AI docs assistant'
     : "Hi! I'm ready to help update your docs"
-  const subtitle = isOnboardingChat
-    ? 'Things you can do with Holocron:'
-    : 'Try these powerful doc enhancements:'
+  const subtitle = isOnboardingChat ? 'Things you can do with Holocron:' : 'Try these powerful doc enhancements:'
 
   return (
     <div className='leading-snug font-mono text-sm whitespace-pre-wrap break-all gap-[0.1em] flex flex-col items-start'>

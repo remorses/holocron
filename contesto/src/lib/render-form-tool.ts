@@ -6,25 +6,21 @@ import { z } from 'zod'
 import { optionalToNullable } from './zod.js'
 import { extractNamePathsFromSchema } from './schema-path-utils.js'
 
-const compileSchema =
-  schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
+const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 
 export interface RenderFormToolConfig {
   jsonSchema?: JSONSchema7
   replaceOptionalsWithNulls?: boolean
   description?: string
   notifyError?: (error: any, msg?: string) => void
-  onExecute?: (params: {
-    messages: ModelMessage[]
-  }) => string | undefined | Promise<string | undefined>
+  onExecute?: (params: { messages: ModelMessage[] }) => string | undefined | Promise<string | undefined>
 }
 
 export function createRenderFormTool({
   jsonSchema,
   description,
   replaceOptionalsWithNulls,
-  notifyError = (err, msg) =>
-    console.error(msg || 'Error in createRenderFormTool', err),
+  notifyError = (err, msg) => console.error(msg || 'Error in createRenderFormTool', err),
   onExecute,
 }: RenderFormToolConfig) {
   let uiFieldsSchema = UIFieldSchema
@@ -105,9 +101,7 @@ export function createRenderFormTool({
       const errors: string[] = []
       for (const field of params.fields) {
         if (field.name.match(/\[\s*index\s*\]/)) {
-          errors.push(
-            `field.name "${field.name}" contains "[index]" syntax; please use field.index instead`,
-          )
+          errors.push(`field.name "${field.name}" contains "[index]" syntax; please use field.index instead`)
         }
         const schema = getTypeForNameInSchema(field.name)
         if (!schema) {
@@ -207,9 +201,7 @@ export const UIFieldSchema = z.object({
   type: FieldTypeEnum,
   label: z
     .string()
-    .describe(
-      'Label describing what this field does to the user. For array items use First, Second, Third prefixes',
-    ),
+    .describe('Label describing what this field does to the user. For array items use First, Second, Third prefixes'),
   description: z.string().optional(),
   // Common fields
   required: z.boolean().optional(),

@@ -11,13 +11,7 @@ type Operation = {
   path: string
 }
 
-export async function getOpenapiDocument({
-  url,
-  docsJson,
-}: {
-  url: URL
-  docsJson: DocsJsonType
-}) {
+export async function getOpenapiDocument({ url, docsJson }: { url: URL; docsJson: DocsJsonType }) {
   const openapiPath = '/api-reference'
   const { openapiUrl, renderer = 'fumadocs' } = await getOpenapiUrl({
     docsJson,
@@ -43,9 +37,7 @@ export async function getOpenapiDocument({
   const method = pathWithoutBase.split('/').pop() as OpenAPIV3_1.HttpMethods
   const path = pathWithoutBase.split('/').slice(1).join('/')
   const operations = getOperations(processedOpenAPI)
-  const found = operations.find(
-    (op) => op.method === method && op.path === path,
-  )
+  const found = operations.find((op) => op.method === method && op.path === path)
   if (!found) {
     return {
       type: 'openapi' as const,
@@ -66,17 +58,10 @@ export async function getOpenapiDocument({
   return {}
 }
 
-export async function getOpenapiUrl({
-  url,
-  docsJson,
-}: {
-  url: URL
-  docsJson: DocsJsonType
-}) {
+export async function getOpenapiUrl({ url, docsJson }: { url: URL; docsJson: DocsJsonType }) {
   const openapiPath = '/api-reference'
   const openapiTab = docsJson.tabs?.find((x) => 'openapi' in x && x.openapi)
-  const isApiReferencePath =
-    url.pathname === openapiPath || url.pathname.startsWith(openapiPath + '/')
+  const isApiReferencePath = url.pathname === openapiPath || url.pathname.startsWith(openapiPath + '/')
   if (isApiReferencePath && openapiTab && 'openapi' in openapiTab) {
     const openapiUrl = openapiTab.openapi
     const { renderer } = openapiTab
@@ -103,12 +88,8 @@ const lru = new LRUCache<string, ProcessedDocument>({
 /**
  * process & reference input document to a Fumadocs OpenAPI compatible format
  */
-export async function processDocument(
-  input: DocumentInput,
-  disableCache = false,
-): Promise<ProcessedDocument> {
-  const cached =
-    !disableCache && typeof input === 'string' ? lru.get(input) : null
+export async function processDocument(input: DocumentInput, disableCache = false): Promise<ProcessedDocument> {
+  const cached = !disableCache && typeof input === 'string' ? lru.get(input) : null
 
   if (cached) return cached
 
@@ -118,9 +99,7 @@ export async function processDocument(
   })
 
   if (loaded.errors && loaded.errors.length > 0) {
-    throw new Error(
-      loaded.errors.map((err) => `${err.code}: ${err.message}`).join('\n'),
-    )
+    throw new Error(loaded.errors.map((err) => `${err.code}: ${err.message}`).join('\n'))
   }
 
   // upgrade

@@ -42,14 +42,10 @@ var Bits = 22
 var Bytes = 23
 var Builtin = 24
 function isAlpha(ch) {
-  return (
-    (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122) || (ch >= 48 && ch <= 57)
-  )
+  return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122) || (ch >= 48 && ch <= 57)
 }
 function isHexDigit(ch) {
-  return (
-    (ch >= 48 && ch <= 57) || (ch >= 97 && ch <= 102) || (ch >= 65 && ch <= 70)
-  )
+  return (ch >= 48 && ch <= 57) || (ch >= 97 && ch <= 102) || (ch >= 65 && ch <= 70)
 }
 function readLiteral(input, endQuote, backslashEscapes) {
   for (let escaped = false; ; ) {
@@ -147,8 +143,7 @@ var defaults = {
 }
 function dialect(spec, kws, types, builtin) {
   let dialect2 = {}
-  for (let prop in defaults)
-    dialect2[prop] = (spec.hasOwnProperty(prop) ? spec : defaults)[prop]
+  for (let prop in defaults) dialect2[prop] = (spec.hasOwnProperty(prop) ? spec : defaults)[prop]
   if (kws) dialect2.words = keywords(kws, types || '', builtin)
   return dialect2
 }
@@ -166,17 +161,10 @@ function tokensFor(d) {
     } else if (next == 39 || (next == 34 && d.doubleQuotedStrings)) {
       readLiteral(input, next, d.backslashEscapes)
       input.acceptToken(String$1)
-    } else if (
-      (next == 35 && d.hashComments) ||
-      (next == 47 && input.next == 47 && d.slashComments)
-    ) {
+    } else if ((next == 35 && d.hashComments) || (next == 47 && input.next == 47 && d.slashComments)) {
       eol(input)
       input.acceptToken(LineComment)
-    } else if (
-      next == 45 &&
-      input.next == 45 &&
-      (!d.spaceAfterDashes || input.peek(1) == 32)
-    ) {
+    } else if (next == 45 && input.next == 45 && (!d.spaceAfterDashes || input.peek(1) == 32)) {
       eol(input)
       input.acceptToken(LineComment)
     } else if (next == 47 && input.next == 42) {
@@ -198,11 +186,7 @@ function tokensFor(d) {
     } else if ((next == 101 || next == 69) && input.next == 39) {
       input.advance()
       readLiteral(input, 39, true)
-    } else if (
-      (next == 110 || next == 78) &&
-      input.next == 39 &&
-      d.charSetCasts
-    ) {
+    } else if ((next == 110 || next == 78) && input.next == 39 && d.charSetCasts) {
       input.advance()
       readLiteral(input, 39, d.backslashEscapes)
       input.acceptToken(String$1)
@@ -235,10 +219,7 @@ function tokensFor(d) {
       input.advance()
       readBits(input)
       input.acceptToken(Bits)
-    } else if (
-      (next == 98 || next == 66) &&
-      (input.next == 39 || input.next == 34)
-    ) {
+    } else if ((next == 98 || next == 66) && (input.next == 39 || input.next == 34)) {
       const quoteStyle = input.next
       input.advance()
       if (d.treatBitsAsBytes) {
@@ -280,11 +261,7 @@ function tokensFor(d) {
     } else if (isAlpha(next)) {
       let word = readWord(input, String.fromCharCode(next))
       input.acceptToken(
-        input.next == 46
-          ? Identifier
-          : (_a = d.words[word.toLowerCase()]) !== null && _a !== void 0
-            ? _a
-            : Identifier,
+        input.next == 46 ? Identifier : (_a = d.words[word.toLowerCase()]) !== null && _a !== void 0 ? _a : Identifier,
       )
     }
   })
@@ -323,8 +300,7 @@ function plainID(node) {
 function pathFor(doc, id) {
   if (id.name == 'CompositeIdentifier') {
     let path = []
-    for (let ch = id.firstChild; ch; ch = ch.nextSibling)
-      if (plainID(ch)) path.push(idName(doc, ch))
+    for (let ch = id.firstChild; ch; ch = ch.nextSibling) if (plainID(ch)) path.push(idName(doc, ch))
     return path
   }
   return [idName(doc, id)]
@@ -341,17 +317,10 @@ function parentsFor(doc, node) {
 function sourceContext(state, startPos) {
   let pos = syntaxTree(state).resolveInner(startPos, -1)
   let aliases = getAliases(state.doc, pos)
-  if (
-    pos.name == 'Identifier' ||
-    pos.name == 'QuotedIdentifier' ||
-    pos.name == 'Keyword'
-  ) {
+  if (pos.name == 'Identifier' || pos.name == 'QuotedIdentifier' || pos.name == 'Keyword') {
     return {
       from: pos.from,
-      quoted:
-        pos.name == 'QuotedIdentifier'
-          ? state.doc.sliceString(pos.from, pos.from + 1)
-          : null,
+      quoted: pos.name == 'QuotedIdentifier' ? state.doc.sliceString(pos.from, pos.from + 1) : null,
       parents: parentsFor(state.doc, tokenBefore(pos)),
       aliases,
     }
@@ -374,9 +343,7 @@ function sourceContext(state, startPos) {
   }
 }
 var EndFrom = /* @__PURE__ */ new Set(
-  /* @__PURE__ */ 'where group having order union intersect except all distinct limit offset fetch for'.split(
-    ' ',
-  ),
+  /* @__PURE__ */ 'where group having order union intersect except all distinct limit offset fetch for'.split(' '),
 )
 function getAliases(doc, at) {
   let statement
@@ -385,15 +352,8 @@ function getAliases(doc, at) {
     if (parent.name == 'Statement') statement = parent
   }
   let aliases = null
-  for (
-    let scan = statement.firstChild, sawFrom = false, prevID = null;
-    scan;
-    scan = scan.nextSibling
-  ) {
-    let kw =
-      scan.name == 'Keyword'
-        ? doc.sliceString(scan.from, scan.to).toLowerCase()
-        : null
+  for (let scan = statement.firstChild, sawFrom = false, prevID = null; scan; scan = scan.nextSibling) {
+    let kw = scan.name == 'Keyword' ? doc.sliceString(scan.from, scan.to).toLowerCase() : null
     let alias = null
     if (!sawFrom) {
       sawFrom = kw == 'from'
@@ -425,8 +385,7 @@ var Span = /^\w*$/
 var QuotedSpan = /^[`'"]?\w*[`'"]?$/
 var CompletionLevel = class {
   child(name) {
-    let children =
-      this.children || (this.children = /* @__PURE__ */ Object.create(null))
+    let children = this.children || (this.children = /* @__PURE__ */ Object.create(null))
     return children[name] || (children[name] = new CompletionLevel())
   }
   childCompletions(type) {
@@ -441,53 +400,39 @@ var CompletionLevel = class {
     this.children = void 0
   }
 }
-function completeFromSchema(
-  schema,
-  tables,
-  schemas,
-  defaultTableName,
-  defaultSchemaName,
-) {
+function completeFromSchema(schema, tables, schemas, defaultTableName, defaultSchemaName) {
   let top = new CompletionLevel()
   let defaultSchema = top.child(defaultSchemaName || '')
   for (let table in schema) {
     let dot = table.indexOf('.')
-    let schemaCompletions =
-      dot > -1 ? top.child(table.slice(0, dot)) : defaultSchema
-    let tableCompletions = schemaCompletions.child(
-      dot > -1 ? table.slice(dot + 1) : table,
-    )
+    let schemaCompletions = dot > -1 ? top.child(table.slice(0, dot)) : defaultSchema
+    let tableCompletions = schemaCompletions.child(dot > -1 ? table.slice(dot + 1) : table)
     tableCompletions.list = schema[table].map((val) =>
       typeof val == 'string' ? { label: val, type: 'property' } : val,
     )
   }
-  defaultSchema.list = (
-    tables || defaultSchema.childCompletions('type')
-  ).concat(defaultTableName ? defaultSchema.child(defaultTableName).list : [])
+  defaultSchema.list = (tables || defaultSchema.childCompletions('type')).concat(
+    defaultTableName ? defaultSchema.child(defaultTableName).list : [],
+  )
   for (let sName in top.children) {
     let schema2 = top.child(sName)
     if (!schema2.list.length) schema2.list = schema2.childCompletions('type')
   }
   top.list = defaultSchema.list.concat(schemas || top.childCompletions('type'))
   return (context) => {
-    let { parents, from, quoted, empty, aliases } = sourceContext(
-      context.state,
-      context.pos,
-    )
+    let { parents, from, quoted, empty, aliases } = sourceContext(context.state, context.pos)
     if (empty && !context.explicit) return null
     if (aliases && parents.length == 1) parents = aliases[parents[0]] || parents
     let level = top
     for (let name of parents) {
       while (!level.children || !level.children[name]) {
         if (level == top) level = defaultSchema
-        else if (level == defaultSchema && defaultTableName)
-          level = level.child(defaultTableName)
+        else if (level == defaultSchema && defaultTableName) level = level.child(defaultTableName)
         else return null
       }
       level = level.child(name)
     }
-    let quoteAfter =
-      quoted && context.state.sliceDoc(context.pos, context.pos + 1) == quoted
+    let quoteAfter = quoted && context.state.sliceDoc(context.pos, context.pos + 1) == quoted
     let options = level.list
     if (level == top && aliases)
       options = options.concat(
@@ -507,23 +452,11 @@ function completeFromSchema(
 function completeKeywords(keywords2, upperCase) {
   let completions = Object.keys(keywords2).map((keyword) => ({
     label: upperCase ? keyword.toUpperCase() : keyword,
-    type:
-      keywords2[keyword] == Type
-        ? 'type'
-        : keywords2[keyword] == Keyword
-          ? 'keyword'
-          : 'variable',
+    type: keywords2[keyword] == Type ? 'type' : keywords2[keyword] == Keyword ? 'keyword' : 'variable',
     boost: -1,
   }))
   return ifNotIn(
-    [
-      'QuotedIdentifier',
-      'SpecialVar',
-      'String',
-      'LineComment',
-      'BlockComment',
-      '.',
-    ],
+    ['QuotedIdentifier', 'SpecialVar', 'String', 'LineComment', 'BlockComment', '.'],
     completeFromList(completions),
   )
 }
@@ -606,13 +539,7 @@ function keywordCompletion(dialect2, upperCase = false) {
 }
 function schemaCompletionSource(config) {
   return config.schema
-    ? completeFromSchema(
-        config.schema,
-        config.tables,
-        config.schemas,
-        config.defaultTable,
-        config.defaultSchema,
-      )
+    ? completeFromSchema(config.schema, config.tables, config.schemas, config.defaultTable, config.defaultSchema)
     : () => null
 }
 function schemaCompletion(config) {
@@ -671,10 +598,7 @@ var MariaSQL = /* @__PURE__ */ SQLDialect.define({
   spaceAfterDashes: true,
   specialVar: '@?',
   identifierQuotes: '`',
-  keywords:
-    SQLKeywords +
-    'always generated groupby_concat hard persistent shutdown soft virtual ' +
-    MySQLKeywords,
+  keywords: SQLKeywords + 'always generated groupby_concat hard persistent shutdown soft virtual ' + MySQLKeywords,
   types: MySQLTypes,
   builtin: MySQLBuiltin,
 })
@@ -706,9 +630,7 @@ var SQLite = /* @__PURE__ */ SQLDialect.define({
 var Cassandra = /* @__PURE__ */ SQLDialect.define({
   keywords:
     'add all allow alter and any apply as asc authorize batch begin by clustering columnfamily compact consistency count create custom delete desc distinct drop each_quorum exists filtering from grant if in index insert into key keyspace keyspaces level limit local_one local_quorum modify nan norecursive nosuperuser not of on one order password permission permissions primary quorum rename revoke schema select set storage superuser table three to token truncate ttl two type unlogged update use user users using values where with writetime infinity NaN',
-  types:
-    SQLTypes +
-    'ascii bigint blob counter frozen inet list map static text timeuuid tuple uuid varint',
+  types: SQLTypes + 'ascii bigint blob counter frozen inet list map static text timeuuid tuple uuid varint',
   slashComments: true,
 })
 var PLSQL = /* @__PURE__ */ SQLDialect.define({

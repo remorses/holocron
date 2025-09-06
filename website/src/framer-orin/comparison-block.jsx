@@ -7,10 +7,7 @@ import { stdin_default as stdin_default8 } from './chunks/chunk-7AAPQZ7Q.js'
 import './chunks/chunk-7D6ZUPOD.js'
 import { stdin_default as stdin_default6 } from './chunks/chunk-U2IF33VB.js'
 import { stdin_default as stdin_default7 } from './chunks/chunk-LZI7I6CP.js'
-import {
-  stdin_default as stdin_default4,
-  stdin_default2 as stdin_default5,
-} from './chunks/chunk-CN6YICE7.js'
+import { stdin_default as stdin_default4, stdin_default2 as stdin_default5 } from './chunks/chunk-CN6YICE7.js'
 import { stdin_default as stdin_default3 } from './chunks/chunk-6NT3LKTJ.js'
 import './chunks/chunk-3XATMP2V.js'
 import './chunks/chunk-T7POLAZE.js'
@@ -31,11 +28,7 @@ import { Fragment as Fragment4 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/dAalYgnOISpcnJxkVCww/Sv7rQc8ZrdtTfFTRftAw/aqhmgCroN.js
-import {
-  jsx as _jsx3,
-  jsxs as _jsxs3,
-  Fragment as _Fragment2,
-} from 'react/jsx-runtime'
+import { jsx as _jsx3, jsxs as _jsxs3, Fragment as _Fragment2 } from 'react/jsx-runtime'
 import {
   addFonts as addFonts3,
   addPropertyControls as addPropertyControls3,
@@ -53,21 +46,12 @@ import {
   useVariantState as useVariantState3,
   withCSS as withCSS3,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup3,
-  motion as motion3,
-  MotionConfigContext as MotionConfigContext3,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup3, motion as motion3, MotionConfigContext as MotionConfigContext3 } from 'unframer'
 import * as React3 from 'react'
 import { useRef as useRef3 } from 'react'
 
 // /:https://framerusercontent.com/modules/yvjzo8iWPsuoQib4udNH/uTQxHgZnm5wy0gZPTrhv/aUccPFm1w.js
-import {
-  addPropertyControls as e5,
-  ControlType as l2,
-  QueryCache as t3,
-  QueryEngine as a2,
-} from 'unframer'
+import { addPropertyControls as e5, ControlType as l2, QueryCache as t3, QueryEngine as a2 } from 'unframer'
 
 // /:https://framerusercontent.com/modules/yvjzo8iWPsuoQib4udNH/uTQxHgZnm5wy0gZPTrhv/aUccPFm1w-0.js
 import { ControlType as v } from 'unframer'
@@ -145,15 +129,13 @@ var f = u({
               if (!(!t6 || false !== t6.batch)) return 1
               var e7 = t6 && t6.maxBatchSize
               if (void 0 === e7) return 1 / 0
-              if ('number' != typeof e7 || e7 < 1)
-                throw TypeError('maxBatchSize must be a positive number: ' + e7)
+              if ('number' != typeof e7 || e7 < 1) throw TypeError('maxBatchSize must be a positive number: ' + e7)
               return e7
             })(e6)),
             (this._batchScheduleFn = (function (t6) {
               var e7 = t6 && t6.batchScheduleFn
               if (void 0 === e7) return i22
-              if ('function' != typeof e7)
-                throw TypeError('batchScheduleFn must be a function: ' + e7)
+              if ('function' != typeof e7) throw TypeError('batchScheduleFn must be a function: ' + e7)
               return e7
             })(e6)),
             (this._cacheKeyFn = (function (t6) {
@@ -162,8 +144,7 @@ var f = u({
                 return function (t7) {
                   return t7
                 }
-              if ('function' != typeof e7)
-                throw TypeError('cacheKeyFn must be a function: ' + e7)
+              if ('function' != typeof e7) throw TypeError('cacheKeyFn must be a function: ' + e7)
               return e7
             })(e6)),
             (this._cacheMap = (function (t6) {
@@ -171,15 +152,10 @@ var f = u({
               var e7 = t6 && t6.cacheMap
               if (void 0 === e7) return /* @__PURE__ */ new Map()
               if (null !== e7) {
-                var r3 = ['get', 'set', 'delete', 'clear'].filter(
-                  function (t7) {
-                    return e7 && 'function' != typeof e7[t7]
-                  },
-                )
-                if (0 !== r3.length)
-                  throw TypeError(
-                    'Custom cacheMap missing methods: ' + r3.join(', '),
-                  )
+                var r3 = ['get', 'set', 'delete', 'clear'].filter(function (t7) {
+                  return e7 && 'function' != typeof e7[t7]
+                })
+                if (0 !== r3.length) throw TypeError('Custom cacheMap missing methods: ' + r3.join(', '))
               }
               return e7
             })(e6)),
@@ -190,19 +166,10 @@ var f = u({
         return (
           (e52.load = function (t5) {
             if (null == t5)
-              throw TypeError(
-                'The loader.load() function must be called with a value, but got: ' +
-                  String(t5) +
-                  '.',
-              )
+              throw TypeError('The loader.load() function must be called with a value, but got: ' + String(t5) + '.')
             var e6 = (function (t6) {
                 var e7 = t6._batch
-                if (
-                  null !== e7 &&
-                  !e7.hasDispatched &&
-                  e7.keys.length < t6._maxBatchSize
-                )
-                  return e7
+                if (null !== e7 && !e7.hasDispatched && e7.keys.length < t6._maxBatchSize) return e7
                 var r4 = {
                   hasDispatched: false,
                   keys: [],
@@ -257,9 +224,7 @@ var f = u({
                         a22(e8)
                         for (var r6 = 0; r6 < e8.callbacks.length; r6++) {
                           var n4 = t8[r6]
-                          n4 instanceof Error
-                            ? e8.callbacks[r6].reject(n4)
-                            : e8.callbacks[r6].resolve(n4)
+                          n4 instanceof Error ? e8.callbacks[r6].reject(n4) : e8.callbacks[r6].resolve(n4)
                         }
                       }).catch(function (r6) {
                         s22(t7, e8, r6)
@@ -293,11 +258,7 @@ var f = u({
           }),
           (e52.loadMany = function (t5) {
             if (!o2(t5))
-              throw TypeError(
-                'The loader.loadMany() function must be called with Array<key> but got: ' +
-                  t5 +
-                  '.',
-              )
+              throw TypeError('The loader.loadMany() function must be called with Array<key> but got: ' + t5 + '.')
             for (var e6 = [], r3 = 0; r3 < t5.length; r3++)
               e6.push(
                 this.load(t5[r3]).catch(function (t6) {
@@ -324,9 +285,7 @@ var f = u({
               var n3,
                 i3 = this._cacheKeyFn(t5)
               void 0 === r3.get(i3) &&
-                (e6 instanceof Error
-                  ? (n3 = Promise.reject(e6)).catch(function () {})
-                  : (n3 = Promise.resolve(e6)),
+                (e6 instanceof Error ? (n3 = Promise.reject(e6)).catch(function () {}) : (n3 = Promise.resolve(e6)),
                 r3.set(i3, n3))
             }
             return this
@@ -351,21 +310,17 @@ var f = u({
               }
     function s22(t4, e52, r3) {
       a22(e52)
-      for (var n3 = 0; n3 < e52.keys.length; n3++)
-        t4.clear(e52.keys[n3]), e52.callbacks[n3].reject(r3)
+      for (var n3 = 0; n3 < e52.keys.length; n3++) t4.clear(e52.keys[n3]), e52.callbacks[n3].reject(r3)
     }
     function a22(t4) {
-      if (t4.cacheHits)
-        for (var e52 = 0; e52 < t4.cacheHits.length; e52++) t4.cacheHits[e52]()
+      if (t4.cacheHits) for (var e52 = 0; e52 < t4.cacheHits.length; e52++) t4.cacheHits[e52]()
     }
     function o2(t4) {
       return (
         'object' == typeof t4 &&
         null !== t4 &&
         'number' == typeof t4.length &&
-        (0 === t4.length ||
-          (t4.length > 0 &&
-            Object.prototype.hasOwnProperty.call(t4, t4.length - 1)))
+        (0 === t4.length || (t4.length > 0 && Object.prototype.hasOwnProperty.call(t4, t4.length - 1)))
       )
     }
     e42.exports = n22
@@ -489,10 +444,7 @@ function p(t32) {
 var m = 'undefined' != typeof window
 var w = m && 'function' == typeof window.requestIdleCallback
 function I(t32, ...e42) {
-  if (!t32)
-    throw Error(
-      'Assertion Error' + (e42.length > 0 ? ': ' + e42.join(' ') : ''),
-    )
+  if (!t32) throw Error('Assertion Error' + (e42.length > 0 ? ': ' + e42.join(' ') : ''))
 }
 function b(t32) {
   throw Error(`Unexpected value: ${t32}`)
@@ -527,8 +479,7 @@ var M = {
   BigInt64: BigInt(2) ** BigInt(63) - BigInt(1),
 }
 function T(t32, e42, r2, n22) {
-  I(t32 >= e42, t32, 'outside lower bound for', n22),
-    I(t32 <= r2, t32, 'outside upper bound for', n22)
+  I(t32 >= e42, t32, 'outside lower bound for', n22), I(t32 <= r2, t32, 'outside upper bound for', n22)
 }
 var F = class {
   getOffset() {
@@ -549,23 +500,17 @@ var F = class {
   writeUint8(t32) {
     T(t32, E.Uint8, M.Uint8, 'Uint8')
     let e42 = d.Uint8
-    this.ensureLength(e42),
-      this.view.setUint8(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setUint8(this.offset, t32), (this.offset += e42)
   }
   writeUint16(t32) {
     T(t32, E.Uint16, M.Uint16, 'Uint16')
     let e42 = d.Uint16
-    this.ensureLength(e42),
-      this.view.setUint16(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setUint16(this.offset, t32), (this.offset += e42)
   }
   writeUint32(t32) {
     T(t32, E.Uint32, M.Uint32, 'Uint32')
     let e42 = d.Uint32
-    this.ensureLength(e42),
-      this.view.setUint32(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setUint32(this.offset, t32), (this.offset += e42)
   }
   writeUint64(t32) {
     T(t32, E.Uint64, M.Uint64, 'Uint64')
@@ -575,30 +520,22 @@ var F = class {
   writeBigUint64(t32) {
     T(t32, E.BigUint64, M.BigUint64, 'BigUint64')
     let e42 = d.BigUint64
-    this.ensureLength(e42),
-      this.view.setBigUint64(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setBigUint64(this.offset, t32), (this.offset += e42)
   }
   writeInt8(t32) {
     T(t32, E.Int8, M.Int8, 'Int8')
     let e42 = d.Int8
-    this.ensureLength(e42),
-      this.view.setInt8(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setInt8(this.offset, t32), (this.offset += e42)
   }
   writeInt16(t32) {
     T(t32, E.Int16, M.Int16, 'Int16')
     let e42 = d.Int16
-    this.ensureLength(e42),
-      this.view.setInt16(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setInt16(this.offset, t32), (this.offset += e42)
   }
   writeInt32(t32) {
     T(t32, E.Int32, M.Int32, 'Int32')
     let e42 = d.Int32
-    this.ensureLength(e42),
-      this.view.setInt32(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setInt32(this.offset, t32), (this.offset += e42)
   }
   writeInt64(t32) {
     T(t32, E.Int64, M.Int64, 'Int64')
@@ -608,27 +545,19 @@ var F = class {
   writeBigInt64(t32) {
     T(t32, E.BigInt64, M.BigInt64, 'BigInt64')
     let e42 = d.BigInt64
-    this.ensureLength(e42),
-      this.view.setBigInt64(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setBigInt64(this.offset, t32), (this.offset += e42)
   }
   writeFloat32(t32) {
     let e42 = d.Float32
-    this.ensureLength(e42),
-      this.view.setFloat32(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setFloat32(this.offset, t32), (this.offset += e42)
   }
   writeFloat64(t32) {
     let e42 = d.Float64
-    this.ensureLength(e42),
-      this.view.setFloat64(this.offset, t32),
-      (this.offset += e42)
+    this.ensureLength(e42), this.view.setFloat64(this.offset, t32), (this.offset += e42)
   }
   writeBytes(t32) {
     let e42 = t32.length
-    this.ensureLength(e42),
-      this.bytes.set(t32, this.offset),
-      (this.offset += e42)
+    this.ensureLength(e42), this.bytes.set(t32, this.offset), (this.offset += e42)
   }
   encodeString(t32) {
     let e42 = this.encodedStrings.get(t32)
@@ -662,12 +591,7 @@ function A(t32) {
 var O = class t2 {
   static fromString(e42) {
     let [r2, n22, i22] = e42.split('/').map(Number)
-    return (
-      I(N(r2), 'Invalid chunkId'),
-      I(N(n22), 'Invalid offset'),
-      I(N(i22), 'Invalid length'),
-      new t2(r2, n22, i22)
-    )
+    return I(N(r2), 'Invalid chunkId'), I(N(n22), 'Invalid offset'), I(N(i22), 'Invalid length'), new t2(r2, n22, i22)
   }
   toString() {
     return `${this.chunkId}/${this.offset}/${this.length}`
@@ -679,9 +603,7 @@ var O = class t2 {
     return new t2(r2, n22, i22)
   }
   write(t32) {
-    t32.writeUint16(this.chunkId),
-      t32.writeUint32(this.offset),
-      t32.writeUint32(this.length)
+    t32.writeUint16(this.chunkId), t32.writeUint32(this.offset), t32.writeUint32(this.length)
   }
   compare(t32) {
     return this.chunkId < t32.chunkId
@@ -744,8 +666,7 @@ function R(e42) {
   }
 }
 function q(e42, r2) {
-  for (let n22 of (e42.writeUint16(r2.value.length), r2.value))
-    t.write(e42, n22)
+  for (let n22 of (e42.writeUint16(r2.value.length), r2.value)) t.write(e42, n22)
 }
 function _(e42, r2, n22) {
   let i22 = e42.value.length,
@@ -866,8 +787,7 @@ function ta(e42) {
 }
 function to(e42, r2) {
   let n22 = Object.entries(r2.value)
-  for (let [r3, i22] of (e42.writeUint16(n22.length), n22))
-    e42.writeString(r3), t.write(e42, i22)
+  for (let [r3, i22] of (e42.writeUint16(n22.length), n22)) e42.writeString(r3), t.write(e42, i22)
 }
 function tu(e42, r2, n22) {
   let i22 = Object.keys(e42.value).sort(),
@@ -926,9 +846,7 @@ function tp(t32, e42) {
 function tv(t32, e42, r2) {
   let n22 = t32.value,
     i22 = e42.value
-  return (0 === r2.type &&
-    ((n22 = t32.value.toLowerCase()), (i22 = e42.value.toLowerCase())),
-  n22 < i22)
+  return (0 === r2.type && ((n22 = t32.value.toLowerCase()), (i22 = e42.value.toLowerCase())), n22 < i22)
     ? -1
     : n22 > i22
       ? 1
@@ -1097,13 +1015,9 @@ var tb = class e2 {
   }
   serialize() {
     let e42 = new F()
-    for (let t32 of (e42.writeJson(this.options.collation),
-    e42.writeUint8(this.fieldNames.length),
-    this.fieldNames))
+    for (let t32 of (e42.writeJson(this.options.collation), e42.writeUint8(this.fieldNames.length), this.fieldNames))
       e42.writeString(t32)
-    for (let r2 of (this.sortEntries(),
-    e42.writeUint32(this.entries.length),
-    this.entries)) {
+    for (let r2 of (this.sortEntries(), e42.writeUint32(this.entries.length), this.entries)) {
       let { values: n22, pointer: i22 } = r2
       for (let r3 of n22) t.write(e42, r3)
       i22.write(e42)
@@ -1158,18 +1072,15 @@ async function tE(t32, e42) {
   let r2 = tF(e42),
     n22 = [],
     i22 = 0
-  for (let t4 of r2)
-    n22.push(`${t4.from}-${t4.to - 1}`), (i22 += t4.to - t4.from)
+  for (let t4 of r2) n22.push(`${t4.from}-${t4.to - 1}`), (i22 += t4.to - t4.from)
   let s22 = new URL(t32),
     a22 = n22.join(',')
   s22.searchParams.set('range', a22)
   let o2 = await tL(s22)
-  if (200 !== o2.status)
-    throw Error(`Request failed: ${o2.status} ${o2.statusText}`)
+  if (200 !== o2.status) throw Error(`Request failed: ${o2.status} ${o2.statusText}`)
   let u22 = await o2.arrayBuffer(),
     l22 = new Uint8Array(u22)
-  if (l22.length !== i22)
-    throw Error('Request failed: Unexpected response length')
+  if (l22.length !== i22) throw Error('Request failed: Unexpected response length')
   let h22 = new tM(),
     c22 = 0
   for (let t4 of r2) {
@@ -1258,11 +1169,7 @@ var tN = class {
     return I(t32, 'Failed to load model'), tb.deserialize(t32)
   }
   async getModel() {
-    return (
-      (this.modelPromise ??= this.loadModel()),
-      (this.model ??= await this.modelPromise),
-      this.model
-    )
+    return (this.modelPromise ??= this.loadModel()), (this.model ??= await this.modelPromise), this.model
   }
   async lookupItems(t32) {
     I(t32.length === this.fields.length, 'Invalid query length')
@@ -1351,11 +1258,7 @@ var tN = class {
       if (t4?.type !== v.String || e42.value?.type !== v.String) return false
       let r3 = t4.value,
         n22 = e42.value.value
-      return (
-        0 === this.collation.type &&
-          ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())),
-        r3.includes(n22)
-      )
+      return 0 === this.collation.type && ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())), r3.includes(n22)
     })
   }
   queryStartsWith(t32, e42, r2) {
@@ -1363,11 +1266,7 @@ var tN = class {
       if (t4?.type !== v.String || e42.value?.type !== v.String) return false
       let r3 = t4.value,
         n22 = e42.value.value
-      return (
-        0 === this.collation.type &&
-          ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())),
-        r3.startsWith(n22)
-      )
+      return 0 === this.collation.type && ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())), r3.startsWith(n22)
     })
   }
   queryEndsWith(t32, e42, r2) {
@@ -1375,11 +1274,7 @@ var tN = class {
       if (t4?.type !== v.String || e42.value?.type !== v.String) return false
       let r3 = t4.value,
         n22 = e42.value.value
-      return (
-        0 === this.collation.type &&
-          ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())),
-        r3.endsWith(n22)
-      )
+      return 0 === this.collation.type && ((r3 = r3.toLowerCase()), (n22 = n22.toLowerCase())), r3.endsWith(n22)
     })
   }
   /**
@@ -1494,9 +1389,7 @@ var tN = class {
           name: t4,
         })
     }
-    ;(this.schema = e42),
-      (this.fields = r2),
-      (this.collation = this.options.collation)
+    ;(this.schema = e42), (this.fields = r2), (this.collation = this.options.collation)
   }
 }
 var tA = class e3 {
@@ -1511,8 +1404,7 @@ var tA = class e3 {
     return n22
   }
   write(e42) {
-    for (let [r2, n22] of (e42.writeUint16(this.fields.size), this.fields))
-      e42.writeString(r2), t.write(e42, n22)
+    for (let [r2, n22] of (e42.writeUint16(this.fields.size), this.fields)) e42.writeString(r2), t.write(e42, n22)
   }
   getData() {
     let t32 = {}
@@ -1533,8 +1425,7 @@ var tO = class {
   scanItems() {
     return (
       (this.itemsPromise ??= tL(this.url).then(async (t32) => {
-        if (!t32.ok)
-          throw Error(`Request failed: ${t32.status} ${t32.statusText}`)
+        if (!t32.ok) throw Error(`Request failed: ${t32.status} ${t32.statusText}`)
         let e42 = await t32.arrayBuffer(),
           r2 = new Uint8Array(e42),
           n22 = new y(r2),
@@ -2130,9 +2021,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -2172,11 +2061,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableEnumMap = {
@@ -2218,21 +2103,13 @@ var getProps = ({
     Iil1FPHfK: free ?? props.Iil1FPHfK ?? true,
     M7IAJ75gF: icon2 ?? props.M7IAJ75gF,
     NFzNLobU4: info3 ?? props.NFzNLobU4 ?? 'Unlimited',
-    OiSdtnqT3:
-      rowColor ??
-      props.OiSdtnqT3 ??
-      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+    OiSdtnqT3: rowColor ?? props.OiSdtnqT3 ?? 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
     pvYqJYSDU: icon1 ?? props.pvYqJYSDU,
     rj8xax8sg: info1 ?? props.rj8xax8sg ?? '1',
     u56V5UFsy: humanReadableEnumMap[select2] ?? select2 ?? props.u56V5UFsy,
-    uDXPtqrDU:
-      humanReadableEnumMap[select1] ??
-      select1 ??
-      props.uDXPtqrDU ??
-      'oYA80aR0m',
+    uDXPtqrDU: humanReadableEnumMap[select1] ?? select1 ?? props.uDXPtqrDU ?? 'oYA80aR0m',
     uJq0Eb7Lj: agency ?? props.uJq0Eb7Lj ?? true,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'kH0tmb9bN',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'kH0tmb9bN',
     vlTAMwD0_: humanReadableEnumMap[select3] ?? select3 ?? props.vlTAMwD0_,
     xK9ydj3FQ: icon3 ?? props.xK9ydj3FQ,
     YzwcYg05D: title ?? props.YzwcYg05D ?? 'General',
@@ -2298,12 +2175,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1huv8d1',
-              className2,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1huv8d1', className2, classNames)}
             data-framer-name={'Category Row'}
             layoutDependency={layoutDependency}
             layoutId={'kH0tmb9bN'}
@@ -2328,11 +2200,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               width={`max(${componentViewport?.width || '100vw'}, 1px)`}
               y={
                 (componentViewport?.y || 0) +
-                (0 +
-                  ((componentViewport?.height || 90) -
-                    0 -
-                    ((componentViewport?.height || 90) - 0) * 1) /
-                    2)
+                (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
               }
               {...addPropertyOverrides(
                 {
@@ -2340,11 +2208,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     height: ((componentViewport?.height || 64) - 0) * 1,
                     y:
                       (componentViewport?.y || 0) +
-                      (0 +
-                        ((componentViewport?.height || 64) -
-                          0 -
-                          ((componentViewport?.height || 64) - 0) * 1) /
-                          2),
+                      (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                   },
                 },
                 baseVariant,
@@ -2395,11 +2259,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 width={`max(${componentViewport?.width || '100vw'}, 1px)`}
                 y={
                   (componentViewport?.y || 0) +
-                  (0 +
-                    ((componentViewport?.height || 90) -
-                      0 -
-                      ((componentViewport?.height || 90) - 0) * 1) /
-                      2)
+                  (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
                 }
                 {...addPropertyOverrides(
                   {
@@ -2407,11 +2267,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: ((componentViewport?.height || 64) - 0) * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        (0 +
-                          ((componentViewport?.height || 64) -
-                            0 -
-                            ((componentViewport?.height || 64) - 0) * 1) /
-                            2),
+                        (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                     },
                   },
                   baseVariant,
@@ -2465,11 +2321,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 width={`max(${componentViewport?.width || '100vw'}, 1px)`}
                 y={
                   (componentViewport?.y || 0) +
-                  (0 +
-                    ((componentViewport?.height || 90) -
-                      0 -
-                      ((componentViewport?.height || 90) - 0) * 1) /
-                      2)
+                  (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
                 }
                 {...addPropertyOverrides(
                   {
@@ -2477,11 +2329,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: ((componentViewport?.height || 64) - 0) * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        (0 +
-                          ((componentViewport?.height || 64) -
-                            0 -
-                            ((componentViewport?.height || 64) - 0) * 1) /
-                            2),
+                        (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                     },
                   },
                   baseVariant,
@@ -2535,11 +2383,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 width={`max(${componentViewport?.width || '100vw'}, 1px)`}
                 y={
                   (componentViewport?.y || 0) +
-                  (0 +
-                    ((componentViewport?.height || 90) -
-                      0 -
-                      ((componentViewport?.height || 90) - 0) * 1) /
-                      2)
+                  (0 + ((componentViewport?.height || 90) - 0 - ((componentViewport?.height || 90) - 0) * 1) / 2)
                 }
                 {...addPropertyOverrides(
                   {
@@ -2547,11 +2391,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: ((componentViewport?.height || 64) - 0) * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        (0 +
-                          ((componentViewport?.height || 64) -
-                            0 -
-                            ((componentViewport?.height || 64) - 0) * 1) /
-                            2),
+                        (0 + ((componentViewport?.height || 64) - 0 - ((componentViewport?.height || 64) - 0) * 1) / 2),
                     },
                   },
                   baseVariant,
@@ -2719,8 +2559,7 @@ addPropertyControls(Framerc72Om5BsH, {
     type: ControlType.Boolean,
   },
   OiSdtnqT3: {
-    defaultValue:
-      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0)) /* {"name":"Black 00"} */',
+    defaultValue: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0)) /* {"name":"Black 00"} */',
     title: 'Row Color',
     type: ControlType.Color,
   },
@@ -2740,11 +2579,7 @@ addFonts(
 )
 
 // /:https://framerusercontent.com/modules/rD0zGvZPpVycEn20PGjj/tXrSPlxbq7GvGHwBBbId/TD3LNDgP8.js
-import {
-  jsx as _jsx2,
-  jsxs as _jsxs2,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx2, jsxs as _jsxs2, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts as addFonts2,
   addPropertyControls as addPropertyControls2,
@@ -2766,11 +2601,7 @@ import {
   useVariantState as useVariantState2,
   withCSS as withCSS2,
 } from 'unframer'
-import {
-  LayoutGroup as LayoutGroup2,
-  motion as motion2,
-  MotionConfigContext as MotionConfigContext2,
-} from 'unframer'
+import { LayoutGroup as LayoutGroup2, motion as motion2, MotionConfigContext as MotionConfigContext2 } from 'unframer'
 import * as React2 from 'react'
 import { useRef as useRef2 } from 'react'
 var MainSiteGridBorderFonts = getFonts2(stdin_default2)
@@ -2789,9 +2620,7 @@ var variantClassNames2 = {
 }
 function addPropertyOverrides2(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition12 = {
@@ -2819,11 +2648,7 @@ var Transition2 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext2.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext2.Provider>
-  )
+  return <MotionConfigContext2.Provider value={contextValue}>{children}</MotionConfigContext2.Provider>
 }
 var Variants2 = motion2.create(React2.Fragment)
 var humanReadableVariantMap2 = {
@@ -2838,8 +2663,7 @@ var getProps2 = ({ agency, height, id, pro, starter, width, ...props }) => {
     gtJhoJlau: pro ?? props.gtJhoJlau,
     lmKEJJPEM: agency ?? props.lmKEJJPEM,
     qkCvlr25n: starter ?? props.qkCvlr25n,
-    variant:
-      humanReadableVariantMap2[props.variant] ?? props.variant ?? 'M7uSAv_Z7',
+    variant: humanReadableVariantMap2[props.variant] ?? props.variant ?? 'M7uSAv_Z7',
   }
 }
 var createLayoutDependency2 = (props, variants) => {
@@ -2915,14 +2739,12 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const sharedStyleClassNames = [className]
   const scopingClassNames = cx2(serializationHash2, ...sharedStyleClassNames)
   const isDisplayed = () => {
-    if (['WkCTX57Qq', 'TCRt_nqLs', 'G6KpydBrS'].includes(baseVariant))
-      return true
+    if (['WkCTX57Qq', 'TCRt_nqLs', 'G6KpydBrS'].includes(baseVariant)) return true
     return false
   }
   const router = useRouter()
   const isDisplayed1 = () => {
-    if (['WkCTX57Qq', 'TCRt_nqLs', 'G6KpydBrS'].includes(baseVariant))
-      return false
+    if (['WkCTX57Qq', 'TCRt_nqLs', 'G6KpydBrS'].includes(baseVariant)) return false
     return true
   }
   return (
@@ -2932,19 +2754,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
           <motion2.div
             {...restProps}
             {...gestureHandlers}
-            className={cx2(
-              scopingClassNames,
-              'framer-1vw47zi',
-              className2,
-              classNames,
-            )}
+            className={cx2(scopingClassNames, 'framer-1vw47zi', className2, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'M7uSAv_Z7'}
             ref={refBinding}
             style={{
-              backgroundColor:
-                'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+              backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
               ...style,
             }}
@@ -3099,17 +2915,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                 >
                                   <ComponentViewportProvider2
                                     height={
-                                      Math.max(
-                                        0,
-                                        (((componentViewport?.height || 90) -
-                                          0) *
-                                          1 -
-                                          0 -
-                                          0) /
-                                          1,
-                                      ) *
-                                        1 -
-                                      0
+                                      Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 - 0
                                     }
                                     width={`max(${componentViewport?.width || '100vw'}, 1px)`}
                                     y={
@@ -3117,25 +2923,12 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                       (0 +
                                         ((componentViewport?.height || 90) -
                                           0 -
-                                          ((componentViewport?.height || 90) -
-                                            0) *
-                                            1) /
+                                          ((componentViewport?.height || 90) - 0) * 1) /
                                           2) +
                                       0 +
-                                      ((((componentViewport?.height || 90) -
-                                        0) *
-                                        1 -
+                                      ((((componentViewport?.height || 90) - 0) * 1 -
                                         0 -
-                                        (Math.max(
-                                          0,
-                                          (((componentViewport?.height || 90) -
-                                            0) *
-                                            1 -
-                                            0 -
-                                            0) /
-                                            1,
-                                        ) *
-                                          1 +
+                                        (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 +
                                           0)) /
                                         2 +
                                         0 +
@@ -3172,16 +2965,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                   >
                                     <ComponentViewportProvider2
                                       height={
-                                        (Math.max(
-                                          0,
-                                          (((componentViewport?.height || 90) -
-                                            0) *
-                                            1 -
-                                            0 -
-                                            0) /
-                                            1,
-                                        ) *
-                                          1 -
+                                        (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 -
                                           0) *
                                           1 -
                                         0
@@ -3192,53 +2976,20 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                         (0 +
                                           ((componentViewport?.height || 90) -
                                             0 -
-                                            ((componentViewport?.height || 90) -
-                                              0) *
-                                              1) /
+                                            ((componentViewport?.height || 90) - 0) * 1) /
                                             2) +
                                         0 +
-                                        ((((componentViewport?.height || 90) -
-                                          0) *
-                                          1 -
+                                        ((((componentViewport?.height || 90) - 0) * 1 -
                                           0 -
-                                          (Math.max(
-                                            0,
-                                            (((componentViewport?.height ||
-                                              90) -
-                                              0) *
-                                              1 -
-                                              0 -
-                                              0) /
-                                              1,
-                                          ) *
-                                            1 +
+                                          (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 +
                                             0)) /
                                           2 +
                                           0 +
                                           0) +
                                         (0 +
-                                          (Math.max(
-                                            0,
-                                            (((componentViewport?.height ||
-                                              90) -
-                                              0) *
-                                              1 -
-                                              0 -
-                                              0) /
-                                              1,
-                                          ) *
-                                            1 -
+                                          (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 -
                                             0 -
-                                            (Math.max(
-                                              0,
-                                              (((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1 -
-                                                0 -
-                                                0) /
-                                                1,
-                                            ) *
+                                            (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                               1 -
                                               0) *
                                               1) /
@@ -3291,29 +3042,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               y:
                                                 (componentViewport?.y || 0) +
                                                 (0 +
-                                                  ((componentViewport?.height ||
-                                                    90) -
+                                                  ((componentViewport?.height || 90) -
                                                     0 -
-                                                    ((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1) /
+                                                    ((componentViewport?.height || 90) - 0) * 1) /
                                                     2) +
                                                 0 +
-                                                ((((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
+                                                ((((componentViewport?.height || 90) - 0) * 1 -
                                                   0 -
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 +
                                                     0)) /
@@ -3323,25 +3061,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (0 +
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0 -
                                                     (Math.max(
                                                       0,
-                                                      (((componentViewport?.height ||
-                                                        90) -
-                                                        0) *
-                                                        1 -
-                                                        0 -
-                                                        0) /
-                                                        1,
+                                                      (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                     ) *
                                                       1 -
                                                       0) *
@@ -3350,13 +3076,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (20 +
                                                   ((Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0) *
@@ -3370,29 +3090,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               y:
                                                 (componentViewport?.y || 0) +
                                                 (0 +
-                                                  ((componentViewport?.height ||
-                                                    90) -
+                                                  ((componentViewport?.height || 90) -
                                                     0 -
-                                                    ((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1) /
+                                                    ((componentViewport?.height || 90) - 0) * 1) /
                                                     2) +
                                                 0 +
-                                                ((((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
+                                                ((((componentViewport?.height || 90) - 0) * 1 -
                                                   0 -
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 +
                                                     0)) /
@@ -3402,25 +3109,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (0 +
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0 -
                                                     (Math.max(
                                                       0,
-                                                      (((componentViewport?.height ||
-                                                        90) -
-                                                        0) *
-                                                        1 -
-                                                        0 -
-                                                        0) /
-                                                        1,
+                                                      (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                     ) *
                                                       1 -
                                                       0) *
@@ -3429,13 +3124,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (20 +
                                                   ((Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0) *
@@ -3449,29 +3138,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               y:
                                                 (componentViewport?.y || 0) +
                                                 (0 +
-                                                  ((componentViewport?.height ||
-                                                    90) -
+                                                  ((componentViewport?.height || 90) -
                                                     0 -
-                                                    ((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1) /
+                                                    ((componentViewport?.height || 90) - 0) * 1) /
                                                     2) +
                                                 0 +
-                                                ((((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
+                                                ((((componentViewport?.height || 90) - 0) * 1 -
                                                   0 -
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 +
                                                     0)) /
@@ -3481,25 +3157,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (0 +
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0 -
                                                     (Math.max(
                                                       0,
-                                                      (((componentViewport?.height ||
-                                                        90) -
-                                                        0) *
-                                                        1 -
-                                                        0 -
-                                                        0) /
-                                                        1,
+                                                      (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                     ) *
                                                       1 -
                                                       0) *
@@ -3508,13 +3172,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (20 +
                                                   ((Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0) *
@@ -3599,32 +3257,18 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 G6KpydBrS: {
                                                   height: 40,
                                                   y:
-                                                    (componentViewport?.y ||
-                                                      0) +
+                                                    (componentViewport?.y || 0) +
                                                     (0 +
-                                                      ((componentViewport?.height ||
-                                                        90) -
+                                                      ((componentViewport?.height || 90) -
                                                         0 -
-                                                        ((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1) /
+                                                        ((componentViewport?.height || 90) - 0) * 1) /
                                                         2) +
                                                     0 +
-                                                    ((((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
+                                                    ((((componentViewport?.height || 90) - 0) * 1 -
                                                       0 -
                                                       (Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 +
                                                         0)) /
@@ -3634,25 +3278,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                     (0 +
                                                       (Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 -
                                                         0 -
                                                         (Math.max(
                                                           0,
-                                                          (((componentViewport?.height ||
-                                                            90) -
-                                                            0) *
-                                                            1 -
-                                                            0 -
-                                                            0) /
-                                                            1,
+                                                          (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                         ) *
                                                           1 -
                                                           0) *
@@ -3661,13 +3293,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                     (20 +
                                                       ((Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 -
                                                         0) *
@@ -3679,32 +3305,18 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 TCRt_nqLs: {
                                                   height: 40,
                                                   y:
-                                                    (componentViewport?.y ||
-                                                      0) +
+                                                    (componentViewport?.y || 0) +
                                                     (0 +
-                                                      ((componentViewport?.height ||
-                                                        90) -
+                                                      ((componentViewport?.height || 90) -
                                                         0 -
-                                                        ((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1) /
+                                                        ((componentViewport?.height || 90) - 0) * 1) /
                                                         2) +
                                                     0 +
-                                                    ((((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
+                                                    ((((componentViewport?.height || 90) - 0) * 1 -
                                                       0 -
                                                       (Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 +
                                                         0)) /
@@ -3714,25 +3326,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                     (0 +
                                                       (Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 -
                                                         0 -
                                                         (Math.max(
                                                           0,
-                                                          (((componentViewport?.height ||
-                                                            90) -
-                                                            0) *
-                                                            1 -
-                                                            0 -
-                                                            0) /
-                                                            1,
+                                                          (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                         ) *
                                                           1 -
                                                           0) *
@@ -3741,13 +3341,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                     (20 +
                                                       ((Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 -
                                                         0) *
@@ -3759,32 +3353,18 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 WkCTX57Qq: {
                                                   height: 40,
                                                   y:
-                                                    (componentViewport?.y ||
-                                                      0) +
+                                                    (componentViewport?.y || 0) +
                                                     (0 +
-                                                      ((componentViewport?.height ||
-                                                        90) -
+                                                      ((componentViewport?.height || 90) -
                                                         0 -
-                                                        ((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1) /
+                                                        ((componentViewport?.height || 90) - 0) * 1) /
                                                         2) +
                                                     0 +
-                                                    ((((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
+                                                    ((((componentViewport?.height || 90) - 0) * 1 -
                                                       0 -
                                                       (Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 +
                                                         0)) /
@@ -3794,25 +3374,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                     (0 +
                                                       (Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 -
                                                         0 -
                                                         (Math.max(
                                                           0,
-                                                          (((componentViewport?.height ||
-                                                            90) -
-                                                            0) *
-                                                            1 -
-                                                            0 -
-                                                            0) /
-                                                            1,
+                                                          (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                         ) *
                                                           1 -
                                                           0) *
@@ -3821,13 +3389,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                     (20 +
                                                       ((Math.max(
                                                         0,
-                                                        (((componentViewport?.height ||
-                                                          90) -
-                                                          0) *
-                                                          1 -
-                                                          0 -
-                                                          0) /
-                                                          1,
+                                                        (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                       ) *
                                                         1 -
                                                         0) *
@@ -3842,12 +3404,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                             )}
                                           >
                                             <SmartComponentScopedContainer2
-                                              className={
-                                                'framer-qffp78-container'
-                                              }
-                                              layoutDependency={
-                                                layoutDependency
-                                              }
+                                              className={'framer-qffp78-container'}
+                                              layoutDependency={layoutDependency}
                                               layoutId={'g6keE3RlY-container'}
                                               nodeId={'g6keE3RlY'}
                                               rendersWithMotion={true}
@@ -3865,32 +3423,18 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 ...addPropertyOverrides2(
                                                   {
                                                     G6KpydBrS: {
-                                                      OLHf8SPKb:
-                                                        resolvedLinks[2],
-                                                      SMZpJms0Q:
-                                                        fmq_qdRpSAXrhGZIhr2,
-                                                      variant:
-                                                        convertFromBoolean3(
-                                                          sXf6XeXCyAXrhGZIhr2,
-                                                          activeLocale,
-                                                        ),
+                                                      OLHf8SPKb: resolvedLinks[2],
+                                                      SMZpJms0Q: fmq_qdRpSAXrhGZIhr2,
+                                                      variant: convertFromBoolean3(sXf6XeXCyAXrhGZIhr2, activeLocale),
                                                     },
                                                     TCRt_nqLs: {
-                                                      OLHf8SPKb:
-                                                        resolvedLinks[1],
-                                                      SMZpJms0Q:
-                                                        ejRRfWc_fAXrhGZIhr2,
-                                                      variant:
-                                                        convertFromBoolean3(
-                                                          egk7S77x1AXrhGZIhr2,
-                                                          activeLocale,
-                                                        ),
+                                                      OLHf8SPKb: resolvedLinks[1],
+                                                      SMZpJms0Q: ejRRfWc_fAXrhGZIhr2,
+                                                      variant: convertFromBoolean3(egk7S77x1AXrhGZIhr2, activeLocale),
                                                     },
                                                     WkCTX57Qq: {
-                                                      OLHf8SPKb:
-                                                        resolvedLinks[0],
-                                                      SMZpJms0Q:
-                                                        vce8B2D2EAXrhGZIhr2,
+                                                      OLHf8SPKb: resolvedLinks[0],
+                                                      SMZpJms0Q: vce8B2D2EAXrhGZIhr2,
                                                     },
                                                   },
                                                   baseVariant,
@@ -3912,17 +3456,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                     >
                                       <ComponentViewportProvider2
                                         height={
-                                          (Math.max(
-                                            0,
-                                            (((componentViewport?.height ||
-                                              90) -
-                                              0) *
-                                              1 -
-                                              0 -
-                                              0) /
-                                              1,
-                                          ) *
-                                            1 -
+                                          (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 -
                                             0) *
                                             1 -
                                           0
@@ -3933,54 +3467,22 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           (0 +
                                             ((componentViewport?.height || 90) -
                                               0 -
-                                              ((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1) /
+                                              ((componentViewport?.height || 90) - 0) * 1) /
                                               2) +
                                           0 +
-                                          ((((componentViewport?.height || 90) -
-                                            0) *
-                                            1 -
+                                          ((((componentViewport?.height || 90) - 0) * 1 -
                                             0 -
-                                            (Math.max(
-                                              0,
-                                              (((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1 -
-                                                0 -
-                                                0) /
-                                                1,
-                                            ) *
+                                            (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                               1 +
                                               0)) /
                                             2 +
                                             0 +
                                             0) +
                                           (0 +
-                                            (Math.max(
-                                              0,
-                                              (((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1 -
-                                                0 -
-                                                0) /
-                                                1,
-                                            ) *
+                                            (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                               1 -
                                               0 -
-                                              (Math.max(
-                                                0,
-                                                (((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
-                                                  0 -
-                                                  0) /
-                                                  1,
-                                              ) *
+                                              (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                                 1 -
                                                 0) *
                                                 1) /
@@ -4032,10 +3534,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           layoutDependency={layoutDependency}
                                           layoutId={'BXRyT2vhs'}
                                           style={{
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           text={EjvpS99sbAXrhGZIhr2}
                                           verticalAlignment={'top'}
@@ -4043,9 +3543,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                         >
                                           <React2.Fragment>
                                             <motion2.h3
-                                              className={
-                                                'framer-styles-preset-yplpmu'
-                                              }
+                                              className={'framer-styles-preset-yplpmu'}
                                               data-styles-preset={'nmO3BT1ni'}
                                             >
                                               {'Starter'}
@@ -4068,29 +3566,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               y={
                                                 (componentViewport?.y || 0) +
                                                 (0 +
-                                                  ((componentViewport?.height ||
-                                                    90) -
+                                                  ((componentViewport?.height || 90) -
                                                     0 -
-                                                    ((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1) /
+                                                    ((componentViewport?.height || 90) - 0) * 1) /
                                                     2) +
                                                 0 +
-                                                ((((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
+                                                ((((componentViewport?.height || 90) - 0) * 1 -
                                                   0 -
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 +
                                                     0)) /
@@ -4100,25 +3585,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (0 +
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0 -
                                                     (Math.max(
                                                       0,
-                                                      (((componentViewport?.height ||
-                                                        90) -
-                                                        0) *
-                                                        1 -
-                                                        0 -
-                                                        0) /
-                                                        1,
+                                                      (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                     ) *
                                                       1 -
                                                       0) *
@@ -4127,13 +3600,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (20 +
                                                   ((Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0) *
@@ -4145,12 +3612,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               }
                                             >
                                               <SmartComponentScopedContainer2
-                                                className={
-                                                  'framer-tk6yy7-container'
-                                                }
-                                                layoutDependency={
-                                                  layoutDependency
-                                                }
+                                                className={'framer-tk6yy7-container'}
+                                                layoutDependency={layoutDependency}
                                                 layoutId={'D8Dh2_1re-container'}
                                                 nodeId={'D8Dh2_1re'}
                                                 rendersWithMotion={true}
@@ -4163,8 +3626,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                   layoutId: 'D8Dh2_1re',
                                                   OLHf8SPKb: resolvedLinks1[0],
                                                   qCxNvGxTB: 'Default',
-                                                  SMZpJms0Q:
-                                                    vce8B2D2EAXrhGZIhr2,
+                                                  SMZpJms0Q: vce8B2D2EAXrhGZIhr2,
                                                   variant: 'ks076Zojt',
                                                   width: '100%',
                                                 })}
@@ -4184,17 +3646,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                     >
                                       <ComponentViewportProvider2
                                         height={
-                                          (Math.max(
-                                            0,
-                                            (((componentViewport?.height ||
-                                              90) -
-                                              0) *
-                                              1 -
-                                              0 -
-                                              0) /
-                                              1,
-                                          ) *
-                                            1 -
+                                          (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 -
                                             0) *
                                             1 -
                                           0
@@ -4205,54 +3657,22 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           (0 +
                                             ((componentViewport?.height || 90) -
                                               0 -
-                                              ((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1) /
+                                              ((componentViewport?.height || 90) - 0) * 1) /
                                               2) +
                                           0 +
-                                          ((((componentViewport?.height || 90) -
-                                            0) *
-                                            1 -
+                                          ((((componentViewport?.height || 90) - 0) * 1 -
                                             0 -
-                                            (Math.max(
-                                              0,
-                                              (((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1 -
-                                                0 -
-                                                0) /
-                                                1,
-                                            ) *
+                                            (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                               1 +
                                               0)) /
                                             2 +
                                             0 +
                                             0) +
                                           (0 +
-                                            (Math.max(
-                                              0,
-                                              (((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1 -
-                                                0 -
-                                                0) /
-                                                1,
-                                            ) *
+                                            (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                               1 -
                                               0 -
-                                              (Math.max(
-                                                0,
-                                                (((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
-                                                  0 -
-                                                  0) /
-                                                  1,
-                                              ) *
+                                              (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                                 1 -
                                                 0) *
                                                 1) /
@@ -4304,10 +3724,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           layoutDependency={layoutDependency}
                                           layoutId={'c_zbfR4ht'}
                                           style={{
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           text={zQUY1GxFMAXrhGZIhr2}
                                           verticalAlignment={'top'}
@@ -4315,9 +3733,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                         >
                                           <React2.Fragment>
                                             <motion2.h3
-                                              className={
-                                                'framer-styles-preset-yplpmu'
-                                              }
+                                              className={'framer-styles-preset-yplpmu'}
                                               data-styles-preset={'nmO3BT1ni'}
                                             >
                                               {'Pro'}
@@ -4340,29 +3756,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               y={
                                                 (componentViewport?.y || 0) +
                                                 (0 +
-                                                  ((componentViewport?.height ||
-                                                    90) -
+                                                  ((componentViewport?.height || 90) -
                                                     0 -
-                                                    ((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1) /
+                                                    ((componentViewport?.height || 90) - 0) * 1) /
                                                     2) +
                                                 0 +
-                                                ((((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
+                                                ((((componentViewport?.height || 90) - 0) * 1 -
                                                   0 -
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 +
                                                     0)) /
@@ -4372,25 +3775,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (0 +
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0 -
                                                     (Math.max(
                                                       0,
-                                                      (((componentViewport?.height ||
-                                                        90) -
-                                                        0) *
-                                                        1 -
-                                                        0 -
-                                                        0) /
-                                                        1,
+                                                      (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                     ) *
                                                       1 -
                                                       0) *
@@ -4399,13 +3790,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (20 +
                                                   ((Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0) *
@@ -4417,12 +3802,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               }
                                             >
                                               <SmartComponentScopedContainer2
-                                                className={
-                                                  'framer-1ak4cgt-container'
-                                                }
-                                                layoutDependency={
-                                                  layoutDependency
-                                                }
+                                                className={'framer-1ak4cgt-container'}
+                                                layoutDependency={layoutDependency}
                                                 layoutId={'mEJndYUkn-container'}
                                                 nodeId={'mEJndYUkn'}
                                                 rendersWithMotion={true}
@@ -4435,8 +3816,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                   layoutId: 'mEJndYUkn',
                                                   OLHf8SPKb: resolvedLinks2[0],
                                                   qCxNvGxTB: 'Default',
-                                                  SMZpJms0Q:
-                                                    ejRRfWc_fAXrhGZIhr2,
+                                                  SMZpJms0Q: ejRRfWc_fAXrhGZIhr2,
                                                   variant: 'fSd_0l8pb',
                                                   width: '100%',
                                                 })}
@@ -4456,17 +3836,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                     >
                                       <ComponentViewportProvider2
                                         height={
-                                          (Math.max(
-                                            0,
-                                            (((componentViewport?.height ||
-                                              90) -
-                                              0) *
-                                              1 -
-                                              0 -
-                                              0) /
-                                              1,
-                                          ) *
-                                            1 -
+                                          (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) * 1 -
                                             0) *
                                             1 -
                                           0
@@ -4477,54 +3847,22 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           (0 +
                                             ((componentViewport?.height || 90) -
                                               0 -
-                                              ((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1) /
+                                              ((componentViewport?.height || 90) - 0) * 1) /
                                               2) +
                                           0 +
-                                          ((((componentViewport?.height || 90) -
-                                            0) *
-                                            1 -
+                                          ((((componentViewport?.height || 90) - 0) * 1 -
                                             0 -
-                                            (Math.max(
-                                              0,
-                                              (((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1 -
-                                                0 -
-                                                0) /
-                                                1,
-                                            ) *
+                                            (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                               1 +
                                               0)) /
                                             2 +
                                             0 +
                                             0) +
                                           (0 +
-                                            (Math.max(
-                                              0,
-                                              (((componentViewport?.height ||
-                                                90) -
-                                                0) *
-                                                1 -
-                                                0 -
-                                                0) /
-                                                1,
-                                            ) *
+                                            (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                               1 -
                                               0 -
-                                              (Math.max(
-                                                0,
-                                                (((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
-                                                  0 -
-                                                  0) /
-                                                  1,
-                                              ) *
+                                              (Math.max(0, (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1) *
                                                 1 -
                                                 0) *
                                                 1) /
@@ -4576,10 +3914,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                           layoutDependency={layoutDependency}
                                           layoutId={'EZCEW7Kno'}
                                           style={{
-                                            '--framer-link-text-color':
-                                              'rgb(0, 153, 255)',
-                                            '--framer-link-text-decoration':
-                                              'underline',
+                                            '--framer-link-text-color': 'rgb(0, 153, 255)',
+                                            '--framer-link-text-decoration': 'underline',
                                           }}
                                           text={RSURoJJLqAXrhGZIhr2}
                                           verticalAlignment={'top'}
@@ -4587,9 +3923,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                         >
                                           <React2.Fragment>
                                             <motion2.h3
-                                              className={
-                                                'framer-styles-preset-yplpmu'
-                                              }
+                                              className={'framer-styles-preset-yplpmu'}
                                               data-styles-preset={'nmO3BT1ni'}
                                             >
                                               {'Agency'}
@@ -4612,29 +3946,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               y={
                                                 (componentViewport?.y || 0) +
                                                 (0 +
-                                                  ((componentViewport?.height ||
-                                                    90) -
+                                                  ((componentViewport?.height || 90) -
                                                     0 -
-                                                    ((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1) /
+                                                    ((componentViewport?.height || 90) - 0) * 1) /
                                                     2) +
                                                 0 +
-                                                ((((componentViewport?.height ||
-                                                  90) -
-                                                  0) *
-                                                  1 -
+                                                ((((componentViewport?.height || 90) - 0) * 1 -
                                                   0 -
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 +
                                                     0)) /
@@ -4644,25 +3965,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (0 +
                                                   (Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0 -
                                                     (Math.max(
                                                       0,
-                                                      (((componentViewport?.height ||
-                                                        90) -
-                                                        0) *
-                                                        1 -
-                                                        0 -
-                                                        0) /
-                                                        1,
+                                                      (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                     ) *
                                                       1 -
                                                       0) *
@@ -4671,13 +3980,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                 (20 +
                                                   ((Math.max(
                                                     0,
-                                                    (((componentViewport?.height ||
-                                                      90) -
-                                                      0) *
-                                                      1 -
-                                                      0 -
-                                                      0) /
-                                                      1,
+                                                    (((componentViewport?.height || 90) - 0) * 1 - 0 - 0) / 1,
                                                   ) *
                                                     1 -
                                                     0) *
@@ -4689,12 +3992,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                               }
                                             >
                                               <SmartComponentScopedContainer2
-                                                className={
-                                                  'framer-1463c6b-container'
-                                                }
-                                                layoutDependency={
-                                                  layoutDependency
-                                                }
+                                                className={'framer-1463c6b-container'}
+                                                layoutDependency={layoutDependency}
                                                 layoutId={'Njzm3kD_9-container'}
                                                 nodeId={'Njzm3kD_9'}
                                                 rendersWithMotion={true}
@@ -4707,8 +4006,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                                                   layoutId: 'Njzm3kD_9',
                                                   OLHf8SPKb: resolvedLinks3[0],
                                                   qCxNvGxTB: 'Default',
-                                                  SMZpJms0Q:
-                                                    fmq_qdRpSAXrhGZIhr2,
+                                                  SMZpJms0Q: fmq_qdRpSAXrhGZIhr2,
                                                   variant: 'ks076Zojt',
                                                   width: '100%',
                                                 })}
@@ -4789,8 +4087,7 @@ addFonts2(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -4873,9 +4170,7 @@ var variantClassNames3 = {
 }
 function addPropertyOverrides3(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition13 = {
@@ -4892,11 +4187,7 @@ var Transition3 = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext3.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext3.Provider>
-  )
+  return <MotionConfigContext3.Provider value={contextValue}>{children}</MotionConfigContext3.Provider>
 }
 var convertFromEnum = (value, activeLocale) => {
   switch (value) {
@@ -4945,8 +4236,7 @@ var humanReadableVariantMap3 = {
 var getProps3 = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap3[props.variant] ?? props.variant ?? 'LUP1ZkiUa',
+    variant: humanReadableVariantMap3[props.variant] ?? props.variant ?? 'LUP1ZkiUa',
   }
 }
 var createLayoutDependency3 = (props, variants) => {
@@ -4999,8 +4289,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
     variantClassNames: variantClassNames3,
   })
   const layoutDependency = createLayoutDependency3(props, variants)
-  const { activeVariantCallback, delay } =
-    useActiveVariantCallback2(baseVariant)
+  const { activeVariantCallback, delay } = useActiveVariantCallback2(baseVariant)
   const qkCvlr25n1ejxvhf = activeVariantCallback(async (...args) => {
     setVariant('l3TRwxclc')
   })
@@ -5019,12 +4308,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
           <motion3.div
             {...restProps}
             {...gestureHandlers}
-            className={cx3(
-              scopingClassNames,
-              'framer-9pzh9l',
-              className2,
-              classNames,
-            )}
+            className={cx3(scopingClassNames, 'framer-9pzh9l', className2, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'LUP1ZkiUa'}
@@ -5052,36 +4336,18 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
               <ComponentViewportProvider3
                 height={90}
                 width={componentViewport?.width || '100vw'}
-                y={
-                  (componentViewport?.y || 0) +
-                  0 +
-                  (((componentViewport?.height || 1654) - 0 - 2070) / 2 + 0 + 0)
-                }
+                y={(componentViewport?.y || 0) + 0 + (((componentViewport?.height || 1654) - 0 - 2070) / 2 + 0 + 0)}
                 {...addPropertyOverrides3(
                   {
                     jDUw05NtE: {
-                      y:
-                        (componentViewport?.y || 0) +
-                        0 +
-                        (((componentViewport?.height || 200) - 0 - 180) / 2 +
-                          0 +
-                          0),
+                      y: (componentViewport?.y || 0) + 0 + (((componentViewport?.height || 200) - 0 - 180) / 2 + 0 + 0),
                     },
                     l3TRwxclc: {
                       y:
-                        (componentViewport?.y || 0) +
-                        0 +
-                        (((componentViewport?.height || 1654) - 0 - 180) / 2 +
-                          0 +
-                          0),
+                        (componentViewport?.y || 0) + 0 + (((componentViewport?.height || 1654) - 0 - 180) / 2 + 0 + 0),
                     },
                     oG_B0PAph: {
-                      y:
-                        (componentViewport?.y || 0) +
-                        0 +
-                        (((componentViewport?.height || 200) - 0 - 180) / 2 +
-                          0 +
-                          0),
+                      y: (componentViewport?.y || 0) + 0 + (((componentViewport?.height || 200) - 0 - 180) / 2 + 0 + 0),
                     },
                   },
                   baseVariant,
@@ -5273,12 +4539,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                     y={
                                       (componentViewport?.y || 0) +
                                       0 +
-                                      (((componentViewport?.height || 1654) -
-                                        0 -
-                                        2070) /
-                                        2 +
-                                        90 +
-                                        0) +
+                                      (((componentViewport?.height || 1654) - 0 - 2070) / 2 + 90 + 0) +
                                       0 +
                                       1890 +
                                       0
@@ -5289,13 +4550,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                           y:
                                             (componentViewport?.y || 0) +
                                             0 +
-                                            (((componentViewport?.height ||
-                                              200) -
-                                              0 -
-                                              180) /
-                                              2 +
-                                              90 +
-                                              0) +
+                                            (((componentViewport?.height || 200) - 0 - 180) / 2 + 90 + 0) +
                                             0 +
                                             0 +
                                             0,
@@ -5304,13 +4559,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                           y:
                                             (componentViewport?.y || 0) +
                                             0 +
-                                            (((componentViewport?.height ||
-                                              1654) -
-                                              0 -
-                                              180) /
-                                              2 +
-                                              90 +
-                                              0) +
+                                            (((componentViewport?.height || 1654) - 0 - 180) / 2 + 90 + 0) +
                                             0 +
                                             0 +
                                             0,
@@ -5319,13 +4568,7 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                           y:
                                             (componentViewport?.y || 0) +
                                             0 +
-                                            (((componentViewport?.height ||
-                                              200) -
-                                              0 -
-                                              180) /
-                                              2 +
-                                              90 +
-                                              0) +
+                                            (((componentViewport?.height || 200) - 0 - 180) / 2 + 90 + 0) +
                                             0 +
                                             0 +
                                             0,
@@ -5355,35 +4598,18 @@ var Component3 = /* @__PURE__ */ React3.forwardRef(function (props, ref) {
                                         M7IAJ75gF: MRJmuhmqnxrIvtKWUJ2,
                                         NFzNLobU4: tzXIAiiVUxrIvtKWUJ2,
                                         OiSdtnqT3: toString(
-                                          convertFromBoolean4(
-                                            isEven(
-                                              repeater_item_indexxrIvtKWUJ2,
-                                            ),
-                                            activeLocale,
-                                          ),
+                                          convertFromBoolean4(isEven(repeater_item_indexxrIvtKWUJ2), activeLocale),
                                         ),
                                         pvYqJYSDU: IvdfeYwDpxrIvtKWUJ2,
                                         rj8xax8sg: ewRDOfxxAxrIvtKWUJ2,
                                         style: {
                                           width: '100%',
                                         },
-                                        u56V5UFsy: convertFromEnum1(
-                                          VeHTu06DexrIvtKWUJ2,
-                                          activeLocale,
-                                        ),
-                                        uDXPtqrDU: convertFromEnum1(
-                                          tmuev0m3oxrIvtKWUJ2,
-                                          activeLocale,
-                                        ),
+                                        u56V5UFsy: convertFromEnum1(VeHTu06DexrIvtKWUJ2, activeLocale),
+                                        uDXPtqrDU: convertFromEnum1(tmuev0m3oxrIvtKWUJ2, activeLocale),
                                         uJq0Eb7Lj: true,
-                                        variant: convertFromEnum(
-                                          PVvA2PK44xrIvtKWUJ2,
-                                          activeLocale,
-                                        ),
-                                        vlTAMwD0_: convertFromEnum1(
-                                          MH3x_C8SUxrIvtKWUJ2,
-                                          activeLocale,
-                                        ),
+                                        variant: convertFromEnum(PVvA2PK44xrIvtKWUJ2, activeLocale),
+                                        vlTAMwD0_: convertFromEnum1(MH3x_C8SUxrIvtKWUJ2, activeLocale),
                                         width: '100%',
                                         xK9ydj3FQ: cQzJVzP4KxrIvtKWUJ2,
                                         YzwcYg05D: auorwKZDMxrIvtKWUJ2,
@@ -5520,17 +4746,11 @@ stdin_default12.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default12}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default12} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -5578,9 +4798,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

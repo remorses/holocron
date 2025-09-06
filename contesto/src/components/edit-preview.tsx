@@ -10,14 +10,8 @@ export const FileEditPreviewTitle = ({
   hunks: Hunk[]
   className?: string
 }) => {
-  const numAdditions = hunks.reduce(
-    (count, hunk) => count + hunk.lines.filter((_) => _.startsWith('+')).length,
-    0,
-  )
-  const numRemovals = hunks.reduce(
-    (count, hunk) => count + hunk.lines.filter((_) => _.startsWith('-')).length,
-    0,
-  )
+  const numAdditions = hunks.reduce((count, hunk) => count + hunk.lines.filter((_) => _.startsWith('+')).length, 0)
+  const numRemovals = hunks.reduce((count, hunk) => count + hunk.lines.filter((_) => _.startsWith('-')).length, 0)
 
   return (
     <Text className={className}>
@@ -25,15 +19,13 @@ export const FileEditPreviewTitle = ({
       {numAdditions > 0 || numRemovals > 0 ? ' with ' : ''}
       {numAdditions > 0 ? (
         <>
-          <Text bold>{numAdditions}</Text>{' '}
-          {numAdditions > 1 ? 'additions' : 'addition'}
+          <Text bold>{numAdditions}</Text> {numAdditions > 1 ? 'additions' : 'addition'}
         </>
       ) : null}
       {numAdditions > 0 && numRemovals > 0 ? ' and ' : null}
       {numRemovals > 0 ? (
         <>
-          <Text bold>{numRemovals}</Text>{' '}
-          {numRemovals > 1 ? 'removals' : 'removal'}
+          <Text bold>{numRemovals}</Text> {numRemovals > 1 ? 'removals' : 'removal'}
         </>
       ) : null}
     </Text>
@@ -53,11 +45,7 @@ export const FileEditPreview = ({
     <Box flexDirection='column' className={className}>
       {hunks.flatMap((patch, i) => {
         const elements = [
-          <Box
-            flexDirection='column'
-            paddingLeft={paddingLeft}
-            key={patch.newStart}
-          >
+          <Box flexDirection='column' paddingLeft={paddingLeft} key={patch.newStart}>
             <StructuredDiff patch={patch} />
           </Box>,
         ]
@@ -184,10 +172,7 @@ const StructuredDiff = ({ patch }: { patch: Hunk }) => {
       if (processedLines[i].type === 'remove') {
         // Look ahead for corresponding add
         let j = i + 1
-        while (
-          j < processedLines.length &&
-          processedLines[j].type === 'remove'
-        ) {
+        while (j < processedLines.length && processedLines[j].type === 'remove') {
           j++
         }
         if (j < processedLines.length && processedLines[j].type === 'add') {

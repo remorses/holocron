@@ -6,12 +6,8 @@ const TodoInfo = z.object({
   content: z.string().describe('Brief description of the task'),
   status: z
     .enum(['pending', 'in_progress', 'completed', 'cancelled'])
-    .describe(
-      'Current status of the task: pending, in_progress, completed, cancelled',
-    ),
-  priority: z
-    .enum(['high', 'medium', 'low'])
-    .describe('Priority level of the task: high, medium, low'),
+    .describe('Current status of the task: pending, in_progress, completed, cancelled'),
+  priority: z.enum(['high', 'medium', 'low']).describe('Priority level of the task: high, medium, low'),
   id: z.string().describe('Unique identifier for the todo item'),
 })
 
@@ -212,9 +208,7 @@ export function createTodoTools({ todos }: { todos: Map<string, TodoInfo[]> }) {
     execute: async ({ todos: newTodos }, { abortSignal, toolCallId }) => {
       const sessionId = toolCallId
       todos.set(sessionId, newTodos)
-      const incompleteTodos = newTodos.filter(
-        (x) => x.status !== 'completed',
-      ).length
+      const incompleteTodos = newTodos.filter((x) => x.status !== 'completed').length
 
       return {
         title: `${incompleteTodos} todos`,
@@ -232,9 +226,7 @@ export function createTodoTools({ todos }: { todos: Map<string, TodoInfo[]> }) {
     execute: async ({}, { abortSignal, toolCallId }) => {
       const sessionId = toolCallId
       const currentTodos = todos.get(sessionId) ?? []
-      const incompleteTodos = currentTodos.filter(
-        (x) => x.status !== 'completed',
-      ).length
+      const incompleteTodos = currentTodos.filter((x) => x.status !== 'completed').length
 
       return {
         title: `${incompleteTodos} todos`,

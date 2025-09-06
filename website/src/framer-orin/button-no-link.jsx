@@ -55,15 +55,7 @@ var enabledGestures = {
     hover: true,
   },
 }
-var cycleOrder = [
-  'l5ER7h9wM',
-  'apqsHcFhe',
-  'kUuOauK7z',
-  'WphgWUJh6',
-  'RBIAwbjor',
-  'R8P66HLzz',
-  'U_leQZu5X',
-]
+var cycleOrder = ['l5ER7h9wM', 'apqsHcFhe', 'kUuOauK7z', 'WphgWUJh6', 'RBIAwbjor', 'R8P66HLzz', 'U_leQZu5X']
 var serializationHash = 'framer-7Nxxo'
 var variantClassNames = {
   apqsHcFhe: 'framer-v-ana9yv',
@@ -76,9 +68,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -100,11 +90,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableEnumMap = {
@@ -124,11 +110,9 @@ var getProps = ({ fill, height, id, label, state, width, ...props }) => {
   return {
     ...props,
     D9dBYabSn: fill ?? props.D9dBYabSn,
-    qCxNvGxTB:
-      humanReadableEnumMap[state] ?? state ?? props.qCxNvGxTB ?? 'Default',
+    qCxNvGxTB: humanReadableEnumMap[state] ?? state ?? props.qCxNvGxTB ?? 'Default',
     SMZpJms0Q: label ?? props.SMZpJms0Q ?? 'Get started',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'l5ER7h9wM',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'l5ER7h9wM',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -141,16 +125,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    SMZpJms0Q,
-    D9dBYabSn,
-    qCxNvGxTB,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, SMZpJms0Q, D9dBYabSn, qCxNvGxTB, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -174,19 +149,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
   const visible = negate(D9dBYabSn)
   const isDisplayed = () => {
-    if (
-      [
-        'apqsHcFhe-hover',
-        'WphgWUJh6-hover',
-        'R8P66HLzz-hover',
-        'RBIAwbjor-hover',
-      ].includes(gestureVariant)
-    )
+    if (['apqsHcFhe-hover', 'WphgWUJh6-hover', 'R8P66HLzz-hover', 'RBIAwbjor-hover'].includes(gestureVariant))
       return false
-    if (
-      ['apqsHcFhe', 'WphgWUJh6', 'RBIAwbjor', 'R8P66HLzz'].includes(baseVariant)
-    )
-      return false
+    if (['apqsHcFhe', 'WphgWUJh6', 'RBIAwbjor', 'R8P66HLzz'].includes(baseVariant)) return false
     return true
   }
   return (
@@ -196,20 +161,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-711g1n',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-711g1n', className, classNames)}
             data-framer-name={'Secondary'}
             draggable={'false'}
             layoutDependency={layoutDependency}
             layoutId={'l5ER7h9wM'}
             ref={refBinding}
             style={{
-              backgroundColor:
-                'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
+              backgroundColor: 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
               borderBottomLeftRadius: 20,
               borderBottomRightRadius: 20,
               borderTopLeftRadius: 20,
@@ -224,14 +183,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 WebkitFilter: 'brightness(0.8)',
               },
               'kUuOauK7z-hover': {
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 filter: 'none',
                 WebkitFilter: 'none',
               },
               'l5ER7h9wM-hover': {
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
               },
               'R8P66HLzz-hover': {
                 filter: 'brightness(0.8)',
@@ -242,8 +199,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 WebkitFilter: 'brightness(0.8)',
               },
               'U_leQZu5X-hover': {
-                backgroundColor:
-                  'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                 filter: 'none',
                 WebkitFilter: 'none',
               },
@@ -271,8 +227,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 borderTopRightRadius: 0,
               },
               WphgWUJh6: {
-                backgroundColor:
-                  'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                 borderBottomLeftRadius: 6,
                 borderBottomRightRadius: 6,
                 borderTopLeftRadius: 6,
@@ -340,9 +295,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   scopeId={'fUBSMgmyd'}
                 >
                   <RollingText
-                    color={
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                    }
+                    color={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                     font={{
                       fontFamily: '"Raveo Variable Variable", sans-serif',
                       fontSize: '14px',
@@ -400,8 +353,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           state: 'Roll',
                         },
                         apqsHcFhe: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                         },
                         kUuOauK7z: {
                           font: {
@@ -415,8 +367,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           padding: '0px 12px 0px 12px',
                         },
                         R8P66HLzz: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                           font: {
                             fontFamily: '"Raveo Variable Variable", sans-serif',
                             fontSize: '12px',
@@ -428,8 +379,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           padding: '0px 12px 0px 12px',
                         },
                         RBIAwbjor: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                           font: {
                             fontFamily: '"Raveo Variable Variable", sans-serif',
                             fontSize: '28px',
@@ -452,8 +402,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           padding: '0px 12px 0px 12px',
                         },
                         WphgWUJh6: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                           font: {
                             fontFamily: '"Raveo Variable Variable", sans-serif',
                             fontSize: '12px',
@@ -487,9 +436,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   scopeId={'fUBSMgmyd'}
                 >
                   <RollingText
-                    color={
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                    }
+                    color={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                     font={{
                       fontFamily: '"Raveo Variable Variable", sans-serif',
                       fontSize: '14px',
@@ -548,8 +495,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           state: 'Roll',
                         },
                         apqsHcFhe: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                         },
                         kUuOauK7z: {
                           font: {
@@ -563,8 +509,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           padding: '0px 12px 0px 12px',
                         },
                         R8P66HLzz: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                           font: {
                             fontFamily: '"Raveo Variable Variable", sans-serif',
                             fontSize: '12px',
@@ -576,8 +521,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           padding: '0px 12px 0px 12px',
                         },
                         RBIAwbjor: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                           font: {
                             fontFamily: '"Raveo Variable Variable", sans-serif',
                             fontSize: '28px',
@@ -600,8 +544,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           padding: '0px 12px 0px 12px',
                         },
                         WphgWUJh6: {
-                          color:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                          color: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                           font: {
                             fontFamily: '"Raveo Variable Variable", sans-serif',
                             fontSize: '12px',
@@ -652,9 +595,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       direction: 'clockwise',
                       speed: 2,
                     }}
-                    borderColor={
-                      'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'
-                    }
+                    borderColor={'var(--token-04a04e54-cbd8-4312-8418-e1527ef396e1, rgb(51, 51, 51))'}
                     borderRadius={20}
                     borderWidth={1}
                     bottom={true}
@@ -737,15 +678,7 @@ FramerfUBSMgmyd.defaultProps = {
 }
 addPropertyControls(FramerfUBSMgmyd, {
   variant: {
-    options: [
-      'l5ER7h9wM',
-      'apqsHcFhe',
-      'kUuOauK7z',
-      'WphgWUJh6',
-      'RBIAwbjor',
-      'R8P66HLzz',
-      'U_leQZu5X',
-    ],
+    options: ['l5ER7h9wM', 'apqsHcFhe', 'kUuOauK7z', 'WphgWUJh6', 'RBIAwbjor', 'R8P66HLzz', 'U_leQZu5X'],
     optionTitles: [
       'Secondary',
       'Primary',
@@ -773,8 +706,7 @@ addPropertyControls(FramerfUBSMgmyd, {
   qCxNvGxTB: RollingTextControls?.['state'] && {
     ...RollingTextControls['state'],
     defaultValue: 'Default',
-    description:
-      'Used for triggering rolling of text when used within another component.',
+    description: 'Used for triggering rolling of text when used within another component.',
     hidden: void 0,
     title: 'State',
   },
@@ -870,17 +802,11 @@ stdin_default.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -928,9 +854,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

@@ -39,10 +39,7 @@ export async function computeGitBlobSHA(content: string): Promise<string> {
  * @param expectedSHA The expected SHA hash
  * @returns Promise<boolean> True if SHA matches
  */
-export async function verifySHA(
-  content: string,
-  expectedSHA: string,
-): Promise<boolean> {
+export async function verifySHA(content: string, expectedSHA: string): Promise<boolean> {
   const computedSHA = await computeGitBlobSHA(content)
   return computedSHA === expectedSHA
 }

@@ -24,13 +24,7 @@ import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Globe, Lock } from 'lucide-react'
 import { useState } from 'react'
 const COOKIE_OPTIONS = {
@@ -57,9 +51,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     throw new Response('Missing GitHub login data', { status: 400 })
   }
 
-  const data: GithubLoginRequestData = JSON.parse(
-    decodeURIComponent(githubDataStr),
-  )
+  const data: GithubLoginRequestData = JSON.parse(decodeURIComponent(githubDataStr))
   const githubAccountLogin = data.githubAccountLogin
 
   if (!githubAccountLogin) {
@@ -151,9 +143,7 @@ export default function ConnectGitHub() {
   const { site, githubAccountLogin } = useLoaderData<typeof loader>()
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const [repoName, setRepoName] = useState(
-    `${(site.name || 'site').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-docs`,
-  )
+  const [repoName, setRepoName] = useState(`${(site.name || 'site').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-docs`)
 
   return (
     <div className='w-full p-16 grow justify-center min-h-full gap-[40px] flex flex-col items-center'>
@@ -205,17 +195,12 @@ export default function ConnectGitHub() {
             </SelectContent>
           </Select>
           <p className='text-sm text-muted-foreground'>
-            Public repositories are visible to everyone. Private repositories
-            are only accessible to you and people you explicitly grant access.
+            Public repositories are visible to everyone. Private repositories are only accessible to you and people you
+            explicitly grant access.
           </p>
         </div>
 
-        <Button
-          type='submit'
-          className='font-semibold'
-          isLoading={isSubmitting}
-          disabled={isSubmitting}
-        >
+        <Button type='submit' className='font-semibold' isLoading={isSubmitting} disabled={isSubmitting}>
           Create Repository
         </Button>
       </Form>
@@ -252,9 +237,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     throw new Response('Missing GitHub login data', { status: 400 })
   }
 
-  const data: GithubLoginRequestData = JSON.parse(
-    decodeURIComponent(githubDataStr),
-  )
+  const data: GithubLoginRequestData = JSON.parse(decodeURIComponent(githubDataStr))
   const githubAccountLogin = data.githubAccountLogin
 
   // Get branch and GitHub installation
@@ -334,12 +317,8 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   // Get existing domain for homepage
-  const existingDomain = existingBranch?.domains?.find(
-    (d) => d.domainType === 'internalDomain',
-  )
-  const homepage = existingDomain
-    ? `https://${existingDomain.host}`
-    : `https://${site.siteId}.${env.APPS_DOMAIN}`
+  const existingDomain = existingBranch?.domains?.find((d) => d.domainType === 'internalDomain')
+  const homepage = existingDomain ? `https://${existingDomain.host}` : `https://${site.siteId}.${env.APPS_DOMAIN}`
 
   // Get site files to create repository with actual content
   const files: Array<{

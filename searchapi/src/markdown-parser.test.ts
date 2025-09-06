@@ -1,8 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import {
-  parseMarkdownIntoSections,
-  isSupportedMarkdownFile,
-} from './markdown-parser.js'
+import { parseMarkdownIntoSections, isSupportedMarkdownFile } from './markdown-parser.js'
 
 describe('parseMarkdownIntoSections', () => {
   test('handles frontmatter', () => {
@@ -520,26 +517,16 @@ MDX allows mixing markdown and JSX seamlessly.`
     `)
 
     // Find the actual sections with JSX content by their slugs
-    const jsxSection = result.sections.find(
-      (s) => s.headingSlug === 'mdx-with-jsx-components',
-    )
-    const codeExamplesSection = result.sections.find(
-      (s) => s.headingSlug === 'code-examples',
-    )
-    const inlineJsxSection = result.sections.find(
-      (s) => s.headingSlug === 'inline-jsx',
-    )
-    const mixedContentSection = result.sections.find(
-      (s) => s.headingSlug === 'mixed-content',
-    )
+    const jsxSection = result.sections.find((s) => s.headingSlug === 'mdx-with-jsx-components')
+    const codeExamplesSection = result.sections.find((s) => s.headingSlug === 'code-examples')
+    const inlineJsxSection = result.sections.find((s) => s.headingSlug === 'inline-jsx')
+    const mixedContentSection = result.sections.find((s) => s.headingSlug === 'mixed-content')
 
     // Verify that JSX is preserved in sections
     expect(jsxSection?.content).toContain('<Card className="mb-4">')
     expect(jsxSection?.content).toContain('<Button')
     expect(codeExamplesSection?.content).toContain('<CustomChart')
-    expect(inlineJsxSection?.content).toContain(
-      '<Button size="small">Inline</Button>',
-    )
+    expect(inlineJsxSection?.content).toContain('<Button size="small">Inline</Button>')
     expect(mixedContentSection?.content).toContain('<Card>')
 
     // Verify the parser handled frontmatter correctly
@@ -549,9 +536,7 @@ MDX allows mixing markdown and JSX seamlessly.`
     expect(frontmatterSection?.weight).toMatchInlineSnapshot(`2`)
 
     // Imports become part of the Introduction section
-    const introSection = result.sections.find(
-      (s) => s.headingSlug === 'introduction',
-    )
+    const introSection = result.sections.find((s) => s.headingSlug === 'introduction')
     expect(introSection?.content).toContain('import { Button, Card }')
   })
 })

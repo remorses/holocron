@@ -10,11 +10,7 @@ import { deepinfra } from '@ai-sdk/deepinfra'
 import dedent from 'string-dedent'
 import { isDocsJson } from 'docs-website/src/lib/utils'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
-import {
-  OpenAIResponsesProviderOptions,
-  openai,
-  createOpenAI,
-} from '@ai-sdk/openai'
+import { OpenAIResponsesProviderOptions, openai, createOpenAI } from '@ai-sdk/openai'
 import { env, WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import {
   UIMessage,
@@ -38,11 +34,7 @@ import path from 'path'
 import { Spiceflow } from 'spiceflow'
 import z, { ZodType } from 'zod'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
-import {
-  validateMarkdownLinks,
-  createFormattedError,
-  type ErrorWithPosition,
-} from 'docs-website/src/lib/lint'
+import { validateMarkdownLinks, createFormattedError, type ErrorWithPosition } from 'docs-website/src/lib/lint'
 import {
   createEditTool,
   EditToolParamSchema,
@@ -65,10 +57,7 @@ import {
   type GetCurrentPageInput,
   type SelectTextInput,
 } from './shared-docs-tools'
-import {
-  searchDocsWithSearchApi,
-  formatSearchApiSearchResults,
-} from 'docs-website/src/lib/search-api-search'
+import { searchDocsWithSearchApi, formatSearchApiSearchResults } from 'docs-website/src/lib/search-api-search'
 import { cleanSlug } from 'docs-website/src/lib/slug-utils'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
@@ -78,10 +67,7 @@ import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 import exampleDocs from 'website/scripts/example-docs.json'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
-import {
-  interpreterToolParamsSchema,
-  createInterpreterTool,
-} from 'contesto/src/lib/interpreter-tool'
+import { interpreterToolParamsSchema, createInterpreterTool } from 'contesto/src/lib/interpreter-tool'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
@@ -106,10 +92,7 @@ const baseten = createOpenAICompatible({
 /**
  * Generate the system message content for the AI
  */
-export async function generateSystemMessage({
-  isOnboardingChat,
-  githubFolder,
-}): Promise<string> {
+export async function generateSystemMessage({ isOnboardingChat, githubFolder }): Promise<string> {
   return [
     await import('../prompts/agent.md?raw').then((x) => x.default),
     await import('../prompts/tone-and-style.md?raw').then((x) => x.default),
@@ -128,16 +111,12 @@ export async function generateSystemMessage({
 
         Notice that this project is located in the base folder ${githubFolder}, all your files should be put inside ${githubFolder}
         `,
-    !isOnboardingChat &&
-      (await import('../prompts/holocron-jsonc.md?raw').then((x) => x.default)),
+    !isOnboardingChat && (await import('../prompts/holocron-jsonc.md?raw').then((x) => x.default)),
     isOnboardingChat && '## Onboarding Instructions',
-    isOnboardingChat &&
-      (await import('../prompts/create-site.md?raw').then((x) => x.default)),
+    isOnboardingChat && (await import('../prompts/create-site.md?raw').then((x) => x.default)),
     isOnboardingChat && generateExampleTemplateFilesPrompt(),
-    !isOnboardingChat &&
-      (await import('../prompts/capabilities.md?raw').then((x) => x.default)),
-    !isOnboardingChat &&
-      (await import('../prompts/css-variables.md?raw').then((x) => x.default)),
+    !isOnboardingChat && (await import('../prompts/capabilities.md?raw').then((x) => x.default)),
+    !isOnboardingChat && (await import('../prompts/css-variables.md?raw').then((x) => x.default)),
   ]
     .filter(Boolean)
     .join('\n\n')
@@ -175,17 +154,11 @@ function generateExampleTemplateFilesPrompt() {
 }
 
 const deletePagesSchema = z.object({
-  filePaths: z
-    .array(z.string())
-    .describe('Array of file paths to delete from the website'),
+  filePaths: z.array(z.string()).describe('Array of file paths to delete from the website'),
 })
 
 const renameFileSchema = z.object({
-  oldPath: z
-    .string()
-    .describe(
-      'The current file path to rename. Must include the file extension.',
-    ),
+  oldPath: z.string().describe('The current file path to rename. Must include the file extension.'),
   newPath: z
     .string()
     .describe(
@@ -197,9 +170,7 @@ const renameFileSchema = z.object({
 const websiteFetchUrlInputSchema = z.object({
   url: z
     .string()
-    .describe(
-      'The absolute URL to fetch. Must start with https://. Use this to fetch content from external websites.',
-    ),
+    .describe('The absolute URL to fetch. Must start with https://. Use this to fetch content from external websites.'),
 })
 
 export type WebsiteTools = {
@@ -304,8 +275,7 @@ export async function* generateMessageStream({
   }) => Promise<void>
   middlewares?: LanguageModelV2Middleware[]
 }) {
-  const isOnboardingChat =
-    [...files.map((x) => x.path)].filter((x) => !isDocsJson(x)).length === 0
+  const isOnboardingChat = [...files.map((x) => x.path)].filter((x) => !isDocsJson(x)).length === 0
   const source = getFumadocsSource({
     files,
     defaultLanguage: defaultLocale,
@@ -371,10 +341,7 @@ export async function* generateMessageStream({
         if (typeof msg.content === 'string') return false
         // handle tool-call interface
         return msg.content.some((part) => {
-          if (
-            part.type === 'tool-call' &&
-            part.toolName === 'strReplaceEditor'
-          ) {
+          if (part.type === 'tool-call' && part.toolName === 'strReplaceEditor') {
             const input = part.input as EditToolParamSchema
             if (input?.path && isDocsJson(input.path)) {
               return true
@@ -441,28 +408,19 @@ export async function* generateMessageStream({
             )
             linkError.line = firstError.line
             linkError.column = firstError.column
-            linkError.reason = linkErrors
-              .map((e) => `Line ${e.line}: "${e.url}" - ${e.reason}`)
-              .join('\n')
+            linkError.reason = linkErrors.map((e) => `Line ${e.line}: "${e.url}" - ${e.reason}`).join('\n')
 
             // Add available slugs hint
             const availableSlugs = validSlugs.slice(0, 10).join(', ')
             const additionalMessage = dedent`
                         Available page slugs include: ${availableSlugs}${
-                          validSlugs.length > 10
-                            ? ` and ${validSlugs.length - 10} more...`
-                            : ''
+                          validSlugs.length > 10 ? ` and ${validSlugs.length - 10} more...` : ''
                         }
                         Please fix the invalid links and submit the tool call again.
                         If you want to reference a page you plan to create later, first create it with empty content and only frontmatter
                         `
 
-            const errorMessage = createFormattedError(
-              linkError,
-              x.content,
-              'Link Validation Error',
-              additionalMessage,
-            )
+            const errorMessage = createFormattedError(linkError, x.content, 'Link Validation Error', additionalMessage)
             return { error: errorMessage.message }
           }
         } catch (error: any) {
@@ -605,10 +563,7 @@ export async function* generateMessageStream({
             baseUrl: `${process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`}`,
           })
         } catch (error) {
-          console.error(
-            'Search API failed, falling back to simple search:',
-            error,
-          )
+          console.error('Search API failed, falling back to simple search:', error)
         }
 
         // Fallback to simple search through existing files
@@ -658,8 +613,7 @@ export async function* generateMessageStream({
     }),
 
     fetchUrl: tool({
-      description:
-        'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
+      description: 'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
       inputSchema: websiteFetchUrlInputSchema,
       execute: async ({ url }) => {
         // Validate that URL starts with https://
@@ -679,22 +633,13 @@ export async function* generateMessageStream({
           if (contentType.includes('application/json')) {
             const data = await response.json()
             const jsonString = JSON.stringify(data, null, 2)
-            return (
-              jsonString.substring(0, maxChars) +
-              (jsonString.length > maxChars ? '...' : '')
-            )
+            return jsonString.substring(0, maxChars) + (jsonString.length > maxChars ? '...' : '')
           } else if (contentType.includes('text/html')) {
             const html = await response.text()
-            return (
-              html.substring(0, maxChars) +
-              (html.length > maxChars ? '...' : '')
-            )
+            return html.substring(0, maxChars) + (html.length > maxChars ? '...' : '')
           } else {
             const text = await response.text()
-            return (
-              text.substring(0, maxChars) +
-              (text.length > maxChars ? '...' : '')
-            )
+            return text.substring(0, maxChars) + (text.length > maxChars ? '...' : '')
           }
         } catch (error) {
           return `Error fetching ${url}: ${error.message}`
@@ -834,10 +779,7 @@ export async function* generateMessageStream({
     originalMessages: messages,
     generateMessageId: idGenerator,
     async onFinish({ messages: uiMessages, isAborted }) {
-      console.log(
-        `chat finished, processing`,
-        isAborted ? 'aborted' : 'completed',
-      )
+      console.log(`chat finished, processing`, isAborted ? 'aborted' : 'completed')
 
       debugMessages(uiMessages, 'scripts/ui-result-messages.json')
 
@@ -881,15 +823,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
     filesInDraft: z.record(z.string(), fileUpdateSchema),
   }),
   async *handler({ request, waitUntil, state: { userId } }) {
-    const {
-      messages,
-      currentSlug,
-      chatId,
-      siteId,
-      branchId,
-      filesInDraft,
-      githubFolder,
-    } = await request.json()
+    const { messages, currentSlug, chatId, siteId, branchId, filesInDraft, githubFolder } = await request.json()
 
     const [branch, chat, files] = await Promise.all([
       prisma.siteBranch.findFirst({
@@ -938,9 +872,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
     }
 
     if (chat && chat.userId !== userId) {
-      throw new Error(
-        'This chat belongs to another user. Please start a new chat instead.',
-      )
+      throw new Error('This chat belongs to another user. Please start a new chat instead.')
     }
 
     // Create the last user message before streaming
@@ -1123,9 +1055,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                   }),
                 )
               } else {
-                console.log(
-                  `unhandled part tool type ${part.type} with state ${part.state}`,
-                )
+                console.log(`unhandled part tool type ${part.type} with state ${part.state}`)
               }
             } else if (part.type === 'file') {
               // Handle ChatPartFile
@@ -1157,9 +1087,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 }),
               )
             } else {
-              console.log(
-                `skipping message of type ${part.type} in the database`,
-              )
+              console.log(`skipping message of type ${part.type} in the database`)
             }
             // Ignore all other part types for now
           }
@@ -1191,9 +1119,7 @@ async function generateAndSaveChatTitle(params: {
       const content =
         ('content' in msg ? msg.content : null) ||
         (msg.parts || [])
-          .filter(
-            (part) => part.type === 'text' || part.type.startsWith('tool-'),
-          )
+          .filter((part) => part.type === 'text' || part.type.startsWith('tool-'))
           .map((part) => {
             if ('input' in part) {
               if (part.state === 'input-available') {
@@ -1218,9 +1144,7 @@ async function generateAndSaveChatTitle(params: {
       const { object } = await generateObject({
         model: openai('gpt-4o-mini'),
         schema: z.object({
-          title: z
-            .string()
-            .describe('A short, descriptive title for the changes, 2-6 words.'),
+          title: z.string().describe('A short, descriptive title for the changes, 2-6 words.'),
           description: z
             .string()
             .describe(
@@ -1266,19 +1190,13 @@ export async function getPageContent({ githubPath, branchId }) {
       select: { docsJson: true, docsJsonComments: true },
     })
     if (!branch || !branch.docsJson) {
-      throw new Error(
-        `Cannot find ${DOCS_JSON_BASENAME} for branch ${branchId}`,
-      )
+      throw new Error(`Cannot find ${DOCS_JSON_BASENAME} for branch ${branchId}`)
     }
 
     // Apply comments if they exist, otherwise use regular JSON stringify
     let content: string
     if (branch.docsJsonComments) {
-      content = applyJsonCComments(
-        branch.docsJson,
-        branch.docsJsonComments as any,
-        2,
-      )
+      content = applyJsonCComments(branch.docsJson, branch.docsJsonComments as any, 2)
     } else {
       content = JSON.stringify(branch.docsJson, null, 2)
     }

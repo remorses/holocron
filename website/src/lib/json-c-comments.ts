@@ -1,11 +1,4 @@
-import {
-  visit,
-  JSONVisitor,
-  parseTree,
-  ParseError,
-  getNodePath,
-  parse,
-} from 'jsonc-parser'
+import { visit, JSONVisitor, parseTree, ParseError, getNodePath, parse } from 'jsonc-parser'
 
 export interface JsonCComments {
   [keyPath: string]: string
@@ -21,9 +14,7 @@ export interface ExtractJsonCCommentsResult {
  * Returns both the parsed object and a map of key paths to their associated comments (including //)
  * Supports nested objects with dot notation and arrays with bracket notation for key paths
  */
-export function extractJsonCComments(
-  jsonCString: string,
-): ExtractJsonCCommentsResult {
+export function extractJsonCComments(jsonCString: string): ExtractJsonCCommentsResult {
   const comments: JsonCComments = {}
 
   // Store all comments with their line numbers
@@ -98,9 +89,7 @@ export function extractJsonCComments(
           // This is an object inside an array
           const arrayIndex = path[path.length - 1] as number
           const arrayPath = path.slice(0, -1).join('.')
-          const fullPath = arrayPath
-            ? `${arrayPath}.${arrayIndex}`
-            : `${arrayIndex}`
+          const fullPath = arrayPath ? `${arrayPath}.${arrayIndex}` : `${arrayIndex}`
 
           const comment = getCommentsAboveLine(startLine)
           if (comment) {
@@ -142,9 +131,7 @@ export function extractJsonCComments(
         if (path.length > 0 && typeof path[path.length - 1] === 'number') {
           const arrayIndex = path[path.length - 1] as number
           const arrayPath = path.slice(0, -1).join('.')
-          const fullPath = arrayPath
-            ? `${arrayPath}.${arrayIndex}`
-            : `${arrayIndex}`
+          const fullPath = arrayPath ? `${arrayPath}.${arrayIndex}` : `${arrayIndex}`
 
           const comment = getCommentsAboveLine(startLine)
           if (comment) {
@@ -182,11 +169,7 @@ export function extractJsonCComments(
  * @param indent Number of spaces for indentation (default: 4)
  * @returns JSON-C string with comments applied
  */
-export function applyJsonCComments(
-  obj: any,
-  comments: JsonCComments,
-  indent: number = 2,
-): string {
+export function applyJsonCComments(obj: any, comments: JsonCComments, indent: number = 2): string {
   // First stringify the object to get a baseline
   const jsonString = JSON.stringify(obj, null, indent)
 
@@ -317,13 +300,9 @@ export function applyJsonCComments(
   for (const insertion of insertions) {
     const indentStr = ' '.repeat(insertion.indent)
     const commentLines = insertion.comment.split('\n')
-    const commentBlock =
-      commentLines.map((line) => indentStr + line).join('\n') + '\n'
+    const commentBlock = commentLines.map((line) => indentStr + line).join('\n') + '\n'
 
-    result =
-      result.slice(0, insertion.offset) +
-      commentBlock +
-      result.slice(insertion.offset)
+    result = result.slice(0, insertion.offset) + commentBlock + result.slice(insertion.offset)
   }
 
   return result

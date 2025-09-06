@@ -13,14 +13,7 @@ export interface Props {
   width?: any
   height?: any
   layoutId?: string
-  variant?:
-    | 'All'
-    | 'Category 01'
-    | 'Category 02'
-    | 'Category 03'
-    | 'Category 04'
-    | 'Category 05'
-    | 'Category 06'
+  variant?: 'All' | 'Category 01' | 'Category 02' | 'Category 03' | 'Category 04' | 'Category 05' | 'Category 06'
   cardVariant?: 'Featured' | 'Default' | 'Default Phone' | 'Featured Phone'
   phone?: boolean
 }
@@ -31,8 +24,6 @@ type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & {
   base: Props['variant']
 }
 
-BlogPostFilteringFramerComponent.Responsive = (
-  props: Omit<Props, 'variant'> & { variants?: VariantsMap },
-) => any
+BlogPostFilteringFramerComponent.Responsive = (props: Omit<Props, 'variant'> & { variants?: VariantsMap }) => any
 
 export default BlogPostFilteringFramerComponent

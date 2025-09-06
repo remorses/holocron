@@ -13,11 +13,7 @@ import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/qqh7HlCyFcvfXpEg1YiU/2BELDBGtAOyHkyrfAcOJ/KOK3oJ8Tj.js
-import {
-  jsx as _jsx2,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx2, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -121,9 +117,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -133,11 +127,7 @@ var transition1 = {
   type: 'spring',
 }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string'
@@ -160,11 +150,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion2.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -174,8 +160,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'SX4gBQsPS',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'SX4gBQsPS',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -234,12 +219,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion2.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-27t1aq',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-27t1aq', className, classNames)}
             data-framer-name={'Default'}
             layoutDependency={layoutDependency}
             layoutId={'SX4gBQsPS'}
@@ -368,9 +348,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           glow={0}
                                           height={'100%'}
                                           id={'c_YyQwZ4C'}
-                                          image={toResponsiveImage(
-                                            SkaQBLm16jxtraO5yv2,
-                                          )}
+                                          image={toResponsiveImage(SkaQBLm16jxtraO5yv2)}
                                           layoutId={'c_YyQwZ4C'}
                                           midtones={50}
                                           pixelSize={1}
@@ -405,9 +383,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       >
                                         <ComponentViewportProvider>
                                           <SmartComponentScopedContainer
-                                            className={
-                                              'framer-1qg483b-container'
-                                            }
+                                            className={'framer-1qg483b-container'}
                                             isAuthoredByUser={true}
                                             isModuleExternal={true}
                                             layoutDependency={layoutDependency}
@@ -433,9 +409,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               glow={0}
                                               height={'100%'}
                                               id={'qnrIsB3jy'}
-                                              image={toResponsiveImage(
-                                                SkaQBLm16jxtraO5yv2,
-                                              )}
+                                              image={toResponsiveImage(SkaQBLm16jxtraO5yv2)}
                                               layoutId={'qnrIsB3jy'}
                                               midtones={65}
                                               pixelSize={1}
@@ -455,9 +429,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                   {isDisplayed1() && (
                                     <motion2.div
                                       className={'framer-1jww0me'}
-                                      data-framer-name={
-                                        'Flashlight Wrap (Social Preview)'
-                                      }
+                                      data-framer-name={'Flashlight Wrap (Social Preview)'}
                                       layoutDependency={layoutDependency}
                                       layoutId={'tnQYzTJqe'}
                                       style={{
@@ -479,9 +451,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       >
                                         <ComponentViewportProvider>
                                           <SmartComponentScopedContainer
-                                            className={
-                                              'framer-1t6pz8n-container'
-                                            }
+                                            className={'framer-1t6pz8n-container'}
                                             isAuthoredByUser={true}
                                             isModuleExternal={true}
                                             layoutDependency={layoutDependency}
@@ -507,9 +477,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                               glow={0}
                                               height={'100%'}
                                               id={'idONJxYWB'}
-                                              image={toResponsiveImage(
-                                                SkaQBLm16jxtraO5yv2,
-                                              )}
+                                              image={toResponsiveImage(SkaQBLm16jxtraO5yv2)}
                                               layoutId={'idONJxYWB'}
                                               midtones={65}
                                               pixelSize={1}
@@ -662,17 +630,11 @@ stdin_default3.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -720,9 +682,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

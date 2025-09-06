@@ -24,15 +24,7 @@ declare global {
   }
 }
 
-export function highlightText({
-  slug,
-  startLine,
-  endLine,
-}: {
-  slug: string
-  startLine: number
-  endLine: number
-}) {
+export function highlightText({ slug, startLine, endLine }: { slug: string; startLine: number; endLine: number }) {
   // Clear any existing highlights
   if (CSS.highlights) {
     CSS.highlights.delete('llm-text-selection')
@@ -42,18 +34,14 @@ export function highlightText({
   const elementsToHighlight: HTMLElement[] = []
 
   for (let lineNum = startLine; lineNum <= endLine; lineNum++) {
-    const element = document.querySelector<HTMLElement>(
-      `[data-markdown-line="${lineNum}"]`,
-    )
+    const element = document.querySelector<HTMLElement>(`[data-markdown-line="${lineNum}"]`)
     if (element) {
       elementsToHighlight.push(element)
     }
   }
 
   if (elementsToHighlight.length === 0) {
-    console.warn(
-      `No elements found with data-markdown-line attributes between ${startLine} and ${endLine}`,
-    )
+    console.warn(`No elements found with data-markdown-line attributes between ${startLine} and ${endLine}`)
     return
   }
 

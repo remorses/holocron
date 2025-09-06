@@ -2,16 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { createIdGenerator, UIMessage } from 'ai'
-import {
-  ChatAssistantMessage,
-  ChatErrorMessage,
-  ChatUserMessage,
-} from 'contesto/src/chat/chat-message'
-import {
-  ChatProvider,
-  ChatState,
-  useChatContext,
-} from 'contesto/src/chat/chat-provider'
+import { ChatAssistantMessage, ChatErrorMessage, ChatUserMessage } from 'contesto/src/chat/chat-message'
+import { ChatProvider, ChatState, useChatContext } from 'contesto/src/chat/chat-provider'
 import { ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { useStickToBottom } from 'contesto/src/lib/stick-to-bottom'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
@@ -120,12 +112,8 @@ function WelcomeMessage() {
 
   return (
     <div className='text-center py-8'>
-      <h2 className='text-2xl select-none font-semibold text-foreground mb-4'>
-        Welcome to MCP Chat Demo
-      </h2>
-      <p className='text-muted-foreground select-none'>
-        Start a conversation by typing a message below
-      </p>
+      <h2 className='text-2xl select-none font-semibold text-foreground mb-4'>Welcome to MCP Chat Demo</h2>
+      <p className='text-muted-foreground select-none'>Start a conversation by typing a message below</p>
     </div>
   )
 }

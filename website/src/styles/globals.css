@@ -12,8 +12,7 @@
 
 @font-face {
   font-family: "Consolas";
-  src: url("https://cdn.jsdelivr.net/gh/your-org/fonts/consolas/Consolas-Regular.woff2")
-    format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/your-org/fonts/consolas/Consolas-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -21,8 +20,7 @@
 
 @font-face {
   font-family: "Inter";
-  src: url("https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK-G0bq7diAaBFpM.woff2")
-    format("woff2");
+  src: url("https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK-G0bq7diAaBFpM.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -30,11 +28,10 @@
 
 @theme {
   --text-mono: 16px;
-  --font-mono:
-    "Consolas", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  --font-mono: "Consolas", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   --font-sans:
-    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
 }
 
 :root {
@@ -231,14 +228,10 @@
 }
 
 .prose-quoteless {
-  :where(blockquote p:first-of-type):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    )::before {
+  :where(blockquote p:first-of-type):not(:where([class~="not-prose"], [class~="not-prose"] *))::before {
     content: none;
   }
-  :where(blockquote p:first-of-type):not(
-      :where([class~="not-prose"], [class~="not-prose"] *)
-    )::after {
+  :where(blockquote p:first-of-type):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
     content: none;
   }
 }

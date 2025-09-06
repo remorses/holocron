@@ -25,32 +25,17 @@ async function main() {
     return
   }
   const messages = chat.messages.map((msg) => {
-    const {
-      textParts = [],
-      reasoningParts = [],
-      toolParts = [],
-      sourceUrlParts = [],
-      fileParts = [],
-      ...rest
-    } = msg
+    const { textParts = [], reasoningParts = [], toolParts = [], sourceUrlParts = [], fileParts = [], ...rest } = msg
 
     const message = {
       ...rest,
-      parts: [
-        ...textParts,
-        ...reasoningParts,
-        ...toolParts,
-        ...sourceUrlParts,
-        ...fileParts,
-      ]
+      parts: [...textParts, ...reasoningParts, ...toolParts, ...sourceUrlParts, ...fileParts]
         .flat()
         .sort((a, b) => a.index - b.index),
     }
     return message
   })
-  console.log(
-    yaml.dump(messages, { noRefs: true, sortKeys: false, lineWidth: 120 }),
-  )
+  console.log(yaml.dump(messages, { noRefs: true, sortKeys: false, lineWidth: 120 }))
 }
 
 main()

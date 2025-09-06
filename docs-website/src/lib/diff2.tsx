@@ -55,12 +55,7 @@ function diff(left: Root, right: Root): PatchResult {
   return patch
 }
 
-function walk(
-  left: DiffNode,
-  right: DiffNode,
-  patch: PatchResult,
-  index: number,
-): void {
+function walk(left: DiffNode, right: DiffNode, patch: PatchResult, index: number): void {
   let apply = patch[index]
 
   if (left === right) {
@@ -89,13 +84,7 @@ function walk(
       const textResult = diffText(apply, left as Text, right as Text)
       if (textResult) apply = textResult
     } else if (parent(right)) {
-      const childrenResult = diffChildren(
-        apply,
-        left as Parent,
-        right as Parent,
-        patch,
-        index,
-      )
+      const childrenResult = diffChildren(apply, left as Parent, right as Parent, patch, index)
       if (childrenResult) apply = childrenResult
     }
   } else {
@@ -117,9 +106,7 @@ function diffText(
   left: Text,
   right: Text,
 ): DiffPatch | DiffPatch[] | undefined {
-  return left.value === right.value
-    ? apply
-    : append(apply, { type: 'text', left: left, right: right })
+  return left.value === right.value ? apply : append(apply, { type: 'text', left: left, right: right })
 }
 
 function diffChildren(
@@ -172,9 +159,7 @@ function diffProperties(
   right: DiffNode,
 ): DiffPatch | DiffPatch[] | undefined {
   const diff = diffObjects(left, right)
-  return diff
-    ? append(apply, { type: 'props', left: left, right: diff })
-    : apply
+  return diff ? append(apply, { type: 'props', left: left, right: diff }) : apply
 }
 
 function diffObjects(left: any, right: any): Record<string, any> | undefined {
@@ -234,10 +219,7 @@ function diffObjects(left: any, right: any): Record<string, any> | undefined {
   return diff
 }
 
-function append(
-  apply: DiffPatch | DiffPatch[] | undefined,
-  patch: DiffPatch,
-): DiffPatch | DiffPatch[] {
+function append(apply: DiffPatch | DiffPatch[] | undefined, patch: DiffPatch): DiffPatch | DiffPatch[] {
   if (!apply) {
     return patch
   }
@@ -250,10 +232,7 @@ function append(
   return [apply as DiffPatch, patch]
 }
 
-function reorder(
-  leftChildren: DiffNode[],
-  rightChildren: DiffNode[],
-): ReorderResult {
+function reorder(leftChildren: DiffNode[], rightChildren: DiffNode[]): ReorderResult {
   let leftChildIndex = keyIndex(leftChildren)
   let leftKeys = leftChildIndex.key
   let leftIndex = leftChildIndex.index
@@ -318,10 +297,7 @@ function reorder(
     } else if (rightKey === leftKey) {
       leftKey = leftIndex[++leftOffset]
       rightKey = rightIndex[++rightOffset]
-    } else if (
-      leftKeys[rightKey] - leftOffset >=
-      rightKeys[leftKey] - rightOffset
-    ) {
+    } else if (leftKeys[rightKey] - leftOffset >= rightKeys[leftKey] - rightOffset) {
       inserts.push({
         left: rightChildren[rightOffset],
         right: rightOffset,
@@ -403,7 +379,5 @@ function text(value: any): value is Text {
 }
 
 function node(value: any): value is DiffNode {
-  return (
-    value !== null && value !== undefined && object(value) && 'type' in value
-  )
+  return value !== null && value !== undefined && object(value) && 'type' in value
 }

@@ -3,15 +3,7 @@ import { parse as parseCookies, serialize as serializeCookie } from 'cookie'
 
 import { loader as fumadocsLoader } from 'fumadocs-core/source'
 import { prisma } from 'db'
-import {
-  data,
-  isRouteErrorResponse,
-  Links,
-  Meta,
-  redirect,
-  Scripts,
-  ScrollRestoration,
-} from 'react-router'
+import { data, isRouteErrorResponse, Links, Meta, redirect, Scripts, ScrollRestoration } from 'react-router'
 // @ts-ignore
 import type { Route } from './+types/root'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
@@ -21,10 +13,7 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
 import { getOpenapiDocument } from 'docs-website/src/lib/openapi.server'
-import {
-  ClientLayout,
-  ClientApp,
-} from 'docs-website/src/routes/_catchall-client'
+import { ClientLayout, ClientApp } from 'docs-website/src/routes/_catchall-client'
 import { FilesInDraft } from '../lib/docs-state'
 import { getDocsJson } from '../lib/utils'
 import { themeModules } from '../lib/themes'
@@ -253,12 +242,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
   const titleClass = 'text-3xl font-semibold mb-3 text-primary'
   const messageClass = 'text-base mb-2 text-muted-foreground'
-  const preClass =
-    'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+  const preClass = 'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
 
   // Check if we're in a chat context
-  const url =
-    typeof window !== 'undefined' ? new URL(window.location.href) : null
+  const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
   const chatId = url?.searchParams.get('chatId')
 
   if (isRouteErrorResponse(error)) {

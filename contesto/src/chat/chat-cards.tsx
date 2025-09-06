@@ -5,13 +5,7 @@ import { cn } from '../lib/cn.js'
 
 export function Cards(props: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      {...props}
-      className={cn(
-        'grid mt-auto grid-cols-2 gap-4 @container',
-        props.className,
-      )}
-    >
+    <div {...props} className={cn('grid mt-auto grid-cols-2 gap-4 @container', props.className)}>
       {props.children}
     </div>
   )
@@ -25,13 +19,7 @@ export type CardProps = Omit<HTMLAttributes<HTMLElement>, 'title'> & {
   href?: string
   external?: boolean
 }
-export function Card({
-  icon,
-  title,
-  description,
-  asChild,
-  ...props
-}: CardProps) {
+export function Card({ icon, title, description, asChild, ...props }: CardProps) {
   const Comp = asChild ? Slot.Root : 'a'
 
   return (
@@ -50,14 +38,8 @@ export function Card({
         </div>
       ) : null}
       <h3 className='not-prose mb-1 text-sm font-medium'>{title}</h3>
-      {description ? (
-        <p className='!my-0 text-sm text-muted-foreground'>{description}</p>
-      ) : null}
-      {props.children ? (
-        <div className='text-sm text-muted-foreground prose-no-margin'>
-          {props.children}
-        </div>
-      ) : null}
+      {description ? <p className='!my-0 text-sm text-muted-foreground'>{description}</p> : null}
+      {props.children ? <div className='text-sm text-muted-foreground prose-no-margin'>{props.children}</div> : null}
     </Comp>
   )
 }

@@ -13,13 +13,7 @@ export async function extractAssetsUrls({ ast, extension }) {
   const html = dom.renderToStaticMarkup(jsx)
 }
 
-export async function processHtml({
-  basePath,
-  allAssetPaths,
-  pagePath,
-  html,
-  mapImageUrl,
-}) {
+export async function processHtml({ basePath, allAssetPaths, pagePath, html, mapImageUrl }) {
   if (!html) {
     return {
       html: '<html></html>',
@@ -87,9 +81,7 @@ export async function processHtml({
               continue
             }
             if (!isAbsoluteUrl(imgPath)) {
-              console.log(
-                `replaced link img from ${JSON.stringify(src)} to ${JSON.stringify(imgPath)}`,
-              )
+              console.log(`replaced link img from ${JSON.stringify(src)} to ${JSON.stringify(imgPath)}`)
 
               mediaPaths.push(imgPath)
               // node.attribs.src = newSrc
@@ -111,20 +103,11 @@ export async function processHtml({
   await processNodes(handler.dom)
 
   if (imagesNotFound.length) {
-    console.log(
-      `${imagesNotFound.length} images not found in ${pagePath}:`,
-      imagesNotFound,
-    )
+    console.log(`${imagesNotFound.length} images not found in ${pagePath}:`, imagesNotFound)
   }
 }
 
-export function findMatchInPaths({
-  filePath,
-  paths,
-}: {
-  paths: string[]
-  filePath: string
-}) {
+export function findMatchInPaths({ filePath, paths }: { paths: string[]; filePath: string }) {
   // hashes are alright
   if (!filePath) {
     return ''

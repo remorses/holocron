@@ -36,31 +36,15 @@ var CompositeBlock = class {
   }
   addChild(child, pos) {
     if (child.prop(NodeProp.contextHash) != this.hash)
-      child = new Tree(
-        child.type,
-        child.children,
-        child.positions,
-        child.length,
-        this.hashProp,
-      )
+      child = new Tree(child.type, child.children, child.positions, child.length, this.hashProp)
     this.children.push(child)
     this.positions.push(pos)
   }
   toTree(nodeSet, end = this.end) {
     let last = this.children.length - 1
-    if (last >= 0)
-      end = Math.max(
-        end,
-        this.positions[last] + this.children[last].length + this.from,
-      )
-    let tree = new Tree(
-      nodeSet.types[this.type],
-      this.children,
-      this.positions,
-      end - this.from,
-    ).balance({
-      makeTree: (children, positions, length) =>
-        new Tree(NodeType.none, children, positions, length, this.hashProp),
+    if (last >= 0) end = Math.max(end, this.positions[last] + this.children[last].length + this.from)
+    let tree = new Tree(nodeSet.types[this.type], this.children, this.positions, end - this.from).balance({
+      makeTree: (children, positions, length) => new Tree(NodeType.none, children, positions, length, this.hashProp),
     })
     return tree
   }
@@ -97,8 +81,7 @@ var Type
   Type2[(Type2['LinkReference'] = 18)] = 'LinkReference'
   Type2[(Type2['Paragraph'] = 19)] = 'Paragraph'
   Type2[(Type2['CommentBlock'] = 20)] = 'CommentBlock'
-  Type2[(Type2['ProcessingInstructionBlock'] = 21)] =
-    'ProcessingInstructionBlock'
+  Type2[(Type2['ProcessingInstructionBlock'] = 21)] = 'ProcessingInstructionBlock'
   Type2[(Type2['Escape'] = 22)] = 'Escape'
   Type2[(Type2['Entity'] = 23)] = 'Entity'
   Type2[(Type2['HardBreak'] = 24)] = 'HardBreak'
@@ -179,8 +162,7 @@ var Line = class {
   /// Find the column position at `to`, optionally starting at a given
   /// position and column.
   countIndent(to, from = 0, indent = 0) {
-    for (let i = from; i < to; i++)
-      indent += this.text.charCodeAt(i) == 9 ? 4 - (indent % 4) : 1
+    for (let i = from; i < to; i++) indent += this.text.charCodeAt(i) == 9 ? 4 - (indent % 4) : 1
     return indent
   }
   /// Find the position corresponding to the given column.
@@ -211,16 +193,11 @@ var Line = class {
 function skipForList(bl, cx, line) {
   if (
     line.pos == line.text.length ||
-    (bl != cx.block &&
-      line.indent >= cx.stack[line.depth + 1].value + line.baseIndent)
+    (bl != cx.block && line.indent >= cx.stack[line.depth + 1].value + line.baseIndent)
   )
     return true
   if (line.indent >= line.baseIndent + 4) return false
-  let size = (bl.type == Type.OrderedList ? isOrderedList : isBulletList)(
-    line,
-    cx,
-    false,
-  )
+  let size = (bl.type == Type.OrderedList ? isOrderedList : isBulletList)(line, cx, false)
   return (
     size > 0 &&
     (bl.type != Type.BulletList || isHorizontalRule(line, cx, false) < 0) &&
@@ -230,12 +207,8 @@ function skipForList(bl, cx, line) {
 var DefaultSkipMarkup = {
   [Type.Blockquote](bl, cx, line) {
     if (line.next != 62) return false
-    line.markers.push(
-      elt(Type.QuoteMark, cx.lineStart + line.pos, cx.lineStart + line.pos + 1),
-    )
-    line.moveBase(
-      line.pos + (space(line.text.charCodeAt(line.pos + 1)) ? 2 : 1),
-    )
+    line.markers.push(elt(Type.QuoteMark, cx.lineStart + line.pos, cx.lineStart + line.pos + 1))
+    line.moveBase(line.pos + (space(line.text.charCodeAt(line.pos + 1)) ? 2 : 1))
     bl.end = cx.lineStart + line.text.length
     return true
   },
@@ -267,8 +240,7 @@ function isFencedCode(line) {
   while (pos < line.text.length && line.text.charCodeAt(pos) == line.next) pos++
   if (pos < line.pos + 3) return -1
   if (line.next == 96) {
-    for (let i = pos; i < line.text.length; i++)
-      if (line.text.charCodeAt(i) == 96) return -1
+    for (let i = pos; i < line.text.length; i++) if (line.text.charCodeAt(i) == 96) return -1
   }
   return pos
 }
@@ -283,27 +255,17 @@ function isHorizontalRule(line, cx, breaking) {
     if (ch == line.next) count++
     else if (!space(ch)) return -1
   }
-  if (
-    breaking &&
-    line.next == 45 &&
-    isSetextUnderline(line) > -1 &&
-    line.depth == cx.stack.length
-  )
-    return -1
+  if (breaking && line.next == 45 && isSetextUnderline(line) > -1 && line.depth == cx.stack.length) return -1
   return count < 3 ? -1 : 1
 }
 function inList(cx, type) {
-  for (let i = cx.stack.length - 1; i >= 0; i--)
-    if (cx.stack[i].type == type) return true
+  for (let i = cx.stack.length - 1; i >= 0; i--) if (cx.stack[i].type == type) return true
   return false
 }
 function isBulletList(line, cx, breaking) {
   return (line.next == 45 || line.next == 43 || line.next == 42) &&
-    (line.pos == line.text.length - 1 ||
-      space(line.text.charCodeAt(line.pos + 1))) &&
-    (!breaking ||
-      inList(cx, Type.BulletList) ||
-      line.skipSpace(line.pos + 2) < line.text.length)
+    (line.pos == line.text.length - 1 || space(line.text.charCodeAt(line.pos + 1))) &&
+    (!breaking || inList(cx, Type.BulletList) || line.skipSpace(line.pos + 2) < line.text.length)
     ? 1
     : -1
 }
@@ -323,9 +285,7 @@ function isOrderedList(line, cx, breaking) {
     (pos < line.text.length - 1 && !space(line.text.charCodeAt(pos + 1))) ||
     (breaking &&
       !inList(cx, Type.OrderedList) &&
-      (line.skipSpace(pos + 1) == line.text.length ||
-        pos > line.pos + 1 ||
-        line.next != 49))
+      (line.skipSpace(pos + 1) == line.text.length || pos > line.pos + 1 || line.next != 49))
   )
     return -1
   return pos + 1 - line.pos
@@ -339,11 +299,7 @@ function isAtxHeading(line) {
   return size > 6 ? -1 : size
 }
 function isSetextUnderline(line) {
-  if (
-    (line.next != 45 && line.next != 61) ||
-    line.indent >= line.baseIndent + 4
-  )
-    return -1
+  if ((line.next != 45 && line.next != 61) || line.indent >= line.baseIndent + 4) return -1
   let pos = line.pos + 1
   while (pos < line.text.length && line.text.charCodeAt(pos) == line.next) pos++
   let end = pos
@@ -382,8 +338,7 @@ function getListIndent(line, pos) {
 }
 function addCodeText(marks, from, to) {
   let last = marks.length - 1
-  if (last >= 0 && marks[last].to == from && marks[last].type == Type.CodeText)
-    marks[last].to = to
+  if (last >= 0 && marks[last].to == from && marks[last].type == Type.CodeText) marks[last].to = to
   else marks.push(elt(Type.CodeText, from, to))
 }
 var DefaultBlockParsers = {
@@ -422,10 +377,7 @@ var DefaultBlockParsers = {
       pendingMarks = pendingMarks.filter((m) => m.type != Type.CodeText)
       if (pendingMarks.length) line.markers = pendingMarks.concat(line.markers)
     }
-    cx.addNode(
-      cx.buffer.writeElements(marks, -from).finish(Type.CodeBlock, to - from),
-      from,
-    )
+    cx.addNode(cx.buffer.writeElements(marks, -from).finish(Type.CodeBlock, to - from), from)
     return true
   },
   FencedCode(cx, line) {
@@ -437,23 +389,13 @@ var DefaultBlockParsers = {
     let infoFrom = line.skipSpace(fenceEnd),
       infoTo = skipSpaceBack(line.text, line.text.length, infoFrom)
     let marks = [elt(Type.CodeMark, from, from + len)]
-    if (infoFrom < infoTo)
-      marks.push(
-        elt(Type.CodeInfo, cx.lineStart + infoFrom, cx.lineStart + infoTo),
-      )
-    for (
-      let first = true;
-      cx.nextLine() && line.depth >= cx.stack.length;
-      first = false
-    ) {
+    if (infoFrom < infoTo) marks.push(elt(Type.CodeInfo, cx.lineStart + infoFrom, cx.lineStart + infoTo))
+    for (let first = true; cx.nextLine() && line.depth >= cx.stack.length; first = false) {
       let i = line.pos
-      if (line.indent - line.baseIndent < 4)
-        while (i < line.text.length && line.text.charCodeAt(i) == ch) i++
+      if (line.indent - line.baseIndent < 4) while (i < line.text.length && line.text.charCodeAt(i) == ch) i++
       if (i - line.pos >= len && line.skipSpace(i) == line.text.length) {
         for (let m of line.markers) marks.push(m)
-        marks.push(
-          elt(Type.CodeMark, cx.lineStart + line.pos, cx.lineStart + i),
-        )
+        marks.push(elt(Type.CodeMark, cx.lineStart + line.pos, cx.lineStart + i))
         cx.nextLine()
         break
       } else {
@@ -464,23 +406,14 @@ var DefaultBlockParsers = {
         if (textStart < textEnd) addCodeText(marks, textStart, textEnd)
       }
     }
-    cx.addNode(
-      cx.buffer
-        .writeElements(marks, -from)
-        .finish(Type.FencedCode, cx.prevLineEnd() - from),
-      from,
-    )
+    cx.addNode(cx.buffer.writeElements(marks, -from).finish(Type.FencedCode, cx.prevLineEnd() - from), from)
     return true
   },
   Blockquote(cx, line) {
     let size = isBlockquote(line)
     if (size < 0) return false
     cx.startContext(Type.Blockquote, line.pos)
-    cx.addNode(
-      Type.QuoteMark,
-      cx.lineStart + line.pos,
-      cx.lineStart + line.pos + 1,
-    )
+    cx.addNode(Type.QuoteMark, cx.lineStart + line.pos, cx.lineStart + line.pos + 1)
     line.moveBase(line.pos + size)
     return null
   },
@@ -494,15 +427,10 @@ var DefaultBlockParsers = {
   BulletList(cx, line) {
     let size = isBulletList(line, cx, false)
     if (size < 0) return false
-    if (cx.block.type != Type.BulletList)
-      cx.startContext(Type.BulletList, line.basePos, line.next)
+    if (cx.block.type != Type.BulletList) cx.startContext(Type.BulletList, line.basePos, line.next)
     let newBase = getListIndent(line, line.pos + 1)
     cx.startContext(Type.ListItem, line.basePos, newBase - line.baseIndent)
-    cx.addNode(
-      Type.ListMark,
-      cx.lineStart + line.pos,
-      cx.lineStart + line.pos + size,
-    )
+    cx.addNode(Type.ListMark, cx.lineStart + line.pos, cx.lineStart + line.pos + size)
     line.moveBaseColumn(newBase)
     return null
   },
@@ -510,18 +438,10 @@ var DefaultBlockParsers = {
     let size = isOrderedList(line, cx, false)
     if (size < 0) return false
     if (cx.block.type != Type.OrderedList)
-      cx.startContext(
-        Type.OrderedList,
-        line.basePos,
-        line.text.charCodeAt(line.pos + size - 1),
-      )
+      cx.startContext(Type.OrderedList, line.basePos, line.text.charCodeAt(line.pos + size - 1))
     let newBase = getListIndent(line, line.pos + size)
     cx.startContext(Type.ListItem, line.basePos, newBase - line.baseIndent)
-    cx.addNode(
-      Type.ListMark,
-      cx.lineStart + line.pos,
-      cx.lineStart + line.pos + size,
-    )
+    cx.addNode(Type.ListMark, cx.lineStart + line.pos, cx.lineStart + line.pos + size)
     line.moveBaseColumn(newBase)
     return null
   },
@@ -533,23 +453,11 @@ var DefaultBlockParsers = {
     let endOfSpace = skipSpaceBack(line.text, line.text.length, off),
       after = endOfSpace
     while (after > off && line.text.charCodeAt(after - 1) == line.next) after--
-    if (
-      after == endOfSpace ||
-      after == off ||
-      !space(line.text.charCodeAt(after - 1))
-    )
-      after = line.text.length
+    if (after == endOfSpace || after == off || !space(line.text.charCodeAt(after - 1))) after = line.text.length
     let buf = cx.buffer
       .write(Type.HeaderMark, 0, size)
-      .writeElements(
-        cx.parser.parseInline(
-          line.text.slice(off + size + 1, after),
-          from + size + 1,
-        ),
-        -from,
-      )
-    if (after < line.text.length)
-      buf.write(Type.HeaderMark, after - off, endOfSpace - off)
+      .writeElements(cx.parser.parseInline(line.text.slice(off + size + 1, after), from + size + 1), -from)
+    if (after < line.text.length) buf.write(Type.HeaderMark, after - off, endOfSpace - off)
     let node = buf.finish(Type.ATXHeading1 - 1 + size, line.text.length - off)
     cx.nextLine()
     cx.addNode(node, from)
@@ -571,16 +479,9 @@ var DefaultBlockParsers = {
     }
     if (trailing) cx.nextLine()
     let nodeType =
-      end == CommentEnd
-        ? Type.CommentBlock
-        : end == ProcessingEnd
-          ? Type.ProcessingInstructionBlock
-          : Type.HTMLBlock
+      end == CommentEnd ? Type.CommentBlock : end == ProcessingEnd ? Type.ProcessingInstructionBlock : Type.HTMLBlock
     let to = cx.prevLineEnd()
-    cx.addNode(
-      cx.buffer.writeElements(marks, -from).finish(nodeType, to - from),
-      from,
-    )
+    cx.addNode(cx.buffer.writeElements(marks, -from).finish(nodeType, to - from), from)
     return true
   },
   SetextHeading: void 0,
@@ -590,23 +491,16 @@ var LinkReferenceParser = class {
     if (this.stage == -1) return false
     let content = leaf.content + '\n' + line.scrub()
     let finish = this.advance(content)
-    if (finish > -1 && finish < content.length)
-      return this.complete(cx, leaf, finish)
+    if (finish > -1 && finish < content.length) return this.complete(cx, leaf, finish)
     return false
   }
   finish(cx, leaf) {
-    if (
-      (this.stage == 2 || this.stage == 3) &&
-      skipSpace(leaf.content, this.pos) == leaf.content.length
-    )
+    if ((this.stage == 2 || this.stage == 3) && skipSpace(leaf.content, this.pos) == leaf.content.length)
       return this.complete(cx, leaf, leaf.content.length)
     return false
   }
   complete(cx, leaf, len) {
-    cx.addLeafElement(
-      leaf,
-      elt(Type.LinkReference, this.start, this.start + len, this.elts),
-    )
+    cx.addLeafElement(leaf, elt(Type.LinkReference, this.start, this.start + len, this.elts))
     return true
   }
   nextStage(elt2) {
@@ -624,22 +518,12 @@ var LinkReferenceParser = class {
       if (this.stage == -1) {
         return -1
       } else if (this.stage == 0) {
-        if (
-          !this.nextStage(parseLinkLabel(content, this.pos, this.start, true))
-        )
-          return -1
+        if (!this.nextStage(parseLinkLabel(content, this.pos, this.start, true))) return -1
         if (content.charCodeAt(this.pos) != 58) return (this.stage = -1)
-        this.elts.push(
-          elt(Type.LinkMark, this.pos + this.start, this.pos + this.start + 1),
-        )
+        this.elts.push(elt(Type.LinkMark, this.pos + this.start, this.pos + this.start + 1))
         this.pos++
       } else if (this.stage == 1) {
-        if (
-          !this.nextStage(
-            parseURL(content, skipSpace(content, this.pos), this.start),
-          )
-        )
-          return -1
+        if (!this.nextStage(parseURL(content, skipSpace(content, this.pos), this.start))) return -1
       } else if (this.stage == 2) {
         let skip = skipSpace(content, this.pos),
           end = 0
@@ -681,20 +565,14 @@ var SetextHeadingParser = class {
     let underline = line.depth < cx.stack.length ? -1 : isSetextUnderline(line)
     let next = line.next
     if (underline < 0) return false
-    let underlineMark = elt(
-      Type.HeaderMark,
-      cx.lineStart + line.pos,
-      cx.lineStart + underline,
-    )
+    let underlineMark = elt(Type.HeaderMark, cx.lineStart + line.pos, cx.lineStart + underline)
     cx.nextLine()
     cx.addLeafElement(
       leaf,
-      elt(
-        next == 61 ? Type.SetextHeading1 : Type.SetextHeading2,
-        leaf.start,
-        cx.prevLineEnd(),
-        [...cx.parser.parseInline(leaf.content, leaf.start), underlineMark],
-      ),
+      elt(next == 61 ? Type.SetextHeading1 : Type.SetextHeading2, leaf.start, cx.prevLineEnd(), [
+        ...cx.parser.parseInline(leaf.content, leaf.start),
+        underlineMark,
+      ]),
     )
     return true
   }
@@ -704,9 +582,7 @@ var SetextHeadingParser = class {
 }
 var DefaultLeafBlocks = {
   LinkReference(_, leaf) {
-    return leaf.content.charCodeAt(0) == 91
-      ? new LinkReferenceParser(leaf)
-      : null
+    return leaf.content.charCodeAt(0) == 91 ? new LinkReferenceParser(leaf) : null
   },
   SetextHeading() {
     return new SetextHeadingParser()
@@ -727,8 +603,7 @@ var BlockContext = class {
     return this.absoluteLineStart
   }
   advance() {
-    if (this.stoppedAt != null && this.absoluteLineStart > this.stoppedAt)
-      return this.finish()
+    if (this.stoppedAt != null && this.absoluteLineStart > this.stoppedAt) return this.finish()
     let { line } = this
     for (;;) {
       while (line.depth < this.stack.length) this.finishContext()
@@ -749,10 +624,7 @@ var BlockContext = class {
         }
       break
     }
-    let leaf = new LeafBlock(
-      this.lineStart + line.pos,
-      line.text.slice(line.pos),
-    )
+    let leaf = new LeafBlock(this.lineStart + line.pos, line.text.slice(line.pos))
     for (let parse of this.parser.leafBlockParsers)
       if (parse) {
         let parser2 = parse(this, leaf)
@@ -761,11 +633,9 @@ var BlockContext = class {
     lines: while (this.nextLine()) {
       if (line.pos == line.text.length) break
       if (line.indent < line.baseIndent + 4) {
-        for (let stop of this.parser.endLeafBlock)
-          if (stop(this, line, leaf)) break lines
+        for (let stop of this.parser.endLeafBlock) if (stop(this, line, leaf)) break lines
       }
-      for (let parser2 of leaf.parsers)
-        if (parser2.nextLine(this, line, leaf)) return null
+      for (let parser2 of leaf.parsers) if (parser2.nextLine(this, line, leaf)) return null
       leaf.content += '\n' + line.scrub()
       for (let m of line.markers) leaf.marks.push(m)
     }
@@ -773,16 +643,12 @@ var BlockContext = class {
     return null
   }
   stopAt(pos) {
-    if (this.stoppedAt != null && this.stoppedAt < pos)
-      throw new RangeError("Can't move stoppedAt forward")
+    if (this.stoppedAt != null && this.stoppedAt < pos) throw new RangeError("Can't move stoppedAt forward")
     this.stoppedAt = pos
   }
   reuseFragment(start) {
     if (
-      !this.fragments.moveTo(
-        this.absoluteLineStart + start,
-        this.absoluteLineStart,
-      ) ||
+      !this.fragments.moveTo(this.absoluteLineStart + start, this.absoluteLineStart) ||
       !this.fragments.matches(this.block.hash)
     )
       return false
@@ -793,8 +659,7 @@ var BlockContext = class {
     for (let i = 1; i < this.ranges.length; i++) {
       let gapFrom = this.ranges[i - 1].to,
         gapTo = this.ranges[i].from
-      if (gapFrom >= this.lineStart && gapTo < end)
-        withoutGaps -= gapTo - gapFrom
+      if (gapFrom >= this.lineStart && gapTo < end) withoutGaps -= gapTo - gapFrom
     }
     this.lineStart += withoutGaps
     this.absoluteLineStart += taken
@@ -839,15 +704,9 @@ var BlockContext = class {
     }
   }
   moveRangeI() {
-    while (
-      this.rangeI < this.ranges.length - 1 &&
-      this.absoluteLineStart >= this.ranges[this.rangeI].to
-    ) {
+    while (this.rangeI < this.ranges.length - 1 && this.absoluteLineStart >= this.ranges[this.rangeI].to) {
       this.rangeI++
-      this.absoluteLineStart = Math.max(
-        this.absoluteLineStart,
-        this.ranges[this.rangeI].from,
-      )
+      this.absoluteLineStart = Math.max(this.absoluteLineStart, this.ranges[this.rangeI].from)
     }
   }
   /// @internal
@@ -867,8 +726,7 @@ var BlockContext = class {
           let nextFrom = this.ranges[rangeI].from
           let after = this.lineChunkAt(nextFrom)
           r.end = nextFrom + after.length
-          r.text =
-            r.text.slice(0, this.ranges[rangeI - 1].to - textOffset) + after
+          r.text = r.text.slice(0, this.ranges[rangeI - 1].to - textOffset) + after
           textOffset = r.end - r.text.length
         }
       }
@@ -934,10 +792,7 @@ var BlockContext = class {
   /// Add a block element. Can be called by [block
   /// parsers](#BlockParser.parse).
   addElement(elt2) {
-    this.block.addChild(
-      elt2.toTree(this.parser.nodeSet),
-      elt2.from - this.block.from,
-    )
+    this.block.addChild(elt2.toTree(this.parser.nodeSet), elt2.from - this.block.from)
   }
   /// Add a block element from a [leaf parser](#LeafBlockParser). This
   /// makes sure any extra composite block markup (such as blockquote
@@ -963,32 +818,17 @@ var BlockContext = class {
   }
   addGaps(tree) {
     return this.ranges.length > 1
-      ? injectGaps(
-          this.ranges,
-          0,
-          tree.topNode,
-          this.ranges[0].from,
-          this.dontInject,
-        )
+      ? injectGaps(this.ranges, 0, tree.topNode, this.ranges[0].from, this.dontInject)
       : tree
   }
   /// @internal
   finishLeaf(leaf) {
     for (let parser2 of leaf.parsers) if (parser2.finish(this, leaf)) return
-    let inline = injectMarks(
-      this.parser.parseInline(leaf.content, leaf.start),
-      leaf.marks,
-    )
-    this.addNode(
-      this.buffer
-        .writeElements(inline, -leaf.start)
-        .finish(Type.Paragraph, leaf.content.length),
-      leaf.start,
-    )
+    let inline = injectMarks(this.parser.parseInline(leaf.content, leaf.start), leaf.marks)
+    this.addNode(this.buffer.writeElements(inline, -leaf.start).finish(Type.Paragraph, leaf.content.length), leaf.start)
   }
   elt(type, from, to, children) {
-    if (typeof type == 'string')
-      return elt(this.parser.getNodeType(type), from, to, children)
+    if (typeof type == 'string') return elt(this.parser.getNodeType(type), from, to, children)
     return new TreeElement(type, from)
   }
   /// @internal
@@ -1006,15 +846,10 @@ var BlockContext = class {
     this.stoppedAt = null
     this.rangeI = 0
     this.to = ranges[ranges.length - 1].to
-    this.lineStart =
-      this.absoluteLineStart =
-      this.absoluteLineEnd =
-        ranges[0].from
+    this.lineStart = this.absoluteLineStart = this.absoluteLineEnd = ranges[0].from
     this.block = CompositeBlock.create(Type.Document, 0, this.lineStart, 0, 0)
     this.stack = [this.block]
-    this.fragments = fragments.length
-      ? new FragmentCursor(fragments, input)
-      : null
+    this.fragments = fragments.length ? new FragmentCursor(fragments, input) : null
     this.readLine()
   }
 }
@@ -1047,13 +882,7 @@ function injectGaps(ranges, rangeI, tree, offset, dont) {
     positions.push(from - start)
   }
   movePastNext(tree.to + offset, false)
-  return new Tree(
-    tree.type,
-    children,
-    positions,
-    tree.to + offset - start,
-    tree.tree ? tree.tree.propValues : void 0,
-  )
+  return new Tree(tree.type, children, positions, tree.to + offset - start, tree.tree ? tree.tree.propValues : void 0)
 }
 var MarkdownParser = class extends Parser {
   createParse(input, fragments, ranges) {
@@ -1078,12 +907,9 @@ var MarkdownParser = class extends Parser {
       let nodeTypes2 = nodeSet.types.slice(),
         styles
       for (let s of config.defineNodes) {
-        let { name, block, composite, style } =
-          typeof s == 'string' ? { name: s } : s
+        let { name, block, composite, style } = typeof s == 'string' ? { name: s } : s
         if (nodeTypes2.some((t) => t.name == name)) continue
-        if (composite)
-          skipContextMarkup[nodeTypes2.length] = (bl, cx, line) =>
-            composite(cx, line, bl.value)
+        if (composite) skipContextMarkup[nodeTypes2.length] = (bl, cx, line) => composite(cx, line, bl.value)
         let id = nodeTypes2.length
         let group = composite
           ? ['Block', 'BlockContext']
@@ -1239,21 +1065,12 @@ function resolveConfig(spec) {
       ? wrapB
       : !wrapB
         ? wrapA
-        : (inner, input, fragments, ranges) =>
-            wrapA(
-              wrapB(inner, input, fragments, ranges),
-              input,
-              fragments,
-              ranges,
-            ),
+        : (inner, input, fragments, ranges) => wrapA(wrapB(inner, input, fragments, ranges), input, fragments, ranges),
   }
 }
 function findName(names, name) {
   let found = names.indexOf(name)
-  if (found < 0)
-    throw new RangeError(
-      `Position specified relative to unknown parser ${name}`,
-    )
+  if (found < 0) throw new RangeError(`Position specified relative to unknown parser ${name}`)
   return found
 }
 var nodeTypes = [NodeType.none]
@@ -1264,14 +1081,7 @@ for (let i = 1, name; (name = Type[i]); i++) {
     props:
       i >= Type.Escape
         ? []
-        : [
-            [
-              NodeProp.group,
-              i in DefaultSkipMarkup
-                ? ['Block', 'BlockContext']
-                : ['Block', 'LeafBlock'],
-            ],
-          ],
+        : [[NodeProp.group, i in DefaultSkipMarkup ? ['Block', 'BlockContext'] : ['Block', 'LeafBlock']]],
   })
 }
 var none = []
@@ -1304,18 +1114,11 @@ var Element = class {
   writeTo(buf, offset) {
     let startOff = buf.content.length
     buf.writeElements(this.children, offset)
-    buf.content.push(
-      this.type,
-      this.from + offset,
-      this.to + offset,
-      buf.content.length + 4 - startOff,
-    )
+    buf.content.push(this.type, this.from + offset, this.to + offset, buf.content.length + 4 - startOff)
   }
   /// @internal
   toTree(nodeSet) {
-    return new Buffer(nodeSet)
-      .writeElements(this.children, -this.from)
-      .finish(this.type, this.to - this.from)
+    return new Buffer(nodeSet).writeElements(this.children, -this.from).finish(this.type, this.to - this.from)
   }
   /// @internal
   constructor(type, from, to, children = none) {
@@ -1337,12 +1140,7 @@ var TreeElement = class {
   }
   writeTo(buf, offset) {
     buf.nodes.push(this.tree)
-    buf.content.push(
-      buf.nodes.length - 1,
-      this.from + offset,
-      this.to + offset,
-      -1,
-    )
+    buf.content.push(buf.nodes.length - 1, this.from + offset, this.to + offset, -1)
   }
   toTree() {
     return this.tree
@@ -1370,18 +1168,14 @@ var InlineDelimiter = class {
 var Escapable = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
 var Punctuation = /[!"#$%&'()*+,\-.\/:;<=>?@\[\\\]^_`{|}~\xA1\u2010-\u2027]/
 try {
-  Punctuation = new RegExp(
-    '[\\p{Pc}|\\p{Pd}|\\p{Pe}|\\p{Pf}|\\p{Pi}|\\p{Po}|\\p{Ps}]',
-    'u',
-  )
+  Punctuation = new RegExp('[\\p{Pc}|\\p{Pd}|\\p{Pe}|\\p{Pf}|\\p{Pi}|\\p{Po}|\\p{Ps}]', 'u')
 } catch (_) {}
 var DefaultInline = {
   Escape(cx, next, start) {
     if (next != 92 || start == cx.end - 1) return -1
     let escaped = cx.char(start + 1)
     for (let i = 0; i < Escapable.length; i++)
-      if (Escapable.charCodeAt(i) == escaped)
-        return cx.append(elt(Type.Escape, start, start + 2))
+      if (Escapable.charCodeAt(i) == escaped) return cx.append(elt(Type.Escape, start, start + 2))
     return -1
   },
   Entity(cx, next, start) {
@@ -1420,13 +1214,9 @@ var DefaultInline = {
       )
     if (url) return cx.append(elt(Type.URL, start, start + 1 + url[0].length))
     let comment = /^!--[^>](?:-[^-]|[^-])*?-->/i.exec(after)
-    if (comment)
-      return cx.append(elt(Type.Comment, start, start + 1 + comment[0].length))
+    if (comment) return cx.append(elt(Type.Comment, start, start + 1 + comment[0].length))
     let procInst = /^\?[^]*?\?>/.exec(after)
-    if (procInst)
-      return cx.append(
-        elt(Type.ProcessingInstruction, start, start + 1 + procInst[0].length),
-      )
+    if (procInst) return cx.append(elt(Type.ProcessingInstruction, start, start + 1 + procInst[0].length))
     let m =
       /^(?:![A-Z][^]*?>|!\[CDATA\[[^]*?\]\]>|\/\s*[a-zA-Z][\w-]*\s*>|\s*[a-zA-Z][\w-]*(\s+[a-zA-Z:_][\w-.:]*(?:\s*=\s*(?:[^\s"'=<>`]+|'[^']*'|"[^"]*"))?)*\s*(\/\s*)?>)/.exec(
         after,
@@ -1458,39 +1248,26 @@ var DefaultInline = {
     )
   },
   HardBreak(cx, next, start) {
-    if (next == 92 && cx.char(start + 1) == 10)
-      return cx.append(elt(Type.HardBreak, start, start + 2))
+    if (next == 92 && cx.char(start + 1) == 10) return cx.append(elt(Type.HardBreak, start, start + 2))
     if (next == 32) {
       let pos = start + 1
       while (cx.char(pos) == 32) pos++
-      if (cx.char(pos) == 10 && pos >= start + 2)
-        return cx.append(elt(Type.HardBreak, start, pos + 1))
+      if (cx.char(pos) == 10 && pos >= start + 2) return cx.append(elt(Type.HardBreak, start, pos + 1))
     }
     return -1
   },
   Link(cx, next, start) {
-    return next == 91
-      ? cx.append(new InlineDelimiter(LinkStart, start, start + 1, 1))
-      : -1
+    return next == 91 ? cx.append(new InlineDelimiter(LinkStart, start, start + 1, 1)) : -1
   },
   Image(cx, next, start) {
-    return next == 33 && cx.char(start + 1) == 91
-      ? cx.append(new InlineDelimiter(ImageStart, start, start + 2, 1))
-      : -1
+    return next == 33 && cx.char(start + 1) == 91 ? cx.append(new InlineDelimiter(ImageStart, start, start + 2, 1)) : -1
   },
   LinkEnd(cx, next, start) {
     if (next != 93) return -1
     for (let i = cx.parts.length - 1; i >= 0; i--) {
       let part = cx.parts[i]
-      if (
-        part instanceof InlineDelimiter &&
-        (part.type == LinkStart || part.type == ImageStart)
-      ) {
-        if (
-          !part.side ||
-          (cx.skipSpace(part.to) == start &&
-            !/[(\[]/.test(cx.slice(start + 1, start + 2)))
-        ) {
+      if (part instanceof InlineDelimiter && (part.type == LinkStart || part.type == ImageStart)) {
+        if (!part.side || (cx.skipSpace(part.to) == start && !/[(\[]/.test(cx.slice(start + 1, start + 2)))) {
           cx.parts[i] = null
           return -1
         }
@@ -1517,9 +1294,7 @@ function finishLink(cx, content, type, start, startPos) {
   let { text } = cx,
     next = cx.char(startPos),
     endPos = startPos
-  content.unshift(
-    elt(Type.LinkMark, start, start + (type == Type.Image ? 2 : 1)),
-  )
+  content.unshift(elt(Type.LinkMark, start, start + (type == Type.Image ? 2 : 1)))
   content.push(elt(Type.LinkMark, startPos - 1, startPos))
   if (next == 40) {
     let pos = cx.skipSpace(startPos + 1)
@@ -1573,11 +1348,7 @@ function parseURL(text, start, offset) {
         escaped = true
       }
     }
-    return pos > start
-      ? elt(Type.URL, start + offset, pos + offset)
-      : pos == text.length
-        ? null
-        : false
+    return pos > start ? elt(Type.URL, start + offset, pos + offset) : pos == text.length ? null : false
   }
 }
 function parseLinkTitle(text, start, offset) {
@@ -1587,26 +1358,16 @@ function parseLinkTitle(text, start, offset) {
   for (let pos = start + 1, escaped = false; pos < text.length; pos++) {
     let ch = text.charCodeAt(pos)
     if (escaped) escaped = false
-    else if (ch == end)
-      return elt(Type.LinkTitle, start + offset, pos + 1 + offset)
+    else if (ch == end) return elt(Type.LinkTitle, start + offset, pos + 1 + offset)
     else if (ch == 92) escaped = true
   }
   return null
 }
 function parseLinkLabel(text, start, offset, requireNonWS) {
-  for (
-    let escaped = false,
-      pos = start + 1,
-      end = Math.min(text.length, pos + 999);
-    pos < end;
-    pos++
-  ) {
+  for (let escaped = false, pos = start + 1, end = Math.min(text.length, pos + 999); pos < end; pos++) {
     let ch = text.charCodeAt(pos)
     if (escaped) escaped = false
-    else if (ch == 93)
-      return requireNonWS
-        ? false
-        : elt(Type.LinkLabel, start + offset, pos + 1 + offset)
+    else if (ch == 93) return requireNonWS ? false : elt(Type.LinkLabel, start + offset, pos + 1 + offset)
     else {
       if (requireNonWS && !space(ch)) requireNonWS = false
       if (ch == 91) return false
@@ -1640,9 +1401,7 @@ var InlineContext = class {
   /// or both. Returns the end of the delimiter, for convenient
   /// returning from [parse functions](#InlineParser.parse).
   addDelimiter(type, from, to, open, close) {
-    return this.append(
-      new InlineDelimiter(type, from, to, (open ? 1 : 0) | (close ? 2 : 0)),
-    )
+    return this.append(new InlineDelimiter(type, from, to, (open ? 1 : 0) | (close ? 2 : 0)))
   }
   /// Add an inline element. Returns the end of the element.
   addElement(elt2) {
@@ -1653,16 +1412,8 @@ var InlineContext = class {
   resolveMarkers(from) {
     for (let i = from; i < this.parts.length; i++) {
       let close = this.parts[i]
-      if (
-        !(
-          close instanceof InlineDelimiter &&
-          close.type.resolve &&
-          close.side & 2
-        )
-      )
-        continue
-      let emp =
-        close.type == EmphasisUnderscore || close.type == EmphasisAsterisk
+      if (!(close instanceof InlineDelimiter && close.type.resolve && close.side & 2)) continue
+      let emp = close.type == EmphasisUnderscore || close.type == EmphasisAsterisk
       let closeSize = close.to - close.from
       let open,
         j = i - 1
@@ -1699,17 +1450,11 @@ var InlineContext = class {
         if (this.parts[k] instanceof Element) content.push(this.parts[k])
         this.parts[k] = null
       }
-      if (close.type.mark)
-        content.push(this.elt(close.type.mark, close.from, end))
+      if (close.type.mark) content.push(this.elt(close.type.mark, close.from, end))
       let element = this.elt(type, start, end, content)
-      this.parts[j] =
-        emp && open.from != start
-          ? new InlineDelimiter(open.type, open.from, start, open.side)
-          : null
+      this.parts[j] = emp && open.from != start ? new InlineDelimiter(open.type, open.from, start, open.side) : null
       let keep = (this.parts[i] =
-        emp && close.to != end
-          ? new InlineDelimiter(close.type, end, close.to, close.side)
-          : null)
+        emp && close.to != end ? new InlineDelimiter(close.type, end, close.to, close.side) : null)
       if (keep) this.parts.splice(i, 0, element)
       else this.parts[i] = element
     }
@@ -1747,8 +1492,7 @@ var InlineContext = class {
     return skipSpace(this.text, from - this.offset) + this.offset
   }
   elt(type, from, to, children) {
-    if (typeof type == 'string')
-      return elt(this.parser.getNodeType(type), from, to, children)
+    if (typeof type == 'string') return elt(this.parser.getNodeType(type), from, to, children)
     return new TreeElement(type, from)
   }
   /// @internal
@@ -1768,13 +1512,7 @@ function injectMarks(elements, marks) {
     while (eI < elts.length && elts[eI].to < mark.to) eI++
     if (eI < elts.length && elts[eI].from < mark.from) {
       let e = elts[eI]
-      if (e instanceof Element)
-        elts[eI] = new Element(
-          e.type,
-          e.from,
-          e.to,
-          injectMarks(e.children, [mark]),
-        )
+      if (e instanceof Element) elts[eI] = new Element(e.type, e.from, e.to, injectMarks(e.children, [mark]))
     } else {
       elts.splice(eI++, 0, mark)
     }
@@ -1784,8 +1522,7 @@ function injectMarks(elements, marks) {
 var NotLast = [Type.CodeBlock, Type.ListItem, Type.OrderedList, Type.BulletList]
 var FragmentCursor = class {
   nextFragment() {
-    this.fragment =
-      this.i < this.fragments.length ? this.fragments[this.i++] : null
+    this.fragment = this.i < this.fragments.length ? this.fragments[this.i++] : null
     this.cursor = null
     this.fragmentEnd = -1
   }
@@ -1877,8 +1614,7 @@ var markdownHighlighting = styleTags({
   'BlockQuote/...': tags.quote,
   'InlineCode CodeText': tags.monospace,
   URL: tags.url,
-  'HeaderMark HardBreak QuoteMark ListMark LinkMark EmphasisMark CodeMark':
-    tags.processingInstruction,
+  'HeaderMark HardBreak QuoteMark ListMark LinkMark EmphasisMark CodeMark': tags.processingInstruction,
   'CodeInfo LinkLabel': tags.labelName,
   LinkTitle: tags.string,
   Paragraph: tags.content,
@@ -1943,8 +1679,7 @@ var Strikethrough = {
     {
       name: 'Strikethrough',
       parse(cx, next, pos) {
-        if (next != 126 || cx.char(pos + 1) != 126 || cx.char(pos + 2) == 126)
-          return -1
+        if (next != 126 || cx.char(pos + 1) != 126 || cx.char(pos + 2) == 126) return -1
         let before = cx.slice(pos - 1, pos),
           after = cx.slice(pos + 2, pos + 3)
         let sBefore = /\s|^$/.test(before),
@@ -1975,10 +1710,7 @@ function parseRow(cx, line, startI = 0, elts, offset = 0) {
         'TableCell',
         offset + cellStart,
         offset + cellEnd,
-        cx.parser.parseInline(
-          line.slice(cellStart, cellEnd),
-          offset + cellStart,
-        ),
+        cx.parser.parseInline(line.slice(cellStart, cellEnd), offset + cellStart),
       ),
     )
   }
@@ -2026,39 +1758,20 @@ var TableParser = class {
           firstCount = parseRow(cx, leaf.content, 0, firstRow, leaf.start)
         if (firstCount == parseRow(cx, lineText, line.pos))
           this.rows = [
-            cx.elt(
-              'TableHeader',
-              leaf.start,
-              leaf.start + leaf.content.length,
-              firstRow,
-            ),
-            cx.elt(
-              'TableDelimiter',
-              cx.lineStart + line.pos,
-              cx.lineStart + line.text.length,
-            ),
+            cx.elt('TableHeader', leaf.start, leaf.start + leaf.content.length, firstRow),
+            cx.elt('TableDelimiter', cx.lineStart + line.pos, cx.lineStart + line.text.length),
           ]
       }
     } else if (this.rows) {
       let content = []
       parseRow(cx, line.text, line.pos, content, cx.lineStart)
-      this.rows.push(
-        cx.elt(
-          'TableRow',
-          cx.lineStart + line.pos,
-          cx.lineStart + line.text.length,
-          content,
-        ),
-      )
+      this.rows.push(cx.elt('TableRow', cx.lineStart + line.pos, cx.lineStart + line.text.length, content))
     }
     return false
   }
   finish(cx, leaf) {
     if (!this.rows) return false
-    cx.addLeafElement(
-      leaf,
-      cx.elt('Table', leaf.start, leaf.start + leaf.content.length, this.rows),
-    )
+    cx.addLeafElement(leaf, cx.elt('Table', leaf.start, leaf.start + leaf.content.length, this.rows))
     return true
   }
   constructor() {
@@ -2080,17 +1793,9 @@ var Table = {
         return hasPipe(leaf.content, 0) ? new TableParser() : null
       },
       endLeaf(cx, line, leaf) {
-        if (
-          leaf.parsers.some((p) => p instanceof TableParser) ||
-          !hasPipe(line.text, line.basePos)
-        )
-          return false
+        if (leaf.parsers.some((p) => p instanceof TableParser) || !hasPipe(line.text, line.basePos)) return false
         let next = cx.scanLine(cx.absoluteLineEnd + 1).text
-        return (
-          delimiterLine.test(next) &&
-          parseRow(cx, line.text, line.basePos) ==
-            parseRow(cx, next, line.basePos)
-        )
+        return delimiterLine.test(next) && parseRow(cx, line.text, line.basePos) == parseRow(cx, next, line.basePos)
       },
       before: 'SetextHeading',
     },
@@ -2120,10 +1825,7 @@ var TaskList = {
     {
       name: 'TaskList',
       leaf(cx, leaf) {
-        return /^\[[ xX]\]/.test(leaf.content) &&
-          cx.parentType().name == 'ListItem'
-          ? new TaskParser()
-          : null
+        return /^\[[ xX]\]/.test(leaf.content) && cx.parentType().name == 'ListItem' ? new TaskParser() : null
       },
       after: 'SetextHeading',
     },
@@ -2136,10 +1838,7 @@ function parseSubSuper(ch, node, mark) {
     let elts = [cx.elt(mark, pos, pos + 1)]
     for (let i = pos + 1; i < cx.end; i++) {
       let next2 = cx.char(i)
-      if (next2 == ch)
-        return cx.addElement(
-          cx.elt(node, pos, i + 1, elts.concat(cx.elt(mark, i, i + 1))),
-        )
+      if (next2 == ch) return cx.addElement(cx.elt(node, pos, i + 1, elts.concat(cx.elt(mark, i, i + 1))))
       if (next2 == 92) elts.push(cx.elt('Escape', i, i++ + 2))
       if (space(next2)) break
     }
@@ -2177,11 +1876,7 @@ var Emoji = {
       name: 'Emoji',
       parse(cx, next, pos) {
         let match
-        if (
-          next != 58 ||
-          !(match = /^[a-zA-Z_0-9]+:/.exec(cx.slice(pos + 1, cx.end)))
-        )
-          return -1
+        if (next != 58 || !(match = /^[a-zA-Z_0-9]+:/.exec(cx.slice(pos + 1, cx.end)))) return -1
         return cx.addElement(cx.elt('Emoji', pos, pos + 1 + match[0].length))
       },
     },
@@ -2217,18 +1912,13 @@ function findSectionEnd(headerNode, level) {
   for (;;) {
     let next = last.nextSibling,
       heading
-    if (!next || ((heading = isHeading(next.type)) != null && heading <= level))
-      break
+    if (!next || ((heading = isHeading(next.type)) != null && heading <= level)) break
     last = next
   }
   return last.to
 }
 var headerIndent = /* @__PURE__ */ foldService.of((state, start, end) => {
-  for (
-    let node = syntaxTree(state).resolveInner(end, -1);
-    node;
-    node = node.parent
-  ) {
+  for (let node = syntaxTree(state).resolveInner(end, -1); node; node = node.parent) {
     if (node.from < start) break
     let heading = node.type.prop(headingProp)
     if (heading == null) continue
@@ -2241,12 +1931,7 @@ function mkLang(parser2) {
   return new Language(data, parser2, [headerIndent], 'markdown')
 }
 var commonmarkLanguage = /* @__PURE__ */ mkLang(commonmark)
-var extended = /* @__PURE__ */ commonmark.configure([
-  GFM,
-  Subscript,
-  Superscript,
-  Emoji,
-])
+var extended = /* @__PURE__ */ commonmark.configure([GFM, Subscript, Superscript, Emoji])
 var markdownLanguage = /* @__PURE__ */ mkLang(extended)
 function getCodeParser(languages, defaultLanguage) {
   return (info) => {
@@ -2256,9 +1941,7 @@ function getCodeParser(languages, defaultLanguage) {
       if (typeof languages == 'function') found = languages(info)
       else found = LanguageDescription.matchLanguageName(languages, info, true)
       if (found instanceof LanguageDescription)
-        return found.support
-          ? found.support.language.parser
-          : ParseContext.getSkippingParser(found.load())
+        return found.support ? found.support.language.parser : ParseContext.getSkippingParser(found.load())
       else if (found) return found.parser
     }
     return defaultLanguage ? defaultLanguage.parser : null
@@ -2271,20 +1954,12 @@ var Context = class {
       while (result.length < maxWidth) result += ' '
       return result
     } else {
-      for (
-        let i = this.to - this.from - result.length - this.spaceAfter.length;
-        i > 0;
-        i--
-      )
-        result += ' '
+      for (let i = this.to - this.from - result.length - this.spaceAfter.length; i > 0; i--) result += ' '
       return result + (trailing ? this.spaceAfter : '')
     }
   }
   marker(doc, add) {
-    let number =
-      this.node.name == 'OrderedList'
-        ? String(+itemNumber(this.item, doc)[2] + add)
-        : ''
+    let number = this.node.name == 'OrderedList' ? String(+itemNumber(this.item, doc)[2] + add) : ''
     return this.spaceBefore + number + this.type + this.spaceAfter
   }
   constructor(node, from, to, spaceBefore, spaceAfter, type, item) {
@@ -2300,12 +1975,7 @@ var Context = class {
 function getContext(node, doc) {
   let nodes = []
   for (let cur = node; cur && cur.name != 'Document'; cur = cur.parent) {
-    if (
-      cur.name == 'ListItem' ||
-      cur.name == 'Blockquote' ||
-      cur.name == 'FencedCode'
-    )
-      nodes.push(cur)
+    if (cur.name == 'ListItem' || cur.name == 'Blockquote' || cur.name == 'FencedCode') nodes.push(cur)
   }
   let context = []
   for (let i = nodes.length - 1; i >= 0; i--) {
@@ -2315,21 +1985,8 @@ function getContext(node, doc) {
       startPos = node2.from - line.from
     if (node2.name == 'FencedCode') {
       context.push(new Context(node2, startPos, startPos, '', '', '', null))
-    } else if (
-      node2.name == 'Blockquote' &&
-      (match = /^[ \t]*>( ?)/.exec(line.text.slice(startPos)))
-    ) {
-      context.push(
-        new Context(
-          node2,
-          startPos,
-          startPos + match[0].length,
-          '',
-          match[1],
-          '>',
-          null,
-        ),
-      )
+    } else if (node2.name == 'Blockquote' && (match = /^[ \t]*>( ?)/.exec(line.text.slice(startPos)))) {
+      context.push(new Context(node2, startPos, startPos + match[0].length, '', match[1], '>', null))
     } else if (
       node2.name == 'ListItem' &&
       node2.parent.name == 'OrderedList' &&
@@ -2341,23 +1998,11 @@ function getContext(node, doc) {
         after = after.slice(0, after.length - 4)
         len -= 4
       }
-      context.push(
-        new Context(
-          node2.parent,
-          startPos,
-          startPos + len,
-          match[1],
-          after,
-          match[2],
-          node2,
-        ),
-      )
+      context.push(new Context(node2.parent, startPos, startPos + len, match[1], after, match[2], node2))
     } else if (
       node2.name == 'ListItem' &&
       node2.parent.name == 'BulletList' &&
-      (match = /^([ \t]*)([-+*])([ \t]{1,4}\[[ xX]\])?([ \t]+)/.exec(
-        line.text.slice(startPos),
-      ))
+      (match = /^([ \t]*)([-+*])([ \t]{1,4}\[[ xX]\])?([ \t]+)/.exec(line.text.slice(startPos)))
     ) {
       let after = match[4],
         len = match[0].length
@@ -2367,17 +2012,7 @@ function getContext(node, doc) {
       }
       let type = match[2]
       if (match[3]) type += match[3].replace(/[xX]/, ' ')
-      context.push(
-        new Context(
-          node2.parent,
-          startPos,
-          startPos + len,
-          match[1],
-          after,
-          type,
-          node2,
-        ),
-      )
+      context.push(new Context(node2.parent, startPos, startPos + len, match[1], after, type, node2))
     }
   }
   return context
@@ -2410,28 +2045,17 @@ var insertNewlineContinueMarkup = ({ state, dispatch }) => {
     { doc } = state
   let dont = null,
     changes = state.changeByRange((range) => {
-      if (!range.empty || !markdownLanguage.isActiveAt(state, range.from))
-        return (dont = { range })
+      if (!range.empty || !markdownLanguage.isActiveAt(state, range.from)) return (dont = { range })
       let pos = range.from,
         line = doc.lineAt(pos)
       let context = getContext(tree.resolveInner(pos, -1), doc)
-      while (
-        context.length &&
-        context[context.length - 1].from > pos - line.from
-      )
-        context.pop()
+      while (context.length && context[context.length - 1].from > pos - line.from) context.pop()
       if (!context.length) return (dont = { range })
       let inner = context[context.length - 1]
-      if (inner.to - inner.spaceAfter.length > pos - line.from)
-        return (dont = { range })
-      let emptyLine =
-        pos >= inner.to - inner.spaceAfter.length &&
-        !/\S/.test(line.text.slice(inner.to))
+      if (inner.to - inner.spaceAfter.length > pos - line.from) return (dont = { range })
+      let emptyLine = pos >= inner.to - inner.spaceAfter.length && !/\S/.test(line.text.slice(inner.to))
       if (inner.item && emptyLine) {
-        if (
-          inner.node.firstChild.to >= pos ||
-          (line.from > 0 && !/[^\s>]/.test(doc.lineAt(line.from - 1).text))
-        ) {
+        if (inner.node.firstChild.to >= pos || (line.from > 0 && !/[^\s>]/.test(doc.lineAt(line.from - 1).text))) {
           let next = context.length > 1 ? context[context.length - 2] : null
           let delTo,
             insert2 = ''
@@ -2442,10 +2066,8 @@ var insertNewlineContinueMarkup = ({ state, dispatch }) => {
             delTo = line.from + (next ? next.to : 0)
           }
           let changes3 = [{ from: delTo, to: pos, insert: insert2 }]
-          if (inner.node.name == 'OrderedList')
-            renumberList(inner.item, doc, changes3, -2)
-          if (next && next.node.name == 'OrderedList')
-            renumberList(next.item, doc, changes3)
+          if (inner.node.name == 'OrderedList') renumberList(inner.item, doc, changes3, -2)
+          if (next && next.node.name == 'OrderedList') renumberList(next.item, doc, changes3)
           return {
             range: EditorSelection.cursor(delTo + insert2.length),
             changes: changes3,
@@ -2453,10 +2075,7 @@ var insertNewlineContinueMarkup = ({ state, dispatch }) => {
         } else {
           let insert2 = ''
           for (let i = 0, e = context.length - 2; i <= e; i++) {
-            insert2 += context[i].blank(
-              i < e ? context[i + 1].from - insert2.length : null,
-              i < e,
-            )
+            insert2 += context[i].blank(i < e ? context[i + 1].from - insert2.length : null, i < e)
           }
           insert2 += state.lineBreak
           return {
@@ -2477,29 +2096,19 @@ var insertNewlineContinueMarkup = ({ state, dispatch }) => {
         }
       }
       let changes2 = []
-      if (inner.node.name == 'OrderedList')
-        renumberList(inner.item, doc, changes2)
+      if (inner.node.name == 'OrderedList') renumberList(inner.item, doc, changes2)
       let continued = inner.item && inner.item.from < line.from
       let insert = ''
-      if (
-        !continued ||
-        /^[\s\d.)\-+*>]*/.exec(line.text)[0].length >= inner.to
-      ) {
+      if (!continued || /^[\s\d.)\-+*>]*/.exec(line.text)[0].length >= inner.to) {
         for (let i = 0, e = context.length - 1; i <= e; i++) {
           insert +=
             i == e && !continued
               ? context[i].marker(doc, 1)
-              : context[i].blank(
-                  i < e ? context[i + 1].from - insert.length : null,
-                )
+              : context[i].blank(i < e ? context[i + 1].from - insert.length : null)
         }
       }
       let from = pos
-      while (
-        from > line.from &&
-        /\s/.test(line.text.charAt(from - line.from - 1))
-      )
-        from--
+      while (from > line.from && /\s/.test(line.text.charAt(from - line.from - 1))) from--
       insert = state.lineBreak + insert
       changes2.push({ from, to: pos, insert })
       return {
@@ -2544,12 +2153,8 @@ var deleteMarkupBackward = ({ state, dispatch }) => {
         let context = getContext(contextNodeForDelete(tree, pos), doc)
         if (context.length) {
           let inner = context[context.length - 1]
-          let spaceEnd =
-            inner.to - inner.spaceAfter.length + (inner.spaceAfter ? 1 : 0)
-          if (
-            pos - line.from > spaceEnd &&
-            !/\S/.test(line.text.slice(spaceEnd, pos - line.from))
-          )
+          let spaceEnd = inner.to - inner.spaceAfter.length + (inner.spaceAfter ? 1 : 0)
+          if (pos - line.from > spaceEnd && !/\S/.test(line.text.slice(spaceEnd, pos - line.from)))
             return {
               range: EditorSelection.cursor(line.from + spaceEnd),
               changes: { from: line.from + spaceEnd, to: pos },
@@ -2558,16 +2163,10 @@ var deleteMarkupBackward = ({ state, dispatch }) => {
             pos - line.from == spaceEnd && // Only apply this if we're on the line that has the
             // construct's syntax, or there's only indentation in the
             // target range
-            (!inner.item ||
-              line.from <= inner.item.from ||
-              !/\S/.test(line.text.slice(0, inner.to)))
+            (!inner.item || line.from <= inner.item.from || !/\S/.test(line.text.slice(0, inner.to)))
           ) {
             let start = line.from + inner.from
-            if (
-              inner.item &&
-              inner.node.from < inner.item.from &&
-              /\S/.test(line.text.slice(inner.from, inner.to))
-            )
+            if (inner.item && inner.node.from < inner.item.from && /\S/.test(line.text.slice(inner.from, inner.to)))
               return {
                 range,
                 changes: {
@@ -2596,16 +2195,9 @@ var markdownKeymap = [
 ]
 var htmlNoMatch = /* @__PURE__ */ html({ matchClosingTags: false })
 function markdown(config = {}) {
-  let {
-    codeLanguages,
-    defaultCodeLanguage,
-    addKeymap = true,
-    base: { parser: parser2 } = commonmarkLanguage,
-  } = config
+  let { codeLanguages, defaultCodeLanguage, addKeymap = true, base: { parser: parser2 } = commonmarkLanguage } = config
   if (!(parser2 instanceof MarkdownParser))
-    throw new RangeError(
-      'Base parser provided to `markdown` should be a Markdown parser',
-    )
+    throw new RangeError('Base parser provided to `markdown` should be a Markdown parser')
   let extensions = config.extensions ? [config.extensions] : []
   let support = [htmlNoMatch.support],
     defaultCode
@@ -2615,13 +2207,8 @@ function markdown(config = {}) {
   } else if (defaultCodeLanguage) {
     defaultCode = defaultCodeLanguage
   }
-  let codeParser =
-    codeLanguages || defaultCode
-      ? getCodeParser(codeLanguages, defaultCode)
-      : void 0
-  extensions.push(
-    parseCode({ codeParser, htmlParser: htmlNoMatch.language.parser }),
-  )
+  let codeParser = codeLanguages || defaultCode ? getCodeParser(codeLanguages, defaultCode) : void 0
+  extensions.push(parseCode({ codeParser, htmlParser: htmlNoMatch.language.parser }))
   if (addKeymap) support.push(Prec.high(keymap.of(markdownKeymap)))
   return new LanguageSupport(mkLang(parser2.configure(extensions)), support)
 }

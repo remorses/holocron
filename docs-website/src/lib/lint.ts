@@ -26,10 +26,7 @@ export interface ValidateConfig {
   resolveDir?: string
 }
 
-export async function validateMarkdownLinks(
-  tree: Root,
-  config: ValidateConfig,
-): Promise<DetectedError[]> {
+export async function validateMarkdownLinks(tree: Root, config: ValidateConfig): Promise<DetectedError[]> {
   const detected: DetectedError[] = []
   const validSlugSet = new Set(config.validSlugs)
 
@@ -52,11 +49,7 @@ export async function validateMarkdownLinks(
   return detected
 }
 
-function detectInvalidLink(
-  href: string,
-  validSlugs: Set<string>,
-  resolveDir?: string,
-): string | undefined {
+function detectInvalidLink(href: string, validSlugs: Set<string>, resolveDir?: string): string | undefined {
   // Skip external URLs
   if (href.match(/^https?:\/\//)) {
     return undefined
@@ -107,11 +100,7 @@ function detectInvalidLink(
   return undefined
 }
 
-export function formatErrorWithContext(
-  error: ErrorWithPosition,
-  content: string,
-  errorType: string = 'Error',
-): string {
+export function formatErrorWithContext(error: ErrorWithPosition, content: string, errorType: string = 'Error'): string {
   // Extract error details
   const errorLine = error.line || error.position?.start?.line || 1
   const errorColumn = error.column || error.position?.start?.column || 1
@@ -154,9 +143,7 @@ export function createFormattedError(
   additionalMessage?: string,
 ): ErrorWithPosition {
   const formattedMessage = formatErrorWithContext(error, content, errorType)
-  const fullMessage = additionalMessage
-    ? `${formattedMessage}\n${additionalMessage}`
-    : formattedMessage
+  const fullMessage = additionalMessage ? `${formattedMessage}\n${additionalMessage}` : formattedMessage
 
   const formattedError: ErrorWithPosition = new Error(fullMessage)
   formattedError.line = error.line || error.position?.start?.line

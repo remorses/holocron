@@ -15,11 +15,7 @@ import {
 } from 'fumadocs-ui/components/dialog/search'
 import { useDocsSearch } from 'fumadocs-core/search/client'
 import { useMemo, useState } from 'react'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from 'fumadocs-ui/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from 'fumadocs-ui/components/ui/popover'
 import { ChevronDown } from 'lucide-react'
 import { buttonVariants } from 'fumadocs-ui/components/ui/button'
 import { cn } from '../lib/cn'
@@ -59,12 +55,7 @@ export function CustomSearchDialog(props: SharedProps) {
   }, [query.data])
 
   return (
-    <SearchDialog
-      search={search}
-      onSearchChange={setSearch}
-      isLoading={query.isLoading}
-      {...props}
-    >
+    <SearchDialog search={search} onSearchChange={setSearch} isLoading={query.isLoading} {...props}>
       <SearchDialogOverlay />
       <SearchDialogContent>
         <SearchDialogHeader>

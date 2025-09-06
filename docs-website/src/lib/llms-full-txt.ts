@@ -1,9 +1,6 @@
 import { prisma } from 'db'
 import { getFilesForSource } from './source.server'
-import {
-  searchDocsWithSearchApi,
-  formatSearchApiSearchResults,
-} from './search-api-search'
+import { searchDocsWithSearchApi, formatSearchApiSearchResults } from './search-api-search'
 import { getFumadocsSource } from './source'
 
 export async function generateLlmsFullTxt({
@@ -96,9 +93,7 @@ export async function generateLlmsFullTxt({
       })
 
       // Create a map for quick lookup
-      const pageContentMap = new Map(
-        markdownPages.map((page) => [page.slug, page.content?.markdown || '']),
-      )
+      const pageContentMap = new Map(markdownPages.map((page) => [page.slug, page.content?.markdown || '']))
 
       // Add each page in the batch
       for (const page of batch) {

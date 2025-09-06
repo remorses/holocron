@@ -1,8 +1,4 @@
-import {
-  LanguageModelV2,
-  LanguageModelV2CallOptions,
-  LanguageModelV2StreamPart,
-} from '@ai-sdk/provider'
+import { LanguageModelV2, LanguageModelV2CallOptions, LanguageModelV2StreamPart } from '@ai-sdk/provider'
 
 interface TestProviderSettings {
   model: LanguageModelV2
@@ -10,9 +6,7 @@ interface TestProviderSettings {
   errorMessage?: string
 }
 
-export function createTestProviderWithErrors(
-  settings: TestProviderSettings,
-): TestProviderWithErrors {
+export function createTestProviderWithErrors(settings: TestProviderSettings): TestProviderWithErrors {
   return new TestProviderWithErrors(settings)
 }
 
@@ -26,8 +20,7 @@ export class TestProviderWithErrors implements LanguageModelV2 {
   constructor(settings: TestProviderSettings) {
     this.model = settings.model
     this.errorAfterCharacters = settings.errorAfterCharacters ?? 100
-    this.errorMessage =
-      settings.errorMessage ?? 'Test error injected after characters'
+    this.errorMessage = settings.errorMessage ?? 'Test error injected after characters'
   }
 
   get modelId(): string {
@@ -72,10 +65,7 @@ export class TestProviderWithErrors implements LanguageModelV2 {
             console.log(value)
             controller.enqueue(value)
 
-            if (
-              !this.hasStreamedOnce &&
-              characterCount >= this.errorAfterCharacters
-            ) {
+            if (!this.hasStreamedOnce && characterCount >= this.errorAfterCharacters) {
               const errorChunk: LanguageModelV2StreamPart = {
                 type: 'error',
                 error: new Error(this.errorMessage),

@@ -6,10 +6,7 @@ import { env } from '../lib/env'
 
 export type { Route }
 
-export async function loader({
-  request,
-  params: { orgId, branchId },
-}: Route.LoaderArgs) {
+export async function loader({ request, params: { orgId, branchId } }: Route.LoaderArgs) {
   // Check if request is aborted early
   if (request.signal.aborted) {
     throw new Error('Request aborted')

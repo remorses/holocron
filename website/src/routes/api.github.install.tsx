@@ -1,14 +1,7 @@
 import { prisma } from 'db'
 
 import { useState } from 'react'
-import {
-  Form,
-  redirect,
-  useLoaderData,
-  useNavigation,
-  useSearchParams,
-  type LoaderFunctionArgs,
-} from 'react-router'
+import { Form, redirect, useLoaderData, useNavigation, useSearchParams, type LoaderFunctionArgs } from 'react-router'
 import { checkGitHubIsInstalled } from 'website/src/lib/github.server'
 import { isTruthy } from 'website/src/lib/utils'
 
@@ -30,12 +23,8 @@ export default function ChooseOrg() {
   const [searchParams] = useSearchParams()
   const navigation = useNavigation()
   const isLoading = navigation.state !== 'idle'
-  const [selectedAccountLogin, setSelectedAccountLogin] = useState(
-    installations?.find((x) => x)?.accountLogin,
-  )
-  const installation = installations.find(
-    (org) => org.accountLogin === selectedAccountLogin,
-  )
+  const [selectedAccountLogin, setSelectedAccountLogin] = useState(installations?.find((x) => x)?.accountLogin)
+  const installation = installations.find((org) => org.accountLogin === selectedAccountLogin)
   const settings = installation
     ? installation?.accountType === 'ORGANIZATION'
       ? `https://github.com/organizations/${installation.accountLogin}/settings/installations/${installation.installationId}`
@@ -45,8 +34,7 @@ export default function ChooseOrg() {
     <div className='w-full p-16  grow justify-center min-h-full gap-[40px] flex flex-col items-center'>
       <div className='flex flex-col gap-4 text-center'>
         <p className='opacity-70 max-w-md text-center text-medium text-balance'>
-          Choose which GitHub organization or account you want to connect to
-          Holocron
+          Choose which GitHub organization or account you want to connect to Holocron
         </p>
       </div>
       <Form className='flex  flex-col gap-6'>
@@ -71,20 +59,14 @@ export default function ChooseOrg() {
               </option>
             )
           })}
-          <option value={FormNames.chooseAnother}>
-            add another organization
-          </option>
+          <option value={FormNames.chooseAnother}>add another organization</option>
         </SelectNative>
 
         {!!selectedAccountLogin && (
           <div className='flex flex-col gap-2'>
             <div className='text-sm opacity-70'>
               change accessible repositories{' '}
-              <a
-                href={settings}
-                target='_blank'
-                className='text-sm text-primary hover:opacity-80'
-              >
+              <a href={settings} target='_blank' className='text-sm text-primary hover:opacity-80'>
                 here
               </a>
             </div>
@@ -171,17 +153,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     let data: GithubLoginRequestData = { githubAccountLogin: chosenOrg }
 
     // Set cookie with GitHub login data
-    const githubDataCookie = cookie.serialize(
-      GITHUB_LOGIN_DATA_COOKIE,
-      encodeURIComponent(JSON.stringify(data)),
-      {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 5, // 5 minutes
-        path: '/',
-      },
-    )
+    const githubDataCookie = cookie.serialize(GITHUB_LOGIN_DATA_COOKIE, encodeURIComponent(JSON.stringify(data)), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 5, // 5 minutes
+      path: '/',
+    })
 
     return redirect(url.toString(), {
       headers: {
@@ -199,9 +177,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
   console.log('adding new github installation via install url')
 
-  const githubInstallationUrl = new URL(
-    `https://github.com/apps/${env.GITHUB_APP_NAME}/installations/new`,
-  )
+  const githubInstallationUrl = new URL(`https://github.com/apps/${env.GITHUB_APP_NAME}/installations/new`)
   const redirectUri = new URL('/api/github/callback', env.PUBLIC_URL)
   // redirectUri.searchParams.set('next', next)
 

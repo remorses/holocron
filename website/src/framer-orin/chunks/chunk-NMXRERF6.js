@@ -22,12 +22,8 @@ var variantClassNames = { XvqTw0Be9: 'framer-v-jjcw9a' }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
-  const transition =
-    value !== null && value !== void 0 ? value : config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const transition = value !== null && value !== void 0 ? value : config.transition
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -39,15 +35,11 @@ var getProps = ({ height, id, subtitle, title, width, ...props }) => {
   return {
     ...props,
     WuF2iG84P:
-      (_ref =
-        subtitle !== null && subtitle !== void 0
-          ? subtitle
-          : props.WuF2iG84P) !== null && _ref !== void 0
+      (_ref = subtitle !== null && subtitle !== void 0 ? subtitle : props.WuF2iG84P) !== null && _ref !== void 0
         ? _ref
         : 'Set up the component by adding background and bouncer elements to the component properties.',
     yeAnKbEUZ:
-      (_ref1 = title !== null && title !== void 0 ? title : props.yeAnKbEUZ) !==
-        null && _ref1 !== void 0
+      (_ref1 = title !== null && title !== void 0 ? title : props.yeAnKbEUZ) !== null && _ref1 !== void 0
         ? _ref1
         : 'Screen Saver',
   }
@@ -58,15 +50,7 @@ var createLayoutDependency = (props, variants) => {
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const { activeLocale, setLocale } = useLocaleInfo()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    yeAnKbEUZ,
-    WuF2iG84P,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, yeAnKbEUZ, WuF2iG84P, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -97,13 +81,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            serializationHash,
-            ...sharedStyleClassNames,
-            'framer-jjcw9a',
-            className,
-            classNames,
-          ),
+          className: cx(serializationHash, ...sharedStyleClassNames, 'framer-jjcw9a', className, classNames),
           'data-framer-name': 'Default',
           layoutDependency,
           layoutId: 'XvqTw0Be9',
@@ -139,15 +117,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       children: /* @__PURE__ */ _jsx(motion.p, {
                         style: {
                           '--font-selector': 'SW50ZXItQm9sZA==',
-                          '--framer-font-family':
-                            '"Inter", "Inter Placeholder", sans-serif',
+                          '--framer-font-family': '"Inter", "Inter Placeholder", sans-serif',
                           '--framer-font-size': '11px',
                           '--framer-font-weight': '700',
                           '--framer-letter-spacing': '-0.02em',
                           '--framer-line-height': '1em',
                           '--framer-text-alignment': 'center',
-                          '--framer-text-color':
-                            'var(--extracted-r6o4lv, rgb(153, 102, 255))',
+                          '--framer-text-color': 'var(--extracted-r6o4lv, rgb(153, 102, 255))',
                         },
                         children: 'Screen Saver',
                       }),
@@ -175,8 +151,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           '--framer-letter-spacing': '-0.03em',
                           '--framer-line-height': '1.4em',
                           '--framer-text-alignment': 'center',
-                          '--framer-text-color':
-                            'var(--extracted-r6o4lv, rgba(153, 102, 255, 0.7))',
+                          '--framer-text-color': 'var(--extracted-r6o4lv, rgba(153, 102, 255, 0.7))',
                         },
                         children:
                           'Set up the component by adding background and bouncer elements to the component properties.',
@@ -227,8 +202,7 @@ addPropertyControls(FramerW7oLCU4_B, {
     type: ControlType.String,
   },
   WuF2iG84P: {
-    defaultValue:
-      'Set up the component by adding background and bouncer elements to the component properties.',
+    defaultValue: 'Set up the component by adding background and bouncer elements to the component properties.',
     displayTextArea: false,
     title: 'Subtitle',
     type: ControlType.String,
@@ -244,8 +218,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/DpPBYI0sL4fYLgAkX8KXOPVt7c.woff2',
           weight: '700',
         },
@@ -304,8 +277,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

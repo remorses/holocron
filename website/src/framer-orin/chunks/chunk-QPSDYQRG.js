@@ -26,14 +26,7 @@ import { LayoutGroup, motion, MotionConfigContext } from 'unframer'
 import * as React from 'react'
 import { useRef } from 'react'
 var AspectRatioLogoFonts = getFonts(AspectRatioLogo)
-var cycleOrder = [
-  'rJpeO5TfG',
-  'HfzpqW5M7',
-  'v60ZzFMlS',
-  'Vm1pdYezD',
-  'zi7jTfbgd',
-  'mGnwAZdNT',
-]
+var cycleOrder = ['rJpeO5TfG', 'HfzpqW5M7', 'v60ZzFMlS', 'Vm1pdYezD', 'zi7jTfbgd', 'mGnwAZdNT']
 var serializationHash = 'framer-N0mec'
 var variantClassNames = {
   HfzpqW5M7: 'framer-v-10n9i3e',
@@ -45,9 +38,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
@@ -58,10 +49,7 @@ var QueryData = ({ query: query2, pageSize, children }) => {
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -79,8 +67,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'rJpeO5TfG',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'rJpeO5TfG',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -150,12 +137,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-8wrhca',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-8wrhca', className, classNames),
           'data-framer-name': '1',
           layoutDependency,
           layoutId: 'rJpeO5TfG',
@@ -334,97 +316,70 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           LayoutGroup,
                           {
                             id: `xUZwcZ2oq-${idxUZwcZ2oq2}`,
-                            children: /* @__PURE__ */ _jsx(
-                              PathVariablesContext.Provider,
-                              {
-                                value: {
-                                  k2CHhHMep: k2CHhHMepxUZwcZ2oq2,
-                                },
-                                children: /* @__PURE__ */ _jsx(motion.div, {
-                                  className: 'framer-12w8kqv',
-                                  'data-framer-name': 'Content',
-                                  layoutDependency,
-                                  layoutId: 'jOhdiIU9n',
-                                  children: /* @__PURE__ */ _jsx(
-                                    ComponentViewportProvider,
-                                    {
-                                      children: /* @__PURE__ */ _jsx(
-                                        SmartComponentScopedContainer,
-                                        {
-                                          className: 'framer-6mtamp-container',
-                                          isAuthoredByUser: true,
-                                          isModuleExternal: true,
-                                          layoutDependency,
-                                          layoutId: 'ILy9bbpCY-container',
-                                          nodeId: 'ILy9bbpCY',
-                                          rendersWithMotion: true,
-                                          scopeId: 'v13l90nXX',
-                                          children: /* @__PURE__ */ _jsx(
-                                            AspectRatioLogo,
-                                            {
-                                              fixedHeight: 20,
-                                              height: '100%',
-                                              id: 'ILy9bbpCY',
-                                              invertColors: toxrw0fkwxUZwcZ2oq2,
-                                              layoutId: 'ILy9bbpCY',
-                                              logoFile: Mu6wvlLANxUZwcZ2oq2,
-                                              noColor: Kp1pQ1RuexUZwcZ2oq2,
-                                              width: '100%',
-                                              ...addPropertyOverrides(
-                                                {
-                                                  HfzpqW5M7: {
-                                                    invertColors:
-                                                      uUQJs5HroxUZwcZ2oq2,
-                                                    logoFile:
-                                                      G0q2KeuUtxUZwcZ2oq2,
-                                                    noColor:
-                                                      ArHQF_SfJxUZwcZ2oq2,
-                                                  },
-                                                  mGnwAZdNT: {
-                                                    invertColors:
-                                                      Fw0Opy1D7xUZwcZ2oq2,
-                                                    logoFile:
-                                                      fj1pbPlZaxUZwcZ2oq2,
-                                                    noColor:
-                                                      gs255VAZAxUZwcZ2oq2,
-                                                  },
-                                                  v60ZzFMlS: {
-                                                    invertColors:
-                                                      UhppilktKxUZwcZ2oq2,
-                                                    logoFile:
-                                                      rjF1a7ijgxUZwcZ2oq2,
-                                                    noColor:
-                                                      FrnLEfoOhxUZwcZ2oq2,
-                                                  },
-                                                  Vm1pdYezD: {
-                                                    invertColors:
-                                                      AsXNwAmtwxUZwcZ2oq2,
-                                                    logoFile:
-                                                      W36DjRbzUxUZwcZ2oq2,
-                                                    noColor:
-                                                      XkUPJeBNwxUZwcZ2oq2,
-                                                  },
-                                                  zi7jTfbgd: {
-                                                    invertColors:
-                                                      QCBuCXtYRxUZwcZ2oq2,
-                                                    logoFile:
-                                                      mnlZ_P8lBxUZwcZ2oq2,
-                                                    noColor:
-                                                      esfgzCyLtxUZwcZ2oq2,
-                                                  },
-                                                },
-                                                baseVariant,
-                                                gestureVariant,
-                                              ),
-                                            },
-                                          ),
-                                        },
-                                      ),
-                                    },
-                                  ),
-                                }),
+                            children: /* @__PURE__ */ _jsx(PathVariablesContext.Provider, {
+                              value: {
+                                k2CHhHMep: k2CHhHMepxUZwcZ2oq2,
                               },
-                            ),
+                              children: /* @__PURE__ */ _jsx(motion.div, {
+                                className: 'framer-12w8kqv',
+                                'data-framer-name': 'Content',
+                                layoutDependency,
+                                layoutId: 'jOhdiIU9n',
+                                children: /* @__PURE__ */ _jsx(ComponentViewportProvider, {
+                                  children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                                    className: 'framer-6mtamp-container',
+                                    isAuthoredByUser: true,
+                                    isModuleExternal: true,
+                                    layoutDependency,
+                                    layoutId: 'ILy9bbpCY-container',
+                                    nodeId: 'ILy9bbpCY',
+                                    rendersWithMotion: true,
+                                    scopeId: 'v13l90nXX',
+                                    children: /* @__PURE__ */ _jsx(AspectRatioLogo, {
+                                      fixedHeight: 20,
+                                      height: '100%',
+                                      id: 'ILy9bbpCY',
+                                      invertColors: toxrw0fkwxUZwcZ2oq2,
+                                      layoutId: 'ILy9bbpCY',
+                                      logoFile: Mu6wvlLANxUZwcZ2oq2,
+                                      noColor: Kp1pQ1RuexUZwcZ2oq2,
+                                      width: '100%',
+                                      ...addPropertyOverrides(
+                                        {
+                                          HfzpqW5M7: {
+                                            invertColors: uUQJs5HroxUZwcZ2oq2,
+                                            logoFile: G0q2KeuUtxUZwcZ2oq2,
+                                            noColor: ArHQF_SfJxUZwcZ2oq2,
+                                          },
+                                          mGnwAZdNT: {
+                                            invertColors: Fw0Opy1D7xUZwcZ2oq2,
+                                            logoFile: fj1pbPlZaxUZwcZ2oq2,
+                                            noColor: gs255VAZAxUZwcZ2oq2,
+                                          },
+                                          v60ZzFMlS: {
+                                            invertColors: UhppilktKxUZwcZ2oq2,
+                                            logoFile: rjF1a7ijgxUZwcZ2oq2,
+                                            noColor: FrnLEfoOhxUZwcZ2oq2,
+                                          },
+                                          Vm1pdYezD: {
+                                            invertColors: AsXNwAmtwxUZwcZ2oq2,
+                                            logoFile: W36DjRbzUxUZwcZ2oq2,
+                                            noColor: XkUPJeBNwxUZwcZ2oq2,
+                                          },
+                                          zi7jTfbgd: {
+                                            invertColors: QCBuCXtYRxUZwcZ2oq2,
+                                            logoFile: mnlZ_P8lBxUZwcZ2oq2,
+                                            noColor: esfgzCyLtxUZwcZ2oq2,
+                                          },
+                                        },
+                                        baseVariant,
+                                        gestureVariant,
+                                      ),
+                                    }),
+                                  }),
+                                }),
+                              }),
+                            }),
                           },
                           idxUZwcZ2oq2,
                         )
@@ -453,23 +408,14 @@ Framerv13l90nXX.displayName = 'Logo Holder'
 Framerv13l90nXX.defaultProps = { height: 86, width: 234 }
 addPropertyControls(Framerv13l90nXX, {
   variant: {
-    options: [
-      'rJpeO5TfG',
-      'HfzpqW5M7',
-      'v60ZzFMlS',
-      'Vm1pdYezD',
-      'zi7jTfbgd',
-      'mGnwAZdNT',
-    ],
+    options: ['rJpeO5TfG', 'HfzpqW5M7', 'v60ZzFMlS', 'Vm1pdYezD', 'zi7jTfbgd', 'mGnwAZdNT'],
     optionTitles: ['1', '2', '3', '4', '5', '6'],
     title: 'Variant',
     type: ControlType.Enum,
   },
 })
-addFonts(
-  Framerv13l90nXX,
-  [{ explicitInter: true, fonts: [] }, ...AspectRatioLogoFonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts(Framerv13l90nXX, [{ explicitInter: true, fonts: [] }, ...AspectRatioLogoFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 export { stdin_default2 as stdin_default }

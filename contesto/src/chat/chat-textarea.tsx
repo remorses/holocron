@@ -8,8 +8,7 @@ import { useChatState } from './chat-provider.js'
 import { cn } from '../lib/cn.js'
 import { ScrollArea } from '../components/ui/scroll-area.js'
 
-interface MentionsTextAreaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface MentionsTextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   ref?: any
   disabled?: boolean
   placeholder?: string
@@ -27,9 +26,7 @@ export function ChatTextarea({
   const ref = React.useRef<HTMLTextAreaElement>(null)
   const [trigger, setTrigger] = React.useState<string | null>(null)
   const [caretOffset, setCaretOffset] = React.useState<number | null>(null)
-  const selectedAutocompleteText = useChatState(
-    (x) => x.selectedAutocompleteText,
-  )
+  const selectedAutocompleteText = useChatState((x) => x.selectedAutocompleteText)
   const submitForm = useChatState((x) => x.submit)
   const value = useChatState((x) => x.draftText || '')
   function onChange(text: string) {
@@ -44,13 +41,9 @@ export function ChatTextarea({
   const deferredSearchValue = React.useDeferredValue(searchValue)
 
   const mentionMatches = React.useMemo(() => {
-    return matchSorter(
-      getList(trigger, mentionOptions),
-      deferredSearchValue || '',
-      {
-        baseSort: (a, b) => (a.index < b.index ? -1 : 1),
-      },
-    ).slice(0, 10)
+    return matchSorter(getList(trigger, mentionOptions), deferredSearchValue || '', {
+      baseSort: (a, b) => (a.index < b.index ? -1 : 1),
+    }).slice(0, 10)
   }, [trigger, deferredSearchValue, mentionOptions])
 
   const hasMatches = !!mentionMatches.length
@@ -231,9 +224,7 @@ export function ChatTextarea({
               'data-[active]:pt-[9px] data-[active]:pb-[7px]',
             )}
           >
-            <span className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {value}
-            </span>
+            <span className='overflow-hidden text-ellipsis whitespace-nowrap'>{value}</span>
           </Ariakit.ComboboxItem>
         ))}
       </Ariakit.ComboboxPopover>
@@ -241,14 +232,8 @@ export function ChatTextarea({
   )
 }
 
-export function ChatAutocomplete({
-  autocompleteSuggestions = [],
-}: {
-  autocompleteSuggestions?: string[]
-}) {
-  const selectedAutocompleteText = useChatState(
-    (state) => state.selectedAutocompleteText,
-  )
+export function ChatAutocomplete({ autocompleteSuggestions = [] }: { autocompleteSuggestions?: string[] }) {
+  const selectedAutocompleteText = useChatState((state) => state.selectedAutocompleteText)
 
   const text = useChatState((x) => {
     return x.draftText || ''
@@ -259,9 +244,7 @@ export function ChatAutocomplete({
     if (!text.trim() || messages.length > 0) return []
 
     return autocompleteSuggestions
-      .filter((suggestion) =>
-        suggestion.toLowerCase().startsWith(text.toLowerCase()),
-      )
+      .filter((suggestion) => suggestion.toLowerCase().startsWith(text.toLowerCase()))
       .slice(0, 5)
   }, [text, messages.length])
 
@@ -276,17 +259,11 @@ export function ChatAutocomplete({
       if (!filteredSuggestions.length) {
         return
       }
-      const selectedAutocompleteText =
-        useChatState.getState()?.selectedAutocompleteText || ''
-      const selectedAutocompleteIndex = filteredSuggestions.indexOf(
-        selectedAutocompleteText,
-      )
+      const selectedAutocompleteText = useChatState.getState()?.selectedAutocompleteText || ''
+      const selectedAutocompleteIndex = filteredSuggestions.indexOf(selectedAutocompleteText)
       if (event.key === 'ArrowDown') {
         event.preventDefault()
-        const newIndex =
-          selectedAutocompleteIndex < filteredSuggestions.length - 1
-            ? selectedAutocompleteIndex + 1
-            : 0
+        const newIndex = selectedAutocompleteIndex < filteredSuggestions.length - 1 ? selectedAutocompleteIndex + 1 : 0
         const selectedAutocompleteText = filteredSuggestions[newIndex]
         useChatState.setState({
           selectedAutocompleteText,
@@ -296,10 +273,7 @@ export function ChatAutocomplete({
       }
       if (event.key === 'ArrowUp') {
         event.preventDefault()
-        const newIndex =
-          selectedAutocompleteIndex > 0
-            ? selectedAutocompleteIndex - 1
-            : filteredSuggestions.length - 1
+        const newIndex = selectedAutocompleteIndex > 0 ? selectedAutocompleteIndex - 1 : filteredSuggestions.length - 1
         const selectedAutocompleteText = filteredSuggestions[newIndex]
         useChatState.setState({
           selectedAutocompleteText,
@@ -310,8 +284,7 @@ export function ChatAutocomplete({
         event.preventDefault()
 
         event.stopPropagation()
-        const selectedAutocompleteText =
-          useChatState.getState()?.selectedAutocompleteText || ''
+        const selectedAutocompleteText = useChatState.getState()?.selectedAutocompleteText || ''
         useChatState.setState({
           selectedAutocompleteText: undefined,
           draftText: selectedAutocompleteText + ' ',
@@ -341,9 +314,7 @@ export function ChatAutocomplete({
               <button
                 key={item}
                 className={`w-full px-2 py-1.5 text-left text-sm rounded-md transition-colors ${
-                  selectedAutocompleteText === item
-                    ? 'bg-muted/70'
-                    : 'hover:bg-accent/50'
+                  selectedAutocompleteText === item ? 'bg-muted/70' : 'hover:bg-accent/50'
                 }`}
                 onClick={() => {
                   useChatState.setState({
@@ -362,10 +333,7 @@ export function ChatAutocomplete({
   )
 }
 
-function getTriggerOffset(
-  element: HTMLTextAreaElement,
-  triggers = defaultTriggers,
-) {
+function getTriggerOffset(element: HTMLTextAreaElement, triggers = defaultTriggers) {
   const { value, selectionStart } = element
   for (let i = selectionStart; i >= 0; i--) {
     const char = value[i]
@@ -387,19 +355,13 @@ function getTrigger(element: HTMLTextAreaElement, triggers = defaultTriggers) {
   return null
 }
 
-function getSearchValue(
-  element: HTMLTextAreaElement,
-  triggers = defaultTriggers,
-) {
+function getSearchValue(element: HTMLTextAreaElement, triggers = defaultTriggers) {
   const offset = getTriggerOffset(element, triggers)
   if (offset === -1) return ''
   return element.value.slice(offset + 1, element.selectionStart)
 }
 
-function getAnchorRect(
-  element: HTMLTextAreaElement,
-  triggers = defaultTriggers,
-) {
+function getAnchorRect(element: HTMLTextAreaElement, triggers = defaultTriggers) {
   const offset = getTriggerOffset(element, triggers)
   const { left, top, height } = getCaretCoordinates(element, offset + 1)
   const { x, y } = element.getBoundingClientRect()
@@ -410,15 +372,9 @@ function getAnchorRect(
   }
 }
 
-function replaceValue(
-  offset: number,
-  searchValue: string,
-  displayValue: string,
-) {
+function replaceValue(offset: number, searchValue: string, displayValue: string) {
   return (prevValue: string) => {
-    const nextValue = `${
-      prevValue.slice(0, offset) + displayValue
-    } ${prevValue.slice(offset + searchValue.length + 1)}`
+    const nextValue = `${prevValue.slice(0, offset) + displayValue} ${prevValue.slice(offset + searchValue.length + 1)}`
     return nextValue
   }
 }
@@ -428,21 +384,13 @@ const defaultTriggers = ['@']
 function getList(trigger: string | null, mentionOptions?: string[]) {
   switch (trigger) {
     case '@':
-      return mentionOptions
-        ? mentionOptions.map((option) =>
-            option.startsWith('@') ? option.slice(1) : option,
-          )
-        : []
+      return mentionOptions ? mentionOptions.map((option) => (option.startsWith('@') ? option.slice(1) : option)) : []
     default:
       return []
   }
 }
 
-function getValue(
-  listValue: string,
-  trigger: string | null,
-  mentionOptions?: string[],
-) {
+function getValue(listValue: string, trigger: string | null, mentionOptions?: string[]) {
   if (trigger === '@') {
     if (mentionOptions) {
       const option = mentionOptions.find((opt) => {

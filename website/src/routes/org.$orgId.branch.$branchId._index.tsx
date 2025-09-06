@@ -4,10 +4,7 @@ import { href } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId.branch.$branchId._index'
 
-export async function loader({
-  request,
-  params: { orgId, branchId },
-}: Route.LoaderArgs) {
+export async function loader({ request, params: { orgId, branchId } }: Route.LoaderArgs) {
   const { userId, redirectTo } = await getSession({ request })
   if (redirectTo) {
     throw redirect(redirectTo)

@@ -116,9 +116,7 @@ export const auth = betterAuth({
 
 export async function getSession({ request }) {
   const headers = new Headers()
-  const data = await auth.api
-    .getSession({ headers: request.headers })
-    .catch(() => null)
+  const data = await auth.api.getSession({ headers: request.headers }).catch(() => null)
   if (!data) {
     return { userId: '', headers, redirectTo: '/login', user: null }
   }

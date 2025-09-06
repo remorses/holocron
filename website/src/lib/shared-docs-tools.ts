@@ -22,16 +22,10 @@ export const searchDocsInputSchema = z.object({
 })
 
 export const goToPageInputSchema = z.object({
-  slug: z
-    .string()
-    .describe(
-      'The page slug/path to navigate to (e.g., "getting-started" or "api/authentication")',
-    ),
+  slug: z.string().describe('The page slug/path to navigate to (e.g., "getting-started" or "api/authentication")'),
 })
 
-export const getCurrentPageInputSchema = z
-  .object({})
-  .describe('Get the current page slug that the user is viewing')
+export const getCurrentPageInputSchema = z.object({}).describe('Get the current page slug that the user is viewing')
 
 export const fetchUrlInputSchema = z.object({
   url: z

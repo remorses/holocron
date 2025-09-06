@@ -177,8 +177,7 @@ addPropertyControls(Confetti, {
     max: 10,
     step: 0.1,
     displayStepper: true,
-    description:
-      'More components at [Framer University](https://frameruni.link/cc).',
+    description: 'More components at [Framer University](https://frameruni.link/cc).',
   },
 })
 

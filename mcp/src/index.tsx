@@ -147,13 +147,7 @@ export interface MCPToolProps {
 /**
  * Main component for rendering MCP tool documentation
  */
-export async function MCPPage({
-  tool,
-  serverUrl,
-  hasHead = true,
-  chatExample,
-  renderContext = {},
-}: MCPPageProps) {
+export async function MCPPage({ tool, serverUrl, hasHead = true, chatExample, renderContext = {} }: MCPPageProps) {
   // Create a basic context for rendering schemas
 
   const document = await processDocument({
@@ -214,17 +208,13 @@ export async function MCPServerPage({
         {server.url && (
           <div className='flex items-center gap-2 mb-4'>
             <span className='text-sm font-medium'>Server:</span>
-            <code className='text-sm bg-fd-secondary px-2 py-1 rounded'>
-              {server.url}
-            </code>
+            <code className='text-sm bg-fd-secondary px-2 py-1 rounded'>{server.url}</code>
           </div>
         )}
         {server.version && (
           <div className='flex items-center gap-2 mb-6'>
             <span className='text-sm font-medium'>Version:</span>
-            <span className='text-sm text-fd-muted-foreground'>
-              {server.version}
-            </span>
+            <span className='text-sm text-fd-muted-foreground'>{server.version}</span>
           </div>
         )}
       </div>
@@ -286,13 +276,7 @@ export function MCPTool({
     inputSchemaNode = (
       <>
         {heading(headingLevel, 'Input Schema', ctx)}
-        <Schema
-          name='input'
-          schema={tool.inputSchema as ResolvedSchema}
-          ctx={ctx}
-          as='body'
-          required={true}
-        />
+        <Schema name='input' schema={tool.inputSchema as ResolvedSchema} ctx={ctx} as='body' required={true} />
       </>
     )
   }
@@ -302,13 +286,7 @@ export function MCPTool({
     outputSchemaNode = (
       <>
         {heading(headingLevel, 'Output Schema', ctx)}
-        <Schema
-          name='output'
-          schema={tool.outputSchema as ResolvedSchema}
-          ctx={ctx}
-          as='body'
-          required={true}
-        />
+        <Schema name='output' schema={tool.outputSchema as ResolvedSchema} ctx={ctx} as='body' required={true} />
       </>
     )
   }
@@ -347,29 +325,27 @@ export function MCPTool({
               </div>
             )}
 
-            {tool.annotations?.destructiveHint !== undefined &&
-              !tool.annotations?.readOnlyHint && (
-                <div className='flex flex-wrap items-center gap-2'>
-                  <span className='text-sm font-medium'>Destructive:</span>
-                  <span className='text-sm text-fd-muted-foreground'>
-                    {tool.annotations.destructiveHint
-                      ? 'This tool may perform destructive updates'
-                      : 'This tool performs only additive updates'}
-                  </span>
-                </div>
-              )}
+            {tool.annotations?.destructiveHint !== undefined && !tool.annotations?.readOnlyHint && (
+              <div className='flex flex-wrap items-center gap-2'>
+                <span className='text-sm font-medium'>Destructive:</span>
+                <span className='text-sm text-fd-muted-foreground'>
+                  {tool.annotations.destructiveHint
+                    ? 'This tool may perform destructive updates'
+                    : 'This tool performs only additive updates'}
+                </span>
+              </div>
+            )}
 
-            {tool.annotations?.idempotentHint !== undefined &&
-              !tool.annotations?.readOnlyHint && (
-                <div className='flex flex-wrap items-center gap-2'>
-                  <span className='text-sm font-medium'>Idempotent:</span>
-                  <span className='text-sm text-fd-muted-foreground'>
-                    {tool.annotations.idempotentHint
-                      ? 'Repeated calls with same arguments have no additional effect'
-                      : 'Repeated calls may have additional effects'}
-                  </span>
-                </div>
-              )}
+            {tool.annotations?.idempotentHint !== undefined && !tool.annotations?.readOnlyHint && (
+              <div className='flex flex-wrap items-center gap-2'>
+                <span className='text-sm font-medium'>Idempotent:</span>
+                <span className='text-sm text-fd-muted-foreground'>
+                  {tool.annotations.idempotentHint
+                    ? 'Repeated calls with same arguments have no additional effect'
+                    : 'Repeated calls may have additional effects'}
+                </span>
+              </div>
+            )}
 
             {tool.annotations?.openWorldHint !== undefined && (
               <div className='flex flex-wrap items-center gap-2'>
@@ -388,9 +364,7 @@ export function MCPTool({
         </ctx.renderer.APIInfo>
       </div>
       <div className='flex flex-col'>
-        {chatExample && (
-          <RightSideTabs messages={chatExample} toolName={tool.name} />
-        )}
+        {chatExample && <RightSideTabs messages={chatExample} toolName={tool.name} />}
       </div>
     </div>
   )
@@ -412,11 +386,7 @@ export function createSampleMCPServer() {
       url: 'mcp://filesystem.local',
       version: '1.2.0',
     },
-    tools: [
-      createSampleMCPTool(),
-      sampleTools.read_file,
-      sampleTools.execute_command,
-    ],
+    tools: [createSampleMCPTool(), sampleTools.read_file, sampleTools.execute_command],
     toolExamples: {
       search_web: createSampleChatExample(),
     },
@@ -598,8 +568,7 @@ export function createSampleChatExample(): CoreMessage[] {
   return [
     {
       role: 'user',
-      content:
-        'Can you search for information about the latest AI developments?',
+      content: 'Can you search for information about the latest AI developments?',
     },
     {
       role: 'assistant',

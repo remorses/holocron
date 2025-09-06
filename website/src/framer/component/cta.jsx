@@ -63,30 +63,8 @@ import { motion } from 'unframer'
 import { steps } from '@motionone/easing'
 function Grain(props) {
   const { opacity, style } = props
-  const keyframesX = [
-    '0%',
-    '-5%',
-    '-15%',
-    '7%',
-    '-5%',
-    '-15%',
-    '15%',
-    '0%',
-    '3%',
-    '-10%',
-  ]
-  const keyframesY = [
-    '0%',
-    '-10%',
-    '5%',
-    '-25%',
-    '25%',
-    '10%',
-    '0%',
-    '15%',
-    '35%',
-    '10%',
-  ]
+  const keyframesX = ['0%', '-5%', '-15%', '7%', '-5%', '-15%', '15%', '0%', '3%', '-10%']
+  const keyframesY = ['0%', '-10%', '5%', '-25%', '25%', '10%', '0%', '15%', '35%', '10%']
   const isCanvas = RenderTarget.current() === RenderTarget.canvas
   return (
     <div
@@ -137,18 +115,12 @@ addPropertyControls(Grain, {
 var containerStyle = {
   backgroundSize: '256px 256px',
   backgroundRepeat: 'repeat',
-  background:
-    "url('https://framerusercontent.com/images/rR6HYXBrMmX4cRpXfXUOvpvpB0.png')",
+  background: "url('https://framerusercontent.com/images/rR6HYXBrMmX4cRpXfXUOvpvpB0.png')",
 }
 
 // /:https://framerusercontent.com/modules/4xysZuCAZczgALeEeRQZ/LO6KBuqpbd73PYjUgMZ7/thOPo8QL3.js
 import { fontStore } from 'unframer'
-fontStore.loadFonts([
-  'Inter-SemiBold',
-  'Inter-Black',
-  'Inter-BlackItalic',
-  'Inter-BoldItalic',
-])
+fontStore.loadFonts(['Inter-SemiBold', 'Inter-Black', 'Inter-BlackItalic', 'Inter-BoldItalic'])
 var fonts2 = [
   {
     explicitInter: true,
@@ -157,8 +129,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/hyOgCu0Xnghbimh0pE8QTvtt2AU.woff2',
         weight: '600',
       },
@@ -217,8 +188,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'normal',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/mkY5Sgyq51ik0AMrSBwhm9DJg.woff2',
         weight: '900',
       },
@@ -277,8 +247,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/05KsVHGDmqXSBXM4yRZ65P8i0s.woff2',
         weight: '900',
       },
@@ -337,8 +306,7 @@ var fonts2 = [
         family: 'Inter',
         source: 'framer',
         style: 'italic',
-        unicodeRange:
-          'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+        unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
         url: 'https://framerusercontent.com/assets/H89BbHkbHDzlxZzxi8uPzTsp90.woff2',
         weight: '700',
       },
@@ -419,9 +387,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -457,11 +423,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion2.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -472,8 +434,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'h4Htb6ikw',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'h4Htb6ikw',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -486,13 +447,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className3,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className3, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -520,12 +475,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion2.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-ra8t5r',
-              className3,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-ra8t5r', className3, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'h4Htb6ikw'}
@@ -574,8 +524,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutId={'kqe7A7GHL'}
                 style={{
                   '--border-bottom-width': '1px',
-                  '--border-color':
-                    'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
+                  '--border-color': 'var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19))',
                   '--border-left-width': '1px',
                   '--border-right-width': '1px',
                   '--border-style': 'solid',
@@ -687,9 +636,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         '--framer-text-alignment': 'center',
                       }}
                     >
-                      {
-                        'Harness the power of AI to grow your portfolio with confidence and clarity.'
-                      }
+                      {'Harness the power of AI to grow your portfolio with confidence and clarity.'}
                     </motion2.p>
                   </React.Fragment>
                 </RichTextWithFX>
@@ -698,9 +645,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   y={
                     (componentViewport?.y || 0) +
                     100 +
-                    (((componentViewport?.height || 497.5) - 200 - 360) / 2 +
-                      0 +
-                      0) +
+                    (((componentViewport?.height || 497.5) - 200 - 360) / 2 + 0 + 0) +
                     0 +
                     0 +
                     80 +
@@ -712,10 +657,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           100 +
-                          (((componentViewport?.height || 521.5) - 120 - 420) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 521.5) - 120 - 420) / 2 + 0 + 0) +
                           0 +
                           0 +
                           100 +
@@ -725,10 +667,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           120 +
-                          (((componentViewport?.height || 541.5) - 200 - 364) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 541.5) - 200 - 364) / 2 + 0 + 0) +
                           0 +
                           0 +
                           80 +
@@ -882,8 +821,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -965,9 +903,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -998,17 +934,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

@@ -12,12 +12,7 @@ import type { Route } from './+types/_catchall.$'
 import { DocsJsonType } from '../lib/docs-json'
 import JSONC from 'tiny-jsonc'
 import { LOCALES } from '../lib/locales'
-import {
-  getProcessor,
-  getTocFromMdast,
-  ProcessorData,
-  ProcessorDataFrontmatter,
-} from '../lib/mdx-heavy'
+import { getProcessor, getTocFromMdast, ProcessorData, ProcessorDataFrontmatter } from '../lib/mdx-heavy'
 import { getFumadocsSource } from '../lib/source'
 
 import { getOpenapiDocument } from '../lib/openapi.server'
@@ -502,10 +497,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           githubPath = draftGithubPath
           break
         } catch (e) {
-          console.warn(
-            `Failed to process draft content for ${draftGithubPath}:`,
-            e,
-          )
+          console.warn(`Failed to process draft content for ${draftGithubPath}:`, e)
         }
       }
     }
@@ -601,17 +593,14 @@ export function ErrorBoundary({
     'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
   const titleClass = 'text-3xl font-semibold mb-3 text-primary'
   const messageClass = 'text-base mb-2 text-muted-foreground'
-  const preClass =
-    'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+  const preClass = 'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
 
   // Check if we're in a chat context
-  const url =
-    typeof window !== 'undefined' ? new URL(window.location.href) : null
+  const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
   const chatId = url?.searchParams.get('chatId')
 
   const isRetryableErrorWithClientLoader =
-    (isRouteErrorResponse(error) && error.status === 404) ||
-    ('markdown' in (error as any) && (error as any).markdown)
+    (isRouteErrorResponse(error) && error.status === 404) || ('markdown' in (error as any) && (error as any).markdown)
 
   // Handle client-side errors in client component
   if (isRetryableErrorWithClientLoader && error instanceof Error) {

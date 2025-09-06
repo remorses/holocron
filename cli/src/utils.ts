@@ -110,9 +110,7 @@ export function getGitRemoteUrl(): string | undefined {
   }
 }
 
-export function getGitHubInfo():
-  | { githubOwner: string; githubRepo: string; name: string }
-  | undefined {
+export function getGitHubInfo(): { githubOwner: string; githubRepo: string; name: string } | undefined {
   const remoteUrl = getGitRemoteUrl()
   if (!remoteUrl) return undefined
 
@@ -152,10 +150,9 @@ export function checkGitStatus(): {
             stdio: 'ignore',
           })
           // Remote branch exists, check for unpushed commits
-          const unpushedCommits = execSync(
-            `git log origin/${currentBranch}..${currentBranch} --oneline`,
-            { encoding: 'utf-8' },
-          ).trim()
+          const unpushedCommits = execSync(`git log origin/${currentBranch}..${currentBranch} --oneline`, {
+            encoding: 'utf-8',
+          }).trim()
           hasUnpushedCommits = unpushedCommits.length > 0
         } catch {
           // Remote branch doesn't exist, so we have unpushed commits

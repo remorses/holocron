@@ -15,8 +15,7 @@ import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 // Remove chatId cookie on page unload at module level
 if (typeof window !== 'undefined') {
   const removeChatIdCookie = () => {
-    document.cookie =
-      'chatId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
+    document.cookie = 'chatId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
   }
 
   window.addEventListener('beforeunload', removeChatIdCookie)
@@ -72,9 +71,7 @@ export function ClientPage(props: Route.ComponentProps) {
   if (typeof window !== 'undefined') {
     globalThis.lastServerLoaderData = props.loaderData
   }
-  const rootData = useRouteLoaderData(
-    'routes/_catchall',
-  ) as RootRoute.ComponentProps['loaderData']
+  const rootData = useRouteLoaderData('routes/_catchall') as RootRoute.ComponentProps['loaderData']
   const docsJson = rootData?.docsJson as DocsJsonType
 
   if (type === 'openapi_scalar') {
@@ -102,10 +99,7 @@ export function ClientPage(props: Route.ComponentProps) {
 
 function PageContent(props: Route.ComponentProps): any {
   const loaderData = props.loaderData
-  const rootData =
-    (useRouteLoaderData(
-      'routes/_catchall',
-    ) as RootRoute.ComponentProps['loaderData']) || {}
+  const rootData = (useRouteLoaderData('routes/_catchall') as RootRoute.ComponentProps['loaderData']) || {}
   const { slug, slugs, githubPath, lastEditedAt } = loaderData || {}
   const owner = rootData.githubOwner
   const repo = rootData.githubRepo
@@ -119,9 +113,7 @@ function PageContent(props: Route.ComponentProps): any {
       const override = filesInDraft[loaderData.githubPath]
       const toc = state.toc || loaderData?.toc
       if (override) {
-        const { attributes: data } = frontMatter<ProcessorDataFrontmatter>(
-          override.content || '',
-        )
+        const { attributes: data } = frontMatter<ProcessorDataFrontmatter>(override.content || '')
 
         return {
           toc,
@@ -155,9 +147,7 @@ function PageContent(props: Route.ComponentProps): any {
           <Suspense
             fallback={
               <div className='flex items-center justify-center h-96'>
-                <div className='text-muted-foreground'>
-                  {/* Loading editor... */}
-                </div>
+                <div className='text-muted-foreground'>{/* Loading editor... */}</div>
               </div>
             }
           >
@@ -208,10 +198,7 @@ function PageContent(props: Route.ComponentProps): any {
         <div className='grow'></div>
         <Rate
           onRateAction={async (url, feedback) => {
-            const apiUrl = new URL(
-              '/api/submitRateFeedback',
-              process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`,
-            )
+            const apiUrl = new URL('/api/submitRateFeedback', process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`)
             const response = await fetch(apiUrl.toString(), {
               method: 'POST',
               headers: {
@@ -274,20 +261,18 @@ function Footer({ footer }: { footer?: any }): any {
       {/* Social Links */}
       {footer.socials && (
         <div className='flex gap-3'>
-          {Object.entries(footer.socials).map(
-            ([platform, url]: [string, any]) => (
-              <a
-                key={platform}
-                href={url}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-                aria-label={platform}
-              >
-                <SocialIcon platform={platform} />
-              </a>
-            ),
-          )}
+          {Object.entries(footer.socials).map(([platform, url]: [string, any]) => (
+            <a
+              key={platform}
+              href={url}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
+              aria-label={platform}
+            >
+              <SocialIcon platform={platform} />
+            </a>
+          ))}
         </div>
       )}
 
@@ -296,22 +281,14 @@ function Footer({ footer }: { footer?: any }): any {
         <div className={`grid gap-6 ${gridCols}`}>
           {footer.links.map((column: any, index: number) => (
             <div key={index} className='flex flex-col gap-2'>
-              {column.header && (
-                <h4 className='font-medium text-fd-foreground text-sm'>
-                  {column.header}
-                </h4>
-              )}
+              {column.header && <h4 className='font-medium text-fd-foreground text-sm'>{column.header}</h4>}
               <div className='flex flex-col gap-1'>
                 {column.items.map((item: any, itemIndex: number) => (
                   <a
                     key={itemIndex}
                     href={item.href}
                     target={item.href.startsWith('http') ? '_blank' : undefined}
-                    rel={
-                      item.href.startsWith('http')
-                        ? 'noopener noreferrer'
-                        : undefined
-                    }
+                    rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className='text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors'
                   >
                     {item.label}
@@ -344,13 +321,7 @@ function SocialIcon({ platform }: { platform: string }) {
   }
 }
 
-function MdxErrorDisplay({
-  error,
-  markdown,
-}: {
-  error: any
-  markdown: string
-}) {
+function MdxErrorDisplay({ error, markdown }: { error: any; markdown: string }) {
   // Extract error details
   const errorLine = error.line || 1
   const errorColumn = error.column || 1
@@ -369,9 +340,7 @@ function MdxErrorDisplay({
       <div className='max-w-4xl mx-auto'>
         {/* Error Header */}
         <div className='bg-destructive/10 border border-destructive rounded-lg p-6 mb-6'>
-          <h1 className='text-2xl font-bold text-destructive mb-2'>
-            MDX Compilation Error
-          </h1>
+          <h1 className='text-2xl font-bold text-destructive mb-2'>MDX Compilation Error</h1>
           <p className='text-base text-destructive/90'>{errorMessage}</p>
           <p className='text-sm text-muted-foreground mt-2'>
             Line {errorLine}, Column {errorColumn}
@@ -391,10 +360,7 @@ function MdxErrorDisplay({
                   const isErrorLine = lineNumber === errorLine
 
                   return (
-                    <div
-                      key={lineNumber}
-                      className={cn('flex', isErrorLine && 'bg-destructive/10')}
-                    >
+                    <div key={lineNumber} className={cn('flex', isErrorLine && 'bg-destructive/10')}>
                       {/* Line number */}
                       <span
                         className={cn(
@@ -407,9 +373,7 @@ function MdxErrorDisplay({
 
                       {/* Code line */}
                       <div className='flex-1 px-4 py-1'>
-                        <span className={cn(isErrorLine && 'text-destructive')}>
-                          {line || ' '}
-                        </span>
+                        <span className={cn(isErrorLine && 'text-destructive')}>{line || ' '}</span>
 
                         {/* Error indicator */}
                         {isErrorLine && errorColumn && (
@@ -454,19 +418,12 @@ const components = {
   // TODO do the same for Image?
   img(props) {
     const src = props.src || ''
-    const { mediaAssets } =
-      useLoaderData() as Route.ComponentProps['loaderData']
+    const { mediaAssets } = useLoaderData() as Route.ComponentProps['loaderData']
 
     const media = mediaAssets.find((asset) => asset.assetSlug === src)
 
     if (media) {
-      return (
-        <mdxComponents.img
-          width={media.asset?.width}
-          height={media.asset?.height}
-          {...props}
-        />
-      )
+      return <mdxComponents.img width={media.asset?.width} height={media.asset?.height} {...props} />
     }
     return <mdxComponents.img {...props} />
   },
@@ -506,9 +463,7 @@ function DocsMarkdown(): any {
           ast: undefined,
         }
       }
-      console.log(
-        `no override for githubPath ${loaderData.githubPath}, using loader data`,
-      )
+      console.log(`no override for githubPath ${loaderData.githubPath}, using loader data`)
 
       return {
         isStreaming,
@@ -591,15 +546,10 @@ export function ClientErrorBoundary({ error }: { error: Error }) {
   const revalidator = useRevalidator()
   const filesInDraft = useDocsState((state) => state.filesInDraft)
 
-  const isRetryableErrorWithClientLoader =
-    'markdown' in (error as any) && (error as any).markdown
+  const isRetryableErrorWithClientLoader = 'markdown' in (error as any) && (error as any).markdown
 
   useEffect(() => {
-    if (
-      isRetryableErrorWithClientLoader &&
-      Object.keys(filesInDraft).length > 0 &&
-      revalidator.state === 'idle'
-    ) {
+    if (isRetryableErrorWithClientLoader && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
       console.log('Revalidating files in draft due to 404 error', filesInDraft)
       revalidator.revalidate()
     }

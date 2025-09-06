@@ -109,10 +109,7 @@ function getWebhooks() {
     }
 
     try {
-      const workerUrl = new URL(
-        '/api/github/webhooks-worker',
-        env.PUBLIC_URL,
-      ).toString()
+      const workerUrl = new URL('/api/github/webhooks-worker', env.PUBLIC_URL).toString()
 
       // Ensure the body matches the webhookWorkerRequestSchema type
       const body = webhookWorkerRequestSchema.parse({
@@ -134,9 +131,7 @@ function getWebhooks() {
         },
       })
 
-      logger.log(
-        `Queued webhook processing for ${repo.owner.login}/${repo.name}`,
-      )
+      logger.log(`Queued webhook processing for ${repo.owner.login}/${repo.name}`)
     } catch (error) {
       logger.error('Error queuing webhook processing:', error)
       notifyError(error, 'github push webhook')
@@ -151,12 +146,9 @@ function getWebhooks() {
     switch (event.payload.action) {
       case 'renamed': {
         const repo = event.payload.repository
-        const previousRepo = (event.payload as any).changes?.repository?.name
-          ?.from
+        const previousRepo = (event.payload as any).changes?.repository?.name?.from
 
-        logger.log(
-          `renaming repository ${repo?.owner?.login}/${previousRepo} to ${repo?.name}`,
-        )
+        logger.log(`renaming repository ${repo?.owner?.login}/${previousRepo} to ${repo?.name}`)
 
         if (!previousRepo || !repo?.name || !repo?.owner?.login) {
           logger.log('missing repository information for rename')

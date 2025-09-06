@@ -15,15 +15,11 @@ var SVG = /* @__PURE__ */ forwardRef2((props, ref) => {
 var getProps = ({ color, height, id, width, ...props }) => {
   return {
     ...props,
-    PnLINQYrT:
-      color ??
-      props.PnLINQYrT ??
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+    PnLINQYrT: color ?? props.PnLINQYrT ?? 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
   }
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-  const { style, className, layoutId, variant, PnLINQYrT, ...restProps } =
-    getProps(props)
+  const { style, className, layoutId, variant, PnLINQYrT, ...restProps } = getProps(props)
   return /* @__PURE__ */ _jsx(SVG, {
     ...restProps,
     className: cx('framer-buq6G', className),
@@ -39,8 +35,7 @@ var Icon = withCSS(Component, css, 'framer-buq6G')
 var stdin_default = Icon
 addPropertyControls(Icon, {
   PnLINQYrT: {
-    defaultValue:
-      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
+    defaultValue: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255)) /* {"name":"White"} */',
     hidden: false,
     title: 'Color',
     type: ControlType.Color,

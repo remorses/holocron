@@ -3,19 +3,12 @@ import { createStorage, type Storage } from 'unstorage'
 import fsDriverImport from 'unstorage/drivers/fs'
 const fsDriver = fsDriverImport as unknown as (opts: { base?: string }) => any
 import { simulateReadableStream } from 'ai'
-import {
-  type LanguageModelV2,
-  type LanguageModelV2Middleware,
-  type LanguageModelV2StreamPart,
-} from '@ai-sdk/provider'
+import { type LanguageModelV2, type LanguageModelV2Middleware, type LanguageModelV2StreamPart } from '@ai-sdk/provider'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 import * as yaml from 'js-yaml'
 
-export function createAiCacheMiddleware({
-  cacheDir = '.aicache',
-  onParams = (x) => {},
-} = {}) {
+export function createAiCacheMiddleware({ cacheDir = '.aicache', onParams = (x) => {} } = {}) {
   const modelsCaches = new Map<string, Storage>()
 
   function getModelCache(modelId: string) {
@@ -58,9 +51,7 @@ export function createAiCacheMiddleware({
           ...cached.result,
           response: {
             ...cached.result.response,
-            timestamp: cached.result?.response?.timestamp
-              ? new Date(cached.result?.response?.timestamp)
-              : undefined,
+            timestamp: cached.result?.response?.timestamp ? new Date(cached.result?.response?.timestamp) : undefined,
           },
         }
       }
@@ -123,10 +114,7 @@ export function createAiCacheMiddleware({
 
       const fullResponse: LanguageModelV2StreamPart[] = []
 
-      const transformStream = new TransformStream<
-        LanguageModelV2StreamPart,
-        LanguageModelV2StreamPart
-      >({
+      const transformStream = new TransformStream<LanguageModelV2StreamPart, LanguageModelV2StreamPart>({
         transform(chunk, controller) {
           fullResponse.push(chunk)
           controller.enqueue(chunk)

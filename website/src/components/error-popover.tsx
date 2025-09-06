@@ -1,23 +1,12 @@
 import { useState } from 'react'
 import { AlertCircle, X } from 'lucide-react'
 import { Button } from './ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
 export function useErrorPopover() {
   const [errorMessage, setErrorMessage] = useState('')
 
-  const ErrorTooltipAnchor = ({
-    children,
-    open,
-  }: {
-    children: React.ReactNode
-    open?: boolean
-  }) => {
+  const ErrorTooltipAnchor = ({ children, open }: { children: React.ReactNode; open?: boolean }) => {
     const isOpen = open !== undefined ? open : !!errorMessage
 
     if (!isOpen || !errorMessage) return <>{children}</>

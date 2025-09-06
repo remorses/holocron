@@ -12,29 +12,17 @@ import './chunks/chunk-D4336PTI.js'
 import './chunks/chunk-ATDUJXYA.js'
 import './chunks/chunk-MFJ4W77Q.js'
 import { className, css, fonts } from './chunks/chunk-OUEV7UWA.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-EAOTBDPC.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-EAOTBDPC.js'
 import { stdin_default } from './chunks/chunk-5PWCC3XC.js'
 import './chunks/chunk-R527CHIA.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunks/chunk-QKWA2WC3.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunks/chunk-QKWA2WC3.js'
 
 // virtual:comparison-cell
 import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/kQyuXGc43wTJEdmTbyos/1FQfLA7tRccjA0LM1h3p/u9g7Rra_M.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -55,12 +43,7 @@ import {
   withCSS,
   withFX,
 } from 'unframer'
-import {
-  AnimatePresence,
-  LayoutGroup,
-  motion,
-  MotionConfigContext,
-} from 'unframer'
+import { AnimatePresence, LayoutGroup, motion, MotionConfigContext } from 'unframer'
 import * as React from 'react'
 import { useRef as useRef2 } from 'react'
 var MainSiteGridBorderFonts = getFonts(stdin_default)
@@ -70,14 +53,7 @@ var MotionDivWithFX = withFX(motion.div)
 var ComparisonInfoIconFonts = getFonts(stdin_default4)
 var ComparisonInfoIconControls = getPropertyControls(stdin_default4)
 var MainSiteGridBorderControls = getPropertyControls(stdin_default)
-var cycleOrder = [
-  'nfivJgRFp',
-  'UccUI26Fx',
-  'euJaCXI3W',
-  'aQVtlUK3s',
-  'EzI3rHVQa',
-  'pgC0zQJoP',
-]
+var cycleOrder = ['nfivJgRFp', 'UccUI26Fx', 'euJaCXI3W', 'aQVtlUK3s', 'EzI3rHVQa', 'pgC0zQJoP']
 var serializationHash = 'framer-IJiRQ'
 var variantClassNames = {
   aQVtlUK3s: 'framer-v-13tefsr',
@@ -89,9 +65,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -188,11 +162,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableEnumMap = {
@@ -218,31 +188,16 @@ var humanReadableVariantMap = {
   Info: 'UccUI26Fx',
   Name: 'nfivJgRFp',
 }
-var getProps = ({
-  border,
-  category,
-  height,
-  icon,
-  id,
-  info,
-  select,
-  title,
-  tooltip,
-  width,
-  ...props
-}) => {
+var getProps = ({ border, category, height, icon, id, info, select, title, tooltip, width, ...props }) => {
   return {
     ...props,
     de67ue1JD: category ?? props.de67ue1JD,
     K8gRRrBIN: tooltip ?? props.K8gRRrBIN,
-    p7K7zqxnH:
-      humanReadableEnumMap1[border] ?? border ?? props.p7K7zqxnH ?? 'yzIFdYlxZ',
-    pb9vTViC1:
-      humanReadableEnumMap[select] ?? select ?? props.pb9vTViC1 ?? 'oYA80aR0m',
+    p7K7zqxnH: humanReadableEnumMap1[border] ?? border ?? props.p7K7zqxnH ?? 'yzIFdYlxZ',
+    pb9vTViC1: humanReadableEnumMap[select] ?? select ?? props.pb9vTViC1 ?? 'oYA80aR0m',
     SBuEMRmew: icon ?? props.SBuEMRmew,
     SjyXrqb3O: info ?? props.SjyXrqb3O ?? 'Up to 10',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'nfivJgRFp',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'nfivJgRFp',
     xvf4zUcWM: title ?? props.xvf4zUcWM ?? 'Number of websites',
   }
 }
@@ -299,12 +254,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
     if (['euJaCXI3W', 'pgC0zQJoP'].includes(baseVariant)) return false
     return true
   }
-  const padding = numberToPixelString(
-    convertFromBoolean(de67ue1JD, activeLocale),
-  )
-  const padding1 = numberToPixelString(
-    convertFromBoolean1(de67ue1JD, activeLocale),
-  )
+  const padding = numberToPixelString(convertFromBoolean(de67ue1JD, activeLocale))
+  const padding1 = numberToPixelString(convertFromBoolean1(de67ue1JD, activeLocale))
   const visible = negate(de67ue1JD)
   const visible1 = negate(SBuEMRmew)
   const isDisplayed1 = (value, value1) => {
@@ -329,12 +280,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-tsvahb',
-              className4,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-tsvahb', className4, classNames)}
             data-framer-name={'Name'}
             layoutDependency={layoutDependency}
             layoutId={'nfivJgRFp'}
@@ -433,10 +379,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         aQVtlUK3s: {
                           children: (
                             <React.Fragment>
-                              <motion.p
-                                className={'framer-styles-preset-2pjocb'}
-                                data-styles-preset={'Dkr92TfXs'}
-                              >
+                              <motion.p className={'framer-styles-preset-2pjocb'} data-styles-preset={'Dkr92TfXs'}>
                                 {'Number of websites'}
                               </motion.p>
                             </React.Fragment>
@@ -480,10 +423,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     )}
                   >
                     <React.Fragment>
-                      <motion.h5
-                        className={'framer-styles-preset-c9mga6'}
-                        data-styles-preset={'Xa6VJQy2p'}
-                      >
+                      <motion.h5 className={'framer-styles-preset-c9mga6'} data-styles-preset={'Xa6VJQy2p'}>
                         {'Number of websites'}
                       </motion.h5>
                     </React.Fragment>
@@ -498,16 +438,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     layoutDependency={layoutDependency}
                     layoutId={'lRt43iP6i'}
                     style={{
-                      '--extracted-1eung3n':
-                        'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                      '--extracted-1eung3n': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                       '--framer-link-text-color': 'rgb(0, 153, 255)',
                       '--framer-link-text-decoration': 'underline',
                     }}
                     text={xvf4zUcWM}
                     variants={{
                       aQVtlUK3s: {
-                        '--extracted-r6o4lv':
-                          'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                        '--extracted-r6o4lv': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                       },
                     }}
                     verticalAlignment={'top'}
@@ -565,21 +503,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                               EzI3rHVQa: {
                                 y:
                                   (componentViewport?.y || 0) +
-                                  (12 +
-                                    ((componentViewport?.height || 90) -
-                                      24 -
-                                      96) /
-                                      2) +
+                                  (12 + ((componentViewport?.height || 90) - 24 - 96) / 2) +
                                   36,
                               },
                               UccUI26Fx: {
                                 y:
                                   (componentViewport?.y || 0) +
-                                  (20 +
-                                    ((componentViewport?.height || 90) -
-                                      40 -
-                                      105) /
-                                      2) +
+                                  (20 + ((componentViewport?.height || 90) - 40 - 105) / 2) +
                                   40.5,
                               },
                             },
@@ -609,9 +539,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                 height: '100%',
                                 width: '100%',
                               },
-                              variant: overlay.visible
-                                ? 'wAbf6XDVH'
-                                : 'N9BS4mTvb',
+                              variant: overlay.visible ? 'wAbf6XDVH' : 'N9BS4mTvb',
                               width: '100%',
                               ...addPropertyOverrides(
                                 {
@@ -656,8 +584,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                       borderBottomRightRadius: 10,
                                       borderTopLeftRadius: 10,
                                       borderTopRightRadius: 10,
-                                      boxShadow:
-                                        '0px 10px 20px 0px rgba(0, 0, 0, 0.05)',
+                                      boxShadow: '0px 10px 20px 0px rgba(0, 0, 0, 0.05)',
                                     }}
                                   >
                                     <ComponentViewportProvider width={'195px'}>
@@ -699,19 +626,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         EzI3rHVQa: {
                           height: 24,
                           y:
-                            (componentViewport?.y || 0) +
-                            (12 +
-                              ((componentViewport?.height || 90) - 24 - 96) /
-                                2) +
-                            36,
+                            (componentViewport?.y || 0) + (12 + ((componentViewport?.height || 90) - 24 - 96) / 2) + 36,
                         },
                         UccUI26Fx: {
                           height: 24,
                           y:
                             (componentViewport?.y || 0) +
-                            (20 +
-                              ((componentViewport?.height || 90) - 40 - 105) /
-                                2) +
+                            (20 + ((componentViewport?.height || 90) - 40 - 105) / 2) +
                             40.5,
                         },
                       },
@@ -773,22 +694,8 @@ Frameru9g7Rra_M.defaultProps = {
 }
 addPropertyControls(Frameru9g7Rra_M, {
   variant: {
-    options: [
-      'nfivJgRFp',
-      'UccUI26Fx',
-      'euJaCXI3W',
-      'aQVtlUK3s',
-      'EzI3rHVQa',
-      'pgC0zQJoP',
-    ],
-    optionTitles: [
-      'Name',
-      'Info',
-      'Empty',
-      'Name Mobile',
-      'Info Mobile',
-      'Empty Mobile',
-    ],
+    options: ['nfivJgRFp', 'UccUI26Fx', 'euJaCXI3W', 'aQVtlUK3s', 'EzI3rHVQa', 'pgC0zQJoP'],
+    optionTitles: ['Name', 'Info', 'Empty', 'Name Mobile', 'Info Mobile', 'Empty Mobile'],
     title: 'Variant',
     type: ControlType.Enum,
   },
@@ -846,8 +753,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -968,17 +874,11 @@ stdin_default5.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default5}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default5} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -1026,9 +926,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

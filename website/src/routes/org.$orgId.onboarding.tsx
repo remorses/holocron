@@ -1,10 +1,7 @@
 import { ulid } from 'ulid'
 import { prisma } from 'db'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
-import {
-  defaultDocsJsonComments,
-  defaultStartingHolocronJson,
-} from 'docs-website/src/lib/docs-json-examples'
+import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
 import { href, redirect } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import { env } from '../lib/env'
@@ -21,18 +18,14 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const siteId = ulid()
   const branchId = ulid()
-  const userName = slugKebabCaseKeepExtension(
-    sessionData.user?.name || 'holocron',
-  )
+  const userName = slugKebabCaseKeepExtension(sessionData.user?.name || 'holocron')
   const orgId = params.orgId
   let name = `holocron-starter`
   const randomHash = Math.random().toString(36).substring(2, 10)
 
   const internalHost = `${userName}-${randomHash}.${env.APPS_DOMAIN}`
   const domains =
-    process.env.NODE_ENV === 'development'
-      ? [`${userName}-${randomHash}.localhost`, internalHost]
-      : [internalHost]
+    process.env.NODE_ENV === 'development' ? [`${userName}-${randomHash}.localhost`, internalHost] : [internalHost]
   const docsJson: DocsJsonType = {
     ...defaultStartingHolocronJson,
     siteId,

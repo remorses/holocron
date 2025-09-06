@@ -38,8 +38,7 @@ function attrContent(quote, token, script) {
     while (
       input.next != quote &&
       input.next >= 0 &&
-      (script ||
-        (input.next != 38 && (input.next != 123 || input.peek(1) != 123)))
+      (script || (input.next != 38 && (input.next != 123 || input.peek(1) != 123)))
     )
       input.advance()
     if (input.pos > start) input.acceptToken(token)
@@ -47,16 +46,8 @@ function attrContent(quote, token, script) {
 }
 var attrSingle = /* @__PURE__ */ attrContent(39, attributeContentSingle, false)
 var attrDouble = /* @__PURE__ */ attrContent(34, attributeContentDouble, false)
-var scriptAttrSingle = /* @__PURE__ */ attrContent(
-  39,
-  scriptAttributeContentSingle,
-  true,
-)
-var scriptAttrDouble = /* @__PURE__ */ attrContent(
-  34,
-  scriptAttributeContentDouble,
-  true,
-)
+var scriptAttrSingle = /* @__PURE__ */ attrContent(39, scriptAttributeContentSingle, true)
+var scriptAttrDouble = /* @__PURE__ */ attrContent(34, scriptAttributeContentDouble, true)
 var parser = /* @__PURE__ */ LRParser.deserialize({
   version: 14,
   states:
@@ -75,15 +66,7 @@ var parser = /* @__PURE__ */ LRParser.deserialize({
   repeatNodeCount: 4,
   tokenData:
     "0r~RyOX#rXY$mYZ$mZ]#r]^$m^p#rpq$mqr#rrs%jst&Qtv#rvw&hwx)zxy*byz*xz{+`{}#r}!O+v!O!P-]!P!Q#r!Q![+v![!]+v!]!_#r!_!`-s!`!c#r!c!}+v!}#O.Z#O#P#r#P#Q.q#Q#R#r#R#S+v#S#T#r#T#o+v#o#p/X#p#q#r#q#r0Z#r%W#r%W;'S+v;'S;:j-V;:j;=`$g<%lO+vQ#wTUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rQ$ZSO#q#r#r;'S#r;'S;=`$g<%lO#rQ$jP;=`<%l#rR$t[UQvPOX#rXY$mYZ$mZ]#r]^$m^p#rpq$mq#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR%qTyPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR&XTaPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR&oXUQWPOp'[pq#rq!]'[!]!^#r!^#q'[#q#r(d#r;'S'[;'S;=`)t<%lO'[R'aXUQOp'[pq#rq!]'[!]!^'|!^#q'[#q#r(d#r;'S'[;'S;=`)t<%lO'[R(TTVPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR(gXOp'[pq#rq!]'[!]!^'|!^#q'[#q#r)S#r;'S'[;'S;=`)t<%lO'[P)VUOp)Sq!])S!]!^)i!^;'S)S;'S;=`)n<%lO)SP)nOVPP)qP;=`<%l)SR)wP;=`<%l'[R*RTzPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR*iT^PUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR+PT_PUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR+gThPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR+}b[PUQO}#r}!O+v!O!Q#r!Q![+v![!]+v!]!c#r!c!}+v!}#R#r#R#S+v#S#T#r#T#o+v#o#q#r#q#r$W#r%W#r%W;'S+v;'S;:j-V;:j;=`$g<%lO+vR-YP;=`<%l+vR-dTwPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR-zTUQbPO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR.bTZPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR.xT]PUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR/^VUQO#o#r#o#p/s#p#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#rR/zTSPUQO#q#r#q#r$W#r;'S#r;'S;=`$g<%lO#r~0^TO#q#r#q#r0m#r;'S#r;'S;=`$g<%lO#r~0rOR~",
-  tokenizers: [
-    text,
-    attrSingle,
-    attrDouble,
-    scriptAttrSingle,
-    scriptAttrDouble,
-    0,
-    1,
-  ],
+  tokenizers: [text, attrSingle, attrDouble, scriptAttrSingle, scriptAttrDouble, 0, 1],
   topRules: { Content: [0, 2], Attribute: [1, 9] },
   tokenPrec: 0,
 })
@@ -96,8 +79,7 @@ var baseParser = /* @__PURE__ */ parser.configure({
       Text: tags.content,
       Is: tags.definitionOperator,
       AttributeName: tags.attributeName,
-      'AttributeValue ExpressionAttributeValue StatementAttributeValue':
-        tags.attributeValue,
+      'AttributeValue ExpressionAttributeValue StatementAttributeValue': tags.attributeValue,
       Entity: tags.character,
       InvalidEntity: tags.invalid,
       'BoundAttributeName/Identifier': tags.attributeName,
@@ -114,9 +96,7 @@ var baseParser = /* @__PURE__ */ parser.configure({
 var exprMixed = { parser: exprParser }
 var statementMixed = { parser: javascriptLanguage.parser }
 var textParser = /* @__PURE__ */ baseParser.configure({
-  wrap: /* @__PURE__ */ parseMixed((node, input) =>
-    node.name == 'InterpolationContent' ? exprMixed : null,
-  ),
+  wrap: /* @__PURE__ */ parseMixed((node, input) => (node.name == 'InterpolationContent' ? exprMixed : null)),
 })
 var attrParser = /* @__PURE__ */ baseParser.configure({
   wrap: /* @__PURE__ */ parseMixed((node, input) => {
@@ -125,9 +105,7 @@ var attrParser = /* @__PURE__ */ baseParser.configure({
       ? exprMixed
       : node.name != 'AttributeInterpolation'
         ? null
-        : ((_a = node.node.parent) === null || _a === void 0
-              ? void 0
-              : _a.name) == 'StatementAttributeValue'
+        : ((_a = node.node.parent) === null || _a === void 0 ? void 0 : _a.name) == 'StatementAttributeValue'
           ? statementMixed
           : exprMixed
   }),
@@ -148,9 +126,7 @@ var angularLanguage = /* @__PURE__ */ LRLanguage.define({
 function mixAngular(node, input) {
   switch (node.name) {
     case 'Attribute':
-      return /^[*#(\[]|\{\{/.test(input.read(node.from, node.to))
-        ? attrMixed
-        : null
+      return /^[*#(\[]|\{\{/.test(input.read(node.from, node.to)) ? attrMixed : null
     case 'Text':
       return textMixed
   }

@@ -27,11 +27,7 @@ import { stdin_default as stdin_default2 } from './chunks/chunk-EUWWW7VO.js'
 import './chunks/chunk-QAV64ZEM.js'
 import './chunks/chunk-EWWPQ2JC.js'
 import { className, css, fonts } from './chunks/chunk-YL4V4VZK.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-KYATNZPG.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-KYATNZPG.js'
 import './chunks/chunk-6G2SY433.js'
 import { stdin_default } from './chunks/chunk-EHCTMXQN.js'
 import { routes } from './chunks/chunk-75FLX355.js'
@@ -74,9 +70,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -216,11 +210,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -231,8 +221,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'kI5dB9Hnr',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'kI5dB9Hnr',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -245,13 +234,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className3,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className3, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -287,12 +270,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-eugzf5',
-              className3,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-eugzf5', className3, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'kI5dB9Hnr'}
@@ -499,9 +477,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         '--framer-text-alignment': 'left',
                       }}
                     >
-                      {
-                        'Discover how Holocron is helping people achieve smarter, data-driven decisions every day.'
-                      }
+                      {'Discover how Holocron is helping people achieve smarter, data-driven decisions every day.'}
                     </motion.p>
                   </React.Fragment>
                 </RichTextWithFX>
@@ -619,17 +595,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     <ComponentViewportProvider
                       height={214}
                       width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                      y={
-                        (componentViewport?.y || 0) +
-                        250 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0
-                      }
+                      y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 0}
                       {...addPropertyOverrides(
                         {
                           xqBh8EtFt: {
@@ -637,12 +603,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             y:
                               (componentViewport?.y || 0) +
                               150 +
-                              (((componentViewport?.height || 200) -
-                                150 -
-                                1344.2) /
-                                2 +
-                                0 +
-                                0) +
+                              (((componentViewport?.height || 200) - 150 - 1344.2) / 2 + 0 + 0) +
                               0 +
                               234.2 +
                               0 +
@@ -654,17 +615,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           zi2QQaP9o: {
                             width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                            y:
-                              (componentViewport?.y || 0) +
-                              150 +
-                              0 +
-                              0 +
-                              237.2 +
-                              0 +
-                              0 +
-                              0 +
-                              0 +
-                              0,
+                            y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 0,
                           },
                         },
                         baseVariant,
@@ -702,25 +653,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           tQSAcNzNQ: 'Product Manager',
                           width: '100%',
-                          ZZgWc_vQ4:
-                            'Holocron streamlined my workflow and gave me actionable insights I can trust.',
+                          ZZgWc_vQ4: 'Holocron streamlined my workflow and gave me actionable insights I can trust.',
                         })}
                       </SmartComponentScopedContainer>
                     </ComponentViewportProvider>
                     <ComponentViewportProvider
                       height={214}
                       width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                      y={
-                        (componentViewport?.y || 0) +
-                        250 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        224
-                      }
+                      y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 224}
                       {...addPropertyOverrides(
                         {
                           xqBh8EtFt: {
@@ -728,12 +668,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             y:
                               (componentViewport?.y || 0) +
                               150 +
-                              (((componentViewport?.height || 200) -
-                                150 -
-                                1344.2) /
-                                2 +
-                                0 +
-                                0) +
+                              (((componentViewport?.height || 200) - 150 - 1344.2) / 2 + 0 + 0) +
                               0 +
                               234.2 +
                               0 +
@@ -745,17 +680,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           zi2QQaP9o: {
                             width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                            y:
-                              (componentViewport?.y || 0) +
-                              150 +
-                              0 +
-                              0 +
-                              237.2 +
-                              0 +
-                              0 +
-                              0 +
-                              0 +
-                              224,
+                            y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 224,
                           },
                         },
                         baseVariant,
@@ -793,25 +718,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           tQSAcNzNQ: 'Wealth Advisor',
                           width: '100%',
-                          ZZgWc_vQ4:
-                            'I rely on Holocron every day to keep my projects organized and my team aligned.',
+                          ZZgWc_vQ4: 'I rely on Holocron every day to keep my projects organized and my team aligned.',
                         })}
                       </SmartComponentScopedContainer>
                     </ComponentViewportProvider>
                     <ComponentViewportProvider
                       height={214}
                       width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                      y={
-                        (componentViewport?.y || 0) +
-                        250 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        448
-                      }
+                      y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 448}
                       {...addPropertyOverrides(
                         {
                           xqBh8EtFt: {
@@ -819,12 +733,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             y:
                               (componentViewport?.y || 0) +
                               150 +
-                              (((componentViewport?.height || 200) -
-                                150 -
-                                1344.2) /
-                                2 +
-                                0 +
-                                0) +
+                              (((componentViewport?.height || 200) - 150 - 1344.2) / 2 + 0 + 0) +
                               0 +
                               234.2 +
                               0 +
@@ -836,17 +745,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           zi2QQaP9o: {
                             width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                            y:
-                              (componentViewport?.y || 0) +
-                              150 +
-                              0 +
-                              0 +
-                              237.2 +
-                              0 +
-                              0 +
-                              0 +
-                              0 +
-                              448,
+                            y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 448,
                           },
                         },
                         baseVariant,
@@ -892,17 +791,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     <ComponentViewportProvider
                       height={214}
                       width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                      y={
-                        (componentViewport?.y || 0) +
-                        250 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        672
-                      }
+                      y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 672}
                       {...addPropertyOverrides(
                         {
                           xqBh8EtFt: {
@@ -910,12 +799,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             y:
                               (componentViewport?.y || 0) +
                               150 +
-                              (((componentViewport?.height || 200) -
-                                150 -
-                                1344.2) /
-                                2 +
-                                0 +
-                                0) +
+                              (((componentViewport?.height || 200) - 150 - 1344.2) / 2 + 0 + 0) +
                               0 +
                               234.2 +
                               0 +
@@ -927,17 +811,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           zi2QQaP9o: {
                             width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                            y:
-                              (componentViewport?.y || 0) +
-                              150 +
-                              0 +
-                              0 +
-                              237.2 +
-                              0 +
-                              0 +
-                              0 +
-                              0 +
-                              672,
+                            y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 672,
                           },
                         },
                         baseVariant,
@@ -975,25 +849,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           tQSAcNzNQ: 'Private Investor',
                           width: '100%',
-                          ZZgWc_vQ4:
-                            'The automation features are a game-changer for my productivity.',
+                          ZZgWc_vQ4: 'The automation features are a game-changer for my productivity.',
                         })}
                       </SmartComponentScopedContainer>
                     </ComponentViewportProvider>
                     <ComponentViewportProvider
                       height={214}
                       width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                      y={
-                        (componentViewport?.y || 0) +
-                        250 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        0 +
-                        896
-                      }
+                      y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 896}
                       {...addPropertyOverrides(
                         {
                           xqBh8EtFt: {
@@ -1001,12 +864,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             y:
                               (componentViewport?.y || 0) +
                               150 +
-                              (((componentViewport?.height || 200) -
-                                150 -
-                                1344.2) /
-                                2 +
-                                0 +
-                                0) +
+                              (((componentViewport?.height || 200) - 150 - 1344.2) / 2 + 0 + 0) +
                               0 +
                               234.2 +
                               0 +
@@ -1018,17 +876,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           zi2QQaP9o: {
                             width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                            y:
-                              (componentViewport?.y || 0) +
-                              150 +
-                              0 +
-                              0 +
-                              237.2 +
-                              0 +
-                              0 +
-                              0 +
-                              0 +
-                              896,
+                            y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 896,
                           },
                         },
                         baseVariant,
@@ -1066,8 +914,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           },
                           tQSAcNzNQ: 'Product Manager',
                           width: '100%',
-                          ZZgWc_vQ4:
-                            'Holocron offers the clarity and transparency I need to make informed decisions.',
+                          ZZgWc_vQ4: 'Holocron offers the clarity and transparency I need to make informed decisions.',
                         })}
                       </SmartComponentScopedContainer>
                     </ComponentViewportProvider>
@@ -1124,32 +971,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       <ComponentViewportProvider
                         height={214}
                         width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                        y={
-                          (componentViewport?.y || 0) +
-                          250 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0
-                        }
+                        y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 0}
                         {...addPropertyOverrides(
                           {
                             zi2QQaP9o: {
                               width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                              y:
-                                (componentViewport?.y || 0) +
-                                150 +
-                                0 +
-                                0 +
-                                237.2 +
-                                0 +
-                                0 +
-                                0 +
-                                0 +
-                                0,
+                              y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 0,
                             },
                           },
                           baseVariant,
@@ -1195,32 +1022,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       <ComponentViewportProvider
                         height={214}
                         width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                        y={
-                          (componentViewport?.y || 0) +
-                          250 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          224
-                        }
+                        y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 224}
                         {...addPropertyOverrides(
                           {
                             zi2QQaP9o: {
                               width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                              y:
-                                (componentViewport?.y || 0) +
-                                150 +
-                                0 +
-                                0 +
-                                237.2 +
-                                0 +
-                                0 +
-                                0 +
-                                0 +
-                                224,
+                              y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 224,
                             },
                           },
                           baseVariant,
@@ -1258,40 +1065,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             },
                             tQSAcNzNQ: 'Operations Director',
                             width: '100%',
-                            ZZgWc_vQ4:
-                              'Real-time updates keep my whole team on the same page, all the time.',
+                            ZZgWc_vQ4: 'Real-time updates keep my whole team on the same page, all the time.',
                           })}
                         </SmartComponentScopedContainer>
                       </ComponentViewportProvider>
                       <ComponentViewportProvider
                         height={214}
                         width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                        y={
-                          (componentViewport?.y || 0) +
-                          250 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          448
-                        }
+                        y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 448}
                         {...addPropertyOverrides(
                           {
                             zi2QQaP9o: {
                               width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                              y:
-                                (componentViewport?.y || 0) +
-                                150 +
-                                0 +
-                                0 +
-                                237.2 +
-                                0 +
-                                0 +
-                                0 +
-                                0 +
-                                448,
+                              y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 448,
                             },
                           },
                           baseVariant,
@@ -1329,40 +1115,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             },
                             tQSAcNzNQ: 'AI Engineer',
                             width: '100%',
-                            ZZgWc_vQ4:
-                              'The smart recommendations feel like having an expert by my side.',
+                            ZZgWc_vQ4: 'The smart recommendations feel like having an expert by my side.',
                           })}
                         </SmartComponentScopedContainer>
                       </ComponentViewportProvider>
                       <ComponentViewportProvider
                         height={214}
                         width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                        y={
-                          (componentViewport?.y || 0) +
-                          250 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          672
-                        }
+                        y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 672}
                         {...addPropertyOverrides(
                           {
                             zi2QQaP9o: {
                               width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                              y:
-                                (componentViewport?.y || 0) +
-                                150 +
-                                0 +
-                                0 +
-                                237.2 +
-                                0 +
-                                0 +
-                                0 +
-                                0 +
-                                672,
+                              y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 672,
                             },
                           },
                           baseVariant,
@@ -1400,40 +1165,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             },
                             tQSAcNzNQ: 'Startup Founder',
                             width: '100%',
-                            ZZgWc_vQ4:
-                              'Our company dashboard with Holocron is now essential for daily operations.',
+                            ZZgWc_vQ4: 'Our company dashboard with Holocron is now essential for daily operations.',
                           })}
                         </SmartComponentScopedContainer>
                       </ComponentViewportProvider>
                       <ComponentViewportProvider
                         height={214}
                         width={`max((max(min(${componentViewport?.width || '100vw'} - 200px, 1100px) / 2, 1px) - 10px) / 2, 1px)`}
-                        y={
-                          (componentViewport?.y || 0) +
-                          250 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          0 +
-                          896
-                        }
+                        y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 0 + 0 + 896}
                         {...addPropertyOverrides(
                           {
                             zi2QQaP9o: {
                               width: `max((min(${componentViewport?.width || '100vw'} - 80px, 810px) - 10px) / 2, 1px)`,
-                              y:
-                                (componentViewport?.y || 0) +
-                                150 +
-                                0 +
-                                0 +
-                                237.2 +
-                                0 +
-                                0 +
-                                0 +
-                                0 +
-                                896,
+                              y: (componentViewport?.y || 0) + 150 + 0 + 0 + 237.2 + 0 + 0 + 0 + 0 + 896,
                             },
                           },
                           baseVariant,
@@ -1471,8 +1215,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             },
                             tQSAcNzNQ: 'Crypto Analyst',
                             width: '100%',
-                            ZZgWc_vQ4:
-                              'Holocron\u2019s risk management tools give me peace of mind.',
+                            ZZgWc_vQ4: 'Holocron\u2019s risk management tools give me peace of mind.',
                           })}
                         </SmartComponentScopedContainer>
                       </ComponentViewportProvider>
@@ -1627,8 +1370,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -1709,9 +1451,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -1742,17 +1482,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

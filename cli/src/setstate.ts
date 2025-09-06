@@ -1,7 +1,4 @@
-import type {
-  DocsState,
-  IframeRpcMessage,
-} from 'docs-website/src/lib/docs-state.js'
+import type { DocsState, IframeRpcMessage } from 'docs-website/src/lib/docs-state.js'
 import type { WebSocket, RawData } from 'ws'
 
 export let docsRpcClient = {
@@ -11,13 +8,7 @@ export let docsRpcClient = {
   cleanup() {},
 }
 
-export function createIframeRpcClient({
-  ws,
-  defaultTimeout = 1000 * 5,
-}: {
-  ws: WebSocket
-  defaultTimeout?: number
-}) {
+export function createIframeRpcClient({ ws, defaultTimeout = 1000 * 5 }: { ws: WebSocket; defaultTimeout?: number }) {
   const pendingRequests = new Map<
     string,
     {
@@ -52,9 +43,7 @@ export function createIframeRpcClient({
     return new Promise((resolve, reject) => {
       // If idempotenceKey is specified and already used, return resolved promise immediately
       if (idempotenceKey && usedIdempotenceIds.has(idempotenceKey)) {
-        console.log(
-          `Idempotence ID ${idempotenceKey} already used, skipping docs state set state`,
-        )
+        console.log(`Idempotence ID ${idempotenceKey} already used, skipping docs state set state`)
         return Promise.resolve(undefined)
       }
       const timeout = setTimeout(() => {

@@ -7,9 +7,7 @@ const { Client } = pg
 
 let dryRun = false
 
-async function checkInstallationActive(
-  installationId: number,
-): Promise<boolean> {
+async function checkInstallationActive(installationId: number): Promise<boolean> {
   try {
     const app = getGithubApp()
 
@@ -31,9 +29,7 @@ async function checkInstallationActive(
       console.log(`✗ Installation ${installationId} is suspended`)
       return false
     }
-    console.error(
-      `✗ Error checking installation ${installationId}: ${error.message}`,
-    )
+    console.error(`✗ Error checking installation ${installationId}: ${error.message}`)
     return false
   }
 }
@@ -51,9 +47,7 @@ async function migrateGithubInstallations() {
     const existingInstallations = await prisma.githubInstallation.findMany({
       select: { installationId: true, appId: true },
     })
-    const existingSet = new Set(
-      existingInstallations.map((i) => `${i.installationId}-${i.appId}`),
-    )
+    const existingSet = new Set(existingInstallations.map((i) => `${i.installationId}-${i.appId}`))
 
     const installations = await holocronClient.query(`
             SELECT
@@ -68,9 +62,7 @@ async function migrateGithubInstallations() {
             ORDER BY "createdAt" DESC
         `)
 
-    console.log(
-      `Found ${installations.rows.length} GitHub installations in old database\n`,
-    )
+    console.log(`Found ${installations.rows.length} GitHub installations in old database\n`)
 
     const seenInstallations = new Set<number>()
     let migratedCount = 0
@@ -79,9 +71,7 @@ async function migrateGithubInstallations() {
     for (const installation of installations.rows) {
       // Skip duplicate installations (keep only the most recent due to ORDER BY)
       if (seenInstallations.has(installation.installationId)) {
-        console.log(
-          `Skipping duplicate installation ${installation.installationId}`,
-        )
+        console.log(`Skipping duplicate installation ${installation.installationId}`)
         continue
       }
       seenInstallations.add(installation.installationId)
@@ -93,14 +83,10 @@ async function migrateGithubInstallations() {
         continue
       }
 
-      console.log(
-        `\nChecking installation ${installation.installationId} for ${installation.accountLogin}...`,
-      )
+      console.log(`\nChecking installation ${installation.installationId} for ${installation.accountLogin}...`)
 
       // Check if installation is still active on GitHub
-      const isActive = await checkInstallationActive(
-        installation.installationId,
-      )
+      const isActive = await checkInstallationActive(installation.installationId)
 
       if (!isActive) {
         console.log(`→ Skipping inactive/suspended installation`)
@@ -133,13 +119,9 @@ async function migrateGithubInstallations() {
     console.log(`Migrated: ${migratedCount} GitHub installations`)
     console.log(`Skipped inactive/suspended: ${skippedInactive}`)
     if (dryRun) {
-      console.log(
-        `\n⚠️  This was a dry run. Run without --dry-run to actually migrate.`,
-      )
+      console.log(`\n⚠️  This was a dry run. Run without --dry-run to actually migrate.`)
     }
-    console.log(
-      `\nNote: Org and Site relationships need to be created manually`,
-    )
+    console.log(`\nNote: Org and Site relationships need to be created manually`)
     console.log(`since the IDs don't match between old and new databases.`)
   } catch (error) {
     console.error('Migration failed:', error)

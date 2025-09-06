@@ -10,22 +10,14 @@ let aws4fetch = new AwsClient({
 })
 
 const bucket = 'fumabase-uploads'
-export async function getPresignedUrl({
-  key,
-  headers,
-  method = 'PUT',
-  expiresInSeconds = 900,
-}) {
+export async function getPresignedUrl({ key, headers, method = 'PUT', expiresInSeconds = 900 }) {
   if (key.startsWith('/')) {
     key = key.slice(1)
   }
   const url = `${env.R2_URL!}/${bucket}/${key}?X-Amz-Expires=${expiresInSeconds}`
-  const { url: presigned } = await aws4fetch.sign(
-    new Request(url, { headers, method }),
-    {
-      aws: { signQuery: true, allHeaders: true },
-    },
-  )
+  const { url: presigned } = await aws4fetch.sign(new Request(url, { headers, method }), {
+    aws: { signQuery: true, allHeaders: true },
+  })
 
   return presigned
 }

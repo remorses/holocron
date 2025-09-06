@@ -64,9 +64,7 @@ const defaultPersistentState: PersistentDocsState = {
 
 export const useDocsState = create<DocsState>(() => defaultState)
 
-export const usePersistentDocsState = create<PersistentDocsState>(
-  () => defaultPersistentState,
-)
+export const usePersistentDocsState = create<PersistentDocsState>(() => defaultPersistentState)
 
 // Save chat messages with limit of 10 messages per chat
 export function saveChatMessages(chatId: string, messages: UIMessage[]) {
@@ -86,10 +84,7 @@ export function saveChatMessages(chatId: string, messages: UIMessage[]) {
 
   // Keep only the most recent 10 chats to prevent localStorage from growing too large
   const sortedChats = Object.entries(updatedHistory)
-    .sort(
-      ([, a], [, b]) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
+    .sort(([, a], [, b]) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 10)
 
   const limitedHistory = Object.fromEntries(sortedChats)
@@ -158,10 +153,7 @@ if (typeof window !== 'undefined') {
 
   // Subscribe to highlightedLines changes
   const unsub2 = useDocsState.subscribe((state, prevState) => {
-    if (
-      state.highlightedLines &&
-      state.highlightedLines !== prevState.highlightedLines
-    ) {
+    if (state.highlightedLines && state.highlightedLines !== prevState.highlightedLines) {
       highlightText(state.highlightedLines)
     }
   })

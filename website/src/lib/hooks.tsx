@@ -6,11 +6,7 @@ import { toast } from 'sonner'
 import { useWebsiteState } from './state'
 import { isDocsJson } from 'docs-website/src/lib/utils'
 
-export function useThrowingFn({
-  fn: fnToWrap,
-  successMessage = '',
-  immediate = false,
-}) {
+export function useThrowingFn({ fn: fnToWrap, successMessage = '', immediate = false }) {
   const [isLoading, setIsLoading] = React.useState(false)
   useEffect(() => {
     if (immediate) {
@@ -48,11 +44,7 @@ export function useThrowingFn({
   }
 }
 
-export function useDebouncedEffect(
-  effect: () => void | (() => void),
-  deps: any[],
-  delay: number,
-) {
+export function useDebouncedEffect(effect: () => void | (() => void), deps: any[], delay: number) {
   useEffect(() => {
     const handler = setTimeout(() => {
       effect()
@@ -107,9 +99,7 @@ export function useTemporaryState<T>(
     }
   }, [state, defaultValue, resetAfter])
 
-  const customSetState: React.Dispatch<React.SetStateAction<T>> = (
-    newState,
-  ) => {
+  const customSetState: React.Dispatch<React.SetStateAction<T>> = (newState) => {
     // when we set a new state, we should clear the previous timeout
     if (timeoutId.current) {
       clearTimeout(timeoutId.current)
@@ -121,9 +111,9 @@ export function useTemporaryState<T>(
 }
 
 export function useShouldHideBrowser() {
-  const chatData = useRouteLoaderData(
-    'routes/org.$orgId.branch.$branchId.chat.$chatId._index',
-  ) as ChatRoute.ComponentProps['loaderData'] | undefined
+  const chatData = useRouteLoaderData('routes/org.$orgId.branch.$branchId.chat.$chatId._index') as
+    | ChatRoute.ComponentProps['loaderData']
+    | undefined
   const { projectPagesFilenames = [] } = chatData || {}
   let hasNoFilesInLoader = !projectPagesFilenames.length
   const filesInDraft = useWebsiteState((x) => x.filesInDraft || {})

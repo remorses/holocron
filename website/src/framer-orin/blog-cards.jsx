@@ -13,42 +13,22 @@ import {
 import { stdin_default as stdin_default2 } from './chunks/chunk-P5EPUU77.js'
 import './chunks/chunk-FBRPPHGN.js'
 import { stdin_default as stdin_default3 } from './chunks/chunk-EMZQEU5F.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-QHS5OC7F.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-QHS5OC7F.js'
 import { className, css, fonts } from './chunks/chunk-OUEV7UWA.js'
 import './chunks/chunk-6NFSISF2.js'
 import { Dither } from './chunks/chunk-25LPWLWQ.js'
-import {
-  className as className3,
-  css as css3,
-  fonts as fonts3,
-} from './chunks/chunk-EAOTBDPC.js'
-import {
-  className as className5,
-  css as css5,
-  fonts as fonts5,
-} from './chunks/chunk-HYTEZIGR.js'
+import { className as className3, css as css3, fonts as fonts3 } from './chunks/chunk-EAOTBDPC.js'
+import { className as className5, css as css5, fonts as fonts5 } from './chunks/chunk-HYTEZIGR.js'
 import { stdin_default } from './chunks/chunk-5PWCC3XC.js'
 import './chunks/chunk-R527CHIA.js'
-import {
-  className as className4,
-  css as css4,
-  fonts as fonts4,
-} from './chunks/chunk-QKWA2WC3.js'
+import { className as className4, css as css4, fonts as fonts4 } from './chunks/chunk-QKWA2WC3.js'
 
 // virtual:blog-cards
 import { Fragment as Fragment2 } from 'react'
 import { ContextProviders } from 'unframer'
 
 // /:https://framerusercontent.com/modules/AdN1vFEB5YpbjrsW0faZ/Tihw785abrQ6vNpfaD8L/Eu9Lomn1l.js
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  Fragment as _Fragment,
-} from 'react/jsx-runtime'
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime'
 import {
   addFonts,
   addPropertyControls,
@@ -76,14 +56,11 @@ import { useRef } from 'react'
 var MainSiteGridBorderFonts = getFonts(stdin_default)
 var DitherFonts = getFonts(Dither)
 var TagFonts = getFonts(stdin_default4)
-var RichTextWithTruncateTwoLines1je5ulx = withCodeBoundaryForOverrides(
-  RichText,
-  {
-    nodeId: 'vM0WvaMXr',
-    override: withTruncateTwoLines,
-    scopeId: 'Eu9Lomn1l',
-  },
-)
+var RichTextWithTruncateTwoLines1je5ulx = withCodeBoundaryForOverrides(RichText, {
+  nodeId: 'vM0WvaMXr',
+  override: withTruncateTwoLines,
+  scopeId: 'Eu9Lomn1l',
+})
 var CardSelectorFonts = getFonts(stdin_default3)
 var enabledGestures = {
   kLecDBvZb: {
@@ -103,9 +80,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -113,11 +88,7 @@ var transition1 = {
   type: 'tween',
 }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string'
@@ -158,11 +129,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -171,20 +138,7 @@ var humanReadableVariantMap = {
   Default: 'sO_8WI4ey',
   Featured: 'kLecDBvZb',
 }
-var getProps = ({
-  category,
-  date,
-  description,
-  dithering,
-  height,
-  id,
-  image,
-  link,
-  pixel,
-  title,
-  width,
-  ...props
-}) => {
+var getProps = ({ category, date, description, dithering, height, id, image, link, pixel, title, width, ...props }) => {
   return {
     ...props,
     dYNQYhs4O: image ?? props.dYNQYhs4O,
@@ -194,12 +148,8 @@ var getProps = ({
       'Discover how lightning-fast load times can boost your SEO, improve user experience, and drive real business results\u2014plus actionable tips to speed up your site today.',
     OnZMqQ_GH: pixel ?? props.OnZMqQ_GH ?? 1,
     prpswvXWg: dithering ?? props.prpswvXWg ?? true,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'kLecDBvZb',
-    wJ9vmGd0H:
-      title ??
-      props.wJ9vmGd0H ??
-      'Why Website Speed Matters More Than Ever in 2025',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'kLecDBvZb',
+    wJ9vmGd0H: title ?? props.wJ9vmGd0H ?? 'Why Website Speed Matters More Than Ever in 2025',
     YCvL6Ce3i: link ?? props.YCvL6Ce3i,
     yqQ5nv2LT: date ?? props.yqQ5nv2LT ?? '1970-01-01T00:00:00.000Z',
     zSyHvqwA8: category ?? props.zSyHvqwA8 ?? ['AmoaEAHNI'],
@@ -252,14 +202,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
     variantClassNames,
   })
   const layoutDependency = createLayoutDependency(props, variants)
-  const sharedStyleClassNames = [
-    className6,
-    className2,
-    className5,
-    className3,
-    className4,
-    className,
-  ]
+  const sharedStyleClassNames = [className6, className2, className5, className3, className4, className]
   const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
   const isDisplayed = () => {
     if (gestureVariant === 'sO_8WI4ey-hover') return false
@@ -272,12 +215,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
     <LayoutGroup id={layoutId ?? defaultLayoutId}>
       <Variants animate={variants} initial={false}>
         <Transition value={transition1}>
-          <Link
-            href={YCvL6Ce3i}
-            motionChild={true}
-            nodeId={'kLecDBvZb'}
-            scopeId={'Eu9Lomn1l'}
-          >
+          <Link href={YCvL6Ce3i} motionChild={true} nodeId={'kLecDBvZb'} scopeId={'Eu9Lomn1l'}>
             <motion.a
               {...restProps}
               {...gestureHandlers}
@@ -292,12 +230,10 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               }}
               variants={{
                 'kLecDBvZb-hover': {
-                  backgroundColor:
-                    'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
+                  backgroundColor: 'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
                 },
                 'sO_8WI4ey-hover': {
-                  backgroundColor:
-                    'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
+                  backgroundColor: 'var(--token-b3e2223f-6504-416a-9959-e8753674e4b2, rgb(8, 8, 8))',
                 },
               }}
               {...addPropertyOverrides(
@@ -404,13 +340,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       intensity: 10,
                       interval: 0.08,
                     }}
-                    backgroundColor={
-                      'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))'
-                    }
+                    backgroundColor={'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))'}
                     brightness={-46}
-                    dotColor={
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'
-                    }
+                    dotColor={'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))'}
                     enabled={prpswvXWg}
                     glow={2}
                     height={'100%'}
@@ -470,8 +402,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     layoutId={'Ai8O10dJM'}
                     style={{
                       mask: 'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%) add',
-                      WebkitMask:
-                        'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%) add',
+                      WebkitMask: 'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%) add',
                     }}
                   >
                     <ChildrenCanSuspend>
@@ -540,11 +471,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                           <_Fragment>
                             {collection?.map(
                               (
-                                {
-                                  eQ710bws0: eQ710bws0Ai8O10dJM2,
-                                  id: idAi8O10dJM2,
-                                  PfZk8Jfkg: PfZk8JfkgAi8O10dJM2,
-                                },
+                                { eQ710bws0: eQ710bws0Ai8O10dJM2, id: idAi8O10dJM2, PfZk8Jfkg: PfZk8JfkgAi8O10dJM2 },
                                 index,
                               ) => {
                                 PfZk8JfkgAi8O10dJM2 ??= ''
@@ -566,13 +493,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           y={
                                             (componentViewport?.y || 0) +
                                             0 +
-                                            (((componentViewport?.height ||
-                                              998) -
-                                              0 -
-                                              1243.2) /
-                                              2 +
-                                              900 +
-                                              0) +
+                                            (((componentViewport?.height || 998) - 0 - 1243.2) / 2 + 900 + 0) +
                                             0 +
                                             0 +
                                             36 +
@@ -586,13 +507,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                 y:
                                                   (componentViewport?.y || 0) +
                                                   0 +
-                                                  (((componentViewport?.height ||
-                                                    380.5) -
-                                                    0 -
-                                                    1078) /
-                                                    2 +
-                                                    900 +
-                                                    0) +
+                                                  (((componentViewport?.height || 380.5) - 0 - 1078) / 2 + 900 + 0) +
                                                   0 +
                                                   0 +
                                                   24 +
@@ -604,13 +519,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                 y:
                                                   (componentViewport?.y || 0) +
                                                   0 +
-                                                  (((componentViewport?.height ||
-                                                    589) -
-                                                    0 -
-                                                    1139) /
-                                                    2 +
-                                                    900 +
-                                                    0) +
+                                                  (((componentViewport?.height || 589) - 0 - 1139) / 2 + 900 + 0) +
                                                   0 +
                                                   0 +
                                                   36 +
@@ -622,13 +531,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                                 y:
                                                   (componentViewport?.y || 0) +
                                                   0 +
-                                                  (((componentViewport?.height ||
-                                                    607.5) -
-                                                    0 -
-                                                    1221.2) /
-                                                    2 +
-                                                    900 +
-                                                    0) +
+                                                  (((componentViewport?.height || 607.5) - 0 - 1221.2) / 2 + 900 + 0) +
                                                   0 +
                                                   0 +
                                                   24 +
@@ -642,9 +545,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                           )}
                                         >
                                           <SmartComponentScopedContainer
-                                            className={
-                                              'framer-1r65oqg-container'
-                                            }
+                                            className={'framer-1r65oqg-container'}
                                             layoutDependency={layoutDependency}
                                             layoutId={'Ye2WumYd2-container'}
                                             nodeId={'Ye2WumYd2'}
@@ -724,9 +625,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     '--framer-text-alignment': 'left',
                                   }}
                                 >
-                                  {
-                                    'Why Website Speed Matters More Than Ever in 2025'
-                                  }
+                                  {'Why Website Speed Matters More Than Ever in 2025'}
                                 </motion.h5>
                               </React.Fragment>
                             ),
@@ -741,9 +640,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     '--framer-text-alignment': 'left',
                                   }}
                                 >
-                                  {
-                                    'Why Website Speed Matters More Than Ever in 2025'
-                                  }
+                                  {'Why Website Speed Matters More Than Ever in 2025'}
                                 </motion.h3>
                               </React.Fragment>
                             ),
@@ -1040,8 +937,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -1166,17 +1062,11 @@ stdin_default5.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default5}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default5} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -1224,9 +1114,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

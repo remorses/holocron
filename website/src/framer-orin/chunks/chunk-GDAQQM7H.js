@@ -8,19 +8,14 @@ var Text = class {
   */
   lineAt(pos) {
     if (pos < 0 || pos > this.length)
-      throw new RangeError(
-        `Invalid position ${pos} in document of length ${this.length}`,
-      )
+      throw new RangeError(`Invalid position ${pos} in document of length ${this.length}`)
     return this.lineInner(pos, false, 1, 0)
   }
   /**
   Get the description for the given (1-based) line number.
   */
   line(n) {
-    if (n < 1 || n > this.lines)
-      throw new RangeError(
-        `Invalid line number ${n} in ${this.lines}-line document`,
-      )
+    if (n < 1 || n > this.lines) throw new RangeError(`Invalid line number ${n} in ${this.lines}-line document`)
     return this.lineInner(n, true, 1, 0)
   }
   /**
@@ -61,8 +56,7 @@ var Text = class {
       a.next(skip)
       b.next(skip)
       skip = 0
-      if (a.lineBreak != b.lineBreak || a.done != b.done || a.value != b.value)
-        return false
+      if (a.lineBreak != b.lineBreak || a.done != b.done || a.value != b.value) return false
       pos += a.value.length
       if (a.done || pos >= end) return true
     }
@@ -98,14 +92,7 @@ var Text = class {
       let start = this.line(from).from
       inner = this.iterRange(
         start,
-        Math.max(
-          start,
-          to == this.lines + 1
-            ? this.length
-            : to <= 1
-              ? 0
-              : this.line(to - 1).to,
-        ),
+        Math.max(start, to == this.lines + 1 ? this.length : to <= 1 ? 0 : this.line(to - 1).to),
       )
     }
     return new LineCursor(inner)
@@ -130,12 +117,9 @@ var Text = class {
   Create a `Text` instance for the given array of lines.
   */
   static of(text) {
-    if (text.length == 0)
-      throw new RangeError('A document must have at least one line')
+    if (text.length == 0) throw new RangeError('A document must have at least one line')
     if (text.length == 1 && !text[0]) return Text.empty
-    return text.length <= 32
-      ? new TextLeaf(text)
-      : TextNode.from(TextLeaf.split(text, []))
+    return text.length <= 32 ? new TextLeaf(text) : TextNode.from(TextLeaf.split(text, []))
   }
   /**
   @internal
@@ -153,8 +137,7 @@ var TextLeaf = class extends Text {
     for (let i2 = 0; ; i2++) {
       let string2 = this.text[i2],
         end = offset + string2.length
-      if ((isLine ? line : end) >= target)
-        return new Line(offset, end, line, string2)
+      if ((isLine ? line : end) >= target) return new Line(offset, end, line, string2)
       offset = end + 1
       line++
     }
@@ -163,10 +146,7 @@ var TextLeaf = class extends Text {
     let text =
       from <= 0 && to >= this.length
         ? this
-        : new TextLeaf(
-            sliceText(this.text, from, to),
-            Math.min(to, this.length) - Math.max(0, from),
-          )
+        : new TextLeaf(sliceText(this.text, from, to), Math.min(to, this.length) - Math.max(0, from))
     if (open & 1) {
       let prev = target.pop()
       let joined = appendText(text.text, prev.text.slice(), 0, text.length)
@@ -174,10 +154,7 @@ var TextLeaf = class extends Text {
         target.push(new TextLeaf(joined, prev.length + text.length))
       } else {
         let mid = joined.length >> 1
-        target.push(
-          new TextLeaf(joined.slice(0, mid)),
-          new TextLeaf(joined.slice(mid)),
-        )
+        target.push(new TextLeaf(joined.slice(0, mid)), new TextLeaf(joined.slice(mid)))
       }
     } else {
       target.push(text)
@@ -185,11 +162,7 @@ var TextLeaf = class extends Text {
   }
   replace(from, to, text) {
     if (!(text instanceof TextLeaf)) return super.replace(from, to, text)
-    let lines = appendText(
-      this.text,
-      appendText(text.text, sliceText(this.text, 0, from)),
-      to,
-    )
+    let lines = appendText(this.text, appendText(text.text, sliceText(this.text, 0, from)), to)
     let newLen = this.length + text.length - (to - from)
     if (lines.length <= 32) return new TextLeaf(lines, newLen)
     return TextNode.from(TextLeaf.split(lines, []), newLen)
@@ -200,8 +173,7 @@ var TextLeaf = class extends Text {
       let line = this.text[i2],
         end = pos + line.length
       if (pos > from && i2) result += lineSep
-      if (from < end && to > pos)
-        result += line.slice(Math.max(0, from - pos), to - pos)
+      if (from < end && to > pos) result += line.slice(Math.max(0, from - pos), to - pos)
       pos = end + 1
     }
     return result
@@ -239,8 +211,7 @@ var TextNode = class extends Text {
       let child = this.children[i2],
         end = offset + child.length,
         endLine = line + child.lines - 1
-      if ((isLine ? endLine : end) >= target)
-        return child.lineInner(target, isLine, line, offset)
+      if ((isLine ? endLine : end) >= target) return child.lineInner(target, isLine, line, offset)
       offset = end + 1
       line = endLine + 1
     }
@@ -265,10 +236,7 @@ var TextNode = class extends Text {
         if (from >= pos && to <= end) {
           let updated = child.replace(from - pos, to - pos, text)
           let totalLines = this.lines - child.lines + updated.lines
-          if (
-            updated.lines < totalLines >> (5 - 1) &&
-            updated.lines > totalLines >> (5 + 1)
-          ) {
+          if (updated.lines < totalLines >> (5 - 1) && updated.lines > totalLines >> (5 + 1)) {
             let copy = this.children.slice()
             copy[i2] = updated
             return new TextNode(copy, this.length - (to - from) + text.length)
@@ -285,8 +253,7 @@ var TextNode = class extends Text {
       let child = this.children[i2],
         end = pos + child.length
       if (pos > from && i2) result += lineSep
-      if (from < end && to > pos)
-        result += child.sliceString(from - pos, to - pos, lineSep)
+      if (from < end && to > pos) result += child.sliceString(from - pos, to - pos, lineSep)
       pos = end + 1
     }
     return result
@@ -309,10 +276,7 @@ var TextNode = class extends Text {
       length += chA.length + 1
     }
   }
-  static from(
-    children,
-    length = children.reduce((l, ch) => l + ch.length + 1, -1),
-  ) {
+  static from(children, length = children.reduce((l, ch) => l + ch.length + 1, -1)) {
     let lines = 0
     for (let ch of children) lines += ch.lines
     if (lines < 32) {
@@ -331,10 +295,7 @@ var TextNode = class extends Text {
       let last
       if (child.lines > maxChunk && child instanceof TextNode) {
         for (let node of child.children) add(node)
-      } else if (
-        child.lines > minChunk &&
-        (currentLines > minChunk || !currentLines)
-      ) {
+      } else if (child.lines > minChunk && (currentLines > minChunk || !currentLines)) {
         flush()
         chunked.push(child)
       } else if (
@@ -358,11 +319,7 @@ var TextNode = class extends Text {
     }
     function flush() {
       if (currentLines == 0) return
-      chunked.push(
-        currentChunk.length == 1
-          ? currentChunk[0]
-          : TextNode.from(currentChunk, currentLen),
-      )
+      chunked.push(currentChunk.length == 1 ? currentChunk[0] : TextNode.from(currentChunk, currentLen))
       currentLen = -1
       currentLines = currentChunk.length = 0
     }
@@ -411,8 +368,7 @@ var RawTextCursor = class {
       let top3 = this.nodes[last],
         offsetValue = this.offsets[last],
         offset = offsetValue >> 1
-      let size =
-        top3 instanceof TextLeaf ? top3.text.length : top3.children.length
+      let size = top3 instanceof TextLeaf ? top3.text.length : top3.children.length
       if (offset == (dir > 0 ? size : 0)) {
         if (last == 0) {
           this.done = true
@@ -434,12 +390,7 @@ var RawTextCursor = class {
         let next = top3.text[offset + (dir < 0 ? -1 : 0)]
         this.offsets[last] += dir
         if (next.length > Math.max(0, skip)) {
-          this.value =
-            skip == 0
-              ? next
-              : dir > 0
-                ? next.slice(skip)
-                : next.slice(0, next.length - skip)
+          this.value = skip == 0 ? next : dir > 0 ? next.slice(skip) : next.slice(0, next.length - skip)
           return this
         }
         skip -= next.length
@@ -451,13 +402,7 @@ var RawTextCursor = class {
         } else {
           if (dir < 0) this.offsets[last]--
           this.nodes.push(next)
-          this.offsets.push(
-            dir > 0
-              ? 1
-              : (next instanceof TextLeaf
-                  ? next.text.length
-                  : next.children.length) << 1,
-          )
+          this.offsets.push(dir > 0 ? 1 : (next instanceof TextLeaf ? next.text.length : next.children.length) << 1)
         }
       }
     }
@@ -475,13 +420,7 @@ var RawTextCursor = class {
     this.lineBreak = false
     this.value = ''
     this.nodes = [text]
-    this.offsets = [
-      dir > 0
-        ? 1
-        : (text instanceof TextLeaf
-            ? text.text.length
-            : text.children.length) << 1,
-    ]
+    this.offsets = [dir > 0 ? 1 : (text instanceof TextLeaf ? text.text.length : text.children.length) << 1]
   }
 }
 var PartialTextCursor = class {
@@ -497,12 +436,7 @@ var PartialTextCursor = class {
     limit -= skip
     let { value } = this.cursor.next(skip)
     this.pos += (value.length + skip) * dir
-    this.value =
-      value.length <= limit
-        ? value
-        : dir < 0
-          ? value.slice(value.length - limit)
-          : value.slice(0, limit)
+    this.value = value.length <= limit ? value : dir < 0 ? value.slice(value.length - limit) : value.slice(0, limit)
     this.done = !this.value
     return this
   }
@@ -586,8 +520,7 @@ var extend =
     .map((s) => (s ? parseInt(s, 36) : 1))
 for (let i2 = 1; i2 < extend.length; i2++) extend[i2] += extend[i2 - 1]
 function isExtendingChar(code2) {
-  for (let i2 = 1; i2 < extend.length; i2 += 2)
-    if (extend[i2] > code2) return extend[i2 - 1] <= code2
+  for (let i2 = 1; i2 < extend.length; i2 += 2) if (extend[i2] > code2) return extend[i2 - 1] <= code2
   return false
 }
 function isRegionalIndicator(code2) {
@@ -595,29 +528,16 @@ function isRegionalIndicator(code2) {
 }
 var ZWJ = 8205
 function findClusterBreak(str, pos, forward = true, includeExtending = true) {
-  return (forward ? nextClusterBreak : prevClusterBreak)(
-    str,
-    pos,
-    includeExtending,
-  )
+  return (forward ? nextClusterBreak : prevClusterBreak)(str, pos, includeExtending)
 }
 function nextClusterBreak(str, pos, includeExtending) {
   if (pos == str.length) return pos
-  if (
-    pos &&
-    surrogateLow(str.charCodeAt(pos)) &&
-    surrogateHigh(str.charCodeAt(pos - 1))
-  )
-    pos--
+  if (pos && surrogateLow(str.charCodeAt(pos)) && surrogateHigh(str.charCodeAt(pos - 1))) pos--
   let prev = codePointAt(str, pos)
   pos += codePointSize(prev)
   while (pos < str.length) {
     let next = codePointAt(str, pos)
-    if (
-      prev == ZWJ ||
-      next == ZWJ ||
-      (includeExtending && isExtendingChar(next))
-    ) {
+    if (prev == ZWJ || next == ZWJ || (includeExtending && isExtendingChar(next))) {
       pos += codePointSize(next)
       prev = next
     } else if (isRegionalIndicator(next)) {
@@ -678,8 +598,7 @@ var ChangeDesc = class {
   */
   get length() {
     let result = 0
-    for (let i2 = 0; i2 < this.sections.length; i2 += 2)
-      result += this.sections[i2]
+    for (let i2 = 0; i2 < this.sections.length; i2 += 2) result += this.sections[i2]
     return result
   }
   /**
@@ -697,10 +616,7 @@ var ChangeDesc = class {
   False when there are actual changes in this set.
   */
   get empty() {
-    return (
-      this.sections.length == 0 ||
-      (this.sections.length == 2 && this.sections[1] < 0)
-    )
+    return this.sections.length == 0 || (this.sections.length == 2 && this.sections[1] < 0)
   }
   /**
   Iterate over the unchanged parts left by these changes. `posA`
@@ -784,16 +700,12 @@ var ChangeDesc = class {
             (mode == MapMode.TrackAfter && endA > pos))
         )
           return null
-        if (endA > pos || (endA == pos && assoc < 0 && !len))
-          return pos == posA || assoc < 0 ? posB : posB + ins
+        if (endA > pos || (endA == pos && assoc < 0 && !len)) return pos == posA || assoc < 0 ? posB : posB + ins
         posB += ins
       }
       posA = endA
     }
-    if (pos > posA)
-      throw new RangeError(
-        `Position ${pos} is out of range for changeset of length ${posA}`,
-      )
+    if (pos > posA) throw new RangeError(`Position ${pos} is out of range for changeset of length ${posA}`)
     return posB
   }
   /**
@@ -806,8 +718,7 @@ var ChangeDesc = class {
       let len = this.sections[i2++],
         ins = this.sections[i2++],
         end = pos + len
-      if (ins >= 0 && pos <= to && end >= from)
-        return pos < from && end > to ? 'cover' : true
+      if (ins >= 0 && pos <= to && end >= from) return pos < from && end > to ? 'cover' : true
       pos = end
     }
     return false
@@ -835,11 +746,7 @@ var ChangeDesc = class {
   by [`toJSON`](https://codemirror.net/6/docs/ref/#state.ChangeDesc.toJSON).
   */
   static fromJSON(json) {
-    if (
-      !Array.isArray(json) ||
-      json.length % 2 ||
-      json.some((a) => typeof a != 'number')
-    )
+    if (!Array.isArray(json) || json.length % 2 || json.some((a) => typeof a != 'number'))
       throw new RangeError('Invalid JSON representation of ChangeDesc')
     return new ChangeDesc(json)
   }
@@ -867,14 +774,10 @@ var ChangeSet = class extends ChangeDesc {
   document.
   */
   apply(doc2) {
-    if (this.length != doc2.length)
-      throw new RangeError(
-        'Applying change set to a document with the wrong length',
-      )
+    if (this.length != doc2.length) throw new RangeError('Applying change set to a document with the wrong length')
     iterChanges(
       this,
-      (fromA, toA, fromB, _toB, text) =>
-        (doc2 = doc2.replace(fromB, fromB + (toA - fromA), text)),
+      (fromA, toA, fromB, _toB, text) => (doc2 = doc2.replace(fromB, fromB + (toA - fromA), text)),
       false,
     )
     return doc2
@@ -912,11 +815,7 @@ var ChangeSet = class extends ChangeDesc {
   returned value will represent the change `docA` → `docC`.
   */
   compose(other) {
-    return this.empty
-      ? other
-      : other.empty
-        ? this
-        : composeSets(this, other, true)
+    return this.empty ? other : other.empty ? this : composeSets(this, other, true)
   }
   /**
   Given another change set starting in the same document, maps this
@@ -978,11 +877,7 @@ var ChangeSet = class extends ChangeDesc {
         if (iter.done) break done
         let len = Math.min(iter.len, end - pos)
         addSection(resultSections, len, -1)
-        addSection(
-          filteredSections,
-          len,
-          iter.ins == -1 ? -1 : iter.off == 0 ? iter.ins : 0,
-        )
+        addSection(filteredSections, len, iter.ins == -1 ? -1 : iter.off == 0 ? iter.ins : 0)
         iter.forward(len)
         pos += len
       }
@@ -1029,17 +924,13 @@ var ChangeSet = class extends ChangeDesc {
         for (let sub of spec) process2(sub)
       } else if (spec instanceof ChangeSet) {
         if (spec.length != length)
-          throw new RangeError(
-            `Mismatched change set length (got ${spec.length}, expected ${length})`,
-          )
+          throw new RangeError(`Mismatched change set length (got ${spec.length}, expected ${length})`)
         flush()
         total = total ? total.compose(spec.map(total)) : spec
       } else {
         let { from, to = from, insert: insert2 } = spec
         if (from > to || from < 0 || to > length)
-          throw new RangeError(
-            `Invalid change range ${from} to ${to} (in doc of length ${length})`,
-          )
+          throw new RangeError(`Invalid change range ${from} to ${to} (in doc of length ${length})`)
         let insText = !insert2
           ? Text.empty
           : typeof insert2 == 'string'
@@ -1069,8 +960,7 @@ var ChangeSet = class extends ChangeDesc {
   [`toJSON`](https://codemirror.net/6/docs/ref/#state.ChangeSet.toJSON).
   */
   static fromJSON(json) {
-    if (!Array.isArray(json))
-      throw new RangeError('Invalid JSON representation of ChangeSet')
+    if (!Array.isArray(json)) throw new RangeError('Invalid JSON representation of ChangeSet')
     let sections = [],
       inserted = []
     for (let i2 = 0; i2 < json.length; i2++) {
@@ -1140,12 +1030,7 @@ function iterChanges(desc, f, individual) {
         endA += len
         endB += ins
         if (ins && inserted) text = text.append(inserted[(i2 - 2) >> 1])
-        if (
-          individual ||
-          i2 == desc.sections.length ||
-          desc.sections[i2 + 1] < 0
-        )
-          break
+        if (individual || i2 == desc.sections.length || desc.sections[i2 + 1] < 0) break
         len = desc.sections[i2++]
         ins = desc.sections[i2++]
       }
@@ -1168,9 +1053,7 @@ function mapSet(setA, setB, before, mkSet = false) {
       b.forward(len)
     } else if (
       b.ins >= 0 &&
-      (a.ins < 0 ||
-        inserted == a.i ||
-        (a.off == 0 && (b.len < a.len || (b.len == a.len && !before))))
+      (a.ins < 0 || inserted == a.i || (a.off == 0 && (b.len < a.len || (b.len == a.len && !before))))
     ) {
       let len = b.len
       addSection(sections, b.ins, -1)
@@ -1206,9 +1089,7 @@ function mapSet(setA, setB, before, mkSet = false) {
       inserted = a.i
       a.forward(a.len - left)
     } else if (a.done && b.done) {
-      return insert2
-        ? ChangeSet.createSet(sections, insert2)
-        : ChangeDesc.create(sections)
+      return insert2 ? ChangeSet.createSet(sections, insert2) : ChangeDesc.create(sections)
     } else {
       throw new Error('Mismatched change set lengths')
     }
@@ -1221,9 +1102,7 @@ function composeSets(setA, setB, mkSet = false) {
     b = new SectionIter(setB)
   for (let open = false; ; ) {
     if (a.done && b.done) {
-      return insert2
-        ? ChangeSet.createSet(sections, insert2)
-        : ChangeDesc.create(sections)
+      return insert2 ? ChangeSet.createSet(sections, insert2) : ChangeDesc.create(sections)
     } else if (a.ins == 0) {
       addSection(sections, a.len, 0, open)
       a.next()
@@ -1247,9 +1126,7 @@ function composeSets(setA, setB, mkSet = false) {
         addSection(sections, a.off ? 0 : a.len, b.off ? 0 : b.ins, open)
         if (insert2 && !b.off) addInsert(insert2, sections, b.text)
       }
-      open =
-        (a.ins > len || (b.ins >= 0 && b.len > len)) &&
-        (open || sections.length > sectionLen)
+      open = (a.ins > len || (b.ins >= 0 && b.len > len)) && (open || sections.length > sectionLen)
       a.forward2(len)
       b.forward(len)
     }
@@ -1366,18 +1243,14 @@ var SelectionRange = class {
       from = change.mapPos(this.from, 1)
       to = change.mapPos(this.to, -1)
     }
-    return from == this.from && to == this.to
-      ? this
-      : new SelectionRange(from, to, this.flags)
+    return from == this.from && to == this.to ? this : new SelectionRange(from, to, this.flags)
   }
   /**
   Extend this range to cover at least `from` to `to`.
   */
   extend(from, to = from) {
-    if (from <= this.anchor && to >= this.anchor)
-      return EditorSelection.range(from, to)
-    let head =
-      Math.abs(from - this.anchor) > Math.abs(to - this.anchor) ? from : to
+    if (from <= this.anchor && to >= this.anchor) return EditorSelection.range(from, to)
+    let head = Math.abs(from - this.anchor) > Math.abs(to - this.anchor) ? from : to
     return EditorSelection.range(this.anchor, head)
   }
   /**
@@ -1429,13 +1302,8 @@ var EditorSelection = class {
   Compare this selection to another selection.
   */
   eq(other) {
-    if (
-      this.ranges.length != other.ranges.length ||
-      this.mainIndex != other.mainIndex
-    )
-      return false
-    for (let i2 = 0; i2 < this.ranges.length; i2++)
-      if (!this.ranges[i2].eq(other.ranges[i2])) return false
+    if (this.ranges.length != other.ranges.length || this.mainIndex != other.mainIndex) return false
+    for (let i2 = 0; i2 < this.ranges.length; i2++) if (!this.ranges[i2].eq(other.ranges[i2])) return false
     return true
   }
   /**
@@ -1457,10 +1325,7 @@ var EditorSelection = class {
   Extend this selection with an extra range.
   */
   addRange(range, main = true) {
-    return EditorSelection.create(
-      [range].concat(this.ranges),
-      main ? 0 : this.mainIndex + 1,
-    )
+    return EditorSelection.create([range].concat(this.ranges), main ? 0 : this.mainIndex + 1)
   }
   /**
   Replace a given range with another range, and then normalize the
@@ -1485,12 +1350,7 @@ var EditorSelection = class {
   Create a selection from a JSON representation.
   */
   static fromJSON(json) {
-    if (
-      !json ||
-      !Array.isArray(json.ranges) ||
-      typeof json.main != 'number' ||
-      json.main >= json.ranges.length
-    )
+    if (!json || !Array.isArray(json.ranges) || typeof json.main != 'number' || json.main >= json.ranges.length)
       throw new RangeError('Invalid JSON representation for EditorSelection')
     return new EditorSelection(
       json.ranges.map((r) => SelectionRange.fromJSON(r)),
@@ -1508,8 +1368,7 @@ var EditorSelection = class {
   selection.
   */
   static create(ranges, mainIndex = 0) {
-    if (ranges.length == 0)
-      throw new RangeError('A selection needs at least one range')
+    if (ranges.length == 0) throw new RangeError('A selection needs at least one range')
     for (let pos = 0, i2 = 0; i2 < ranges.length; i2++) {
       let range = ranges[i2]
       if (range.empty ? range.from <= pos : range.from < pos)
@@ -1528,10 +1387,7 @@ var EditorSelection = class {
       pos,
       (assoc == 0 ? 0 : assoc < 0 ? 4 : 8) |
         (bidiLevel == null ? 3 : Math.min(2, bidiLevel)) |
-        ((goalColumn !== null && goalColumn !== void 0
-          ? goalColumn
-          : 33554431) <<
-          5),
+        ((goalColumn !== null && goalColumn !== void 0 ? goalColumn : 33554431) << 5),
     )
   }
   /**
@@ -1539,8 +1395,7 @@ var EditorSelection = class {
   */
   static range(anchor, head, goalColumn, bidiLevel) {
     let flags =
-      ((goalColumn !== null && goalColumn !== void 0 ? goalColumn : 33554431) <<
-        5) |
+      ((goalColumn !== null && goalColumn !== void 0 ? goalColumn : 33554431) << 5) |
       (bidiLevel == null ? 3 : Math.min(2, bidiLevel))
     return head < anchor
       ? SelectionRange.create(head, anchor, 16 | 8 | flags)
@@ -1563,9 +1418,7 @@ var EditorSelection = class {
         ranges.splice(
           --i2,
           2,
-          range.anchor > range.head
-            ? EditorSelection.range(to, from)
-            : EditorSelection.range(from, to),
+          range.anchor > range.head ? EditorSelection.range(to, from) : EditorSelection.range(from, to),
         )
       }
     }
@@ -1578,8 +1431,7 @@ var EditorSelection = class {
 }
 function checkSelection(selection, docLength) {
   for (let range of selection.ranges)
-    if (range.to > docLength)
-      throw new RangeError('Selection points outside of document')
+    if (range.to > docLength) throw new RangeError('Selection points outside of document')
 }
 var nextID = 0
 var Facet = class {
@@ -1653,11 +1505,7 @@ var FacetProvider = class {
     for (let dep of this.dependencies) {
       if (dep == 'doc') depDoc = true
       else if (dep == 'selection') depSel = true
-      else if (
-        (((_a2 = addresses[dep.id]) !== null && _a2 !== void 0 ? _a2 : 1) &
-          1) ==
-        0
-      )
+      else if ((((_a2 = addresses[dep.id]) !== null && _a2 !== void 0 ? _a2 : 1) & 1) == 0)
         depAddrs.push(addresses[dep.id])
     }
     return {
@@ -1666,17 +1514,9 @@ var FacetProvider = class {
         return 1
       },
       update(state, tr) {
-        if (
-          (depDoc && tr.docChanged) ||
-          (depSel && (tr.docChanged || tr.selection)) ||
-          ensureAll(state, depAddrs)
-        ) {
+        if ((depDoc && tr.docChanged) || (depSel && (tr.docChanged || tr.selection)) || ensureAll(state, depAddrs)) {
           let newVal = getter(state)
-          if (
-            multi
-              ? !compareArray(newVal, state.values[idx], compare2)
-              : !compare2(newVal, state.values[idx])
-          ) {
+          if (multi ? !compareArray(newVal, state.values[idx], compare2) : !compare2(newVal, state.values[idx])) {
             state.values[idx] = newVal
             return 1
           }
@@ -1721,8 +1561,7 @@ var FacetProvider = class {
 }
 function compareArray(a, b, compare2) {
   if (a.length != b.length) return false
-  for (let i2 = 0; i2 < a.length; i2++)
-    if (!compare2(a[i2], b[i2])) return false
+  for (let i2 = 0; i2 < a.length; i2++) if (!compare2(a[i2], b[i2])) return false
   return true
 }
 function ensureAll(state, addrs) {
@@ -1781,21 +1620,13 @@ var StateField = class {
   Define a state field.
   */
   static define(config) {
-    let field = new StateField(
-      nextID++,
-      config.create,
-      config.update,
-      config.compare || ((a, b) => a === b),
-      config,
-    )
+    let field = new StateField(nextID++, config.create, config.update, config.compare || ((a, b) => a === b), config)
     if (config.provide) field.provides = config.provide(field)
     return field
   }
   create(state) {
     let init = state.facet(initField).find((i2) => i2.field == this)
-    return (
-      (init === null || init === void 0 ? void 0 : init.create) || this.createF
-    )(state)
+    return ((init === null || init === void 0 ? void 0 : init.create) || this.createF)(state)
   }
   /**
   @internal
@@ -1937,8 +1768,7 @@ var Configuration = class {
       address[field.id] = dynamicSlots.length << 1
       dynamicSlots.push((a) => field.slot(a))
     }
-    let oldFacets =
-      oldState === null || oldState === void 0 ? void 0 : oldState.config.facets
+    let oldFacets = oldState === null || oldState === void 0 ? void 0 : oldState.config.facets
     for (let id2 in facets) {
       let providers = facets[id2],
         facet = providers[0].facet
@@ -1949,11 +1779,7 @@ var Configuration = class {
           staticValues.push(oldState.facet(facet))
         } else {
           let value = facet.combine(providers.map((p) => p.value))
-          staticValues.push(
-            oldState && facet.compare(value, oldState.facet(facet))
-              ? oldState.facet(facet)
-              : value,
-          )
+          staticValues.push(oldState && facet.compare(value, oldState.facet(facet)) ? oldState.facet(facet) : value)
         }
       } else {
         for (let p of providers) {
@@ -1970,23 +1796,9 @@ var Configuration = class {
       }
     }
     let dynamic = dynamicSlots.map((f) => f(address))
-    return new Configuration(
-      base2,
-      newCompartments,
-      dynamic,
-      address,
-      staticValues,
-      facets,
-    )
+    return new Configuration(base2, newCompartments, dynamic, address, staticValues, facets)
   }
-  constructor(
-    base2,
-    compartments,
-    dynamicSlots,
-    address,
-    staticValues,
-    facets,
-  ) {
+  constructor(base2, compartments, dynamicSlots, address, staticValues, facets) {
     this.base = base2
     this.compartments = compartments
     this.dynamicSlots = dynamicSlots
@@ -1994,8 +1806,7 @@ var Configuration = class {
     this.staticValues = staticValues
     this.facets = facets
     this.statusTemplate = []
-    while (this.statusTemplate.length < dynamicSlots.length)
-      this.statusTemplate.push(0)
+    while (this.statusTemplate.length < dynamicSlots.length) this.statusTemplate.push(0)
   }
 }
 function flatten(extension, compartments, newCompartments) {
@@ -2007,15 +1818,13 @@ function flatten(extension, compartments, newCompartments) {
       if (known <= prec2) return
       let found = result[known].indexOf(ext)
       if (found > -1) result[known].splice(found, 1)
-      if (ext instanceof CompartmentInstance)
-        newCompartments.delete(ext.compartment)
+      if (ext instanceof CompartmentInstance) newCompartments.delete(ext.compartment)
     }
     seen.set(ext, prec2)
     if (Array.isArray(ext)) {
       for (let e of ext) inner(e, prec2)
     } else if (ext instanceof CompartmentInstance) {
-      if (newCompartments.has(ext.compartment))
-        throw new RangeError(`Duplicate use of compartment in extensions`)
+      if (newCompartments.has(ext.compartment)) throw new RangeError(`Duplicate use of compartment in extensions`)
       let content2 = compartments.get(ext.compartment) || ext.inner
       newCompartments.set(ext.compartment, content2)
       inner(content2, prec2)
@@ -2043,17 +1852,14 @@ function ensureAddr(state, addr) {
   if (addr & 1) return 2
   let idx = addr >> 1
   let status = state.status[idx]
-  if (status == 4)
-    throw new Error('Cyclic dependency between fields and/or facets')
+  if (status == 4) throw new Error('Cyclic dependency between fields and/or facets')
   if (status & 2) return status
   state.status[idx] = 4
   let changed = state.computeSlot(state, state.config.dynamicSlots[idx])
   return (state.status[idx] = 2 | changed)
 }
 function getAddr(state, addr) {
-  return addr & 1
-    ? state.config.staticValues[addr >> 1]
-    : state.values[addr >> 1]
+  return addr & 1 ? state.config.staticValues[addr >> 1] : state.values[addr >> 1]
 }
 var languageData = /* @__PURE__ */ Facet.define()
 var allowMultipleSelections = /* @__PURE__ */ Facet.define({
@@ -2115,11 +1921,7 @@ var StateEffect = class {
   */
   map(mapping) {
     let mapped = this.type.map(this.value, mapping)
-    return mapped === void 0
-      ? void 0
-      : mapped == this.value
-        ? this
-        : new StateEffect(this.type, mapped)
+    return mapped === void 0 ? void 0 : mapped == this.value ? this : new StateEffect(this.type, mapped)
   }
   /**
   Tells you whether this effect object is of a given
@@ -2164,22 +1966,8 @@ var Transaction = class {
   /**
   @internal
   */
-  static create(
-    startState,
-    changes,
-    selection,
-    effects,
-    annotations,
-    scrollIntoView2,
-  ) {
-    return new Transaction(
-      startState,
-      changes,
-      selection,
-      effects,
-      annotations,
-      scrollIntoView2,
-    )
+  static create(startState, changes, selection, effects, annotations, scrollIntoView2) {
+    return new Transaction(startState, changes, selection, effects, annotations, scrollIntoView2)
   }
   /**
   The new document produced by the transaction. Contrary to
@@ -2244,20 +2032,10 @@ var Transaction = class {
     let e = this.annotation(Transaction.userEvent)
     return !!(
       e &&
-      (e == event ||
-        (e.length > event.length &&
-          e.slice(0, event.length) == event &&
-          e[event.length] == '.'))
+      (e == event || (e.length > event.length && e.slice(0, event.length) == event && e[event.length] == '.'))
     )
   }
-  constructor(
-    startState,
-    changes,
-    selection,
-    effects,
-    annotations,
-    scrollIntoView2,
-  ) {
+  constructor(startState, changes, selection, effects, annotations, scrollIntoView2) {
     this.startState = startState
     this.changes = changes
     this.selection = selection
@@ -2286,8 +2064,7 @@ function joinRanges(a, b) {
       from = b[iB++]
       to = b[iB++]
     } else return result
-    if (!result.length || result[result.length - 1] < from)
-      result.push(from, to)
+    if (!result.length || result[result.length - 1] < from) result.push(from, to)
     else if (result[result.length - 1] < to) result[result.length - 1] = to
   }
 }
@@ -2310,63 +2087,39 @@ function mergeTransaction(a, b, sequential) {
       : (_a2 = a.selection) === null || _a2 === void 0
         ? void 0
         : _a2.map(mapForA),
-    effects: StateEffect.mapEffects(a.effects, mapForA).concat(
-      StateEffect.mapEffects(b.effects, mapForB),
-    ),
-    annotations: a.annotations.length
-      ? a.annotations.concat(b.annotations)
-      : b.annotations,
+    effects: StateEffect.mapEffects(a.effects, mapForA).concat(StateEffect.mapEffects(b.effects, mapForB)),
+    annotations: a.annotations.length ? a.annotations.concat(b.annotations) : b.annotations,
     scrollIntoView: a.scrollIntoView || b.scrollIntoView,
   }
 }
 function resolveTransactionInner(state, spec, docSize) {
   let sel = spec.selection,
     annotations = asArray(spec.annotations)
-  if (spec.userEvent)
-    annotations = annotations.concat(Transaction.userEvent.of(spec.userEvent))
+  if (spec.userEvent) annotations = annotations.concat(Transaction.userEvent.of(spec.userEvent))
   return {
     changes:
       spec.changes instanceof ChangeSet
         ? spec.changes
         : ChangeSet.of(spec.changes || [], docSize, state.facet(lineSeparator)),
-    selection:
-      sel &&
-      (sel instanceof EditorSelection
-        ? sel
-        : EditorSelection.single(sel.anchor, sel.head)),
+    selection: sel && (sel instanceof EditorSelection ? sel : EditorSelection.single(sel.anchor, sel.head)),
     effects: asArray(spec.effects),
     annotations,
     scrollIntoView: !!spec.scrollIntoView,
   }
 }
 function resolveTransaction(state, specs, filter) {
-  let s = resolveTransactionInner(
-    state,
-    specs.length ? specs[0] : {},
-    state.doc.length,
-  )
+  let s = resolveTransactionInner(state, specs.length ? specs[0] : {}, state.doc.length)
   if (specs.length && specs[0].filter === false) filter = false
   for (let i2 = 1; i2 < specs.length; i2++) {
     if (specs[i2].filter === false) filter = false
     let seq = !!specs[i2].sequential
     s = mergeTransaction(
       s,
-      resolveTransactionInner(
-        state,
-        specs[i2],
-        seq ? s.changes.newLength : state.doc.length,
-      ),
+      resolveTransactionInner(state, specs[i2], seq ? s.changes.newLength : state.doc.length),
       seq,
     )
   }
-  let tr = Transaction.create(
-    state,
-    s.changes,
-    s.selection,
-    s.effects,
-    s.annotations,
-    s.scrollIntoView,
-  )
+  let tr = Transaction.create(state, s.changes, s.selection, s.effects, s.annotations, s.scrollIntoView)
   return extendTransaction(filter ? filterTransaction(tr) : tr)
 }
 function filterTransaction(tr) {
@@ -2378,8 +2131,7 @@ function filterTransaction(tr) {
       result = false
       break
     }
-    if (Array.isArray(value))
-      result = result === true ? value : joinRanges(result, value)
+    if (Array.isArray(value)) result = result === true ? value : joinRanges(result, value)
   }
   if (result !== true) {
     let changes, back
@@ -2404,12 +2156,7 @@ function filterTransaction(tr) {
   for (let i2 = filters.length - 1; i2 >= 0; i2--) {
     let filtered = filters[i2](tr)
     if (filtered instanceof Transaction) tr = filtered
-    else if (
-      Array.isArray(filtered) &&
-      filtered.length == 1 &&
-      filtered[0] instanceof Transaction
-    )
-      tr = filtered[0]
+    else if (Array.isArray(filtered) && filtered.length == 1 && filtered[0] instanceof Transaction) tr = filtered[0]
     else tr = resolveTransaction(state, asArray(filtered), false)
   }
   return tr
@@ -2421,22 +2168,11 @@ function extendTransaction(tr) {
   for (let i2 = extenders.length - 1; i2 >= 0; i2--) {
     let extension = extenders[i2](tr)
     if (extension && Object.keys(extension).length)
-      spec = mergeTransaction(
-        spec,
-        resolveTransactionInner(state, extension, tr.changes.newLength),
-        true,
-      )
+      spec = mergeTransaction(spec, resolveTransactionInner(state, extension, tr.changes.newLength), true)
   }
   return spec == tr
     ? tr
-    : Transaction.create(
-        state,
-        tr.changes,
-        tr.selection,
-        spec.effects,
-        spec.annotations,
-        spec.scrollIntoView,
-      )
+    : Transaction.create(state, tr.changes, tr.selection, spec.effects, spec.annotations, spec.scrollIntoView)
 }
 var none = []
 function asArray(value) {
@@ -2458,12 +2194,7 @@ function hasWordChar(str) {
   if (wordChar) return wordChar.test(str)
   for (let i2 = 0; i2 < str.length; i2++) {
     let ch = str[i2]
-    if (
-      /\w/.test(ch) ||
-      (ch > '\x80' &&
-        (ch.toUpperCase() != ch.toLowerCase() ||
-          nonASCIISingleCaseWordChar.test(ch)))
-    )
+    if (/\w/.test(ch) || (ch > '\x80' && (ch.toUpperCase() != ch.toLowerCase() || nonASCIISingleCaseWordChar.test(ch))))
       return true
   }
   return false
@@ -2472,8 +2203,7 @@ function makeCategorizer(wordChars) {
   return (char) => {
     if (!/\S/.test(char)) return CharCategory.Space
     if (hasWordChar(char)) return CharCategory.Word
-    for (let i2 = 0; i2 < wordChars.length; i2++)
-      if (char.indexOf(wordChars[i2]) > -1) return CharCategory.Word
+    for (let i2 = 0; i2 < wordChars.length; i2++) if (char.indexOf(wordChars[i2]) > -1) return CharCategory.Word
     return CharCategory.Other
   }
 }
@@ -2542,14 +2272,7 @@ var EditorState = class {
     } else {
       startValues = tr.startState.values.slice()
     }
-    new EditorState(
-      conf,
-      tr.newDoc,
-      tr.newSelection,
-      startValues,
-      (state, slot) => slot.update(state, tr),
-      tr,
-    )
+    new EditorState(conf, tr.newDoc, tr.newSelection, startValues, (state, slot) => slot.update(state, tr), tr)
   }
   /**
   Create a [transaction spec](https://codemirror.net/6/docs/ref/#state.TransactionSpec) that
@@ -2604,11 +2327,7 @@ var EditorState = class {
   */
   changes(spec = []) {
     if (spec instanceof ChangeSet) return spec
-    return ChangeSet.of(
-      spec,
-      this.doc.length,
-      this.facet(EditorState.lineSeparator),
-    )
+    return ChangeSet.of(spec, this.doc.length, this.facet(EditorState.lineSeparator))
   }
   /**
   Using the state's [line
@@ -2616,9 +2335,7 @@ var EditorState = class {
   [`Text`](https://codemirror.net/6/docs/ref/#state.Text) instance from the given string.
   */
   toText(string2) {
-    return Text.of(
-      string2.split(this.facet(EditorState.lineSeparator) || DefaultSplit),
-    )
+    return Text.of(string2.split(this.facet(EditorState.lineSeparator) || DefaultSplit))
   }
   /**
   Return the given range of the document as a string.
@@ -2649,10 +2366,7 @@ var EditorState = class {
     if (fields)
       for (let prop in fields) {
         let value = fields[prop]
-        if (
-          value instanceof StateField &&
-          this.config.address[value.id] != null
-        )
+        if (value instanceof StateField && this.config.address[value.id] != null)
           result[prop] = value.spec.toJSON(this.field(fields[prop]), this)
       }
     return result
@@ -2664,25 +2378,20 @@ var EditorState = class {
   third argument.
   */
   static fromJSON(json, config = {}, fields) {
-    if (!json || typeof json.doc != 'string')
-      throw new RangeError('Invalid JSON representation for EditorState')
+    if (!json || typeof json.doc != 'string') throw new RangeError('Invalid JSON representation for EditorState')
     let fieldInit = []
     if (fields)
       for (let prop in fields) {
         if (Object.prototype.hasOwnProperty.call(json, prop)) {
           let field = fields[prop],
             value = json[prop]
-          fieldInit.push(
-            field.init((state) => field.spec.fromJSON(value, state)),
-          )
+          fieldInit.push(field.init((state) => field.spec.fromJSON(value, state)))
         }
       }
     return EditorState.create({
       doc: json.doc,
       selection: EditorSelection.fromJSON(json.selection),
-      extensions: config.extensions
-        ? fieldInit.concat([config.extensions])
-        : fieldInit,
+      extensions: config.extensions ? fieldInit.concat([config.extensions]) : fieldInit,
     })
   }
   /**
@@ -2691,27 +2400,18 @@ var EditorState = class {
   transactions.
   */
   static create(config = {}) {
-    let configuration = Configuration.resolve(
-      config.extensions || [],
-      /* @__PURE__ */ new Map(),
-    )
+    let configuration = Configuration.resolve(config.extensions || [], /* @__PURE__ */ new Map())
     let doc2 =
       config.doc instanceof Text
         ? config.doc
-        : Text.of(
-            (config.doc || '').split(
-              configuration.staticFacet(EditorState.lineSeparator) ||
-                DefaultSplit,
-            ),
-          )
+        : Text.of((config.doc || '').split(configuration.staticFacet(EditorState.lineSeparator) || DefaultSplit))
     let selection = !config.selection
       ? EditorSelection.single(0)
       : config.selection instanceof EditorSelection
         ? config.selection
         : EditorSelection.single(config.selection.anchor, config.selection.head)
     checkSelection(selection, doc2.length)
-    if (!configuration.staticFacet(allowMultipleSelections))
-      selection = selection.asSingle()
+    if (!configuration.staticFacet(allowMultipleSelections)) selection = selection.asSingle()
     return new EditorState(
       configuration,
       doc2,
@@ -2786,8 +2486,7 @@ var EditorState = class {
     let values = []
     for (let provider of this.facet(languageData)) {
       for (let result of provider(this, pos, side)) {
-        if (Object.prototype.hasOwnProperty.call(result, name2))
-          values.push(result[name2])
+        if (Object.prototype.hasOwnProperty.call(result, name2)) values.push(result[name2])
       }
     }
     return values
@@ -2837,8 +2536,7 @@ var EditorState = class {
     this.status = config.statusTemplate.slice()
     this.computeSlot = computeSlot
     if (tr) tr._state = this
-    for (let i2 = 0; i2 < this.config.dynamicSlots.length; i2++)
-      ensureAddr(this, i2 << 1)
+    for (let i2 = 0; i2 < this.config.dynamicSlots.length; i2++) ensureAddr(this, i2 << 1)
     this.computeSlot = null
   }
 }
@@ -2868,12 +2566,10 @@ function combineConfig(configs, defaults, combine = {}) {
         current = result[key]
       if (current === void 0) result[key] = value
       else if (current === value || value === void 0);
-      else if (Object.hasOwnProperty.call(combine, key))
-        result[key] = combine[key](current, value)
+      else if (Object.hasOwnProperty.call(combine, key)) result[key] = combine[key](current, value)
       else throw new Error('Config merge conflict for field ' + key)
     }
-  for (let key in defaults)
-    if (result[key] === void 0) result[key] = defaults[key]
+  for (let key in defaults) if (result[key] === void 0) result[key] = defaults[key]
   return result
 }
 var RangeValue = class {
@@ -2924,26 +2620,15 @@ var Chunk = class {
     for (let lo = startAt, hi = arr.length; ; ) {
       if (lo == hi) return lo
       let mid = (lo + hi) >> 1
-      let diff =
-        arr[mid] - pos ||
-        (end ? this.value[mid].endSide : this.value[mid].startSide) - side
+      let diff = arr[mid] - pos || (end ? this.value[mid].endSide : this.value[mid].startSide) - side
       if (mid == lo) return diff >= 0 ? lo : hi
       if (diff >= 0) hi = mid
       else lo = mid + 1
     }
   }
   between(offset, from, to, f) {
-    for (
-      let i2 = this.findIndex(from, -1e9, true),
-        e = this.findIndex(to, 1e9, false, i2);
-      i2 < e;
-      i2++
-    )
-      if (
-        f(this.from[i2] + offset, this.to[i2] + offset, this.value[i2]) ===
-        false
-      )
-        return false
+    for (let i2 = this.findIndex(from, -1e9, true), e = this.findIndex(to, 1e9, false, i2); i2 < e; i2++)
+      if (f(this.from[i2] + offset, this.to[i2] + offset, this.value[i2]) === false) return false
   }
   map(offset, changes) {
     let value = [],
@@ -2968,11 +2653,7 @@ var Chunk = class {
       } else {
         newFrom = changes.mapPos(curFrom, val.startSide)
         newTo = changes.mapPos(curTo, val.endSide)
-        if (
-          newFrom > newTo ||
-          (newFrom == newTo && val.startSide > 0 && val.endSide <= 0)
-        )
-          continue
+        if (newFrom > newTo || (newFrom == newTo && val.startSide > 0 && val.endSide <= 0)) continue
       }
       if ((newTo - newFrom || val.endSide - val.startSide) < 0) continue
       if (newPos < 0) newPos = newFrom
@@ -3032,12 +2713,7 @@ var RangeSet = class {
   `Y`.)
   */
   update(updateSpec) {
-    let {
-      add = [],
-      sort = false,
-      filterFrom = 0,
-      filterTo = this.length,
-    } = updateSpec
+    let { add = [], sort = false, filterFrom = 0, filterTo = this.length } = updateSpec
     let filter = updateSpec.filter
     if (add.length == 0 && !filter) return this
     if (sort) add = add.slice().sort(cmpRange)
@@ -3047,36 +2723,20 @@ var RangeSet = class {
       spill = []
     let builder = new RangeSetBuilder()
     while (cur.value || i2 < add.length) {
-      if (
-        i2 < add.length &&
-        (cur.from - add[i2].from || cur.startSide - add[i2].value.startSide) >=
-          0
-      ) {
+      if (i2 < add.length && (cur.from - add[i2].from || cur.startSide - add[i2].value.startSide) >= 0) {
         let range = add[i2++]
-        if (!builder.addInner(range.from, range.to, range.value))
-          spill.push(range)
+        if (!builder.addInner(range.from, range.to, range.value)) spill.push(range)
       } else if (
         cur.rangeIndex == 1 &&
         cur.chunkIndex < this.chunk.length &&
         (i2 == add.length || this.chunkEnd(cur.chunkIndex) < add[i2].from) &&
-        (!filter ||
-          filterFrom > this.chunkEnd(cur.chunkIndex) ||
-          filterTo < this.chunkPos[cur.chunkIndex]) &&
-        builder.addChunk(
-          this.chunkPos[cur.chunkIndex],
-          this.chunk[cur.chunkIndex],
-        )
+        (!filter || filterFrom > this.chunkEnd(cur.chunkIndex) || filterTo < this.chunkPos[cur.chunkIndex]) &&
+        builder.addChunk(this.chunkPos[cur.chunkIndex], this.chunk[cur.chunkIndex])
       ) {
         cur.nextChunk()
       } else {
-        if (
-          !filter ||
-          filterFrom > cur.to ||
-          filterTo < cur.from ||
-          filter(cur.from, cur.to, cur.value)
-        ) {
-          if (!builder.addInner(cur.from, cur.to, cur.value))
-            spill.push(Range.create(cur.from, cur.to, cur.value))
+        if (!filter || filterFrom > cur.to || filterTo < cur.from || filter(cur.from, cur.to, cur.value)) {
+          if (!builder.addInner(cur.from, cur.to, cur.value)) spill.push(Range.create(cur.from, cur.to, cur.value))
         }
         cur.next()
       }
@@ -3118,9 +2778,7 @@ var RangeSet = class {
       }
     }
     let next = this.nextLayer.map(changes)
-    return chunks.length == 0
-      ? next
-      : new RangeSet(chunkPos, chunks, next || RangeSet.empty, maxPoint)
+    return chunks.length == 0 ? next : new RangeSet(chunkPos, chunks, next || RangeSet.empty, maxPoint)
   }
   /**
   Iterate over the ranges that touch the region `from` to `to`,
@@ -3133,11 +2791,7 @@ var RangeSet = class {
     for (let i2 = 0; i2 < this.chunk.length; i2++) {
       let start = this.chunkPos[i2],
         chunk = this.chunk[i2]
-      if (
-        to >= start &&
-        from <= start + chunk.length &&
-        chunk.between(start, from - start, to - start, f) === false
-      )
+      if (to >= start && from <= start + chunk.length && chunk.between(start, from - start, to - start, f) === false)
         return
     }
     this.nextLayer.between(from, to, f)
@@ -3167,22 +2821,13 @@ var RangeSet = class {
   to notify it of possible differences.
   */
   static compare(oldSets, newSets, textDiff, comparator, minPointSize = -1) {
-    let a = oldSets.filter(
-      (set) =>
-        set.maxPoint > 0 || (!set.isEmpty && set.maxPoint >= minPointSize),
-    )
-    let b = newSets.filter(
-      (set) =>
-        set.maxPoint > 0 || (!set.isEmpty && set.maxPoint >= minPointSize),
-    )
+    let a = oldSets.filter((set) => set.maxPoint > 0 || (!set.isEmpty && set.maxPoint >= minPointSize))
+    let b = newSets.filter((set) => set.maxPoint > 0 || (!set.isEmpty && set.maxPoint >= minPointSize))
     let sharedChunks = findSharedChunks(a, b, textDiff)
     let sideA = new SpanCursor(a, sharedChunks, minPointSize)
     let sideB = new SpanCursor(b, sharedChunks, minPointSize)
-    textDiff.iterGaps((fromA, fromB, length) =>
-      compare(sideA, fromA, sideB, fromB, length, comparator),
-    )
-    if (textDiff.empty && textDiff.length == 0)
-      compare(sideA, 0, sideB, 0, 0, comparator)
+    textDiff.iterGaps((fromA, fromB, length) => compare(sideA, fromA, sideB, fromB, length, comparator))
+    if (textDiff.empty && textDiff.length == 0) compare(sideA, 0, sideB, 0, 0, comparator)
   }
   /**
   Compare the contents of two groups of range sets, returning true
@@ -3224,25 +2869,14 @@ var RangeSet = class {
       let curTo = Math.min(cursor.to, to)
       if (cursor.point) {
         let active = cursor.activeForPoint(cursor.to)
-        let openCount =
-          cursor.pointFrom < from
-            ? active.length + 1
-            : Math.min(active.length, openRanges)
-        iterator.point(
-          pos,
-          curTo,
-          cursor.point,
-          active,
-          openCount,
-          cursor.pointRank,
-        )
+        let openCount = cursor.pointFrom < from ? active.length + 1 : Math.min(active.length, openRanges)
+        iterator.point(pos, curTo, cursor.point, active, openCount, cursor.pointRank)
         openRanges = Math.min(cursor.openEnd(curTo), active.length)
       } else if (curTo > pos) {
         iterator.span(pos, curTo, cursor.active, openRanges)
         openRanges = cursor.openEnd(curTo)
       }
-      if (cursor.to > to)
-        return openRanges + (cursor.point && cursor.to > to ? 1 : 0)
+      if (cursor.to > to) return openRanges + (cursor.point && cursor.to > to ? 1 : 0)
       pos = cursor.to
       cursor.next()
     }
@@ -3256,11 +2890,7 @@ var RangeSet = class {
   */
   static of(ranges, sort = false) {
     let build = new RangeSetBuilder()
-    for (let range of ranges instanceof Range
-      ? [ranges]
-      : sort
-        ? lazySort(ranges)
-        : ranges)
+    for (let range of ranges instanceof Range ? [ranges] : sort ? lazySort(ranges) : ranges)
       build.add(range.from, range.to, range.value)
     return build.finish()
   }
@@ -3301,24 +2931,15 @@ var RangeSetBuilder = class {
   */
   add(from, to, value) {
     if (!this.addInner(from, to, value))
-      (this.nextLayer || (this.nextLayer = new RangeSetBuilder())).add(
-        from,
-        to,
-        value,
-      )
+      (this.nextLayer || (this.nextLayer = new RangeSetBuilder())).add(from, to, value)
   }
   /**
   @internal
   */
   addInner(from, to, value) {
     let diff = from - this.lastTo || value.startSide - this.last.endSide
-    if (
-      diff <= 0 &&
-      (from - this.lastFrom || value.startSide - this.last.startSide) < 0
-    )
-      throw new Error(
-        'Ranges must be added sorted by `from` position and `startSide`',
-      )
+    if (diff <= 0 && (from - this.lastFrom || value.startSide - this.last.startSide) < 0)
+      throw new Error('Ranges must be added sorted by `from` position and `startSide`')
     if (diff < 0) return false
     if (this.from.length == 250) this.finishChunk(true)
     if (this.chunkStart < 0) this.chunkStart = from
@@ -3335,10 +2956,7 @@ var RangeSetBuilder = class {
   @internal
   */
   addChunk(from, chunk) {
-    if (
-      (from - this.lastTo || chunk.value[0].startSide - this.last.endSide) < 0
-    )
-      return false
+    if ((from - this.lastTo || chunk.value[0].startSide - this.last.endSide) < 0) return false
     if (this.from.length) this.finishChunk(true)
     this.setMaxPoint = Math.max(this.setMaxPoint, chunk.maxPoint)
     this.chunks.push(chunk)
@@ -3441,14 +3059,12 @@ var LayerCursor = class {
         side,
         true,
       )
-      if (!forward || this.rangeIndex < rangeIndex)
-        this.setRangeIndex(rangeIndex)
+      if (!forward || this.rangeIndex < rangeIndex) this.setRangeIndex(rangeIndex)
     }
     this.next()
   }
   forward(pos, side) {
-    if ((this.to - pos || this.endSide - side) < 0)
-      this.gotoInner(pos, side, true)
+    if ((this.to - pos || this.endSide - side) < 0) this.gotoInner(pos, side, true)
   }
   next() {
     for (;;) {
@@ -3464,11 +3080,7 @@ var LayerCursor = class {
         this.to = chunkPos + chunk.to[this.rangeIndex]
         this.value = chunk.value[this.rangeIndex]
         this.setRangeIndex(this.rangeIndex + 1)
-        if (
-          this.minPoint < 0 ||
-          (this.value.point && this.to - this.from >= this.minPoint)
-        )
-          break
+        if (this.minPoint < 0 || (this.value.point && this.to - this.from >= this.minPoint)) break
       }
     }
   }
@@ -3476,10 +3088,7 @@ var LayerCursor = class {
     if (index == this.layer.chunk[this.chunkIndex].value.length) {
       this.chunkIndex++
       if (this.skip) {
-        while (
-          this.chunkIndex < this.layer.chunk.length &&
-          this.skip.has(this.layer.chunk[this.chunkIndex])
-        )
+        while (this.chunkIndex < this.layer.chunk.length && this.skip.has(this.layer.chunk[this.chunkIndex]))
           this.chunkIndex++
       }
       this.rangeIndex = 0
@@ -3513,8 +3122,7 @@ var HeapCursor = class {
     let heap = []
     for (let i2 = 0; i2 < sets.length; i2++) {
       for (let cur = sets[i2]; !cur.isEmpty; cur = cur.nextLayer) {
-        if (cur.maxPoint >= minPoint)
-          heap.push(new LayerCursor(cur, skip, minPoint, i2))
+        if (cur.maxPoint >= minPoint) heap.push(new LayerCursor(cur, skip, minPoint, i2))
       }
     }
     return heap.length == 1 ? heap[0] : new HeapCursor(heap)
@@ -3524,15 +3132,13 @@ var HeapCursor = class {
   }
   goto(pos, side = -1e9) {
     for (let cur of this.heap) cur.goto(pos, side)
-    for (let i2 = this.heap.length >> 1; i2 >= 0; i2--)
-      heapBubble(this.heap, i2)
+    for (let i2 = this.heap.length >> 1; i2 >= 0; i2--) heapBubble(this.heap, i2)
     this.next()
     return this
   }
   forward(pos, side) {
     for (let cur of this.heap) cur.forward(pos, side)
-    for (let i2 = this.heap.length >> 1; i2 >= 0; i2--)
-      heapBubble(this.heap, i2)
+    for (let i2 = this.heap.length >> 1; i2 >= 0; i2--) heapBubble(this.heap, i2)
     if ((this.to - pos || this.value.endSide - side) < 0) this.next()
   }
   next() {
@@ -3559,10 +3165,7 @@ function heapBubble(heap, index) {
     let childIndex = (index << 1) + 1
     if (childIndex >= heap.length) break
     let child = heap[childIndex]
-    if (
-      childIndex + 1 < heap.length &&
-      child.compare(heap[childIndex + 1]) >= 0
-    ) {
+    if (childIndex + 1 < heap.length && child.compare(heap[childIndex + 1]) >= 0) {
       child = heap[childIndex + 1]
       childIndex++
     }
@@ -3586,8 +3189,7 @@ var SpanCursor = class {
   forward(pos, side) {
     while (
       this.minActive > -1 &&
-      (this.activeTo[this.minActive] - pos ||
-        this.active[this.minActive].endSide - side) < 0
+      (this.activeTo[this.minActive] - pos || this.active[this.minActive].endSide - side) < 0
     )
       this.removeActive(this.minActive)
     this.cursor.forward(pos, side)
@@ -3617,11 +3219,7 @@ var SpanCursor = class {
     let trackOpen = this.openStart < 0 ? [] : null
     for (;;) {
       let a = this.minActive
-      if (
-        a > -1 &&
-        (this.activeTo[a] - this.cursor.from ||
-          this.active[a].endSide - this.cursor.startSide) < 0
-      ) {
+      if (a > -1 && (this.activeTo[a] - this.cursor.from || this.active[a].endSide - this.cursor.startSide) < 0) {
         if (this.activeTo[a] > from) {
           this.to = this.activeTo[a]
           this.endSide = this.active[a].endSide
@@ -3641,11 +3239,7 @@ var SpanCursor = class {
         if (!nextVal.point) {
           this.addActive(trackOpen)
           this.cursor.next()
-        } else if (
-          wasPoint &&
-          this.cursor.to == this.to &&
-          this.cursor.from < this.cursor.to
-        ) {
+        } else if (wasPoint && this.cursor.to == this.to && this.cursor.from < this.cursor.to) {
           this.cursor.next()
         } else {
           this.point = nextVal
@@ -3661,8 +3255,7 @@ var SpanCursor = class {
     }
     if (trackOpen) {
       this.openStart = 0
-      for (let i2 = trackOpen.length - 1; i2 >= 0 && trackOpen[i2] < from; i2--)
-        this.openStart++
+      for (let i2 = trackOpen.length - 1; i2 >= 0 && trackOpen[i2] < from; i2--) this.openStart++
     }
   }
   activeForPoint(to) {
@@ -3670,23 +3263,14 @@ var SpanCursor = class {
     let active = []
     for (let i2 = this.active.length - 1; i2 >= 0; i2--) {
       if (this.activeRank[i2] < this.pointRank) break
-      if (
-        this.activeTo[i2] > to ||
-        (this.activeTo[i2] == to &&
-          this.active[i2].endSide >= this.point.endSide)
-      )
+      if (this.activeTo[i2] > to || (this.activeTo[i2] == to && this.active[i2].endSide >= this.point.endSide))
         active.push(this.active[i2])
     }
     return active.reverse()
   }
   openEnd(to) {
     let open = 0
-    for (
-      let i2 = this.activeTo.length - 1;
-      i2 >= 0 && this.activeTo[i2] > to;
-      i2--
-    )
-      open++
+    for (let i2 = this.activeTo.length - 1; i2 >= 0 && this.activeTo[i2] > to; i2--) open++
     return open
   }
   constructor(sets, skip, minPoint) {
@@ -3725,8 +3309,7 @@ function compare(a, startA, b, startB, length, comparator) {
       )
         comparator.comparePoint(pos, clipEnd, a.point, b.point)
     } else {
-      if (clipEnd > pos && !sameValues(a.active, b.active))
-        comparator.compareRange(pos, clipEnd, a.active, b.active)
+      if (clipEnd > pos && !sameValues(a.active, b.active)) comparator.compareRange(pos, clipEnd, a.active, b.active)
     }
     if (end > endB) break
     pos = end
@@ -3736,13 +3319,11 @@ function compare(a, startA, b, startB, length, comparator) {
 }
 function sameValues(a, b) {
   if (a.length != b.length) return false
-  for (let i2 = 0; i2 < a.length; i2++)
-    if (a[i2] != b[i2] && !a[i2].eq(b[i2])) return false
+  for (let i2 = 0; i2 < a.length; i2++) if (a[i2] != b[i2] && !a[i2].eq(b[i2])) return false
   return true
 }
 function remove(array, index) {
-  for (let i2 = index, e = array.length - 1; i2 < e; i2++)
-    array[i2] = array[i2 + 1]
+  for (let i2 = index, e = array.length - 1; i2 < e; i2++) array[i2] = array[i2 + 1]
   array.pop()
 }
 function insert(array, index, value) {
@@ -3753,9 +3334,7 @@ function findMinIndex(value, array) {
   let found = -1,
     foundPos = 1e9
   for (let i2 = 0; i2 < array.length; i2++)
-    if (
-      (array[i2] - foundPos || value[i2].endSide - value[found].endSide) < 0
-    ) {
+    if ((array[i2] - foundPos || value[i2].endSide - value[found].endSide) < 0) {
       found = i2
       foundPos = array[i2]
     }
@@ -3788,16 +3367,8 @@ function findColumn(string2, col, tabSize, strict) {
 var __unframerNavigator = typeof window !== 'undefined' ? navigator : void 0
 var C = '\u037C'
 var COUNT = typeof Symbol == 'undefined' ? '__' + C : Symbol.for(C)
-var SET =
-  typeof Symbol == 'undefined'
-    ? '__styleSet' + Math.floor(Math.random() * 1e8)
-    : Symbol('styleSet')
-var top =
-  typeof globalThis != 'undefined'
-    ? globalThis
-    : typeof window != 'undefined'
-      ? window
-      : {}
+var SET = typeof Symbol == 'undefined' ? '__styleSet' + Math.floor(Math.random() * 1e8) : Symbol('styleSet')
+var top = typeof globalThis != 'undefined' ? globalThis : typeof window != 'undefined' ? window : {}
 var StyleModule = class {
   // :: () → string
   // Returns a string containing the module's CSS rules.
@@ -3825,9 +3396,7 @@ var StyleModule = class {
   // in a way that changes the order of already mounted modules, the old
   // order will be changed.
   static mount(root, modules) {
-    ;(root[SET] || new StyleSet(root)).mount(
-      Array.isArray(modules) ? modules : [modules],
-    )
+    ;(root[SET] || new StyleSet(root)).mount(Array.isArray(modules) ? modules : [modules])
   }
   // :: (Object<Style>, ?{finish: ?(string) → string})
   // Create a style module from the given spec.
@@ -3857,30 +3426,15 @@ var StyleModule = class {
             target,
           )
         } else if (value && typeof value == 'object') {
-          if (!isAt)
-            throw new RangeError(
-              'The value of a property (' +
-                prop +
-                ') should be a primitive value.',
-            )
+          if (!isAt) throw new RangeError('The value of a property (' + prop + ') should be a primitive value.')
           render(splitSelector(prop), value, local, keyframes)
         } else if (value != null) {
-          local.push(
-            prop
-              .replace(/_.*/, '')
-              .replace(/[A-Z]/g, (l) => '-' + l.toLowerCase()) +
-              ': ' +
-              value +
-              ';',
-          )
+          local.push(prop.replace(/_.*/, '').replace(/[A-Z]/g, (l) => '-' + l.toLowerCase()) + ': ' + value + ';')
         }
       }
       if (local.length || keyframes) {
         target.push(
-          (finish && !isAt && !isKeyframes
-            ? selectors.map(finish)
-            : selectors
-          ).join(', ') +
+          (finish && !isAt && !isKeyframes ? selectors.map(finish) : selectors).join(', ') +
             ' {' +
             local.join(' ') +
             '}',
@@ -3906,9 +3460,7 @@ var StyleSet = class {
       }
       if (index == -1) {
         this.modules.splice(j++, 0, mod)
-        if (sheet)
-          for (let k = 0; k < mod.rules.length; k++)
-            sheet.insertRule(mod.rules[k], pos++)
+        if (sheet) for (let k = 0; k < mod.rules.length; k++) sheet.insertRule(mod.rules[k], pos++)
       } else {
         while (j < index) pos += this.modules[j++].rules.length
         pos += mod.rules.length
@@ -3917,8 +3469,7 @@ var StyleSet = class {
     }
     if (!sheet) {
       let text = ''
-      for (let i2 = 0; i2 < this.modules.length; i2++)
-        text += this.modules[i2].getRules() + '\n'
+      for (let i2 = 0; i2 < this.modules.length; i2++) text += this.modules[i2].getRules() + '\n'
       this.styleTag.textContent = text
     }
   }
@@ -4023,14 +3574,10 @@ var shift = {
   221: '}',
   222: '"',
 }
-var mac =
-  typeof __unframerNavigator != 'undefined' &&
-  /Mac/.test(__unframerNavigator.platform)
+var mac = typeof __unframerNavigator != 'undefined' && /Mac/.test(__unframerNavigator.platform)
 var ie =
   typeof __unframerNavigator != 'undefined' &&
-  /MSIE \d|Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(
-    __unframerNavigator.userAgent,
-  )
+  /MSIE \d|Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(__unframerNavigator.userAgent)
 for (i = 0; i < 10; i++) base[48 + i] = base[96 + i] = String(i)
 var i
 for (i = 1; i <= 24; i++) base[i + 111] = 'F' + i
@@ -4044,18 +3591,10 @@ for (code in base) if (!shift.hasOwnProperty(code)) shift[code] = base[code]
 var code
 function keyName(event) {
   var ignoreKey =
-    (mac &&
-      event.metaKey &&
-      event.shiftKey &&
-      !event.ctrlKey &&
-      !event.altKey) ||
+    (mac && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey) ||
     (ie && event.shiftKey && event.key && event.key.length == 1) ||
     event.key == 'Unidentified'
-  var name2 =
-    (!ignoreKey && event.key) ||
-    (event.shiftKey ? shift : base)[event.keyCode] ||
-    event.key ||
-    'Unidentified'
+  var name2 = (!ignoreKey && event.key) || (event.shiftKey ? shift : base)[event.keyCode] || event.key || 'Unidentified'
   if (name2 == 'Esc') name2 = 'Escape'
   if (name2 == 'Del') name2 = 'Delete'
   if (name2 == 'Left') name2 = 'ArrowLeft'
@@ -4074,9 +3613,7 @@ function getSelection(root) {
   return target.getSelection()
 }
 function contains(dom, node) {
-  return node
-    ? dom == node || dom.contains(node.nodeType != 1 ? node.parentNode : node)
-    : false
+  return node ? dom == node || dom.contains(node.nodeType != 1 ? node.parentNode : node) : false
 }
 function deepActiveElement(doc2) {
   let elt = doc2.activeElement
@@ -4092,15 +3629,13 @@ function hasSelection(dom, selection) {
   }
 }
 function clientRectsFor(dom) {
-  if (dom.nodeType == 3)
-    return textRange(dom, 0, dom.nodeValue.length).getClientRects()
+  if (dom.nodeType == 3) return textRange(dom, 0, dom.nodeValue.length).getClientRects()
   else if (dom.nodeType == 1) return dom.getClientRects()
   else return []
 }
 function isEquivalentPosition(node, off, targetNode, targetOff) {
   return targetNode
-    ? scanFor(node, off, targetNode, targetOff, -1) ||
-        scanFor(node, off, targetNode, targetOff, 1)
+    ? scanFor(node, off, targetNode, targetOff, -1) || scanFor(node, off, targetNode, targetOff, 1)
     : false
 }
 function domIndex(node) {
@@ -4147,10 +3682,7 @@ function scrollRectIntoView(dom, rect, side, x, y, xMargin, yMargin, ltr) {
       if (top22) {
         bounding = windowRect(win)
       } else {
-        if (
-          cur.scrollHeight <= cur.clientHeight &&
-          cur.scrollWidth <= cur.clientWidth
-        ) {
+        if (cur.scrollHeight <= cur.clientHeight && cur.scrollWidth <= cur.clientWidth) {
           cur = cur.assignedSlot || cur.parentNode
           continue
         }
@@ -4167,12 +3699,10 @@ function scrollRectIntoView(dom, rect, side, x, y, xMargin, yMargin, ltr) {
       if (y == 'nearest') {
         if (rect.top < bounding.top) {
           moveY = -(bounding.top - rect.top + yMargin)
-          if (side > 0 && rect.bottom > bounding.bottom + moveY)
-            moveY = rect.bottom - bounding.bottom + moveY + yMargin
+          if (side > 0 && rect.bottom > bounding.bottom + moveY) moveY = rect.bottom - bounding.bottom + moveY + yMargin
         } else if (rect.bottom > bounding.bottom) {
           moveY = rect.bottom - bounding.bottom + yMargin
-          if (side < 0 && rect.top - moveY < bounding.top)
-            moveY = -(bounding.top + moveY - rect.top + yMargin)
+          if (side < 0 && rect.top - moveY < bounding.top) moveY = -(bounding.top + moveY - rect.top + yMargin)
         }
       } else {
         let rectHeight = rect.bottom - rect.top,
@@ -4188,19 +3718,15 @@ function scrollRectIntoView(dom, rect, side, x, y, xMargin, yMargin, ltr) {
       if (x == 'nearest') {
         if (rect.left < bounding.left) {
           moveX = -(bounding.left - rect.left + xMargin)
-          if (side > 0 && rect.right > bounding.right + moveX)
-            moveX = rect.right - bounding.right + moveX + xMargin
+          if (side > 0 && rect.right > bounding.right + moveX) moveX = rect.right - bounding.right + moveX + xMargin
         } else if (rect.right > bounding.right) {
           moveX = rect.right - bounding.right + xMargin
-          if (side < 0 && rect.left < bounding.left + moveX)
-            moveX = -(bounding.left + moveX - rect.left + xMargin)
+          if (side < 0 && rect.left < bounding.left + moveX) moveX = -(bounding.left + moveX - rect.left + xMargin)
         }
       } else {
         let targetLeft =
           x == 'center'
-            ? rect.left +
-              (rect.right - rect.left) / 2 -
-              (bounding.right - bounding.left) / 2
+            ? rect.left + (rect.right - rect.left) / 2 - (bounding.right - bounding.left) / 2
             : (x == 'start') == ltr
               ? rect.left - xMargin
               : rect.right - (bounding.right - bounding.left) + xMargin
@@ -4247,11 +3773,7 @@ function scrollableParent(dom) {
     if (cur == doc2.body) {
       break
     } else if (cur.nodeType == 1) {
-      if (
-        cur.scrollHeight > cur.clientHeight ||
-        cur.scrollWidth > cur.clientWidth
-      )
-        return cur
+      if (cur.scrollHeight > cur.clientHeight || cur.scrollWidth > cur.clientWidth) return cur
       cur = cur.assignedSlot || cur.parentNode
     } else if (cur.nodeType == 11) {
       cur = cur.host
@@ -4347,8 +3869,7 @@ function dispatchKey(elt, name2, code2) {
 }
 function getRoot(node) {
   while (node) {
-    if (node && (node.nodeType == 9 || (node.nodeType == 11 && node.host)))
-      return node
+    if (node && (node.nodeType == 9 || (node.nodeType == 11 && node.host))) return node
     node = node.assignedSlot || node.parentNode
   }
   return null
@@ -4359,8 +3880,7 @@ function clearAttributes(node) {
 function atElementStart(doc2, selection) {
   let node = selection.focusNode,
     offset = selection.focusOffset
-  if (!node || selection.anchorNode != node || selection.anchorOffset != offset)
-    return false
+  if (!node || selection.anchorNode != node || selection.anchorOffset != offset) return false
   offset = Math.min(offset, maxOffset(node))
   for (;;) {
     if (offset) {
@@ -4421,28 +3941,15 @@ var ContentView = class {
         next
       for (let child of this.children) {
         if (child.dirty) {
-          if (
-            !child.dom &&
-            (next = prev ? prev.nextSibling : parent.firstChild)
-          ) {
+          if (!child.dom && (next = prev ? prev.nextSibling : parent.firstChild)) {
             let contentView = ContentView.get(next)
-            if (
-              !contentView ||
-              (!contentView.parent && contentView.canReuseDOM(child))
-            )
-              child.reuseDOM(next)
+            if (!contentView || (!contentView.parent && contentView.canReuseDOM(child))) child.reuseDOM(next)
           }
           child.sync(view, track)
           child.dirty = 0
         }
         next = prev ? prev.nextSibling : parent.firstChild
-        if (
-          track &&
-          !track.written &&
-          track.node == parent &&
-          next != child.dom
-        )
-          track.written = true
+        if (track && !track.written && track.node == parent && next != child.dom) track.written = true
         if (child.dom.parentNode == parent) {
           while (next && next != child.dom) next = rm$1(next)
         } else {
@@ -4494,11 +4001,7 @@ var ContentView = class {
       fromStart = -1,
       toI = -1,
       toEnd = -1
-    for (
-      let i2 = 0, pos = offset, prevEnd = offset;
-      i2 < this.children.length;
-      i2++
-    ) {
+    for (let i2 = 0, pos = offset, prevEnd = offset; i2 < this.children.length; i2++) {
       let child = this.children[i2],
         end = pos + child.length
       if (pos < from && end > to) return child.domBoundsAround(from, to, pos)
@@ -4517,11 +4020,8 @@ var ContentView = class {
     return {
       from: fromStart,
       to: toEnd < 0 ? offset + this.length : toEnd,
-      startDOM:
-        (fromI ? this.children[fromI - 1].dom.nextSibling : null) ||
-        this.dom.firstChild,
-      endDOM:
-        toI < this.children.length && toI >= 0 ? this.children[toI].dom : null,
+      startDOM: (fromI ? this.children[fromI - 1].dom.nextSibling : null) || this.dom.firstChild,
+      endDOM: toI < this.children.length && toI >= 0 ? this.children[toI].dom : null,
     }
   }
   markDirty(andParent = false) {
@@ -4632,11 +4132,7 @@ function rm$1(dom) {
 var ChildCursor = class {
   findPos(pos, bias = 1) {
     for (;;) {
-      if (
-        pos > this.pos ||
-        (pos == this.pos &&
-          (bias > 0 || this.i == 0 || this.children[this.i - 1].breakAfter))
-      ) {
+      if (pos > this.pos || (pos == this.pos && (bias > 0 || this.i == 0 || this.children[this.i - 1].breakAfter))) {
         this.off = pos - this.pos
         return this
       }
@@ -4651,17 +4147,7 @@ var ChildCursor = class {
     this.off = 0
   }
 }
-function replaceRange(
-  parent,
-  fromI,
-  fromOff,
-  toI,
-  toOff,
-  insert2,
-  breakAtStart,
-  openStart,
-  openEnd,
-) {
+function replaceRange(parent, fromI, fromOff, toI, toOff, insert2, breakAtStart, openStart, openEnd) {
   let { children } = parent
   let before = children.length ? children[fromI] : null
   let last = insert2.length ? insert2[insert2.length - 1] : null
@@ -4672,14 +4158,7 @@ function replaceRange(
     !breakAtStart &&
     !breakAtEnd &&
     insert2.length < 2 &&
-    before.merge(
-      fromOff,
-      toOff,
-      insert2.length ? last : null,
-      fromOff == 0,
-      openStart,
-      openEnd,
-    )
+    before.merge(fromOff, toOff, insert2.length ? last : null, fromOff == 0, openStart, openEnd)
   )
     return
   if (toI < children.length) {
@@ -4689,11 +4168,7 @@ function replaceRange(
         after = after.split(toOff)
         toOff = 0
       }
-      if (
-        !breakAtEnd &&
-        last &&
-        after.merge(0, toOff, last, true, 0, openEnd)
-      ) {
+      if (!breakAtEnd && last && after.merge(0, toOff, last, true, 0, openEnd)) {
         insert2[insert2.length - 1] = after
       } else {
         if (toOff) after.merge(0, toOff, null, false, 0, openEnd)
@@ -4708,16 +4183,11 @@ function replaceRange(
   if (before) {
     before.breakAfter = breakAtStart
     if (fromOff > 0) {
-      if (
-        !breakAtStart &&
-        insert2.length &&
-        before.merge(fromOff, before.length, insert2[0], false, openStart, 0)
-      ) {
+      if (!breakAtStart && insert2.length && before.merge(fromOff, before.length, insert2[0], false, openStart, 0)) {
         before.breakAfter = insert2.shift().breakAfter
       } else if (
         fromOff < before.length ||
-        (before.children.length &&
-          before.children[before.children.length - 1].length == 0)
+        (before.children.length && before.children[before.children.length - 1].length == 0)
       ) {
         before.merge(fromOff, before.length, null, false, openStart, 0)
       }
@@ -4754,63 +4224,35 @@ function mergeChildrenInto(parent, from, to, insert2, openStart, openEnd) {
   let dLen = from - to
   for (let view of insert2) dLen += view.length
   parent.length += dLen
-  replaceRange(
-    parent,
-    fromI,
-    fromOff,
-    toI,
-    toOff,
-    insert2,
-    0,
-    openStart,
-    openEnd,
-  )
+  replaceRange(parent, fromI, fromOff, toI, toOff, insert2, 0, openStart, openEnd)
 }
-var nav =
-  typeof __unframerNavigator != 'undefined'
-    ? __unframerNavigator
-    : { userAgent: '', vendor: '', platform: '' }
-var doc =
-  typeof document != 'undefined' ? document : { documentElement: { style: {} } }
+var nav = typeof __unframerNavigator != 'undefined' ? __unframerNavigator : { userAgent: '', vendor: '', platform: '' }
+var doc = typeof document != 'undefined' ? document : { documentElement: { style: {} } }
 var ie_edge = /* @__PURE__ */ /Edge\/(\d+)/.exec(nav.userAgent)
 var ie_upto10 = /* @__PURE__ */ /MSIE \d/.test(nav.userAgent)
-var ie_11up = /* @__PURE__ */ /Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(
-  nav.userAgent,
-)
+var ie_11up = /* @__PURE__ */ /Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(nav.userAgent)
 var ie2 = !!(ie_upto10 || ie_11up || ie_edge)
 var gecko = !ie2 && /* @__PURE__ */ /gecko\/(\d+)/i.test(nav.userAgent)
 var chrome = !ie2 && /* @__PURE__ */ /Chrome\/(\d+)/.exec(nav.userAgent)
 var webkit = 'webkitFontSmoothing' in doc.documentElement.style
 var safari = !ie2 && /* @__PURE__ */ /Apple Computer/.test(nav.vendor)
-var ios =
-  safari && (/Mobile\/\w+/.test(nav.userAgent) || nav.maxTouchPoints > 2)
+var ios = safari && (/Mobile\/\w+/.test(nav.userAgent) || nav.maxTouchPoints > 2)
 var browser = {
   mac: ios || /* @__PURE__ */ /Mac/.test(nav.platform),
   windows: /* @__PURE__ */ /Win/.test(nav.platform),
   linux: /* @__PURE__ */ /Linux|X11/.test(nav.platform),
   ie: ie2,
-  ie_version: ie_upto10
-    ? doc.documentMode || 6
-    : ie_11up
-      ? +ie_11up[1]
-      : ie_edge
-        ? +ie_edge[1]
-        : 0,
+  ie_version: ie_upto10 ? doc.documentMode || 6 : ie_11up ? +ie_11up[1] : ie_edge ? +ie_edge[1] : 0,
   gecko,
-  gecko_version: gecko
-    ? +(/Firefox\/(\d+)/.exec(nav.userAgent) || [0, 0])[1]
-    : 0,
+  gecko_version: gecko ? +(/Firefox\/(\d+)/.exec(nav.userAgent) || [0, 0])[1] : 0,
   chrome: !!chrome,
   chrome_version: chrome ? +chrome[1] : 0,
   ios,
   android: /* @__PURE__ */ /Android\b/.test(nav.userAgent),
   webkit,
   safari,
-  webkit_version: webkit
-    ? +(/\bAppleWebKit\/(\d+)/.exec(__unframerNavigator.userAgent) || [0, 0])[1]
-    : 0,
-  tabSize:
-    doc.documentElement.style.tabSize != null ? 'tab-size' : '-moz-tab-size',
+  webkit_version: webkit ? +(/\bAppleWebKit\/(\d+)/.exec(__unframerNavigator.userAgent) || [0, 0])[1] : 0,
+  tabSize: doc.documentElement.style.tabSize != null ? 'tab-size' : '-moz-tab-size',
 }
 var MaxJoinLen = 256
 var TextView = class extends ContentView {
@@ -4831,16 +4273,9 @@ var TextView = class extends ContentView {
     if (dom.nodeType == 3) this.createDOM(dom)
   }
   merge(from, to, source) {
-    if (
-      source &&
-      (!(source instanceof TextView) ||
-        this.length - (to - from) + source.length > MaxJoinLen)
-    )
+    if (source && (!(source instanceof TextView) || this.length - (to - from) + source.length > MaxJoinLen))
       return false
-    this.text =
-      this.text.slice(0, from) +
-      (source ? source.text : '') +
-      this.text.slice(to)
+    this.text = this.text.slice(0, from) + (source ? source.text : '') + this.text.slice(to)
     this.markDirty()
     return true
   }
@@ -4876,9 +4311,7 @@ var MarkView = class extends ContentView {
   setAttrs(dom) {
     clearAttributes(dom)
     if (this.mark.class) dom.className = this.mark.class
-    if (this.mark.attrs)
-      for (let name2 in this.mark.attrs)
-        dom.setAttribute(name2, this.mark.attrs[name2])
+    if (this.mark.attrs) for (let name2 in this.mark.attrs) dom.setAttribute(name2, this.mark.attrs[name2])
     return dom
   }
   reuseDOM(node) {
@@ -4888,8 +4321,7 @@ var MarkView = class extends ContentView {
     }
   }
   sync(view, track) {
-    if (!this.dom)
-      this.setDOM(this.setAttrs(document.createElement(this.mark.tagName)))
+    if (!this.dom) this.setDOM(this.setAttrs(document.createElement(this.mark.tagName)))
     else if (this.dirty & 4) this.setAttrs(this.dom)
     super.sync(view, track)
   }
@@ -4901,14 +4333,7 @@ var MarkView = class extends ContentView {
         (to < this.length && openEnd <= 0))
     )
       return false
-    mergeChildrenInto(
-      this,
-      from,
-      to,
-      source ? source.children : [],
-      openStart - 1,
-      openEnd - 1,
-    )
+    mergeChildrenInto(this, from, to, source ? source.children : [], openStart - 1, openEnd - 1)
     this.markDirty()
     return true
   }
@@ -4969,8 +4394,7 @@ function textCoords(text, pos, side) {
   let rects = textRange(text, from, to).getClientRects()
   if (!rects.length) return null
   let rect = rects[(flatten2 ? flatten2 < 0 : side >= 0) ? 0 : rects.length - 1]
-  if (browser.safari && !flatten2 && rect.width == 0)
-    rect = Array.prototype.find.call(rects, (r) => r.width) || rect
+  if (browser.safari && !flatten2 && rect.width == 0) rect = Array.prototype.find.call(rects, (r) => r.width) || rect
   return flatten2 ? flattenRect(rect, flatten2 < 0) : rect || null
 }
 var WidgetView = class extends ContentView {
@@ -5006,11 +4430,7 @@ var WidgetView = class extends ContentView {
     return true
   }
   become(other) {
-    if (
-      other instanceof WidgetView &&
-      other.side == this.side &&
-      this.widget.constructor == other.widget.constructor
-    ) {
+    if (other instanceof WidgetView && other.side == this.side && this.widget.constructor == other.widget.constructor) {
       if (!this.widget.compare(other.widget)) this.markDirty(true)
       if (this.dom && !this.prevWidget) this.prevWidget = this.widget
       this.widget = other.widget
@@ -5051,8 +4471,7 @@ var WidgetView = class extends ContentView {
     let fromBack = this.side ? this.side < 0 : pos > 0
     for (let i2 = fromBack ? rects.length - 1 : 0; ; i2 += fromBack ? -1 : 1) {
       rect = rects[i2]
-      if (pos > 0 ? i2 == 0 : i2 == rects.length - 1 || rect.top < rect.bottom)
-        break
+      if (pos > 0 ? i2 == 0 : i2 == rects.length - 1 || rect.top < rect.bottom) break
     }
     return flattenRect(rect, !fromBack)
   }
@@ -5097,13 +4516,7 @@ var CompositionView = class extends WidgetView {
   localPosFromDOM(node, offset) {
     let { topView, text } = this.widget
     if (!topView) return Math.min(offset, this.length)
-    return posFromDOMInCompositionTree(
-      node,
-      offset,
-      topView,
-      text,
-      this.length - topView.length,
-    )
+    return posFromDOMInCompositionTree(node, offset, topView, text, this.length - topView.length)
   }
   ignoreMutation() {
     return false
@@ -5127,9 +4540,7 @@ var CompositionView = class extends WidgetView {
   destroy() {
     var _a2
     super.destroy()
-    ;(_a2 = this.widget.topView) === null || _a2 === void 0
-      ? void 0
-      : _a2.destroy()
+    ;(_a2 = this.widget.topView) === null || _a2 === void 0 ? void 0 : _a2.destroy()
   }
   get isEditable() {
     return true
@@ -5151,15 +4562,7 @@ function scanCompositionTree(pos, side, view, text, dLen, enterView, fromText) {
         let len = desc.length + (hasComp ? dLen : 0)
         if (pos < len || (pos == len && desc.getSide() <= 0))
           return hasComp
-            ? scanCompositionTree(
-                pos,
-                side,
-                desc,
-                text,
-                dLen,
-                enterView,
-                fromText,
-              )
+            ? scanCompositionTree(pos, side, desc, text, dLen, enterView, fromText)
             : enterView(desc, pos, side)
         pos -= len
       }
@@ -5213,16 +4616,10 @@ function posFromDOMInCompositionTree(node, offset, view, text, dLen) {
 }
 function posFromDOMInOpaqueNode(node, offset, target) {
   if (target.nodeType == 3) {
-    return node == target
-      ? { result: offset }
-      : { size: target.nodeValue.length }
+    return node == target ? { result: offset } : { size: target.nodeValue.length }
   } else if (target.nodeType == 1 && target.contentEditable != 'false') {
     let pos = 0
-    for (
-      let child = target.firstChild, i2 = 0;
-      ;
-      child = child.nextSibling, i2++
-    ) {
+    for (let child = target.firstChild, i2 = 0; ; child = child.nextSibling, i2++) {
       if (node == target && i2 == offset) return { result: pos }
       if (!child) return { size: pos }
       let inner = posFromDOMInOpaqueNode(node, offset, child)
@@ -5280,10 +4677,7 @@ var WidgetBufferView = class extends ContentView {
     this.side = side
   }
 }
-TextView.prototype.children =
-  WidgetView.prototype.children =
-  WidgetBufferView.prototype.children =
-    noChildren
+TextView.prototype.children = WidgetView.prototype.children = WidgetBufferView.prototype.children = noChildren
 function inlineDOMAtPos(parent, pos) {
   let dom = parent.dom,
     { children } = parent,
@@ -5292,8 +4686,7 @@ function inlineDOMAtPos(parent, pos) {
     let child = children[i2],
       end = off + child.length
     if (end == off && child.getSide() <= 0) continue
-    if (pos > off && pos < end && child.dom.parentNode == dom)
-      return child.domAtPos(pos - off)
+    if (pos > off && pos < end && child.dom.parentNode == dom) return child.domAtPos(pos - off)
     if (pos <= off) break
     off = end
   }
@@ -5336,16 +4729,10 @@ function coordsInChildren(view, pos, side) {
       if (end >= pos2) {
         if (child.children.length) {
           scan(child, pos2 - off)
-        } else if (
-          (!after || (after.isHidden && side > 0)) &&
-          (end > pos2 || (off == end && child.getSide() > 0))
-        ) {
+        } else if ((!after || (after.isHidden && side > 0)) && (end > pos2 || (off == end && child.getSide() > 0))) {
           after = child
           afterPos = pos2 - off
-        } else if (
-          off < pos2 ||
-          (off == end && child.getSide() < 0 && !child.isHidden)
-        ) {
+        } else if (off < pos2 || (off == end && child.getSide() < 0 && !child.isHidden)) {
           before = child
           beforePos = pos2 - off
         }
@@ -5355,11 +4742,7 @@ function coordsInChildren(view, pos, side) {
   }
   scan(view, pos)
   let target = (side < 0 ? before : after) || before || after
-  if (target)
-    return target.coordsAt(
-      Math.max(0, target == before ? beforePos : afterPos),
-      side,
-    )
+  if (target) return target.coordsAt(Math.max(0, target == before ? beforePos : afterPos), side)
   return fallbackRect(view)
 }
 function fallbackRect(view) {
@@ -5371,8 +4754,7 @@ function fallbackRect(view) {
 function combineAttrs(source, target) {
   for (let name2 in source) {
     if (name2 == 'class' && target.class) target.class += ' ' + source.class
-    else if (name2 == 'style' && target.style)
-      target.style += ';' + source.style
+    else if (name2 == 'style' && target.style) target.style += ';' + source.style
     else target[name2] = source[name2]
   }
   return target
@@ -5391,13 +4773,11 @@ function attrsEq(a, b) {
 function updateAttrs(dom, prev, attrs) {
   let changed = null
   if (prev) {
-    for (let name2 in prev)
-      if (!(attrs && name2 in attrs)) dom.removeAttribute((changed = name2))
+    for (let name2 in prev) if (!(attrs && name2 in attrs)) dom.removeAttribute((changed = name2))
   }
   if (attrs) {
     for (let name2 in attrs)
-      if (!(prev && prev[name2] == attrs[name2]))
-        dom.setAttribute((changed = name2), attrs[name2])
+      if (!(prev && prev[name2] == attrs[name2])) dom.setAttribute((changed = name2), attrs[name2])
   }
   return !!changed
 }
@@ -5428,9 +4808,7 @@ var WidgetType = class {
   @internal
   */
   compare(other) {
-    return (
-      this == other || (this.constructor == other.constructor && this.eq(other))
-    )
+    return this == other || (this.constructor == other.constructor && this.eq(other))
   }
   /**
   The estimated height this widget will have, to be used when
@@ -5520,14 +4898,7 @@ var Decoration = class extends RangeValue {
     let side = Math.max(-1e4, Math.min(1e4, spec.side || 0)),
       block = !!spec.block
     side += block ? (side > 0 ? 3e8 : -4e8) : side > 0 ? 1e8 : -1e8
-    return new PointDecoration(
-      spec,
-      side,
-      side,
-      block,
-      spec.widget || null,
-      false,
-    )
+    return new PointDecoration(spec, side, side, block, spec.widget || null, false)
   }
   /**
   Create a replace decoration which replaces the given range with
@@ -5545,14 +4916,7 @@ var Decoration = class extends RangeValue {
       startSide = (start ? (block ? -3e8 : -1) : 5e8) - 1
       endSide = (end ? (block ? 2e8 : 1) : -6e8) + 1
     }
-    return new PointDecoration(
-      spec,
-      startSide,
-      endSide,
-      block,
-      spec.widget || null,
-      true,
-    )
+    return new PointDecoration(spec, startSide, endSide, block, spec.widget || null, true)
   }
   /**
   Create a line decoration, which can add DOM attributes to the
@@ -5616,8 +4980,7 @@ var LineDecoration = class extends Decoration {
     )
   }
   range(from, to = from) {
-    if (to != from)
-      throw new RangeError('Line decoration ranges must be zero-length')
+    if (to != from) throw new RangeError('Line decoration ranges must be zero-length')
     return super.range(from, to)
   }
   constructor(spec) {
@@ -5636,11 +4999,7 @@ var PointDecoration = class extends Decoration {
         : BlockType.WidgetAfter
   }
   get heightRelevant() {
-    return (
-      this.block ||
-      (!!this.widget &&
-        (this.widget.estimatedHeight >= 5 || this.widget.lineBreaks > 0))
-    )
+    return this.block || (!!this.widget && (this.widget.estimatedHeight >= 5 || this.widget.lineBreaks > 0))
   }
   eq(other) {
     return (
@@ -5652,26 +5011,16 @@ var PointDecoration = class extends Decoration {
     )
   }
   range(from, to = from) {
-    if (
-      this.isReplace &&
-      (from > to || (from == to && this.startSide > 0 && this.endSide <= 0))
-    )
+    if (this.isReplace && (from > to || (from == to && this.startSide > 0 && this.endSide <= 0)))
       throw new RangeError('Invalid range for replacement decoration')
-    if (!this.isReplace && to != from)
-      throw new RangeError(
-        'Widget decorations can only have zero-length ranges',
-      )
+    if (!this.isReplace && to != from) throw new RangeError('Widget decorations can only have zero-length ranges')
     return super.range(from, to)
   }
   constructor(spec, startSide, endSide, block, widget, isReplace) {
     super(startSide, endSide, widget, spec)
     this.block = block
     this.isReplace = isReplace
-    this.mapMode = !block
-      ? MapMode.TrackDel
-      : startSide <= 0
-        ? MapMode.TrackBefore
-        : MapMode.TrackAfter
+    this.mapMode = !block ? MapMode.TrackDel : startSide <= 0 ? MapMode.TrackBefore : MapMode.TrackAfter
   }
 }
 PointDecoration.prototype.point = true
@@ -5689,8 +5038,7 @@ function widgetsEq(a, b) {
 }
 function addRange(from, to, ranges, margin = 0) {
   let last = ranges.length - 1
-  if (last >= 0 && ranges[last] + margin >= from)
-    ranges[last] = Math.max(ranges[last], to)
+  if (last >= 0 && ranges[last] + margin >= from) ranges[last] = Math.max(ranges[last], to)
   else ranges.push(from, to)
 }
 var LineView = class extends ContentView {
@@ -5701,14 +5049,7 @@ var LineView = class extends ContentView {
       if (!this.dom) source.transferDOM(this)
     }
     if (hasStart) this.setDeco(source ? source.attrs : null)
-    mergeChildrenInto(
-      this,
-      from,
-      to,
-      source ? source.children : [],
-      openStart,
-      openEnd,
-    )
+    mergeChildrenInto(this, from, to, source ? source.children : [], openStart, openEnd)
     return true
   }
   split(at) {
@@ -5721,10 +5062,8 @@ var LineView = class extends ContentView {
       this.children[i2].merge(off, this.children[i2].length, null, false, 0, 0)
       i2++
     }
-    for (let j = i2; j < this.children.length; j++)
-      end.append(this.children[j], 0)
-    while (i2 > 0 && this.children[i2 - 1].length == 0)
-      this.children[--i2].destroy()
+    for (let j = i2; j < this.children.length; j++) end.append(this.children[j], 0)
+    while (i2 > 0 && this.children[i2 - 1].length == 0) this.children[--i2].destroy()
     this.children.length = i2
     this.markDirty()
     this.length = at
@@ -5784,15 +5123,12 @@ var LineView = class extends ContentView {
     }
     super.sync(view, track)
     let last = this.dom.lastChild
-    while (last && ContentView.get(last) instanceof MarkView)
-      last = last.lastChild
+    while (last && ContentView.get(last) instanceof MarkView) last = last.lastChild
     if (
       !last ||
       !this.length ||
       (last.nodeName != 'BR' &&
-        ((_a2 = ContentView.get(last)) === null || _a2 === void 0
-          ? void 0
-          : _a2.isEditable) == false &&
+        ((_a2 = ContentView.get(last)) === null || _a2 === void 0 ? void 0 : _a2.isEditable) == false &&
         (!browser.ios || !this.children.some((ch) => ch instanceof TextView)))
     ) {
       let hack = document.createElement('BR')
@@ -5824,10 +5160,7 @@ var LineView = class extends ContentView {
     if (!this.children.length && rect && this.parent) {
       let { heightOracle } = this.parent.view.viewState,
         height = rect.bottom - rect.top
-      if (
-        Math.abs(height - heightOracle.lineHeight) < 2 &&
-        heightOracle.textHeight < height
-      ) {
+      if (Math.abs(height - heightOracle.lineHeight) < 2 && heightOracle.textHeight < height) {
         let dist = (height - heightOracle.textHeight) / 2
         return {
           top: rect.top + dist,
@@ -5880,9 +5213,7 @@ var BlockWidgetView = class extends ContentView {
     return true
   }
   domAtPos(pos) {
-    return pos == 0
-      ? DOMPos.before(this.dom)
-      : DOMPos.after(this.dom, pos == this.length)
+    return pos == 0 ? DOMPos.before(this.dom) : DOMPos.after(this.dom, pos == this.length)
   }
   split(at) {
     let len = this.length - at
@@ -5903,18 +5234,13 @@ var BlockWidgetView = class extends ContentView {
     }
   }
   get overrideDOMText() {
-    return this.parent
-      ? this.parent.view.state.doc.slice(this.posAtStart, this.posAtEnd)
-      : Text.empty
+    return this.parent ? this.parent.view.state.doc.slice(this.posAtStart, this.posAtEnd) : Text.empty
   }
   domBoundsAround() {
     return null
   }
   become(other) {
-    if (
-      other instanceof BlockWidgetView &&
-      other.widget.constructor == this.widget.constructor
-    ) {
+    if (other instanceof BlockWidgetView && other.widget.constructor == this.widget.constructor) {
       if (!other.widget.compare(this.widget)) this.markDirty(true)
       if (this.dom && !this.prevWidget) this.prevWidget = this.widget
       this.widget = other.widget
@@ -5955,13 +5281,9 @@ var BlockWidgetView = class extends ContentView {
 }
 var ContentBuilder = class {
   posCovered() {
-    if (this.content.length == 0)
-      return !this.breakAtStart && this.doc.lineAt(this.pos).from != this.pos
+    if (this.content.length == 0) return !this.breakAtStart && this.doc.lineAt(this.pos).from != this.pos
     let last = this.content[this.content.length - 1]
-    return (
-      !last.breakAfter &&
-      !(last instanceof BlockWidgetView && last.type == BlockType.WidgetBefore)
-    )
+    return !last.breakAfter && !(last instanceof BlockWidgetView && last.type == BlockType.WidgetBefore)
   }
   getLine() {
     if (!this.curLine) {
@@ -5972,10 +5294,7 @@ var ContentBuilder = class {
   }
   flushBuffer(active = this.bufferMarks) {
     if (this.pendingBuffer) {
-      this.curLine.append(
-        wrapMarks(new WidgetBufferView(-1), active),
-        active.length,
-      )
+      this.curLine.append(wrapMarks(new WidgetBufferView(-1), active), active.length)
       this.pendingBuffer = 0
     }
   }
@@ -5985,8 +5304,7 @@ var ContentBuilder = class {
     this.content.push(view)
   }
   finish(openEnd) {
-    if (this.pendingBuffer && openEnd <= this.bufferMarks.length)
-      this.flushBuffer()
+    if (this.pendingBuffer && openEnd <= this.bufferMarks.length) this.flushBuffer()
     else this.pendingBuffer = 0
     if (!this.posCovered()) this.getLine()
   }
@@ -5995,12 +5313,10 @@ var ContentBuilder = class {
       if (this.textOff == this.text.length) {
         let { value, lineBreak, done } = this.cursor.next(this.skip)
         this.skip = 0
-        if (done)
-          throw new Error('Ran out of text content when drawing inline views')
+        if (done) throw new Error('Ran out of text content when drawing inline views')
         if (lineBreak) {
           if (!this.posCovered()) this.getLine()
-          if (this.content.length)
-            this.content[this.content.length - 1].breakAfter = 1
+          if (this.content.length) this.content[this.content.length - 1].breakAfter = 1
           else this.breakAtStart = 1
           this.flushBuffer()
           this.curLine = null
@@ -6015,10 +5331,7 @@ var ContentBuilder = class {
       let take = Math.min(this.text.length - this.textOff, length, 512)
       this.flushBuffer(active.slice(active.length - openStart))
       this.getLine().append(
-        wrapMarks(
-          new TextView(this.text.slice(this.textOff, this.textOff + take)),
-          active,
-        ),
+        wrapMarks(new TextView(this.text.slice(this.textOff, this.textOff + take)), active),
         openStart,
       )
       this.atCursorPos = true
@@ -6033,44 +5346,24 @@ var ContentBuilder = class {
     if (this.openStart < 0) this.openStart = openStart
   }
   point(from, to, deco, active, openStart, index) {
-    if (
-      this.disallowBlockEffectsFor[index] &&
-      deco instanceof PointDecoration
-    ) {
-      if (deco.block)
-        throw new RangeError(
-          'Block decorations may not be specified via plugins',
-        )
+    if (this.disallowBlockEffectsFor[index] && deco instanceof PointDecoration) {
+      if (deco.block) throw new RangeError('Block decorations may not be specified via plugins')
       if (to > this.doc.lineAt(this.pos).to)
-        throw new RangeError(
-          'Decorations that replace line breaks may not be specified via plugins',
-        )
+        throw new RangeError('Decorations that replace line breaks may not be specified via plugins')
     }
     let len = to - from
     if (deco instanceof PointDecoration) {
       if (deco.block) {
         let { type } = deco
         if (type == BlockType.WidgetAfter && !this.posCovered()) this.getLine()
-        this.addBlockWidget(
-          new BlockWidgetView(deco.widget || new NullWidget('div'), len, type),
-        )
+        this.addBlockWidget(new BlockWidgetView(deco.widget || new NullWidget('div'), len, type))
       } else {
-        let view = WidgetView.create(
-          deco.widget || new NullWidget('span'),
-          len,
-          len ? 0 : deco.startSide,
-        )
+        let view = WidgetView.create(deco.widget || new NullWidget('span'), len, len ? 0 : deco.startSide)
         let cursorBefore =
-          this.atCursorPos &&
-          !view.isEditable &&
-          openStart <= active.length &&
-          (from < to || deco.startSide > 0)
-        let cursorAfter =
-          !view.isEditable &&
-          (from < to || openStart > active.length || deco.startSide <= 0)
+          this.atCursorPos && !view.isEditable && openStart <= active.length && (from < to || deco.startSide > 0)
+        let cursorAfter = !view.isEditable && (from < to || openStart > active.length || deco.startSide <= 0)
         let line = this.getLine()
-        if (this.pendingBuffer == 2 && !cursorBefore && !view.isEditable)
-          this.pendingBuffer = 0
+        if (this.pendingBuffer == 2 && !cursorBefore && !view.isEditable) this.pendingBuffer = 0
         this.flushBuffer(active)
         if (cursorBefore) {
           line.append(wrapMarks(new WidgetBufferView(1), active), openStart)
@@ -6078,11 +5371,7 @@ var ContentBuilder = class {
         }
         line.append(wrapMarks(view, active), openStart)
         this.atCursorPos = cursorAfter
-        this.pendingBuffer = !cursorAfter
-          ? 0
-          : from < to || openStart > active.length
-            ? 1
-            : 2
+        this.pendingBuffer = !cursorAfter ? 0 : from < to || openStart > active.length ? 1 : 2
         if (this.pendingBuffer) this.bufferMarks = active.slice()
       }
     } else if (this.doc.lineAt(this.pos).from == this.pos) {
@@ -6163,15 +5452,7 @@ var nativeSelectionHidden = /* @__PURE__ */ Facet.define({
 })
 var ScrollTarget = class {
   map(changes) {
-    return changes.empty
-      ? this
-      : new ScrollTarget(
-          this.range.map(changes),
-          this.y,
-          this.x,
-          this.yMargin,
-          this.xMargin,
-        )
+    return changes.empty ? this : new ScrollTarget(this.range.map(changes), this.y, this.x, this.yMargin, this.xMargin)
   }
   constructor(range, y = 'nearest', x = 'nearest', yMargin = 5, xMargin = 5) {
     this.range = range
@@ -6187,8 +5468,7 @@ var scrollIntoView = /* @__PURE__ */ StateEffect.define({
 function logException(state, exception, context) {
   let handler = state.facet(exceptionSink)
   if (handler.length) handler[0](exception)
-  else if (window.onerror)
-    window.onerror(String(exception), context, void 0, void 0, exception)
+  else if (window.onerror) window.onerror(String(exception), context, void 0, void 0, exception)
   else if (context) console.error(context + ':', exception)
   else console.error(exception)
 }
@@ -6335,15 +5615,12 @@ var ChangedRange = class {
           to = ranges[rI + 1]
         let fromB = Math.max(posB, from),
           toB = Math.min(end, to)
-        if (fromB <= toB)
-          new ChangedRange(fromB + off, toB + off, fromB, toB).addToSet(result)
+        if (fromB <= toB) new ChangedRange(fromB + off, toB + off, fromB, toB).addToSet(result)
         if (to > end) break
         else rI += 2
       }
       if (!next) return result
-      new ChangedRange(next.fromA, next.toA, next.fromB, next.toB).addToSet(
-        result,
-      )
+      new ChangedRange(next.fromA, next.toA, next.fromB, next.toB).addToSet(result)
       posA = next.toA
       posB = next.toB
     }
@@ -6491,11 +5768,7 @@ var BidiSpan = class {
         if (span.level == level) return i2
         if (
           maybe < 0 ||
-          (assoc != 0
-            ? assoc < 0
-              ? span.from < index
-              : span.to > index
-            : order[maybe].level > span.level)
+          (assoc != 0 ? (assoc < 0 ? span.from < index : span.to > index) : order[maybe].level > span.level)
         )
           maybe = i2
       }
@@ -6529,18 +5802,12 @@ function computeOrder(line, direction) {
   for (let i2 = 0, prev = outerType, prevStrong = outerType; i2 < len; i2++) {
     let type = types[i2]
     if (type == 128) {
-      if (i2 < len - 1 && prev == types[i2 + 1] && prev & 24)
-        type = types[i2] = prev
+      if (i2 < len - 1 && prev == types[i2 + 1] && prev & 24) type = types[i2] = prev
       else types[i2] = 256
     } else if (type == 64) {
       let end = i2 + 1
       while (end < len && types[end] == 64) end++
-      let replace =
-        (i2 && prev == 8) || (end < len && types[end] == 8)
-          ? prevStrong == 1
-            ? 1
-            : 8
-          : 256
+      let replace = (i2 && prev == 8) || (end < len && types[end] == 8) ? (prevStrong == 1 ? 1 : 8) : 256
       for (let j = i2; j < end; j++) types[j] = replace
       i2 = end - 1
     } else if (type == 8 && prevStrong == 1) {
@@ -6555,14 +5822,7 @@ function computeOrder(line, direction) {
         for (let sJ = sI - 3; sJ >= 0; sJ -= 3) {
           if (BracketStack[sJ + 1] == -br) {
             let flags = BracketStack[sJ + 2]
-            let type2 =
-              flags & 2
-                ? outerType
-                : !(flags & 4)
-                  ? 0
-                  : flags & 1
-                    ? oppositeType
-                    : outerType
+            let type2 = flags & 2 ? outerType : !(flags & 4) ? 0 : flags & 1 ? oppositeType : outerType
             if (type2) types[i2] = types[BracketStack[sJ]] = type2
             sI = sJ
             break
@@ -6651,12 +5911,7 @@ function moveVisually(line, order, dir, start, forward) {
     }
   }
   if (spanI < 0)
-    spanI = BidiSpan.find(
-      order,
-      startIndex,
-      (_a2 = start.bidiLevel) !== null && _a2 !== void 0 ? _a2 : -1,
-      start.assoc,
-    )
+    spanI = BidiSpan.find(order, startIndex, (_a2 = start.bidiLevel) !== null && _a2 !== void 0 ? _a2 : -1, start.assoc)
   let span = order[spanI]
   if (startIndex == span.side(forward, dir)) {
     span = order[(spanI += forward ? 1 : -1)]
@@ -6664,37 +5919,15 @@ function moveVisually(line, order, dir, start, forward) {
   }
   let indexForward = forward == (span.dir == dir)
   let nextIndex = findClusterBreak(line.text, startIndex, indexForward)
-  movedOver = line.text.slice(
-    Math.min(startIndex, nextIndex),
-    Math.max(startIndex, nextIndex),
-  )
+  movedOver = line.text.slice(Math.min(startIndex, nextIndex), Math.max(startIndex, nextIndex))
   if (nextIndex != span.side(forward, dir))
-    return EditorSelection.cursor(
-      nextIndex + line.from,
-      indexForward ? -1 : 1,
-      span.level,
-    )
-  let nextSpan =
-    spanI == (forward ? order.length - 1 : 0)
-      ? null
-      : order[spanI + (forward ? 1 : -1)]
+    return EditorSelection.cursor(nextIndex + line.from, indexForward ? -1 : 1, span.level)
+  let nextSpan = spanI == (forward ? order.length - 1 : 0) ? null : order[spanI + (forward ? 1 : -1)]
   if (!nextSpan && span.level != dir)
-    return EditorSelection.cursor(
-      forward ? line.to : line.from,
-      forward ? -1 : 1,
-      dir,
-    )
+    return EditorSelection.cursor(forward ? line.to : line.from, forward ? -1 : 1, dir)
   if (nextSpan && nextSpan.level < span.level)
-    return EditorSelection.cursor(
-      nextSpan.side(!forward, dir) + line.from,
-      forward ? 1 : -1,
-      nextSpan.level,
-    )
-  return EditorSelection.cursor(
-    nextIndex + line.from,
-    forward ? -1 : 1,
-    span.level,
-  )
+    return EditorSelection.cursor(nextSpan.side(!forward, dir) + line.from, forward ? 1 : -1, nextSpan.level)
+  return EditorSelection.cursor(nextIndex + line.from, forward ? -1 : 1, span.level)
 }
 var LineBreakPlaceholder = '\uFFFF'
 var DOMReader = class {
@@ -6719,9 +5952,7 @@ var DOMReader = class {
         view && nextView
           ? view.breakAfter
           : (view ? view.breakAfter : isBlockElement(cur)) ||
-            (isBlockElement(next) &&
-              (cur.nodeName != 'BR' || cur.cmIgnore) &&
-              this.text.length > oldLen)
+            (isBlockElement(next) && (cur.nodeName != 'BR' || cur.cmIgnore) && this.text.length > oldLen)
       )
         this.lineBreak()
       cur = next
@@ -6732,8 +5963,7 @@ var DOMReader = class {
   readTextNode(node) {
     let text = node.nodeValue
     for (let point of this.points)
-      if (point.node == node)
-        point.pos = this.text.length + Math.min(point.offset, text.length)
+      if (point.node == node) point.pos = this.text.length + Math.min(point.offset, text.length)
     for (let off = 0, re = this.lineSeparator ? null : /\r\n?|\n/g; ; ) {
       let nextBreak = -1,
         breakSize = 1,
@@ -6750,8 +5980,7 @@ var DOMReader = class {
       this.lineBreak()
       if (breakSize > 1) {
         for (let point of this.points)
-          if (point.node == node && point.pos > this.text.length)
-            point.pos -= breakSize - 1
+          if (point.node == node && point.pos > this.text.length) point.pos -= breakSize - 1
       }
       off = nextBreak + breakSize
     }
@@ -6776,8 +6005,7 @@ var DOMReader = class {
   }
   findPointBefore(node, next) {
     for (let point of this.points)
-      if (point.node == node && node.childNodes[point.offset] == next)
-        point.pos = this.text.length
+      if (point.node == node && node.childNodes[point.offset] == next) point.pos = this.text.length
   }
   findPointInside(node, maxLen) {
     for (let point of this.points)
@@ -6791,10 +6019,7 @@ var DOMReader = class {
   }
 }
 function isBlockElement(node) {
-  return (
-    node.nodeType == 1 &&
-    /^(DIV|P|LI|UL|OL|BLOCKQUOTE|DD|DT|H\d|SECTION|PRE)$/.test(node.nodeName)
-  )
+  return node.nodeType == 1 && /^(DIV|P|LI|UL|OL|BLOCKQUOTE|DD|DT|H\d|SECTION|PRE)$/.test(node.nodeName)
 }
 var DOMPoint = class {
   constructor(node, offset) {
@@ -6811,20 +6036,14 @@ var DocView = class extends ContentView {
   update(update) {
     let changedRanges = update.changedRanges
     if (this.minWidth > 0 && changedRanges.length) {
-      if (
-        !changedRanges.every(
-          ({ fromA, toA }) =>
-            toA < this.minWidthFrom || fromA > this.minWidthTo,
-        )
-      ) {
+      if (!changedRanges.every(({ fromA, toA }) => toA < this.minWidthFrom || fromA > this.minWidthTo)) {
         this.minWidth = this.minWidthFrom = this.minWidthTo = 0
       } else {
         this.minWidthFrom = update.changes.mapPos(this.minWidthFrom, 1)
         this.minWidthTo = update.changes.mapPos(this.minWidthTo, 1)
       }
     }
-    if (this.view.inputState.composing < 0)
-      this.compositionDeco = Decoration.none
+    if (this.view.inputState.composing < 0) this.compositionDeco = Decoration.none
     else if (update.transactions.length || this.dirty)
       this.compositionDeco = computeCompositionDeco(this.view, update.changes)
     if (
@@ -6864,24 +6083,13 @@ var DocView = class extends ContentView {
           : void 0
       this.sync(this.view, track)
       this.dirty = 0
-      if (
-        track &&
-        (track.written || observer.selectionRange.focusNode != track.node)
-      )
-        this.forceSelection = true
+      if (track && (track.written || observer.selectionRange.focusNode != track.node)) this.forceSelection = true
       this.dom.style.height = ''
     })
     let gaps = []
-    if (
-      this.view.viewport.from ||
-      this.view.viewport.to < this.view.state.doc.length
-    ) {
+    if (this.view.viewport.from || this.view.viewport.to < this.view.state.doc.length) {
       for (let child of this.children)
-        if (
-          child instanceof BlockWidgetView &&
-          child.widget instanceof BlockGapWidget
-        )
-          gaps.push(child.dom)
+        if (child instanceof BlockWidgetView && child.widget instanceof BlockGapWidget) gaps.push(child.dom)
     }
     observer.updateGaps(gaps)
   }
@@ -6896,32 +6104,15 @@ var DocView = class extends ContentView {
         breakAtStart,
         openStart,
         openEnd,
-      } = ContentBuilder.build(
-        this.view.state.doc,
-        fromB,
-        toB,
-        this.decorations,
-        this.dynamicDecorationMap,
-      )
+      } = ContentBuilder.build(this.view.state.doc, fromB, toB, this.decorations, this.dynamicDecorationMap)
       let { i: toI, off: toOff } = cursor.findPos(toA, 1)
       let { i: fromI, off: fromOff } = cursor.findPos(fromA, -1)
-      replaceRange(
-        this,
-        fromI,
-        fromOff,
-        toI,
-        toOff,
-        content2,
-        breakAtStart,
-        openStart,
-        openEnd,
-      )
+      replaceRange(this, fromI, fromOff, toI, toOff, content2, breakAtStart, openStart, openEnd)
     }
   }
   // Sync the DOM selection to this.state.selection
   updateSelection(mustRead = false, fromPointer = false) {
-    if (mustRead || !this.view.observer.selectionRange.focusNode)
-      this.view.observer.readSelectionRange()
+    if (mustRead || !this.view.observer.selectionRange.focusNode) this.view.observer.readSelectionRange()
     let activeElt = this.view.root.activeElement,
       focused = activeElt == this.dom
     let selectionNotFocus =
@@ -6934,19 +6125,9 @@ var DocView = class extends ContentView {
     let main = this.view.state.selection.main
     let anchor = this.domAtPos(main.anchor)
     let head = main.empty ? anchor : this.domAtPos(main.head)
-    if (
-      browser.gecko &&
-      main.empty &&
-      !this.compositionDeco.size &&
-      betweenUneditable(anchor)
-    ) {
+    if (browser.gecko && main.empty && !this.compositionDeco.size && betweenUneditable(anchor)) {
       let dummy = document.createTextNode('')
-      this.view.observer.ignore(() =>
-        anchor.node.insertBefore(
-          dummy,
-          anchor.node.childNodes[anchor.offset] || null,
-        ),
-      )
+      this.view.observer.ignore(() => anchor.node.insertBefore(dummy, anchor.node.childNodes[anchor.offset] || null))
       anchor = head = new DOMPos(dummy, 0)
       force = true
     }
@@ -6954,18 +6135,8 @@ var DocView = class extends ContentView {
     if (
       force ||
       !domSel.focusNode ||
-      !isEquivalentPosition(
-        anchor.node,
-        anchor.offset,
-        domSel.anchorNode,
-        domSel.anchorOffset,
-      ) ||
-      !isEquivalentPosition(
-        head.node,
-        head.offset,
-        domSel.focusNode,
-        domSel.focusOffset,
-      )
+      !isEquivalentPosition(anchor.node, anchor.offset, domSel.anchorNode, domSel.anchorOffset) ||
+      !isEquivalentPosition(head.node, head.offset, domSel.focusNode, domSel.focusOffset)
     ) {
       this.view.observer.ignore(() => {
         if (
@@ -6983,21 +6154,12 @@ var DocView = class extends ContentView {
           if (browser.gecko) {
             let nextTo = nextToUneditable(anchor.node, anchor.offset)
             if (nextTo && nextTo != (1 | 2)) {
-              let text = nearbyTextNode(
-                anchor.node,
-                anchor.offset,
-                nextTo == 1 ? 1 : -1,
-              )
-              if (text)
-                anchor = new DOMPos(
-                  text,
-                  nextTo == 1 ? 0 : text.nodeValue.length,
-                )
+              let text = nearbyTextNode(anchor.node, anchor.offset, nextTo == 1 ? 1 : -1)
+              if (text) anchor = new DOMPos(text, nextTo == 1 ? 0 : text.nodeValue.length)
             }
           }
           rawSel.collapse(anchor.node, anchor.offset)
-          if (main.bidiLevel != null && domSel.cursorBidiLevel != null)
-            domSel.cursorBidiLevel = main.bidiLevel
+          if (main.bidiLevel != null && domSel.cursorBidiLevel != null) domSel.cursorBidiLevel = main.bidiLevel
         } else if (rawSel.extend) {
           rawSel.collapse(anchor.node, anchor.offset)
           try {
@@ -7018,12 +6180,8 @@ var DocView = class extends ContentView {
       })
       this.view.observer.setSelectionRange(anchor, head)
     }
-    this.impreciseAnchor = anchor.precise
-      ? null
-      : new DOMPos(domSel.anchorNode, domSel.anchorOffset)
-    this.impreciseHead = head.precise
-      ? null
-      : new DOMPos(domSel.focusNode, domSel.focusOffset)
+    this.impreciseAnchor = anchor.precise ? null : new DOMPos(domSel.anchorNode, domSel.anchorOffset)
+    this.impreciseHead = head.precise ? null : new DOMPos(domSel.focusNode, domSel.focusOffset)
   }
   enforceCursorAssoc() {
     if (this.compositionDeco.size) return
@@ -7035,24 +6193,16 @@ var DocView = class extends ContentView {
     let line = LineView.find(this, cursor.head)
     if (!line) return
     let lineStart = line.posAtStart
-    if (cursor.head == lineStart || cursor.head == lineStart + line.length)
-      return
+    if (cursor.head == lineStart || cursor.head == lineStart + line.length) return
     let before = this.coordsAt(cursor.head, -1),
       after = this.coordsAt(cursor.head, 1)
     if (!before || !after || before.bottom > after.top) return
     let dom = this.domAtPos(cursor.head + cursor.assoc)
     sel.collapse(dom.node, dom.offset)
-    sel.modify(
-      'move',
-      cursor.assoc < 0 ? 'forward' : 'backward',
-      'lineboundary',
-    )
+    sel.modify('move', cursor.assoc < 0 ? 'forward' : 'backward', 'lineboundary')
     view.observer.readSelectionRange()
     let newRange = view.observer.selectionRange
-    if (
-      view.docView.posFromDOM(newRange.anchorNode, newRange.anchorOffset) !=
-      cursor.from
-    )
+    if (view.docView.posFromDOM(newRange.anchorNode, newRange.anchorOffset) != cursor.from)
       sel.collapse(anchorNode, anchorOffset)
   }
   nearest(dom) {
@@ -7065,10 +6215,7 @@ var DocView = class extends ContentView {
   }
   posFromDOM(node, offset) {
     let view = this.nearest(node)
-    if (!view)
-      throw new RangeError(
-        'Trying to find position for a DOM position outside of the document',
-      )
+    if (!view) throw new RangeError('Trying to find position for a DOM position outside of the document')
     return view.localPosFromDOM(node, offset) + view.posAtStart
   }
   domAtPos(pos) {
@@ -7093,8 +6240,7 @@ var DocView = class extends ContentView {
           (!i2 ||
             side == 2 ||
             this.children[i2 - 1].breakAfter ||
-            (this.children[i2 - 1].type == BlockType.WidgetBefore &&
-              side > -2)))
+            (this.children[i2 - 1].type == BlockType.WidgetBefore && side > -2)))
       )
         return child.coordsAt(pos - start, side)
       off = start
@@ -7104,9 +6250,7 @@ var DocView = class extends ContentView {
     let result = [],
       { from, to } = viewport
     let contentWidth = this.view.contentDOM.clientWidth
-    let isWider =
-      contentWidth >
-      Math.max(this.view.scrollDOM.clientWidth, this.minWidth) + 1
+    let isWider = contentWidth > Math.max(this.view.scrollDOM.clientWidth, this.minWidth) + 1
     let widest = -1,
       ltr = this.view.textDirection == Direction.LTR
     for (let pos = 0, i2 = 0; i2 < this.children.length; i2++) {
@@ -7121,9 +6265,7 @@ var DocView = class extends ContentView {
           let rects = last ? clientRectsFor(last) : []
           if (rects.length) {
             let rect = rects[rects.length - 1]
-            let width = ltr
-              ? rect.right - childRect.left
-              : childRect.right - rect.left
+            let width = ltr ? rect.right - childRect.left : childRect.right - rect.left
             if (width > widest) {
               widest = width
               this.minWidth = contentWidth
@@ -7139,9 +6281,7 @@ var DocView = class extends ContentView {
   }
   textDirectionAt(pos) {
     let { i: i2 } = this.childPos(pos, 1)
-    return getComputedStyle(this.children[i2].dom).direction == 'rtl'
-      ? Direction.RTL
-      : Direction.LTR
+    return getComputedStyle(this.children[i2].dom).direction == 'rtl' ? Direction.RTL : Direction.LTR
   }
   measureTextSize() {
     for (let child of this.children) {
@@ -7199,8 +6339,7 @@ var DocView = class extends ContentView {
       let dynamic = (this.dynamicDecorationMap[i2] = typeof d == 'function')
       return dynamic ? d(this.view) : d
     })
-    for (let i2 = allDeco.length; i2 < allDeco.length + 3; i2++)
-      this.dynamicDecorationMap[i2] = false
+    for (let i2 = allDeco.length; i2 < allDeco.length + 3; i2++) this.dynamicDecorationMap[i2] = false
     return (this.decorations = [
       ...allDeco,
       this.compositionDeco,
@@ -7210,16 +6349,10 @@ var DocView = class extends ContentView {
   }
   scrollIntoView(target) {
     let { range } = target
-    let rect = this.coordsAt(
-        range.head,
-        range.empty ? range.assoc : range.head > range.anchor ? -1 : 1,
-      ),
+    let rect = this.coordsAt(range.head, range.empty ? range.assoc : range.head > range.anchor ? -1 : 1),
       other
     if (!rect) return
-    if (
-      !range.empty &&
-      (other = this.coordsAt(range.anchor, range.anchor > range.head ? -1 : 1))
-    )
+    if (!range.empty && (other = this.coordsAt(range.anchor, range.anchor > range.head ? -1 : 1)))
       rect = {
         left: Math.min(rect.left, other.left),
         top: Math.min(rect.top, other.top),
@@ -7268,10 +6401,8 @@ function betweenUneditable(pos) {
   return (
     pos.node.nodeType == 1 &&
     pos.node.firstChild &&
-    (pos.offset == 0 ||
-      pos.node.childNodes[pos.offset - 1].contentEditable == 'false') &&
-    (pos.offset == pos.node.childNodes.length ||
-      pos.node.childNodes[pos.offset].contentEditable == 'false')
+    (pos.offset == 0 || pos.node.childNodes[pos.offset - 1].contentEditable == 'false') &&
+    (pos.offset == pos.node.childNodes.length || pos.node.childNodes[pos.offset].contentEditable == 'false')
   )
 }
 var BlockGapWidget = class extends WidgetType {
@@ -7297,8 +6428,7 @@ var BlockGapWidget = class extends WidgetType {
 }
 function compositionSurroundingNode(view) {
   let sel = view.observer.selectionRange
-  let textNode =
-    sel.focusNode && nearbyTextNode(sel.focusNode, sel.focusOffset, 0)
+  let textNode = sel.focusNode && nearbyTextNode(sel.focusNode, sel.focusOffset, 0)
   if (!textNode) return null
   let cView = view.docView.nearest(textNode)
   if (!cView) return null
@@ -7338,17 +6468,9 @@ function computeCompositionDeco(view, changes) {
   let { text } = reader
   if (text.indexOf(LineBreakPlaceholder) > -1) return Decoration.none
   if (newTo - newFrom < text.length) {
-    if (
-      state.doc.sliceString(
-        newFrom,
-        Math.min(state.doc.length, newFrom + text.length),
-      ) == text
-    )
+    if (state.doc.sliceString(newFrom, Math.min(state.doc.length, newFrom + text.length)) == text)
       newTo = newFrom + text.length
-    else if (
-      state.doc.sliceString(Math.max(0, newTo - text.length), newTo) == text
-    )
-      newFrom = newTo - text.length
+    else if (state.doc.sliceString(Math.max(0, newTo - text.length), newTo) == text) newFrom = newTo - text.length
     else return Decoration.none
   } else if (state.doc.sliceString(newFrom, newTo) != text) {
     return Decoration.none
@@ -7410,10 +6532,7 @@ function nextToUneditable(node, offset) {
   if (node.nodeType != 1) return 0
   return (
     (offset && node.childNodes[offset - 1].contentEditable == 'false' ? 1 : 0) |
-    (offset < node.childNodes.length &&
-    node.childNodes[offset].contentEditable == 'false'
-      ? 2
-      : 0)
+    (offset < node.childNodes.length && node.childNodes[offset].contentEditable == 'false' ? 2 : 0)
   )
 }
 var DecorationComparator$1 = class {
@@ -7433,11 +6552,7 @@ function findChangedDeco(a, b, diff) {
   return comp.changes
 }
 function inUneditable(node, inside2) {
-  for (
-    let cur = node;
-    cur && cur != inside2;
-    cur = cur.assignedSlot || cur.parentNode
-  ) {
+  for (let cur = node; cur && cur != inside2; cur = cur.assignedSlot || cur.parentNode) {
     if (cur.nodeType == 1 && cur.contentEditable == 'false') {
       return true
     }
@@ -7488,9 +6603,7 @@ function upTop(rect, top22) {
     : rect
 }
 function upBot(rect, bottom) {
-  return bottom > rect.bottom
-    ? { top: rect.top, left: rect.left, right: rect.right, bottom }
-    : rect
+  return bottom > rect.bottom ? { top: rect.top, left: rect.left, right: rect.right, bottom } : rect
 }
 function domPosAtCoords(parent, x, y) {
   let closest,
@@ -7503,28 +6616,16 @@ function domPosAtCoords(parent, x, y) {
     let rects = clientRectsFor(child)
     for (let i2 = 0; i2 < rects.length; i2++) {
       let rect = rects[i2]
-      if (closestRect && yOverlap(closestRect, rect))
-        rect = upTop(upBot(rect, closestRect.bottom), closestRect.top)
+      if (closestRect && yOverlap(closestRect, rect)) rect = upTop(upBot(rect, closestRect.bottom), closestRect.top)
       let dx = getdx(x, rect),
         dy = getdy(y, rect)
-      if (dx == 0 && dy == 0)
-        return child.nodeType == 3
-          ? domPosInText(child, x, y)
-          : domPosAtCoords(child, x, y)
+      if (dx == 0 && dy == 0) return child.nodeType == 3 ? domPosInText(child, x, y) : domPosAtCoords(child, x, y)
       if (!closest || closestY > dy || (closestY == dy && closestX > dx)) {
         closest = child
         closestRect = rect
         closestX = dx
         closestY = dy
-        let side = dy
-          ? y < rect.top
-            ? -1
-            : 1
-          : dx
-            ? x < rect.left
-              ? -1
-              : 1
-            : 0
+        let side = dy ? (y < rect.top ? -1 : 1) : dx ? (x < rect.left ? -1 : 1) : 0
         closestOverlap = !side || (side > 0 ? i2 < rects.length - 1 : i2 > 0)
       }
       if (dx == 0) {
@@ -7552,11 +6653,9 @@ function domPosAtCoords(parent, x, y) {
   if (!closest) return { node: parent, offset: 0 }
   let clipX = Math.max(closestRect.left, Math.min(closestRect.right, x))
   if (closest.nodeType == 3) return domPosInText(closest, clipX, y)
-  if (closestOverlap && closest.contentEditable != 'false')
-    return domPosAtCoords(closest, clipX, y)
+  if (closestOverlap && closest.contentEditable != 'false') return domPosAtCoords(closest, clipX, y)
   let offset =
-    Array.prototype.indexOf.call(parent.childNodes, closest) +
-    (x >= (closestRect.left + closestRect.right) / 2 ? 1 : 0)
+    Array.prototype.indexOf.call(parent.childNodes, closest) + (x >= (closestRect.left + closestRect.right) / 2 ? 1 : 0)
   return { node: parent, offset }
 }
 function domPosInText(node, x, y) {
@@ -7586,12 +6685,7 @@ function domPosInText(node, x, y) {
   }
   return {
     node,
-    offset:
-      closestOffset > -1
-        ? closestOffset
-        : generalSide > 0
-          ? node.nodeValue.length
-          : 0,
+    offset: closestOffset > -1 ? closestOffset : generalSide > 0 ? node.nodeValue.length : 0,
   }
 }
 function posAtCoords(view, coords, precise, bias = -1) {
@@ -7618,11 +6712,7 @@ function posAtCoords(view, coords, precise, bias = -1) {
   y = docTop + yOffset
   let lineStart = block.from
   if (lineStart < view.viewport.from)
-    return view.viewport.from == 0
-      ? 0
-      : precise
-        ? null
-        : posAtCoordsImprecise(view, content2, block, x, y)
+    return view.viewport.from == 0 ? 0 : precise ? null : posAtCoordsImprecise(view, content2, block, x, y)
   if (lineStart > view.viewport.to)
     return view.viewport.to == view.state.doc.length
       ? view.state.doc.length
@@ -7642,9 +6732,7 @@ function posAtCoords(view, coords, precise, bias = -1) {
     offset = -1
   if (
     element &&
-    ((_a2 = view.docView.nearest(element)) === null || _a2 === void 0
-      ? void 0
-      : _a2.isEditable) != false
+    ((_a2 = view.docView.nearest(element)) === null || _a2 === void 0 ? void 0 : _a2.isEditable) != false
   ) {
     if (doc2.caretPositionFromPoint) {
       let pos = doc2.caretPositionFromPoint(x, y)
@@ -7664,19 +6752,14 @@ function posAtCoords(view, coords, precise, bias = -1) {
   }
   if (!node || !view.docView.dom.contains(node)) {
     let line = LineView.find(view.docView, lineStart)
-    if (!line)
-      return yOffset > block.top + block.height / 2 ? block.to : block.from
+    if (!line) return yOffset > block.top + block.height / 2 ? block.to : block.from
     ;({ node, offset } = domPosAtCoords(line.dom, x, y))
   }
   let nearest = view.docView.nearest(node)
   if (!nearest) return null
-  if (
-    nearest.isWidget &&
-    ((_b = nearest.dom) === null || _b === void 0 ? void 0 : _b.nodeType) == 1
-  ) {
+  if (nearest.isWidget && ((_b = nearest.dom) === null || _b === void 0 ? void 0 : _b.nodeType) == 1) {
     let rect = nearest.dom.getBoundingClientRect()
-    return coords.y < rect.top ||
-      (coords.y <= rect.bottom && coords.x <= (rect.left + rect.right) / 2)
+    return coords.y < rect.top || (coords.y <= rect.bottom && coords.x <= (rect.left + rect.right) / 2)
       ? nearest.posAtStart
       : nearest.posAtEnd
   } else {
@@ -7694,8 +6777,7 @@ function posAtCoordsImprecise(view, contentRect, block, x, y) {
 }
 function isSuspiciousSafariCaretResult(node, offset, x) {
   let len
-  if (node.nodeType != 3 || offset != (len = node.nodeValue.length))
-    return false
+  if (node.nodeType != 3 || offset != (len = node.nodeValue.length)) return false
   for (let next = node.nextSibling; next; next = next.nextSibling)
     if (next.nodeType != 1 || next.nodeName != 'BR') return false
   return textRange(node, len - 1, len).getBoundingClientRect().left > x
@@ -7704,53 +6786,35 @@ function isSuspiciousChromeCaretResult(node, offset, x) {
   if (offset != 0) return false
   for (let cur = node; ; ) {
     let parent = cur.parentNode
-    if (!parent || parent.nodeType != 1 || parent.firstChild != cur)
-      return false
+    if (!parent || parent.nodeType != 1 || parent.firstChild != cur) return false
     if (parent.classList.contains('cm-line')) break
     cur = parent
   }
   let rect =
     node.nodeType == 1
       ? node.getBoundingClientRect()
-      : textRange(
-          node,
-          0,
-          Math.max(node.nodeValue.length, 1),
-        ).getBoundingClientRect()
+      : textRange(node, 0, Math.max(node.nodeValue.length, 1)).getBoundingClientRect()
   return x - rect.left > 5
 }
 function blockAt(view, pos) {
   let line = view.lineBlockAt(pos)
   if (Array.isArray(line.type))
     for (let l of line.type) {
-      if (
-        l.to > pos ||
-        (l.to == pos && (l.to == line.to || l.type == BlockType.Text))
-      )
-        return l
+      if (l.to > pos || (l.to == pos && (l.to == line.to || l.type == BlockType.Text))) return l
     }
   return line
 }
 function moveToLineBoundary(view, start, forward, includeWrap) {
   let line = blockAt(view, start.head)
   let coords =
-    !includeWrap ||
-    line.type != BlockType.Text ||
-    !(view.lineWrapping || line.widgetLineBreaks)
+    !includeWrap || line.type != BlockType.Text || !(view.lineWrapping || line.widgetLineBreaks)
       ? null
-      : view.coordsAtPos(
-          start.assoc < 0 && start.head > line.from
-            ? start.head - 1
-            : start.head,
-        )
+      : view.coordsAtPos(start.assoc < 0 && start.head > line.from ? start.head - 1 : start.head)
   if (coords) {
     let editorRect = view.dom.getBoundingClientRect()
     let direction = view.textDirectionAt(line.from)
     let pos = view.posAtCoords({
-      x:
-        forward == (direction == Direction.LTR)
-          ? editorRect.right - 1
-          : editorRect.left + 1,
+      x: forward == (direction == Direction.LTR) ? editorRect.right - 1 : editorRect.left + 1,
       y: (coords.top + coords.bottom) / 2,
     })
     if (pos != null) return EditorSelection.cursor(pos, forward ? -1 : 1)
@@ -7792,8 +6856,7 @@ function byGroup(view, pos, start) {
 function moveVertically(view, start, forward, distance) {
   let startPos = start.head,
     dir = forward ? 1 : -1
-  if (startPos == (forward ? view.state.doc.length : 0))
-    return EditorSelection.cursor(startPos, start.assoc)
+  if (startPos == (forward ? view.state.doc.length : 0)) return EditorSelection.cursor(startPos, start.assoc)
   let goal = start.goalColumn,
     startY
   let rect = view.contentDOM.getBoundingClientRect()
@@ -7804,26 +6867,15 @@ function moveVertically(view, start, forward, distance) {
     startY = dir < 0 ? startCoords.top : startCoords.bottom
   } else {
     let line = view.viewState.lineBlockAt(startPos)
-    if (goal == null)
-      goal = Math.min(
-        rect.right - rect.left,
-        view.defaultCharacterWidth * (startPos - line.from),
-      )
+    if (goal == null) goal = Math.min(rect.right - rect.left, view.defaultCharacterWidth * (startPos - line.from))
     startY = (dir < 0 ? line.top : line.bottom) + docTop
   }
   let resolvedGoal = rect.left + goal
-  let dist =
-    distance !== null && distance !== void 0
-      ? distance
-      : view.defaultLineHeight >> 1
+  let dist = distance !== null && distance !== void 0 ? distance : view.defaultLineHeight >> 1
   for (let extra = 0; ; extra += 10) {
     let curY = startY + (dist + extra) * dir
     let pos = posAtCoords(view, { x: resolvedGoal, y: curY }, false, dir)
-    if (
-      curY < rect.top ||
-      curY > rect.bottom ||
-      (dir < 0 ? pos < startPos : pos > startPos)
-    )
+    if (curY < rect.top || curY > rect.bottom || (dir < 0 ? pos < startPos : pos > startPos))
       return EditorSelection.cursor(pos, start.assoc, void 0, goal)
   }
 }
@@ -7848,9 +6900,7 @@ function skipAtoms(view, oldPos, pos) {
     pos.from,
     oldPos.head > pos.from ? -1 : 1,
   )
-  return newPos == pos.from
-    ? pos
-    : EditorSelection.cursor(newPos, newPos < pos.from ? 1 : -1)
+  return newPos == pos.from ? pos : EditorSelection.cursor(newPos, newPos < pos.from ? 1 : -1)
 }
 var InputState = class {
   setSelectionOrigin(origin) {
@@ -7862,12 +6912,7 @@ var InputState = class {
     let handlers2
     this.customHandlers = []
     for (let plugin2 of plugins)
-      if (
-        (handlers2 =
-          (_a2 = plugin2.update(view).spec) === null || _a2 === void 0
-            ? void 0
-            : _a2.domEventHandlers)
-      ) {
+      if ((handlers2 = (_a2 = plugin2.update(view).spec) === null || _a2 === void 0 ? void 0 : _a2.domEventHandlers)) {
         this.customHandlers.push({
           plugin: plugin2.value,
           handlers: handlers2,
@@ -7877,8 +6922,7 @@ var InputState = class {
             this.registeredEvents.push(type)
             view.contentDOM.addEventListener(type, (event) => {
               if (!eventBelongsToEditor(view, event)) return
-              if (this.runCustomHandlers(type, view, event))
-                event.preventDefault()
+              if (this.runCustomHandlers(type, view, event)) event.preventDefault()
             })
           }
       }
@@ -7888,8 +6932,7 @@ var InputState = class {
       let handler = set.handlers[type]
       if (handler) {
         try {
-          if (handler.call(set.plugin, event, view) || event.defaultPrevented)
-            return true
+          if (handler.call(set.plugin, event, view) || event.defaultPrevented) return true
         } catch (e) {
           logException(view.state, e)
         }
@@ -7915,14 +6958,8 @@ var InputState = class {
     this.lastKeyCode = event.keyCode
     this.lastKeyTime = Date.now()
     if (event.keyCode == 9 && Date.now() < this.lastEscPress + 2e3) return true
-    if (event.keyCode != 27 && modifierCodes.indexOf(event.keyCode) < 0)
-      view.inputState.lastEscPress = 0
-    if (
-      browser.android &&
-      browser.chrome &&
-      !event.synthetic &&
-      (event.keyCode == 13 || event.keyCode == 8)
-    ) {
+    if (event.keyCode != 27 && modifierCodes.indexOf(event.keyCode) < 0) view.inputState.lastEscPress = 0
+    if (browser.android && browser.chrome && !event.synthetic && (event.keyCode == 13 || event.keyCode == 8)) {
       view.observer.delayAndroidKey(event.key, event.keyCode)
       return true
     }
@@ -7932,11 +6969,8 @@ var InputState = class {
       !event.synthetic &&
       !event.altKey &&
       !event.metaKey &&
-      (((pending = PendingKeys.find((key) => key.keyCode == event.keyCode)) &&
-        !event.ctrlKey) ||
-        (EmacsyPendingKeys.indexOf(event.key) > -1 &&
-          event.ctrlKey &&
-          !event.shiftKey))
+      (((pending = PendingKeys.find((key) => key.keyCode == event.keyCode)) && !event.ctrlKey) ||
+        (EmacsyPendingKeys.indexOf(event.key) > -1 && event.ctrlKey && !event.shiftKey))
     ) {
       this.pendingIOSKey = pending || event
       setTimeout(() => this.flushIOSKey(view), 250)
@@ -7953,12 +6987,7 @@ var InputState = class {
   ignoreDuringComposition(event) {
     if (!/^key/.test(event.type)) return false
     if (this.composing > 0) return true
-    if (
-      browser.safari &&
-      !browser.ios &&
-      this.compositionPendingKey &&
-      Date.now() - this.compositionEndedAt < 100
-    ) {
+    if (browser.safari && !browser.ios && this.compositionPendingKey && Date.now() - this.compositionEndedAt < 100) {
       this.compositionPendingKey = false
       return true
     }
@@ -7973,8 +7002,7 @@ var InputState = class {
   }
   update(update) {
     if (this.mouseSelection) this.mouseSelection.update(update)
-    if (update.transactions.length)
-      this.lastKeyCode = this.lastSelectionTime = 0
+    if (update.transactions.length) this.lastKeyCode = this.lastSelectionTime = 0
   }
   destroy() {
     if (this.mouseSelection) this.mouseSelection.destroy()
@@ -8005,8 +7033,7 @@ var InputState = class {
       if (this.ignoreDuringComposition(event)) return
       if (event.type == 'keydown' && this.keydown(view, event)) return
       if (this.mustFlushObserver(event)) view.observer.forceFlush()
-      if (this.runCustomHandlers(event.type, view, event))
-        event.preventDefault()
+      if (this.runCustomHandlers(event.type, view, event)) event.preventDefault()
       else handler(view, event)
     }
     for (let type in handlers) {
@@ -8021,10 +7048,7 @@ var InputState = class {
       this.registeredEvents.push(type)
     }
     view.scrollDOM.addEventListener('mousedown', (event) => {
-      if (
-        event.target == view.scrollDOM &&
-        event.clientY > view.contentDOM.getBoundingClientRect().bottom
-      ) {
+      if (event.target == view.scrollDOM && event.clientY > view.contentDOM.getBoundingClientRect().bottom) {
         handleEvent(handlers.mousedown, event)
         if (!event.defaultPrevented && event.button == 2) {
           let start = view.contentDOM.style.minHeight
@@ -8034,18 +7058,14 @@ var InputState = class {
       }
     })
     view.scrollDOM.addEventListener('drop', (event) => {
-      if (
-        event.target == view.scrollDOM &&
-        event.clientY > view.contentDOM.getBoundingClientRect().bottom
-      )
+      if (event.target == view.scrollDOM && event.clientY > view.contentDOM.getBoundingClientRect().bottom)
         handleEvent(handlers.drop, event)
     })
     if (browser.chrome && browser.chrome_version == 102) {
       view.scrollDOM.addEventListener(
         'wheel',
         () => {
-          if (this.chromeScrollHack < 0)
-            view.contentDOM.style.pointerEvents = 'none'
+          if (this.chromeScrollHack < 0) view.contentDOM.style.pointerEvents = 'none'
           else window.clearTimeout(this.chromeScrollHack)
           this.chromeScrollHack = setTimeout(() => {
             this.chromeScrollHack = -1
@@ -8084,21 +7104,17 @@ var MouseSelection = class {
     this.select((this.lastEvent = event))
     let sx = 0,
       sy = 0
-    let rect = ((_a2 = this.scrollParent) === null || _a2 === void 0
-      ? void 0
-      : _a2.getBoundingClientRect()) || {
+    let rect = ((_a2 = this.scrollParent) === null || _a2 === void 0 ? void 0 : _a2.getBoundingClientRect()) || {
       left: 0,
       top: 0,
       right: this.view.win.innerWidth,
       bottom: this.view.win.innerHeight,
     }
     let margins = getScrollMargins(this.view)
-    if (event.clientX - margins.left <= rect.left + dragScrollMargin)
-      sx = -dragScrollSpeed(rect.left - event.clientX)
+    if (event.clientX - margins.left <= rect.left + dragScrollMargin) sx = -dragScrollSpeed(rect.left - event.clientX)
     else if (event.clientX + margins.right >= rect.right - dragScrollMargin)
       sx = dragScrollSpeed(event.clientX - rect.right)
-    if (event.clientY - margins.top <= rect.top + dragScrollMargin)
-      sy = -dragScrollSpeed(rect.top - event.clientY)
+    if (event.clientY - margins.top <= rect.top + dragScrollMargin) sy = -dragScrollSpeed(rect.top - event.clientY)
     else if (event.clientY + margins.bottom >= rect.bottom - dragScrollMargin)
       sy = dragScrollSpeed(event.clientY - rect.bottom)
     this.setScrollSpeed(sx, sy)
@@ -8118,8 +7134,7 @@ var MouseSelection = class {
   setScrollSpeed(sx, sy) {
     this.scrollSpeed = { x: sx, y: sy }
     if (sx || sy) {
-      if (this.scrolling < 0)
-        this.scrolling = setInterval(() => this.scroll(), 50)
+      if (this.scrolling < 0) this.scrolling = setInterval(() => this.scroll(), 50)
     } else if (this.scrolling > -1) {
       clearInterval(this.scrolling)
       this.scrolling = -1
@@ -8146,10 +7161,7 @@ var MouseSelection = class {
         let from = skipAtomicRanges(this.atoms, range.from, -1)
         let to = skipAtomicRanges(this.atoms, range.to, 1)
         if (from != range.from || to != range.to)
-          updated = EditorSelection.range(
-            range.from == range.anchor ? from : to,
-            range.from == range.head ? from : to,
-          )
+          updated = EditorSelection.range(range.from == range.anchor ? from : to, range.from == range.head ? from : to)
       }
       if (updated) {
         if (!ranges) ranges = sel.ranges.slice()
@@ -8160,9 +7172,7 @@ var MouseSelection = class {
   }
   select(event) {
     let { view } = this,
-      selection = this.skipAtoms(
-        this.style.get(event, this.extend, this.multiple),
-      )
+      selection = this.skipAtoms(this.style.get(event, this.extend, this.multiple))
     if (
       this.mustSelect ||
       !selection.eq(view.state.selection) ||
@@ -8172,10 +7182,8 @@ var MouseSelection = class {
     this.mustSelect = false
   }
   update(update) {
-    if (update.docChanged && this.dragging)
-      this.dragging = this.dragging.map(update.changes)
-    if (this.style.update(update))
-      setTimeout(() => this.select(this.lastEvent), 20)
+    if (update.docChanged && this.dragging) this.dragging = this.dragging.map(update.changes)
+    if (this.style.update(update)) setTimeout(() => this.select(this.lastEvent), 20)
   }
   constructor(view, startEvent, style, mustSelect) {
     this.view = view
@@ -8190,31 +7198,18 @@ var MouseSelection = class {
     doc2.addEventListener('mousemove', (this.move = this.move.bind(this)))
     doc2.addEventListener('mouseup', (this.up = this.up.bind(this)))
     this.extend = startEvent.shiftKey
-    this.multiple =
-      view.state.facet(EditorState.allowMultipleSelections) &&
-      addsSelectionRange(view, startEvent)
+    this.multiple = view.state.facet(EditorState.allowMultipleSelections) && addsSelectionRange(view, startEvent)
     this.dragMove = dragMovesSelection(view, startEvent)
-    this.dragging =
-      isInPrimarySelection(view, startEvent) && getClickType(startEvent) == 1
-        ? null
-        : false
+    this.dragging = isInPrimarySelection(view, startEvent) && getClickType(startEvent) == 1 ? null : false
   }
 }
 function addsSelectionRange(view, event) {
   let facet = view.state.facet(clickAddsSelectionRange)
-  return facet.length
-    ? facet[0](event)
-    : browser.mac
-      ? event.metaKey
-      : event.ctrlKey
+  return facet.length ? facet[0](event) : browser.mac ? event.metaKey : event.ctrlKey
 }
 function dragMovesSelection(view, event) {
   let facet = view.state.facet(dragMovesSelection$1)
-  return facet.length
-    ? facet[0](event)
-    : browser.mac
-      ? !event.altKey
-      : !event.ctrlKey
+  return facet.length ? facet[0](event) : browser.mac ? !event.altKey : !event.ctrlKey
 }
 function isInPrimarySelection(view, event) {
   let { main } = view.state.selection
@@ -8237,24 +7232,13 @@ function isInPrimarySelection(view, event) {
 function eventBelongsToEditor(view, event) {
   if (!event.bubbles) return true
   if (event.defaultPrevented) return false
-  for (
-    let node = event.target, cView;
-    node != view.contentDOM;
-    node = node.parentNode
-  )
-    if (
-      !node ||
-      node.nodeType == 11 ||
-      ((cView = ContentView.get(node)) && cView.ignoreEvent(event))
-    )
-      return false
+  for (let node = event.target, cView; node != view.contentDOM; node = node.parentNode)
+    if (!node || node.nodeType == 11 || ((cView = ContentView.get(node)) && cView.ignoreEvent(event))) return false
   return true
 }
 var handlers = /* @__PURE__ */ Object.create(null)
 var handlerOptions = /* @__PURE__ */ Object.create(null)
-var brokenClipboardAPI =
-  (browser.ie && browser.ie_version < 15) ||
-  (browser.ios && browser.webkit_version < 604)
+var brokenClipboardAPI = (browser.ie && browser.ie_version < 15) || (browser.ios && browser.webkit_version < 604)
 function capturePaste(view) {
   let parent = view.dom.parentNode
   if (!parent) return
@@ -8274,18 +7258,14 @@ function doPaste(view, input) {
     text = state.toText(input)
   let byLine = text.lines == state.selection.ranges.length
   let linewise =
-    lastLinewiseCopy != null &&
-    state.selection.ranges.every((r) => r.empty) &&
-    lastLinewiseCopy == text.toString()
+    lastLinewiseCopy != null && state.selection.ranges.every((r) => r.empty) && lastLinewiseCopy == text.toString()
   if (linewise) {
     let lastLine = -1
     changes = state.changeByRange((range) => {
       let line = state.doc.lineAt(range.from)
       if (line.from == lastLine) return { range }
       lastLine = line.from
-      let insert2 = state.toText(
-        (byLine ? text.line(i2++).text : input) + state.lineBreak,
-      )
+      let insert2 = state.toText((byLine ? text.line(i2++).text : input) + state.lineBreak)
       return {
         changes: { from: line.from, insert: insert2 },
         range: EditorSelection.cursor(range.from + insert2.length),
@@ -8327,13 +7307,9 @@ handlers.mousedown = (view, event) => {
   if (!style && event.button == 0) style = basicMouseSelection(view, event)
   if (style) {
     let mustFocus = view.root.activeElement != view.contentDOM
-    view.inputState.startMouseSelection(
-      new MouseSelection(view, event, style, mustFocus),
-    )
-    if (mustFocus)
-      view.observer.ignore(() => focusPreventScroll(view.contentDOM))
-    if (view.inputState.mouseSelection)
-      view.inputState.mouseSelection.start(event)
+    view.inputState.startMouseSelection(new MouseSelection(view, event, style, mustFocus))
+    if (mustFocus) view.observer.ignore(() => focusPreventScroll(view.contentDOM))
+    if (view.inputState.mouseSelection) view.inputState.mouseSelection.start(event)
   }
 }
 function rangeForClick(view, pos, bias, type) {
@@ -8351,8 +7327,7 @@ function rangeForClick(view, pos, bias, type) {
   }
 }
 var insideY = (y, rect) => y >= rect.top && y <= rect.bottom
-var inside = (x, y, rect) =>
-  insideY(y, rect) && x >= rect.left && x <= rect.right
+var inside = (x, y, rect) => insideY(y, rect) && x >= rect.left && x <= rect.right
 function findPositionSide(view, pos, x, y) {
   let line = LineView.find(view.docView, pos)
   if (!line) return 1
@@ -8409,19 +7384,10 @@ function basicMouseSelection(view, event) {
         let startRange = rangeForClick(view, start.pos, start.bias, type)
         let from = Math.min(startRange.from, range.from),
           to = Math.max(startRange.to, range.to)
-        range =
-          from < range.from
-            ? EditorSelection.range(from, to)
-            : EditorSelection.range(to, from)
+        range = from < range.from ? EditorSelection.range(from, to) : EditorSelection.range(to, from)
       }
-      if (extend2)
-        return startSel.replaceRange(startSel.main.extend(range.from, range.to))
-      else if (
-        multiple &&
-        type == 1 &&
-        startSel.ranges.length > 1 &&
-        (removed = removeRangeAround(startSel, cur.pos))
-      )
+      if (extend2) return startSel.replaceRange(startSel.main.extend(range.from, range.to))
+      else if (multiple && type == 1 && startSel.ranges.length > 1 && (removed = removeRangeAround(startSel, cur.pos)))
         return removed
       else if (multiple) return startSel.addRange(range)
       else return EditorSelection.create([range])
@@ -8456,10 +7422,7 @@ function dropText(view, event, text, direct) {
   event.preventDefault()
   let { mouseSelection } = view.inputState
   let del =
-    direct &&
-    mouseSelection &&
-    mouseSelection.dragging &&
-    mouseSelection.dragMove
+    direct && mouseSelection && mouseSelection.dragging && mouseSelection.dragMove
       ? {
           from: mouseSelection.dragging.from,
           to: mouseSelection.dragging.to,
@@ -8486,20 +7449,13 @@ handlers.drop = (view, event) => {
     let text = Array(files.length),
       read = 0
     let finishFile = () => {
-      if (++read == files.length)
-        dropText(
-          view,
-          event,
-          text.filter((s) => s != null).join(view.state.lineBreak),
-          false,
-        )
+      if (++read == files.length) dropText(view, event, text.filter((s) => s != null).join(view.state.lineBreak), false)
     }
     for (let i2 = 0; i2 < files.length; i2++) {
       let reader = new FileReader()
       reader.onerror = finishFile
       reader.onload = () => {
-        if (!/[\x00-\x08\x0e-\x1f]{2}/.test(reader.result))
-          text[i2] = reader.result
+        if (!/[\x00-\x08\x0e-\x1f]{2}/.test(reader.result)) text[i2] = reader.result
         finishFile()
       }
       reader.readAsText(files[i2])
@@ -8586,9 +7542,7 @@ function focusChangeTransaction(state, focus) {
     let effect = getEffect(state, focus)
     if (effect) effects.push(effect)
   }
-  return effects
-    ? state.update({ effects, annotations: isFocusChange.of(true) })
-    : null
+  return effects ? state.update({ effects, annotations: isFocusChange.of(true) }) : null
 }
 function updateForFocusChange(view) {
   setTimeout(() => {
@@ -8602,10 +7556,7 @@ function updateForFocusChange(view) {
 }
 handlers.focus = (view) => {
   view.inputState.lastFocusTime = Date.now()
-  if (
-    !view.scrollDOM.scrollTop &&
-    (view.inputState.lastScrollTop || view.inputState.lastScrollLeft)
-  ) {
+  if (!view.scrollDOM.scrollTop && (view.inputState.lastScrollTop || view.inputState.lastScrollLeft)) {
     view.scrollDOM.scrollTop = view.inputState.lastScrollTop
     view.scrollDOM.scrollLeft = view.inputState.lastScrollLeft
   }
@@ -8616,8 +7567,7 @@ handlers.blur = (view) => {
   updateForFocusChange(view)
 }
 handlers.compositionstart = handlers.compositionupdate = (view) => {
-  if (view.inputState.compositionFirstChange == null)
-    view.inputState.compositionFirstChange = true
+  if (view.inputState.compositionFirstChange == null) view.inputState.compositionFirstChange = true
   if (view.inputState.composing < 0) {
     view.inputState.composing = 0
   }
@@ -8626,8 +7576,7 @@ handlers.compositionend = (view) => {
   view.inputState.composing = -1
   view.inputState.compositionEndedAt = Date.now()
   view.inputState.compositionPendingKey = true
-  view.inputState.compositionPendingChange =
-    view.observer.pendingRecords().length > 0
+  view.inputState.compositionPendingChange = view.observer.pendingRecords().length > 0
   view.inputState.compositionFirstChange = null
   if (browser.chrome && browser.android) {
     view.observer.flushSoon()
@@ -8635,8 +7584,7 @@ handlers.compositionend = (view) => {
     Promise.resolve().then(() => view.observer.flush())
   } else {
     setTimeout(() => {
-      if (view.inputState.composing < 0 && view.docView.compositionDeco.size)
-        view.update([])
+      if (view.inputState.composing < 0 && view.docView.compositionDeco.size) view.update([])
     }, 50)
   }
 }
@@ -8646,23 +7594,14 @@ handlers.contextmenu = (view) => {
 handlers.beforeinput = (view, event) => {
   var _a2
   let pending
-  if (
-    browser.chrome &&
-    browser.android &&
-    (pending = PendingKeys.find((key) => key.inputType == event.inputType))
-  ) {
+  if (browser.chrome && browser.android && (pending = PendingKeys.find((key) => key.inputType == event.inputType))) {
     view.observer.delayAndroidKey(pending.key, pending.keyCode)
     if (pending.key == 'Backspace' || pending.key == 'Delete') {
-      let startViewHeight =
-        ((_a2 = window.visualViewport) === null || _a2 === void 0
-          ? void 0
-          : _a2.height) || 0
+      let startViewHeight = ((_a2 = window.visualViewport) === null || _a2 === void 0 ? void 0 : _a2.height) || 0
       setTimeout(() => {
         var _a22
         if (
-          (((_a22 = window.visualViewport) === null || _a22 === void 0
-            ? void 0
-            : _a22.height) || 0) >
+          (((_a22 = window.visualViewport) === null || _a22 === void 0 ? void 0 : _a22.height) || 0) >
             startViewHeight + 10 &&
           view.hasFocus
         ) {
@@ -8678,19 +7617,12 @@ var HeightOracle = class {
   heightForGap(from, to) {
     let lines = this.doc.lineAt(to).number - this.doc.lineAt(from).number + 1
     if (this.lineWrapping)
-      lines += Math.max(
-        0,
-        Math.ceil(
-          (to - from - lines * this.lineLength * 0.5) / this.lineLength,
-        ),
-      )
+      lines += Math.max(0, Math.ceil((to - from - lines * this.lineLength * 0.5) / this.lineLength))
     return this.lineHeight * lines
   }
   heightForLine(length) {
     if (!this.lineWrapping) return this.lineHeight
-    let lines =
-      1 +
-      Math.max(0, Math.ceil((length - this.lineLength) / (this.lineLength - 5)))
+    let lines = 1 + Math.max(0, Math.ceil((length - this.lineLength) / (this.lineLength - 5)))
     return lines * this.lineHeight
   }
   setDoc(doc2) {
@@ -8713,18 +7645,9 @@ var HeightOracle = class {
     }
     return newHeight
   }
-  refresh(
-    whiteSpace,
-    lineHeight,
-    charWidth,
-    textHeight,
-    lineLength,
-    knownHeights,
-  ) {
+  refresh(whiteSpace, lineHeight, charWidth, textHeight, lineLength, knownHeights) {
     let lineWrapping = wrappingWhiteSpace.indexOf(whiteSpace) > -1
-    let changed =
-      Math.round(lineHeight) != Math.round(this.lineHeight) ||
-      this.lineWrapping != lineWrapping
+    let changed = Math.round(lineHeight) != Math.round(this.lineHeight) || this.lineWrapping != lineWrapping
     this.lineWrapping = lineWrapping
     this.lineHeight = lineHeight
     this.charWidth = charWidth
@@ -8790,9 +7713,7 @@ var BlockInfo = class {
   associated with it.
   */
   get widget() {
-    return this._content instanceof PointDecoration
-      ? this._content.widget
-      : null
+    return this._content instanceof PointDecoration ? this._content.widget : null
   }
   /**
   If this is a textblock, this holds the number of line breaks
@@ -8805,16 +7726,10 @@ var BlockInfo = class {
   @internal
   */
   join(other) {
-    let content2 = (
-      Array.isArray(this._content) ? this._content : [this]
-    ).concat(Array.isArray(other._content) ? other._content : [other])
-    return new BlockInfo(
-      this.from,
-      this.length + other.length,
-      this.top,
-      this.height + other.height,
-      content2,
+    let content2 = (Array.isArray(this._content) ? this._content : [this]).concat(
+      Array.isArray(other._content) ? other._content : [other],
     )
+    return new BlockInfo(this.from, this.length + other.length, this.top, this.height + other.height, content2)
   }
   /**
   @internal
@@ -8865,34 +7780,19 @@ var HeightMap = class {
       doc2 = oracle.doc
     for (let i2 = changes.length - 1; i2 >= 0; i2--) {
       let { fromA, toA, fromB, toB } = changes[i2]
-      let start = me.lineAt(
-        fromA,
-        QueryType.ByPosNoHeight,
-        oracle.setDoc(oldDoc),
-        0,
-        0,
-      )
-      let end =
-        start.to >= toA
-          ? start
-          : me.lineAt(toA, QueryType.ByPosNoHeight, oracle, 0, 0)
+      let start = me.lineAt(fromA, QueryType.ByPosNoHeight, oracle.setDoc(oldDoc), 0, 0)
+      let end = start.to >= toA ? start : me.lineAt(toA, QueryType.ByPosNoHeight, oracle, 0, 0)
       toB += end.to - toA
       toA = end.to
       while (i2 > 0 && start.from <= changes[i2 - 1].toA) {
         fromA = changes[i2 - 1].fromA
         fromB = changes[i2 - 1].fromB
         i2--
-        if (fromA < start.from)
-          start = me.lineAt(fromA, QueryType.ByPosNoHeight, oracle, 0, 0)
+        if (fromA < start.from) start = me.lineAt(fromA, QueryType.ByPosNoHeight, oracle, 0, 0)
       }
       fromB += start.from - fromA
       fromA = start.from
-      let nodes = NodeBuilder.build(
-        oracle.setDoc(doc2),
-        decorations2,
-        fromB,
-        toB,
-      )
+      let nodes = NodeBuilder.build(oracle.setDoc(doc2), decorations2, fromB, toB)
       me = me.replace(fromA, toA, nodes)
     }
     return me.updateHeight(oracle, 0)
@@ -8943,11 +7843,7 @@ var HeightMap = class {
       brk = 1
       j++
     }
-    return new HeightMapBranch(
-      HeightMap.of(nodes.slice(0, i2)),
-      brk,
-      HeightMap.of(nodes.slice(j)),
-    )
+    return new HeightMapBranch(HeightMap.of(nodes.slice(0, i2)), brk, HeightMap.of(nodes.slice(j)))
   }
   constructor(length, height, flags = 2) {
     this.length = length
@@ -8958,24 +7854,16 @@ var HeightMap = class {
 HeightMap.prototype.size = 1
 var HeightMapBlock = class extends HeightMap {
   blockAt(_height, _oracle, top22, offset) {
-    return new BlockInfo(
-      offset,
-      this.length,
-      top22,
-      this.height,
-      this.deco || 0,
-    )
+    return new BlockInfo(offset, this.length, top22, this.height, this.deco || 0)
   }
   lineAt(_value, _type, oracle, top22, offset) {
     return this.blockAt(0, oracle, top22, offset)
   }
   forEachLine(from, to, oracle, top22, offset, f) {
-    if (from <= offset + this.length && to >= offset)
-      f(this.blockAt(0, oracle, top22, offset))
+    if (from <= offset + this.length && to >= offset) f(this.blockAt(0, oracle, top22, offset))
   }
   updateHeight(oracle, offset = 0, _force = false, measured) {
-    if (measured && measured.from <= offset && measured.more)
-      this.setHeight(oracle, measured.heights[measured.index++])
+    if (measured && measured.from <= offset && measured.more) this.setHeight(oracle, measured.heights[measured.index++])
     this.outdated = false
     return this
   }
@@ -8995,12 +7883,10 @@ var HeightMapText = class extends HeightMapBlock {
     let node = nodes[0]
     if (
       nodes.length == 1 &&
-      (node instanceof HeightMapText ||
-        (node instanceof HeightMapGap && node.flags & 4)) &&
+      (node instanceof HeightMapText || (node instanceof HeightMapGap && node.flags & 4)) &&
       Math.abs(this.length - node.length) < 10
     ) {
-      if (node instanceof HeightMapGap)
-        node = new HeightMapText(node.length, this.height)
+      if (node instanceof HeightMapGap) node = new HeightMapText(node.length, this.height)
       else node.height = this.height
       if (!this.outdated) node.outdated = false
       return node
@@ -9009,15 +7895,11 @@ var HeightMapText = class extends HeightMapBlock {
     }
   }
   updateHeight(oracle, offset = 0, force = false, measured) {
-    if (measured && measured.from <= offset && measured.more)
-      this.setHeight(oracle, measured.heights[measured.index++])
+    if (measured && measured.from <= offset && measured.more) this.setHeight(oracle, measured.heights[measured.index++])
     else if (force || this.outdated)
       this.setHeight(
         oracle,
-        Math.max(
-          this.widgetHeight,
-          oracle.heightForLine(this.length - this.collapsed),
-        ) +
+        Math.max(this.widgetHeight, oracle.heightForLine(this.length - this.collapsed)) +
           this.breaks * oracle.lineHeight,
       )
     this.outdated = false
@@ -9043,41 +7925,28 @@ var HeightMapGap = class extends HeightMap {
     if (oracle.lineWrapping) {
       let totalPerLine = Math.min(this.height, oracle.lineHeight * lines)
       perLine = totalPerLine / lines
-      if (this.length > lines + 1)
-        perChar = (this.height - totalPerLine) / (this.length - lines - 1)
+      if (this.length > lines + 1) perChar = (this.height - totalPerLine) / (this.length - lines - 1)
     } else {
       perLine = this.height / lines
     }
     return { firstLine, lastLine, perLine, perChar }
   }
   blockAt(height, oracle, top22, offset) {
-    let { firstLine, lastLine, perLine, perChar } = this.heightMetrics(
-      oracle,
-      offset,
-    )
+    let { firstLine, lastLine, perLine, perChar } = this.heightMetrics(oracle, offset)
     if (oracle.lineWrapping) {
-      let guess =
-        offset +
-        Math.round(
-          Math.max(0, Math.min(1, (height - top22) / this.height)) *
-            this.length,
-        )
+      let guess = offset + Math.round(Math.max(0, Math.min(1, (height - top22) / this.height)) * this.length)
       let line = oracle.doc.lineAt(guess),
         lineHeight = perLine + line.length * perChar
       let lineTop = Math.max(top22, height - lineHeight / 2)
       return new BlockInfo(line.from, line.length, lineTop, lineHeight, 0)
     } else {
-      let line = Math.max(
-        0,
-        Math.min(lastLine - firstLine, Math.floor((height - top22) / perLine)),
-      )
+      let line = Math.max(0, Math.min(lastLine - firstLine, Math.floor((height - top22) / perLine)))
       let { from, length } = oracle.doc.line(firstLine + line)
       return new BlockInfo(from, length, top22 + perLine * line, perLine, 0)
     }
   }
   lineAt(value, type, oracle, top22, offset) {
-    if (type == QueryType.ByHeight)
-      return this.blockAt(value, oracle, top22, offset)
+    if (type == QueryType.ByHeight) return this.blockAt(value, oracle, top22, offset)
     if (type == QueryType.ByPosNoHeight) {
       let { from, to } = oracle.doc.lineAt(value)
       return new BlockInfo(from, to - from, 0, 0, 0)
@@ -9086,8 +7955,7 @@ var HeightMapGap = class extends HeightMap {
     let line = oracle.doc.lineAt(value),
       lineHeight = perLine + line.length * perChar
     let linesAbove = line.number - firstLine
-    let lineTop =
-      top22 + perLine * linesAbove + perChar * (line.from - offset - linesAbove)
+    let lineTop = top22 + perLine * linesAbove + perChar * (line.from - offset - linesAbove)
     return new BlockInfo(
       line.from,
       line.length,
@@ -9116,14 +7984,12 @@ var HeightMapGap = class extends HeightMap {
     let after = this.length - to
     if (after > 0) {
       let last = nodes[nodes.length - 1]
-      if (last instanceof HeightMapGap)
-        nodes[nodes.length - 1] = new HeightMapGap(last.length + after)
+      if (last instanceof HeightMapGap) nodes[nodes.length - 1] = new HeightMapGap(last.length + after)
       else nodes.push(null, new HeightMapGap(after - 1))
     }
     if (from > 0) {
       let first = nodes[0]
-      if (first instanceof HeightMapGap)
-        nodes[0] = new HeightMapGap(from + first.length)
+      if (first instanceof HeightMapGap) nodes[0] = new HeightMapGap(from + first.length)
       else nodes.unshift(new HeightMapGap(from - 1), null)
     }
     return HeightMap.of(nodes)
@@ -9140,13 +8006,7 @@ var HeightMapGap = class extends HeightMap {
       let nodes = [],
         pos = Math.max(offset, measured.from),
         singleHeight = -1
-      if (measured.from > offset)
-        nodes.push(
-          new HeightMapGap(measured.from - offset - 1).updateHeight(
-            oracle,
-            offset,
-          ),
-        )
+      if (measured.from > offset) nodes.push(new HeightMapGap(measured.from - offset - 1).updateHeight(oracle, offset))
       while (pos <= end && measured.more) {
         let len = oracle.doc.lineAt(pos).length
         if (nodes.length) nodes.push(null)
@@ -9158,14 +8018,12 @@ var HeightMapGap = class extends HeightMap {
         nodes.push(line)
         pos += len + 1
       }
-      if (pos <= end)
-        nodes.push(null, new HeightMapGap(end - pos).updateHeight(oracle, pos))
+      if (pos <= end) nodes.push(null, new HeightMapGap(end - pos).updateHeight(oracle, pos))
       let result = HeightMap.of(nodes)
       if (
         singleHeight < 0 ||
         Math.abs(result.height - this.height) >= Epsilon ||
-        Math.abs(singleHeight - this.heightMetrics(oracle, offset).perLine) >=
-          Epsilon
+        Math.abs(singleHeight - this.heightMetrics(oracle, offset).perLine) >= Epsilon
       )
         oracle.heightChanged = true
       return result
@@ -9190,65 +8048,38 @@ var HeightMapBranch = class extends HeightMap {
     let mid = top22 + this.left.height
     return height < mid
       ? this.left.blockAt(height, oracle, top22, offset)
-      : this.right.blockAt(
-          height,
-          oracle,
-          mid,
-          offset + this.left.length + this.break,
-        )
+      : this.right.blockAt(height, oracle, mid, offset + this.left.length + this.break)
   }
   lineAt(value, type, oracle, top22, offset) {
     let rightTop = top22 + this.left.height,
       rightOffset = offset + this.left.length + this.break
-    let left =
-      type == QueryType.ByHeight ? value < rightTop : value < rightOffset
+    let left = type == QueryType.ByHeight ? value < rightTop : value < rightOffset
     let base2 = left
       ? this.left.lineAt(value, type, oracle, top22, offset)
       : this.right.lineAt(value, type, oracle, rightTop, rightOffset)
-    if (
-      this.break ||
-      (left ? base2.to < rightOffset : base2.from > rightOffset)
-    )
-      return base2
-    let subQuery =
-      type == QueryType.ByPosNoHeight
-        ? QueryType.ByPosNoHeight
-        : QueryType.ByPos
-    if (left)
-      return base2.join(
-        this.right.lineAt(rightOffset, subQuery, oracle, rightTop, rightOffset),
-      )
-    else
-      return this.left
-        .lineAt(rightOffset, subQuery, oracle, top22, offset)
-        .join(base2)
+    if (this.break || (left ? base2.to < rightOffset : base2.from > rightOffset)) return base2
+    let subQuery = type == QueryType.ByPosNoHeight ? QueryType.ByPosNoHeight : QueryType.ByPos
+    if (left) return base2.join(this.right.lineAt(rightOffset, subQuery, oracle, rightTop, rightOffset))
+    else return this.left.lineAt(rightOffset, subQuery, oracle, top22, offset).join(base2)
   }
   forEachLine(from, to, oracle, top22, offset, f) {
     let rightTop = top22 + this.left.height,
       rightOffset = offset + this.left.length + this.break
     if (this.break) {
-      if (from < rightOffset)
-        this.left.forEachLine(from, to, oracle, top22, offset, f)
-      if (to >= rightOffset)
-        this.right.forEachLine(from, to, oracle, rightTop, rightOffset, f)
+      if (from < rightOffset) this.left.forEachLine(from, to, oracle, top22, offset, f)
+      if (to >= rightOffset) this.right.forEachLine(from, to, oracle, rightTop, rightOffset, f)
     } else {
       let mid = this.lineAt(rightOffset, QueryType.ByPos, oracle, top22, offset)
-      if (from < mid.from)
-        this.left.forEachLine(from, mid.from - 1, oracle, top22, offset, f)
+      if (from < mid.from) this.left.forEachLine(from, mid.from - 1, oracle, top22, offset, f)
       if (mid.to >= from && mid.from <= to) f(mid)
-      if (to > mid.to)
-        this.right.forEachLine(mid.to + 1, to, oracle, rightTop, rightOffset, f)
+      if (to > mid.to) this.right.forEachLine(mid.to + 1, to, oracle, rightTop, rightOffset, f)
     }
   }
   replace(from, to, nodes) {
     let rightStart = this.left.length + this.break
-    if (to < rightStart)
-      return this.balanced(this.left.replace(from, to, nodes), this.right)
+    if (to < rightStart) return this.balanced(this.left.replace(from, to, nodes), this.right)
     if (from > this.left.length)
-      return this.balanced(
-        this.left,
-        this.right.replace(from - rightStart, to - rightStart, nodes),
-      )
+      return this.balanced(this.left, this.right.replace(from - rightStart, to - rightStart, nodes))
     let result = []
     if (from > 0) this.decomposeLeft(from, result)
     let left = result.length
@@ -9298,12 +8129,7 @@ var HeightMapBranch = class extends HeightMap {
       rebalance = left = left.updateHeight(oracle, offset, force, measured)
     else left.updateHeight(oracle, offset, force)
     if (measured && measured.from <= rightStart + right.length && measured.more)
-      rebalance = right = right.updateHeight(
-        oracle,
-        rightStart,
-        force,
-        measured,
-      )
+      rebalance = right = right.updateHeight(oracle, rightStart, force, measured)
     else right.updateHeight(oracle, rightStart, force)
     if (rebalance) return this.balanced(left, right)
     this.height = this.left.height + this.right.height
@@ -9314,11 +8140,7 @@ var HeightMapBranch = class extends HeightMap {
     return this.left + (this.break ? ' ' : '-') + this.right
   }
   constructor(left, brk, right) {
-    super(
-      left.length + brk + right.length,
-      left.height + right.height,
-      brk | (left.outdated || right.outdated ? 2 : 0),
-    )
+    super(left.length + brk + right.length, left.height + right.height, brk | (left.outdated || right.outdated ? 2 : 0))
     this.left = left
     this.right = right
     this.size = left.size + right.size
@@ -9331,11 +8153,7 @@ function mergeGaps(nodes, around) {
     (before = nodes[around - 1]) instanceof HeightMapGap &&
     (after = nodes[around + 1]) instanceof HeightMapGap
   )
-    nodes.splice(
-      around - 1,
-      3,
-      new HeightMapGap(before.length + 1 + after.length),
-    )
+    nodes.splice(around - 1, 3, new HeightMapGap(before.length + 1 + after.length))
 }
 var relevantWidgetHeight = 5
 var NodeBuilder = class {
@@ -9347,8 +8165,7 @@ var NodeBuilder = class {
       let end = Math.min(to, this.lineEnd),
         last = this.nodes[this.nodes.length - 1]
       if (last instanceof HeightMapText) last.length += end - this.pos
-      else if (end > this.pos || !this.isCovered)
-        this.nodes.push(new HeightMapText(end - this.pos, -1))
+      else if (end > this.pos || !this.isCovered) this.nodes.push(new HeightMapText(end - this.pos, -1))
       this.writtenTo = end
       if (to > end) {
         this.nodes.push(null)
@@ -9372,8 +8189,7 @@ var NodeBuilder = class {
     } else if (to > from) {
       this.span(from, to)
     }
-    if (this.lineEnd > -1 && this.lineEnd < this.pos)
-      this.lineEnd = this.oracle.doc.lineAt(this.pos).to
+    if (this.lineEnd > -1 && this.lineEnd < this.pos) this.lineEnd = this.oracle.doc.lineAt(this.pos).to
   }
   enterLine() {
     if (this.lineStart > -1) return
@@ -9381,10 +8197,7 @@ var NodeBuilder = class {
     this.lineStart = from
     this.lineEnd = to
     if (this.writtenTo < from) {
-      if (
-        this.writtenTo < from - 1 ||
-        this.nodes[this.nodes.length - 1] == null
-      )
+      if (this.writtenTo < from - 1 || this.nodes[this.nodes.length - 1] == null)
         this.nodes.push(this.blankContent(this.writtenTo, from - 1))
       this.nodes.push(null)
     }
@@ -9423,14 +8236,9 @@ var NodeBuilder = class {
   }
   finish(from) {
     let last = this.nodes.length == 0 ? null : this.nodes[this.nodes.length - 1]
-    if (
-      this.lineStart > -1 &&
-      !(last instanceof HeightMapText) &&
-      !this.isCovered
-    )
+    if (this.lineStart > -1 && !(last instanceof HeightMapText) && !this.isCovered)
       this.nodes.push(new HeightMapText(0, -1))
-    else if (this.writtenTo < this.pos || last == null)
-      this.nodes.push(this.blankContent(this.writtenTo, this.pos))
+    else if (this.writtenTo < this.pos || last == null) this.nodes.push(this.blankContent(this.writtenTo, this.pos))
     let pos = from
     for (let node of this.nodes) {
       if (node instanceof HeightMapText) node.updateHeight(this.oracle, pos)
@@ -9466,8 +8274,7 @@ function heightRelevantDecoChanges(a, b, diff) {
 var DecorationComparator = class {
   compareRange() {}
   comparePoint(from, to, a, b) {
-    if (from < to || (a && a.heightRelevant) || (b && b.heightRelevant))
-      addRange(from, to, this.changes, 5)
+    if (from < to || (a && a.heightRelevant) || (b && b.heightRelevant)) addRange(from, to, this.changes, 5)
   }
   constructor() {
     this.changes = []
@@ -9485,24 +8292,14 @@ function visiblePixelRange(dom, paddingTop) {
     if (parent.nodeType == 1) {
       let elt = parent
       let style = window.getComputedStyle(elt)
-      if (
-        (elt.scrollHeight > elt.clientHeight ||
-          elt.scrollWidth > elt.clientWidth) &&
-        style.overflow != 'visible'
-      ) {
+      if ((elt.scrollHeight > elt.clientHeight || elt.scrollWidth > elt.clientWidth) && style.overflow != 'visible') {
         let parentRect = elt.getBoundingClientRect()
         left = Math.max(left, parentRect.left)
         right = Math.min(right, parentRect.right)
         top22 = Math.max(top22, parentRect.top)
-        bottom =
-          parent == dom.parentNode
-            ? parentRect.bottom
-            : Math.min(bottom, parentRect.bottom)
+        bottom = parent == dom.parentNode ? parentRect.bottom : Math.min(bottom, parentRect.bottom)
       }
-      parent =
-        style.position == 'absolute' || style.position == 'fixed'
-          ? elt.offsetParent
-          : elt.parentNode
+      parent = style.position == 'absolute' || style.position == 'fixed' ? elt.offsetParent : elt.parentNode
     } else if (parent.nodeType == 11) {
       parent = parent.host
     } else {
@@ -9531,8 +8328,7 @@ var LineGap = class {
     for (let i2 = 0; i2 < a.length; i2++) {
       let gA = a[i2],
         gB = b[i2]
-      if (gA.from != gB.from || gA.to != gB.to || gA.size != gB.size)
-        return false
+      if (gA.from != gB.from || gA.to != gB.to || gA.size != gB.size) return false
     }
     return true
   }
@@ -9584,9 +8380,7 @@ var ViewState = class {
     }
     this.viewports = viewports.sort((a, b) => a.from - b.from)
     this.scaler =
-      this.heightMap.height <= 7e6
-        ? IdScaler
-        : new BigScaler(this.heightOracle, this.heightMap, this.viewports)
+      this.heightMap.height <= 7e6 ? IdScaler : new BigScaler(this.heightOracle, this.heightMap, this.viewports)
   }
   updateViewportLines() {
     this.viewportLines = []
@@ -9597,18 +8391,14 @@ var ViewState = class {
       0,
       0,
       (block) => {
-        this.viewportLines.push(
-          this.scaler.scale == 1 ? block : scaleBlock(block, this.scaler),
-        )
+        this.viewportLines.push(this.scaler.scale == 1 ? block : scaleBlock(block, this.scaler))
       },
     )
   }
   update(update, scrollTarget = null) {
     this.state = update.state
     let prevDeco = this.stateDeco
-    this.stateDeco = this.state
-      .facet(decorations)
-      .filter((d) => typeof d != 'function')
+    this.stateDeco = this.state.facet(decorations).filter((d) => typeof d != 'function')
     let contentChanges = update.changedRanges
     let heightChanges = ChangedRange.extendWithRanges(
       contentChanges,
@@ -9619,9 +8409,7 @@ var ViewState = class {
       ),
     )
     let prevHeight = this.heightMap.height
-    let scrollAnchor = this.scrolledToBottom
-      ? null
-      : this.lineBlockAtHeight(this.scrollTop)
+    let scrollAnchor = this.scrolledToBottom ? null : this.lineBlockAtHeight(this.scrollTop)
     this.heightMap = this.heightMap.applyChanges(
       this.stateDeco,
       update.startState.doc,
@@ -9636,13 +8424,9 @@ var ViewState = class {
       this.scrollAnchorPos = -1
       this.scrollAnchorHeight = this.heightMap.height
     }
-    let viewport = heightChanges.length
-      ? this.mapViewport(this.viewport, update.changes)
-      : this.viewport
+    let viewport = heightChanges.length ? this.mapViewport(this.viewport, update.changes) : this.viewport
     if (
-      (scrollTarget &&
-        (scrollTarget.range.head < viewport.from ||
-          scrollTarget.range.head > viewport.to)) ||
+      (scrollTarget && (scrollTarget.range.head < viewport.from || scrollTarget.range.head > viewport.to)) ||
       !this.viewportIsAppropriate(viewport)
     )
       viewport = this.getViewport(0, scrollTarget)
@@ -9654,13 +8438,8 @@ var ViewState = class {
     this.viewport = viewport
     this.updateForViewport()
     if (updateLines) this.updateViewportLines()
-    if (
-      this.lineGaps.length ||
-      this.viewport.to - this.viewport.from > 2e3 << 1
-    )
-      this.updateLineGaps(
-        this.ensureLineGaps(this.mapLineGaps(this.lineGaps, update.changes)),
-      )
+    if (this.lineGaps.length || this.viewport.to - this.viewport.from > 2e3 << 1)
+      this.updateLineGaps(this.ensureLineGaps(this.mapLineGaps(this.lineGaps, update.changes)))
     update.flags |= this.computeVisibleRanges()
     if (scrollTarget) this.scrollTarget = scrollTarget
     if (
@@ -9678,14 +8457,10 @@ var ViewState = class {
       style = window.getComputedStyle(dom)
     let oracle = this.heightOracle
     let whiteSpace = style.whiteSpace
-    this.defaultTextDirection =
-      style.direction == 'rtl' ? Direction.RTL : Direction.LTR
+    this.defaultTextDirection = style.direction == 'rtl' ? Direction.RTL : Direction.LTR
     let refresh = this.heightOracle.mustRefreshForWrapping(whiteSpace)
     let domRect = dom.getBoundingClientRect()
-    let measureContent =
-      refresh ||
-      this.mustMeasureContent ||
-      this.contentDOMHeight != domRect.height
+    let measureContent = refresh || this.mustMeasureContent || this.contentDOMHeight != domRect.height
     this.contentDOMHeight = domRect.height
     this.mustMeasureContent = false
     let result = 0,
@@ -9706,29 +8481,20 @@ var ViewState = class {
       this.scrollAnchorHeight = -1
       this.scrollTop = view.scrollDOM.scrollTop
     }
-    this.scrolledToBottom =
-      this.scrollTop >
-      view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight - 4
-    let pixelViewport = (this.printing ? fullPixelRange : visiblePixelRange)(
-      dom,
-      this.paddingTop,
-    )
+    this.scrolledToBottom = this.scrollTop > view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight - 4
+    let pixelViewport = (this.printing ? fullPixelRange : visiblePixelRange)(dom, this.paddingTop)
     let dTop = pixelViewport.top - this.pixelViewport.top,
       dBottom = pixelViewport.bottom - this.pixelViewport.bottom
     this.pixelViewport = pixelViewport
     let inView =
-      this.pixelViewport.bottom > this.pixelViewport.top &&
-      this.pixelViewport.right > this.pixelViewport.left
+      this.pixelViewport.bottom > this.pixelViewport.top && this.pixelViewport.right > this.pixelViewport.left
     if (inView != this.inView) {
       this.inView = inView
       if (inView) measureContent = true
     }
     if (!this.inView && !this.scrollTarget) return 0
     let contentWidth = domRect.width
-    if (
-      this.contentDOMWidth != contentWidth ||
-      this.editorHeight != view.scrollDOM.clientHeight
-    ) {
+    if (this.contentDOMWidth != contentWidth || this.editorHeight != view.scrollDOM.clientHeight) {
       this.contentDOMWidth = domRect.width
       this.editorHeight = view.scrollDOM.clientHeight
       result |= 8
@@ -9736,23 +8502,11 @@ var ViewState = class {
     if (measureContent) {
       let lineHeights = view.docView.measureVisibleLineHeights(this.viewport)
       if (oracle.mustRefreshForHeights(lineHeights)) refresh = true
-      if (
-        refresh ||
-        (oracle.lineWrapping &&
-          Math.abs(contentWidth - this.contentDOMWidth) > oracle.charWidth)
-      ) {
-        let { lineHeight, charWidth, textHeight } =
-          view.docView.measureTextSize()
+      if (refresh || (oracle.lineWrapping && Math.abs(contentWidth - this.contentDOMWidth) > oracle.charWidth)) {
+        let { lineHeight, charWidth, textHeight } = view.docView.measureTextSize()
         refresh =
           lineHeight > 0 &&
-          oracle.refresh(
-            whiteSpace,
-            lineHeight,
-            charWidth,
-            textHeight,
-            contentWidth / charWidth,
-            lineHeights,
-          )
+          oracle.refresh(whiteSpace, lineHeight, charWidth, textHeight, contentWidth / charWidth, lineHeights)
         if (refresh) {
           view.docView.minWidth = 0
           result |= 8
@@ -9762,44 +8516,26 @@ var ViewState = class {
       else if (dTop < 0 && dBottom < 0) bias = Math.min(dTop, dBottom)
       oracle.heightChanged = false
       for (let vp of this.viewports) {
-        let heights =
-          vp.from == this.viewport.from
-            ? lineHeights
-            : view.docView.measureVisibleLineHeights(vp)
+        let heights = vp.from == this.viewport.from ? lineHeights : view.docView.measureVisibleLineHeights(vp)
         this.heightMap = (
           refresh
-            ? HeightMap.empty().applyChanges(
-                this.stateDeco,
-                Text.empty,
-                this.heightOracle,
-                [new ChangedRange(0, 0, 0, view.state.doc.length)],
-              )
+            ? HeightMap.empty().applyChanges(this.stateDeco, Text.empty, this.heightOracle, [
+                new ChangedRange(0, 0, 0, view.state.doc.length),
+              ])
             : this.heightMap
-        ).updateHeight(
-          oracle,
-          0,
-          refresh,
-          new MeasuredHeights(vp.from, heights),
-        )
+        ).updateHeight(oracle, 0, refresh, new MeasuredHeights(vp.from, heights))
       }
       if (oracle.heightChanged) result |= 2
     }
     let viewportChange =
       !this.viewportIsAppropriate(this.viewport, bias) ||
       (this.scrollTarget &&
-        (this.scrollTarget.range.head < this.viewport.from ||
-          this.scrollTarget.range.head > this.viewport.to))
-    if (viewportChange)
-      this.viewport = this.getViewport(bias, this.scrollTarget)
+        (this.scrollTarget.range.head < this.viewport.from || this.scrollTarget.range.head > this.viewport.to))
+    if (viewportChange) this.viewport = this.getViewport(bias, this.scrollTarget)
     this.updateForViewport()
     if (result & 2 || viewportChange) this.updateViewportLines()
-    if (
-      this.lineGaps.length ||
-      this.viewport.to - this.viewport.from > 2e3 << 1
-    )
-      this.updateLineGaps(
-        this.ensureLineGaps(refresh ? [] : this.lineGaps, view),
-      )
+    if (this.lineGaps.length || this.viewport.to - this.viewport.from > 2e3 << 1)
+      this.updateLineGaps(this.ensureLineGaps(refresh ? [] : this.lineGaps, view))
     result |= this.computeVisibleRanges()
     if (this.mustEnforceCursorAssoc) {
       this.mustEnforceCursorAssoc = false
@@ -9819,42 +8555,21 @@ var ViewState = class {
       oracle = this.heightOracle
     let { visibleTop, visibleBottom } = this
     let viewport = new Viewport(
-      map.lineAt(visibleTop - marginTop * 1e3, QueryType.ByHeight, oracle, 0, 0)
-        .from,
-      map.lineAt(
-        visibleBottom + (1 - marginTop) * 1e3,
-        QueryType.ByHeight,
-        oracle,
-        0,
-        0,
-      ).to,
+      map.lineAt(visibleTop - marginTop * 1e3, QueryType.ByHeight, oracle, 0, 0).from,
+      map.lineAt(visibleBottom + (1 - marginTop) * 1e3, QueryType.ByHeight, oracle, 0, 0).to,
     )
     if (scrollTarget) {
       let { head } = scrollTarget.range
       if (head < viewport.from || head > viewport.to) {
-        let viewHeight = Math.min(
-          this.editorHeight,
-          this.pixelViewport.bottom - this.pixelViewport.top,
-        )
+        let viewHeight = Math.min(this.editorHeight, this.pixelViewport.bottom - this.pixelViewport.top)
         let block = map.lineAt(head, QueryType.ByPos, oracle, 0, 0),
           topPos
-        if (scrollTarget.y == 'center')
-          topPos = (block.top + block.bottom) / 2 - viewHeight / 2
-        else if (
-          scrollTarget.y == 'start' ||
-          (scrollTarget.y == 'nearest' && head < viewport.from)
-        )
-          topPos = block.top
+        if (scrollTarget.y == 'center') topPos = (block.top + block.bottom) / 2 - viewHeight / 2
+        else if (scrollTarget.y == 'start' || (scrollTarget.y == 'nearest' && head < viewport.from)) topPos = block.top
         else topPos = block.bottom - viewHeight
         viewport = new Viewport(
           map.lineAt(topPos - 1e3 / 2, QueryType.ByHeight, oracle, 0, 0).from,
-          map.lineAt(
-            topPos + viewHeight + 1e3 / 2,
-            QueryType.ByHeight,
-            oracle,
-            0,
-            0,
-          ).to,
+          map.lineAt(topPos + viewHeight + 1e3 / 2, QueryType.ByHeight, oracle, 0, 0).to,
         )
       }
     }
@@ -9864,8 +8579,7 @@ var ViewState = class {
     let from = changes.mapPos(viewport.from, -1),
       to = changes.mapPos(viewport.to, 1)
     return new Viewport(
-      this.heightMap.lineAt(from, QueryType.ByPos, this.heightOracle, 0, 0)
-        .from,
+      this.heightMap.lineAt(from, QueryType.ByPos, this.heightOracle, 0, 0).from,
       this.heightMap.lineAt(to, QueryType.ByPos, this.heightOracle, 0, 0).to,
     )
   }
@@ -9873,25 +8587,12 @@ var ViewState = class {
   // document and not too much beyond that.
   viewportIsAppropriate({ from, to }, bias = 0) {
     if (!this.inView) return true
-    let { top: top22 } = this.heightMap.lineAt(
-      from,
-      QueryType.ByPos,
-      this.heightOracle,
-      0,
-      0,
-    )
-    let { bottom } = this.heightMap.lineAt(
-      to,
-      QueryType.ByPos,
-      this.heightOracle,
-      0,
-      0,
-    )
+    let { top: top22 } = this.heightMap.lineAt(from, QueryType.ByPos, this.heightOracle, 0, 0)
+    let { bottom } = this.heightMap.lineAt(to, QueryType.ByPos, this.heightOracle, 0, 0)
     let { visibleTop, visibleBottom } = this
     return (
       (from == 0 || top22 <= visibleTop - Math.max(10, Math.min(-bias, 250))) &&
-      (to == this.state.doc.length ||
-        bottom >= visibleBottom + Math.max(10, Math.min(bias, 250))) &&
+      (to == this.state.doc.length || bottom >= visibleBottom + Math.max(10, Math.min(bias, 250))) &&
       top22 > visibleTop - 2 * 1e3 &&
       bottom < visibleBottom + 2 * 1e3
     )
@@ -9901,13 +8602,7 @@ var ViewState = class {
     let mapped = []
     for (let gap of gaps)
       if (!changes.touchesRange(gap.from, gap.to))
-        mapped.push(
-          new LineGap(
-            changes.mapPos(gap.from),
-            changes.mapPos(gap.to),
-            gap.size,
-          ),
-        )
+        mapped.push(new LineGap(changes.mapPos(gap.from), changes.mapPos(gap.to), gap.size))
     return mapped
   }
   // Computes positions in the viewport where the start or end of a
@@ -9952,11 +8647,7 @@ var ViewState = class {
           wrapping &&
           mayMeasure.visibleRanges.some((r) => r.from <= to && r.to >= to)
         ) {
-          let lineStart = mayMeasure.moveToLineBoundary(
-            EditorSelection.cursor(to),
-            false,
-            true,
-          ).head
+          let lineStart = mayMeasure.moveToLineBoundary(EditorSelection.cursor(to), false, true).head
           if (lineStart > from) to = lineStart
         }
         gap = new LineGap(from, to, this.gapSize(line, from, to, structure))
@@ -9970,14 +8661,11 @@ var ViewState = class {
       let target = this.scrollTarget ? this.scrollTarget.range.head : null
       let viewFrom, viewTo
       if (wrapping) {
-        let marginHeight =
-          (margin / this.heightOracle.lineLength) * this.heightOracle.lineHeight
+        let marginHeight = (margin / this.heightOracle.lineLength) * this.heightOracle.lineHeight
         let top22, bot
         if (target != null) {
           let targetFrac = findFraction(structure, target)
-          let spaceFrac =
-            ((this.visibleBottom - this.visibleTop) / 2 + marginHeight) /
-            line.height
+          let spaceFrac = ((this.visibleBottom - this.visibleTop) / 2 + marginHeight) / line.height
           top22 = targetFrac - spaceFrac
           bot = targetFrac + spaceFrac
         } else {
@@ -9992,10 +8680,7 @@ var ViewState = class {
         let left, right
         if (target != null) {
           let targetFrac = findFraction(structure, target)
-          let spaceFrac =
-            ((this.pixelViewport.right - this.pixelViewport.left) / 2 +
-              marginWidth) /
-            totalWidth
+          let spaceFrac = ((this.pixelViewport.right - this.pixelViewport.left) / 2 + marginWidth) / totalWidth
           left = targetFrac - spaceFrac
           right = targetFrac + spaceFrac
         } else {
@@ -10021,9 +8706,7 @@ var ViewState = class {
   updateLineGaps(gaps) {
     if (!LineGap.same(gaps, this.lineGaps)) {
       this.lineGaps = gaps
-      this.lineGapDeco = Decoration.set(
-        gaps.map((gap) => gap.draw(this.heightOracle.lineWrapping)),
-      )
+      this.lineGapDeco = Decoration.set(gaps.map((gap) => gap.draw(this.heightOracle.lineWrapping)))
     }
   }
   computeVisibleRanges() {
@@ -10044,9 +8727,7 @@ var ViewState = class {
     )
     let changed =
       ranges.length != this.visibleRanges.length ||
-      this.visibleRanges.some(
-        (r, i2) => r.from != ranges[i2].from || r.to != ranges[i2].to,
-      )
+      this.visibleRanges.some((r, i2) => r.from != ranges[i2].from || r.to != ranges[i2].to)
     this.visibleRanges = ranges
     return changed ? 4 : 0
   }
@@ -10055,34 +8736,17 @@ var ViewState = class {
       (pos >= this.viewport.from &&
         pos <= this.viewport.to &&
         this.viewportLines.find((b) => b.from <= pos && b.to >= pos)) ||
-      scaleBlock(
-        this.heightMap.lineAt(pos, QueryType.ByPos, this.heightOracle, 0, 0),
-        this.scaler,
-      )
+      scaleBlock(this.heightMap.lineAt(pos, QueryType.ByPos, this.heightOracle, 0, 0), this.scaler)
     )
   }
   lineBlockAtHeight(height) {
     return scaleBlock(
-      this.heightMap.lineAt(
-        this.scaler.fromDOM(height),
-        QueryType.ByHeight,
-        this.heightOracle,
-        0,
-        0,
-      ),
+      this.heightMap.lineAt(this.scaler.fromDOM(height), QueryType.ByHeight, this.heightOracle, 0, 0),
       this.scaler,
     )
   }
   elementAtHeight(height) {
-    return scaleBlock(
-      this.heightMap.blockAt(
-        this.scaler.fromDOM(height),
-        this.heightOracle,
-        0,
-        0,
-      ),
-      this.scaler,
-    )
+    return scaleBlock(this.heightMap.blockAt(this.scaler.fromDOM(height), this.heightOracle, 0, 0), this.scaler)
   }
   get docHeight() {
     return this.scaler.toDOM(this.heightMap.height)
@@ -10120,22 +8784,15 @@ var ViewState = class {
       .facet(contentAttributes)
       .some((v) => typeof v != 'function' && v.class == 'cm-lineWrapping')
     this.heightOracle = new HeightOracle(guessWrapping)
-    this.stateDeco = state
-      .facet(decorations)
-      .filter((d) => typeof d != 'function')
-    this.heightMap = HeightMap.empty().applyChanges(
-      this.stateDeco,
-      Text.empty,
-      this.heightOracle.setDoc(state.doc),
-      [new ChangedRange(0, 0, 0, state.doc.length)],
-    )
+    this.stateDeco = state.facet(decorations).filter((d) => typeof d != 'function')
+    this.heightMap = HeightMap.empty().applyChanges(this.stateDeco, Text.empty, this.heightOracle.setDoc(state.doc), [
+      new ChangedRange(0, 0, 0, state.doc.length),
+    ])
     this.viewport = this.getViewport(0, null)
     this.updateViewportLines()
     this.updateForViewport()
     this.lineGaps = this.ensureLineGaps([])
-    this.lineGapDeco = Decoration.set(
-      this.lineGaps.map((gap) => gap.draw(false)),
-    )
+    this.lineGapDeco = Decoration.set(this.lineGaps.map((gap) => gap.draw(false)))
     this.computeVisibleRanges()
   }
 }
@@ -10252,9 +8909,7 @@ function scaleBlock(block, scaler) {
     block.length,
     bTop,
     bBottom - bTop,
-    Array.isArray(block._content)
-      ? block._content.map((b) => scaleBlock(b, scaler))
-      : block._content,
+    Array.isArray(block._content) ? block._content.map((b) => scaleBlock(b, scaler)) : block._content,
   )
 }
 var theme = /* @__PURE__ */ Facet.define({ combine: (strs) => strs.join(' ') })
@@ -10271,8 +8926,7 @@ function buildTheme(main, spec, scopes) {
       return /&/.test(sel)
         ? sel.replace(/&\w*/, (m) => {
             if (m == '&') return main
-            if (!scopes || !scopes[m])
-              throw new RangeError(`Unsupported selector: ${m}`)
+            if (!scopes || !scopes[m]) throw new RangeError(`Unsupported selector: ${m}`)
             return scopes[m]
           })
         : main + ' ' + sel
@@ -10342,10 +8996,8 @@ var baseTheme$1 = /* @__PURE__ */ buildTheme(
     },
     '&light .cm-selectionBackground': { background: '#d9d9d9' },
     '&dark .cm-selectionBackground': { background: '#222' },
-    '&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
-      { background: '#d7d4f0' },
-    '&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
-      { background: '#233' },
+    '&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': { background: '#d7d4f0' },
+    '&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': { background: '#233' },
     '.cm-cursorLayer': { pointerEvents: 'none' },
     '&.cm-focused > .cm-scroller > .cm-cursorLayer': {
       animation: 'steps(1) cm-blink 1.2s infinite',
@@ -10482,10 +9134,7 @@ var DOMChange = class {
     let { impreciseHead: iHead, impreciseAnchor: iAnchor } = view.docView
     if (view.state.readOnly && start > -1) {
       this.newSel = null
-    } else if (
-      start > -1 &&
-      (this.bounds = view.docView.domBoundsAround(start, end, 0))
-    ) {
+    } else if (start > -1 && (this.bounds = view.docView.domBoundsAround(start, end, 0))) {
       let selPoints = iHead || iAnchor ? [] : selectionPoints(view)
       let reader = new DOMReader(selPoints, view.state)
       reader.readRange(this.bounds.startDOM, this.bounds.endDOM)
@@ -10494,16 +9143,12 @@ var DOMChange = class {
     } else {
       let domSel = view.observer.selectionRange
       let head =
-        (iHead &&
-          iHead.node == domSel.focusNode &&
-          iHead.offset == domSel.focusOffset) ||
+        (iHead && iHead.node == domSel.focusNode && iHead.offset == domSel.focusOffset) ||
         !contains(view.contentDOM, domSel.focusNode)
           ? view.state.selection.main.head
           : view.docView.posFromDOM(domSel.focusNode, domSel.focusOffset)
       let anchor =
-        (iAnchor &&
-          iAnchor.node == domSel.anchorNode &&
-          iAnchor.offset == domSel.anchorOffset) ||
+        (iAnchor && iAnchor.node == domSel.anchorNode && iAnchor.offset == domSel.anchorOffset) ||
         !contains(view.contentDOM, domSel.anchorNode)
           ? view.state.selection.main.anchor
           : view.docView.posFromDOM(domSel.anchorNode, domSel.anchorOffset)
@@ -10515,18 +9160,12 @@ function applyDOMChange(view, domChange) {
   let change
   let { newSel } = domChange,
     sel = view.state.selection.main
-  let lastKey =
-    view.inputState.lastKeyTime > Date.now() - 100
-      ? view.inputState.lastKeyCode
-      : -1
+  let lastKey = view.inputState.lastKeyTime > Date.now() - 100 ? view.inputState.lastKeyCode : -1
   if (domChange.bounds) {
     let { from, to } = domChange.bounds
     let preferredPos = sel.from,
       preferredSide = null
-    if (
-      lastKey === 8 ||
-      (browser.android && domChange.text.length < to - from)
-    ) {
+    if (lastKey === 8 || (browser.android && domChange.text.length < to - from)) {
       preferredPos = sel.to
       preferredSide = 'end'
     }
@@ -10541,32 +9180,20 @@ function applyDOMChange(view, domChange) {
         browser.chrome &&
         lastKey == 13 &&
         diff.toB == diff.from + 2 &&
-        domChange.text.slice(diff.from, diff.toB) ==
-          LineBreakPlaceholder + LineBreakPlaceholder
+        domChange.text.slice(diff.from, diff.toB) == LineBreakPlaceholder + LineBreakPlaceholder
       )
         diff.toB--
       change = {
         from: from + diff.from,
         to: from + diff.toA,
-        insert: Text.of(
-          domChange.text.slice(diff.from, diff.toB).split(LineBreakPlaceholder),
-        ),
+        insert: Text.of(domChange.text.slice(diff.from, diff.toB).split(LineBreakPlaceholder)),
       }
     }
-  } else if (
-    newSel &&
-    ((!view.hasFocus && view.state.facet(editable)) || newSel.main.eq(sel))
-  ) {
+  } else if (newSel && ((!view.hasFocus && view.state.facet(editable)) || newSel.main.eq(sel))) {
     newSel = null
   }
   if (!change && !newSel) return false
-  if (
-    !change &&
-    domChange.typeOver &&
-    !sel.empty &&
-    newSel &&
-    newSel.main.empty
-  ) {
+  if (!change && domChange.typeOver && !sel.empty && newSel && newSel.main.empty) {
     change = {
       from: sel.from,
       to: sel.to,
@@ -10596,10 +9223,7 @@ function applyDOMChange(view, domChange) {
     view.contentDOM.getAttribute('autocorrect') == 'off'
   ) {
     if (newSel && change.insert.length == 2)
-      newSel = EditorSelection.single(
-        newSel.main.anchor - 1,
-        newSel.main.head - 1,
-      )
+      newSel = EditorSelection.single(newSel.main.anchor - 1, newSel.main.head - 1)
     change = { from: sel.from, to: sel.to, insert: Text.of([' ']) }
   } else if (
     browser.chrome &&
@@ -10609,11 +9233,7 @@ function applyDOMChange(view, domChange) {
     change.insert.toString() == '\n ' &&
     view.lineWrapping
   ) {
-    if (newSel)
-      newSel = EditorSelection.single(
-        newSel.main.anchor - 1,
-        newSel.main.head - 1,
-      )
+    if (newSel) newSel = EditorSelection.single(newSel.main.anchor - 1, newSel.main.head - 1)
     change = { from: sel.from, to: sel.to, insert: Text.of([' ']) }
   }
   if (change) {
@@ -10626,9 +9246,7 @@ function applyDOMChange(view, domChange) {
         change.insert.length == 1 &&
         change.insert.lines == 2 &&
         dispatchKey(view.contentDOM, 'Enter', 13)) ||
-        (((change.from == sel.from - 1 &&
-          change.to == sel.to &&
-          change.insert.length == 0) ||
+        (((change.from == sel.from - 1 && change.to == sel.to && change.insert.length == 0) ||
           (lastKey == 8 && change.insert.length < change.to - change.from)) &&
           dispatchKey(view.contentDOM, 'Backspace', 8)) ||
         (change.from == sel.from &&
@@ -10638,38 +9256,24 @@ function applyDOMChange(view, domChange) {
     )
       return true
     let text = change.insert.toString()
-    if (
-      view.state
-        .facet(inputHandler)
-        .some((h) => h(view, change.from, change.to, text))
-    )
-      return true
+    if (view.state.facet(inputHandler).some((h) => h(view, change.from, change.to, text))) return true
     if (view.inputState.composing >= 0) view.inputState.composing++
     let tr
     if (
       change.from >= sel.from &&
       change.to <= sel.to &&
       change.to - change.from >= (sel.to - sel.from) / 3 &&
-      (!newSel ||
-        (newSel.main.empty &&
-          newSel.main.from == change.from + change.insert.length)) &&
+      (!newSel || (newSel.main.empty && newSel.main.from == change.from + change.insert.length)) &&
       view.inputState.composing < 0
     ) {
-      let before =
-        sel.from < change.from ? startState.sliceDoc(sel.from, change.from) : ''
-      let after =
-        sel.to > change.to ? startState.sliceDoc(change.to, sel.to) : ''
+      let before = sel.from < change.from ? startState.sliceDoc(sel.from, change.from) : ''
+      let after = sel.to > change.to ? startState.sliceDoc(change.to, sel.to) : ''
       tr = startState.replaceSelection(
-        view.state.toText(
-          before +
-            change.insert.sliceString(0, void 0, view.state.lineBreak) +
-            after,
-        ),
+        view.state.toText(before + change.insert.sliceString(0, void 0, view.state.lineBreak) + after),
       )
     } else {
       let changes = startState.changes(change)
-      let mainSel =
-        newSel && newSel.main.to <= changes.newLength ? newSel.main : void 0
+      let mainSel = newSel && newSel.main.to <= changes.newLength ? newSel.main : void 0
       if (
         startState.selection.ranges.length > 1 &&
         view.inputState.composing >= 0 &&
@@ -10677,13 +9281,11 @@ function applyDOMChange(view, domChange) {
         change.to >= sel.to - 10
       ) {
         let replaced = view.state.sliceDoc(change.from, change.to)
-        let compositionRange =
-          compositionSurroundingNode(view) || view.state.doc.lineAt(sel.head)
+        let compositionRange = compositionSurroundingNode(view) || view.state.doc.lineAt(sel.head)
         let offset = sel.to - change.to,
           size = sel.to - sel.from
         tr = startState.changeByRange((range) => {
-          if (range.from == sel.from && range.to == sel.to)
-            return { changes, range: mainSel || range.map(changes) }
+          if (range.from == sel.from && range.to == sel.to) return { changes, range: mainSel || range.map(changes) }
           let to = range.to - offset,
             from = to - replaced.length
           if (
@@ -10692,9 +9294,7 @@ function applyDOMChange(view, domChange) {
             // changes in the same node work without aborting
             // composition, so cursors in the composition range are
             // ignored.
-            (compositionRange &&
-              range.to >= compositionRange.from &&
-              range.from <= compositionRange.to)
+            (compositionRange && range.to >= compositionRange.from && range.from <= compositionRange.to)
           )
             return { range }
           let rangeChanges = startState.changes({
@@ -10707,10 +9307,7 @@ function applyDOMChange(view, domChange) {
             changes: rangeChanges,
             range: !mainSel
               ? range.map(rangeChanges)
-              : EditorSelection.range(
-                  Math.max(0, mainSel.anchor + selOff),
-                  Math.max(0, mainSel.head + selOff),
-                ),
+              : EditorSelection.range(Math.max(0, mainSel.anchor + selOff), Math.max(0, mainSel.head + selOff)),
           }
         })
       } else {
@@ -10723,8 +9320,7 @@ function applyDOMChange(view, domChange) {
     let userEvent = 'input.type'
     if (
       view.composing ||
-      (view.inputState.compositionPendingChange &&
-        view.inputState.compositionEndedAt > Date.now() - 50)
+      (view.inputState.compositionPendingChange && view.inputState.compositionEndedAt > Date.now() - 50)
     ) {
       view.inputState.compositionPendingChange = false
       userEvent += '.compose'
@@ -10739,8 +9335,7 @@ function applyDOMChange(view, domChange) {
     let scrollIntoView2 = false,
       userEvent = 'select'
     if (view.inputState.lastSelectionTime > Date.now() - 50) {
-      if (view.inputState.lastSelectionOrigin == 'select')
-        scrollIntoView2 = true
+      if (view.inputState.lastSelectionOrigin == 'select') scrollIntoView2 = true
       userEvent = view.inputState.lastSelectionOrigin
     }
     view.dispatch({
@@ -10769,14 +9364,12 @@ function findDiff(a, b, preferredPos, preferredSide) {
     preferredPos -= toA + adjust - from
   }
   if (toA < from && a.length < b.length) {
-    let move =
-      preferredPos <= from && preferredPos >= toA ? from - preferredPos : 0
+    let move = preferredPos <= from && preferredPos >= toA ? from - preferredPos : 0
     from -= move
     toB = from + (toB - toA)
     toA = from
   } else if (toB < from) {
-    let move =
-      preferredPos <= from && preferredPos >= toB ? from - preferredPos : 0
+    let move = preferredPos <= from && preferredPos >= toB ? from - preferredPos : 0
     from -= move
     toA = from + (toA - toB)
     toB = from
@@ -10786,12 +9379,10 @@ function findDiff(a, b, preferredPos, preferredSide) {
 function selectionPoints(view) {
   let result = []
   if (view.root.activeElement != view.contentDOM) return result
-  let { anchorNode, anchorOffset, focusNode, focusOffset } =
-    view.observer.selectionRange
+  let { anchorNode, anchorOffset, focusNode, focusOffset } = view.observer.selectionRange
   if (anchorNode) {
     result.push(new DOMPoint(anchorNode, anchorOffset))
-    if (focusNode != anchorNode || focusOffset != anchorOffset)
-      result.push(new DOMPoint(focusNode, focusOffset))
+    if (focusNode != anchorNode || focusOffset != anchorOffset) result.push(new DOMPoint(focusNode, focusOffset))
   }
   return result
 }
@@ -10799,9 +9390,7 @@ function selectionFromPoints(points, base2) {
   if (points.length == 0) return null
   let anchor = points[0].pos,
     head = points.length == 2 ? points[1].pos : anchor
-  return anchor > -1 && head > -1
-    ? EditorSelection.single(anchor + base2, head + base2)
-    : null
+  return anchor > -1 && head > -1 ? EditorSelection.single(anchor + base2, head + base2) : null
 }
 var observeOptions = {
   childList: true,
@@ -10836,11 +9425,7 @@ var DOMObserver = class {
     }, 500)
   }
   updateGaps(gaps) {
-    if (
-      this.gapIntersection &&
-      (gaps.length != this.gaps.length ||
-        this.gaps.some((g, i2) => g != gaps[i2]))
-    ) {
+    if (this.gapIntersection && (gaps.length != this.gaps.length || this.gaps.some((g, i2) => g != gaps[i2]))) {
       this.gapIntersection.disconnect()
       for (let gap of gaps) this.gapIntersection.observe(gap)
       this.gaps = gaps
@@ -10851,28 +9436,17 @@ var DOMObserver = class {
     if (!this.readSelectionRange() || this.delayedAndroidKey) return
     let { view } = this,
       sel = this.selectionRange
-    if (
-      view.state.facet(editable)
-        ? view.root.activeElement != this.dom
-        : !hasSelection(view.dom, sel)
-    )
-      return
+    if (view.state.facet(editable) ? view.root.activeElement != this.dom : !hasSelection(view.dom, sel)) return
     let context = sel.anchorNode && view.docView.nearest(sel.anchorNode)
     if (context && context.ignoreEvent(event)) {
       if (!wasChanged) this.selectionChanged = false
       return
     }
     if (
-      ((browser.ie && browser.ie_version <= 11) ||
-        (browser.android && browser.chrome)) &&
+      ((browser.ie && browser.ie_version <= 11) || (browser.android && browser.chrome)) &&
       !view.state.selection.main.empty && // (Selection.isCollapsed isn't reliable on IE)
       sel.focusNode &&
-      isEquivalentPosition(
-        sel.focusNode,
-        sel.focusOffset,
-        sel.anchorNode,
-        sel.anchorOffset,
-      )
+      isEquivalentPosition(sel.focusNode, sel.focusOffset, sel.anchorNode, sel.anchorOffset)
     )
       this.flushSoon()
     else this.flush(false)
@@ -10915,12 +9489,7 @@ var DOMObserver = class {
       changed = null
     for (let dom = this.dom; dom; ) {
       if (dom.nodeType == 1) {
-        if (
-          !changed &&
-          i2 < this.scrollTargets.length &&
-          this.scrollTargets[i2] == dom
-        )
-          i2++
+        if (!changed && i2 < this.scrollTargets.length && this.scrollTargets[i2] == dom) i2++
         else if (!changed) changed = this.scrollTargets.slice(0, i2)
         if (changed) changed.push(dom)
         dom = dom.assignedSlot || dom.parentNode
@@ -10930,13 +9499,10 @@ var DOMObserver = class {
         break
       }
     }
-    if (i2 < this.scrollTargets.length && !changed)
-      changed = this.scrollTargets.slice(0, i2)
+    if (i2 < this.scrollTargets.length && !changed) changed = this.scrollTargets.slice(0, i2)
     if (changed) {
-      for (let dom of this.scrollTargets)
-        dom.removeEventListener('scroll', this.onScroll)
-      for (let dom of (this.scrollTargets = changed))
-        dom.addEventListener('scroll', this.onScroll)
+      for (let dom of this.scrollTargets) dom.removeEventListener('scroll', this.onScroll)
+      for (let dom of (this.scrollTargets = changed)) dom.addEventListener('scroll', this.onScroll)
     }
   }
   ignore(f) {
@@ -10952,16 +9518,14 @@ var DOMObserver = class {
   start() {
     if (this.active) return
     this.observer.observe(this.dom, observeOptions)
-    if (useCharData)
-      this.dom.addEventListener('DOMCharacterDataModified', this.onCharData)
+    if (useCharData) this.dom.addEventListener('DOMCharacterDataModified', this.onCharData)
     this.active = true
   }
   stop() {
     if (!this.active) return
     this.active = false
     this.observer.disconnect()
-    if (useCharData)
-      this.dom.removeEventListener('DOMCharacterDataModified', this.onCharData)
+    if (useCharData) this.dom.removeEventListener('DOMCharacterDataModified', this.onCharData)
   }
   // Throw away any pending changes
   clear() {
@@ -10987,8 +9551,7 @@ var DOMObserver = class {
           this.view.inputState.lastKeyCode = key2.keyCode
           this.view.inputState.lastKeyTime = Date.now()
           let flushed = this.flush()
-          if (!flushed && key2.force)
-            dispatchKey(this.dom, key2.key, key2.keyCode)
+          if (!flushed && key2.force) dispatchKey(this.dom, key2.key, key2.keyCode)
         }
       }
       this.flushingAndroidKey = this.view.win.requestAnimationFrame(flush)
@@ -11003,9 +9566,7 @@ var DOMObserver = class {
         // be ignored if it returns the DOM to its previous state.
         force:
           this.lastChange < Date.now() - 50 ||
-          !!((_a2 = this.delayedAndroidKey) === null || _a2 === void 0
-            ? void 0
-            : _a2.force),
+          !!((_a2 = this.delayedAndroidKey) === null || _a2 === void 0 ? void 0 : _a2.force),
       }
   }
   clearDelayedAndroidKey() {
@@ -11052,8 +9613,7 @@ var DOMObserver = class {
   }
   readChange() {
     let { from, to, typeOver } = this.processRecords()
-    let newSel =
-      this.selectionChanged && hasSelection(this.dom, this.selectionRange)
+    let newSel = this.selectionChanged && hasSelection(this.dom, this.selectionRange)
     if (from < 0 && !newSel) return null
     if (from > -1) this.lastChange = Date.now()
     this.view.inputState.lastFocusTime = 0
@@ -11077,16 +9637,8 @@ var DOMObserver = class {
     cView.markDirty(rec.type == 'attributes')
     if (rec.type == 'attributes') cView.dirty |= 4
     if (rec.type == 'childList') {
-      let childBefore = findChild(
-        cView,
-        rec.previousSibling || rec.target.previousSibling,
-        -1,
-      )
-      let childAfter = findChild(
-        cView,
-        rec.nextSibling || rec.target.nextSibling,
-        1,
-      )
+      let childBefore = findChild(cView, rec.previousSibling || rec.target.previousSibling, -1)
+      let childAfter = findChild(cView, rec.nextSibling || rec.target.nextSibling, 1)
       return {
         from: childBefore ? cView.posAfter(childBefore) : cView.posAtStart,
         to: childAfter ? cView.posBefore(childAfter) : cView.posAtEnd,
@@ -11124,20 +9676,11 @@ var DOMObserver = class {
   destroy() {
     var _a2, _b, _c, _d
     this.stop()
-    ;(_a2 = this.intersection) === null || _a2 === void 0
-      ? void 0
-      : _a2.disconnect()
-    ;(_b = this.gapIntersection) === null || _b === void 0
-      ? void 0
-      : _b.disconnect()
-    ;(_c = this.resizeScroll) === null || _c === void 0
-      ? void 0
-      : _c.disconnect()
-    ;(_d = this.resizeContent) === null || _d === void 0
-      ? void 0
-      : _d.disconnect()
-    for (let dom of this.scrollTargets)
-      dom.removeEventListener('scroll', this.onScroll)
+    ;(_a2 = this.intersection) === null || _a2 === void 0 ? void 0 : _a2.disconnect()
+    ;(_b = this.gapIntersection) === null || _b === void 0 ? void 0 : _b.disconnect()
+    ;(_c = this.resizeScroll) === null || _c === void 0 ? void 0 : _c.disconnect()
+    ;(_d = this.resizeContent) === null || _d === void 0 ? void 0 : _d.disconnect()
+    for (let dom of this.scrollTargets) dom.removeEventListener('scroll', this.onScroll)
     this.removeWindowListeners(this.win)
     clearTimeout(this.parentCheck)
     clearTimeout(this.resizeTimeout)
@@ -11167,13 +9710,11 @@ var DOMObserver = class {
     this.observer = new MutationObserver((mutations) => {
       for (let mut of mutations) this.queue.push(mut)
       if (
-        ((browser.ie && browser.ie_version <= 11) ||
-          (browser.ios && view.composing)) &&
+        ((browser.ie && browser.ie_version <= 11) || (browser.ios && view.composing)) &&
         mutations.some(
           (m) =>
             (m.type == 'childList' && m.removedNodes.length) ||
-            (m.type == 'characterData' &&
-              m.oldValue.length > m.target.nodeValue.length),
+            (m.type == 'characterData' && m.oldValue.length > m.target.nodeValue.length),
         )
       )
         this.flushSoon()
@@ -11195,12 +9736,7 @@ var DOMObserver = class {
     if (typeof ResizeObserver == 'function') {
       this.resizeScroll = new ResizeObserver(() => {
         var _a2
-        if (
-          ((_a2 = this.view.docView) === null || _a2 === void 0
-            ? void 0
-            : _a2.lastUpdate) <
-          Date.now() - 75
-        )
+        if (((_a2 = this.view.docView) === null || _a2 === void 0 ? void 0 : _a2.lastUpdate) < Date.now() - 75)
           this.onResize()
       })
       this.resizeScroll.observe(view.scrollDOM)
@@ -11212,26 +9748,17 @@ var DOMObserver = class {
     if (typeof IntersectionObserver == 'function') {
       this.intersection = new IntersectionObserver(
         (entries) => {
-          if (this.parentCheck < 0)
-            this.parentCheck = setTimeout(this.listenForScroll.bind(this), 1e3)
-          if (
-            entries.length > 0 &&
-            entries[entries.length - 1].intersectionRatio > 0 !=
-              this.intersecting
-          ) {
+          if (this.parentCheck < 0) this.parentCheck = setTimeout(this.listenForScroll.bind(this), 1e3)
+          if (entries.length > 0 && entries[entries.length - 1].intersectionRatio > 0 != this.intersecting) {
             this.intersecting = !this.intersecting
-            if (this.intersecting != this.view.inView)
-              this.onScrollChanged(document.createEvent('Event'))
+            if (this.intersecting != this.view.inView) this.onScrollChanged(document.createEvent('Event'))
           }
         },
         { threshold: [0, 1e-3] },
       )
       this.intersection.observe(this.dom)
       this.gapIntersection = new IntersectionObserver((entries) => {
-        if (
-          entries.length > 0 &&
-          entries[entries.length - 1].intersectionRatio > 0
-        )
+        if (entries.length > 0 && entries[entries.length - 1].intersectionRatio > 0)
           this.onScrollChanged(document.createEvent('Event'))
       }, {})
     }
@@ -11244,12 +9771,7 @@ function findChild(cView, dom, dir) {
     let curView = ContentView.get(dom)
     if (curView && curView.parent == cView) return curView
     let parent = dom.parentNode
-    dom =
-      parent != cView.dom
-        ? parent
-        : dir > 0
-          ? dom.nextSibling
-          : dom.previousSibling
+    dom = parent != cView.dom ? parent : dir > 0 ? dom.nextSibling : dom.previousSibling
   }
   return null
 }
@@ -11269,20 +9791,8 @@ function safariSelectionRangeHack(view) {
   let focusNode = found.endContainer,
     focusOffset = found.endOffset
   let curAnchor = view.docView.domAtPos(view.state.selection.main.anchor)
-  if (
-    isEquivalentPosition(
-      curAnchor.node,
-      curAnchor.offset,
-      focusNode,
-      focusOffset,
-    )
-  )
-    [anchorNode, anchorOffset, focusNode, focusOffset] = [
-      focusNode,
-      focusOffset,
-      anchorNode,
-      anchorOffset,
-    ]
+  if (isEquivalentPosition(curAnchor.node, curAnchor.offset, focusNode, focusOffset))
+    [anchorNode, anchorOffset, focusNode, focusOffset] = [focusNode, focusOffset, anchorNode, anchorOffset]
   return { anchorNode, anchorOffset, focusNode, focusOffset }
 }
 var EditorView = class {
@@ -11350,10 +9860,7 @@ var EditorView = class {
     return this.dom.ownerDocument.defaultView || window
   }
   dispatch(...input) {
-    let tr =
-      input.length == 1 && input[0] instanceof Transaction
-        ? input[0]
-        : this.state.update(...input)
+    let tr = input.length == 1 && input[0] instanceof Transaction ? input[0] : this.state.update(...input)
     this._dispatch(tr, this)
   }
   /**
@@ -11366,18 +9873,14 @@ var EditorView = class {
   */
   update(transactions) {
     if (this.updateState != 0)
-      throw new Error(
-        'Calls to EditorView.update are not allowed while an update is in progress',
-      )
+      throw new Error('Calls to EditorView.update are not allowed while an update is in progress')
     let redrawn = false,
       attrsChanged = false,
       update
     let state = this.state
     for (let tr of transactions) {
       if (tr.startState != state)
-        throw new RangeError(
-          "Trying to update state with a transaction that doesn't start from the previous state.",
-        )
+        throw new RangeError("Trying to update state with a transaction that doesn't start from the previous state.")
       state = tr.state
     }
     if (this.destroyed) {
@@ -11400,18 +9903,11 @@ var EditorView = class {
     if (pendingKey) {
       this.observer.clearDelayedAndroidKey()
       domChange = this.observer.readChange()
-      if (
-        (domChange && !this.state.doc.eq(state.doc)) ||
-        !this.state.selection.eq(state.selection)
-      )
-        domChange = null
+      if ((domChange && !this.state.doc.eq(state.doc)) || !this.state.selection.eq(state.selection)) domChange = null
     } else {
       this.observer.clear()
     }
-    if (
-      state.facet(EditorState.phrases) != this.state.facet(EditorState.phrases)
-    )
-      return this.setState(state)
+    if (state.facet(EditorState.phrases) != this.state.facet(EditorState.phrases)) return this.setState(state)
     update = ViewUpdate.create(this, state, transactions)
     update.flags |= focusFlag
     let scrollTarget = this.viewState.scrollTarget
@@ -11422,16 +9918,10 @@ var EditorView = class {
         if (tr.scrollIntoView) {
           let { main } = tr.state.selection
           scrollTarget = new ScrollTarget(
-            main.empty
-              ? main
-              : EditorSelection.cursor(
-                  main.head,
-                  main.head > main.anchor ? -1 : 1,
-                ),
+            main.empty ? main : EditorSelection.cursor(main.head, main.head > main.anchor ? -1 : 1),
           )
         }
-        for (let e of tr.effects)
-          if (e.is(scrollIntoView)) scrollTarget = e.value
+        for (let e of tr.effects) if (e.is(scrollIntoView)) scrollTarget = e.value
       }
       this.viewState.update(update, scrollTarget)
       this.bidiCache = CachedOrder.update(this.bidiCache, update.changes)
@@ -11450,8 +9940,7 @@ var EditorView = class {
     } finally {
       this.updateState = 0
     }
-    if (update.startState.facet(theme) != update.state.facet(theme))
-      this.viewState.mustMeasureContent = true
+    if (update.startState.facet(theme) != update.state.facet(theme)) this.viewState.mustMeasureContent = true
     if (
       redrawn ||
       attrsChanged ||
@@ -11460,12 +9949,10 @@ var EditorView = class {
       this.viewState.mustMeasureContent
     )
       this.requestMeasure()
-    if (!update.empty)
-      for (let listener of this.state.facet(updateListener)) listener(update)
+    if (!update.empty) for (let listener of this.state.facet(updateListener)) listener(update)
     if (dispatchFocus || domChange)
       Promise.resolve().then(() => {
-        if (dispatchFocus && this.state == dispatchFocus.startState)
-          this.dispatch(dispatchFocus)
+        if (dispatchFocus && this.state == dispatchFocus.startState) this.dispatch(dispatchFocus)
         if (domChange) {
           if (!applyDOMChange(this, domChange) && pendingKey.force)
             dispatchKey(this.contentDOM, pendingKey.key, pendingKey.keyCode)
@@ -11481,9 +9968,7 @@ var EditorView = class {
   */
   setState(newState) {
     if (this.updateState != 0)
-      throw new Error(
-        'Calls to EditorView.setState are not allowed while an update is in progress',
-      )
+      throw new Error('Calls to EditorView.setState are not allowed while an update is in progress')
     if (this.destroyed) {
       this.viewState.state = newState
       return
@@ -11493,9 +9978,7 @@ var EditorView = class {
     try {
       for (let plugin2 of this.plugins) plugin2.destroy(this)
       this.viewState = new ViewState(newState)
-      this.plugins = newState
-        .facet(viewPlugin)
-        .map((spec) => new PluginInstance(spec))
+      this.plugins = newState.facet(viewPlugin).map((spec) => new PluginInstance(spec))
       this.pluginMap.clear()
       for (let plugin2 of this.plugins) plugin2.update(this)
       this.docView = new DocView(this)
@@ -11524,24 +10007,21 @@ var EditorView = class {
           newPlugins.push(plugin2)
         }
       }
-      for (let plugin2 of this.plugins)
-        if (plugin2.mustUpdate != update) plugin2.destroy(this)
+      for (let plugin2 of this.plugins) if (plugin2.mustUpdate != update) plugin2.destroy(this)
       this.plugins = newPlugins
       this.pluginMap.clear()
       this.inputState.ensureHandlers(this, this.plugins)
     } else {
       for (let p of this.plugins) p.mustUpdate = update
     }
-    for (let i2 = 0; i2 < this.plugins.length; i2++)
-      this.plugins[i2].update(this)
+    for (let i2 = 0; i2 < this.plugins.length; i2++) this.plugins[i2].update(this)
   }
   /**
   @internal
   */
   measure(flush = true) {
     if (this.destroyed) return
-    if (this.measureScheduled > -1)
-      this.win.cancelAnimationFrame(this.measureScheduled)
+    if (this.measureScheduled > -1) this.win.cancelAnimationFrame(this.measureScheduled)
     this.measureScheduled = 0
     if (flush) this.observer.forceFlush()
     let updated = null
@@ -11564,23 +10044,15 @@ var EditorView = class {
         this.updateState = 1
         let oldViewport = this.viewport
         let changed = this.viewState.measure(this)
-        if (
-          !changed &&
-          !this.measureRequests.length &&
-          this.viewState.scrollTarget == null
-        )
-          break
+        if (!changed && !this.measureRequests.length && this.viewState.scrollTarget == null) break
         if (i2 > 5) {
           console.warn(
-            this.measureRequests.length
-              ? 'Measure loop restarted more than 5 times'
-              : 'Viewport failed to stabilize',
+            this.measureRequests.length ? 'Measure loop restarted more than 5 times' : 'Viewport failed to stabilize',
           )
           break
         }
         let measuring = []
-        if (!(changed & 4))
-          [this.measureRequests, measuring] = [measuring, this.measureRequests]
+        if (!(changed & 4)) [this.measureRequests, measuring] = [measuring, this.measureRequests]
         let measured = measuring.map((m) => {
           try {
             return m.read(this)
@@ -11618,9 +10090,7 @@ var EditorView = class {
             scrolled = true
           } else if (scrollAnchorHeight > -1) {
             let newAnchorHeight =
-              scrollAnchorPos < 0
-                ? this.viewState.heightMap.height
-                : this.viewState.lineBlockAt(scrollAnchorPos).top
+              scrollAnchorPos < 0 ? this.viewState.heightMap.height : this.viewState.lineBlockAt(scrollAnchorPos).top
             let diff = newAnchorHeight - scrollAnchorHeight
             if (diff > 1 || diff < -1) {
               sDOM.scrollTop = scrollTop + diff
@@ -11642,27 +10112,17 @@ var EditorView = class {
       this.updateState = 0
       this.measureScheduled = -1
     }
-    if (updated && !updated.empty)
-      for (let listener of this.state.facet(updateListener)) listener(updated)
+    if (updated && !updated.empty) for (let listener of this.state.facet(updateListener)) listener(updated)
   }
   /**
   Get the CSS classes for the currently active editor themes.
   */
   get themeClasses() {
-    return (
-      baseThemeID +
-      ' ' +
-      (this.state.facet(darkTheme) ? baseDarkID : baseLightID) +
-      ' ' +
-      this.state.facet(theme)
-    )
+    return baseThemeID + ' ' + (this.state.facet(darkTheme) ? baseDarkID : baseLightID) + ' ' + this.state.facet(theme)
   }
   updateAttrs() {
     let editorAttrs = attrsFromFacet(this, editorAttributes, {
-      class:
-        'cm-editor' +
-        (this.hasFocus ? ' cm-focused ' : ' ') +
-        this.themeClasses,
+      class: 'cm-editor' + (this.hasFocus ? ' cm-focused ' : ' ') + this.themeClasses,
     })
     let contentAttrs = {
       spellcheck: 'false',
@@ -11678,11 +10138,7 @@ var EditorView = class {
     if (this.state.readOnly) contentAttrs['aria-readonly'] = 'true'
     attrsFromFacet(this, contentAttributes, contentAttrs)
     let changed = this.observer.ignore(() => {
-      let changedContent = updateAttrs(
-        this.contentDOM,
-        this.contentAttrs,
-        contentAttrs,
-      )
+      let changedContent = updateAttrs(this.contentDOM, this.contentAttrs, contentAttrs)
       let changedEditor = updateAttrs(this.dom, this.editorAttrs, editorAttrs)
       return changedContent || changedEditor
     })
@@ -11703,16 +10159,10 @@ var EditorView = class {
   }
   mountStyles() {
     this.styleModules = this.state.facet(styleModule)
-    StyleModule.mount(
-      this.root,
-      this.styleModules.concat(baseTheme$1).reverse(),
-    )
+    StyleModule.mount(this.root, this.styleModules.concat(baseTheme$1).reverse())
   }
   readMeasured() {
-    if (this.updateState == 2)
-      throw new Error(
-        "Reading the editor layout isn't allowed during an update",
-      )
+    if (this.updateState == 2) throw new Error("Reading the editor layout isn't allowed during an update")
     if (this.updateState == 0 && this.measureScheduled > -1) this.measure(false)
   }
   /**
@@ -11724,10 +10174,7 @@ var EditorView = class {
   unnecessary DOM layout computations.
   */
   requestMeasure(request) {
-    if (this.measureScheduled < 0)
-      this.measureScheduled = this.win.requestAnimationFrame(() =>
-        this.measure(),
-      )
+    if (this.measureScheduled < 0) this.measureScheduled = this.win.requestAnimationFrame(() => this.measure())
     if (request) {
       if (this.measureRequests.indexOf(request) > -1) return
       if (request.key != null)
@@ -11749,10 +10196,7 @@ var EditorView = class {
   plugin(plugin2) {
     let known = this.pluginMap.get(plugin2)
     if (known === void 0 || (known && known.spec != plugin2))
-      this.pluginMap.set(
-        plugin2,
-        (known = this.plugins.find((p) => p.spec == plugin2) || null),
-      )
+      this.pluginMap.set(plugin2, (known = this.plugins.find((p) => p.spec == plugin2) || null))
     return known && known.update(this).value
   }
   /**
@@ -11761,9 +10205,7 @@ var EditorView = class {
   directly to the top of the first line, not above the padding.
   */
   get documentTop() {
-    return (
-      this.contentDOM.getBoundingClientRect().top + this.viewState.paddingTop
-    )
+    return this.contentDOM.getBoundingClientRect().top + this.viewState.paddingTop
   }
   /**
   Reports the padding above and below the document.
@@ -11847,9 +10289,7 @@ var EditorView = class {
     return skipAtoms(
       this,
       start,
-      moveByChar(this, start, forward, (initial) =>
-        byGroup(this, start.head, initial),
-      ),
+      moveByChar(this, start, forward, (initial) => byGroup(this, start.head, initial)),
     )
   }
   /**
@@ -11876,11 +10316,7 @@ var EditorView = class {
   used.
   */
   moveVertically(start, forward, distance) {
-    return skipAtoms(
-      this,
-      start,
-      moveVertically(this, start, forward, distance),
-    )
+    return skipAtoms(this, start, moveVertically(this, start, forward, distance))
   }
   /**
   Find the DOM parent node and offset (child offset if `node` is
@@ -11957,8 +10393,7 @@ var EditorView = class {
   */
   textDirectionAt(pos) {
     let perLine = this.state.facet(perLineTextDirection)
-    if (!perLine || pos < this.viewport.from || pos > this.viewport.to)
-      return this.textDirection
+    if (!perLine || pos < this.viewport.from || pos > this.viewport.to) return this.textDirection
     this.readMeasured()
     return this.docView.textDirectionAt(pos)
   }
@@ -11982,8 +10417,7 @@ var EditorView = class {
   bidiSpans(line) {
     if (line.length > MaxBidiLine) return trivialOrder(line.length)
     let dir = this.textDirectionAt(line.from)
-    for (let entry of this.bidiCache)
-      if (entry.from == line.from && entry.dir == dir) return entry.order
+    for (let entry of this.bidiCache) if (entry.from == line.from && entry.dir == dir) return entry.order
     let order = computeOrder(line.text, dir)
     this.bidiCache.push(new CachedOrder(line.from, line.to, dir, order))
     return order
@@ -11996,10 +10430,7 @@ var EditorView = class {
     return (
       (this.dom.ownerDocument.hasFocus() ||
         (browser.safari &&
-          ((_a2 = this.inputState) === null || _a2 === void 0
-            ? void 0
-            : _a2.lastContextMenu) >
-            Date.now() - 3e4)) &&
+          ((_a2 = this.inputState) === null || _a2 === void 0 ? void 0 : _a2.lastContextMenu) > Date.now() - 3e4)) &&
       this.root.activeElement == this.contentDOM
     )
   }
@@ -12019,9 +10450,7 @@ var EditorView = class {
   setRoot(root) {
     if (this._root != root) {
       this._root = root
-      this.observer.setWindow(
-        (root.nodeType == 9 ? root : root.ownerDocument).defaultView || window,
-      )
+      this.observer.setWindow((root.nodeType == 9 ? root : root.ownerDocument).defaultView || window)
       this.mountStyles()
     }
   }
@@ -12037,8 +10466,7 @@ var EditorView = class {
     this.inputState.destroy()
     this.dom.remove()
     this.observer.destroy()
-    if (this.measureScheduled > -1)
-      this.win.cancelAnimationFrame(this.measureScheduled)
+    if (this.measureScheduled > -1) this.win.cancelAnimationFrame(this.measureScheduled)
     this.destroyed = true
   }
   /**
@@ -12092,10 +10520,7 @@ var EditorView = class {
   */
   static theme(spec, options) {
     let prefix = StyleModule.newName()
-    let result = [
-      theme.of(prefix),
-      styleModule.of(buildTheme(`.${prefix}`, spec)),
-    ]
+    let result = [theme.of(prefix), styleModule.of(buildTheme(`.${prefix}`, spec))]
     if (options && options.dark) result.push(darkTheme.of(true))
     return result
   }
@@ -12107,9 +10532,7 @@ var EditorView = class {
   target editors with a dark or light theme.
   */
   static baseTheme(spec) {
-    return Prec.lowest(
-      styleModule.of(buildTheme('.' + baseThemeID, spec, lightDarkIDs)),
-    )
+    return Prec.lowest(styleModule.of(buildTheme('.' + baseThemeID, spec, lightDarkIDs)))
   }
   /**
   Retrieve an editor view instance from the view's DOM
@@ -12120,8 +10543,7 @@ var EditorView = class {
     let content2 = dom.querySelector('.cm-content')
     let cView = (content2 && ContentView.get(content2)) || ContentView.get(dom)
     return (
-      ((_a2 = cView === null || cView === void 0 ? void 0 : cView.rootView) ===
-        null || _a2 === void 0
+      ((_a2 = cView === null || cView === void 0 ? void 0 : cView.rootView) === null || _a2 === void 0
         ? void 0
         : _a2.view) || null
     )
@@ -12156,9 +10578,7 @@ var EditorView = class {
     this.dispatch = this.dispatch.bind(this)
     this._root = config.root || getRoot(config.parent) || document
     this.viewState = new ViewState(config.state || EditorState.create(config))
-    this.plugins = this.state
-      .facet(viewPlugin)
-      .map((spec) => new PluginInstance(spec))
+    this.plugins = this.state.facet(viewPlugin).map((spec) => new PluginInstance(spec))
     for (let plugin2 of this.plugins) plugin2.update(this)
     this.observer = new DOMObserver(this)
     this.inputState = new InputState(this)
@@ -12202,12 +10622,7 @@ var CachedOrder = class {
       let entry = cache[i2]
       if (entry.dir == lastDir && !changes.touchesRange(entry.from, entry.to))
         result.push(
-          new CachedOrder(
-            changes.mapPos(entry.from, 1),
-            changes.mapPos(entry.to, -1),
-            entry.dir,
-            entry.order,
-          ),
+          new CachedOrder(changes.mapPos(entry.from, 1), changes.mapPos(entry.to, -1), entry.dir, entry.order),
         )
     }
     return result
@@ -12220,24 +10635,14 @@ var CachedOrder = class {
   }
 }
 function attrsFromFacet(view, facet, base2) {
-  for (
-    let sources = view.state.facet(facet), i2 = sources.length - 1;
-    i2 >= 0;
-    i2--
-  ) {
+  for (let sources = view.state.facet(facet), i2 = sources.length - 1; i2 >= 0; i2--) {
     let source = sources[i2],
       value = typeof source == 'function' ? source(view) : source
     if (value) combineAttrs(value, base2)
   }
   return base2
 }
-var currentPlatform = browser.mac
-  ? 'mac'
-  : browser.windows
-    ? 'win'
-    : browser.linux
-      ? 'linux'
-      : 'key'
+var currentPlatform = browser.mac ? 'mac' : browser.windows ? 'win' : browser.linux ? 'linux' : 'key'
 function normalizeKeyName(name2, platform) {
   const parts = name2.split(/-(?!$)/)
   let result = parts[parts.length - 1]
@@ -12279,11 +10684,7 @@ var Keymaps = /* @__PURE__ */ new WeakMap()
 function getKeymap(state) {
   let bindings = state.facet(keymap)
   let map = Keymaps.get(bindings)
-  if (!map)
-    Keymaps.set(
-      bindings,
-      (map = buildKeymap(bindings.reduce((a, b) => a.concat(b), []))),
-    )
+  if (!map) Keymaps.set(bindings, (map = buildKeymap(bindings.reduce((a, b) => a.concat(b), []))))
   return map
 }
 var storedPrefix = null
@@ -12295,16 +10696,11 @@ function buildKeymap(bindings, platform = currentPlatform) {
     let current = isPrefix[name2]
     if (current == null) isPrefix[name2] = is
     else if (current != is)
-      throw new Error(
-        'Key binding ' +
-          name2 +
-          ' is used both as a regular binding and as a multi-stroke prefix',
-      )
+      throw new Error('Key binding ' + name2 + ' is used both as a regular binding and as a multi-stroke prefix')
   }
   let add = (scope, key, command, preventDefault) => {
     var _a2, _b
-    let scopeObj =
-      bound[scope] || (bound[scope] = /* @__PURE__ */ Object.create(null))
+    let scopeObj = bound[scope] || (bound[scope] = /* @__PURE__ */ Object.create(null))
     let parts = key.split(/ (?!$)/).map((k) => normalizeKeyName(k, platform))
     for (let i2 = 1; i2 < parts.length; i2++) {
       let prefix = parts.slice(0, i2).join(' ')
@@ -12334,10 +10730,7 @@ function buildKeymap(bindings, platform = currentPlatform) {
       (scopeObj[full] = {
         preventDefault: false,
         run:
-          ((_b =
-            (_a2 = scopeObj._any) === null || _a2 === void 0
-              ? void 0
-              : _a2.run) === null || _b === void 0
+          ((_b = (_a2 = scopeObj._any) === null || _a2 === void 0 ? void 0 : _a2.run) === null || _b === void 0
             ? void 0
             : _b.slice()) || [],
       })
@@ -12348,8 +10741,7 @@ function buildKeymap(bindings, platform = currentPlatform) {
     let scopes = b.scope ? b.scope.split(' ') : ['editor']
     if (b.any)
       for (let scope of scopes) {
-        let scopeObj =
-          bound[scope] || (bound[scope] = /* @__PURE__ */ Object.create(null))
+        let scopeObj = bound[scope] || (bound[scope] = /* @__PURE__ */ Object.create(null))
         if (!scopeObj._any) scopeObj._any = { preventDefault: false, run: [] }
         for (let key in scopeObj) scopeObj[key].run.push(b.any)
       }
@@ -12368,14 +10760,9 @@ function runHandlers(map, event, view, scope) {
     isChar = codePointSize(charCode) == name2.length && name2 != ' '
   let prefix = '',
     fallthrough = false
-  if (
-    storedPrefix &&
-    storedPrefix.view == view &&
-    storedPrefix.scope == scope
-  ) {
+  if (storedPrefix && storedPrefix.view == view && storedPrefix.scope == scope) {
     prefix = storedPrefix.prefix + ' '
-    if ((fallthrough = modifierCodes.indexOf(event.keyCode) < 0))
-      storedPrefix = null
+    if ((fallthrough = modifierCodes.indexOf(event.keyCode) < 0)) storedPrefix = null
   }
   let ran = /* @__PURE__ */ new Set()
   let runFor = (binding) => {
@@ -12401,8 +10788,7 @@ function runHandlers(map, event, view, scope) {
       (baseName = base[event.keyCode]) &&
       baseName != name2
     ) {
-      if (runFor(scopeObj[prefix + modifiers(baseName, event, true)]))
-        return true
+      if (runFor(scopeObj[prefix + modifiers(baseName, event, true)])) return true
       else if (
         event.shiftKey &&
         (shiftName = shift[event.keyCode]) != name2 &&
@@ -12427,29 +10813,18 @@ var themeSpec = {
 if (CanHidePrimary) themeSpec['.cm-line'].caretColor = 'transparent !important'
 function iterMatches(doc2, re, from, to, f) {
   re.lastIndex = 0
-  for (
-    let cursor = doc2.iterRange(from, to), pos = from, m;
-    !cursor.next().done;
-    pos += cursor.value.length
-  ) {
-    if (!cursor.lineBreak)
-      while ((m = re.exec(cursor.value))) f(pos + m.index, m)
+  for (let cursor = doc2.iterRange(from, to), pos = from, m; !cursor.next().done; pos += cursor.value.length) {
+    if (!cursor.lineBreak) while ((m = re.exec(cursor.value))) f(pos + m.index, m)
   }
 }
 function matchRanges(view, maxLength) {
   let visible = view.visibleRanges
-  if (
-    visible.length == 1 &&
-    visible[0].from == view.viewport.from &&
-    visible[0].to == view.viewport.to
-  )
-    return visible
+  if (visible.length == 1 && visible[0].from == view.viewport.from && visible[0].to == view.viewport.to) return visible
   let result = []
   for (let { from, to } of visible) {
     from = Math.max(view.state.doc.lineAt(from).from, from - maxLength)
     to = Math.min(view.state.doc.lineAt(to).to, to + maxLength)
-    if (result.length && result[result.length - 1].to >= from)
-      result[result.length - 1].to = to
+    if (result.length && result[result.length - 1].to >= from) result[result.length - 1].to = to
     else result.push({ from, to })
   }
   return result
@@ -12464,9 +10839,7 @@ var MatchDecorator = class {
     let build = new RangeSetBuilder(),
       add = build.add.bind(build)
     for (let { from, to } of matchRanges(view, this.maxLength))
-      iterMatches(view.state.doc, this.regexp, from, to, (from2, m) =>
-        this.addMatch(m, view, from2, add),
-      )
+      iterMatches(view.state.doc, this.regexp, from, to, (from2, m) => this.addMatch(m, view, from2, add))
     return build.finish()
   }
   /**
@@ -12484,15 +10857,8 @@ var MatchDecorator = class {
           changeTo = Math.max(to, changeTo)
         }
       })
-    if (update.viewportChanged || changeTo - changeFrom > 1e3)
-      return this.createDeco(update.view)
-    if (changeTo > -1)
-      return this.updateRange(
-        update.view,
-        deco.map(update.changes),
-        changeFrom,
-        changeTo,
-      )
+    if (update.viewportChanged || changeTo - changeFrom > 1e3) return this.createDeco(update.view)
+    if (changeTo > -1) return this.updateRange(update.view, deco.map(update.changes), changeFrom, changeTo)
     return deco
   }
   updateRange(view, deco, updateFrom, updateTo) {
@@ -12521,15 +10887,10 @@ var MatchDecorator = class {
         let add = (from2, to2, deco2) => ranges.push(deco2.range(from2, to2))
         if (fromLine == toLine) {
           this.regexp.lastIndex = start - fromLine.from
-          while (
-            (m = this.regexp.exec(fromLine.text)) &&
-            m.index < end - fromLine.from
-          )
+          while ((m = this.regexp.exec(fromLine.text)) && m.index < end - fromLine.from)
             this.addMatch(m, view, m.index + fromLine.from, add)
         } else {
-          iterMatches(view.state.doc, this.regexp, start, end, (from2, m2) =>
-            this.addMatch(m2, view, from2, add),
-          )
+          iterMatches(view.state.doc, this.regexp, start, end, (from2, m2) => this.addMatch(m2, view, from2, add))
         }
         deco = deco.update({
           filterFrom: start,
@@ -12547,25 +10908,19 @@ var MatchDecorator = class {
   constructor(config) {
     const { regexp, decoration, decorate, boundary, maxLength = 1e3 } = config
     if (!regexp.global)
-      throw new RangeError(
-        "The regular expression given to MatchDecorator should have its 'g' flag set",
-      )
+      throw new RangeError("The regular expression given to MatchDecorator should have its 'g' flag set")
     this.regexp = regexp
     if (decorate) {
-      this.addMatch = (match, view, from, add) =>
-        decorate(add, from, from + match[0].length, match, view)
+      this.addMatch = (match, view, from, add) => decorate(add, from, from + match[0].length, match, view)
     } else if (typeof decoration == 'function') {
       this.addMatch = (match, view, from, add) => {
         let deco = decoration(match, view, from)
         if (deco) add(from, from + match[0].length, deco)
       }
     } else if (decoration) {
-      this.addMatch = (match, _view, from, add) =>
-        add(from, from + match[0].length, decoration)
+      this.addMatch = (match, _view, from, add) => add(from, from + match[0].length, decoration)
     } else {
-      throw new RangeError(
-        "Either 'decorate' or 'decoration' should be provided to MatchDecorator",
-      )
+      throw new RangeError("Either 'decorate' or 'decoration' should be provided to MatchDecorator")
     }
     this.boundary = boundary
     this.maxLength = maxLength
@@ -12602,16 +10957,9 @@ var Names = {
 var _supportsTabSize = null
 function supportsTabSize() {
   var _a2
-  if (
-    _supportsTabSize == null &&
-    typeof document != 'undefined' &&
-    document.body
-  ) {
+  if (_supportsTabSize == null && typeof document != 'undefined' && document.body) {
     let styles = document.body.style
-    _supportsTabSize =
-      ((_a2 = styles.tabSize) !== null && _a2 !== void 0
-        ? _a2
-        : styles.MozTabSize) != null
+    _supportsTabSize = ((_a2 = styles.tabSize) !== null && _a2 !== void 0 ? _a2 : styles.MozTabSize) != null
   }
   return _supportsTabSize || false
 }
@@ -12623,10 +10971,7 @@ var specialCharConfig = /* @__PURE__ */ Facet.define({
       addSpecialChars: null,
     })
     if ((config.replaceTabs = !supportsTabSize()))
-      config.specialChars = new RegExp(
-        '	|' + config.specialChars.source,
-        UnicodeRegexpSupport,
-      )
+      config.specialChars = new RegExp('	|' + config.specialChars.source, UnicodeRegexpSupport)
     if (config.addSpecialChars)
       config.specialChars = new RegExp(
         config.specialChars.source + '|' + config.addSpecialChars.source,
@@ -12655,9 +11000,7 @@ function specialCharPlugin() {
                 let size = view.state.tabSize,
                   col = countColumn(line.text, size, pos - line.from)
                 return Decoration.replace({
-                  widget: new TabWidget(
-                    (size - (col % size)) * this.view.defaultCharacterWidth,
-                  ),
+                  widget: new TabWidget((size - (col % size)) * this.view.defaultCharacterWidth),
                 })
               }
               return (
@@ -12676,19 +11019,14 @@ function specialCharPlugin() {
             this.decorator = this.makeDecorator(conf)
             this.decorations = this.decorator.createDeco(update.view)
           } else {
-            this.decorations = this.decorator.updateDeco(
-              update,
-              this.decorations,
-            )
+            this.decorations = this.decorator.updateDeco(update, this.decorations)
           }
         }
         constructor(view) {
           this.view = view
           this.decorations = Decoration.none
           this.decorationCache = /* @__PURE__ */ Object.create(null)
-          this.decorator = this.makeDecorator(
-            view.state.facet(specialCharConfig),
-          )
+          this.decorator = this.makeDecorator(view.state.facet(specialCharConfig))
           this.decorations = this.decorator.createDeco(view)
         }
       },
@@ -12708,10 +11046,7 @@ var SpecialCharWidget = class extends WidgetType {
   }
   toDOM(view) {
     let ph = placeholder$1(this.code)
-    let desc =
-      view.state.phrase('Control character') +
-      ' ' +
-      (Names[this.code] || '0x' + this.code.toString(16))
+    let desc = view.state.phrase('Control character') + ' ' + (Names[this.code] || '0x' + this.code.toString(16))
     let custom = this.options.render && this.options.render(this.code, desc, ph)
     if (custom) return custom
     let span = document.createElement('span')
@@ -12756,8 +11091,7 @@ var lineDeco = /* @__PURE__ */ Decoration.line({ class: 'cm-activeLine' })
 var activeLineHighlighter = /* @__PURE__ */ ViewPlugin.fromClass(
   class {
     update(update) {
-      if (update.docChanged || update.selectionSet)
-        this.decorations = this.getDeco(update.view)
+      if (update.docChanged || update.selectionSet) this.decorations = this.getDeco(update.view)
     }
     getDeco(view) {
       let lastLineStart = -1,
@@ -12825,9 +11159,7 @@ var GutterMarker = class extends RangeValue {
   @internal
   */
   compare(other) {
-    return (
-      this == other || (this.constructor == other.constructor && this.eq(other))
-    )
+    return this == other || (this.constructor == other.constructor && this.eq(other))
   }
   /**
   Compare this marker to another marker of the same type.
@@ -12865,8 +11197,7 @@ var gutterView = /* @__PURE__ */ ViewPlugin.fromClass(
         let vpOverlap = Math.min(vpA.to, vpB.to) - Math.max(vpA.from, vpB.from)
         this.syncGutters(vpOverlap < (vpB.to - vpB.from) * 0.8)
       }
-      if (update.geometryChanged)
-        this.dom.style.minHeight = this.view.contentHeight + 'px'
+      if (update.geometryChanged) this.dom.style.minHeight = this.view.contentHeight + 'px'
       if (this.view.state.facet(unfixGutters) != !this.fixed) {
         this.fixed = !this.fixed
         this.dom.style.position = this.fixed ? 'sticky' : ''
@@ -12876,18 +11207,10 @@ var gutterView = /* @__PURE__ */ ViewPlugin.fromClass(
     syncGutters(detach) {
       let after = this.dom.nextSibling
       if (detach) this.dom.remove()
-      let lineClasses = RangeSet.iter(
-        this.view.state.facet(gutterLineClass),
-        this.view.viewport.from,
-      )
+      let lineClasses = RangeSet.iter(this.view.state.facet(gutterLineClass), this.view.viewport.from)
       let classSet = []
       let contexts = this.gutters.map(
-        (gutter2) =>
-          new UpdateContext(
-            gutter2,
-            this.view.viewport,
-            -this.view.documentPadding.top,
-          ),
+        (gutter2) => new UpdateContext(gutter2, this.view.viewport, -this.view.documentPadding.top),
       )
       for (let line of this.view.viewportLineBlocks) {
         if (classSet.length) classSet = []
@@ -12924,8 +11247,7 @@ var gutterView = /* @__PURE__ */ ViewPlugin.fromClass(
           update.view.viewport.to,
         )
       if (prev == cur) {
-        for (let gutter2 of this.gutters)
-          if (gutter2.update(update)) change = true
+        for (let gutter2 of this.gutters) if (gutter2.update(update)) change = true
       } else {
         change = true
         let gutters2 = []
@@ -12958,9 +11280,7 @@ var gutterView = /* @__PURE__ */ ViewPlugin.fromClass(
       this.dom.className = 'cm-gutters'
       this.dom.setAttribute('aria-hidden', 'true')
       this.dom.style.minHeight = this.view.contentHeight + 'px'
-      this.gutters = view.state
-        .facet(activeGutters)
-        .map((conf) => new SingleGutterView(view, conf))
+      this.gutters = view.state.facet(activeGutters).map((conf) => new SingleGutterView(view, conf))
       for (let gutter2 of this.gutters) this.dom.appendChild(gutter2.dom)
       this.fixed = !view.state.facet(unfixGutters)
       if (this.fixed) {
@@ -12975,9 +11295,7 @@ var gutterView = /* @__PURE__ */ ViewPlugin.fromClass(
       EditorView.scrollMargins.of((view) => {
         let value = view.plugin(plugin2)
         if (!value || value.gutters.length == 0 || !value.fixed) return null
-        return view.textDirection == Direction.LTR
-          ? { left: value.dom.offsetWidth }
-          : { right: value.dom.offsetWidth }
+        return view.textDirection == Direction.LTR ? { left: value.dom.offsetWidth } : { right: value.dom.offsetWidth }
       }),
   },
 )
@@ -13039,15 +11357,12 @@ var SingleGutterView = class {
     this.markers = asArray2(this.config.markers(update.view))
     if (this.spacer && this.config.updateSpacer) {
       let updated = this.config.updateSpacer(this.spacer.markers[0], update)
-      if (updated != this.spacer.markers[0])
-        this.spacer.update(update.view, 0, 0, [updated])
+      if (updated != this.spacer.markers[0]) this.spacer.update(update.view, 0, 0, [updated])
     }
     let vp = update.view.viewport
     return (
       !RangeSet.eq(this.markers, prevMarkers, vp.from, vp.to) ||
-      (this.config.lineMarkerChange
-        ? this.config.lineMarkerChange(update)
-        : false)
+      (this.config.lineMarkerChange ? this.config.lineMarkerChange(update) : false)
     )
   }
   destroy() {
@@ -13059,8 +11374,7 @@ var SingleGutterView = class {
     this.elements = []
     this.spacer = null
     this.dom = document.createElement('div')
-    this.dom.className =
-      'cm-gutter' + (this.config.class ? ' ' + this.config.class : '')
+    this.dom.className = 'cm-gutter' + (this.config.class ? ' ' + this.config.class : '')
     for (let prop in config.domEventHandlers) {
       this.dom.addEventListener(prop, (event) => {
         let target = event.target,
@@ -13073,25 +11387,21 @@ var SingleGutterView = class {
           y = event.clientY
         }
         let line = view.lineBlockAtHeight(y - view.documentTop)
-        if (config.domEventHandlers[prop](view, line, event))
-          event.preventDefault()
+        if (config.domEventHandlers[prop](view, line, event)) event.preventDefault()
       })
     }
     this.markers = asArray2(config.markers(view))
     if (config.initialSpacer) {
       this.spacer = new GutterElement(view, 0, 0, [config.initialSpacer(view)])
       this.dom.appendChild(this.spacer.dom)
-      this.spacer.dom.style.cssText +=
-        'visibility: hidden; pointer-events: none'
+      this.spacer.dom.style.cssText += 'visibility: hidden; pointer-events: none'
     }
   }
 }
 var GutterElement = class {
   update(view, height, above, markers) {
-    if (this.height != height)
-      this.dom.style.height = (this.height = height) + 'px'
-    if (this.above != above)
-      this.dom.style.marginTop = (this.above = above) ? above + 'px' : ''
+    if (this.height != height) this.dom.style.height = (this.height = height) + 'px'
+    if (this.above != above) this.dom.style.marginTop = (this.above = above) ? above + 'px' : ''
     if (!sameMarkers(this.markers, markers)) this.setMarkers(view, markers)
   }
   setMarkers(view, markers) {
@@ -13161,10 +11471,7 @@ var lineNumberConfig = /* @__PURE__ */ Facet.define({
           for (let event in b) {
             let exists = result[event],
               add = b[event]
-            result[event] = exists
-              ? (view, line, event2) =>
-                  exists(view, line, event2) || add(view, line, event2)
-              : add
+            result[event] = exists ? (view, line, event2) => exists(view, line, event2) || add(view, line, event2) : add
           }
           return result
         },
@@ -13187,39 +11494,27 @@ var NumberMarker = class extends GutterMarker {
 function formatNumber(view, number2) {
   return view.state.facet(lineNumberConfig).formatNumber(number2, view.state)
 }
-var lineNumberGutter = /* @__PURE__ */ activeGutters.compute(
-  [lineNumberConfig],
-  (state) => ({
-    class: 'cm-lineNumbers',
-    renderEmptyElements: false,
-    markers(view) {
-      return view.state.facet(lineNumberMarkers)
-    },
-    lineMarker(view, line, others) {
-      if (others.some((m) => m.toDOM)) return null
-      return new NumberMarker(
-        formatNumber(view, view.state.doc.lineAt(line.from).number),
-      )
-    },
-    widgetMarker: () => null,
-    lineMarkerChange: (update) =>
-      update.startState.facet(lineNumberConfig) !=
-      update.state.facet(lineNumberConfig),
-    initialSpacer(view) {
-      return new NumberMarker(
-        formatNumber(view, maxLineNumber(view.state.doc.lines)),
-      )
-    },
-    updateSpacer(spacer, update) {
-      let max = formatNumber(
-        update.view,
-        maxLineNumber(update.view.state.doc.lines),
-      )
-      return max == spacer.number ? spacer : new NumberMarker(max)
-    },
-    domEventHandlers: state.facet(lineNumberConfig).domEventHandlers,
-  }),
-)
+var lineNumberGutter = /* @__PURE__ */ activeGutters.compute([lineNumberConfig], (state) => ({
+  class: 'cm-lineNumbers',
+  renderEmptyElements: false,
+  markers(view) {
+    return view.state.facet(lineNumberMarkers)
+  },
+  lineMarker(view, line, others) {
+    if (others.some((m) => m.toDOM)) return null
+    return new NumberMarker(formatNumber(view, view.state.doc.lineAt(line.from).number))
+  },
+  widgetMarker: () => null,
+  lineMarkerChange: (update) => update.startState.facet(lineNumberConfig) != update.state.facet(lineNumberConfig),
+  initialSpacer(view) {
+    return new NumberMarker(formatNumber(view, maxLineNumber(view.state.doc.lines)))
+  },
+  updateSpacer(spacer, update) {
+    let max = formatNumber(update.view, maxLineNumber(update.view.state.doc.lines))
+    return max == spacer.number ? spacer : new NumberMarker(max)
+  },
+  domEventHandlers: state.facet(lineNumberConfig).domEventHandlers,
+}))
 function lineNumbers(config = {}) {
   return [lineNumberConfig.of(config), gutters(), lineNumberGutter]
 }
@@ -13249,8 +11544,7 @@ var NodeProp = class {
   it does.
   */
   add(match) {
-    if (this.perNode)
-      throw new RangeError("Can't add per-node props to node types")
+    if (this.perNode) throw new RangeError("Can't add per-node props to node types")
     if (typeof match != 'function') match = NodeType.match(match)
     return (type) => {
       let result = match(type)
@@ -13302,22 +11596,14 @@ var NodeType = class {
   Define a node type.
   */
   static define(spec) {
-    let props =
-      spec.props && spec.props.length
-        ? /* @__PURE__ */ Object.create(null)
-        : noProps
-    let flags =
-      (spec.top ? 1 : 0) |
-      (spec.skipped ? 2 : 0) |
-      (spec.error ? 4 : 0) |
-      (spec.name == null ? 8 : 0)
+    let props = spec.props && spec.props.length ? /* @__PURE__ */ Object.create(null) : noProps
+    let flags = (spec.top ? 1 : 0) | (spec.skipped ? 2 : 0) | (spec.error ? 4 : 0) | (spec.name == null ? 8 : 0)
     let type = new NodeType(spec.name || '', props, spec.id, flags)
     if (spec.props)
       for (let src of spec.props) {
         if (!Array.isArray(src)) src = src(type)
         if (src) {
-          if (src[0].perNode)
-            throw new RangeError("Can't store a per-node prop on a node type")
+          if (src[0].perNode) throw new RangeError("Can't store a per-node prop on a node type")
           props[src[0].id] = src[1]
         }
       }
@@ -13377,14 +11663,9 @@ var NodeType = class {
   */
   static match(map) {
     let direct = /* @__PURE__ */ Object.create(null)
-    for (let prop in map)
-      for (let name2 of prop.split(' ')) direct[name2] = map[prop]
+    for (let prop in map) for (let name2 of prop.split(' ')) direct[name2] = map[prop]
     return (node) => {
-      for (
-        let groups = node.prop(NodeProp.group), i2 = -1;
-        i2 < (groups ? groups.length : 0);
-        i2++
-      ) {
+      for (let groups = node.prop(NodeProp.group), i2 = -1; i2 < (groups ? groups.length : 0); i2++) {
         let found = direct[i2 < 0 ? node.name : groups[i2]]
         if (found) return found
       }
@@ -13418,11 +11699,7 @@ var NodeSet = class {
           newProps[add[0].id] = add[1]
         }
       }
-      newTypes.push(
-        newProps
-          ? new NodeType(type.name, newProps, type.id, type.flags)
-          : type,
-      )
+      newTypes.push(newProps ? new NodeType(type.name, newProps, type.id, type.flags) : type)
     }
     return new NodeSet(newTypes)
   }
@@ -13434,9 +11711,7 @@ var NodeSet = class {
     this.types = types2
     for (let i2 = 0; i2 < types2.length; i2++)
       if (types2[i2].id != i2)
-        throw new RangeError(
-          'Node type ids should correspond to array positions when creating a node set',
-        )
+        throw new RangeError('Node type ids should correspond to array positions when creating a node set')
   }
 }
 var CachedNode = /* @__PURE__ */ new WeakMap()
@@ -13465,9 +11740,8 @@ var Tree = class {
     }
     return !this.type.name
       ? children
-      : (/\W/.test(this.type.name) && !this.type.isError
-          ? JSON.stringify(this.type.name)
-          : this.type.name) + (children.length ? '(' + children + ')' : '')
+      : (/\W/.test(this.type.name) && !this.type.isError ? JSON.stringify(this.type.name) : this.type.name) +
+          (children.length ? '(' + children + ')' : '')
   }
   /**
   Get a [tree cursor](#common.TreeCursor) positioned at the top of
@@ -13508,12 +11782,7 @@ var Tree = class {
   [`resolveInner`](#common.Tree.resolveInner) instead.
   */
   resolve(pos, side = 0) {
-    let node = resolveNode(
-      CachedNode.get(this) || this.topNode,
-      pos,
-      side,
-      false,
-    )
+    let node = resolveNode(CachedNode.get(this) || this.topNode, pos, side, false)
     CachedNode.set(this, node)
     return node
   }
@@ -13525,12 +11794,7 @@ var Tree = class {
   the host trees).
   */
   resolveInner(pos, side = 0) {
-    let node = resolveNode(
-      CachedInnerNode.get(this) || this.topNode,
-      pos,
-      side,
-      true,
-    )
+    let node = resolveNode(CachedInnerNode.get(this) || this.topNode, pos, side, true)
     CachedInnerNode.set(this, node)
     return node
   }
@@ -13557,11 +11821,7 @@ var Tree = class {
       anon = (mode & IterMode.IncludeAnonymous) > 0
     for (let c = this.cursor(mode | IterMode.IncludeAnonymous); ; ) {
       let entered = false
-      if (
-        c.from <= to &&
-        c.to >= from &&
-        ((!anon && c.type.isAnonymous) || enter(c) !== false)
-      ) {
+      if (c.from <= to && c.to >= from && ((!anon && c.type.isAnonymous) || enter(c) !== false)) {
         if (c.firstChild()) continue
         entered = true
       }
@@ -13578,11 +11838,7 @@ var Tree = class {
   node. Works with both per-node and per-type props.
   */
   prop(prop) {
-    return !prop.perNode
-      ? this.type.prop(prop)
-      : this.props
-        ? this.props[prop.id]
-        : void 0
+    return !prop.perNode ? this.type.prop(prop) : this.props ? this.props[prop.id] : void 0
   }
   /**
   Returns the node's [per-node props](#common.NodeProp.perNode) in a
@@ -13591,8 +11847,7 @@ var Tree = class {
   */
   get propValues() {
     let result = []
-    if (this.props)
-      for (let id2 in this.props) result.push([+id2, this.props[id2]])
+    if (this.props) for (let id2 in this.props) result.push([+id2, this.props[id2]])
     return result
   }
   /**
@@ -13611,11 +11866,8 @@ var Tree = class {
           this.children.length,
           0,
           this.length,
-          (children, positions, length) =>
-            new Tree(this.type, children, positions, length, this.propValues),
-          config.makeTree ||
-            ((children, positions, length) =>
-              new Tree(NodeType.none, children, positions, length)),
+          (children, positions, length) => new Tree(this.type, children, positions, length, this.propValues),
+          config.makeTree || ((children, positions, length) => new Tree(NodeType.none, children, positions, length)),
         )
   }
   /**
@@ -13636,8 +11888,7 @@ var Tree = class {
     this.props = null
     if (props && props.length) {
       this.props = /* @__PURE__ */ Object.create(null)
-      for (let [prop, value] of props)
-        this.props[typeof prop == 'number' ? prop : prop.id] = value
+      for (let [prop, value] of props) this.props[typeof prop == 'number' ? prop : prop.id] = value
     }
   }
 }
@@ -13767,26 +12018,17 @@ function resolveNode(node, pos, side, overlays) {
     (side < 1 ? node.from >= pos : node.from > pos) ||
     (side > -1 ? node.to <= pos : node.to < pos)
   ) {
-    let parent =
-      !overlays && node instanceof TreeNode && node.index < 0
-        ? null
-        : node.parent
+    let parent = !overlays && node instanceof TreeNode && node.index < 0 ? null : node.parent
     if (!parent) return node
     node = parent
   }
   let mode = overlays ? 0 : IterMode.IgnoreOverlays
   if (overlays)
-    for (
-      let scan = node, parent = scan.parent;
-      parent;
-      scan = parent, parent = scan.parent
-    ) {
+    for (let scan = node, parent = scan.parent; parent; scan = parent, parent = scan.parent) {
       if (
         scan instanceof TreeNode &&
         scan.index < 0 &&
-        ((_a2 = parent.enter(pos, side, mode)) === null || _a2 === void 0
-          ? void 0
-          : _a2.from) != scan.from
+        ((_a2 = parent.enter(pos, side, mode)) === null || _a2 === void 0 ? void 0 : _a2.from) != scan.from
       )
         node = parent
     }
@@ -13850,55 +12092,25 @@ var TreeNode = class extends BaseNode {
   }
   nextChild(i2, dir, pos, side, mode = 0) {
     for (let parent = this; ; ) {
-      for (
-        let { children, positions } = parent._tree,
-          e = dir > 0 ? children.length : -1;
-        i2 != e;
-        i2 += dir
-      ) {
+      for (let { children, positions } = parent._tree, e = dir > 0 ? children.length : -1; i2 != e; i2 += dir) {
         let next = children[i2],
           start = positions[i2] + parent.from
         if (!checkSide(side, pos, start, start + next.length)) continue
         if (next instanceof TreeBuffer) {
           if (mode & IterMode.ExcludeBuffers) continue
-          let index = next.findChild(
-            0,
-            next.buffer.length,
-            dir,
-            pos - start,
-            side,
-          )
-          if (index > -1)
-            return new BufferNode(
-              new BufferContext(parent, next, i2, start),
-              null,
-              index,
-            )
-        } else if (
-          mode & IterMode.IncludeAnonymous ||
-          !next.type.isAnonymous ||
-          hasChild(next)
-        ) {
+          let index = next.findChild(0, next.buffer.length, dir, pos - start, side)
+          if (index > -1) return new BufferNode(new BufferContext(parent, next, i2, start), null, index)
+        } else if (mode & IterMode.IncludeAnonymous || !next.type.isAnonymous || hasChild(next)) {
           let mounted
-          if (
-            !(mode & IterMode.IgnoreMounts) &&
-            (mounted = MountedTree.get(next)) &&
-            !mounted.overlay
-          )
+          if (!(mode & IterMode.IgnoreMounts) && (mounted = MountedTree.get(next)) && !mounted.overlay)
             return new TreeNode(mounted.tree, start, i2, parent)
           let inner = new TreeNode(next, start, i2, parent)
           return mode & IterMode.IncludeAnonymous || !inner.type.isAnonymous
             ? inner
-            : inner.nextChild(
-                dir < 0 ? next.children.length - 1 : 0,
-                dir,
-                pos,
-                side,
-              )
+            : inner.nextChild(dir < 0 ? next.children.length - 1 : 0, dir, pos, side)
         }
       }
-      if (mode & IterMode.IncludeAnonymous || !parent.type.isAnonymous)
-        return null
+      if (mode & IterMode.IncludeAnonymous || !parent.type.isAnonymous) return null
       if (parent.index >= 0) i2 = parent.index + dir
       else i2 = dir < 0 ? -1 : parent._parent._tree.children.length
       parent = parent._parent
@@ -13919,23 +12131,11 @@ var TreeNode = class extends BaseNode {
   }
   enter(pos, side, mode = 0) {
     let mounted
-    if (
-      !(mode & IterMode.IgnoreOverlays) &&
-      (mounted = MountedTree.get(this._tree)) &&
-      mounted.overlay
-    ) {
+    if (!(mode & IterMode.IgnoreOverlays) && (mounted = MountedTree.get(this._tree)) && mounted.overlay) {
       let rPos = pos - this.from
       for (let { from, to } of mounted.overlay) {
-        if (
-          (side > 0 ? from <= rPos : from < rPos) &&
-          (side < 0 ? to >= rPos : to > rPos)
-        )
-          return new TreeNode(
-            mounted.tree,
-            mounted.overlay[0].from + this.from,
-            -1,
-            this,
-          )
+        if ((side > 0 ? from <= rPos : from < rPos) && (side < 0 ? to >= rPos : to > rPos))
+          return new TreeNode(mounted.tree, mounted.overlay[0].from + this.from, -1, this)
       }
     }
     return this.nextChild(0, 1, pos, side, mode)
@@ -13949,14 +12149,10 @@ var TreeNode = class extends BaseNode {
     return this._parent ? this._parent.nextSignificantParent() : null
   }
   get nextSibling() {
-    return this._parent && this.index >= 0
-      ? this._parent.nextChild(this.index + 1, 1, 0, 4)
-      : null
+    return this._parent && this.index >= 0 ? this._parent.nextChild(this.index + 1, 1, 0, 4) : null
   }
   get prevSibling() {
-    return this._parent && this.index >= 0
-      ? this._parent.nextChild(this.index - 1, -1, 0, 4)
-      : null
+    return this._parent && this.index >= 0 ? this._parent.nextChild(this.index - 1, -1, 0, 4) : null
   }
   get tree() {
     return this._tree
@@ -14023,13 +12219,7 @@ var BufferNode = class extends BaseNode {
   }
   child(dir, pos, side) {
     let { buffer } = this.context
-    let index = buffer.findChild(
-      this.index + 4,
-      buffer.buffer[this.index + 3],
-      dir,
-      pos - this.context.start,
-      side,
-    )
+    let index = buffer.findChild(this.index + 4, buffer.buffer[this.index + 3], dir, pos - this.context.start, side)
     return index < 0 ? null : new BufferNode(this.context, this, index)
   }
   get firstChild() {
@@ -14060,19 +12250,12 @@ var BufferNode = class extends BaseNode {
     return this._parent || this.context.parent.nextSignificantParent()
   }
   externalSibling(dir) {
-    return this._parent
-      ? null
-      : this.context.parent.nextChild(this.context.index + dir, dir, 0, 4)
+    return this._parent ? null : this.context.parent.nextChild(this.context.index + dir, dir, 0, 4)
   }
   get nextSibling() {
     let { buffer } = this.context
     let after = buffer.buffer[this.index + 3]
-    if (
-      after <
-      (this._parent
-        ? buffer.buffer[this._parent.index + 3]
-        : buffer.buffer.length)
-    )
+    if (after < (this._parent ? buffer.buffer[this._parent.index + 3] : buffer.buffer.length))
       return new BufferNode(this.context, this._parent, after)
     return this.externalSibling(1)
   }
@@ -14080,11 +12263,7 @@ var BufferNode = class extends BaseNode {
     let { buffer } = this.context
     let parentStart = this._parent ? this._parent.index + 4 : 0
     if (this.index == parentStart) return this.externalSibling(-1)
-    return new BufferNode(
-      this.context,
-      this._parent,
-      buffer.findChild(parentStart, this.index, -1, 0, 4),
-    )
+    return new BufferNode(this.context, this._parent, buffer.findChild(parentStart, this.index, -1, 0, 4))
   }
   get tree() {
     return null
@@ -14127,8 +12306,7 @@ function iterStack(heads) {
       pick = i2
     }
   }
-  let next =
-    picked instanceof TreeNode && picked.index < 0 ? null : picked.parent
+  let next = picked instanceof TreeNode && picked.index < 0 ? null : picked.parent
   let newHeads = heads.slice()
   if (next) newHeads[pick] = next
   else newHeads.splice(pick, 1)
@@ -14146,32 +12324,16 @@ var StackIterator = class {
 function stackIterator(tree, pos, side) {
   let inner = tree.resolveInner(pos, side),
     layers = null
-  for (
-    let scan = inner instanceof TreeNode ? inner : inner.context.parent;
-    scan;
-    scan = scan.parent
-  ) {
+  for (let scan = inner instanceof TreeNode ? inner : inner.context.parent; scan; scan = scan.parent) {
     if (scan.index < 0) {
       let parent = scan.parent
       ;(layers || (layers = [inner])).push(parent.resolve(pos, side))
       scan = parent
     } else {
       let mount = MountedTree.get(scan.tree)
-      if (
-        mount &&
-        mount.overlay &&
-        mount.overlay[0].from <= pos &&
-        mount.overlay[mount.overlay.length - 1].to >= pos
-      ) {
-        let root = new TreeNode(
-          mount.tree,
-          mount.overlay[0].from + scan.from,
-          -1,
-          scan,
-        )
-        ;(layers || (layers = [inner])).push(
-          resolveNode(root, pos, side, false),
-        )
+      if (mount && mount.overlay && mount.overlay[0].from <= pos && mount.overlay[mount.overlay.length - 1].to >= pos) {
+        let root = new TreeNode(mount.tree, mount.overlay[0].from + scan.from, -1, scan)
+        ;(layers || (layers = [inner])).push(resolveNode(root, pos, side, false))
       }
     }
   }
@@ -14216,9 +12378,7 @@ var TreeCursor = class {
   @internal
   */
   toString() {
-    return this.buffer
-      ? this.buffer.buffer.childString(this.index)
-      : this._tree.toString()
+    return this.buffer ? this.buffer.buffer.childString(this.index) : this._tree.toString()
   }
   /**
   @internal
@@ -14226,22 +12386,10 @@ var TreeCursor = class {
   enterChild(dir, pos, side) {
     if (!this.buffer)
       return this.yield(
-        this._tree.nextChild(
-          dir < 0 ? this._tree._tree.children.length - 1 : 0,
-          dir,
-          pos,
-          side,
-          this.mode,
-        ),
+        this._tree.nextChild(dir < 0 ? this._tree._tree.children.length - 1 : 0, dir, pos, side, this.mode),
       )
     let { buffer } = this.buffer
-    let index = buffer.findChild(
-      this.index + 4,
-      buffer.buffer[this.index + 3],
-      dir,
-      pos - this.buffer.start,
-      side,
-    )
+    let index = buffer.findChild(this.index + 4, buffer.buffer[this.index + 3], dir, pos - this.buffer.start, side)
     if (index < 0) return false
     this.stack.push(this.index)
     return this.yieldBuf(index)
@@ -14280,25 +12428,16 @@ var TreeCursor = class {
   */
   enter(pos, side, mode = this.mode) {
     if (!this.buffer) return this.yield(this._tree.enter(pos, side, mode))
-    return mode & IterMode.ExcludeBuffers
-      ? false
-      : this.enterChild(1, pos, side)
+    return mode & IterMode.ExcludeBuffers ? false : this.enterChild(1, pos, side)
   }
   /**
   Move to the node's parent node, if this isn't the top node.
   */
   parent() {
     if (!this.buffer)
-      return this.yieldNode(
-        this.mode & IterMode.IncludeAnonymous
-          ? this._tree._parent
-          : this._tree.parent,
-      )
+      return this.yieldNode(this.mode & IterMode.IncludeAnonymous ? this._tree._parent : this._tree.parent)
     if (this.stack.length) return this.yieldBuf(this.stack.pop())
-    let parent =
-      this.mode & IterMode.IncludeAnonymous
-        ? this.buffer.parent
-        : this.buffer.parent.nextSignificantParent()
+    let parent = this.mode & IterMode.IncludeAnonymous ? this.buffer.parent : this.buffer.parent.nextSignificantParent()
     this.buffer = null
     return this.yieldNode(parent)
   }
@@ -14310,43 +12449,18 @@ var TreeCursor = class {
       return !this._tree._parent
         ? false
         : this.yield(
-            this._tree.index < 0
-              ? null
-              : this._tree._parent.nextChild(
-                  this._tree.index + dir,
-                  dir,
-                  0,
-                  4,
-                  this.mode,
-                ),
+            this._tree.index < 0 ? null : this._tree._parent.nextChild(this._tree.index + dir, dir, 0, 4, this.mode),
           )
     let { buffer } = this.buffer,
       d = this.stack.length - 1
     if (dir < 0) {
       let parentStart = d < 0 ? 0 : this.stack[d] + 4
-      if (this.index != parentStart)
-        return this.yieldBuf(
-          buffer.findChild(parentStart, this.index, -1, 0, 4),
-        )
+      if (this.index != parentStart) return this.yieldBuf(buffer.findChild(parentStart, this.index, -1, 0, 4))
     } else {
       let after = buffer.buffer[this.index + 3]
-      if (
-        after <
-        (d < 0 ? buffer.buffer.length : buffer.buffer[this.stack[d] + 3])
-      )
-        return this.yieldBuf(after)
+      if (after < (d < 0 ? buffer.buffer.length : buffer.buffer[this.stack[d] + 3])) return this.yieldBuf(after)
     }
-    return d < 0
-      ? this.yield(
-          this.buffer.parent.nextChild(
-            this.buffer.index + dir,
-            dir,
-            0,
-            4,
-            this.mode,
-          ),
-        )
-      : false
+    return d < 0 ? this.yield(this.buffer.parent.nextChild(this.buffer.index + dir, dir, 0, 4, this.mode)) : false
   }
   /**
   Move to this node's next sibling, if any.
@@ -14368,8 +12482,7 @@ var TreeCursor = class {
       if (dir > 0) {
         if (this.index < buffer.buffer.buffer.length) return false
       } else {
-        for (let i2 = 0; i2 < this.index; i2++)
-          if (buffer.buffer.buffer[i2 + 3] < this.index) return false
+        for (let i2 = 0; i2 < this.index; i2++) if (buffer.buffer.buffer[i2 + 3] < this.index) return false
       }
       ;({ index, parent } = buffer)
     } else {
@@ -14377,11 +12490,7 @@ var TreeCursor = class {
     }
     for (; parent; { index, _parent: parent } = parent) {
       if (index > -1)
-        for (
-          let i2 = index + dir, e = dir < 0 ? -1 : parent._tree.children.length;
-          i2 != e;
-          i2 += dir
-        ) {
+        for (let i2 = index + dir, e = dir < 0 ? -1 : parent._tree.children.length; i2 != e; i2 += dir) {
           let child = parent._tree.children[i2]
           if (
             this.mode & IterMode.IncludeAnonymous ||
@@ -14456,8 +12565,7 @@ var TreeCursor = class {
         index = this.stack[--d]
       }
     }
-    for (let i2 = depth; i2 < this.stack.length; i2++)
-      result = new BufferNode(this.buffer, result, this.stack[i2])
+    for (let i2 = depth; i2 < this.stack.length; i2++) result = new BufferNode(this.buffer, result, this.stack[i2])
     return (this.bufferNode = new BufferNode(this.buffer, result, this.index))
   }
   /**
@@ -14535,9 +12643,7 @@ var TreeCursor = class {
   }
 }
 function hasChild(tree) {
-  return tree.children.some(
-    (ch) => ch instanceof TreeBuffer || !ch.type.isAnonymous || hasChild(ch),
-  )
+  return tree.children.some((ch) => ch instanceof TreeBuffer || !ch.type.isAnonymous || hasChild(ch))
 }
 function buildTree(data) {
   var _a2
@@ -14548,20 +12654,11 @@ function buildTree(data) {
     reused = [],
     minRepeatType = nodeSet2.types.length,
   } = data
-  let cursor = Array.isArray(buffer)
-    ? new FlatBufferCursor(buffer, buffer.length)
-    : buffer
+  let cursor = Array.isArray(buffer) ? new FlatBufferCursor(buffer, buffer.length) : buffer
   let types2 = nodeSet2.types
   let contextHash = 0,
     lookAhead = 0
-  function takeNode(
-    parentStart,
-    minPos,
-    children2,
-    positions2,
-    inRepeat,
-    depth,
-  ) {
+  function takeNode(parentStart, minPos, children2, positions2, inRepeat, depth) {
     let { id: id2, start, end, size } = cursor
     let lookAheadAtStart = lookAhead,
       contextAtStart = contextHash
@@ -14586,15 +12683,11 @@ function buildTree(data) {
       node,
       buffer2
     let startPos = start - parentStart
-    if (
-      end - start <= maxBufferLength &&
-      (buffer2 = findBufferSize(cursor.pos - minPos, inRepeat))
-    ) {
+    if (end - start <= maxBufferLength && (buffer2 = findBufferSize(cursor.pos - minPos, inRepeat))) {
       let data2 = new Uint16Array(buffer2.size - buffer2.skip)
       let endPos = cursor.pos - buffer2.size,
         index = data2.length
-      while (cursor.pos > endPos)
-        index = copyToBuffer(buffer2.start, data2, index)
+      while (cursor.pos > endPos) index = copyToBuffer(buffer2.start, data2, index)
       node = new TreeBuffer(data2, end - buffer2.start, nodeSet2)
       startPos = buffer2.start - parentStart
     } else {
@@ -14606,11 +12699,7 @@ function buildTree(data) {
       let lastGroup = 0,
         lastEnd = end
       while (cursor.pos > endPos) {
-        if (
-          localInRepeat >= 0 &&
-          cursor.id == localInRepeat &&
-          cursor.size >= 0
-        ) {
+        if (localInRepeat >= 0 && cursor.id == localInRepeat && cursor.size >= 0) {
           if (cursor.end <= lastEnd - maxBufferLength) {
             makeRepeatLeaf(
               localChildren,
@@ -14630,21 +12719,10 @@ function buildTree(data) {
         } else if (depth > 2500) {
           takeFlatNode(start, endPos, localChildren, localPositions)
         } else {
-          takeNode(
-            start,
-            endPos,
-            localChildren,
-            localPositions,
-            localInRepeat,
-            depth + 1,
-          )
+          takeNode(start, endPos, localChildren, localPositions, localInRepeat, depth + 1)
         }
       }
-      if (
-        localInRepeat >= 0 &&
-        lastGroup > 0 &&
-        lastGroup < localChildren.length
-      )
+      if (localInRepeat >= 0 && lastGroup > 0 && lastGroup < localChildren.length)
         makeRepeatLeaf(
           localChildren,
           localPositions,
@@ -14660,26 +12738,9 @@ function buildTree(data) {
       localPositions.reverse()
       if (localInRepeat > -1 && lastGroup > 0) {
         let make = makeBalanced(type, contextAtStart)
-        node = balanceRange(
-          type,
-          localChildren,
-          localPositions,
-          0,
-          localChildren.length,
-          0,
-          end - start,
-          make,
-          make,
-        )
+        node = balanceRange(type, localChildren, localPositions, 0, localChildren.length, 0, end - start, make, make)
       } else {
-        node = makeTree(
-          type,
-          localChildren,
-          localPositions,
-          end - start,
-          lookAheadAtStart - end,
-          contextAtStart,
-        )
+        node = makeTree(type, localChildren, localPositions, end - start, lookAheadAtStart - end, contextAtStart)
       }
     }
     children2.push(node)
@@ -14726,27 +12787,10 @@ function buildTree(data) {
         if ((lookAheadProp = last.prop(NodeProp.lookAhead)))
           lookAhead2 = positions2[lastI] + last.length + lookAheadProp
       }
-      return makeTree(
-        type,
-        children2,
-        positions2,
-        length2,
-        lookAhead2,
-        contextHash2,
-      )
+      return makeTree(type, children2, positions2, length2, lookAhead2, contextHash2)
     }
   }
-  function makeRepeatLeaf(
-    children2,
-    positions2,
-    base2,
-    i2,
-    from,
-    to,
-    type,
-    lookAhead2,
-    contextHash2,
-  ) {
+  function makeRepeatLeaf(children2, positions2, base2, i2, from, to, type, lookAhead2, contextHash2) {
     let localChildren = [],
       localPositions = []
     while (children2.length > i2) {
@@ -14754,26 +12798,11 @@ function buildTree(data) {
       localPositions.push(positions2.pop() + base2 - from)
     }
     children2.push(
-      makeTree(
-        nodeSet2.types[type],
-        localChildren,
-        localPositions,
-        to - from,
-        lookAhead2 - to,
-        contextHash2,
-      ),
+      makeTree(nodeSet2.types[type], localChildren, localPositions, to - from, lookAhead2 - to, contextHash2),
     )
     positions2.push(from - base2)
   }
-  function makeTree(
-    type,
-    children2,
-    positions2,
-    length2,
-    lookAhead2,
-    contextHash2,
-    props,
-  ) {
+  function makeTree(type, children2, positions2, length2, lookAhead2, contextHash2, props) {
     if (contextHash2) {
       let pair2 = [NodeProp.contextHash, contextHash2]
       props = props ? [pair2].concat(props) : [pair2]
@@ -14834,8 +12863,7 @@ function buildTree(data) {
       let startIndex = index
       if (size > 4) {
         let endPos = cursor.pos - (size - 4)
-        while (cursor.pos > endPos)
-          index = copyToBuffer(bufferStart, buffer2, index)
+        while (cursor.pos > endPos) index = copyToBuffer(bufferStart, buffer2, index)
       }
       buffer2[--index] = startIndex
       buffer2[--index] = end - bufferStart
@@ -14850,29 +12878,14 @@ function buildTree(data) {
   }
   let children = [],
     positions = []
-  while (cursor.pos > 0)
-    takeNode(data.start || 0, data.bufferStart || 0, children, positions, -1, 0)
+  while (cursor.pos > 0) takeNode(data.start || 0, data.bufferStart || 0, children, positions, -1, 0)
   let length =
-    (_a2 = data.length) !== null && _a2 !== void 0
-      ? _a2
-      : children.length
-        ? positions[0] + children[0].length
-        : 0
-  return new Tree(
-    types2[data.topID],
-    children.reverse(),
-    positions.reverse(),
-    length,
-  )
+    (_a2 = data.length) !== null && _a2 !== void 0 ? _a2 : children.length ? positions[0] + children[0].length : 0
+  return new Tree(types2[data.topID], children.reverse(), positions.reverse(), length)
 }
 var nodeSizeCache = /* @__PURE__ */ new WeakMap()
 function nodeSize(balanceType, node) {
-  if (
-    !balanceType.isAnonymous ||
-    node instanceof TreeBuffer ||
-    node.type != balanceType
-  )
-    return 1
+  if (!balanceType.isAnonymous || node instanceof TreeBuffer || node.type != balanceType) return 1
   let size = nodeSizeCache.get(node)
   if (size == null) {
     size = 1
@@ -14887,20 +12900,9 @@ function nodeSize(balanceType, node) {
   }
   return size
 }
-function balanceRange(
-  balanceType,
-  children,
-  positions,
-  from,
-  to,
-  start,
-  length,
-  mkTop,
-  mkTree,
-) {
+function balanceRange(balanceType, children, positions, from, to, start, length, mkTop, mkTree) {
   let total = 0
-  for (let i2 = from; i2 < to; i2++)
-    total += nodeSize(balanceType, children[i2])
+  for (let i2 = from; i2 < to; i2++) total += nodeSize(balanceType, children[i2])
   let maxChild = Math.ceil((total * 1.5) / 8)
   let localChildren = [],
     localPositions = []
@@ -14918,30 +12920,14 @@ function balanceRange(
       if (i2 == groupFrom + 1) {
         if (groupSize > maxChild) {
           let only = children2[groupFrom]
-          divide(
-            only.children,
-            only.positions,
-            0,
-            only.children.length,
-            positions2[groupFrom] + offset,
-          )
+          divide(only.children, only.positions, 0, only.children.length, positions2[groupFrom] + offset)
           continue
         }
         localChildren.push(children2[groupFrom])
       } else {
         let length2 = positions2[i2 - 1] + children2[i2 - 1].length - groupStart
         localChildren.push(
-          balanceRange(
-            balanceType,
-            children2,
-            positions2,
-            groupFrom,
-            i2,
-            groupStart,
-            length2,
-            null,
-            mkTree,
-          ),
+          balanceRange(balanceType, children2, positions2, groupFrom, i2, groupStart, length2, null, mkTree),
         )
       }
       localPositions.push(groupStart + offset - start)
@@ -14964,8 +12950,7 @@ var NodeWeakMap = class {
   Set the value for this syntax node.
   */
   set(node, value) {
-    if (node instanceof BufferNode)
-      this.setBuffer(node.context.buffer, node.index, value)
+    if (node instanceof BufferNode) this.setBuffer(node.context.buffer, node.index, value)
     else if (node instanceof TreeNode) this.map.set(node.tree, value)
   }
   /**
@@ -14990,9 +12975,7 @@ var NodeWeakMap = class {
   to.
   */
   cursorGet(cursor) {
-    return cursor.buffer
-      ? this.getBuffer(cursor.buffer.buffer, cursor.index)
-      : this.map.get(cursor.tree)
+    return cursor.buffer ? this.getBuffer(cursor.buffer.buffer, cursor.index) : this.map.get(cursor.tree)
   }
   constructor() {
     this.map = /* @__PURE__ */ new WeakMap()
@@ -15047,17 +13030,7 @@ var TreeFragment = class {
           if (pos >= cut.from || nextPos <= cut.to || off) {
             let fFrom = Math.max(cut.from, pos) - off,
               fTo = Math.min(cut.to, nextPos) - off
-            cut =
-              fFrom >= fTo
-                ? null
-                : new TreeFragment(
-                    fFrom,
-                    fTo,
-                    cut.tree,
-                    cut.offset + off,
-                    cI > 0,
-                    !!nextC,
-                  )
+            cut = fFrom >= fTo ? null : new TreeFragment(fFrom, fTo, cut.tree, cut.offset + off, cI > 0, !!nextC)
           }
           if (cut) result.push(cut)
           if (nextF.to > nextPos) break
@@ -15132,8 +13105,7 @@ var StringInput = class {
   }
 }
 function parseMixed(nest) {
-  return (parse, input, fragments, ranges) =>
-    new MixedParse(parse, nest, input, fragments, ranges)
+  return (parse, input, fragments, ranges) => new MixedParse(parse, nest, input, fragments, ranges)
 }
 var InnerParse = class {
   constructor(parser, parse, overlay, target, from) {
@@ -15146,9 +13118,7 @@ var InnerParse = class {
 }
 function checkRanges(ranges) {
   if (!ranges.length || ranges.some((r) => r.from >= r.to))
-    throw new RangeError(
-      'Invalid inner parse ranges given: ' + JSON.stringify(ranges),
-    )
+    throw new RangeError('Invalid inner parse ranges given: ' + JSON.stringify(ranges))
 }
 var ActiveOverlay = class {
   constructor(parser, predicate, mounts, index, start, target, prev) {
@@ -15172,8 +13142,7 @@ var MixedParse = class {
       this.baseParse = null
       this.baseTree = done2
       this.startInner()
-      if (this.stoppedAt != null)
-        for (let inner2 of this.inner) inner2.parse.stopAt(this.stoppedAt)
+      if (this.stoppedAt != null) for (let inner2 of this.inner) inner2.parse.stopAt(this.stoppedAt)
     }
     if (this.innerDone == this.inner.length) {
       let result = this.baseTree
@@ -15191,15 +13160,8 @@ var MixedParse = class {
       done = inner.parse.advance()
     if (done) {
       this.innerDone++
-      let props = Object.assign(
-        /* @__PURE__ */ Object.create(null),
-        inner.target.props,
-      )
-      props[NodeProp.mounted.id] = new MountedTree(
-        done,
-        inner.overlay,
-        inner.parser,
-      )
+      let props = Object.assign(/* @__PURE__ */ Object.create(null), inner.target.props)
+      props[NodeProp.mounted.id] = new MountedTree(done, inner.overlay, inner.parser)
       inner.target.props = props
     }
     return null
@@ -15208,17 +13170,14 @@ var MixedParse = class {
     if (this.baseParse) return 0
     let pos = this.input.length
     for (let i2 = this.innerDone; i2 < this.inner.length; i2++) {
-      if (this.inner[i2].from < pos)
-        pos = Math.min(pos, this.inner[i2].parse.parsedPos)
+      if (this.inner[i2].from < pos) pos = Math.min(pos, this.inner[i2].parse.parsedPos)
     }
     return pos
   }
   stopAt(pos) {
     this.stoppedAt = pos
     if (this.baseParse) this.baseParse.stopAt(pos)
-    else
-      for (let i2 = this.innerDone; i2 < this.inner.length; i2++)
-        this.inner[i2].parse.stopAt(pos)
+    else for (let i2 = this.innerDone; i2 < this.inner.length; i2++) this.inner[i2].parse.stopAt(pos)
   }
   startInner() {
     let fragmentCursor = new FragmentCursor(this.fragments)
@@ -15236,28 +13195,18 @@ var MixedParse = class {
       } else if (fragmentCursor.hasNode(cursor)) {
         if (overlay) {
           let match = overlay.mounts.find(
-            (m) =>
-              m.frag.from <= cursor.from &&
-              m.frag.to >= cursor.to &&
-              m.mount.overlay,
+            (m) => m.frag.from <= cursor.from && m.frag.to >= cursor.to && m.mount.overlay,
           )
           if (match)
             for (let r of match.mount.overlay) {
               let from = r.from + match.pos,
                 to = r.to + match.pos
-              if (
-                from >= cursor.from &&
-                to <= cursor.to &&
-                !overlay.ranges.some((r2) => r2.from < to && r2.to > from)
-              )
+              if (from >= cursor.from && to <= cursor.to && !overlay.ranges.some((r2) => r2.from < to && r2.to > from))
                 overlay.ranges.push({ from, to })
             }
         }
         enter = false
-      } else if (
-        covered &&
-        (isCovered = checkCover(covered.ranges, cursor.from, cursor.to))
-      ) {
+      } else if (covered && (isCovered = checkCover(covered.ranges, cursor.from, cursor.to))) {
         enter = isCovered != 2
       } else if (
         !cursor.type.isAnonymous &&
@@ -15279,10 +13228,7 @@ var MixedParse = class {
         } else {
           let ranges = punchRanges(
             this.ranges,
-            nest.overlay ||
-              (cursor.from < cursor.to
-                ? [new Range2(cursor.from, cursor.to)]
-                : []),
+            nest.overlay || (cursor.from < cursor.to ? [new Range2(cursor.from, cursor.to)] : []),
           )
           if (ranges.length) checkRanges(ranges)
           if (ranges.length || !nest.overlay)
@@ -15290,18 +13236,9 @@ var MixedParse = class {
               new InnerParse(
                 nest.parser,
                 ranges.length
-                  ? nest.parser.startParse(
-                      this.input,
-                      enterFragments(oldMounts, ranges),
-                      ranges,
-                    )
+                  ? nest.parser.startParse(this.input, enterFragments(oldMounts, ranges), ranges)
                   : nest.parser.startParse(''),
-                nest.overlay
-                  ? nest.overlay.map(
-                      (r) =>
-                        new Range2(r.from - cursor.from, r.to - cursor.from),
-                    )
-                  : null,
+                nest.overlay ? nest.overlay.map((r) => new Range2(r.from - cursor.from, r.to - cursor.from)) : null,
                 cursor.tree,
                 ranges.length ? ranges[0].from : cursor.from,
               ),
@@ -15337,15 +13274,8 @@ var MixedParse = class {
                 0,
                 new InnerParse(
                   overlay.parser,
-                  overlay.parser.startParse(
-                    this.input,
-                    enterFragments(overlay.mounts, ranges),
-                    ranges,
-                  ),
-                  overlay.ranges.map(
-                    (r) =>
-                      new Range2(r.from - overlay.start, r.to - overlay.start),
-                  ),
+                  overlay.parser.startParse(this.input, enterFragments(overlay.mounts, ranges), ranges),
+                  overlay.ranges.map((r) => new Range2(r.from - overlay.start, r.to - overlay.start)),
                   overlay.target,
                   ranges[0].from,
                 ),
@@ -15406,28 +13336,14 @@ function materialize(cursor) {
       to = b[targetI + 2]
     newStack.push(children.length)
     let child = stackPos
-      ? split(
-          targetI + 4,
-          b[targetI + 3],
-          buf.set.types[b[targetI]],
-          from,
-          to - from,
-          stackPos - 1,
-        )
+      ? split(targetI + 4, b[targetI + 3], buf.set.types[b[targetI]], from, to - from, stackPos - 1)
       : node.toTree()
     children.push(child)
     positions.push(from - innerOffset)
     sliceBuf(buf, b[targetI + 3], endI, children, positions, innerOffset)
     return new Tree(type, children, positions, length)
   }
-  base2.children[i2] = split(
-    0,
-    b.length,
-    NodeType.none,
-    0,
-    buf.length,
-    stack.length - 1,
-  )
+  base2.children[i2] = split(0, b.length, NodeType.none, 0, buf.length, stack.length - 1)
   for (let index of newStack) {
     let tree = cursor.tree.children[index],
       pos = cursor.tree.positions[index]
@@ -15440,28 +13356,16 @@ var StructureCursor = class {
     let { cursor } = this,
       p = pos - this.offset
     while (!this.done && cursor.from < p) {
-      if (
-        cursor.to >= pos &&
-        cursor.enter(p, 1, IterMode.IgnoreOverlays | IterMode.ExcludeBuffers)
-      );
+      if (cursor.to >= pos && cursor.enter(p, 1, IterMode.IgnoreOverlays | IterMode.ExcludeBuffers));
       else if (!cursor.next(false)) this.done = true
     }
   }
   hasNode(cursor) {
     this.moveTo(cursor.from)
-    if (
-      !this.done &&
-      this.cursor.from + this.offset == cursor.from &&
-      this.cursor.tree
-    ) {
+    if (!this.done && this.cursor.from + this.offset == cursor.from && this.cursor.tree) {
       for (let tree = this.cursor.tree; ; ) {
         if (tree == cursor.tree) return true
-        if (
-          tree.children.length &&
-          tree.positions[0] == 0 &&
-          tree.children[0] instanceof Tree
-        )
-          tree = tree.children[0]
+        if (tree.children.length && tree.positions[0] == 0 && tree.children[0] instanceof Tree) tree = tree.children[0]
         else break
       }
     }
@@ -15476,12 +13380,7 @@ var StructureCursor = class {
 var FragmentCursor = class {
   hasNode(node) {
     while (this.curFrag && node.from >= this.curTo) this.nextFrag()
-    return (
-      this.curFrag &&
-      this.curFrag.from <= node.from &&
-      this.curTo >= node.to &&
-      this.inner.hasNode(node)
-    )
+    return this.curFrag && this.curFrag.from <= node.from && this.curTo >= node.to && this.inner.hasNode(node)
   }
   nextFrag() {
     var _a2
@@ -15490,10 +13389,7 @@ var FragmentCursor = class {
       this.curFrag = this.inner = null
     } else {
       let frag = (this.curFrag = this.fragments[this.fragI])
-      this.curTo =
-        (_a2 = frag.tree.prop(stoppedInner)) !== null && _a2 !== void 0
-          ? _a2
-          : frag.to
+      this.curTo = (_a2 = frag.tree.prop(stoppedInner)) !== null && _a2 !== void 0 ? _a2 : frag.to
       this.inner = new StructureCursor(frag.tree, -frag.offset)
     }
   }
@@ -15503,10 +13399,7 @@ var FragmentCursor = class {
     if (this.inner) {
       this.inner.cursor.moveTo(pos, 1)
       for (let pos2 = this.inner.cursor.node; pos2; pos2 = pos2.parent) {
-        let mount =
-          (_a2 = pos2.tree) === null || _a2 === void 0
-            ? void 0
-            : _a2.prop(NodeProp.mounted)
+        let mount = (_a2 = pos2.tree) === null || _a2 === void 0 ? void 0 : _a2.prop(NodeProp.mounted)
         if (mount && mount.parser == parser) {
           for (let i2 = this.fragI; i2 < this.fragments.length; i2++) {
             let frag = this.fragments[i2]
@@ -15530,10 +13423,7 @@ var FragmentCursor = class {
     this.fragI = 0
     if (fragments.length) {
       let first = (this.curFrag = fragments[0])
-      this.curTo =
-        (_a2 = first.tree.prop(stoppedInner)) !== null && _a2 !== void 0
-          ? _a2
-          : first.to
+      this.curTo = (_a2 = first.tree.prop(stoppedInner)) !== null && _a2 !== void 0 ? _a2 : first.to
       this.inner = new StructureCursor(first.tree, -first.offset)
     } else {
       this.curFrag = this.inner = null
@@ -15605,9 +13495,7 @@ function enterFragments(mounts, ranges) {
     let from = Math.max(frag.from, startPos),
       to = Math.min(frag.to, endPos)
     if (mount.overlay) {
-      let overlay = mount.overlay.map(
-        (r) => new Range2(r.from + pos, r.to + pos),
-      )
+      let overlay = mount.overlay.map((r) => new Range2(r.from + pos, r.to + pos))
       let changes = findCoverChanges(ranges, overlay, from, to)
       for (let i2 = 0, pos2 = from; ; i2++) {
         let last = i2 == changes.length,
@@ -15696,17 +13584,14 @@ var nextModifierID = 0
 var Modifier = class {
   static get(base2, mods) {
     if (!mods.length) return base2
-    let exists = mods[0].instances.find(
-      (t2) => t2.base == base2 && sameArray2(mods, t2.modified),
-    )
+    let exists = mods[0].instances.find((t2) => t2.base == base2 && sameArray2(mods, t2.modified))
     if (exists) return exists
     let set = [],
       tag = new Tag(set, base2, mods)
     for (let m of mods) m.instances.push(tag)
     let configs = powerSet(mods)
     for (let parent of base2.set)
-      if (!parent.modified.length)
-        for (let config of configs) set.push(Modifier.get(parent, config))
+      if (!parent.modified.length) for (let config of configs) set.push(Modifier.get(parent, config))
     return tag
   }
   constructor() {
@@ -15743,9 +13628,7 @@ function styleTags(spec) {
           }
           let m = /^"(?:[^"\\]|\\.)*?"|[^\/!]+/.exec(rest)
           if (!m) throw new RangeError('Invalid path: ' + part)
-          pieces.push(
-            m[0] == '*' ? '' : m[0][0] == '"' ? JSON.parse(m[0]) : m[0],
-          )
+          pieces.push(m[0] == '*' ? '' : m[0][0] == '"' ? JSON.parse(m[0]) : m[0])
           pos += m[0].length
           if (pos == part.length) break
           let next = part[pos++]
@@ -15759,11 +13642,7 @@ function styleTags(spec) {
         let last = pieces.length - 1,
           inner = pieces[last]
         if (!inner) throw new RangeError('Invalid path: ' + part)
-        let rule = new Rule(
-          tags2,
-          mode,
-          last > 0 ? pieces.slice(0, last) : null,
-        )
+        let rule = new Rule(tags2, mode, last > 0 ? pieces.slice(0, last) : null)
         byName[inner] = rule.sort(byName[inner])
       }
   }
@@ -15828,18 +13707,8 @@ function highlightTags(highlighters, tags2) {
   }
   return result
 }
-function highlightTree(
-  tree,
-  highlighter,
-  putStyle,
-  from = 0,
-  to = tree.length,
-) {
-  let builder = new HighlightBuilder(
-    from,
-    Array.isArray(highlighter) ? highlighter : [highlighter],
-    putStyle,
-  )
+function highlightTree(tree, highlighter, putStyle, from = 0, to = tree.length) {
+  let builder = new HighlightBuilder(from, Array.isArray(highlighter) ? highlighter : [highlighter], putStyle)
   builder.highlightRange(tree.cursor(), from, to, '', builder.highlighters)
   builder.flush(to)
 }
@@ -15857,8 +13726,7 @@ var HighlightBuilder = class {
   highlightRange(cursor, from, to, inheritedClass, highlighters) {
     let { type, from: start, to: end } = cursor
     if (start >= to || end <= from) return
-    if (type.isTop)
-      highlighters = this.highlighters.filter((h) => !h.scope || h.scope(type))
+    if (type.isTop) highlighters = this.highlighters.filter((h) => !h.scope || h.scope(type))
     let cls = inheritedClass
     let rule = getStyleTags(cursor) || Rule.empty
     let tagCls = highlightTags(highlighters, rule.tags)
@@ -15872,9 +13740,7 @@ var HighlightBuilder = class {
     let mounted = cursor.tree && cursor.tree.prop(NodeProp.mounted)
     if (mounted && mounted.overlay) {
       let inner = cursor.node.enter(mounted.overlay[0].from + start, 1)
-      let innerHighlighters = this.highlighters.filter(
-        (h) => !h.scope || h.scope(mounted.tree.type),
-      )
+      let innerHighlighters = this.highlighters.filter((h) => !h.scope || h.scope(mounted.tree.type))
       let hasChild2 = cursor.firstChild()
       for (let i2 = 0, pos = start; ; i2++) {
         let next = i2 < mounted.overlay.length ? mounted.overlay[i2] : null
@@ -15883,13 +13749,7 @@ var HighlightBuilder = class {
           rangeTo = Math.min(to, nextPos)
         if (rangeFrom < rangeTo && hasChild2) {
           while (cursor.from < rangeTo) {
-            this.highlightRange(
-              cursor,
-              rangeFrom,
-              rangeTo,
-              inheritedClass,
-              highlighters,
-            )
+            this.highlightRange(cursor, rangeFrom, rangeTo, inheritedClass, highlighters)
             this.startSpan(Math.min(rangeTo, cursor.to), cls)
             if (cursor.to >= nextPos || !cursor.nextSibling()) break
           }
@@ -15928,8 +13788,7 @@ var HighlightBuilder = class {
 }
 function getStyleTags(node) {
   let rule = node.type.prop(ruleNodeProp)
-  while (rule && rule.context && !node.matchContext(rule.context))
-    rule = rule.next
+  while (rule && rule.context && !node.matchContext(rule.context)) rule = rule.next
   return rule || null
 }
 var t = Tag.define
@@ -16359,16 +14218,8 @@ var classHighlighter = tagHighlighter([
 var __unframerNavigator2 = typeof window !== 'undefined' ? navigator : void 0
 var C2 = '\u037C'
 var COUNT2 = typeof Symbol == 'undefined' ? '__' + C2 : Symbol.for(C2)
-var SET2 =
-  typeof Symbol == 'undefined'
-    ? '__styleSet' + Math.floor(Math.random() * 1e8)
-    : Symbol('styleSet')
-var top2 =
-  typeof globalThis != 'undefined'
-    ? globalThis
-    : typeof window != 'undefined'
-      ? window
-      : {}
+var SET2 = typeof Symbol == 'undefined' ? '__styleSet' + Math.floor(Math.random() * 1e8) : Symbol('styleSet')
+var top2 = typeof globalThis != 'undefined' ? globalThis : typeof window != 'undefined' ? window : {}
 var StyleModule2 = class {
   // :: () → string
   // Returns a string containing the module's CSS rules.
@@ -16396,9 +14247,7 @@ var StyleModule2 = class {
   // in a way that changes the order of already mounted modules, the old
   // order will be changed.
   static mount(root, modules) {
-    ;(root[SET2] || new StyleSet2(root)).mount(
-      Array.isArray(modules) ? modules : [modules],
-    )
+    ;(root[SET2] || new StyleSet2(root)).mount(Array.isArray(modules) ? modules : [modules])
   }
   // :: (Object<Style>, ?{finish: ?(string) → string})
   // Create a style module from the given spec.
@@ -16428,30 +14277,15 @@ var StyleModule2 = class {
             target,
           )
         } else if (value && typeof value == 'object') {
-          if (!isAt)
-            throw new RangeError(
-              'The value of a property (' +
-                prop +
-                ') should be a primitive value.',
-            )
+          if (!isAt) throw new RangeError('The value of a property (' + prop + ') should be a primitive value.')
           render(splitSelector(prop), value, local, keyframes)
         } else if (value != null) {
-          local.push(
-            prop
-              .replace(/_.*/, '')
-              .replace(/[A-Z]/g, (l) => '-' + l.toLowerCase()) +
-              ': ' +
-              value +
-              ';',
-          )
+          local.push(prop.replace(/_.*/, '').replace(/[A-Z]/g, (l) => '-' + l.toLowerCase()) + ': ' + value + ';')
         }
       }
       if (local.length || keyframes) {
         target.push(
-          (finish && !isAt && !isKeyframes
-            ? selectors.map(finish)
-            : selectors
-          ).join(', ') +
+          (finish && !isAt && !isKeyframes ? selectors.map(finish) : selectors).join(', ') +
             ' {' +
             local.join(' ') +
             '}',
@@ -16477,9 +14311,7 @@ var StyleSet2 = class {
       }
       if (index == -1) {
         this.modules.splice(j++, 0, mod)
-        if (sheet)
-          for (let k = 0; k < mod.rules.length; k++)
-            sheet.insertRule(mod.rules[k], pos++)
+        if (sheet) for (let k = 0; k < mod.rules.length; k++) sheet.insertRule(mod.rules[k], pos++)
       } else {
         while (j < index) pos += this.modules[j++].rules.length
         pos += mod.rules.length
@@ -16488,8 +14320,7 @@ var StyleSet2 = class {
     }
     if (!sheet) {
       let text = ''
-      for (let i2 = 0; i2 < this.modules.length; i2++)
-        text += this.modules[i2].getRules() + '\n'
+      for (let i2 = 0; i2 < this.modules.length; i2++) text += this.modules[i2].getRules() + '\n'
       this.styleTag.textContent = text
     }
   }
@@ -16536,8 +14367,7 @@ var Language = class {
   */
   findRegions(state) {
     let lang = state.facet(language)
-    if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
-      return [{ from: 0, to: state.doc.length }]
+    if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data) return [{ from: 0, to: state.doc.length }]
     if (!lang || !lang.allowsNesting) return []
     let result = []
     let explore = (tree, from) => {
@@ -16620,12 +14450,7 @@ function topNodeAt(state, pos, side) {
   let topLang = state.facet(language),
     tree = syntaxTree(state).topNode
   if (!topLang || topLang.allowsNesting) {
-    for (
-      let node = tree;
-      node;
-      node = node.enter(pos, side, IterMode.ExcludeBuffers)
-    )
-      if (node.type.isTop) tree = node
+    for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers)) if (node.type.isTop) tree = node
   }
   return tree
 }
@@ -16648,11 +14473,7 @@ var LRLanguage = class extends Language {
   version of its parser and optionally a new name.
   */
   configure(options, name2) {
-    return new LRLanguage(
-      this.data,
-      this.parser.configure(options),
-      name2 || this.name,
-    )
+    return new LRLanguage(this.data, this.parser.configure(options), name2 || this.name)
   }
   get allowsNesting() {
     return this.parser.hasWrappers()
@@ -16684,8 +14505,7 @@ var DocInput = class {
   }
   read(from, to) {
     let stringStart = this.cursorPos - this.string.length
-    if (from < stringStart || to >= this.cursorPos)
-      return this.doc.sliceString(from, to)
+    if (from < stringStart || to >= this.cursorPos) return this.doc.sliceString(from, to)
     else return this.string.slice(from - stringStart, to - stringStart)
   }
   /**
@@ -16704,16 +14524,7 @@ var ParseContext = class {
   @internal
   */
   static create(parser, state, viewport) {
-    return new ParseContext(
-      parser,
-      state,
-      [],
-      Tree.empty,
-      0,
-      viewport,
-      [],
-      null,
-    )
+    return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null)
   }
   startParse() {
     return this.parser.startParse(new DocInput(this.state.doc), this.fragments)
@@ -16723,12 +14534,7 @@ var ParseContext = class {
   */
   work(until, upto) {
     if (upto != null && upto >= this.state.doc.length) upto = void 0
-    if (
-      this.tree != Tree.empty &&
-      this.isDone(
-        upto !== null && upto !== void 0 ? upto : this.state.doc.length,
-      )
-    ) {
+    if (this.tree != Tree.empty && this.isDone(upto !== null && upto !== void 0 ? upto : this.state.doc.length)) {
       this.takeTree()
       return true
     }
@@ -16739,32 +14545,18 @@ var ParseContext = class {
         until = () => Date.now() > endTime
       }
       if (!this.parse) this.parse = this.startParse()
-      if (
-        upto != null &&
-        (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) &&
-        upto < this.state.doc.length
-      )
+      if (upto != null && (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) && upto < this.state.doc.length)
         this.parse.stopAt(upto)
       for (;;) {
         let done = this.parse.advance()
         if (done) {
           this.fragments = this.withoutTempSkipped(
-            TreeFragment.addTree(
-              done,
-              this.fragments,
-              this.parse.stoppedAt != null,
-            ),
+            TreeFragment.addTree(done, this.fragments, this.parse.stoppedAt != null),
           )
-          this.treeLen =
-            (_a2 = this.parse.stoppedAt) !== null && _a2 !== void 0
-              ? _a2
-              : this.state.doc.length
+          this.treeLen = (_a2 = this.parse.stoppedAt) !== null && _a2 !== void 0 ? _a2 : this.state.doc.length
           this.tree = done
           this.parse = null
-          if (
-            this.treeLen <
-            (upto !== null && upto !== void 0 ? upto : this.state.doc.length)
-          )
+          if (this.treeLen < (upto !== null && upto !== void 0 ? upto : this.state.doc.length))
             this.parse = this.startParse()
           else return true
         }
@@ -16778,16 +14570,13 @@ var ParseContext = class {
   takeTree() {
     let pos, tree
     if (this.parse && (pos = this.parse.parsedPos) >= this.treeLen) {
-      if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos)
-        this.parse.stopAt(pos)
+      if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos) this.parse.stopAt(pos)
       this.withContext(() => {
         while (!(tree = this.parse.advance())) {}
       })
       this.treeLen = pos
       this.tree = tree
-      this.fragments = this.withoutTempSkipped(
-        TreeFragment.addTree(this.tree, this.fragments, true),
-      )
+      this.fragments = this.withoutTempSkipped(TreeFragment.addTree(this.tree, this.fragments, true))
       this.parse = null
     }
   }
@@ -16801,8 +14590,7 @@ var ParseContext = class {
     }
   }
   withoutTempSkipped(fragments) {
-    for (let r; (r = this.tempSkipped.pop()); )
-      fragments = cutFragments(fragments, r.from, r.to)
+    for (let r; (r = this.tempSkipped.pop()); ) fragments = cutFragments(fragments, r.from, r.to)
     return fragments
   }
   /**
@@ -16813,9 +14601,7 @@ var ParseContext = class {
     this.takeTree()
     if (!changes.empty) {
       let ranges = []
-      changes.iterChangedRanges((fromA, toA, fromB, toB) =>
-        ranges.push({ fromA, toA, fromB, toB }),
-      )
+      changes.iterChangedRanges((fromA, toA, fromB, toB) => ranges.push({ fromA, toA, fromB, toB }))
       fragments = TreeFragment.applyChanges(fragments, ranges)
       tree = Tree.empty
       treeLen = 0
@@ -16832,23 +14618,13 @@ var ParseContext = class {
         }
       }
     }
-    return new ParseContext(
-      this.parser,
-      newState,
-      fragments,
-      tree,
-      treeLen,
-      viewport,
-      skipped,
-      this.scheduleOn,
-    )
+    return new ParseContext(this.parser, newState, fragments, tree, treeLen, viewport, skipped, this.scheduleOn)
   }
   /**
   @internal
   */
   updateViewport(viewport) {
-    if (this.viewport.from == viewport.from && this.viewport.to == viewport.to)
-      return false
+    if (this.viewport.from == viewport.from && this.viewport.to == viewport.to) return false
     this.viewport = viewport
     let startLen = this.skipped.length
     for (let i2 = 0; i2 < this.skipped.length; i2++) {
@@ -16899,10 +14675,7 @@ var ParseContext = class {
             let cx = currentContext
             if (cx) {
               for (let r of ranges) cx.tempSkipped.push(r)
-              if (until)
-                cx.scheduleOn = cx.scheduleOn
-                  ? Promise.all([cx.scheduleOn, until])
-                  : until
+              if (until) cx.scheduleOn = cx.scheduleOn ? Promise.all([cx.scheduleOn, until]) : until
             }
             this.parsedPos = to
             return new Tree(NodeType.none, [], [], to - from)
@@ -16920,12 +14693,7 @@ var ParseContext = class {
   isDone(upto) {
     upto = Math.min(upto, this.state.doc.length)
     let frags = this.fragments
-    return (
-      this.treeLen >= upto &&
-      frags.length &&
-      frags[0].from == 0 &&
-      frags[0].to >= upto
-    )
+    return this.treeLen >= upto && frags.length && frags[0].from == 0 && frags[0].to >= upto
   }
   /**
   Get the context for the current parse, or `null` if no editor
@@ -16934,16 +14702,7 @@ var ParseContext = class {
   static get() {
     return currentContext
   }
-  constructor(
-    parser,
-    state,
-    fragments = [],
-    tree,
-    treeLen,
-    viewport,
-    skipped,
-    scheduleOn,
-  ) {
+  constructor(parser, state, fragments = [], tree, treeLen, viewport, skipped, scheduleOn) {
     this.parser = parser
     this.state = state
     this.fragments = fragments
@@ -16957,9 +14716,7 @@ var ParseContext = class {
   }
 }
 function cutFragments(fragments, from, to) {
-  return TreeFragment.applyChanges(fragments, [
-    { fromA: from, toA: to, fromB: from, toB: to },
-  ])
+  return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }])
 }
 var LanguageState = class {
   apply(tr) {
@@ -16990,8 +14747,7 @@ Language.state = /* @__PURE__ */ StateField.define({
   create: LanguageState.init,
   update(value, tr) {
     for (let e of tr.effects) if (e.is(Language.setState)) return e.value
-    if (tr.startState.facet(language) != tr.state.facet(language))
-      return LanguageState.init(tr.state)
+    if (tr.startState.facet(language) != tr.state.facet(language)) return LanguageState.init(tr.state)
     return value.apply(tr)
   },
 })
@@ -17009,20 +14765,14 @@ if (typeof requestIdleCallback != 'undefined')
   }
 var isInputPending =
   typeof __unframerNavigator2 != 'undefined' &&
-  ((_a = __unframerNavigator2.scheduling) === null || _a === void 0
-    ? void 0
-    : _a.isInputPending)
+  ((_a = __unframerNavigator2.scheduling) === null || _a === void 0 ? void 0 : _a.isInputPending)
     ? () => __unframerNavigator2.scheduling.isInputPending()
     : null
 var parseWorker = /* @__PURE__ */ ViewPlugin.fromClass(
   class ParseWorker {
     update(update) {
       let cx = this.view.state.field(Language.state).context
-      if (
-        cx.updateViewport(update.view.viewport) ||
-        this.view.viewport.to > cx.treeLen
-      )
-        this.scheduleWork()
+      if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen) this.scheduleWork()
       if (update.docChanged) {
         if (this.view.hasFocus) this.chunkBudget += 50
         this.scheduleWork()
@@ -17033,10 +14783,7 @@ var parseWorker = /* @__PURE__ */ ViewPlugin.fromClass(
       if (this.working) return
       let { state } = this.view,
         field = state.field(Language.state)
-      if (
-        field.tree != field.context.tree ||
-        !field.context.isDone(state.doc.length)
-      )
+      if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
         this.working = requestIdle(this.work)
     }
     work(deadline) {
@@ -17052,19 +14799,11 @@ var parseWorker = /* @__PURE__ */ ViewPlugin.fromClass(
           viewport: { to: vpTo },
         } = this.view,
         field = state.field(Language.state)
-      if (field.tree == field.context.tree && field.context.isDone(vpTo + 1e5))
-        return
+      if (field.tree == field.context.tree && field.context.isDone(vpTo + 1e5)) return
       let endTime =
         Date.now() +
-        Math.min(
-          this.chunkBudget,
-          100,
-          deadline && !isInputPending
-            ? Math.max(25, deadline.timeRemaining() - 5)
-            : 1e9,
-        )
-      let viewportFirst =
-        field.context.treeLen < vpTo && state.doc.length > vpTo + 1e3
+        Math.min(this.chunkBudget, 100, deadline && !isInputPending ? Math.max(25, deadline.timeRemaining() - 5) : 1e9)
+      let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1e3
       let done = field.context.work(
         () => {
           return (isInputPending && isInputPending()) || Date.now() > endTime
@@ -17162,10 +14901,7 @@ var LanguageDescription = class {
   static of(spec) {
     let { load, support } = spec
     if (!load) {
-      if (!support)
-        throw new RangeError(
-          "Must pass either 'load' or 'support' to LanguageDescription.of",
-        )
+      if (!support) throw new RangeError("Must pass either 'load' or 'support' to LanguageDescription.of")
       load = () => Promise.resolve(support)
     }
     return new LanguageDescription(
@@ -17206,12 +14942,7 @@ var LanguageDescription = class {
       for (let d of descs)
         for (let a of d.alias) {
           let found = name2.indexOf(a)
-          if (
-            found > -1 &&
-            (a.length > 2 ||
-              (!/\w/.test(name2[found - 1]) &&
-                !/\w/.test(name2[found + a.length])))
-          )
+          if (found > -1 && (a.length > 2 || (!/\w/.test(name2[found - 1]) && !/\w/.test(name2[found + a.length]))))
             return d
         }
     return null
@@ -17275,13 +15006,8 @@ var IndentContext = class {
   lineAt(pos, bias = 1) {
     let line = this.state.doc.lineAt(pos)
     let { simulateBreak, simulateDoubleBreak } = this.options
-    if (
-      simulateBreak != null &&
-      simulateBreak >= line.from &&
-      simulateBreak <= line.to
-    ) {
-      if (simulateDoubleBreak && simulateBreak == pos)
-        return { text: '', from: pos }
+    if (simulateBreak != null && simulateBreak >= line.from && simulateBreak <= line.to) {
+      if (simulateDoubleBreak && simulateBreak == pos) return { text: '', from: pos }
       else if (bias < 0 ? simulateBreak < pos : simulateBreak <= pos)
         return {
           text: line.text.slice(simulateBreak - line.from),
@@ -17300,8 +15026,7 @@ var IndentContext = class {
   or the next 100 characters, whichever is shorter.
   */
   textAfterPos(pos, bias = 1) {
-    if (this.options.simulateDoubleBreak && pos == this.options.simulateBreak)
-      return ''
+    if (this.options.simulateDoubleBreak && pos == this.options.simulateBreak) return ''
     let { text, from } = this.lineAt(pos, bias)
     return text.slice(pos - from, Math.min(text.length, pos + 100 - from))
   }
@@ -17311,11 +15036,8 @@ var IndentContext = class {
   column(pos, bias = 1) {
     let { text, from } = this.lineAt(pos, bias)
     let result = this.countColumn(text, pos - from)
-    let override = this.options.overrideIndentation
-      ? this.options.overrideIndentation(from)
-      : -1
-    if (override > -1)
-      result += override - this.countColumn(text, text.search(/\S|$/))
+    let override = this.options.overrideIndentation ? this.options.overrideIndentation(from) : -1
+    if (override > -1) result += override - this.countColumn(text, text.search(/\S|$/))
     return result
   }
   /**
@@ -17356,11 +15078,7 @@ var IndentContext = class {
 }
 var indentNodeProp = /* @__PURE__ */ new NodeProp()
 function syntaxIndentation(cx, ast, pos) {
-  return indentFrom(
-    ast.resolveInner(pos).enterUnfinishedNodesBefore(pos),
-    pos,
-    cx,
-  )
+  return indentFrom(ast.resolveInner(pos).enterUnfinishedNodesBefore(pos), pos, cx)
 }
 function ignoreClosed(cx) {
   return cx.pos == cx.options.simulateBreak && cx.options.simulateDoubleBreak
@@ -17373,14 +15091,7 @@ function indentStrategy(tree) {
   if (first && (close = first.type.prop(NodeProp.closedBy))) {
     let last = tree.lastChild,
       closed = last && close.indexOf(last.name) > -1
-    return (cx) =>
-      delimitedStrategy(
-        cx,
-        true,
-        1,
-        void 0,
-        closed && !ignoreClosed(cx) ? last.from : void 0,
-      )
+    return (cx) => delimitedStrategy(cx, true, 1, void 0, closed && !ignoreClosed(cx) ? last.from : void 0)
   }
   return tree.parent == null ? topIndent : null
 }
@@ -17426,8 +15137,7 @@ var TreeIndentContext = class extends IndentContext {
     let line = this.state.doc.lineAt(node.from)
     for (;;) {
       let atBreak = node.resolve(line.from)
-      while (atBreak.parent && atBreak.parent.from == atBreak.from)
-        atBreak = atBreak.parent
+      while (atBreak.parent && atBreak.parent.from == atBreak.from) atBreak = atBreak.parent
       if (isParent(atBreak, node)) break
       line = this.state.doc.lineAt(atBreak.from)
     }
@@ -17459,10 +15169,7 @@ function bracketedAligned(context) {
   if (!openToken) return null
   let sim = context.options.simulateBreak
   let openLine = context.state.doc.lineAt(openToken.from)
-  let lineEnd =
-    sim == null || sim <= openLine.from
-      ? openLine.to
-      : Math.min(openLine.to, sim)
+  let lineEnd = sim == null || sim <= openLine.from ? openLine.to : Math.min(openLine.to, sim)
   for (let pos = openToken.to; ; ) {
     let next = tree.childAfter(pos)
     if (!next || next == last) return null
@@ -17476,12 +15183,9 @@ function delimitedIndent({ closing, align = true, units = 1 }) {
 function delimitedStrategy(context, align, units, closing, closedAt) {
   let after = context.textAfter,
     space = after.match(/^\s*/)[0].length
-  let closed =
-    (closing && after.slice(space, space + closing.length) == closing) ||
-    closedAt == context.pos + space
+  let closed = (closing && after.slice(space, space + closing.length) == closing) || closedAt == context.pos + space
   let aligned = align ? bracketedAligned(context) : null
-  if (aligned)
-    return closed ? context.column(aligned.from) : context.column(aligned.to)
+  if (aligned) return closed ? context.column(aligned.from) : context.column(aligned.to)
   return context.baseIndent + (closed ? 0 : context.unit * units)
 }
 var flatIndent = (context) => context.baseIndent
@@ -17496,9 +15200,7 @@ var foldNodeProp = /* @__PURE__ */ new NodeProp()
 function foldInside(node) {
   let first = node.firstChild,
     last = node.lastChild
-  return first && first.to < last.from
-    ? { from: first.to, to: last.type.isError ? node.to : last.from }
-    : null
+  return first && first.to < last.from ? { from: first.to, to: last.type.isError ? node.to : last.from } : null
 }
 var HighlightStyle = class {
   /**
@@ -17524,16 +15226,10 @@ var HighlightStyle = class {
     let modSpec
     function def(spec) {
       let cls = StyleModule2.newName()
-      ;(modSpec || (modSpec = /* @__PURE__ */ Object.create(null)))['.' + cls] =
-        spec
+      ;(modSpec || (modSpec = /* @__PURE__ */ Object.create(null)))['.' + cls] = spec
       return cls
     }
-    const all =
-      typeof options.all == 'string'
-        ? options.all
-        : options.all
-          ? def(options.all)
-          : void 0
+    const all = typeof options.all == 'string' ? options.all : options.all ? def(options.all) : void 0
     const scopeOpt = options.scope
     this.scope =
       scopeOpt instanceof Language
@@ -17566,18 +15262,14 @@ function syntaxHighlighting(highlighter, options) {
   let ext = [treeHighlighter],
     themeType
   if (highlighter instanceof HighlightStyle) {
-    if (highlighter.module)
-      ext.push(EditorView.styleModule.of(highlighter.module))
+    if (highlighter.module) ext.push(EditorView.styleModule.of(highlighter.module))
     themeType = highlighter.themeType
   }
-  if (options === null || options === void 0 ? void 0 : options.fallback)
-    ext.push(fallbackHighlighter.of(highlighter))
+  if (options === null || options === void 0 ? void 0 : options.fallback) ext.push(fallbackHighlighter.of(highlighter))
   else if (themeType)
     ext.push(
       highlighterFacet.computeN([EditorView.darkTheme], (state) => {
-        return state.facet(EditorView.darkTheme) == (themeType == 'dark')
-          ? [highlighter]
-          : []
+        return state.facet(EditorView.darkTheme) == (themeType == 'dark') ? [highlighter] : []
       }),
     )
   else ext.push(highlighterFacet.of(highlighter))
@@ -17588,11 +15280,7 @@ var TreeHighlighter = class {
     let tree = syntaxTree(update.state),
       highlighters = getHighlighters(update.state)
     let styleChange = highlighters != getHighlighters(update.startState)
-    if (
-      tree.length < update.view.viewport.to &&
-      !styleChange &&
-      tree.type == this.tree.type
-    ) {
+    if (tree.length < update.view.viewport.to && !styleChange && tree.type == this.tree.type) {
       this.decorations = this.decorations.map(update.changes)
     } else if (tree != this.tree || update.viewportChanged || styleChange) {
       this.tree = tree
@@ -17642,13 +15330,7 @@ var defaultHighlightStyle = /* @__PURE__ */ HighlightStyle.define([
   { tag: tags.strikethrough, textDecoration: 'line-through' },
   { tag: tags.keyword, color: '#708' },
   {
-    tag: [
-      tags.atom,
-      tags.bool,
-      tags.url,
-      tags.contentSeparator,
-      tags.labelName,
-    ],
+    tag: [tags.atom, tags.bool, tags.url, tags.contentSeparator, tags.labelName],
     color: '#219',
   },
   { tag: [tags.literal, tags.inserted], color: '#164' },
@@ -17710,14 +15392,11 @@ var bracketMatchingState = /* @__PURE__ */ StateField.define({
       if (!range.empty) continue
       let match =
         matchBrackets(tr.state, range.head, -1, config) ||
-        (range.head > 0 &&
-          matchBrackets(tr.state, range.head - 1, 1, config)) ||
+        (range.head > 0 && matchBrackets(tr.state, range.head - 1, 1, config)) ||
         (config.afterCursor &&
           (matchBrackets(tr.state, range.head, 1, config) ||
-            (range.head < tr.state.doc.length &&
-              matchBrackets(tr.state, range.head + 1, -1, config))))
-      if (match)
-        decorations2 = decorations2.concat(config.renderMatch(match, tr.state))
+            (range.head < tr.state.doc.length && matchBrackets(tr.state, range.head + 1, -1, config))))
+      if (match) decorations2 = decorations2.concat(config.renderMatch(match, tr.state))
     }
     return Decoration.set(decorations2, true)
   },
@@ -17733,8 +15412,7 @@ function matchingNodes(node, dir, brackets) {
   if (byProp) return byProp
   if (node.name.length == 1) {
     let index = brackets.indexOf(node.name)
-    if (index > -1 && index % 2 == (dir < 0 ? 1 : 0))
-      return [brackets[index + dir]]
+    if (index > -1 && index % 2 == (dir < 0 ? 1 : 0)) return [brackets[index + dir]]
   }
   return null
 }
@@ -17751,63 +15429,25 @@ function matchBrackets(state, pos, dir, config = {}) {
     let matches = matchingNodes(cur.type, dir, brackets)
     if (matches && cur.from < cur.to) {
       let handle = findHandle(cur)
-      if (
-        handle &&
-        (dir > 0
-          ? pos >= handle.from && pos < handle.to
-          : pos > handle.from && pos <= handle.to)
-      )
-        return matchMarkedBrackets(
-          state,
-          pos,
-          dir,
-          cur,
-          handle,
-          matches,
-          brackets,
-        )
+      if (handle && (dir > 0 ? pos >= handle.from && pos < handle.to : pos > handle.from && pos <= handle.to))
+        return matchMarkedBrackets(state, pos, dir, cur, handle, matches, brackets)
     }
   }
-  return matchPlainBrackets(
-    state,
-    pos,
-    dir,
-    tree,
-    node.type,
-    maxScanDistance,
-    brackets,
-  )
+  return matchPlainBrackets(state, pos, dir, tree, node.type, maxScanDistance, brackets)
 }
-function matchMarkedBrackets(
-  _state,
-  _pos,
-  dir,
-  token,
-  handle,
-  matching,
-  brackets,
-) {
+function matchMarkedBrackets(_state, _pos, dir, token, handle, matching, brackets) {
   let parent = token.parent,
     firstToken = { from: handle.from, to: handle.to }
   let depth = 0,
     cursor = parent === null || parent === void 0 ? void 0 : parent.cursor()
-  if (
-    cursor &&
-    (dir < 0 ? cursor.childBefore(token.from) : cursor.childAfter(token.to))
-  )
+  if (cursor && (dir < 0 ? cursor.childBefore(token.from) : cursor.childAfter(token.to)))
     do {
       if (dir < 0 ? cursor.to <= token.from : cursor.from >= token.to) {
-        if (
-          depth == 0 &&
-          matching.indexOf(cursor.type.name) > -1 &&
-          cursor.from < cursor.to
-        ) {
+        if (depth == 0 && matching.indexOf(cursor.type.name) > -1 && cursor.from < cursor.to) {
           let endHandle = findHandle(cursor)
           return {
             start: firstToken,
-            end: endHandle
-              ? { from: endHandle.from, to: endHandle.to }
-              : void 0,
+            end: endHandle ? { from: endHandle.from, to: endHandle.to } : void 0,
             matched: true,
           }
         } else if (matchingNodes(cursor.type, dir, brackets)) {
@@ -17817,10 +15457,7 @@ function matchMarkedBrackets(
             let endHandle = findHandle(cursor)
             return {
               start: firstToken,
-              end:
-                endHandle && endHandle.from < endHandle.to
-                  ? { from: endHandle.from, to: endHandle.to }
-                  : void 0,
+              end: endHandle && endHandle.from < endHandle.to ? { from: endHandle.from, to: endHandle.to } : void 0,
               matched: false,
             }
           }
@@ -17830,17 +15467,8 @@ function matchMarkedBrackets(
     } while (dir < 0 ? cursor.prevSibling() : cursor.nextSibling())
   return { start: firstToken, matched: false }
 }
-function matchPlainBrackets(
-  state,
-  pos,
-  dir,
-  tree,
-  tokenType,
-  maxScanDistance,
-  brackets,
-) {
-  let startCh =
-    dir < 0 ? state.sliceDoc(pos - 1, pos) : state.sliceDoc(pos, pos + 1)
+function matchPlainBrackets(state, pos, dir, tree, tokenType, maxScanDistance, brackets) {
+  let startCh = dir < 0 ? state.sliceDoc(pos - 1, pos) : state.sliceDoc(pos, pos + 1)
   let bracket2 = brackets.indexOf(startCh)
   if (bracket2 < 0 || (bracket2 % 2 == 0) != dir > 0) return null
   let startToken = {
@@ -17853,15 +15481,9 @@ function matchPlainBrackets(
     let text = iter.value
     if (dir < 0) distance += text.length
     let basePos = pos + distance * dir
-    for (
-      let pos2 = dir > 0 ? 0 : text.length - 1,
-        end = dir > 0 ? text.length : -1;
-      pos2 != end;
-      pos2 += dir
-    ) {
+    for (let pos2 = dir > 0 ? 0 : text.length - 1, end = dir > 0 ? text.length : -1; pos2 != end; pos2 += dir) {
       let found = brackets.indexOf(text[pos2])
-      if (found < 0 || tree.resolveInner(basePos + pos2, 1).type != tokenType)
-        continue
+      if (found < 0 || tree.resolveInner(basePos + pos2, 1).type != tokenType) continue
       if ((found % 2 == 0) == dir > 0) {
         depth++
       } else if (depth == 1) {
@@ -17977,13 +15599,7 @@ var StringStream = class {
   */
   column() {
     if (this.lastColumnPos < this.start) {
-      this.lastColumnValue = countCol(
-        this.string,
-        this.start,
-        this.tabSize,
-        this.lastColumnPos,
-        this.lastColumnValue,
-      )
+      this.lastColumnValue = countCol(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue)
       this.lastColumnPos = this.start
     }
     return this.lastColumnValue
@@ -17993,9 +15609,7 @@ var StringStream = class {
   */
   indentation() {
     var _a2
-    return (_a2 = this.overrideIndent) !== null && _a2 !== void 0
-      ? _a2
-      : countCol(this.string, null, this.tabSize)
+    return (_a2 = this.overrideIndent) !== null && _a2 !== void 0 ? _a2 : countCol(this.string, null, this.tabSize)
   }
   /**
   Match the input against the given string or regular expression
@@ -18083,13 +15697,7 @@ var StreamLanguage = class extends Language {
       from = IndentedFrom.get(cx.state)
       if (from != null && from < pos - 1e4) from = void 0
     }
-    let start = findState(
-        this,
-        tree,
-        0,
-        at.from,
-        from !== null && from !== void 0 ? from : pos,
-      ),
+    let start = findState(this, tree, 0, at.from, from !== null && from !== void 0 ? from : pos),
       statePos,
       state
     if (start) {
@@ -18104,17 +15712,9 @@ var StreamLanguage = class extends Language {
       let line2 = cx.state.doc.lineAt(statePos),
         end = Math.min(pos, line2.to)
       if (line2.length) {
-        let indentation = overrideIndentation
-          ? overrideIndentation(line2.from)
-          : -1
-        let stream = new StringStream(
-          line2.text,
-          cx.state.tabSize,
-          cx.unit,
-          indentation < 0 ? void 0 : indentation,
-        )
-        while (stream.pos < end - line2.from)
-          readToken(this.streamParser.token, stream, state)
+        let indentation = overrideIndentation ? overrideIndentation(line2.from) : -1
+        let stream = new StringStream(line2.text, cx.state.tabSize, cx.unit, indentation < 0 ? void 0 : indentation)
+        while (stream.pos < end - line2.from) readToken(this.streamParser.token, stream, state)
       } else {
         this.streamParser.blankLine(state, cx.unit)
       }
@@ -18122,8 +15722,7 @@ var StreamLanguage = class extends Language {
       statePos = line2.to + 1
     }
     let line = cx.lineAt(pos)
-    if (overrideIndentation && from == null)
-      IndentedFrom.set(cx.state, line.from)
+    if (overrideIndentation && from == null) IndentedFrom.set(cx.state, line.from)
     return this.streamParser.indent(state, /^\s*(.*)/.exec(line.text)[1], cx)
   }
   get allowsNesting() {
@@ -18138,24 +15737,16 @@ var StreamLanguage = class extends Language {
         return new Parse(self, input, fragments, ranges)
       }
     })()
-    super(
-      data,
-      impl,
-      [indentService.of((cx, pos) => this.getIndent(cx, pos))],
-      parser.name,
-    )
+    super(data, impl, [indentService.of((cx, pos) => this.getIndent(cx, pos))], parser.name)
     this.topNode = docID(data)
     self = this
     this.streamParser = p
     this.stateAfter = new NodeProp({ perNode: true })
-    this.tokenTable = parser.tokenTable
-      ? new TokenTable(p.tokenTable)
-      : defaultTokenTable
+    this.tokenTable = parser.tokenTable ? new TokenTable(p.tokenTable) : defaultTokenTable
   }
 }
 function findState(lang, tree, off, startPos, before) {
-  let state =
-    off >= startPos && off + tree.length <= before && tree.prop(lang.stateAfter)
+  let state = off >= startPos && off + tree.length <= before && tree.prop(lang.stateAfter)
   if (state)
     return {
       state: lang.streamParser.copyState(state),
@@ -18164,10 +15755,7 @@ function findState(lang, tree, off, startPos, before) {
   for (let i2 = tree.children.length - 1; i2 >= 0; i2--) {
     let child = tree.children[i2],
       pos = off + tree.positions[i2]
-    let found =
-      child instanceof Tree &&
-      pos < before &&
-      findState(lang, child, pos, startPos, before)
+    let found = child instanceof Tree && pos < before && findState(lang, child, pos, startPos, before)
     if (found) return found
   }
   return null
@@ -18197,35 +15785,20 @@ function findStartInFragments(lang, fragments, startPos, editorState) {
   for (let f of fragments) {
     let from = f.from + (f.openStart ? 25 : 0),
       to = f.to - (f.openEnd ? 25 : 0)
-    let found =
-        from <= startPos &&
-        to > startPos &&
-        findState(lang, f.tree, 0 - f.offset, startPos, to),
+    let found = from <= startPos && to > startPos && findState(lang, f.tree, 0 - f.offset, startPos, to),
       tree
-    if (
-      found &&
-      (tree = cutTree(
-        lang,
-        f.tree,
-        startPos + f.offset,
-        found.pos + f.offset,
-        false,
-      ))
-    )
+    if (found && (tree = cutTree(lang, f.tree, startPos + f.offset, found.pos + f.offset, false)))
       return { state: found.state, tree }
   }
   return {
-    state: lang.streamParser.startState(
-      editorState ? getIndentUnit(editorState) : 4,
-    ),
+    state: lang.streamParser.startState(editorState ? getIndentUnit(editorState) : 4),
     tree: Tree.empty,
   }
 }
 var Parse = class {
   advance() {
     let context = ParseContext.get()
-    let parseEnd =
-      this.stoppedAt == null ? this.to : Math.min(this.to, this.stoppedAt)
+    let parseEnd = this.stoppedAt == null ? this.to : Math.min(this.to, this.stoppedAt)
     let end = Math.min(parseEnd, this.chunkStart + 2048)
     if (context) end = Math.min(end, context.viewport.to)
     while (this.parsedPos < end) this.parseLine(context)
@@ -18296,11 +15869,7 @@ var Parse = class {
     let { line, end } = this.nextLine(),
       offset = 0,
       { streamParser } = this.lang
-    let stream = new StringStream(
-      line,
-      context ? context.state.tabSize : 4,
-      context ? getIndentUnit(context.state) : 2,
-    )
+    let stream = new StringStream(line, context ? context.state.tabSize : 4, context ? getIndentUnit(context.state) : 2)
     if (stream.eol()) {
       streamParser.blankLine(this.state, stream.indentUnit)
     } else {
@@ -18341,12 +15910,7 @@ var Parse = class {
     this.chunkStart = this.parsedPos
   }
   finish() {
-    return new Tree(
-      this.lang.topNode,
-      this.chunks,
-      this.chunkPos,
-      this.parsedPos - this.ranges[0].from,
-    ).balance()
+    return new Tree(this.lang.topNode, this.chunks, this.chunkPos, this.parsedPos - this.ranges[0].from).balance()
   }
   constructor(lang, input, fragments, ranges) {
     this.lang = lang
@@ -18375,9 +15939,7 @@ var Parse = class {
       this.chunkPos.push(tree.positions[i2])
     }
     if (context && this.parsedPos < context.viewport.from - 1e5) {
-      this.state = this.lang.streamParser.startState(
-        getIndentUnit(context.state),
-      )
+      this.state = this.lang.streamParser.startState(getIndentUnit(context.state))
       context.skipUntilInView(this.parsedPos, context.viewport.from)
       this.parsedPos = context.viewport.from
     }
@@ -18414,16 +15976,11 @@ for (let [legacyName, name2] of [
   defaultTable[legacyName] = /* @__PURE__ */ createTokenType(noTokens, name2)
 var TokenTable = class {
   resolve(tag) {
-    return !tag
-      ? 0
-      : this.table[tag] || (this.table[tag] = createTokenType(this.extra, tag))
+    return !tag ? 0 : this.table[tag] || (this.table[tag] = createTokenType(this.extra, tag))
   }
   constructor(extra) {
     this.extra = extra
-    this.table = Object.assign(
-      /* @__PURE__ */ Object.create(null),
-      defaultTable,
-    )
+    this.table = Object.assign(/* @__PURE__ */ Object.create(null), defaultTable)
   }
 }
 var defaultTokenTable = /* @__PURE__ */ new TokenTable(noTokens)
@@ -18476,19 +16033,7 @@ var Stack = class {
   /// @internal
   static start(p, state, pos = 0) {
     let cx = p.parser.context
-    return new Stack(
-      p,
-      [],
-      state,
-      pos,
-      pos,
-      0,
-      [],
-      0,
-      cx ? new StackContext(cx, cx.start) : null,
-      0,
-      null,
-    )
+    return new Stack(p, [], state, pos, pos, 0, [], 0, cx ? new StackContext(cx, cx.start) : null, 0, null)
   }
   /// The stack's current [context](#lr.ContextTracker) value, if
   /// any. Its type will depend on the context tracker's type
@@ -18515,8 +16060,7 @@ var Stack = class {
     if (dPrec) this.score += dPrec
     if (depth == 0) {
       this.pushState(parser.getGoto(this.state, type, true), this.reducePos)
-      if (type < parser.minRepeatTerm)
-        this.storeNode(type, this.reducePos, this.reducePos, 4, true)
+      if (type < parser.minRepeatTerm) this.storeNode(type, this.reducePos, this.reducePos, 4, true)
       this.reduceContext(type, this.reducePos)
       return
     }
@@ -18525,9 +16069,7 @@ var Stack = class {
       size = this.reducePos - start
     if (
       size >= 2e3 &&
-      !((_a2 = this.p.parser.nodeSet.types[type]) === null || _a2 === void 0
-        ? void 0
-        : _a2.isAnonymous)
+      !((_a2 = this.p.parser.nodeSet.types[type]) === null || _a2 === void 0 ? void 0 : _a2.isAnonymous)
     ) {
       if (start == this.p.lastBigReductionStart) {
         this.p.bigReductionCount++
@@ -18556,12 +16098,7 @@ var Stack = class {
   // Shift a value into the buffer
   /// @internal
   storeNode(term, start, end, size = 4, isReduce = false) {
-    if (
-      term == 0 &&
-      (!this.stack.length ||
-        this.stack[this.stack.length - 1] <
-          this.buffer.length + this.bufferBase)
-    ) {
+    if (term == 0 && (!this.stack.length || this.stack[this.stack.length - 1] < this.buffer.length + this.bufferBase)) {
       let cur = this,
         top3 = this.buffer.length
       if (top3 == 0 && cur.parent) {
@@ -18614,8 +16151,7 @@ var Stack = class {
     } else {
       this.pos = nextEnd
       this.shiftContext(next, start)
-      if (next <= this.p.parser.maxNode)
-        this.buffer.push(next, start, nextEnd, 4)
+      if (next <= this.p.parser.maxNode) this.buffer.push(next, start, nextEnd, 4)
     }
   }
   // Apply an action
@@ -18686,9 +16222,7 @@ var Stack = class {
   /// given token when it applies.
   canShift(term) {
     for (let sim = new SimulatedStack(this); ; ) {
-      let action =
-        this.p.parser.stateSlot(sim.state, 4) ||
-        this.p.parser.hasAction(sim.state, term)
+      let action = this.p.parser.stateSlot(sim.state, 4) || this.p.parser.hasAction(sim.state, term)
       if (action == 0) return false
       if ((action & 65536) == 0) return true
       sim.reduce(action)
@@ -18703,21 +16237,12 @@ var Stack = class {
     if (nextStates.length > 4 << 1 || this.stack.length >= 120) {
       let best = []
       for (let i2 = 0, s; i2 < nextStates.length; i2 += 2) {
-        if (
-          (s = nextStates[i2 + 1]) != this.state &&
-          this.p.parser.hasAction(s, next)
-        )
-          best.push(nextStates[i2], s)
+        if ((s = nextStates[i2 + 1]) != this.state && this.p.parser.hasAction(s, next)) best.push(nextStates[i2], s)
       }
       if (this.stack.length < 120)
-        for (
-          let i2 = 0;
-          best.length < 4 << 1 && i2 < nextStates.length;
-          i2 += 2
-        ) {
+        for (let i2 = 0; best.length < 4 << 1 && i2 < nextStates.length; i2 += 2) {
           let s = nextStates[i2 + 1]
-          if (!best.some((v, i22) => i22 & 1 && v == s))
-            best.push(nextStates[i2], s)
+          if (!best.some((v, i22) => i22 & 1 && v == s)) best.push(nextStates[i2], s)
         }
       nextStates = best
     }
@@ -18773,10 +16298,7 @@ var Stack = class {
           if (rDepth > 1) {
             let term = action & 65535,
               target = this.stack.length - rDepth * 3
-            if (
-              target >= 0 &&
-              parser.getGoto(this.stack[target], term, false) >= 0
-            )
+            if (target >= 0 && parser.getGoto(this.stack[target], term, false) >= 0)
               return (rDepth << 19) | 65536 | term
           }
         } else {
@@ -18803,10 +16325,7 @@ var Stack = class {
   get deadEnd() {
     if (this.stack.length != 3) return false
     let { parser } = this.p
-    return (
-      parser.data[parser.stateSlot(this.state, 1)] == 65535 &&
-      !parser.stateSlot(this.state, 4)
-    )
+    return parser.data[parser.stateSlot(this.state, 1)] == 65535 && !parser.stateSlot(this.state, 4)
   }
   /// Restart the stack (put it back in its start state). Only safe
   /// when this.stack.length == 3 (state is directly below the top
@@ -18817,10 +16336,8 @@ var Stack = class {
   }
   /// @internal
   sameState(other) {
-    if (this.state != other.state || this.stack.length != other.stack.length)
-      return false
-    for (let i2 = 0; i2 < this.stack.length; i2 += 3)
-      if (this.stack[i2] != other.stack[i2]) return false
+    if (this.state != other.state || this.stack.length != other.stack.length) return false
+    for (let i2 = 0; i2 < this.stack.length; i2 += 3) if (this.stack[i2] != other.stack[i2]) return false
     return true
   }
   /// Get the parser used by this stack.
@@ -18834,37 +16351,23 @@ var Stack = class {
   }
   shiftContext(term, start) {
     if (this.curContext)
-      this.updateContext(
-        this.curContext.tracker.shift(
-          this.curContext.context,
-          term,
-          this,
-          this.p.stream.reset(start),
-        ),
-      )
+      this.updateContext(this.curContext.tracker.shift(this.curContext.context, term, this, this.p.stream.reset(start)))
   }
   reduceContext(term, start) {
     if (this.curContext)
       this.updateContext(
-        this.curContext.tracker.reduce(
-          this.curContext.context,
-          term,
-          this,
-          this.p.stream.reset(start),
-        ),
+        this.curContext.tracker.reduce(this.curContext.context, term, this, this.p.stream.reset(start)),
       )
   }
   /// @internal
   emitContext() {
     let last = this.buffer.length - 1
-    if (last < 0 || this.buffer[last] != -3)
-      this.buffer.push(this.curContext.hash, this.pos, this.pos, -3)
+    if (last < 0 || this.buffer[last] != -3) this.buffer.push(this.curContext.hash, this.pos, this.pos, -3)
   }
   /// @internal
   emitLookAhead() {
     let last = this.buffer.length - 1
-    if (last < 0 || this.buffer[last] != -4)
-      this.buffer.push(this.lookAhead, this.pos, this.pos, -4)
+    if (last < 0 || this.buffer[last] != -4) this.buffer.push(this.lookAhead, this.pos, this.pos, -4)
   }
   updateContext(context) {
     if (context != this.curContext.context) {
@@ -18886,19 +16389,7 @@ var Stack = class {
     if (this.lookAhead > 0) this.emitLookAhead()
   }
   /// @internal
-  constructor(
-    p,
-    stack,
-    state,
-    reducePos,
-    pos,
-    score,
-    buffer,
-    bufferBase,
-    curContext,
-    lookAhead = 0,
-    parent,
-  ) {
+  constructor(p, stack, state, reducePos, pos, score, buffer, bufferBase, curContext, lookAhead = 0, parent) {
     this.p = p
     this.stack = stack
     this.state = state
@@ -18926,8 +16417,7 @@ var Recover
   Recover2[(Recover2['Reduce'] = 100)] = 'Reduce'
   Recover2[(Recover2['MaxNext'] = 4)] = 'MaxNext'
   Recover2[(Recover2['MaxInsertStackDepth'] = 300)] = 'MaxInsertStackDepth'
-  Recover2[(Recover2['DampenInsertStackDepth'] = 120)] =
-    'DampenInsertStackDepth'
+  Recover2[(Recover2['DampenInsertStackDepth'] = 120)] = 'DampenInsertStackDepth'
   Recover2[(Recover2['MinBigReduction'] = 2e3)] = 'MinBigReduction'
 })(Recover || (Recover = {}))
 var SimulatedStack = class {
@@ -18941,11 +16431,7 @@ var SimulatedStack = class {
     } else {
       this.base -= (depth - 1) * 3
     }
-    let goto = this.start.p.parser.getGoto(
-      this.stack[this.base - 3],
-      term,
-      true,
-    )
+    let goto = this.start.p.parser.getGoto(this.stack[this.base - 3], term, true)
     this.state = goto
   }
   constructor(start) {
@@ -19058,8 +16544,7 @@ var InputStream = class {
   /// @internal
   clipPos(pos) {
     if (pos >= this.range.from && pos < this.range.to) return pos
-    for (let range of this.ranges)
-      if (range.to > pos) return Math.max(pos, range.from)
+    for (let range of this.ranges) if (range.to > pos) return Math.max(pos, range.from)
     return this.end
   }
   /// Look at a code unit near the stream position. `.peek(0)` equals
@@ -19089,8 +16574,7 @@ var InputStream = class {
           range = this.range
         while (range.to <= pos) range = this.ranges[++i2]
         this.chunk2 = this.input.chunk((this.chunk2Pos = pos))
-        if (pos + this.chunk2.length > range.to)
-          this.chunk2 = this.chunk2.slice(0, range.to - pos)
+        if (pos + this.chunk2.length > range.to) this.chunk2 = this.chunk2.slice(0, range.to - pos)
         result = this.chunk2.charCodeAt(0)
       }
     }
@@ -19102,16 +16586,12 @@ var InputStream = class {
   /// the stream position) to change that.
   acceptToken(token, endOffset = 0) {
     let end = endOffset ? this.resolveOffset(endOffset, -1) : this.pos
-    if (end == null || end < this.token.start)
-      throw new RangeError('Token end out of bounds')
+    if (end == null || end < this.token.start) throw new RangeError('Token end out of bounds')
     this.token.value = token
     this.token.end = end
   }
   getChunk() {
-    if (
-      this.pos >= this.chunk2Pos &&
-      this.pos < this.chunk2Pos + this.chunk2.length
-    ) {
+    if (this.pos >= this.chunk2Pos && this.pos < this.chunk2Pos + this.chunk2.length) {
       let { chunk, chunkPos } = this
       this.chunk = this.chunk2
       this.chunkPos = this.chunk2Pos
@@ -19123,10 +16603,7 @@ var InputStream = class {
       this.chunk2Pos = this.chunkPos
       let nextChunk = this.input.chunk(this.pos)
       let end = this.pos + nextChunk.length
-      this.chunk =
-        end > this.range.to
-          ? nextChunk.slice(0, this.range.to - this.pos)
-          : nextChunk
+      this.chunk = end > this.range.to ? nextChunk.slice(0, this.range.to - this.pos) : nextChunk
       this.chunkPos = this.pos
       this.chunkOff = 0
     }
@@ -19192,13 +16669,11 @@ var InputStream = class {
       return this.chunk.slice(from - this.chunkPos, to - this.chunkPos)
     if (from >= this.chunk2Pos && to <= this.chunk2Pos + this.chunk2.length)
       return this.chunk2.slice(from - this.chunk2Pos, to - this.chunk2Pos)
-    if (from >= this.range.from && to <= this.range.to)
-      return this.input.read(from, to)
+    if (from >= this.range.from && to <= this.range.to) return this.input.read(from, to)
     let result = ''
     for (let r of this.ranges) {
       if (r.from >= to) break
-      if (r.to > from)
-        result += this.input.read(Math.max(r.from, from), Math.min(r.to, to))
+      if (r.to > from) result += this.input.read(Math.max(r.from, from), Math.min(r.to, to))
     }
     return result
   }
@@ -19222,24 +16697,14 @@ var InputStream = class {
 var TokenGroup = class {
   token(input, stack) {
     let { parser } = stack.p
-    readToken2(
-      this.data,
-      input,
-      stack,
-      this.id,
-      parser.data,
-      parser.tokenPrecTable,
-    )
+    readToken2(this.data, input, stack, this.id, parser.data, parser.tokenPrecTable)
   }
   constructor(data, id2) {
     this.data = data
     this.id = id2
   }
 }
-TokenGroup.prototype.contextual =
-  TokenGroup.prototype.fallback =
-  TokenGroup.prototype.extend =
-    false
+TokenGroup.prototype.contextual = TokenGroup.prototype.fallback = TokenGroup.prototype.extend = false
 var LocalTokenGroup = class {
   token(input, stack) {
     let start = input.pos,
@@ -19264,10 +16729,7 @@ var LocalTokenGroup = class {
     this.data = typeof data == 'string' ? decodeArray(data) : data
   }
 }
-LocalTokenGroup.prototype.contextual =
-  TokenGroup.prototype.fallback =
-  TokenGroup.prototype.extend =
-    false
+LocalTokenGroup.prototype.contextual = TokenGroup.prototype.fallback = TokenGroup.prototype.extend = false
 var ExternalTokenizer = class {
   /// Create a tokenizer. The first argument is the function that,
   /// given an input stream, scans for the types of tokens it
@@ -19304,12 +16766,7 @@ function readToken2(data, input, stack, group, precTable, precOffset) {
     let next = input.next,
       low = 0,
       high = data[state + 2]
-    if (
-      input.next < 0 &&
-      high > low &&
-      data[accEnd + high * 3 - 3] == 65535 &&
-      data[accEnd + high * 3 - 3] == 65535
-    ) {
+    if (input.next < 0 && high > low && data[accEnd + high * 3 - 3] == 65535 && data[accEnd + high * 3 - 3] == 65535) {
       state = data[accEnd + high * 3 - 1]
       continue scan
     }
@@ -19330,18 +16787,14 @@ function readToken2(data, input, stack, group, precTable, precOffset) {
   }
 }
 function findOffset(data, start, term) {
-  for (let i2 = start, next; (next = data[i2]) != 65535; i2++)
-    if (next == term) return i2 - start
+  for (let i2 = start, next; (next = data[i2]) != 65535; i2++) if (next == term) return i2 - start
   return -1
 }
 function overrides(token, prev, tableData, tableOffset) {
   let iPrev = findOffset(tableData, tableOffset, prev)
   return iPrev < 0 || findOffset(tableData, tableOffset, token) < iPrev
 }
-var verbose =
-  typeof process != 'undefined' &&
-  process.env &&
-  /\bparse\b/.test(process.env.LOG)
+var verbose = typeof process != 'undefined' && process.env && /\bparse\b/.test(process.env.LOG)
 var stackIDs = null
 var Safety
 ;(function (Safety2) {
@@ -19353,10 +16806,7 @@ function cutAt(tree, pos, side) {
   for (;;) {
     if (!(side < 0 ? cursor.childBefore(pos) : cursor.childAfter(pos)))
       for (;;) {
-        if (
-          (side < 0 ? cursor.to < pos : cursor.from > pos) &&
-          !cursor.type.isError
-        )
+        if ((side < 0 ? cursor.to < pos : cursor.from > pos) && !cursor.type.isError)
           return side < 0
             ? Math.max(0, Math.min(cursor.to - 1, pos - 25))
             : Math.min(tree.length, Math.max(cursor.from + 1, pos + 25))
@@ -19367,15 +16817,10 @@ function cutAt(tree, pos, side) {
 }
 var FragmentCursor2 = class {
   nextFragment() {
-    let fr = (this.fragment =
-      this.i == this.fragments.length ? null : this.fragments[this.i++])
+    let fr = (this.fragment = this.i == this.fragments.length ? null : this.fragments[this.i++])
     if (fr) {
-      this.safeFrom = fr.openStart
-        ? cutAt(fr.tree, fr.from + fr.offset, 1) - fr.offset
-        : fr.from
-      this.safeTo = fr.openEnd
-        ? cutAt(fr.tree, fr.to + fr.offset, -1) - fr.offset
-        : fr.to
+      this.safeFrom = fr.openStart ? cutAt(fr.tree, fr.from + fr.offset, 1) - fr.offset : fr.from
+      this.safeTo = fr.openEnd ? cutAt(fr.tree, fr.to + fr.offset, -1) - fr.offset : fr.to
       while (this.trees.length) {
         this.trees.pop()
         this.start.pop()
@@ -19462,33 +16907,16 @@ var TokenCache = class {
       let tokenizer = tokenizers[i2],
         token = this.tokens[i2]
       if (main && !tokenizer.fallback) continue
-      if (
-        tokenizer.contextual ||
-        token.start != stack.pos ||
-        token.mask != mask ||
-        token.context != context
-      ) {
+      if (tokenizer.contextual || token.start != stack.pos || token.mask != mask || token.context != context) {
         this.updateCachedToken(token, tokenizer, stack)
         token.mask = mask
         token.context = context
       }
-      if (token.lookAhead > token.end + 25)
-        lookAhead = Math.max(token.lookAhead, lookAhead)
+      if (token.lookAhead > token.end + 25) lookAhead = Math.max(token.lookAhead, lookAhead)
       if (token.value != 0) {
         let startIndex = actionIndex
-        if (token.extended > -1)
-          actionIndex = this.addActions(
-            stack,
-            token.extended,
-            token.end,
-            actionIndex,
-          )
-        actionIndex = this.addActions(
-          stack,
-          token.value,
-          token.end,
-          actionIndex,
-        )
+        if (token.extended > -1) actionIndex = this.addActions(stack, token.extended, token.end, actionIndex)
+        actionIndex = this.addActions(stack, token.value, token.end, actionIndex)
         if (!tokenizer.extend) {
           main = token
           if (actionIndex > startIndex) break
@@ -19522,10 +16950,7 @@ var TokenCache = class {
       let { parser } = stack.p
       for (let i2 = 0; i2 < parser.specialized.length; i2++)
         if (parser.specialized[i2] == token.value) {
-          let result = parser.specializers[i2](
-            this.stream.read(token.start, token.end),
-            stack,
-          )
+          let result = parser.specializers[i2](this.stream.read(token.start, token.end), stack)
           if (result >= 0 && stack.p.parser.dialect.allows(result >> 1)) {
             if ((result & 1) == 0) token.value = result >> 1
             else token.extended = result >> 1
@@ -19538,8 +16963,7 @@ var TokenCache = class {
     }
   }
   putAction(action, token, end, index) {
-    for (let i2 = 0; i2 < index; i2 += 3)
-      if (this.actions[i2] == action) return index
+    for (let i2 = 0; i2 < index; i2 += 3) if (this.actions[i2] == action) return index
     this.actions[index++] = action
     this.actions[index++] = token
     this.actions[index++] = end
@@ -19555,13 +16979,11 @@ var TokenCache = class {
           if (data[i2 + 1] == 1) {
             i2 = pair(data, i2 + 2)
           } else {
-            if (index == 0 && data[i2 + 1] == 2)
-              index = this.putAction(pair(data, i2 + 2), token, end, index)
+            if (index == 0 && data[i2 + 1] == 2) index = this.putAction(pair(data, i2 + 2), token, end, index)
             break
           }
         }
-        if (data[i2] == token)
-          index = this.putAction(pair(data, i2 + 1), token, end, index)
+        if (data[i2] == token) index = this.putAction(pair(data, i2 + 1), token, end, index)
       }
     }
     return index
@@ -19582,8 +17004,7 @@ var Rec
   Rec2[(Rec2['ForceReduceLimit'] = 10)] = 'ForceReduceLimit'
   Rec2[(Rec2['CutDepth'] = 15e3)] = 'CutDepth'
   Rec2[(Rec2['CutTo'] = 9e3)] = 'CutTo'
-  Rec2[(Rec2['MaxLeftAssociativeReductionCount'] = 300)] =
-    'MaxLeftAssociativeReductionCount'
+  Rec2[(Rec2['MaxLeftAssociativeReductionCount'] = 300)] = 'MaxLeftAssociativeReductionCount'
   Rec2[(Rec2['MaxStackCount'] = 12)] = 'MaxStackCount'
 })(Rec || (Rec = {}))
 var Parse2 = class {
@@ -19603,11 +17024,7 @@ var Parse2 = class {
     let stopped, stoppedTokens
     if (this.bigReductionCount > 300 && stacks.length == 1) {
       let [s] = stacks
-      while (
-        s.forceReduce() &&
-        s.stack.length &&
-        s.stack[s.stack.length - 2] >= this.lastBigReductionStart
-      ) {}
+      while (s.forceReduce() && s.stack.length && s.stack[s.stack.length - 2] >= this.lastBigReductionStart) {}
       this.bigReductionCount = this.lastBigReductionSize = 0
     }
     for (let i2 = 0; i2 < stacks.length; i2++) {
@@ -19636,10 +17053,7 @@ var Parse2 = class {
       if (this.parser.strict) {
         if (verbose && stopped)
           console.log(
-            'Stuck with token ' +
-              (this.tokens.mainToken
-                ? this.parser.getName(this.tokens.mainToken.value)
-                : 'none'),
+            'Stuck with token ' + (this.tokens.mainToken ? this.parser.getName(this.tokens.mainToken.value) : 'none'),
           )
         throw new SyntaxError('No parse at ' + pos)
       }
@@ -19664,14 +17078,8 @@ var Parse2 = class {
         let stack = newStacks[i2]
         for (let j = i2 + 1; j < newStacks.length; j++) {
           let other = newStacks[j]
-          if (
-            stack.sameState(other) ||
-            (stack.buffer.length > 500 && other.buffer.length > 500)
-          ) {
-            if (
-              (stack.score - other.score ||
-                stack.buffer.length - other.buffer.length) > 0
-            ) {
+          if (stack.sameState(other) || (stack.buffer.length > 500 && other.buffer.length > 500)) {
+            if ((stack.score - other.score || stack.buffer.length - other.buffer.length) > 0) {
               newStacks.splice(j--, 1)
             } else {
               newStacks.splice(i2--, 1)
@@ -19684,13 +17092,11 @@ var Parse2 = class {
     }
     this.minStackPos = newStacks[0].pos
     for (let i2 = 1; i2 < newStacks.length; i2++)
-      if (newStacks[i2].pos < this.minStackPos)
-        this.minStackPos = newStacks[i2].pos
+      if (newStacks[i2].pos < this.minStackPos) this.minStackPos = newStacks[i2].pos
     return null
   }
   stopAt(pos) {
-    if (this.stoppedAt != null && this.stoppedAt < pos)
-      throw new RangeError("Can't move stoppedAt forward")
+    if (this.stoppedAt != null && this.stoppedAt < pos) throw new RangeError("Can't move stoppedAt forward")
     this.stoppedAt = pos
   }
   // Returns an updated version of the given stack, or null if the
@@ -19701,36 +17107,19 @@ var Parse2 = class {
     let start = stack.pos,
       { parser } = this
     let base2 = verbose ? this.stackID(stack) + ' -> ' : ''
-    if (this.stoppedAt != null && start > this.stoppedAt)
-      return stack.forceReduce() ? stack : null
+    if (this.stoppedAt != null && start > this.stoppedAt) return stack.forceReduce() ? stack : null
     if (this.fragments) {
       let strictCx = stack.curContext && stack.curContext.tracker.strict,
         cxHash = strictCx ? stack.curContext.hash : 0
       for (let cached = this.fragments.nodeAt(start); cached; ) {
         let match =
-          this.parser.nodeSet.types[cached.type.id] == cached.type
-            ? parser.getGoto(stack.state, cached.type.id)
-            : -1
-        if (
-          match > -1 &&
-          cached.length &&
-          (!strictCx || (cached.prop(NodeProp.contextHash) || 0) == cxHash)
-        ) {
+          this.parser.nodeSet.types[cached.type.id] == cached.type ? parser.getGoto(stack.state, cached.type.id) : -1
+        if (match > -1 && cached.length && (!strictCx || (cached.prop(NodeProp.contextHash) || 0) == cxHash)) {
           stack.useNode(cached, match)
-          if (verbose)
-            console.log(
-              base2 +
-                this.stackID(stack) +
-                ` (via reuse of ${parser.getName(cached.type.id)})`,
-            )
+          if (verbose) console.log(base2 + this.stackID(stack) + ` (via reuse of ${parser.getName(cached.type.id)})`)
           return true
         }
-        if (
-          !(cached instanceof Tree) ||
-          cached.children.length == 0 ||
-          cached.positions[0] > 0
-        )
-          break
+        if (!(cached instanceof Tree) || cached.children.length == 0 || cached.positions[0] > 0) break
         let inner = cached.children[0]
         if (inner instanceof Tree && cached.positions[0] == 0) cached = inner
         else break
@@ -19740,11 +17129,7 @@ var Parse2 = class {
     if (defaultReduce > 0) {
       stack.reduce(defaultReduce)
       if (verbose)
-        console.log(
-          base2 +
-            this.stackID(stack) +
-            ` (via always-reduce ${parser.getName(defaultReduce & 65535)})`,
-        )
+        console.log(base2 + this.stackID(stack) + ` (via always-reduce ${parser.getName(defaultReduce & 65535)})`)
       return true
     }
     if (stack.stack.length >= 15e3) {
@@ -19802,15 +17187,13 @@ var Parse2 = class {
       let force = stack.split(),
         forceBase = base2
       for (let j = 0; force.forceReduce() && j < 10; j++) {
-        if (verbose)
-          console.log(forceBase + this.stackID(force) + ' (via force-reduce)')
+        if (verbose) console.log(forceBase + this.stackID(force) + ' (via force-reduce)')
         let done = this.advanceFully(force, newStacks)
         if (done) break
         if (verbose) forceBase = this.stackID(force) + ' -> '
       }
       for (let insert2 of stack.recoverByInsert(token)) {
-        if (verbose)
-          console.log(base2 + this.stackID(insert2) + ' (via recover-insert)')
+        if (verbose) console.log(base2 + this.stackID(insert2) + ' (via recover-insert)')
         this.advanceFully(insert2, newStacks)
       }
       if (this.stream.end > stack.pos) {
@@ -19819,12 +17202,7 @@ var Parse2 = class {
           token = 0
         }
         stack.recoverByDelete(token, tokenEnd)
-        if (verbose)
-          console.log(
-            base2 +
-              this.stackID(stack) +
-              ` (via recover-delete ${this.parser.getName(token)})`,
-          )
+        if (verbose) console.log(base2 + this.stackID(stack) + ` (via recover-delete ${this.parser.getName(token)})`)
         pushStackDedup(stack, newStacks)
       } else if (!finished || finished.score < stack.score) {
         finished = stack
@@ -19847,11 +17225,8 @@ var Parse2 = class {
     })
   }
   stackID(stack) {
-    let id2 = (stackIDs || (stackIDs = /* @__PURE__ */ new WeakMap())).get(
-      stack,
-    )
-    if (!id2)
-      stackIDs.set(stack, (id2 = String.fromCodePoint(this.nextStackID++)))
+    let id2 = (stackIDs || (stackIDs = /* @__PURE__ */ new WeakMap())).get(stack)
+    if (!id2) stackIDs.set(stack, (id2 = String.fromCodePoint(this.nextStackID++)))
     return id2 + stack
   }
   constructor(parser, input, fragments, ranges) {
@@ -19924,8 +17299,7 @@ var LRParser = class extends Parser {
         last = groupTag & 1
       let target = table[pos++]
       if (last && loose) return target
-      for (let end = pos + (groupTag >> 1); pos < end; pos++)
-        if (table[pos] == state) return target
+      for (let end = pos + (groupTag >> 1); pos < end; pos++) if (table[pos] == state) return target
       if (last) return -1
     }
   }
@@ -19980,8 +17354,7 @@ var LRParser = class extends Parser {
       }
       if ((this.data[i2 + 2] & (65536 >> 16)) == 0) {
         let value = this.data[i2 + 1]
-        if (!result.some((v, i22) => i22 & 1 && v == value))
-          result.push(this.data[i2], value)
+        if (!result.some((v, i22) => i22 & 1 && v == value)) result.push(this.data[i2], value)
       }
     }
     return result
@@ -20061,10 +17434,7 @@ var LRParser = class extends Parser {
     let disabled = null
     for (let i2 = 0; i2 < values.length; i2++)
       if (!flags[i2]) {
-        for (
-          let j = this.dialects[values[i2]], id2;
-          (id2 = this.data[j++]) != 65535;
-        )
+        for (let j = this.dialects[values[i2]], id2; (id2 = this.data[j++]) != 65535; )
           (disabled || (disabled = new Uint8Array(this.maxTerm + 1)))[id2] = 1
       }
     return new Dialect(dialect, flags, disabled)
@@ -20079,9 +17449,7 @@ var LRParser = class extends Parser {
     super()
     this.wrappers = []
     if (spec.version != 14)
-      throw new RangeError(
-        `Parser version (${spec.version}) doesn't match runtime version (${14})`,
-      )
+      throw new RangeError(`Parser version (${spec.version}) doesn't match runtime version (${14})`)
     let nodeNames = spec.nodeNames.split(' ')
     this.minRepeatTerm = nodeNames.length
     for (let i2 = 0; i2 < spec.repeatNodeCount; i2++) nodeNames.push('')
@@ -20118,16 +17486,14 @@ var LRParser = class extends Parser {
         }),
       ),
     )
-    if (spec.propSources)
-      this.nodeSet = this.nodeSet.extend(...spec.propSources)
+    if (spec.propSources) this.nodeSet = this.nodeSet.extend(...spec.propSources)
     this.strict = false
     this.bufferLength = DefaultBufferLength
     let tokenArray = decodeArray(spec.tokenData)
     this.context = spec.context
     this.specializerSpecs = spec.specialized || []
     this.specialized = new Uint16Array(this.specializerSpecs.length)
-    for (let i2 = 0; i2 < this.specializerSpecs.length; i2++)
-      this.specialized[i2] = this.specializerSpecs[i2].term
+    for (let i2 = 0; i2 < this.specializerSpecs.length; i2++) this.specialized[i2] = this.specializerSpecs[i2].term
     this.specializers = this.specializerSpecs.map(getSpecializer)
     this.states = decodeArray(spec.states, Uint32Array)
     this.data = decodeArray(spec.stateData)
@@ -20154,8 +17520,7 @@ function findFinished(stacks) {
   for (let stack of stacks) {
     let stopped = stack.p.stoppedAt
     if (
-      (stack.pos == stack.p.stream.end ||
-        (stopped != null && stack.pos > stopped)) &&
+      (stack.pos == stack.p.stream.end || (stopped != null && stack.pos > stopped)) &&
       stack.p.parser.stateFlag(stack.state, 2) &&
       (!best || best.score < stack.score)
     )

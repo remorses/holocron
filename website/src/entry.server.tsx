@@ -2,12 +2,7 @@ import { PassThrough } from 'node:stream'
 import { createReadableStreamFromReadable } from '@react-router/node'
 import { isbot } from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
-import type {
-  ActionFunctionArgs,
-  AppLoadContext,
-  EntryContext,
-  LoaderFunctionArgs,
-} from 'react-router'
+import type { ActionFunctionArgs, AppLoadContext, EntryContext, LoaderFunctionArgs } from 'react-router'
 import { isRouteErrorResponse, ServerRouter } from 'react-router'
 import { notifyError } from './lib/errors'
 
@@ -24,18 +19,8 @@ export default function handleRequest(
   loadContext: AppLoadContext,
 ) {
   return isbot(request.headers.get('user-agent') || '')
-    ? handleBotRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        reactRouterContext,
-      )
-    : handleBrowserRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        reactRouterContext,
-      )
+    ? handleBotRequest(request, responseStatusCode, responseHeaders, reactRouterContext)
+    : handleBrowserRequest(request, responseStatusCode, responseHeaders, reactRouterContext)
 }
 
 function handleBotRequest(
@@ -142,10 +127,7 @@ function handleBrowserRequest(
   })
 }
 
-export function handleError(
-  error: any,
-  { request, params, context }: LoaderFunctionArgs | ActionFunctionArgs,
-) {
+export function handleError(error: any, { request, params, context }: LoaderFunctionArgs | ActionFunctionArgs) {
   // https://github.com/remix-run/remix/discussions/8933
   if (request.signal.aborted || isRouteErrorResponse(error)) {
     return

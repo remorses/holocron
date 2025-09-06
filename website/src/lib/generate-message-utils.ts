@@ -1,13 +1,7 @@
 import { generateMessageStream } from './spiceflow-generate-message'
 import { FileSystemEmulator } from './file-system-emulator'
 import { createAiCacheMiddleware } from 'contesto/src/lib/ai-cache'
-import {
-  wrapLanguageModel,
-  readUIMessageStream,
-  type UIMessage,
-  type ModelMessage,
-  isToolUIPart,
-} from 'ai'
+import { wrapLanguageModel, readUIMessageStream, type UIMessage, type ModelMessage, isToolUIPart } from 'ai'
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { asyncIterableToReadableStream } from 'contesto/src/lib/utils'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
@@ -20,9 +14,7 @@ import { WebsiteUIMessage } from './types'
  */
 function truncateObjectOrString(value: unknown, maxLength = 1000): unknown {
   if (typeof value === 'string') {
-    return value.length > maxLength
-      ? value.substring(0, maxLength) + '...'
-      : value
+    return value.length > maxLength ? value.substring(0, maxLength) + '...' : value
   }
 
   if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
@@ -36,7 +28,6 @@ function truncateObjectOrString(value: unknown, maxLength = 1000): unknown {
     }
     return truncated
   }
-
   return value
 }
 
@@ -137,9 +128,7 @@ export function uiMessageToMarkdown(message: UIMessage): string {
 /**
  * Serialize filesInDraft to markdown format with file tree
  */
-export function filesInDraftToMarkdown(
-  filesInDraft: Record<string, FileUpdate>,
-): string {
+export function filesInDraftToMarkdown(filesInDraft: Record<string, FileUpdate>): string {
   const lines: string[] = []
 
   // Filter out deleted files (content: null) and get file paths with titles
@@ -171,9 +160,7 @@ export function filesInDraftToMarkdown(
   }
 
   // Sort by path and output
-  const sortedFiles = Array.from(filesByCleanPath.entries()).sort(([a], [b]) =>
-    a.localeCompare(b),
-  )
+  const sortedFiles = Array.from(filesByCleanPath.entries()).sort(([a], [b]) => a.localeCompare(b))
 
   for (const [cleanPath, file] of sortedFiles) {
     lines.push('='.repeat(50))

@@ -2,11 +2,7 @@ import { RiAddLine, RiAttachment2, RiCloseLine } from '@remixicon/react'
 import { forwardRef, useRef, useState } from 'react'
 
 import { Button } from '../components/ui/button.js'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../components/ui/popover.js'
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover.js'
 
 import { createIdGenerator } from 'ai'
 
@@ -25,14 +21,7 @@ const AttachmentButton = forwardRef<
   }
 >(({ count, onClick, disabled }, ref) => {
   return (
-    <Button
-      ref={ref}
-      variant='ghost'
-      size='icon'
-      className='relative '
-      onClick={onClick}
-      disabled={disabled}
-    >
+    <Button ref={ref} variant='ghost' size='icon' className='relative ' onClick={onClick} disabled={disabled}>
       <RiAttachment2 className='size-5' />
       {count && count > 0 && (
         <span className='absolute -top-1 left-full min-w-3 -translate-x-2 px-0.5 h-3 rounded-full text-[10px] font-medium flex items-center justify-center border border-background text-foreground'>
@@ -130,11 +119,7 @@ export function ChatUploadButton({
       {uploadedFiles.length > 0 && (
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
-            <AttachmentButton
-              count={uploadedFiles.length}
-              onClick={handleAttachClick}
-              disabled={isLoading}
-            />
+            <AttachmentButton count={uploadedFiles.length} onClick={handleAttachClick} disabled={isLoading} />
           </PopoverTrigger>
 
           <PopoverContent className='w-80 p-0' align='start'>
@@ -156,10 +141,7 @@ export function ChatUploadButton({
                   className='flex items-center justify-between px-3 py-2 text-sm hover:bg-muted rounded-md'
                 >
                   <span className='truncate flex-1 mr-2'>{file.name}</span>
-                  <button
-                    className='p-0 cursor-pointer'
-                    onClick={() => removeFile(file.name)}
-                  >
+                  <button className='p-0 cursor-pointer' onClick={() => removeFile(file.name)}>
                     <RiCloseLine className='size-5' />
                   </button>
                 </div>
@@ -169,9 +151,7 @@ export function ChatUploadButton({
         </Popover>
       )}
 
-      {uploadedFiles.length === 0 && (
-        <AttachmentButton onClick={handleAttachClick} disabled={isLoading} />
-      )}
+      {uploadedFiles.length === 0 && <AttachmentButton onClick={handleAttachClick} disabled={isLoading} />}
     </>
   )
 }

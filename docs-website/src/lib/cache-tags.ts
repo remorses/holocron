@@ -11,12 +11,6 @@ export function getCacheTagForPage({
   return `page:${branchId}:${slug}${localePrefix}`
 }
 
-export function getCacheTagForMediaAsset({
-  branchId,
-  slug,
-}: {
-  branchId: string
-  slug: string
-}): string {
+export function getCacheTagForMediaAsset({ branchId, slug }: { branchId: string; slug: string }): string {
   return `mediaAsset:${branchId}:${slug}`
 }

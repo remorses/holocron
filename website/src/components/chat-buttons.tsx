@@ -1,17 +1,8 @@
 import { memo, useMemo, useState, useCallback } from 'react'
 import { Button } from 'website/src/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from 'website/src/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from 'website/src/components/ui/tooltip'
 import { GitBranch, ZapIcon } from 'lucide-react'
-import {
-  Link,
-  useLoaderData,
-  useRevalidator,
-  useRouteLoaderData,
-} from 'react-router'
+import { Link, useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { href } from 'react-router'
 import { useChatContext } from 'contesto/src/chat/chat-provider'
 import { useTemporaryState } from '../lib/hooks'
@@ -21,21 +12,16 @@ import { cn } from '../lib/utils'
 import { useErrorPopover } from './error-popover'
 
 import type { Route as BranchRoute } from '../routes/org.$orgId.branch.$branchId'
-import {
-  FileUpdate,
-  calculateLineChanges,
-} from 'docs-website/src/lib/edit-tool'
+import { FileUpdate, calculateLineChanges } from 'docs-website/src/lib/edit-tool'
 import { useQuery } from '@tanstack/react-query'
 
 export function PrButton({ className = '' }) {
   const { messages, isGenerating: isChatGenerating } = useChatContext()
   const { chatId, chat, prUrl } =
-    useLoaderData<
-      typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader
-    >()
-  const branchData = useRouteLoaderData<
-    typeof import('../routes/org.$orgId.branch.$branchId').loader
-  >('routes/org.$orgId.branch.$branchId')!
+    useLoaderData<typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader>()
+  const branchData = useRouteLoaderData<typeof import('../routes/org.$orgId.branch.$branchId').loader>(
+    'routes/org.$orgId.branch.$branchId',
+  )!
   const [isUpdating, setIsUpdating] = useState(false)
 
   const { siteId, branchId } = branchData
@@ -60,12 +46,10 @@ export function PrButton({ className = '' }) {
 
       try {
         const currentFilesInDraft = useWebsiteState.getState().filesInDraft
-        const { data, error } = await apiClient.api.updateChatFilesInDraft.post(
-          {
-            chatId,
-            filesInDraft: currentFilesInDraft,
-          },
-        )
+        const { data, error } = await apiClient.api.updateChatFilesInDraft.post({
+          chatId,
+          filesInDraft: currentFilesInDraft,
+        })
 
         if (error) {
           console.error('Failed to update filesInDraft before PR:', error)
@@ -94,9 +78,7 @@ export function PrButton({ className = '' }) {
     if (isChatGenerating) {
       return {
         to: prHref,
-        text: chat.prNumber
-          ? `Push to PR #${chat.prNumber}`
-          : 'Create Github PR',
+        text: chat.prNumber ? `Push to PR #${chat.prNumber}` : 'Create Github PR',
         isButtonDisabled: true,
         tooltipMessage: 'Wait for chat to finish generating',
       }
@@ -149,12 +131,7 @@ export function PrButton({ className = '' }) {
             disabled={isButtonDisabled}
             asChild
           >
-            <Link
-              to={to}
-              target='_blank'
-              rel='noreferrer'
-              onClick={handlePrClick}
-            >
+            <Link to={to} target='_blank' rel='noreferrer' onClick={handlePrClick}>
               <div className='flex items-center gap-2'>
                 <GitBranch className='size-4' />
                 {text}
@@ -170,18 +147,15 @@ export function PrButton({ className = '' }) {
 
 export function SaveChangesButton({ className = '' }) {
   const [isLoading, setIsLoading] = useState(false)
-  const { setErrorMessage, errorMessage, ErrorTooltipAnchor } =
-    useErrorPopover()
+  const { setErrorMessage, errorMessage, ErrorTooltipAnchor } = useErrorPopover()
   const [buttonText, setButtonText] = useTemporaryState('', 2000)
   const { messages, isGenerating: isChatGenerating } = useChatContext()
 
   const { chatId, branchId } =
-    useLoaderData<
-      typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader
-    >()
-  const branchData = useRouteLoaderData<
-    typeof import('../routes/org.$orgId.branch.$branchId').loader
-  >('routes/org.$orgId.branch.$branchId')
+    useLoaderData<typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader>()
+  const branchData = useRouteLoaderData<typeof import('../routes/org.$orgId.branch.$branchId').loader>(
+    'routes/org.$orgId.branch.$branchId',
+  )
   if (!branchData) return null
 
   const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
@@ -196,9 +170,7 @@ export function SaveChangesButton({ className = '' }) {
   if (!!branchData.site.githubInstallations?.length) return null
 
   // Only show if there are files in draft with content
-  const hasFilesWithContent = Object.values(filesInDraft).some((file) =>
-    file?.content?.trim(),
-  )
+  const hasFilesWithContent = Object.values(filesInDraft).some((file) => file?.content?.trim())
   if (!hasFilesWithContent) return null
 
   const isButtonDisabled: boolean = (() => {
@@ -260,8 +232,7 @@ export function SaveChangesButton({ className = '' }) {
       setButtonText('Changes saved')
     } catch (error) {
       console.error('Failed to save changes:', error)
-      const message =
-        error instanceof Error ? error.message : 'Failed to save changes'
+      const message = error instanceof Error ? error.message : 'Failed to save changes'
       setErrorMessage(message)
     } finally {
       setIsLoading(false)
@@ -287,9 +258,7 @@ export function SaveChangesButton({ className = '' }) {
               </div>
             </Button>
           </TooltipTrigger>
-          {Boolean(isButtonDisabled && getTooltipMessage()) && (
-            <TooltipContent>{getTooltipMessage()}</TooltipContent>
-          )}
+          {Boolean(isButtonDisabled && getTooltipMessage()) && <TooltipContent>{getTooltipMessage()}</TooltipContent>}
         </Tooltip>
       </ErrorTooltipAnchor>
     </div>
@@ -302,14 +271,9 @@ interface DiffStatsProps {
   className?: string
 }
 
-export const DiffStats = memo(function DiffStats({
-  filesInDraft,
-  className = '',
-}: DiffStatsProps) {
+export const DiffStats = memo(function DiffStats({ filesInDraft, className = '' }: DiffStatsProps) {
   const { branchId } =
-    useLoaderData<
-      typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader
-    >()
+    useLoaderData<typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader>()
 
   const { data: resolvedStats = [] } = useQuery({
     queryKey: ['diffStats', branchId, filesInDraft],
@@ -329,26 +293,22 @@ export const DiffStats = memo(function DiffStats({
         return calculateLineChanges(originalContent, currentContent)
       }
 
-      const statsPromises = Object.entries(filesInDraft).map(
-        async ([path, file]) => {
-          const stats = await computeStatsForFile(file)
-          return {
-            path,
-            file,
-            addedLines: stats.addedLines,
-            deletedLines: stats.deletedLines,
-          }
-        },
-      )
+      const statsPromises = Object.entries(filesInDraft).map(async ([path, file]) => {
+        const stats = await computeStatsForFile(file)
+        return {
+          path,
+          file,
+          addedLines: stats.addedLines,
+          deletedLines: stats.deletedLines,
+        }
+      })
 
       return Promise.all(statsPromises)
     },
   })
 
   // Only include files that have additions or deletions
-  const changedFiles = resolvedStats.filter(
-    ({ addedLines, deletedLines }) => addedLines > 0 || deletedLines > 0,
-  )
+  const changedFiles = resolvedStats.filter(({ addedLines, deletedLines }) => addedLines > 0 || deletedLines > 0)
   const fileCount = changedFiles.length
 
   // Don't render if no files have diff
@@ -356,19 +316,11 @@ export const DiffStats = memo(function DiffStats({
     return null
   }
 
-  const totalAdded = changedFiles.reduce(
-    (sum, { addedLines }) => sum + addedLines,
-    0,
-  )
-  const totalDeleted = changedFiles.reduce(
-    (sum, { deletedLines }) => sum + deletedLines,
-    0,
-  )
+  const totalAdded = changedFiles.reduce((sum, { addedLines }) => sum + addedLines, 0)
+  const totalDeleted = changedFiles.reduce((sum, { deletedLines }) => sum + deletedLines, 0)
 
   return (
-    <div
-      className={`text-xs flex gap-2 text-muted-foreground px-2 py-1 rounded-md ${className}`}
-    >
+    <div className={`text-xs flex gap-2 text-muted-foreground px-2 py-1 rounded-md ${className}`}>
       <div>
         edited <span className='font-medium'>{fileCount}</span> file
         {fileCount !== 1 ? 's' : ''}

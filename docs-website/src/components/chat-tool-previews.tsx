@@ -8,9 +8,7 @@ import { ShowMore } from './show-more'
 import { ChatMarkdown } from './docs-chat'
 
 function Highlight({ children }: { children: ReactNode }) {
-  return (
-    <span className=' dark:text-purple-300 text-purple-800'>{children}</span>
-  )
+  return <span className=' dark:text-purple-300 text-purple-800'>{children}</span>
 }
 
 export function ErrorPreview({ error }) {
@@ -19,10 +17,7 @@ export function ErrorPreview({ error }) {
     <div className='flex flex-row  gap-2'>
       <div className='shrink-0'>⎿</div>
       <span>
-        Error:{' '}
-        <span className='dark:text-orange-300 text-orange-500 whitespace-pre-line'>
-          {truncatedError}
-        </span>
+        Error: <span className='dark:text-orange-300 text-orange-500 whitespace-pre-line'>{truncatedError}</span>
       </span>
     </div>
   )
@@ -50,8 +45,7 @@ export function EditorToolPreview({
 
     return (
       <ToolPreviewContainer>
-        <Dot toolCallId={toolCallId} /> Reading{' '}
-        <Highlight>{args?.path}</Highlight>
+        <Dot toolCallId={toolCallId} /> Reading <Highlight>{args?.path}</Highlight>
         {linesText}
         {error && <ErrorPreview error={error} />}
       </ToolPreviewContainer>
@@ -61,18 +55,13 @@ export function EditorToolPreview({
   if (command === 'undo_edit') {
     return (
       <ToolPreviewContainer>
-        <Dot toolCallId={toolCallId} /> Undo last edit in{' '}
-        <Highlight>{args?.path}</Highlight>
+        <Dot toolCallId={toolCallId} /> Undo last edit in <Highlight>{args?.path}</Highlight>
         {error && <ErrorPreview error={error} />}
       </ToolPreviewContainer>
     )
   }
 
-  if (
-    command === 'create' ||
-    command === 'insert' ||
-    command === 'str_replace'
-  ) {
+  if (command === 'create' || command === 'insert' || command === 'str_replace') {
     let language = 'mdx'
     let code = args?.file_text || args?.new_str || ''
     if (args?.new_str || args?.old_str) {
@@ -103,17 +92,12 @@ export function EditorToolPreview({
     return (
       <ShowMore>
         <ToolPreviewContainer>
-          <Dot toolCallId={toolCallId} /> {actionText}{' '}
-          <Highlight>{args?.path}</Highlight>
+          <Dot toolCallId={toolCallId} /> {actionText} <Highlight>{args?.path}</Highlight>
           {command === 'insert' ? `:${args?.insert_line || 0}` : ''}
           {error ? (
             <ErrorPreview error={error} />
           ) : (
-            <ChatMarkdown
-              className='block'
-              isStreaming={isChatGenerating}
-              markdown={markdown}
-            />
+            <ChatMarkdown className='block' isStreaming={isChatGenerating} markdown={markdown} />
           )}
         </ToolPreviewContainer>
       </ShowMore>
@@ -122,30 +106,14 @@ export function EditorToolPreview({
 
   return (
     <ToolPreviewContainer>
-      <Dot toolCallId={toolCallId} /> Loading files{' '}
-      <Highlight>{args?.path}</Highlight>
+      <Dot toolCallId={toolCallId} /> Loading files <Highlight>{args?.path}</Highlight>
       {error && <ErrorPreview error={error} />}
     </ToolPreviewContainer>
   )
 }
 
-export function ToolPreviewContainer({
-  children,
-  className,
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'py-2 rounded-lg font-mono text-sm space-y-2 w-full',
-        className,
-      )}
-    >
-      {children}
-    </div>
-  )
+export function ToolPreviewContainer({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cn('py-2 rounded-lg font-mono text-sm space-y-2 w-full', className)}>{children}</div>
 }
 
 export function Dot({ toolCallId }: { toolCallId?: string }) {
@@ -176,17 +144,8 @@ export function Dot({ toolCallId }: { toolCallId?: string }) {
     if (!lastToolCall || lastToolCall.id !== toolCallId) return false
 
     // Check if it's still processing (not output-available or error)
-    return (
-      lastToolCall.state !== 'output-available' &&
-      lastToolCall.state !== 'error'
-    )
+    return lastToolCall.state !== 'output-available' && lastToolCall.state !== 'error'
   }, [toolCallId, messages])
 
-  return (
-    <span
-      className={cn('whitespace-pre', isLastPendingCall && 'animate-pulse')}
-    >
-      •{' '}
-    </span>
-  )
+  return <span className={cn('whitespace-pre', isLastPendingCall && 'animate-pulse')}>• </span>
 }

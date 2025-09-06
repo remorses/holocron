@@ -7,12 +7,8 @@ function wordRegexp(words) {
 }
 var singleOperators = new RegExp("^[\\+\\-\\*/&|\\^~<>!@'\\\\]")
 var singleDelimiters = new RegExp('^[\\(\\[\\{\\},:=;\\.]')
-var doubleOperators = new RegExp(
-  '^((==)|(~=)|(<=)|(>=)|(<<)|(>>)|(\\.[\\+\\-\\*/\\^\\\\]))',
-)
-var doubleDelimiters = new RegExp(
-  '^((!=)|(\\+=)|(\\-=)|(\\*=)|(/=)|(&=)|(\\|=)|(\\^=))',
-)
+var doubleOperators = new RegExp('^((==)|(~=)|(<=)|(>=)|(<<)|(>>)|(\\.[\\+\\-\\*/\\^\\\\]))')
+var doubleDelimiters = new RegExp('^((!=)|(\\+=)|(\\-=)|(\\*=)|(/=)|(&=)|(\\|=)|(\\^=))')
 var tripleDelimiters = new RegExp('^((>>=)|(<<=))')
 var expressionEnd = new RegExp('^[\\]\\)]')
 var identifiers = new RegExp('^[_A-Za-z\xA1-\uFFFF][_A-Za-z0-9\xA1-\uFFFF]*')
@@ -159,8 +155,7 @@ function tokenBase(stream, state) {
   if (stream.match(wordRegexp(['nan', 'NaN', 'inf', 'Inf']))) {
     return 'number'
   }
-  var m =
-    stream.match(/^"(?:[^"]|"")*("|$)/) || stream.match(/^'(?:[^']|'')*('|$)/)
+  var m = stream.match(/^"(?:[^"]|"")*("|$)/) || stream.match(/^'(?:[^']|'')*('|$)/)
   if (m) {
     return m[1] ? 'string' : 'error'
   }
@@ -176,11 +171,7 @@ function tokenBase(stream, state) {
   if (stream.match(singleOperators) || stream.match(doubleOperators)) {
     return 'operator'
   }
-  if (
-    stream.match(singleDelimiters) ||
-    stream.match(doubleDelimiters) ||
-    stream.match(tripleDelimiters)
-  ) {
+  if (stream.match(singleDelimiters) || stream.match(doubleDelimiters) || stream.match(tripleDelimiters)) {
     return null
   }
   if (stream.match(expressionEnd)) {

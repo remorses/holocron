@@ -28,10 +28,7 @@ export const useScrollToFirstAddedIfAtTop = ({
 
     const rect = first.getBoundingClientRect()
     // Check if element is not fully in view vertically
-    const inView =
-      rect.top >= 0 &&
-      rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight)
+    const inView = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
 
     if (!inView) {
       first.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -55,11 +52,7 @@ export const useAddedHighlighter = ({
     if (!host || !CSS.highlights) return
 
     /* collect all added nodes except opt-outs */
-    const added: HTMLElement[] = Array.from(
-      host.querySelectorAll<HTMLElement>(
-        '[data-added]:not([data-no-highlight])',
-      ),
-    )
+    const added: HTMLElement[] = Array.from(host.querySelectorAll<HTMLElement>('[data-added]:not([data-no-highlight])'))
 
     if (!added.length) return
 

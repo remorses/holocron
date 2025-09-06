@@ -70,9 +70,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -171,11 +169,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -186,8 +180,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'zISvybPEk',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'zISvybPEk',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -200,13 +193,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className2, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -234,12 +221,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1vlqip2',
-              className2,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1vlqip2', className2, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'zISvybPEk'}
@@ -373,9 +355,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   y={
                     (componentViewport?.y || 0) +
                     200 +
-                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 +
-                      0 +
-                      0) +
+                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 + 0 + 0) +
                     0 +
                     71.2 +
                     0 +
@@ -388,10 +368,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           150 +
-                          (((componentViewport?.height || 847) - 190 - 611.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 847) - 190 - 611.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -402,10 +379,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           80 +
-                          (((componentViewport?.height || 200) - 120 - 1141.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 200) - 120 - 1141.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -445,8 +419,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   >
                     {_jsx(stdin_default2, {
                       e2KlnzxYz: 'Instant Data Access',
-                      Ec4tMUtI0:
-                        'Fetch and update your data in milliseconds with our modern API.',
+                      Ec4tMUtI0: 'Fetch and update your data in milliseconds with our modern API.',
                       height: '100%',
                       id: 'NjrcSoQxz',
                       layoutId: 'NjrcSoQxz',
@@ -460,8 +433,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         {
                           C_ZZDts2y: {
                             e2KlnzxYz: 'Real-Time Insights',
-                            Ec4tMUtI0:
-                              'Access blockchain data in real-time to make timely and informed decisions.',
+                            Ec4tMUtI0: 'Access blockchain data in real-time to make timely and informed decisions.',
                           },
                         },
                         baseVariant,
@@ -476,9 +448,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   y={
                     (componentViewport?.y || 0) +
                     200 +
-                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 +
-                      0 +
-                      0) +
+                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 + 0 + 0) +
                     0 +
                     71.2 +
                     0 +
@@ -491,10 +461,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           150 +
-                          (((componentViewport?.height || 847) - 190 - 611.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 847) - 190 - 611.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -505,10 +472,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           80 +
-                          (((componentViewport?.height || 200) - 120 - 1141.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 200) - 120 - 1141.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -551,8 +515,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   >
                     {_jsx(stdin_default2, {
                       e2KlnzxYz: 'Seamless Integration',
-                      Ec4tMUtI0:
-                        'Connect holocron to your favorite tools and frameworks with ease.',
+                      Ec4tMUtI0: 'Connect holocron to your favorite tools and frameworks with ease.',
                       height: '100%',
                       id: 'rwuszWyOa',
                       layoutId: 'rwuszWyOa',
@@ -571,9 +534,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   y={
                     (componentViewport?.y || 0) +
                     200 +
-                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 +
-                      0 +
-                      0) +
+                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 + 0 + 0) +
                     0 +
                     71.2 +
                     0 +
@@ -586,10 +547,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           150 +
-                          (((componentViewport?.height || 847) - 190 - 611.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 847) - 190 - 611.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -600,10 +558,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           80 +
-                          (((componentViewport?.height || 200) - 120 - 1141.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 200) - 120 - 1141.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -646,8 +601,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   >
                     {_jsx(stdin_default2, {
                       e2KlnzxYz: 'Secure by Design',
-                      Ec4tMUtI0:
-                        'Your data is encrypted and protected with enterprise-grade security.',
+                      Ec4tMUtI0: 'Your data is encrypted and protected with enterprise-grade security.',
                       height: '100%',
                       id: 'iGG3ubzmv',
                       layoutId: 'iGG3ubzmv',
@@ -666,9 +620,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   y={
                     (componentViewport?.y || 0) +
                     200 +
-                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 +
-                      0 +
-                      0) +
+                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 + 0 + 0) +
                     0 +
                     71.2 +
                     0 +
@@ -681,10 +633,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           150 +
-                          (((componentViewport?.height || 847) - 190 - 611.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 847) - 190 - 611.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -695,10 +644,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           80 +
-                          (((componentViewport?.height || 200) - 120 - 1141.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 200) - 120 - 1141.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -741,8 +687,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   >
                     {_jsx(stdin_default2, {
                       e2KlnzxYz: 'Scalable Infrastructure',
-                      Ec4tMUtI0:
-                        'Grow from prototype to production without worrying about capacity.',
+                      Ec4tMUtI0: 'Grow from prototype to production without worrying about capacity.',
                       height: '100%',
                       id: 'bW_HOgte1',
                       layoutId: 'bW_HOgte1',
@@ -761,9 +706,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   y={
                     (componentViewport?.y || 0) +
                     200 +
-                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 +
-                      0 +
-                      0) +
+                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 + 0 + 0) +
                     0 +
                     71.2 +
                     0 +
@@ -776,10 +719,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           150 +
-                          (((componentViewport?.height || 847) - 190 - 611.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 847) - 190 - 611.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -790,10 +730,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           80 +
-                          (((componentViewport?.height || 200) - 120 - 1141.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 200) - 120 - 1141.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -836,8 +773,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   >
                     {_jsx(stdin_default2, {
                       e2KlnzxYz: 'Developer Friendly',
-                      Ec4tMUtI0:
-                        'Comprehensive docs and SDKs for a smooth development experience.',
+                      Ec4tMUtI0: 'Comprehensive docs and SDKs for a smooth development experience.',
                       height: '100%',
                       id: 'QMCfI5Sdn',
                       layoutId: 'QMCfI5Sdn',
@@ -856,9 +792,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   y={
                     (componentViewport?.y || 0) +
                     200 +
-                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 +
-                      0 +
-                      0) +
+                    (((componentViewport?.height || 676) - 250 - 426.2) / 2 + 0 + 0) +
                     0 +
                     71.2 +
                     0 +
@@ -871,10 +805,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           150 +
-                          (((componentViewport?.height || 847) - 190 - 611.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 847) - 190 - 611.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -885,10 +816,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                         y:
                           (componentViewport?.y || 0) +
                           80 +
-                          (((componentViewport?.height || 200) - 120 - 1141.2) /
-                            2 +
-                            0 +
-                            0) +
+                          (((componentViewport?.height || 200) - 120 - 1141.2) / 2 + 0 + 0) +
                           0 +
                           71.2 +
                           0 +
@@ -931,8 +859,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   >
                     {_jsx(stdin_default2, {
                       e2KlnzxYz: 'Real-Time Sync',
-                      Ec4tMUtI0:
-                        'Keep your apps up-to-date with instant data synchronization.',
+                      Ec4tMUtI0: 'Keep your apps up-to-date with instant data synchronization.',
                       height: '100%',
                       id: 'Jp0PD1z46',
                       layoutId: 'Jp0PD1z46',
@@ -968,8 +895,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: (componentViewport?.height || 847) * 1 * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        ((componentViewport?.height || 847) *
-                          0.5000000000000002 -
+                        ((componentViewport?.height || 847) * 0.5000000000000002 -
                           ((componentViewport?.height || 847) * 1) / 2) +
                         0,
                     },
@@ -977,8 +903,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       height: (componentViewport?.height || 200) * 1 * 1,
                       y:
                         (componentViewport?.y || 0) +
-                        ((componentViewport?.height || 200) *
-                          0.5000000000000002 -
+                        ((componentViewport?.height || 200) * 0.5000000000000002 -
                           ((componentViewport?.height || 200) * 1) / 2) +
                         0,
                     },
@@ -1075,8 +1000,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -1156,9 +1080,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -1189,17 +1111,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

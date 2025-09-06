@@ -54,25 +54,14 @@ addPropertyControls(AvoidLayoutJumping, {
     displaySegmentedControl: true,
     segmentedControlDirection: 'vertical',
     // @ts-ignore
-    optionIcons: [
-      'direction-vertical',
-      'direction-horizontal',
-      'direction-all',
-    ],
-    description:
-      'More components at [Framer University](https://frameruni.link/cc).',
+    optionIcons: ['direction-vertical', 'direction-horizontal', 'direction-all'],
+    description: 'More components at [Framer University](https://frameruni.link/cc).',
   },
 })
 
 // /:https://framerusercontent.com/modules/pdBKDKoqm14kvHVBJbPp/vXMSnKnLT3x4gH3shABz/ho_VhF6QI.js
 import { jsx as _jsx2 } from 'react/jsx-runtime'
-import {
-  addPropertyControls as addPropertyControls2,
-  ControlType as ControlType2,
-  cx,
-  motion,
-  withCSS,
-} from 'unframer'
+import { addPropertyControls as addPropertyControls2, ControlType as ControlType2, cx, motion, withCSS } from 'unframer'
 import * as React from 'react'
 import { forwardRef as forwardRef2 } from 'react'
 var SVG = /* @__PURE__ */ forwardRef2((props, ref) => {
@@ -88,8 +77,7 @@ var getProps = ({ color, height, id, width, ...props }) => {
   }
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-  const { style, className, layoutId, variant, HN7TZix3o, ...restProps } =
-    getProps(props)
+  const { style, className, layoutId, variant, HN7TZix3o, ...restProps } = getProps(props)
   return /* @__PURE__ */ _jsx2(SVG, {
     ...restProps,
     className: cx('framer-Lvnjs', className),

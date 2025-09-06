@@ -6,10 +6,7 @@ export function jsxDedent(strings: any, ...values: any[]) {
   strings = [...strings]
   if (strings.length) {
     strings[0] = strings[0].replace(/^\s+/, '')
-    strings[strings.length - 1] = strings[strings.length - 1].replace(
-      /\s+$/,
-      '',
-    )
+    strings[strings.length - 1] = strings[strings.length - 1].replace(/\s+$/, '')
   }
   // ── 1. compute common left indent ─────────────────────────
   const minIndent = strings.reduce((min, chunk) => {

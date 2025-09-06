@@ -19,8 +19,7 @@ var getProps = ({ color, height, id, width, ...props }) => {
   }
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-  const { style, className, layoutId, variant, HN7TZix3o, ...restProps } =
-    getProps(props)
+  const { style, className, layoutId, variant, HN7TZix3o, ...restProps } = getProps(props)
   return /* @__PURE__ */ _jsx(SVG, {
     ...restProps,
     className: cx('framer-80uTL', className),

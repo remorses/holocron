@@ -14,11 +14,7 @@ import {
   CommandItem,
   CommandList,
 } from 'website/src/components/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from 'website/src/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'
 
 interface ComboboxProps {
   value?: string
@@ -54,11 +50,7 @@ export function Combobox({
           aria-expanded={open}
           className={cn('justify-between max-w-full', className)}
         >
-          <span className='truncate'>
-            {value
-              ? items.find((item) => item.value === value)?.label
-              : placeholder}
-          </span>
+          <span className='truncate'>{value ? items.find((item) => item.value === value)?.label : placeholder}</span>
           <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
@@ -81,19 +73,13 @@ export function Combobox({
                   <div className='flex items-center justify-between gap-4 min-w-0 w-full'>
                     <span className='truncate'>{item.label}</span>
                     {item.branch && (
-                      <Badge
-                        variant='outline'
-                        className='text-xs shrink-0 truncate'
-                      >
+                      <Badge variant='outline' className='text-xs shrink-0 truncate'>
                         {item.branch}
                       </Badge>
                     )}
                   </div>
                   <Check
-                    className={cn(
-                      'ml-auto h-4 w-4 shrink-0',
-                      value === item.value ? 'opacity-100' : 'opacity-0',
-                    )}
+                    className={cn('ml-auto h-4 w-4 shrink-0', value === item.value ? 'opacity-100' : 'opacity-0')}
                   />
                 </CommandItem>
               ))}

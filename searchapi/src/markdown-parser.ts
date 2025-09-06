@@ -80,10 +80,7 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
   } else {
     // Process content before first heading if any
     if (currentLineIndex < headingPositions[0].line) {
-      const introContent = lines
-        .slice(currentLineIndex, headingPositions[0].line)
-        .join('\n')
-        .trim()
+      const introContent = lines.slice(currentLineIndex, headingPositions[0].line).join('\n').trim()
       if (introContent) {
         sections.push({
           content: introContent,

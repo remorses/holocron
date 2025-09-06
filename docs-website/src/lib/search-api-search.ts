@@ -33,9 +33,7 @@ export async function searchDocsWithSearchApi({
 
   // Apply exact search wrapping if requested
   const finalQuery =
-    exact && !searchQuery.startsWith('"') && !searchQuery.endsWith('"')
-      ? `"${searchQuery}"`
-      : searchQuery
+    exact && !searchQuery.startsWith('"') && !searchQuery.endsWith('"') ? `"${searchQuery}"` : searchQuery
 
   let searchResults: SortedResult[] = []
 
@@ -60,9 +58,7 @@ export async function searchDocsWithSearchApi({
   return searchResults
 }
 
-function formatSearchApiResults(
-  response: SearchSectionsResponse,
-): SortedResult[] {
+function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[] {
   const grouped: SortedResult[] = []
   const pageGroups = new Map<string, typeof response.results>()
 
@@ -78,8 +74,7 @@ function formatSearchApiResults(
     // Add page-level result
     const firstResult = results[0]
     const pageTitle = firstResult.metadata?.title || filename
-    const pageSlug =
-      firstResult.metadata?.slug || '/' + filename.replace(/\.mdx?$/, '')
+    const pageSlug = firstResult.metadata?.slug || '/' + filename.replace(/\.mdx?$/, '')
 
     grouped.push({
       id: 'page-' + filename,
@@ -90,12 +85,8 @@ function formatSearchApiResults(
 
     // Add section-level results
     for (const result of results) {
-      const basePath =
-        result.metadata?.slug || '/' + result.filename.replace(/\.mdx?$/, '')
-      const fragment =
-        result.sectionSlug && result.sectionSlug !== 'frontmatter-0'
-          ? result.sectionSlug
-          : undefined
+      const basePath = result.metadata?.slug || '/' + result.filename.replace(/\.mdx?$/, '')
+      const fragment = result.sectionSlug && result.sectionSlug !== 'frontmatter-0' ? result.sectionSlug : undefined
       const sectionUrl = fragment ? `${basePath}#${fragment}` : basePath
 
       grouped.push({
@@ -113,15 +104,9 @@ function formatSearchApiResults(
   return grouped
 }
 
-function searchFilesInDraft(
-  filesInDraft: Record<string, FileUpdate>,
-  searchQuery: string,
-): SortedResult[] {
+function searchFilesInDraft(filesInDraft: Record<string, FileUpdate>, searchQuery: string): SortedResult[] {
   const results: SortedResult[] = []
-  const queryRegex = new RegExp(
-    searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-    'gi',
-  )
+  const queryRegex = new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
 
   for (const [filePath, fileUpdate] of Object.entries(filesInDraft)) {
     if (!fileUpdate.content) continue
@@ -140,9 +125,7 @@ function searchFilesInDraft(
         .pop() || 'Untitled'
 
     if (frontmatterMatch) {
-      const titleMatch = frontmatterMatch[1].match(
-        /title:\s*['"]?([^'"\n]+)['"]?/,
-      )
+      const titleMatch = frontmatterMatch[1].match(/title:\s*['"]?([^'"\n]+)['"]?/)
       if (titleMatch) {
         title = titleMatch[1].trim()
       }

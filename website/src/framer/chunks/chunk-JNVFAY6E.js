@@ -26,10 +26,7 @@ var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -52,14 +49,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    JYBYjvMjT,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className2, layoutId, variant, JYBYjvMjT, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -89,12 +79,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-opxhqq',
-            className2,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-opxhqq', className2, classNames),
           'data-border': true,
           'data-framer-name': 'Variant 1',
           layoutDependency,
@@ -102,8 +87,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           ref: refBinding,
           style: {
             '--border-bottom-width': '1px',
-            '--border-color':
-              'var(--token-ebf207fb-f9e0-4c9c-91c0-517fa05c795c, rgb(184, 92, 0))',
+            '--border-color': 'var(--token-ebf207fb-f9e0-4c9c-91c0-517fa05c795c, rgb(184, 92, 0))',
             '--border-left-width': '1px',
             '--border-right-width': '1px',
             '--border-style': 'solid',
@@ -113,8 +97,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             borderBottomRightRadius: 15,
             borderTopLeftRadius: 15,
             borderTopRightRadius: 15,
-            boxShadow:
-              '0px 3px 10px 0px var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
+            boxShadow: '0px 3px 10px 0px var(--token-61af1f46-12b4-4cd6-9489-e4165314c405, rgba(209, 63, 0, 0.7))',
             WebkitBackdropFilter: 'blur(5px)',
             ...style,
           },
@@ -174,8 +157,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

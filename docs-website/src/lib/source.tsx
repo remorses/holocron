@@ -1,10 +1,4 @@
-import {
-  loader,
-  MetaData,
-  PageData,
-  PageFile,
-  VirtualFile,
-} from 'fumadocs-core/source'
+import { loader, MetaData, PageData, PageFile, VirtualFile } from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { PageTree } from 'fumadocs-core/server'
@@ -55,10 +49,7 @@ export function getFumadocsSource({
   return source
 }
 
-export const attachFile = (
-  node: PageTree.Item,
-  file: PageFile | undefined,
-): PageTree.Item => {
+export const attachFile = (node: PageTree.Item, file: PageFile | undefined): PageTree.Item => {
   if (!file) return node
   let data = file.data as ProcessorDataFrontmatter
 

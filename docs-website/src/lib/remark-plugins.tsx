@@ -28,11 +28,7 @@ export function remarkCodeGroup({
 }: RemarkInstallOptions = {}): Transformer<Root, Root> {
   return (tree) => {
     visit(tree, 'mdxJsxFlowElement', (node, index, parent) => {
-      if (
-        node.type !== 'mdxJsxFlowElement' ||
-        node.name !== 'CodeGroup' ||
-        !Array.isArray(node.children)
-      ) {
+      if (node.type !== 'mdxJsxFlowElement' || node.name !== 'CodeGroup' || !Array.isArray(node.children)) {
         return
       }
 
@@ -111,12 +107,7 @@ export function remarkCodeGroup({
 export function remarkMermaidCode(): Transformer<Root, Root> {
   return (tree) => {
     visit(tree, 'code', (node, index, parent) => {
-      if (
-        node.type !== 'code' ||
-        node.lang !== 'mermaid' ||
-        !parent ||
-        typeof index !== 'number'
-      ) {
+      if (node.type !== 'code' || node.lang !== 'mermaid' || !parent || typeof index !== 'number') {
         return
       }
 
@@ -142,19 +133,12 @@ export function remarkMermaidCode(): Transformer<Root, Root> {
 export function remarkSingleAccordionItems(): Transformer<Root, Root> {
   return (tree) => {
     visit(tree, 'mdxJsxFlowElement', (node, index, parent) => {
-      if (
-        node.type !== 'mdxJsxFlowElement' ||
-        node.name !== 'Accordion' ||
-        !Array.isArray(parent?.children)
-      ) {
+      if (node.type !== 'mdxJsxFlowElement' || node.name !== 'Accordion' || !Array.isArray(parent?.children)) {
         return
       }
 
       // Check if immediate parent is AccordionGroup or Accordions
-      if (
-        parent.type === 'mdxJsxFlowElement' &&
-        (parent.name === 'AccordionGroup' || parent.name === 'Accordions')
-      ) {
+      if (parent.type === 'mdxJsxFlowElement' && (parent.name === 'AccordionGroup' || parent.name === 'Accordions')) {
         return
       }
 
@@ -167,11 +151,7 @@ export function remarkSingleAccordionItems(): Transformer<Root, Root> {
   }
 }
 
-export function createElement(
-  name: string,
-  attributes: object[],
-  children?: unknown,
-): object {
+export function createElement(name: string, attributes: object[], children?: unknown): object {
   const element: Record<string, unknown> = {
     type: 'mdxJsxFlowElement',
     name,

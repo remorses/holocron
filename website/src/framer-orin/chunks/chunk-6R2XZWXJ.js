@@ -84,18 +84,12 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0, delay: 0, duration: 0.4, type: 'spring' }
 var toResponsiveImage = (value) => {
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.src === 'string'
-  ) {
+  if (typeof value === 'object' && value !== null && typeof value.src === 'string') {
     return value
   }
   return typeof value === 'string' ? { src: value } : void 0
@@ -104,10 +98,7 @@ var transition2 = { bounce: 0, delay: 0.2, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -115,26 +106,11 @@ var Transition = ({ value, children }) => {
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = { Default: 'vU0jij3HY', Phone: 'XuwkBHaAi' }
-var getProps = ({
-  accent,
-  desc,
-  height,
-  id,
-  image,
-  title,
-  width,
-  ...props
-}) => {
+var getProps = ({ accent, desc, height, id, image, title, width, ...props }) => {
   return {
     ...props,
-    awB03NceI:
-      desc ??
-      props.awB03NceI ??
-      'Load pages in milliseconds.\nKeep visitors coming back.',
-    inzsA49iE:
-      accent ??
-      props.inzsA49iE ??
-      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+    awB03NceI: desc ?? props.awB03NceI ?? 'Load pages in milliseconds.\nKeep visitors coming back.',
+    inzsA49iE: accent ?? props.inzsA49iE ?? 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
     N6Sd3edYv: title ?? props.N6Sd3edYv ?? 'Better user experience',
     v8r3ar16y: image ??
       props.v8r3ar16y ?? {
@@ -144,8 +120,7 @@ var getProps = ({
         srcSet:
           'https://framerusercontent.com/images/UUtWM4ApOe8XEPFio72PFjq9hbc.png?scale-down-to=512 512w,https://framerusercontent.com/images/UUtWM4ApOe8XEPFio72PFjq9hbc.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/UUtWM4ApOe8XEPFio72PFjq9hbc.png 1588w',
       },
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'vU0jij3HY',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'vU0jij3HY',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -204,12 +179,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-quvjok',
-            className3,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-quvjok', className3, classNames),
           'data-framer-name': 'Default',
           layoutDependency,
           layoutId: 'vU0jij3HY',
@@ -256,8 +226,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               style: {
                 mask: 'linear-gradient(24deg, rgba(0, 0, 0, 0.1) 17%, rgba(0, 0, 0, 0.7) 61%) add',
                 opacity: 0.8,
-                WebkitMask:
-                  'linear-gradient(24deg, rgba(0, 0, 0, 0.1) 17%, rgba(0, 0, 0, 0.7) 61%) add',
+                WebkitMask: 'linear-gradient(24deg, rgba(0, 0, 0, 0.1) 17%, rgba(0, 0, 0, 0.7) 61%) add',
               },
               variants: {
                 'vU0jij3HY-hover': { opacity: 1 },
@@ -265,124 +234,115 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
               },
               children: [
                 /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                  children: /* @__PURE__ */ _jsx(
-                    SmartComponentScopedContainer,
-                    {
-                      className: 'framer-1vgnwgl-container',
-                      'data-framer-name': 'Accent',
+                  children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                    className: 'framer-1vgnwgl-container',
+                    'data-framer-name': 'Accent',
+                    isAuthoredByUser: true,
+                    isModuleExternal: true,
+                    layoutDependency,
+                    layoutId: 'oO9rCMd9T-container',
+                    name: 'Accent',
+                    nodeId: 'oO9rCMd9T',
+                    rendersWithMotion: true,
+                    scopeId: 'YqcbBjDQ5',
+                    style: {
+                      filter: 'grayscale(1)',
+                      opacity: 0.8,
+                      WebkitFilter: 'grayscale(1)',
+                    },
+                    variants: {
+                      'vU0jij3HY-hover': {
+                        filter: 'grayscale(0)',
+                        WebkitFilter: 'grayscale(0)',
+                      },
+                      XuwkBHaAi: {
+                        filter: 'none',
+                        WebkitFilter: 'none',
+                      },
+                    },
+                    children: /* @__PURE__ */ _jsx(Dither, {
+                      algorithm: 'random',
+                      animation: {
+                        canvasPreview: true,
+                        enabled: false,
+                        intensity: 10,
+                        interval: 0.1,
+                      },
+                      backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                      brightness: 58,
+                      dotColor: inzsA49iE,
+                      enabled: true,
+                      glow: 0,
+                      height: '100%',
+                      id: 'oO9rCMd9T',
+                      image: toResponsiveImage(v8r3ar16y),
+                      layoutId: 'oO9rCMd9T',
+                      midtones: 59,
+                      name: 'Accent',
+                      pixelSize: 2,
+                      radius: '0px',
+                      style: {
+                        height: '100%',
+                        width: '100%',
+                      },
+                      threshold: 118,
+                      width: '100%',
+                      ...addPropertyOverrides(
+                        {
+                          'vU0jij3HY-hover': {
+                            animation: {
+                              canvasPreview: true,
+                              enabled: true,
+                              intensity: 5,
+                              interval: 0.2,
+                            },
+                          },
+                        },
+                        baseVariant,
+                        gestureVariant,
+                      ),
+                    }),
+                  }),
+                }),
+                isDisplayed() &&
+                  /* @__PURE__ */ _jsx(ComponentViewportProvider, {
+                    children: /* @__PURE__ */ _jsx(SmartComponentScopedContainer, {
+                      className: 'framer-5fdrg6-container',
                       isAuthoredByUser: true,
                       isModuleExternal: true,
                       layoutDependency,
-                      layoutId: 'oO9rCMd9T-container',
-                      name: 'Accent',
-                      nodeId: 'oO9rCMd9T',
+                      layoutId: 'HZnKLD9V4-container',
+                      nodeId: 'HZnKLD9V4',
                       rendersWithMotion: true,
                       scopeId: 'YqcbBjDQ5',
-                      style: {
-                        filter: 'grayscale(1)',
-                        opacity: 0.8,
-                        WebkitFilter: 'grayscale(1)',
-                      },
-                      variants: {
-                        'vU0jij3HY-hover': {
-                          filter: 'grayscale(0)',
-                          WebkitFilter: 'grayscale(0)',
-                        },
-                        XuwkBHaAi: {
-                          filter: 'none',
-                          WebkitFilter: 'none',
-                        },
-                      },
                       children: /* @__PURE__ */ _jsx(Dither, {
-                        algorithm: 'random',
+                        algorithm: 'ordered',
                         animation: {
-                          canvasPreview: true,
+                          canvasPreview: false,
                           enabled: false,
-                          intensity: 10,
-                          interval: 0.1,
+                          intensity: 20,
+                          interval: 0.08,
                         },
-                        backgroundColor:
-                          'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                        brightness: 58,
-                        dotColor: inzsA49iE,
+                        backgroundColor: 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                        brightness: 29,
+                        dotColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                         enabled: true,
                         glow: 0,
                         height: '100%',
-                        id: 'oO9rCMd9T',
+                        id: 'HZnKLD9V4',
                         image: toResponsiveImage(v8r3ar16y),
-                        layoutId: 'oO9rCMd9T',
-                        midtones: 59,
-                        name: 'Accent',
-                        pixelSize: 2,
+                        layoutId: 'HZnKLD9V4',
+                        midtones: 87,
+                        pixelSize: 3,
                         radius: '0px',
                         style: {
                           height: '100%',
                           width: '100%',
                         },
-                        threshold: 118,
+                        threshold: 90,
                         width: '100%',
-                        ...addPropertyOverrides(
-                          {
-                            'vU0jij3HY-hover': {
-                              animation: {
-                                canvasPreview: true,
-                                enabled: true,
-                                intensity: 5,
-                                interval: 0.2,
-                              },
-                            },
-                          },
-                          baseVariant,
-                          gestureVariant,
-                        ),
                       }),
-                    },
-                  ),
-                }),
-                isDisplayed() &&
-                  /* @__PURE__ */ _jsx(ComponentViewportProvider, {
-                    children: /* @__PURE__ */ _jsx(
-                      SmartComponentScopedContainer,
-                      {
-                        className: 'framer-5fdrg6-container',
-                        isAuthoredByUser: true,
-                        isModuleExternal: true,
-                        layoutDependency,
-                        layoutId: 'HZnKLD9V4-container',
-                        nodeId: 'HZnKLD9V4',
-                        rendersWithMotion: true,
-                        scopeId: 'YqcbBjDQ5',
-                        children: /* @__PURE__ */ _jsx(Dither, {
-                          algorithm: 'ordered',
-                          animation: {
-                            canvasPreview: false,
-                            enabled: false,
-                            intensity: 20,
-                            interval: 0.08,
-                          },
-                          backgroundColor:
-                            'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
-                          brightness: 29,
-                          dotColor:
-                            'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
-                          enabled: true,
-                          glow: 0,
-                          height: '100%',
-                          id: 'HZnKLD9V4',
-                          image: toResponsiveImage(v8r3ar16y),
-                          layoutId: 'HZnKLD9V4',
-                          midtones: 87,
-                          pixelSize: 3,
-                          radius: '0px',
-                          style: {
-                            height: '100%',
-                            width: '100%',
-                          },
-                          threshold: 90,
-                          width: '100%',
-                        }),
-                      },
-                    ),
+                    }),
                   }),
               ],
             }),
@@ -525,8 +485,7 @@ addPropertyControls(FramerYqcbBjDQ5, {
     type: ControlType.Enum,
   },
   inzsA49iE: {
-    defaultValue:
-      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)) /* {"name":"Accent"} */',
+    defaultValue: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197)) /* {"name":"Accent"} */',
     title: 'Accent',
     type: ControlType.Color,
   },
@@ -559,8 +518,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

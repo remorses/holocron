@@ -70,16 +70,9 @@ this is another paragraph in the same subsection 2
 
     const result = await processor.process(basicMdx)
     const data: ProcessorData = result.data as any
-    const grouped = Object.entries(
-      groupBy(data?.structuredData.contents, (x) => x.heading || ''),
-    )
+    const grouped = Object.entries(groupBy(data?.structuredData.contents, (x) => x.heading || ''))
       .map(([k, v]) => {
-        return (
-          '## ' +
-          k +
-          '\n\n' +
-          v.flatMap((item) => [item.content]).join('\n---\n')
-        )
+        return '## ' + k + '\n\n' + v.flatMap((item) => [item.content]).join('\n---\n')
       })
       .join('\n\n----------\n\n')
     expect(grouped).toMatchInlineSnapshot(`

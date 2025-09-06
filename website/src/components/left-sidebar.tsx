@@ -23,14 +23,7 @@ import { Combobox } from './ui/combobox'
 import { Badge } from './ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { useErrorPopover } from './error-popover'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-  CommandInput,
-} from './ui/command'
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandInput } from './ui/command'
 import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
 import type { Route as BranchRoute } from 'website/src/routes/org.$orgId.branch.$branchId'
@@ -106,9 +99,7 @@ function NewChatButton() {
       })
 
       if (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : 'Failed to create new chat',
-        )
+        setErrorMessage(error instanceof Error ? error.message : 'Failed to create new chat')
         return
       }
 
@@ -122,9 +113,7 @@ function NewChatButton() {
         )
       }
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to create new chat',
-      )
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to create new chat')
     } finally {
       setIsCreatingChat(false)
     }
@@ -145,23 +134,13 @@ function NewChatButton() {
               }}
               asChild
             >
-              <Button
-                variant='secondary'
-                className='flex items-center gap-1 px-3'
-                disabled={isCreatingChat}
-              >
-                {isCreatingChat ? (
-                  <Loader2 className='h-4 w-4 animate-spin' />
-                ) : (
-                  <PlusIcon className='h-4 w-4' />
-                )}
+              <Button variant='secondary' className='flex items-center gap-1 px-3' disabled={isCreatingChat}>
+                {isCreatingChat ? <Loader2 className='h-4 w-4 animate-spin' /> : <PlusIcon className='h-4 w-4' />}
                 <ChevronDown className='h-3 w-3' />
               </Button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <TooltipContent>
-            {isCreatingChat ? 'Creating new chat...' : 'New chat'}
-          </TooltipContent>
+          <TooltipContent>{isCreatingChat ? 'Creating new chat...' : 'New chat'}</TooltipContent>
         </Tooltip>
         <PopoverContent className='p-0 w-56' align='start'>
           <Command>
@@ -178,9 +157,7 @@ function NewChatButton() {
                     }}
                     className='max-w-full cursor-pointer'
                   >
-                    <span className='truncate'>
-                      New chat in {branch.githubBranch}
-                    </span>
+                    <span className='truncate'>New chat in {branch.githubBranch}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -191,13 +168,9 @@ function NewChatButton() {
     </ErrorTooltipAnchor>
   )
 }
-export function ChatLeftSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
+export function ChatLeftSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const hideBrowser = useShouldHideBrowser()
-  const orgData = useRouteLoaderData(
-    'routes/org.$orgId',
-  ) as OrgRoute.ComponentProps['loaderData']
+  const orgData = useRouteLoaderData('routes/org.$orgId') as OrgRoute.ComponentProps['loaderData']
 
   const params = useParams()
   const { chatId } = params

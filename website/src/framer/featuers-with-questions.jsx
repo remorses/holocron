@@ -26,11 +26,7 @@
 import { stdin_default } from './chunks/chunk-IETFVNRG.js'
 import './chunks/chunk-BTSBQWPZ.js'
 import './chunks/chunk-EWWPQ2JC.js'
-import {
-  className as className2,
-  css as css2,
-  fonts as fonts2,
-} from './chunks/chunk-KYATNZPG.js'
+import { className as className2, css as css2, fonts as fonts2 } from './chunks/chunk-KYATNZPG.js'
 import { className, css, fonts } from './chunks/chunk-6G2SY433.js'
 import { stdin_default as stdin_default2 } from './chunks/chunk-EHCTMXQN.js'
 import { routes } from './chunks/chunk-75FLX355.js'
@@ -73,9 +69,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -151,11 +145,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -166,8 +156,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'EMqlJYnox',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'EMqlJYnox',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -180,13 +169,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className3,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className3, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -218,12 +201,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1m7hue2',
-              className3,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1m7hue2', className3, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'EMqlJYnox'}
@@ -313,9 +291,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     '--framer-text-alignment': 'center',
                                   }}
                                 >
-                                  {
-                                    'why Fumabase instead of managing my own code?'
-                                  }
+                                  {'why Fumabase instead of managing my own code?'}
                                 </motion.p>
                               </React.Fragment>
                             ),
@@ -386,28 +362,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   </MotionDivWithFX>
                   <ComponentViewportProvider
                     height={40}
-                    y={
-                      (componentViewport?.y || 0) +
-                      250 +
-                      0 +
-                      0 +
-                      0 +
-                      0 +
-                      20 +
-                      197.2
-                    }
+                    y={(componentViewport?.y || 0) + 250 + 0 + 0 + 0 + 0 + 20 + 197.2}
                     {...addPropertyOverrides(
                       {
                         cd5FSHbb8: {
                           y:
                             (componentViewport?.y || 0) +
                             150 +
-                            (((componentViewport?.height || 200) -
-                              190 -
-                              403.2) /
-                              2 +
-                              0 +
-                              0) +
+                            (((componentViewport?.height || 200) - 190 - 403.2) / 2 + 0 + 0) +
                             0 +
                             0 +
                             0 +
@@ -416,15 +378,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             178.2,
                         },
                         nlVa1BmpJ: {
-                          y:
-                            (componentViewport?.y || 0) +
-                            150 +
-                            0 +
-                            0 +
-                            0 +
-                            0 +
-                            20 +
-                            197.2,
+                          y: (componentViewport?.y || 0) + 150 + 0 + 0 + 0 + 0 + 20 + 197.2,
                         },
                       },
                       baseVariant,
@@ -535,9 +489,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                                     '--framer-text-alignment': 'center',
                                   }}
                                 >
-                                  {
-                                    'why Fumabase instead of managing my own code?'
-                                  }
+                                  {'why Fumabase instead of managing my own code?'}
                                 </motion.p>
                               </React.Fragment>
                             ),
@@ -608,28 +560,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   </MotionDivWithFX>
                   <ComponentViewportProvider
                     height={40}
-                    y={
-                      (componentViewport?.y || 0) +
-                      250 +
-                      0 +
-                      0 +
-                      287.2 +
-                      0 +
-                      20 +
-                      114
-                    }
+                    y={(componentViewport?.y || 0) + 250 + 0 + 0 + 287.2 + 0 + 20 + 114}
                     {...addPropertyOverrides(
                       {
                         cd5FSHbb8: {
                           y:
                             (componentViewport?.y || 0) +
                             150 +
-                            (((componentViewport?.height || 200) -
-                              190 -
-                              403.2) /
-                              2 +
-                              0 +
-                              0) +
+                            (((componentViewport?.height || 200) - 190 - 403.2) / 2 + 0 + 0) +
                             0 +
                             268.2 +
                             0 +
@@ -638,15 +576,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                             95,
                         },
                         nlVa1BmpJ: {
-                          y:
-                            (componentViewport?.y || 0) +
-                            150 +
-                            0 +
-                            0 +
-                            282.2 +
-                            0 +
-                            20 +
-                            114,
+                          y: (componentViewport?.y || 0) + 150 + 0 + 0 + 282.2 + 0 + 20 + 114,
                         },
                       },
                       baseVariant,
@@ -886,8 +816,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -964,9 +893,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -997,17 +924,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

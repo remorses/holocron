@@ -25,8 +25,7 @@ export const env = {
   QSTASH_TOKEN: process.env.QSTASH_TOKEN,
   // TRIEVE_ORGANIZATION_ID: process.env.TRIEVE_ORGANIZATION_ID,
   // TRIEVE_API_KEY: process.env.TRIEVE_API_KEY,
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
@@ -38,10 +37,7 @@ export const env = {
 
 // console.log(env)
 for (let k in env) {
-  if (
-    env[k] == null &&
-    (typeof window === 'undefined' || k.includes('PUBLIC'))
-  ) {
+  if (env[k] == null && (typeof window === 'undefined' || k.includes('PUBLIC'))) {
     throw new Error(`Missing env var ${k}`)
   }
 }

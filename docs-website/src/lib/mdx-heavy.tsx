@@ -10,11 +10,7 @@ import acornJsx from 'acorn-jsx'
 import { TOCItemType } from 'fumadocs-core/server'
 
 import { trySync } from './utils'
-import {
-  remarkCodeGroup,
-  remarkMermaidCode,
-  remarkSingleAccordionItems,
-} from './remark-plugins'
+import { remarkCodeGroup, remarkMermaidCode, remarkSingleAccordionItems } from './remark-plugins'
 import remarkStringify from 'remark-stringify'
 
 // Remove fumadocs-docgen import as it uses Node.js modules
@@ -101,11 +97,7 @@ const remarkCodeToHtml = () => async (tree: Root, file) => {
         if (hast && node.data && node.data.hProperties) {
           visit(
             hast,
-            (el: any) =>
-              typeof el === 'object' &&
-              el !== null &&
-              el.type === 'element' &&
-              el.tagName === 'pre',
+            (el: any) => typeof el === 'object' && el !== null && el.type === 'element' && el.tagName === 'pre',
             (preNode: any) => {
               preNode.properties = {
                 ...(preNode.properties || {}),
@@ -174,9 +166,7 @@ const injectData = () => {
     if (!file.data) file.data = {}
     const data: ProcessorData = file.data
     data.ast = tree
-    const frontmatterYaml = data.ast?.children.find(
-      (node) => node.type === 'yaml',
-    )?.value
+    const frontmatterYaml = data.ast?.children.find((node) => node.type === 'yaml')?.value
     let frontmatter: Record<string, any> = {}
     if (frontmatterYaml) {
       frontmatter = YAML.load(frontmatterYaml) as any
@@ -217,9 +207,7 @@ function looseAcorn() {
   return tolerantAcorn
 }
 
-export function parseMetaString(
-  meta: string | null | undefined,
-): Record<string, string> {
+export function parseMetaString(meta: string | null | undefined): Record<string, string> {
   if (!meta) {
     return {}
   }
@@ -253,20 +241,12 @@ export function parseMetaString(
   return map
 }
 
-export const getProcessor = function getProcessor({
-  extension,
-}: {
-  extension: string | undefined
-}) {
+export const getProcessor = function getProcessor({ extension }: { extension: string | undefined }) {
   const structureOptions: StructureOptions = {
     types(node) {
       if (node.type === 'yaml') return false
       // Ignore additional MDX nodes that shouldn't be treated as structure content
-      if (
-        node.type === 'mdxFlowExpression' ||
-        node.type === 'mdxTextExpression' ||
-        node.type === 'mdxjsEsm'
-      )
+      if (node.type === 'mdxFlowExpression' || node.type === 'mdxTextExpression' || node.type === 'mdxjsEsm')
         return false
       return true
     },

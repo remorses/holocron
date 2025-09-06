@@ -3,10 +3,7 @@ import path from 'path'
 import YAML from 'js-yaml'
 import { getProcessor, ProcessorData } from './mdx-heavy'
 
-const processorCache = new Map<
-  string | undefined,
-  ReturnType<typeof getProcessor>
->()
+const processorCache = new Map<string | undefined, ReturnType<typeof getProcessor>>()
 
 export async function processMdxInServer({
   markdown,

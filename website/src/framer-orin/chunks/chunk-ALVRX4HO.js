@@ -49,19 +49,14 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0, delay: 0, duration: 0.4, type: 'spring' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -82,8 +77,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'dNbszlCS9',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'dNbszlCS9',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -127,12 +121,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsx(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-z8k7b0',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-z8k7b0', className, classNames),
           'data-framer-name': 'Top Left',
           layoutDependency,
           layoutId: 'dNbszlCS9',
@@ -169,8 +158,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   direction: 'clockwise',
                   speed: 2,
                 },
-                borderColor:
-                  'var(--token-ab91763a-bd8d-4b8f-92c1-f89e2462855c, rgb(28, 28, 28))',
+                borderColor: 'var(--token-ab91763a-bd8d-4b8f-92c1-f89e2462855c, rgb(28, 28, 28))',
                 borderRadius: 0,
                 borderWidth: 1,
                 bottom: false,
@@ -275,10 +263,8 @@ addPropertyControls(FramerywmXeNfxF, {
     type: ControlType.Enum,
   },
 })
-addFonts(
-  FramerywmXeNfxF,
-  [{ explicitInter: true, fonts: [] }, ...AnimatedDashedBorderFonts],
-  { supportsExplicitInterCodegen: true },
-)
+addFonts(FramerywmXeNfxF, [{ explicitInter: true, fonts: [] }, ...AnimatedDashedBorderFonts], {
+  supportsExplicitInterCodegen: true,
+})
 
 export { stdin_default }

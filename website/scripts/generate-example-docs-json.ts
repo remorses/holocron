@@ -69,9 +69,7 @@ async function generateExampleDocsJson() {
     console.log('\nProcessed files:')
     docFiles.forEach((file) => {
       const sizeInfo =
-        file.encoding === 'base64'
-          ? `base64: ${file.content.length} chars`
-          : `${file.content.length} chars`
+        file.encoding === 'base64' ? `base64: ${file.content.length} chars` : `${file.content.length} chars`
       console.log(`  - ${file.filePath} (${sizeInfo})`)
     })
   } catch (error) {

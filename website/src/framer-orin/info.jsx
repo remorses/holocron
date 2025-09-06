@@ -35,9 +35,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -58,11 +56,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -74,8 +68,7 @@ var getProps = ({ height, hover, id, smallIcon, width, ...props }) => {
     ...props,
     gqg_nvVwg: smallIcon ?? props.gqg_nvVwg,
     nc3N4L5qA: hover ?? props.nc3N4L5qA,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'N9BS4mTvb',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'N9BS4mTvb',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -88,15 +81,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className,
-    layoutId,
-    variant,
-    nc3N4L5qA,
-    gqg_nvVwg,
-    ...restProps
-  } = getProps(props)
+  const { style, className, layoutId, variant, nc3N4L5qA, gqg_nvVwg, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -135,12 +120,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.div
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-ozmiqv',
-              className,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-ozmiqv', className, classNames)}
             data-border={true}
             data-framer-name={'Default'}
             data-highlight={true}
@@ -150,8 +130,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             ref={refBinding}
             style={{
               '--border-bottom-width': '1px',
-              '--border-color':
-                'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
+              '--border-color': 'var(--token-fa07d228-afbe-4fad-9a44-2fb0dadd2a5e, rgb(23, 23, 23))',
               '--border-left-width': '1px',
               '--border-right-width': '1px',
               '--border-style': 'solid',
@@ -165,8 +144,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
             }}
             variants={{
               wAbf6XDVH: {
-                backgroundColor:
-                  'var(--token-361e1224-4029-4612-a297-51f349511b71, rgba(255, 255, 255, 0.1))',
+                backgroundColor: 'var(--token-361e1224-4029-4612-a297-51f349511b71, rgba(255, 255, 255, 0.1))',
               },
             }}
             {...addPropertyOverrides(
@@ -186,8 +164,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutDependency,
                 layoutId: 'LpniIIvv8',
                 style: {
-                  '--13bnw74':
-                    'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                  '--13bnw74': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                 },
               })}
             {gqg_nvVwg &&
@@ -199,8 +176,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 layoutId: 'GBuds_0Au',
                 name: 'Icon Smaller',
                 style: {
-                  '--13bnw74':
-                    'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                  '--13bnw74': 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                 },
                 transformTemplate: transformTemplate1,
               })}
@@ -308,17 +284,11 @@ stdin_default2.Responsive = ({ locale, ...rest }) => {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default2}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default2} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }
@@ -366,9 +336,7 @@ function ComponentWithRoot({ locale, ...rest }) {
           path: '/careers',
         },
       }}
-      framerSiteId={
-        'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'
-      }
+      framerSiteId={'dfa04aa1c5bdec07246cce5cf5bdd608b64f5245b2256932daafbe1cb51c98be'}
       locale={locale}
       locales={locales}
     >

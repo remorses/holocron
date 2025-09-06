@@ -14,22 +14,15 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import { cn } from '../lib/cn'
 import { XIcon } from 'lucide-react'
 import { Button } from './ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 import { useDocsState } from '../lib/docs-state'
 
 // Configure Monaco workers for Vite
 self.MonacoEnvironment = {
   getWorker(_, label) {
     if (label === 'json') return new jsonWorker()
-    if (label === 'css' || label === 'scss' || label === 'less')
-      return new cssWorker()
-    if (label === 'html' || label === 'handlebars' || label === 'razor')
-      return new htmlWorker()
+    if (label === 'css' || label === 'scss' || label === 'less') return new cssWorker()
+    if (label === 'html' || label === 'handlebars' || label === 'razor') return new htmlWorker()
     if (label === 'typescript' || label === 'javascript') return new tsWorker()
     return new editorWorker()
   },
@@ -44,11 +37,7 @@ interface MonacoMarkdownEditorProps {
   className?: string
 }
 
-export function MonacoMarkdownEditor({
-  value,
-  onChange,
-  className,
-}: MonacoMarkdownEditorProps) {
+export function MonacoMarkdownEditor({ value, onChange, className }: MonacoMarkdownEditorProps) {
   const { resolvedTheme: theme, forcedTheme } = useTheme()
   const resolvedTheme = forcedTheme || theme
   const monaco = useMonaco()
@@ -60,30 +49,18 @@ export function MonacoMarkdownEditor({
 
     // Get the computed CSS variable value
     const computedStyle = getComputedStyle(document.body)
-    const bgColorRaw = computedStyle
-      .getPropertyValue('--color-fd-background')
-      .trim()
+    const bgColorRaw = computedStyle.getPropertyValue('--color-fd-background').trim()
 
     if (!bgColorRaw) {
-      console.warn(
-        'Monaco editor: Could not get --color-fd-background CSS variable, falling back to default colors',
-      )
+      console.warn('Monaco editor: Could not get --color-fd-background CSS variable, falling back to default colors')
     }
 
     // Convert to hex format and apply 80% alpha since Monaco doesn't support HSL/CSS variables
     let bgColor: string
     try {
-      bgColor = bgColorRaw
-        ? colord(bgColorRaw).toHex()
-        : resolvedTheme === 'dark'
-          ? '#1e1e1e'
-          : '#ffffff'
+      bgColor = bgColorRaw ? colord(bgColorRaw).toHex() : resolvedTheme === 'dark' ? '#1e1e1e' : '#ffffff'
     } catch (error) {
-      console.error(
-        'Monaco editor: Failed to parse background color:',
-        bgColorRaw,
-        error,
-      )
+      console.error('Monaco editor: Failed to parse background color:', bgColorRaw, error)
       // Fallback if color parsing fails
       bgColor = resolvedTheme === 'dark' ? '#1e1e1e' : '#ffffff'
     }
@@ -131,10 +108,7 @@ export function MonacoMarkdownEditor({
   // - Code block detection
 
   return (
-    <div
-      className='not-prose -mx-2 relative'
-      style={{ height: 'calc(100vh - var(--fd-nav-height))' }}
-    >
+    <div className='not-prose -mx-2 relative' style={{ height: 'calc(100vh - var(--fd-nav-height))' }}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -169,10 +143,7 @@ export function MonacoMarkdownEditor({
         theme='docs-theme'
         // loading={null}
         wrapperProps={{
-          className: cn(
-            'h-full transition-opacity duration-300',
-            !ready && 'opacity-0',
-          ),
+          className: cn('h-full transition-opacity duration-300', !ready && 'opacity-0'),
         }}
         options={{
           minimap: { enabled: false },

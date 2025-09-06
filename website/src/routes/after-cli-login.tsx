@@ -1,10 +1,4 @@
-import {
-  redirect,
-  Form,
-  useSearchParams,
-  useActionData,
-  useNavigation,
-} from 'react-router'
+import { redirect, Form, useSearchParams, useActionData, useNavigation } from 'react-router'
 import { prisma } from 'db'
 import { getSession } from 'website/src/lib/better-auth'
 import { auth } from 'website/src/lib/better-auth'
@@ -22,9 +16,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const { userId } = await getSession({ request })
   if (!userId) {
-    throw redirect(
-      `/login?callbackUrl=${encodeURIComponent(url.pathname + url.search)}`,
-    )
+    throw redirect(`/login?callbackUrl=${encodeURIComponent(url.pathname + url.search)}`)
   }
 
   return { cliSessionSecret }
@@ -99,12 +91,10 @@ export default function AfterCliLogin() {
           <div className='mb-4 flex justify-center'>
             <ShieldCheckIcon className='h-12 w-12 text-green-600' />
           </div>
-          <h1 className='mb-4 text-2xl font-bold'>
-            CLI Authorization Successful
-          </h1>
+          <h1 className='mb-4 text-2xl font-bold'>CLI Authorization Successful</h1>
           <p className='text-muted-foreground'>
-            You have successfully authorized the Holocron CLI. You can now close
-            this window and return to your terminal.
+            You have successfully authorized the Holocron CLI. You can now close this window and return to your
+            terminal.
           </p>
         </div>
       </div>
@@ -117,31 +107,20 @@ export default function AfterCliLogin() {
         <h1 className='mb-6 text-2xl font-bold'>Authorize Holocron CLI</h1>
 
         <div className='mb-6 rounded-lg bg-muted p-4'>
-          <p className='mb-2 text-center text-sm text-muted-foreground'>
-            Verification Code:
-          </p>
+          <p className='mb-2 text-center text-sm text-muted-foreground'>Verification Code:</p>
           <p className='text-center font-mono text-2xl font-bold tracking-widest'>
             {cliSessionSecret ? formatCode(cliSessionSecret) : 'Invalid'}
           </p>
         </div>
 
         <p className='mb-6 text-sm text-muted-foreground'>
-          Please verify that this code matches the one displayed in your
-          terminal. Only click "Authorize CLI" if you initiated this login
-          request.
+          Please verify that this code matches the one displayed in your terminal. Only click "Authorize CLI" if you
+          initiated this login request.
         </p>
 
         <Form method='post'>
-          <input
-            type='hidden'
-            name='cliSessionSecret'
-            value={cliSessionSecret || ''}
-          />
-          <Button
-            type='submit'
-            className='w-full'
-            disabled={!cliSessionSecret || isSubmitting}
-          >
+          <input type='hidden' name='cliSessionSecret' value={cliSessionSecret || ''} />
+          <Button type='submit' className='w-full' disabled={!cliSessionSecret || isSubmitting}>
             {isSubmitting ? <>Authorizing...</> : <>Authorize CLI</>}
           </Button>
         </Form>

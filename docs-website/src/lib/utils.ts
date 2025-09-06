@@ -55,10 +55,7 @@ export function isInsidePreviewIframe(): boolean {
   return false
 }
 
-export function debounce<T extends (...args: any[]) => any>(
-  delay: number,
-  fn: T,
-) {
+export function debounce<T extends (...args: any[]) => any>(delay: number, fn: T) {
   let timeoutId: ReturnType<typeof setTimeout> | undefined
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     if (timeoutId) clearTimeout(timeoutId)
@@ -66,10 +63,7 @@ export function debounce<T extends (...args: any[]) => any>(
   }
 }
 
-export function throttle<T extends (...args: any[]) => any>(
-  delay: number,
-  fn: T,
-) {
+export function throttle<T extends (...args: any[]) => any>(delay: number, fn: T) {
   let lastExecTime = 0
   let timeoutId: ReturnType<typeof setTimeout> | undefined
 
@@ -94,15 +88,9 @@ export function throttle<T extends (...args: any[]) => any>(
   }
 }
 
-export function generateSlugFromPath(
-  pathWithFrontSlash: string,
-  basePath: string,
-) {
+export function generateSlugFromPath(pathWithFrontSlash: string, basePath: string) {
   // Return empty string for .json and .jsonc files to prevent navigation
-  if (
-    pathWithFrontSlash.endsWith('.json') ||
-    pathWithFrontSlash.endsWith('.jsonc')
-  ) {
+  if (pathWithFrontSlash.endsWith('.json') || pathWithFrontSlash.endsWith('.jsonc')) {
     return ''
   }
 
@@ -154,10 +142,7 @@ export const isTruthy = <T>(value: T): value is NonNullable<T> => {
   return Boolean(value)
 }
 
-export function groupBy<T, K extends string | number>(
-  array: T[],
-  keyFn: (item: T) => K,
-): Record<K, T[]> {
+export function groupBy<T, K extends string | number>(array: T[], keyFn: (item: T) => K): Record<K, T[]> {
   return array.reduce(
     (acc, item) => {
       const key = keyFn(item)
@@ -222,11 +207,7 @@ export function truncateText(text: string, maxLength: number = 500): string {
  * Makes all properties of T optional, recursively.
  */
 export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object
-    ? T[P] extends Function
-      ? T[P]
-      : DeepPartial<T[P]>
-    : T[P]
+  [P in keyof T]?: T[P] extends object ? (T[P] extends Function ? T[P] : DeepPartial<T[P]>) : T[P]
 }
 
 export const safeJsoncParse = <T = unknown>(json: string): T | null => {

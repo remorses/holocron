@@ -41,9 +41,7 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
     )
   }
   return (
-    <div
-      className={cn('select-text prose-sm dark:prose-invert', props.className)}
-    >
+    <div className={cn('select-text prose-sm dark:prose-invert', props.className)}>
       <SafeMdxRenderer
         addMarkdownLineNumbers={props.addMarkdownLineNumbers ?? true}
         allowClientEsmImports

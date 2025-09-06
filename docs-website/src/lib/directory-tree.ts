@@ -6,14 +6,8 @@ interface TreeNode {
   children: TreeNode[]
 }
 
-export function printDirectoryTree({
-  filePaths,
-}: {
-  filePaths: { path: string; title: string }[]
-}): string {
-  function buildTree(
-    pathsWithTitles: { path: string; title: string }[],
-  ): TreeNode[] {
+export function printDirectoryTree({ filePaths }: { filePaths: { path: string; title: string }[] }): string {
+  function buildTree(pathsWithTitles: { path: string; title: string }[]): TreeNode[] {
     const root: TreeNode[] = []
     const nodeMap = new Map<string, TreeNode>()
 
@@ -82,12 +76,7 @@ export function printDirectoryTree({
     }
   }
 
-  function printNode(
-    node: TreeNode,
-    prefix: string,
-    isLast: boolean,
-    isRoot: boolean = false,
-  ): string {
+  function printNode(node: TreeNode, prefix: string, isLast: boolean, isRoot: boolean = false): string {
     const lines: string[] = []
     const titleSuffix = node.title ? ` # ${node.title}` : ''
 

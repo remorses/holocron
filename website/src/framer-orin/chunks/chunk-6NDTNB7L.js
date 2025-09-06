@@ -5,8 +5,7 @@
 import { jsx as _jsx } from 'react/jsx-runtime'
 import { useEffect, useRef, useState } from 'react'
 import { addPropertyControls, ControlType, RenderTarget } from 'unframer'
-var DEFAULT_SCRAMBLE_CHARS =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
+var DEFAULT_SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
 function TextGlitch(props) {
   const { text, font, color, scrambleColor, duration, style, glitch } = props
   const [display, setDisplay] = useState(text)
@@ -78,11 +77,7 @@ function TextGlitch(props) {
       children: parts.map((part, i) => {
         if (part.startsWith('<span data-scramble="1">')) {
           const letter = part.replace(/<.*?>/g, '')
-          return /* @__PURE__ */ _jsx(
-            'span',
-            { style: { color: scrambleColor }, children: letter },
-            i,
-          )
+          return /* @__PURE__ */ _jsx('span', { style: { color: scrambleColor }, children: letter }, i)
         }
         return /* @__PURE__ */ _jsx('span', { children: part }, i)
       }),

@@ -24,9 +24,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0, delay: 0, duration: 0.3, type: 'spring' }
@@ -34,10 +32,7 @@ var transition2 = { duration: 0, type: 'tween' }
 var Transition = ({ value, children }) => {
   const config = React.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -48,8 +43,7 @@ var humanReadableVariantMap = { Hidden: 'jcOPzl09p', Visible: 'CCKwLQUhX' }
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'jcOPzl09p',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'jcOPzl09p',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -97,12 +91,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
         children: /* @__PURE__ */ _jsxs(motion.div, {
           ...restProps,
           ...gestureHandlers,
-          className: cx(
-            scopingClassNames,
-            'framer-1ohvp48',
-            className,
-            classNames,
-          ),
+          className: cx(scopingClassNames, 'framer-1ohvp48', className, classNames),
           'data-framer-name': 'Hidden',
           layoutDependency,
           layoutId: 'jcOPzl09p',
@@ -113,15 +102,10 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           },
           variants: {
             CCKwLQUhX: {
-              backgroundColor:
-                'var(--token-22e7e14f-1f70-49cd-ae98-e88c20549e6b, rgba(255, 255, 255, 0.03))',
+              backgroundColor: 'var(--token-22e7e14f-1f70-49cd-ae98-e88c20549e6b, rgba(255, 255, 255, 0.03))',
             },
           },
-          ...addPropertyOverrides(
-            { CCKwLQUhX: { 'data-framer-name': 'Visible' } },
-            baseVariant,
-            gestureVariant,
-          ),
+          ...addPropertyOverrides({ CCKwLQUhX: { 'data-framer-name': 'Visible' } }, baseVariant, gestureVariant),
           children: [
             isDisplayed() &&
               /* @__PURE__ */ _jsx(Transition, {
@@ -132,8 +116,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'BXS5UucFu',
                   style: {
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   },
                 }),
               }),
@@ -146,8 +129,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'x8yAn3j5q',
                   style: {
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   },
                 }),
               }),
@@ -160,8 +142,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'MUY7JFEse',
                   style: {
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   },
                 }),
               }),
@@ -174,8 +155,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'yVYxnkOcO',
                   style: {
-                    backgroundColor:
-                      'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
+                    backgroundColor: 'var(--token-4fef9130-aa55-4351-8ed5-cfba481137a7, rgb(255, 255, 255))',
                   },
                 }),
               }),

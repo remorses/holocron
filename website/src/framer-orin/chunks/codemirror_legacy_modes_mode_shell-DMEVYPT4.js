@@ -162,12 +162,7 @@ function tokenString(quote, style) {
       if (next === close && !escaped) {
         state.tokens.shift()
         break
-      } else if (
-        next === '$' &&
-        !escaped &&
-        quote !== "'" &&
-        stream.peek() != close
-      ) {
+      } else if (next === '$' && !escaped && quote !== "'" && stream.peek() != close) {
         escaped = true
         stream.backUp(1)
         state.tokens.unshift(tokenDollar)
@@ -196,10 +191,7 @@ var tokenDollar = function (stream, state) {
   if (state.tokens.length > 1) stream.eat('$')
   var ch = stream.next()
   if (/['"({]/.test(ch)) {
-    state.tokens[0] = tokenString(
-      ch,
-      ch == '(' ? 'quote' : ch == '{' ? 'def' : 'string',
-    )
+    state.tokens[0] = tokenString(ch, ch == '(' ? 'quote' : ch == '{' ? 'def' : 'string')
     return tokenize(stream, state)
   }
   if (!/\d/.test(ch)) stream.eatWhile(/\w/)

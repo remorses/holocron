@@ -193,8 +193,7 @@ describe('optionalToNullable', () => {
           }
         `)
     const res = await generateText({
-      prompt:
-        'Convert this schema to a tool schema, random values for each field',
+      prompt: 'Convert this schema to a tool schema, random values for each field',
       tools: {
         test: tool({ inputSchema: UIFieldSchema }),
       },
@@ -579,11 +578,7 @@ describe('optionalToNullable', () => {
 
   test('handles tuples with optional elements', () => {
     const originalSchema = z.object({
-      coordinates: z.tuple([
-        z.number(),
-        z.number().optional(),
-        z.string().optional(),
-      ]),
+      coordinates: z.tuple([z.number(), z.number().optional(), z.string().optional()]),
     })
 
     const transformedSchema = optionalToNullable(originalSchema)
@@ -664,11 +659,7 @@ describe('optionalToNullable', () => {
 
   test('handles unions with optional schemas', () => {
     const originalSchema = z.object({
-      value: z.union([
-        z.string().optional(),
-        z.number(),
-        z.boolean().optional(),
-      ]),
+      value: z.union([z.string().optional(), z.number(), z.boolean().optional()]),
     })
 
     const transformedSchema = optionalToNullable(originalSchema)

@@ -5,11 +5,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from 'website/src/components/ui/navigation-menu'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from 'website/src/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'
 import { useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { useParams, useRouteLoaderData } from 'react-router'
@@ -26,14 +22,7 @@ const navigationLinks = [
 
 function Logo() {
   return (
-    <svg
-      width='28'
-      height='28'
-      viewBox='0 0 28 28'
-      fill='none'
-      xmlns='http://www.w3.org/2000/svg'
-      aria-label='Logo'
-    >
+    <svg width='28' height='28' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg' aria-label='Logo'>
       <rect width='28' height='28' rx='6' fill='#6366F1' />
       <path
         d='M8 18V10C8 9.44772 8.44772 9 9 9H19C19.5523 9 20 9.44772 20 10V18C20 18.5523 19.5523 19 19 19H9C8.44772 19 8 18.5523 8 18Z'

@@ -44,14 +44,7 @@ var getProps = ({ color, height, id, width, ...props }) => {
   }
 }
 var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    HN7TZix3o,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className2, layoutId, variant, HN7TZix3o, ...restProps } = getProps(props)
   return /* @__PURE__ */ _jsx(SVG, {
     ...restProps,
     className: cx('framer-EYyVK', className2),
@@ -85,9 +78,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
@@ -95,10 +86,7 @@ var transformTemplate1 = (_, t) => `translateY(-50%) ${t}`
 var Transition = ({ value, children }) => {
   const config = React2.useContext(MotionConfigContext)
   const transition = value ?? config.transition
-  const contextValue = React2.useMemo(
-    () => ({ ...config, transition }),
-    [JSON.stringify(transition)],
-  )
+  const contextValue = React2.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)])
   return /* @__PURE__ */ _jsx2(MotionConfigContext.Provider, {
     value: contextValue,
     children,
@@ -111,8 +99,7 @@ var getProps2 = ({ height, id, link, title, width, ...props }) => {
     ...props,
     GeEQ7Yy4N: link ?? props.GeEQ7Yy4N,
     I13doUJFU: title ?? props.I13doUJFU ?? 'NEW: 2025 OCTOBER UPDATE',
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'k86ji4391',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'k86ji4391',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -125,15 +112,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
   const defaultLayoutId = React2.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    I13doUJFU,
-    GeEQ7Yy4N,
-    ...restProps
-  } = getProps2(props)
+  const { style, className: className2, layoutId, variant, I13doUJFU, GeEQ7Yy4N, ...restProps } = getProps2(props)
   const {
     baseVariant,
     classNames,
@@ -187,11 +166,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
               WebkitBackdropFilter: 'blur(4px)',
               ...style,
             },
-            ...addPropertyOverrides(
-              { qX9SHwP6z: { 'data-framer-name': 'No Icon' } },
-              baseVariant,
-              gestureVariant,
-            ),
+            ...addPropertyOverrides({ qX9SHwP6z: { 'data-framer-name': 'No Icon' } }, baseVariant, gestureVariant),
             children: [
               /* @__PURE__ */ _jsx2(RichText, {
                 __fromCanvasComponent: true,
@@ -213,8 +188,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 layoutDependency,
                 layoutId: 'auwop4k2H',
                 style: {
-                  '--extracted-r6o4lv':
-                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                  '--extracted-r6o4lv': 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                   '--framer-link-text-color': 'rgb(0, 153, 255)',
                   '--framer-link-text-decoration': 'underline',
                   opacity: 0,
@@ -235,8 +209,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   scopeId: 'zAXYBSDPR',
                   transformTemplate: transformTemplate1,
                   children: /* @__PURE__ */ _jsx2(TextShimmer, {
-                    color:
-                      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                    color: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                     content: I13doUJFU,
                     delay: 2,
                     direction: 'right',
@@ -253,8 +226,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                     id: 'gi9Pv3SCk',
                     layoutId: 'gi9Pv3SCk',
                     rotation: 100,
-                    shimmer:
-                      'var(--token-54d5892b-0224-424e-b224-359f05491e1f, rgba(0, 0, 0, 0.75))',
+                    shimmer: 'var(--token-54d5892b-0224-424e-b224-359f05491e1f, rgba(0, 0, 0, 0.75))',
                     size: 30,
                     speed: 10,
                     style: { width: '100%' },
@@ -287,8 +259,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                 layoutDependency,
                 layoutId: 'UCVVuPaRA',
                 style: {
-                  backgroundColor:
-                    'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                  backgroundColor: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                   borderBottomLeftRadius: 100,
                   borderBottomRightRadius: 100,
                   borderTopLeftRadius: 100,
@@ -303,8 +274,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                   layoutDependency,
                   layoutId: 'gIj3CTmgM',
                   style: {
-                    backgroundColor:
-                      'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
+                    backgroundColor: 'var(--token-19e7a84f-9c9f-4761-ac3b-54ec81f5f8e0, rgb(0, 230, 197))',
                     borderBottomLeftRadius: 100,
                     borderBottomRightRadius: 100,
                     borderTopLeftRadius: 100,
@@ -318,8 +288,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
                     layoutId: 'JY7CW3cLh',
                     name: 'Arrow',
                     style: {
-                      '--13bnw74':
-                        'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
+                      '--13bnw74': 'var(--token-bb3f9735-47c4-4ac2-b002-c5446021aee6, rgb(0, 0, 0))',
                     },
                   }),
                 }),
@@ -372,8 +341,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },

@@ -8,11 +8,7 @@ import { ChevronsUpDownIcon, CheckIcon } from 'lucide-react'
 import { Button } from './ui/button'
 import { GithubIcon } from './icons'
 import { cn } from 'website/src/lib/utils'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from 'website/src/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'
 import {
   Command,
   CommandEmpty,
@@ -48,8 +44,7 @@ export function TeamSwitcher({
 
   if (!sites.length) return <div className={className} />
 
-  const activeSite =
-    sites.find((site) => site.siteId === currentSiteId) || sites[0] || null
+  const activeSite = sites.find((site) => site.siteId === currentSiteId) || sites[0] || null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -74,14 +69,9 @@ export function TeamSwitcher({
             )}
           </div>
           <div className='grid flex-1 text-left leading-tight'>
-            <span className='truncate font-medium'>
-              {activeSite?.name || activeSite?.org.name || 'Select a Site'}
-            </span>
+            <span className='truncate font-medium'>{activeSite?.name || activeSite?.org.name || 'Select a Site'}</span>
           </div>
-          <ChevronsUpDownIcon
-            className='ms-auto text-sidebar-foreground/50 h-4 w-4 shrink-0'
-            aria-hidden='true'
-          />
+          <ChevronsUpDownIcon className='ms-auto text-sidebar-foreground/50 h-4 w-4 shrink-0' aria-hidden='true' />
         </Button>
       </PopoverTrigger>
       <PopoverContent className='p-0 w-[260px]' align='start'>
@@ -95,9 +85,7 @@ export function TeamSwitcher({
                   key={site.siteId}
                   value={site.siteId}
                   onSelect={(selectedSiteId) => {
-                    const selectedSite = sites.find(
-                      (s) => s.siteId === selectedSiteId,
-                    )
+                    const selectedSite = sites.find((s) => s.siteId === selectedSiteId)
                     if (selectedSite) {
                       navigate(
                         href('/org/:orgId/site/:siteId', {
@@ -125,9 +113,7 @@ export function TeamSwitcher({
                   <CheckIcon
                     className={cn(
                       'ml-auto h-4 w-4 shrink-0',
-                      currentSiteId === site.siteId
-                        ? 'opacity-100'
-                        : 'opacity-0',
+                      currentSiteId === site.siteId ? 'opacity-100' : 'opacity-0',
                     )}
                   />
                 </CommandItem>

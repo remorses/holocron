@@ -67,9 +67,7 @@ var variantClassNames = {
 }
 function addPropertyOverrides(overrides, ...variants) {
   const nextOverrides = {}
-  variants?.forEach(
-    (variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-  )
+  variants?.forEach((variant) => variant && Object.assign(nextOverrides, overrides[variant]))
   return nextOverrides
 }
 var transition1 = {
@@ -123,11 +121,7 @@ var Transition = ({ value, children }) => {
     }),
     [JSON.stringify(transition)],
   )
-  return (
-    <MotionConfigContext.Provider value={contextValue}>
-      {children}
-    </MotionConfigContext.Provider>
-  )
+  return <MotionConfigContext.Provider value={contextValue}>{children}</MotionConfigContext.Provider>
 }
 var Variants = motion.create(React.Fragment)
 var humanReadableVariantMap = {
@@ -138,8 +132,7 @@ var humanReadableVariantMap = {
 var getProps = ({ height, id, width, ...props }) => {
   return {
     ...props,
-    variant:
-      humanReadableVariantMap[props.variant] ?? props.variant ?? 'rmeeJSz78',
+    variant: humanReadableVariantMap[props.variant] ?? props.variant ?? 'rmeeJSz78',
   }
 }
 var createLayoutDependency = (props, variants) => {
@@ -152,13 +145,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
   const defaultLayoutId = React.useId()
   const { activeLocale, setLocale } = useLocaleInfo()
   const componentViewport = useComponentViewport()
-  const {
-    style,
-    className: className2,
-    layoutId,
-    variant,
-    ...restProps
-  } = getProps(props)
+  const { style, className: className2, layoutId, variant, ...restProps } = getProps(props)
   const {
     baseVariant,
     classNames,
@@ -186,12 +173,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
           <motion.section
             {...restProps}
             {...gestureHandlers}
-            className={cx(
-              scopingClassNames,
-              'framer-1rbr5xo',
-              className2,
-              classNames,
-            )}
+            className={cx(scopingClassNames, 'framer-1rbr5xo', className2, classNames)}
             data-framer-name={'Desktop'}
             layoutDependency={layoutDependency}
             layoutId={'rmeeJSz78'}
@@ -289,25 +271,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                     {
                       EW4AHUAxX: {
                         width: `min(${componentViewport?.width || '100vw'} - 40px, 580px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          120 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          0,
+                        y: (componentViewport?.y || 0) + 120 + 0 + 0 + 86.2 + 0 + 0,
                       },
                       XrZxEUAaJ: {
                         width: `min(${componentViewport?.width || '100vw'} - 80px, 810px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          150 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          0,
+                        y: (componentViewport?.y || 0) + 150 + 0 + 0 + 86.2 + 0 + 0,
                       },
                     },
                     baseVariant,
@@ -352,40 +320,23 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       },
                       variant: 'G8PiTZbU_',
                       width: '100%',
-                      xyvbwpR7S:
-                        'How is Holocron different from other documentation tools?',
+                      xyvbwpR7S: 'How is Holocron different from other documentation tools?',
                     })}
                   </SmartComponentScopedContainerWithFX>
                 </ComponentViewportProvider>
                 <ComponentViewportProvider
                   height={116}
                   width={`min(${componentViewport?.width || '100vw'} - 200px, 1100px)`}
-                  y={
-                    (componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 130
-                  }
+                  y={(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 130}
                   {...addPropertyOverrides(
                     {
                       EW4AHUAxX: {
                         width: `min(${componentViewport?.width || '100vw'} - 40px, 580px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          120 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          126,
+                        y: (componentViewport?.y || 0) + 120 + 0 + 0 + 86.2 + 0 + 126,
                       },
                       XrZxEUAaJ: {
                         width: `min(${componentViewport?.width || '100vw'} - 80px, 810px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          150 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          130,
+                        y: (componentViewport?.y || 0) + 150 + 0 + 0 + 86.2 + 0 + 130,
                       },
                     },
                     baseVariant,
@@ -428,32 +379,16 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 <ComponentViewportProvider
                   height={116}
                   width={`min(${componentViewport?.width || '100vw'} - 200px, 1100px)`}
-                  y={
-                    (componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 260
-                  }
+                  y={(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 260}
                   {...addPropertyOverrides(
                     {
                       EW4AHUAxX: {
                         width: `min(${componentViewport?.width || '100vw'} - 40px, 580px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          120 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          252,
+                        y: (componentViewport?.y || 0) + 120 + 0 + 0 + 86.2 + 0 + 252,
                       },
                       XrZxEUAaJ: {
                         width: `min(${componentViewport?.width || '100vw'} - 80px, 810px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          150 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          260,
+                        y: (componentViewport?.y || 0) + 150 + 0 + 0 + 86.2 + 0 + 260,
                       },
                     },
                     baseVariant,
@@ -496,32 +431,16 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                 <ComponentViewportProvider
                   height={116}
                   width={`min(${componentViewport?.width || '100vw'} - 200px, 1100px)`}
-                  y={
-                    (componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 390
-                  }
+                  y={(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 390}
                   {...addPropertyOverrides(
                     {
                       EW4AHUAxX: {
                         width: `min(${componentViewport?.width || '100vw'} - 40px, 580px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          120 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          378,
+                        y: (componentViewport?.y || 0) + 120 + 0 + 0 + 86.2 + 0 + 378,
                       },
                       XrZxEUAaJ: {
                         width: `min(${componentViewport?.width || '100vw'} - 80px, 810px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          150 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          390,
+                        y: (componentViewport?.y || 0) + 150 + 0 + 0 + 86.2 + 0 + 390,
                       },
                     },
                     baseVariant,
@@ -557,40 +476,23 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       },
                       variant: 'G8PiTZbU_',
                       width: '100%',
-                      xyvbwpR7S:
-                        'Why should I use Holocron instead of self-hosting?',
+                      xyvbwpR7S: 'Why should I use Holocron instead of self-hosting?',
                     })}
                   </SmartComponentScopedContainerWithFX>
                 </ComponentViewportProvider>
                 <ComponentViewportProvider
                   height={116}
                   width={`min(${componentViewport?.width || '100vw'} - 200px, 1100px)`}
-                  y={
-                    (componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 520
-                  }
+                  y={(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 520}
                   {...addPropertyOverrides(
                     {
                       EW4AHUAxX: {
                         width: `min(${componentViewport?.width || '100vw'} - 40px, 580px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          120 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          504,
+                        y: (componentViewport?.y || 0) + 120 + 0 + 0 + 86.2 + 0 + 504,
                       },
                       XrZxEUAaJ: {
                         width: `min(${componentViewport?.width || '100vw'} - 80px, 810px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          150 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          520,
+                        y: (componentViewport?.y || 0) + 150 + 0 + 0 + 86.2 + 0 + 520,
                       },
                     },
                     baseVariant,
@@ -626,40 +528,23 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
                       },
                       variant: 'G8PiTZbU_',
                       width: '100%',
-                      xyvbwpR7S:
-                        'What makes Holocron unique compared to Mintlify?',
+                      xyvbwpR7S: 'What makes Holocron unique compared to Mintlify?',
                     })}
                   </SmartComponentScopedContainerWithFX>
                 </ComponentViewportProvider>
                 <ComponentViewportProvider
                   height={116}
                   width={`min(${componentViewport?.width || '100vw'} - 200px, 1100px)`}
-                  y={
-                    (componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 650
-                  }
+                  y={(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 650}
                   {...addPropertyOverrides(
                     {
                       EW4AHUAxX: {
                         width: `min(${componentViewport?.width || '100vw'} - 40px, 580px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          120 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          630,
+                        y: (componentViewport?.y || 0) + 120 + 0 + 0 + 86.2 + 0 + 630,
                       },
                       XrZxEUAaJ: {
                         width: `min(${componentViewport?.width || '100vw'} - 80px, 810px)`,
-                        y:
-                          (componentViewport?.y || 0) +
-                          150 +
-                          0 +
-                          0 +
-                          86.2 +
-                          0 +
-                          650,
+                        y: (componentViewport?.y || 0) + 150 + 0 + 0 + 86.2 + 0 + 650,
                       },
                     },
                     baseVariant,
@@ -809,8 +694,7 @@ addFonts(
           family: 'Inter',
           source: 'framer',
           style: 'normal',
-          unicodeRange:
-            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          unicodeRange: 'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
           url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
           weight: '400',
         },
@@ -890,9 +774,7 @@ function ComponentWithRoot({ locale, ...rest }) {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
@@ -923,17 +805,11 @@ ComponentWithRoot.Responsive = ({ locale = '', ...rest }) => {
   return (
     <ContextProviders
       routes={routes}
-      framerSiteId={
-        '6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'
-      }
+      framerSiteId={'6ea1ba37e05fac32a45356fef8456248177d20a6a62facacd4fc997df2f330fd'}
       locale={locale}
       locales={locales}
     >
-      <WithFramerBreakpoints
-        Component={stdin_default3}
-        variants={defaultResponsiveVariants}
-        {...rest}
-      />
+      <WithFramerBreakpoints Component={stdin_default3} variants={defaultResponsiveVariants} {...rest} />
     </ContextProviders>
   )
 }

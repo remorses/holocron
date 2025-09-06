@@ -42,15 +42,10 @@ function DashedBorderFrame(props) {
     let w = 200,
       h = 100
     if (!containerRef.current) return { width: w, height: h }
-    if (
-      RenderTarget.current() === RenderTarget.canvas ||
-      RenderTarget.current() === RenderTarget.thumbnail
-    ) {
-      if (props.style && typeof props.style.width === 'number')
-        w = props.style.width
+    if (RenderTarget.current() === RenderTarget.canvas || RenderTarget.current() === RenderTarget.thumbnail) {
+      if (props.style && typeof props.style.width === 'number') w = props.style.width
       else w = containerRef.current.offsetWidth
-      if (props.style && typeof props.style.height === 'number')
-        h = props.style.height
+      if (props.style && typeof props.style.height === 'number') h = props.style.height
       else h = containerRef.current.offsetHeight
     } else {
       const rect = containerRef.current.getBoundingClientRect()
@@ -63,9 +58,7 @@ function DashedBorderFrame(props) {
     if (!containerRef.current) return
     const updateSize = () => {
       const { width: w, height: h } = getCurrentSize()
-      setSize((prev) =>
-        prev.width !== w || prev.height !== h ? { width: w, height: h } : prev,
-      )
+      setSize((prev) => (prev.width !== w || prev.height !== h ? { width: w, height: h } : prev))
     }
     updateSize()
     if (resizeObserverRef.current) {
@@ -115,8 +108,7 @@ function DashedBorderFrame(props) {
   const getBorderPath = useCallback((w, h, bw2, r, sides2) => {
     const half2 = bw2 / 2
     const maxR = Math.min(r, (w - bw2) / 2, (h - bw2) / 2)
-    if (!sides2.top && !sides2.right && !sides2.bottom && !sides2.left)
-      return ''
+    if (!sides2.top && !sides2.right && !sides2.bottom && !sides2.left) return ''
     if (sides2.top && sides2.right && sides2.bottom && sides2.left) {
       return [
         `M${half2 + maxR},${half2}`,

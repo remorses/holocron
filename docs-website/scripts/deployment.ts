@@ -1,9 +1,4 @@
-import {
-  deployFly,
-  getCurrentStage,
-  getDopplerEnv,
-  shell,
-} from '@xmorse/deployment-utils'
+import { deployFly, getCurrentStage, getDopplerEnv, shell } from '@xmorse/deployment-utils'
 // import './openapi'
 
 async function main() {
@@ -11,9 +6,7 @@ async function main() {
   const isProduction = stage === 'production'
 
   if (stage !== 'production' && stage !== 'preview') {
-    console.warn(
-      `skipping deployment because stage is ${stage}. Only production and preview are supported.`,
-    )
+    console.warn(`skipping deployment because stage is ${stage}. Only production and preview are supported.`)
     return
   }
 
@@ -37,9 +30,7 @@ async function main() {
 
   const port = 7777
 
-  const appNameSuffix = basePath
-    ? `-base-path-${basePath.replace(/^\//, '').replace(/\//g, '-')}`
-    : ''
+  const appNameSuffix = basePath ? `-base-path-${basePath.replace(/^\//, '').replace(/\//g, '-')}` : ''
   const stagePrefix = stage === 'production' ? 'prod' : 'preview'
   const appName = `fumabase-docs-${stagePrefix}${appNameSuffix}`
 

@@ -6,11 +6,7 @@ export function PoweredBy({ className }: { className?: string }) {
     <div className={cn('text-sm text-fd-muted-foreground', className)}>
       Powered by{' '}
       <b>
-        <a
-          href={`https://${WEBSITE_DOMAIN}`}
-          target='_blank'
-          className={cn('text-fd-muted-foreground')}
-        >
+        <a href={`https://${WEBSITE_DOMAIN}`} target='_blank' className={cn('text-fd-muted-foreground')}>
           Holocron
         </a>
       </b>

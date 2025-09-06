@@ -108,8 +108,7 @@ export const footerLinksOnlyExample: DocsJsonType = {
 // Complete Example
 export const completeDocsConfigExample: DocsJsonType = {
   name: 'Example Documentation',
-  description:
-    'Complete example of docs json configuration showcasing all available options',
+  description: 'Complete example of docs json configuration showcasing all available options',
   siteId: '',
   disableEditButton: false,
   logo: {
@@ -223,8 +222,7 @@ export const completeDocsConfigExample: DocsJsonType = {
   },
 
   banner: {
-    content:
-      "🎉 Version 2.0 is now available! <a href='/changelog'>See what's new</a>",
+    content: "🎉 Version 2.0 is now available! <a href='/changelog'>See what's new</a>",
     dismissible: true,
   },
 
