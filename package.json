@@ -16,6 +16,7 @@
     "@biomejs/biome": "^2.2.3",
     "@changesets/cli": "^2.29.4",
     "@prisma/client": "^6.15.0",
+    "prettier": "^3.6.2",
     "tsup": "8.5.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",

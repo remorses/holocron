@@ -191,7 +191,7 @@ function getWebhooks() {
   return webhooks
 }
 
-export function loader({}: LoaderFunctionArgs) {
+export function loader({ }: LoaderFunctionArgs) {
   return 'use POST'
 }
 
