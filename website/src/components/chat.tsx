@@ -874,7 +874,8 @@ function Footer() {
                         {/* Textarea buttons */}
                         <div className='flex items-center justify-between gap-2 p-3'>
                             {/* Left buttons */}
-                            <div className='flex items-center gap-2'>
+                            <div className='grow'></div>
+                            {/*<div className='flex items-center gap-2'>
                                 <ChatUploadButton
                                     onUpload={async (file) => {
                                         return await uploadFileToSite(
@@ -900,7 +901,7 @@ function Footer() {
                                 <ChatRecordButton
                                     transcribeAudio={transcribeAudio}
                                 />
-                            </div>
+                            </div>*/}
                             {/* Right buttons */}
                             <div className='flex items-center gap-2'>
                                 {isPending ? (
