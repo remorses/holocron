@@ -10,6 +10,8 @@ import { CSSProperties, startTransition, useEffect, useMemo, useState } from 're
 
 import { Dot, ToolPreviewContainer } from 'docs-website/src/components/chat-tool-previews'
 import { TodoPreview } from 'docs-website/src/components/todo-tool-previews'
+import { WebSearchFirecrawlPreview } from './web-search-firecrawl-preview'
+import { WebSearchGooglePreview } from './web-search-google-preview'
 
 import { Button } from 'website/src/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'
@@ -278,7 +280,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
       filesInDraft,
       baseDir: githubFolder || undefined,
       getPageContent,
-      onFilesDraftChange: async () => {},
+      onFilesDraftChange: async () => { },
     })
     const execute = createEditExecute({
       fileSystem: globalFileSystem,
@@ -408,7 +410,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
             .finally(() => {
               isPostMessageBusy = false
             })
-        } catch (e) {}
+        } catch (e) { }
       }
     })
 
@@ -558,6 +560,12 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
           }
           if ((part.type === 'tool-todowrite' || part.type === 'tool-todoread') && part.state !== 'output-error') {
             return <TodoPreview key={index} part={part} message={message} index={index} />
+          }
+          if (part.type === 'tool-webSearchFirecrawl' && part.state === 'output-available') {
+            return <WebSearchFirecrawlPreview key={index} part={part} />
+          }
+          if (part.type === 'tool-googleSearch' && part.state === 'output-available') {
+            return <WebSearchGooglePreview key={index} part={part} />
           }
           return <MessagePartRenderer part={part as any} key={index} />
         })}

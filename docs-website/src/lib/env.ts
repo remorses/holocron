@@ -33,6 +33,8 @@ export const env = {
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
   BASETEN_API_KEY: process.env.BASETEN_API_KEY,
   GITHUB_WEBHOOKS_SECRET: process.env.GITHUB_WEBHOOKS_SECRET,
+  FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
+  GOOGLE_SEARCH_API_KEY: process.env.GOOGLE_SEARCH_API_KEY,
 }
 
 // console.log(env)

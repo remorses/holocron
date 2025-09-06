@@ -1,5 +1,25 @@
 # Changelog
 
+## 2025-01-25 09:25
+
+- Add Google Search support as fallback when Firecrawl is not available
+- Install @googleapis/customsearch dependency
+- Add GOOGLE_SEARCH_API_KEY environment variable
+- Create web-search-google-preview.tsx component for Google Search results
+- Integrate Google Search tool that triggers when FIRECRAWL_API_KEY is not set
+- Update both search preview components to show URL instead of description
+- Use Google SDK types (customsearch_v1.Schema$Search) for type safety
+
+## 2025-01-25 09:20
+
+- Add Firecrawl web search tool for AI models that don't have native web search
+- Install @mendable/firecrawl-js dependency
+- Add FIRECRAWL_API_KEY environment variable
+- Implement webSearchFirecrawl tool that returns raw Firecrawl search results
+- Add tool preview rendering in chat.tsx for webSearchFirecrawl results
+- Display web search results with title, URL, and description in a clean format
+- Style web search results to match todo preview with tree-like Unicode characters (⎿ and •)
+
 ## 2025-01-24 20:20
 
 - Add variant prop support to Select component (ghost variant removes border)

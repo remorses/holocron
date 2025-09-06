@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { deepseek } from '@ai-sdk/deepseek'
 
-import { google, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
+import { google as googleAI, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
@@ -78,6 +78,8 @@ import { applyJsonCComments } from './json-c-comments'
 import JSONC from 'tiny-jsonc'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import { FirecrawlClient, type SearchData } from '@mendable/firecrawl-js'
+import { customsearch_v1 } from '@googleapis/customsearch'
 
 const openrouter = createOpenRouter({
   apiKey: env.OPENROUTER_API_KEY,
@@ -175,6 +177,19 @@ const websiteFetchUrlInputSchema = z.object({
     .describe('The absolute URL to fetch. Must start with https://. Use this to fetch content from external websites.'),
 })
 
+// Firecrawl web search schema
+const firecrawlWebSearchSchema = z.object({
+  query: z.string().describe('The search query to search the web for'),
+  limit: z.number().optional().default(10).describe('Maximum number of search results to return'),
+})
+
+// Google Search schema
+const googleSearchSchema = z.object({
+  query: z.string().describe('The search query to search the web for'),
+  limit: z.number().optional().default(10).describe('Maximum number of search results to return'),
+})
+
+
 export type WebsiteTools = {
   strReplaceEditor: {
     input: EditToolParamSchema
@@ -246,6 +261,14 @@ export type WebsiteTools = {
   todoread: {
     input: {}
     output: import('./types').TodoReadResponse
+  }
+  webSearchFirecrawl: {
+    input: z.infer<typeof firecrawlWebSearchSchema>
+    output: SearchData
+  }
+  googleSearch: {
+    input: z.infer<typeof googleSearchSchema>
+    output: customsearch_v1.Schema$Search
   }
 }
 
@@ -434,7 +457,7 @@ export async function* generateMessageStream({
                         `
 
             const errorMessage = createFormattedError(linkError, x.content, 'Link Validation Error', additionalMessage)
-            return { error: errorMessage.message }
+            return { warning: errorMessage.message }
           }
         } catch (error: any) {
           if (error?.line != null || error.position?.start?.line != null) {
@@ -726,9 +749,49 @@ export async function* generateMessageStream({
     ...(model.provider.startsWith('anthropic') && {
       webSearchAnthropic: anthropic.tools.webSearch_20250305({}),
     }),
+
+    // Add firecrawl web search for other providers
+    ...(!model.provider.startsWith('openai') && !model.provider.startsWith('anthropic') && env.FIRECRAWL_API_KEY && {
+      webSearchFirecrawl: tool({
+        description: 'Search the web for information using Firecrawl. Use this to find current information from the web.',
+        inputSchema: firecrawlWebSearchSchema,
+        execute: async ({ query, limit }) => {
+          const firecrawl = new FirecrawlClient({
+            apiKey: env.FIRECRAWL_API_KEY,
+          })
+
+          const searchResults = await firecrawl.search(query, {
+            limit,
+          })
+
+          return searchResults
+        },
+      }),
+    }),
+
+    // Add Google Search for other providers when Firecrawl is not available
+    ...(!model.provider.startsWith('openai') && !model.provider.startsWith('anthropic') && {
+      googleSearch: tool({
+        description: 'Search the web using Google Custom Search. Use this to find current information from the web.',
+        inputSchema: googleSearchSchema,
+        execute: async ({ query, limit }) => {
+          const customsearch = new customsearch_v1.Customsearch({
+            auth: env.GOOGLE_SEARCH_API_KEY,
+          })
+
+          const res = await customsearch.cse.list({
+            // cx: 'e6c89c83c1eec4ab2',
+            q: query,
+            num: limit,
+          })
+
+          return res.data
+        },
+      }),
+    }),
   }
 
-  tools['jsInterpreter'] = await createInterpreterTool({ tools })
+  // tools['jsInterpreter'] = await createInterpreterTool({ tools })
 
   const allMessages: ModelMessage[] = [
     {
