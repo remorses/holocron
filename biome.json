@@ -25,24 +25,6 @@
       "*.ts",
       "*.tsx",
       "*.jsx"
-    ],
-    "experimentalScannerIgnores": [
-      "*.astro",
-      "docs/**",
-      "fumadocs",
-      "pnpm-lock.yaml",
-      "**/framer-orin/**",
-      "**/framer/**",
-      "website/src/framer-orin/**",
-      "docs-website/src/framer-orin/**",
-      "website/src/framer/**",
-      "docs-website/src/framer/**",
-      "fumadocs/packages/mdx-remote/test/fixtures/*.mdx.js",
-      "fumadocs/packages/mdx-remote/test/fixtures/*.mdx.production.js",
-      "website/src/lib/spiceflow-generate-message.tsx",
-      "docs-website/src/app.css",
-      "fumadocs/apps/docs/app/global.css",
-      "mcp-demo/app/globals.css"
     ]
   },
   "formatter": {
