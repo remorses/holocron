@@ -783,7 +783,7 @@ export async function* generateMessageStream({
           const res = await customsearch.cse.list({
             // cx: 'e6c89c83c1eec4ab2',
             q: query,
-            num: limit,
+            num: limit || 10,
           })
 
           return res.data
