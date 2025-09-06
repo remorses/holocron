@@ -32,18 +32,18 @@ export function WebSearchFirecrawlPreview({ part }: WebSearchPreviewProps) {
                 <div className="shrink-0">{idx === 0 ? '⎿' : '  '}</div>
                 <div className="flex flex-col gap-0.5">
 
+                  <div className="text-sm flex items-center gap-1">
+                    <span className="text-muted-foreground">▪︎{' '}</span>
+                    {title || url}
+                  </div>
                   <a
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary  hover:underline text-sm flex items-center gap-1"
+                    className="text-muted-foreground hover:text-primary text-xs ml-5 line-clamp-1 hover:underline"
                   >
-                    <span className="text-muted-foreground">▪︎{' '}</span>
-                    {title || url}
-                  </a>
-                  <span className="text-muted-foreground text-xs ml-5 line-clamp-1">
                     {url}
-                  </span>
+                  </a>
                 </div>
               </div>
             )
@@ -78,9 +78,14 @@ export function WebSearchFirecrawlPreview({ part }: WebSearchPreviewProps) {
                   <span className="text-muted-foreground">□</span>
                   {result.title || result.url}
                 </a>
-                <span className="text-muted-foreground text-xs ml-5 line-clamp-1">
+                <a
+                  href={result.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary text-xs ml-5 line-clamp-1 hover:underline"
+                >
                   {result.url}
-                </span>
+                </a>
               </div>
             </div>
           ))}

@@ -25,18 +25,18 @@ export function WebSearchGooglePreview({ part }: GoogleSearchPreviewProps) {
             <div key={idx} className="flex whitespace-pre-wrap gap-2">
               <div className="shrink-0">{idx === 0 ? '⎿' : '  '}</div>
               <div className="flex flex-col gap-0.5">
+                <div className="text-sm flex items-center gap-1">
+                  <span className="text-muted-foreground">■</span>
+                  {result.title}
+                </div>
                 <a
                   href={result.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline text-sm flex items-center gap-1"
+                  className="text-muted-foreground hover:text-primary text-xs ml-5 line-clamp-1 hover:underline"
                 >
-                  <span className="text-muted-foreground">■</span>
-                  {result.title}
-                </a>
-                <span className="text-muted-foreground text-xs ml-5 line-clamp-1">
                   {result.displayLink || result.link}
-                </span>
+                </a>
               </div>
             </div>
           ))}
