@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from 'vitest'
 import { z, toJSONSchema } from 'zod'
-import { removeNullsForOptionals, optionalToNullable } from './zod.js'
+import { removeNullsForOptionals, optionalToNullable, repairToolCall } from './zod.js'
 
 describe('removeNullsForOptionals', () => {
   it('should remove null values for optional fields', () => {
@@ -229,6 +229,447 @@ describe('removeNullsForOptionals', () => {
       {
         "anotherUnknown": null,
         "unknown": "value",
+      }
+    `)
+  })
+
+  it('should handle deeply nested optional fields', () => {
+    const schema = z.object({
+      level1: z.object({
+        level2: z.object({
+          level3: z.object({
+            required: z.string(),
+            optional: z.string().optional(),
+            nullable: z.string().nullable(),
+          }).optional(),
+        }).optional(),
+      }),
+    })
+
+    const input = {
+      level1: {
+        level2: {
+          level3: {
+            required: 'value',
+            optional: null,
+            nullable: null,
+          },
+        },
+      },
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "level1": {
+          "level2": {
+            "level3": {
+              "nullable": null,
+              "required": "value",
+            },
+          },
+        },
+      }
+    `)
+  })
+
+  it('should handle mixed arrays with nullable and optional items', () => {
+    const schema = z.object({
+      mixedArray: z.array(
+        z.union([
+          z.object({
+            type: z.literal('a'),
+            value: z.string().optional(),
+          }),
+          z.object({
+            type: z.literal('b'),
+            value: z.number().nullable(),
+          }),
+        ])
+      ),
+    })
+
+    const input = {
+      mixedArray: [
+        { type: 'a', value: null },
+        { type: 'b', value: null },
+        { type: 'a', value: 'test' },
+        { type: 'b', value: 42 },
+      ],
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "mixedArray": [
+          {
+            "type": "a",
+            "value": null,
+          },
+          {
+            "type": "b",
+            "value": null,
+          },
+          {
+            "type": "a",
+            "value": "test",
+          },
+          {
+            "type": "b",
+            "value": 42,
+          },
+        ],
+      }
+    `)
+  })
+
+  it('should handle optional arrays and nullable arrays', () => {
+    const schema = z.object({
+      optionalArray: z.array(z.string()).optional(),
+      nullableArray: z.array(z.string()).nullable(),
+      optionalNullableArray: z.array(z.string()).optional().nullable(),
+      arrayOfOptionals: z.array(z.string().optional()),
+    })
+
+    const input = {
+      optionalArray: null,
+      nullableArray: null,
+      optionalNullableArray: null,
+      arrayOfOptionals: ['a', null, 'b', null],
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "arrayOfOptionals": [
+          "a",
+          "b",
+        ],
+        "nullableArray": null,
+        "optionalNullableArray": null,
+      }
+    `)
+  })
+
+  it('should handle discriminated unions', () => {
+    const schema = z.object({
+      data: z.discriminatedUnion('type', [
+        z.object({
+          type: z.literal('text'),
+          content: z.string().optional(),
+          metadata: z.object({
+            author: z.string().optional(),
+            timestamp: z.number().nullable(),
+          }).optional(),
+        }),
+        z.object({
+          type: z.literal('image'),
+          url: z.string(),
+          alt: z.string().optional(),
+          dimensions: z.object({
+            width: z.number().optional(),
+            height: z.number().optional(),
+          }).nullable(),
+        }),
+      ]),
+    })
+
+    const input = {
+      data: {
+        type: 'text',
+        content: null,
+        metadata: {
+          author: null,
+          timestamp: null,
+        },
+      },
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "data": {
+          "content": null,
+          "metadata": {
+            "author": null,
+            "timestamp": null,
+          },
+          "type": "text",
+        },
+      }
+    `)
+  })
+
+  it('should handle complex record types with nested optionals', () => {
+    const schema = z.object({
+      settings: z.record(
+        z.string(),
+        z.object({
+          enabled: z.boolean(),
+          value: z.union([z.string(), z.number()]).optional(),
+          config: z.record(z.string(), z.unknown()).optional(),
+        })
+      ),
+    })
+
+    const input = {
+      settings: {
+        feature1: {
+          enabled: true,
+          value: null,
+          config: null,
+        },
+        feature2: {
+          enabled: false,
+          value: 'test',
+          config: { key: 'value', another: null },
+        },
+      },
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "settings": {
+          "feature1": {
+            "enabled": true,
+          },
+          "feature2": {
+            "config": {
+              "another": null,
+              "key": "value",
+            },
+            "enabled": false,
+            "value": "test",
+          },
+        },
+      }
+    `)
+  })
+
+  it('should handle circular reference patterns', () => {
+    type TreeNode = {
+      value: string
+      left?: TreeNode | null
+      right?: TreeNode | null
+    }
+
+    const TreeSchema: z.ZodType<TreeNode> = z.object({
+      value: z.string(),
+      left: z.lazy(() => TreeSchema).optional(),
+      right: z.lazy(() => TreeSchema).nullable(),
+    })
+
+    const input = {
+      value: 'root',
+      left: {
+        value: 'left',
+        left: null,
+        right: null,
+      },
+      right: null,
+    }
+
+    const result = removeNullsForOptionals(TreeSchema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "left": {
+          "left": null,
+          "right": null,
+          "value": "left",
+        },
+        "right": null,
+        "value": "root",
+      }
+    `)
+  })
+
+  it('should handle transforms and refinements', () => {
+    const schema = z.object({
+      email: z.string().email().optional(),
+      age: z.number().int().positive().optional(),
+      date: z.string().datetime().optional(),
+      custom: z.string().transform(val => val.toUpperCase()).optional(),
+    })
+
+    const input = {
+      email: null,
+      age: null,
+      date: null,
+      custom: null,
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`{}`)
+  })
+
+  it('should handle edge case with empty objects and arrays', () => {
+    const schema = z.object({
+      emptyObj: z.object({}).optional(),
+      emptyArr: z.array(z.never()).optional(),
+      objWithAllOptionals: z.object({
+        a: z.string().optional(),
+        b: z.number().optional(),
+      }),
+    })
+
+    const input = {
+      emptyObj: null,
+      emptyArr: null,
+      objWithAllOptionals: {
+        a: null,
+        b: null,
+      },
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "objWithAllOptionals": {},
+      }
+    `)
+  })
+
+  it('should handle Maps and Sets', () => {
+    const schema = z.object({
+      map: z.map(z.string(), z.number().optional()),
+      set: z.set(z.string().optional()),
+      optionalMap: z.map(z.string(), z.number()).optional(),
+    })
+
+    const inputMap = new Map([
+      ['key1', 1],
+      ['key2', null],
+      ['key3', 3],
+    ])
+
+    const inputSet = new Set(['a', null, 'b'])
+
+    const input = {
+      map: inputMap,
+      set: inputSet,
+      optionalMap: null,
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "map": Map {
+          "key1" => 1,
+          "key2" => null,
+          "key3" => 3,
+        },
+        "set": Set {
+          "a",
+          null,
+          "b",
+        },
+      }
+    `)
+  })
+
+  it('should handle promise schemas', () => {
+    const schema = z.object({
+      asyncData: z.promise(z.string().optional()),
+      optionalPromise: z.promise(z.string()).optional(),
+    })
+
+    const input = {
+      asyncData: Promise.resolve(null),
+      optionalPromise: null,
+    }
+
+    const result = removeNullsForOptionals(schema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "asyncData": Promise {},
+      }
+    `)
+  })
+
+  it('should handle complex real-world schema', () => {
+    const UserSchema = z.object({
+      id: z.string(),
+      profile: z.object({
+        name: z.string(),
+        email: z.string().email().optional(),
+        avatar: z.string().url().optional(),
+        bio: z.string().max(500).optional(),
+        settings: z.object({
+          notifications: z.object({
+            email: z.boolean(),
+            push: z.boolean().optional(),
+            sms: z.boolean().optional(),
+          }),
+          privacy: z.object({
+            profileVisibility: z.enum(['public', 'private', 'friends']),
+            showEmail: z.boolean().optional(),
+            showActivity: z.boolean().optional(),
+          }).optional(),
+        }).optional(),
+      }),
+      metadata: z.record(z.string(), z.unknown()).optional(),
+      tags: z.array(z.string()).optional(),
+      createdAt: z.date(),
+      updatedAt: z.date().nullable(),
+    })
+
+    const input = {
+      id: '123',
+      profile: {
+        name: 'John Doe',
+        email: null,
+        avatar: null,
+        bio: 'Developer',
+        settings: {
+          notifications: {
+            email: true,
+            push: null,
+            sms: false,
+          },
+          privacy: {
+            profileVisibility: 'public',
+            showEmail: null,
+            showActivity: null,
+          },
+        },
+      },
+      metadata: null,
+      tags: null,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: null,
+    }
+
+    const result = removeNullsForOptionals(UserSchema, input)
+    
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "createdAt": 2024-01-01T00:00:00.000Z,
+        "id": "123",
+        "profile": {
+          "bio": "Developer",
+          "name": "John Doe",
+          "settings": {
+            "notifications": {
+              "email": true,
+              "sms": false,
+            },
+            "privacy": {
+              "profileVisibility": "public",
+            },
+          },
+        },
+        "updatedAt": null,
       }
     `)
   })

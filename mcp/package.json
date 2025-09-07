@@ -6,7 +6,7 @@
   "main": "src/index.tsx",
   "types": "src/index.tsx",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.3",
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "ai": "5.0.34",
     "contesto": "workspace:*",
     "fumadocs-openapi": "workspace:*",

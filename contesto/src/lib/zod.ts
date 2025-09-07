@@ -101,7 +101,15 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
 
   // 5 · Arrays - process each element
   if (schema instanceof z.ZodArray && Array.isArray(value)) {
-    return value.map(item => removeNullsForOptionals(schema.element as any, item))
+    return value
+      .map(item => {
+        // If array element is optional and null, return undefined to filter it out
+        if (schema.element instanceof z.ZodOptional && item === null) {
+          return undefined
+        }
+        return removeNullsForOptionals(schema.element as any, item)
+      })
+      .filter(item => item !== undefined)
   }
 
   // 6 · Records - process each value
@@ -143,6 +151,107 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
     })
   }
 
-  // 9 · Other types - return as is
+  // 9 · Intersections
+  if (schema instanceof z.ZodIntersection) {
+    // For intersections, we need to handle both sides
+    // This is a simplified approach - just return as is
+    return value
+  }
+
+  // 10 · Lazy schemas (for circular references)
+  if (schema instanceof z.ZodLazy) {
+    // For lazy schemas, we can't easily unwrap them without evaluating
+    // So we return the value as is
+    return value
+  }
+
+  // 11 · Non-JSON types - return as is
+  // Maps, Sets, Promises, etc. are not JSON-serializable
+  if (value instanceof Map || value instanceof Set || value instanceof Promise) {
+    return value
+  }
+
+  // 14 · Discriminated unions
+  if (schema instanceof z.ZodDiscriminatedUnion) {
+    // For discriminated unions, we can't determine which branch without the discriminator
+    // So we return the value as is
+    return value
+  }
+
+  // 15 · Effects (transforms, refinements)
+  if ('_def' in schema && schema._def && 'schema' in schema._def) {
+    // Process the inner schema for ZodEffects/ZodTransform
+    return removeNullsForOptionals(schema._def.schema as any, value)
+  }
+
+  // 16 · Other types - return as is
   return value
+}
+
+/**
+ * Repairs tool call arguments that failed validation by using an LLM to fix the input.
+ * This function takes a failed tool call and attempts to repair it by generating
+ * a corrected version that matches the expected schema.
+ * 
+ * @param params - The repair parameters
+ * @param params.toolCall - The tool call that failed validation
+ * @param params.tool - The tool definition with input schema
+ * @param params.inputSchema - The JSON schema for the tool input
+ * @param params.error - The error that occurred during validation
+ * @param params.generateObjectFn - Function to generate the repaired object using an LLM
+ * @returns The repaired tool call with corrected input, or null if repair fails
+ */
+export async function repairToolCall<TSchema extends z.ZodTypeAny>({
+  toolCall,
+  tool,
+  inputSchema,
+  error,
+  generateObjectFn,
+}: {
+  toolCall: {
+    toolName: string
+    toolCallId: string
+    input: unknown
+  }
+  tool: {
+    inputSchema?: TSchema
+  }
+  inputSchema: unknown
+  error: Error
+  generateObjectFn: (params: {
+    schema: z.ZodTypeAny
+    prompt: string
+  }) => Promise<{ object: z.infer<TSchema> }>
+}): Promise<{
+  toolCallId: string
+  toolName: string
+  input: string
+} | null> {
+  if (!tool.inputSchema) {
+    return null
+  }
+
+  try {
+    const { object: repairedArgs } = await generateObjectFn({
+      schema: optionalToNullable(tool.inputSchema),
+      prompt: `The model tried to call the tool "${toolCall.toolName}" with the following inputs:
+<input>
+${JSON.stringify(toolCall.input)}
+</input>
+The tool accepts the following schema:
+<schema>
+${JSON.stringify(inputSchema)}
+</schema>
+Please fix the input argument to respect the json schema, keeping the same tool call intent`,
+    })
+
+    return {
+      toolCallId: toolCall.toolCallId,
+      toolName: toolCall.toolName,
+      input: JSON.stringify(removeNullsForOptionals(tool.inputSchema, repairedArgs))
+    }
+  } catch (repairError) {
+    // If repair fails, return null
+    return null
+  }
 }

@@ -47,7 +47,7 @@ import {
 } from 'docs-website/src/lib/edit-tool'
 import { FileSystemEmulator } from './file-system-emulator'
 import { notifyError } from './errors'
-import { createRenderFormTool, optionalToNullable, RenderFormParameters } from 'contesto'
+import { createRenderFormTool, optionalToNullable, removeNullsForOptionals, RenderFormParameters } from 'contesto'
 import { mdxRegex as mdxOrMdRegex } from './utils'
 import {
   searchDocsInputSchema,
@@ -817,7 +817,7 @@ export async function* generateMessageStream({
         return null; // do not attempt to fix invalid tool names
       }
 
-      const tool = tools[toolCall.toolName as keyof typeof tools];
+      const tool = tools[toolCall.toolName];
       if (!tool) {
         return null
       }
@@ -832,11 +832,13 @@ export async function* generateMessageStream({
           } satisfies OpenAIResponsesProviderOptions,
         },
 
-        // schema: optionalToNullable(tool.inputSchema! as any),
-        schema: tool.inputSchema! as any,
+        schema: optionalToNullable(tool.inputSchema! as any),
+        // schema: tool.inputSchema! as any,
         prompt: dedent`
           The model tried to call the tool "${toolCall.toolName}" with the following inputs:
+          <input>
           ${JSON.stringify(toolCall.input)}
+          </input>
 
           The tool accepts the following schema:
           <schema>
@@ -847,7 +849,7 @@ export async function* generateMessageStream({
         `,
       });
 
-      return { ...toolCall, input: JSON.stringify(repairedArgs) };
+      return { ...toolCall, input: JSON.stringify(removeNullsForOptionals(tool.inputSchema, repairedArgs)) };
     },
     providerOptions: {
       google: {

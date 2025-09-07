@@ -29,10 +29,10 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.3",
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "@playwright/mcp": "latest",
     "patchright-core": "^1.52.5",
     "user-agents": "^1.1.610",
-    "zod": "^4.1.1"
+    "zod": "^4.1.5"
   }
 }
