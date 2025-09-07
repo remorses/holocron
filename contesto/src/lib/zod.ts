@@ -201,7 +201,7 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
  * @param params.generateObjectFn - Function to generate the repaired object using an LLM
  * @returns The repaired tool call with corrected input, or null if repair fails
  */
-export async function repairToolCall<TSchema extends z.ZodTypeAny>({
+export async function repairToolCall({
   toolCall,
   tool,
   inputSchema,
@@ -214,14 +214,14 @@ export async function repairToolCall<TSchema extends z.ZodTypeAny>({
     input: unknown
   }
   tool: {
-    inputSchema?: TSchema
+    inputSchema?: z.ZodTypeAny
   }
   inputSchema: unknown
   error: Error
   generateObjectFn: (params: {
     schema: z.ZodTypeAny
     prompt: string
-  }) => Promise<{ object: z.infer<TSchema> }>
+  }) => Promise<{ object: unknown }>
 }): Promise<{
   toolCallId: string
   toolName: string

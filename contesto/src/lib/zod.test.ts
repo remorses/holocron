@@ -1507,3 +1507,246 @@ describe('optionalToNullable', () => {
     `)
   })
 })
+
+describe('repairToolCall', () => {
+  it('should repair tool call with missing optional fields', async () => {
+    const schema = z.object({
+      name: z.string(),
+      email: z.string().email(),
+      age: z.number().optional(),
+      preferences: z.object({
+        theme: z.string().optional(),
+        notifications: z.boolean().optional()
+      }).optional()
+    })
+
+    const toolCall = {
+      toolName: 'updateUser',
+      toolCallId: 'call_123',
+      input: {
+        name: 'John Doe',
+        // Missing required email field
+        age: '25', // Wrong type - should be number
+        preferences: {
+          theme: 'dark',
+          // notifications could be missing
+        }
+      }
+    }
+
+    const tool = {
+      inputSchema: schema
+    }
+
+    const mockGenerateObjectFn = async ({ schema, prompt }: { schema: z.ZodTypeAny; prompt: string }) => {
+      // Simulate LLM fixing the input
+      return {
+        object: {
+          name: 'John Doe',
+          email: 'john@example.com', // Added missing required field
+          age: 25, // Fixed type
+          preferences: {
+            theme: 'dark',
+            notifications: null // Optional field set to null
+          }
+        }
+      }
+    }
+
+    const result = await repairToolCall({
+      toolCall,
+      tool,
+      inputSchema: toJSONSchema(schema),
+      error: new Error('Validation failed'),
+      generateObjectFn: mockGenerateObjectFn
+    })
+
+    expect(result).not.toBeNull()
+    expect(result?.toolCallId).toBe('call_123')
+    expect(result?.toolName).toBe('updateUser')
+    
+    // Parse the repaired input
+    const repairedInput = JSON.parse(result!.input)
+    expect(repairedInput).toMatchInlineSnapshot(`
+      {
+        "age": 25,
+        "email": "john@example.com",
+        "name": "John Doe",
+        "preferences": {
+          "theme": "dark",
+        },
+      }
+    `)
+  })
+
+  it('should return null when tool has no input schema', async () => {
+    const toolCall = {
+      toolName: 'simpleAction',
+      toolCallId: 'call_456',
+      input: {}
+    }
+
+    const tool = {
+      // No inputSchema defined
+    }
+
+    const mockGenerateObjectFn = async () => {
+      throw new Error('Should not be called')
+    }
+
+    const result = await repairToolCall({
+      toolCall,
+      tool,
+      inputSchema: {},
+      error: new Error('No schema'),
+      generateObjectFn: mockGenerateObjectFn
+    })
+
+    expect(result).toBeNull()
+  })
+
+  it('should return null when repair fails', async () => {
+    const schema = z.object({
+      requiredField: z.string()
+    })
+
+    const toolCall = {
+      toolName: 'failingTool',
+      toolCallId: 'call_789',
+      input: { wrongField: 'value' }
+    }
+
+    const tool = {
+      inputSchema: schema
+    }
+
+    const mockGenerateObjectFn = async () => {
+      throw new Error('LLM failed to generate')
+    }
+
+    const result = await repairToolCall({
+      toolCall,
+      tool,
+      inputSchema: toJSONSchema(schema),
+      error: new Error('Original error'),
+      generateObjectFn: mockGenerateObjectFn
+    })
+
+    expect(result).toBeNull()
+  })
+
+  it('should handle complex nested schemas with arrays', async () => {
+    const schema = z.object({
+      users: z.array(z.object({
+        id: z.number(),
+        name: z.string(),
+        tags: z.array(z.string()).optional(),
+        settings: z.object({
+          emailNotifications: z.boolean(),
+          theme: z.enum(['light', 'dark']).optional()
+        })
+      })),
+      metadata: z.record(z.string(), z.any()).optional()
+    })
+
+    const toolCall = {
+      toolName: 'updateUserList',
+      toolCallId: 'call_complex',
+      input: {
+        users: [
+          {
+            id: '1', // Wrong type
+            name: 'Alice',
+            tags: null, // Should be array or undefined
+            settings: {
+              emailNotifications: 'yes', // Wrong type
+              theme: 'blue' // Invalid enum value
+            }
+          }
+        ],
+        metadata: null
+      }
+    }
+
+    const tool = {
+      inputSchema: schema
+    }
+
+    const mockGenerateObjectFn = async ({ schema }: { schema: z.ZodTypeAny }) => {
+      return {
+        object: {
+          users: [
+            {
+              id: 1,
+              name: 'Alice',
+              tags: null, // Will be removed by removeNullsForOptionals
+              settings: {
+                emailNotifications: true,
+                theme: null // Will be removed
+              }
+            }
+          ],
+          metadata: null // Will be removed
+        }
+      }
+    }
+
+    const result = await repairToolCall({
+      toolCall,
+      tool,
+      inputSchema: toJSONSchema(schema),
+      error: new Error('Complex validation error'),
+      generateObjectFn: mockGenerateObjectFn
+    })
+
+    expect(result).not.toBeNull()
+    const repairedInput = JSON.parse(result!.input)
+    expect(repairedInput).toMatchInlineSnapshot(`
+      {
+        "users": [
+          {
+            "id": 1,
+            "name": "Alice",
+            "settings": {
+              "emailNotifications": true,
+            },
+          },
+        ],
+      }
+    `)
+  })
+
+  it('should preserve tool call ID and name in repaired result', async () => {
+    const schema = z.object({
+      message: z.string()
+    })
+
+    const toolCall = {
+      toolName: 'sendMessage',
+      toolCallId: 'unique_call_id_12345',
+      input: { msg: 'Hello' } // Wrong field name
+    }
+
+    const tool = {
+      inputSchema: schema
+    }
+
+    const mockGenerateObjectFn = async () => ({
+      object: {
+        message: 'Hello'
+      }
+    })
+
+    const result = await repairToolCall({
+      toolCall,
+      tool,
+      inputSchema: toJSONSchema(schema),
+      error: new Error('Field name error'),
+      generateObjectFn: mockGenerateObjectFn
+    })
+
+    expect(result).not.toBeNull()
+    expect(result?.toolCallId).toBe('unique_call_id_12345')
+    expect(result?.toolName).toBe('sendMessage')
+  })
+})

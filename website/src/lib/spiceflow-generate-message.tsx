@@ -623,7 +623,19 @@ export async function* generateMessageStream({
         )
       },
     }),
-
+    invalidTool: tool({
+      description: "Internal tool. Do not use",
+      inputSchema: z.object({
+        tool: z.string(),
+        error: z.string(),
+      }),
+      async execute(params) {
+        if (!Object.prototype.hasOwnProperty.call(tools, params.tool)) {
+          return `${params.tool} does not exist in tools, available tools are ${Object.keys(tools).filter(x => x !== 'invalidTool')}`
+        }
+        return `The arguments provided to the tool ${params.tool} are invalid: ${params.error}`
+      },
+    }),
     goToPage: tool({
       inputSchema: goToPageInputSchema,
       execute: async ({ slug }) => {
@@ -806,50 +818,15 @@ export async function* generateMessageStream({
       }),
     messages: allMessages,
     stopWhen: stepCountIs(100),
-    experimental_repairToolCall: async ({
-      toolCall,
-      tools,
-
-      inputSchema,
-      error,
-    }) => {
-      if (NoSuchToolError.isInstance(error)) {
-        return null; // do not attempt to fix invalid tool names
+    async experimental_repairToolCall(input) {
+      return {
+        ...input.toolCall,
+        input: JSON.stringify({
+          tool: input.toolCall.toolName,
+          error: input.error.message,
+        }),
+        toolName: "invalidTool",
       }
-
-      const tool = tools[toolCall.toolName];
-      if (!tool) {
-        return null
-      }
-
-      const { object: repairedArgs } = await generateObject({
-        model: openai('gpt-4.1'),
-        providerOptions: {
-          openai: {
-
-            strictJsonSchema: true,
-
-          } satisfies OpenAIResponsesProviderOptions,
-        },
-
-        schema: optionalToNullable(tool.inputSchema! as any),
-        // schema: tool.inputSchema! as any,
-        prompt: dedent`
-          The model tried to call the tool "${toolCall.toolName}" with the following inputs:
-          <input>
-          ${JSON.stringify(toolCall.input)}
-          </input>
-
-          The tool accepts the following schema:
-          <schema>
-          ${JSON.stringify(inputSchema(toolCall))}
-          </schema>
-
-          Please fix the input argument to respect the json schema, keeping the same tool call intent
-        `,
-      });
-
-      return { ...toolCall, input: JSON.stringify(removeNullsForOptionals(tool.inputSchema, repairedArgs)) };
     },
     providerOptions: {
       google: {
