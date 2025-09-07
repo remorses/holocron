@@ -41,6 +41,23 @@ export class Tunnel {
   constructor(state: DurableObjectState, env: Env) {
     this.ctx = state
     this.env = env
+
+    // Set auto-responses to avoid waking the DO for common messages
+    // 1. Standard ping/pong
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'))
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{ "type": "ping" }', '{ "type": "pong" }'))
+    this.ctx.setWebSocketAutoResponse(
+      new WebSocketRequestResponsePair(
+        '{"type":"ping"}',
+        '{"type":"pong"}'
+      )
+    )
+
+    // 2. Custom heartbeat messages (if your app uses them)
+    // this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(
+    //   JSON.stringify({ type: 'heartbeat' }),
+    //   JSON.stringify({ type: 'heartbeat-ack' })
+    // ))
   }
 
   async fetch(req: Request) {
@@ -84,7 +101,7 @@ export class Tunnel {
       for (const down of downs) {
         try {
           down.send(message)
-        } catch {}
+        } catch { }
       }
     } else if (attachment?.role === 'down') {
       // Forward message from downstream to upstream
@@ -92,7 +109,7 @@ export class Tunnel {
       if (up) {
         try {
           up.send(message)
-        } catch {}
+        } catch { }
       }
     }
   }
@@ -106,7 +123,7 @@ export class Tunnel {
       for (const down of downs) {
         try {
           down.close(1012, 'upstream closed')
-        } catch {}
+        } catch { }
       }
     }
     // If downstream closes, it's automatically removed from the live set
@@ -122,7 +139,7 @@ export class Tunnel {
       for (const down of downs) {
         try {
           down.close(1011, 'upstream error')
-        } catch {}
+        } catch { }
       }
     }
   }
