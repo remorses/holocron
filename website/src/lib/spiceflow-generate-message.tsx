@@ -623,6 +623,8 @@ export async function* generateMessageStream({
         )
       },
     }),
+    // idea from https://github.com/sst/opencode/blob/93c2f5060e2391e9a579cc9e0d5065d205ca412a/packages/opencode/src/tool/invalid.ts#L11
+    // when an agent calls a non existing tool or uses an invalid schema it will get back an error and try again.
     invalidTool: tool({
       description: "Internal tool. Do not use",
       inputSchema: z.object({
@@ -633,7 +635,7 @@ export async function* generateMessageStream({
         if (!Object.prototype.hasOwnProperty.call(tools, params.tool)) {
           return `${params.tool} does not exist in tools, available tools are ${Object.keys(tools).filter(x => x !== 'invalidTool')}`
         }
-        return `The arguments provided to the tool ${params.tool} are invalid: ${params.error}`
+        return `Error! The arguments provided to the tool ${params.tool} are invalid, try again: ${params.error}`
       },
     }),
     goToPage: tool({

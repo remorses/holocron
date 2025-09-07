@@ -47,7 +47,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
       currentOrigin: z.string(),
       filesInDraft: z.record(z.string(), fileUpdateSchema).optional().default({}),
     }),
-    async *handler({ request, waitUntil, state: {} }) {
+    async *handler({ request, waitUntil, state: { } }) {
       const { messages, currentSlug, locale, chatId, currentOrigin, filesInDraft = {} } = await request.json()
       const url = new URL(request.url)
       const domain = url.hostname.split(':')[0]
@@ -159,6 +159,19 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
 
       const tools = {
         strReplaceEditor: editTool,
+        invalidTool: tool({
+          description: "Internal tool. Do not use",
+          inputSchema: z.object({
+            tool: z.string(),
+            error: z.string(),
+          }),
+          async execute(params) {
+            if (!Object.prototype.hasOwnProperty.call(tools, params.tool)) {
+              return `${params.tool} does not exist in tools, available tools are ${Object.keys(tools).filter(x => x !== 'invalidTool')}`
+            }
+            return `Error! The arguments provided to the tool ${params.tool} are invalid, try again: ${params.error}`
+          },
+        }),
         searchDocs: tool({
           inputSchema: searchDocsInputSchema,
           execute: async ({ terms, searchType = 'fulltext' }) => {
@@ -313,6 +326,16 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
           },
           ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
         ],
+        async experimental_repairToolCall(input) {
+          return {
+            ...input.toolCall,
+            input: JSON.stringify({
+              tool: input.toolCall.toolName,
+              error: input.error.message,
+            }),
+            toolName: "invalidTool",
+          }
+        },
         stopWhen: stepCountIs(100),
         providerOptions: {
           openai: {
@@ -321,7 +344,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
           } satisfies OpenAIResponsesProviderOptions,
         },
         tools,
-        async onFinish({ response }) {},
+        async onFinish({ response }) { },
       })
 
       const lastUserMessage = messages.findLast((x) => x.role === 'user')
