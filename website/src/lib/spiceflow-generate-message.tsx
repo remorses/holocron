@@ -79,7 +79,7 @@ import JSONC from 'tiny-jsonc'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { FirecrawlClient, type SearchData } from '@mendable/firecrawl-js'
-import { googleSearch, googleSearchSchema } from './google-search'
+import { googleSearch, googleSearchSchema, type CleanGoogleSearchResponse } from './google-search'
 
 const openrouter = createOpenRouter({
   apiKey: env.OPENROUTER_API_KEY,
@@ -264,7 +264,7 @@ export type WebsiteTools = {
   }
   googleSearch: {
     input: z.infer<typeof googleSearchSchema>
-    output: customsearch_v1.Schema$Search
+    output: CleanGoogleSearchResponse
   }
 }
 

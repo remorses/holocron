@@ -9,7 +9,19 @@ export const googleSearchSchema = z.object({
 
 export type GoogleSearchInput = z.infer<typeof googleSearchSchema>
 
-export async function googleSearch({ query, limit }: GoogleSearchInput): Promise<customsearch_v1.Schema$Search> {
+export interface GoogleSearchResult {
+  title: string
+  link: string
+  snippet: string
+  displayLink: string
+}
+
+export interface CleanGoogleSearchResponse {
+  items: GoogleSearchResult[]
+  totalResults: string
+}
+
+export async function googleSearch({ query, limit }: GoogleSearchInput): Promise<CleanGoogleSearchResponse> {
   console.log({ query, limit })
   const customsearch = new customsearch_v1.Customsearch({
     auth: env.GOOGLE_SEARCH_API_KEY,
@@ -29,5 +41,15 @@ export async function googleSearch({ query, limit }: GoogleSearchInput): Promise
     throw new Error('No data returned from Google Custom Search API')
   }
 
-  return res.data
+  const cleanedItems: GoogleSearchResult[] = (res.data.items || []).map(item => ({
+    title: item.title || '',
+    link: item.link || '',
+    snippet: item.snippet || '',
+    displayLink: item.displayLink || '',
+  }))
+
+  return {
+    items: cleanedItems,
+    totalResults: res.data.searchInformation?.totalResults || '0',
+  }
 }

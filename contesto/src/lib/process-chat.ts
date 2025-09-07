@@ -54,7 +54,7 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
     terminateOnError: true,
     onError: (error) => {
       console.error('Error in UI message stream:', error)
-      throw error
+      capturedError = error
     },
     message,
   })) {
