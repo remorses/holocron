@@ -13,9 +13,9 @@ You can use tools to
 - get the current page location with `getCurrentPage`
 - search the docs with `searchDocs`
 - select lines on any page with `selectText`
-- read a page content with `fetchUrl`
+- read a page content with `fetch`
 
-## reading .md files of the website with fetchUrl
+## reading .md files of the website with fetch
 
 You can append `.md` to a slug of the website to fetch it in markdown format instead of HTML. Use this to read in full the contents of a page.
 

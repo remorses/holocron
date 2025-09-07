@@ -73,7 +73,7 @@ export type DocsTools = {
     input: GetCurrentPageInput
     output: any
   }
-  fetchUrl: {
+  fetch: {
     input: FetchUrlInput
     output: any
   }

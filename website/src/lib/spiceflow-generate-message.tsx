@@ -25,6 +25,7 @@ import {
   ModelMessage,
   wrapLanguageModel,
   convertToModelMessages,
+  NoSuchToolError,
 } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 import { type LanguageModelV2Middleware } from '@ai-sdk/provider'
@@ -46,7 +47,7 @@ import {
 } from 'docs-website/src/lib/edit-tool'
 import { FileSystemEmulator } from './file-system-emulator'
 import { notifyError } from './errors'
-import { createRenderFormTool, RenderFormParameters } from 'contesto'
+import { createRenderFormTool, optionalToNullable, RenderFormParameters } from 'contesto'
 import { mdxRegex as mdxOrMdRegex } from './utils'
 import {
   searchDocsInputSchema,
@@ -224,7 +225,7 @@ export type WebsiteTools = {
     input: GetCurrentPageInput
     output: any
   }
-  fetchUrl: {
+  fetch: {
     input: z.infer<typeof websiteFetchUrlInputSchema>
     output: any
   }
@@ -648,7 +649,7 @@ export async function* generateMessageStream({
       },
     }),
 
-    fetchUrl: tool({
+    fetch: tool({
       description: 'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
       inputSchema: websiteFetchUrlInputSchema,
       execute: async ({ url }) => {
@@ -805,7 +806,49 @@ export async function* generateMessageStream({
       }),
     messages: allMessages,
     stopWhen: stepCountIs(100),
+    experimental_repairToolCall: async ({
+      toolCall,
+      tools,
 
+      inputSchema,
+      error,
+    }) => {
+      if (NoSuchToolError.isInstance(error)) {
+        return null; // do not attempt to fix invalid tool names
+      }
+
+      const tool = tools[toolCall.toolName as keyof typeof tools];
+      if (!tool) {
+        return null
+      }
+
+      const { object: repairedArgs } = await generateObject({
+        model: openai('gpt-4.1'),
+        providerOptions: {
+          openai: {
+
+            strictJsonSchema: true,
+
+          } satisfies OpenAIResponsesProviderOptions,
+        },
+
+        // schema: optionalToNullable(tool.inputSchema! as any),
+        schema: tool.inputSchema! as any,
+        prompt: dedent`
+          The model tried to call the tool "${toolCall.toolName}" with the following inputs:
+          ${JSON.stringify(toolCall.input)}
+
+          The tool accepts the following schema:
+          <schema>
+          ${JSON.stringify(inputSchema(toolCall))}
+          </schema>
+
+          Please fix the input argument to respect the json schema, keeping the same tool call intent
+        `,
+      });
+
+      return { ...toolCall, input: JSON.stringify(repairedArgs) };
+    },
     providerOptions: {
       google: {
         threshold: 'OFF',

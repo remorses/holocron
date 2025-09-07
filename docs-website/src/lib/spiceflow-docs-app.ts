@@ -195,7 +195,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
             return `Current page slug: ${currentSlug}`
           },
         }),
-        fetchUrl: tool({
+        fetch: tool({
           inputSchema: fetchUrlInputSchema,
           execute: async ({ url }) => {
             let fullUrl: string
