@@ -16,9 +16,13 @@ export async function googleSearch({ query, limit }: GoogleSearchInput): Promise
   })
 
   const res = await customsearch.cse.list({
-    cx: 'e6c89c83c1eec4ab2',
+    // get this id at https://programmablesearchengine.google.com/controlpanel/overview?cx=c47c2b14ae81745dc
+    cx: 'c47c2b14ae81745dc',
+    auth: env.GOOGLE_SEARCH_API_KEY,
     q: query,
     num: limit || 10,
+    safe: 'off'
+
   })
 
   if (!res.data) {
