@@ -71,6 +71,7 @@ import exampleDocs from 'website/scripts/example-docs.json'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { createTodoTools } from 'contesto/src/lib/todo-tool'
 import { interpreterToolParamsSchema, createInterpreterTool } from 'contesto/src/lib/interpreter-tool'
+import { createInvalidTool, INVALID_TOOL_NAME, type InvalidToolInput, type InvalidToolOutput } from 'contesto/src/lib/invalid-tool'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
@@ -267,6 +268,10 @@ export type WebsiteTools = {
     input: z.infer<typeof googleSearchSchema>
     output: CleanGoogleSearchResponse
   }
+  invalidTool: {
+    input: InvalidToolInput
+    output: InvalidToolOutput
+  }
 }
 
 /**
@@ -394,6 +399,8 @@ export async function* generateMessageStream({
     },
   })
   // model = anthropic('claude-3-5-haiku-latest')
+  const { invalidTool, repairToolCall } = createInvalidTool({})
+  
   const strReplaceEditor = createEditTool({
     fileSystem,
     model: { provider: model.provider },
@@ -528,6 +535,7 @@ export async function* generateMessageStream({
 
   const tools = {
     strReplaceEditor,
+    invalidTool,
 
     ...createTodoTools({
       todos,
@@ -621,21 +629,6 @@ export async function* generateMessageStream({
             })
             .join('\n')
         )
-      },
-    }),
-    // idea from https://github.com/sst/opencode/blob/93c2f5060e2391e9a579cc9e0d5065d205ca412a/packages/opencode/src/tool/invalid.ts#L11
-    // when an agent calls a non existing tool or uses an invalid schema it will get back an error and try again.
-    invalidTool: tool({
-      description: "Internal tool. Do not use",
-      inputSchema: z.object({
-        tool: z.string(),
-        error: z.string(),
-      }),
-      async execute(params) {
-        if (!Object.prototype.hasOwnProperty.call(tools, params.tool)) {
-          return `${params.tool} does not exist in tools, available tools are ${Object.keys(tools).filter(x => x !== 'invalidTool')}`
-        }
-        return `Error! The arguments provided to the tool ${params.tool} are invalid, try again: ${params.error}`
       },
     }),
     goToPage: tool({
@@ -821,14 +814,7 @@ export async function* generateMessageStream({
     messages: allMessages,
     stopWhen: stepCountIs(100),
     async experimental_repairToolCall(input) {
-      return {
-        ...input.toolCall,
-        input: JSON.stringify({
-          tool: input.toolCall.toolName,
-          error: input.error.message,
-        }),
-        toolName: "invalidTool",
-      }
+      return repairToolCall(input)
     },
     providerOptions: {
       google: {

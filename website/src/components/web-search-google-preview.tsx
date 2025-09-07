@@ -25,7 +25,7 @@ export function WebSearchGooglePreview({ part }: GoogleSearchPreviewProps) {
             <div key={idx} className="flex whitespace-pre-wrap gap-2">
               <div className="shrink-0">{idx === 0 ? '⎿' : '  '}</div>
               <div className="flex flex-col gap-0.5">
-                <div className="text-sm flex items-center gap-1">
+                <div className="text-sm flex items-start gap-1">
                   <span className="text-muted-foreground">▪︎{' '}</span>
                   {result.title}
                 </div>

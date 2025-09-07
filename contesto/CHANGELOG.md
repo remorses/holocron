@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-09-07 16:45
+
+- Extract invalidTool into reusable module in contesto package
+- Export createInvalidTool function that returns both tool and repairToolCall function
+- Export InvalidToolInput and InvalidToolOutput types for use in WebsiteTools type definition
+- Export INVALID_TOOL_NAME constant for consistent tool naming
+
 ## 2025-08-15 18:56
 
 - Added URL constructor support in isolated environment using ivm.Callback

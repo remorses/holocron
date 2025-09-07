@@ -31,6 +31,7 @@ import { cleanSlug } from './slug-utils'
 import { createEditTool, editToolParamsSchema, fileUpdateSchema, type FileUpdate } from './edit-tool'
 import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 import { printDirectoryTree } from './directory-tree'
+import { createInvalidTool, INVALID_TOOL_NAME } from 'contesto/src/lib/invalid-tool'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -152,6 +153,8 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
         },
       })
 
+      const { invalidTool, repairToolCall } = createInvalidTool({})
+      
       const editTool = createEditTool({
         fileSystem,
         model: { provider: model.provider },
@@ -159,19 +162,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
 
       const tools = {
         strReplaceEditor: editTool,
-        invalidTool: tool({
-          description: "Internal tool. Do not use",
-          inputSchema: z.object({
-            tool: z.string(),
-            error: z.string(),
-          }),
-          async execute(params) {
-            if (!Object.prototype.hasOwnProperty.call(tools, params.tool)) {
-              return `${params.tool} does not exist in tools, available tools are ${Object.keys(tools).filter(x => x !== 'invalidTool')}`
-            }
-            return `Error! The arguments provided to the tool ${params.tool} are invalid, try again: ${params.error}`
-          },
-        }),
+        invalidTool,
         searchDocs: tool({
           inputSchema: searchDocsInputSchema,
           execute: async ({ terms, searchType = 'fulltext' }) => {
@@ -327,14 +318,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
           ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
         ],
         async experimental_repairToolCall(input) {
-          return {
-            ...input.toolCall,
-            input: JSON.stringify({
-              tool: input.toolCall.toolName,
-              error: input.error.message,
-            }),
-            toolName: "invalidTool",
-          }
+          return repairToolCall(input)
         },
         stopWhen: stepCountIs(100),
         providerOptions: {

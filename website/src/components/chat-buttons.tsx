@@ -1,7 +1,7 @@
 import { memo, useMemo, useState, useCallback } from 'react'
 import { Button } from 'website/src/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from 'website/src/components/ui/tooltip'
-import { GitBranch, ZapIcon } from 'lucide-react'
+import { CloudUploadIcon, GitBranch, ZapIcon } from 'lucide-react'
 import { Link, useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { href } from 'react-router'
 import { useChatContext } from 'contesto/src/chat/chat-provider'
@@ -246,14 +246,14 @@ export function SaveChangesButton({ className = '' }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant='default'
+              variant={isButtonDisabled ? 'ghost' : 'default'}
               onClick={handleSaveChanges}
               disabled={isButtonDisabled}
               size={'sm'}
               className='disabled:opacity-50'
             >
               <div className='flex items-center gap-2'>
-                <ZapIcon className='size-4' />
+                <CloudUploadIcon className='size-4' />
                 {displayButtonText}
               </div>
             </Button>
