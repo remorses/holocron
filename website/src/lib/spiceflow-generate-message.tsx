@@ -79,7 +79,7 @@ import JSONC from 'tiny-jsonc'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { FirecrawlClient, type SearchData } from '@mendable/firecrawl-js'
-import { customsearch_v1 } from '@googleapis/customsearch'
+import { googleSearch, googleSearchSchema } from './google-search'
 
 const openrouter = createOpenRouter({
   apiKey: env.OPENROUTER_API_KEY,
@@ -184,11 +184,6 @@ const firecrawlWebSearchSchema = z.object({
   limit: z.number().optional().default(10).describe('Maximum number of search results to return'),
 })
 
-// Google Search schema
-const googleSearchSchema = z.object({
-  query: z.string().describe('The search query to search the web for'),
-  limit: z.number().optional().default(10).describe('Maximum number of search results to return'),
-})
 
 
 export type WebsiteTools = {
@@ -775,19 +770,7 @@ export async function* generateMessageStream({
       googleSearch: tool({
         description: 'Search the web using Google Custom Search. Use this to find current information from the web.',
         inputSchema: googleSearchSchema,
-        execute: async ({ query, limit }) => {
-          const customsearch = new customsearch_v1.Customsearch({
-            auth: env.GOOGLE_SEARCH_API_KEY,
-          })
-
-          const res = await customsearch.cse.list({
-            // cx: 'e6c89c83c1eec4ab2',
-            q: query,
-            num: limit || 10,
-          })
-
-          return res.data
-        },
+        execute: googleSearch,
       }),
     }),
   }
