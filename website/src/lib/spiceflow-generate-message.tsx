@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { deepseek } from '@ai-sdk/deepseek'
-
+import { createFallback } from 'ai-fallback'
 import { google as googleAI, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
 import yaml from 'js-yaml'
 import fs from 'fs'
@@ -26,6 +26,7 @@ import {
   wrapLanguageModel,
   convertToModelMessages,
   NoSuchToolError,
+  LanguageModel,
 } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 import { type LanguageModelV2Middleware } from '@ai-sdk/provider'
@@ -322,35 +323,18 @@ export async function* generateMessageStream({
     languages: locales,
   })
 
-  // let model = baseten('moonshotai/Kimi-K2-Instruct')
-  let model = groq('moonshotai/kimi-k2-instruct')
-  // let model = groq('moonshotai/kimi-k2-instruct')
-  // let model = deepseek('deepseek-chat')
-
-  // let model = anthropic('claude-sonnet-4-20250514')
-  // let model = openai('gpt-5-mini')
-  // let model = openrouter('qwen/qwen3-coder', {
-  //     extraBody: {
-  //         provider: {
-  //             order: ['cerebras'],
-  //             allow_fallbacks: false,
-  //         },
-  //     },
-  // })
-
-  // if (modelId && modelProvider) {
-  //     if (modelProvider.startsWith('openai')) {
-  //         model = openai(modelId)
-  //     } else if (modelProvider === 'anthropic') {
-  //         model = anthropic(modelId)
-  //     } else if (modelProvider === 'google') {
-  //         model = google(modelId)
-  //     } else {
-  //         // throw new Error(
-  //         //     `Unsupported model provider: ${modelProvider}`,
-  //         // )
-  //     }
-  // }
+  // Create fallback model with groq as primary and gemini flash 2.5 as fallback
+  let model: LanguageModel = createFallback({
+    models: [
+      groq('moonshotai/kimi-k2-instruct'),
+      googleAI('gemini-2.5-flash')
+    ],
+    onError: (error, modelId) => {
+      console.error(`Error with model ${modelId}:`, error)
+      notifyError(error, `AI model error: ${modelId}`)
+    },
+    modelResetInterval: 60000, // Reset to primary model after 1 minute
+  })
 
   // Apply middleware if provided
   if (middlewares && middlewares.length > 0) {
@@ -400,7 +384,7 @@ export async function* generateMessageStream({
   })
   // model = anthropic('claude-3-5-haiku-latest')
   const { invalidTool, repairToolCall } = createInvalidTool({})
-  
+
   const strReplaceEditor = createEditTool({
     fileSystem,
     model: { provider: model.provider },

@@ -477,6 +477,9 @@ importers:
       ai:
         specifier: 5.0.34
         version: 5.0.34(zod@4.1.5)
+      ai-fallback:
+        specifier: ^1.0.6
+        version: 1.0.6(zod@4.1.5)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -1932,7 +1935,7 @@ importers:
         version: 1.17.5
       '@playwright/mcp':
         specifier: latest
-        version: 0.0.36
+        version: 0.0.37
       patchright-core:
         specifier: ^1.52.5
         version: 1.52.5
@@ -2167,8 +2170,8 @@ importers:
         specifier: 5.0.34
         version: 5.0.34(zod@4.1.5)
       ai-fallback:
-        specifier: ^1.0.2
-        version: 1.0.2(zod@4.1.5)
+        specifier: ^1.0.6
+        version: 1.0.6(zod@4.1.5)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -2522,11 +2525,11 @@ packages:
     peerDependencies:
       zod: ^3.23.8
 
-  '@ai-sdk/provider-utils@3.0.0-beta.1':
-    resolution: {integrity: sha512-CpxjXZ3IOKSlZbb9lSplZjeOfKdn5fXNpBnKsI9uix54PntpN3dB7l0aACDunzx2fd9NiPzbovj6Zs+VtGIspg==}
+  '@ai-sdk/provider-utils@3.0.7':
+    resolution: {integrity: sha512-o3BS5/t8KnBL3ubP8k3w77AByOypLm+pkIL/DCw0qKkhDbvhCy+L3hRTGPikpdb8WHcylAeKsjgwOxhj4cqTUA==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: ^3.25.49
+      zod: ^3.25.76 || ^4
 
   '@ai-sdk/provider-utils@3.0.8':
     resolution: {integrity: sha512-cDj1iigu7MW2tgAQeBzOiLhjHOUM9vENsgh4oAVitek0d//WdgfPCsKO3euP7m7LyO/j9a1vr/So+BGNdpFXYw==}
@@ -2540,10 +2543,6 @@ packages:
 
   '@ai-sdk/provider@2.0.0':
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
-    engines: {node: '>=18'}
-
-  '@ai-sdk/provider@2.0.0-beta.1':
-    resolution: {integrity: sha512-Z8SPncMtS3RsoXITmT7NVwrAq6M44dmw0DoUOYJqNNtCu8iMWuxB8Nxsoqpa0uEEy9R1V1ZThJAXTYgjTUxl3w==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@1.2.12':
@@ -5314,8 +5313,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/mcp@0.0.36':
-    resolution: {integrity: sha512-dcW3V2xHZ1RD28+E4lb7+fwBluk6A0rWODA0g+slogWaw+O9Ly99+I+kDvlf8Ii6QvDqpmzOw7LlyVBvBCtYcg==}
+  '@playwright/mcp@0.0.37':
+    resolution: {integrity: sha512-BnI2Ijim1rhIGhoFKJRCa+MaWtNr7M2lnLeDldDsR0n+ZB2G7zjt+MAMqy5eRD/mMiWsTaQsXlzZmXeixqBdsA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8200,8 +8199,8 @@ packages:
     peerDependencies:
       react: '*'
 
-  ai-fallback@1.0.2:
-    resolution: {integrity: sha512-6eKECjPeY05evV1AX69d1b2UakLZnfJJLJb2/jUiOYZJ9wx3PVvhkgLA+jSwUziBOS0swg+/alK4EG8+boamSw==}
+  ai-fallback@1.0.6:
+    resolution: {integrity: sha512-01tRgVHpYWPdFN/5GBtQbMivVgvRu4lKlFWu5G0fSBAFZ2hiEFWcyWQfhk8UOW/AwcZwxfOUJ8etfeLTLvz8UA==}
 
   ai@4.3.19:
     resolution: {integrity: sha512-dIE2bfNpqHN3r6IINp9znguYdhIOheKW2LDigAMrgt/upT3B8eBGPSCblENvaZGoq+hxaN9fSMzjWpbqloP+7Q==}
@@ -8828,10 +8827,6 @@ packages:
 
   commander@12.1.0:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
-    engines: {node: '>=18'}
-
-  commander@13.1.0:
-    resolution: {integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==}
     engines: {node: '>=18'}
 
   commander@14.0.0:
@@ -9786,10 +9781,6 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
-
-  eventsource-parser@3.0.5:
-    resolution: {integrity: sha512-bSRG85ZrMdmWtm7qkF9He9TNRzc/Bm99gEJMaQoHJ9E6Kv9QBbsldh2oMj7iXmYNEAVvNgvv5vPorG6W+XtBhQ==}
-    engines: {node: '>=20.0.0'}
 
   eventsource-parser@3.0.6:
     resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
@@ -12373,13 +12364,13 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  playwright-core@1.56.0-alpha-1756505518000:
-    resolution: {integrity: sha512-qeM+G9jA+PkA3dSYZmqKrARnIgd53B+7Lm3e52wH3rPyZJ+IBhRvhW369iN8tVJunbmsr7fkU1+05K2c7q9y0g==}
+  playwright-core@1.56.0-alpha-2025-09-06:
+    resolution: {integrity: sha512-B2s/cuqYuu+mT4hIHG8gIOXjCSKh0Np1gJNCp0CrDk/UTLB74gThwXiyPAJU0fADIQH6Dv1glv8ZvKTDVT8Fng==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.56.0-alpha-1756505518000:
-    resolution: {integrity: sha512-aChIG1Hly/pxzVdwOMArmOMNz4Wo2VyWBxLaMvLJaGWRPPB9+Sl1N8PRm6oH1CbbpFGpPvIeXl83LomkibShRA==}
+  playwright@1.56.0-alpha-2025-09-06:
+    resolution: {integrity: sha512-suVjiF5eeUtIqFq5E/5LGgkV0/bRSik87N+M7uLsjPQrKln9QHbZt3cy7Zybicj3ZqTBWWHvpN9b4cnpg6hS0g==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -14960,13 +14951,12 @@ snapshots:
       secure-json-parse: 2.7.0
       zod: 4.1.5
 
-  '@ai-sdk/provider-utils@3.0.0-beta.1(zod@4.1.5)':
+  '@ai-sdk/provider-utils@3.0.7(zod@4.1.5)':
     dependencies:
-      '@ai-sdk/provider': 2.0.0-beta.1
+      '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
-      eventsource-parser: 3.0.5
+      eventsource-parser: 3.0.6
       zod: 4.1.5
-      zod-to-json-schema: 3.24.6(zod@4.1.5)
 
   '@ai-sdk/provider-utils@3.0.8(zod@4.1.5)':
     dependencies:
@@ -14980,10 +14970,6 @@ snapshots:
       json-schema: 0.4.0
 
   '@ai-sdk/provider@2.0.0':
-    dependencies:
-      json-schema: 0.4.0
-
-  '@ai-sdk/provider@2.0.0-beta.1':
     dependencies:
       json-schema: 0.4.0
 
@@ -18141,22 +18127,10 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/mcp@0.0.36':
+  '@playwright/mcp@0.0.37':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.17.5
-      commander: 13.1.0
-      debug: 4.4.1
-      dotenv: 17.2.1
-      mime: 4.0.7
-      playwright: 1.56.0-alpha-1756505518000
-      playwright-core: 1.56.0-alpha-1756505518000
-      ws: 8.18.3
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
+      playwright: 1.56.0-alpha-2025-09-06
+      playwright-core: 1.56.0-alpha-2025-09-06
 
   '@polka/url@1.0.0-next.29': {}
 
@@ -22779,10 +22753,10 @@ snapshots:
       - '@cloudflare/workers-types'
       - supports-color
 
-  ai-fallback@1.0.2(zod@4.1.5):
+  ai-fallback@1.0.6(zod@4.1.5):
     dependencies:
-      '@ai-sdk/provider': 2.0.0-beta.1
-      '@ai-sdk/provider-utils': 3.0.0-beta.1(zod@4.1.5)
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.7(zod@4.1.5)
     transitivePeerDependencies:
       - zod
 
@@ -23573,8 +23547,6 @@ snapshots:
   commander@11.1.0: {}
 
   commander@12.1.0: {}
-
-  commander@13.1.0: {}
 
   commander@14.0.0: {}
 
@@ -24657,8 +24629,6 @@ snapshots:
   eventemitter3@5.0.1: {}
 
   events@3.3.0: {}
-
-  eventsource-parser@3.0.5: {}
 
   eventsource-parser@3.0.6: {}
 
@@ -27919,11 +27889,11 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  playwright-core@1.56.0-alpha-1756505518000: {}
+  playwright-core@1.56.0-alpha-2025-09-06: {}
 
-  playwright@1.56.0-alpha-1756505518000:
+  playwright@1.56.0-alpha-2025-09-06:
     dependencies:
-      playwright-core: 1.56.0-alpha-1756505518000
+      playwright-core: 1.56.0-alpha-2025-09-06
     optionalDependencies:
       fsevents: 2.3.2
 

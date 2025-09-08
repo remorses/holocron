@@ -3,7 +3,8 @@ import { google } from '@ai-sdk/google'
 import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import { groq } from '@ai-sdk/groq'
-import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages, smoothStream } from 'ai'
+import { createFallback } from 'ai-fallback'
+import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages, smoothStream, LanguageModel } from 'ai'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
 import { Spiceflow } from 'spiceflow'
@@ -91,8 +92,18 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
       })
       const pages = source.getPages(locale)
 
-      // let model = google('gemini-2.5-flash')
-      let model = groq('moonshotai/kimi-k2-instruct')
+      // Create fallback model with groq as primary and gemini flash 2.5 as fallback
+      let model: LanguageModel = createFallback({
+        models: [
+          groq('moonshotai/kimi-k2-instruct'),
+          google('gemini-2.5-flash')
+        ],
+        onError: (error, modelId) => {
+          console.error(`Error with model ${modelId}:`, error)
+          notifyError(error, `AI model error: ${modelId}`)
+        },
+        modelResetInterval: 60000, // Reset to primary model after 1 minute
+      })
 
       const linksText = pages
         .map((page) => {
