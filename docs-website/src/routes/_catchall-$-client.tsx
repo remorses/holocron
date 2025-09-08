@@ -448,7 +448,8 @@ function DocsMarkdown(): any {
   const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
   const showDiff = true
   useScrollToFirstAddedIfAtTop({ enabled: showDiff })
-  useAddedHighlighter({ enabled: showDiff })
+  // TODO now i disable highlight which now is ugly
+  // useAddedHighlighter({ enabled: showDiff })
   const extension = loaderData.githubPath.split('.').pop()
   let { ast, markdown, isStreaming } = useDocsState(
     useShallow((x) => {

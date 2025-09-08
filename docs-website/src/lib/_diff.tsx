@@ -205,7 +205,7 @@ function findSameSpotText(target: Text, tree: Root): Text | null {
 
 import { useLayoutEffect, useRef, RefObject } from 'react'
 export const useAddedHighlighter = ({
-  root,
+
   enabled = true,
 }: {
   root?: RefObject<HTMLElement | null>
