@@ -42,15 +42,15 @@ export class Tunnel {
     this.ctx = state
     this.env = env
 
-    // Set auto-responses to avoid waking the DO for common messages
-    // 1. Standard ping/pong
+    // Auto-respond to ping messages without waking the DO or forwarding to other clients
+    // This saves costs and prevents unnecessary ping flooding through the tunnel
+    
+    // 1. Standard WebSocket ping/pong frames
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'))
-    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{ "type": "ping" }', '{ "type": "pong" }'))
+    
+    // 2. JSON-formatted ping messages (common in applications)
     this.ctx.setWebSocketAutoResponse(
-      new WebSocketRequestResponsePair(
-        '{"type":"ping"}',
-        '{"type":"pong"}'
-      )
+      new WebSocketRequestResponsePair('{"type":"ping"}', '{"type":"pong"}')
     )
 
     // 2. Custom heartbeat messages (if your app uses them)
