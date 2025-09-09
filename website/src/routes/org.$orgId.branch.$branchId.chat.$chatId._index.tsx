@@ -313,7 +313,7 @@ function RightSide() {
   )
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange} className='flex flex-col gap-4 h-full'>
+    <Tabs value={activeTab} onValueChange={handleTabChange} className='flex flex-col grow gap-4 h-full'>
       <div className='flex gap-2'>
         <TabsList className=''>
           <TabsTrigger value='preview'>Browser Preview</TabsTrigger>
@@ -343,7 +343,7 @@ function RightSide() {
           }}
           className={cn(
             'text-sm shrink-0 shadow rounded-xl justify-stretch',
-            'items-stretch h-full flex-col flex-1 border',
+            'items-stretch h-full flex-col grow border',
             ' lg:flex bg-background',
           )}
         >
@@ -351,7 +351,7 @@ function RightSide() {
             ref={iframeRefCallback}
             key={chat.chatId}
             style={scaleDownElement(1)}
-            className={cn(' inset-0 bg-transparent', 'absolute')}
+            className={cn('inset-0 bg-transparent', 'absolute')}
             frameBorder={0}
             allowTransparency={true}
             name='preview' // tell iframe preview props is enabled
