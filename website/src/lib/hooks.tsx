@@ -114,7 +114,7 @@ export function useShouldHideBrowser() {
   const chatData = useRouteLoaderData('routes/org.$orgId.branch.$branchId.chat.$chatId._index') as
     | ChatRoute.ComponentProps['loaderData']
     | undefined
-  const { projectPagesFilenames = [] } = chatData || {}
+  const {  projectPagesFilenames = [] } = chatData || {}
   let hasNoFilesInLoader = !projectPagesFilenames.length
   const filesInDraft = useWebsiteState((x) => x.filesInDraft || {})
   // console.log('filesInDraft', filesInDraft)

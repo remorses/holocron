@@ -150,7 +150,7 @@ export async function loader({ request, params: { orgId, branchId, chatId } }: R
     files,
     languages,
   })
-  const fileNames: string[] = await (async () => {
+  const projectPagesFilenames: string[] = await (async () => {
     const branchId = chat.branchId
     if (!branchId) return []
 
@@ -196,7 +196,7 @@ export async function loader({ request, params: { orgId, branchId, chatId } }: R
     chatId,
     chat,
     prUrl,
-    projectPagesFilenames: fileNames,
+    projectPagesFilenames,
     iframeUrl,
     host,
     branchId,

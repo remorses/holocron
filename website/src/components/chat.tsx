@@ -234,7 +234,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
 
     console.log('Using new initial chat state', state)
     return state
-  }, [loaderData.chatId, searchParams])
+  }, [loaderData.chatId,])
 
   const submitMessages = async ({ messages, setMessages, abortController }: ChatState) => {
     const generateId = createIdGenerator()
