@@ -1,0 +1,29 @@
+{
+  "name": "cloudflare-basepath-proxy",
+  "description": "",
+  "type": "module",
+  "private": true,
+  "repository": "https://github.com/remorses/",
+  "scripts": {
+
+    "deployment": "pnpm tsc && wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "vitest --run"
+  },
+  "files": [
+    "dist",
+    "src",
+    "esm"
+  ],
+  "keywords": [],
+  "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
+  "license": "",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250712.0",
+    "@types/node": "^24.3.0",
+    "@types/ws": "^8.18.1",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.24.3",
+    "ws": "^8.18.3"
+  }
+}

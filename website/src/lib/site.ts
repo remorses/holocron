@@ -77,6 +77,11 @@ export async function createSite({
     ? [...defaultDomains, ...additionalDomains]
     : defaultDomains
 
+  const domainForBasePath = `${branchId}-docs-basepath.holocronsites.com`
+
+  // TODO only add this for paid websites
+  domains.push(domainForBasePath)
+
   // Create docsJson configuration
   const docsJson: DocsJsonType = {
     ...defaultStartingHolocronJson,
@@ -137,38 +142,17 @@ export async function createSite({
 
 
   // adds support for hosing a site on a docs base path
-  const cloudflareDomain = `${branchId}-docs-basepath.holocronsites.com`
+  await prisma.domain.create({
+    data: {
+      host: domainForBasePath,
+      branchId,
+      domainType: 'basepathDomain',
+    },
+  })
 
-  try {
-    const zoneId = getZoneIdForDomain(cloudflareDomain)
-    const cloudflareClient = new CloudflareClient({ zoneId })
 
-    // Create the Cloudflare domain with custom origin
-    await cloudflareClient.createDomain({
-      domain: cloudflareDomain,
-      customOriginServer: 'docs-basepath.holocronsites.com'
-    })
 
-    // Create domain record in database
-    await prisma.domain.create({
-      data: {
-        host: cloudflareDomain,
-        branchId,
-        domainType: 'basepathDomain',
-      },
-    })
 
-    console.log(`Created Cloudflare domain: ${cloudflareDomain}`)
-  } catch (e) {
-    console.error(`Failed to create Cloudflare domain: ${e}`)
-    // Don't fail site creation if domain creation fails
-  }
-
-  // Add the Cloudflare domain to the domains array
-  domains.push(cloudflareDomain)
-
-  // Update docsJson with all domains including Cloudflare domain
-  docsJson.domains = domains
 
   // Always create a chat for the branch
   const chat = await prisma.chat.create({
@@ -190,6 +174,6 @@ export async function createSite({
     internalHost,
     domains,
     pageCount,
-    cloudflareDomain,
+    cloudflareDomain: domainForBasePath,
   }
 }
