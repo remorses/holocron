@@ -1,7 +1,6 @@
 import { ulid } from 'ulid'
 import { prisma } from 'db'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
-import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { Form, href, Link, redirect, useActionData, useLoaderData, useNavigation } from 'react-router'
 import { useState } from 'react'
@@ -28,8 +27,8 @@ import { Label } from '../components/ui/label'
 import * as cookie from 'cookie'
 import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
 import { GithubLoginRequestData } from '../lib/types'
-import { slugKebabCaseKeepExtension } from '../lib/utils'
 import { GithubIcon } from '../components/icons'
+import { createSite } from '../lib/site'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const sessionData = await getSession({ request })
@@ -179,38 +178,23 @@ export async function action({ request, params }: Route.ActionArgs) {
       throw new Error(`GitHub installation not found for ${githubAccountLogin}`)
     }
 
-    const siteId = ulid()
-    const branchId = ulid()
-    const randomHash = Math.random().toString(36).substring(2, 10)
-    const userName = slugKebabCaseKeepExtension(repo || 'holocron-site')
-    const internalHost = `${userName}-${randomHash}.${env.APPS_DOMAIN}`
-    const domains =
-      process.env.NODE_ENV === 'development' ? [`${userName}-${randomHash}.localhost`, internalHost] : [internalHost]
-
-    // Create the site
-    const site = await prisma.site.create({
-      data: {
-        name: repo,
-        siteId,
-        orgId,
-        githubOwner: owner,
-        githubRepo: repo,
-        githubFolder: basePath,
-        githubInstallations: {
-          create: {
-            installationId: githubInstallation.installationId,
-            appId: env.GITHUB_APP_ID!,
-          },
-        },
-        branches: {
-          create: {
-            branchId,
-            title: 'Main',
-            githubBranch: 'main', // Will be updated during sync if different
-          },
-        },
-      },
+    // Add the docsJson file as initial file
+    const docsJsonPath = basePath ? `${basePath}/${DOCS_JSON_BASENAME}` : DOCS_JSON_BASENAME
+    
+    // Create the site with GitHub configuration and docsJson as initial file
+    const { siteId, branchId, docsJson, internalHost, domains, chatId } = await createSite({
+      name: repo,
+      orgId,
+      userId,
+      githubOwner: owner,
+      githubRepo: repo,
+      githubFolder: basePath,
+      githubBranch: 'main', // Will be updated during sync if different
+      githubInstallationId: githubInstallation.installationId,
+      files: [], // Start with empty, will sync GitHub files next
     })
+    
+    const docsJsonContent = JSON.stringify(docsJson, null, 2)
 
     console.log(`created site ${siteId} syncing from ${owner}/${repo}`)
 
@@ -235,17 +219,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       branch: selectedBranch,
     })
 
-    // Create default docsJson if not exists
-    const docsJson: DocsJsonType = {
-      ...defaultStartingHolocronJson,
-      siteId,
-      name: repo,
-      domains,
-    }
 
-    // Add the docsJson file to the sync manually (to avoid branch protection issues)
-    const docsJsonPath = basePath ? `${basePath}/${DOCS_JSON_BASENAME}` : DOCS_JSON_BASENAME
-    const docsJsonContent = JSON.stringify(docsJson, null, 2)
 
     // Create an async generator that includes the docsJson file
     async function* filesWithDocsJson() {
@@ -260,6 +234,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       yield* files
     }
 
+    // Sync GitHub files after initial site creation
     const { pageCount } = await syncSite({
       files: filesWithDocsJson(),
       branchId,
@@ -297,14 +272,6 @@ export async function action({ request, params }: Route.ActionArgs) {
     })
     console.log(`Created PR for ${DOCS_JSON_BASENAME}: ${prUrl}`)
 
-    // Create a chat for the branch
-    const chat = await prisma.chat.create({
-      data: {
-        userId,
-        branchId,
-      },
-    })
-
     // Clear GitHub data cookie
     const clearCookie = cookie.serialize(GITHUB_LOGIN_DATA_COOKIE, '', {
       httpOnly: true,
@@ -314,7 +281,6 @@ export async function action({ request, params }: Route.ActionArgs) {
       path: '/',
     })
 
-    const chatId = chat.chatId
     throw redirect(
       href('/org/:orgId/branch/:branchId/chat/:chatId', {
         orgId,

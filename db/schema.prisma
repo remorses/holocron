@@ -334,6 +334,7 @@ model MetaFile {
 enum DomainType {
   customDomain
   internalDomain
+  basepathDomain
 }
 
 model Domain {

@@ -355,7 +355,10 @@ export async function syncSite({
       const existingHosts = new Set(branchDomains.map((d) => d.host))
       const configuredHosts = new Set(jsonData.domains)
 
+      // TODO: Currently we only remove internalDomain types and leave customDomain/basepathDomain untouched.
+      // This is just being cautious - we may want to remove customDomains in the future as well.
       // Remove internal domains that are no longer in the configuration
+      // Note: basepathDomain types are never removed during sync
       const internalDomainsToRemove = branchDomains.filter(
         (domain) => domain.domainType === 'internalDomain' && !configuredHosts.has(domain.host),
       )

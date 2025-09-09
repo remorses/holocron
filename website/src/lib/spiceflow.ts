@@ -2,6 +2,7 @@ import { ulid } from 'ulid'
 import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
 
 import { Prisma, prisma, Site } from 'db'
+import { createSite } from './site'
 import { getKeyForMediaAsset, getPresignedUrl, s3 } from 'docs-website/src/lib/s3'
 import { preventProcessExitIfBusy, Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
@@ -967,86 +968,61 @@ export const app = new Spiceflow({ basePath: '/api' })
         }
         finalBranchId = branch.branchId
       } else {
-        // Create new site
-        finalSiteId = ulid()
-        finalBranchId = ulid()
-        const randomHash = Math.random().toString(36).substring(2, 10)
-        const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
-
-        const site = await prisma.site.create({
-          data: {
-            name,
-            siteId: finalSiteId,
-            orgId,
-            githubOwner: githubOwner || '',
-            githubRepo: githubRepo || '',
-            githubRepoId: githubRepoId,
-            githubFolder: githubFolder || '',
-            branches: {
-              create: {
-                branchId: finalBranchId,
-                title: 'Main',
-                githubBranch: githubBranch || 'main',
-              },
-            },
-          },
+        // Create new site using createSite helper
+        const result = await createSite({
+          name,
+          orgId,
+          userId,
+          githubOwner,
+          githubRepo,
+          githubRepoId,
+          githubFolder,
+          githubBranch: githubBranch || 'main',
+          files, // Pass the files directly
         })
-
-        // Create a default chat for the new site branch and user
-        await prisma.chat.create({
-          data: {
-            branchId: finalBranchId,
-            userId,
-            title: `Welcome Chat for ${name}`,
-            description: 'This is your first chat for the new site.',
-          },
-        })
+        
+        finalSiteId = result.siteId
+        finalBranchId = result.branchId
       }
 
-      // Get or create internal host for new sites
-      let docsJson = {} as DocsJsonType
-      let docsJsonComments = {}
-      if (!siteId) {
-        const randomHash = Math.random().toString(36).substring(2, 10)
-        const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
-        const domains =
-          process.env.NODE_ENV === 'development'
-            ? [`${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.localhost`, internalHost]
-            : [internalHost]
-        docsJson = {
-          ...defaultStartingHolocronJson,
-          siteId: finalSiteId,
-          name,
-          domains,
-        }
-      } else {
-        // For updates, fetch the branch's latest docsJson
+      let pageCount: number
+      
+      // For updates (existing sites), we need to sync again
+      if (siteId) {
+        // Fetch the branch's latest docsJson
         const branch = await prisma.siteBranch.findFirst({
           where: { branchId: finalBranchId },
         })
-        docsJson = branch?.docsJson as any
-        docsJsonComments = branch?.docsJsonComments as any
+        const docsJson = branch?.docsJson as DocsJsonType
+        const docsJsonComments = branch?.docsJsonComments as any
+        
+        // Convert files to pages format
+        const assets = assetsFromFilesList({
+          files,
+          docsJson,
+          githubFolder: githubFolder || '',
+          docsJsonComments: {
+            ...defaultDocsJsonComments,
+            ...docsJsonComments,
+          },
+        })
+
+        const syncResult = await syncSite({
+          files: assets,
+          githubFolder: githubFolder || '',
+          branchId: finalBranchId,
+          siteId: finalSiteId,
+          name,
+          docsJson,
+        })
+        pageCount = syncResult.pageCount
+      } else {
+        // For new sites, createSite already synced the files
+        const result = await prisma.markdownPage.count({
+          where: { branchId: finalBranchId },
+        })
+        pageCount = result
       }
-
-      // Convert files to pages format
-      const assets = assetsFromFilesList({
-        files,
-        docsJson,
-        githubFolder: githubFolder || '',
-        docsJsonComments: {
-          ...defaultDocsJsonComments,
-          ...docsJsonComments,
-        },
-      })
-
-      const { pageCount } = await syncSite({
-        files: assets,
-        githubFolder: githubFolder || '',
-        branchId: finalBranchId,
-        siteId: finalSiteId,
-        name,
-        docsJson,
-      })
 
       // Get the generated docsJson and any sync errors
       const [branch, syncErrors] = await Promise.all([
@@ -1080,13 +1056,16 @@ export const app = new Spiceflow({ basePath: '/api' })
         errorType: error.errorType,
       }))
 
+      // Get docsJsonComments from the branch
+      const branchDocsJsonComments = (branch?.docsJsonComments || {}) as any
+      
       const docsJsonWithComments = applyJsonCComments(branch?.docsJson || {}, {
         ...defaultDocsJsonComments,
-        ...docsJsonComments,
+        ...branchDocsJsonComments,
       })
 
       return {
-        ...branch?.site,
+        ...(branch?.site || {}),
         success: true,
         docsJsonWithComments,
         siteId: finalSiteId,
