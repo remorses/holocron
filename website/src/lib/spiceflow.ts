@@ -63,6 +63,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'GET',
     path: '/health',
+    detail: {
+      hide: true,
+    },
     handler() {
       return {
         status: 'healthy',
@@ -74,6 +77,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/getPageContent',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       branchId: z.string(),
       githubPath: z.string(),
@@ -127,6 +133,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/githubSync',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       siteId: z.string().min(1, 'siteId is required'),
       githubBranch: z.string().min(1, 'githubBranch is required'),
@@ -258,6 +267,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/createUploadSignedUrl',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       siteId: z.string().min(1, 'siteId is required'),
       // branchId: z.string().min(1, 'branchId is required'),
@@ -310,6 +322,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/newChat',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       branchId: z.string(),
       orgId: z.string(),
@@ -376,6 +391,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/submitRateFeedback',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       branchId: z.string().min(1, 'siteId is required'),
       url: z.string().min(1, 'url is required'),
@@ -662,6 +680,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/updateChatFilesInDraft',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       chatId: z.string().min(1, 'chatId is required'),
       filesInDraft: z.record(z.string(), fileUpdateSchema),
@@ -687,6 +708,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/saveChangesForChat',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       branchId: z.string().min(1, 'branchId is required'),
       chatId: z.string().min(1, 'chatId is required'),
@@ -781,6 +805,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/getCliSession',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       secret: z.string().regex(/^\d{6}$/, 'Secret must be a 6-digit code'),
     }),
@@ -835,6 +862,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/upsertSiteFromFiles',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       name: z.string().min(1, 'Name is required'),
       files: z.array(
@@ -1069,6 +1099,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'GET',
     path: '/getStarterTemplate',
+    detail: {
+      hide: true,
+    },
     async handler() {
       return {
         success: true,
@@ -1079,6 +1112,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/transcribeAudio',
+    detail: {
+      hide: true,
+    },
     async handler({ request, state: { userId } }) {
       // no auth so this can be used from docs websites
       // if (!userId) {
@@ -1127,6 +1163,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/getRepoBranches',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       orgId: z.string().min(1, 'orgId is required'),
       owner: z.string().min(1, 'owner is required'),
@@ -1208,6 +1247,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/updateSiteVisibility',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       siteId: z.string().min(1, 'siteId is required'),
       visibility: z.enum(['public', 'private']),
@@ -1252,6 +1294,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/deleteWebsite',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       siteId: z.string().min(1, 'siteId is required'),
     }),
@@ -1296,6 +1341,9 @@ export const app = new Spiceflow({ basePath: '/api' })
   .route({
     method: 'POST',
     path: '/databaseNightlyCleanup',
+    detail: {
+      hide: true,
+    },
     request: z.object({
       SERVICE_SECRET: z.string().min(1, 'SERVICE_SECRET is required'),
     }),

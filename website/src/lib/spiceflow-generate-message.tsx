@@ -871,6 +871,9 @@ export async function* generateMessageStream({
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
   method: 'POST',
   path: '/generateMessage',
+  detail: {
+    hide: true,
+  },
   request: z.object({
     messages: z.array(z.any() as ZodType<WebsiteUIMessage>),
     siteId: z.string(),
