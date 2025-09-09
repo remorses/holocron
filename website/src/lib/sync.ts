@@ -42,46 +42,46 @@ export function gitBlobSha(content: string | Buffer, algo: 'sha1' | 'sha256' = '
 
 export type AssetForSync =
   | {
-      type: 'page'
-      totalPages: number
-      markdown: string
-      githubPath: string
-      githubSha: string
-    }
+    type: 'page'
+    totalPages: number
+    markdown: string
+    githubPath: string
+    githubSha: string
+  }
   | {
-      type: 'mediaAsset'
-      githubSha: string
-      /**
-       * The file is uploaded first to S3 if the downloadUrl is not in the UPLOADS_BASE_URL url already, the docs website then expects the file to be in {UPLOADS_BASE_URL}/site/${siteId}/mediaAssets${slug}
-       */
-      downloadUrl: string
-      githubPath: string
-      width?: number
-      height?: number
-      bytes?: number
-    }
+    type: 'mediaAsset'
+    githubSha: string
+    /**
+     * The file is uploaded first to S3 if the downloadUrl is not in the UPLOADS_BASE_URL url already, the docs website then expects the file to be in {UPLOADS_BASE_URL}/site/${siteId}/mediaAssets${slug}
+     */
+    downloadUrl: string
+    githubPath: string
+    width?: number
+    height?: number
+    bytes?: number
+  }
   | {
-      type: 'metaFile'
-      content: string
-      githubPath: string
-      githubSha: string
-    }
+    type: 'metaFile'
+    content: string
+    githubPath: string
+    githubSha: string
+  }
   | {
-      type: 'docsJson'
-      content: string
-      githubPath: string
-      githubSha: string
-    }
+    type: 'docsJson'
+    content: string
+    githubPath: string
+    githubSha: string
+  }
   | {
-      type: 'stylesCss'
-      content: string
-      githubPath: string
-      githubSha: string
-    }
+    type: 'stylesCss'
+    content: string
+    githubPath: string
+    githubSha: string
+  }
   | {
-      type: 'deletedAsset'
-      githubPath: string
-    }
+    type: 'deletedAsset'
+    githubPath: string
+  }
 
 export const mediaExtensions = [
   // Image extensions
@@ -412,7 +412,7 @@ export async function syncSite({
             const cloudflareClient = new CloudflareClient({
               zoneId,
             })
-            await cloudflareClient.createDomain(host)
+            await cloudflareClient.createDomain({ domain: host })
 
             await prisma.domain.create({
               data: {
@@ -1056,11 +1056,11 @@ export async function* filesFromGithub({
 
   const [repoResult, ok, existingPages, existingMediaAssets, existingMetaFiles] = await Promise.all([
     !branch &&
-      octokit.rest.repos.get({
-        owner,
-        repo,
-        request: { signal },
-      }),
+    octokit.rest.repos.get({
+      owner,
+      repo,
+      request: { signal },
+    }),
     checkGitHubIsInstalled({ installationId }),
     prisma.markdownPage.findMany({
       where: {

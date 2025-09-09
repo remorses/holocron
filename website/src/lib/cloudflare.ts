@@ -146,7 +146,7 @@ export class CloudflareClient {
     }
     return results
   }
-  async createDomain(domain: string): Promise<CloudflareCustomHostnameResponse> {
+  async createDomain({ domain, customOriginServer }: { domain: string, customOriginServer?: string }): Promise<CloudflareCustomHostnameResponse> {
     if (domain.endsWith('.localhost')) {
       console.log(`skipping creating domain ${domain} in cloudflare`)
       return {} as any
@@ -163,6 +163,7 @@ export class CloudflareClient {
           type: 'dv',
           method: 'http',
         },
+        custom_origin_server: customOriginServer
 
         // you have to pay for this...
         // custom_metadata: {

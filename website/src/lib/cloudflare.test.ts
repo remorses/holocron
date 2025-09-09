@@ -7,7 +7,7 @@ describe.skip('CloudflareClient', () => {
     // You should replace 'example.com' with a real test domain if running for real.
     const zoneId = getZoneIdForDomain(domain)
     const cloudflareClient = new CloudflareClient({ zoneId })
-    const result = await cloudflareClient.createDomain(domain)
+    const result = await cloudflareClient.createDomain({ domain })
     console.log(result)
     // void {
     //     result: {
