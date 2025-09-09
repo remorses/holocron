@@ -1,16 +1,51 @@
 'use client'
 
-import React from 'react'
+import { Markdown } from 'contesto/src/lib/markdown'
 import { MediaAsset, PageMediaAsset } from 'db'
+import { buttonVariants } from 'docs-website/src/components/ui/button'
+import { cn } from 'docs-website/src/lib/cn'
+import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import frontMatter from 'front-matter'
+import {
+    PageArticle,
+    PageBreadcrumb,
+    PageFooter,
+    PageLastUpdate,
+    PageRoot,
+    PageTOC,
+    PageTOCItems,
+    PageTOCPopover,
+    PageTOCPopoverContent,
+    PageTOCPopoverItems,
+    PageTOCPopoverTrigger,
+    PageTOCTitle,
+} from 'fumadocs-ui/layouts/docs/page'
+import {
+    Edit3Icon,
+    ExternalLinkIcon,
+    EyeIcon,
+    GithubIcon,
+    LinkedinIcon,
+    MessageCircleIcon,
+    TwitterIcon
+} from 'lucide-react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
-import { useDocsState, updateFileInDocsEditor } from '../lib/docs-state'
-import { cn } from 'docs-website/src/lib/cn'
-import type { Route as RootRoute } from './_catchall'
+import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
+import { mdxComponents } from '../components/mdx-components'
+import { PoweredBy } from '../components/poweredby'
+import { Rate } from '../components/rate'
+import { ScalarOpenApi } from '../components/scalar'
+import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
+import { DocsJsonType } from '../lib/docs-json'
+import { updateFileInDocsEditor, useDocsState } from '../lib/docs-state'
+import { useDocsJson } from '../lib/hooks'
+import { MarkdownRuntime } from '../lib/markdown-runtime'
+import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
+import { renderNode } from '../lib/mdx-render-node'
 import type { Route } from './+types/_catchall.$'
-import { Markdown } from 'contesto/src/lib/markdown'
-import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
+import type { Route as RootRoute } from './_catchall'
 
 // Remove chatId cookie on page unload at module level
 if (typeof window !== 'undefined') {
@@ -21,46 +56,6 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', removeChatIdCookie)
   // window.addEventListener('pagehide', removeChatIdCookie)
 }
-import {
-  PageArticle,
-  PageRoot,
-  PageTOCItems,
-  PageTOCPopoverItems,
-  PageTOCTitle,
-  PageBreadcrumb,
-  PageFooter,
-  PageLastUpdate,
-  PageTOC,
-  PageTOCPopover,
-  PageTOCPopoverContent,
-  PageTOCPopoverTrigger,
-} from 'fumadocs-ui/layouts/docs/page'
-import {
-  ExternalLinkIcon,
-  GithubIcon,
-  LinkedinIcon,
-  MessageCircleIcon,
-  TwitterIcon,
-  Edit3Icon,
-  EyeIcon,
-  SparklesIcon,
-} from 'lucide-react'
-import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
-import { buttonVariants } from 'docs-website/src/components/ui/button'
-import { mdxComponents } from '../components/mdx-components'
-import { PoweredBy } from '../components/poweredby'
-import { Rate } from '../components/rate'
-import { DocsJsonType } from '../lib/docs-json'
-import { useDocsJson } from '../lib/hooks'
-import { useAddedHighlighter } from '../lib/_diff'
-import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
-import { MarkdownRuntime } from '../lib/markdown-runtime'
-import { renderNode } from '../lib/mdx-render-node'
-import { ScalarOpenApi } from '../components/scalar'
-import { useEffect, lazy, Suspense } from 'react'
-import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
-import { LoaderData } from './_catchall.$'
-import { APIPageInner } from 'fumadocs-openapi/render/api-page-inner'
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
 
