@@ -17,6 +17,7 @@ import { ClientLayout, ClientApp } from 'docs-website/src/routes/_catchall-clien
 import { FilesInDraft } from '../lib/docs-state'
 import { getDocsJson } from '../lib/utils'
 import { themeModules } from '../lib/themes'
+import { getHost } from '../lib/get-host'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -41,7 +42,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const chatId = cookies.chatId || url.searchParams.get('chatId')
   console.log(`${timerId} - cookies:`, { chatId })
 
-  const domain = url.hostname.split(':')[0]
+  const domain = getHost(request)
 
   // Handle websocketId in search params - set plain cookie and redirect
   const websocketId = url.searchParams.get('websocketId')

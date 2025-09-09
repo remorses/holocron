@@ -3,10 +3,11 @@ import type { Route } from './+types/api.search'
 import { prisma } from 'db'
 import { searchDocsWithSearchApi } from '../lib/search-api-search'
 import type { FileUpdate } from '../lib/edit-tool'
+import { getHost } from '../lib/get-host'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
-  const domain = url.hostname.split(':')[0]
+  const domain = getHost(request)
 
   const params = url.searchParams
   const query = params.get('query') || ''

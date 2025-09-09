@@ -21,6 +21,7 @@ import { ClientPage, ClientErrorBoundary } from './_catchall-$-client'
 import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 import { FilesInDraft } from '../lib/docs-state'
 import { getDocsJson, withBasePath } from '../lib/utils'
+import { getHost } from '../lib/get-host'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
@@ -168,7 +169,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url)
-  const domain = url.hostname.split(':')[0]
+  const domain = getHost(request)
   let headers = {} as Record<string, string>
 
   const chatIdFromQuery = url.searchParams.get('chatId')

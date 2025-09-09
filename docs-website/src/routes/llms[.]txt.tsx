@@ -2,10 +2,10 @@ import { prisma } from 'db'
 import type { Route } from './+types/llms[.]txt'
 import { getFilesForSource } from '../lib/source.server'
 import { getFumadocsSource } from '../lib/source'
+import { getHost } from '../lib/get-host'
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url)
-  const domain = url.hostname.split(':')[0]
+  const domain = getHost(request)
 
   const siteBranch = await prisma.siteBranch.findFirst({
     where: {

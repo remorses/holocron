@@ -2,10 +2,10 @@ import { prisma } from 'db'
 import { getKeyForMediaAsset, s3 } from '../lib/s3'
 import { getCacheTagForMediaAsset } from '../lib/cache-tags'
 import { withoutBasePath } from './utils'
+import { getHost } from './get-host'
 
 export async function imageLoader({ request }) {
-  const url = new URL(request.url)
-  const domain = url.hostname.split(':')[0]
+  const domain = getHost(request)
 
   const siteBranch = await prisma.siteBranch.findFirst({
     where: {

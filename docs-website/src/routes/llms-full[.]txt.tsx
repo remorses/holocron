@@ -2,10 +2,11 @@ import { prisma } from 'db'
 import type { Route } from './+types/llms-full[.]txt'
 import { generateLlmsFullTxt } from '../lib/llms-full-txt'
 import { getCacheTagForPage } from '../lib/cache-tags'
+import { getHost } from '../lib/get-host'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
-  const domain = url.hostname.split(':')[0]
+  const domain = getHost(request)
 
   // Extract search parameters and combine into a single query
   const searchParams = url.searchParams.getAll('search').filter((s) => s.trim().length > 0)

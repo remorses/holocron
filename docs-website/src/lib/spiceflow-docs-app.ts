@@ -33,6 +33,7 @@ import { createEditTool, editToolParamsSchema, fileUpdateSchema, type FileUpdate
 import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 import { printDirectoryTree } from './directory-tree'
 import { createInvalidTool, INVALID_TOOL_NAME } from 'contesto/src/lib/invalid-tool'
+import { getHost } from './get-host'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -51,8 +52,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
     }),
     async *handler({ request, waitUntil, state: { } }) {
       const { messages, currentSlug, locale, chatId, currentOrigin, filesInDraft = {} } = await request.json()
-      const url = new URL(request.url)
-      const domain = url.hostname.split(':')[0]
+      const domain = getHost(request)
 
       const siteBranch = await prisma.siteBranch.findFirst({
         where: {
