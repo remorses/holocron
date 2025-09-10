@@ -5,8 +5,7 @@ import type {
   ExecutionContext
 } from '@cloudflare/workers-types'
 
-// https://test-docs-basepath.holocronsites.com/docs
-// https://fumabase-docs-prod-base-path-docs.fly.dev/docs
+
 
 
 
@@ -70,3 +69,6 @@ export default {
     return await fetch(req)
   },
 }
+
+// https://test-docs-basepath.holocronsites.com/docs
+// https://fumabase-docs-prod-base-path-docs.fly.dev/docs
