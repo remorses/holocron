@@ -3,13 +3,14 @@ import { Outlet } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId'
 import { ClientOnly } from 'website/src/components/client-only'
+import { KnownError } from '../lib/errors'
 
 export type { Route }
 
 export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
   // Check if request is aborted early
   if (request.signal.aborted) {
-    throw new Error('Request aborted')
+    throw new KnownError('Request aborted')
   }
 
   const session = await getSession({ request })
@@ -17,7 +18,7 @@ export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
 
   // Check signal before database query
   if (request.signal.aborted) {
-    throw new Error('Request aborted')
+    throw new KnownError('Request aborted')
   }
 
   // If no userId, return early with undefined fields
@@ -42,7 +43,7 @@ export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
 
   // Check signal before fetching user sites
   if (request.signal.aborted) {
-    throw new Error('Request aborted')
+    throw new KnownError('Request aborted')
   }
 
   // If user is not org member, return with undefined fields

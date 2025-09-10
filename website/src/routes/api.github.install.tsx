@@ -12,6 +12,7 @@ import { GithubState, GithubLoginRequestData } from '../lib/types'
 import { SelectNative } from '../components/ui/select-native'
 import * as cookie from 'cookie'
 import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
+import { KnownError } from '../lib/errors'
 
 enum FormNames {
   chooseAnother = '_chooseAnother',
@@ -101,12 +102,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
     request,
   })
   if (!afterInstall) {
-    throw new Error('URL is malformed, missing next param')
+    throw new KnownError('URL is malformed, missing next param')
   }
 
   let orgId = userId
   if (!orgId) {
-    throw new Error('Unauthorized')
+    throw new KnownError('Unauthorized')
   }
 
   const [githubInstallations] = await Promise.all([

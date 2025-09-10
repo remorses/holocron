@@ -36,3 +36,5 @@ export class KnownError extends Error {
     this.name = 'KnownError'
   }
 }
+
+export const AppError = KnownError

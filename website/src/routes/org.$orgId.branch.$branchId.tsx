@@ -3,13 +3,14 @@ import { Outlet } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId.branch.$branchId'
 import { env } from '../lib/env'
+import { KnownError } from '../lib/errors'
 
 export type { Route }
 
 export async function loader({ request, params: { orgId, branchId } }: Route.LoaderArgs) {
   // Check if request is aborted early
   if (request.signal.aborted) {
-    throw new Error('Request aborted')
+    throw new KnownError('Request aborted')
   }
 
   // Get session but don't require it
@@ -18,7 +19,7 @@ export async function loader({ request, params: { orgId, branchId } }: Route.Loa
 
   // Check signal before database queries
   if (request.signal.aborted) {
-    throw new Error('Request aborted')
+    throw new KnownError('Request aborted')
   }
 
   // Fetch all data in parallel
@@ -92,7 +93,7 @@ export async function loader({ request, params: { orgId, branchId } }: Route.Loa
   ])
 
   if (!siteBranch) {
-    throw new Error('Branch not found')
+    throw new KnownError('Branch not found')
   }
 
   const site = siteBranch.site
@@ -101,7 +102,7 @@ export async function loader({ request, params: { orgId, branchId } }: Route.Loa
 
   // For private sites, require user to be org member
   if (!isPublic && !isOrgMember) {
-    throw new Error('Access denied')
+    throw new KnownError('Access denied')
   }
 
   const siteId = site.siteId

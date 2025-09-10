@@ -29,6 +29,7 @@ import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
 import { GithubLoginRequestData } from '../lib/types'
 import { GithubIcon } from '../components/icons'
 import { createSite } from '../lib/site'
+import { KnownError } from '../lib/errors'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const sessionData = await getSession({ request })
@@ -149,7 +150,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     const githubDataStr = cookies[GITHUB_LOGIN_DATA_COOKIE]
 
     if (!githubDataStr) {
-      throw new Error('Missing GitHub login data')
+      throw new KnownError('Missing GitHub login data')
     }
 
     const data: GithubLoginRequestData = JSON.parse(decodeURIComponent(githubDataStr))
@@ -158,7 +159,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     // Parse repo name and owner
     const [owner, repo] = selectedRepo.split('/')
     if (!owner || !repo) {
-      throw new Error('Invalid repository format')
+      throw new KnownError('Invalid repository format')
     }
 
     // Get GitHub installation
@@ -175,7 +176,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     })
 
     if (!githubInstallation) {
-      throw new Error(`GitHub installation not found for ${githubAccountLogin}`)
+      throw new KnownError(`GitHub installation not found for ${githubAccountLogin}`)
     }
 
     // Add the docsJson file as initial file
@@ -249,7 +250,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       await prisma.site.delete({
         where: { siteId },
       })
-      throw new Error(
+      throw new KnownError(
         'No documentation pages found in the repository. Please ensure your repository contains markdown files.',
       )
     }

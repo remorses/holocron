@@ -13,6 +13,7 @@ import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient, docsRpcClient } from '../lib/docs-setstate'
 import { parse } from 'cookie'
 import { PREFERS_EDITOR_VIEW_COOKIE } from '../lib/constants'
+import { KnownError } from '../lib/errors'
 
 import { State, useWebsiteState, WebsiteStateProvider, useFilesInDraftAutoSave } from '../lib/state'
 import { cn } from '../lib/utils'
@@ -40,7 +41,7 @@ export type { Route }
 export async function loader({ request, params: { orgId, branchId, chatId } }: Route.LoaderArgs) {
   // Check if request is aborted early
   if (request.signal.aborted) {
-    throw new Error('Request aborted')
+    throw new KnownError('Request aborted')
   }
 
   const session = await getSession({ request })
@@ -48,7 +49,7 @@ export async function loader({ request, params: { orgId, branchId, chatId } }: R
 
   // Check signal before main database queries
   if (request.signal.aborted) {
-    throw new Error('Request aborted')
+    throw new KnownError('Request aborted')
   }
 
   // Fetch branch and chat in parallel
@@ -111,11 +112,11 @@ export async function loader({ request, params: { orgId, branchId, chatId } }: R
   ])
 
   if (!siteBranch) {
-    throw new Error('Branch not found')
+    throw new KnownError('Branch not found')
   }
 
   if (!chatData) {
-    throw new Error('Chat not found')
+    throw new KnownError('Chat not found')
   }
 
   const site = siteBranch.site
@@ -124,12 +125,12 @@ export async function loader({ request, params: { orgId, branchId, chatId } }: R
 
   // For private sites, require user to be org member
   if (!isPublic && !isOrgMember) {
-    throw new Error('Access denied')
+    throw new KnownError('Access denied')
   }
 
   // For private sites, ensure the chat belongs to the user
   if (!isPublic && chatData.userId !== userId) {
-    throw new Error('Chat not found')
+    throw new KnownError('Chat not found')
   }
 
   const chat = chatData
@@ -156,7 +157,7 @@ export async function loader({ request, params: { orgId, branchId, chatId } }: R
 
     // Check signal before getting files
     if (request.signal.aborted) {
-      throw new Error('Request aborted')
+      throw new KnownError('Request aborted')
     }
 
     const allFiles = source.getPages()
