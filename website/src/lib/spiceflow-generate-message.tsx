@@ -47,7 +47,7 @@ import {
   type ValidateNewContentResult,
 } from 'docs-website/src/lib/edit-tool'
 import { FileSystemEmulator } from './file-system-emulator'
-import { notifyError } from './errors'
+import { KnownError, notifyError } from './errors'
 import { createRenderFormTool, optionalToNullable, removeNullsForOptionals, RenderFormParameters } from 'contesto'
 import { mdxRegex as mdxOrMdRegex } from './utils'
 import {
@@ -375,7 +375,7 @@ export async function* generateMessageStream({
       })
 
       if (!hasReadHolocronFile) {
-        throw new Error(
+        throw new KnownError(
           `You need to first read the ${DOCS_JSON_BASENAME} file before calling this tool, to know what are the existing values`,
         )
       }
@@ -939,11 +939,11 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
       }),
     ])
     if (!branch) {
-      throw new Error('You do not have access to this branch')
+      throw new KnownError('You do not have access to this branch')
     }
 
     if (chat && chat.userId !== userId) {
-      throw new Error('This chat belongs to another user. Please start a new chat instead.')
+      throw new KnownError('This chat belongs to another user. Please start a new chat instead.')
     }
 
     // Create the last user message before streaming

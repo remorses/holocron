@@ -16,6 +16,9 @@ init({
     if (event?.['name'] === 'AbortError') {
       return null
     }
+    if (event?.['name'] === 'KnownError') {
+      return null
+    }
 
     return event
   },
@@ -27,9 +30,9 @@ export async function notifyError(error: any, msg?: string) {
   await flush(1000)
 }
 
-export class AppError extends Error {
+export class KnownError extends Error {
   constructor(message: string) {
     super(message)
-    this.name = 'AppError'
+    this.name = 'KnownError'
   }
 }
