@@ -8,11 +8,13 @@
 
   "workers_dev": true,
 
-  // ↓ narrower pattern
   "routes": [
     {
       "pattern": "*-docs-basepath.holocronsites.com/*",
-
+      "zone_name": "holocronsites.com",
+    },
+    {
+      "pattern": "*-preview-site.holocronsites.com/*",
       "zone_name": "holocronsites.com",
     },
   ],

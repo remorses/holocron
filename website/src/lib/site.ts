@@ -65,12 +65,21 @@ export async function createSite({
   // Generate internal hostname
   const userName = slugKebabCaseKeepExtension(githubRepo || name || 'holocron-site')
   const randomHash = Math.random().toString(36).substring(2, 10)
-  const internalHost = `${userName}-${randomHash}.${env.APPS_DOMAIN}`
+
+  const isPreview = env.PUBLIC_URL?.includes('preview.')
+
+  let postfix = ''
+  if (isPreview) {
+    postfix = '-preview-site'
+  }
+  const internalHost = `${userName}-${randomHash}${postfix}.${env.APPS_DOMAIN}`
 
   // Set up default domains
   const defaultDomains = process.env.NODE_ENV === 'development'
     ? [`${userName}-${randomHash}.localhost`, internalHost]
     : [internalHost]
+
+
 
   // Combine default and additional domains
   const domains = additionalDomains
