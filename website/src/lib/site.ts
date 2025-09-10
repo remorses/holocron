@@ -106,6 +106,7 @@ export async function createSite({
           branchId,
           title: 'Main',
           ...(githubBranch && { githubBranch }),
+
         },
       },
       ...(githubInstallationId && {
@@ -130,40 +131,35 @@ export async function createSite({
       ...defaultDocsJsonComments,
     },
   })
-
-  const { pageCount } = await syncSite({
-    files: assets,
-    githubFolder: sanitizedGithubFolder || '',
-    branchId,
-    siteId,
-    name,
-    docsJson,
-  })
-
-
-  // adds support for hosing a site on a docs base path
-  await prisma.domain.create({
-    data: {
-      host: domainForBasePath,
+  // Do domain creation, chat creation, and syncSite in parallel
+  const [_, chat, syncResult] = await Promise.all([
+    prisma.domain.create({
+      data: {
+        host: domainForBasePath,
+        branchId,
+        domainType: 'basepathDomain',
+      },
+    }),
+    prisma.chat.create({
+      data: {
+        userId,
+        branchId,
+        title: null,
+        currentSlug: null,
+        filesInDraft: {},
+      },
+    }),
+    syncSite({
+      files: assets,
+      githubFolder: sanitizedGithubFolder || '',
       branchId,
-      domainType: 'basepathDomain',
-    },
-  })
+      siteId,
+      name,
+      docsJson,
+    }),
+  ])
 
-
-
-
-
-  // Always create a chat for the branch
-  const chat = await prisma.chat.create({
-    data: {
-      userId,
-      branchId,
-      title: null,
-      currentSlug: null,
-      filesInDraft: {},
-    },
-  })
+  const { pageCount } = syncResult
   const chatId = chat.chatId
 
   return {
