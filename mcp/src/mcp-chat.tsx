@@ -92,7 +92,9 @@ export function Chat() {
   )
 
   return (
-    <ChatProvider initialValue={initialChatState}>
+    <ChatProvider initialValue={initialChatState} onError={(error, msg) => {
+      console.error(msg || 'Error in MCP chat', error)
+    }}>
       <div className='flex flex-col max-h-[700px] '>
         <div className='px-3 py-4 w-full min-h-0 max-w-full max-h-full relative overflow-y-auto '>
           <div className='flex flex-col gap-4 relative h-full justify-center'>

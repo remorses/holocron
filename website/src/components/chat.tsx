@@ -2,6 +2,7 @@
 
 import { createIdGenerator, isToolUIPart, UIMessage, FileUIPart } from 'ai'
 import { ChatAssistantMessage, ChatErrorMessage, ChatUserMessage } from 'contesto/src/chat/chat-message'
+import { notifyError } from '../lib/errors'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { isDocsJson } from 'docs-website/src/lib/utils'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
@@ -438,7 +439,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
   }
 
   return (
-    <ChatProvider generateMessages={submitMessages} initialValue={initialChatState}>
+    <ChatProvider generateMessages={submitMessages} initialValue={initialChatState} onError={notifyError}>
       <div
         style={
           {

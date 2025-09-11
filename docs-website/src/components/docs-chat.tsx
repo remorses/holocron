@@ -1,6 +1,7 @@
 import { CSSProperties, Fragment, useEffect, useMemo, useState } from 'react'
 
 import { createIdGenerator, isToolUIPart } from 'ai'
+import { notifyError } from '../lib/errors'
 import {
   ToolPartInputAvailable,
   ToolPartInputStreaming,
@@ -224,7 +225,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
   }
 
   return (
-    <ChatProvider initialValue={initialChatState} generateMessages={submitMessageWithoutDelete}>
+    <ChatProvider initialValue={initialChatState} generateMessages={submitMessageWithoutDelete} onError={notifyError}>
       <AnimatePresence>
         {drawerState !== 'minimized' && (
           <motion.div
@@ -590,7 +591,7 @@ function Footer() {
       const { text } = await response.json()
       return text || ''
     } catch (error) {
-      console.error('Transcription error:', error)
+      notifyError(error, 'Transcription error')
       return ''
     }
   }

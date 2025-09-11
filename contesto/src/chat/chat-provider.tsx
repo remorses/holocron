@@ -27,6 +27,7 @@ const ChatProvider = (props: {
   generateMessages?: (x: ChatState) => Promise<void>
   initialValue: Partial<ChatState>
   className?: string
+  onError: (error: Error | unknown, message?: string) => void
 }) => {
   const mentionsCombobox = Ariakit.useComboboxStore()
   const stableInitialState = useShallowStable(props.initialValue)
@@ -150,7 +151,7 @@ const ChatProvider = (props: {
     try {
       await props.generateMessages?.(useChatState.getState())
     } catch (error) {
-      console.error('Error during message generation:', error)
+      props.onError(error, 'Error during message generation')
       // Remove only the failed assistant message, keep user message
       const currentMessages = store.getState().messages || []
       let messagesWithoutAssistant = currentMessages.slice(0, -1)

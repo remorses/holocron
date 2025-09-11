@@ -1134,7 +1134,7 @@ export const app = new Spiceflow({ basePath: '/api' })
           text: result.text,
         }
       } catch (error) {
-        console.error('Transcription error:', error)
+        notifyError(error, 'Transcription error')
         throw new AppError(`Failed to transcribe audio: ${error.message}`)
       }
     },

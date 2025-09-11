@@ -5,6 +5,7 @@ import JSONC from 'tiny-jsonc'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { createIdGenerator } from 'ai'
 import { apiClient } from './spiceflow-client'
+import { notifyError } from './errors'
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -212,7 +213,7 @@ export async function transcribeAudio(audioFile: File): Promise<string> {
     const { text } = await response.json()
     return text || ''
   } catch (error) {
-    console.error('Transcription error:', error)
+    notifyError(error, 'Transcription error')
     return ''
   }
 }
