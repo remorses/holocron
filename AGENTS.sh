@@ -8,7 +8,6 @@ NOTICE: AGENTS.md is generated using AGENTS.sh and should NEVER be manually upda
 ---
 
 
-
 "
 
 OUTPUT_FILE="AGENTS.md"
@@ -40,5 +39,7 @@ for f in \
   curl -fsSL "https://raw.githubusercontent.com/remorses/AGENTS.md/main/$f" >> "$OUTPUT_FILE"
   printf '\n\n---\n\n' >> "$OUTPUT_FILE"
 done
+
+ln -sf AGENTS.md CLAUDE.md
 
 echo "✅ AGENTS.md generated successfully!"
