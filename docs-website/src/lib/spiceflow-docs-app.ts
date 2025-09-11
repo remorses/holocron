@@ -37,6 +37,19 @@ import { getHost } from './get-host'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
+// Create fallback model with groq as primary and gemini flash 2.5 as fallback
+let model: LanguageModel = createFallback({
+  models: [
+    groq('moonshotai/kimi-k2-instruct'),
+    google('gemini-2.5-flash')
+  ],
+  onError: (error, modelId) => {
+    console.error(`Error with model ${modelId}:`, error)
+    notifyError(error, `AI fallback for: ${modelId}`)
+  },
+  modelResetInterval: 60000, // Reset to primary model after 1 minute
+})
+
 export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
   .use(preventProcessExitIfBusy())
   .route({
@@ -92,18 +105,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
       })
       const pages = source.getPages(locale)
 
-      // Create fallback model with groq as primary and gemini flash 2.5 as fallback
-      let model: LanguageModel = createFallback({
-        models: [
-          groq('moonshotai/kimi-k2-instruct'),
-          google('gemini-2.5-flash')
-        ],
-        onError: (error, modelId) => {
-          console.error(`Error with model ${modelId}:`, error)
-          notifyError(error, `AI model error: ${modelId}`)
-        },
-        modelResetInterval: 60000, // Reset to primary model after 1 minute
-      })
+
 
       const linksText = pages
         .map((page) => {
@@ -165,7 +167,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
       })
 
       const { invalidTool, repairToolCall } = createInvalidTool({})
-      
+
       const editTool = createEditTool({
         fileSystem,
         model: { provider: model.provider },

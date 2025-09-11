@@ -275,6 +275,20 @@ export type WebsiteTools = {
   }
 }
 
+// Create fallback model with groq as primary and gemini flash 2.5 as fallback
+let model: LanguageModel = createFallback({
+  models: [
+    groq('moonshotai/kimi-k2-instruct'),
+    googleAI('gemini-2.5-flash')
+  ],
+  onError: (error, modelId) => {
+    console.error(`Error with model ${modelId}:`, error)
+    notifyError(error, `AI fallback for: ${modelId}`)
+  },
+  modelResetInterval: 60000, // Reset to primary model after 1 minute
+})
+
+
 /**
  * Stateless function for generating messages - no Prisma dependency
  */
@@ -323,18 +337,6 @@ export async function* generateMessageStream({
     languages: locales,
   })
 
-  // Create fallback model with groq as primary and gemini flash 2.5 as fallback
-  let model: LanguageModel = createFallback({
-    models: [
-      groq('moonshotai/kimi-k2-instruct'),
-      googleAI('gemini-2.5-flash')
-    ],
-    onError: (error, modelId) => {
-      console.error(`Error with model ${modelId}:`, error)
-      notifyError(error, `AI model error: ${modelId}`)
-    },
-    modelResetInterval: 60000, // Reset to primary model after 1 minute
-  })
 
   // Apply middleware if provided
   if (middlewares && middlewares.length > 0) {
