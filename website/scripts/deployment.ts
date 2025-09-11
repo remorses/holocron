@@ -51,7 +51,7 @@ async function main() {
     memorySize: '1gb',
     machineType: 'shared-cpu-2x',
     depot: true,
-
+    suspend: stage === 'preview',
     env: {
       ...env,
       NODE_ENV: 'production',
