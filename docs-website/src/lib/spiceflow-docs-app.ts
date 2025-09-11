@@ -1,4 +1,5 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
+import { LanguageModelV2, type LanguageModelV2Middleware } from '@ai-sdk/provider'
 import { google } from '@ai-sdk/google'
 import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
@@ -38,7 +39,7 @@ import { getHost } from './get-host'
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
-let model: LanguageModel = createFallback({
+let model: LanguageModelV2 = createFallback({
   models: [
     groq('moonshotai/kimi-k2-instruct'),
     google('gemini-2.5-flash')

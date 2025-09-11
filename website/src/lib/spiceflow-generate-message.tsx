@@ -1,4 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
+import { fireworks } from '@ai-sdk/fireworks';
 import { deepseek } from '@ai-sdk/deepseek'
 import { createFallback } from 'ai-fallback'
 import { google as googleAI, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
@@ -29,7 +30,7 @@ import {
   LanguageModel,
 } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
-import { type LanguageModelV2Middleware } from '@ai-sdk/provider'
+import { LanguageModelV2, type LanguageModelV2Middleware } from '@ai-sdk/provider'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
@@ -276,8 +277,9 @@ export type WebsiteTools = {
 }
 
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
-let model: LanguageModel = createFallback({
+let model: LanguageModelV2 = createFallback({
   models: [
+    fireworks('accounts/fireworks/models/kimi-k2-instruct'),
     groq('moonshotai/kimi-k2-instruct'),
     googleAI('gemini-2.5-flash')
   ],
