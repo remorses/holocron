@@ -209,4 +209,30 @@ describe.concurrent('Tunnel WebSocket', () => {
     client1.close()
     client2.close()
   })
+
+  test('client connection fails when no upstream is connected', async () => {
+    const tunnelId = getTunnelId()
+
+    // Try to connect client without upstream
+    const client = new WebSocket(`${WS_URL}/downstream?id=${tunnelId}`)
+
+    // Track both open and close events
+    const eventPromise = new Promise<{ code: number; reason: string }>((resolve, reject) => {
+      client.on('open', () => {
+        // Connection opened, wait for close
+      })
+      client.on('close', (code, reason) => {
+        resolve({ code, reason: reason.toString() })
+      })
+      client.on('error', (error) => {
+        reject(error)
+      })
+    })
+
+    // Wait for the connection to be closed
+    const closeEvent = await eventPromise
+
+    expect(closeEvent.code).toBe(4008)
+    expect(closeEvent.reason).toBe('No upstream available')
+  })
 })

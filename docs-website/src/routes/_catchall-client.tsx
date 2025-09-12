@@ -64,7 +64,7 @@ const openapiPath = `/api-reference`
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, ''), 'http://localhost:7664']
 
-let onFirstStateMessage = () => {}
+let onFirstStateMessage = () => { }
 const firstStateReceived = new Promise<void>((resolve) => {
   onFirstStateMessage = resolve
 })
@@ -170,43 +170,80 @@ async function websocketIdHandling(websocketId: string) {
   if (globalThis.websocketHandlingDone) return
   globalThis.websocketHandlingDone = true
 
-  console.log('connecting over preview websocketId', websocketId)
-  const websocketUrl = `wss://${WEBSITE_DOMAIN}/_tunnel/client?id=${websocketId}`
-  const ws = new WebSocket(websocketUrl)
-  ws.onopen = () => {
-    useDocsState.setState({
-      websocketServerPreviewConnected: true,
-    })
-    ws.send(JSON.stringify({ type: 'ready' }))
+  let ws: WebSocket | null = null
+  let reconnectTimeout: NodeJS.Timeout | null = null
+  let pingInterval: NodeJS.Timeout | null = null
+
+  const clearTimers = () => {
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout)
+      reconnectTimeout = null
+    }
+    if (pingInterval) {
+      clearInterval(pingInterval)
+      pingInterval = null
+    }
   }
-  ws.onclose = () => {
-    useDocsState.setState({
-      websocketServerPreviewConnected: false,
-    })
+
+  const connect = () => {
+    console.log('connecting over preview websocketId', websocketId)
+    const websocketUrl = `wss://${WEBSITE_DOMAIN}/_tunnel/downstream?id=${websocketId}`
+    ws = new WebSocket(websocketUrl)
+
+    ws.onopen = () => {
+      clearTimers()
+      useDocsState.setState({
+        websocketConnectionState: 'CONNECTED',
+      })
+      ws!.send(JSON.stringify({ type: 'ready' }))
+
+      // Start ping interval
+      pingInterval = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping' }))
+        }
+      }, 5 * 1000)
+    }
+
+    ws.onclose = (event) => {
+      clearTimers()
+
+      // Check if upstream is not connected based on close code
+      if (event.code === 4008) {
+        useDocsState.setState({
+          websocketConnectionState: 'UPSTREAM_NOT_CONNECTED',
+        })
+      } else {
+        useDocsState.setState({
+          websocketConnectionState: 'NOT_CONNECTED',
+        })
+      }
+
+      // Always attempt to reconnect after 5 seconds
+      reconnectTimeout = setTimeout(() => connect(), 5000)
+    }
+
+    ws.onmessage = async (event) => {
+      let data: IframeRpcMessage
+      try {
+        data = JSON.parse(event.data)
+      } catch {
+        console.error(`websocket sent invalid json`, event.data)
+        return
+      }
+      const { id, revalidate, state: partialState } = data || {}
+      if (partialState) {
+        await setDocsStateForMessage(partialState)
+      }
+      if (revalidate) {
+        await revalidator?.revalidate()
+      }
+      ws!.send(JSON.stringify({ id } satisfies IframeRpcMessage))
+    }
   }
-  ws.onmessage = async (event) => {
-    let data: IframeRpcMessage
-    try {
-      data = JSON.parse(event.data)
-    } catch {
-      console.error(`websocket sent invalid json`, event.data)
-      return
-    }
-    const { id, revalidate, state: partialState } = data || {}
-    if (partialState) {
-      await setDocsStateForMessage(partialState)
-    }
-    if (revalidate) {
-      await revalidator?.revalidate()
-    }
-    ws.send(JSON.stringify({ id } satisfies IframeRpcMessage))
-  }
-  // ping interval
-  setInterval(() => {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'ping' }))
-    }
-  }, 1000)
+
+  // Start initial connection
+  connect()
 }
 
 if (typeof window !== 'undefined') {
@@ -293,11 +330,11 @@ export function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
   const toCssBlock = (obj: Record<string, string> | undefined) =>
     obj
       ? Object.entries(obj)
-          .map(([key, value]) => {
-            const cssVar = key.startsWith('--') ? key : `--${key}`
-            return `${cssVar}: ${value} !important;`
-          })
-          .join('\n  ')
+        .map(([key, value]) => {
+          const cssVar = key.startsWith('--') ? key : `--${key}`
+          return `${cssVar}: ${value} !important;`
+        })
+        .join('\n  ')
       : ''
 
   // Don't render if both empty
@@ -552,7 +589,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
 }
 
 const noop = (callback: () => void) => {
-  return () => {}
+  return () => { }
 }
 
 function PreviewBanner({ websocketId }: { websocketId?: string }) {
@@ -564,7 +601,7 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
     globalNavigate(url.pathname + url.search)
   }
 
-  const websocketServerPreviewConnected = useDocsState((state) => state.websocketServerPreviewConnected)
+  const websocketConnectionState = useDocsState((state) => state.websocketConnectionState)
 
   const shouldShow = useSyncExternalStore(
     noop,
@@ -575,19 +612,41 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
     return null
   }
 
+  const getStatusColor = () => {
+    switch (websocketConnectionState) {
+      case 'CONNECTED':
+        return 'bg-green-500'
+      case 'UPSTREAM_NOT_CONNECTED':
+        return 'bg-yellow-500'
+      case 'NOT_CONNECTED':
+      default:
+        return 'bg-red-500'
+    }
+  }
+
+  const getStatusMessage = () => {
+    switch (websocketConnectionState) {
+      case 'CONNECTED':
+        return 'Connected to local preview. Added content will be highlighted green'
+      case 'UPSTREAM_NOT_CONNECTED':
+        return 'Waiting for upstream server. Please run the preview server'
+      case 'NOT_CONNECTED':
+      default:
+        return 'Server disconnected. Please restart the preview server'
+    }
+  }
+
   return (
     <Banner className='sticky top-0 z-50 bg-fd-muted text-fd-accent-foreground isolate px-4 py-1 flex items-center justify-between'>
       <div className='flex items-center gap-2'>
         <div
           className={cn(
             'w-2 h-2 rounded-full animate-pulse',
-            websocketServerPreviewConnected ? 'bg-green-500' : 'bg-red-500',
+            getStatusColor(),
           )}
         ></div>
         <span className='font-medium text-sm'>
-          {websocketServerPreviewConnected
-            ? 'Connected to local preview. Added content will be highlighted green'
-            : 'Server disconnected. Please restart the preview server'}
+          {getStatusMessage()}
         </span>
       </div>
       <button

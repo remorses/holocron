@@ -12,20 +12,24 @@
   "routes": [
     {
       "pattern": "holocron.so/_tunnel/*",
-      "zone_name": "holocron.so"
+      "zone_name": "holocron.so",
     },
     {
       "pattern": "fumabase.com/_tunnel/*",
-      "zone_name": "fumabase.com"
+      "zone_name": "fumabase.com",
     },
     {
       "pattern": "unframer.co/_tunnel/*",
-      "zone_name": "unframer.co"
-    }
+      "zone_name": "unframer.co",
+    },
+    {
+      "pattern": "mcp.unframer.co/_tunnel/*",
+      "zone_name": "unframer.co",
+    },
   ],
 
   "durable_objects": {
-    "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }]
+    "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }],
   },
 
   "migrations": [{ "tag": "v1", "new_classes": ["Tunnel"] }],
@@ -35,16 +39,24 @@
       "routes": [
         {
           "pattern": "preview.fumabase.com/_tunnel/*",
-          "zone_name": "fumabase.com"
+          "zone_name": "fumabase.com",
         },
         {
           "pattern": "preview.holocron.so/_tunnel/*",
-          "zone_name": "holocron.so"
-        }
+          "zone_name": "holocron.so",
+        },
+        {
+          "pattern": "mcp.preview.unframer.co/_tunnel/*",
+          "zone_name": "unframer.co",
+        },
+        {
+          "pattern": "preview.unframer.co/_tunnel/*",
+          "zone_name": "unframer.co",
+        },
       ],
       "durable_objects": {
-        "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }]
-      }
-    }
-  }
+        "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }],
+      },
+    },
+  },
 }

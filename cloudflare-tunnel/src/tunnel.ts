@@ -82,6 +82,17 @@ export class Tunnel {
       this.ctx.acceptWebSocket(server)
       server.serializeAttachment({ role: 'up' } satisfies Attachment)
     } else {
+      // Check if upstream exists before accepting downstream
+      const existingUp = this.getUpstream()
+      if (!existingUp) {
+        // Accept the WebSocket connection
+        server.accept()
+        // Immediately close it
+        server.close(4008, 'No upstream available')
+        // Return successful WebSocket upgrade response
+        // The client will receive the close event after connection
+        return addCors(new Response(null, { status: 101, webSocket: client }))
+      }
       // Accept with hibernation and tag as downstream
       this.ctx.acceptWebSocket(server)
       server.serializeAttachment({ role: 'down' } satisfies Attachment)

@@ -25,6 +25,8 @@ export type ChatHistory = {
 
 export type DrawerState = 'closed' | 'minimized' | 'open'
 
+export type WebSocketConnectionState = 'CONNECTED' | 'UPSTREAM_NOT_CONNECTED' | 'NOT_CONNECTED'
+
 export type PersistentDocsState = {
   chatId: string
   drawerState: DrawerState
@@ -34,7 +36,7 @@ export type PersistentDocsState = {
 export type DocsState = {
   // tree?: PageTree.Root
   toc?: TOCItemType[]
-  websocketServerPreviewConnected?: boolean
+  websocketConnectionState?: WebSocketConnectionState
   currentSlug?: string
   // docsJson?: DocsJsonType
   filesInDraft: FilesInDraft
@@ -54,6 +56,7 @@ const defaultState: DocsState = {
   filesInDraft: {},
   deletedPages: [],
   previewMode: 'preview',
+  websocketConnectionState: 'NOT_CONNECTED',
 }
 
 const defaultPersistentState: PersistentDocsState = {

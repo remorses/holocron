@@ -6,7 +6,7 @@
   "repository": "https://github.com/remorses/",
   "scripts": {
     "deployment": "pnpm tsc && wrangler deploy --env preview",
-    "deployment:prod": "pnpm tsc && wrangler deploy && pnpm deployment",
+    "deployment:prod": "sudo pnpm tsc && wrangler deploy && pnpm deployment",
     "dev": "wrangler dev",
     "test": "vitest --run"
   },
