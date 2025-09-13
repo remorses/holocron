@@ -793,6 +793,9 @@ export async function* generateMessageStream({
       console.log(`Error in streamText:`, error)
       throw error
     },
+    onStepFinish({}) {
+
+    },
     experimental_transform: process.env.VITEST
       ? undefined
       : smoothStream({
@@ -840,6 +843,7 @@ export async function* generateMessageStream({
 
     originalMessages: messages,
     generateMessageId: idGenerator,
+
     async onFinish({ messages: uiMessages, isAborted }) {
       console.log(`chat finished, processing`, isAborted ? 'aborted' : 'completed')
 

@@ -88,7 +88,6 @@ async function generateToolsTypeDefinition(tools: Record<string, Tool<any, any>>
       DO NOT use import or require.
 
       NEVER suppress errors with empty catch statements. Always log the errors.
-
     `
 }
 
