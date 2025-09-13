@@ -430,11 +430,11 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
           setMessages(newMessages)
         })
       }
-    } finally {
-      // Set generating state to false when finished
-      useWebsiteState.setState({ isChatGenerating: false })
       console.log('finished streaming message response, revalidating')
+      // only revalidate on success. if we revalidate on error loader will return empty chat, because chat is still not saved
       await revalidator.revalidate()
+    } finally {
+      useWebsiteState.setState({ isChatGenerating: false })
     }
   }
 

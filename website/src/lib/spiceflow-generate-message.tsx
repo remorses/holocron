@@ -28,6 +28,7 @@ import {
   convertToModelMessages,
   NoSuchToolError,
   LanguageModel,
+  readUIMessageStream,
 } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 import { LanguageModelV2, type LanguageModelV2Middleware } from '@ai-sdk/provider'
@@ -793,7 +794,7 @@ export async function* generateMessageStream({
       console.log(`Error in streamText:`, error)
       throw error
     },
-    onStepFinish({}) {
+    onStepFinish({ }) {
 
     },
     experimental_transform: process.env.VITEST
@@ -865,6 +866,9 @@ export async function* generateMessageStream({
       }
     },
   })
+
+
+
   for await (const chunk of stream) {
     // console.log(chunk)
     if (chunk.type === 'error') {
