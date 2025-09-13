@@ -68,11 +68,11 @@ export async function createSite({
 
   const isPreview = env.PUBLIC_URL?.includes('preview.')
 
-  let postfix = ''
+  let prefix = ''
   if (isPreview) {
-    postfix = '-preview-site'
+    prefix = '-preview-site'
   }
-  const internalHost = `${userName}-${randomHash}${postfix}.${env.APPS_DOMAIN}`
+  const internalHost = `${userName}-${randomHash}${prefix}.${env.APPS_DOMAIN}`
 
   // Set up default domains
   const defaultDomains = process.env.NODE_ENV === 'development'
@@ -87,9 +87,6 @@ export async function createSite({
     : defaultDomains
 
   const domainForBasePath = `${branchId}-docs-basepath.holocronsites.com`
-
-  // TODO only add this for paid websites
-  domains.push(domainForBasePath)
 
   // Create docsJson configuration
   const docsJson: DocsJsonType = {
