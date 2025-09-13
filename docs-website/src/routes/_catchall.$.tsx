@@ -592,7 +592,7 @@ export function ErrorBoundary({
 }: Route.ErrorBoundaryProps) {
   const containerClass =
     'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
-  const titleClass = 'text-3xl font-semibold mb-3 text-primary'
+  const titleClass = 'text-2xl mb-3 text-primary'
   const messageClass = 'text-base mb-2 text-muted-foreground'
   const preClass = 'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
 
@@ -615,7 +615,7 @@ export function ErrorBoundary({
     if (status === 404 && chatId) {
       return (
         <div className={containerClass}>
-          <h1 className={titleClass}>Site in construction...</h1>
+          <h1 className={titleClass}>Site Under Construction...</h1>
         </div>
       )
     }
