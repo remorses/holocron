@@ -57,7 +57,7 @@ async function main() {
       NODE_ENV: 'production',
       PORT: String(port),
     },
-    regions: ['iad'],
+    regions: [stage === 'preview' ? 'fra' : 'iad'],
   })
 }
 
