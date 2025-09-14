@@ -22,6 +22,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "2.0.16",
     "@ai-sdk/cerebras": "^1.0.17",
+    "@ai-sdk/fireworks": "^1.0.17",
     "@ai-sdk/google": "^2.0.14",
     "@ai-sdk/groq": "^2.0.19",
     "@ai-sdk/openai": "2.0.30",

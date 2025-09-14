@@ -280,7 +280,7 @@ export type WebsiteTools = {
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
-    fireworks('accounts/fireworks/models/kimi-k2-instruct'),
+    fireworks('accounts/fireworks/models/kimi-k2-instruct-0905'),
     groq('moonshotai/kimi-k2-instruct'),
     googleAI('gemini-2.5-flash')
   ],
