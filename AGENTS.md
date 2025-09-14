@@ -1,11 +1,10 @@
 
 # Project Coding Guidelines
 
-NOTICE: This file is generated using AGENTS.sh and should NEVER be manually updated.
-
-This file contains all coding guidelines and standards for this project.
+NOTICE: AGENTS.md is generated using AGENTS.sh and should NEVER be manually updated.
 
 ---
+
 
 
 when summarizing changes at the end of the message, be super short, a few words and in bullet points, use bold text to highlight important keywords. use markdown.
@@ -21,6 +20,12 @@ NEVER add comments unless I tell you
 ## files
 
 always use kebab case for new filenames. never use uppercase letters in filenames
+
+
+## see files in the repo
+
+use `git ls-files | tree --fromfile` to see files in the repo. this command will ignore files ignored by git
+
 
 ---
 
@@ -57,6 +62,8 @@ always use kebab case for new filenames. never use uppercase letters in filename
 - for node built-in imports, never import singular names. instead do `import fs from 'node:fs'`, same for path, os, etc.
 
 - NEVER start the development server with pnpm dev yourself. there is no reason to do so, even with &
+
+- When creating classes do not add setters and getters for a simple private field. instead make the field public directly so user can get it or set it himself without abstractions on top
 
 - if you encounter typescript lint errors for an npm package, read the node_modules/package/\*.d.ts files to understand the typescript types of the package. if you cannot understand them, ask me to help you with it.
 
@@ -117,6 +124,7 @@ const users: User[] = []
 
 remember to always add the explicit type to avoid unexpected type inference.
 
+
 ---
 
 # package manager: pnpm with workspace
@@ -128,6 +136,12 @@ try to run commands inside the package folder that you are working on. for examp
 if you need to install packages always use pnpm
 
 instead of adding packages directly in package.json use `pnpm install package` inside the right workspace folder. NEVER manually add a package by updating package.json
+
+## updating a package
+
+when i ask you to update a package always run `pnpm update -r packagename`. to update to latest also add --latest
+
+Do not do `pnpm add packagename` to update a package. only to add a missing one. otherwise other packages versions will get out of sync.
 
 ## fixing duplicate pnpm dependencies
 
@@ -234,6 +248,7 @@ in this case, we could have only updated @better-auth/stripe to fix the issue to
 
 if after doing this we still have duplicate packages, you will have to ask the user for help. you can try deleting the node_modules and restarting the approach, but it rarely helps.
 
+
 ---
 
 ## reading github repositories
@@ -243,11 +258,12 @@ you can use gitchamber.com to read repo files. run `curl https://gitchamber.com`
 ### vercel ai sdk documentation
 
 when working with the vercel ai sdk, you can fetch the latest docs using:
-https://gitchamber.com/repos/vercel/ai/main/files
+https://gitchamber.com/repos/repos/vercel/ai/main/files
 
 use gitchamber to read the .md files using curl
 
 you can swap out the topic with text you want to search docs for. you can also limit the total results returned with the param token to limit the tokens that will be added to the context window
+
 
 ---
 
@@ -454,8 +470,6 @@ in typescript never use process.env directly. instead find the closest `env.ts` 
 ## cac for cli development
 
 the cli uses cac npm package.
-
-notice that if you add a route in the spiceflow server you will need to run `pnpm --filter website gen-client` to update the apiClient inside cli.
 
 
 ---
@@ -823,13 +837,21 @@ use lucide-react to import icons. always add the Icon import name, for example `
 
 ---
 
+# spiceflow
+
+before writing or updating spiceflow related code always execute this command to get Spiceflow full documentation: `curl -s https://gitchamber.com/repos/remorses/spiceflow/main/files/README.md`
+
+spiceflow is an API library similar to hono, it allows you to write api servers using whatwg requests and responses
+
+use zod to create schemas and types that need to be used for tool inputs or spiceflow API routes.
+
 ## calling the server from the client
+
+you can obtain a type safe client for the API using `createSpiceflowClient` from `spiceflow/client`
 
 for simple routes that only have one interaction in the page, for example a form page, you should use react-router forms and actions to interact with the server.
 
 but when you do interactions from a component that can be rendered from multiple routes, or simply is not implemented inside a route page, you should use spiceflow client instead.
-
-the website exposes an API via spiceflow. here is spiceflow docs: https://getspiceflow.com/
 
 > ALWAYS use the fetch tool to get the latest docs if you need to implement a new route in a spiceflow API app server or need to add a new rpc call with a spiceflow api client!
 
@@ -847,6 +869,24 @@ always use `const {data, error} = await apiClient...` when calling spiceflow rpc
 spiceflow is a little-known api framework. if you add server routes to a file that includes spiceflow in the name or you are using the apiClient rpc, you always need to fetch the spiceflow docs first, using the @fetch tool on https://getspiceflow.com/
 
 this url returns a single long documentation that covers your use case. always fetch this document so you know how to use spiceflow. spiceflow is different from hono and other api frameworks, that's why you should ALWAYS fetch the docs first before using it
+
+## using spiceflow client in published public workspace packages
+
+usually you can just import the App type from the server workspace to create the client with createSpiceflowClient
+
+if you want to use the spiceflow client in a published package instead we will use the pattern of generating .d.ts and copying these in the workspace package, this way the package does not need to depend on unpublished private server package.
+
+example:
+
+```json
+{
+  "scripts": {
+    "gen-client": "export DIR=../plugin-mcp/src/generated/ && cd ../website && tsc --incremental && cd ../plugin-mcp && rm -rf $DIR && mkdir -p $DIR && cp ../website/dist/src/lib/api-client.* $DIR"
+  }
+}
+```
+
+notice that if you add a route in the spiceflow server you will need to run `pnpm --filter website gen-client` to update the apiClient inside cli.
 
 
 ---
@@ -874,9 +914,26 @@ if i ask you to test something in the browser, know that the website dev server 
 
 ## zod
 
-use zod to create schemas and types that need to be used for tool inputs or spiceflow API routes.
-
 when you need to create a complex type that comes from a prisma table, do not create a new schema that tries to recreate the prisma table structure. instead just use `z.any() as ZodType<PrismaTable>)` to get type safety but leave any in the schema. this gets most of the benefits of zod without having to define a new zod schema that can easily go out of sync.
+
+## converting zod schema to jsonschema
+
+you MUST use the built in zod v4 toJSONSchema and not the npm package `zod-to-json-schema` which is outdated and does not support zod v4.
+
+```ts
+import { toJSONSchema } from "zod";
+
+const mySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(3).max(100),
+  age: z.number().min(0).optional(),
+});
+
+const jsonSchema = toJSONSchema(mySchema, {
+  removeAdditionalStrategy: "strict",
+});
+```
+
 
 ---
 
