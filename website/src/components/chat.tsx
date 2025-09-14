@@ -233,7 +233,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
       isGenerating: false,
     }
 
-    console.log('Using new initial chat state', state)
+    // console.log('Using new initial chat state', state)
     return state
   }, [loaderData.chatId,])
 
