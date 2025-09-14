@@ -46,7 +46,7 @@ async function main() {
     buildkit: true,
     memorySize: '1gb',
     machineType: 'shared-cpu-2x',
-    suspend: stage === 'preview',
+    // suspend: stage === 'preview',
     depot: true,
     kill_timeout: 300,
     env: {
