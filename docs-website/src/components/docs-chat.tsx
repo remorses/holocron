@@ -44,6 +44,8 @@ import { MarkdownRendererProps, RenderFormPreview } from 'contesto'
 import { ErrorPreview, EditorToolPreview, ToolPreviewContainer, Dot } from './chat-tool-previews'
 import { ShowMore } from './show-more'
 import { useDisableBodyScroll } from '../lib/hooks'
+import { RenderNode } from 'safe-mdx'
+import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
   const chatId = usePersistentDocsState((x) => x.chatId)
@@ -307,7 +309,7 @@ function ChatTopBar() {
   )
 }
 
-function Chat({}) {
+function Chat({ }) {
   return (
     <ScrollArea className='[&>div>div]:grow -mr-4 [scrollbar-gutter:stable_both-edges] pr-4 relative items-stretch rounded max-h-full flex flex-col grow justify-center '>
       <div className='flex flex-col gap-4 relative h-full justify-center'>
@@ -319,8 +321,57 @@ function Chat({}) {
   )
 }
 
+
+export const renderChatNode: RenderNode = (node, transform) => {
+  // TODO only enable colored bold in chat?
+  if (node.type === 'strong') {
+    return <span className='dark:text-rose-200 font-mono'>{node.children?.map((child) => transform(child))}</span>
+  }
+  if (node.type === 'emphasis') {
+    return <span className='dark:text-emerald-200 font-mono'>{node.children?.map((child) => transform(child))}</span>
+  }
+  if (node.type === 'delete') {
+    return <span className='dark:text-red-200 font-mono line-through'>{node.children?.map((child) => transform(child))}</span>
+  }
+  if (node.type === 'inlineCode') {
+    return (
+      <span className='dark:text-red-200 dark:bg-red-950/30 px-1 rounded font-mono text-[0.9em]'>{node.value}</span>
+    )
+  }
+
+  if (
+    node.type === 'heading'
+  ) {
+    return (
+      <span className='font-semibold font-mono dark:text-purple-300'>
+        {node.children?.map((child) => transform(child))}
+      </span>
+    )
+  }
+
+  if (node.type === 'code') {
+    const language = node.lang || ''
+
+    const html = node.data?.['html']
+    const props = {
+      title: '',
+      ...(node.data?.hProperties ?? {}),
+
+      lang: language,
+    }
+
+    return (
+      <CodeBlock {...props}>
+        <Pre>{html ? <div className='content' dangerouslySetInnerHTML={{ __html: html }}></div> : node.value}</Pre>
+      </CodeBlock>
+    )
+  }
+}
+
+
+
 export function ChatMarkdown({ ...rest }: MarkdownRendererProps) {
-  return <MarkdownRuntime addMarkdownLineNumbers={false} isStreaming={true} {...rest} extension='md' />
+  return <MarkdownRuntime addMarkdownLineNumbers={false} renderNode={renderChatNode} isStreaming={true} {...rest} extension='md' />
 }
 
 function WelcomeMessage() {
@@ -615,7 +666,7 @@ function Footer() {
     .map((file) => `@${file.path.replace(/\.mdx\?$/, '')}`)
 
   return (
-    <AnimatePresence custom={false} onExitComplete={() => {}}>
+    <AnimatePresence custom={false} onExitComplete={() => { }}>
       <div className=' sticky bottom-4 z-50 w-full mt-4'>
         <motion.div
           layoutId='textarea'
