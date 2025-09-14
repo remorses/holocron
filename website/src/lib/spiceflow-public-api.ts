@@ -1,0 +1,572 @@
+import { z } from 'zod'
+import { prisma } from 'db'
+import { Spiceflow } from 'spiceflow'
+import { cors } from 'spiceflow/cors'
+import { openapi } from 'spiceflow/openapi'
+import { createSite } from './site'
+import { AppError, notifyError } from './errors'
+import { assetsFromFilesList, syncSite } from './sync'
+import { defaultDocsJsonComments } from 'docs-website/src/lib/docs-json-examples'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
+import { filesSchema } from './spiceflow'
+import { client as searchApi } from 'docs-website/src/lib/search-api'
+
+export const publicApiApp = new Spiceflow({ basePath: '/api/v1' })
+  .state('apiKey', '')
+  .state('userId', '')
+  .state('orgId', '')
+  .use(cors())
+  .use(openapi())
+  .use(async ({ request, state }, next) => {
+    const apiKey = request.headers.get('x-api-key')
+    
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'API key required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    const userSession = await prisma.cliLoginSession.findFirst({
+      where: { apiKey },
+      include: {
+        user: {
+          include: {
+            orgs: {
+              include: {
+                org: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    if (!userSession) {
+      return new Response(JSON.stringify({ error: 'Invalid API key' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    state.apiKey = apiKey
+    state.userId = userSession.userId
+    state.orgId = userSession.user.orgs[0]?.orgId || ''
+
+    return next()
+  })
+  .route({
+    method: 'POST',
+    path: '/sites',
+    detail: {
+      summary: 'Create a new documentation site',
+      description: 'Creates a new site with the provided files and configuration'
+    },
+    request: z.object({
+      name: z.string().min(1, 'Name is required'),
+      orgId: z.string().min(1, 'Organization ID is required'),
+      files: filesSchema,
+      githubOwner: z.string().optional(),
+      githubRepo: z.string().optional(),
+      githubRepoId: z.number().optional(),
+      githubBranch: z.string().optional(),
+      githubFolder: z.string().optional()
+    }),
+    async handler({ request, state }) {
+      const body = await request.json()
+      const { name, orgId, files, githubOwner, githubRepo, githubRepoId, githubBranch, githubFolder } = body
+      
+      const userOrgAccess = await prisma.orgsUsers.findFirst({
+        where: {
+          userId: state.userId,
+          orgId
+        }
+      })
+
+      if (!userOrgAccess) {
+        throw new AppError('Access denied to organization')
+      }
+
+      const result = await createSite({
+        name,
+        orgId,
+        userId: state.userId,
+        githubOwner,
+        githubRepo,
+        githubRepoId,
+        githubFolder,
+        githubBranch: githubBranch || 'main',
+        files
+      })
+
+      const [branch, syncErrors] = await Promise.all([
+        prisma.siteBranch.findUnique({
+          where: { branchId: result.branchId }
+        }),
+        prisma.markdownPageSyncError.findMany({
+          where: {
+            page: {
+              branchId: result.branchId
+            }
+          },
+          include: {
+            page: {
+              select: {
+                githubPath: true,
+                slug: true
+              }
+            }
+          }
+        })
+      ])
+
+      const errors = syncErrors.map((error) => ({
+        githubPath: error.page.githubPath,
+        line: error.line,
+        errorMessage: error.errorMessage,
+        errorType: error.errorType
+      }))
+
+      return {
+        success: true,
+        siteId: result.siteId,
+        branchId: result.branchId,
+        chatId: result.chatId,
+        docsJson: (branch?.docsJson || {}) as DocsJsonType,
+        errors
+      }
+    }
+  })
+  .route({
+    method: 'POST',
+    path: '/sites/:siteId/sync',
+    detail: {
+      summary: 'Sync files to an existing site',
+      description: 'Updates an existing site with new or modified files'
+    },
+    params: z.object({
+      siteId: z.string()
+    }),
+    request: z.object({
+      files: filesSchema,
+    }),
+    async handler({ request, params, state }) {
+      const body = await request.json()
+      const { files } = body
+      const { siteId } = params
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        include: {
+          branches: {
+            orderBy: { createdAt: 'asc' },
+            take: 1
+          }
+        }
+      })
+
+      if (!site) {
+        throw new AppError('Site not found or access denied')
+      }
+
+      // Get the first (and only) branch
+      const branch = site.branches[0]
+      if (!branch) {
+        throw new AppError('No branch found for site')
+      }
+
+      const docsJson = (branch.docsJson || {}) as DocsJsonType
+      const docsJsonComments = (branch.docsJsonComments || {}) as any
+
+      const assets = assetsFromFilesList({
+        files,
+        docsJson,
+        githubFolder: site.githubFolder || '',
+        docsJsonComments: {
+          ...defaultDocsJsonComments,
+          ...docsJsonComments
+        }
+      })
+
+      const { pageCount } = await syncSite({
+        files: assets,
+        githubFolder: site.githubFolder || '',
+        branchId: branch.branchId,
+        siteId,
+        name: site.name || '',
+        docsJson
+      })
+
+      await prisma.siteBranch.update({
+        where: { branchId: branch.branchId },
+        data: {
+          lastGithubSyncAt: new Date()
+        }
+      })
+
+      const [updatedBranch, syncErrors] = await Promise.all([
+        prisma.siteBranch.findUnique({
+          where: { branchId: branch.branchId }
+        }),
+        prisma.markdownPageSyncError.findMany({
+          where: {
+            page: {
+              branchId: branch.branchId
+            }
+          },
+          include: {
+            page: {
+              select: {
+                githubPath: true,
+                slug: true
+              }
+            }
+          }
+        })
+      ])
+
+      const errors = syncErrors.map((error) => ({
+        githubPath: error.page.githubPath,
+        line: error.line,
+        errorMessage: error.errorMessage,
+        errorType: error.errorType
+      }))
+
+      return {
+        success: true,
+        siteId,
+        branchId: branch.branchId,
+        pageCount,
+        docsJson: (updatedBranch?.docsJson || {}) as DocsJsonType,
+        errors
+      }
+    }
+  })
+  .route({
+    method: 'DELETE',
+    path: '/sites/:siteId/files',
+    detail: {
+      summary: 'Delete files from a site',
+      description: 'Deletes specified files from the site and syncs the changes'
+    },
+    params: z.object({
+      siteId: z.string()
+    }),
+    request: z.object({
+      filePaths: z.array(z.string()).min(1, 'At least one file path is required')
+    }),
+    async handler({ request, params, state }) {
+      const body = await request.json()
+      const { filePaths } = body
+      const { siteId } = params
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        include: {
+          branches: {
+            orderBy: { createdAt: 'asc' },
+            take: 1
+          }
+        }
+      })
+
+      if (!site) {
+        throw new AppError('Site not found or access denied')
+      }
+
+      // Get the first (and only) branch
+      const branch = site.branches[0]
+      if (!branch) {
+        throw new AppError('No branch found for site')
+      }
+
+      // Delete pages with the specified githubPaths
+      const deletedPages = await prisma.markdownPage.deleteMany({
+        where: {
+          branchId: branch.branchId,
+          githubPath: {
+            in: filePaths
+          }
+        }
+      })
+
+      // Delete media assets with the specified githubPaths
+      const deletedMediaAssets = await prisma.mediaAsset.deleteMany({
+        where: {
+          branchId: branch.branchId,
+          githubPath: {
+            in: filePaths
+          }
+        }
+      })
+
+      // Delete meta files with the specified githubPaths
+      const deletedMetaFiles = await prisma.metaFile.deleteMany({
+        where: {
+          branchId: branch.branchId,
+          githubPath: {
+            in: filePaths
+          }
+        }
+      })
+
+      // Delete files from search API
+      if (filePaths.length > 0) {
+        try {
+          await searchApi.deleteFiles({
+            datasetId: branch.branchId,
+            filenames: filePaths
+          })
+        } catch (error) {
+          console.error('Error deleting files from search API:', error)
+          notifyError(error, 'search API delete in public API')
+        }
+      }
+
+      const totalDeleted = deletedPages.count + deletedMediaAssets.count + deletedMetaFiles.count
+
+      return {
+        success: true,
+        deletedCount: totalDeleted,
+        deletedPages: deletedPages.count,
+        deletedMediaAssets: deletedMediaAssets.count,
+        deletedMetaFiles: deletedMetaFiles.count
+      }
+    }
+  })
+  .route({
+    method: 'POST',
+    path: '/sites/:siteId',
+    detail: {
+      summary: 'Update site configuration',
+      description: 'Updates site metadata and configuration'
+    },
+    params: z.object({
+      siteId: z.string()
+    }),
+    request: z.object({
+      name: z.string().optional(),
+      visibility: z.enum(['public', 'private']).optional(),
+      githubOwner: z.string().optional(),
+      githubRepo: z.string().optional(),
+      githubFolder: z.string().optional()
+    }),
+    async handler({ request, params, state }) {
+      const body = await request.json()
+      const { siteId } = params
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        }
+      })
+
+      if (!site) {
+        throw new AppError('Site not found or access denied')
+      }
+
+      const updatedSite = await prisma.site.update({
+        where: { siteId },
+        data: {
+          ...(body.name && { name: body.name }),
+          ...(body.visibility && { visibility: body.visibility }),
+          ...(body.githubOwner && { githubOwner: body.githubOwner }),
+          ...(body.githubRepo && { githubRepo: body.githubRepo }),
+          ...(body.githubFolder !== undefined && { githubFolder: body.githubFolder })
+        }
+      })
+
+      return {
+        success: true,
+        siteId: updatedSite.siteId,
+        name: updatedSite.name || '',
+        visibility: updatedSite.visibility
+      }
+    }
+  })
+  .route({
+    method: 'GET',
+    path: '/sites',
+    detail: {
+      summary: 'List all sites',
+      description: 'Returns all sites accessible to the authenticated user'
+    },
+    async handler({ state }) {
+      const sites = await prisma.site.findMany({
+        where: {
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return {
+        success: true,
+        sites: sites.map(site => ({
+          siteId: site.siteId,
+          name: site.name,
+          visibility: site.visibility,
+          githubOwner: site.githubOwner,
+          githubRepo: site.githubRepo,
+          githubFolder: site.githubFolder,
+          createdAt: site.createdAt
+        }))
+      }
+    }
+  })
+  .route({
+    method: 'GET',
+    path: '/sites/:siteId',
+    detail: {
+      summary: 'Get site details',
+      description: 'Returns detailed information about a specific site including docsJson'
+    },
+    params: z.object({
+      siteId: z.string()
+    }),
+    async handler({ params, state }) {
+      const { siteId } = params
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        include: {
+          branches: {
+            orderBy: { createdAt: 'asc' },
+            take: 1
+          }
+        }
+      })
+
+      if (!site) {
+        throw new AppError('Site not found or access denied')
+      }
+
+      // Get the first (and only) branch
+      const branch = site.branches[0]
+
+      return {
+        success: true,
+        site: {
+          siteId: site.siteId,
+          name: site.name,
+          visibility: site.visibility,
+          githubOwner: site.githubOwner,
+          githubRepo: site.githubRepo,
+          githubFolder: site.githubFolder,
+          createdAt: site.createdAt,
+          branchId: branch?.branchId,
+          docsJson: branch ? (branch.docsJson as DocsJsonType) : null
+        }
+      }
+    }
+  })
+  .route({
+    method: 'DELETE',
+    path: '/sites/:siteId',
+    detail: {
+      summary: 'Delete a site',
+      description: 'Permanently deletes a site and all associated data including domains'
+    },
+    params: z.object({
+      siteId: z.string()
+    }),
+    async handler({ params, state }) {
+      const { siteId } = params
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        include: {
+          branches: {
+            include: {
+              domains: true
+            }
+          }
+        }
+      })
+
+      if (!site) {
+        throw new AppError('Site not found or access denied')
+      }
+
+      // Delete all domains from Cloudflare
+      for (const branch of site.branches) {
+        for (const domain of branch.domains) {
+          try {
+            const zoneId = getZoneIdForDomain(domain.host)
+            if (zoneId) {
+              const cloudflareClient = new CloudflareClient({ zoneId })
+              await cloudflareClient.removeDomain(domain.host)
+              console.log(`Deleted domain ${domain.host} from Cloudflare`)
+            }
+          } catch (error) {
+            console.error(`Error deleting domain ${domain.host} from Cloudflare:`, error)
+            notifyError(error, `Failed to delete domain ${domain.host} from Cloudflare`)
+          }
+        }
+      }
+
+      // Delete the site (cascading deletes will handle branches, pages, domains, etc.)
+      await prisma.site.delete({
+        where: { siteId }
+      })
+
+      return {
+        success: true,
+        message: `Site "${site.name}" has been deleted successfully`
+      }
+    }
+  })
+  .onError(({ error, request }) => {
+    notifyError(error, `Public API error: ${request.method} ${request.url}`)
+    
+    if (error instanceof AppError) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  })
+
+export type PublicApiApp = typeof publicApiApp

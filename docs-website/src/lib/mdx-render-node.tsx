@@ -20,6 +20,7 @@ export const renderNode: RenderNode = (node, transform) => {
       <span className='dark:text-red-200 dark:bg-red-950/30 px-1 rounded font-mono text-[0.9em]'>{node.value}</span>
     )
   }
+
   if (node.type === 'code') {
     const language = node.lang || ''
 

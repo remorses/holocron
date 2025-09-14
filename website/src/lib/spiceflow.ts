@@ -22,6 +22,22 @@ import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { openai } from '@ai-sdk/openai'
 import { experimental_transcribe as transcribe } from 'ai'
 import { applyJsonCComments } from './json-c-comments'
+import { publicApiApp } from './spiceflow-public-api'
+
+// Export schemas for reuse
+export const filesSchema = z.array(
+  z.object({
+    relativePath: z.string(),
+    contents: z.string(),
+    downloadUrl: z.string().optional(),
+    metadata: z
+      .object({
+        width: z.number().optional(),
+        height: z.number().optional(),
+      })
+      .optional(),
+  }),
+)
 
 // Utility to get client IP from request, handling Cloudflare proxy headers
 function getClientIp(request: Request): string {
@@ -61,6 +77,7 @@ export const app = new Spiceflow({ basePath: '/api' })
   })
   .use(openapi())
   .use(cors())
+  .use(publicApiApp)
   .route({
     method: 'GET',
     path: '/health',
@@ -868,19 +885,7 @@ export const app = new Spiceflow({ basePath: '/api' })
     },
     request: z.object({
       name: z.string().min(1, 'Name is required'),
-      files: z.array(
-        z.object({
-          relativePath: z.string(),
-          contents: z.string(),
-          downloadUrl: z.string().optional(),
-          metadata: z
-            .object({
-              width: z.number().optional(),
-              height: z.number().optional(),
-            })
-            .optional(),
-        }),
-      ),
+      files: filesSchema,
       orgId: z.string().min(1, 'Organization ID is required'),
       githubOwner: z.string().optional(),
       githubRepo: z.string().optional(),

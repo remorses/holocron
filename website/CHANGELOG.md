@@ -1,5 +1,37 @@
 # Changelog
 
+## 2025-01-25 11:00
+
+- Refactor public REST API v1 with simplified architecture
+- Remove upsert route to keep API simpler
+- Add DELETE /api/v1/sites/:siteId/files endpoint to delete specific files from a site
+- Delete files from search API when deleting files
+- Update GET /api/v1/sites/:siteId to return docsJson from the site's branch
+- Assume sites have only one branch for API simplicity
+- All branch operations now use the first branch automatically
+- Import searchApi client for file deletion operations
+- Fix CloudflareClient method name from deleteDomain to removeDomain
+- Extract and export filesSchema for reuse across both internal and public APIs
+- Update /upsertSiteFromFiles route to use the exported filesSchema
+
+## 2025-01-25 10:45
+
+- Add public REST API v1 for external integrations
+- Create spiceflow-public-api.ts with versioned REST endpoints at /api/v1
+- Implement API key authentication using x-api-key header (uses existing CLI login sessions)
+- Add POST /api/v1/sites endpoint to create new documentation sites
+- Add POST /api/v1/sites/:siteId/sync endpoint to sync files to existing sites
+- Add POST /api/v1/sites/:siteId endpoint to update site configuration
+- Add GET /api/v1/sites endpoint to list all accessible sites
+- Add GET /api/v1/sites/:siteId endpoint to get site details
+- Add DELETE /api/v1/sites/:siteId endpoint to delete sites and associated domains
+- Reuse existing filesSchema from spiceflow.ts to avoid duplication
+- Remove response type definitions to keep routes flexible
+- Delete domains from Cloudflare when deleting sites
+- Reuse existing createSite and syncSite functions from internal implementation
+- Mount public API app to main spiceflow app
+- Include OpenAPI documentation support and proper error handling
+
 ## 2025-01-25 09:25
 
 - Add Google Search support as fallback when Firecrawl is not available
