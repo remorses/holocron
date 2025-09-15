@@ -37,6 +37,7 @@
     "@ai-sdk/openai-compatible": "^1.0.17",
     "@ai-sdk/provider": "2.0.0",
     "@ai-sdk/react": "2.0.44",
+    "@ai-sdk/togetherai": "^1.0.17",
     "@ai-sdk/ui-utils": "^1.2.11",
     "@ariakit/react": "^0.4.17",
     "@better-auth/stripe": "^1.3.6",

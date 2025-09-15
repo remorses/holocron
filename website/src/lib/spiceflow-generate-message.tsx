@@ -1,4 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
+import { togetherai } from '@ai-sdk/togetherai';
+
 import { fireworks } from '@ai-sdk/fireworks';
 import { deepseek } from '@ai-sdk/deepseek'
 import { createFallback } from 'ai-fallback'
@@ -280,6 +282,7 @@ export type WebsiteTools = {
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
+    togetherai('moonshotai/Kimi-K2-Instruct-0905'),
     googleAI('gemini-2.5-flash'),
     fireworks('accounts/fireworks/models/kimi-k2-instruct'), // TODO fireworks returns duplicate tool call ids.
     groq('moonshotai/kimi-k2-instruct'),
