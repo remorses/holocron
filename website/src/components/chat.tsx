@@ -521,7 +521,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
           if (part.type === 'tool-renderForm' && part.state === 'output-available') {
             return (
               <RenderFormPreview
-                key={index}
+                key={part.toolCallId}
                 message={message}
                 {...part}
                 showSubmitButton={hideBrowser}
@@ -535,7 +535,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
           if (part.type === 'tool-deletePages') {
             const filePaths = part.input?.filePaths || []
             return (
-              <ToolPreviewContainer key={index}>
+              <ToolPreviewContainer key={part.toolCallId}>
                 <Dot /> Deleting Pages:{' '}
                 {filePaths.map((path) => (
                   <span key={path}>
@@ -549,7 +549,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
             return (
               <RenderFormPreview
                 message={message}
-                key={index}
+                key={part.toolCallId}
                 {...part}
                 showSubmitButton={hideBrowser}
                 uploadFunction={async (file) => {
@@ -560,15 +560,15 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
             )
           }
           if ((part.type === 'tool-todowrite' || part.type === 'tool-todoread') && part.state !== 'output-error') {
-            return <TodoPreview key={index} part={part} message={message} index={index} />
+            return <TodoPreview key={part.toolCallId} part={part} message={message} index={index} />
           }
           if (part.type === 'tool-webSearchFirecrawl' && part.state === 'output-available') {
-            return <WebSearchFirecrawlPreview key={index} part={part} />
+            return <WebSearchFirecrawlPreview key={part.toolCallId} part={part} />
           }
           if (part.type === 'tool-googleSearch' && part.state === 'output-available') {
-            return <WebSearchGooglePreview key={index} part={part} />
+            return <WebSearchGooglePreview key={part.toolCallId} part={part} />
           }
-          return <MessagePartRenderer part={part as any} key={index} />
+          return <MessagePartRenderer part={part as any} key={('toolCallId' in part && part.toolCallId) ? part.toolCallId : index} />
         })}
       </ChatAssistantMessage>
     </ChatForm>
