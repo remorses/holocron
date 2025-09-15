@@ -489,6 +489,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     return (
       <ChatUserMessage className='my-4 text-[16px]' message={message}>
         {message.parts.map((part, index) => {
+
           if (part.type === 'text') {
             return <span key={index}>{part.text}</span>
           }
