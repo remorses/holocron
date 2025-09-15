@@ -44,10 +44,10 @@ export class Tunnel {
 
     // Auto-respond to ping messages without waking the DO or forwarding to other clients
     // This saves costs and prevents unnecessary ping flooding through the tunnel
-    
+
     // 1. Standard WebSocket ping/pong frames
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'))
-    
+
     // 2. JSON-formatted ping messages (common in applications)
     this.ctx.setWebSocketAutoResponse(
       new WebSocketRequestResponsePair('{"type":"ping"}', '{"type":"pong"}')
@@ -71,7 +71,7 @@ export class Tunnel {
     if (role === 'up') {
       // Check if upstream already exists using live sockets
       const existingUp = this.getUpstream()
-      if (existingUp) {
+      if (existingUp?.readyState === WebSocket.OPEN) {
         // Accept the connection but immediately close it with a specific code
         server.accept()
         server.close(4009, 'Upstream already connected')
