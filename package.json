@@ -9,7 +9,7 @@
     "watch": "pnpm -r watch",
     "typecheck": "pnpm -r --parallel --no-bail --stream typecheck",
     "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
-    "release": "pnpm build && changeset",
+    "release": "git rebase main && git checkout main && git merge preview && git push && git checkout preview",
     "format": "biome format --write . --skip-parse-errors"
   },
   "devDependencies": {
