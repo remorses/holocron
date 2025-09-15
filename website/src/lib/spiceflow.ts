@@ -22,22 +22,9 @@ import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { openai } from '@ai-sdk/openai'
 import { experimental_transcribe as transcribe } from 'ai'
 import { applyJsonCComments } from './json-c-comments'
-import { publicApiApp } from './spiceflow-public-api'
+import { filesSchema, publicApiApp } from './spiceflow-public-api'
 
-// Export schemas for reuse
-export const filesSchema = z.array(
-  z.object({
-    relativePath: z.string(),
-    contents: z.string(),
-    downloadUrl: z.string().optional(),
-    metadata: z
-      .object({
-        width: z.number().optional(),
-        height: z.number().optional(),
-      })
-      .optional(),
-  }),
-)
+
 
 // Utility to get client IP from request, handling Cloudflare proxy headers
 function getClientIp(request: Request): string {
@@ -985,13 +972,13 @@ export const app = new Spiceflow({ basePath: '/api' })
           githubBranch: githubBranch || 'main',
           files, // Pass the files directly
         })
-        
+
         finalSiteId = result.siteId
         finalBranchId = result.branchId
       }
 
       let pageCount: number
-      
+
       // For updates (existing sites), we need to sync again
       if (siteId) {
         // Fetch the branch's latest docsJson
@@ -1000,7 +987,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         })
         const docsJson = branch?.docsJson as DocsJsonType
         const docsJsonComments = branch?.docsJsonComments as any
-        
+
         // Convert files to pages format
         const assets = assetsFromFilesList({
           files,
@@ -1063,7 +1050,7 @@ export const app = new Spiceflow({ basePath: '/api' })
 
       // Get docsJsonComments from the branch
       const branchDocsJsonComments = (branch?.docsJsonComments || {}) as any
-      
+
       const docsJsonWithComments = applyJsonCComments(branch?.docsJson || {}, {
         ...defaultDocsJsonComments,
         ...branchDocsJsonComments,

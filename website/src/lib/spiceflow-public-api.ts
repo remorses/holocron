@@ -9,8 +9,23 @@ import { assetsFromFilesList, syncSite } from './sync'
 import { defaultDocsJsonComments } from 'docs-website/src/lib/docs-json-examples'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
-import { filesSchema } from './spiceflow'
+
 import { client as searchApi } from 'docs-website/src/lib/search-api'
+
+// Export schemas for reuse
+export const filesSchema = z.array(
+  z.object({
+    relativePath: z.string(),
+    contents: z.string(),
+    downloadUrl: z.string().optional(),
+    metadata: z
+      .object({
+        width: z.number().optional(),
+        height: z.number().optional(),
+      })
+      .optional(),
+  }),
+)
 
 export const publicApiApp = new Spiceflow({ basePath: '/api/v1' })
   .state('apiKey', '')
@@ -20,7 +35,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/api/v1' })
   .use(openapi())
   .use(async ({ request, state }, next) => {
     const apiKey = request.headers.get('x-api-key')
-    
+
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'API key required' }), {
         status: 401,
@@ -76,7 +91,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/api/v1' })
     async handler({ request, state }) {
       const body = await request.json()
       const { name, orgId, files, githubOwner, githubRepo, githubRepoId, githubBranch, githubFolder } = body
-      
+
       const userOrgAccess = await prisma.orgsUsers.findFirst({
         where: {
           userId: state.userId,
@@ -555,14 +570,14 @@ export const publicApiApp = new Spiceflow({ basePath: '/api/v1' })
   })
   .onError(({ error, request }) => {
     notifyError(error, `Public API error: ${request.method} ${request.url}`)
-    
+
     if (error instanceof AppError) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
     }
-    
+
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
