@@ -20,7 +20,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "2.0.16",
+    "@ai-sdk/anthropic": "2.0.17",
     "@ai-sdk/cerebras": "^1.0.17",
     "@ai-sdk/fireworks": "^1.0.17",
     "@ai-sdk/google": "^2.0.14",

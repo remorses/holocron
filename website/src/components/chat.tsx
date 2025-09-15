@@ -515,10 +515,12 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
 
   let minHeight = isLastMessage ? 'calc(-248px + 100dvh)' : '0px'
 
+
   return (
     <ChatForm disabled={messages[messages.length - 1]?.id !== message.id}>
       <ChatAssistantMessage style={{ minHeight }} message={message}>
         {message.parts.map((part, index) => {
+          // console.log('part.toolCallId', part.toolCallId)
           if (part.type === 'tool-renderForm' && part.state === 'output-available') {
             return (
               <RenderFormPreview

@@ -26,7 +26,7 @@
     "./*": "./*"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "2.0.16",
+    "@ai-sdk/anthropic": "2.0.17",
     "@ai-sdk/deepinfra": "^1.0.17",
     "@ai-sdk/deepseek": "^1.0.17",
     "@ai-sdk/fireworks": "^1.0.17",

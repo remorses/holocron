@@ -42,8 +42,8 @@ const agentPromptTemplate = Handlebars.compile(agentPrompt)
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
+    google('gemini-2.5-flash'),
     fireworks('accounts/fireworks/models/kimi-k2-instruct-0905'),
-    google('gemini-2.5-flash')
   ],
   onError: (error, modelId) => {
     console.error(`Error with model ${modelId}:`, error)
