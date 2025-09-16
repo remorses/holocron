@@ -7,7 +7,7 @@ import * as CardsComponents from 'fumadocs-ui/components/card'
 import { Steps, Step } from 'fumadocs-ui/components/steps'
 
 import { Latex } from './math'
-import { CSSProperties } from 'react'
+import { CSSProperties, createContext, useContext } from 'react'
 import fumadocsComponents from 'fumadocs-ui/mdx'
 import { DynamicIcon } from '../lib/icon'
 import React from 'react'
@@ -15,6 +15,34 @@ import { Expandable } from './expandable'
 import { ShowMore } from './show-more'
 
 const Mermaid = React.lazy(() => import('./mermaid'))
+
+// Context to control whether titles should be shown in CodeBlocks
+const TabGroupContext = createContext<{ isInsideTabGroup: boolean }>({ isInsideTabGroup: false })
+
+// Custom wrapper for CodeBlock that checks context
+function ContextAwareCodeBlock(props: React.ComponentProps<typeof fumadocsComponents.pre>) {
+  const { isInsideTabGroup } = useContext(TabGroupContext) || {}
+
+  return <fumadocsComponents.pre {...props} title={isInsideTabGroup ? undefined : props.title} />
+}
+
+// Wrapper for CodeBlockTabs to set context
+function ContextAwareCodeBlockTabs(props: React.ComponentProps<typeof fumadocsComponents.CodeBlockTabs>) {
+  return (
+    <TabGroupContext.Provider value={{ isInsideTabGroup: true }}>
+      <fumadocsComponents.CodeBlockTabs {...props} />
+    </TabGroupContext.Provider>
+  )
+}
+
+// Wrapper for CodeBlockTab to maintain context
+function ContextAwareCodeBlockTab(props: React.ComponentProps<typeof fumadocsComponents.CodeBlockTab>) {
+  return (
+    <TabGroupContext.Provider value={{ isInsideTabGroup: true }}>
+      <fumadocsComponents.CodeBlockTab {...props} />
+    </TabGroupContext.Provider>
+  )
+}
 
 function TodoItem({
   checked,
@@ -287,7 +315,9 @@ function Frame({
 function Tab({ children, title, ...props }: { children: React.ReactNode; title?: string }) {
   return (
     <TabsComponents.Tab value={title} {...props}>
-      {children}
+      <TabGroupContext.Provider value={{ isInsideTabGroup: true }}>
+        {children}
+      </TabGroupContext.Provider>
     </TabsComponents.Tab>
   )
 }
@@ -344,27 +374,35 @@ function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
     return titles
   }
 
+  // If items are already provided, use them directly
   if (props.items) {
-    return <TabsComponents.Tabs {...props} />
+    return (
+      <TabGroupContext.Provider value={{ isInsideTabGroup: true }}>
+        <TabsComponents.Tabs {...props} />
+      </TabGroupContext.Provider>
+    )
   }
 
+  // Otherwise, normalize children and extract titles
   const normalizedChildren = normalizeChildren(props.children)
   const items = extractTitles(normalizedChildren)
 
   return (
-    <TabsComponents.Tabs {...props} items={items}>
-      {normalizedChildren}
-    </TabsComponents.Tabs>
+    <TabGroupContext.Provider value={{ isInsideTabGroup: true }}>
+      <TabsComponents.Tabs {...props} items={items}>
+        {normalizedChildren}
+      </TabsComponents.Tabs>
+    </TabGroupContext.Provider>
   )
 }
 
 Tabs.displayName = 'Tabs'
 
 export const mdxComponents = {
-  CodeBlockTab: fumadocsComponents.CodeBlockTab,
-  CodeBlockTabs: fumadocsComponents.CodeBlockTabs,
+  CodeBlockTab: ContextAwareCodeBlockTab,
+  CodeBlockTabs: ContextAwareCodeBlockTabs,
   figcaption: 'figcaption',
-  pre: fumadocsComponents.pre,
+  pre: ContextAwareCodeBlock,
   ShowMore,
   a: fumadocsComponents.a,
   img: fumadocsComponents.img,

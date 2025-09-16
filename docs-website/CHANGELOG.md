@@ -1,5 +1,13 @@
 # Changelog
 
+## 2025-09-16 18:00
+
+- Refactored title removal to use React Context instead of prop manipulation
+- Added TabGroupContext to control CodeBlock title visibility based on parent context
+- Created context-aware wrappers for CodeBlock, CodeBlockTabs, and CodeBlockTab components
+- Preserved Tabs auto-wrapping functionality for non-Tab children (needed for MDX code blocks)
+- Kept title extraction logic for creating tab labels from code block titles
+
 ## 2025-08-11 13:25
 
 - Added markdown link validation utility for checking internal links against valid slugs
