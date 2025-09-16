@@ -1,7 +1,7 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
 import { fireworks } from '@ai-sdk/fireworks';
 import { LanguageModelV2, type LanguageModelV2Middleware } from '@ai-sdk/provider'
-import { google } from '@ai-sdk/google'
+import { google, } from '@ai-sdk/google'
 import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import { groq } from '@ai-sdk/groq'
@@ -42,8 +42,8 @@ const agentPromptTemplate = Handlebars.compile(agentPrompt)
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
+    groq('moonshotai/kimi-k2-instruct'),
     google('gemini-2.5-flash'),
-    fireworks('accounts/fireworks/models/kimi-k2-instruct-0905'),
   ],
   onError: (error, modelId) => {
     console.error(`Error with model ${modelId}:`, error)

@@ -4,7 +4,7 @@ import { togetherai } from '@ai-sdk/togetherai';
 import { fireworks } from '@ai-sdk/fireworks';
 import { deepseek } from '@ai-sdk/deepseek'
 import { createFallback } from 'ai-fallback'
-import { google as googleAI, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
+import { google, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
@@ -282,10 +282,10 @@ export type WebsiteTools = {
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
-    togetherai('moonshotai/Kimi-K2-Instruct-0905'),
-    googleAI('gemini-2.5-flash'),
-    fireworks('accounts/fireworks/models/kimi-k2-instruct'), // TODO fireworks returns duplicate tool call ids.
     groq('moonshotai/kimi-k2-instruct'),
+    google('gemini-2.5-flash'),
+    // togetherai('moonshotai/Kimi-K2-Instruct-0905'), // TODO together can't even parse tool calls
+    // fireworks('accounts/fireworks/models/kimi-k2-instruct'), // TODO fireworks returns duplicate tool call ids.
   ],
   onError: (error, modelId) => {
     console.error(`Error with model ${modelId}:`, error)
