@@ -411,7 +411,7 @@ export const editToolParamsSchema = z.object({
    */
   file_text: z
     .string()
-    .describe('Required parameter of `create` command, with the content of the file to be created.')
+    .describe('Required parameter of `create` command, with the content of the file to be created. Keep file_text short, for long content create a short initial file, then add more content later using command insert')
     .optional(),
   /**
    * Required parameter of `insert` command. The `new_str` will be inserted AFTER the line `insert_line` of `path`.
@@ -429,7 +429,7 @@ export const editToolParamsSchema = z.object({
   new_str: z
     .string()
     .describe(
-      'Optional parameter of `str_replace` command containing the new string (if not given, no string will be added). Required parameter of `insert` command containing the string to insert.',
+      'Optional parameter of `str_replace` command containing the new string (if not given, old_str will be deleted). Required parameter of `insert` command containing the string to insert. Keep new_str short, use many short easy tool calls for each paragraph to replace long content',
     )
     .optional(),
   /**
