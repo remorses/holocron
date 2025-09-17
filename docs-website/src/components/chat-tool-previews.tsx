@@ -13,7 +13,10 @@ function Highlight({ children }: { children: ReactNode }) {
 }
 
 export function ErrorPreview({ error }) {
-  const truncatedError = truncateText(String(error), 500)
+  const truncatedError = truncateText(
+    String(error),
+    process.env.NODE_ENV === 'development' ? Infinity : 600
+  )
   return (
     <div className='flex flex-row  gap-2'>
       <div className='shrink-0'>⎿</div>
