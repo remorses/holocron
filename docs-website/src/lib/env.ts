@@ -35,6 +35,8 @@ export const env = {
   GITHUB_WEBHOOKS_SECRET: process.env.GITHUB_WEBHOOKS_SECRET,
   FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
   GOOGLE_SEARCH_API_KEY: process.env.GOOGLE_SEARCH_API_KEY,
+  ZEN_API_KEY: process.env.ZEN_API_KEY,
+  MOONSHOT_API_KEY: process.env.MOONSHOT_API_KEY,
 }
 
 // console.log(env)

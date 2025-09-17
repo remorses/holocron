@@ -36,13 +36,15 @@ import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 import { printDirectoryTree } from './directory-tree'
 import { createInvalidTool, INVALID_TOOL_NAME } from 'contesto/src/lib/invalid-tool'
 import { getHost } from './get-host'
+import { moonshot } from './moonshot';
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
-    groq('moonshotai/kimi-k2-instruct-0905'),
+    // groq('moonshotai/kimi-k2-instruct-0905'),
+    moonshot('kimi-k2-0905-preview'),
     google('gemini-2.5-flash'),
   ],
   onError: (error, modelId) => {

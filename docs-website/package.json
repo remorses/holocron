@@ -26,6 +26,7 @@
     "@ai-sdk/google": "^2.0.14",
     "@ai-sdk/groq": "^2.0.19",
     "@ai-sdk/openai": "2.0.31",
+    "@ai-sdk/openai-compatible": "^1.0.18",
     "@ai-sdk/provider": "2.0.0",
     "@cloudflare/vite-plugin": "^1.9.4",
     "@cloudflare/workers-types": "^4.20250712.0",

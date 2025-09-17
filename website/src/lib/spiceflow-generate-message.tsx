@@ -12,6 +12,7 @@ import { groq } from '@ai-sdk/groq'
 import { deepinfra } from '@ai-sdk/deepinfra'
 import dedent from 'string-dedent'
 import { isDocsJson } from 'docs-website/src/lib/utils'
+import { moonshot } from 'docs-website/src/lib/moonshot'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { OpenAIResponsesProviderOptions, openai, createOpenAI } from '@ai-sdk/openai'
 import { env, WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
@@ -99,6 +100,7 @@ const baseten = createOpenAICompatible({
     Authorization: `Bearer ${env.BASETEN_API_KEY ?? ''}`,
   },
 })
+
 
 /**
  * Generate the system message content for the AI
@@ -282,7 +284,8 @@ export type WebsiteTools = {
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
-    groq('moonshotai/kimi-k2-instruct-0905'),
+    moonshot('kimi-k2-0905-preview'),
+    // groq('moonshotai/kimi-k2-instruct-0905'),
     google('gemini-2.5-flash'),
     // togetherai('moonshotai/Kimi-K2-Instruct-0905'), // TODO together can't even parse tool calls
     // fireworks('accounts/fireworks/models/kimi-k2-instruct'), // TODO fireworks returns duplicate tool call ids.
