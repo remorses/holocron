@@ -1,4 +1,5 @@
-import { tool } from 'ai'
+import { LanguageModelV2ToolCall } from '@ai-sdk/provider'
+import { tool, ToolCallRepairFunction } from 'ai'
 import z from 'zod'
 
 export const INVALID_TOOL_NAME = 'invalidTool'
@@ -13,6 +14,7 @@ export const invalidToolDescription = "Internal tool. Do not use"
 export type InvalidToolInput = z.infer<typeof invalidToolInputSchema>
 export type InvalidToolOutput = string
 
+// taken from https://github.com/sst/opencode/blob/93c2f5060e2391e9a579cc9e0d5065d205ca412a/packages/opencode/src/tool/invalid.ts#L11
 export function createInvalidTool(tools: Record<string, any>) {
   const invalidTool = tool({
     description: invalidToolDescription,
@@ -25,12 +27,19 @@ export function createInvalidTool(tools: Record<string, any>) {
     },
   })
 
-  const repairToolCall = async (input: any) => {
+  const repairToolCall: ToolCallRepairFunction<any> = async (input) => {
+    const lower = input.toolCall.toolName.toLowerCase()
+    if (lower !== input.toolCall.toolName && tools[lower]) {
+      return {
+        ...input.toolCall,
+        toolName: lower,
+      }
+    }
     return {
       ...input.toolCall,
       input: JSON.stringify({
-        tool: input.toolCall.toolName,
-        error: input.error.message,
+        tool: input.toolCall.toolName || '',
+        error: String(input.error.message || ''),
       }),
       toolName: INVALID_TOOL_NAME,
     }
