@@ -6,4 +6,5 @@ export const moonshot = createOpenAICompatible({
   name: 'moonshot',
   apiKey: env.MOONSHOT_API_KEY,
   baseURL: 'https://api.moonshot.ai/v1',
+
 })

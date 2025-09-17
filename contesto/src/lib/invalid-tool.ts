@@ -20,10 +20,11 @@ export function createInvalidTool(tools: Record<string, any>) {
     description: invalidToolDescription,
     inputSchema: invalidToolInputSchema,
     async execute(params) {
-      if (!Object.prototype.hasOwnProperty.call(tools, params.tool)) {
-        return `${params.tool} does not exist in tools, available tools are ${Object.keys(tools).filter(x => x !== INVALID_TOOL_NAME).join(', ')}`
+      if (!params.tool || !(params.tool in tools)) {
+        throw new Error(`${JSON.stringify(params.tool)} does not exist in tools. Available tools: ${Object.keys(tools).filter(x => x !== INVALID_TOOL_NAME).join(', ')}`)
       }
-      return `Error! The arguments provided to the tool ${params.tool} are invalid, fix them and try again: ${params.error}`
+      throw new Error(`Error! The arguments provided to the tool ${params.tool} are invalid, fix them and try again: ${params.error}`)
+      return {}
     },
   })
 

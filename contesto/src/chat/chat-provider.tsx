@@ -131,6 +131,12 @@ const ChatProvider = (props: {
       })
     }
 
+    // Clear the draft text cookie when generation starts
+    document.cookie = cookie.serialize(CONTESTO_DRAFT_MESSAGE_KEY, '', {
+      path: '/',
+      maxAge: 0, // This deletes the cookie
+    })
+
     requestAnimationFrame(() => {
       const messageElement = document.querySelector(`[data-message-id="${userMessageId}"]`)
       if (messageElement) {

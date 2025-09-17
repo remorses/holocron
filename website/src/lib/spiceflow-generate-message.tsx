@@ -803,6 +803,10 @@ export async function* generateMessageStream({
     onStepFinish({ }) {
 
     },
+
+    // default values for kimi k2
+    temperature: 0.6,
+    topP: 0.48,
     experimental_transform: process.env.VITEST
       ? undefined
       : smoothStream({
@@ -814,6 +818,7 @@ export async function* generateMessageStream({
     async experimental_repairToolCall(input) {
       return repairToolCall(input)
     },
+
     providerOptions: {
       google: {
         threshold: 'OFF',

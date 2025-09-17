@@ -6,6 +6,7 @@ import { capitalize, cn } from 'docs-website/src/lib/utils'
 import { ReactNode, useMemo } from 'react'
 import { ShowMore } from './show-more'
 import { ChatMarkdown } from './docs-chat'
+import React from 'react'
 
 function Highlight({ children }: { children: ReactNode }) {
   return <span className=' dark:text-purple-300 text-purple-800'>{children}</span>
@@ -32,8 +33,10 @@ export function EditorToolPreview({
   const { isGenerating: isChatGenerating } = useChatContext()
   const command = args?.command
   let error = ''
-  if (typeof result === 'object' && 'error' in result && result.error) {
-    error = result.error
+  if (
+    typeof result === 'object' && 'error' in result && result.error
+  ) {
+    error = result?.error
   }
 
   if (command === 'view') {
@@ -106,7 +109,7 @@ export function EditorToolPreview({
 
   return (
     <ToolPreviewContainer>
-      <Dot toolCallId={toolCallId} /> Loading files <Highlight>{args?.path}</Highlight>
+      <Dot toolCallId={toolCallId} /> Loading files {args?.command} <Highlight>{args?.path}</Highlight>
       {error && <ErrorPreview error={error} />}
     </ToolPreviewContainer>
   )
@@ -148,5 +151,24 @@ export function Dot({ toolCallId }: { toolCallId?: string }) {
     return lastToolCall.state !== 'output-available' && lastToolCall.state !== 'error'
   }, [toolCallId, messages])
 
-  return <span className={cn('whitespace-pre', isLastPendingCall && 'animate-pulse')}>• </span>
+  return (
+    <span className={cn('whitespace-pre')}>
+      {isLastPendingCall ? <PieLoader /> : '◆ '}
+    </span>
+  )
+}
+
+function PieLoader() {
+
+  const pies = ['◔', '◑', '◕', '●']
+  const [index, setIndex] = React.useState(0)
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex(i => (i + 1) % pies.length)
+    }, 160)
+    return () => clearInterval(interval)
+  }, [])
+
+  return <span className="inline-block text-orange-500 dark:text-orange-300">{pies[index]} </span>
 }
