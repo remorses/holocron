@@ -804,10 +804,10 @@ export async function* generateMessageStream({
     onStepFinish({ }) {
 
     },
-
     // default values for kimi k2
     temperature: 0.6,
     topP: 0.48,
+    maxOutputTokens: 131072,
     experimental_transform: process.env.VITEST
       ? undefined
       : smoothStream({
