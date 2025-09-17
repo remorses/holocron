@@ -49,7 +49,6 @@ import { ArrowUpIcon, FilePlus2Icon, ImageIcon, ListTreeIcon, PaletteIcon } from
 import React from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useLoaderData, useLocation, useParams, useRevalidator, useRouteLoaderData } from 'react-router'
-import { AnimatePresence, motion } from 'unframer'
 import {
   Command,
   CommandEmpty,
@@ -686,7 +685,7 @@ function Footer() {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
   return (
-    <motion.div layoutId='textarea' className='sticky bottom-0 pt-4 z-50 w-full'>
+    <div className='sticky bottom-0 pt-4 z-50 w-full'>
       <div className='space-y-3'>
         <div className='flex flex-col gap-2 '>
           <div className='flex gap-1 empty:hidden justify-start items-center bg-root-background p-1 rounded-md'>
@@ -774,6 +773,6 @@ function Footer() {
         </div>
       </div>
       <ChatAutocomplete autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS} />
-    </motion.div>
+    </div>
   )
 }

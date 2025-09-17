@@ -666,10 +666,9 @@ function Footer() {
     .map((file) => `@${file.path.replace(/\.mdx\?$/, '')}`)
 
   return (
-    <AnimatePresence custom={false} onExitComplete={() => { }}>
+    <>
       <div className=' sticky bottom-4 z-50 w-full mt-4'>
-        <motion.div
-          layoutId='textarea'
+        <div
           className={cn(' w-full mt-4 rounded-[10px] border bg-background flex flex-col max-w-3xl mx-auto space-y-3')}
         >
           <ContextButton contextOptions={contextOptions} />
@@ -707,9 +706,9 @@ function Footer() {
               </Button>
             )}
           </div>
-        </motion.div>
+        </div>
         <ChatAutocomplete autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS} />
       </div>
-    </AnimatePresence>
+    </>
   )
 }
