@@ -44,7 +44,7 @@ const agentPromptTemplate = Handlebars.compile(agentPrompt)
 let model: LanguageModelV2 = createFallback({
   models: [
     // groq('moonshotai/kimi-k2-instruct-0905'),
-    moonshot('kimi-k2-0905-preview'),
+    moonshot('kimi-k2-turbo-preview'),
     google('gemini-2.5-flash'),
   ],
   onError: (error, modelId) => {

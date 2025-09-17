@@ -284,7 +284,7 @@ export type WebsiteTools = {
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
-    moonshot('kimi-k2-0905-preview'),
+    moonshot('kimi-k2-turbo-preview'),
     // groq('moonshotai/kimi-k2-instruct-0905'),
     google('gemini-2.5-flash'),
     // togetherai('moonshotai/Kimi-K2-Instruct-0905'), // TODO together can't even parse tool calls
