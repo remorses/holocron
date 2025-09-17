@@ -393,8 +393,7 @@ export async function* generateMessageStream({
       return `do not read again ${DOCS_JSON_BASENAME}, updates will be there only in the next message.`
     },
   })
-  // model = anthropic('claude-3-5-haiku-latest')
-  const { invalidTool, repairToolCall } = createInvalidTool({})
+
 
   const strReplaceEditor = createEditTool({
     fileSystem,
@@ -530,7 +529,6 @@ export async function* generateMessageStream({
 
   const tools = {
     strReplaceEditor,
-    invalidTool,
 
     ...createTodoTools({
       todos,
@@ -777,6 +775,9 @@ export async function* generateMessageStream({
       }),
     }),
   }
+
+  const { invalidTool, repairToolCall } = createInvalidTool(tools)
+  Object.assign(tools, { invalidTool })
 
   // tools['jsInterpreter'] = await createInterpreterTool({ tools })
 

@@ -170,7 +170,6 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
         },
       })
 
-      const { invalidTool, repairToolCall } = createInvalidTool({})
 
       const editTool = createEditTool({
         fileSystem,
@@ -179,7 +178,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
 
       const tools = {
         strReplaceEditor: editTool,
-        invalidTool,
+
         searchDocs: tool({
           inputSchema: searchDocsInputSchema,
           execute: async ({ terms, searchType = 'fulltext' }) => {
@@ -318,7 +317,8 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
           },
         }),
       }
-
+      const { invalidTool, repairToolCall } = createInvalidTool(tools)
+      Object.assign(tools, { invalidTool })
       // Add edit tool
 
       const result = streamText({
