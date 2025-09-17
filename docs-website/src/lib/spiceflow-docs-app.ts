@@ -42,7 +42,7 @@ const agentPromptTemplate = Handlebars.compile(agentPrompt)
 // Create fallback model with groq as primary and gemini flash 2.5 as fallback
 let model: LanguageModelV2 = createFallback({
   models: [
-    groq('moonshotai/kimi-k2-instruct'),
+    groq('moonshotai/kimi-k2-instruct-0905'),
     google('gemini-2.5-flash'),
   ],
   onError: (error, modelId) => {
