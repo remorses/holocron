@@ -1,13 +1,13 @@
 {
   "name": "@holocron.so/cli",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "",
   "type": "module",
   "repository": "https://github.com/remorses/holocron",
   "scripts": {
     "build": "tsc ",
     "typecheck": "tsc",
-    "prepublishOnly": "tsc",
+    "prepublishOnly": "pnpm --filter website gen-client && tsc",
     "holocron": "node bin.js",
     "watch": "tsc -w"
   },

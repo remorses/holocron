@@ -19,6 +19,8 @@ import {
   getGitRepoRoot,
   getGitHubInfo,
   checkGitStatus,
+  DOCS_JSON_BASENAME,
+  isDocsJson,
 } from './utils.js'
 import { randomInt } from 'crypto'
 import { homedir } from 'os'
@@ -28,8 +30,6 @@ import { Sema } from 'sema4'
 import Table from 'cli-table3'
 import { imageDimensionsFromData } from 'image-dimensions'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
-import { isDocsJson } from 'docs-website/src/lib/utils.js'
-import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants.js'
 
 export const cli = cac('holocron')
 
@@ -57,7 +57,7 @@ type UserConfig = {
 }
 
 const url = process.env.SERVER_URL || 'https://holocron.so'
-const configPath = path.join(homedir(), `.${DOCS_JSON_BASENAME}`)
+const configPath = path.join(homedir(), `.holocron-config.json`)
 
 // Check if running in TTY environment
 const isTTY = process.stdout.isTTY && process.stdin.isTTY

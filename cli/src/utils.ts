@@ -1,5 +1,5 @@
 import type { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
-import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants.js'
+
 import os from 'node:os'
 import JSONC from 'tiny-jsonc'
 import fs from 'node:fs'
@@ -177,3 +177,16 @@ export function checkGitStatus(): {
     }
   }
 }
+
+
+export function isDocsJson(path: string): boolean {
+  if (!path) return false
+  const candidates = [DOCS_JSON_BASENAME, 'fumabase.jsonc']
+  for (const name of candidates) {
+    if (path === name || path.endsWith(`/${name}`)) {
+      return true
+    }
+  }
+  return false
+}
+export const DOCS_JSON_BASENAME = 'holocron.jsonc'
