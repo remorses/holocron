@@ -6,6 +6,7 @@
   "access": "public",
   "baseBranch": "main",
   "privatePackages": false,
+  "githubRelease": true,
   "updateInternalDependencies": "patch",
   "ignore": []
 }

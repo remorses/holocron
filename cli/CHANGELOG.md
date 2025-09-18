@@ -1,5 +1,11 @@
 # holocron
 
+## 0.3.0
+
+### Minor Changes
+
+- export createHolocronApiClient
+
 ## 0.2.0
 
 ### Minor Changes
