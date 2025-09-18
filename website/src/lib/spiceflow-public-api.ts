@@ -27,7 +27,7 @@ export const filesSchema = z.array(
   }),
 )
 
-export const publicApiApp = new Spiceflow({ basePath: '/api/v1' })
+export const publicApiApp = new Spiceflow({ basePath: '/v1' })
   .state('apiKey', '')
   .state('userId', '')
   .state('orgId', '')
