@@ -12,194 +12,22 @@ export declare const apiClient: {
                 200: any;
             }>>;
         };
-        api: {
-            v1: {
-                openapi: {
-                    get: (options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        [x: number]: any;
-                        200: any;
-                    }>>;
-                };
-                sites: ((params: {
-                    siteId: string | number;
-                }) => {
-                    sync: {
-                        post: (request: {
-                            files: {
-                                relativePath: string;
-                                contents: string;
-                                downloadUrl?: string | undefined;
-                                metadata?: {
-                                    width?: number | undefined;
-                                    height?: number | undefined;
-                                } | undefined;
-                            }[];
-                        }, options?: {
-                            headers?: Record<string, unknown> | undefined;
-                            query?: Record<string, unknown> | undefined;
-                            fetch?: RequestInit | undefined;
-                        } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                            200: {
-                                success: boolean;
-                                siteId: string;
-                                branchId: string;
-                                pageCount: number;
-                                docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
-                                errors: {
-                                    githubPath: string;
-                                    line: number;
-                                    errorMessage: string;
-                                    errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
-                                }[];
-                            };
-                        }>>;
-                    };
-                    files: {
-                        delete: (request: {
-                            filePaths: string[];
-                        }, options?: {
-                            headers?: Record<string, unknown> | undefined;
-                            query?: Record<string, unknown> | undefined;
-                            fetch?: RequestInit | undefined;
-                        } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                            200: {
-                                success: boolean;
-                                deletedCount: number;
-                                deletedPages: number;
-                                deletedMediaAssets: number;
-                                deletedMetaFiles: number;
-                            };
-                        }>>;
-                    };
+        v1: {
+            openapi: {
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    [x: number]: any;
+                    200: any;
+                }>>;
+            };
+            sites: ((params: {
+                siteId: string | number;
+            }) => {
+                sync: {
                     post: (request: {
-                        name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
-                        githubOwner?: string | undefined;
-                        githubRepo?: string | undefined;
-                        githubFolder?: string | undefined;
-                    }, options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            siteId: string;
-                            name: string;
-                            visibility: import("db/src/generated/enums").SiteVisibility;
-                        };
-                    }>>;
-                    get: (options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            site: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                createdAt: Date;
-                                branchId: string;
-                                docsJson: {
-                                    siteId: string;
-                                    name: string;
-                                    $schema?: string | undefined;
-                                    description?: string | undefined;
-                                    logo?: {
-                                        light: string;
-                                        dark: string;
-                                        href?: string | undefined;
-                                        text?: string | undefined;
-                                    } | undefined;
-                                    favicon?: {
-                                        light: string;
-                                        dark: string;
-                                    } | undefined;
-                                    navbar?: {
-                                        links?: {
-                                            label: string;
-                                            href: string;
-                                            icon?: string | undefined;
-                                        }[] | undefined;
-                                        primary?: {
-                                            type: "button";
-                                            label: string;
-                                            href: string;
-                                        } | {
-                                            type: "github";
-                                            href: string;
-                                        } | undefined;
-                                    } | undefined;
-                                    tabs?: ({
-                                        tab: string;
-                                        openapi: string;
-                                        renderer?: "fumadocs" | "scalar" | undefined;
-                                    } | {
-                                        tab: string;
-                                        mcp: string;
-                                    })[] | undefined;
-                                    footer?: {
-                                        socials?: Record<string, string> | undefined;
-                                        links?: {
-                                            items: {
-                                                label: string;
-                                                href: string;
-                                            }[];
-                                            header?: string | undefined;
-                                        }[] | undefined;
-                                    } | undefined;
-                                    seo?: {
-                                        metatags: Record<string, string>;
-                                        indexing?: "all" | "navigable" | undefined;
-                                    } | undefined;
-                                    redirects?: {
-                                        source: string;
-                                        destination: string;
-                                        permanent?: boolean | undefined;
-                                    }[] | undefined;
-                                    banner?: {
-                                        content: string;
-                                        dismissible?: boolean | undefined;
-                                    } | undefined;
-                                    contextual?: {
-                                        options: ("copy" | "view" | "chatgpt" | "claude")[];
-                                    } | undefined;
-                                    cssVariables?: {
-                                        light: Record<string, string>;
-                                        dark: Record<string, string>;
-                                    } | undefined;
-                                    domains?: string[] | undefined;
-                                    hideSidebar?: boolean | undefined;
-                                    ignore?: string[] | undefined;
-                                    theme?: string | undefined;
-                                    disableEditButton?: boolean | undefined;
-                                } | null;
-                            };
-                        };
-                    }>>;
-                    delete: (request?: unknown, options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            message: string;
-                        };
-                    }>>;
-                }) & {
-                    post: (request: {
-                        name: string;
-                        orgId: string;
                         files: {
                             relativePath: string;
                             contents: string;
@@ -209,11 +37,6 @@ export declare const apiClient: {
                                 height?: number | undefined;
                             } | undefined;
                         }[];
-                        githubOwner?: string | undefined;
-                        githubRepo?: string | undefined;
-                        githubRepoId?: number | undefined;
-                        githubBranch?: string | undefined;
-                        githubFolder?: string | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -223,7 +46,7 @@ export declare const apiClient: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
-                            chatId: string;
+                            pageCount: number;
                             docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
                             errors: {
                                 githubPath: string;
@@ -233,25 +56,200 @@ export declare const apiClient: {
                             }[];
                         };
                     }>>;
-                    get: (options?: {
+                };
+                files: {
+                    delete: (request: {
+                        filePaths: string[];
+                    }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                         200: {
                             success: boolean;
-                            sites: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                createdAt: Date;
-                            }[];
+                            deletedCount: number;
+                            deletedPages: number;
+                            deletedMediaAssets: number;
+                            deletedMetaFiles: number;
                         };
                     }>>;
                 };
+                post: (request: {
+                    name?: string | undefined;
+                    visibility?: "private" | "public" | undefined;
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
+                    githubFolder?: string | undefined;
+                }, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        siteId: string;
+                        name: string;
+                        visibility: import("db/src/generated/enums").SiteVisibility;
+                    };
+                }>>;
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        site: {
+                            siteId: string;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubFolder: string;
+                            createdAt: Date;
+                            branchId: string;
+                            docsJson: {
+                                siteId: string;
+                                name: string;
+                                $schema?: string | undefined;
+                                description?: string | undefined;
+                                logo?: {
+                                    light: string;
+                                    dark: string;
+                                    href?: string | undefined;
+                                    text?: string | undefined;
+                                } | undefined;
+                                favicon?: {
+                                    light: string;
+                                    dark: string;
+                                } | undefined;
+                                navbar?: {
+                                    links?: {
+                                        label: string;
+                                        href: string;
+                                        icon?: string | undefined;
+                                    }[] | undefined;
+                                    primary?: {
+                                        type: "button";
+                                        label: string;
+                                        href: string;
+                                    } | {
+                                        type: "github";
+                                        href: string;
+                                    } | undefined;
+                                } | undefined;
+                                tabs?: ({
+                                    tab: string;
+                                    openapi: string;
+                                    renderer?: "fumadocs" | "scalar" | undefined;
+                                } | {
+                                    tab: string;
+                                    mcp: string;
+                                })[] | undefined;
+                                footer?: {
+                                    socials?: Record<string, string> | undefined;
+                                    links?: {
+                                        items: {
+                                            label: string;
+                                            href: string;
+                                        }[];
+                                        header?: string | undefined;
+                                    }[] | undefined;
+                                } | undefined;
+                                seo?: {
+                                    metatags: Record<string, string>;
+                                    indexing?: "navigable" | "all" | undefined;
+                                } | undefined;
+                                redirects?: {
+                                    source: string;
+                                    destination: string;
+                                    permanent?: boolean | undefined;
+                                }[] | undefined;
+                                banner?: {
+                                    content: string;
+                                    dismissible?: boolean | undefined;
+                                } | undefined;
+                                contextual?: {
+                                    options: ("copy" | "view" | "chatgpt" | "claude")[];
+                                } | undefined;
+                                cssVariables?: {
+                                    light: Record<string, string>;
+                                    dark: Record<string, string>;
+                                } | undefined;
+                                domains?: string[] | undefined;
+                                hideSidebar?: boolean | undefined;
+                                ignore?: string[] | undefined;
+                                theme?: string | undefined;
+                                disableEditButton?: boolean | undefined;
+                            } | null;
+                        };
+                    };
+                }>>;
+                delete: (request?: unknown, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        message: string;
+                    };
+                }>>;
+            }) & {
+                post: (request: {
+                    name: string;
+                    orgId: string;
+                    files: {
+                        relativePath: string;
+                        contents: string;
+                        downloadUrl?: string | undefined;
+                        metadata?: {
+                            width?: number | undefined;
+                            height?: number | undefined;
+                        } | undefined;
+                    }[];
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
+                    githubRepoId?: number | undefined;
+                    githubBranch?: string | undefined;
+                    githubFolder?: string | undefined;
+                }, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        siteId: string;
+                        branchId: string;
+                        chatId: string;
+                        docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
+                        errors: {
+                            githubPath: string;
+                            line: number;
+                            errorMessage: string;
+                            errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
+                        }[];
+                    };
+                }>>;
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        sites: {
+                            siteId: string;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubFolder: string;
+                            createdAt: Date;
+                        }[];
+                    };
+                }>>;
             };
         };
         health: {
@@ -298,7 +296,7 @@ export declare const apiClient: {
                 }>;
                 todos?: {
                     content: string;
-                    status: "pending" | "in_progress" | "completed" | "cancelled";
+                    status: "pending" | "completed" | "cancelled" | "in_progress";
                     priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
@@ -484,13 +482,13 @@ export declare const apiClient: {
                     }[];
                     orgId?: string | undefined;
                     name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
-                    defaultLocale?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
+                    githubFolder?: string | undefined;
+                    createdAt?: Date | undefined;
+                    defaultLocale?: string | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                 };
             }>>;
         };
@@ -608,194 +606,22 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 200: any;
             }>>;
         };
-        api: {
-            v1: {
-                openapi: {
-                    get: (options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        [x: number]: any;
-                        200: any;
-                    }>>;
-                };
-                sites: ((params: {
-                    siteId: string | number;
-                }) => {
-                    sync: {
-                        post: (request: {
-                            files: {
-                                relativePath: string;
-                                contents: string;
-                                downloadUrl?: string | undefined;
-                                metadata?: {
-                                    width?: number | undefined;
-                                    height?: number | undefined;
-                                } | undefined;
-                            }[];
-                        }, options?: {
-                            headers?: Record<string, unknown> | undefined;
-                            query?: Record<string, unknown> | undefined;
-                            fetch?: RequestInit | undefined;
-                        } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                            200: {
-                                success: boolean;
-                                siteId: string;
-                                branchId: string;
-                                pageCount: number;
-                                docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
-                                errors: {
-                                    githubPath: string;
-                                    line: number;
-                                    errorMessage: string;
-                                    errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
-                                }[];
-                            };
-                        }>>;
-                    };
-                    files: {
-                        delete: (request: {
-                            filePaths: string[];
-                        }, options?: {
-                            headers?: Record<string, unknown> | undefined;
-                            query?: Record<string, unknown> | undefined;
-                            fetch?: RequestInit | undefined;
-                        } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                            200: {
-                                success: boolean;
-                                deletedCount: number;
-                                deletedPages: number;
-                                deletedMediaAssets: number;
-                                deletedMetaFiles: number;
-                            };
-                        }>>;
-                    };
+        v1: {
+            openapi: {
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    [x: number]: any;
+                    200: any;
+                }>>;
+            };
+            sites: ((params: {
+                siteId: string | number;
+            }) => {
+                sync: {
                     post: (request: {
-                        name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
-                        githubOwner?: string | undefined;
-                        githubRepo?: string | undefined;
-                        githubFolder?: string | undefined;
-                    }, options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            siteId: string;
-                            name: string;
-                            visibility: import("db/src/generated/enums").SiteVisibility;
-                        };
-                    }>>;
-                    get: (options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            site: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                createdAt: Date;
-                                branchId: string;
-                                docsJson: {
-                                    siteId: string;
-                                    name: string;
-                                    $schema?: string | undefined;
-                                    description?: string | undefined;
-                                    logo?: {
-                                        light: string;
-                                        dark: string;
-                                        href?: string | undefined;
-                                        text?: string | undefined;
-                                    } | undefined;
-                                    favicon?: {
-                                        light: string;
-                                        dark: string;
-                                    } | undefined;
-                                    navbar?: {
-                                        links?: {
-                                            label: string;
-                                            href: string;
-                                            icon?: string | undefined;
-                                        }[] | undefined;
-                                        primary?: {
-                                            type: "button";
-                                            label: string;
-                                            href: string;
-                                        } | {
-                                            type: "github";
-                                            href: string;
-                                        } | undefined;
-                                    } | undefined;
-                                    tabs?: ({
-                                        tab: string;
-                                        openapi: string;
-                                        renderer?: "fumadocs" | "scalar" | undefined;
-                                    } | {
-                                        tab: string;
-                                        mcp: string;
-                                    })[] | undefined;
-                                    footer?: {
-                                        socials?: Record<string, string> | undefined;
-                                        links?: {
-                                            items: {
-                                                label: string;
-                                                href: string;
-                                            }[];
-                                            header?: string | undefined;
-                                        }[] | undefined;
-                                    } | undefined;
-                                    seo?: {
-                                        metatags: Record<string, string>;
-                                        indexing?: "all" | "navigable" | undefined;
-                                    } | undefined;
-                                    redirects?: {
-                                        source: string;
-                                        destination: string;
-                                        permanent?: boolean | undefined;
-                                    }[] | undefined;
-                                    banner?: {
-                                        content: string;
-                                        dismissible?: boolean | undefined;
-                                    } | undefined;
-                                    contextual?: {
-                                        options: ("copy" | "view" | "chatgpt" | "claude")[];
-                                    } | undefined;
-                                    cssVariables?: {
-                                        light: Record<string, string>;
-                                        dark: Record<string, string>;
-                                    } | undefined;
-                                    domains?: string[] | undefined;
-                                    hideSidebar?: boolean | undefined;
-                                    ignore?: string[] | undefined;
-                                    theme?: string | undefined;
-                                    disableEditButton?: boolean | undefined;
-                                } | null;
-                            };
-                        };
-                    }>>;
-                    delete: (request?: unknown, options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            message: string;
-                        };
-                    }>>;
-                }) & {
-                    post: (request: {
-                        name: string;
-                        orgId: string;
                         files: {
                             relativePath: string;
                             contents: string;
@@ -805,11 +631,6 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 height?: number | undefined;
                             } | undefined;
                         }[];
-                        githubOwner?: string | undefined;
-                        githubRepo?: string | undefined;
-                        githubRepoId?: number | undefined;
-                        githubBranch?: string | undefined;
-                        githubFolder?: string | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -819,7 +640,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                             success: boolean;
                             siteId: string;
                             branchId: string;
-                            chatId: string;
+                            pageCount: number;
                             docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
                             errors: {
                                 githubPath: string;
@@ -829,25 +650,200 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                             }[];
                         };
                     }>>;
-                    get: (options?: {
+                };
+                files: {
+                    delete: (request: {
+                        filePaths: string[];
+                    }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                         200: {
                             success: boolean;
-                            sites: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                createdAt: Date;
-                            }[];
+                            deletedCount: number;
+                            deletedPages: number;
+                            deletedMediaAssets: number;
+                            deletedMetaFiles: number;
                         };
                     }>>;
                 };
+                post: (request: {
+                    name?: string | undefined;
+                    visibility?: "private" | "public" | undefined;
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
+                    githubFolder?: string | undefined;
+                }, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        siteId: string;
+                        name: string;
+                        visibility: import("db/src/generated/enums").SiteVisibility;
+                    };
+                }>>;
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        site: {
+                            siteId: string;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubFolder: string;
+                            createdAt: Date;
+                            branchId: string;
+                            docsJson: {
+                                siteId: string;
+                                name: string;
+                                $schema?: string | undefined;
+                                description?: string | undefined;
+                                logo?: {
+                                    light: string;
+                                    dark: string;
+                                    href?: string | undefined;
+                                    text?: string | undefined;
+                                } | undefined;
+                                favicon?: {
+                                    light: string;
+                                    dark: string;
+                                } | undefined;
+                                navbar?: {
+                                    links?: {
+                                        label: string;
+                                        href: string;
+                                        icon?: string | undefined;
+                                    }[] | undefined;
+                                    primary?: {
+                                        type: "button";
+                                        label: string;
+                                        href: string;
+                                    } | {
+                                        type: "github";
+                                        href: string;
+                                    } | undefined;
+                                } | undefined;
+                                tabs?: ({
+                                    tab: string;
+                                    openapi: string;
+                                    renderer?: "fumadocs" | "scalar" | undefined;
+                                } | {
+                                    tab: string;
+                                    mcp: string;
+                                })[] | undefined;
+                                footer?: {
+                                    socials?: Record<string, string> | undefined;
+                                    links?: {
+                                        items: {
+                                            label: string;
+                                            href: string;
+                                        }[];
+                                        header?: string | undefined;
+                                    }[] | undefined;
+                                } | undefined;
+                                seo?: {
+                                    metatags: Record<string, string>;
+                                    indexing?: "navigable" | "all" | undefined;
+                                } | undefined;
+                                redirects?: {
+                                    source: string;
+                                    destination: string;
+                                    permanent?: boolean | undefined;
+                                }[] | undefined;
+                                banner?: {
+                                    content: string;
+                                    dismissible?: boolean | undefined;
+                                } | undefined;
+                                contextual?: {
+                                    options: ("copy" | "view" | "chatgpt" | "claude")[];
+                                } | undefined;
+                                cssVariables?: {
+                                    light: Record<string, string>;
+                                    dark: Record<string, string>;
+                                } | undefined;
+                                domains?: string[] | undefined;
+                                hideSidebar?: boolean | undefined;
+                                ignore?: string[] | undefined;
+                                theme?: string | undefined;
+                                disableEditButton?: boolean | undefined;
+                            } | null;
+                        };
+                    };
+                }>>;
+                delete: (request?: unknown, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        message: string;
+                    };
+                }>>;
+            }) & {
+                post: (request: {
+                    name: string;
+                    orgId: string;
+                    files: {
+                        relativePath: string;
+                        contents: string;
+                        downloadUrl?: string | undefined;
+                        metadata?: {
+                            width?: number | undefined;
+                            height?: number | undefined;
+                        } | undefined;
+                    }[];
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
+                    githubRepoId?: number | undefined;
+                    githubBranch?: string | undefined;
+                    githubFolder?: string | undefined;
+                }, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        siteId: string;
+                        branchId: string;
+                        chatId: string;
+                        docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
+                        errors: {
+                            githubPath: string;
+                            line: number;
+                            errorMessage: string;
+                            errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
+                        }[];
+                    };
+                }>>;
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        sites: {
+                            siteId: string;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubFolder: string;
+                            createdAt: Date;
+                        }[];
+                    };
+                }>>;
             };
         };
         health: {
@@ -894,7 +890,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 }>;
                 todos?: {
                     content: string;
-                    status: "pending" | "in_progress" | "completed" | "cancelled";
+                    status: "pending" | "completed" | "cancelled" | "in_progress";
                     priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
@@ -1080,13 +1076,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }[];
                     orgId?: string | undefined;
                     name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
-                    defaultLocale?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
+                    githubFolder?: string | undefined;
+                    createdAt?: Date | undefined;
+                    defaultLocale?: string | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                 };
             }>>;
         };
@@ -1205,194 +1201,22 @@ export declare const apiClientWithDurableFetch: {
                 200: any;
             }>>;
         };
-        api: {
-            v1: {
-                openapi: {
-                    get: (options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        [x: number]: any;
-                        200: any;
-                    }>>;
-                };
-                sites: ((params: {
-                    siteId: string | number;
-                }) => {
-                    sync: {
-                        post: (request: {
-                            files: {
-                                relativePath: string;
-                                contents: string;
-                                downloadUrl?: string | undefined;
-                                metadata?: {
-                                    width?: number | undefined;
-                                    height?: number | undefined;
-                                } | undefined;
-                            }[];
-                        }, options?: {
-                            headers?: Record<string, unknown> | undefined;
-                            query?: Record<string, unknown> | undefined;
-                            fetch?: RequestInit | undefined;
-                        } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                            200: {
-                                success: boolean;
-                                siteId: string;
-                                branchId: string;
-                                pageCount: number;
-                                docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
-                                errors: {
-                                    githubPath: string;
-                                    line: number;
-                                    errorMessage: string;
-                                    errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
-                                }[];
-                            };
-                        }>>;
-                    };
-                    files: {
-                        delete: (request: {
-                            filePaths: string[];
-                        }, options?: {
-                            headers?: Record<string, unknown> | undefined;
-                            query?: Record<string, unknown> | undefined;
-                            fetch?: RequestInit | undefined;
-                        } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                            200: {
-                                success: boolean;
-                                deletedCount: number;
-                                deletedPages: number;
-                                deletedMediaAssets: number;
-                                deletedMetaFiles: number;
-                            };
-                        }>>;
-                    };
+        v1: {
+            openapi: {
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    [x: number]: any;
+                    200: any;
+                }>>;
+            };
+            sites: ((params: {
+                siteId: string | number;
+            }) => {
+                sync: {
                     post: (request: {
-                        name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
-                        githubOwner?: string | undefined;
-                        githubRepo?: string | undefined;
-                        githubFolder?: string | undefined;
-                    }, options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            siteId: string;
-                            name: string;
-                            visibility: import("db/src/generated/enums").SiteVisibility;
-                        };
-                    }>>;
-                    get: (options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            site: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                createdAt: Date;
-                                branchId: string;
-                                docsJson: {
-                                    siteId: string;
-                                    name: string;
-                                    $schema?: string | undefined;
-                                    description?: string | undefined;
-                                    logo?: {
-                                        light: string;
-                                        dark: string;
-                                        href?: string | undefined;
-                                        text?: string | undefined;
-                                    } | undefined;
-                                    favicon?: {
-                                        light: string;
-                                        dark: string;
-                                    } | undefined;
-                                    navbar?: {
-                                        links?: {
-                                            label: string;
-                                            href: string;
-                                            icon?: string | undefined;
-                                        }[] | undefined;
-                                        primary?: {
-                                            type: "button";
-                                            label: string;
-                                            href: string;
-                                        } | {
-                                            type: "github";
-                                            href: string;
-                                        } | undefined;
-                                    } | undefined;
-                                    tabs?: ({
-                                        tab: string;
-                                        openapi: string;
-                                        renderer?: "fumadocs" | "scalar" | undefined;
-                                    } | {
-                                        tab: string;
-                                        mcp: string;
-                                    })[] | undefined;
-                                    footer?: {
-                                        socials?: Record<string, string> | undefined;
-                                        links?: {
-                                            items: {
-                                                label: string;
-                                                href: string;
-                                            }[];
-                                            header?: string | undefined;
-                                        }[] | undefined;
-                                    } | undefined;
-                                    seo?: {
-                                        metatags: Record<string, string>;
-                                        indexing?: "all" | "navigable" | undefined;
-                                    } | undefined;
-                                    redirects?: {
-                                        source: string;
-                                        destination: string;
-                                        permanent?: boolean | undefined;
-                                    }[] | undefined;
-                                    banner?: {
-                                        content: string;
-                                        dismissible?: boolean | undefined;
-                                    } | undefined;
-                                    contextual?: {
-                                        options: ("copy" | "view" | "chatgpt" | "claude")[];
-                                    } | undefined;
-                                    cssVariables?: {
-                                        light: Record<string, string>;
-                                        dark: Record<string, string>;
-                                    } | undefined;
-                                    domains?: string[] | undefined;
-                                    hideSidebar?: boolean | undefined;
-                                    ignore?: string[] | undefined;
-                                    theme?: string | undefined;
-                                    disableEditButton?: boolean | undefined;
-                                } | null;
-                            };
-                        };
-                    }>>;
-                    delete: (request?: unknown, options?: {
-                        headers?: Record<string, unknown> | undefined;
-                        query?: Record<string, unknown> | undefined;
-                        fetch?: RequestInit | undefined;
-                    } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
-                            success: boolean;
-                            message: string;
-                        };
-                    }>>;
-                }) & {
-                    post: (request: {
-                        name: string;
-                        orgId: string;
                         files: {
                             relativePath: string;
                             contents: string;
@@ -1402,11 +1226,6 @@ export declare const apiClientWithDurableFetch: {
                                 height?: number | undefined;
                             } | undefined;
                         }[];
-                        githubOwner?: string | undefined;
-                        githubRepo?: string | undefined;
-                        githubRepoId?: number | undefined;
-                        githubBranch?: string | undefined;
-                        githubFolder?: string | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -1416,7 +1235,7 @@ export declare const apiClientWithDurableFetch: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
-                            chatId: string;
+                            pageCount: number;
                             docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
                             errors: {
                                 githubPath: string;
@@ -1426,25 +1245,200 @@ export declare const apiClientWithDurableFetch: {
                             }[];
                         };
                     }>>;
-                    get: (options?: {
+                };
+                files: {
+                    delete: (request: {
+                        filePaths: string[];
+                    }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                         200: {
                             success: boolean;
-                            sites: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                createdAt: Date;
-                            }[];
+                            deletedCount: number;
+                            deletedPages: number;
+                            deletedMediaAssets: number;
+                            deletedMetaFiles: number;
                         };
                     }>>;
                 };
+                post: (request: {
+                    name?: string | undefined;
+                    visibility?: "private" | "public" | undefined;
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
+                    githubFolder?: string | undefined;
+                }, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        siteId: string;
+                        name: string;
+                        visibility: import("db/src/generated/enums").SiteVisibility;
+                    };
+                }>>;
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        site: {
+                            siteId: string;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubFolder: string;
+                            createdAt: Date;
+                            branchId: string;
+                            docsJson: {
+                                siteId: string;
+                                name: string;
+                                $schema?: string | undefined;
+                                description?: string | undefined;
+                                logo?: {
+                                    light: string;
+                                    dark: string;
+                                    href?: string | undefined;
+                                    text?: string | undefined;
+                                } | undefined;
+                                favicon?: {
+                                    light: string;
+                                    dark: string;
+                                } | undefined;
+                                navbar?: {
+                                    links?: {
+                                        label: string;
+                                        href: string;
+                                        icon?: string | undefined;
+                                    }[] | undefined;
+                                    primary?: {
+                                        type: "button";
+                                        label: string;
+                                        href: string;
+                                    } | {
+                                        type: "github";
+                                        href: string;
+                                    } | undefined;
+                                } | undefined;
+                                tabs?: ({
+                                    tab: string;
+                                    openapi: string;
+                                    renderer?: "fumadocs" | "scalar" | undefined;
+                                } | {
+                                    tab: string;
+                                    mcp: string;
+                                })[] | undefined;
+                                footer?: {
+                                    socials?: Record<string, string> | undefined;
+                                    links?: {
+                                        items: {
+                                            label: string;
+                                            href: string;
+                                        }[];
+                                        header?: string | undefined;
+                                    }[] | undefined;
+                                } | undefined;
+                                seo?: {
+                                    metatags: Record<string, string>;
+                                    indexing?: "navigable" | "all" | undefined;
+                                } | undefined;
+                                redirects?: {
+                                    source: string;
+                                    destination: string;
+                                    permanent?: boolean | undefined;
+                                }[] | undefined;
+                                banner?: {
+                                    content: string;
+                                    dismissible?: boolean | undefined;
+                                } | undefined;
+                                contextual?: {
+                                    options: ("copy" | "view" | "chatgpt" | "claude")[];
+                                } | undefined;
+                                cssVariables?: {
+                                    light: Record<string, string>;
+                                    dark: Record<string, string>;
+                                } | undefined;
+                                domains?: string[] | undefined;
+                                hideSidebar?: boolean | undefined;
+                                ignore?: string[] | undefined;
+                                theme?: string | undefined;
+                                disableEditButton?: boolean | undefined;
+                            } | null;
+                        };
+                    };
+                }>>;
+                delete: (request?: unknown, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        message: string;
+                    };
+                }>>;
+            }) & {
+                post: (request: {
+                    name: string;
+                    orgId: string;
+                    files: {
+                        relativePath: string;
+                        contents: string;
+                        downloadUrl?: string | undefined;
+                        metadata?: {
+                            width?: number | undefined;
+                            height?: number | undefined;
+                        } | undefined;
+                    }[];
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
+                    githubRepoId?: number | undefined;
+                    githubBranch?: string | undefined;
+                    githubFolder?: string | undefined;
+                }, options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        siteId: string;
+                        branchId: string;
+                        chatId: string;
+                        docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
+                        errors: {
+                            githubPath: string;
+                            line: number;
+                            errorMessage: string;
+                            errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
+                        }[];
+                    };
+                }>>;
+                get: (options?: {
+                    headers?: Record<string, unknown> | undefined;
+                    query?: Record<string, unknown> | undefined;
+                    fetch?: RequestInit | undefined;
+                } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean;
+                        sites: {
+                            siteId: string;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubFolder: string;
+                            createdAt: Date;
+                        }[];
+                    };
+                }>>;
             };
         };
         health: {
@@ -1491,7 +1485,7 @@ export declare const apiClientWithDurableFetch: {
                 }>;
                 todos?: {
                     content: string;
-                    status: "pending" | "in_progress" | "completed" | "cancelled";
+                    status: "pending" | "completed" | "cancelled" | "in_progress";
                     priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
@@ -1677,13 +1671,13 @@ export declare const apiClientWithDurableFetch: {
                     }[];
                     orgId?: string | undefined;
                     name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
-                    defaultLocale?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
+                    githubFolder?: string | undefined;
+                    createdAt?: Date | undefined;
+                    defaultLocale?: string | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                 };
             }>>;
         };
