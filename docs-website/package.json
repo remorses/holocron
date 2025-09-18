@@ -8,6 +8,7 @@
     "dev": "doppler run -- react-router dev --port 7777",
     "dev:prod": "doppler run -c production -- react-router dev --port 7777",
     "fly": "fly --app fumabase-docs-prod",
+    "fly:basepath": "fly --app fumabase-docs-prod-base-path-docs",
     "fly:preview": "fly --app fumabase-docs-preview",
     "deployment": "doppler run --preserve-env -- pnpm vite-node scripts/deployment.ts",
     "dev:wrangler": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7777",

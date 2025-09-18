@@ -1,3 +1,2 @@
--- AlterEnum
-ALTER TYPE "public"."DomainType" ADD VALUE 'basepathDomain';
+-- This is an empty migration.
 

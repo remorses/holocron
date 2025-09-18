@@ -42,7 +42,7 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
+                        200: Response | {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -65,7 +65,7 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
+                        200: Response | {
                             success: boolean;
                             deletedCount: number;
                             deletedPages: number;
@@ -85,7 +85,7 @@ export declare const apiClient: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         siteId: string;
                         name: string;
@@ -97,7 +97,7 @@ export declare const apiClient: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         site: {
                             siteId: string;
@@ -190,7 +190,7 @@ export declare const apiClient: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         message: string;
                     };
@@ -218,7 +218,7 @@ export declare const apiClient: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         siteId: string;
                         branchId: string;
@@ -636,7 +636,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
+                        200: Response | {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -659,7 +659,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
+                        200: Response | {
                             success: boolean;
                             deletedCount: number;
                             deletedPages: number;
@@ -679,7 +679,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         siteId: string;
                         name: string;
@@ -691,7 +691,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         site: {
                             siteId: string;
@@ -784,7 +784,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         message: string;
                     };
@@ -812,7 +812,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         siteId: string;
                         branchId: string;
@@ -1231,7 +1231,7 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
+                        200: Response | {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -1254,7 +1254,7 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: {
+                        200: Response | {
                             success: boolean;
                             deletedCount: number;
                             deletedPages: number;
@@ -1274,7 +1274,7 @@ export declare const apiClientWithDurableFetch: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         siteId: string;
                         name: string;
@@ -1286,7 +1286,7 @@ export declare const apiClientWithDurableFetch: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         site: {
                             siteId: string;
@@ -1379,7 +1379,7 @@ export declare const apiClientWithDurableFetch: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         message: string;
                     };
@@ -1407,7 +1407,7 @@ export declare const apiClientWithDurableFetch: {
                     query?: Record<string, unknown> | undefined;
                     fetch?: RequestInit | undefined;
                 } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                    200: {
+                    200: Response | {
                         success: boolean;
                         siteId: string;
                         branchId: string;

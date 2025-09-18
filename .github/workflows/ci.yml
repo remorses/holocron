@@ -6,9 +6,9 @@ on:
             - main
             - preview
 
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# concurrency:
+#     group: ${{ github.workflow }}-${{ github.ref }}
+#     cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
     contents: write # push branch
