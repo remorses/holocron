@@ -338,6 +338,13 @@ export const renderChatNode: RenderNode = (node, transform) => {
       <span className='dark:text-red-200 dark:bg-red-950/30 px-1 rounded font-mono text-[0.9em]'>{node.value}</span>
     )
   }
+  // if (node.type === 'paragraph') {
+  //   return (
+  //     <p className='text-sm '>
+  //       {node.children?.map((child) => transform(child))}
+  //     </p>
+  //   )
+  // }
 
   if (
     node.type === 'heading'
@@ -348,6 +355,15 @@ export const renderChatNode: RenderNode = (node, transform) => {
       </span>
     )
   }
+  // if (
+  //   node.type === 'list'
+  // ) {
+  //   return (
+  //     <ul className='text-sm'>
+  //       {node.children?.map((child) => transform(child))}
+  //     </ul>
+  //   )
+  // }
 
   if (node.type === 'code') {
     const language = node.lang || ''

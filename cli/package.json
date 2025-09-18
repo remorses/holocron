@@ -17,6 +17,8 @@
     "src",
     "bin.js"
   ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "keywords": [],
   "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
   "license": "",
