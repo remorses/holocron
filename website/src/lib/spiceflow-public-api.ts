@@ -100,7 +100,10 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       })
 
       if (!userOrgAccess) {
-        throw new AppError('Access denied to organization')
+        return new Response(JSON.stringify({ error: 'Access denied to organization' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       const result = await createSite({
