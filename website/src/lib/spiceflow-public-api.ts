@@ -69,6 +69,13 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
     state.userId = userSession.userId
     state.orgId = userSession.user.orgs[0]?.orgId || ''
 
+    if (!state.orgId) {
+      return new Response(JSON.stringify({ error: 'User has no organization, create one first' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
     return next()
   })
   .route({
