@@ -192,13 +192,19 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       })
 
       if (!site) {
-        throw new AppError('Site not found or access denied')
+        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       // Get the first (and only) branch
       const branch = site.branches[0]
       if (!branch) {
-        throw new AppError('No branch found for site')
+        return new Response(JSON.stringify({ error: 'No branch found for site' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       const docsJson = (branch.docsJson || {}) as DocsJsonType
@@ -304,13 +310,19 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       })
 
       if (!site) {
-        throw new AppError('Site not found or access denied')
+        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       // Get the first (and only) branch
       const branch = site.branches[0]
       if (!branch) {
-        throw new AppError('No branch found for site')
+        return new Response(JSON.stringify({ error: 'No branch found for site' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       // Delete pages with the specified githubPaths
@@ -400,7 +412,10 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       })
 
       if (!site) {
-        throw new AppError('Site not found or access denied')
+        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       const updatedSite = await prisma.site.update({
@@ -486,7 +501,10 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       })
 
       if (!site) {
-        throw new AppError('Site not found or access denied')
+        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       // Get the first (and only) branch
@@ -540,7 +558,10 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       })
 
       if (!site) {
-        throw new AppError('Site not found or access denied')
+        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
 
       // Delete all domains from Cloudflare
