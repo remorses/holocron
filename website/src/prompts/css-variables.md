@@ -70,4 +70,4 @@ Here is an example of good CSS variables:
 }
 ```
 
-There is also `--fd-layout-width` which changes the max width of the docs website content, use a really large number to make the website full width, this value should always end with px, for example `1400px`.
+There is also `--fd-layout-width` which changes the max width of the docs website content, use a really large number to make the website full width, this value should always end with px, for example `1400px`
