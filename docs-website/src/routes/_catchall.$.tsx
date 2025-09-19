@@ -107,9 +107,9 @@ export function meta({ data, matches }: Route.MetaArgs): any {
   // Custom meta tags from docsJson.seo.metatags
   const customMetaTags = docsJson?.seo?.metatags
     ? Object.entries(docsJson.seo.metatags).map(([name, content]) => ({
-        name,
-        content,
-      }))
+      name,
+      content,
+    }))
     : []
 
   return [
@@ -123,38 +123,38 @@ export function meta({ data, matches }: Route.MetaArgs): any {
     ...customMetaTags,
     ...(og
       ? [
-          { property: 'og:image', content: og },
-          { name: 'twitter:card', content: 'summary_large_image' },
-          { name: 'twitter:image', content: og },
-        ]
+        { property: 'og:image', content: og },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:image', content: og },
+      ]
       : []),
     ...(favicon
       ? [
-          {
-            rel: 'icon',
-            href: favicon,
-            media: '(prefers-color-scheme: light)',
-          },
-          {
-            rel: 'apple-touch-icon',
-            href: favicon,
-            media: '(prefers-color-scheme: light)',
-          },
-        ]
+        {
+          rel: 'icon',
+          href: favicon,
+          media: '(prefers-color-scheme: light)',
+        },
+        {
+          rel: 'apple-touch-icon',
+          href: favicon,
+          media: '(prefers-color-scheme: light)',
+        },
+      ]
       : []),
     ...(faviconDark
       ? [
-          {
-            rel: 'icon',
-            href: faviconDark,
-            media: '(prefers-color-scheme: dark)',
-          },
-          {
-            rel: 'apple-touch-icon',
-            href: faviconDark,
-            media: '(prefers-color-scheme: dark)',
-          },
-        ]
+        {
+          rel: 'icon',
+          href: faviconDark,
+          media: '(prefers-color-scheme: dark)',
+        },
+        {
+          rel: 'apple-touch-icon',
+          href: faviconDark,
+          media: '(prefers-color-scheme: dark)',
+        },
+      ]
       : []),
   ].filter(Boolean)
 }
@@ -280,6 +280,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     filesInDraft,
     docsJson: siteBranch.docsJson,
   })
+  if (docsJson && files.length <= 1) {
+    docsJson.hideSidebar = true
+  }
 
   const fumadocsPage = source.getPage(slugs, locale)
 

@@ -162,9 +162,7 @@ export async function* assetsFromFilesList({
 
   // Now yield docs json if provided
   if (docsJson !== undefined) {
-    if (docsJson.hideSidebar !== false && files.length === 1) {
-      docsJson.hideSidebar = true
-    }
+
     let content: string
     if (typeof docsJson === 'string') {
       content = docsJson

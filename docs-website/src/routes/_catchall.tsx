@@ -145,6 +145,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     docsJson: siteBranch.docsJson,
   })
 
+  if (docsJson && files.length <= 1) {
+    docsJson.hideSidebar = true
+  }
+
   // Check signal before processing banner
   if (request.signal.aborted) {
     throw new Error('Request aborted')
