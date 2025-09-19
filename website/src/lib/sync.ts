@@ -983,7 +983,16 @@ export async function syncSite({
         // Only invalidate if zone ID is not empty
         console.log(`Invalidating cache for zone ${zoneId} (domains: ${domains.join(', ')})`)
         const cloudflareClient = new CloudflareClient({ zoneId })
-        await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
+        try {
+          await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
+        } catch (error: any) {
+          // Ignore 429 rate limit errors from Cloudflare
+          if (error?.message && error.message.includes('429')) {
+            console.log(`Ignoring 429 rate limit error for cache invalidation in zone ${zoneId}`)
+          } else {
+            throw error
+          }
+        }
       }
     }
   }
