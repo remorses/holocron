@@ -20,8 +20,10 @@ import { getFilesForSource, removeGithubFolder } from '../lib/source.server'
 import { ClientPage, ClientErrorBoundary } from './_catchall-$-client'
 import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 import { FilesInDraft } from '../lib/docs-state'
-import { getDocsJson, withBasePath } from '../lib/utils'
+import { getDocsJson, withBasePath, withoutBasePath } from '../lib/utils'
 import { getHost } from '../lib/get-host'
+import { serveRawMarkdown } from '../lib/serve-raw-markdown.server'
+import { imageLoader } from '../lib/image-loader'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
@@ -159,7 +161,65 @@ export function meta({ data, matches }: Route.MetaArgs): any {
   ].filter(Boolean)
 }
 
+const mediaExtensions = [
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'svg',
+  'ico',
+  'mp4',
+  'webm',
+  'mov',
+  'avi',
+  'mp3',
+  'wav',
+  'ogg',
+  'pdf',
+  'doc',
+  'docx',
+  'zip',
+]
+
 export async function loader({ params, request }: Route.LoaderArgs) {
+  const url = new URL(request.url)
+  const path = withoutBasePath(url.pathname)
+  const host = url.hostname
+
+  // Handle raw markdown files
+  if (path.endsWith('.md') || path.endsWith('.mdx')) {
+    const showLineNumbers =
+      url.searchParams.get('showLineNumbers') != null && url.searchParams.get('showLineNumbers') !== 'false'
+    const startLine = url.searchParams.get('startLine') ? parseInt(url.searchParams.get('startLine')!, 10) : undefined
+    const endLine = url.searchParams.get('endLine') ? parseInt(url.searchParams.get('endLine')!, 10) : undefined
+
+    const result = await serveRawMarkdown({
+      domain: host,
+      path,
+      showLineNumbers,
+      startLine,
+      endLine,
+    })
+
+    if (result != null) {
+      return new Response(result.markdown, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'public, max-age=300, s-maxage=300',
+          'Cache-Tag': result.cacheTag,
+        },
+      })
+    }
+  }
+
+  // Handle media assets
+  const hasMediaExtension = mediaExtensions.some((ext) => path.endsWith('.' + ext))
+  if (hasMediaExtension) {
+    return await imageLoader({ request })
+  }
+
   const timerId = `loader-${Math.random().toString(36).substr(2, 9)}`
   console.time(`${timerId} - total loader time`)
 
@@ -168,7 +228,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     throw new Error('Request aborted')
   }
 
-  const url = new URL(request.url)
   const domain = getHost(request)
   let headers = {} as Record<string, string>
 

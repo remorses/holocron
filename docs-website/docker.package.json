@@ -3,10 +3,10 @@
   "scripts": {},
   "dependencies": {
     "@lancedb/lancedb": "^0.21.2",
-    "@prisma/client": "^6.14.0",
+    "@prisma/client": "^6.15.0",
     "@sentry/node": "^9.28.1",
     "json-schema-library": "^10.1.2",
     "pg": "^8.13.1",
-    "shiki": "^3.11.0"
+    "shiki": "^3.12.2"
   }
 }
