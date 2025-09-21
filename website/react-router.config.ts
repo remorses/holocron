@@ -6,7 +6,7 @@ export default {
   future: {
     // unstable_viteEnvironmentApi: true,
     unstable_optimizeDeps: true,
-    unstable_middleware: true,
+    middleware: true,
   },
   serverBuildFile: '[name].js',
 } satisfies Config

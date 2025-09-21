@@ -22,7 +22,7 @@ export function meta() {
   ]
 }
 
-const redirectMiddleware: Route.unstable_MiddlewareFunction = async ({ request }, next) => {
+const redirectMiddleware: Route.MiddlewareFunction = async ({ request }, next) => {
   const url = new URL(request.url)
 
   const host = url.hostname
@@ -32,7 +32,7 @@ const redirectMiddleware: Route.unstable_MiddlewareFunction = async ({ request }
   return next()
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [redirectMiddleware]
+export const middleware: Route.MiddlewareFunction[] = [redirectMiddleware]
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
