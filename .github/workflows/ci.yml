@@ -18,6 +18,7 @@ permissions:
 jobs:
     ci:
         strategy:
+            fail-fast: false
             matrix:
                 command:
                     - pnpm --filter website deployment
