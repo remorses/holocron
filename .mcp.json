@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "playwriter": {
-      "command": "npx",
-      "args": ["-y", "playwriter@latest"]
+    "framer": {
+      "type": "http",
+      "url": "https://mcp.unframer.co/mcp"
     }
   }
 }
