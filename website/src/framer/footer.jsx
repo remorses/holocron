@@ -23,18 +23,18 @@
 }} Props
 
  */
-import { stdin_default } from "./chunks/chunk-FWELEOPG.js";
 import {
 	className as className3,
 	css as css3,
 	fonts as fonts3,
 } from "./chunks/chunk-M65DCHB6.js";
-import { className, css, fonts } from "./chunks/chunk-6G2SY433.js";
+import { stdin_default } from "./chunks/chunk-FWELEOPG.js";
 import {
 	className as className2,
 	css as css2,
 	fonts as fonts2,
-} from "./chunks/chunk-EWWPQ2JC.js";
+} from "./chunks/chunk-6G2SY433.js";
+import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 
 // virtual:footer
@@ -295,7 +295,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		variantClassNames,
 	});
 	const layoutDependency = createLayoutDependency(props, variants);
-	const sharedStyleClassNames = [className, className3, className4, className2];
+	const sharedStyleClassNames = [className2, className3, className4, className];
 	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
 	const isDisplayed = () => {
 		if (baseVariant === "GlazZkpnx") return false;
@@ -910,10 +910,10 @@ var css5 = [
 	".framer-8fDd2.framer-v-w0wp92 .framer-9ihyxa { align-content: center; align-items: center; flex: none; width: 100%; }",
 	".framer-8fDd2.framer-v-w0wp92 .framer-1jcf308 { order: 1; }",
 	".framer-8fDd2.framer-v-w0wp92 .framer-h6zbgu { order: 2; }",
-	...css,
+	...css2,
 	...css3,
 	...css4,
-	...css2,
+	...css,
 ];
 var FramerZxU1ZqLuB = withCSS(Component, css5, "framer-8fDd2");
 var stdin_default2 = FramerZxU1ZqLuB;
@@ -1000,10 +1000,10 @@ addFonts(
 		},
 		...LogoIconFonts,
 		...AutoYearCopyrightFonts,
-		...getFontsFromSharedStyle(fonts),
+		...getFontsFromSharedStyle(fonts2),
 		...getFontsFromSharedStyle(fonts3),
 		...getFontsFromSharedStyle(fonts4),
-		...getFontsFromSharedStyle(fonts2),
+		...getFontsFromSharedStyle(fonts),
 	],
 	{
 		supportsExplicitInterCodegen: true,

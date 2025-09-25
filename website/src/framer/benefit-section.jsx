@@ -23,52 +23,19 @@
 }} Props
 
  */
-import {
-	className as className3,
-	css as css3,
-	fonts as fonts3,
-} from "./chunks/chunk-QAV64ZEM.js";
-import { Icon } from "./chunks/chunk-BTSBQWPZ.js";
-import {
-	className as className2,
-	css as css2,
-	fonts as fonts2,
-} from "./chunks/chunk-EWWPQ2JC.js";
 import { className, css, fonts } from "./chunks/chunk-KYATNZPG.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-CQZGE527.js";
+import "./chunks/chunk-QAV64ZEM.js";
+import "./chunks/chunk-BTSBQWPZ.js";
+import "./chunks/chunk-EWWPQ2JC.js";
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 
 // virtual:benefit-section
-import { Fragment as Fragment3 } from "react";
+import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
 // /:https://framerusercontent.com/modules/jXKnJfWfJ6CmOI4Pa51Y/NvgLJU8FZhLIkCYBr1MF/uSzRf2WyT.js
-import { jsx as _jsx2, jsxs as _jsxs2 } from "react/jsx-runtime";
-import {
-	addFonts as addFonts2,
-	addPropertyControls as addPropertyControls2,
-	ComponentViewportProvider as ComponentViewportProvider2,
-	ControlType as ControlType2,
-	cx as cx2,
-	getFonts as getFonts2,
-	getFontsFromSharedStyle as getFontsFromSharedStyle2,
-	RichText as RichText2,
-	SmartComponentScopedContainer as SmartComponentScopedContainer2,
-	useComponentViewport as useComponentViewport2,
-	useLocaleInfo as useLocaleInfo2,
-	useVariantState as useVariantState2,
-	withCSS as withCSS2,
-	withFX,
-} from "unframer";
-import {
-	LayoutGroup as LayoutGroup2,
-	motion as motion2,
-	MotionConfigContext as MotionConfigContext2,
-} from "unframer";
-import * as React2 from "react";
-import { useRef as useRef2 } from "react";
-
-// /:https://framerusercontent.com/modules/k400dSHEmbyhufufEx6F/9phOwQvd5VBcOQXd2VFv/UjciXny12.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -78,24 +45,28 @@ import {
 	cx,
 	getFonts,
 	getFontsFromSharedStyle,
-	getPropertyControls,
 	RichText,
 	SmartComponentScopedContainer,
 	useComponentViewport,
 	useLocaleInfo,
 	useVariantState,
 	withCSS,
+	withFX,
 } from "unframer";
 import { LayoutGroup, motion, MotionConfigContext } from "unframer";
 import * as React from "react";
 import { useRef } from "react";
-var PhosphorFonts = getFonts(Icon);
-var PhosphorControls = getPropertyControls(Icon);
-var cycleOrder = ["i0XLBMf50", "a_iN9wuzB"];
-var serializationHash = "framer-68ceF";
+var RichTextWithFX = withFX(RichText);
+var MotionDivWithFX = withFX(motion.div);
+var BenefitCardFonts = getFonts(stdin_default2);
+var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
+var GridFonts = getFonts(stdin_default);
+var cycleOrder = ["zISvybPEk", "C_ZZDts2y", "GFIhwxsh9"];
+var serializationHash = "framer-mqaZS";
 var variantClassNames = {
-	a_iN9wuzB: "framer-v-1rych2v",
-	i0XLBMf50: "framer-v-170e50z",
+	C_ZZDts2y: "framer-v-tvkrgq",
+	GFIhwxsh9: "framer-v-hh5j7x",
+	zISvybPEk: "framer-v-1vlqip2",
 };
 function addPropertyOverrides(overrides, ...variants) {
 	const nextOverrides = {};
@@ -105,404 +76,6 @@ function addPropertyOverrides(overrides, ...variants) {
 	return nextOverrides;
 }
 var transition1 = {
-	bounce: 0,
-	delay: 0,
-	duration: 0.3,
-	type: "spring",
-};
-var Transition = ({ value, children }) => {
-	const config = React.useContext(MotionConfigContext);
-	const transition = value ?? config.transition;
-	const contextValue = React.useMemo(
-		() => ({
-			...config,
-			transition,
-		}),
-		[JSON.stringify(transition)],
-	);
-	return (
-		<MotionConfigContext.Provider value={contextValue}>
-			{children}
-		</MotionConfigContext.Provider>
-	);
-};
-var Variants = motion.create(React.Fragment);
-var humanReadableVariantMap = {
-	Desktop: "i0XLBMf50",
-	Phone: "a_iN9wuzB",
-};
-var getProps = ({ content, height, icon, id, title, width, ...props }) => {
-	return {
-		...props,
-		e2KlnzxYz: title ?? props.e2KlnzxYz ?? "Future-Forward Solutions",
-		Ec4tMUtI0:
-			content ??
-			props.Ec4tMUtI0 ??
-			"Our Web3 fintech simplifies complex finance for all to access.",
-		QT_GTeY8Q: icon ?? props.QT_GTeY8Q ?? "House",
-		variant:
-			humanReadableVariantMap[props.variant] ?? props.variant ?? "i0XLBMf50",
-	};
-};
-var createLayoutDependency = (props, variants) => {
-	if (props.layoutDependency)
-		return variants.join("-") + props.layoutDependency;
-	return variants.join("-");
-};
-var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-	const fallbackRef = useRef(null);
-	const refBinding = ref ?? fallbackRef;
-	const defaultLayoutId = React.useId();
-	const { activeLocale, setLocale } = useLocaleInfo();
-	const componentViewport = useComponentViewport();
-	const {
-		style,
-		className: className4,
-		layoutId,
-		variant,
-		e2KlnzxYz,
-		Ec4tMUtI0,
-		QT_GTeY8Q,
-		...restProps
-	} = getProps(props);
-	const {
-		baseVariant,
-		classNames,
-		clearLoadingGesture,
-		gestureHandlers,
-		gestureVariant,
-		isLoading,
-		setGestureState,
-		setVariant,
-		variants,
-	} = useVariantState({
-		cycleOrder,
-		defaultVariant: "i0XLBMf50",
-		ref: refBinding,
-		variant,
-		variantClassNames,
-	});
-	const layoutDependency = createLayoutDependency(props, variants);
-	const sharedStyleClassNames = [className3, className2];
-	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
-	return (
-		<LayoutGroup id={layoutId ?? defaultLayoutId}>
-			<Variants animate={variants} initial={false}>
-				<Transition value={transition1}>
-					<motion.div
-						{...restProps}
-						{...gestureHandlers}
-						className={cx(
-							scopingClassNames,
-							"framer-170e50z",
-							className4,
-							classNames,
-						)}
-						data-border={true}
-						data-framer-name={"Desktop"}
-						layoutDependency={layoutDependency}
-						layoutId={"i0XLBMf50"}
-						ref={refBinding}
-						style={{
-							"--border-bottom-width": "1px",
-							"--border-color":
-								"var(--token-f799a2df-306e-498f-bee9-a5591c59bc52, rgba(112, 69, 54, 0.7))",
-							"--border-left-width": "1px",
-							"--border-right-width": "1px",
-							"--border-style": "solid",
-							"--border-top-width": "1px",
-							backdropFilter: "blur(5px)",
-							background:
-								"linear-gradient(180deg, var(--token-b9018599-27d5-4611-a33e-8b2f64661ff4, rgb(28, 28, 28)) 15%, var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19)) 131%)",
-							borderBottomLeftRadius: 10,
-							borderBottomRightRadius: 10,
-							borderTopLeftRadius: 10,
-							borderTopRightRadius: 10,
-							WebkitBackdropFilter: "blur(5px)",
-							...style,
-						}}
-						variants={{
-							a_iN9wuzB: {
-								backdropFilter: "none",
-								WebkitBackdropFilter: "none",
-							},
-						}}
-						{...addPropertyOverrides(
-							{
-								a_iN9wuzB: {
-									"data-framer-name": "Phone",
-								},
-							},
-							baseVariant,
-							gestureVariant,
-						)}
-					>
-						<motion.div
-							className={"framer-j9385y"}
-							data-framer-name={"Container"}
-							layoutDependency={layoutDependency}
-							layoutId={"JAwKIMVvN"}
-						>
-							<motion.div
-								className={"framer-y4c7xv"}
-								data-framer-name={"Icon"}
-								layoutDependency={layoutDependency}
-								layoutId={"SZCgdSYUv"}
-								style={{
-									backgroundColor:
-										"var(--token-298b4add-111d-4ff0-82fc-7d5e99a4405b, rgb(204, 61, 0))",
-									borderBottomLeftRadius: 8,
-									borderBottomRightRadius: 8,
-									borderTopLeftRadius: 8,
-									borderTopRightRadius: 8,
-								}}
-							>
-								<ComponentViewportProvider>
-									<SmartComponentScopedContainer
-										className={"framer-1uyhvyc-container"}
-										isAuthoredByUser={true}
-										isModuleExternal={true}
-										layoutDependency={layoutDependency}
-										layoutId={"bTwR7NnKu-container"}
-										nodeId={"bTwR7NnKu"}
-										rendersWithMotion={true}
-										scopeId={"UjciXny12"}
-									>
-										<Icon
-											color={
-												"var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))"
-											}
-											height={"100%"}
-											iconSearch={"House"}
-											iconSelection={QT_GTeY8Q}
-											id={"bTwR7NnKu"}
-											layoutId={"bTwR7NnKu"}
-											mirrored={false}
-											selectByList={true}
-											style={{
-												height: "100%",
-												width: "100%",
-											}}
-											weight={"bold"}
-											width={"100%"}
-										/>
-									</SmartComponentScopedContainer>
-								</ComponentViewportProvider>
-							</motion.div>
-							<motion.div
-								className={"framer-1mncmvr"}
-								data-framer-name={"Cotent"}
-								layoutDependency={layoutDependency}
-								layoutId={"zauQ3Ed6o"}
-							>
-								<RichText
-									__fromCanvasComponent={true}
-									className={"framer-5v7ri0"}
-									data-framer-name={"Future-Forward Solutions"}
-									fonts={["Inter"]}
-									layoutDependency={layoutDependency}
-									layoutId={"AxSEM4qqn"}
-									style={{
-										"--framer-paragraph-spacing": "0px",
-									}}
-									text={e2KlnzxYz}
-									verticalAlignment={"top"}
-									withExternalLayout={true}
-								>
-									<React.Fragment>
-										<motion.h5
-											className={"framer-styles-preset-b7mi5l"}
-											data-styles-preset={"cq4N7Obrm"}
-										>
-											{"Next-Generation Database"}
-										</motion.h5>
-									</React.Fragment>
-								</RichText>
-								<RichText
-									__fromCanvasComponent={true}
-									className={"framer-exvd1y"}
-									data-framer-name={
-										"Our Web3 fintech simplifies complex finance for all to access."
-									}
-									fonts={["Inter"]}
-									layoutDependency={layoutDependency}
-									layoutId={"ekVHDLtNw"}
-									style={{
-										"--framer-paragraph-spacing": "0px",
-										opacity: 0.8,
-									}}
-									text={Ec4tMUtI0}
-									verticalAlignment={"top"}
-									withExternalLayout={true}
-								>
-									<React.Fragment>
-										<motion.p
-											className={"framer-styles-preset-1x4srpb"}
-											data-styles-preset={"WGktsHNSh"}
-										>
-											{
-												"holocron empowers developers to build scalable, secure apps with ease."
-											}
-										</motion.p>
-									</React.Fragment>
-								</RichText>
-							</motion.div>
-						</motion.div>
-					</motion.div>
-				</Transition>
-			</Variants>
-		</LayoutGroup>
-	);
-});
-var css4 = [
-	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-68ceF.framer-y2xqsx, .framer-68ceF .framer-y2xqsx { display: block; }",
-	".framer-68ceF.framer-170e50z { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 170px; justify-content: flex-start; overflow: hidden; padding: 25px; position: relative; width: 360px; will-change: var(--framer-will-change-override, transform); }",
-	".framer-68ceF .framer-j9385y { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 16px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-68ceF .framer-y4c7xv { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: hidden; padding: 9px; position: relative; width: min-content; will-change: var(--framer-will-change-override, transform); }",
-	".framer-68ceF .framer-1uyhvyc-container { flex: none; height: 18px; position: relative; width: 18px; }",
-	".framer-68ceF .framer-1mncmvr { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 0px; position: relative; width: 100%; }",
-	".framer-68ceF .framer-5v7ri0, .framer-68ceF .framer-exvd1y { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
-	".framer-68ceF.framer-v-1rych2v .framer-j9385y { order: 0; }",
-	...css3,
-	...css2,
-	'.framer-68ceF[data-border="true"]::after, .framer-68ceF [data-border="true"]::after { content: ""; border-width: var(--border-top-width, 0) var(--border-right-width, 0) var(--border-bottom-width, 0) var(--border-left-width, 0); border-color: var(--border-color, none); border-style: var(--border-style, none); width: 100%; height: 100%; position: absolute; box-sizing: border-box; left: 0; top: 0; border-radius: inherit; pointer-events: none; }',
-];
-var FramerUjciXny12 = withCSS(Component, css4, "framer-68ceF");
-var stdin_default2 = FramerUjciXny12;
-FramerUjciXny12.displayName = "Benefit Card";
-FramerUjciXny12.defaultProps = {
-	height: 170,
-	width: 360,
-};
-addPropertyControls(FramerUjciXny12, {
-	variant: {
-		options: ["i0XLBMf50", "a_iN9wuzB"],
-		optionTitles: ["Desktop", "Phone"],
-		title: "Variant",
-		type: ControlType.Enum,
-	},
-	e2KlnzxYz: {
-		defaultValue: "Future-Forward Solutions",
-		displayTextArea: false,
-		title: "Title",
-		type: ControlType.String,
-	},
-	Ec4tMUtI0: {
-		defaultValue:
-			"Our Web3 fintech simplifies complex finance for all to access.",
-		displayTextArea: false,
-		title: "Content",
-		type: ControlType.String,
-	},
-	QT_GTeY8Q: PhosphorControls?.["iconSelection"] && {
-		...PhosphorControls["iconSelection"],
-		defaultValue: "House",
-		description: void 0,
-		hidden: void 0,
-		title: "Icon",
-	},
-});
-addFonts(
-	FramerUjciXny12,
-	[
-		{
-			explicitInter: true,
-			fonts: [
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F",
-					url: "https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
-					url: "https://framerusercontent.com/assets/EOr0mi4hNtlgWNn9if640EZzXCo.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+1F00-1FFF",
-					url: "https://framerusercontent.com/assets/Y9k9QrlZAqio88Klkmbd8VoMQc.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+0370-03FF",
-					url: "https://framerusercontent.com/assets/OYrD2tBIBPvoJXiIHnLoOXnY9M.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF",
-					url: "https://framerusercontent.com/assets/JeYwfuaPfZHQhEG8U5gtPDZ7WQ.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB",
-					url: "https://framerusercontent.com/assets/b6Y37FthZeALduNqHicBT6FutY.woff2",
-					weight: "400",
-				},
-			],
-		},
-		...PhosphorFonts,
-		...getFontsFromSharedStyle(fonts3),
-		...getFontsFromSharedStyle(fonts2),
-	],
-	{
-		supportsExplicitInterCodegen: true,
-	},
-);
-
-// /:https://framerusercontent.com/modules/jXKnJfWfJ6CmOI4Pa51Y/NvgLJU8FZhLIkCYBr1MF/uSzRf2WyT.js
-var RichTextWithFX = withFX(RichText2);
-var MotionDivWithFX = withFX(motion2.div);
-var BenefitCardFonts = getFonts2(stdin_default2);
-var SmartComponentScopedContainerWithFX = withFX(
-	SmartComponentScopedContainer2,
-);
-var GridFonts = getFonts2(stdin_default);
-var cycleOrder2 = ["zISvybPEk", "C_ZZDts2y", "GFIhwxsh9"];
-var serializationHash2 = "framer-mqaZS";
-var variantClassNames2 = {
-	C_ZZDts2y: "framer-v-tvkrgq",
-	GFIhwxsh9: "framer-v-hh5j7x",
-	zISvybPEk: "framer-v-1vlqip2",
-};
-function addPropertyOverrides2(overrides, ...variants) {
-	const nextOverrides = {};
-	variants?.forEach(
-		(variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-	);
-	return nextOverrides;
-}
-var transition12 = {
 	bounce: 0.2,
 	delay: 0,
 	duration: 0.4,
@@ -588,10 +161,10 @@ var transition7 = {
 	duration: 0.8,
 	type: "spring",
 };
-var Transition2 = ({ value, children }) => {
-	const config = React2.useContext(MotionConfigContext2);
+var Transition = ({ value, children }) => {
+	const config = React.useContext(MotionConfigContext);
 	const transition = value ?? config.transition;
-	const contextValue = React2.useMemo(
+	const contextValue = React.useMemo(
 		() => ({
 			...config,
 			transition,
@@ -599,42 +172,42 @@ var Transition2 = ({ value, children }) => {
 		[JSON.stringify(transition)],
 	);
 	return (
-		<MotionConfigContext2.Provider value={contextValue}>
+		<MotionConfigContext.Provider value={contextValue}>
 			{children}
-		</MotionConfigContext2.Provider>
+		</MotionConfigContext.Provider>
 	);
 };
-var Variants2 = motion2.create(React2.Fragment);
-var humanReadableVariantMap2 = {
+var Variants = motion.create(React.Fragment);
+var humanReadableVariantMap = {
 	Desktop: "zISvybPEk",
 	Phone: "GFIhwxsh9",
 	Tablet: "C_ZZDts2y",
 };
-var getProps2 = ({ height, id, width, ...props }) => {
+var getProps = ({ height, id, width, ...props }) => {
 	return {
 		...props,
 		variant:
-			humanReadableVariantMap2[props.variant] ?? props.variant ?? "zISvybPEk",
+			humanReadableVariantMap[props.variant] ?? props.variant ?? "zISvybPEk",
 	};
 };
-var createLayoutDependency2 = (props, variants) => {
+var createLayoutDependency = (props, variants) => {
 	if (props.layoutDependency)
 		return variants.join("-") + props.layoutDependency;
 	return variants.join("-");
 };
-var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
-	const fallbackRef = useRef2(null);
+var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
+	const fallbackRef = useRef(null);
 	const refBinding = ref ?? fallbackRef;
-	const defaultLayoutId = React2.useId();
-	const { activeLocale, setLocale } = useLocaleInfo2();
-	const componentViewport = useComponentViewport2();
+	const defaultLayoutId = React.useId();
+	const { activeLocale, setLocale } = useLocaleInfo();
+	const componentViewport = useComponentViewport();
 	const {
 		style,
-		className: className4,
+		className: className2,
 		layoutId,
 		variant,
 		...restProps
-	} = getProps2(props);
+	} = getProps(props);
 	const {
 		baseVariant,
 		classNames,
@@ -645,27 +218,27 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 		setGestureState,
 		setVariant,
 		variants,
-	} = useVariantState2({
-		cycleOrder: cycleOrder2,
+	} = useVariantState({
+		cycleOrder,
 		defaultVariant: "zISvybPEk",
 		ref: refBinding,
 		variant,
-		variantClassNames: variantClassNames2,
+		variantClassNames,
 	});
-	const layoutDependency = createLayoutDependency2(props, variants);
+	const layoutDependency = createLayoutDependency(props, variants);
 	const sharedStyleClassNames = [className];
-	const scopingClassNames = cx2(serializationHash2, ...sharedStyleClassNames);
+	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
 	return (
-		<LayoutGroup2 id={layoutId ?? defaultLayoutId}>
-			<Variants2 animate={variants} initial={false}>
-				<Transition2 value={transition12}>
-					<motion2.section
+		<LayoutGroup id={layoutId ?? defaultLayoutId}>
+			<Variants animate={variants} initial={false}>
+				<Transition value={transition1}>
+					<motion.section
 						{...restProps}
 						{...gestureHandlers}
-						className={cx2(
+						className={cx(
 							scopingClassNames,
 							"framer-1vlqip2",
-							className4,
+							className2,
 							classNames,
 						)}
 						data-framer-name={"Desktop"}
@@ -687,7 +260,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 								borderTopRightRadius: 0,
 							},
 						}}
-						{...addPropertyOverrides2(
+						{...addPropertyOverrides(
 							{
 								C_ZZDts2y: {
 									"data-framer-name": "Tablet",
@@ -700,19 +273,19 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 							gestureVariant,
 						)}
 					>
-						<motion2.div
+						<motion.div
 							className={"framer-uzoqzu"}
 							data-framer-name={"Container"}
 							layoutDependency={layoutDependency}
 							layoutId={"asWySC6Qt"}
 						>
-							<motion2.div
+							<motion.div
 								className={"framer-10uv332"}
 								data-framer-name={"Heading Content"}
 								layoutDependency={layoutDependency}
 								layoutId={"c2w02LtMV"}
 							>
-								<motion2.div
+								<motion.div
 									className={"framer-1xv11j0"}
 									data-framer-name={"Container"}
 									layoutDependency={layoutDependency}
@@ -723,7 +296,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										data-framer-name={"Heading"}
 										layoutDependency={layoutDependency}
 										layoutId={"QXx4FogCB"}
-										{...addPropertyOverrides2(
+										{...addPropertyOverrides(
 											{
 												GFIhwxsh9: {
 													__framer__animate: {
@@ -764,7 +337,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											}}
 											verticalAlignment={"top"}
 											withExternalLayout={true}
-											{...addPropertyOverrides2(
+											{...addPropertyOverrides(
 												{
 													GFIhwxsh9: {
 														__framer__styleAppearEffectEnabled: void 0,
@@ -774,8 +347,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												gestureVariant,
 											)}
 										>
-											<React2.Fragment>
-												<motion2.h2
+											<React.Fragment>
+												<motion.h2
 													className={"framer-styles-preset-163xgy6"}
 													data-styles-preset={"EEpMe6lZZ"}
 													style={{
@@ -783,19 +356,19 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													}}
 												>
 													{"Unlock Knowledge. Build Smarter with holocron"}
-												</motion2.h2>
-											</React2.Fragment>
+												</motion.h2>
+											</React.Fragment>
 										</RichTextWithFX>
 									</MotionDivWithFX>
-								</motion2.div>
-							</motion2.div>
-							<motion2.div
+								</motion.div>
+							</motion.div>
+							<motion.div
 								className={"framer-11cgjwm"}
 								data-framer-name={"Card"}
 								layoutDependency={layoutDependency}
 								layoutId={"mDudIZrfg"}
 							>
-								<ComponentViewportProvider2
+								<ComponentViewportProvider
 									height={170}
 									width={`max((min(${componentViewport?.width || "100vw"} - 200px, 1100px) - 30px) / 3, 50px)`}
 									y={
@@ -809,7 +382,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										0 +
 										0
 									}
-									{...addPropertyOverrides2(
+									{...addPropertyOverrides(
 										{
 											C_ZZDts2y: {
 												width: `max((min(min(${componentViewport?.width || "100vw"} - 80px, 1100px), 810px) - 15px) / 2, 50px)`,
@@ -861,7 +434,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										nodeId={"NjrcSoQxz"}
 										rendersWithMotion={true}
 										scopeId={"uSzRf2WyT"}
-										{...addPropertyOverrides2(
+										{...addPropertyOverrides(
 											{
 												GFIhwxsh9: {
 													__framer__enter: animation,
@@ -871,7 +444,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										{_jsx2(stdin_default2, {
+										{_jsx(stdin_default2, {
 											e2KlnzxYz: "Instant Data Access",
 											Ec4tMUtI0:
 												"Fetch and update your data in milliseconds with our modern API.",
@@ -884,7 +457,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											},
 											variant: "i0XLBMf50",
 											width: "100%",
-											...addPropertyOverrides2(
+											...addPropertyOverrides(
 												{
 													C_ZZDts2y: {
 														e2KlnzxYz: "Real-Time Insights",
@@ -897,8 +470,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											),
 										})}
 									</SmartComponentScopedContainerWithFX>
-								</ComponentViewportProvider2>
-								<ComponentViewportProvider2
+								</ComponentViewportProvider>
+								<ComponentViewportProvider
 									height={170}
 									width={`max((min(${componentViewport?.width || "100vw"} - 200px, 1100px) - 30px) / 3, 50px)`}
 									y={
@@ -912,7 +485,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										0 +
 										0
 									}
-									{...addPropertyOverrides2(
+									{...addPropertyOverrides(
 										{
 											C_ZZDts2y: {
 												width: `max((min(min(${componentViewport?.width || "100vw"} - 80px, 1100px), 810px) - 15px) / 2, 50px)`,
@@ -964,7 +537,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										nodeId={"rwuszWyOa"}
 										rendersWithMotion={true}
 										scopeId={"uSzRf2WyT"}
-										{...addPropertyOverrides2(
+										{...addPropertyOverrides(
 											{
 												GFIhwxsh9: {
 													__framer__animate: {
@@ -977,7 +550,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										{_jsx2(stdin_default2, {
+										{_jsx(stdin_default2, {
 											e2KlnzxYz: "Seamless Integration",
 											Ec4tMUtI0:
 												"Connect holocron to your favorite tools and frameworks with ease.",
@@ -992,8 +565,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											width: "100%",
 										})}
 									</SmartComponentScopedContainerWithFX>
-								</ComponentViewportProvider2>
-								<ComponentViewportProvider2
+								</ComponentViewportProvider>
+								<ComponentViewportProvider
 									height={170}
 									width={`max((min(${componentViewport?.width || "100vw"} - 200px, 1100px) - 30px) / 3, 50px)`}
 									y={
@@ -1007,7 +580,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										0 +
 										0
 									}
-									{...addPropertyOverrides2(
+									{...addPropertyOverrides(
 										{
 											C_ZZDts2y: {
 												width: `max((min(min(${componentViewport?.width || "100vw"} - 80px, 1100px), 810px) - 15px) / 2, 50px)`,
@@ -1059,7 +632,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										nodeId={"iGG3ubzmv"}
 										rendersWithMotion={true}
 										scopeId={"uSzRf2WyT"}
-										{...addPropertyOverrides2(
+										{...addPropertyOverrides(
 											{
 												GFIhwxsh9: {
 													__framer__animate: {
@@ -1072,7 +645,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										{_jsx2(stdin_default2, {
+										{_jsx(stdin_default2, {
 											e2KlnzxYz: "Secure by Design",
 											Ec4tMUtI0:
 												"Your data is encrypted and protected with enterprise-grade security.",
@@ -1087,8 +660,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											width: "100%",
 										})}
 									</SmartComponentScopedContainerWithFX>
-								</ComponentViewportProvider2>
-								<ComponentViewportProvider2
+								</ComponentViewportProvider>
+								<ComponentViewportProvider
 									height={170}
 									width={`max((min(${componentViewport?.width || "100vw"} - 200px, 1100px) - 30px) / 3, 50px)`}
 									y={
@@ -1102,7 +675,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										0 +
 										185
 									}
-									{...addPropertyOverrides2(
+									{...addPropertyOverrides(
 										{
 											C_ZZDts2y: {
 												width: `max((min(min(${componentViewport?.width || "100vw"} - 80px, 1100px), 810px) - 15px) / 2, 50px)`,
@@ -1154,7 +727,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										nodeId={"bW_HOgte1"}
 										rendersWithMotion={true}
 										scopeId={"uSzRf2WyT"}
-										{...addPropertyOverrides2(
+										{...addPropertyOverrides(
 											{
 												GFIhwxsh9: {
 													__framer__animate: {
@@ -1167,7 +740,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										{_jsx2(stdin_default2, {
+										{_jsx(stdin_default2, {
 											e2KlnzxYz: "Scalable Infrastructure",
 											Ec4tMUtI0:
 												"Grow from prototype to production without worrying about capacity.",
@@ -1182,8 +755,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											width: "100%",
 										})}
 									</SmartComponentScopedContainerWithFX>
-								</ComponentViewportProvider2>
-								<ComponentViewportProvider2
+								</ComponentViewportProvider>
+								<ComponentViewportProvider
 									height={170}
 									width={`max((min(${componentViewport?.width || "100vw"} - 200px, 1100px) - 30px) / 3, 50px)`}
 									y={
@@ -1197,7 +770,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										0 +
 										185
 									}
-									{...addPropertyOverrides2(
+									{...addPropertyOverrides(
 										{
 											C_ZZDts2y: {
 												width: `max((min(min(${componentViewport?.width || "100vw"} - 80px, 1100px), 810px) - 15px) / 2, 50px)`,
@@ -1249,7 +822,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										nodeId={"QMCfI5Sdn"}
 										rendersWithMotion={true}
 										scopeId={"uSzRf2WyT"}
-										{...addPropertyOverrides2(
+										{...addPropertyOverrides(
 											{
 												GFIhwxsh9: {
 													__framer__animate: {
@@ -1262,7 +835,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										{_jsx2(stdin_default2, {
+										{_jsx(stdin_default2, {
 											e2KlnzxYz: "Developer Friendly",
 											Ec4tMUtI0:
 												"Comprehensive docs and SDKs for a smooth development experience.",
@@ -1277,8 +850,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											width: "100%",
 										})}
 									</SmartComponentScopedContainerWithFX>
-								</ComponentViewportProvider2>
-								<ComponentViewportProvider2
+								</ComponentViewportProvider>
+								<ComponentViewportProvider
 									height={170}
 									width={`max((min(${componentViewport?.width || "100vw"} - 200px, 1100px) - 30px) / 3, 50px)`}
 									y={
@@ -1292,7 +865,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										0 +
 										185
 									}
-									{...addPropertyOverrides2(
+									{...addPropertyOverrides(
 										{
 											C_ZZDts2y: {
 												width: `max((min(min(${componentViewport?.width || "100vw"} - 80px, 1100px), 810px) - 15px) / 2, 50px)`,
@@ -1344,7 +917,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										nodeId={"Jp0PD1z46"}
 										rendersWithMotion={true}
 										scopeId={"uSzRf2WyT"}
-										{...addPropertyOverrides2(
+										{...addPropertyOverrides(
 											{
 												GFIhwxsh9: {
 													__framer__animate: {
@@ -1357,7 +930,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										{_jsx2(stdin_default2, {
+										{_jsx(stdin_default2, {
 											e2KlnzxYz: "Real-Time Sync",
 											Ec4tMUtI0:
 												"Keep your apps up-to-date with instant data synchronization.",
@@ -1372,16 +945,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											width: "100%",
 										})}
 									</SmartComponentScopedContainerWithFX>
-								</ComponentViewportProvider2>
-							</motion2.div>
-						</motion2.div>
-						<motion2.div
+								</ComponentViewportProvider>
+							</motion.div>
+						</motion.div>
+						<motion.div
 							className={"framer-i4a7x7"}
 							data-framer-name={"Grid"}
 							layoutDependency={layoutDependency}
 							layoutId={"WyGg344YA"}
 						>
-							<ComponentViewportProvider2
+							<ComponentViewportProvider
 								height={(componentViewport?.height || 676) * 1 * 1}
 								width={componentViewport?.width || "100vw"}
 								y={
@@ -1390,7 +963,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										((componentViewport?.height || 676) * 1) / 2) +
 									0
 								}
-								{...addPropertyOverrides2(
+								{...addPropertyOverrides(
 									{
 										C_ZZDts2y: {
 											height: (componentViewport?.height || 847) * 1 * 1,
@@ -1415,7 +988,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 									gestureVariant,
 								)}
 							>
-								<SmartComponentScopedContainer2
+								<SmartComponentScopedContainer
 									className={"framer-1wchqd9-container"}
 									layoutDependency={layoutDependency}
 									layoutId={"BMg9Y1bt_-container"}
@@ -1423,7 +996,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 									rendersWithMotion={true}
 									scopeId={"uSzRf2WyT"}
 								>
-									{_jsx2(stdin_default, {
+									{_jsx(stdin_default, {
 										height: "100%",
 										id: "BMg9Y1bt_",
 										layoutId: "BMg9Y1bt_",
@@ -1433,7 +1006,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										},
 										variant: "hdexXEO_X",
 										width: "100%",
-										...addPropertyOverrides2(
+										...addPropertyOverrides(
 											{
 												C_ZZDts2y: {
 													variant: "QYQ1r9X7u",
@@ -1446,16 +1019,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										),
 									})}
-								</SmartComponentScopedContainer2>
-							</ComponentViewportProvider2>
-						</motion2.div>
-					</motion2.section>
-				</Transition2>
-			</Variants2>
-		</LayoutGroup2>
+								</SmartComponentScopedContainer>
+							</ComponentViewportProvider>
+						</motion.div>
+					</motion.section>
+				</Transition>
+			</Variants>
+		</LayoutGroup>
 	);
 });
-var css5 = [
+var css2 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
 	".framer-mqaZS.framer-e5g54u, .framer-mqaZS .framer-e5g54u { display: block; }",
 	".framer-mqaZS.framer-1vlqip2 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 40px; height: min-content; justify-content: center; overflow: hidden; padding: 200px 100px 50px 100px; position: relative; width: 1200px; will-change: var(--framer-will-change-override, transform); }",
@@ -1478,22 +1051,22 @@ var css5 = [
 	".framer-mqaZS.framer-v-hh5j7x .framer-11cgjwm { gap: 10px; grid-template-columns: repeat(1, minmax(50px, 1fr)); max-width: 600px; }",
 	...css,
 ];
-var FrameruSzRf2WyT = withCSS2(Component2, css5, "framer-mqaZS");
+var FrameruSzRf2WyT = withCSS(Component, css2, "framer-mqaZS");
 var stdin_default3 = FrameruSzRf2WyT;
 FrameruSzRf2WyT.displayName = "Benefit Section";
 FrameruSzRf2WyT.defaultProps = {
 	height: 676,
 	width: 1200,
 };
-addPropertyControls2(FrameruSzRf2WyT, {
+addPropertyControls(FrameruSzRf2WyT, {
 	variant: {
 		options: ["zISvybPEk", "C_ZZDts2y", "GFIhwxsh9"],
 		optionTitles: ["Desktop", "Tablet", "Phone"],
 		title: "Variant",
-		type: ControlType2.Enum,
+		type: ControlType.Enum,
 	},
 });
-addFonts2(
+addFonts(
 	FrameruSzRf2WyT,
 	[
 		{
@@ -1563,7 +1136,7 @@ addFonts2(
 		},
 		...BenefitCardFonts,
 		...GridFonts,
-		...getFontsFromSharedStyle2(fonts),
+		...getFontsFromSharedStyle(fonts),
 	],
 	{
 		supportsExplicitInterCodegen: true,

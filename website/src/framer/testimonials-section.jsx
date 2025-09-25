@@ -23,484 +23,51 @@
 }} Props
 
  */
-import {
-	className as className5,
-	css as css5,
-	fonts as fonts5,
-} from "./chunks/chunk-YL4V4VZK.js";
-import { className, css, fonts } from "./chunks/chunk-6G2SY433.js";
-import {
-	className as className4,
-	css as css4,
-	fonts as fonts4,
-} from "./chunks/chunk-QAV64ZEM.js";
-import {
-	className as className3,
-	css as css3,
-	fonts as fonts3,
-} from "./chunks/chunk-EWWPQ2JC.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-5JFBU2B7.js";
 import {
 	className as className2,
 	css as css2,
 	fonts as fonts2,
 } from "./chunks/chunk-KYATNZPG.js";
+import "./chunks/chunk-QAV64ZEM.js";
+import "./chunks/chunk-6G2SY433.js";
+import "./chunks/chunk-EWWPQ2JC.js";
+import { className, css, fonts } from "./chunks/chunk-YL4V4VZK.js";
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 
 // virtual:testimonials-section
-import { Fragment as Fragment3 } from "react";
+import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
 // /:https://framerusercontent.com/modules/Mmejh8IHc5aPOSTKtYf3/S1XuLYZwC7vDqZ6Swjrx/zpIDfR7Ez.js
-import { jsx as _jsx2, jsxs as _jsxs2 } from "react/jsx-runtime";
-import {
-	addFonts as addFonts2,
-	addPropertyControls as addPropertyControls2,
-	ComponentViewportProvider,
-	ControlType as ControlType2,
-	cx as cx2,
-	getFonts,
-	getFontsFromSharedStyle as getFontsFromSharedStyle2,
-	RichText as RichText2,
-	SmartComponentScopedContainer,
-	useComponentViewport as useComponentViewport2,
-	useLocaleInfo as useLocaleInfo2,
-	useVariantState as useVariantState2,
-	withCSS as withCSS2,
-	withFX,
-} from "unframer";
-import {
-	LayoutGroup as LayoutGroup2,
-	motion as motion2,
-	MotionConfigContext as MotionConfigContext2,
-} from "unframer";
-import * as React2 from "react";
-import { useRef as useRef2 } from "react";
-
-// /:https://framerusercontent.com/modules/9927dCADXXNruBeH5IRY/e7IfWZyRNDvIDhy9ccIM/wLiYWknL9.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
 	addPropertyControls,
+	ComponentViewportProvider,
 	ControlType,
 	cx,
+	getFonts,
 	getFontsFromSharedStyle,
-	getLoadingLazyAtYPosition,
-	Image,
 	RichText,
+	SmartComponentScopedContainer,
 	useComponentViewport,
 	useLocaleInfo,
 	useVariantState,
 	withCSS,
+	withFX,
 } from "unframer";
 import { LayoutGroup, motion, MotionConfigContext } from "unframer";
 import * as React from "react";
 import { useRef } from "react";
-var serializationHash = "framer-9xeZn";
-var variantClassNames = {
-	sBzO2jA8Z: "framer-v-8nogqb",
-};
-var transition1 = {
-	damping: 60,
-	delay: 0,
-	mass: 1,
-	stiffness: 500,
-	type: "spring",
-};
-var toResponsiveImage = (value) => {
-	if (
-		typeof value === "object" &&
-		value !== null &&
-		typeof value.src === "string"
-	) {
-		return value;
-	}
-	return typeof value === "string"
-		? {
-				src: value,
-			}
-		: void 0;
-};
-var Transition = ({ value, children }) => {
-	const config = React.useContext(MotionConfigContext);
-	const transition = value ?? config.transition;
-	const contextValue = React.useMemo(
-		() => ({
-			...config,
-			transition,
-		}),
-		[JSON.stringify(transition)],
-	);
-	return (
-		<MotionConfigContext.Provider value={contextValue}>
-			{children}
-		</MotionConfigContext.Provider>
-	);
-};
-var Variants = motion.create(React.Fragment);
-var getProps = ({
-	content,
-	height,
-	id,
-	image,
-	name1,
-	subtitle,
-	width,
-	...props
-}) => {
-	return {
-		...props,
-		GMiww36xM: image ??
-			props.GMiww36xM ?? {
-				pixelHeight: 1200,
-				pixelWidth: 800,
-				src: "https://framerusercontent.com/images/vF64nZh1LyvSThX5vUunjhbm2g.png?scale-down-to=512&width=800&height=1200",
-				srcSet:
-					"https://framerusercontent.com/images/vF64nZh1LyvSThX5vUunjhbm2g.png?scale-down-to=1024&width=800&height=1200 682w,https://framerusercontent.com/images/vF64nZh1LyvSThX5vUunjhbm2g.png?width=800&height=1200 800w",
-			},
-		ijAzc017T: name1 ?? props.ijAzc017T ?? "Alex Smirnov",
-		tQSAcNzNQ: subtitle ?? props.tQSAcNzNQ ?? "Product Manager",
-		ZZgWc_vQ4:
-			content ??
-			props.ZZgWc_vQ4 ??
-			"The platform gave me clarity and confidence in managing my personal investments, even with limited time.",
-	};
-};
-var createLayoutDependency = (props, variants) => {
-	if (props.layoutDependency)
-		return variants.join("-") + props.layoutDependency;
-	return variants.join("-");
-};
-var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-	const fallbackRef = useRef(null);
-	const refBinding = ref ?? fallbackRef;
-	const defaultLayoutId = React.useId();
-	const { activeLocale, setLocale } = useLocaleInfo();
-	const componentViewport = useComponentViewport();
-	const {
-		style,
-		className: className6,
-		layoutId,
-		variant,
-		ijAzc017T,
-		tQSAcNzNQ,
-		ZZgWc_vQ4,
-		GMiww36xM,
-		...restProps
-	} = getProps(props);
-	const {
-		baseVariant,
-		classNames,
-		clearLoadingGesture,
-		gestureHandlers,
-		gestureVariant,
-		isLoading,
-		setGestureState,
-		setVariant,
-		variants,
-	} = useVariantState({
-		defaultVariant: "sBzO2jA8Z",
-		ref: refBinding,
-		variant,
-		variantClassNames,
-	});
-	const layoutDependency = createLayoutDependency(props, variants);
-	const sharedStyleClassNames = [className4, className3, className];
-	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
-	return (
-		<LayoutGroup id={layoutId ?? defaultLayoutId}>
-			<Variants animate={variants} initial={false}>
-				<Transition value={transition1}>
-					<motion.div
-						{...restProps}
-						{...gestureHandlers}
-						className={cx(
-							scopingClassNames,
-							"framer-8nogqb",
-							className6,
-							classNames,
-						)}
-						data-border={true}
-						data-framer-name={"Primary"}
-						layoutDependency={layoutDependency}
-						layoutId={"sBzO2jA8Z"}
-						ref={refBinding}
-						style={{
-							"--border-bottom-width": "1px",
-							"--border-color":
-								"var(--token-f799a2df-306e-498f-bee9-a5591c59bc52, rgba(112, 69, 54, 0.7))",
-							"--border-left-width": "1px",
-							"--border-right-width": "1px",
-							"--border-style": "solid",
-							"--border-top-width": "1px",
-							borderBottomLeftRadius: 15,
-							borderBottomRightRadius: 15,
-							borderTopLeftRadius: 15,
-							borderTopRightRadius: 15,
-							...style,
-						}}
-					>
-						<motion.div
-							className={"framer-1c7lrn4"}
-							data-framer-name={"Container"}
-							layoutDependency={layoutDependency}
-							layoutId={"P0TuYjpYl"}
-						>
-							<motion.div
-								className={"framer-1x7ry2b"}
-								data-framer-name={"Avatar & Heading"}
-								layoutDependency={layoutDependency}
-								layoutId={"fmcdW6KdY"}
-							>
-								<Image
-									background={{
-										alt: "",
-										fit: "fill",
-										intrinsicHeight: 5e3,
-										intrinsicWidth: 3974,
-										loading: getLoadingLazyAtYPosition(
-											(componentViewport?.y || 0) + 25 + 0 + 0 + 0,
-										),
-										pixelHeight: 4e3,
-										pixelWidth: 4e3,
-										sizes: "40px",
-										...toResponsiveImage(GMiww36xM),
-										...{
-											positionX: "center",
-											positionY: "center",
-										},
-									}}
-									className={"framer-1uxcu15"}
-									data-framer-name={"Avatar"}
-									layoutDependency={layoutDependency}
-									layoutId={"Ehjx7stBF"}
-									style={{
-										borderBottomLeftRadius: 999,
-										borderBottomRightRadius: 999,
-										borderTopLeftRadius: 999,
-										borderTopRightRadius: 999,
-									}}
-								/>
-								<motion.div
-									className={"framer-1kvsgob"}
-									data-framer-name={"Heading"}
-									layoutDependency={layoutDependency}
-									layoutId={"aJfoQrmlU"}
-								>
-									<RichText
-										__fromCanvasComponent={true}
-										className={"framer-1nbiuqh"}
-										fonts={["Inter"]}
-										layoutDependency={layoutDependency}
-										layoutId={"g6WX0fs07"}
-										style={{
-											"--framer-link-text-color": "rgb(0, 153, 255)",
-											"--framer-link-text-decoration": "underline",
-										}}
-										text={ijAzc017T}
-										verticalAlignment={"top"}
-										withExternalLayout={true}
-									>
-										<React.Fragment>
-											<motion.h5
-												className={"framer-styles-preset-b7mi5l"}
-												data-styles-preset={"cq4N7Obrm"}
-											>
-												{"Jamie Lee"}
-											</motion.h5>
-										</React.Fragment>
-									</RichText>
-									<RichText
-										__fromCanvasComponent={true}
-										className={"framer-qshgd8"}
-										fonts={["Inter"]}
-										layoutDependency={layoutDependency}
-										layoutId={"gkLvpXdUi"}
-										style={{
-											"--framer-link-text-color": "rgb(0, 153, 255)",
-											"--framer-link-text-decoration": "underline",
-											opacity: 0.7,
-										}}
-										text={tQSAcNzNQ}
-										verticalAlignment={"top"}
-										withExternalLayout={true}
-									>
-										<React.Fragment>
-											<motion.h6
-												className={"framer-styles-preset-1x4srpb"}
-												data-styles-preset={"WGktsHNSh"}
-											>
-												{"Operations Lead"}
-											</motion.h6>
-										</React.Fragment>
-									</RichText>
-								</motion.div>
-							</motion.div>
-						</motion.div>
-						<RichText
-							__fromCanvasComponent={true}
-							className={"framer-18r8sz4"}
-							fonts={["Inter"]}
-							layoutDependency={layoutDependency}
-							layoutId={"GfOK49tqe"}
-							style={{
-								"--framer-link-text-color": "rgb(0, 153, 255)",
-								"--framer-link-text-decoration": "underline",
-							}}
-							text={ZZgWc_vQ4}
-							verticalAlignment={"top"}
-							withExternalLayout={true}
-						>
-							<React.Fragment>
-								<motion.p
-									className={"framer-styles-preset-4mzurx"}
-									data-styles-preset={"C5Bqm4Y89"}
-								>
-									{
-										"Holocron gave me the tools to manage my workload efficiently and confidently."
-									}
-								</motion.p>
-							</React.Fragment>
-						</RichText>
-					</motion.div>
-				</Transition>
-			</Variants>
-		</LayoutGroup>
-	);
-});
-var css6 = [
-	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-9xeZn.framer-132w7u3, .framer-9xeZn .framer-132w7u3 { display: block; }",
-	".framer-9xeZn.framer-8nogqb { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 20px; height: min-content; justify-content: flex-start; overflow: visible; padding: 25px; position: relative; width: 237px; }",
-	".framer-9xeZn .framer-1c7lrn4 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-9xeZn .framer-1x7ry2b { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-9xeZn .framer-1uxcu15 { flex: none; height: 40px; position: relative; width: 40px; }",
-	".framer-9xeZn .framer-1kvsgob { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-9xeZn .framer-1nbiuqh, .framer-9xeZn .framer-qshgd8, .framer-9xeZn .framer-18r8sz4 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
-	...css4,
-	...css3,
-	...css,
-	'.framer-9xeZn[data-border="true"]::after, .framer-9xeZn [data-border="true"]::after { content: ""; border-width: var(--border-top-width, 0) var(--border-right-width, 0) var(--border-bottom-width, 0) var(--border-left-width, 0); border-color: var(--border-color, none); border-style: var(--border-style, none); width: 100%; height: 100%; position: absolute; box-sizing: border-box; left: 0; top: 0; border-radius: inherit; pointer-events: none; }',
-];
-var FramerwLiYWknL9 = withCSS(Component, css6, "framer-9xeZn");
-var stdin_default2 = FramerwLiYWknL9;
-FramerwLiYWknL9.displayName = "Card/Testimonials Card";
-FramerwLiYWknL9.defaultProps = {
-	height: 214,
-	width: 237,
-};
-addPropertyControls(FramerwLiYWknL9, {
-	ijAzc017T: {
-		defaultValue: "Alex Smirnov",
-		displayTextArea: false,
-		title: "Name",
-		type: ControlType.String,
-	},
-	tQSAcNzNQ: {
-		defaultValue: "Product Manager",
-		displayTextArea: false,
-		title: "Subtitle",
-		type: ControlType.String,
-	},
-	ZZgWc_vQ4: {
-		defaultValue:
-			"The platform gave me clarity and confidence in managing my personal investments, even with limited time.",
-		displayTextArea: false,
-		title: "Content",
-		type: ControlType.String,
-	},
-	GMiww36xM: {
-		__defaultAssetReference:
-			"data:framer/asset-reference,vF64nZh1LyvSThX5vUunjhbm2g.png?originalFilename=QmVi3YgPBSaYgXvz9goKS2rK3H6eWXyLDhbsirwEzEnsfF%3Fauto%3Dformat%26h%3D1200.png&preferredSize=auto",
-		title: "Image",
-		type: ControlType.ResponsiveImage,
-	},
-});
-addFonts(
-	FramerwLiYWknL9,
-	[
-		{
-			explicitInter: true,
-			fonts: [
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F",
-					url: "https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
-					url: "https://framerusercontent.com/assets/EOr0mi4hNtlgWNn9if640EZzXCo.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+1F00-1FFF",
-					url: "https://framerusercontent.com/assets/Y9k9QrlZAqio88Klkmbd8VoMQc.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+0370-03FF",
-					url: "https://framerusercontent.com/assets/OYrD2tBIBPvoJXiIHnLoOXnY9M.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF",
-					url: "https://framerusercontent.com/assets/JeYwfuaPfZHQhEG8U5gtPDZ7WQ.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB",
-					url: "https://framerusercontent.com/assets/b6Y37FthZeALduNqHicBT6FutY.woff2",
-					weight: "400",
-				},
-			],
-		},
-		...getFontsFromSharedStyle(fonts4),
-		...getFontsFromSharedStyle(fonts3),
-		...getFontsFromSharedStyle(fonts),
-	],
-	{
-		supportsExplicitInterCodegen: true,
-	},
-);
-
-// /:https://framerusercontent.com/modules/Mmejh8IHc5aPOSTKtYf3/S1XuLYZwC7vDqZ6Swjrx/zpIDfR7Ez.js
-var RichTextWithFX = withFX(RichText2);
-var MotionDivWithFX = withFX(motion2.div);
+var RichTextWithFX = withFX(RichText);
+var MotionDivWithFX = withFX(motion.div);
 var CardTestimonialsCardFonts = getFonts(stdin_default2);
 var GridFonts = getFonts(stdin_default);
 var cycleOrder = ["kI5dB9Hnr", "zi2QQaP9o", "xqBh8EtFt"];
-var serializationHash2 = "framer-XrkQm";
-var variantClassNames2 = {
+var serializationHash = "framer-XrkQm";
+var variantClassNames = {
 	kI5dB9Hnr: "framer-v-eugzf5",
 	xqBh8EtFt: "framer-v-1srezno",
 	zi2QQaP9o: "framer-v-geeel9",
@@ -512,7 +79,7 @@ function addPropertyOverrides(overrides, ...variants) {
 	);
 	return nextOverrides;
 }
-var transition12 = {
+var transition1 = {
 	bounce: 0.2,
 	delay: 0,
 	duration: 0.4,
@@ -639,10 +206,10 @@ var transition7 = {
 	duration: 1,
 	type: "spring",
 };
-var Transition2 = ({ value, children }) => {
-	const config = React2.useContext(MotionConfigContext2);
+var Transition = ({ value, children }) => {
+	const config = React.useContext(MotionConfigContext);
 	const transition = value ?? config.transition;
-	const contextValue = React2.useMemo(
+	const contextValue = React.useMemo(
 		() => ({
 			...config,
 			transition,
@@ -650,42 +217,42 @@ var Transition2 = ({ value, children }) => {
 		[JSON.stringify(transition)],
 	);
 	return (
-		<MotionConfigContext2.Provider value={contextValue}>
+		<MotionConfigContext.Provider value={contextValue}>
 			{children}
-		</MotionConfigContext2.Provider>
+		</MotionConfigContext.Provider>
 	);
 };
-var Variants2 = motion2.create(React2.Fragment);
+var Variants = motion.create(React.Fragment);
 var humanReadableVariantMap = {
 	Desktop: "kI5dB9Hnr",
 	Phone: "xqBh8EtFt",
 	Tablet: "zi2QQaP9o",
 };
-var getProps2 = ({ height, id, width, ...props }) => {
+var getProps = ({ height, id, width, ...props }) => {
 	return {
 		...props,
 		variant:
 			humanReadableVariantMap[props.variant] ?? props.variant ?? "kI5dB9Hnr",
 	};
 };
-var createLayoutDependency2 = (props, variants) => {
+var createLayoutDependency = (props, variants) => {
 	if (props.layoutDependency)
 		return variants.join("-") + props.layoutDependency;
 	return variants.join("-");
 };
-var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
-	const fallbackRef = useRef2(null);
+var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
+	const fallbackRef = useRef(null);
 	const refBinding = ref ?? fallbackRef;
-	const defaultLayoutId = React2.useId();
-	const { activeLocale, setLocale } = useLocaleInfo2();
-	const componentViewport = useComponentViewport2();
+	const defaultLayoutId = React.useId();
+	const { activeLocale, setLocale } = useLocaleInfo();
+	const componentViewport = useComponentViewport();
 	const {
 		style,
-		className: className6,
+		className: className3,
 		layoutId,
 		variant,
 		...restProps
-	} = getProps2(props);
+	} = getProps(props);
 	const {
 		baseVariant,
 		classNames,
@@ -696,16 +263,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 		setGestureState,
 		setVariant,
 		variants,
-	} = useVariantState2({
+	} = useVariantState({
 		cycleOrder,
 		defaultVariant: "kI5dB9Hnr",
 		ref: refBinding,
 		variant,
-		variantClassNames: variantClassNames2,
+		variantClassNames,
 	});
-	const layoutDependency = createLayoutDependency2(props, variants);
-	const sharedStyleClassNames = [className2, className5];
-	const scopingClassNames = cx2(serializationHash2, ...sharedStyleClassNames);
+	const layoutDependency = createLayoutDependency(props, variants);
+	const sharedStyleClassNames = [className2, className];
+	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
 	const isDisplayed = () => {
 		if (baseVariant === "xqBh8EtFt") return false;
 		return true;
@@ -715,16 +282,16 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 		return true;
 	};
 	return (
-		<LayoutGroup2 id={layoutId ?? defaultLayoutId}>
-			<Variants2 animate={variants} initial={false}>
-				<Transition2 value={transition12}>
-					<motion2.section
+		<LayoutGroup id={layoutId ?? defaultLayoutId}>
+			<Variants animate={variants} initial={false}>
+				<Transition value={transition1}>
+					<motion.section
 						{...restProps}
 						{...gestureHandlers}
-						className={cx2(
+						className={cx(
 							scopingClassNames,
 							"framer-eugzf5",
-							className6,
+							className3,
 							classNames,
 						)}
 						data-framer-name={"Desktop"}
@@ -747,7 +314,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 							gestureVariant,
 						)}
 					>
-						<motion2.div
+						<motion.div
 							className={"framer-nqc413"}
 							data-framer-name={"Container"}
 							layoutDependency={layoutDependency}
@@ -799,8 +366,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										{
 											xqBh8EtFt: {
 												children: (
-													<React2.Fragment>
-														<motion2.h2
+													<React.Fragment>
+														<motion.h2
 															className={"framer-styles-preset-163xgy6"}
 															data-styles-preset={"EEpMe6lZZ"}
 															style={{
@@ -808,8 +375,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 															}}
 														>
 															{"See Why Users Trust Holocron"}
-														</motion2.h2>
-													</React2.Fragment>
+														</motion.h2>
+													</React.Fragment>
 												),
 											},
 											zi2QQaP9o: {
@@ -824,8 +391,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												__smartComponentFX: true,
 												__targetOpacity: 1,
 												children: (
-													<React2.Fragment>
-														<motion2.h2
+													<React.Fragment>
+														<motion.h2
 															className={"framer-styles-preset-163xgy6"}
 															data-styles-preset={"EEpMe6lZZ"}
 															style={{
@@ -833,8 +400,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 															}}
 														>
 															{"See Why Users Trust Holocron"}
-														</motion2.h2>
-													</React2.Fragment>
+														</motion.h2>
+													</React.Fragment>
 												),
 											},
 										},
@@ -842,8 +409,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										gestureVariant,
 									)}
 								>
-									<React2.Fragment>
-										<motion2.h2
+									<React.Fragment>
+										<motion.h2
 											className={"framer-styles-preset-163xgy6"}
 											data-styles-preset={"EEpMe6lZZ"}
 											style={{
@@ -851,8 +418,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											}}
 										>
 											{"See Why Users Trust Holocron"}
-										</motion2.h2>
-									</React2.Fragment>
+										</motion.h2>
+									</React.Fragment>
 								</RichTextWithFX>
 								<RichTextWithFX
 									__fromCanvasComponent={true}
@@ -877,8 +444,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										{
 											xqBh8EtFt: {
 												children: (
-													<React2.Fragment>
-														<motion2.p
+													<React.Fragment>
+														<motion.p
 															className={"framer-styles-preset-m4awkb"}
 															data-styles-preset={"YqcGXulro"}
 															style={{
@@ -888,8 +455,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 															{
 																"Discover how Holocron is helping people achieve smarter, data-driven decisions every day."
 															}
-														</motion2.p>
-													</React2.Fragment>
+														</motion.p>
+													</React.Fragment>
 												),
 											},
 											zi2QQaP9o: {
@@ -904,8 +471,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												__smartComponentFX: true,
 												__targetOpacity: 0.8,
 												children: (
-													<React2.Fragment>
-														<motion2.p
+													<React.Fragment>
+														<motion.p
 															className={"framer-styles-preset-m4awkb"}
 															data-styles-preset={"YqcGXulro"}
 															style={{
@@ -915,8 +482,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 															{
 																"Discover how Holocron is helping people achieve smarter, data-driven decisions every day."
 															}
-														</motion2.p>
-													</React2.Fragment>
+														</motion.p>
+													</React.Fragment>
 												),
 												effect: textEffect,
 											},
@@ -925,8 +492,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										gestureVariant,
 									)}
 								>
-									<React2.Fragment>
-										<motion2.p
+									<React.Fragment>
+										<motion.p
 											className={"framer-styles-preset-m4awkb"}
 											data-styles-preset={"YqcGXulro"}
 											style={{
@@ -936,17 +503,17 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											{
 												"Discover how Holocron is helping people achieve smarter, data-driven decisions every day."
 											}
-										</motion2.p>
-									</React2.Fragment>
+										</motion.p>
+									</React.Fragment>
 								</RichTextWithFX>
 							</MotionDivWithFX>
-							<motion2.div
+							<motion.div
 								className={"framer-1jimr11"}
 								data-framer-name={"Testimonials"}
 								layoutDependency={layoutDependency}
 								layoutId={"P4X_EUHd2"}
 							>
-								<motion2.div
+								<motion.div
 									className={"framer-2tus5b"}
 									data-framer-name={"Container"}
 									layoutDependency={layoutDependency}
@@ -1115,7 +682,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												rendersWithMotion={true}
 												scopeId={"zpIDfR7Ez"}
 											>
-												{_jsx2(stdin_default2, {
+												{_jsx(stdin_default2, {
 													GMiww36xM: addImageAlt(
 														{
 															pixelHeight: 1200,
@@ -1206,7 +773,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												rendersWithMotion={true}
 												scopeId={"zpIDfR7Ez"}
 											>
-												{_jsx2(stdin_default2, {
+												{_jsx(stdin_default2, {
 													GMiww36xM: addImageAlt(
 														{
 															pixelHeight: 1200,
@@ -1297,7 +864,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												rendersWithMotion={true}
 												scopeId={"zpIDfR7Ez"}
 											>
-												{_jsx2(stdin_default2, {
+												{_jsx(stdin_default2, {
 													GMiww36xM: addImageAlt(
 														{
 															pixelHeight: 1200,
@@ -1388,7 +955,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												rendersWithMotion={true}
 												scopeId={"zpIDfR7Ez"}
 											>
-												{_jsx2(stdin_default2, {
+												{_jsx(stdin_default2, {
 													GMiww36xM: addImageAlt(
 														{
 															pixelHeight: 1200,
@@ -1479,7 +1046,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												rendersWithMotion={true}
 												scopeId={"zpIDfR7Ez"}
 											>
-												{_jsx2(stdin_default2, {
+												{_jsx(stdin_default2, {
 													GMiww36xM: addImageAlt(
 														{
 															pixelHeight: 1200,
@@ -1600,7 +1167,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													rendersWithMotion={true}
 													scopeId={"zpIDfR7Ez"}
 												>
-													{_jsx2(stdin_default2, {
+													{_jsx(stdin_default2, {
 														GMiww36xM: addImageAlt(
 															{
 																pixelHeight: 1200,
@@ -1671,7 +1238,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													rendersWithMotion={true}
 													scopeId={"zpIDfR7Ez"}
 												>
-													{_jsx2(stdin_default2, {
+													{_jsx(stdin_default2, {
 														GMiww36xM: addImageAlt(
 															{
 																pixelHeight: 1200,
@@ -1742,7 +1309,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													rendersWithMotion={true}
 													scopeId={"zpIDfR7Ez"}
 												>
-													{_jsx2(stdin_default2, {
+													{_jsx(stdin_default2, {
 														GMiww36xM: addImageAlt(
 															{
 																pixelHeight: 1200,
@@ -1813,7 +1380,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													rendersWithMotion={true}
 													scopeId={"zpIDfR7Ez"}
 												>
-													{_jsx2(stdin_default2, {
+													{_jsx(stdin_default2, {
 														GMiww36xM: addImageAlt(
 															{
 																pixelHeight: 1200,
@@ -1884,7 +1451,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													rendersWithMotion={true}
 													scopeId={"zpIDfR7Ez"}
 												>
-													{_jsx2(stdin_default2, {
+													{_jsx(stdin_default2, {
 														GMiww36xM: addImageAlt(
 															{
 																pixelHeight: 1200,
@@ -1912,10 +1479,10 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											</ComponentViewportProvider>
 										</MotionDivWithFX>
 									)}
-								</motion2.div>
-							</motion2.div>
-						</motion2.div>
-						<motion2.div
+								</motion.div>
+							</motion.div>
+						</motion.div>
+						<motion.div
 							className={"framer-1pqpxdy"}
 							data-framer-name={"Grid"}
 							layoutDependency={layoutDependency}
@@ -1946,7 +1513,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 									rendersWithMotion={true}
 									scopeId={"zpIDfR7Ez"}
 								>
-									{_jsx2(stdin_default, {
+									{_jsx(stdin_default, {
 										height: "100%",
 										id: "N2AP6p4X2",
 										layoutId: "N2AP6p4X2",
@@ -1994,14 +1561,14 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 									}}
 								/>
 							)}
-						</motion2.div>
-					</motion2.section>
-				</Transition2>
-			</Variants2>
-		</LayoutGroup2>
+						</motion.div>
+					</motion.section>
+				</Transition>
+			</Variants>
+		</LayoutGroup>
 	);
 });
-var css7 = [
+var css3 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
 	".framer-XrkQm.framer-n8gw4f, .framer-XrkQm .framer-n8gw4f { display: block; }",
 	".framer-XrkQm.framer-eugzf5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 70px; height: min-content; justify-content: flex-start; overflow: visible; padding: 250px 100px 50px 100px; position: relative; width: 1200px; }",
@@ -2034,24 +1601,24 @@ var css7 = [
 	".framer-XrkQm.framer-v-1srezno .framer-2tus5b { flex-direction: column; gap: 35px; height: min-content; }",
 	".framer-XrkQm.framer-v-1srezno .framer-f2ozck { flex: none; width: 100%; }",
 	...css2,
-	...css5,
+	...css,
 ];
-var FramerzpIDfR7Ez = withCSS2(Component2, css7, "framer-XrkQm");
+var FramerzpIDfR7Ez = withCSS(Component, css3, "framer-XrkQm");
 var stdin_default3 = FramerzpIDfR7Ez;
 FramerzpIDfR7Ez.displayName = "Testimonials Section";
 FramerzpIDfR7Ez.defaultProps = {
 	height: 1145,
 	width: 1200,
 };
-addPropertyControls2(FramerzpIDfR7Ez, {
+addPropertyControls(FramerzpIDfR7Ez, {
 	variant: {
 		options: ["kI5dB9Hnr", "zi2QQaP9o", "xqBh8EtFt"],
 		optionTitles: ["Desktop", "Tablet", "Phone"],
 		title: "Variant",
-		type: ControlType2.Enum,
+		type: ControlType.Enum,
 	},
 });
-addFonts2(
+addFonts(
 	FramerzpIDfR7Ez,
 	[
 		{
@@ -2121,8 +1688,8 @@ addFonts2(
 		},
 		...CardTestimonialsCardFonts,
 		...GridFonts,
-		...getFontsFromSharedStyle2(fonts2),
-		...getFontsFromSharedStyle2(fonts5),
+		...getFontsFromSharedStyle(fonts2),
+		...getFontsFromSharedStyle(fonts),
 	],
 	{
 		supportsExplicitInterCodegen: true,

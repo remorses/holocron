@@ -23,82 +23,86 @@
 }} Props
 
  */
-import { stdin_default as stdin_default2 } from "./chunks/chunk-FWELEOPG.js";
 import {
 	className as className2,
 	css as css2,
 	fonts as fonts2,
 } from "./chunks/chunk-M65DCHB6.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-BCBVPGVB.js";
+import "./chunks/chunk-FWELEOPG.js";
+import "./chunks/chunk-QAV64ZEM.js";
 import { stdin_default } from "./chunks/chunk-IETFVNRG.js";
-import {
-	className as className3,
-	css as css3,
-	fonts as fonts3,
-} from "./chunks/chunk-QAV64ZEM.js";
 import "./chunks/chunk-BTSBQWPZ.js";
 import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 
 // virtual:nav-bar
-import { Fragment as Fragment3 } from "react";
+import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
 // /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/3nvS5VgfVwLDqgwaQ1hx/XmsKfRWHg.js
-import { jsx as _jsx2, jsxs as _jsxs2 } from "react/jsx-runtime";
-import {
-	addFonts as addFonts2,
-	addPropertyControls,
-	ComponentViewportProvider as ComponentViewportProvider2,
-	ControlType,
-	cx as cx2,
-	getFonts as getFonts2,
-	getFontsFromSharedStyle as getFontsFromSharedStyle2,
-	Link,
-	ResolveLinks,
-	RichText as RichText2,
-	SmartComponentScopedContainer as SmartComponentScopedContainer2,
-	useActiveVariantCallback,
-	useComponentViewport as useComponentViewport2,
-	useLocaleInfo as useLocaleInfo2,
-	useRouter,
-	useVariantState as useVariantState2,
-	withCSS as withCSS2,
-} from "unframer";
-import {
-	LayoutGroup as LayoutGroup2,
-	motion as motion2,
-	MotionConfigContext as MotionConfigContext2,
-} from "unframer";
-import * as React2 from "react";
-import { useRef as useRef2 } from "react";
-
-// /:https://framerusercontent.com/modules/rvrhXy6hyBpTWrIAdgKR/k0isw05m98fLNhbLmfmS/U1FNLyINY.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
+	addPropertyControls,
 	ComponentViewportProvider,
+	ControlType,
 	cx,
 	getFonts,
 	getFontsFromSharedStyle,
+	Link,
+	ResolveLinks,
 	RichText,
 	SmartComponentScopedContainer,
+	useActiveVariantCallback,
 	useComponentViewport,
 	useLocaleInfo,
+	useRouter,
 	useVariantState,
 	withCSS,
 } from "unframer";
 import { LayoutGroup, motion, MotionConfigContext } from "unframer";
 import * as React from "react";
 import { useRef } from "react";
-var LogoIconFonts = getFonts(stdin_default2);
-var serializationHash = "framer-AWPMD";
+var LogoFonts = getFonts(stdin_default2);
+var ComponentButtonFonts = getFonts(stdin_default);
+var cycleOrder = [
+	"c6mQiEUZR",
+	"oVqk5DKpt",
+	"ypBE0GADG",
+	"lTFPk57AC",
+	"FSWJCj0iy",
+];
+var serializationHash = "framer-adqrZ";
 var variantClassNames = {
-	chDyeH5Qc: "framer-v-j724qj",
+	c6mQiEUZR: "framer-v-1d9x1ba",
+	FSWJCj0iy: "framer-v-1e176yj",
+	lTFPk57AC: "framer-v-1a1l0re",
+	oVqk5DKpt: "framer-v-1xrbkc6",
+	ypBE0GADG: "framer-v-1n2x4j7",
 };
+function addPropertyOverrides(overrides, ...variants) {
+	const nextOverrides = {};
+	variants?.forEach(
+		(variant) => variant && Object.assign(nextOverrides, overrides[variant]),
+	);
+	return nextOverrides;
+}
 var transition1 = {
-	bounce: 0.2,
+	damping: 40,
 	delay: 0,
-	duration: 0.4,
+	mass: 1,
+	stiffness: 400,
+	type: "spring",
+};
+var transition2 = {
+	duration: 0,
+	type: "tween",
+};
+var transition3 = {
+	bounce: 0.1,
+	delay: 0,
+	duration: 0.6,
 	type: "spring",
 };
 var Transition = ({ value, children }) => {
@@ -118,9 +122,18 @@ var Transition = ({ value, children }) => {
 	);
 };
 var Variants = motion.create(React.Fragment);
+var humanReadableVariantMap = {
+	"Phone - Open": "FSWJCj0iy",
+	"Phone -Close": "lTFPk57AC",
+	"Tablet - Close": "oVqk5DKpt",
+	"Tablet - Open": "ypBE0GADG",
+	Desktop: "c6mQiEUZR",
+};
 var getProps = ({ height, id, width, ...props }) => {
 	return {
 		...props,
+		variant:
+			humanReadableVariantMap[props.variant] ?? props.variant ?? "c6mQiEUZR",
 	};
 };
 var createLayoutDependency = (props, variants) => {
@@ -136,7 +149,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 	const componentViewport = useComponentViewport();
 	const {
 		style,
-		className: className4,
+		className: className3,
 		layoutId,
 		variant,
 		...restProps
@@ -152,286 +165,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		setVariant,
 		variants,
 	} = useVariantState({
-		defaultVariant: "chDyeH5Qc",
+		cycleOrder,
+		defaultVariant: "c6mQiEUZR",
 		ref: refBinding,
 		variant,
 		variantClassNames,
 	});
 	const layoutDependency = createLayoutDependency(props, variants);
-	const sharedStyleClassNames = [className3];
-	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
-	return (
-		<LayoutGroup id={layoutId ?? defaultLayoutId}>
-			<Variants animate={variants} initial={false}>
-				<Transition value={transition1}>
-					<motion.div
-						{...restProps}
-						{...gestureHandlers}
-						className={cx(
-							scopingClassNames,
-							"framer-j724qj",
-							className4,
-							classNames,
-						)}
-						data-framer-name={"Variant 1"}
-						layoutDependency={layoutDependency}
-						layoutId={"chDyeH5Qc"}
-						ref={refBinding}
-						style={{
-							...style,
-						}}
-					>
-						<ComponentViewportProvider
-							height={19}
-							y={
-								(componentViewport?.y || 0) +
-								(0 + ((componentViewport?.height || 21) - 0 - 19) / 2)
-							}
-						>
-							<SmartComponentScopedContainer
-								className={"framer-v7q3dv-container"}
-								layoutDependency={layoutDependency}
-								layoutId={"RATlmXuTy-container"}
-								nodeId={"RATlmXuTy"}
-								rendersWithMotion={true}
-								scopeId={"U1FNLyINY"}
-							>
-								{_jsx(stdin_default2, {
-									height: "100%",
-									id: "RATlmXuTy",
-									layoutId: "RATlmXuTy",
-									width: "100%",
-								})}
-							</SmartComponentScopedContainer>
-						</ComponentViewportProvider>
-						<RichText
-							__fromCanvasComponent={true}
-							className={"framer-5fmjo5"}
-							fonts={["Inter"]}
-							layoutDependency={layoutDependency}
-							layoutId={"jWEfmuXxW"}
-							style={{
-								"--framer-link-text-color": "rgb(0, 153, 255)",
-								"--framer-link-text-decoration": "underline",
-							}}
-							verticalAlignment={"top"}
-							withExternalLayout={true}
-						>
-							<React.Fragment>
-								<motion.p
-									className={"framer-styles-preset-b7mi5l"}
-									data-styles-preset={"cq4N7Obrm"}
-								>
-									{"Holocron"}
-								</motion.p>
-							</React.Fragment>
-						</RichText>
-					</motion.div>
-				</Transition>
-			</Variants>
-		</LayoutGroup>
-	);
-});
-var css4 = [
-	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-AWPMD.framer-17y4ldr, .framer-AWPMD .framer-17y4ldr { display: block; }",
-	".framer-AWPMD.framer-j724qj { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-AWPMD .framer-v7q3dv-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-AWPMD .framer-5fmjo5 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	...css3,
-];
-var FramerU1FNLyINY = withCSS(Component, css4, "framer-AWPMD");
-var stdin_default3 = FramerU1FNLyINY;
-FramerU1FNLyINY.displayName = "Logo";
-FramerU1FNLyINY.defaultProps = {
-	height: 21,
-	width: 101,
-};
-addFonts(
-	FramerU1FNLyINY,
-	[
-		{
-			explicitInter: true,
-			fonts: [
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F",
-					url: "https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
-					url: "https://framerusercontent.com/assets/EOr0mi4hNtlgWNn9if640EZzXCo.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+1F00-1FFF",
-					url: "https://framerusercontent.com/assets/Y9k9QrlZAqio88Klkmbd8VoMQc.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange: "U+0370-03FF",
-					url: "https://framerusercontent.com/assets/OYrD2tBIBPvoJXiIHnLoOXnY9M.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF",
-					url: "https://framerusercontent.com/assets/JeYwfuaPfZHQhEG8U5gtPDZ7WQ.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
-					weight: "400",
-				},
-				{
-					family: "Inter",
-					source: "framer",
-					style: "normal",
-					unicodeRange:
-						"U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB",
-					url: "https://framerusercontent.com/assets/b6Y37FthZeALduNqHicBT6FutY.woff2",
-					weight: "400",
-				},
-			],
-		},
-		...LogoIconFonts,
-		...getFontsFromSharedStyle(fonts3),
-	],
-	{
-		supportsExplicitInterCodegen: true,
-	},
-);
-
-// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/3nvS5VgfVwLDqgwaQ1hx/XmsKfRWHg.js
-var LogoFonts = getFonts2(stdin_default3);
-var ComponentButtonFonts = getFonts2(stdin_default);
-var cycleOrder = [
-	"c6mQiEUZR",
-	"oVqk5DKpt",
-	"ypBE0GADG",
-	"lTFPk57AC",
-	"FSWJCj0iy",
-];
-var serializationHash2 = "framer-adqrZ";
-var variantClassNames2 = {
-	c6mQiEUZR: "framer-v-1d9x1ba",
-	FSWJCj0iy: "framer-v-1e176yj",
-	lTFPk57AC: "framer-v-1a1l0re",
-	oVqk5DKpt: "framer-v-1xrbkc6",
-	ypBE0GADG: "framer-v-1n2x4j7",
-};
-function addPropertyOverrides(overrides, ...variants) {
-	const nextOverrides = {};
-	variants?.forEach(
-		(variant) => variant && Object.assign(nextOverrides, overrides[variant]),
-	);
-	return nextOverrides;
-}
-var transition12 = {
-	damping: 40,
-	delay: 0,
-	mass: 1,
-	stiffness: 400,
-	type: "spring",
-};
-var transition2 = {
-	duration: 0,
-	type: "tween",
-};
-var transition3 = {
-	bounce: 0.1,
-	delay: 0,
-	duration: 0.6,
-	type: "spring",
-};
-var Transition2 = ({ value, children }) => {
-	const config = React2.useContext(MotionConfigContext2);
-	const transition = value ?? config.transition;
-	const contextValue = React2.useMemo(
-		() => ({
-			...config,
-			transition,
-		}),
-		[JSON.stringify(transition)],
-	);
-	return (
-		<MotionConfigContext2.Provider value={contextValue}>
-			{children}
-		</MotionConfigContext2.Provider>
-	);
-};
-var Variants2 = motion2.create(React2.Fragment);
-var humanReadableVariantMap = {
-	"Phone - Open": "FSWJCj0iy",
-	"Phone -Close": "lTFPk57AC",
-	"Tablet - Close": "oVqk5DKpt",
-	"Tablet - Open": "ypBE0GADG",
-	Desktop: "c6mQiEUZR",
-};
-var getProps2 = ({ height, id, width, ...props }) => {
-	return {
-		...props,
-		variant:
-			humanReadableVariantMap[props.variant] ?? props.variant ?? "c6mQiEUZR",
-	};
-};
-var createLayoutDependency2 = (props, variants) => {
-	if (props.layoutDependency)
-		return variants.join("-") + props.layoutDependency;
-	return variants.join("-");
-};
-var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
-	const fallbackRef = useRef2(null);
-	const refBinding = ref ?? fallbackRef;
-	const defaultLayoutId = React2.useId();
-	const { activeLocale, setLocale } = useLocaleInfo2();
-	const componentViewport = useComponentViewport2();
-	const {
-		style,
-		className: className4,
-		layoutId,
-		variant,
-		...restProps
-	} = getProps2(props);
-	const {
-		baseVariant,
-		classNames,
-		clearLoadingGesture,
-		gestureHandlers,
-		gestureVariant,
-		isLoading,
-		setGestureState,
-		setVariant,
-		variants,
-	} = useVariantState2({
-		cycleOrder,
-		defaultVariant: "c6mQiEUZR",
-		ref: refBinding,
-		variant,
-		variantClassNames: variantClassNames2,
-	});
-	const layoutDependency = createLayoutDependency2(props, variants);
 	const { activeVariantCallback, delay } =
 		useActiveVariantCallback(baseVariant);
 	const onTap19yqw1v = activeVariantCallback(async (...args) => {
@@ -450,7 +190,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 		setVariant("FSWJCj0iy");
 	});
 	const sharedStyleClassNames = [className, className2];
-	const scopingClassNames = cx2(serializationHash2, ...sharedStyleClassNames);
+	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
 	const isDisplayed = () => {
 		if (
 			["oVqk5DKpt", "ypBE0GADG", "lTFPk57AC", "FSWJCj0iy"].includes(baseVariant)
@@ -468,10 +208,10 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 	};
 	const router = useRouter();
 	return (
-		<LayoutGroup2 id={layoutId ?? defaultLayoutId}>
-			<Variants2 animate={variants} initial={false}>
-				<Transition2
-					value={transition12}
+		<LayoutGroup id={layoutId ?? defaultLayoutId}>
+			<Variants animate={variants} initial={false}>
+				<Transition
+					value={transition1}
 					{...addPropertyOverrides(
 						{
 							FSWJCj0iy: {
@@ -491,13 +231,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 						gestureVariant,
 					)}
 				>
-					<motion2.nav
+					<motion.nav
 						{...restProps}
 						{...gestureHandlers}
-						className={cx2(
+						className={cx(
 							scopingClassNames,
 							"framer-1d9x1ba",
-							className4,
+							className3,
 							classNames,
 						)}
 						data-framer-name={"Desktop"}
@@ -548,13 +288,13 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 							gestureVariant,
 						)}
 					>
-						<motion2.div
+						<motion.div
 							className={"framer-nmzyuu"}
 							data-framer-name={"Container"}
 							layoutDependency={layoutDependency}
 							layoutId={"oP75yGkiD"}
 						>
-							<motion2.div
+							<motion.div
 								className={"framer-ydgisg"}
 								data-framer-name={"Logo"}
 								layoutDependency={layoutDependency}
@@ -570,7 +310,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 									scopeId={"XmsKfRWHg"}
 									smoothScroll={true}
 								>
-									<motion2.a
+									<motion.a
 										className={"framer-1t7g6pl framer-c615or"}
 										data-framer-name={"Logo"}
 										layoutDependency={layoutDependency}
@@ -590,7 +330,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										<ComponentViewportProvider2
+										<ComponentViewportProvider
 											height={21}
 											y={
 												(componentViewport?.y || 0) +
@@ -652,7 +392,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												gestureVariant,
 											)}
 										>
-											<SmartComponentScopedContainer2
+											<SmartComponentScopedContainer
 												className={"framer-8p6p2b-container"}
 												layoutDependency={layoutDependency}
 												layoutId={"Sc6IK65m2-container"}
@@ -660,18 +400,18 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												rendersWithMotion={true}
 												scopeId={"XmsKfRWHg"}
 											>
-												{_jsx2(stdin_default3, {
+												{_jsx(stdin_default2, {
 													height: "100%",
 													id: "Sc6IK65m2",
 													layoutId: "Sc6IK65m2",
 													width: "100%",
 												})}
-											</SmartComponentScopedContainer2>
-										</ComponentViewportProvider2>
-									</motion2.a>
+											</SmartComponentScopedContainer>
+										</ComponentViewportProvider>
+									</motion.a>
 								</Link>
 								{isDisplayed() && (
-									<motion2.div
+									<motion.div
 										className={"framer-1outej8"}
 										data-framer-name={"Icon"}
 										data-highlight={true}
@@ -698,7 +438,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										)}
 									>
 										{isDisplayed1() && (
-											<motion2.div
+											<motion.div
 												className={"framer-10jqita"}
 												layoutDependency={layoutDependency}
 												layoutId={"Sum7UAgQW"}
@@ -712,7 +452,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												}}
 											/>
 										)}
-										<motion2.div
+										<motion.div
 											className={"framer-1xx0lo2"}
 											layoutDependency={layoutDependency}
 											layoutId={"xuvtMdSO2"}
@@ -737,7 +477,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												},
 											}}
 										/>
-										<motion2.div
+										<motion.div
 											className={"framer-cuneb5"}
 											layoutDependency={layoutDependency}
 											layoutId={"krrURf65f"}
@@ -762,23 +502,23 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												},
 											}}
 										/>
-									</motion2.div>
+									</motion.div>
 								)}
-							</motion2.div>
+							</motion.div>
 							{isDisplayed2() && (
-								<motion2.div
+								<motion.div
 									className={"framer-l7mfmx"}
 									data-framer-name={"Menu Item"}
 									layoutDependency={layoutDependency}
 									layoutId={"nlTc_Ntf_"}
 								>
-									<motion2.div
+									<motion.div
 										className={"framer-wz2tj0"}
 										data-framer-name={"Items"}
 										layoutDependency={layoutDependency}
 										layoutId={"rVGIGLY1C"}
 									>
-										<RichText2
+										<RichText
 											__fromCanvasComponent={true}
 											className={"framer-uh0ias"}
 											fonts={["Inter"]}
@@ -791,8 +531,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													FSWJCj0iy: {
 														"data-highlight": true,
 														children: (
-															<React2.Fragment>
-																<motion2.p
+															<React.Fragment>
+																<motion.p
 																	className={"framer-styles-preset-1x4srpb"}
 																	data-styles-preset={"WGktsHNSh"}
 																	style={{
@@ -810,23 +550,23 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={false}
 																	>
-																		<motion2.a
+																		<motion.a
 																			className={"framer-styles-preset-1i37dfc"}
 																			data-styles-preset={"uT5gCl_8P"}
 																		>
 																			{"Dashboard"}
-																		</motion2.a>
+																		</motion.a>
 																	</Link>
-																</motion2.p>
-															</React2.Fragment>
+																</motion.p>
+															</React.Fragment>
 														),
 														onTap: onTap1vap3b3,
 													},
 													ypBE0GADG: {
 														"data-highlight": true,
 														children: (
-															<React2.Fragment>
-																<motion2.p
+															<React.Fragment>
+																<motion.p
 																	className={"framer-styles-preset-1x4srpb"}
 																	data-styles-preset={"WGktsHNSh"}
 																	style={{
@@ -845,15 +585,15 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={false}
 																	>
-																		<motion2.a
+																		<motion.a
 																			className={"framer-styles-preset-1i37dfc"}
 																			data-styles-preset={"uT5gCl_8P"}
 																		>
 																			{"Dashboard"}
-																		</motion2.a>
+																		</motion.a>
 																	</Link>
-																</motion2.p>
-															</React2.Fragment>
+																</motion.p>
+															</React.Fragment>
 														),
 														onTap: onTap19yqw1v,
 													},
@@ -862,8 +602,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												gestureVariant,
 											)}
 										>
-											<React2.Fragment>
-												<motion2.p
+											<React.Fragment>
+												<motion.p
 													className={"framer-styles-preset-1x4srpb"}
 													data-styles-preset={"WGktsHNSh"}
 												>
@@ -878,17 +618,17 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 														scopeId={"XmsKfRWHg"}
 														smoothScroll={false}
 													>
-														<motion2.a
+														<motion.a
 															className={"framer-styles-preset-1i37dfc"}
 															data-styles-preset={"uT5gCl_8P"}
 														>
 															{"Dashboard"}
-														</motion2.a>
+														</motion.a>
 													</Link>
-												</motion2.p>
-											</React2.Fragment>
-										</RichText2>
-										<RichText2
+												</motion.p>
+											</React.Fragment>
+										</RichText>
+										<RichText
 											__fromCanvasComponent={true}
 											className={"framer-18dt6r6"}
 											fonts={["Inter"]}
@@ -901,8 +641,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													FSWJCj0iy: {
 														"data-highlight": true,
 														children: (
-															<React2.Fragment>
-																<motion2.h6
+															<React.Fragment>
+																<motion.h6
 																	className={"framer-styles-preset-1x4srpb"}
 																	data-styles-preset={"WGktsHNSh"}
 																	style={{
@@ -921,23 +661,23 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
-																		<motion2.a
+																		<motion.a
 																			className={"framer-styles-preset-1i37dfc"}
 																			data-styles-preset={"uT5gCl_8P"}
 																		>
 																			{"Documentation"}
-																		</motion2.a>
+																		</motion.a>
 																	</Link>
-																</motion2.h6>
-															</React2.Fragment>
+																</motion.h6>
+															</React.Fragment>
 														),
 														onTap: onTap1vap3b3,
 													},
 													ypBE0GADG: {
 														"data-highlight": true,
 														children: (
-															<React2.Fragment>
-																<motion2.h6
+															<React.Fragment>
+																<motion.h6
 																	className={"framer-styles-preset-1x4srpb"}
 																	data-styles-preset={"WGktsHNSh"}
 																	style={{
@@ -956,15 +696,15 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
-																		<motion2.a
+																		<motion.a
 																			className={"framer-styles-preset-1i37dfc"}
 																			data-styles-preset={"uT5gCl_8P"}
 																		>
 																			{"Documentation"}
-																		</motion2.a>
+																		</motion.a>
 																	</Link>
-																</motion2.h6>
-															</React2.Fragment>
+																</motion.h6>
+															</React.Fragment>
 														),
 														onTap: onTap19yqw1v,
 													},
@@ -973,8 +713,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												gestureVariant,
 											)}
 										>
-											<React2.Fragment>
-												<motion2.h6
+											<React.Fragment>
+												<motion.h6
 													className={"framer-styles-preset-1x4srpb"}
 													data-styles-preset={"WGktsHNSh"}
 												>
@@ -990,17 +730,17 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 														scopeId={"XmsKfRWHg"}
 														smoothScroll={true}
 													>
-														<motion2.a
+														<motion.a
 															className={"framer-styles-preset-1i37dfc"}
 															data-styles-preset={"uT5gCl_8P"}
 														>
 															{"Documentation"}
-														</motion2.a>
+														</motion.a>
 													</Link>
-												</motion2.h6>
-											</React2.Fragment>
-										</RichText2>
-										<RichText2
+												</motion.h6>
+											</React.Fragment>
+										</RichText>
+										<RichText
 											__fromCanvasComponent={true}
 											className={"framer-vcuy02"}
 											fonts={["Inter"]}
@@ -1013,8 +753,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 													FSWJCj0iy: {
 														"data-highlight": true,
 														children: (
-															<React2.Fragment>
-																<motion2.p
+															<React.Fragment>
+																<motion.p
 																	className={"framer-styles-preset-1x4srpb"}
 																	data-styles-preset={"WGktsHNSh"}
 																	style={{
@@ -1033,23 +773,23 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
-																		<motion2.a
+																		<motion.a
 																			className={"framer-styles-preset-1i37dfc"}
 																			data-styles-preset={"uT5gCl_8P"}
 																		>
 																			{"FAQ"}
-																		</motion2.a>
+																		</motion.a>
 																	</Link>
-																</motion2.p>
-															</React2.Fragment>
+																</motion.p>
+															</React.Fragment>
 														),
 														onTap: onTap1vap3b3,
 													},
 													ypBE0GADG: {
 														"data-highlight": true,
 														children: (
-															<React2.Fragment>
-																<motion2.p
+															<React.Fragment>
+																<motion.p
 																	className={"framer-styles-preset-1x4srpb"}
 																	data-styles-preset={"WGktsHNSh"}
 																	style={{
@@ -1068,15 +808,15 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
-																		<motion2.a
+																		<motion.a
 																			className={"framer-styles-preset-1i37dfc"}
 																			data-styles-preset={"uT5gCl_8P"}
 																		>
 																			{"FAQ"}
-																		</motion2.a>
+																		</motion.a>
 																	</Link>
-																</motion2.p>
-															</React2.Fragment>
+																</motion.p>
+															</React.Fragment>
 														),
 														onTap: onTap19yqw1v,
 													},
@@ -1085,8 +825,8 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												gestureVariant,
 											)}
 										>
-											<React2.Fragment>
-												<motion2.p
+											<React.Fragment>
+												<motion.p
 													className={"framer-styles-preset-1x4srpb"}
 													data-styles-preset={"WGktsHNSh"}
 												>
@@ -1102,18 +842,18 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 														scopeId={"XmsKfRWHg"}
 														smoothScroll={true}
 													>
-														<motion2.a
+														<motion.a
 															className={"framer-styles-preset-1i37dfc"}
 															data-styles-preset={"uT5gCl_8P"}
 														>
 															{"FAQ"}
-														</motion2.a>
+														</motion.a>
 													</Link>
-												</motion2.p>
-											</React2.Fragment>
-										</RichText2>
-									</motion2.div>
-								</motion2.div>
+												</motion.p>
+											</React.Fragment>
+										</RichText>
+									</motion.div>
+								</motion.div>
 							)}
 							{isDisplayed2() && (
 								<ResolveLinks
@@ -1139,7 +879,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 									]}
 								>
 									{(resolvedLinks) => (
-										<ComponentViewportProvider2
+										<ComponentViewportProvider
 											height={40}
 											y={
 												(componentViewport?.y || 0) +
@@ -1177,7 +917,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												gestureVariant,
 											)}
 										>
-											<SmartComponentScopedContainer2
+											<SmartComponentScopedContainer
 												className={"framer-ndiw3d-container"}
 												layoutDependency={layoutDependency}
 												layoutId={"lFQdgHFZB-container"}
@@ -1185,7 +925,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												rendersWithMotion={true}
 												scopeId={"XmsKfRWHg"}
 											>
-												{_jsx2(stdin_default, {
+												{_jsx(stdin_default, {
 													b7sws2Xmf: false,
 													gDhgzsvqf: resolvedLinks[0],
 													height: "100%",
@@ -1217,19 +957,19 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 														gestureVariant,
 													),
 												})}
-											</SmartComponentScopedContainer2>
-										</ComponentViewportProvider2>
+											</SmartComponentScopedContainer>
+										</ComponentViewportProvider>
 									)}
 								</ResolveLinks>
 							)}
-						</motion2.div>
-					</motion2.nav>
-				</Transition2>
-			</Variants2>
-		</LayoutGroup2>
+						</motion.div>
+					</motion.nav>
+				</Transition>
+			</Variants>
+		</LayoutGroup>
 	);
 });
-var css5 = [
+var css3 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
 	".framer-adqrZ.framer-c615or, .framer-adqrZ .framer-c615or { display: block; }",
 	".framer-adqrZ.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
@@ -1263,8 +1003,8 @@ var css5 = [
 	...css,
 	...css2,
 ];
-var FramerXmsKfRWHg = withCSS2(Component2, css5, "framer-adqrZ");
-var stdin_default4 = FramerXmsKfRWHg;
+var FramerXmsKfRWHg = withCSS(Component, css3, "framer-adqrZ");
+var stdin_default3 = FramerXmsKfRWHg;
 FramerXmsKfRWHg.displayName = "Nav Bar";
 FramerXmsKfRWHg.defaultProps = {
 	height: 70,
@@ -1284,7 +1024,7 @@ addPropertyControls(FramerXmsKfRWHg, {
 		type: ControlType.Enum,
 	},
 });
-addFonts2(
+addFonts(
 	FramerXmsKfRWHg,
 	[
 		{
@@ -1354,8 +1094,8 @@ addFonts2(
 		},
 		...LogoFonts,
 		...ComponentButtonFonts,
-		...getFontsFromSharedStyle2(fonts),
-		...getFontsFromSharedStyle2(fonts2),
+		...getFontsFromSharedStyle(fonts),
+		...getFontsFromSharedStyle(fonts2),
 	],
 	{
 		supportsExplicitInterCodegen: true,
@@ -1382,7 +1122,7 @@ function ComponentWithRoot({ locale, ...rest }) {
 			locale={locale}
 			locales={locales}
 		>
-			{jsx(stdin_default4, {
+			{jsx(stdin_default3, {
 				...rest,
 			})}
 		</ContextProviders>
@@ -1416,13 +1156,13 @@ ComponentWithRoot.Responsive = ({ locale = "", ...rest }) => {
 			locales={locales}
 		>
 			<WithFramerBreakpoints
-				Component={stdin_default4}
+				Component={stdin_default3}
 				variants={defaultResponsiveVariants}
 				{...rest}
 			/>
 		</ContextProviders>
 	);
 };
-Object.assign(ComponentWithRoot, stdin_default4);
+Object.assign(ComponentWithRoot, stdin_default3);
 var nav_bar_default = ComponentWithRoot;
 export { nav_bar_default as default };

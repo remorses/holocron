@@ -23,11 +23,11 @@
 }} Props
 
  */
-import { stdin_default as stdin_default2 } from "../chunks/chunk-IETFVNRG.js";
-import { className, css, fonts } from "../chunks/chunk-6G2SY433.js";
+import { stdin_default } from "../chunks/chunk-IETFVNRG.js";
 import "../chunks/chunk-BTSBQWPZ.js";
+import { className, css, fonts } from "../chunks/chunk-6G2SY433.js";
 import "../chunks/chunk-EWWPQ2JC.js";
-import { stdin_default } from "../chunks/chunk-EHCTMXQN.js";
+import { stdin_default as stdin_default2 } from "../chunks/chunk-EHCTMXQN.js";
 import { routes } from "../chunks/chunk-75FLX355.js";
 
 // virtual:component/cta
@@ -406,10 +406,10 @@ var className2 = "framer-zhPc1";
 // /:https://framerusercontent.com/modules/3ZFMIMC6WwAlWOtEl0nt/f8NIJhft4xMfFpkVi6Jh/UwAUJRUI6.js
 var GrainFonts = getFonts(Grain);
 var RichTextWithFX = withFX(RichText);
-var ComponentButtonFonts = getFonts(stdin_default2);
+var ComponentButtonFonts = getFonts(stdin_default);
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
 var MotionDivWithFX = withFX(motion2.div);
-var GridFonts = getFonts(stdin_default);
+var GridFonts = getFonts(stdin_default2);
 var cycleOrder = ["h4Htb6ikw", "zAYUkgshF", "wNpY6eSkL"];
 var serializationHash = "framer-BdmJM";
 var variantClassNames = {
@@ -758,7 +758,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										rendersWithMotion={true}
 										scopeId={"UwAUJRUI6"}
 									>
-										{_jsx2(stdin_default2, {
+										{_jsx2(stdin_default, {
 											b7sws2Xmf: true,
 											gDhgzsvqf: "https://www.framer.com?via=green13",
 											height: "100%",
@@ -800,7 +800,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									rendersWithMotion={true}
 									scopeId={"UwAUJRUI6"}
 								>
-									{_jsx2(stdin_default, {
+									{_jsx2(stdin_default2, {
 										height: "100%",
 										id: "WaP5g_VO4",
 										layoutId: "WaP5g_VO4",
