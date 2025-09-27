@@ -20,17 +20,18 @@
  * height?: any
  * layoutId?: string
  * variant?: 'Desktop' | 'Tablet - Close' | 'Tablet - Open' | 'Phone -Close' | 'Phone - Open' // Variant
+ * navCta?: string // navCta
 }} Props
 
  */
+import { stdin_default as stdin_default2 } from "./chunks/chunk-4H26PR3V.js";
+import "./chunks/chunk-QAV64ZEM.js";
 import {
 	className as className2,
 	css as css2,
 	fonts as fonts2,
 } from "./chunks/chunk-M65DCHB6.js";
-import { stdin_default as stdin_default2 } from "./chunks/chunk-BCBVPGVB.js";
 import "./chunks/chunk-FWELEOPG.js";
-import "./chunks/chunk-QAV64ZEM.js";
 import { stdin_default } from "./chunks/chunk-IETFVNRG.js";
 import "./chunks/chunk-BTSBQWPZ.js";
 import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
@@ -40,7 +41,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/3nvS5VgfVwLDqgwaQ1hx/XmsKfRWHg.js
+// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/judoiLUUG7VRXvkBv38A/XmsKfRWHg.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -51,13 +52,11 @@ import {
 	getFonts,
 	getFontsFromSharedStyle,
 	Link,
-	ResolveLinks,
 	RichText,
 	SmartComponentScopedContainer,
 	useActiveVariantCallback,
 	useComponentViewport,
 	useLocaleInfo,
-	useRouter,
 	useVariantState,
 	withCSS,
 } from "unframer";
@@ -73,7 +72,7 @@ var cycleOrder = [
 	"lTFPk57AC",
 	"FSWJCj0iy",
 ];
-var serializationHash = "framer-adqrZ";
+var serializationHash = "framer-Yajrq";
 var variantClassNames = {
 	c6mQiEUZR: "framer-v-1d9x1ba",
 	FSWJCj0iy: "framer-v-1e176yj",
@@ -129,9 +128,10 @@ var humanReadableVariantMap = {
 	"Tablet - Open": "ypBE0GADG",
 	Desktop: "c6mQiEUZR",
 };
-var getProps = ({ height, id, width, ...props }) => {
+var getProps = ({ height, id, navCta, width, ...props }) => {
 	return {
 		...props,
+		KVWh_V2xG: navCta ?? props.KVWh_V2xG,
 		variant:
 			humanReadableVariantMap[props.variant] ?? props.variant ?? "c6mQiEUZR",
 	};
@@ -152,6 +152,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		className: className3,
 		layoutId,
 		variant,
+		KVWh_V2xG,
 		...restProps
 	} = getProps(props);
 	const {
@@ -206,7 +207,6 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		if (["oVqk5DKpt", "lTFPk57AC"].includes(baseVariant)) return false;
 		return true;
 	};
-	const router = useRouter();
 	return (
 		<LayoutGroup id={layoutId ?? defaultLayoutId}>
 			<Variants animate={variants} initial={false}>
@@ -345,7 +345,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														y:
 															(componentViewport?.y || 0) +
 															(18 +
-																((componentViewport?.height || 288) -
+																((componentViewport?.height || 200) -
 																	36 -
 																	249.4) /
 																	2) +
@@ -358,7 +358,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														y:
 															(componentViewport?.y || 0) +
 															(18 +
-																((componentViewport?.height || 64) - 36 - 29) /
+																((componentViewport?.height || 200) - 36 - 29) /
 																	2) +
 															0 +
 															4 +
@@ -856,111 +856,80 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								</motion.div>
 							)}
 							{isDisplayed2() && (
-								<ResolveLinks
-									links={[
+								<ComponentViewportProvider
+									height={40}
+									y={
+										(componentViewport?.y || 0) +
+										(0 + ((componentViewport?.height || 70) - 0 - 40) / 2) +
+										0
+									}
+									{...addPropertyOverrides(
 										{
-											href: {
-												webPageId: "p4p9Y1lWb",
+											FSWJCj0iy: {
+												width: `max(${componentViewport?.width || "100vw"} - 40px, 1px)`,
+												y:
+													(componentViewport?.y || 0) +
+													(18 +
+														((componentViewport?.height || 200) - 36 - 249.4) /
+															2) +
+													0 +
+													209.4,
 											},
-											implicitPathVariables: void 0,
-										},
-										{
-											href: {
-												webPageId: "p4p9Y1lWb",
+											ypBE0GADG: {
+												width: `max(${componentViewport?.width || "100vw"} - 80px, 1px)`,
+												y:
+													(componentViewport?.y || 0) +
+													(18 +
+														((componentViewport?.height || 304) - 36 - 254.4) /
+															2) +
+													0 +
+													214.4,
 											},
-											implicitPathVariables: void 0,
 										},
-										{
-											href: {
-												webPageId: "p4p9Y1lWb",
-											},
-											implicitPathVariables: void 0,
-										},
-									]}
+										baseVariant,
+										gestureVariant,
+									)}
 								>
-									{(resolvedLinks) => (
-										<ComponentViewportProvider
-											height={40}
-											y={
-												(componentViewport?.y || 0) +
-												(0 + ((componentViewport?.height || 70) - 0 - 40) / 2) +
-												0
-											}
-											{...addPropertyOverrides(
+									<SmartComponentScopedContainer
+										className={"framer-ndiw3d-container"}
+										layoutDependency={layoutDependency}
+										layoutId={"lFQdgHFZB-container"}
+										nodeId={"lFQdgHFZB"}
+										rendersWithMotion={true}
+										scopeId={"XmsKfRWHg"}
+									>
+										{_jsx(stdin_default, {
+											b7sws2Xmf: false,
+											gDhgzsvqf: KVWh_V2xG,
+											height: "100%",
+											id: "lFQdgHFZB",
+											layoutId: "lFQdgHFZB",
+											nx2tuureE: "Dashboard",
+											variant: "feWXGq4P4",
+											width: "100%",
+											...addPropertyOverrides(
 												{
 													FSWJCj0iy: {
-														width: `max(${componentViewport?.width || "100vw"} - 40px, 1px)`,
-														y:
-															(componentViewport?.y || 0) +
-															(18 +
-																((componentViewport?.height || 288) -
-																	36 -
-																	249.4) /
-																	2) +
-															0 +
-															209.4,
+														LPw9Av7yM: void 0,
+														style: {
+															width: "100%",
+														},
+														variant: "h_czR0__J",
 													},
 													ypBE0GADG: {
-														width: `max(${componentViewport?.width || "100vw"} - 80px, 1px)`,
-														y:
-															(componentViewport?.y || 0) +
-															(18 +
-																((componentViewport?.height || 304) -
-																	36 -
-																	254.4) /
-																	2) +
-															0 +
-															214.4,
+														LPw9Av7yM: void 0,
+														style: {
+															width: "100%",
+														},
+														variant: "dpEXmejGI",
 													},
 												},
 												baseVariant,
 												gestureVariant,
-											)}
-										>
-											<SmartComponentScopedContainer
-												className={"framer-ndiw3d-container"}
-												layoutDependency={layoutDependency}
-												layoutId={"lFQdgHFZB-container"}
-												nodeId={"lFQdgHFZB"}
-												rendersWithMotion={true}
-												scopeId={"XmsKfRWHg"}
-											>
-												{_jsx(stdin_default, {
-													b7sws2Xmf: false,
-													gDhgzsvqf: resolvedLinks[0],
-													height: "100%",
-													id: "lFQdgHFZB",
-													layoutId: "lFQdgHFZB",
-													nx2tuureE: "Dashboard",
-													variant: "feWXGq4P4",
-													width: "100%",
-													...addPropertyOverrides(
-														{
-															FSWJCj0iy: {
-																gDhgzsvqf: resolvedLinks[2],
-																LPw9Av7yM: void 0,
-																style: {
-																	width: "100%",
-																},
-																variant: "h_czR0__J",
-															},
-															ypBE0GADG: {
-																gDhgzsvqf: resolvedLinks[1],
-																LPw9Av7yM: void 0,
-																style: {
-																	width: "100%",
-																},
-																variant: "dpEXmejGI",
-															},
-														},
-														baseVariant,
-														gestureVariant,
-													),
-												})}
-											</SmartComponentScopedContainer>
-										</ComponentViewportProvider>
-									)}
-								</ResolveLinks>
+											),
+										})}
+									</SmartComponentScopedContainer>
+								</ComponentViewportProvider>
 							)}
 						</motion.div>
 					</motion.nav>
@@ -971,39 +940,39 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css3 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-adqrZ.framer-c615or, .framer-adqrZ .framer-c615or { display: block; }",
-	".framer-adqrZ.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
-	".framer-adqrZ .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-adqrZ .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-adqrZ .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
-	".framer-adqrZ .framer-8p6p2b-container, .framer-adqrZ .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-adqrZ .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
-	".framer-adqrZ .framer-10jqita, .framer-adqrZ .framer-1xx0lo2, .framer-adqrZ .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
-	".framer-adqrZ .framer-l7mfmx, .framer-adqrZ .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-adqrZ .framer-uh0ias, .framer-adqrZ .framer-18dt6r6, .framer-adqrZ .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-adqrZ.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
-	".framer-adqrZ.framer-v-1xrbkc6 .framer-nmzyuu, .framer-adqrZ.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
-	".framer-adqrZ.framer-v-1xrbkc6 .framer-ydgisg, .framer-adqrZ.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
-	".framer-adqrZ.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-nmzyuu, .framer-adqrZ.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-ydgisg, .framer-adqrZ.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-adqrZ.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-adqrZ.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-l7mfmx, .framer-adqrZ.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-wz2tj0, .framer-adqrZ.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-uh0ias, .framer-adqrZ.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-18dt6r6, .framer-adqrZ.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 1; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-vcuy02, .framer-adqrZ.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 2; }",
-	".framer-adqrZ.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
-	".framer-adqrZ.framer-v-1a1l0re.framer-1d9x1ba, .framer-adqrZ.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
-	".framer-adqrZ.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-adqrZ.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-adqrZ.framer-v-1e176yj .framer-1xx0lo2, .framer-adqrZ.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
-	".framer-adqrZ.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
+	".framer-Yajrq.framer-c615or, .framer-Yajrq .framer-c615or { display: block; }",
+	".framer-Yajrq.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
+	".framer-Yajrq .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-Yajrq .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-Yajrq .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
+	".framer-Yajrq .framer-8p6p2b-container, .framer-Yajrq .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-Yajrq .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
+	".framer-Yajrq .framer-10jqita, .framer-Yajrq .framer-1xx0lo2, .framer-Yajrq .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
+	".framer-Yajrq .framer-l7mfmx, .framer-Yajrq .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-Yajrq .framer-uh0ias, .framer-Yajrq .framer-18dt6r6, .framer-Yajrq .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-Yajrq.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
+	".framer-Yajrq.framer-v-1xrbkc6 .framer-nmzyuu, .framer-Yajrq.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
+	".framer-Yajrq.framer-v-1xrbkc6 .framer-ydgisg, .framer-Yajrq.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
+	".framer-Yajrq.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-nmzyuu, .framer-Yajrq.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-ydgisg, .framer-Yajrq.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-Yajrq.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-Yajrq.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-l7mfmx, .framer-Yajrq.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-wz2tj0, .framer-Yajrq.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-uh0ias, .framer-Yajrq.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-18dt6r6, .framer-Yajrq.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 1; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-vcuy02, .framer-Yajrq.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 2; }",
+	".framer-Yajrq.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
+	".framer-Yajrq.framer-v-1a1l0re.framer-1d9x1ba, .framer-Yajrq.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
+	".framer-Yajrq.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 29px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-Yajrq.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 29px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-Yajrq.framer-v-1e176yj .framer-1xx0lo2, .framer-Yajrq.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
+	".framer-Yajrq.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
 	...css,
 	...css2,
 ];
-var FramerXmsKfRWHg = withCSS(Component, css3, "framer-adqrZ");
+var FramerXmsKfRWHg = withCSS(Component, css3, "framer-Yajrq");
 var stdin_default3 = FramerXmsKfRWHg;
 FramerXmsKfRWHg.displayName = "Nav Bar";
 FramerXmsKfRWHg.defaultProps = {
@@ -1022,6 +991,10 @@ addPropertyControls(FramerXmsKfRWHg, {
 		],
 		title: "Variant",
 		type: ControlType.Enum,
+	},
+	KVWh_V2xG: {
+		title: "navCta",
+		type: ControlType.Link,
 	},
 });
 addFonts(
