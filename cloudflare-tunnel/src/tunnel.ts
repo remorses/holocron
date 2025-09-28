@@ -136,6 +136,8 @@ export class Tunnel {
           down.close(1012, 'upstream closed')
         } catch { }
       }
+
+      this.closeAllUpstreams({ code: 1012, reason: 'upstream closed' })
     }
     // If downstream closes, it's automatically removed from the live set
   }
@@ -152,20 +154,40 @@ export class Tunnel {
           down.close(1011, 'upstream error')
         } catch { }
       }
+
+      this.closeAllUpstreams({ code: 1011, reason: 'upstream error' })
+    }
+  }
+
+  private closeAllUpstreams({ code, reason }: { code: number; reason: string }) {
+    const ups = this.getUpstreamSockets()
+    for (const up of ups) {
+      try {
+        up.close(code, reason)
+      } catch { }
     }
   }
 
   /* ------ Helper methods to get live sockets ------ */
 
   private getUpstream(): WebSocket | null {
+    const ups = this.getUpstreamSockets()
+    if (ups.length === 0) {
+      return null
+    }
+    return ups[0]
+  }
+
+  private getUpstreamSockets(): WebSocket[] {
     const sockets = this.ctx.getWebSockets()
+    const ups: WebSocket[] = []
     for (const ws of sockets) {
       const attachment = ws.deserializeAttachment() as Attachment | undefined
       if (attachment?.role === 'up') {
-        return ws
+        ups.push(ws)
       }
     }
-    return null
+    return ups
   }
 
   private getDownstreams(): WebSocket[] {

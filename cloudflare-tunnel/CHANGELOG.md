@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-09-28 00:00
+
+- Close upstream socket when its client disconnects to prevent lingering connections
+- Close all upstream sockets when duplicates slip through connection checks
+
 ## 2025-01-28 18:20
 
 - Add `Attachment` type for WebSocket attachments with role field
