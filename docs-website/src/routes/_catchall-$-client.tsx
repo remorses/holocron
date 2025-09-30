@@ -180,7 +180,7 @@ function PageContent(props: Route.ComponentProps): any {
           <LLMCopyButton slug={slugs} contextual={docsJson?.contextual} />
           <ViewOptions
             markdownUrl={`${slug}.mdx`}
-            githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/${githubPath}`}
+            githubUrl={owner && repo ? `https://github.com/${owner}/${repo}/blob/${githubBranch}/${githubPath}` : undefined}
             contextual={docsJson?.contextual}
           />
           {!isEditorDisabled && <EditorToggle />}

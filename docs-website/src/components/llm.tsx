@@ -92,7 +92,7 @@ const optionVariants = cva(
 
 export function ViewOptions(props: {
   markdownUrl: string
-  githubUrl: string
+  githubUrl?: string
   contextual?: DocsJsonType['contextual']
 }) {
   // Get enabled options from contextual config
@@ -116,7 +116,8 @@ export function ViewOptions(props: {
   // Build available actions based on options
   const actions: Array<{ title: string; href: string; icon: ReactElement }> = []
 
-  if (options.includes('view')) {
+
+  if (options.includes('view') && props.githubUrl) {
     actions.push({
       title: 'Open in GitHub',
       href: props.githubUrl,
