@@ -242,7 +242,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       siteId,
       githubFolder: basePath,
       name: repo,
-      docsJson,
+      ignorePatterns: docsJson?.ignore || [],
     })
 
     if (pageCount === 0) {

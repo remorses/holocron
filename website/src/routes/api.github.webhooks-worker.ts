@@ -162,7 +162,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
       githubFolder: siteBranch.site.githubFolder,
       files: changedFiles,
       name: siteBranch.site.name || '',
-      docsJson: (siteBranch.docsJson || {}) as DocsJsonType,
+      ignorePatterns: ((siteBranch.docsJson || {}) as any)?.ignore || [],
     })
 
     // Update last sync info

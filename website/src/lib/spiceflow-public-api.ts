@@ -215,16 +215,10 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       }
 
       const docsJson = (branch.docsJson || {}) as DocsJsonType
-      const docsJsonComments = (branch.docsJsonComments || {}) as any
 
       const assets = assetsFromFilesList({
         files,
-        docsJson,
         githubFolder: site.githubFolder || '',
-        docsJsonComments: {
-          ...defaultDocsJsonComments,
-          ...docsJsonComments
-        }
       })
 
       const { pageCount } = await syncSite({
@@ -233,7 +227,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
         branchId: branch.branchId,
         siteId,
         name: site.name || '',
-        docsJson
+        ignorePatterns: (docsJson)?.ignore || []
       })
 
       await prisma.siteBranch.update({

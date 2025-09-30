@@ -1,5 +1,13 @@
 # Changelog
 
+## 2025-01-30 12:30
+
+- Fix docs.json (holocron.jsonc) not being saved when updating website files through chat
+- Refactor `assetsFromFilesList` to remove docsJson/docsJsonComments parameters
+- Refactor `syncSite` to remove docsJson parameter, replace with ignorePatterns
+- Require callers to explicitly include holocron.jsonc in files array when needed
+- Only update docsJson in database when holocron.jsonc is explicitly modified
+
 ## 2025-01-25 11:00
 
 - Refactor public REST API v1 with simplified architecture

@@ -1,7 +1,10 @@
 import { ulid } from 'ulid'
+import path from 'node:path'
 import { prisma } from 'db'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
+import { applyJsonCComments } from './json-c-comments'
 import { env } from './env'
 import { assetsFromFilesList, syncSite } from './sync'
 import { slugKebabCaseKeepExtension } from './utils'
@@ -128,14 +131,22 @@ export async function createSite({
 
   console.log(`created site ${siteId}`)
 
+  // Add docsJson as a file if not already present
+  const docsJsonPath = path.posix.join(sanitizedGithubFolder || '.', DOCS_JSON_BASENAME)
+  const hasDocsJson = files.some(f => f.relativePath === docsJsonPath || f.relativePath === DOCS_JSON_BASENAME)
+  
+  const filesWithDocsJson = hasDocsJson ? files : [
+    ...files,
+    {
+      relativePath: docsJsonPath,
+      contents: applyJsonCComments(docsJson, defaultDocsJsonComments, 2),
+    }
+  ]
+
   // Always sync files (empty array creates initial structure)
   const assets = assetsFromFilesList({
-    files,
+    files: filesWithDocsJson,
     githubFolder: sanitizedGithubFolder || '',
-    docsJson,
-    docsJsonComments: {
-      ...defaultDocsJsonComments,
-    },
   })
   // Do domain creation, chat creation, and syncSite in parallel
   const [_, chat, syncResult] = await Promise.all([
@@ -161,7 +172,7 @@ export async function createSite({
       branchId,
       siteId,
       name,
-      docsJson,
+      ignorePatterns: docsJson?.ignore || [],
     }),
   ])
 

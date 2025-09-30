@@ -206,13 +206,14 @@ export const app = new Spiceflow({ basePath: '/api' })
         branch: githubBranch,
         forceFullSync: true,
       })
+      const docsJson = (branch.docsJson || {}) as any
       const { pageCount } = await syncSite({
         siteId,
         githubFolder,
         branchId,
         name: site.name || '',
         files: pages,
-        docsJson: (branch.docsJson || {}) as DocsJsonType,
+        ignorePatterns: docsJson?.ignore || [],
       })
 
       await prisma.siteBranch.update({
@@ -773,17 +774,15 @@ export const app = new Spiceflow({ basePath: '/api' })
           contents: fileUpdate?.content || '',
         }))
 
-      // Get current docsJson and comments
-      const docsJson = (branch.docsJson || {}) as DocsJsonType
-      const docsJsonComments = (branch.docsJsonComments || {}) as any
-
       // Convert files to assets generator
+      // Only include files that are actually modified - no defaults
       const assets = assetsFromFilesList({
         files,
-        docsJson,
-        docsJsonComments,
         githubFolder: site.githubFolder || '',
       })
+
+      // Get current docsJson for syncSite (needed for ignore patterns)
+      const docsJson = (branch.docsJson || {}) as DocsJsonType
 
       // Sync the files as markdown pages
       const { pageCount } = await syncSite({
@@ -792,7 +791,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         branchId,
         siteId: site.siteId,
         name: site.name || '',
-        docsJson,
+        ignorePatterns: (docsJson)?.ignore || [],
       })
 
       // Update chat with the saved files
@@ -981,22 +980,16 @@ export const app = new Spiceflow({ basePath: '/api' })
 
       // For updates (existing sites), we need to sync again
       if (siteId) {
-        // Fetch the branch's latest docsJson
+        // Fetch the branch's latest docsJson (needed for syncSite's ignore patterns)
         const branch = await prisma.siteBranch.findFirst({
           where: { branchId: finalBranchId },
         })
         const docsJson = branch?.docsJson as DocsJsonType
-        const docsJsonComments = branch?.docsJsonComments as any
 
         // Convert files to pages format
         const assets = assetsFromFilesList({
           files,
-          docsJson,
           githubFolder: githubFolder || '',
-          docsJsonComments: {
-            ...defaultDocsJsonComments,
-            ...docsJsonComments,
-          },
         })
 
         const syncResult = await syncSite({
@@ -1005,7 +998,7 @@ export const app = new Spiceflow({ basePath: '/api' })
           branchId: finalBranchId,
           siteId: finalSiteId,
           name,
-          docsJson,
+          ignorePatterns: (docsJson as any)?.ignore || [],
         })
         pageCount = syncResult.pageCount
       } else {

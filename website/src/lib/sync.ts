@@ -117,8 +117,6 @@ export function isMediaFile(path: string): boolean {
 
 export async function* assetsFromFilesList({
   files,
-  docsJson: defaultDocsJson,
-  docsJsonComments: defaultDocsJsonComments,
   githubFolder,
 }: {
   files: {
@@ -128,13 +126,11 @@ export async function* assetsFromFilesList({
     metadata?: { width?: number; height?: number; bytes?: number }
   }[]
   githubFolder: string
-  docsJson?: DocsJsonType
-  docsJsonComments?: JsonCComments
 }): AsyncGenerator<AssetForSync> {
   // Check if docs json exists in the files
   const holocronJsonFile = files.find((f) => isDocsJson(f.relativePath))
 
-  // Use docs json from files if present, otherwise use defaults
+  // Only process docsJson if it exists in the files
   let docsJson: DocsJsonType | undefined
   let docsJsonComments: JsonCComments | undefined
 
@@ -143,10 +139,6 @@ export async function* assetsFromFilesList({
     const { comments, data } = extractJsonCComments(holocronJsonFile.contents)
     docsJson = data
     docsJsonComments = comments
-  } else {
-    // Fall back to defaults
-    docsJson = defaultDocsJson
-    docsJsonComments = defaultDocsJsonComments
   }
   // First handle meta.json files
   const metaFiles = files.filter((file) => file.relativePath.endsWith('meta.json'))
@@ -236,7 +228,7 @@ export async function syncSite({
   files,
   signal,
   githubFolder,
-  docsJson,
+  ignorePatterns = [],
 }: {
   files: AsyncIterable<AssetForSync>
   branchId: string
@@ -244,13 +236,11 @@ export async function syncSite({
   siteId: string
   name: string
   signal?: AbortSignal
-  docsJson: DocsJsonType
+  ignorePatterns?: string[]
 }): Promise<{ pageCount: number }> {
   const concurrencyLimit = 2
   const semaphore = new Sema(concurrencyLimit)
   let pageCount = 0
-
-  const ignorePatterns = docsJson?.ignore || []
 
   // Helper function to check if a file should be ignored
   const shouldIgnoreFile = (githubPath: string): boolean => {
@@ -332,7 +322,6 @@ export async function syncSite({
   async function syncDocsJson(asset: AssetForSync): Promise<SearchApiFile[]> {
     if (asset.type !== 'docsJson') return []
 
-    console.log(`Updating docsJson for branch ${branchId}`)
     const { data: jsonData, comments } = extractJsonCComments(asset.content)
     await prisma.siteBranch.update({
       where: { branchId },
