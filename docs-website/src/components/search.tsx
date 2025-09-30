@@ -21,6 +21,7 @@ import { buttonVariants } from 'fumadocs-ui/components/ui/button'
 import { cn } from '../lib/cn'
 import { WEBSITE_DOMAIN } from '../lib/env'
 import { usePersistentDocsState } from '../lib/docs-state'
+import { useDocsJson } from '../lib/hooks'
 
 const tags = [
   {
@@ -34,6 +35,7 @@ export function CustomSearchDialog(props: SharedProps) {
   const [open, setOpen] = useState(false)
   const [tag, setTag] = useState<string | undefined>()
   const chatId = usePersistentDocsState((state) => state.chatId)
+  const docsJson = useDocsJson()
 
   const { search, setSearch, query } = useDocsSearch({
     type: 'fetch',
@@ -112,11 +114,11 @@ export function CustomSearchDialog(props: SharedProps) {
             </PopoverContent>
           </Popover>
           <a
-            href={`https://${WEBSITE_DOMAIN}`}
+            href={docsJson?.poweredBy?.url || `https://${WEBSITE_DOMAIN}`}
             rel='noreferrer noopener'
             className='text-xs text-nowrap text-fd-muted-foreground'
           >
-            Powered by Holocron
+            Powered by {docsJson?.poweredBy?.name || 'Holocron'}
           </a>
         </SearchDialogFooter>
       </SearchDialogContent>

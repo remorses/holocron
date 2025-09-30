@@ -385,6 +385,14 @@ export const DocsConfigSchema = z
       .boolean()
       .optional()
       .describe('Whether to disable the edit button and Monaco editor functionality'),
+    poweredBy: z
+      .object({
+        name: z.string().describe('Name to display in the powered by text'),
+        url: z.string().url().describe('URL to link to when clicking the powered by text'),
+      })
+      .optional()
+      .meta({ hidden: true })
+      .describe('Custom powered by attribution'),
   })
   .strict()
 
