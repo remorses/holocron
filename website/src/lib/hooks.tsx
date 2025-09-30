@@ -1,7 +1,7 @@
 import React, { RefObject, useEffect, useRef } from 'react'
 import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.branch.$branchId.chat.$chatId._index'
 
-import { useRouteLoaderData } from 'react-router'
+import { useRouteLoaderData, useBlocker, type Blocker } from 'react-router'
 import { toast } from 'sonner'
 import { useWebsiteState } from './state'
 import { isDocsJson } from 'docs-website/src/lib/utils'
@@ -126,4 +126,39 @@ export function useShouldHideBrowser() {
   })
   if (hasDraftFiles) return false
   return hasNoFilesInLoader
+}
+
+export function useConfirmLeave({
+  when,
+  message = 'You have unsaved changes. Are you sure you want to leave?'
+}: {
+  when: boolean | Parameters<typeof useBlocker>[0]
+  message?: string
+}) {
+  const blocker: Blocker = useBlocker(when);
+
+  // Handle SPA navigation blocking
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      const confirmLeave = window.confirm(message)
+      if (confirmLeave) {
+        blocker.proceed()
+      } else {
+        blocker.reset()
+      }
+    }
+  }, [blocker, message])
+
+  // Native prompt for tab close/reload/new URL (not for SPA links)
+  useEffect(() => {
+    if (!when) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ""; // required to trigger the prompt in modern browsers
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [when]);
+
+  return blocker;
 }

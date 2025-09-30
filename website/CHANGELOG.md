@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-01-30 14:00
+
+- Block navigation when user has unsaved changes in chat view
+- Add `useConfirmLeave` hook to lib/hooks.tsx with configurable message
+- Hook handles both SPA navigation and browser tab close/reload confirmation
+- Automatically shows confirmation dialog when navigation is blocked
+
 ## 2025-01-30 12:30
 
 - Fix docs.json (holocron.jsonc) not being saved when updating website files through chat

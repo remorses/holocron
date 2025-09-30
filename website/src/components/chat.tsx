@@ -21,7 +21,7 @@ import { DiffStats, PrButton, SaveChangesButton } from './chat-buttons'
 import { WelcomeMessage } from './chat-welcome'
 
 import { ToolPartInputStreaming, ToolPartOutputAvailable, uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
-import { useShouldHideBrowser } from '../lib/hooks'
+import { useShouldHideBrowser, useConfirmLeave } from '../lib/hooks'
 import { apiClient, apiClientWithDurableFetch, durableFetchClient } from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 
@@ -661,6 +661,12 @@ function Footer() {
   const hasNonPushedChanges = useMemo(() => {
     return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
   }, [filesInDraft, lastPushedFiles])
+
+  // Block navigation when there are unsaved changes
+  useConfirmLeave({
+    when: hasNonPushedChanges,
+    message: 'You have unsaved changes. Are you sure you want to leave?'
+  })
 
   useEffect(() => {
     const lastMessageId = messages[messages!.length - 1]?.id || ''
