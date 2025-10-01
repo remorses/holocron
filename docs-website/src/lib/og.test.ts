@@ -1,12 +1,13 @@
 import { describe, test, expect } from 'vitest'
 import { writeFileSync } from 'node:fs'
-import { generateOgImageSvg, generateOgImagePng } from './og'
+import { generateOgImageSvg, generateOgImagePng, type GenerateOgImageOptions } from './og'
 
 describe('OG Image Generation', () => {
-  test('generates OG image', { timeout: 10000 }, async () => {
-    const options = {
+  test('generates OG image', { timeout: 30000 }, async () => {
+    const options: GenerateOgImageOptions = {
       title: 'Test Documentation',
       description: 'This is a test description for the OG image generation. It should be truncated after 125 characters to ensure consistent layout.',
+      faviconUrl: 'https://notaku.so/logo.svg',
       siteName: 'Fumabase Docs',
       siteTagline: 'Open Source Documentation',
     }
