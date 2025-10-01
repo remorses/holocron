@@ -164,7 +164,7 @@ const OgBase: React.FC<OgBaseProps> = ({
                 }}
               >
                 <HolocronLogo style={{ height: '1em', width: '1.1em', opacity: 0.7 }} />
-                <span>{siteName}</span>
+                <span style={{ fontWeight: 600, fontFamily: 'GeistBold' }}>{siteName}</span>
               </div>
               {siteTagline && (
                 <span style={{ opacity: 0.5, fontSize: '1.6rem' }}>
