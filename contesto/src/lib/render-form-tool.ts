@@ -1,12 +1,10 @@
 import { ModelMessage, tool, UIMessage } from 'ai'
 import dedent from 'string-dedent'
 import type { JSONSchema7 } from 'json-schema'
-import * as schemaLib from 'json-schema-library'
+import { compileSchema } from 'json-schema-library'
 import { z } from 'zod'
 import { optionalToNullable } from './zod.js'
 import { extractNamePathsFromSchema } from './schema-path-utils.js'
-
-const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 
 export interface RenderFormToolConfig {
   jsonSchema?: JSONSchema7
