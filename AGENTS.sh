@@ -14,11 +14,15 @@ OUTPUT_FILE="AGENTS.md"
 
 echo "$PREFIX" > "$OUTPUT_FILE"
 
+# Force cache refresh with initial files listing
+echo "Refreshing gitchamber cache..."
+curl -fsSL "https://gitchamber.com/repos/remorses/AGENTS.md/main/files?force=true" > /dev/null
+
 for f in \
     core.md \
     typescript.md \
     pnpm.md \
-    gitchamber.md \
+    github.md \
     react.md \
     sentry.md \
     vitest.md \
@@ -36,7 +40,7 @@ for f in \
     playwright.md \
     zod.md; do
   echo "Fetching $f..."
-  curl -fsSL "https://raw.githubusercontent.com/remorses/AGENTS.md/main/$f" >> "$OUTPUT_FILE"
+  curl -fsSL "https://gitchamber.com/repos/remorses/AGENTS.md/main/files/$f" >> "$OUTPUT_FILE"
   printf '\n\n---\n\n' >> "$OUTPUT_FILE"
 done
 
