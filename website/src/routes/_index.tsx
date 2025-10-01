@@ -31,6 +31,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function App() {
   const navigation = useNavigation()
   const isLoading = navigation.state !== 'idle'
+  React.useEffect(() => {
+    const input = document.getElementsByName('prompt')[0] as HTMLInputElement | undefined
+    if (input) {
+      input.focus()
+    }
+  }, [])
   return (
     <Form
       action='/login'

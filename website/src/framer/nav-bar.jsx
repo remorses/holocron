@@ -20,7 +20,6 @@
  * height?: any
  * layoutId?: string
  * variant?: 'Desktop' | 'Tablet - Close' | 'Tablet - Open' | 'Phone -Close' | 'Phone - Open' // Variant
- * navCta?: string // navCta
 }} Props
 
  */
@@ -41,7 +40,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/judoiLUUG7VRXvkBv38A/XmsKfRWHg.js
+// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/RrJp0K0m8xyuNryVmbFF/XmsKfRWHg.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -52,11 +51,13 @@ import {
 	getFonts,
 	getFontsFromSharedStyle,
 	Link,
+	ResolveLinks,
 	RichText,
 	SmartComponentScopedContainer,
 	useActiveVariantCallback,
 	useComponentViewport,
 	useLocaleInfo,
+	useRouter,
 	useVariantState,
 	withCSS,
 } from "unframer";
@@ -72,7 +73,7 @@ var cycleOrder = [
 	"lTFPk57AC",
 	"FSWJCj0iy",
 ];
-var serializationHash = "framer-Yajrq";
+var serializationHash = "framer-SBHV8";
 var variantClassNames = {
 	c6mQiEUZR: "framer-v-1d9x1ba",
 	FSWJCj0iy: "framer-v-1e176yj",
@@ -128,10 +129,9 @@ var humanReadableVariantMap = {
 	"Tablet - Open": "ypBE0GADG",
 	Desktop: "c6mQiEUZR",
 };
-var getProps = ({ height, id, navCta, width, ...props }) => {
+var getProps = ({ height, id, width, ...props }) => {
 	return {
 		...props,
-		KVWh_V2xG: navCta ?? props.KVWh_V2xG,
 		variant:
 			humanReadableVariantMap[props.variant] ?? props.variant ?? "c6mQiEUZR",
 	};
@@ -152,7 +152,6 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		className: className3,
 		layoutId,
 		variant,
-		KVWh_V2xG,
 		...restProps
 	} = getProps(props);
 	const {
@@ -207,6 +206,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		if (["oVqk5DKpt", "lTFPk57AC"].includes(baseVariant)) return false;
 		return true;
 	};
+	const router = useRouter();
 	return (
 		<LayoutGroup id={layoutId ?? defaultLayoutId}>
 			<Variants animate={variants} initial={false}>
@@ -856,80 +856,111 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								</motion.div>
 							)}
 							{isDisplayed2() && (
-								<ComponentViewportProvider
-									height={40}
-									y={
-										(componentViewport?.y || 0) +
-										(0 + ((componentViewport?.height || 70) - 0 - 40) / 2) +
-										0
-									}
-									{...addPropertyOverrides(
+								<ResolveLinks
+									links={[
 										{
-											FSWJCj0iy: {
-												width: `max(${componentViewport?.width || "100vw"} - 40px, 1px)`,
-												y:
-													(componentViewport?.y || 0) +
-													(18 +
-														((componentViewport?.height || 200) - 36 - 249.4) /
-															2) +
-													0 +
-													209.4,
+											href: {
+												webPageId: "p4p9Y1lWb",
 											},
-											ypBE0GADG: {
-												width: `max(${componentViewport?.width || "100vw"} - 80px, 1px)`,
-												y:
-													(componentViewport?.y || 0) +
-													(18 +
-														((componentViewport?.height || 304) - 36 - 254.4) /
-															2) +
-													0 +
-													214.4,
-											},
+											implicitPathVariables: void 0,
 										},
-										baseVariant,
-										gestureVariant,
-									)}
+										{
+											href: {
+												webPageId: "p4p9Y1lWb",
+											},
+											implicitPathVariables: void 0,
+										},
+										{
+											href: {
+												webPageId: "p4p9Y1lWb",
+											},
+											implicitPathVariables: void 0,
+										},
+									]}
 								>
-									<SmartComponentScopedContainer
-										className={"framer-ndiw3d-container"}
-										layoutDependency={layoutDependency}
-										layoutId={"lFQdgHFZB-container"}
-										nodeId={"lFQdgHFZB"}
-										rendersWithMotion={true}
-										scopeId={"XmsKfRWHg"}
-									>
-										{_jsx(stdin_default, {
-											b7sws2Xmf: false,
-											gDhgzsvqf: KVWh_V2xG,
-											height: "100%",
-											id: "lFQdgHFZB",
-											layoutId: "lFQdgHFZB",
-											nx2tuureE: "Dashboard",
-											variant: "feWXGq4P4",
-											width: "100%",
-											...addPropertyOverrides(
+									{(resolvedLinks) => (
+										<ComponentViewportProvider
+											height={40}
+											y={
+												(componentViewport?.y || 0) +
+												(0 + ((componentViewport?.height || 70) - 0 - 40) / 2) +
+												0
+											}
+											{...addPropertyOverrides(
 												{
 													FSWJCj0iy: {
-														LPw9Av7yM: void 0,
-														style: {
-															width: "100%",
-														},
-														variant: "h_czR0__J",
+														width: `max(${componentViewport?.width || "100vw"} - 40px, 1px)`,
+														y:
+															(componentViewport?.y || 0) +
+															(18 +
+																((componentViewport?.height || 200) -
+																	36 -
+																	249.4) /
+																	2) +
+															0 +
+															209.4,
 													},
 													ypBE0GADG: {
-														LPw9Av7yM: void 0,
-														style: {
-															width: "100%",
-														},
-														variant: "dpEXmejGI",
+														width: `max(${componentViewport?.width || "100vw"} - 80px, 1px)`,
+														y:
+															(componentViewport?.y || 0) +
+															(18 +
+																((componentViewport?.height || 304) -
+																	36 -
+																	254.4) /
+																	2) +
+															0 +
+															214.4,
 													},
 												},
 												baseVariant,
 												gestureVariant,
-											),
-										})}
-									</SmartComponentScopedContainer>
-								</ComponentViewportProvider>
+											)}
+										>
+											<SmartComponentScopedContainer
+												className={"framer-ndiw3d-container"}
+												layoutDependency={layoutDependency}
+												layoutId={"lFQdgHFZB-container"}
+												nodeId={"lFQdgHFZB"}
+												rendersWithMotion={true}
+												scopeId={"XmsKfRWHg"}
+											>
+												{_jsx(stdin_default, {
+													b7sws2Xmf: false,
+													gDhgzsvqf: resolvedLinks[0],
+													height: "100%",
+													id: "lFQdgHFZB",
+													layoutId: "lFQdgHFZB",
+													nx2tuureE: "Dashboard",
+													variant: "feWXGq4P4",
+													width: "100%",
+													...addPropertyOverrides(
+														{
+															FSWJCj0iy: {
+																gDhgzsvqf: resolvedLinks[2],
+																LPw9Av7yM: void 0,
+																style: {
+																	width: "100%",
+																},
+																variant: "h_czR0__J",
+															},
+															ypBE0GADG: {
+																gDhgzsvqf: resolvedLinks[1],
+																LPw9Av7yM: void 0,
+																style: {
+																	width: "100%",
+																},
+																variant: "dpEXmejGI",
+															},
+														},
+														baseVariant,
+														gestureVariant,
+													),
+												})}
+											</SmartComponentScopedContainer>
+										</ComponentViewportProvider>
+									)}
+								</ResolveLinks>
 							)}
 						</motion.div>
 					</motion.nav>
@@ -940,39 +971,39 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css3 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-Yajrq.framer-c615or, .framer-Yajrq .framer-c615or { display: block; }",
-	".framer-Yajrq.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
-	".framer-Yajrq .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-Yajrq .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-Yajrq .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
-	".framer-Yajrq .framer-8p6p2b-container, .framer-Yajrq .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-Yajrq .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
-	".framer-Yajrq .framer-10jqita, .framer-Yajrq .framer-1xx0lo2, .framer-Yajrq .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
-	".framer-Yajrq .framer-l7mfmx, .framer-Yajrq .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-Yajrq .framer-uh0ias, .framer-Yajrq .framer-18dt6r6, .framer-Yajrq .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-Yajrq.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
-	".framer-Yajrq.framer-v-1xrbkc6 .framer-nmzyuu, .framer-Yajrq.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
-	".framer-Yajrq.framer-v-1xrbkc6 .framer-ydgisg, .framer-Yajrq.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
-	".framer-Yajrq.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-nmzyuu, .framer-Yajrq.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-ydgisg, .framer-Yajrq.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-Yajrq.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-Yajrq.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-l7mfmx, .framer-Yajrq.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-wz2tj0, .framer-Yajrq.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-uh0ias, .framer-Yajrq.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-18dt6r6, .framer-Yajrq.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 1; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-vcuy02, .framer-Yajrq.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 2; }",
-	".framer-Yajrq.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
-	".framer-Yajrq.framer-v-1a1l0re.framer-1d9x1ba, .framer-Yajrq.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
-	".framer-Yajrq.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 29px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-Yajrq.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 29px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-Yajrq.framer-v-1e176yj .framer-1xx0lo2, .framer-Yajrq.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
-	".framer-Yajrq.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
+	".framer-SBHV8.framer-c615or, .framer-SBHV8 .framer-c615or { display: block; }",
+	".framer-SBHV8.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
+	".framer-SBHV8 .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-SBHV8 .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-SBHV8 .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
+	".framer-SBHV8 .framer-8p6p2b-container, .framer-SBHV8 .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-SBHV8 .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
+	".framer-SBHV8 .framer-10jqita, .framer-SBHV8 .framer-1xx0lo2, .framer-SBHV8 .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
+	".framer-SBHV8 .framer-l7mfmx, .framer-SBHV8 .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-SBHV8 .framer-uh0ias, .framer-SBHV8 .framer-18dt6r6, .framer-SBHV8 .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-SBHV8.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
+	".framer-SBHV8.framer-v-1xrbkc6 .framer-nmzyuu, .framer-SBHV8.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
+	".framer-SBHV8.framer-v-1xrbkc6 .framer-ydgisg, .framer-SBHV8.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
+	".framer-SBHV8.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-nmzyuu, .framer-SBHV8.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-ydgisg, .framer-SBHV8.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-SBHV8.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-SBHV8.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-l7mfmx, .framer-SBHV8.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-wz2tj0, .framer-SBHV8.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-uh0ias, .framer-SBHV8.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-18dt6r6, .framer-SBHV8.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 1; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-vcuy02, .framer-SBHV8.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 2; }",
+	".framer-SBHV8.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
+	".framer-SBHV8.framer-v-1a1l0re.framer-1d9x1ba, .framer-SBHV8.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
+	".framer-SBHV8.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 29px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-SBHV8.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 29px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-SBHV8.framer-v-1e176yj .framer-1xx0lo2, .framer-SBHV8.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
+	".framer-SBHV8.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
 	...css,
 	...css2,
 ];
-var FramerXmsKfRWHg = withCSS(Component, css3, "framer-Yajrq");
+var FramerXmsKfRWHg = withCSS(Component, css3, "framer-SBHV8");
 var stdin_default3 = FramerXmsKfRWHg;
 FramerXmsKfRWHg.displayName = "Nav Bar";
 FramerXmsKfRWHg.defaultProps = {
@@ -991,10 +1022,6 @@ addPropertyControls(FramerXmsKfRWHg, {
 		],
 		title: "Variant",
 		type: ControlType.Enum,
-	},
-	KVWh_V2xG: {
-		title: "navCta",
-		type: ControlType.Link,
 	},
 });
 addFonts(
