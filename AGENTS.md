@@ -7,6 +7,8 @@ NOTICE: AGENTS.md is generated using AGENTS.sh and should NEVER be manually upda
 
 
 
+# core guidelines
+
 when summarizing changes at the end of the message, be super short, a few words and in bullet points, use bold text to highlight important keywords. use markdown.
 
 please ask questions and confirm assumptions before generating complex architecture code.
@@ -69,38 +71,36 @@ use `git ls-files | tree --fromfile` to see files in the repo. this command will
 
 ```ts
 // BAD. DO NOT DO THIS
-let favicon: string | undefined
+let favicon: string | undefined;
 if (docsConfig?.favicon) {
-    if (typeof docsConfig.favicon === 'string') {
-        favicon = docsConfig.favicon
-    } else if (docsConfig.favicon?.light) {
-        // Use light favicon as default, could be enhanced with theme detection
-        favicon = docsConfig.favicon.light
-    }
+  if (typeof docsConfig.favicon === "string") {
+    favicon = docsConfig.favicon;
+  } else if (docsConfig.favicon?.light) {
+    // Use light favicon as default, could be enhanced with theme detection
+    favicon = docsConfig.favicon.light;
+  }
 }
 // DO THIS. use an iife. Immediately Invoked Function Expression
 const favicon: string = (() => {
-    if (!docsConfig?.favicon) {
-        return ''
-    }
-    if (typeof docsConfig.favicon === 'string') {
-        return docsConfig.favicon
-    }
-    if (docsConfig.favicon?.light) {
-        // Use light favicon as default, could be enhanced with theme detection
-        return docsConfig.favicon.light
-    }
-    return ''
-})()
+  if (!docsConfig?.favicon) {
+    return "";
+  }
+  if (typeof docsConfig.favicon === "string") {
+    return docsConfig.favicon;
+  }
+  if (docsConfig.favicon?.light) {
+    // Use light favicon as default, could be enhanced with theme detection
+    return docsConfig.favicon.light;
+  }
+  return "";
+})();
 // if you already know the type use it:
 const favicon: string = () => {
-    // ...
-}
+  // ...
+};
 ```
 
 - when a package has to import files from another packages in the workspace never add a new tsconfig path, instead add that package as a workspace dependency using `pnpm i "package@workspace:*"`
-
-## typescript
 
 NEVER use require. always esm imports
 
@@ -114,15 +114,20 @@ always specify the type when creating arrays, especially for empty arrays. if yo
 
 ```ts
 // BAD: Type will be never[]
-const items = []
+const items = [];
 
 // GOOD: Specify the expected type
-const items: string[] = []
-const numbers: number[] = []
-const users: User[] = []
+const items: string[] = [];
+const numbers: number[] = [];
+const users: User[] = [];
 ```
 
 remember to always add the explicit type to avoid unexpected type inference.
+
+- when using nodejs APIs like fs always import the module and not the named exports. I prefer hacing nodejs APIs accessed on the module namspace like fs, os, path, etc.
+
+DO `import fs from 'fs'; fs.writeFileSync(...)`
+DO NOT `import { writeFileSync } from 'fs';`
 
 
 ---
@@ -251,23 +256,11 @@ if after doing this we still have duplicate packages, you will have to ask the u
 
 ---
 
-## reading github repositories
-
-you can use gitchamber.com to read repo files. run `curl https://gitchamber.com` to see how the API works. always use curl to fetch the responses of gitchamber.com
-
-### vercel ai sdk documentation
-
-when working with the vercel ai sdk, you can fetch the latest docs using:
-https://gitchamber.com/repos/repos/vercel/ai/main/files
-
-use gitchamber to read the .md files using curl
-
-you can swap out the topic with text you want to search docs for. you can also limit the total results returned with the param token to limit the tokens that will be added to the context window
-
+github.md
 
 ---
 
-## react
+# react
 
 - never test react code. instead put as much code as possible in react-agnostic functions or classes and test those if needed.
 
@@ -310,7 +303,7 @@ you can swap out the topic with text you want to search docs for. you can also l
 
 ---
 
-## sentry
+# sentry
 
 this project uses sentry to notify about unexpected errors.
 
@@ -392,6 +385,10 @@ to understand how the code you are writing works, you should add inline snapshot
 > always call `pnpm vitest` or `pnpm test` with `--run` or they will hang forever waiting for changes!
 > ALWAYS read back the test if you use the `-u` option to make sure the inline snapshots are as you expect.
 
+- NEVER writes the snapshots content yourself in `toMatchInlineSnapshot`. instead leave it empty and call `pnpm test -u` to fill in snapshots content.
+
+- when updating implementation and `toMatchInlineSnapshot` should change, DO NOT remove the inline snapshots yourself, just run `pnpm test -u` instead! This will replace contents of the snapshots without wasting time doing it yourself.
+
 - for very long snapshots you should use `toMatchFileSnapshot(filename)` instead of `toMatchInlineSnapshot()`. put the snapshot files in a snapshots/ directory and use the appropriate extension for the file based on the content
 
 never test client react components. only server code that runs on the server.
@@ -410,11 +407,16 @@ sometimes tests work directly on database data, using prisma. to run these tests
 
 never write tests yourself that call prisma or interact with database or emails. for these, ask the user to write them for you.
 
+
 ---
 
-## changelog
+# changelog
 
 after you make a change that is noteworthy, add an entry in the CHANGELOG.md file in the root of the package. there are 2 kinds of packages, public and private packages. private packages have a private: true field in package.json, public packages do not and instead have a version field in package.json. public packages are the ones that are published to npm.
+
+If the current package has a version field and it is not private then include the version in the changelog too like in the examples, otherwise use the current date and time.
+
+If you use the version you MUST use a bumped version compared to the current package.json version, and you should update the package.json version field to that version. But do not publish. I will handle that myself.
 
 to write a changelog.md file for a public package, use the following format, add a heading with the new version and a bullet list of your changes, like this:
 
@@ -451,9 +453,10 @@ use present tense. be detailed but concise, omit useless verbs like "implement",
 
 the website package has a dependency on docs-website. instead of duplicating code that is needed both in website and docs-website keep a file in docs-website instead and import from there for the website package.
 
+
 ---
 
-## writing docs
+# writing docs
 
 when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you had to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
 
@@ -467,14 +470,14 @@ in typescript never use process.env directly. instead find the closest `env.ts` 
 
 ---
 
-## cac for cli development
+# cac for cli development
 
 the cli uses cac npm package.
 
 
 ---
 
-## prisma
+# prisma
 
 this project uses prisma to interact with the database. if you need to add new queries always read the schema.prisma inside the db folder first so you understand the shape of the tables in the database.
 
@@ -798,10 +801,14 @@ pnpm typecheck  # This runs typegen first, then tsc
 - Export `Route` type from layout routes for child routes to import
 - Use `href()` for all internal paths, even in redirects
 
+## debugging build failures
+
+when you build the website always pipe the output to a file so you can later grep inside it for errors. with `pnpm build 2>&1 | build.log`
+
 
 ---
 
-## styling
+# styling
 
 - always use tailwind for styling. prefer using simple styles using flex and gap. margins should be avoided, instead use flexbox gaps, grid gaps, or separate spacing divs.
 
@@ -823,7 +830,7 @@ try to reuse these available components when you can, for example for buttons, t
 
 ---
 
-## tailwind v4
+# tailwind v4
 
 this project uses tailwind v4. this new tailwind version does not use tailwind.config.js. instead it does all configuration in css files.
 
@@ -831,7 +838,7 @@ read https://tailwindcss.com/docs/upgrade-guide to understand the updates landed
 
 ---
 
-## lucide icons
+# lucide icons
 
 use lucide-react to import icons. always add the Icon import name, for example `ImageIcon` instead of just `Image`.
 
@@ -845,7 +852,7 @@ spiceflow is an API library similar to hono, it allows you to write api servers 
 
 use zod to create schemas and types that need to be used for tool inputs or spiceflow API routes.
 
-## calling the server from the client
+## calling the server from the clientE
 
 you can obtain a type safe client for the API using `createSpiceflowClient` from `spiceflow/client`
 
@@ -891,7 +898,7 @@ notice that if you add a route in the spiceflow server you will need to run `pnp
 
 ---
 
-## ai sdk
+# ai sdk
 
 i use the vercel ai sdk to interact with LLMs, also known as the npm package `ai`. never use the openai sdk or provider-specific sdks, always use the vercel ai sdk, npm package `ai`. streamText is preferred over generateText, unless the model used is very small and fast and the current code doesn't care about streaming tokens or showing a preview to the user. `streamObject` is also preferred over generateObject.
 
@@ -904,7 +911,7 @@ you can swap out the topic with text you want to search docs for. you can also l
 
 ---
 
-## playwright
+# playwright
 
 you can control the browser using the playwright mcp tools. these tools let you control the browser to get information or accomplish actions
 
@@ -912,7 +919,7 @@ if i ask you to test something in the browser, know that the website dev server 
 
 ---
 
-## zod
+# zod
 
 when you need to create a complex type that comes from a prisma table, do not create a new schema that tries to recreate the prisma table structure. instead just use `z.any() as ZodType<PrismaTable>)` to get type safety but leave any in the schema. this gets most of the benefits of zod without having to define a new zod schema that can easily go out of sync.
 
