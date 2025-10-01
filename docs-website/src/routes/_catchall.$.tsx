@@ -71,14 +71,19 @@ declare global {
   var lastServerLoaderData: LoaderData | null
 }
 
-export function meta({ data, matches }: Route.MetaArgs): any {
+export function meta({ data, matches, location }: Route.MetaArgs): any {
   if (!data) return []
   const rootMatch = matches?.find((match) => match?.id === 'root')
   if (!rootMatch?.data) return []
   const rootData = rootMatch.data as RootRoute.ComponentProps['loaderData']
   const docsJson = rootData?.docsJson as DocsJsonType
   const suffix = rootData?.name || ''
-  const og = '' // TODO generate og image
+
+  let ogPath = location.pathname
+  if (ogPath === '/') {
+    ogPath = ''
+  }
+  const og = `/og${ogPath}`
 
   const favicon = (() => {
     if (!docsJson?.favicon) {

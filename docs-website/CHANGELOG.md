@@ -1,5 +1,14 @@
 # Changelog
 
+## 2025-10-01 12:17
+
+- Refactored OG image generation to be modular and reusable
+- Moved OG generation logic to `src/lib/og.tsx` with customizable `generateOgImagePng` and `generateOgImageSvg` functions
+- Simplified route to just call the library function with page metadata
+- Created simpler test in `src/lib/og.test.ts` that generates snapshot images for visual inspection
+- Use JSX syntax instead of createElement for better readability
+- Keep same OpenAlternative-inspired styling with gradient background and Geist font
+
 ## 2025-09-16 18:00
 
 - Refactored title removal to use React Context instead of prop manipulation
