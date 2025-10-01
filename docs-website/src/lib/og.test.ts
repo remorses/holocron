@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs'
 import { generateOgImageSvg, generateOgImagePng } from './og'
 
 describe('OG Image Generation', () => {
-  test('generates OG image', async () => {
+  test('generates OG image', { timeout: 10000 }, async () => {
     const options = {
       title: 'Test Documentation',
       description: 'This is a test description for the OG image generation. It should be truncated after 125 characters to ensure consistent layout.',

@@ -3,6 +3,8 @@ import { type Route } from './+types/og.$'
 import { generateOgImagePng } from '../lib/og'
 import { getHost } from '../lib/get-host'
 import { getDocsJson, withoutBasePath } from '../lib/utils'
+import type { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
+import type { DocsJsonType } from '../lib/docs-json'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
@@ -28,7 +30,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   // Get docsJson for site metadata
-  const docsJson = getDocsJson({
+  const docsJson: DocsJsonType = getDocsJson({
     filesInDraft: {},
     docsJson: siteBranch.docsJson,
   })
@@ -45,8 +47,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   })
 
   // Get page metadata from frontmatter or use defaults
-  const title = (page?.frontmatter as any)?.title || siteBranch.site.name || 'Documentation'
-  const description = (page?.frontmatter as any)?.description || docsJson?.description || ''
+  const frontmatter: ProcessorDataFrontmatter = page?.frontmatter as ProcessorDataFrontmatter || {}
+  const title = frontmatter.title || siteBranch.site.name || 'Documentation'
+  const description = frontmatter.description || docsJson?.description || ''
 
   // Get favicon/logo URL
   const faviconUrl = (() => {
@@ -65,12 +68,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
 
     // Fallback to logo
-    if (docsJson?.logo) {
-      if (typeof docsJson.logo === 'string') {
-        return new URL(docsJson.logo, url.origin).toString()
+    const logo = docsJson?.logo as string | { light: string; dark: string; text?: string; href?: string } | undefined
+    if (logo) {
+      if (typeof logo === 'string') {
+        return new URL(logo, url.origin).toString()
       }
-      if ((docsJson.logo as any)?.light) {
-        return new URL((docsJson.logo as any).light, url.origin).toString()
+      if (logo.light) {
+        return new URL(logo.light, url.origin).toString()
       }
     }
 

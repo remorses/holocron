@@ -125,17 +125,23 @@ const OgBase: React.FC<OgBaseProps> = ({
             marginTop: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: '12',
+            gap: '8px',
             fontSize: '2rem',
           }}
         >
           {siteName && (
-            <>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+              }}
+            >
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12',
+                  gap: '12px',
                   fontSize: '2rem',
                 }}
               >
@@ -147,7 +153,7 @@ const OgBase: React.FC<OgBaseProps> = ({
                   {siteTagline}
                 </span>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
