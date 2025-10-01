@@ -91,12 +91,12 @@ const OgBase: React.FC<OgBaseProps> = ({
       <HolocronLogo
         style={{
           height: '36em',
-          width: '36em',
+          width: '40em', // Aspect ratio 456:412 ≈ 1.1:1
           position: 'absolute',
           top: '-25%',
           right: '-10%',
           transform: 'rotate(12deg)',
-          opacity: 0.05,
+          opacity: 0.03,
         }}
       />
 
@@ -117,7 +117,7 @@ const OgBase: React.FC<OgBaseProps> = ({
               alt=""
               width={92}
               height={92}
-              style={{ borderRadius: '0.5rem' }}
+              style={{ borderRadius: '0.5rem', objectFit: 'contain' }}
             />
           )}
 
@@ -163,7 +163,7 @@ const OgBase: React.FC<OgBaseProps> = ({
                   fontSize: '2rem',
                 }}
               >
-                <LogoSymbol style={{ height: '1.25em', width: '1.25em' }} />
+                <HolocronLogo style={{ height: '1em', width: '1.1em', opacity: 0.7 }} />
                 <span>{siteName}</span>
               </div>
               {siteTagline && (
