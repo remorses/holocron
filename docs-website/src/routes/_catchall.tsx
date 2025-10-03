@@ -130,16 +130,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const languages = site.locales.map((x) => x.locale)
 
-  console.time(`${timerId} - create fumadocs source`)
-  const source = getFumadocsSource({
-    defaultLanguage: site.defaultLocale,
-    files,
-    languages: languages,
-  })
-  console.timeEnd(`${timerId} - create fumadocs source`)
-
-  const i18n = source._i18n
-
   const docsJson = getDocsJson({
     filesInDraft,
     docsJson: siteBranch.docsJson,
@@ -148,6 +138,17 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (docsJson && files.length <= 1) {
     docsJson.hideSidebar = true
   }
+
+  console.time(`${timerId} - create fumadocs source`)
+  const source = getFumadocsSource({
+    defaultLanguage: site.defaultLocale,
+    files,
+    languages: languages,
+    docsJson,
+  })
+  console.timeEnd(`${timerId} - create fumadocs source`)
+
+  const i18n = source._i18n
 
   // Check signal before processing banner
   if (request.signal.aborted) {

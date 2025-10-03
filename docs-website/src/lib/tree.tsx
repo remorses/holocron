@@ -2,6 +2,7 @@ import frontMatter from 'front-matter'
 import { VirtualFile } from 'fumadocs-core/source'
 import { FilesInDraft } from './docs-state'
 import { getFumadocsSource } from './source'
+import { DocsJsonType } from './docs-json'
 
 export interface GetTreeFromFilesParams {
   files: VirtualFile[]
@@ -9,6 +10,7 @@ export interface GetTreeFromFilesParams {
   defaultLanguage: string
   languages: string[]
   githubFolder: string
+  docsJson?: DocsJsonType
 }
 
 export const getTreeFromFiles = ({
@@ -17,6 +19,7 @@ export const getTreeFromFiles = ({
   defaultLanguage,
   languages,
   githubFolder,
+  docsJson,
 }: GetTreeFromFilesParams) => {
   function removeGithubFolder(p) {
     if (p.startsWith('/')) {
@@ -94,6 +97,7 @@ export const getTreeFromFiles = ({
       files: allFiles,
       defaultLanguage,
       languages,
+      docsJson,
     })
 
     const tree = source.getPageTree(defaultLanguage || 'en')
@@ -107,6 +111,7 @@ export const getTreeFromFiles = ({
       files,
       defaultLanguage,
       languages,
+      docsJson,
     })
 
     const tree = source.getPageTree(defaultLanguage || 'en')

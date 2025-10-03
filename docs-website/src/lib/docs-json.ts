@@ -184,6 +184,15 @@ const NavigationTabSchema = z
         mcp: z.string().describe('MCP tool url'),
       })
       .strict()
+      .describe('MCP tab configuration'),
+    z
+      .object({
+        tab: z.string().describe('Tab label'),
+        folder: z.string().describe('Content folder path for this tab'),
+        description: z.string().optional().describe('Tab description'),
+        url: z.string().optional().describe('URL pattern that activates this tab'),
+      })
+      .strict()
       .describe('Folder tab configuration'),
   ])
   .describe('Navigation tab configuration')

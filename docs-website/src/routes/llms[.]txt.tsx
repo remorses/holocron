@@ -3,6 +3,7 @@ import type { Route } from './+types/llms[.]txt'
 import { getFilesForSource } from '../lib/source.server'
 import { getFumadocsSource } from '../lib/source'
 import { getHost } from '../lib/get-host'
+import { getDocsJson } from '../lib/utils'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const domain = getHost(request)
@@ -41,10 +42,14 @@ export async function loader({ request }: Route.LoaderArgs) {
     githubFolder: siteBranch.site?.githubFolder || '',
     filesInDraft: {},
   })
+
+
+
   const source = getFumadocsSource({
     defaultLanguage: site.defaultLocale,
     files,
     languages,
+    docsJson: siteBranch.docsJson,
   })
 
   const siteName = site.name || 'Documentation'

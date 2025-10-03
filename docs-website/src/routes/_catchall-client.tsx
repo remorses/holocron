@@ -466,6 +466,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
       languages: i18n?.languages || [],
       githubFolder,
       filesInDraft,
+      docsJson,
     })
   }, [loaderData.files, loaderData.i18n, filesInDraft])
 

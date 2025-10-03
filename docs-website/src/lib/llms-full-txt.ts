@@ -2,6 +2,7 @@ import { prisma } from 'db'
 import { getFilesForSource } from './source.server'
 import { searchDocsWithSearchApi, formatSearchApiSearchResults } from './search-api-search'
 import { getFumadocsSource } from './source'
+import { getDocsJson } from './utils'
 
 export async function generateLlmsFullTxt({
   domain,
@@ -25,6 +26,7 @@ export async function generateLlmsFullTxt({
     select: {
       branchId: true,
       domains: true,
+      docsJson: true,
       site: {
         select: {
           defaultLocale: true,
@@ -61,10 +63,14 @@ export async function generateLlmsFullTxt({
       githubFolder: site.githubFolder || '',
       filesInDraft: {},
     })
+
+    const docsJson = siteBranch.docsJson as DocsJsonType
+
     const source = getFumadocsSource({
       defaultLanguage: site.defaultLocale,
       files,
       languages,
+      docsJson,
     })
     const pages = source.getPages()
     const batchSize = 5

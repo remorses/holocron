@@ -324,11 +324,20 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   // Add draft files to the files array for navigation tree
 
+  const docsJson = getDocsJson({
+    filesInDraft,
+    docsJson: siteBranch.docsJson,
+  })
+  if (docsJson && files.length <= 1) {
+    docsJson.hideSidebar = true
+  }
+
   console.time(`${timerId} - create fumadocs source`)
   const source = getFumadocsSource({
     defaultLanguage: site.defaultLocale,
     languages: languages,
     files,
+    docsJson,
   })
   console.timeEnd(`${timerId} - create fumadocs source`)
 
@@ -338,14 +347,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   if (slugs[0] && LOCALES.includes(slugs[0] as any)) {
     locale = slugs[0]
     slugs = slugs.slice(1)
-  }
-
-  const docsJson = getDocsJson({
-    filesInDraft,
-    docsJson: siteBranch.docsJson,
-  })
-  if (docsJson && files.length <= 1) {
-    docsJson.hideSidebar = true
   }
 
   const fumadocsPage = source.getPage(slugs, locale)

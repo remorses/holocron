@@ -3,7 +3,7 @@ import { getFilesForSource } from './source.server'
 import { LOCALES } from './locales'
 import { getFumadocsSource } from './source'
 import { getCacheTagForPage } from './cache-tags'
-import { withoutBasePath } from './utils'
+import { withoutBasePath, getDocsJson } from './utils'
 
 export async function serveRawMarkdown({
   domain,
@@ -52,10 +52,17 @@ export async function serveRawMarkdown({
     githubFolder: siteBranch.site?.githubFolder || '',
     filesInDraft: {},
   })
+  
+  const docsJson = getDocsJson({
+    filesInDraft: {},
+    docsJson: siteBranch.docsJson,
+  })
+  
   const source = getFumadocsSource({
     defaultLanguage: site.defaultLocale,
     files,
     languages,
+    docsJson,
   })
 
   const processedPath = withoutBasePath(path)

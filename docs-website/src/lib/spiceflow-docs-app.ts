@@ -19,6 +19,7 @@ import { notifyError } from './errors'
 import { getFilesForSource } from './source.server'
 import { searchDocsWithSearchApi, formatSearchApiSearchResults } from './search-api-search'
 import { getFumadocsSource } from './source'
+import { getDocsJson } from './utils'
 import {
   searchDocsInputSchema,
   goToPageInputSchema,
@@ -114,10 +115,17 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
         filesInDraft,
         githubFolder: siteBranch.site?.githubFolder || '',
       })
+      
+      const docsJson = getDocsJson({
+        filesInDraft,
+        docsJson: siteBranch.docsJson,
+      })
+      
       const source = getFumadocsSource({
         files,
         defaultLanguage,
         languages,
+        docsJson,
       })
       const pages = source.getPages(locale)
 

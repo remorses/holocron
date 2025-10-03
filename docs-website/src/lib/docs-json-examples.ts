@@ -253,3 +253,128 @@ export const completeDocsConfigExample: DocsJsonType = {
     },
   },
 }
+
+// Tabs Examples
+
+// Example showing behavior without tabs - all content is in the sidebar
+export const noTabsExample: DocsJsonType = {
+  name: 'Documentation without Tabs',
+  siteId: '',
+  disableEditButton: false,
+  // Without tabs configuration, all folders appear in a single sidebar
+  // This is the default behavior when tabs are not configured
+}
+
+// Simple tabs configuration
+export const tabsSimpleExample: DocsJsonType = {
+  name: 'Documentation with Tabs',
+  siteId: '',
+  disableEditButton: false,
+  tabs: [
+    {
+      tab: 'Documentation',
+      folder: 'docs',
+      description: 'Product documentation',
+    },
+    {
+      tab: 'API Reference',
+      folder: 'api',
+      description: 'API documentation',
+    },
+    {
+      tab: 'Guides',
+      folder: 'guides',
+      description: 'Step-by-step guides',
+    },
+  ],
+}
+
+export const tabsWithApiExample: DocsJsonType = {
+  name: 'Documentation with API Tab',
+  siteId: '',
+  disableEditButton: false,
+  tabs: [
+    {
+      tab: 'Documentation',
+      folder: 'docs',
+      description: 'Product documentation',
+    },
+    {
+      tab: 'API Reference',
+      openapi: '/openapi.yaml',
+      renderer: 'fumadocs',
+    },
+  ],
+}
+
+export const tabsComplexExample: DocsJsonType = {
+  name: 'Complex Documentation with Multiple Tabs',
+  siteId: '',
+  disableEditButton: false,
+  logo: {
+    light: '/logo-light.svg',
+    dark: '/logo-dark.svg',
+  },
+  navbar: {
+    links: [
+      {
+        label: 'GitHub',
+        href: 'https://github.com/example/project',
+        icon: 'github',
+      },
+    ],
+    primary: {
+      type: 'button',
+      label: 'Get Started',
+      href: '/docs/getting-started',
+    },
+  },
+  tabs: [
+    {
+      tab: 'Documentation',
+      folder: 'docs',
+      description: 'Core documentation and guides',
+    },
+    {
+      tab: 'API',
+      openapi: '/api/openapi.json',
+      renderer: 'fumadocs',
+    },
+    {
+      tab: 'Examples',
+      folder: 'examples',
+      description: 'Code examples and demos',
+    },
+    {
+      tab: 'Blog',
+      folder: 'blog',
+      description: 'Latest news and updates',
+    },
+    {
+      tab: 'Changelog',
+      folder: 'changelog',
+      description: 'Version history and release notes',
+    },
+  ],
+  footer: {
+    socials: {
+      twitter: 'https://twitter.com/example',
+      github: 'https://github.com/example',
+    },
+    links: [
+      {
+        header: 'Community',
+        items: [
+          {
+            label: 'Discord',
+            href: 'https://discord.gg/example',
+          },
+          {
+            label: 'Forum',
+            href: 'https://forum.example.com',
+          },
+        ],
+      },
+    ],
+  },
+}
