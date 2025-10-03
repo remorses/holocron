@@ -341,19 +341,19 @@ And another [invalid link](../escape) that goes outside.`
     const formatted = formatErrorWithContext(linkError, content, 'Link Validation Error')
 
     expect(formatted).toMatchInlineSnapshot(`
-          "Link Validation Error at line 3, column 11:
-          Line 3: "/docs/missing" - Link not found
-          Line 5: "../escape" - Path escapes root
+      "Link Validation Error at line 3, column 11:
+      Line 3: "/docs/missing" - Link not found
+      Line 5: "../escape" - Path escapes root
 
-          Error Context:
-            1 | # Documentation
-            2 |
-            3 | Here is a [broken link](/docs/missing) in the text.
-                         ^
-            4 |
-            5 | And another [invalid link](../escape) that goes outside.
-          "
-        `)
+      Error Context:
+        1 | # Documentation
+        2 | 
+        3 | Here is a [broken link](/docs/missing) in the text.
+                     ^
+        4 | 
+        5 | And another [invalid link](../escape) that goes outside.
+      "
+    `)
   })
 
   test('formats MDX parsing errors', () => {
@@ -375,21 +375,21 @@ Some more content here`
     const formatted = formatErrorWithContext(mdxError, content, 'MDX Compilation Error')
 
     expect(formatted).toMatchInlineSnapshot(`
-          "MDX Compilation Error at line 7, column 26:
-          Expected "}" but found "syntax"
+      "MDX Compilation Error at line 7, column 26:
+      Expected "}" but found "syntax"
 
-          Error Context:
-            2 | title: Test Page
-            3 | ---
-            4 |
-            5 | # Header
-            6 |
-            7 | <Component prop={invalid syntax} />
-                                        ^
-            8 |
-            9 | Some more content here
-          "
-        `)
+      Error Context:
+        2 | title: Test Page
+        3 | ---
+        4 | 
+        5 | # Header
+        6 | 
+        7 | <Component prop={invalid syntax} />
+                                    ^
+        8 | 
+        9 | Some more content here
+      "
+    `)
   })
 
   test('formats JSON syntax errors', () => {

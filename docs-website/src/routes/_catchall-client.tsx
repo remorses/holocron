@@ -47,6 +47,8 @@ import { getTreeFromFiles } from '../lib/tree'
 import { getPageTreeForOpenAPI } from '../lib/openapi-client'
 import { env } from '../lib/env'
 import { useQuery } from '@tanstack/react-query'
+import { getSidebarTabs } from 'fumadocs-ui/utils/get-sidebar-tabs'
+import { isTabActive } from 'fumadocs-ui/utils/is-active'
 
 const ChatDrawer = lazy(() =>
   import('../components/docs-chat').then((mod) => ({
@@ -446,8 +448,8 @@ export function ClientApp() {
 function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; docsJson: DocsJsonType }) {
   const loaderData = useLoaderData<Route.ComponentProps['loaderData']>() || {}
   const { i18n, previewWebsocketId, openapiUrl } = loaderData
+  const location = useLocation()
 
-  // Create tree client-side using files and filesInDraft
   const filesInDraft = useDocsState((state) => state.filesInDraft)
 
   const tree = useMemo(() => {
@@ -470,9 +472,25 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
     })
   }, [loaderData.files, loaderData.i18n, filesInDraft])
 
-  // Configure layout based on docsJson
+  const activeConfiguredTab = useMemo(() => {
+    if (!docsJson?.tabs) {
+      return undefined
+    }
+    const tabs = getSidebarTabs(tree)
+    const activeTab = tabs.find((tab) => isTabActive(tab, location.pathname))
+    if (!activeTab) return undefined
+    return docsJson.tabs.find((tab) => {
+      if (typeof activeTab.title === 'string') {
+        return tab.tab === activeTab.title
+      }
+      return false
+    })
+  }, [tree, location.pathname, docsJson?.tabs])
+
+  const shouldHideSidebar = Boolean(docsJson?.hideSidebar || activeConfiguredTab?.hideSidebar)
+
   let navMode = 'auto' as 'top' | 'auto'
-  if (docsJson.hideSidebar) {
+  if (shouldHideSidebar) {
     navMode = 'top' as const
   }
   const disableThemeSwitch = false
@@ -545,7 +563,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
 
   return (
     <div className='h-full flex flex-col w-full'>
-      {docsJson?.hideSidebar && (
+      {shouldHideSidebar && (
         <style>{`
                     #nd-sidebar { display: none !important; }
                     article.docs-page-article { padding-left: 1rem;  }

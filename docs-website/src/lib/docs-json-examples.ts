@@ -303,6 +303,7 @@ export const tabsWithApiExample: DocsJsonType = {
       tab: 'API Reference',
       openapi: '/openapi.yaml',
       renderer: 'fumadocs',
+      hideSidebar: true,
     },
   ],
 }

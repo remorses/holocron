@@ -3,6 +3,7 @@ import { getFilesForSource } from './source.server'
 import { searchDocsWithSearchApi, formatSearchApiSearchResults } from './search-api-search'
 import { getFumadocsSource } from './source'
 import { getDocsJson } from './utils'
+import type { DocsJsonType } from './docs-json'
 
 export async function generateLlmsFullTxt({
   domain,

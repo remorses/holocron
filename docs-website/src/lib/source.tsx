@@ -30,7 +30,7 @@ export function getFumadocsSource({
   }
 
   const transformers: PageTreeTransformer[] = []
-  
+
   // Add tabs transformer if tabs are configured in docsJson
   if (docsJson?.tabs && docsJson.tabs.length > 0) {
     transformers.push(createTabsTransformer(docsJson.tabs))
@@ -61,6 +61,7 @@ export function getFumadocsSource({
       return <DynamicIcon icon={icon as any} />
     },
   })
+
 
   return source
 }
@@ -94,7 +95,7 @@ export const attachFile = (node: PageTree.Item, file: PageFile | undefined): Pag
 function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer {
   // Track which folders are configured as tabs
   const tabFolders = new Set<string>()
-  
+
   if (tabs) {
     tabs.forEach(tab => {
       if ('folder' in tab && tab.folder) {
@@ -108,9 +109,9 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
     name: 'tabs-transformer',
     folder(node, folderPath, metaPath) {
       if (!tabs || tabs.length === 0) return node
-      
+
       const normalizedPath = folderPath.replace(/^\/+|\/+$/g, '')
-      
+
       // Check if this folder matches any tab configuration
       const matchingTab = tabs.find(tab => {
         if ('folder' in tab && tab.folder) {
@@ -134,11 +135,11 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
     },
     root(node) {
       if (!tabs || tabs.length === 0) return node
-      
+
       // Group all non-tab items into a "Docs" tab
       const tabItems: typeof node.children = []
       const docsItems: typeof node.children = []
-      
+
       node.children.forEach(child => {
         if (child.type === 'folder' && child.root) {
           // This folder is already marked as a tab
@@ -148,7 +149,7 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
           docsItems.push(child)
         }
       })
-      
+
       // Create main docs tab if there are any non-tab items
       if (docsItems.length > 0) {
         const docsTab: typeof node.children[0] = {
@@ -157,13 +158,13 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
           root: true,
           children: docsItems,
         }
-        
+
         return {
           ...node,
           children: [docsTab, ...tabItems],
         }
       }
-      
+
       return {
         ...node,
         children: tabItems,

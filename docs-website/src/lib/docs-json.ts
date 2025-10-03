@@ -175,6 +175,7 @@ const NavigationTabSchema = z
         tab: z.string().describe('Tab label'),
         openapi: z.string().describe('OpenAPI spec file path'),
         renderer: z.enum(['fumadocs', 'scalar']).default('fumadocs').optional().describe('API documentation renderer'),
+        hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
       .describe('OpenAPI tab configuration'),
@@ -182,6 +183,7 @@ const NavigationTabSchema = z
       .object({
         tab: z.string().describe('Tab label'),
         mcp: z.string().describe('MCP tool url'),
+        hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
       .describe('MCP tab configuration'),
@@ -191,6 +193,7 @@ const NavigationTabSchema = z
         folder: z.string().describe('Content folder path for this tab'),
         description: z.string().optional().describe('Tab description'),
         url: z.string().optional().describe('URL pattern that activates this tab'),
+        hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
       .describe('Folder tab configuration'),

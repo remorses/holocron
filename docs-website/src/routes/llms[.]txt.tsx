@@ -45,11 +45,16 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 
 
+  const docsJson = getDocsJson({
+    filesInDraft: {},
+    docsJson: siteBranch.docsJson,
+  })
+
   const source = getFumadocsSource({
     defaultLanguage: site.defaultLocale,
     files,
     languages,
-    docsJson: siteBranch.docsJson,
+    docsJson,
   })
 
   const siteName = site.name || 'Documentation'
