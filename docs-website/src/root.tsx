@@ -36,7 +36,7 @@ const mediaExtensions = [
   'zip',
 ]
 
-export const middleware: Route.MiddlewareFunction = async ({ request }, next) => {
+const markdownTextMiddleware: Route.MiddlewareFunction = async ({ request }, next) => {
   const url = new URL(request.url)
   const path = withoutBasePath(url.pathname)
   const host = url.hostname
@@ -74,6 +74,8 @@ export const middleware: Route.MiddlewareFunction = async ({ request }, next) =>
 
   return next()
 }
+
+export const middleware = [markdownTextMiddleware]
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
