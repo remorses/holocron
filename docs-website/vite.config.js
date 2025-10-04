@@ -20,7 +20,7 @@ export default defineConfig({
     'process.env.NODE_ENV': NODE_ENV,
   },
   optimizeDeps: {
-    exclude: ['@lancedb/lancedb', 'isolated-vm'],
+    exclude: ['@lancedb/lancedb', 'isolated-vm', '@resvg/resvg-js'],
   },
 
   test: {
