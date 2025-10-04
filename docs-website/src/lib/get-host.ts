@@ -1,12 +1,12 @@
 export function getHost(request: Request): string {
     const xForwardedHost = request.headers.get('x-forwarded-host')
     if (xForwardedHost) {
-        return xForwardedHost.split(',')[0].trim()
+        return xForwardedHost.split(',')[0].trim().split(':')[0]
     }
 
     const hostHeader = request.headers.get('host')
     if (hostHeader) {
-        return hostHeader.split(',')[0].trim()
+        return hostHeader.split(',')[0].trim().split(':')[0]
     }
 
     const url = new URL(request.url)
