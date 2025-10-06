@@ -20,7 +20,7 @@ async function main() {
       env,
     }),
     shell(`pnpm tsc --incremental`, {
-      env: { ...env, NODE_OPTIONS: '--max-old-space-size=6144' },
+      env: { ...env, NODE_OPTIONS: '--max-old-space-size=8192' },
     }),
   ])
 
