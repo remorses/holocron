@@ -62,7 +62,7 @@ export const StreamingMarkdownRuntimeComponent = memo(function MarkdownRuntimeCo
   })
 
   return (
-    <div className={cn('prose select-text dark:prose-invert', className)} ref={container}>
+    <div className={cn('select-text ', className)} ref={container}>
       {resultAst?.children?.map((block, index) => {
         return (
           <SafeMdxRenderer

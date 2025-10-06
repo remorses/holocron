@@ -9,6 +9,12 @@
 @source "./components";
 @source "fumadocs-ui";
 
+
+.font-mono {
+    font-size: 0.875em;
+}
+
+
 summary > p {
   display: inline;
 }

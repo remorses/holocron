@@ -445,7 +445,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
             '--show-more-bg': 'var(--color-root-background)',
           } as CSSProperties
         }
-        className='flex grow w-full max-w-[900px] flex-col gap-3 pr-2 pl-0 justify-center'
+        className='flex text-sm grow w-full max-w-[900px] flex-col gap-3 pr-2 pl-0 justify-center'
       >
         <Messages ref={ref} />
         <WelcomeMessage />

@@ -156,7 +156,7 @@ const EditingUserMessage = memo(function EditingUserMessage({ message }: { messa
         <motion.div
           layout='position'
           layoutId={`content-${message.id}`}
-          className='prose isolate w-full max-w-full dark:prose-invert'
+          className=' isolate w-full max-w-full '
         >
           <div ref={editingBox} className='space-y-2 w-full'>
             <textarea

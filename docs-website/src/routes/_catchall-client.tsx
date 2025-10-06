@@ -689,7 +689,7 @@ function UserBanner({ docsJson }: { docsJson?: any }) {
 
   return (
     <div className='relative bg-fd-primary/10 border border-fd-primary/20 rounded-lg p-4 mb-4'>
-      <div className='prose prose-sm text-fd-foreground'>
+      <div className='prose text-fd-foreground'>
         <Markdown markdown={banner.content} ast={bannerAst} isStreaming={false} components={mdxComponents} />
       </div>
       {banner.dismissible && (

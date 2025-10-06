@@ -7,6 +7,7 @@ import { mdxComponents } from '../components/mdx-components'
 import { markAddedNodes } from './diff'
 import { renderNode } from './mdx-render-node'
 import { getProcessor } from './mdx-heavy'
+import { cn } from './cn'
 
 export function MarkdownRuntime({
   extension = 'mdx',
@@ -38,7 +39,7 @@ export function MarkdownRuntime({
       markdown={markdown}
       processor={processor}
       components={mdxComponents}
-      className={className}
+      className={cn('', className)}
       {...rest}
     />
   )

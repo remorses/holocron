@@ -6,7 +6,9 @@
 
 @source "../../../docs-website/src";
 @source "../../../contesto/src";
-/*@plugin "@tailwindcss/typography";*/
+
+
+
 
 @custom-variant dark (&:is(.dark *));
 

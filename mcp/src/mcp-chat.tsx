@@ -148,7 +148,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                 key={index}
                 markdown={part.text}
                 isStreaming={isChatGenerating}
-                className='prose prose-sm max-w-none'
+                className='prose max-w-none'
               />
             )
           }
@@ -167,7 +167,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
               key={index}
               markdown={part.text}
               isStreaming={isChatGenerating}
-              className='prose prose-sm max-w-none'
+              className='prose max-w-none'
             />
           )
         }
