@@ -106,7 +106,6 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
   }
 
   return {
-    name: 'tabs-transformer',
     folder(node, folderPath, metaPath) {
       if (!tabs || tabs.length === 0) return node
 

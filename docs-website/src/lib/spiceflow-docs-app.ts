@@ -355,7 +355,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
           ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
         ],
         async experimental_repairToolCall(input) {
-          return repairToolCall(input)
+          return repairToolCall(input as any)
         },
         stopWhen: stepCountIs(100),
         providerOptions: {

@@ -378,13 +378,13 @@ export function createEditTool({
   }
 
   // For OpenAI models, convert optionals to nullables
-  const schema = model?.provider?.startsWith('openai') ? (optionalToNullable(editToolParamsSchema) as any) : editToolParamsSchema
+  const schema: any = model?.provider?.startsWith('openai') ? optionalToNullable(editToolParamsSchema) : editToolParamsSchema
 
   return tool({
     onInputDelta(options) {},
 
     description: editToolDescription,
-    inputSchema: schema as any,
+    inputSchema: schema,
     execute,
   })
 }
