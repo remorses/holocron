@@ -83,7 +83,7 @@
     "unstorage": "^1.16.1",
     "use-stick-to-bottom": "^1.1.1",
     "vitest": "^3.2.4",
-    "zod": "4.1.9",
+    "zod": "4.1.11",
     "zustand": "^5.0.6"
   },
   "peerDependencies": {

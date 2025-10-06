@@ -146,7 +146,7 @@
     "use-stick-to-bottom": "^1.1.1",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
-    "zod": "^4.1.9",
+    "zod": "^4.1.11",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
