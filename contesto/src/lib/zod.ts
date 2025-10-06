@@ -49,7 +49,7 @@ export function optionalToNullable<S extends z.ZodTypeAny>(schema: S): S {
  * Removes null values from an object for fields that are optional in the schema.
  * This is useful for cleaning data before validation or serialization.
  */
-export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value: unknown): unknown {
+export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value: unknown): S {
   // 1 · Handle null/undefined values at the top level
   if (value === null || value === undefined) {
     return value
@@ -72,19 +72,19 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
   if (schema instanceof z.ZodObject && typeof value === 'object' && value !== null && !Array.isArray(value)) {
     const result: Record<string, unknown> = {}
     const shape = schema.shape
-    
+
     for (const key in value as any) {
       if (Object.prototype.hasOwnProperty.call(value, key)) {
         const fieldSchema = shape[key]
         const fieldValue = (value as any)[key]
-        
+
         if (fieldSchema) {
           // Check if this field schema is optional and value is null
           if (fieldSchema instanceof z.ZodOptional && fieldValue === null) {
             // Skip this field entirely (don't add to result)
             continue
           }
-          
+
           const processedValue = removeNullsForOptionals(fieldSchema, fieldValue)
           if (processedValue !== undefined) {
             result[key] = processedValue
@@ -95,7 +95,7 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
         }
       }
     }
-    
+
     return result
   }
 
@@ -192,7 +192,7 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
  * Repairs tool call arguments that failed validation by using an LLM to fix the input.
  * This function takes a failed tool call and attempts to repair it by generating
  * a corrected version that matches the expected schema.
- * 
+ *
  * @param params - The repair parameters
  * @param params.toolCall - The tool call that failed validation
  * @param params.tool - The tool definition with input schema
