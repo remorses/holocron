@@ -23,7 +23,7 @@ async function main() {
     shell(`pnpm build`, {
       env,
     }),
-    await shell(`pnpm tsc --incremental`, {
+    shell(`NODE_OPTIONS=--max-old-space-size=6144 pnpm tsc --incremental`, {
       env,
     }),
   ])
