@@ -5,31 +5,31 @@ import { z } from 'zod'
  * "required + nullable" so that no field can be `undefined`
  * (OpenAI‑JSON compliant) but all may be `null`.
  */
-export function optionalToNullable<S extends z.ZodTypeAny>(schema: S): S {
+export function optionalToNullable<S extends z.ZodTypeAny>(schema: S): z.ZodTypeAny {
   // 1 · Optional ─► unwrap ─► make nullable
   if (schema instanceof z.ZodOptional) {
-    return optionalToNullable(schema.unwrap() as any).nullable()
+    return optionalToNullable(schema.unwrap() as any).nullable() as any
   }
 
   // 2 · Object ─► run on every property (keeps passthrough/strict options)
   if (schema instanceof z.ZodObject) {
     const transformed = Object.fromEntries(Object.entries(schema.shape).map(([k, v]) => [k, optionalToNullable(v)]))
-    return z.object(transformed) as unknown as S
+    return z.object(transformed) as any
   }
 
   // 3 · Collections / composites
-  if (schema instanceof z.ZodArray) return z.array(optionalToNullable(schema.element as any)) as unknown as S
+  if (schema instanceof z.ZodArray) return z.array(optionalToNullable(schema.element as any)) as any
   if (schema instanceof z.ZodRecord)
-    return z.record(z.string(), optionalToNullable(schema.valueType as any)) as unknown as S
+    return z.record(z.string(), optionalToNullable(schema.valueType as any)) as any
   if (schema instanceof z.ZodTuple)
-    return z.tuple(schema.def.items.map((x) => optionalToNullable(x as any)) as any) as unknown as S
+    return z.tuple(schema.def.items.map((x) => optionalToNullable(x as any)) as any) as any
   if (schema instanceof z.ZodUnion)
-    return z.union(schema.def.options.map((x) => optionalToNullable(x as any))) as unknown as S
+    return z.union(schema.def.options.map((x) => optionalToNullable(x as any))) as any
   if (schema instanceof z.ZodIntersection)
     return z.intersection(
       optionalToNullable(schema.def.left as any),
       optionalToNullable(schema.def.right as any),
-    ) as unknown as S
+    ) as any
 
   // 4 · Leaf schema ─► untouched
   // 4 · Additional collection types
@@ -37,12 +37,12 @@ export function optionalToNullable<S extends z.ZodTypeAny>(schema: S): S {
     return z.map(
       optionalToNullable(schema.def.keyType as any),
       optionalToNullable(schema.def.valueType as any),
-    ) as unknown as S
-  if (schema instanceof z.ZodSet) return z.set(optionalToNullable(schema.def.valueType as any)) as unknown as S
-  if (schema instanceof z.ZodPromise) return z.promise(optionalToNullable(schema.def.type as any)) as unknown as S
+    ) as any
+  if (schema instanceof z.ZodSet) return z.set(optionalToNullable(schema.def.valueType as any)) as any
+  if (schema instanceof z.ZodPromise) return z.promise(optionalToNullable(schema.def.type as any)) as any
 
   // 5 · Leaf schema ─► untouched
-  return schema
+  return schema as any
 }
 
 /**
