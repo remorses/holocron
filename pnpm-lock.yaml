@@ -327,10 +327,10 @@ importers:
         specifier: ^4.0.4
         version: 4.0.4
       '@types/react':
-        specifier: ^19.1.11
+        specifier: ^19.2.0
         version: 19.2.0
       '@types/react-dom':
-        specifier: ^19.1.7
+        specifier: ^19.2.0
         version: 19.2.0(@types/react@19.2.0)
       mdast-util-to-markdown:
         specifier: ^2.1.2
@@ -794,10 +794,10 @@ importers:
         specifier: ^24.0.1
         version: 24.6.2
       '@types/react':
-        specifier: ^19.1.11
+        specifier: ^19.2.0
         version: 19.2.0
       '@types/react-dom':
-        specifier: ^19.1.7
+        specifier: ^19.2.0
         version: 19.2.0(@types/react@19.2.0)
       miniflare:
         specifier: ^4.20250617.4
@@ -2016,7 +2016,7 @@ importers:
         version: 19.2.0
     devDependencies:
       '@types/react':
-        specifier: ^19.1.11
+        specifier: ^19.2.0
         version: 19.2.0
 
   mcp-demo:
@@ -2053,10 +2053,10 @@ importers:
         specifier: ^15.3.5
         version: 15.3.5
       '@types/react':
-        specifier: ^19.1.11
+        specifier: ^19.2.0
         version: 19.2.0
       '@types/react-dom':
-        specifier: ^19.1.7
+        specifier: ^19.2.0
         version: 19.2.0(@types/react@19.2.0)
       tailwindcss:
         specifier: ^4.1.11
@@ -2544,10 +2544,10 @@ importers:
         specifier: ^24.0.1
         version: 24.6.2
       '@types/react':
-        specifier: ^19.1.11
+        specifier: ^19.2.0
         version: 19.2.0
       '@types/react-dom':
-        specifier: ^19.1.7
+        specifier: ^19.2.0
         version: 19.2.0(@types/react@19.2.0)
       '@xmorse/deployment-utils':
         specifier: ^0.7.0
