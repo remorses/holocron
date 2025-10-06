@@ -5,7 +5,7 @@ import { z } from 'zod'
  * "required + nullable" so that no field can be `undefined`
  * (OpenAI‑JSON compliant) but all may be `null`.
  */
-export function optionalToNullable<S extends z.ZodTypeAny>(schema: S): z.ZodTypeAny {
+export function optionalToNullable<S extends z.ZodTypeAny>(schema: S): S {
   // 1 · Optional ─► unwrap ─► make nullable
   if (schema instanceof z.ZodOptional) {
     return optionalToNullable(schema.unwrap() as any).nullable() as any
