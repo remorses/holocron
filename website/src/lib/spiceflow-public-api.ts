@@ -80,7 +80,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
   })
   .route({
     method: 'POST',
-    path: '/sites',
+    path: '/sites/create',
     detail: {
       summary: 'Create a new documentation site',
       description: 'Creates a new site with the provided files and configuration'
@@ -165,21 +165,18 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
   })
   .route({
     method: 'POST',
-    path: '/sites/:siteId/sync',
+    path: '/sites/sync',
     detail: {
       summary: 'Sync files to an existing site',
       description: 'Updates an existing site with new or modified files'
     },
-    params: z.object({
-      siteId: z.string()
-    }),
     request: z.object({
+      siteId: z.string(),
       files: filesSchema,
     }),
-    async handler({ request, params, state }) {
+    async handler({ request, state }) {
       const body = await request.json()
-      const { files } = body
-      const { siteId } = params
+      const { files, siteId } = body
 
       const site = await prisma.site.findFirst({
         where: {
@@ -276,22 +273,19 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
     }
   })
   .route({
-    method: 'DELETE',
-    path: '/sites/:siteId/files',
+    method: 'POST',
+    path: '/sites/deleteFiles',
     detail: {
       summary: 'Delete files from a site',
       description: 'Deletes specified files from the site and syncs the changes'
     },
-    params: z.object({
-      siteId: z.string()
-    }),
     request: z.object({
+      siteId: z.string(),
       filePaths: z.array(z.string()).min(1, 'At least one file path is required')
     }),
-    async handler({ request, params, state }) {
+    async handler({ request, state }) {
       const body = await request.json()
-      const { filePaths } = body
-      const { siteId } = params
+      const { filePaths, siteId } = body
 
       const site = await prisma.site.findFirst({
         where: {
@@ -382,24 +376,22 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
   })
   .route({
     method: 'POST',
-    path: '/sites/:siteId',
+    path: '/sites/update',
     detail: {
       summary: 'Update site configuration',
       description: 'Updates site metadata and configuration'
     },
-    params: z.object({
-      siteId: z.string()
-    }),
     request: z.object({
+      siteId: z.string(),
       name: z.string().optional(),
       visibility: z.enum(['public', 'private']).optional(),
       githubOwner: z.string().optional(),
       githubRepo: z.string().optional(),
       githubFolder: z.string().optional()
     }),
-    async handler({ request, params, state }) {
+    async handler({ request, state }) {
       const body = await request.json()
-      const { siteId } = params
+      const { siteId } = body
 
       const site = await prisma.site.findFirst({
         where: {
@@ -439,8 +431,8 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
     }
   })
   .route({
-    method: 'GET',
-    path: '/sites',
+    method: 'POST',
+    path: '/sites/list',
     detail: {
       summary: 'List all sites',
       description: 'Returns all sites accessible to the authenticated user'
@@ -472,17 +464,18 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
     }
   })
   .route({
-    method: 'GET',
-    path: '/sites/:siteId',
+    method: 'POST',
+    path: '/sites/get',
     detail: {
       summary: 'Get site details',
       description: 'Returns detailed information about a specific site including docsJson'
     },
-    params: z.object({
+    request: z.object({
       siteId: z.string()
     }),
-    async handler({ params, state }) {
-      const { siteId } = params
+    async handler({ request, state }) {
+      const body = await request.json()
+      const { siteId } = body
 
       const site = await prisma.site.findFirst({
         where: {
@@ -528,17 +521,18 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
     }
   })
   .route({
-    method: 'DELETE',
-    path: '/sites/:siteId',
+    method: 'POST',
+    path: '/sites/delete',
     detail: {
       summary: 'Delete a site',
       description: 'Permanently deletes a site and all associated data including domains'
     },
-    params: z.object({
+    request: z.object({
       siteId: z.string()
     }),
-    async handler({ params, state }) {
-      const { siteId } = params
+    async handler({ request, state }) {
+      const body = await request.json()
+      const { siteId } = body
 
       const site = await prisma.site.findFirst({
         where: {

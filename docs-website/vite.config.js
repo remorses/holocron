@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 
 import react from '@vitejs/plugin-react'
+
 import { reactRouter } from '@react-router/dev/vite'
 import tailwindcss from '@tailwindcss/vite'
 import {
@@ -67,6 +68,7 @@ export default defineConfig({
 
   plugins: [
     // cloudflare({ viteEnvironment: { name: 'ssr' } }),
+    // treegraphPlugin(),
     EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
     EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
 

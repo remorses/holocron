@@ -171,6 +171,7 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-bundle-analyzer": "^0.23.0",
+    "vite-treegraph": "^0.2.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "wrangler": "^4.24.3",

@@ -5,9 +5,11 @@ import { useNavigate, useParams } from 'react-router'
 import { href } from 'react-router'
 import { RiAddLine } from '@remixicon/react'
 import { ChevronsUpDownIcon, CheckIcon } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
 import { Button } from './ui/button'
 import { GithubIcon } from './icons'
 import { cn } from 'website/src/lib/utils'
+import { Badge } from './ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'
 import {
   Command,
@@ -26,6 +28,7 @@ export function TeamSwitcher({
   sites: {
     name: string | null
     siteId: string
+    createdAt: Date
     customization?: {
       logoUrl?: string | null
     } | null
@@ -34,6 +37,11 @@ export function TeamSwitcher({
       name: string
       image?: string | null
     }
+    branches: {
+      _count: {
+        pages: number
+      }
+    }[]
   }[]
   className?: string
 }) {
@@ -80,42 +88,52 @@ export function TeamSwitcher({
           <CommandList>
             <CommandEmpty>No sites found.</CommandEmpty>
             <CommandGroup>
-              {sites.map((site) => (
-                <CommandItem
-                  key={site.siteId}
-                  value={`${site.siteId}-${site.name || site.org.name}`}
-                  keywords={[site.name || '', site.org.name]}
-                  onSelect={() => {
-                    navigate(
-                      href('/org/:orgId/site/:siteId', {
-                        orgId: site.org.orgId,
-                        siteId: site.siteId,
-                      }),
-                    )
-                    setOpen(false)
-                  }}
-                  className='gap-2'
-                >
-                  <div className='flex size-6 items-center justify-center rounded-md overflow-hidden shrink-0'>
-                    <img
-                      src={
-                        site.org.image ||
-                        `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`
-                      }
-                      width={24}
-                      height={24}
-                      alt={site.name || site.org.name}
-                    />
-                  </div>
-                  <span className='truncate'>{site.name || site.org.name}</span>
-                  <CheckIcon
-                    className={cn(
-                      'ml-auto h-4 w-4 shrink-0',
-                      currentSiteId === site.siteId ? 'opacity-100' : 'opacity-0',
-                    )}
-                  />
-                </CommandItem>
-              ))}
+              {sites.map((site) => {
+                const totalPages = site.branches.reduce((sum, branch) => sum + branch._count.pages, 0)
+                return (
+                  <CommandItem
+                    key={site.siteId}
+                    value={`${site.siteId}-${site.name || site.org.name}`}
+                    keywords={[site.name || '', site.org.name]}
+                    onSelect={() => {
+                      navigate(
+                        href('/org/:orgId/site/:siteId', {
+                          orgId: site.org.orgId,
+                          siteId: site.siteId,
+                        }),
+                      )
+                      setOpen(false)
+                    }}
+                    className='flex-col items-start py-2 grow pr-0'
+                  >
+                    <div className='flex items-center gap-2 w-full'>
+                      <div className='flex size-6 items-center justify-center rounded-md overflow-hidden shrink-0'>
+                        <img
+                          src={
+                            site.org.image ||
+                            `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`
+                          }
+                          width={24}
+                          height={24}
+                          alt={site.name || site.org.name}
+                        />
+                      </div>
+                      <span className='truncate grow'>{site.name || site.org.name}</span>
+                      {currentSiteId === site.siteId ? <CheckIcon
+                        className={cn(
+                          'ml-auto h-4 w-4 shrink-0',
+                          currentSiteId === site.siteId ? 'opacity-100' : 'opacity-0',
+                        )}
+                      /> : <Badge className='mr-0' variant='outline'>{totalPages} {totalPages === 1 ? 'page' : 'pages'}</Badge>}
+
+                    </div>
+                    <div className='flex items-center gap-2 pl-8 text-xs text-muted-foreground'>
+                      <span>{formatDistanceToNow(new Date(site.createdAt), { addSuffix: true })}</span>
+
+                    </div>
+                  </CommandItem>
+                )
+              })}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup>

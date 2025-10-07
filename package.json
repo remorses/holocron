@@ -13,7 +13,6 @@
     "format": "biome format --write . --skip-parse-errors"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.3",
     "@changesets/cli": "^2.29.4",
     "@prisma/client": "^6.15.0",
     "prettier": "^3.6.2",

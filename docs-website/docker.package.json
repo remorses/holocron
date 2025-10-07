@@ -4,9 +4,11 @@
   "dependencies": {
     "@lancedb/lancedb": "^0.21.2",
     "@prisma/client": "^6.15.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@sentry/node": "^9.28.1",
     "json-schema-library": "^10.1.2",
     "pg": "^8.13.1",
-    "shiki": "^3.12.2"
+    "satori": "^0.18.3",
+    "shiki": "^3.13.0"
   }
 }

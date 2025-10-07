@@ -69,6 +69,15 @@ export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
     },
     include: {
       org: true,
+      branches: {
+        include: {
+          _count: {
+            select: {
+              pages: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',
