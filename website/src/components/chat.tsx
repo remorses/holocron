@@ -486,7 +486,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
   const isLastMessage = messages[messages.length - 1]?.id === message.id
   if (message.role === 'user') {
     return (
-      <ChatUserMessage className='my-4 text-[16px]' message={message}>
+      <ChatUserMessage className='my-4' message={message}>
         {message.parts.map((part, index) => {
 
           if (part.type === 'text') {
