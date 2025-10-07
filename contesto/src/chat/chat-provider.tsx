@@ -119,11 +119,12 @@ const ChatProvider = (props: {
           messages: [
             ...messages,
             userMessage,
-            // {
-            //     parts: [],
-            //     role: 'assistant',
-            //     id: assistantMessageId,
-            // },
+            {
+              // this empty message ensures we increase the chat height and we are able to scroll to the user message so it is at the top of the chat
+              parts: [],
+              role: 'assistant',
+              id: assistantMessageId,
+            },
           ],
           draftText: '',
           attachedFiles: [], // Clear attached files after sending
