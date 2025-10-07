@@ -137,7 +137,7 @@ const ChatProvider = (props: {
       maxAge: 0, // This deletes the cookie
     })
 
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       const messageElement = document.querySelector(`[data-message-id="${userMessageId}"]`)
       if (messageElement) {
         messageElement.scrollIntoView({
@@ -147,7 +147,7 @@ const ChatProvider = (props: {
       } else {
         console.warn(`Message element with id ${userMessageId} not found for scrolling`)
       }
-    })
+    }, 0)
 
     store.setState({
       isGenerating: true,
@@ -189,15 +189,17 @@ const ChatProvider = (props: {
     const messages = stableInitialState.messages || []
     const lastUserMessage = [...messages].reverse().find((msg) => msg.role === 'user')
     const userMessageId = lastUserMessage?.id
-    const messageElement = document.querySelector(`[data-message-id="${userMessageId}"]`)
-    if (messageElement) {
-      messageElement.scrollIntoView({
-        behavior: 'instant',
-        block: 'start',
-      })
-    } else {
-      console.warn(`Message element with id ${userMessageId} not found for scrolling initial message`)
-    }
+    setTimeout(() => {
+      const messageElement = document.querySelector(`[data-message-id="${userMessageId}"]`)
+      if (messageElement) {
+        messageElement.scrollIntoView({
+          behavior: 'instant',
+          block: 'start',
+        })
+      } else {
+        console.warn(`Message element with id ${userMessageId} not found for scrolling initial message`)
+      }
+    }, 0)
   }, [])
 
   useEffect(() => {
