@@ -1,5 +1,11 @@
 # holocron
 
+## 0.4.0
+
+### Minor Changes
+
+- new public api generated
+
 ## 0.3.2
 
 ### Patch Changes

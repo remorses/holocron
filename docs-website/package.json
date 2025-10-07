@@ -89,7 +89,6 @@
     "flat-cache": "^6.1.10",
     "front-matter": "^4.0.2",
     "fumadocs-core": "workspace:*",
-    "fumadocs-docgen": "^2.0.1",
     "fumadocs-openapi": "workspace:^",
     "fumadocs-ui": "workspace:*",
     "getprototypeof": "^2.0.0",

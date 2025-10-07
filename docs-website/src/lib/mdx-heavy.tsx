@@ -13,8 +13,6 @@ import { trySync } from './utils'
 import { remarkCodeGroup, remarkMermaidCode, remarkSingleAccordionItems } from './remark-plugins'
 import remarkStringify from 'remark-stringify'
 
-// Remove fumadocs-docgen import as it uses Node.js modules
-
 import YAML from 'js-yaml'
 import { RenderNode } from 'safe-mdx'
 import { remarkMarkAndUnravel } from 'safe-mdx/parse'
