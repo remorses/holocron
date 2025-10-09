@@ -195,8 +195,12 @@ model Site {
 
   githubInstallations SiteGithubInstallation[]
 
+  metadata Json @default("{}")
+
   @@index([createdAt])
   @@index([orgId])
+  // GIN index with JsonbPathOps: indexes all key-value pairs in the metadata JSON for efficient containment queries (@>, ?, @@). More compact than jsonb_ops and optimized for filtering by specific field values using path + equals.
+  @@index([metadata(ops: JsonbPathOps)], type: Gin)
 }
 
 enum SiteVisibility {

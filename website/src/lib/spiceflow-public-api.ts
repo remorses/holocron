@@ -437,14 +437,27 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       summary: 'List all sites',
       description: 'Returns all sites accessible to the authenticated user'
     },
-    async handler({ state }) {
+    request: z.object({
+      metadata: z.record(z.string(), z.any()).optional()
+    }),
+    async handler({ request, state }) {
+      const { metadata: metadataFilter } = await request.json()
+
       const sites = await prisma.site.findMany({
         where: {
           org: {
             users: {
               some: { userId: state.userId }
             }
-          }
+          },
+          ...(metadataFilter && {
+            AND: Object.entries(metadataFilter).map(([key, value]) => ({
+              metadata: {
+                path: [key],
+                equals: value
+              } as any
+            }))
+          })
         },
         orderBy: { createdAt: 'desc' }
       })
@@ -458,6 +471,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
           githubOwner: site.githubOwner,
           githubRepo: site.githubRepo,
           githubFolder: site.githubFolder,
+          metadata: site.metadata,
           createdAt: site.createdAt
         }))
       }
@@ -513,6 +527,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
           githubOwner: site.githubOwner,
           githubRepo: site.githubRepo,
           githubFolder: site.githubFolder,
+          metadata: site.metadata,
           createdAt: site.createdAt,
           branchId: branch?.branchId,
           docsJson: branch ? (branch.docsJson as DocsJsonType) : null
