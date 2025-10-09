@@ -89,10 +89,6 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { FirecrawlClient, type SearchData } from '@mendable/firecrawl-js'
 import { googleSearch, googleSearchSchema, type CleanGoogleSearchResponse } from './google-search'
 
-const openrouter = createOpenRouter({
-  apiKey: env.OPENROUTER_API_KEY,
-})
-
 const baseten = createOpenAICompatible({
   name: 'baseten',
   baseURL: 'https://inference.baseten.co/v1',
