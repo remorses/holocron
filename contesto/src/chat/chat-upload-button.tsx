@@ -1,8 +1,8 @@
 import { RiAddLine, RiAttachment2, RiCloseLine } from '@remixicon/react'
 import { forwardRef, useRef, useState } from 'react'
 
-import { Button } from '../components/ui/button.js'
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover.js'
+import { Button } from '../components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover'
 
 import { createIdGenerator } from 'ai'
 

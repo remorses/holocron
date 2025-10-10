@@ -2,9 +2,9 @@ import { describe, test, expect, vi } from 'vitest'
 import { createIdGenerator, streamText, wrapLanguageModel, generateText, UIMessage, tool } from 'ai'
 import { z } from 'zod/v4'
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
-import { uiStreamToUIMessages } from './process-chat.js'
-import { createAiCacheMiddleware } from './ai-cache.js'
-import { asyncIterableToReadableStream, readableStreamToAsyncIterable } from './utils.js'
+import { uiStreamToUIMessages } from './process-chat'
+import { createAiCacheMiddleware } from './ai-cache'
+import { asyncIterableToReadableStream, readableStreamToAsyncIterable } from './utils'
 
 describe('process-chat', () => {
   test('should convert simple streamText to messages', async () => {

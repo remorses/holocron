@@ -4,9 +4,9 @@ import { matchSorter } from 'match-sorter'
 import * as React from 'react'
 import getCaretCoordinates from 'textarea-caret'
 
-import { useChatState } from './chat-provider.js'
-import { cn } from '../lib/cn.js'
-import { ScrollArea } from '../components/ui/scroll-area.js'
+import { useChatState } from './chat-provider'
+import { cn } from '../lib/cn'
+import { ScrollArea } from '../components/ui/scroll-area'
 
 interface MentionsTextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   ref?: any

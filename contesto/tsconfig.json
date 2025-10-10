@@ -5,7 +5,8 @@
     "outDir": "dist",
     "jsx": "react-jsx",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
     "paths": {
       "contesto": ["."]
     }

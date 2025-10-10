@@ -3,7 +3,7 @@ import stableString from 'fast-json-stable-stringify'
 import { streamText, generateText, generateObject, wrapLanguageModel } from 'ai'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { createAiCacheMiddleware } from './ai-cache.js'
+import { createAiCacheMiddleware } from './ai-cache'
 
 describe(
   'ai-cache middleware',

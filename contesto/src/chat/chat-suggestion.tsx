@@ -1,7 +1,7 @@
 import { createIdGenerator } from 'ai'
 import { flushSync } from 'react-dom'
-import { Button } from '../components/ui/button.js'
-import { useChatState } from './chat-provider.js'
+import { Button } from '../components/ui/button'
+import { useChatState } from './chat-provider'
 
 export function ChatSuggestionButton({
   icon,

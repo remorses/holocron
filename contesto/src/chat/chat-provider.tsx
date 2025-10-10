@@ -14,7 +14,7 @@ const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(nul
 
 import { shallow } from 'zustand/shallow'
 import { flushSync } from 'react-dom'
-import { CONTESTO_DRAFT_MESSAGE_KEY, CONTESTO_SUBMIT_ON_LOAD } from '../lib/constants.js'
+import { CONTESTO_DRAFT_MESSAGE_KEY, CONTESTO_SUBMIT_ON_LOAD } from '../lib/constants'
 
 function useShallowStable<T>(value: T): T {
   const ref = useRef(value)

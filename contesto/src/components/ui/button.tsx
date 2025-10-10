@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot as SlotPrimitive } from 'radix-ui'
 
-import { cn } from '../../lib/cn.js'
+import { cn } from '../../lib/cn'
 
 const LoadingSpinner = () => (
   <svg className='animate-spin size-4' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>

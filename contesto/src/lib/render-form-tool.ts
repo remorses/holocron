@@ -3,8 +3,8 @@ import dedent from 'string-dedent'
 import type { JSONSchema7 } from 'json-schema'
 import * as schemaLib from 'json-schema-library'
 import { z } from 'zod'
-import { optionalToNullable } from './zod.js'
-import { extractNamePathsFromSchema } from './schema-path-utils.js'
+import { optionalToNullable } from './zod'
+import { extractNamePathsFromSchema } from './schema-path-utils'
 
 const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 

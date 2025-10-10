@@ -3,10 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { RenderNode, SafeMdxRenderer } from 'safe-mdx'
 
-import { cn } from './cn.js'
+import { cn } from './cn'
 
 const MarkdownRuntimeComponent = lazy(() =>
-  import('./markdown-runtime.js').then((mod) => ({
+  import('./markdown-runtime').then((mod) => ({
     default: mod.StreamingMarkdownRuntimeComponent,
   })),
 )

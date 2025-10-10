@@ -5,7 +5,7 @@ import { Processor } from 'unified'
 import remarkGfm from 'remark-gfm'
 import stringify from 'remark-stringify'
 import remarkMdx from 'remark-mdx'
-import { memoize } from './utils.js'
+import { memoize } from './utils'
 
 export const simplerProcessor = remark().use(remarkGfm).use(remarkMdx).use(stringify) as any as Processor
 

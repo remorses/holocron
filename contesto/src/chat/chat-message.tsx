@@ -2,11 +2,11 @@ import { RiBookLine, RiCheckLine, RiCodeSSlashLine, RiEditLine, RiLoopRightFill,
 import { UIMessage } from 'ai'
 import { memo, RefObject, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip.js'
-import { cn } from '../lib/cn.js'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
+import { cn } from '../lib/cn'
 
-import { Button } from '../components/ui/button.js'
-import { useChatState } from './chat-provider.js'
+import { Button } from '../components/ui/button'
+import { useChatState } from './chat-provider'
 import { useChat } from '@ai-sdk/react'
 import { motion } from 'framer-motion'
 

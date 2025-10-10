@@ -1,7 +1,7 @@
 import * as Slot from '@radix-ui/react-slot'
 
 import type { HTMLAttributes, ReactNode } from 'react'
-import { cn } from '../lib/cn.js'
+import { cn } from '../lib/cn'
 
 export function Cards(props: HTMLAttributes<HTMLDivElement>) {
   return (

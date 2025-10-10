@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Sketch } from '@uiw/react-color'
-import { Button } from './ui/button.js'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover.js'
+import { Button } from './ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 type ColorPickerButtonProps = {
   value: string

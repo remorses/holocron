@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { ChevronDownIcon } from 'lucide-react'
 
-import { cn } from '../../lib/cn.js'
+import { cn } from '../../lib/cn'
 
 const SelectNative = ({ className, children, ...props }: React.ComponentProps<'select'>) => {
   return (

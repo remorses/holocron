@@ -2,12 +2,12 @@ import { keepPreviousData, useQuery, useSuspenseQuery } from '@tanstack/react-qu
 import { memo, useRef, useState } from 'react'
 
 import { SafeMdxRenderer } from 'safe-mdx'
-import { cn } from './cn.js'
+import { cn } from './cn'
 
-import { parseMarkdownIncremental } from './incremental-markdown-parser.js'
-import { MarkdownRendererProps } from './markdown.js'
+import { parseMarkdownIncremental } from './incremental-markdown-parser'
+import { MarkdownRendererProps } from './markdown'
 
-import { processorWithAst, simplerProcessor } from './simple-processor.js'
+import { processorWithAst, simplerProcessor } from './simple-processor'
 
 export const StreamingMarkdownRuntimeComponent = memo(function MarkdownRuntimeComponent({
   markdown: markdown,

@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { simplerProcessor } from './simple-processor.js'
+import { simplerProcessor } from './simple-processor'
 
-import { IncrementalParsingProps, parseMarkdownIncremental, SegmentEntry } from './incremental-markdown-parser.js'
+import { IncrementalParsingProps, parseMarkdownIncremental, SegmentEntry } from './incremental-markdown-parser'
 import React from 'react'
 
 // Wait for highlighter to initialize

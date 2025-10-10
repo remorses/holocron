@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { createInterpreterTool } from './interpreter-tool.js'
+import { createInterpreterTool } from './interpreter-tool'
 import { tool } from 'ai'
 import { z } from 'zod'
 

@@ -1,5 +1,5 @@
 import { isToolUIPart, readUIMessageStream, UIMessage, UIMessageChunk } from 'ai'
-import { asyncIterableToReadableStream, isReadableStream, throttleGenerator } from './utils.js'
+import { asyncIterableToReadableStream, isReadableStream, throttleGenerator } from './utils'
 
 export type ToolPart<M extends UIMessage = UIMessage> = Extract<
   M['parts'][number],

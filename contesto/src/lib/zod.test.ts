@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from 'vitest'
 import { z, toJSONSchema } from 'zod'
-import { removeNullsForOptionals, optionalToNullable, repairToolCall } from './zod.js'
+import { removeNullsForOptionals, optionalToNullable, repairToolCall } from './zod'
 
 describe('removeNullsForOptionals', () => {
   it('should remove null values for optional fields', () => {
@@ -19,7 +19,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "nullable": null,
@@ -53,7 +53,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "user": {
@@ -82,7 +82,7 @@ describe('removeNullsForOptionals', () => {
     ]
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       [
         {
@@ -113,7 +113,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "a": 1,
@@ -132,7 +132,7 @@ describe('removeNullsForOptionals', () => {
     const input = ['hello', null, null]
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       [
         "hello",
@@ -152,7 +152,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`{}`)
   })
 
@@ -162,7 +162,7 @@ describe('removeNullsForOptionals', () => {
     })
 
     const result = removeNullsForOptionals(schema, null)
-    
+
     expect(result).toMatchInlineSnapshot(`null`)
   })
 
@@ -172,7 +172,7 @@ describe('removeNullsForOptionals', () => {
     })
 
     const result = removeNullsForOptionals(schema, undefined)
-    
+
     expect(result).toMatchInlineSnapshot(`undefined`)
   })
 
@@ -194,7 +194,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "array": [
@@ -224,7 +224,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "anotherUnknown": null,
@@ -259,7 +259,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "level1": {
@@ -300,7 +300,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "mixedArray": [
@@ -341,7 +341,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "arrayOfOptionals": [
@@ -389,7 +389,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "data": {
@@ -432,7 +432,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "settings": {
@@ -476,7 +476,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(TreeSchema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "left": {
@@ -506,7 +506,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`{}`)
   })
 
@@ -530,7 +530,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "objWithAllOptionals": {},
@@ -560,7 +560,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "map": Map {
@@ -589,7 +589,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(schema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "asyncData": Promise {},
@@ -651,7 +651,7 @@ describe('removeNullsForOptionals', () => {
     }
 
     const result = removeNullsForOptionals(UserSchema, input)
-    
+
     expect(result).toMatchInlineSnapshot(`
       {
         "createdAt": 2024-01-01T00:00:00.000Z,
@@ -1564,7 +1564,7 @@ describe('repairToolCall', () => {
     expect(result).not.toBeNull()
     expect(result?.toolCallId).toBe('call_123')
     expect(result?.toolName).toBe('updateUser')
-    
+
     // Parse the repaired input
     const repairedInput = JSON.parse(result!.input)
     expect(repairedInput).toMatchInlineSnapshot(`

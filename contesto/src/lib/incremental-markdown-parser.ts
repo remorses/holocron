@@ -1,5 +1,5 @@
 import { Root } from 'mdast'
-import { processorWithAst } from './simple-processor.js'
+import { processorWithAst } from './simple-processor'
 
 /* ─────────── types ─────────── */
 interface Offset {
