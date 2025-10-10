@@ -93,11 +93,12 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       githubRepo: z.string().optional(),
       githubRepoId: z.number().optional(),
       githubBranch: z.string().optional(),
-      githubFolder: z.string().optional()
+      githubFolder: z.string().optional(),
+      metadata: z.record(z.string(), z.any()).optional()
     }),
     async handler({ request, state }) {
       const body = await request.json()
-      const { name, orgId, files, githubOwner, githubRepo, githubRepoId, githubBranch, githubFolder } = body
+      const { name, orgId, files, githubOwner, githubRepo, githubRepoId, githubBranch, githubFolder, metadata } = body
 
       const userOrgAccess = await prisma.orgsUsers.findFirst({
         where: {
@@ -122,7 +123,8 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
         githubRepoId,
         githubFolder,
         githubBranch: githubBranch || 'main',
-        files
+        files,
+        metadata
       })
 
       const [branch, syncErrors] = await Promise.all([
@@ -387,7 +389,8 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
       visibility: z.enum(['public', 'private']).optional(),
       githubOwner: z.string().optional(),
       githubRepo: z.string().optional(),
-      githubFolder: z.string().optional()
+      githubFolder: z.string().optional(),
+      metadata: z.record(z.string(), z.any()).optional()
     }),
     async handler({ request, state }) {
       const body = await request.json()
@@ -418,7 +421,8 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
           ...(body.visibility && { visibility: body.visibility }),
           ...(body.githubOwner && { githubOwner: body.githubOwner }),
           ...(body.githubRepo && { githubRepo: body.githubRepo }),
-          ...(body.githubFolder !== undefined && { githubFolder: body.githubFolder })
+          ...(body.githubFolder !== undefined && { githubFolder: body.githubFolder }),
+          ...(body.metadata !== undefined && { metadata: body.metadata })
         }
       })
 

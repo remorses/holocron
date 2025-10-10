@@ -26,6 +26,7 @@ interface CreateSiteParams {
   }>
   additionalDomains?: string[]
   visibility?: 'public' | 'private'
+  metadata?: Record<string, any>
 }
 
 interface CreateSiteResult {
@@ -52,6 +53,7 @@ export async function createSite({
   files = [],
   additionalDomains,
   visibility = 'private',
+  metadata,
 }: CreateSiteParams): Promise<CreateSiteResult> {
   // Sanitize githubFolder - remove leading and trailing slashes
   let sanitizedGithubFolder = githubFolder
@@ -110,6 +112,7 @@ export async function createSite({
       githubRepoId: githubRepoId || (githubRepo ? 0 : undefined),
       githubFolder: sanitizedGithubFolder || '',
       visibility,
+      ...(metadata && { metadata }),
       branches: {
         create: {
           branchId,
