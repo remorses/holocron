@@ -42,6 +42,7 @@ export declare const apiClient: {
                         githubRepoId?: number | undefined;
                         githubBranch?: string | undefined;
                         githubFolder?: string | undefined;
+                        metadata?: Record<string, any> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -116,10 +117,11 @@ export declare const apiClient: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
+                        metadata?: Record<string, any> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -134,7 +136,9 @@ export declare const apiClient: {
                     }>>;
                 };
                 list: {
-                    post: (request?: unknown, options?: {
+                    post: (request: {
+                        metadata?: Record<string, any> | undefined;
+                    }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
@@ -148,6 +152,7 @@ export declare const apiClient: {
                                 githubOwner: string | null;
                                 githubRepo: string | null;
                                 githubFolder: string;
+                                metadata: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                             }[];
                         };
@@ -170,6 +175,7 @@ export declare const apiClient: {
                                 githubOwner: string | null;
                                 githubRepo: string | null;
                                 githubFolder: string;
+                                metadata: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                                 branchId: string;
                                 docsJson: {
@@ -230,7 +236,7 @@ export declare const apiClient: {
                                     } | undefined;
                                     seo?: {
                                         metatags: Record<string, string>;
-                                        indexing?: "all" | "navigable" | undefined;
+                                        indexing?: "navigable" | "all" | undefined;
                                     } | undefined;
                                     redirects?: {
                                         source: string;
@@ -323,7 +329,7 @@ export declare const apiClient: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "low" | "medium";
+                    priority: "high" | "medium" | "low";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -506,15 +512,16 @@ export declare const apiClient: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    orgId?: string | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
-                    defaultLocale?: string | undefined;
+                    orgId?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
+                    githubFolder?: string | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
+                    defaultLocale?: string | undefined;
+                    createdAt?: Date | undefined;
                 };
             }>>;
         };
@@ -574,7 +581,7 @@ export declare const apiClient: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -662,6 +669,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         githubRepoId?: number | undefined;
                         githubBranch?: string | undefined;
                         githubFolder?: string | undefined;
+                        metadata?: Record<string, any> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -736,10 +744,11 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
+                        metadata?: Record<string, any> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -754,7 +763,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }>>;
                 };
                 list: {
-                    post: (request?: unknown, options?: {
+                    post: (request: {
+                        metadata?: Record<string, any> | undefined;
+                    }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
@@ -768,6 +779,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 githubOwner: string | null;
                                 githubRepo: string | null;
                                 githubFolder: string;
+                                metadata: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                             }[];
                         };
@@ -790,6 +802,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 githubOwner: string | null;
                                 githubRepo: string | null;
                                 githubFolder: string;
+                                metadata: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                                 branchId: string;
                                 docsJson: {
@@ -850,7 +863,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                     } | undefined;
                                     seo?: {
                                         metatags: Record<string, string>;
-                                        indexing?: "all" | "navigable" | undefined;
+                                        indexing?: "navigable" | "all" | undefined;
                                     } | undefined;
                                     redirects?: {
                                         source: string;
@@ -943,7 +956,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "low" | "medium";
+                    priority: "high" | "medium" | "low";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1126,15 +1139,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    orgId?: string | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
-                    defaultLocale?: string | undefined;
+                    orgId?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
+                    githubFolder?: string | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
+                    defaultLocale?: string | undefined;
+                    createdAt?: Date | undefined;
                 };
             }>>;
         };
@@ -1194,7 +1208,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1283,6 +1297,7 @@ export declare const apiClientWithDurableFetch: {
                         githubRepoId?: number | undefined;
                         githubBranch?: string | undefined;
                         githubFolder?: string | undefined;
+                        metadata?: Record<string, any> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -1357,10 +1372,11 @@ export declare const apiClientWithDurableFetch: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
+                        metadata?: Record<string, any> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -1375,7 +1391,9 @@ export declare const apiClientWithDurableFetch: {
                     }>>;
                 };
                 list: {
-                    post: (request?: unknown, options?: {
+                    post: (request: {
+                        metadata?: Record<string, any> | undefined;
+                    }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
@@ -1389,6 +1407,7 @@ export declare const apiClientWithDurableFetch: {
                                 githubOwner: string | null;
                                 githubRepo: string | null;
                                 githubFolder: string;
+                                metadata: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                             }[];
                         };
@@ -1411,6 +1430,7 @@ export declare const apiClientWithDurableFetch: {
                                 githubOwner: string | null;
                                 githubRepo: string | null;
                                 githubFolder: string;
+                                metadata: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                                 branchId: string;
                                 docsJson: {
@@ -1471,7 +1491,7 @@ export declare const apiClientWithDurableFetch: {
                                     } | undefined;
                                     seo?: {
                                         metatags: Record<string, string>;
-                                        indexing?: "all" | "navigable" | undefined;
+                                        indexing?: "navigable" | "all" | undefined;
                                     } | undefined;
                                     redirects?: {
                                         source: string;
@@ -1564,7 +1584,7 @@ export declare const apiClientWithDurableFetch: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "low" | "medium";
+                    priority: "high" | "medium" | "low";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1747,15 +1767,16 @@ export declare const apiClientWithDurableFetch: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    orgId?: string | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
-                    defaultLocale?: string | undefined;
+                    orgId?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
+                    githubFolder?: string | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
+                    defaultLocale?: string | undefined;
+                    createdAt?: Date | undefined;
                 };
             }>>;
         };
@@ -1815,7 +1836,7 @@ export declare const apiClientWithDurableFetch: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
