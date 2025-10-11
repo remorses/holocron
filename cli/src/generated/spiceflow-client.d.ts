@@ -117,7 +117,7 @@ export declare const apiClient: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "public" | "private" | undefined;
+                        visibility?: "private" | "public" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -137,7 +137,7 @@ export declare const apiClient: {
                 };
                 list: {
                     post: (request: {
-                        metadata?: Record<string, any> | undefined;
+                        metadata: import("db").JsonFilter<"Site"> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -167,104 +167,64 @@ export declare const apiClient: {
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                         200: Response | {
-                            success: boolean;
-                            site: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                metadata: import("@prisma/client/runtime/client").JsonValue;
-                                createdAt: Date;
+                            branch: {
+                                domains: {
+                                    id: string;
+                                    branchId: string | null;
+                                    host: string;
+                                    domainType: import("db/src/generated/enums").DomainType;
+                                }[];
+                            } & {
+                                title: string;
+                                githubBranch: string;
                                 branchId: string;
-                                docsJson: {
-                                    siteId: string;
-                                    name: string;
-                                    $schema?: string | undefined;
-                                    description?: string | undefined;
-                                    logo?: {
-                                        light: string;
-                                        dark: string;
-                                        href?: string | undefined;
-                                        text?: string | undefined;
-                                    } | undefined;
-                                    favicon?: {
-                                        light: string;
-                                        dark: string;
-                                    } | undefined;
-                                    navbar?: {
-                                        links?: {
-                                            label: string;
-                                            href: string;
-                                            icon?: string | undefined;
-                                        }[] | undefined;
-                                        primary?: {
-                                            type: "button";
-                                            label: string;
-                                            href: string;
-                                        } | {
-                                            type: "github";
-                                            href: string;
-                                        } | undefined;
-                                    } | undefined;
-                                    tabs?: ({
-                                        tab: string;
-                                        openapi: string;
-                                        renderer?: "fumadocs" | "scalar" | undefined;
-                                        hideSidebar?: boolean | undefined;
-                                    } | {
-                                        tab: string;
-                                        mcp: string;
-                                        hideSidebar?: boolean | undefined;
-                                    } | {
-                                        tab: string;
-                                        folder: string;
-                                        description?: string | undefined;
-                                        url?: string | undefined;
-                                        hideSidebar?: boolean | undefined;
-                                    })[] | undefined;
-                                    footer?: {
-                                        socials?: Record<string, string> | undefined;
-                                        links?: {
-                                            items: {
-                                                label: string;
-                                                href: string;
-                                            }[];
-                                            header?: string | undefined;
-                                        }[] | undefined;
-                                    } | undefined;
-                                    seo?: {
-                                        metatags: Record<string, string>;
-                                        indexing?: "navigable" | "all" | undefined;
-                                    } | undefined;
-                                    redirects?: {
-                                        source: string;
-                                        destination: string;
-                                        permanent?: boolean | undefined;
-                                    }[] | undefined;
-                                    banner?: {
-                                        content: string;
-                                        dismissible?: boolean | undefined;
-                                    } | undefined;
-                                    contextual?: {
-                                        options: ("copy" | "view" | "chatgpt" | "claude")[];
-                                    } | undefined;
-                                    cssVariables?: {
-                                        light: Record<string, string>;
-                                        dark: Record<string, string>;
-                                    } | undefined;
-                                    domains?: string[] | undefined;
-                                    hideSidebar?: boolean | undefined;
-                                    ignore?: string[] | undefined;
-                                    theme?: string | undefined;
-                                    disableEditButton?: boolean | undefined;
-                                    poweredBy?: {
-                                        name: string;
-                                        url: string;
-                                    } | undefined;
-                                } | null;
+                                siteId: string;
+                                createdAt: Date;
+                                updatedAt: Date;
+                                docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
+                                cssStyles: string;
+                                lastGithubSyncAt: Date | null;
+                                lastGithubSyncCommit: string | null;
                             };
+                            domains: {
+                                id: string;
+                                branchId: string | null;
+                                host: string;
+                                domainType: import("db/src/generated/enums").DomainType;
+                            }[];
+                            branches: ({
+                                domains: {
+                                    id: string;
+                                    branchId: string | null;
+                                    host: string;
+                                    domainType: import("db/src/generated/enums").DomainType;
+                                }[];
+                            } & {
+                                title: string;
+                                githubBranch: string;
+                                branchId: string;
+                                siteId: string;
+                                createdAt: Date;
+                                updatedAt: Date;
+                                docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
+                                cssStyles: string;
+                                lastGithubSyncAt: Date | null;
+                                lastGithubSyncCommit: string | null;
+                            })[];
+                            metadata: import("@prisma/client/runtime/client").JsonValue;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            orgId: string;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubRepoId: number;
+                            githubFolder: string;
+                            siteId: string;
+                            createdAt: Date;
+                            defaultLocale: string;
+                            success: boolean;
                         };
                     }>>;
                 };
@@ -329,7 +289,7 @@ export declare const apiClient: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "medium" | "low";
+                    priority: "medium" | "high" | "low";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -514,14 +474,14 @@ export declare const apiClient: {
                     }[];
                     metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     name?: string | null | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     orgId?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
                     githubFolder?: string | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    defaultLocale?: string | undefined;
                     createdAt?: Date | undefined;
+                    defaultLocale?: string | undefined;
                 };
             }>>;
         };
@@ -581,7 +541,7 @@ export declare const apiClient: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "public" | "private";
+                visibility: "private" | "public";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -744,7 +704,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "public" | "private" | undefined;
+                        visibility?: "private" | "public" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -764,7 +724,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 };
                 list: {
                     post: (request: {
-                        metadata?: Record<string, any> | undefined;
+                        metadata: import("db").JsonFilter<"Site"> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -794,104 +754,64 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                         200: Response | {
-                            success: boolean;
-                            site: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                metadata: import("@prisma/client/runtime/client").JsonValue;
-                                createdAt: Date;
+                            branch: {
+                                domains: {
+                                    id: string;
+                                    branchId: string | null;
+                                    host: string;
+                                    domainType: import("db/src/generated/enums").DomainType;
+                                }[];
+                            } & {
+                                title: string;
+                                githubBranch: string;
                                 branchId: string;
-                                docsJson: {
-                                    siteId: string;
-                                    name: string;
-                                    $schema?: string | undefined;
-                                    description?: string | undefined;
-                                    logo?: {
-                                        light: string;
-                                        dark: string;
-                                        href?: string | undefined;
-                                        text?: string | undefined;
-                                    } | undefined;
-                                    favicon?: {
-                                        light: string;
-                                        dark: string;
-                                    } | undefined;
-                                    navbar?: {
-                                        links?: {
-                                            label: string;
-                                            href: string;
-                                            icon?: string | undefined;
-                                        }[] | undefined;
-                                        primary?: {
-                                            type: "button";
-                                            label: string;
-                                            href: string;
-                                        } | {
-                                            type: "github";
-                                            href: string;
-                                        } | undefined;
-                                    } | undefined;
-                                    tabs?: ({
-                                        tab: string;
-                                        openapi: string;
-                                        renderer?: "fumadocs" | "scalar" | undefined;
-                                        hideSidebar?: boolean | undefined;
-                                    } | {
-                                        tab: string;
-                                        mcp: string;
-                                        hideSidebar?: boolean | undefined;
-                                    } | {
-                                        tab: string;
-                                        folder: string;
-                                        description?: string | undefined;
-                                        url?: string | undefined;
-                                        hideSidebar?: boolean | undefined;
-                                    })[] | undefined;
-                                    footer?: {
-                                        socials?: Record<string, string> | undefined;
-                                        links?: {
-                                            items: {
-                                                label: string;
-                                                href: string;
-                                            }[];
-                                            header?: string | undefined;
-                                        }[] | undefined;
-                                    } | undefined;
-                                    seo?: {
-                                        metatags: Record<string, string>;
-                                        indexing?: "navigable" | "all" | undefined;
-                                    } | undefined;
-                                    redirects?: {
-                                        source: string;
-                                        destination: string;
-                                        permanent?: boolean | undefined;
-                                    }[] | undefined;
-                                    banner?: {
-                                        content: string;
-                                        dismissible?: boolean | undefined;
-                                    } | undefined;
-                                    contextual?: {
-                                        options: ("copy" | "view" | "chatgpt" | "claude")[];
-                                    } | undefined;
-                                    cssVariables?: {
-                                        light: Record<string, string>;
-                                        dark: Record<string, string>;
-                                    } | undefined;
-                                    domains?: string[] | undefined;
-                                    hideSidebar?: boolean | undefined;
-                                    ignore?: string[] | undefined;
-                                    theme?: string | undefined;
-                                    disableEditButton?: boolean | undefined;
-                                    poweredBy?: {
-                                        name: string;
-                                        url: string;
-                                    } | undefined;
-                                } | null;
+                                siteId: string;
+                                createdAt: Date;
+                                updatedAt: Date;
+                                docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
+                                cssStyles: string;
+                                lastGithubSyncAt: Date | null;
+                                lastGithubSyncCommit: string | null;
                             };
+                            domains: {
+                                id: string;
+                                branchId: string | null;
+                                host: string;
+                                domainType: import("db/src/generated/enums").DomainType;
+                            }[];
+                            branches: ({
+                                domains: {
+                                    id: string;
+                                    branchId: string | null;
+                                    host: string;
+                                    domainType: import("db/src/generated/enums").DomainType;
+                                }[];
+                            } & {
+                                title: string;
+                                githubBranch: string;
+                                branchId: string;
+                                siteId: string;
+                                createdAt: Date;
+                                updatedAt: Date;
+                                docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
+                                cssStyles: string;
+                                lastGithubSyncAt: Date | null;
+                                lastGithubSyncCommit: string | null;
+                            })[];
+                            metadata: import("@prisma/client/runtime/client").JsonValue;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            orgId: string;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubRepoId: number;
+                            githubFolder: string;
+                            siteId: string;
+                            createdAt: Date;
+                            defaultLocale: string;
+                            success: boolean;
                         };
                     }>>;
                 };
@@ -956,7 +876,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "medium" | "low";
+                    priority: "medium" | "high" | "low";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1141,14 +1061,14 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }[];
                     metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     name?: string | null | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     orgId?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
                     githubFolder?: string | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    defaultLocale?: string | undefined;
                     createdAt?: Date | undefined;
+                    defaultLocale?: string | undefined;
                 };
             }>>;
         };
@@ -1208,7 +1128,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "public" | "private";
+                visibility: "private" | "public";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1372,7 +1292,7 @@ export declare const apiClientWithDurableFetch: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "public" | "private" | undefined;
+                        visibility?: "private" | "public" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -1392,7 +1312,7 @@ export declare const apiClientWithDurableFetch: {
                 };
                 list: {
                     post: (request: {
-                        metadata?: Record<string, any> | undefined;
+                        metadata: import("db").JsonFilter<"Site"> | undefined;
                     }, options?: {
                         headers?: Record<string, unknown> | undefined;
                         query?: Record<string, unknown> | undefined;
@@ -1422,104 +1342,64 @@ export declare const apiClientWithDurableFetch: {
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                         200: Response | {
-                            success: boolean;
-                            site: {
-                                siteId: string;
-                                name: string | null;
-                                visibility: import("db/src/generated/enums").SiteVisibility;
-                                githubOwner: string | null;
-                                githubRepo: string | null;
-                                githubFolder: string;
-                                metadata: import("@prisma/client/runtime/client").JsonValue;
-                                createdAt: Date;
+                            branch: {
+                                domains: {
+                                    id: string;
+                                    branchId: string | null;
+                                    host: string;
+                                    domainType: import("db/src/generated/enums").DomainType;
+                                }[];
+                            } & {
+                                title: string;
+                                githubBranch: string;
                                 branchId: string;
-                                docsJson: {
-                                    siteId: string;
-                                    name: string;
-                                    $schema?: string | undefined;
-                                    description?: string | undefined;
-                                    logo?: {
-                                        light: string;
-                                        dark: string;
-                                        href?: string | undefined;
-                                        text?: string | undefined;
-                                    } | undefined;
-                                    favicon?: {
-                                        light: string;
-                                        dark: string;
-                                    } | undefined;
-                                    navbar?: {
-                                        links?: {
-                                            label: string;
-                                            href: string;
-                                            icon?: string | undefined;
-                                        }[] | undefined;
-                                        primary?: {
-                                            type: "button";
-                                            label: string;
-                                            href: string;
-                                        } | {
-                                            type: "github";
-                                            href: string;
-                                        } | undefined;
-                                    } | undefined;
-                                    tabs?: ({
-                                        tab: string;
-                                        openapi: string;
-                                        renderer?: "fumadocs" | "scalar" | undefined;
-                                        hideSidebar?: boolean | undefined;
-                                    } | {
-                                        tab: string;
-                                        mcp: string;
-                                        hideSidebar?: boolean | undefined;
-                                    } | {
-                                        tab: string;
-                                        folder: string;
-                                        description?: string | undefined;
-                                        url?: string | undefined;
-                                        hideSidebar?: boolean | undefined;
-                                    })[] | undefined;
-                                    footer?: {
-                                        socials?: Record<string, string> | undefined;
-                                        links?: {
-                                            items: {
-                                                label: string;
-                                                href: string;
-                                            }[];
-                                            header?: string | undefined;
-                                        }[] | undefined;
-                                    } | undefined;
-                                    seo?: {
-                                        metatags: Record<string, string>;
-                                        indexing?: "navigable" | "all" | undefined;
-                                    } | undefined;
-                                    redirects?: {
-                                        source: string;
-                                        destination: string;
-                                        permanent?: boolean | undefined;
-                                    }[] | undefined;
-                                    banner?: {
-                                        content: string;
-                                        dismissible?: boolean | undefined;
-                                    } | undefined;
-                                    contextual?: {
-                                        options: ("copy" | "view" | "chatgpt" | "claude")[];
-                                    } | undefined;
-                                    cssVariables?: {
-                                        light: Record<string, string>;
-                                        dark: Record<string, string>;
-                                    } | undefined;
-                                    domains?: string[] | undefined;
-                                    hideSidebar?: boolean | undefined;
-                                    ignore?: string[] | undefined;
-                                    theme?: string | undefined;
-                                    disableEditButton?: boolean | undefined;
-                                    poweredBy?: {
-                                        name: string;
-                                        url: string;
-                                    } | undefined;
-                                } | null;
+                                siteId: string;
+                                createdAt: Date;
+                                updatedAt: Date;
+                                docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
+                                cssStyles: string;
+                                lastGithubSyncAt: Date | null;
+                                lastGithubSyncCommit: string | null;
                             };
+                            domains: {
+                                id: string;
+                                branchId: string | null;
+                                host: string;
+                                domainType: import("db/src/generated/enums").DomainType;
+                            }[];
+                            branches: ({
+                                domains: {
+                                    id: string;
+                                    branchId: string | null;
+                                    host: string;
+                                    domainType: import("db/src/generated/enums").DomainType;
+                                }[];
+                            } & {
+                                title: string;
+                                githubBranch: string;
+                                branchId: string;
+                                siteId: string;
+                                createdAt: Date;
+                                updatedAt: Date;
+                                docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
+                                cssStyles: string;
+                                lastGithubSyncAt: Date | null;
+                                lastGithubSyncCommit: string | null;
+                            })[];
+                            metadata: import("@prisma/client/runtime/client").JsonValue;
+                            name: string | null;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            orgId: string;
+                            githubOwner: string | null;
+                            githubRepo: string | null;
+                            githubRepoId: number;
+                            githubFolder: string;
+                            siteId: string;
+                            createdAt: Date;
+                            defaultLocale: string;
+                            success: boolean;
                         };
                     }>>;
                 };
@@ -1584,7 +1464,7 @@ export declare const apiClientWithDurableFetch: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "medium" | "low";
+                    priority: "medium" | "high" | "low";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1769,14 +1649,14 @@ export declare const apiClientWithDurableFetch: {
                     }[];
                     metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     name?: string | null | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     orgId?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
                     githubRepoId?: number | undefined;
                     githubFolder?: string | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
-                    defaultLocale?: string | undefined;
                     createdAt?: Date | undefined;
+                    defaultLocale?: string | undefined;
                 };
             }>>;
         };
@@ -1836,7 +1716,7 @@ export declare const apiClientWithDurableFetch: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "public" | "private";
+                visibility: "private" | "public";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
