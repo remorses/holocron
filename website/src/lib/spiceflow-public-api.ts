@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { prisma } from 'db'
+import { prisma, Prisma } from 'db'
 import { Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
 import { openapi } from 'spiceflow/openapi'
@@ -439,10 +439,10 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
     path: '/sites/list',
     detail: {
       summary: 'List all sites',
-      description: 'Returns all sites accessible to the authenticated user'
+      description: 'Returns all sites accessible to the authenticated user with optional JSON metadata filtering'
     },
     request: z.object({
-      metadata: z.record(z.string(), z.any()).optional()
+      metadata: z.any() as z.ZodType<Prisma.JsonFilter<'Site'> | undefined>
     }),
     async handler({ request, state }) {
       const { metadata: metadataFilter } = await request.json()
@@ -454,14 +454,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
               some: { userId: state.userId }
             }
           },
-          ...(metadataFilter && {
-            AND: Object.entries(metadataFilter).map(([key, value]) => ({
-              metadata: {
-                path: [key],
-                equals: value
-              } as any
-            }))
-          })
+          ...(metadataFilter && { metadata: metadataFilter })
         },
         orderBy: { createdAt: 'desc' }
       })
