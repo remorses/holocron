@@ -175,6 +175,6 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "wrangler": "^4.24.3",
-    "zod-to-json-schema": "^3.24.5"
+    "zod-to-json-schema": "^3.24.6"
   }
 }

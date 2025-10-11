@@ -25,7 +25,6 @@
   "dependencies": {
     "@lancedb/lancedb": "^0.21.2",
     "@xmorse/tar-parser": "^0.3.0",
-    "agents": "^0.2.12",
     "ajv": "^8.17.1",
     "apache-arrow": "18.1.0",
     "github-slugger": "^2.0.0",

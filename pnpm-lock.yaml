@@ -833,7 +833,7 @@ importers:
         specifier: ^4.24.3
         version: 4.35.0(@cloudflare/workers-types@4.20250911.0)
       zod-to-json-schema:
-        specifier: ^3.24.5
+        specifier: ^3.24.6
         version: 3.24.6(zod@4.1.12)
 
   fumadocs:
@@ -2109,9 +2109,6 @@ importers:
       '@xmorse/tar-parser':
         specifier: ^0.3.0
         version: 0.3.0
-      agents:
-        specifier: ^0.2.12
-        version: 0.2.12(@cloudflare/workers-types@4.20250911.0)(react@19.2.0)(typescript@5.9.3)
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -2670,12 +2667,6 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@2.0.48':
-    resolution: {integrity: sha512-dIGOVtHaScTNIQzxkE4I8T5PpoutFWxonR/awdRz+5sCpoO7V2kVL44+X6piJbQIMdFYUK/h+HTX3+BjTbRHmw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
   '@ai-sdk/openai@2.0.49':
     resolution: {integrity: sha512-BkeTl+gfeJAEap0srZEMK36t9IuQDGYWJyvQTWEgmWn8zoT70LAuO5EKWgAaJYUfjLY5OsM6QlYkjF1XfxCRgw==}
     engines: {node: '>=18'}
@@ -3017,10 +3008,6 @@ packages:
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
-
-  '@babel/runtime-corejs3@7.28.4':
-    resolution: {integrity: sha512-h7iEYiW4HebClDEhtvFObtPmIvrd1SSfpI9EhOeKk4CtIK/ngBWFpuhCzhdmRKtg71ylcue+9I6dv54XYO1epQ==}
-    engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.28.4':
     resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
@@ -8214,18 +8201,6 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  agents@0.2.12:
-    resolution: {integrity: sha512-5oW2B5T2FOxmg+C11WAnMzV3ILLoI2sTqa3r1qxLymSZcnaP/37J17atts2o/lRFjWVWua/Y9mHSaBvm0XFdjw==}
-    peerDependencies:
-      react: '*'
-      viem: '>=2.0.0'
-      x402: ^0.6.5
-    peerDependenciesMeta:
-      viem:
-        optional: true
-      x402:
-        optional: true
-
   ai-fallback@1.0.7:
     resolution: {integrity: sha512-bf0u0Paw1arrHRPbpMUKNQnlEMP7SXTUf/L7powFC6O/oqf9fwtmBr2ns33MSi3k3xCfTF+YWiS+am5dNlaNlw==}
 
@@ -8989,9 +8964,6 @@ packages:
     resolution: {integrity: sha512-mFsNh/DIANLqFt5VHZoGirdg7bK5+oTWlhnGu6tgRhzBlnEKWaPX2xrFaLltii/6rmhqFMJqffUgknuRdpYlHw==}
     engines: {node: '>=18'}
 
-  core-js-pure@3.46.0:
-    resolution: {integrity: sha512-NMCW30bHNofuhwLhYPt66OLOKTMbOhgTTatKVbaQC3KRHpTCiRIBYvtshr+NBYSnBxwAFhjW/RfJ0XbIjS16rw==}
-
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -9033,10 +9005,6 @@ packages:
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
-
-  cron-schedule@5.0.4:
-    resolution: {integrity: sha512-nH0a49E/kSVk6BeFgKZy4uUsy6D2A16p120h5bYD9ILBhQu7o2sJFH+WI4R731TSBQ0dB1Ik7inB/dRAB4C8QQ==}
-    engines: {node: '>=18'}
 
   croner@9.1.0:
     resolution: {integrity: sha512-p9nwwR4qyT5W996vBZhdvBCnMhicY5ytZkR4D1Xj0wuTDEiMnjwR57Q3RXYY/s0EpX6Ay3vgIcfaR+ewGHsi+g==}
@@ -9818,9 +9786,6 @@ packages:
 
   eval-estree-expression@3.0.0:
     resolution: {integrity: sha512-siT1mQEeCtw4eHQ3jozxaXMpQeEkb5imAdoLB5Uj3wcpgicGCV41cbVdv/G0HT/SBe7o5+ex1lg1odCuSgnUJA==}
-
-  event-target-polyfill@0.0.4:
-    resolution: {integrity: sha512-Gs6RLjzlLRdT8X9ZipJdIZI/Y6/HhRLyq9RdDlCsnpxr/+Nn6bU2EFGuC94GjxqhM+Nmij2Vcq98yoHrU8uNFQ==}
 
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
@@ -11052,11 +11017,6 @@ packages:
   json-schema-to-typescript-lite@15.0.0:
     resolution: {integrity: sha512-5mMORSQm9oTLyjM4mWnyNBi2T042Fhg1/0gCIB6X8U/LVpM2A+Nmj2yEyArqVouDmFThDxpEXcnTgSrjkGJRFA==}
 
-  json-schema-to-typescript@15.0.4:
-    resolution: {integrity: sha512-Su9oK8DR4xCmDsLlyvadkXzX6+GGXJpbhwoLtOGArAG61dvbW4YQmSEno2y66ahpIdmLMg6YUf/QHLgiwvkrHQ==}
-    engines: {node: '>=16.0.0'}
-    hasBin: true
-
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
@@ -11671,9 +11631,6 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  mimetext@3.0.27:
-    resolution: {integrity: sha512-mUhWAsZD1N/K6dbN4+a5Yq78OPnYQw1ubOSMasBntsLQ2S7KVNlvDEA8dwpr4a7PszWMzeslKahAprtwYMgaBA==}
-
   mimic-fn@2.1.0:
     resolution: {integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==}
     engines: {node: '>=6'}
@@ -12262,14 +12219,6 @@ packages:
   parseurl@1.3.3:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
     engines: {node: '>= 0.8'}
-
-  partyserver@0.0.75:
-    resolution: {integrity: sha512-i/18vvdxuGjx+rpQ+fDdExlvQoRb7EfTF+6b+kA2ILEpHemtpLWV8NdgDrOPEklRNdCc/4WlzDtYn05d17aZAQ==}
-    peerDependencies:
-      '@cloudflare/workers-types': ^4.20240729.0
-
-  partysocket@1.1.6:
-    resolution: {integrity: sha512-LkEk8N9hMDDsDT0iDK0zuwUDFVrVMUXFXCeN3850Ng8wtjPqPBeJlwdeY6ROlJSEh3tPoTTasXoSBYH76y118w==}
 
   patchright-core@1.52.5:
     resolution: {integrity: sha512-8rnLVEK9jDZWzFPy2hCQrp4xhU7zgE8IqseZyjGkgxf+jpAWTuGNgIAlcsKZMfQrDL8j1mZgRIGNAQT00nk6QA==}
@@ -14873,12 +14822,6 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod-to-ts@1.2.0:
-    resolution: {integrity: sha512-x30XE43V+InwGpvTySRNz9kB7qFU8DlyEy7BsSTCHPH1R0QasMmHWZDCzYm6bVXtj/9NNJAZF3jW8rzFvH5OFA==}
-    peerDependencies:
-      typescript: ^4.9.4 || ^5.0.2
-      zod: ^3
-
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
@@ -14999,13 +14942,6 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
       zod: 4.1.12
 
-  '@ai-sdk/gateway@1.0.39(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.12(zod@3.25.76)
-      '@vercel/oidc': 3.0.2
-      zod: 3.25.76
-
   '@ai-sdk/gateway@1.0.39(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
@@ -15031,12 +14967,6 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
       zod: 4.1.12
 
-  '@ai-sdk/openai@2.0.48(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.12(zod@3.25.76)
-      zod: 3.25.76
-
   '@ai-sdk/openai@2.0.49(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
@@ -15049,13 +14979,6 @@ snapshots:
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
       zod: 4.1.12
-
-  '@ai-sdk/provider-utils@3.0.12(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@standard-schema/spec': 1.0.0
-      eventsource-parser: 3.0.6
-      zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.12(zod@4.1.12)':
     dependencies:
@@ -15542,10 +15465,6 @@ snapshots:
       '@babel/plugin-transform-typescript': 7.28.0(@babel/core@7.28.4)
     transitivePeerDependencies:
       - supports-color
-
-  '@babel/runtime-corejs3@7.28.4':
-    dependencies:
-      core-js-pure: 3.46.0
 
   '@babel/runtime@7.28.4': {}
 
@@ -21739,40 +21658,12 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  agents@0.2.12(@cloudflare/workers-types@4.20250911.0)(react@19.2.0)(typescript@5.9.3):
-    dependencies:
-      '@ai-sdk/openai': 2.0.48(zod@3.25.76)
-      '@modelcontextprotocol/sdk': 1.20.0
-      ai: 5.0.68(zod@3.25.76)
-      cron-schedule: 5.0.4
-      json-schema: 0.4.0
-      json-schema-to-typescript: 15.0.4
-      mimetext: 3.0.27
-      nanoid: 5.1.6
-      partyserver: 0.0.75(@cloudflare/workers-types@4.20250911.0)
-      partysocket: 1.1.6
-      react: 19.2.0
-      zod: 3.25.76
-      zod-to-ts: 1.2.0(typescript@5.9.3)(zod@3.25.76)
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - supports-color
-      - typescript
-
   ai-fallback@1.0.7(zod@4.1.12):
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.7(zod@4.1.12)
     transitivePeerDependencies:
       - zod
-
-  ai@5.0.68(zod@3.25.76):
-    dependencies:
-      '@ai-sdk/gateway': 1.0.39(zod@3.25.76)
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.12(zod@3.25.76)
-      '@opentelemetry/api': 1.9.0
-      zod: 3.25.76
 
   ai@5.0.68(zod@4.1.12):
     dependencies:
@@ -22655,8 +22546,6 @@ snapshots:
       graceful-fs: 4.2.11
       p-event: 6.0.1
 
-  core-js-pure@3.46.0: {}
-
   core-util-is@1.0.3: {}
 
   cors@2.8.5:
@@ -22701,8 +22590,6 @@ snapshots:
   cron-parser@4.9.0:
     dependencies:
       luxon: 3.6.1
-
-  cron-schedule@5.0.4: {}
 
   croner@9.1.0: {}
 
@@ -23636,8 +23523,6 @@ snapshots:
   etag@1.8.1: {}
 
   eval-estree-expression@3.0.0: {}
-
-  event-target-polyfill@0.0.4: {}
 
   event-target-shim@5.0.1: {}
 
@@ -25077,18 +24962,6 @@ snapshots:
       '@apidevtools/json-schema-ref-parser': 14.1.1
       '@types/json-schema': 7.0.15
 
-  json-schema-to-typescript@15.0.4:
-    dependencies:
-      '@apidevtools/json-schema-ref-parser': 11.9.3
-      '@types/json-schema': 7.0.15
-      '@types/lodash': 4.17.20
-      is-glob: 4.0.3
-      js-yaml: 4.1.0
-      lodash: 4.17.21
-      minimist: 1.2.8
-      prettier: 3.6.2
-      tinyglobby: 0.2.15
-
   json-schema-traverse@0.4.1: {}
 
   json-schema-traverse@1.0.0: {}
@@ -25977,13 +25850,6 @@ snapshots:
 
   mime@4.0.7: {}
 
-  mimetext@3.0.27:
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@babel/runtime-corejs3': 7.28.4
-      js-base64: 3.7.8
-      mime-types: 2.1.35
-
   mimic-fn@2.1.0: {}
 
   mimic-fn@4.0.0: {}
@@ -26716,15 +26582,6 @@ snapshots:
       entities: 6.0.1
 
   parseurl@1.3.3: {}
-
-  partyserver@0.0.75(@cloudflare/workers-types@4.20250911.0):
-    dependencies:
-      '@cloudflare/workers-types': 4.20250911.0
-      nanoid: 5.1.6
-
-  partysocket@1.1.6:
-    dependencies:
-      event-target-polyfill: 0.0.4
 
   patchright-core@1.52.5: {}
 
@@ -29895,11 +29752,6 @@ snapshots:
   zod-to-json-schema@3.24.6(zod@4.1.12):
     dependencies:
       zod: 4.1.12
-
-  zod-to-ts@1.2.0(typescript@5.9.3)(zod@3.25.76):
-    dependencies:
-      typescript: 5.9.3
-      zod: 3.25.76
 
   zod-validation-error@4.0.2(zod@4.1.12):
     dependencies:
