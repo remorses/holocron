@@ -196,7 +196,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
         model: { provider: model.provider },
       })
 
-      const tools = {
+      const tools: any = {
         strReplaceEditor: editTool,
 
         searchDocs: tool({
