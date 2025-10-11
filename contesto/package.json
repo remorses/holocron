@@ -24,7 +24,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "mdast-util-to-markdown": "^2.1.2",
-    "react-hook-form": "*",
+    "react-hook-form": "^7.65.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
@@ -44,7 +44,7 @@
     "@types/cookie": "^1.0.0",
     "@types/js-yaml": "^4.0.9",
     "@uiw/react-color": "^2.6.0",
-    "ai": "5.0.45",
+    "ai": "5.0.68",
     "camelcase": "^8.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -83,7 +83,7 @@
     "unstorage": "^1.16.1",
     "use-stick-to-bottom": "^1.1.1",
     "vitest": "^3.2.4",
-    "zod": "4.1.11",
+    "zod": "4.1.12",
     "zustand": "^5.0.6"
   },
   "peerDependencies": {
