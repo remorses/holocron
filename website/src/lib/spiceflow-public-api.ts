@@ -192,8 +192,9 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
         include: {
           branches: {
             orderBy: { createdAt: 'asc' },
+
             take: 1
-          }
+          },
         }
       })
 
@@ -500,6 +501,9 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
         include: {
           branches: {
             orderBy: { createdAt: 'asc' },
+            include: {
+              domains: true,
+            },
             take: 1
           }
         }
@@ -517,18 +521,9 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1' })
 
       return {
         success: true,
-        site: {
-          siteId: site.siteId,
-          name: site.name,
-          visibility: site.visibility,
-          githubOwner: site.githubOwner,
-          githubRepo: site.githubRepo,
-          githubFolder: site.githubFolder,
-          metadata: site.metadata,
-          createdAt: site.createdAt,
-          branchId: branch?.branchId,
-          docsJson: branch ? (branch.docsJson as DocsJsonType) : null
-        }
+        ...site,
+        branch,
+        domains: branch?.domains || [],
       }
     }
   })
