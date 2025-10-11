@@ -103,10 +103,11 @@ async function iframeMessagesHandling() {
   console.log(`docs iframe starts listening on message events`)
   async function onParentPostMessage(e: MessageEvent) {
     onFirstStateMessage()
-    if (!allowedOrigins.includes(e.origin)) {
-      console.warn(`ignoring message from disallowed origin: ${e.origin}`, allowedOrigins, e.data)
-      return
-    }
+    // TODO make sure that there is no issue listening to all messages from anywhere
+    // if (!allowedOrigins.includes(e.origin)) {
+    //   console.warn(`ignoring message from disallowed origin: ${e.origin}`, allowedOrigins, e.data)
+    //   return
+    // }
     try {
       const data = e.data as IframeRpcMessage
       const { id, revalidate, state: partialState } = data || {}
