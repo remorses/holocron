@@ -12,6 +12,7 @@ import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
 import dedent from 'string-dedent'
 
 import { client as searchApi } from 'docs-website/src/lib/search-api'
+import { HolocronSite } from '@holocron.so/cli/src'
 
 // Export schemas for reuse
 export const filesSchema = z.array(
@@ -542,13 +543,14 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
 
 
 
-      return {
+      const data = {
         success: true,
         ...site,
         branches: [],
         branch,
         domains: branch?.domains || [],
-      }
+      } satisfies HolocronSite
+      return data
     }
   })
   .route({

@@ -89,6 +89,7 @@
     "cmdk": "^1.1.1",
     "colord": "^2.9.3",
     "contesto": "workspace:*",
+    "@holocron.so/cli": "workspace:*",
     "cookie": "^1.0.2",
     "date-fns": "^4.1.0",
     "db": "workspace:*",
