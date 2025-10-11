@@ -538,16 +538,12 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         })
       }
 
-      // Get the first (and only) branch
       const branch = site.branches[0]
 
-
-
       const data = {
-        success: true,
         ...site,
-        branches: [],
-        branch,
+        metadata: site.metadata as Record<string, any>,
+        branch: { ...branch, docsJson: branch.docsJson as DocsJsonType, docsJsonComments: branch.docsJsonComments as Record<string, any> },
         domains: branch?.domains || [],
       } satisfies HolocronSite
       return data

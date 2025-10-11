@@ -510,7 +510,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
     const navbarLinks = docsJson?.navbar?.links || []
     const primary = docsJson?.navbar?.primary
 
-    const mainLinks: LinkItemType[] = navbarLinks.map((link: any) => ({
+    const mainLinks: LinkItemType[] = navbarLinks.filter(Boolean).map((link) => ({
       text: link.label || '',
       type: 'main',
       url: link.href || '#',
