@@ -115,12 +115,12 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
         filesInDraft,
         githubFolder: siteBranch.site?.githubFolder || '',
       })
-      
+
       const docsJson = getDocsJson({
         filesInDraft,
         docsJson: siteBranch.docsJson,
       })
-      
+
       const source = getFumadocsSource({
         files,
         defaultLanguage,
@@ -196,7 +196,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
         model: { provider: model.provider },
       })
 
-      const tools: any = {
+      const tools = {
         strReplaceEditor: editTool,
 
         searchDocs: tool({

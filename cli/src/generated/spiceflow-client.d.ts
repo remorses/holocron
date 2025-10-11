@@ -117,7 +117,7 @@ export declare const apiClient: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -522,7 +522,7 @@ export declare const apiClient: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -685,7 +685,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -1090,7 +1090,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1254,7 +1254,7 @@ export declare const apiClientWithDurableFetch: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -1659,7 +1659,7 @@ export declare const apiClientWithDurableFetch: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
