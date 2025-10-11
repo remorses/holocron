@@ -33,6 +33,6 @@
     "@playwright/mcp": "latest",
     "patchright-core": "^1.52.5",
     "user-agents": "^1.1.610",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   }
 }
