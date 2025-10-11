@@ -9,6 +9,7 @@ import { assetsFromFilesList, syncSite } from './sync'
 import { defaultDocsJsonComments } from 'docs-website/src/lib/docs-json-examples'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
+import dedent from 'string-dedent'
 
 import { client as searchApi } from 'docs-website/src/lib/search-api'
 
@@ -440,7 +441,27 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     path: '/sites/list',
     detail: {
       summary: 'List all sites',
-      description: 'Returns all sites accessible to the authenticated user with optional JSON metadata filtering'
+      description: dedent`
+        Returns all sites accessible to the authenticated user with optional JSON metadata filtering.
+        
+        Example: to filter sites where metadata.users array contains an object with exact match:
+        {
+          "metadata": {
+            "path": ["users"],
+            "array_contains": { "userId": "user-123", "role": "admin" }
+          }
+        }
+        
+        Note: array_contains requires exact object match (all fields must match). Field order doesn't matter.
+        
+        For partial matching (e.g., any object with userId="user-123" regardless of other fields),
+        Prisma's JsonFilter doesn't support this. You would need to use PostgreSQL's @> operator directly
+        with raw SQL: metadata->'users' @> '[{"userId": "user-123"}]'
+        
+        Other examples:
+        - Simple field match: { "metadata": { "path": ["environment"], "equals": "production" } }
+        - Nested field: { "metadata": { "path": ["config", "theme"], "equals": "dark" } }
+      `
     },
     request: z.object({
       metadata: z.any() as z.ZodType<Prisma.JsonFilter<'Site'> | undefined>
@@ -519,9 +540,12 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       // Get the first (and only) branch
       const branch = site.branches[0]
 
+
+
       return {
         success: true,
         ...site,
+        branches: [],
         branch,
         domains: branch?.domains || [],
       }
