@@ -27,7 +27,7 @@ export const filesSchema = z.array(
   }),
 )
 
-export const publicApiApp = new Spiceflow({ basePath: '/v1' })
+export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnlessRpc: true })
   .state('apiKey', '')
   .state('userId', '')
   .state('orgId', '')
