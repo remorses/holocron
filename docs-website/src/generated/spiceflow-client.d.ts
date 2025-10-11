@@ -48,7 +48,7 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -80,7 +80,7 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -104,7 +104,7 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             deletedCount: number;
                             deletedPages: number;
@@ -127,7 +127,7 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             name: string;
@@ -166,64 +166,45 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
+                            branches: never[];
                             branch: {
                                 domains: {
-                                    id: string;
                                     branchId: string | null;
+                                    id: string;
                                     host: string;
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                             } & {
-                                title: string;
-                                githubBranch: string;
                                 branchId: string;
                                 siteId: string;
-                                createdAt: Date;
-                                updatedAt: Date;
+                                title: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                createdAt: Date;
+                                githubBranch: string;
+                                updatedAt: Date;
                                 docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
                                 cssStyles: string;
                                 lastGithubSyncAt: Date | null;
                                 lastGithubSyncCommit: string | null;
                             };
                             domains: {
-                                id: string;
                                 branchId: string | null;
+                                id: string;
                                 host: string;
                                 domainType: import("db/src/generated/enums").DomainType;
                             }[];
-                            branches: ({
-                                domains: {
-                                    id: string;
-                                    branchId: string | null;
-                                    host: string;
-                                    domainType: import("db/src/generated/enums").DomainType;
-                                }[];
-                            } & {
-                                title: string;
-                                githubBranch: string;
-                                branchId: string;
-                                siteId: string;
-                                createdAt: Date;
-                                updatedAt: Date;
-                                docsJson: import("@prisma/client/runtime/client").JsonValue;
-                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
-                                cssStyles: string;
-                                lastGithubSyncAt: Date | null;
-                                lastGithubSyncCommit: string | null;
-                            })[];
-                            metadata: import("@prisma/client/runtime/client").JsonValue;
-                            name: string | null;
-                            visibility: import("db/src/generated/enums").SiteVisibility;
                             orgId: string;
+                            name: string | null;
+                            siteId: string;
+                            metadata: import("@prisma/client/runtime/client").JsonValue;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubFolder: string;
+                            createdAt: Date;
+                            defaultLocale: string;
                             githubOwner: string | null;
                             githubRepo: string | null;
                             githubRepoId: number;
-                            githubFolder: string;
-                            siteId: string;
-                            createdAt: Date;
-                            defaultLocale: string;
                             success: boolean;
                         };
                     }>>;
@@ -236,7 +217,7 @@ export declare const apiClient: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             message: string;
                         };
@@ -289,7 +270,7 @@ export declare const apiClient: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "medium" | "high" | "low";
+                    priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -472,16 +453,16 @@ export declare const apiClient: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
-                    name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     orgId?: string | undefined;
-                    githubOwner?: string | null | undefined;
-                    githubRepo?: string | null | undefined;
-                    githubRepoId?: number | undefined;
+                    name?: string | null | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     githubFolder?: string | undefined;
                     createdAt?: Date | undefined;
                     defaultLocale?: string | undefined;
+                    githubOwner?: string | null | undefined;
+                    githubRepo?: string | null | undefined;
+                    githubRepoId?: number | undefined;
                 };
             }>>;
         };
@@ -635,7 +616,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -667,7 +648,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -691,7 +672,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             deletedCount: number;
                             deletedPages: number;
@@ -714,7 +695,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             name: string;
@@ -753,64 +734,45 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
+                            branches: never[];
                             branch: {
                                 domains: {
-                                    id: string;
                                     branchId: string | null;
+                                    id: string;
                                     host: string;
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                             } & {
-                                title: string;
-                                githubBranch: string;
                                 branchId: string;
                                 siteId: string;
-                                createdAt: Date;
-                                updatedAt: Date;
+                                title: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                createdAt: Date;
+                                githubBranch: string;
+                                updatedAt: Date;
                                 docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
                                 cssStyles: string;
                                 lastGithubSyncAt: Date | null;
                                 lastGithubSyncCommit: string | null;
                             };
                             domains: {
-                                id: string;
                                 branchId: string | null;
+                                id: string;
                                 host: string;
                                 domainType: import("db/src/generated/enums").DomainType;
                             }[];
-                            branches: ({
-                                domains: {
-                                    id: string;
-                                    branchId: string | null;
-                                    host: string;
-                                    domainType: import("db/src/generated/enums").DomainType;
-                                }[];
-                            } & {
-                                title: string;
-                                githubBranch: string;
-                                branchId: string;
-                                siteId: string;
-                                createdAt: Date;
-                                updatedAt: Date;
-                                docsJson: import("@prisma/client/runtime/client").JsonValue;
-                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
-                                cssStyles: string;
-                                lastGithubSyncAt: Date | null;
-                                lastGithubSyncCommit: string | null;
-                            })[];
-                            metadata: import("@prisma/client/runtime/client").JsonValue;
-                            name: string | null;
-                            visibility: import("db/src/generated/enums").SiteVisibility;
                             orgId: string;
+                            name: string | null;
+                            siteId: string;
+                            metadata: import("@prisma/client/runtime/client").JsonValue;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubFolder: string;
+                            createdAt: Date;
+                            defaultLocale: string;
                             githubOwner: string | null;
                             githubRepo: string | null;
                             githubRepoId: number;
-                            githubFolder: string;
-                            siteId: string;
-                            createdAt: Date;
-                            defaultLocale: string;
                             success: boolean;
                         };
                     }>>;
@@ -823,7 +785,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             message: string;
                         };
@@ -876,7 +838,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "medium" | "high" | "low";
+                    priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1059,16 +1021,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
-                    name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     orgId?: string | undefined;
-                    githubOwner?: string | null | undefined;
-                    githubRepo?: string | null | undefined;
-                    githubRepoId?: number | undefined;
+                    name?: string | null | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     githubFolder?: string | undefined;
                     createdAt?: Date | undefined;
                     defaultLocale?: string | undefined;
+                    githubOwner?: string | null | undefined;
+                    githubRepo?: string | null | undefined;
+                    githubRepoId?: number | undefined;
                 };
             }>>;
         };
@@ -1223,7 +1185,7 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -1255,7 +1217,7 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             branchId: string;
@@ -1279,7 +1241,7 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             deletedCount: number;
                             deletedPages: number;
@@ -1302,7 +1264,7 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             siteId: string;
                             name: string;
@@ -1341,64 +1303,45 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
+                            branches: never[];
                             branch: {
                                 domains: {
-                                    id: string;
                                     branchId: string | null;
+                                    id: string;
                                     host: string;
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                             } & {
-                                title: string;
-                                githubBranch: string;
                                 branchId: string;
                                 siteId: string;
-                                createdAt: Date;
-                                updatedAt: Date;
+                                title: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                createdAt: Date;
+                                githubBranch: string;
+                                updatedAt: Date;
                                 docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
                                 cssStyles: string;
                                 lastGithubSyncAt: Date | null;
                                 lastGithubSyncCommit: string | null;
                             };
                             domains: {
-                                id: string;
                                 branchId: string | null;
+                                id: string;
                                 host: string;
                                 domainType: import("db/src/generated/enums").DomainType;
                             }[];
-                            branches: ({
-                                domains: {
-                                    id: string;
-                                    branchId: string | null;
-                                    host: string;
-                                    domainType: import("db/src/generated/enums").DomainType;
-                                }[];
-                            } & {
-                                title: string;
-                                githubBranch: string;
-                                branchId: string;
-                                siteId: string;
-                                createdAt: Date;
-                                updatedAt: Date;
-                                docsJson: import("@prisma/client/runtime/client").JsonValue;
-                                docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
-                                cssStyles: string;
-                                lastGithubSyncAt: Date | null;
-                                lastGithubSyncCommit: string | null;
-                            })[];
-                            metadata: import("@prisma/client/runtime/client").JsonValue;
-                            name: string | null;
-                            visibility: import("db/src/generated/enums").SiteVisibility;
                             orgId: string;
+                            name: string | null;
+                            siteId: string;
+                            metadata: import("@prisma/client/runtime/client").JsonValue;
+                            visibility: import("db/src/generated/enums").SiteVisibility;
+                            githubFolder: string;
+                            createdAt: Date;
+                            defaultLocale: string;
                             githubOwner: string | null;
                             githubRepo: string | null;
                             githubRepoId: number;
-                            githubFolder: string;
-                            siteId: string;
-                            createdAt: Date;
-                            defaultLocale: string;
                             success: boolean;
                         };
                     }>>;
@@ -1411,7 +1354,7 @@ export declare const apiClientWithDurableFetch: {
                         query?: Record<string, unknown> | undefined;
                         fetch?: RequestInit | undefined;
                     } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                        200: Response | {
+                        200: {
                             success: boolean;
                             message: string;
                         };
@@ -1464,7 +1407,7 @@ export declare const apiClientWithDurableFetch: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "medium" | "high" | "low";
+                    priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1647,16 +1590,16 @@ export declare const apiClientWithDurableFetch: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
-                    name?: string | null | undefined;
-                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     orgId?: string | undefined;
-                    githubOwner?: string | null | undefined;
-                    githubRepo?: string | null | undefined;
-                    githubRepoId?: number | undefined;
+                    name?: string | null | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
+                    visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     githubFolder?: string | undefined;
                     createdAt?: Date | undefined;
                     defaultLocale?: string | undefined;
+                    githubOwner?: string | null | undefined;
+                    githubRepo?: string | null | undefined;
+                    githubRepoId?: number | undefined;
                 };
             }>>;
         };
