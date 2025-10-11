@@ -1,4 +1,4 @@
-import type { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
+import type { DocsJsonType } from './docs-json.js'
 
 import os from 'node:os'
 import JSONC from 'tiny-jsonc'

@@ -38,7 +38,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     const apiKey = request.headers.get('x-api-key')
 
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key required' }), {
+      throw new Response(JSON.stringify({ error: 'API key required' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -60,7 +60,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     })
 
     if (!userSession) {
-      return new Response(JSON.stringify({ error: 'Invalid API key' }), {
+      throw new Response(JSON.stringify({ error: 'Invalid API key' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -71,7 +71,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     state.orgId = userSession.user.orgs[0]?.orgId || ''
 
     if (!state.orgId) {
-      return new Response(JSON.stringify({ error: 'User has no organization, create one first' }), {
+      throw new Response(JSON.stringify({ error: 'User has no organization, create one first' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -109,7 +109,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       })
 
       if (!userOrgAccess) {
-        return new Response(JSON.stringify({ error: 'Access denied to organization' }), {
+        throw new Response(JSON.stringify({ error: 'Access denied to organization' }), {
           status: 403,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -200,7 +200,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       })
 
       if (!site) {
-        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -209,7 +209,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       // Get the first (and only) branch
       const branch = site.branches[0]
       if (!branch) {
-        return new Response(JSON.stringify({ error: 'No branch found for site' }), {
+        throw new Response(JSON.stringify({ error: 'No branch found for site' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -309,7 +309,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       })
 
       if (!site) {
-        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -318,7 +318,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       // Get the first (and only) branch
       const branch = site.branches[0]
       if (!branch) {
-        return new Response(JSON.stringify({ error: 'No branch found for site' }), {
+        throw new Response(JSON.stringify({ error: 'No branch found for site' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -410,7 +410,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       })
 
       if (!site) {
-        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -443,7 +443,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       summary: 'List all sites',
       description: dedent`
         Returns all sites accessible to the authenticated user with optional JSON metadata filtering.
-        
+
         Example: to filter sites where metadata.users array contains an object with exact match:
         {
           "metadata": {
@@ -451,13 +451,13 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
             "array_contains": { "userId": "user-123", "role": "admin" }
           }
         }
-        
+
         Note: array_contains requires exact object match (all fields must match). Field order doesn't matter.
-        
+
         For partial matching (e.g., any object with userId="user-123" regardless of other fields),
         Prisma's JsonFilter doesn't support this. You would need to use PostgreSQL's @> operator directly
         with raw SQL: metadata->'users' @> '[{"userId": "user-123"}]'
-        
+
         Other examples:
         - Simple field match: { "metadata": { "path": ["environment"], "equals": "production" } }
         - Nested field: { "metadata": { "path": ["config", "theme"], "equals": "dark" } }
@@ -531,7 +531,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       })
 
       if (!site) {
-        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -584,7 +584,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       })
 
       if (!site) {
-        return new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         })
@@ -622,13 +622,13 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     notifyError(error, `Public API error: ${request.method} ${request.url}`)
 
     if (error instanceof AppError) {
-      return new Response(JSON.stringify({ error: error.message }), {
+      throw new Response(JSON.stringify({ error: error.message }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    throw new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })

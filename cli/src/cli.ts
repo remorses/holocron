@@ -29,7 +29,7 @@ import { lookup } from 'mime-types'
 import { Sema } from 'sema4'
 import Table from 'cli-table3'
 import { imageDimensionsFromData } from 'image-dimensions'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
+import { DocsJsonType } from './docs-json.js'
 
 export const cli = cac('holocron')
 

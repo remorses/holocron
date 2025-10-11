@@ -1,7 +1,6 @@
 import { createApiClient, } from './generated/spiceflow-client.js'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
 
-export { DocsJsonType as HolocronJsonc }
+export { DocsJsonType as HolocronJsonc, DocsJsonType, DocsConfigSchema, docsJsonSchema } from './docs-json.js'
 
 
 export * from './types.js'
