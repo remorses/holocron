@@ -1,3 +1,4 @@
+// @ts-ignore
 import { DocsJsonType } from "docs-website/src/lib/docs-json.js"
 
 export type HolocronSite = {
