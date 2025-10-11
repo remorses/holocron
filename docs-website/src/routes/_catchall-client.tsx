@@ -64,7 +64,14 @@ function ChatDrawerWrapper() {
 
 const openapiPath = `/api-reference`
 
-const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, ''), 'http://localhost:7664']
+const allowedOrigins = [
+  env.NEXT_PUBLIC_URL!.replace(/\/$/, ''), //
+  'http://localhost:7664',
+  'http://localhost:3000',
+  'http://localhost:3348',
+  'https://preview.notaku.so',
+  'https://notaku.so',
+]
 
 let onFirstStateMessage = () => { }
 const firstStateReceived = new Promise<void>((resolve) => {
@@ -103,11 +110,10 @@ async function iframeMessagesHandling() {
   console.log(`docs iframe starts listening on message events`)
   async function onParentPostMessage(e: MessageEvent) {
     onFirstStateMessage()
-    // TODO make sure that there is no issue listening to all messages from anywhere
-    // if (!allowedOrigins.includes(e.origin)) {
-    //   console.warn(`ignoring message from disallowed origin: ${e.origin}`, allowedOrigins, e.data)
-    //   return
-    // }
+    if (!allowedOrigins.includes(e.origin)) {
+      console.warn(`ignoring message from disallowed origin: ${e.origin}`, allowedOrigins, e.data)
+      return
+    }
     try {
       const data = e.data as IframeRpcMessage
       const { id, revalidate, state: partialState } = data || {}
