@@ -323,6 +323,9 @@ export async function syncSite({
     if (asset.type !== 'docsJson') return []
 
     const { data: jsonData, comments } = extractJsonCComments(asset.content)
+
+    jsonData.siteId = siteId
+
     await prisma.siteBranch.update({
       where: { branchId },
       data: { docsJson: jsonData, docsJsonComments: comments },
@@ -338,7 +341,7 @@ export async function syncSite({
     }
 
     // Handle domain connections
-    if (jsonData.domains && Array.isArray(jsonData.domains)) {
+    if (jsonData.domains && Array.isArray(jsonData.domains) && jsonData.domains.length > 0) {
       const existingHosts = new Set(branchDomains.map((d) => d.host))
       const configuredHosts = new Set(jsonData.domains)
 
