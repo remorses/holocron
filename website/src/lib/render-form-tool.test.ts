@@ -3,7 +3,7 @@ import { toJSONSchema } from 'zod'
 import * as schemaLib from 'json-schema-library'
 const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 import { describe, expect, test } from 'vitest'
-import { getTypeForNameInSchema, RenderFormParameters } from 'contesto'
+import { getTypeForNameInSchema, RenderFormParameters, getValidFieldTypesForSchema } from 'contesto'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 test('compileSchema can be called on {}', () => {
@@ -365,120 +365,448 @@ describe('DocsConfigSchema', () => {
   })
 })
 
+describe('getTypeForNameInSchema edge cases', () => {
+  test('enum field with string type', () => {
+    const zodSchema = z.object({
+      status: z.enum(['active', 'inactive', 'pending']),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('status', compiled)).toMatchInlineSnapshot(`
+      {
+        "enum": [
+          "active",
+          "inactive",
+          "pending",
+        ],
+        "type": "string",
+      }
+    `)
+  })
+
+  test('enum field with numbers', () => {
+    const zodSchema = z.object({
+      priority: z.enum(['1', '2', '3']),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('priority', compiled)).toMatchInlineSnapshot(`
+      {
+        "enum": [
+          "1",
+          "2",
+          "3",
+        ],
+        "type": "string",
+      }
+    `)
+  })
+
+  test('const field', () => {
+    const zodSchema = z.object({
+      version: z.literal('v1'),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('version', compiled)).toMatchInlineSnapshot(`
+      {
+        "const": "v1",
+        "type": "string",
+      }
+    `)
+  })
+
+  test('nullable string', () => {
+    const zodSchema = z.object({
+      optional: z.string().nullable(),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('optional', compiled)).toMatchInlineSnapshot(`
+      {
+        "anyOf": [
+          {
+            "type": "string",
+          },
+          {
+            "type": "null",
+          },
+        ],
+      }
+    `)
+  })
+
+  test('union of string and null', () => {
+    const zodSchema = z.object({
+      field: z.union([z.string(), z.null()]),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('field', compiled)).toMatchInlineSnapshot(`
+      {
+        "anyOf": [
+          {
+            "type": "string",
+          },
+          {
+            "type": "null",
+          },
+        ],
+      }
+    `)
+  })
+
+  test('array of enums', () => {
+    const zodSchema = z.object({
+      tags: z.array(z.enum(['red', 'blue', 'green'])),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('tags.0', compiled)).toMatchInlineSnapshot(`
+      {
+        "enum": [
+          "red",
+          "blue",
+          "green",
+        ],
+        "type": "string",
+      }
+    `)
+  })
+
+  test('nested object in array with enum', () => {
+    const zodSchema = z.object({
+      items: z.array(
+        z.object({
+          status: z.enum(['draft', 'published']),
+          title: z.string(),
+        }),
+      ),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('items.0.status', compiled)).toMatchInlineSnapshot(`
+      {
+        "enum": [
+          "draft",
+          "published",
+        ],
+        "type": "string",
+      }
+    `)
+    expect(getTypeForNameInSchema('items.0.title', compiled)).toMatchInlineSnapshot(`
+      {
+        "type": "string",
+      }
+    `)
+  })
+
+  test('boolean field', () => {
+    const zodSchema = z.object({
+      enabled: z.boolean(),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('enabled', compiled)).toMatchInlineSnapshot(`
+      {
+        "type": "boolean",
+      }
+    `)
+  })
+
+  test('number with constraints', () => {
+    const zodSchema = z.object({
+      age: z.number().min(0).max(120),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('age', compiled)).toMatchInlineSnapshot(`
+      {
+        "maximum": 120,
+        "minimum": 0,
+        "type": "number",
+      }
+    `)
+  })
+
+  test('integer field', () => {
+    const zodSchema = z.object({
+      count: z.number().int(),
+    })
+    const schema = toJSONSchema(zodSchema)
+    const compiled = compileSchema(schema)
+    
+    expect(getTypeForNameInSchema('count', compiled)).toMatchInlineSnapshot(`
+      {
+        "maximum": 9007199254740991,
+        "minimum": -9007199254740991,
+        "type": "integer",
+      }
+    `)
+  })
+})
+
+describe('getValidFieldTypesForSchema', () => {
+  test('string type', () => {
+    expect(getValidFieldTypesForSchema({ type: 'string' })).toMatchInlineSnapshot(`
+      [
+        "input",
+        "password",
+        "textarea",
+        "select",
+        "radio",
+        "color_picker",
+        "date_picker",
+      ]
+    `)
+  })
+
+  test('number type', () => {
+    expect(getValidFieldTypesForSchema({ type: 'number' })).toMatchInlineSnapshot(`
+      [
+        "number",
+        "slider",
+      ]
+    `)
+  })
+
+  test('integer type', () => {
+    expect(getValidFieldTypesForSchema({ type: 'integer' })).toMatchInlineSnapshot(`
+      [
+        "number",
+        "slider",
+      ]
+    `)
+  })
+
+  test('boolean type', () => {
+    expect(getValidFieldTypesForSchema({ type: 'boolean' })).toMatchInlineSnapshot(`
+      [
+        "switch",
+      ]
+    `)
+  })
+
+  test('enum with few options (<=3)', () => {
+    expect(getValidFieldTypesForSchema({ enum: ['a', 'b', 'c'] })).toMatchInlineSnapshot(`
+      [
+        "radio",
+        "select",
+      ]
+    `)
+  })
+
+  test('enum with many options (>3)', () => {
+    expect(getValidFieldTypesForSchema({ enum: ['a', 'b', 'c', 'd', 'e'] })).toMatchInlineSnapshot(`
+      [
+        "select",
+      ]
+    `)
+  })
+
+  test('const value', () => {
+    expect(getValidFieldTypesForSchema({ const: 'fixed' })).toMatchInlineSnapshot(`
+      [
+        "input",
+        "textarea",
+      ]
+    `)
+  })
+
+  test('anyOf with string and number', () => {
+    expect(
+      getValidFieldTypesForSchema({
+        anyOf: [{ type: 'string' }, { type: 'number' }],
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "input",
+        "password",
+        "textarea",
+        "select",
+        "radio",
+        "color_picker",
+        "date_picker",
+        "number",
+        "slider",
+      ]
+    `)
+  })
+
+  test('oneOf with boolean and string', () => {
+    expect(
+      getValidFieldTypesForSchema({
+        oneOf: [{ type: 'boolean' }, { type: 'string' }],
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "switch",
+        "input",
+        "password",
+        "textarea",
+        "select",
+        "radio",
+        "color_picker",
+        "date_picker",
+      ]
+    `)
+  })
+
+  test('array of types', () => {
+    expect(getValidFieldTypesForSchema({ type: ['string', 'null'] })).toMatchInlineSnapshot(`
+      [
+        "input",
+        "password",
+        "textarea",
+        "select",
+        "radio",
+        "color_picker",
+        "date_picker",
+      ]
+    `)
+  })
+
+  test('invalid schema (array type)', () => {
+    expect(getValidFieldTypesForSchema({ type: 'array' })).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('invalid schema (object type)', () => {
+    expect(getValidFieldTypesForSchema({ type: 'object' })).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('null schema', () => {
+    expect(getValidFieldTypesForSchema(null)).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('undefined schema', () => {
+    expect(getValidFieldTypesForSchema(undefined)).toMatchInlineSnapshot(`[]`)
+  })
+})
+
 test('render form tool schema is readable', () => {
   const schema = toJSONSchema(RenderFormParameters, {})
   expect(schema).toMatchInlineSnapshot(`
-      {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "additionalProperties": false,
-        "properties": {
-          "fields": {
-            "items": {
-              "additionalProperties": false,
-              "properties": {
-                "description": {
-                  "type": "string",
-                },
-                "groupTitle": {
-                  "description": "Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ALWAYS and ONLY use this for array of objects to put each object in the array into its own group. ",
-                  "type": "string",
-                },
-                "href": {
-                  "type": "string",
-                },
-                "initialValue": {
-                  "anyOf": [
-                    {
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "type": "string",
+              },
+              "groupTitle": {
+                "description": "Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ALWAYS and ONLY use this for array of objects to put each object in the array into its own group. ",
+                "type": "string",
+              },
+              "href": {
+                "type": "string",
+              },
+              "initialValue": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                  },
+                  {
+                    "type": "number",
+                  },
+                  {
+                    "type": "boolean",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "label": {
+                "description": "Label describing what this field does to the user. For array items use First, Second, Third prefixes",
+                "type": "string",
+              },
+              "max": {
+                "type": "number",
+              },
+              "min": {
+                "type": "number",
+              },
+              "name": {
+                "description": "Field path with parts delimited by dot, for example object.field.child . for array items you can use parent.{index}.objectField where index is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0",
+                "type": "string",
+              },
+              "options": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
                       "type": "string",
                     },
-                    {
-                      "type": "number",
+                    "label": {
+                      "type": "string",
                     },
-                    {
-                      "type": "boolean",
+                    "value": {
+                      "type": "string",
                     },
-                    {
-                      "type": "null",
-                    },
-                  ],
-                },
-                "label": {
-                  "description": "Label describing what this field does to the user. For array items use First, Second, Third prefixes",
-                  "type": "string",
-                },
-                "max": {
-                  "type": "number",
-                },
-                "min": {
-                  "type": "number",
-                },
-                "name": {
-                  "type": "string",
-                },
-                "options": {
-                  "items": {
-                    "additionalProperties": false,
-                    "properties": {
-                      "description": {
-                        "type": "string",
-                      },
-                      "label": {
-                        "type": "string",
-                      },
-                      "value": {
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "label",
-                      "value",
-                    ],
-                    "type": "object",
                   },
-                  "type": "array",
-                },
-                "placeholder": {
-                  "type": "string",
-                },
-                "required": {
-                  "type": "boolean",
-                },
-                "step": {
-                  "type": "number",
-                },
-                "type": {
-                  "enum": [
-                    "input",
-                    "password",
-                    "textarea",
-                    "number",
-                    "select",
-                    "radio",
-                    "slider",
-                    "switch",
-                    "color_picker",
-                    "date_picker",
-                    "image_upload",
-                    "button",
+                  "required": [
+                    "label",
+                    "value",
                   ],
-                  "type": "string",
+                  "type": "object",
                 },
+                "type": "array",
               },
-              "required": [
-                "name",
-                "type",
-                "label",
-                "initialValue",
-              ],
-              "type": "object",
+              "placeholder": {
+                "type": "string",
+              },
+              "required": {
+                "type": "boolean",
+              },
+              "step": {
+                "type": "number",
+              },
+              "type": {
+                "enum": [
+                  "input",
+                  "password",
+                  "textarea",
+                  "number",
+                  "select",
+                  "radio",
+                  "slider",
+                  "switch",
+                  "color_picker",
+                  "date_picker",
+                  "image_upload",
+                  "button",
+                ],
+                "type": "string",
+              },
             },
-            "type": "array",
+            "required": [
+              "name",
+              "type",
+              "label",
+              "initialValue",
+            ],
+            "type": "object",
           },
+          "type": "array",
         },
-        "required": [
-          "fields",
-        ],
-        "type": "object",
-      }
-    `)
+      },
+      "required": [
+        "fields",
+      ],
+      "type": "object",
+    }
+  `)
 })
