@@ -326,6 +326,7 @@ export async function syncSite({
     const { data: jsonData, comments } = extractJsonCComments(asset.content)
 
     jsonData.siteId = siteId
+    jsonData.name ??= ''
 
     const validationResult = DocsConfigSchema.safeParse(jsonData)
     if (!validationResult.success) {
