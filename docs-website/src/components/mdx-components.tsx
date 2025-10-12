@@ -13,6 +13,7 @@ import { DynamicIcon } from '../lib/icon'
 import React from 'react'
 import { Expandable } from './expandable'
 import { ShowMore } from './show-more'
+import { notionComponents } from './notion-components'
 
 const Mermaid = React.lazy(() => import('./mermaid'))
 
@@ -80,63 +81,6 @@ function Columns({ children, cols = 2 }: { children?: React.ReactNode; cols?: nu
 
 function Column({ children }: { children?: React.ReactNode }) {
   return <div className='flex flex-col gap-4 p-2 flex-1'>{children}</div>
-}
-
-function Embed({ src, children }: { src: string; children?: string }) {
-  const caption = children || 'Embedded Content'
-  return (
-    <div className='my-4 p-4 border border-gray-200 rounded-md bg-gray-50'>
-      <iframe src={src} title={caption} className='w-full h-[400px] border-none' allowFullScreen />
-      <div className='mt-2 text-sm text-gray-500 text-center'>{caption}</div>
-    </div>
-  )
-}
-
-function File({ url, name, children }: { url: string; name?: string; children?: string }) {
-  const displayText = children || name || 'Download File'
-  return (
-    <div className='my-4 p-4 border border-gray-200 rounded-md bg-gray-50'>
-      <a href={url} download={name || true} className='block no-underline text-blue-500 font-medium'>
-        {displayText}
-      </a>
-      {name && children && name !== children && <div className='mt-2 text-sm text-gray-500'>{name}</div>}
-    </div>
-  )
-}
-
-function Audio({ src, children }: { src: string; children?: string }) {
-  return (
-    <div className='my-4 p-4 border border-gray-200 rounded-md bg-gray-50'>
-      <audio controls className='w-full'>
-        <source src={src} />
-        Your browser does not support the audio element.
-      </audio>
-      {children && <div className='mt-2 text-sm text-gray-500 text-center'>{children}</div>}
-    </div>
-  )
-}
-
-function NotionIcon({ url }: { url: string }) {
-  if (!url) {
-    return null
-  }
-
-  return <img src={url} className='w-4 h-4' alt='' />
-}
-
-function Video({ src, children }: { src: string; children?: string }) {
-  return (
-    <div className='relative pb-[56.25%] h-0 overflow-hidden max-w-full my-4'>
-      <iframe
-        src={src}
-        title={children || 'Video'}
-        allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-        allowFullScreen
-        className='absolute top-0 left-0 w-full h-full border-0'
-      />
-      {children && <div className='text-center text-sm text-gray-500 mt-2'>{children}</div>}
-    </div>
-  )
 }
 
 // Mintlify-style callout components using fumadocs Callout
@@ -444,9 +388,5 @@ export const mdxComponents = {
   // API documentation components
   // ParamField,
   // ResponseField,
-  // Embed,
-  // File,
-  // Audio,
-  // NotionIcon,
-  // Video,
+  notion: notionComponents,
 }
