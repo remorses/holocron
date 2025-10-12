@@ -27,11 +27,10 @@ export function createRenderFormTool({
   if (replaceOptionalsWithNulls) {
     uiFieldsSchema = optionalToNullable(uiFieldsSchema)
   }
+  let exampleNamePaths = [] as string[]
   if (jsonSchema) {
-    const exampleNamePaths = extractNamePathsFromSchema(jsonSchema)
-    uiFieldsSchema = uiFieldsSchema.describe(
-      `Each field requires a name property that describes the filed updated on that scalar field, it can be ${exampleNamePaths.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
-    )
+    exampleNamePaths = extractNamePathsFromSchema(jsonSchema)
+
   }
 
   const compiledSchema = compileSchema(jsonSchema || {})
@@ -49,6 +48,9 @@ export function createRenderFormTool({
         .map((part) => (isNaN(Number(part)) ? part : 'items'))
         .join('/')
     const { node, error } = compiledSchema.getNode(pointer)
+    if (error) {
+      notifyError(error, `Failed to get schema node for pointer: ${pointer}`)
+    }
     return node?.schema
   }
 
@@ -62,22 +64,27 @@ export function createRenderFormTool({
         - Perform bulk deletions or removals
         Instead modify the file directly with string and replace for those operations.
 
-        Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the array.
+        Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the existing array.
 
         Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.
 
-        If your workflow requires asking for a lot of fields, split the form into many messages, each one with 1 form field ideally.
+        Switch should only be used for boolean values.
 
-        NEVER ask the user to fill more than 1 or 2 fields. Instead ask for 1 input and deduce the rest. For example NEVER ask the user to provide both company name and domain, deduce the company name from the domain. Or use web search and fetch to find related information.
+        If your workflow requires asking for a lot of fields, split your data collection in multiple messages. plan first on what you will need to ask in full and decide on the few fields to ask first.
+
+        NEVER ask the user to fill more than 1 or 2 fields in case of non array fields. Instead ask for 1 input and deduce the rest. For example NEVER ask the user to provide both company name and domain, deduce the company name from the domain. Or use web search and fetch to find related information.
 
         Only render many form fields in the case of list of items or fields that are part of an object.
-
-        Render one form field at a time. Split your forms into many messages.
 
         If the user submits a form without adding the fields you want DO NOT ask the user to fill the form again. Instead render another form in a new message.
         Previous messages forms are disabled and the user cannot submit them again. Render a simpler shorter form the user can fill in. Use relevant default values.
 
-        Always try to fill in the default values so the user has less things to type and check.
+        Always try to fill in the default values (or existing json values) so the user has less things to type and check.
+
+        ${exampleNamePaths.length
+        ? `These are the only available values for the parameter "name" where {index} is a number: ${exampleNamePaths.join(', ')}`
+        : ''
+      }
 
         ${description || ''}
       `,
@@ -112,6 +119,12 @@ export function createRenderFormTool({
             `name ${field.name} is not a scalar, instead it has the following schema: ${JSON.stringify(schema)}`,
           )
         }
+        const validTypes = getValidFieldTypesForSchema(schema)
+        if (validTypes.length > 0 && !validTypes.includes(field.type)) {
+          errors.push(
+            `field type "${field.type}" is not valid for ${field.name}. Valid types are: ${validTypes.join(', ')}`,
+          )
+        }
       }
 
       if (errors.length > 0) {
@@ -136,7 +149,89 @@ export function getTypeForNameInSchema(name: string, compiledSchema: any) {
       .join('/')
   console.log(pointer)
   const { node, error } = compiledSchema.getNode(pointer)
+  if (error) {
+    console.error(`Failed to get schema node for pointer: ${pointer}`, error)
+  }
   return node?.schema
+}
+
+type FieldType = z.infer<typeof FieldTypeEnum>
+
+export function getValidFieldTypesForSchema(schema: any): FieldType[] {
+  if (!schema || typeof schema !== 'object') {
+    return []
+  }
+
+  if (schema.enum) {
+    const enumLength = Array.isArray(schema.enum) ? schema.enum.length : 0
+    if (enumLength <= 3) {
+      return ['radio', 'select']
+    }
+    return ['select']
+  }
+
+  if (schema.const) {
+    return ['input', 'textarea']
+  }
+
+  if (schema.anyOf && Array.isArray(schema.anyOf)) {
+    const allTypes = new Set<FieldType>()
+    for (const subSchema of schema.anyOf) {
+      const types = getValidFieldTypesForSchema(subSchema)
+      types.forEach((t) => allTypes.add(t))
+    }
+    return Array.from(allTypes)
+  }
+
+  if (schema.oneOf && Array.isArray(schema.oneOf)) {
+    const allTypes = new Set<FieldType>()
+    for (const subSchema of schema.oneOf) {
+      const types = getValidFieldTypesForSchema(subSchema)
+      types.forEach((t) => allTypes.add(t))
+    }
+    return Array.from(allTypes)
+  }
+
+  if (schema.allOf && Array.isArray(schema.allOf)) {
+    const allTypes = new Set<FieldType>()
+    for (const subSchema of schema.allOf) {
+      const types = getValidFieldTypesForSchema(subSchema)
+      types.forEach((t) => allTypes.add(t))
+    }
+    return Array.from(allTypes)
+  }
+
+  const schemaType = schema.type
+
+  if (Array.isArray(schemaType)) {
+    const allTypes = new Set<FieldType>()
+    for (const type of schemaType) {
+      if (type === 'string') {
+        ;['input', 'password', 'textarea', 'select', 'radio', 'color_picker', 'date_picker'].forEach((t) =>
+          allTypes.add(t as FieldType),
+        )
+      } else if (type === 'number' || type === 'integer') {
+        ;['number', 'slider'].forEach((t) => allTypes.add(t as FieldType))
+      } else if (type === 'boolean') {
+        allTypes.add('switch')
+      }
+    }
+    return Array.from(allTypes)
+  }
+
+  if (schemaType === 'string') {
+    return ['input', 'password', 'textarea', 'select', 'radio', 'color_picker', 'date_picker']
+  }
+
+  if (schemaType === 'number' || schemaType === 'integer') {
+    return ['number', 'slider']
+  }
+
+  if (schemaType === 'boolean') {
+    return ['switch']
+  }
+
+  return []
 }
 
 export function isScalarSchema(schema: any): boolean {
@@ -197,7 +292,7 @@ const FieldTypeEnum = z.enum([
 ])
 
 export const UIFieldSchema = z.object({
-  name: z.string(),
+  name: z.string().describe(`Field path with parts delimited by dot, for example object.field.child . for array items you can use parent.{index}.objectField where index is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`),
   type: FieldTypeEnum,
   label: z
     .string()

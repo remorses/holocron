@@ -1,13 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "fumadocs-ui/css/shadcn.css";
-@import "fumadocs-ui/css/shadcn.css";
 @import "fumadocs-ui/css/preset.css";
 
 @source "../../../docs-website/src";
 @source "../../../contesto/src";
-
-
 
 
 @custom-variant dark (&:is(.dark *));

@@ -8,6 +8,7 @@ import micromatch from 'micromatch'
 
 import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DocsConfigSchema } from '@holocron.so/cli/src'
 import { DocumentRecord, ProcessorData } from 'docs-website/src/lib/mdx-heavy'
 import { StructuredData, Heading, StructuredContent } from 'docs-website/src/lib/remark-structure'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -323,6 +324,19 @@ export async function syncSite({
     if (asset.type !== 'docsJson') return []
 
     const { data: jsonData, comments } = extractJsonCComments(asset.content)
+
+    jsonData.siteId = siteId
+    jsonData.name ??= ''
+
+    const validationResult = DocsConfigSchema.safeParse(jsonData)
+    if (!validationResult.success) {
+      console.error(`Invalid holocron.jsonc schema:`, validationResult.error.format())
+      notifyError(validationResult.error, `Invalid holocron.jsonc for site ${siteId}`)
+      return []
+    }
+
+
+
     await prisma.siteBranch.update({
       where: { branchId },
       data: { docsJson: jsonData, docsJsonComments: comments },
@@ -338,7 +352,7 @@ export async function syncSite({
     }
 
     // Handle domain connections
-    if (jsonData.domains && Array.isArray(jsonData.domains)) {
+    if (jsonData.domains && Array.isArray(jsonData.domains) && jsonData.domains.length > 0) {
       const existingHosts = new Set(branchDomains.map((d) => d.host))
       const configuredHosts = new Set(jsonData.domains)
 
