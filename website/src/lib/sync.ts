@@ -8,6 +8,7 @@ import micromatch from 'micromatch'
 
 import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DocsConfigSchema } from '@holocron.so/cli/src'
 import { DocumentRecord, ProcessorData } from 'docs-website/src/lib/mdx-heavy'
 import { StructuredData, Heading, StructuredContent } from 'docs-website/src/lib/remark-structure'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -325,6 +326,15 @@ export async function syncSite({
     const { data: jsonData, comments } = extractJsonCComments(asset.content)
 
     jsonData.siteId = siteId
+
+    const validationResult = DocsConfigSchema.safeParse(jsonData)
+    if (!validationResult.success) {
+      console.error(`Invalid holocron.jsonc schema:`, validationResult.error.format())
+      notifyError(validationResult.error, `Invalid holocron.jsonc for site ${siteId}`)
+      return []
+    }
+
+
 
     await prisma.siteBranch.update({
       where: { branchId },
