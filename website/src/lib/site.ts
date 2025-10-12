@@ -4,7 +4,7 @@ import { prisma } from 'db'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
-import { applyJsonCComments } from './json-c-comments'
+import { applyJsonCComments, extractJsonCComments } from './json-c-comments'
 import { env } from './env'
 import { assetsFromFilesList, syncSite } from './sync'
 import { slugKebabCaseKeepExtension } from './utils'
@@ -92,16 +92,29 @@ export async function createSite({
     : defaultDomains
 
   const domainForBasePath = `${branchId}-docs-basepath.holocronsites.com`
+  const docsJsonPath = path.posix.join(sanitizedGithubFolder || '.', DOCS_JSON_BASENAME)
 
-  // Create docsJson configuration
+  const holocronJsoncFile = files.find(f =>
+    f.relativePath === DOCS_JSON_BASENAME ||
+    f.relativePath === docsJsonPath
+  )
+
+  let parsedHolocronJson: Partial<DocsJsonType> = {}
+  let userComments = {}
+  if (holocronJsoncFile) {
+    const { data, comments } = extractJsonCComments(holocronJsoncFile.contents)
+    parsedHolocronJson = data
+    userComments = comments
+  }
+
   const docsJson: DocsJsonType = {
     ...defaultStartingHolocronJson,
+    ...parsedHolocronJson,
     siteId,
     name,
     domains,
   }
 
-  // Create the site
   const site = await prisma.site.create({
     data: {
       name,
@@ -118,7 +131,6 @@ export async function createSite({
           branchId,
           title: 'Main',
           ...(githubBranch && { githubBranch }),
-
         },
       },
       ...(githubInstallationId && {
@@ -134,19 +146,18 @@ export async function createSite({
 
   console.log(`created site ${siteId}`)
 
-  // Add docsJson as a file if not already present
-  const docsJsonPath = path.posix.join(sanitizedGithubFolder || '.', DOCS_JSON_BASENAME)
-  const hasDocsJson = files.some(f => f.relativePath === docsJsonPath || f.relativePath === DOCS_JSON_BASENAME)
-  
-  const filesWithDocsJson = hasDocsJson ? files : [
-    ...files,
+
+
+  const filesWithDocsJson = [
+    ...files.filter(
+      f => f.relativePath !== holocronJsoncFile?.relativePath
+    ),
     {
       relativePath: docsJsonPath,
-      contents: applyJsonCComments(docsJson, defaultDocsJsonComments, 2),
+      contents: applyJsonCComments(docsJson, { ...defaultDocsJsonComments, ...userComments }, 2),
     }
   ]
 
-  // Always sync files (empty array creates initial structure)
   const assets = assetsFromFilesList({
     files: filesWithDocsJson,
     githubFolder: sanitizedGithubFolder || '',
