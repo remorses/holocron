@@ -61,7 +61,7 @@ export function createRenderFormTool({
         IMPORTANT: Do NOT use this tool to:
         - Remove array fields or array items
         - Remove/delete any fields from the data
-        - Perform bulk deletions or removals
+        - Reorder array items. Use another tool to do that instead then use again this tool with the right index
         Instead modify the file directly with string and replace for those operations.
 
         Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the existing array.

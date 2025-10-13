@@ -612,7 +612,7 @@ export function MessagePartRenderer({
     if (!part.text) return null
     return (
       <ShowMore>
-        <div className='flex flex-row text-sm  opacity-80 tracking-wide gap-[1ch]'>
+        <div className='flex flex-row text-sm opacity-80 tracking-wide gap-[1ch]'>
           <Dot />
           <ChatMarkdown
             isStreaming={isChatGenerating}
