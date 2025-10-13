@@ -403,9 +403,7 @@ export function ClientApp() {
     staleTime: Infinity, // Theme CSS doesn't change often
   })
 
-  if (!source) {
-    return null
-  }
+
 
   return (
     <>

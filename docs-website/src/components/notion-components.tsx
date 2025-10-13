@@ -38,6 +38,9 @@ function MentionPage({ url, children }: { url: string; children?: React.ReactNod
     if (!context) return url
 
     const { source, locale } = context
+    if (!source) {
+      return url
+    }
 
     const pageId = (() => {
       try {
