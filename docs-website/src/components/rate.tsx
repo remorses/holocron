@@ -26,7 +26,7 @@ export interface Feedback {
 }
 
 export interface ActionResponse {
-  githubUrl: string
+  githubUrl?: string
 }
 
 interface Result extends Feedback {
@@ -128,21 +128,23 @@ export function Rate({ onRateAction }: { onRateAction: (url: string, feedback: F
         {previous ? (
           <div className='px-3 py-6 flex flex-col items-center gap-3 bg-fd-card text-fd-muted-foreground text-sm text-center rounded-xl'>
             <p>Thank you for your feedback!</p>
-            <div className='flex flex-row items-center gap-2'>
-              <a
-                href={previous.response?.githubUrl}
-                rel='noreferrer noopener'
-                target='_blank'
-                className={cn(
-                  buttonVariants({
-                    color: 'primary',
-                  }),
-                  'text-xs',
-                )}
-              >
-                View on GitHub
-              </a>
-            </div>
+            {previous.response?.githubUrl && (
+              <div className='flex flex-row items-center gap-2'>
+                <a
+                  href={previous.response.githubUrl}
+                  rel='noreferrer noopener'
+                  target='_blank'
+                  className={cn(
+                    buttonVariants({
+                      color: 'primary',
+                    }),
+                    'text-xs',
+                  )}
+                >
+                  View on GitHub
+                </a>
+              </div>
+            )}
           </div>
         ) : (
           <form className='flex flex-col gap-3' onSubmit={submit}>
