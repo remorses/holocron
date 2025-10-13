@@ -1,7 +1,8 @@
 import React, { useContext } from 'react'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { SourceContext } from '../lib/source'
-import { Link } from 'react-router';
+import { Link } from 'react-router'
+import { DynamicIcon } from '../lib/icon'
 
 type Color =
   | 'gray'
@@ -31,7 +32,7 @@ function MentionUser({ url, children }: { url: string; children?: React.ReactNod
   )
 }
 
-function MentionPage({ url, children }: { url: string; children?: React.ReactNode }) {
+function MentionPage({ url, icon, children }: { url: string; icon?: string; children?: React.ReactNode }) {
   const context = useContext(SourceContext)
 
   const pageUrl = (() => {
@@ -67,22 +68,25 @@ function MentionPage({ url, children }: { url: string; children?: React.ReactNod
 
   return (
     <Link to={pageUrl} className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 no-underline'>
+      {icon && <DynamicIcon icon={icon} className='size-4' />}
       {children}
     </Link>
   )
 }
 
-function MentionDatabase({ url, children }: { url: string; children?: React.ReactNode }) {
+function MentionDatabase({ url, icon, children }: { url: string; icon?: string; children?: React.ReactNode }) {
   return (
     <a href={url} className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 no-underline'>
+      {icon && <DynamicIcon icon={icon} className='size-4' />}
       {children}
     </a>
   )
 }
 
-function MentionDataSource({ url, children }: { url: string; children?: React.ReactNode }) {
+function MentionDataSource({ url, icon, children }: { url: string; icon?: string; children?: React.ReactNode }) {
   return (
     <a href={url} className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 no-underline'>
+      {icon && <DynamicIcon icon={icon} className='size-4' />}
       {children}
     </a>
   )

@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 import {
   viteExternalsPlugin,
   enablePreserveModulesPlugin,
-} from '@xmorse/deployment-utils/src/vite-externals-plugin'
+} from '@xmorse/deployment-utils/dist/vite-externals-plugin.js'
 import { reactRouterServerPlugin } from '@xmorse/deployment-utils/dist/react-router.js'
 import { defineConfig } from 'vite'
 import EnvironmentPlugin from 'vite-plugin-environment'
