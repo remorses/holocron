@@ -209,7 +209,7 @@ export function getValidFieldTypesForSchema(schema: any): FieldType[] {
     const allTypes = new Set<FieldType>()
     for (const type of schemaType) {
       if (type === 'string') {
-        ;['input', 'password', 'textarea', 'select', 'radio', 'color_picker', 'date_picker'].forEach((t) =>
+        ;['input', 'password', 'textarea', 'select', 'radio', 'color_picker', 'date_picker', "image_upload"].forEach((t) =>
           allTypes.add(t as FieldType),
         )
       } else if (type === 'number' || type === 'integer') {
