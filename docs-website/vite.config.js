@@ -91,7 +91,6 @@ export default defineConfig({
         '@scalar/api-client',
         'lodash-es',
         'undici',
-        'framer-motion',
         'katex',
       ],
     }),
