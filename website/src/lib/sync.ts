@@ -381,17 +381,20 @@ export async function syncSite({
         })
       }
 
-      const domainsToConnect = jsonData.domains.filter((domain: string) => !existingHosts.has(domain))
+      const domainsToConnect = jsonData.domains.filter((domain: string) => !existingHosts.has(domain) && domain.trim() !== '')
 
       if (domainsToConnect.length > 0) {
         console.log(`Connecting ${domainsToConnect.length} new domains for site ${siteId}`)
         for (const host of domainsToConnect) {
+          if (!host || host.trim() === '') {
+            console.log(`Skipping empty domain`)
+            continue
+          }
           const domainTaken = await prisma.domain.findFirst({
             where: { host },
           })
           if (domainTaken) {
             console.log(`Domain ${host} is already taken, skipping.`)
-            // TODO add a way to show errors to the user in cases like this (domain already taken), if domain is already taken, send them an email?
             continue
           }
           const domainType: DomainType =
