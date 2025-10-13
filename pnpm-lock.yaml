@@ -499,8 +499,8 @@ importers:
         specifier: ^4.5.2
         version: 4.7.0(rolldown-vite@7.1.16(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0))
       '@xmorse/deployment-utils':
-        specifier: ^0.7.0
-        version: 0.7.0(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
+        specifier: ^0.7.1
+        version: 0.7.1(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
       '@xmorse/markdown-rs':
         specifier: ^0.0.3
         version: 0.0.3
@@ -2556,8 +2556,8 @@ importers:
         specifier: ^19.2.1
         version: 19.2.1(@types/react@19.2.2)
       '@xmorse/deployment-utils':
-        specifier: ^0.7.0
-        version: 0.7.0(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
+        specifier: ^0.7.1
+        version: 0.7.1(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.6)
@@ -8284,8 +8284,8 @@ packages:
     resolution: {integrity: sha512-ueFCcIPaMgtuYDS9u0qlUoEvj6GiSsKrwnOLPp9SshqjtcRaR1IEHRjoReq3sXNydsF5i0ZnmuYgXq9dV53t0g==}
     engines: {node: '>=18.0.0'}
 
-  '@xmorse/deployment-utils@0.7.0':
-    resolution: {integrity: sha512-SPHBI3Zs92OKbKQTuAoELTnAvhiMVyJdcv+qqBYxYpuQ+ql4Eb+WKUEBbAMUR3ny97VeXS/KSzFhFvJ2mMMuPQ==}
+  '@xmorse/deployment-utils@0.7.1':
+    resolution: {integrity: sha512-KjO/42D2kMiwPsVRhg5PgBXjRKUVqMPZFQ2+v547Uq00tGlsskiEHM3Cv5JK33nG3AXrRa2n0mvfbmzvdm8mwA==}
 
   '@xmorse/markdown-rs-binding-darwin-arm64@0.0.3':
     resolution: {integrity: sha512-odUfHkoz1TXZFr5hrpo30sPiQ67SF1tjVVzZP3Y8GgTpyqy4UaJUWbxKPvlVcPkwGln1D8zOPA4YJFNH7e/G5w==}
@@ -10124,6 +10124,10 @@ packages:
 
   fast-xml-parser@5.2.5:
     resolution: {integrity: sha512-pfX9uG9Ki0yekDHx2SiuRIyFdyAr1kMIMitPvb0YBo8SUfKvia7w7FIyd/l6av85pFYRhZscS75MwMnbvY+hcQ==}
+    hasBin: true
+
+  fast-xml-parser@5.3.0:
+    resolution: {integrity: sha512-gkWGshjYcQCF+6qtlrqBqELqNqnt4CxruY6UVAWWnqb3DQ6qaNFEIKqzYep1XzHLM/QtrHVCxyPOtTk4LTQ7Aw==}
     hasBin: true
 
   fastq@1.19.1:
@@ -13701,6 +13705,11 @@ packages:
     engines: {node: '>=20.16.0'}
     hasBin: true
 
+  srvx@0.8.16:
+    resolution: {integrity: sha512-hmcGW4CgroeSmzgF1Ihwgl+Ths0JqAJ7HwjP2X7e3JzY7u4IydLMcdnlqGQiQGUswz+PO9oh/KtCpOISIvs9QQ==}
+    engines: {node: '>=20.16.0'}
+    hasBin: true
+
   stack-trace@0.0.10:
     resolution: {integrity: sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg==}
 
@@ -15354,7 +15363,7 @@ snapshots:
 
   '@antfu/ni@25.0.0':
     dependencies:
-      ansis: 4.1.0
+      ansis: 4.2.0
       fzf: 0.5.2
       package-manager-detector: 1.3.0
       tinyexec: 1.0.1
@@ -15465,7 +15474,7 @@ snapshots:
 
   '@azure/core-xml@1.5.0':
     dependencies:
-      fast-xml-parser: 5.2.5
+      fast-xml-parser: 5.3.0
       tslib: 2.8.1
 
   '@azure/logger@1.3.0':
@@ -21830,7 +21839,7 @@ snapshots:
       '@whatwg-node/promise-helpers': 1.3.2
       tslib: 2.8.1
 
-  '@xmorse/deployment-utils@0.7.0(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)':
+  '@xmorse/deployment-utils@0.7.1(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)':
     dependencies:
       '@actions/cache': 3.3.0
       '@iarna/toml': 2.2.5
@@ -24028,6 +24037,10 @@ snapshots:
     dependencies:
       strnum: 2.1.1
 
+  fast-xml-parser@5.3.0:
+    dependencies:
+      strnum: 2.1.1
+
   fastq@1.19.1:
     dependencies:
       reusify: 1.1.0
@@ -24568,7 +24581,7 @@ snapshots:
       cookie-es: 2.0.0
       fetchdts: 0.1.7
       rou3: 0.7.7
-      srvx: 0.8.15
+      srvx: 0.8.16
 
   hachure-fill@0.5.2: {}
 
@@ -28513,6 +28526,8 @@ snapshots:
   srvx@0.8.15:
     dependencies:
       cookie-es: 2.0.0
+
+  srvx@0.8.16: {}
 
   stack-trace@0.0.10: {}
 
