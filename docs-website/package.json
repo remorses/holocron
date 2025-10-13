@@ -31,6 +31,7 @@
     "@ai-sdk/provider": "2.0.0",
     "@cloudflare/vite-plugin": "^1.9.4",
     "@cloudflare/workers-types": "^4.20250712.0",
+    "@emotion/is-prop-valid": "^1.4.0",
     "@holocron.so/cli": "workspace:*",
     "@iconify-json/lucide": "^1.2.49",
     "@lancedb/lancedb": "^0.21.2",
