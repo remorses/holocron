@@ -93,6 +93,7 @@ export default defineConfig({
         'undici',
         'katex',
       ],
+
     }),
     tailwindcss(),
     process.env.ANALYZE &&
