@@ -8,27 +8,14 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 }
 
 /**
- * ShowMore component that collapses content with a gradient fade effect
- * 
- * Displays content up to a specified height, showing a "Show more" button when content exceeds that height.
- * When collapsed, displays a gradient fade at the bottom that blends into the background.
- * 
- * @remarks
- * The gradient fade uses the CSS variable `--show-more-bg` to match the parent background color.
- * Parent components should set this CSS variable in their style prop:
+ * Collapses content with a gradient fade. Requires parent to set `--show-more-bg` CSS variable to a tailwind color.
  * 
  * @example
  * ```tsx
- * <div style={{ '--show-more-bg': 'var(--color-background)' } as CSSProperties}>
- *   <ShowMore height={200}>
- *     <div>Long content here...</div>
- *   </ShowMore>
+ * <div style={{ '--show-more-bg': 'hsl(var(--background))' } as CSSProperties}>
+ *   <ShowMore height={200}>Long content...</ShowMore>
  * </div>
  * ```
- * 
- * @param children - Content to be shown/hidden
- * @param height - Maximum height in pixels before content is collapsed (default: 160)
- * @param className - Additional CSS classes to apply to the container
  */
 export function ShowMore({
   children,
