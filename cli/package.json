@@ -8,7 +8,7 @@
     "build": "tsc ",
     "typecheck": "tsc",
     "prepublishOnly": "pnpm --filter website gen-client && tsc",
-    "holocron": "node bin.js",
+    "cli": "node bin.js",
     "watch": "tsc -w"
   },
   "bin": "./bin.js",
