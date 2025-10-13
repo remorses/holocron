@@ -73,7 +73,7 @@ import {
   ToolPreviewContainer,
   Dot,
 } from './chat-tool-previews'
-import { ShowMore } from './show-more'
+import { ShowMore } from 'contesto/src/components/show-more'
 import { useDisableBodyScroll, useDocsJson } from '../lib/hooks'
 import { RenderNode } from 'safe-mdx'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'

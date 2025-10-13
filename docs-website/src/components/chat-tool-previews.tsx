@@ -4,7 +4,7 @@ import { truncateText } from 'docs-website/src/lib/utils'
 import { DocsToolPart } from 'docs-website/src/lib/types'
 import { capitalize, cn } from 'docs-website/src/lib/utils'
 import { ReactNode, useMemo } from 'react'
-import { ShowMore } from './show-more'
+import { ShowMore } from 'contesto/src/components/show-more'
 import { ChatMarkdown } from './docs-chat'
 import React from 'react'
 

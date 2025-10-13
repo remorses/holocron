@@ -1,8 +1,11 @@
 'use client'
 
-import { cn } from 'docs-website/src/lib/cn'
 import { ChevronDownIcon } from 'lucide-react'
 import React from 'react'
+
+function cn(...inputs: (string | undefined | null | false)[]) {
+  return inputs.filter(Boolean).join(' ')
+}
 export function ShowMore({
   children,
   height = 160,

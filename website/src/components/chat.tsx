@@ -13,6 +13,7 @@ import { Dot, ToolPreviewContainer } from 'docs-website/src/components/chat-tool
 import { TodoPreview } from 'docs-website/src/components/todo-tool-previews'
 import { WebSearchFirecrawlPreview } from './web-search-firecrawl-preview'
 import { WebSearchGooglePreview } from './web-search-google-preview'
+import { ShowMore } from 'contesto/src/components/show-more'
 
 import { Button } from 'website/src/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'

@@ -12,7 +12,7 @@ import fumadocsComponents from 'fumadocs-ui/mdx'
 import { DynamicIcon } from '../lib/icon'
 import React from 'react'
 import { Expandable } from './expandable'
-import { ShowMore } from './show-more'
+import { ShowMore } from 'contesto/src/components/show-more'
 import { notionComponents } from './notion-components'
 
 const Mermaid = React.lazy(() => import('./mermaid'))
