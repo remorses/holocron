@@ -1,4 +1,4 @@
-import { loader, MetaData, PageData, PageFile, VirtualFile, PageTreeTransformer } from 'fumadocs-core/source'
+import { loader, MetaData, PageData, PageFile, VirtualFile, PageTreeTransformer, LoaderOutput } from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { PageTree } from 'fumadocs-core/server'
@@ -7,6 +7,7 @@ import { DynamicIcon } from './icon'
 import { ProcessorDataFrontmatter, StructuredData } from './mdx-heavy'
 import { Badge } from '../components/badge'
 import { DocsJsonType } from './docs-json'
+import { createContext, useContext } from 'react'
 
 export interface SourceOptions {
   languages?: string[]
@@ -38,9 +39,7 @@ export function getFumadocsSource({
 
   const source = loader<
     {
-      pageData: PageData & {
-        structuredData: StructuredData
-      }
+      pageData: ProcessorDataFrontmatter
       metaData: MetaData
     },
     I18nConfig
@@ -171,3 +170,18 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
     },
   }
 }
+
+type FumadocsSource = LoaderOutput<{
+  source: {
+    pageData: ProcessorDataFrontmatter
+    metaData: MetaData
+  }
+  i18n: I18nConfig
+}>
+
+interface SourceContextValue {
+  source: FumadocsSource
+  locale: string
+}
+
+export const SourceContext = createContext<SourceContextValue | undefined>(undefined)

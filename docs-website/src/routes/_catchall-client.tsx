@@ -49,6 +49,7 @@ import { env } from '../lib/env'
 import { useQuery } from '@tanstack/react-query'
 import { getSidebarTabs } from 'fumadocs-ui/utils/get-sidebar-tabs'
 import { isTabActive } from 'fumadocs-ui/utils/is-active'
+import { SourceContext } from '../lib/source'
 
 const ChatDrawer = lazy(() =>
   import('../components/docs-chat').then((mod) => ({
@@ -371,7 +372,7 @@ export function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
 
 export function ClientApp() {
   const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
-  const { previewWebsocketId } = loaderData || {}
+  const { previewWebsocketId, source } = loaderData || {}
   const docsJson = useDocsJson()
   useNProgress()
   // Inline DocsProvider
@@ -401,6 +402,10 @@ export function ClientApp() {
     enabled: !!docsJson?.theme,
     staleTime: Infinity, // Theme CSS doesn't change often
   })
+
+  if (!source) {
+    return null
+  }
 
   return (
     <>
@@ -441,10 +446,12 @@ export function ClientApp() {
                 }}
               />
             )}
-            <ChatDrawerWrapper />
-            <DocsLayoutWrapper docsJson={docsJson}>
-              <Outlet />
-            </DocsLayoutWrapper>
+            <SourceContext.Provider value={{ source, locale: locale || 'en' }}>
+              <ChatDrawerWrapper />
+              <DocsLayoutWrapper docsJson={docsJson}>
+                <Outlet />
+              </DocsLayoutWrapper>
+            </SourceContext.Provider>
           </ThemeProvider>
         </RootProvider>
       </CustomReactRouterProvider>

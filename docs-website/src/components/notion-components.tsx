@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Callout } from 'fumadocs-ui/components/callout'
+import { SourceContext } from '../lib/source'
+import { Link } from 'react-router';
 
 type Color =
   | 'gray'
@@ -30,10 +32,40 @@ function MentionUser({ url, children }: { url: string; children?: React.ReactNod
 }
 
 function MentionPage({ url, children }: { url: string; children?: React.ReactNode }) {
+  const context = useContext(SourceContext)
+
+  const pageUrl = (() => {
+    if (!context) return url
+
+    const { source, locale } = context
+
+    const pageId = (() => {
+      try {
+        const urlObj = new URL(url, 'http://notion.so')
+        const pathWithoutLeadingSlash = urlObj.pathname.replace(/^\//, '')
+        const firstSegment = pathWithoutLeadingSlash.split('/')[0]
+        return firstSegment || ''
+      } catch {
+        return ''
+      }
+    })()
+
+    if (!pageId) return url
+
+    const pages = source.getPages(locale)
+    const page = pages.find(p => p.data.notionPageId === pageId)
+
+    if (page) {
+      return page.url
+    }
+
+    return url
+  })()
+
   return (
-    <a href={url} className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 no-underline'>
+    <Link to={pageUrl} className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 no-underline'>
       {children}
-    </a>
+    </Link>
   )
 }
 
@@ -314,8 +346,8 @@ function Br() {
 export const notionComponents = {
   'mention-user': MentionUser,
   'mention-page': MentionPage,
-  'mention-database': MentionDatabase,
-  'mention-data-source': MentionDataSource,
+  'mention-database': MentionPage,
+  'mention-data-source': MentionPage,
   'mention-date': MentionDate,
   audio: Audio,
   file: File,

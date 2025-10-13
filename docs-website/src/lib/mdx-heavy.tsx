@@ -304,6 +304,7 @@ export interface ProcessorDataFrontmatter {
   title?: string
   description?: string
   icon?: string
+  notionPageId?: string
   // full?: boolean // hides the table of contents
   badge?: {
     content?: string
@@ -319,5 +320,6 @@ export type ProcessorData = {
   toc: TOCItemType[]
   frontmatter: ProcessorDataFrontmatter
   frontmatterYaml?: string
+
   structuredData: StructuredData
 }
