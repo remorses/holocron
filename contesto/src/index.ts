@@ -24,5 +24,8 @@ export * from './lib/schema-path-utils'
 export * from './lib/zod'
 export * from './components/edit-preview'
 
+// UI components
+export * from './components/show-more'
+
 
 export { jsxDedent }
