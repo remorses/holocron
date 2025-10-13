@@ -2,7 +2,6 @@ import { toJSONSchema, z } from 'zod'
 import dedent from 'dedent'
 
 const DOCS_JSON_BASENAME = 'holocron.jsonc'
-const WEBSITE_DOMAIN = 'holocron.so'
 
 const themeNames = ['black', 'catppuccin', 'dusk', 'neutral', 'ocean', 'purple', 'vitepress']
 
@@ -323,77 +322,81 @@ const CSSVariablesSchema = z
         All keys should start with --. The same keys should be specified to both light and dark.
     `)
 
-export const DocsConfigSchema = z
-  .object({
-    $schema: z.string().url().optional().describe('Schema URL for IDE autocomplete'),
-    siteId: z
-      .string()
-      .describe(
-        `The site id for this folder. This field is required and should never be manually updated. This field should never by created instead it is automatically assigned.`,
-      ),
-    name: z
-      .string()
-      .min(1)
-      .describe(
-        'Project or product name. This will be used in holocron dashboard to list the user websites. It has no other use case than that.',
-      ),
+export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websiteDomain: string, docsJsonBasename: string }) {
+  return z
+    .object({
+      $schema: z.string().url().optional().describe('Schema URL for IDE autocomplete'),
+      siteId: z
+        .string()
+        .describe(
+          `The site id for this folder. This field is required and should never be manually updated. This field should never by created instead it is automatically assigned.`,
+        ),
+      name: z
+        .string()
+        .min(1)
+        .describe(
+          'Project or product name. This will be used in holocron dashboard to list the user websites. It has no other use case than that.',
+        ),
 
-    description: z
-      .string()
-      .optional()
-      .describe('default SEO description for pages that do not have a description frontmatter'),
-    logo: LogoSchema.optional().describe('Logo config, shown in the top left in the navbar'),
-    favicon: FaviconSchema.optional().describe('Favicon config'),
-    navbar: NavbarSchema.optional().describe('Top navbar settings'),
-    tabs: z
-      .array(NavigationTabSchema)
-      .optional()
-      .describe('Navigation tabs. This setting is still experimental and discouraged. It does not work currently'),
+      description: z
+        .string()
+        .optional()
+        .describe('default SEO description for pages that do not have a description frontmatter'),
+      logo: LogoSchema.optional().describe('Logo config, shown in the top left in the navbar'),
+      favicon: FaviconSchema.optional().describe('Favicon config'),
+      navbar: NavbarSchema.optional().describe('Top navbar settings'),
+      tabs: z
+        .array(NavigationTabSchema)
+        .optional()
+        .describe('Navigation tabs. This setting is still experimental and discouraged. It does not work currently'),
 
-    footer: FooterSchema.optional().describe('Footer content, shown at the bottom of the website in all pages'),
-    seo: SeoSchema.optional().describe('SEO meta & indexing settings'),
-    redirects: z.array(RedirectSchema).optional().describe('Redirect rules'),
-    banner: BannerSchema.optional().describe('Site-wide banner for announcements or news'),
-    contextual: ContextualSchema.optional().describe(
-      'Contextual actions shown in the buttons at the top of a docs page',
-    ),
-    cssVariables: CSSVariablesSchema.optional().describe('CSS variables'),
-    domains: z
-      .array(z.string())
-      .optional()
-      .describe(
-        `Custom domains to connect to this documentation site. Each domain should point to cname.${WEBSITE_DOMAIN} via CNAME record. Domains will be connected when ${DOCS_JSON_BASENAME} is pushed to the main branch.`,
+      footer: FooterSchema.optional().describe('Footer content, shown at the bottom of the website in all pages'),
+      seo: SeoSchema.optional().describe('SEO meta & indexing settings'),
+      redirects: z.array(RedirectSchema).optional().describe('Redirect rules'),
+      banner: BannerSchema.optional().describe('Site-wide banner for announcements or news'),
+      contextual: ContextualSchema.optional().describe(
+        'Contextual actions shown in the buttons at the top of a docs page',
       ),
-    hideSidebar: z
-      .boolean()
-      .optional()
-      .describe('Hide the sidebar completely from the documentation site. This should be rare'),
-    ignore: z
-      .array(z.string())
-      .optional()
-      .describe(
-        'Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.',
-      ),
-    theme: z
-      .enum(themeNames as [string, ...string[]])
-      .optional()
-      .describe(
-        'Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged',
-      ),
-    disableEditButton: z
-      .boolean()
-      .optional()
-      .describe('Whether to disable the edit button and Monaco editor functionality'),
-    poweredBy: z
-      .object({
-        name: z.string().describe('Name to display in the powered by text'),
-        url: z.string().url().describe('URL to link to when clicking the powered by text'),
-      })
-      .optional()
-      .meta({ hidden: true })
-      .describe('Custom powered by attribution'),
-  })
-  .strict()
+      cssVariables: CSSVariablesSchema.optional().describe('CSS variables'),
+      domains: z
+        .array(z.string())
+        .optional()
+        .describe(
+          `Custom domains to connect to this documentation site. Each domain should point to cname.${websiteDomain} via CNAME record. Domains will be connected when ${docsJsonBasename} is pushed to the main branch.`,
+        ),
+      hideSidebar: z
+        .boolean()
+        .optional()
+        .describe('Hide the sidebar completely from the documentation site. This should be rare'),
+      ignore: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.',
+        ),
+      theme: z
+        .enum(themeNames as [string, ...string[]])
+        .optional()
+        .describe(
+          'Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged',
+        ),
+      disableEditButton: z
+        .boolean()
+        .optional()
+        .describe('Whether to disable the edit button and Monaco editor functionality'),
+      poweredBy: z
+        .object({
+          name: z.string().describe('Name to display in the powered by text'),
+          url: z.string().url().describe('URL to link to when clicking the powered by text'),
+        })
+        .optional()
+        .meta({ hidden: true })
+        .describe('Custom powered by attribution'),
+    })
+    .strict()
+}
+
+export const DocsConfigSchema = getDocsConfigSchema({ websiteDomain: 'holocron.so', docsJsonBasename: DOCS_JSON_BASENAME })
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 
