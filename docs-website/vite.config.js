@@ -76,6 +76,7 @@ export default defineConfig({
 
     // tsconfigPaths(),
     viteExternalsPlugin({
+      // Add packages here that have CJS/ESM bundling issues with rolldown
       externals: [
         'pg',
         'shiki',
@@ -92,6 +93,7 @@ export default defineConfig({
         'lodash-es',
         'undici',
         'katex',
+        '@apidevtools/json-schema-ref-parser',
       ],
 
     }),
