@@ -43,7 +43,7 @@ async function main() {
     buildRemotely: true,
     // buildkit: true,
     dockerfile: 'Dockerfile',
-    minInstances: isProduction ? 1 : 0,
+    minInstances: stage === 'production' ? 1 : 1,
     forceHttps: false,
     maxInstances: 3,
     kill_timeout: 300,

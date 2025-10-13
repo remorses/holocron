@@ -39,7 +39,7 @@ async function main() {
     port,
     buildRemotely: true,
     dockerfile: 'Dockerfile',
-    minInstances: stage === 'production' ? 1 : 0,
+    minInstances: stage === 'production' ? 1 : 1,
     forceHttps: false,
     maxInstances: stage === 'production' ? 3 : 1,
     healthCheckPath: `${basePath}/api/health`,
