@@ -25,7 +25,7 @@
   },
   "pnpm": {
     "overrides": {
-      "rollup": "4.43.0"
+      "vite": "npm:rolldown-vite@latest"
     }
   },
   "repository": "https://github.com/remorses/",
