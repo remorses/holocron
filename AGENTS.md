@@ -1,11 +1,9 @@
 
-# Project Coding Guidelines
+To research fumadocs you can fetch https://fumadocs.dev/llms-full.txt
 
-NOTICE: AGENTS.md is generated using AGENTS.sh and should NEVER be manually updated.
+Optionally grep for what you need with curl https://fumadocs.dev/llms-full.txt | grep 'search term'
 
----
-
-
+You can also search for files in the folder fumadocs to do the same thing
 
 # core guidelines
 
@@ -27,9 +25,6 @@ always use kebab case for new filenames. never use uppercase letters in filename
 ## see files in the repo
 
 use `git ls-files | tree --fromfile` to see files in the repo. this command will ignore files ignored by git
-
-
----
 
 # typescript
 
@@ -128,9 +123,6 @@ remember to always add the explicit type to avoid unexpected type inference.
 
 DO `import fs from 'fs'; fs.writeFileSync(...)`
 DO NOT `import { writeFileSync } from 'fs';`
-
-
----
 
 # package manager: pnpm with workspace
 
@@ -253,39 +245,6 @@ in this case, we could have only updated @better-auth/stripe to fix the issue to
 
 if after doing this we still have duplicate packages, you will have to ask the user for help. you can try deleting the node_modules and restarting the approach, but it rarely helps.
 
-
----
-
-# github
-
-you can use the `gh` cli to do operations on github for the current repository. For example: open issues, open PRs, check actions status, read workflow logs, etc.
-
-## get current github repo
-
-`git config --get remote.origin.url`
-
-## checking status of latest github actions workflow run
-
-```bash
-gh run list # lists latest actions runs
-gh run watch <id> --exit-status # if workflow is in progress, wait for the run to complete. the actions run is finished when this command exits. Set a tiemout of at least 10 minutes when running this command
-gh run view <id> --log-failed | tail -n 300 # read the logs for failed steps in the actions run
-gh run view <id> --log | tail -n 300 # read all logs for a github actions run
-```
-
-## reading github repositories
-
-you can use gitchamber.com to read repo files. run `curl https://gitchamber.com` to see how the API works. always use curl to fetch the responses of gitchamber.com
-
-for example when working with the vercel ai sdk, you can fetch the latest docs using:
-
-https://gitchamber.com/repos/repos/vercel/ai/main/files
-
-use gitchamber to read the .md files using curl
-
-
----
-
 # react
 
 - never test react code. instead put as much code as possible in react-agnostic functions or classes and test those if needed.
@@ -325,9 +284,6 @@ use gitchamber to read the .md files using curl
 - non component code should be put in the src/lib folder.
 
 - hooks should be put in the src/hooks.tsx file. do not create a new file for each new hook. also notice that you should never create custom hooks, only do it if asked for.
-
-
----
 
 # sentry
 
@@ -395,9 +351,6 @@ every time you throw a user-readable error you should use AppError instead of Er
 
 AppError messages will be forwarded to the user as is. normal Error instances instead could have their messages obfuscated
 
-
----
-
 # testing
 
 do not write new test files unless asked. do not write tests if there is not already a test or describe block for that function or module.
@@ -432,9 +385,6 @@ NEVER write tests for react components or react hooks. NEVER write tests for rea
 sometimes tests work directly on database data, using prisma. to run these tests you have to use the package.json script, which will call `doppler run -- vitest` or similar. never run doppler cli yourself as you could delete or update production data. tests generally use a staging database instead.
 
 never write tests yourself that call prisma or interact with database or emails. for these, ask the user to write them for you.
-
-
----
 
 # changelog
 
@@ -479,29 +429,67 @@ use present tense. be detailed but concise, omit useless verbs like "implement",
 
 the website package has a dependency on docs-website. instead of duplicating code that is needed both in website and docs-website keep a file in docs-website instead and import from there for the website package.
 
-
----
-
 # writing docs
 
 when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you had to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
-
----
-
 # secrets
 
 this project uses doppler to manage secrets, with a single project with 3 envs: dev, preview and production. dev is the env already selected and implicit in doppler calls.
 
 in typescript never use process.env directly. instead find the closest `env.ts` file that exports an env object (this file should already exist). so the env can be used type-safely and i can clearly see which secrets are available and need to be added.
-
----
-
 # cac for cli development
 
 the cli uses cac npm package.
 
+# github
 
----
+you can use the `gh` cli to do operations on github for the current repository. For example: open issues, open PRs, check actions status, read workflow logs, etc.
+
+## creating issues and pull requests
+
+when opening issues and pull requests with gh cli, never use markdown headings or sections. instead just use simple paragraphs, lists and code examples. be as short as possible while remaining clear and using good English.
+
+example:
+
+```bash
+gh issue create --title "Fix login timeout" --body "The login form times out after 5 seconds on slow connections. This affects users on mobile networks.
+
+Steps to reproduce:
+1. Open login page on 3G connection
+2. Enter credentials
+3. Click submit
+
+Expected: Login completes within 30 seconds
+Actual: Request times out after 5 seconds
+
+Error in console:
+\`\`\`bash
+Error: Request timeout at /api/auth/login
+\`\`\`"
+```
+
+## get current github repo
+
+`git config --get remote.origin.url`
+
+## checking status of latest github actions workflow run
+
+```bash
+gh run list # lists latest actions runs
+gh run watch <id> --exit-status # if workflow is in progress, wait for the run to complete. the actions run is finished when this command exits. Set a tiemout of at least 10 minutes when running this command
+gh run view <id> --log-failed | tail -n 300 # read the logs for failed steps in the actions run
+gh run view <id> --log | tail -n 300 # read all logs for a github actions run
+```
+
+## reading github repositories
+
+you can use gitchamber.com to read repo files. run `curl https://gitchamber.com` to see how the API works. always use curl to fetch the responses of gitchamber.com
+
+for example when working with the vercel ai sdk, you can fetch the latest docs using:
+
+https://gitchamber.com/repos/repos/vercel/ai/main/files
+
+use gitchamber to read the .md files using curl
 
 # prisma
 
@@ -587,9 +575,6 @@ if (!user.subscription) {
     )
 }
 ````
-
----
-
 # react router v7
 
 the website uses react-router v7.
@@ -831,9 +816,6 @@ pnpm typecheck  # This runs typegen first, then tsc
 
 when you build the website always pipe the output to a file so you can later grep inside it for errors. with `pnpm build 2>&1 | build.log`
 
-
----
-
 # styling
 
 - always use tailwind for styling. prefer using simple styles using flex and gap. margins should be avoided, instead use flexbox gaps, grid gaps, or separate spacing divs.
@@ -853,23 +835,23 @@ when you build the website always pipe the output to a file so you can later gre
 this project uses shadcn components placed in the website/src/components/ui folder. never add a new shadcn component yourself by writing code. instead use the shadcn cli installed locally.
 
 try to reuse these available components when you can, for example for buttons, tooltips, scroll areas, etc.
-
----
-
 # tailwind v4
 
 this project uses tailwind v4. this new tailwind version does not use tailwind.config.js. instead it does all configuration in css files.
 
 read https://tailwindcss.com/docs/upgrade-guide to understand the updates landed in tailwind v4 if you do not have tailwind v4 in your training context. ignore the parts that talk about running the upgrade cli. this project already uses tailwind v4 so no need to upgrade anything.
 
----
+## spacing should use multiples of 4
+
+for margin, padding, gaps, widths and heights it is preferable to use multiples of 4 of the tailwind spacing scale. for example p-4 or gap-4
+
+4 is equal to 16px which is the default font size of the page. this way every spacing is a multiple of the height and width of a default letter.
+
+user interfaces are mostly text so using the letter width and height as a base unit makes it easier to reason about the layout and sizes.
 
 # lucide icons
 
 use lucide-react to import icons. always add the Icon import name, for example `ImageIcon` instead of just `Image`.
-
----
-
 # spiceflow
 
 before writing or updating spiceflow related code always execute this command to get Spiceflow full documentation: `curl -s https://gitchamber.com/repos/remorses/spiceflow/main/files/README.md`
@@ -921,9 +903,6 @@ example:
 
 notice that if you add a route in the spiceflow server you will need to run `pnpm --filter website gen-client` to update the apiClient inside cli.
 
-
----
-
 # ai sdk
 
 i use the vercel ai sdk to interact with LLMs, also known as the npm package `ai`. never use the openai sdk or provider-specific sdks, always use the vercel ai sdk, npm package `ai`. streamText is preferred over generateText, unless the model used is very small and fast and the current code doesn't care about streaming tokens or showing a preview to the user. `streamObject` is also preferred over generateObject.
@@ -934,17 +913,11 @@ https://gitchamber.com/repos/vercel/ai/main/files
 use gitchamber to read the .md files using curl
 
 you can swap out the topic with text you want to search docs for. you can also limit the total results returned with the param token to limit the tokens that will be added to the context window
-
----
-
 # playwright
 
 you can control the browser using the playwright mcp tools. these tools let you control the browser to get information or accomplish actions
 
 if i ask you to test something in the browser, know that the website dev server is already running at http://localhost:7664 for website and :7777 for docs-website (but docs-website needs to use the website domain specifically, for example name-hash.localhost:7777)
-
----
-
 # zod
 
 when you need to create a complex type that comes from a prisma table, do not create a new schema that tries to recreate the prisma table structure. instead just use `z.any() as ZodType<PrismaTable>)` to get type safety but leave any in the schema. this gets most of the benefits of zod without having to define a new zod schema that can easily go out of sync.
@@ -967,6 +940,43 @@ const jsonSchema = toJSONSchema(mySchema, {
 });
 ```
 
+# stripe
 
----
+stripe is used to manage subscriptions and payments.
+
+the Stripe billing portal is used to
+
+- send user to payment to create a sub via `stripe.checkout.sessions.create`
+- let user change plan, cancel or change payment method ("manage subscription") via `stripe.billingPortal.sessions.create`
+
+## subscriptions
+
+a subscription is active if state is in
+
+- trialing
+- active
+
+a subscription can be reactivated if state is NOT in
+
+- canceled
+- incomplete_expired
+- unpaid
+
+> If sub is in any of these states the user will not be able to use the billing portal to reactivate it. Meaning we should treat a subscription in these states as completely missing. Forcing the user to create a new one instead of shoging the "manage subscription" button that redirects the user to the billing portal. BUT customer id must be preserved, reusing previous sub customerId in `stripe.billingPortal.sessions.create({ customer: prevCustomerId })`
+
+
+##
+
+github.md
+# fly
+
+fly is a deployment platform. some packages use it to deploy the website. you can find the deployment scripts searching for **/deployment.ts
+
+usually there are 2 fly apps for each package, one staging environment and one production. these are 2 different apps at 2 different urls, you can target the right app usually by using `pnpm fly:preview` or `pnpm fly:prod`. sometimes there is only `pnpm fly` and you can use that instead. These scripts will append the right --app argument to work on the right fly app.
+
+## reading logs
+
+you can read fly apps logs using `pnpm fly:preview logs --no-tail | tail -n 100`
+
+if content is too long write pipe to a .log file and grep that file for what you are searching (like Error for searching for failures).
 
