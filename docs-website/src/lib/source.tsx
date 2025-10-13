@@ -180,7 +180,7 @@ type FumadocsSource = LoaderOutput<{
 }>
 
 interface SourceContextValue {
-  source: FumadocsSource
+  source?: FumadocsSource
   locale: string
 }
 

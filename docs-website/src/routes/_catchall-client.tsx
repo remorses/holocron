@@ -372,7 +372,7 @@ export function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
 
 export function ClientApp() {
   const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
-  const { previewWebsocketId, source } = loaderData || {}
+  const { previewWebsocketId, } = loaderData || {}
   const docsJson = useDocsJson()
   useNProgress()
   // Inline DocsProvider
@@ -444,12 +444,11 @@ export function ClientApp() {
                 }}
               />
             )}
-            <SourceContext.Provider value={{ source, locale: locale || 'en' }}>
-              <ChatDrawerWrapper />
-              <DocsLayoutWrapper docsJson={docsJson}>
-                <Outlet />
-              </DocsLayoutWrapper>
-            </SourceContext.Provider>
+            <ChatDrawerWrapper />
+            <DocsLayoutWrapper docsJson={docsJson}>
+              <Outlet />
+            </DocsLayoutWrapper>
+
           </ThemeProvider>
         </RootProvider>
       </CustomReactRouterProvider>
@@ -464,7 +463,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
 
   const filesInDraft = useDocsState((state) => state.filesInDraft)
 
-  const tree = useMemo(() => {
+  const { tree, source } = useMemo(() => {
     const { files, i18n, openapiUrl, githubFolder, processedOpenAPI } = loaderData
     if (processedOpenAPI?.document) {
       const pageTree = getPageTreeForOpenAPI({
@@ -472,7 +471,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
         openapiDocument: processedOpenAPI?.document! as any,
         filesInDraft,
       })
-      return pageTree
+      return { tree: pageTree, source: undefined }
     }
     return getTreeFromFiles({
       files,
@@ -613,7 +612,9 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
           links,
         }}
       >
-        {children}
+        <SourceContext.Provider value={{ source, locale: loaderData.locale || 'en' }}>
+          {children}
+        </SourceContext.Provider>
       </DocsLayoutNotebook>
     </div>
   )

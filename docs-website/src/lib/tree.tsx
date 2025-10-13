@@ -104,7 +104,7 @@ export const getTreeFromFiles = ({
     // force rerender
     tree.$id = Math.random().toString(36).slice(2)
     // console.log(tree)
-    return tree
+    return { source, tree }
   } catch (e) {
     console.error(`cannot create tree with draft files`, e, filesInDraft)
     const source = getFumadocsSource({
@@ -118,6 +118,6 @@ export const getTreeFromFiles = ({
     tree.$id = Math.random().toString(36).slice(2)
     console.log(`creating new tree with id`, tree.$id)
     // console.log(tree)
-    return tree
+    return { source, tree }
   }
 }
