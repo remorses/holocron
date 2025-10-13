@@ -256,18 +256,20 @@ function Footer({ footer }: { footer?: any }): any {
       {/* Social Links */}
       {footer.socials && (
         <div className='flex gap-3'>
-          {Object.entries(footer.socials).map(([platform, url]: [string, any]) => (
-            <a
-              key={platform}
-              href={url}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-              aria-label={platform}
-            >
-              <SocialIcon platform={platform} />
-            </a>
-          ))}
+          {Object.entries(footer.socials)
+            .filter(([, url]: [string, any]) => url)
+            .map(([platform, url]: [string, any]) => (
+              <a
+                key={platform}
+                href={url}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
+                aria-label={platform}
+              >
+                <SocialIcon platform={platform} />
+              </a>
+            ))}
         </div>
       )}
 
