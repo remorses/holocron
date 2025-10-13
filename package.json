@@ -4,6 +4,7 @@
   "scripts": {
     "test": "NODE_ENV=test vitest",
     "install-doppler": "curl -fsSL https://cli.doppler.com/install.sh | sh -s -- --no-package-manager --install-path ./node_modules/.bin",
+    "agents.md": "agentsdotmd ./HOLOCRON_AGENTS.md core.md typescript.md pnpm.md react.md sentry.md vitest.md changelog.md docs-writing.md doppler.md cac.md github.md prisma.md react-router.md shadcn.md tailwind.md lucide.md spiceflow.md vercel-ai-sdk.md playwright.md zod.md stripe.md gitchamber.md fly.md",
     "deployment": "pnpm bootstrap && pnpm -r --parallel --stream --no-bail run --filter website --filter docs-website deployment",
     "bootstrap": "pnpm install-doppler && pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm ",
     "watch": "pnpm -r watch",
