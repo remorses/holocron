@@ -74,7 +74,7 @@ import {
   Dot,
 } from './chat-tool-previews'
 import { ShowMore } from './show-more'
-import { useDisableBodyScroll } from '../lib/hooks'
+import { useDisableBodyScroll, useDocsJson } from '../lib/hooks'
 import { RenderNode } from 'safe-mdx'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 
@@ -531,11 +531,13 @@ export function ChatMarkdown({ ...rest }: MarkdownRendererProps) {
 
 function WelcomeMessage() {
   const { messages } = useChatContext()
+  const docsJson = useDocsJson()
+  const assistantName = docsJson?.poweredBy?.name || 'Holocron'
   if (messages?.length) return null
   return (
     <ChatMarkdown
       markdown={
-        'Hi, I am holocron, I can help you search and explain the docs\n'
+        `Hi, I am ${assistantName}, I can help you search and explain the docs\n`
       }
       className='text-2xl select-none text-center text-balance font-semibold'
       isStreaming={false}
