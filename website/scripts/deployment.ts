@@ -41,7 +41,7 @@ async function main() {
     appName,
     port,
     buildRemotely: true,
-    // buildkit: true,
+    buildkit: true,
     dockerfile: 'Dockerfile',
     minInstances: stage === 'production' ? 1 : 1,
     forceHttps: false,

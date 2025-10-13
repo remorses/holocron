@@ -43,7 +43,8 @@ async function main() {
     forceHttps: false,
     maxInstances: stage === 'production' ? 3 : 1,
     healthCheckPath: `${basePath}/api/health`,
-    // buildkit: true,
+    buildkit: true,
+
     memorySize: '1gb',
     machineType: 'shared-cpu-2x',
     // suspend: stage === 'preview',
