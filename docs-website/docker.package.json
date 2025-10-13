@@ -2,6 +2,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
+    "@emotion/is-prop-valid": "^1.4.0",
     "@lancedb/lancedb": "^0.21.2",
     "@prisma/client": "^6.15.0",
     "@resvg/resvg-js": "^2.6.2",
