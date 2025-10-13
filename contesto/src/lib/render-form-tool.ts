@@ -79,6 +79,8 @@ export function createRenderFormTool({
         If the user submits a form without adding the fields you want DO NOT ask the user to fill the form again. Instead render another form in a new message.
         Previous messages forms are disabled and the user cannot submit them again. Render a simpler shorter form the user can fill in. Use relevant default values.
 
+        You can use the type image_upload to let user upload a file, this field should be used for url image fields, the form will set the name field to an url with the uploaded file url. This is preferable over text inputs for image urls.
+
         Always try to fill in the default values (or existing json values) so the user has less things to type and check.
 
         ${exampleNamePaths.length
@@ -220,7 +222,7 @@ export function getValidFieldTypesForSchema(schema: any): FieldType[] {
   }
 
   if (schemaType === 'string') {
-    return ['input', 'password', 'textarea', 'select', 'radio', 'color_picker', 'date_picker']
+    return ['input', 'password', 'textarea', 'select', 'radio', 'color_picker', 'date_picker', "image_upload"]
   }
 
   if (schemaType === 'number' || schemaType === 'integer') {
