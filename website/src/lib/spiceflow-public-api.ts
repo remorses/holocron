@@ -616,6 +616,85 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       }
     }
   })
+  .route({
+    method: 'POST',
+    path: '/sites/pages',
+    detail: {
+      summary: 'Get all pages for a site',
+      description: 'Returns all pages for a site with optional frontmatter data'
+    },
+    request: z.object({
+      siteId: z.string(),
+      withFrontmatter: z.boolean().optional()
+    }),
+    async handler({ request, state }) {
+      const body = await request.json()
+      const { siteId, withFrontmatter } = body
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        include: {
+          branches: {
+            orderBy: { createdAt: 'asc' },
+            take: 1
+          }
+        }
+      })
+
+      if (!site) {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      const branch = site.branches[0]
+      if (!branch) {
+        throw new Response(JSON.stringify({ error: 'No branch found for site' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      const pages = await prisma.markdownPage.findMany({
+        where: {
+          branchId: branch.branchId
+        },
+        select: {
+          pageId: true,
+          slug: true,
+          githubPath: true,
+          githubSha: true,
+          frontmatter: withFrontmatter,
+          createdAt: true,
+          lastEditedAt: true
+        },
+        orderBy: { slug: 'asc' }
+      })
+
+      return {
+        success: true,
+        siteId,
+        branchId: branch.branchId,
+        pages: pages.map(page => ({
+          pageId: page.pageId,
+          slug: page.slug,
+          githubPath: page.githubPath,
+          githubSha: page.githubSha,
+          ...(withFrontmatter && { frontmatter: page.frontmatter as Record<string, any> }),
+          createdAt: page.createdAt,
+          lastEditedAt: page.lastEditedAt
+        }))
+      }
+    }
+  })
   .onError(({ error, request }) => {
     notifyError(error, `Public API error: ${request.method} ${request.url}`)
 
