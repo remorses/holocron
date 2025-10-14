@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import type { ReactElement } from 'react'
-import { Check, ChevronDown, Copy, ExternalLinkIcon, MessageCircleIcon, SparklesIcon } from 'lucide-react'
+import { Check, ChevronDown, Copy, ExternalLinkIcon, MessageCircleIcon, SparklesIcon, X } from 'lucide-react'
 import { cn } from 'docs-website/src/lib/cn'
 import { useCopyButton } from 'fumadocs-ui/utils/use-copy-button'
 import { buttonVariants } from 'docs-website/src/components/ui/button'
@@ -13,15 +13,16 @@ import { useDocsState, usePersistentDocsState } from '../lib/docs-state'
 const cache = new Map<string, string>()
 
 export function LLMCopyButton({ slug, contextual }: { slug: string[]; contextual?: DocsJsonType['contextual'] }) {
-  // Check if copy option is enabled
   const options = contextual?.options || ['copy', 'view', 'chatgpt', 'claude']
   if (!options.includes('copy')) {
     return null
   }
 
   const [isLoading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [checked, onClick] = useCopyButton(async () => {
     setLoading(true)
+    setError('')
 
     const url = `/${slug.join('/')}.md`
     try {
@@ -33,6 +34,9 @@ export function LLMCopyButton({ slug, contextual }: { slug: string[]; contextual
         await navigator.clipboard.write([
           new ClipboardItem({
             'text/plain': fetch(url).then(async (res) => {
+              if (!res.ok) {
+                throw new Error(`Failed to fetch markdown: ${res.status}`)
+              }
               const content = await res.text()
               cache.set(url, content)
 
@@ -41,6 +45,9 @@ export function LLMCopyButton({ slug, contextual }: { slug: string[]; contextual
           }),
         ])
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to copy')
+      throw err
     } finally {
       setLoading(false)
     }
@@ -58,7 +65,7 @@ export function LLMCopyButton({ slug, contextual }: { slug: string[]; contextual
       )}
       onClick={onClick}
     >
-      {checked ? <Check /> : <Copy />}
+      {error ? <X className='text-red-600' /> : checked ? <Check /> : <Copy />}
       Copy Markdown
     </button>
   )
