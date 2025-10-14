@@ -239,7 +239,7 @@ export async function syncSite({
   signal?: AbortSignal
   ignorePatterns?: string[]
 }): Promise<{ pageCount: number }> {
-  const concurrencyLimit = 2
+  const concurrencyLimit = 1 // TODO increase this to speed up sync
   const semaphore = new Sema(concurrencyLimit)
   let pageCount = 0
 
