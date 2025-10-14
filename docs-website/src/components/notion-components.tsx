@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useMemo } from 'react'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { SourceContext } from '../lib/source'
 import { Link } from 'react-router'
@@ -35,11 +35,12 @@ function MentionUser({ url, children }: { url: string; children?: React.ReactNod
 function MentionPage({ url, icon, children }: { url: string; icon?: string; children?: React.ReactNode }) {
   const context = useContext(SourceContext)
 
-  const pageUrl = (() => {
+  const pageUrl = useMemo(() => {
     if (!context) return url
 
     const { source, locale } = context
     if (!source) {
+      console.warn(`MentionPage: no source available for url ${url}`)
       return url
     }
 
@@ -63,8 +64,9 @@ function MentionPage({ url, icon, children }: { url: string; icon?: string; chil
       return page.url
     }
 
+    console.warn(`MentionPage: cannot find page for notion id ${pageId}`)
     return url
-  })()
+  }, [context, url])
 
   return (
     <Link to={pageUrl} className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 no-underline'>
