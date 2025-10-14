@@ -363,8 +363,8 @@ export const notionComponents = {
   image: Image,
   pdf: Pdf,
   video: Video,
-  page: Page,
-  database: Database,
+  page: MentionPage,
+  database: MentionPage,
   'data-source': DataSource,
   view: View,
   callout: NotionCallout,
@@ -372,6 +372,7 @@ export const notionComponents = {
   column: Column,
   table_of_contents: TableOfContents,
   synced_block: SyncedBlock,
+  // TODO the notion-mdx code should fetch the associated block with fetch and replace synced block with the actual content
   synced_block_reference: SyncedBlockReference,
   unknown: Unknown,
   'meeting-notes': MeetingNotes,
