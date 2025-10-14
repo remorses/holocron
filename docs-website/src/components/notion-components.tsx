@@ -288,7 +288,7 @@ function Page({
   children?: React.ReactNode
 }) {
   return (
-    <div>
+    <div className=''>
       <MentionPage url={url}>{children}</MentionPage>
     </div>
   )
@@ -308,12 +308,8 @@ function Database({
   children?: React.ReactNode
 }) {
   return (
-    <div className='my-4 p-4 border border-border rounded-lg bg-muted'>
-      <div className='flex items-center gap-2'>
-        {icon && <span>{icon}</span>}
-        <span className='font-medium'>{children}</span>
-      </div>
-      {url && <div className='mt-2 text-xs text-muted-foreground'>{url}</div>}
+    <div className=''>
+      <MentionPage url={url} icon={icon} />
     </div>
   )
 }
@@ -530,8 +526,8 @@ export const notionComponents = {
   image: Image,
   pdf: Pdf,
   video: Video,
-  page: MentionPage,
-  database: MentionPage,
+  page: Page,
+  database: Database,
   'data-source': DataSource,
   view: View,
   callout: NotionCallout,
