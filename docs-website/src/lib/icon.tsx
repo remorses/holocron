@@ -3,7 +3,7 @@
 import React, { lazy, Suspense } from 'react'
 import { prefetchDNS, preconnect } from 'react-dom'
 import { useHydrated } from './hooks'
-import { lucideVersion } from './utils'
+import { cn, lucideVersion } from './utils'
 
 // simple in-memory cache so every icon is fetched only once
 const cache: Record<string, React.ComponentType<any>> = {}
@@ -61,7 +61,7 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
         src={name}
         alt="icon"
         {...rest as any}
-        className={(rest.className ?? '') + 'size-4 object-contain'}
+        className={cn(rest.className, 'size-4 object-contain')}
       />
     )
   }
