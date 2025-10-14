@@ -57,7 +57,7 @@ function MentionPage({ url, icon, children }: { url: string; icon?: string; chil
 
     if (!pageId) return url
 
-    const pages = source.getPages(locale)
+    const pages = source.getPages() // TODO pass locale here?
     const page = pages.find(p => p.data.notionPageId === pageId)
 
     if (page) {
@@ -66,7 +66,7 @@ function MentionPage({ url, icon, children }: { url: string; icon?: string; chil
 
     console.warn(`MentionPage: cannot find page for notion id ${pageId}`)
     return url
-  }, [context, url])
+  }, [context?.source, url])
 
   return (
     <Link to={pageUrl} className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 no-underline'>

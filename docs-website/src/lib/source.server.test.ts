@@ -73,6 +73,56 @@ describe('getFilesFromFilesInDraft', () => {
     expect(result).toHaveLength(1)
     expect(result[0].path).toBe('index.md')
   })
+
+  test('preserves frontmatter fields like notionPageId in page data', () => {
+    const filesInDraft: FilesInDraft = {
+      'docs/index.md': {
+        content: `---
+title: Welcome
+notionPageId: abc123
+customField: someValue
+---
+
+# Welcome`,
+        githubPath: 'docs/index.md',
+      },
+    }
+
+    const files = getFilesFromFilesInDraft(filesInDraft)
+    const source = getFumadocsSource({
+      files,
+      defaultLanguage: 'en',
+      languages: ['en'],
+    })
+
+    const pages = source.getPages()
+    
+    expect(pages).toMatchInlineSnapshot(`
+      [
+        {
+          "absolutePath": "",
+          "data": {
+            "customField": "someValue",
+            "notionPageId": "abc123",
+            "title": "Welcome",
+          },
+          "file": {
+            "dirname": "docs",
+            "ext": ".md",
+            "flattenedPath": "docs/index",
+            "name": "index",
+            "path": "docs/index.md",
+          },
+          "locale": "en",
+          "path": "docs/index.md",
+          "slugs": [
+            "docs",
+          ],
+          "url": "/docs",
+        },
+      ]
+    `)
+  })
 })
 
 describe('getFumadocsSource with tabs', () => {
