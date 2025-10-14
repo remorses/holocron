@@ -2,6 +2,7 @@ import { createIdGenerator } from 'ai'
 import { flushSync } from 'react-dom'
 import { Button } from '../components/ui/button'
 import { useChatState } from './chat-provider'
+import { cn } from '../lib/cn'
 
 export function ChatSuggestionButton({
   icon,
@@ -17,7 +18,7 @@ export function ChatSuggestionButton({
     <Button
       variant='ghost'
       {...props}
-      className={'flex px-2 items-center gap-3 ' + (props.className ?? '')}
+      className={cn('flex px-2 items-center gap-3', props.className)}
       onClick={(e) => {
         if (props.onClick) props.onClick(e)
         if (userMessage) {

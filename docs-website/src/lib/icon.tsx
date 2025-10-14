@@ -46,7 +46,7 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
   if (isEmoji(name)) {
     return (
       <span
-        className={(rest.className ?? '') + ' inline-flex items-center justify-center'}
+        className={cn(rest.className, 'inline-flex items-center justify-center')}
         style={{ fontSize: '16px' }}
       >
         {name}
