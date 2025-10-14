@@ -620,7 +620,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     notifyError(error, `Public API error: ${request.method} ${request.url}`)
 
     throw new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
+      status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
   })
