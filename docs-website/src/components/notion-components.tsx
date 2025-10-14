@@ -66,7 +66,7 @@ function MentionPage({
         const firstSegment = pathWithoutLeadingSlash.split('/')[0]
         return firstSegment || ''
       } catch (e) {
-        console.error('MentionPage', e)
+        console.error('MentionPage error getting page id', e)
         return ''
       }
     })()
@@ -74,7 +74,7 @@ function MentionPage({
     if (!pageId) return { pageUrl: url }
 
     const pages = source.getPages() // TODO pass locale here?
-    const page = pages.find((p) => p.data.notionPageId === pageId)
+    const page = pages.find((p) => p.data?.notionPageId === pageId)
 
     if (page) {
       return { pageUrl: page.url, icon: page.data.icon }
