@@ -619,15 +619,8 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
   .onError(({ error, request }) => {
     notifyError(error, `Public API error: ${request.method} ${request.url}`)
 
-    if (error instanceof AppError) {
-      throw new Response(JSON.stringify({ error: error.message }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-
-    throw new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
+    throw new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
       headers: { 'Content-Type': 'application/json' }
     })
   })
