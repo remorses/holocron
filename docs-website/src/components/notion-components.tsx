@@ -84,6 +84,15 @@ function MentionPage({
     return { pageUrl: url }
   }, [context?.source, url])
 
+  if (!pageUrl) {
+    return (
+      <span className='inline-flex items-center gap-1 text-gray-600'>
+        {icon && <DynamicIcon icon={icon} className='size-4' />}
+        {children}
+      </span>
+    )
+  }
+
   return (
     <Link
       to={pageUrl}
