@@ -101,3 +101,19 @@ export function isReadableStream(obj: any): obj is ReadableStream<any> {
     typeof obj.cancel === 'function'
   )
 }
+
+export function isAbortError(error: unknown): boolean {
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return true
+  }
+  if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
+    return true
+  }
+  if (error instanceof Error && error.message.includes('BodyStreamBuffer was aborted')) {
+    return true
+  }
+  if (error instanceof Error && error.message.includes('aborted')) {
+    return true
+  }
+  return false
+}
