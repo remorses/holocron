@@ -69,31 +69,16 @@ export class Tunnel {
     const [client, server] = Object.values(pair)
 
     if (role === 'up') {
-      // Check if upstream already exists using live sockets
-      const existingUp = this.getUpstream()
-      if (existingUp?.readyState === WebSocket.OPEN) {
-        // Accept the connection but immediately close it with a specific code
-        server.accept()
-        server.close(4009, 'Upstream already connected')
-        // Still return a successful WebSocket upgrade response
-        return addCors(new Response(null, { status: 101, webSocket: client }))
-      }
-      // Accept with hibernation and tag as upstream
+      this.closeAllUpstreams({ code: 4009, reason: 'Upstream already connected' })
       this.ctx.acceptWebSocket(server)
       server.serializeAttachment({ role: 'up' } satisfies Attachment)
     } else {
-      // Check if upstream exists before accepting downstream
-      const existingUp = this.getUpstream()
-      if (!existingUp) {
-        // Accept the WebSocket connection
+      const existingUps = this.getUpstreams()
+      if (existingUps.length === 0) {
         server.accept()
-        // Immediately close it
         server.close(4008, 'No upstream available')
-        // Return successful WebSocket upgrade response
-        // The client will receive the close event after connection
         return addCors(new Response(null, { status: 101, webSocket: client }))
       }
-      // Accept with hibernation and tag as downstream
       this.ctx.acceptWebSocket(server)
       server.serializeAttachment({ role: 'down' } satisfies Attachment)
     }
@@ -115,11 +100,10 @@ export class Tunnel {
         } catch { }
       }
     } else if (attachment?.role === 'down') {
-      // Forward message from downstream to upstream
-      const up = this.getUpstream()
-      if (up) {
+      const ups = this.getUpstreams()
+      if (ups.length > 0) {
         try {
-          up.send(message)
+          ups[0].send(message)
         } catch { }
       }
     }
@@ -160,7 +144,7 @@ export class Tunnel {
   }
 
   private closeAllUpstreams({ code, reason }: { code: number; reason: string }) {
-    const ups = this.getUpstreamSockets()
+    const ups = this.getUpstreams()
     for (const up of ups) {
       try {
         up.close(code, reason)
@@ -170,15 +154,7 @@ export class Tunnel {
 
   /* ------ Helper methods to get live sockets ------ */
 
-  private getUpstream(): WebSocket | null {
-    const ups = this.getUpstreamSockets()
-    if (ups.length === 0) {
-      return null
-    }
-    return ups[0]
-  }
-
-  private getUpstreamSockets(): WebSocket[] {
+  private getUpstreams(): WebSocket[] {
     const sockets = this.ctx.getWebSockets()
     const ups: WebSocket[] = []
     for (const ws of sockets) {
