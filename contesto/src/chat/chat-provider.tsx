@@ -9,6 +9,7 @@ import type { StoreApi, UseBoundStore } from 'zustand'
 import { ComboboxStore } from '@ariakit/react'
 
 import * as cookie from 'cookie'
+import { isAbortError } from '../lib/utils'
 
 const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(null)
 
@@ -158,14 +159,15 @@ const ChatProvider = (props: {
     try {
       await props.generateMessages?.(useChatState.getState())
     } catch (error) {
-      props.onError(error, 'Error during message generation')
-      // Remove only the failed assistant message, keep user message
-      const currentMessages = store.getState().messages || []
-      let messagesWithoutAssistant = currentMessages.slice(0, -1)
-      store.setState({
-        messages: messagesWithoutAssistant,
-        assistantErrorMessage: error instanceof Error ? error.message : 'An unexpected error occurred',
-      })
+      if (!isAbortError(error)) {
+        props.onError(error, 'Error during message generation')
+        const currentMessages = store.getState().messages || []
+        let messagesWithoutAssistant = currentMessages.slice(0, -1)
+        store.setState({
+          messages: messagesWithoutAssistant,
+          assistantErrorMessage: error instanceof Error ? error.message : 'An unexpected error occurred',
+        })
+      }
     } finally {
       store.setState({
         isGenerating: false,
