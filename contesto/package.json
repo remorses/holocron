@@ -22,7 +22,7 @@
   "devDependencies": {
     "@types/mdast": "^4.0.4",
     "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.1",
+    "@types/react-dom": "^19.2.2",
     "mdast-util-to-markdown": "^2.1.2",
     "react-hook-form": "^7.65.0",
     "typescript": "^5.8.3"
