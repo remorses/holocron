@@ -16,7 +16,9 @@ export const loader = async ({ params }: Route.LoaderArgs) => {
   return new Response(svgString, {
     headers: {
       'Content-Type': 'image/svg+xml',
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': 'public, max-age=31536000, immutable, stale-while-revalidate=31536000',
+      'ETag': `"${provider}-${icon}"`,
+      'Vary': 'Accept-Encoding',
     },
   })
 }
