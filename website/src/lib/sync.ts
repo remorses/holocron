@@ -355,14 +355,16 @@ export async function syncSite({
 
       if (internalDomainsToRemove.length > 0) {
         console.log(`Removing ${internalDomainsToRemove.length} internal domains that are no longer configured`)
-        for (const domain of internalDomainsToRemove) {
-          await prisma.domain.delete({
-            where: {
-              host: domain.host,
-            },
-          })
-          console.log(`Removed internal domain: ${domain.host}`)
-        }
+        await Promise.all(
+          internalDomainsToRemove.map(async (domain) => {
+            await prisma.domain.delete({
+              where: {
+                host: domain.host,
+              },
+            })
+            console.log(`Removed internal domain: ${domain.host}`)
+          }),
+        )
         // Refresh branchDomains after deletion
         branchDomains = await prisma.domain.findMany({
           where: { branchId },
@@ -374,61 +376,60 @@ export async function syncSite({
 
       if (domainsToConnect.length > 0) {
         console.log(`Connecting ${domainsToConnect.length} new domains for site ${siteId}`)
-        for (const host of domainsToConnect) {
-          const domainTaken = await prisma.domain.findFirst({
-            where: { host },
-          })
-          if (domainTaken) {
-            console.log(`Domain ${host} is already taken, skipping.`)
-            // TODO add a way to show errors to the user in cases like this (domain already taken), if domain is already taken, send them an email?
-            continue
-          }
-          const domainType: DomainType =
-            host.endsWith('.' + env.APPS_DOMAIN) || host.endsWith('.localhost') ? 'internalDomain' : 'customDomain'
-          if (domainType === 'customDomain') {
-            const zoneId = getZoneIdForDomain(host)
-            const cloudflareClient = new CloudflareClient({
-              zoneId,
+        await Promise.all(
+          domainsToConnect.map(async (host) => {
+            const domainTaken = await prisma.domain.findFirst({
+              where: { host },
             })
-            const takenInCloudflare = await cloudflareClient.get(host).catch((e) => {
-              notifyError(e, `Cloudflare domain check for ${host}`)
-              return null
-            })
-            if (takenInCloudflare) console.log(takenInCloudflare)
-            if (takenInCloudflare?.id) {
-              console.log(`Domain ${host} is already taken in Cloudflare, skipping.`)
-              continue
+            if (domainTaken) {
+              console.log(`Domain ${host} is already taken, skipping.`)
+              return
             }
-          }
-          try {
-            const zoneId = getZoneIdForDomain(host)
-            const cloudflareClient = new CloudflareClient({
-              zoneId,
-            })
-            await cloudflareClient.createDomain({ domain: host })
+            const domainType: DomainType =
+              host.endsWith('.' + env.APPS_DOMAIN) || host.endsWith('.localhost') ? 'internalDomain' : 'customDomain'
+            if (domainType === 'customDomain') {
+              const zoneId = getZoneIdForDomain(host)
+              const cloudflareClient = new CloudflareClient({
+                zoneId,
+              })
+              const takenInCloudflare = await cloudflareClient.get(host).catch((e) => {
+                notifyError(e, `Cloudflare domain check for ${host}`)
+                return null
+              })
+              if (takenInCloudflare) console.log(takenInCloudflare)
+              if (takenInCloudflare?.id) {
+                console.log(`Domain ${host} is already taken in Cloudflare, skipping.`)
+                return
+              }
+            }
+            try {
+              const zoneId = getZoneIdForDomain(host)
+              const cloudflareClient = new CloudflareClient({
+                zoneId,
+              })
+              await cloudflareClient.createDomain({ domain: host })
 
-            await prisma.domain.create({
-              data: {
-                host,
-                branchId,
-                domainType,
-              },
-            })
-          } catch (e) {
-            if (typeof e?.message === 'string' && e.message.includes('409 Conflict')) {
-              console.log(`stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`)
-            } else {
-              throw e
+              await prisma.domain.create({
+                data: {
+                  host,
+                  branchId,
+                  domainType,
+                },
+              })
+            } catch (e) {
+              if (typeof e?.message === 'string' && e.message.includes('409 Conflict')) {
+                console.log(`stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`)
+              } else {
+                throw e
+              }
             }
-          }
-        }
+          }),
+        )
         // Refresh branchDomains after additions
-        if (domainsToConnect.length > 0) {
-          branchDomains = await prisma.domain.findMany({
-            where: { branchId },
-            select: { host: true, domainType: true },
-          })
-        }
+        branchDomains = await prisma.domain.findMany({
+          where: { branchId },
+          select: { host: true, domainType: true },
+        })
       }
     }
     return []
