@@ -387,11 +387,12 @@ export async function syncSite({
             }
             const domainType: DomainType =
               host.endsWith('.' + env.APPS_DOMAIN) || host.endsWith('.localhost') ? 'internalDomain' : 'customDomain'
+            
+            let cloudflareClient: CloudflareClient | undefined
             if (domainType === 'customDomain') {
               const zoneId = getZoneIdForDomain(host)
-              const cloudflareClient = new CloudflareClient({
-                zoneId,
-              })
+              cloudflareClient = new CloudflareClient({ zoneId })
+              
               const takenInCloudflare = await cloudflareClient.get(host).catch((e) => {
                 notifyError(e, `Cloudflare domain check for ${host}`)
                 return null
@@ -402,12 +403,11 @@ export async function syncSite({
                 return
               }
             }
+            
             try {
-              const zoneId = getZoneIdForDomain(host)
-              const cloudflareClient = new CloudflareClient({
-                zoneId,
-              })
-              await cloudflareClient.createDomain({ domain: host })
+              if (cloudflareClient) {
+                await cloudflareClient.createDomain({ domain: host })
+              }
 
               await prisma.domain.create({
                 data: {
