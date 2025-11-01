@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { href } from 'react-router'
 import { useHydrated } from './hooks'
 import { cn } from './utils'
 
@@ -49,7 +48,7 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
       return
     }
 
-    const iconUrl = href('/api/icons/:provider/icon/:icon.svg', { provider: 'lucide', icon: name })
+    const iconUrl = `/api/icons/lucide/icon/${name}.svg`
     fetch(iconUrl, {
       cache: 'force-cache',
     })
