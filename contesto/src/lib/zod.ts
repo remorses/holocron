@@ -73,26 +73,23 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
     const result: Record<string, unknown> = {}
     const shape = schema.shape
 
-    for (const key in value as any) {
-      if (Object.prototype.hasOwnProperty.call(value, key)) {
-        const fieldSchema = shape[key]
-        const fieldValue = (value as any)[key]
+    for (const [key, fieldValue] of Object.entries(value as any)) {
+      const fieldSchema = shape[key]
 
-        if (fieldSchema) {
-          // Check if this field schema is optional and value is null
-          if (fieldSchema instanceof z.ZodOptional && fieldValue === null) {
-            // Skip this field entirely (don't add to result)
-            continue
-          }
-
-          const processedValue = removeNullsForOptionals(fieldSchema, fieldValue)
-          if (processedValue !== undefined) {
-            result[key] = processedValue
-          }
-        } else {
-          // Keep fields not in schema (for passthrough objects)
-          result[key] = fieldValue
+      if (fieldSchema) {
+        // Check if this field schema is optional and value is null
+        if (fieldSchema instanceof z.ZodOptional && fieldValue === null) {
+          // Skip this field entirely (don't add to result)
+          continue
         }
+
+        const processedValue = removeNullsForOptionals(fieldSchema, fieldValue)
+        if (processedValue !== undefined) {
+          result[key] = processedValue
+        }
+      } else {
+        // Keep fields not in schema (for passthrough objects)
+        result[key] = fieldValue
       }
     }
 
@@ -115,16 +112,13 @@ export function removeNullsForOptionals<S extends z.ZodTypeAny>(schema: S, value
   // 6 · Records - process each value
   if (schema instanceof z.ZodRecord && typeof value === 'object' && value !== null && !Array.isArray(value)) {
     const result: Record<string, unknown> = {}
-    for (const key in value as any) {
-      if (Object.prototype.hasOwnProperty.call(value, key)) {
-        const fieldValue = (value as any)[key]
-        // Check if the value type is optional and value is null
-        if (schema.valueType instanceof z.ZodOptional && fieldValue === null) {
-          // Skip this entry entirely
-          continue
-        }
-        result[key] = removeNullsForOptionals(schema.valueType as any, fieldValue)
+    for (const [key, fieldValue] of Object.entries(value as any)) {
+      // Check if the value type is optional and value is null
+      if (schema.valueType instanceof z.ZodOptional && fieldValue === null) {
+        // Skip this entry entirely
+        continue
       }
+      result[key] = removeNullsForOptionals(schema.valueType as any, fieldValue)
     }
     return result
   }
