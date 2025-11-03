@@ -44,8 +44,8 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
       return
     }
 
-    if (svgCache[name]) {
-      setSvgContent(svgCache[name])
+    if (name in svgCache) {
+      setSvgContent(svgCache[name] || null)
       return
     }
 
@@ -56,13 +56,16 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
     })
       .then(async (res) => {
         if (!res.ok) {
-          return null
+          svgCache[name] = ''
+          setSvgContent(null)
+          return
         }
         const svg = await res.text()
         svgCache[name] = svg
         setSvgContent(svg)
       })
       .catch(() => {
+        svgCache[name] = ''
         setSvgContent(null)
       })
   }, [name])
