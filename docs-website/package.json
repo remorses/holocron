@@ -15,8 +15,6 @@
     "dev:wrangler": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7777",
     "vercel-build": "pnpm --filter 'fumadocs-root' build && pnpm build",
     "test": "doppler run -- pnpm vitest",
-    "secrets:preview": "doppler run --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview",
-    "secrets:prod": "doppler run --mount .env.prod --mount-format env -- wrangler secret bulk .env.prod",
     "start": "PORT=7777 doppler run --preserve-env -- react-router-serve ./build/server/server.js",
     "typecheck": "react-router typegen && tsc"
   },
