@@ -49,6 +49,7 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
       return
     }
 
+    // @ts-ignore the other workspace tries to import this file and fails because the type Pages is global
     const iconUrl = href('/api/icons/:provider/icon/:icon.svg', { provider: 'lucide', icon: name })
     fetch(iconUrl, {
       cache: 'force-cache',
