@@ -231,7 +231,7 @@ importers:
         version: 12.23.24(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.14)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.14)
       isolated-vm:
         specifier: ^6.0.1
         version: 6.0.1
@@ -291,7 +291,7 @@ importers:
         version: 11.0.0
       safe-mdx:
         specifier: ^1.3.9
-        version: 1.3.9(react@19.2.0)
+        version: 1.3.9(canvas@3.2.0)(react@19.2.0)
       shiki:
         specifier: ^3.7.0
         version: 3.13.0
@@ -537,6 +537,9 @@ importers:
       aws4fetch:
         specifier: ^1.0.20
         version: 1.0.20
+      canvas:
+        specifier: '*'
+        version: 3.2.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -621,6 +624,9 @@ importers:
       idb-keyval:
         specifier: ^6.2.2
         version: 6.2.2
+      importmap-vite-plugin:
+        specifier: ^0.1.0
+        version: 0.1.0(rolldown-vite@7.1.20(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0))
       is-object:
         specifier: ^1.0.2
         version: 1.0.2
@@ -731,7 +737,7 @@ importers:
         version: 11.0.0
       safe-mdx:
         specifier: ^1.3.9
-        version: 1.3.9(react@19.2.0)
+        version: 1.3.9(canvas@3.2.0)(react@19.2.0)
       satori:
         specifier: ^0.18.3
         version: 0.18.3
@@ -763,7 +769,7 @@ importers:
         specifier: '*'
         version: 7.16.0
       unframer:
-        specifier: ^3.2.7
+        specifier: ^3.2.14
         version: 3.2.14(@emotion/is-prop-valid@1.4.0)(@modelcontextprotocol/sdk@1.20.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       unified:
         specifier: ^11.0.5
@@ -1146,7 +1152,7 @@ importers:
         version: 2.0.1
       next:
         specifier: 15.5.6
-        version: 15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react-router:
         specifier: ^7.9.3
         version: 7.9.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -2034,7 +2040,7 @@ importers:
         version: link:../fumadocs/packages/openapi
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.14)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.14)
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -2098,7 +2104,7 @@ importers:
         version: 1.20.0
       '@playwright/mcp':
         specifier: latest
-        version: 0.0.42
+        version: 0.0.45
       patchright-core:
         specifier: ^1.52.5
         version: 1.52.5
@@ -2481,7 +2487,7 @@ importers:
         version: 1.4.0(react@19.2.0)
       safe-mdx:
         specifier: ^1.3.9
-        version: 1.3.9(react@19.2.0)
+        version: 1.3.9(canvas@3.2.0)(react@19.2.0)
       searchapi:
         specifier: workspace:*
         version: link:../searchapi
@@ -5450,8 +5456,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/mcp@0.0.42':
-    resolution: {integrity: sha512-oYkZnxq6vSPAVUD7Wjensok3IO8m7quCoJLPkRBk4VGx8MGA7zyGTgqjB/fpqB4PABa96TW7dkT/psln0tLipg==}
+  '@playwright/mcp@0.0.45':
+    resolution: {integrity: sha512-bnndS9etl3ZHu2r3IHEeokk/+7XJ5JfV1KR4bapkwmxLY8nYrt7ETCuyagpQhjzKZq69il50YTorH7UeFSlbUQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8951,6 +8957,10 @@ packages:
   canvas-confetti@1.9.3:
     resolution: {integrity: sha512-rFfTURMvmVEX1gyXFgn5QMn81bYk70qa0HLzcIOSVEyl57n6o9ItHeBtUSWdvKAPY0xlvBHno4/v3QPrT83q9g==}
 
+  canvas@3.2.0:
+    resolution: {integrity: sha512-jk0GxrLtUEmW/TmFsk2WghvgHe8B0pxGilqCL21y8lHkPUGa6FTsnCNtHPOzT8O3y+N+m3espawV80bbBlgfTA==}
+    engines: {node: ^18.12.0 || >= 20.9.0}
+
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
@@ -10948,6 +10958,11 @@ packages:
   import-in-the-middle@1.14.0:
     resolution: {integrity: sha512-g5zLT0HaztRJWysayWYiUq/7E5H825QIiecMD2pI5QO7Wzr847l6GDvPvmZaDIdrDtS2w7qRczywxiK6SL5vRw==}
 
+  importmap-vite-plugin@0.1.0:
+    resolution: {integrity: sha512-x7UVXY9ri92+jrr5mIaHwpGzBRZ72SkvG6lgV/EjWO/ZhSe/Js/qZ7UDmRxCnHBSBElwvWBJvM2fCDpNMJ5PMQ==}
+    peerDependencies:
+      vite: '*'
+
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
     engines: {node: '>=0.8.19'}
@@ -12804,13 +12819,13 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  playwright-core@1.57.0-alpha-2025-10-09:
-    resolution: {integrity: sha512-K6BwJMLn+2wLRu/iqk0l4MJ1Ou1tObap3UMX+sVoXrgAOBG1/L5RTe70NVTB1ROrsgZYxaqFGMyo53bBN/uw5Q==}
+  playwright-core@1.57.0-alpha-1761929702000:
+    resolution: {integrity: sha512-8wL65hCHIBKPRUMj7sycaAqhLqgXBIfGITSefv0Tgrm/qIUbbbGzKAxPABR2bxOCMcCGEufaL8nnm/ePG+X9Qw==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.57.0-alpha-2025-10-09:
-    resolution: {integrity: sha512-43vX0bt/YQANmKuWMDJSQMtic5iKBgqD6YMFgM045hELzFE5/mbRKRZI+iPVrFbKsvyClWzd/HVIvluwkbJVqg==}
+  playwright@1.57.0-alpha-1761929702000:
+    resolution: {integrity: sha512-kWIfN7hC15Izvkz4ySUhnobOH/CFVK2+ixhPgBCPWu6THIAHLFIL0WKnf06lGhTXX46ptDBWHa7bSMHBesmVLg==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -18317,10 +18332,10 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/mcp@0.0.42':
+  '@playwright/mcp@0.0.45':
     dependencies:
-      playwright: 1.57.0-alpha-2025-10-09
-      playwright-core: 1.57.0-alpha-2025-10-09
+      playwright: 1.57.0-alpha-1761929702000
+      playwright-core: 1.57.0-alpha-1761929702000
 
   '@polka/url@1.0.0-next.29': {}
 
@@ -23615,6 +23630,11 @@ snapshots:
 
   canvas-confetti@1.9.3: {}
 
+  canvas@3.2.0:
+    dependencies:
+      node-addon-api: 7.1.1
+      prebuild-install: 7.1.3
+
   ccount@2.0.1: {}
 
   chai@5.2.1:
@@ -25360,7 +25380,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       '@formatjs/intl-localematcher': 0.6.2
       '@orama/orama': 3.1.14
@@ -25383,13 +25403,13 @@ snapshots:
       '@oramacloud/client': 2.1.4
       '@types/react': 19.2.2
       algoliasearch: 5.39.0
-      next: 15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      next: 15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.14):
+  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.14):
     dependencies:
       '@radix-ui/react-accordion': 1.2.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -25402,7 +25422,7 @@ snapshots:
       '@radix-ui/react-slot': 1.2.3(@types/react@19.2.2)(react@19.2.0)
       '@radix-ui/react-tabs': 1.1.13(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       class-variance-authority: 0.7.1
-      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.2.2)(algoliasearch@5.39.0)(next@15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       lodash.merge: 4.6.2
       next-themes: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       postcss-selector-parser: 7.1.0
@@ -25413,7 +25433,7 @@ snapshots:
       tailwind-merge: 3.3.1
     optionalDependencies:
       '@types/react': 19.2.2
-      next: 15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      next: 15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       tailwindcss: 4.1.14
     transitivePeerDependencies:
       - '@oramacloud/client'
@@ -26024,6 +26044,10 @@ snapshots:
       cjs-module-lexer: 1.4.3
       module-details-from-path: 1.0.4
 
+  importmap-vite-plugin@0.1.0(rolldown-vite@7.1.20(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)):
+    dependencies:
+      vite: rolldown-vite@7.1.20(@types/node@24.6.2)(esbuild@0.25.10)(jiti@2.6.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
+
   imurmurhash@0.1.4: {}
 
   index-to-position@1.1.0: {}
@@ -26610,13 +26634,15 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  linkedom@0.18.12:
+  linkedom@0.18.12(canvas@3.2.0):
     dependencies:
       css-select: 5.2.2
       cssom: 0.5.0
       html-escaper: 3.0.3
       htmlparser2: 10.0.0
       uhyphen: 0.2.0
+    optionalDependencies:
+      canvas: 3.2.0
 
   listhen@1.9.0:
     dependencies:
@@ -27562,7 +27588,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  next@15.5.6(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  next@15.5.6(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       '@next/env': 15.5.6
       '@swc/helpers': 0.5.15
@@ -28202,11 +28228,11 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  playwright-core@1.57.0-alpha-2025-10-09: {}
+  playwright-core@1.57.0-alpha-1761929702000: {}
 
-  playwright@1.57.0-alpha-2025-10-09:
+  playwright@1.57.0-alpha-1761929702000:
     dependencies:
-      playwright-core: 1.57.0-alpha-2025-10-09
+      playwright-core: 1.57.0-alpha-1761929702000
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -29281,14 +29307,14 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-mdx@1.3.9(react@19.2.0):
+  safe-mdx@1.3.9(canvas@3.2.0)(react@19.2.0):
     dependencies:
       '@babel/parser': 7.28.5
       '@babel/types': 7.28.5
       '@standard-schema/spec': 1.0.0
       collapse-white-space: 2.1.0
       eval-estree-expression: 3.0.1
-      linkedom: 0.18.12
+      linkedom: 0.18.12(canvas@3.2.0)
       react: 19.2.0
       remark: 15.0.1
       remark-frontmatter: 5.0.0

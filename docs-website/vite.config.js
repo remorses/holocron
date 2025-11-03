@@ -1,6 +1,8 @@
 /// <reference types="vitest/config" />
 
 import react from '@vitejs/plugin-react'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { reactRouter } from '@react-router/dev/vite'
 import tailwindcss from '@tailwindcss/vite'
@@ -12,6 +14,9 @@ import { reactRouterServerPlugin } from '@xmorse/deployment-utils/dist/react-rou
 import { defineConfig } from 'vite'
 import EnvironmentPlugin from 'vite-plugin-environment'
 import { analyzer } from 'vite-bundle-analyzer'
+import { importMapPlugin } from 'importmap-vite-plugin'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const NODE_ENV = JSON.stringify(process.env.NODE_ENV || 'production')
 
@@ -102,6 +107,14 @@ export default defineConfig({
       analyzer({ openAnalyzer: false, analyzerMode: 'static' }),
     reactRouterServerPlugin({ port: process.env.PORT || '7777' }),
     enablePreserveModulesPlugin(),
+    importMapPlugin({
+      imports: {
+        'react': path.resolve(__dirname, './src/import-map/react'),
+        'react-dom': path.resolve(__dirname, './src/import-map/react-dom'),
+        'react/jsx-runtime': path.resolve(__dirname, './src/import-map/react/jsx-runtime'),
+        'unframer': path.resolve(__dirname, './src/import-map/unframer'),
+      }
+    }),
   ],
 
   // legacy: {
