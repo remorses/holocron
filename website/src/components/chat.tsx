@@ -98,7 +98,7 @@ const setDocsJsonState = ({ values, githubFolder, previousValues }) => {
   docsRpcClient.setDocsState({
     // revalidate: true, // TODO
     state: { filesInDraft: newChanges },
-  })
+  }).catch((e) => console.error)
 }
 
 function ChatForm({ children, disabled }) {
@@ -307,7 +307,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
           filesInDraft: { ...filesInDraft },
           currentSlug,
         })
-        try {
+
           await docsRpcClient.setDocsState({
             state: {
               filesInDraft: filesInDraft,
@@ -316,10 +316,8 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
             },
             revalidate,
             idempotenceKey: toolPart.toolCallId,
-          })
-        } catch (e) {
-          console.error('failed setDocsState', e)
-        }
+          }).catch((e) => console.error)
+
       }
 
       // Handle selectText tool output

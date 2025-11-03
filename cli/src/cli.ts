@@ -944,7 +944,7 @@ cli
             filesInDraft: updatedFile,
           },
           revalidate,
-        })
+        }).catch((e) => console.error)
       }
 
       watcher.on('add', (x) => handleFileUpdate(x, true))
@@ -970,7 +970,7 @@ cli
               filesInDraft: deletedFile,
             },
             revalidate: true,
-          })
+          }).catch((e) => console.error)
         }
       })
     } catch (error) {
