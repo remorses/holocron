@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useHydrated } from './hooks'
 import { cn } from './utils'
+import { href } from 'react-router'
 
 // simple in-memory cache so every icon svg is fetched only once
 const svgCache: Record<string, string> = {}
