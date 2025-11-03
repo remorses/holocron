@@ -4,6 +4,7 @@ import type { Route } from './+types/root'
 import { imageLoader } from './lib/image-loader'
 import { serveRawMarkdown } from './lib/serve-raw-markdown.server'
 import { withoutBasePath } from './lib/utils'
+import './lib/mount-importmap'
 import './app.css'
 
 const queryClient = new QueryClient({
