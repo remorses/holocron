@@ -106,7 +106,7 @@ export default defineConfig({
     process.env.ANALYZE &&
       analyzer({ openAnalyzer: false, analyzerMode: 'static' }),
     reactRouterServerPlugin({ port: process.env.PORT || '7777' }),
-    // enablePreserveModulesPlugin(),
+    // enablePreserveModulesPlugin(), // TODO preserve modules has a bug with cssom package and vite rolldown.
     importMapPlugin({
       imports: {
         'react': path.resolve(__dirname, './src/import-map/react'),
