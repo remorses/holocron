@@ -42,7 +42,7 @@ describe('getIconJsx', () => {
       expect(svgString).toContain('<svg')
     })
   })
-  ;['archive', 'cog', 'house'].forEach((iconKey) => {
+  ;['archive', 'cog', 'house', 'file-text', 'image', 'text', 'code'].forEach((iconKey) => {
     test(`defaults to lucide provider when not specified (${iconKey})`, () => {
       const result = getIconJsx({ key: iconKey })
       expect(result).toBeTruthy()
