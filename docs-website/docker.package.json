@@ -2,14 +2,21 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "@emotion/is-prop-valid": "^1.4.0",
+    "@apidevtools/json-schema-ref-parser": "*",
     "@lancedb/lancedb": "^0.21.2",
     "@prisma/client": "^6.15.0",
     "@resvg/resvg-js": "^2.6.2",
+    "@scalar/api-client": "*",
+    "@scalar/icons": "*",
     "@sentry/node": "^9.28.1",
     "json-schema-library": "^10.1.2",
+    "katex": "^0.16.22",
+    "mermaid": "^11.7.0",
+    "monaco-editor": "^0.52.2",
     "pg": "^8.13.1",
+    "prettier": "*",
     "satori": "^0.18.3",
-    "shiki": "^3.13.0"
+    "shiki": "^3.13.0",
+    "undici": "*"
   }
 }
