@@ -1,8 +1,24 @@
 {
+  "$schema": "https://holocron.so/holocron.json",
+  "tabs": [
+    {
+      "folder": "essentials",
+      "tab": "v1",
+      "hideSidebar": false,
+      "url": "/v1"
+    },
+    {
+      "folder": "v2",
+      "tab": "v2",
+      "hideSidebar": false,
+      "url": "/v2"
+    }
+  ],
+
   // the logo shown in the top left
   "logo": {
     "dark": "http://localhost:7664/logo/light.svg",
-    "light": "http://localhost:7664/logo/dark.svg"
+    "light": "http://localhost:7664/logo/dark.svg",
   },
   "name": "holocron",
   "footer": {
@@ -11,16 +27,16 @@
         "items": [
           {
             "href": "https://localhost:7664",
-            "label": "Holocron"
-          }
+            "label": "Holocron",
+          },
         ],
-        "header": "Documentation"
-      }
+        "header": "Documentation",
+      },
     ],
     "socials": {
       "github": "https://github.com/remorses",
-      "twitter": "https://x.com/__morse"
-    }
+      "twitter": "https://x.com/__morse",
+    },
   },
   "navbar": {
     // the links shown in the top right
@@ -28,26 +44,24 @@
       {
         "href": "https://localhost:7664",
         "icon": "document",
-        "label": "Home"
-      }
+        "label": "Home",
+      },
     ],
     // a button shown on the top right
     "primary": {
       "href": "https://localhost:7664/login",
       "type": "button",
-      "label": "Get Started"
-    }
+      "label": "Get Started",
+    },
   },
+
   "siteId": "01K9TCKT3NYJJQX4APFNJCBB58",
-  "$schema": "https://localhost:7664/holocron.json",
+
   // to add new domains you can simply add them here, then add a CNAME record pointing to cname.localhost:7664
-  "domains": [
-    "holocron-ysx261dl.localhost",
-    "holocron-ysx261dl.holocron.live"
-  ],
+  "domains": ["holocron-ysx261dl.localhost", "holocron-ysx261dl.holocron.live"],
   "favicon": {
     "dark": "/favicon.svg",
-    "light": "/favicon.svg"
+    "light": "/favicon.svg",
   },
-  "disableEditButton": false
+  "disableEditButton": false,
 }
