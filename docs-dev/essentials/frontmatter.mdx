@@ -1,0 +1,72 @@
+---
+title: 'Frontmatter'
+description: 'Configure page metadata and display properties'
+icon: 'file-text'
+---
+
+## Overview
+
+Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.
+
+```yaml
+---
+title: 'Page Title'
+description: 'Brief description of the page content'
+icon: 'file'
+---
+```
+
+## Required Properties
+
+### title
+
+The page title that appears in the sidebar navigation and as the main H1 heading on the page.
+
+```yaml
+title: 'Getting Started'
+```
+
+### description
+
+Meta description used for SEO and displayed in search results. Also shown in the document overview.
+
+```yaml
+description: 'Learn how to set up and configure your project'
+```
+
+## Optional Properties
+
+### icon
+
+Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title in the sidebar.
+
+```yaml
+icon: 'rocket'        # Shows rocket icon
+icon: 'book-open'     # Shows book-open icon
+icon: 'settings'      # Shows settings icon
+```
+
+<Tip>
+
+Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for your page.
+
+</Tip>
+
+## Example
+
+Here's a complete frontmatter example:
+
+```yaml
+---
+title: 'API Reference'
+description: 'Complete API documentation with examples and response schemas'
+icon: 'code'
+---
+
+# Your markdown content starts here
+```
+
+This creates a page with:
+- "API Reference" in the sidebar and as the H1
+- SEO description for search engines
+- Code icon in the sidebar

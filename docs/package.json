@@ -1,0 +1,6 @@
+{
+  "name": "docs-example",
+  "scripts": {
+    "dev": "pnpm tsx --watch ../cli/src/bin dev"
+  }
+}
