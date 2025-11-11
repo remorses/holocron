@@ -1,12 +1,7 @@
 {
   "$schema": "https://holocron.so/holocron.json",
   "tabs": [
-    {
-      "folder": "essentials",
-      "tab": "v1",
-      "hideSidebar": false,
-      "url": "/v1"
-    },
+
     {
       "folder": "v2",
       "tab": "v2",

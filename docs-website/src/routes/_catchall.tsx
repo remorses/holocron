@@ -208,12 +208,15 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Check for editor preview mode query parameter
   const editorPreviewMode = url.searchParams.get('editorPreviewMode') === 'true'
 
+  // Strip passwords from docsJson before sending to client
+  const { passwords, ...safeDocsJson } = (siteBranch.docsJson || {}) as DocsJsonType
+
   console.timeEnd(`${timerId} - total root loader time`)
   return {
     openapiUrl,
     openapiRenderer,
     ...rest,
-    docsJson: siteBranch.docsJson as DocsJsonType,
+    docsJson: safeDocsJson as DocsJsonType,
     languages,
     files,
     i18n,

@@ -33,7 +33,7 @@ export function getFumadocsSource({
   const transformers: PageTreeTransformer[] = []
 
   // Add tabs transformer if tabs are configured in docsJson
-  if (docsJson?.tabs && docsJson.tabs.length > 0) {
+  if (docsJson?.tabs?.length) {
     transformers.push(createTabsTransformer(docsJson.tabs))
   }
 
@@ -104,6 +104,8 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
     })
   }
 
+
+
   return {
     folder(node, folderPath, metaPath) {
       if (!tabs || tabs.length === 0) return node
@@ -114,6 +116,7 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
       const matchingTab = tabs.find(tab => {
         if ('folder' in tab && tab.folder) {
           const normalizedFolder = tab.folder.replace(/^\/+|\/+$/g, '')
+
           return normalizedFolder === normalizedPath
         }
         return false
@@ -132,6 +135,7 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
       return node
     },
     root(node) {
+
       if (!tabs || tabs.length === 0) return node
 
       // Group all non-tab items into a "Docs" tab
@@ -147,6 +151,7 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
           docsItems.push(child)
         }
       })
+
 
       // Create main docs tab if there are any non-tab items
       if (docsItems.length > 0) {

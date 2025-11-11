@@ -1,6 +1,6 @@
 {
   "name": "docs-example-dev",
   "scripts": {
-    "dev": "SERVER_URL=http://localhost:7664 pnpm tsx --watch ../cli/src/bin.ts "
+    "dev": "SERVER_URL=http://localhost:7664 pnpm tsx ../cli/src/bin.ts "
   }
 }
