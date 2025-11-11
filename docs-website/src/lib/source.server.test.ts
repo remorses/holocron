@@ -450,4 +450,71 @@ describe('getFumadocsSource with tabs', () => {
         📄 [index] Blog Home (/blog)"
     `)
   })
+
+  test('essentials and v2 folders configured as tabs should not appear as folders in Docs tab', () => {
+    const files: VirtualFile[] = [
+      // Root pages
+      { path: 'index.mdx', data: { title: 'Home' }, type: 'page' },
+      { path: 'about.mdx', data: { title: 'About' }, type: 'page' },
+      
+      // essentials folder (configured as v1 tab)
+      { path: 'essentials/index.mdx', data: { title: 'Essentials Home' }, type: 'page' },
+      { path: 'essentials/getting-started.mdx', data: { title: 'Getting Started' }, type: 'page' },
+      { path: 'essentials/code.mdx', data: { title: 'Code Blocks' }, type: 'page' },
+      
+      // v2 folder (configured as v2 tab)
+      { path: 'v2/index.mdx', data: { title: 'V2 Home' }, type: 'page' },
+      { path: 'v2/new-features.mdx', data: { title: 'New Features' }, type: 'page' },
+      
+      // Other content folders (NOT tabs)
+      { path: 'writing/index.mdx', data: { title: 'Writing' }, type: 'page' },
+      { path: 'writing/content-structure.mdx', data: { title: 'Content Structure' }, type: 'page' },
+    ]
+    
+    const docsJson: DocsJsonType = {
+      siteId: 'test-site',
+      name: 'Test Site', 
+      tabs: [
+        {
+          tab: 'v1',
+          folder: 'essentials',
+          hideSidebar: false,
+          url: '/v1',
+        },
+        {
+          tab: 'v2',
+          folder: 'v2',
+          hideSidebar: false,
+          url: '/v2',
+        },
+      ],
+    }
+    
+    const source = getFumadocsSource({
+      files,
+      defaultLanguage: 'en',
+      languages: ['en'],
+      docsJson,
+    })
+    
+    const tree = source.getPageTree()
+    console.log('Full tree structure:')
+    console.log(treeToText(tree))
+    
+    expect(treeToText(tree)).toMatchInlineSnapshot(`
+      "📁 Docs [TAB]
+        📄 Home (/)
+        📄 About (/about)
+        📁 Writing
+          📄 [index] Writing (/writing)
+          📄 Content Structure (/writing/content-structure)
+      📁 v1 [TAB]
+        📄 [index] Essentials Home (/essentials)
+        📄 Code Blocks (/essentials/code)
+        📄 Getting Started (/essentials/getting-started)
+      📁 v2 [TAB]
+        📄 [index] V2 Home (/v2)
+        📄 New Features (/v2/new-features)"
+    `)
+  })
 })
