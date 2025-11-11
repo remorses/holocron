@@ -171,6 +171,9 @@ function NewChatButton() {
 export function ChatLeftSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const hideBrowser = useShouldHideBrowser()
   const orgData = useRouteLoaderData('routes/org.$orgId') as OrgRoute.ComponentProps['loaderData']
+  const branchData = useRouteLoaderData(
+    'routes/org.$orgId.branch.$branchId',
+  ) as BranchRoute.ComponentProps['loaderData'] | undefined
 
   const params = useParams()
   const { chatId } = params
@@ -191,7 +194,7 @@ export function ChatLeftSidebar({ ...props }: React.ComponentProps<typeof Sideba
       className='dark mx-auto h-full flex-col scheme-only-dark px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
     >
       <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 pr-2 flex'>
-        <TeamSwitcher className='grow ' sites={userSites || []} />
+        <TeamSwitcher className='grow ' sites={userSites || []} currentSiteId={branchData?.siteId} />
 
         <div className='flex items-start gap-2'>
           <ChatCombobox chatId={chatId} />
