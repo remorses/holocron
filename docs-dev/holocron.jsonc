@@ -1,13 +1,12 @@
 {
   "$schema": "https://holocron.so/holocron.json",
   "tabs": [
-
     {
       "folder": "v2",
       "tab": "v2",
       "hideSidebar": false,
-      "url": "/v2"
-    }
+      "url": "/v2",
+    },
   ],
 
   // the logo shown in the top left
@@ -33,6 +32,7 @@
       "twitter": "https://x.com/__morse",
     },
   },
+  "passwords": [{ "password": "xxx" }],
   "navbar": {
     // the links shown in the top right
     "links": [

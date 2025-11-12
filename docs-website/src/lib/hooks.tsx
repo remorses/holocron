@@ -47,15 +47,21 @@ export function useDocsJson(): DocsJsonType {
 
   // Parse docsJsonString if present using useMemo for efficiency
   return useMemo(() => {
+    let result: DocsJsonType
     if (docsJsonString) {
       try {
-        return JSONC.parse(docsJsonString)
+        result = JSONC.parse(docsJsonString)
       } catch (e) {
         console.error('Failed to parse docsJson from state', e)
-        return docsJson
+        result = docsJson || {}
       }
+    } else {
+      result = docsJson || {}
     }
-    return docsJson || {}
+
+    // Strip passwords before returning to prevent client exposure
+    const { passwords, ...safeDocsJson } = result
+    return safeDocsJson as DocsJsonType
   }, [docsJsonString, docsJson])
 }
 

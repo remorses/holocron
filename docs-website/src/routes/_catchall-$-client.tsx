@@ -30,10 +30,11 @@ import {
     TwitterIcon
 } from 'lucide-react'
 import { lazy, Suspense, useEffect } from 'react'
-import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
+import { useLoaderData, useRevalidator, useRouteLoaderData, isRouteErrorResponse } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
 import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
 import { mdxComponents } from '../components/mdx-components'
+import { PasswordProtection } from '../components/password-protection'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
 import { ScalarOpenApi } from '../components/scalar'
@@ -540,9 +541,17 @@ function EditorToggle() {
   )
 }
 
+
+
 export function ClientErrorBoundary({ error }: { error: Error }) {
   const revalidator = useRevalidator()
   const filesInDraft = useDocsState((state) => state.filesInDraft)
+
+
+
+  if (isRouteErrorResponse(error) && error.status === 401) {
+    return <PasswordProtection siteName={error.data?.siteName} />
+  }
 
   const isRetryableErrorWithClientLoader = 'markdown' in (error as any) && (error as any).markdown
 

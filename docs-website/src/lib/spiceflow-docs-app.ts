@@ -71,6 +71,42 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
   .use(preventProcessExitIfBusy())
   .route({
     method: 'POST',
+    path: '/checkPassword',
+    request: z.object({
+      password: z.string(),
+    }),
+    async handler({ request, state: {} }) {
+      const { password } = await request.json()
+      const domain = getHost(request)
+
+      const siteBranch = await prisma.siteBranch.findFirst({
+        where: {
+          domains: {
+            some: {
+              host: domain,
+            },
+          },
+        },
+      })
+
+      if (!siteBranch) {
+        throw new Response('Site not found', { status: 404 })
+      }
+
+      // TODO support for previewing the password protection in preview. with passwords in fileInDraft only.
+      const docsJson = getDocsJson({
+        filesInDraft: {},
+        docsJson: siteBranch.docsJson,
+      })
+
+      const passwords = docsJson?.passwords || []
+      const isValid = passwords.some((p) => p.password === password)
+
+      return Response.json({ valid: isValid })
+    },
+  })
+  .route({
+    method: 'POST',
     path: '/generateMessage',
     request: z.object({
       messages: z.array(z.custom<UIMessage>()),

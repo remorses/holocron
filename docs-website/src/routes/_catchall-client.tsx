@@ -39,7 +39,7 @@ import JSONC from 'tiny-jsonc'
 import { LOCALE_LABELS } from '../lib/locales'
 import { Markdown } from 'contesto/src/lib/markdown'
 import { mdxComponents } from '../components/mdx-components'
-import { cn, isInsidePreviewIframe } from '../lib/utils'
+import { cn, isInsidePreviewIframe, isDocsJson } from '../lib/utils'
 import { DynamicIcon } from '../lib/icon'
 import { PoweredBy } from '../components/poweredby'
 import { CustomSearchDialog } from '../components/search'
@@ -376,6 +376,9 @@ export function ClientApp() {
   const { previewWebsocketId, } = loaderData || {}
   const docsJson = useDocsJson()
   useNProgress()
+
+
+
   // Inline DocsProvider
   const { i18n, cssStyles, themeCSS: initialThemeCSS } = loaderData || {}
   const locale = i18n?.defaultLanguage

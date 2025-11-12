@@ -510,17 +510,17 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         orderBy: {
           slug: 'asc',
         },
-        include: {
-          content: true,
-          mediaAssets: {
-            include: {
-              asset: true,
-            },
-          },
+        select: {
+          slug: true,
         },
       }),
     ])
-    page = indexPage || anotherPage
+
+    if (indexPage) {
+      page = indexPage
+    } else if (!fumadocsPage && anotherPage) {
+      throw redirect(withBasePath(anotherPage.slug))
+    }
   }
 
   // Initialize with normal flow values (page content or defaults)
@@ -693,7 +693,7 @@ export function ErrorBoundary({
         <h1 className={titleClass}>
           {error.status} {error.statusText}
         </h1>
-        <p className={messageClass}>{error.data}</p>
+
       </div>
     )
   } else if (error instanceof Error) {
