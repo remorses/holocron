@@ -58,6 +58,10 @@ export function FloatingCommentButton() {
 
     const startLine = parseInt(anchorEl.getAttribute('data-comment-line-start') || '0', 10)
     const endLine = parseInt(anchorEl.getAttribute('data-comment-line-end') || '0', 10)
+    const headingId = anchorEl.id || ''
+
+    // Build currentSlug with hash if heading has ID
+    const currentSlug = headingId ? `${location.pathname}#${headingId}` : location.pathname
 
     useDocsState.setState({
       highlightedLines: {
@@ -65,6 +69,7 @@ export function FloatingCommentButton() {
         startLine,
         endLine,
       },
+      currentSlug,
     })
 
     const chatId = usePersistentDocsState.getState().chatId
@@ -101,7 +106,7 @@ export function FloatingCommentButton() {
           'transition-colors',
           'bg-background border border-border shadow-sm',
         )}
-        aria-label='Comment on this paragraph'
+        aria-label='Comment on this section'
       >
         <MessageCircleIcon className='size-4' />
       </button>

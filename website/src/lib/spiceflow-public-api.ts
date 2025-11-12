@@ -697,7 +697,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
   })
   .route({
     method: 'POST',
-    path: '/sites/feedback',
+    path: '/sites/getFeedback',
     detail: {
       summary: 'List feedback for a site',
       description: 'Returns paginated feedback for a site with optional filtering by opinion'
