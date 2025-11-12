@@ -38,6 +38,7 @@ import { PasswordProtection } from '../components/password-protection'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
 import { ScalarOpenApi } from '../components/scalar'
+import { FloatingCommentButton } from '../components/floating-comment-button'
 import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 import { DocsJsonType } from '../lib/docs-json'
 import { updateFileInDocsEditor, useDocsState } from '../lib/docs-state'
@@ -173,7 +174,7 @@ function PageContent(props: Route.ComponentProps): any {
           </PageTOCPopoverContent>
         </PageTOCPopover>
       )}
-      <PageArticle className='docs-page-article'>
+      <PageArticle className='docs-page-article lg:pr-8'>
         <PageBreadcrumb />
         <h1 className='text-3xl font-semibold'>{title}</h1>
         <p className='text-lg text-fd-muted-foreground'>{description}</p>
@@ -191,6 +192,7 @@ function PageContent(props: Route.ComponentProps): any {
         <div className='prose flex-1 text-fd-foreground/80'>
           <DocsMarkdown />
         </div>
+        <FloatingCommentButton />
         <div className='grow'></div>
         <Rate
           onRateAction={async (url, feedback) => {
