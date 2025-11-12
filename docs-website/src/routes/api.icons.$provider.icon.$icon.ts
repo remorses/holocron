@@ -1,4 +1,4 @@
-import { Route } from './+types/api.icons.$provider.icon.$icon[.]svg'
+import { Route } from './+types/api.icons.$provider.icon.$icon'
 import { getIconJsx } from '../lib/icons.server'
 import { renderToString } from 'react-dom/server'
 
@@ -8,14 +8,15 @@ export const loader = async ({ params }: Route.LoaderArgs) => {
   // Strip ".svg" ending from icon, if present
   const svgExtension = '.svg'
   if (icon.endsWith(svgExtension)) {
-    icon = icon.slice(0, icon.length - svgExtension.length)
+    icon = icon.slice(0, - svgExtension.length)
   }
   const iconJsx = getIconJsx({ provider, key: icon })
 
   if (!iconJsx) {
+    const text = `Icon not found: provider="${provider}" icon="${icon}"`
     throw new Response(
-      `Icon not found: provider="${provider}" icon="${icon}"`,
-      { status: 404 },
+      text,
+      { status: 404, statusText: `Icon not found: provider="${provider}" icon="${icon}"` },
     )
   }
 
