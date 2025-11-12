@@ -522,7 +522,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     if (indexPage) {
       page = indexPage
     } else if (!fumadocsPage && anotherPage) {
-      throw redirect(withBasePath(anotherPage.slug))
+      throw redirect(withBasePath(anotherPage.slug + url.search))
     }
   }
 
@@ -670,12 +670,13 @@ export function ErrorBoundary({
 
   const isRetryableErrorWithClientLoader = 'markdown' in (error as any) && (error as any).markdown
 
-  useEffect(() => {
-    if (isRouteErrorResponse(error) && error.status === 404 && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
-      console.log('Revalidating files in draft due to 404 error', filesInDraft)
-      revalidator.revalidate()
-    }
-  }, [filesInDraft, isRetryableErrorWithClientLoader, revalidator.state])
+  // TODO revalidate on 404 causes a loop?
+  // useEffect(() => {
+  //   if (isRouteErrorResponse(error) && error.status === 404 && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
+  //     console.log('Revalidating files in draft due to 404 error', filesInDraft)
+  //     revalidator.revalidate()
+  //   }
+  // }, [filesInDraft, isRetryableErrorWithClientLoader, revalidator.state])
 
   const isMdxError = error instanceof Error && 'line' in error
   const markdown = error?.['markdown']
