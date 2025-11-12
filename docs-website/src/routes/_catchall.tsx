@@ -62,11 +62,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     // Remove websocketId from search params for redirect
     const redirectUrl = new URL(url)
     redirectUrl.searchParams.delete('websocketId')
+    redirectUrl.searchParams.set('chatId', websocketId)
 
     // Create a plain Set-Cookie header (session cookie, JS-readable)
     // Explicitly set HttpOnly=false for JavaScript access
     const isSecure = process.env.NODE_ENV === 'production'
     const cookieValue = `__websocket_preview=${encodeURIComponent(websocketId)}; Path=/; HttpOnly=false${isSecure ? '; Secure' : ''}`
+
 
     throw redirect(redirectUrl.toString(), {
       headers: {
