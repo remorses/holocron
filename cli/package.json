@@ -1,6 +1,6 @@
 {
   "name": "@holocron.so/cli",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "",
   "type": "module",
   "repository": "https://github.com/remorses/holocron",
@@ -36,6 +36,7 @@
     "sema4": "^0.1.3",
     "spiceflow": "^1.17.12",
     "tiny-jsonc": "^1.0.2",
+    "ulid": "^3.0.1",
     "ws": "^8.18.2",
     "zod": "^4.1.12"
   },
