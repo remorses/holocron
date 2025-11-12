@@ -84,7 +84,7 @@ export function PasswordProtection({ siteName }: { siteName?: string }) {
 
           <Button
             type='submit'
-            className='w-full'
+            className='w-full text-white'
             disabled={isSubmitting || !password}
           >
             {isSubmitting ? 'Verifying...' : 'Access Documentation'}

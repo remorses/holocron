@@ -155,9 +155,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   let isPasswordValid =
     sitePassword && docsJson.passwords?.some((p) => p.password === sitePassword)
 
-  // isPasswordValid = false // for testing only
+  let hasPasswords = !!docsJson?.passwords?.length
 
-  if (docsJson.passwords?.length && !isPasswordValid) {
+  hasPasswords = true // for testing only
+
+  if (hasPasswords && !isPasswordValid) {
     throw data(
       { message: 'Password required', siteName: site.name },
       {
