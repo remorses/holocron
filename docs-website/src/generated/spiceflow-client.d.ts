@@ -177,9 +177,9 @@ export declare const apiClient: {
                                     host: string;
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
+                                title: string;
                                 branchId: string;
                                 siteId: string;
-                                title: string;
                                 createdAt: Date;
                                 githubBranch: string;
                                 updatedAt: Date;
@@ -201,9 +201,9 @@ export declare const apiClient: {
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                             } & {
+                                title: string;
                                 branchId: string;
                                 siteId: string;
-                                title: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                                 githubBranch: string;
@@ -590,6 +590,38 @@ export declare const apiClient: {
                     success: boolean;
                     message: string;
                     siteId: string;
+                };
+            }>>;
+        };
+        getBranchFilesWithHashes: {
+            post: (request: {
+                branchId: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    files: {
+                        githubPath: string;
+                        sha1: string;
+                    }[];
+                };
+            }>>;
+        };
+        getOrCreateDevChat: {
+            post: (request: {
+                siteId: string;
+                branchId?: string | undefined;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    chatId: string;
+                    branchId: any;
+                    filesInDraft: any;
                 };
             }>>;
         };
@@ -787,9 +819,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                     host: string;
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
+                                title: string;
                                 branchId: string;
                                 siteId: string;
-                                title: string;
                                 createdAt: Date;
                                 githubBranch: string;
                                 updatedAt: Date;
@@ -811,9 +843,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                             } & {
+                                title: string;
                                 branchId: string;
                                 siteId: string;
-                                title: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                                 githubBranch: string;
@@ -1200,6 +1232,38 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     success: boolean;
                     message: string;
                     siteId: string;
+                };
+            }>>;
+        };
+        getBranchFilesWithHashes: {
+            post: (request: {
+                branchId: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    files: {
+                        githubPath: string;
+                        sha1: string;
+                    }[];
+                };
+            }>>;
+        };
+        getOrCreateDevChat: {
+            post: (request: {
+                siteId: string;
+                branchId?: string | undefined;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    chatId: string;
+                    branchId: any;
+                    filesInDraft: any;
                 };
             }>>;
         };
@@ -1398,9 +1462,9 @@ export declare const apiClientWithDurableFetch: {
                                     host: string;
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
+                                title: string;
                                 branchId: string;
                                 siteId: string;
-                                title: string;
                                 createdAt: Date;
                                 githubBranch: string;
                                 updatedAt: Date;
@@ -1422,9 +1486,9 @@ export declare const apiClientWithDurableFetch: {
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                             } & {
+                                title: string;
                                 branchId: string;
                                 siteId: string;
-                                title: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
                                 createdAt: Date;
                                 githubBranch: string;
@@ -1811,6 +1875,38 @@ export declare const apiClientWithDurableFetch: {
                     success: boolean;
                     message: string;
                     siteId: string;
+                };
+            }>>;
+        };
+        getBranchFilesWithHashes: {
+            post: (request: {
+                branchId: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    files: {
+                        githubPath: string;
+                        sha1: string;
+                    }[];
+                };
+            }>>;
+        };
+        getOrCreateDevChat: {
+            post: (request: {
+                siteId: string;
+                branchId?: string | undefined;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    chatId: string;
+                    branchId: any;
+                    filesInDraft: any;
                 };
             }>>;
         };

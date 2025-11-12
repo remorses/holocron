@@ -31,7 +31,7 @@
       "twitter": "https://x.com/__morse",
     },
   },
-  "passwords": [{ "password": "xxx" }],
+  // "passwords": [{ "password": "xxx" }],
   "navbar": {
     // the links shown in the top right
     "links": [

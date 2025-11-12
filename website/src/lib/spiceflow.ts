@@ -23,6 +23,7 @@ import { openai } from '@ai-sdk/openai'
 import { experimental_transcribe as transcribe } from 'ai'
 import { applyJsonCComments } from './json-c-comments'
 import { filesSchema, publicApiApp } from './spiceflow-public-api'
+import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 
 
 
@@ -1302,6 +1303,193 @@ export const app = new Spiceflow({ basePath: '/api' })
       }
     },
   })
+  .route({
+    method: 'POST',
+    path: '/getBranchFilesWithHashes',
+    detail: {
+      hide: true,
+    },
+    request: z.object({
+      branchId: z.string(),
+    }),
+    async handler({ request, state: { userId } }) {
+      const { branchId } = await request.json()
+
+      const branch = await prisma.siteBranch.findFirst({
+        where: {
+          branchId,
+          OR: [
+            {
+              site: {
+                org: {
+                  users: {
+                    some: { userId },
+                  },
+                },
+              },
+            },
+            {
+              site: {
+                visibility: 'public',
+              },
+            },
+          ],
+        },
+        include: {
+          site: true,
+        },
+      })
+
+      if (!branch) {
+        throw new AppError('Branch not found or you do not have access')
+      }
+
+      const [pages, metaFiles, mediaAssets] = await Promise.all([
+        prisma.markdownPage.findMany({
+          where: { branchId },
+          select: {
+            githubPath: true,
+            githubSha: true,
+          },
+        }),
+        prisma.metaFile.findMany({
+          where: { branchId },
+          select: {
+            githubPath: true,
+            githubSha: true,
+          },
+        }),
+        prisma.mediaAsset.findMany({
+          where: { branchId },
+          select: {
+            githubPath: true,
+            githubSha: true,
+          },
+        }),
+      ])
+
+      const files = [
+        ...pages.map((page) => ({
+          githubPath: page.githubPath,
+          sha1: page.githubSha || '',
+        })),
+        ...metaFiles.map((meta) => ({
+          githubPath: meta.githubPath,
+          sha1: meta.githubSha,
+        })),
+        ...mediaAssets.map((asset) => ({
+          githubPath: asset.githubPath,
+          sha1: asset.githubSha,
+        })),
+      ]
+
+      // Include docsJson hash
+      const docsJsonContent = branch.docsJsonComments
+        ? applyJsonCComments(branch.docsJson, branch.docsJsonComments as any, 2)
+        : JSON.stringify(branch.docsJson, null, 2)
+      const docsJsonPath = branch.site?.githubFolder ? `${branch.site.githubFolder}/holocron.jsonc` : 'holocron.jsonc'
+      files.push({
+        githubPath: docsJsonPath,
+        sha1: createHash('sha1').update(docsJsonContent, 'utf-8').digest('hex'),
+      })
+
+      if (branch.cssStyles) {
+        const cssPath = branch.site?.githubFolder ? `${branch.site.githubFolder}/styles.css` : 'styles.css'
+        files.push({
+          githubPath: cssPath,
+          sha1: createHash('sha1').update(branch.cssStyles, 'utf-8').digest('hex'),
+        })
+      }
+
+      return {
+        files,
+      }
+    },
+  })
+  .route({
+    method: 'POST',
+    path: '/getOrCreateDevChat',
+    detail: {
+      hide: true,
+    },
+    request: z.object({
+      siteId: z.string(),
+      branchId: z.string().optional(),
+    }),
+    async handler({ request, state: { userId } }) {
+      let { siteId, branchId } = await request.json()
+
+      if (!userId) {
+        throw new AppError('User not authenticated')
+      }
+
+      let branch
+
+      if (branchId) {
+        branch = await prisma.siteBranch.findFirst({
+          where: {
+            branchId,
+            site: {
+              siteId,
+              org: {
+                users: {
+                  some: { userId },
+                },
+              },
+            },
+          },
+        })
+      } else {
+        branch = await prisma.siteBranch.findFirst({
+          where: {
+            site: {
+              siteId,
+              org: {
+                users: {
+                  some: { userId },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        })
+      }
+
+      if (!branch) {
+        throw new AppError('Branch not found or you do not have access')
+      }
+
+      let chat = await prisma.chat.findFirst({
+        where: {
+          userId,
+          branchId: branch.branchId,
+          title: '__dev_session__',
+        },
+      })
+
+      if (!chat) {
+        chat = await prisma.chat.create({
+          data: {
+            chatId: ulid(),
+            userId,
+            branchId: branch.branchId,
+            title: '__dev_session__',
+            type: 'hidden',
+            filesInDraft: {},
+          },
+        })
+      }
+
+      return {
+        chatId: chat.chatId,
+        branchId: branch.branchId,
+        filesInDraft: (chat.filesInDraft as FilesInDraft) || {},
+      }
+    },
+  })
+
   .route({
     method: 'POST',
     path: '/databaseNightlyCleanup',
