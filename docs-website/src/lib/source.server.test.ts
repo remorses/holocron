@@ -479,13 +479,11 @@ describe('getFumadocsSource with tabs', () => {
           tab: 'v1',
           folder: 'essentials',
           hideSidebar: false,
-          url: '/v1',
         },
         {
           tab: 'v2',
           folder: 'v2',
           hideSidebar: false,
-          url: '/v2',
         },
       ],
     }
@@ -544,13 +542,11 @@ describe('getFumadocsSource with tabs', () => {
           tab: 'v1',
           folder: 'essentials',
           hideSidebar: false,
-          url: '/v1',
         },
         {
           tab: 'v2',
           folder: 'v2',
           hideSidebar: false,
-          url: '/v2',
         },
       ],
     }
