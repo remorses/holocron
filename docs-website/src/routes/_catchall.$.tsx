@@ -671,7 +671,7 @@ export function ErrorBoundary({
   const isRetryableErrorWithClientLoader = 'markdown' in (error as any) && (error as any).markdown
 
   useEffect(() => {
-    if (isRetryableErrorWithClientLoader && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
+    if (isRouteErrorResponse(error) && error.status === 404 && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
       console.log('Revalidating files in draft due to 404 error', filesInDraft)
       revalidator.revalidate()
     }

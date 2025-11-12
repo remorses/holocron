@@ -969,6 +969,7 @@ cli
             state: {
               filesInDraft: deletedFile,
             },
+            // when a page is removed we run the server loader. this way we redirect to existing page if we are currently in the deleted page.
             revalidate: true,
           }).catch((e) => console.error)
         }
