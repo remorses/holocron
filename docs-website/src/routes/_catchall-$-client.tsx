@@ -319,7 +319,7 @@ function SocialIcon({ platform }: { platform: string }) {
   }
 }
 
-function MdxErrorDisplay({ error, markdown }: { error: any; markdown: string }) {
+export function MdxErrorDisplay({ error, markdown }: { error: any; markdown: string }) {
   // Extract error details
   const errorLine = error.line || 1
   const errorColumn = error.column || 1
@@ -539,36 +539,4 @@ function EditorToggle() {
       )}
     </button>
   )
-}
-
-
-
-export function ClientErrorBoundary({ error }: { error: Error }) {
-  const revalidator = useRevalidator()
-  const filesInDraft = useDocsState((state) => state.filesInDraft)
-
-
-
-  if (isRouteErrorResponse(error) && error.status === 401) {
-    return <PasswordProtection siteName={error.data?.siteName} />
-  }
-
-  const isRetryableErrorWithClientLoader = 'markdown' in (error as any) && (error as any).markdown
-
-  useEffect(() => {
-    if (isRetryableErrorWithClientLoader && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
-      console.log('Revalidating files in draft due to 404 error', filesInDraft)
-      revalidator.revalidate()
-    }
-  }, [filesInDraft, isRetryableErrorWithClientLoader, revalidator.state])
-
-  // Check if this is an MDX/remark error with line information
-  const isMdxError = error instanceof Error && 'line' in error
-  const markdown = error?.['markdown']
-
-  if (isMdxError && markdown) {
-    return <MdxErrorDisplay error={error} markdown={markdown} />
-  }
-
-  return null
 }

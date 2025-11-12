@@ -157,7 +157,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   let hasPasswords = !!docsJson?.passwords?.length
 
-  hasPasswords = true // for testing only
+  // hasPasswords = true // for testing only
 
   if (hasPasswords && !isPasswordValid) {
     throw data(
