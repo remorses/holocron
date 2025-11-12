@@ -39,6 +39,7 @@ import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
 import { ScalarOpenApi } from '../components/scalar'
 import { FloatingCommentButton } from '../components/floating-comment-button'
+import { docsApiClient } from '../lib/docs-spiceflow-client'
 import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 import { DocsJsonType } from '../lib/docs-json'
 import { updateFileInDocsEditor, useDocsState } from '../lib/docs-state'
@@ -196,26 +197,18 @@ function PageContent(props: Route.ComponentProps): any {
         <div className='grow'></div>
         <Rate
           onRateAction={async (url, feedback) => {
-            const apiUrl = new URL('/api/submitRateFeedback', process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`)
-            const response = await fetch(apiUrl.toString(), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                branchId,
-                url,
-                opinion: feedback.opinion,
-                message: feedback.message,
-              }),
+            const { data, error } = await docsApiClient.holocronInternalAPI.submitRateFeedback.post({
+              branchId,
+              url,
+              opinion: feedback.opinion,
+              message: feedback.message,
             })
 
-            if (!response.ok) {
+            if (error) {
               throw new Error('Failed to submit feedback')
             }
 
-            const result = await response.json()
-            return { githubUrl: result.githubUrl }
+            return { githubUrl: data.githubUrl }
           }}
         />
         <div className='flex items-center gap-2'>

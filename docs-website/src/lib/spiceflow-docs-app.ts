@@ -26,11 +26,13 @@ import {
   getCurrentPageInputSchema,
   fetchUrlInputSchema,
   selectTextInputSchema,
+  submitFeedbackInputSchema,
   type SearchDocsInput,
   type GoToPageInput,
   type GetCurrentPageInput,
   type FetchUrlInput,
   type SelectTextInput,
+  type SubmitFeedbackInput,
 } from 'website/src/lib/shared-docs-tools'
 import { cleanSlug } from './slug-utils'
 import { createEditTool, editToolParamsSchema, fileUpdateSchema, type FileUpdate } from './edit-tool'
@@ -38,7 +40,8 @@ import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 import { printDirectoryTree } from './directory-tree'
 import { createInvalidTool, INVALID_TOOL_NAME } from 'contesto/src/lib/invalid-tool'
 import { getHost } from './get-host'
-import { moonshot } from './moonshot';
+import { moonshot } from './moonshot'
+import { submitRateFeedback } from './submit-feedback'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -103,6 +106,29 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
       const isValid = passwords.some((p) => p.password === password)
 
       return Response.json({ valid: isValid })
+    },
+  })
+  .route({
+    method: 'POST',
+    path: '/submitRateFeedback',
+    request: z.object({
+      branchId: z.string().min(1, 'branchId is required'),
+      url: z.string().min(1, 'url is required'),
+      opinion: z.enum(['good', 'bad']),
+      message: z.string().min(1, 'message is required'),
+    }),
+    async handler({ request }) {
+      const { branchId, url, opinion, message } = await request.json()
+
+      const result = await submitRateFeedback({
+        request,
+        branchId,
+        url,
+        opinion,
+        message,
+      })
+
+      return result
     },
   })
   .route({
@@ -369,6 +395,28 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
               startLine,
               endLine,
               message: `highlighted text on ${page.url} from ${startLine} to ${endLine}`,
+            }
+          },
+        }),
+        submitFeedback: tool({
+          description: 'Submit user feedback about documentation. Use this when the user explicitly provides feedback about the page or documentation.',
+          inputSchema: submitFeedbackInputSchema,
+          execute: async ({ opinion, message }) => {
+            try {
+              const result = await submitRateFeedback({
+                request,
+                branchId,
+                url: currentSlug,
+                opinion,
+                message,
+              })
+
+              return result
+            } catch (error) {
+              return { 
+                success: false, 
+                error: error instanceof Error ? error.message : 'Unknown error' 
+              }
             }
           },
         }),

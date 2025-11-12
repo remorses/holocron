@@ -689,6 +689,27 @@ export function MessagePartRenderer({
       </ToolPreviewContainer>
     )
   }
+
+  if (part.type === 'tool-submitFeedback') {
+    if (!part.input) return null
+
+    const success = part.output?.success
+    const error = part.output?.error
+
+    return (
+      <ToolPreviewContainer>
+        <Dot toolCallId={part.toolCallId} />
+        Submitting {part.input.opinion} feedback
+        {success && (
+          <div className='text-sm text-green-600 dark:text-green-400 mt-1'>
+            ✓ Feedback submitted successfully
+          </div>
+        )}
+        {error && <ErrorPreview error={error} />}
+      </ToolPreviewContainer>
+    )
+  }
+
   // if (
   //     part.type.startsWith('tool-') &&
   //     process.env.NODE_ENV === 'development'
