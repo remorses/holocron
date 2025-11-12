@@ -32,6 +32,24 @@ import { imageDimensionsFromData } from 'image-dimensions'
 import { DocsJsonType } from './docs-json.js'
 
 export const cli = cac('holocron')
+const url = process.env.SERVER_URL || 'https://holocron.so'
+const configPath = path.join(homedir(), `.holocron-config.json`)
+
+const apiClient = createApiClient(url, {
+  onRequest() {
+    const config = getUserConfig()
+    if (config?.apiKey) {
+      return {
+        headers: {
+          'x-api-key': config.apiKey,
+        },
+      }
+    }
+
+    return {}
+  },
+})
+
 
 cli.help()
 
@@ -56,8 +74,7 @@ type UserConfig = {
   websocketIds?: Record<string, string> // Map of siteId to websocketId
 }
 
-const url = process.env.SERVER_URL || 'https://holocron.so'
-const configPath = path.join(homedir(), `.holocron-config.json`)
+
 
 // Check if running in TTY environment
 const isTTY = process.stdout.isTTY && process.stdin.isTTY
@@ -303,21 +320,6 @@ async function determineTemplateDownload({
 
   return false
 }
-
-const apiClient = createApiClient(url, {
-  onRequest() {
-    const config = getUserConfig()
-    if (config?.apiKey) {
-      return {
-        headers: {
-          'x-api-key': config.apiKey,
-        },
-      }
-    }
-
-    return {}
-  },
-})
 
 cli
   .command('init', 'Initialize or deploy a holocron project')
