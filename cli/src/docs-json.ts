@@ -187,7 +187,6 @@ const NavigationTabSchema = z
         tab: z.string().describe('Tab label'),
         folder: z.string().describe('Content folder path for this tab'),
         description: z.string().optional().describe('Tab description'),
-        url: z.string().optional().describe('URL pattern that activates this tab'),
         hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
