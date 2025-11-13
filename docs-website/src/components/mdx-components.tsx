@@ -13,7 +13,17 @@ import { DynamicIcon } from '../lib/icon'
 import React from 'react'
 import { Expandable } from './expandable'
 import { ShowMore } from 'contesto/src/components/show-more'
-import { notionComponents } from './notion-components'
+import { privateApiNotionComponents } from './private-api-notion-components'
+import { InlineMath as KatexInlineMath, BlockMath as KatexBlockMath } from '@matejmazur/react-katex'
+import type {
+  MathProps,
+  VideoProps,
+  FileProps,
+  AudioProps,
+  ColumnsProps,
+  ColumnProps,
+  EmbedProps,
+} from './component-types'
 
 const Mermaid = React.lazy(() => import('./mermaid'))
 
@@ -45,43 +55,7 @@ function ContextAwareCodeBlockTab(props: React.ComponentProps<typeof fumadocsCom
   )
 }
 
-function TodoItem({
-  checked,
-  onChange,
-  children,
-  className,
-  style,
-}: {
-  checked?: boolean
-  onChange?: (checked: boolean) => void
-  children?: React.ReactNode
-  className?: string
-  style?: CSSProperties
-}) {
-  return (
-    <div className={clsx('flex items-center my-2', className)} style={style}>
-      <input
-        type='checkbox'
-        checked={checked}
-        // onChange={(e) => onChange?.(e.target.checked)}
-        className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2'
-      />
-      <div className={clsx(checked && 'line-through text-gray-500')}>{children}</div>
-    </div>
-  )
-}
 
-function Columns({ children, cols = 2 }: { children?: React.ReactNode; cols?: number }) {
-  return (
-    <div className={`grid gap-4 my-4`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-      {children}
-    </div>
-  )
-}
-
-function Column({ children }: { children?: React.ReactNode }) {
-  return <div className='flex flex-col gap-4 p-2 flex-1'>{children}</div>
-}
 
 // Mintlify-style callout components using fumadocs Callout
 function Note({ children }: { children: React.ReactNode }) {
@@ -342,6 +316,218 @@ function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
 
 Tabs.displayName = 'Tabs'
 
+// Notion-compatible components
+function Math({ math, inline }: MathProps) {
+  if (inline) {
+    return <KatexInlineMath math={math} />
+  }
+  return (
+    <div className='my-4'>
+      <KatexBlockMath math={math} />
+    </div>
+  )
+}
+
+function Video({
+  src,
+  width,
+  height,
+  aspectRatio,
+  alignment,
+  className,
+  children,
+}: VideoProps) {
+  const style: React.CSSProperties = {}
+  
+  if (width) style.width = width
+  if (height) style.height = height
+  if (aspectRatio) style.aspectRatio = String(aspectRatio)
+  
+  const wrapperClassName = (() => {
+    const classes: string[] = ['my-4']
+    if (alignment === 'center') classes.push('flex justify-center')
+    if (alignment === 'left') classes.push('flex justify-start')
+    if (alignment === 'right') classes.push('flex justify-end')
+    return classes.join(' ')
+  })()
+
+  const isYouTube = src.includes('youtube.com') || src.includes('youtu.be')
+  const isVimeo = src.includes('vimeo.com')
+
+  if (isYouTube || isVimeo) {
+    return (
+      <div className={wrapperClassName}>
+        <div
+          className='relative pb-[56.25%] h-0 overflow-hidden max-w-full'
+          style={Object.keys(style).length > 0 ? style : undefined}
+        >
+          <iframe
+            src={src}
+            title='Video'
+            allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+            allowFullScreen
+            className={className ? `absolute top-0 left-0 w-full h-full border-0 ${className}` : 'absolute top-0 left-0 w-full h-full border-0'}
+          />
+        </div>
+        {children && (
+          <div className='text-center text-sm text-gray-500 mt-2'>{children}</div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className={wrapperClassName}>
+      <video
+        controls
+        src={src}
+        style={Object.keys(style).length > 0 ? style : undefined}
+        className={className ? `max-w-full ${className}` : 'max-w-full'}
+      />
+      {children && (
+        <div className='text-center text-sm text-gray-500 mt-2'>{children}</div>
+      )}
+    </div>
+  )
+}
+
+function File({
+  url,
+  name,
+  width,
+  height,
+  aspectRatio,
+  alignment,
+  className,
+  children,
+}: FileProps) {
+  const wrapperClassName = (() => {
+    const classes: string[] = ['my-4', 'p-4', 'border', 'border-gray-200', 'rounded-md', 'bg-gray-50']
+    if (alignment === 'center') classes.push('flex flex-col items-center')
+    if (alignment === 'left') classes.push('flex flex-col items-start')
+    if (alignment === 'right') classes.push('flex flex-col items-end')
+    return classes.join(' ')
+  })()
+
+  return (
+    <div className={className ? `${wrapperClassName} ${className}` : wrapperClassName}>
+      <a
+        href={url}
+        download
+        className='block no-underline text-blue-500 font-medium'
+      >
+        {name}
+      </a>
+      {children}
+    </div>
+  )
+}
+
+function Audio({
+  src,
+  width,
+  height,
+  aspectRatio,
+  alignment,
+  className,
+  children,
+}: AudioProps) {
+  const style: React.CSSProperties = {}
+  
+  if (width) style.width = width
+  
+  const wrapperClassName = (() => {
+    const classes: string[] = ['my-4', 'p-4', 'border', 'border-gray-200', 'rounded-md', 'bg-gray-50']
+    if (alignment === 'center') classes.push('flex flex-col items-center')
+    if (alignment === 'left') classes.push('flex flex-col items-start')
+    if (alignment === 'right') classes.push('flex flex-col items-end')
+    return classes.join(' ')
+  })()
+
+  return (
+    <div className={className ? `${wrapperClassName} ${className}` : wrapperClassName}>
+      <audio
+        controls
+        style={Object.keys(style).length > 0 ? style : undefined}
+        className='w-full'
+      >
+        <source src={src} />
+        Your browser does not support the audio element.
+      </audio>
+      {children && (
+        <div className='mt-2 text-sm text-gray-500 text-center'>{children}</div>
+      )}
+    </div>
+  )
+}
+
+function Columns({ children }: ColumnsProps) {
+  const childArray = React.Children.toArray(children)
+  const columnCount = childArray.length || 2
+
+  return (
+    <div className='grid gap-4 my-4' style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
+      {children}
+    </div>
+  )
+}
+
+function Column({ children }: ColumnProps) {
+  return <div className='flex flex-col gap-4'>{children}</div>
+}
+
+function Embed({
+  src,
+  width,
+  height,
+  aspectRatio,
+  alignment,
+  className,
+  children,
+}: EmbedProps) {
+  const style: React.CSSProperties = {}
+  
+  if (width) style.width = width
+  if (height) style.height = height
+  if (aspectRatio) style.aspectRatio = String(aspectRatio)
+  
+  const wrapperClassName = (() => {
+    const classes: string[] = ['my-4']
+    if (alignment === 'center') classes.push('flex justify-center')
+    if (alignment === 'left') classes.push('flex justify-start')
+    if (alignment === 'right') classes.push('flex justify-end')
+    return classes.join(' ')
+  })()
+
+  return (
+    <div className={wrapperClassName}>
+      <div className='w-full'>
+        <iframe
+          src={src}
+          style={Object.keys(style).length > 0 ? style : undefined}
+          className={className ? `w-full border-0 ${className}` : 'w-full border-0'}
+          title='Embed'
+        />
+        {children && (
+          <div className='text-center text-sm text-gray-500 mt-2'>{children}</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export type {
+  NotionPageLinkProps,
+  VideoProps,
+  FileProps,
+  AudioProps,
+  MathProps,
+  ColumnsProps,
+  ColumnProps,
+  EmbedProps,
+  ComponentPropsMap,
+} from './component-types'
+
 export const mdxComponents = {
   CodeBlockTab: ContextAwareCodeBlockTab,
   CodeBlockTabs: ContextAwareCodeBlockTabs,
@@ -361,9 +547,6 @@ export const mdxComponents = {
   summary: 'summary',
   details: 'details',
   Latex: Latex,
-  // TodoItem,
-  Columns,
-  Column,
   Tabs: Tabs,
   Tab: Tab,
   Accordion,
@@ -388,5 +571,13 @@ export const mdxComponents = {
   // API documentation components
   // ParamField,
   // ResponseField,
-  notion: notionComponents,
+  // Notion-compatible components
+  Math,
+  Video,
+  File,
+  Audio,
+  Columns,
+  Column,
+  Embed,
+  notion: privateApiNotionComponents,
 }
