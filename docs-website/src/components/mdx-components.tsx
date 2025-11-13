@@ -14,7 +14,7 @@ import React from 'react'
 import { Expandable } from './expandable'
 import { ShowMore } from 'contesto/src/components/show-more'
 import { privateApiNotionComponents } from './private-api-notion-components'
-import { InlineMath as KatexInlineMath, BlockMath as KatexBlockMath } from '@matejmazur/react-katex'
+import Katex from '@matejmazur/react-katex'
 import type {
   MathProps,
   VideoProps,
@@ -319,11 +319,11 @@ Tabs.displayName = 'Tabs'
 // Notion-compatible components
 function Math({ math, inline }: MathProps) {
   if (inline) {
-    return <KatexInlineMath math={math} />
+    return <Katex math={String(math)} block={false} />
   }
   return (
     <div className='my-4'>
-      <KatexBlockMath math={math} />
+      <Katex math={String(math)} block={true} />
     </div>
   )
 }
