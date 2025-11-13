@@ -76,6 +76,7 @@ export async function loader({ request, params: { orgId, branchId } }: Route.Loa
           where: {
             userId,
             branchId,
+            type: { not: 'hidden' },
           },
           select: {
             chatId: true,

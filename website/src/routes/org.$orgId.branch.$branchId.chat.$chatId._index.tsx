@@ -296,10 +296,10 @@ function RightSide() {
       // do it as soon as the page loads to not wait for the ready message
       docsRpcClient.setDocsState({ state }).then(() => {
         sentFirstMessage = true
-      })
+      }).catch((e) => console.error)
       const waitForFirstMessage = (event) => {
         if (iframeRef.current && !sentFirstMessage && event.source === iframeRef.current.contentWindow) {
-          docsRpcClient.setDocsState({ state })
+          docsRpcClient.setDocsState({ state }).catch((e) => console.error)
           window.removeEventListener('message', waitForFirstMessage)
         }
       }

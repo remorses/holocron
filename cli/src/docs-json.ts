@@ -187,7 +187,6 @@ const NavigationTabSchema = z
         tab: z.string().describe('Tab label'),
         folder: z.string().describe('Content folder path for this tab'),
         description: z.string().optional().describe('Tab description'),
-        url: z.string().optional().describe('URL pattern that activates this tab'),
         hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
@@ -322,6 +321,14 @@ const CSSVariablesSchema = z
         All keys should start with --. The same keys should be specified to both light and dark.
     `)
 
+const PasswordSchema = z
+  .object({
+    password: z.string().min(1).describe('Password required to access the protected content'),
+    name: z.string().optional().describe('Optional name or label for this password (e.g., "Team Access", "Client Portal")'),
+  })
+  .strict()
+  .describe('Password protection entry')
+
 export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websiteDomain: string, docsJsonBasename: string }) {
   return z
     .object({
@@ -392,6 +399,12 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
         .optional()
         .meta({ hidden: true })
         .describe('Custom powered by attribution'),
+      passwords: z
+        .array(PasswordSchema)
+        .optional()
+        .describe(
+          'Password protection for the documentation site. Visitors will be required to enter one of the specified passwords to access the content. Multiple passwords can be configured for different users or teams.',
+        ),
     })
     .strict()
 }

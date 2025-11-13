@@ -21,6 +21,22 @@ export const renderNode: RenderNode = (node, transform) => {
   //   )
   // }
 
+  if (node.type === 'paragraph') {
+    const startLine = node.position?.start?.line || 0
+    const endLine = node.position?.end?.line || 0
+
+    return (
+      <p 
+        data-markdown-line={startLine}
+        data-comment-line-start={startLine}
+        data-comment-line-end={endLine}
+        data-commentable="true"
+      >
+        {node.children?.map((child) => transform(child))}
+      </p>
+    )
+  }
+
   if (node.type === 'code') {
     const language = node.lang || ''
 

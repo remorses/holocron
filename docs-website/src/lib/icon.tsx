@@ -1,12 +1,12 @@
 'use client'
 
-import React, { lazy, Suspense } from 'react'
-import { prefetchDNS, preconnect } from 'react-dom'
+import React, { useEffect, useState } from 'react'
 import { useHydrated } from './hooks'
-import { cn, lucideVersion } from './utils'
+import { cn } from './utils'
+import { href } from 'react-router'
 
-// simple in-memory cache so every icon is fetched only once
-const cache: Record<string, React.ComponentType<any>> = {}
+// simple in-memory cache so every icon svg is fetched only once
+const svgCache: Record<string, string> = {}
 
 type DynamicIconProps = { icon?: string } & React.SVGProps<SVGSVGElement>
 
@@ -36,9 +36,40 @@ function isUrl(str: string): boolean {
 }
 
 export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
-  prefetchDNS('https://esm.sh')
-  preconnect('https://esm.sh')
   const hydrated = useHydrated()
+  const [svgContent, setSvgContent] = useState<string | null>(svgCache[name || ''] || null)
+
+  useEffect(() => {
+    if (!name || isEmoji(name) || isUrl(name)) {
+      return
+    }
+
+    if (name in svgCache) {
+      setSvgContent(svgCache[name] || null)
+      return
+    }
+
+    // @ts-ignore the other workspace tries to import this file and fails because the type Pages is global
+    const iconUrl = href('/api/icons/:provider/icon/:icon', { provider: 'lucide', icon: name })
+    fetch(iconUrl, {
+      cache: 'force-cache',
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          svgCache[name] = ''
+          setSvgContent(null)
+          return
+        }
+        const svg = await res.text()
+        svgCache[name] = svg
+        setSvgContent(svg)
+      })
+      .catch(() => {
+        svgCache[name] = ''
+        setSvgContent(null)
+      })
+  }, [name])
+
   if (!hydrated) return <EmptyIcon />
   if (!name) return null
 
@@ -66,20 +97,18 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
     )
   }
 
-  // Handle Lucide icon
-  const Icon =
-    cache[name] ||
-    (cache[name] = lazy(() =>
-      import(
-        /* @vite-ignore */
-        `https://esm.sh/lucide-react@${lucideVersion}/es2022/dist/esm/icons/${name}.mjs`
-      ).catch((e) => ({ default: EmptyIcon })),
-    ))
-
-  if (!Icon || EmptyIcon === Icon) {
-    return null
+  // Handle Lucide icon via local API
+  if (!svgContent) {
+    return <EmptyIcon />
   }
-  return <Icon {...rest} className={(rest.className ?? '') + ' w-full'} />
+
+  return (
+    <div
+      {...rest as any}
+      className={cn(rest.className, 'inline-flex items-center justify-center')}
+      dangerouslySetInnerHTML={{ __html: svgContent }}
+    />
+  )
 }
 
 function EmptyIcon() {
@@ -87,9 +116,5 @@ function EmptyIcon() {
 }
 
 export function DynamicIcon({ icon: name, ...rest }: DynamicIconProps) {
-  return (
-    <Suspense fallback={<span className='block w-4 h-4 rounded transition-opacity opacity-0' />}>
-      <DynamicIconInner icon={name} {...rest} />
-    </Suspense>
-  )
+  return <DynamicIconInner icon={name} {...rest} />
 }

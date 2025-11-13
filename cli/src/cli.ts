@@ -22,8 +22,9 @@ import {
   DOCS_JSON_BASENAME,
   isDocsJson,
 } from './utils.js'
-import { randomInt } from 'crypto'
+import { createHash } from 'crypto'
 import { homedir } from 'os'
+import { ulid } from 'ulid'
 import prompts from 'prompts'
 import { lookup } from 'mime-types'
 import { Sema } from 'sema4'
@@ -32,6 +33,24 @@ import { imageDimensionsFromData } from 'image-dimensions'
 import { DocsJsonType } from './docs-json.js'
 
 export const cli = cac('holocron')
+const url = process.env.SERVER_URL || 'https://holocron.so'
+const configPath = path.join(homedir(), `.holocron-config.json`)
+
+const apiClient = createApiClient(url, {
+  onRequest() {
+    const config = getUserConfig()
+    if (config?.apiKey) {
+      return {
+        headers: {
+          'x-api-key': config.apiKey,
+        },
+      }
+    }
+
+    return {}
+  },
+})
+
 
 cli.help()
 
@@ -53,11 +72,11 @@ type UserConfig = {
     orgId: string
     name?: string
   }>
-  websocketIds?: Record<string, string> // Map of siteId to websocketId
+  // Map of siteId to chatId (chatId and websocketId are the same thing)
+  devSessions?: Record<string, string>
 }
 
-const url = process.env.SERVER_URL || 'https://holocron.so'
-const configPath = path.join(homedir(), `.holocron-config.json`)
+
 
 // Check if running in TTY environment
 const isTTY = process.stdout.isTTY && process.stdin.isTTY
@@ -73,6 +92,32 @@ function getUserConfig(): UserConfig | null {
 
 async function saveUserConfig(config: UserConfig): Promise<void> {
   await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2))
+}
+
+export function gitBlobSha(content: string | Buffer, algo: 'sha1' | 'sha256' = 'sha1'): string {
+  const body = Buffer.isBuffer(content) ? content : Buffer.from(content, 'utf8')
+
+  // Build the canonical Git header:  `blob <size>\0`
+  const header = Buffer.from(`blob ${body.length}\0`, 'utf8')
+
+  // Concatenate header + body and hash
+  return createHash(algo)
+    .update(Buffer.concat([header, body]))
+    .digest('hex')
+}
+
+function debounce<T extends (...args: any[]) => any>(ms: number, fn: T): T {
+  let timeout: NodeJS.Timeout | null = null
+
+  return ((...args: Parameters<T>) => {
+    if (timeout) {
+      clearTimeout(timeout)
+    }
+
+    timeout = setTimeout(() => {
+      fn(...args)
+    }, ms)
+  }) as T
 }
 
 // Media file extensions that should be uploaded
@@ -303,21 +348,6 @@ async function determineTemplateDownload({
 
   return false
 }
-
-const apiClient = createApiClient(url, {
-  onRequest() {
-    const config = getUserConfig()
-    if (config?.apiKey) {
-      return {
-        headers: {
-          'x-api-key': config.apiKey,
-        },
-      }
-    }
-
-    return {}
-  },
-})
 
 cli
   .command('init', 'Initialize or deploy a holocron project')
@@ -638,7 +668,7 @@ cli
       console.log(pc.gray('This will replace the existing login.\n'))
     }
 
-    const cliSessionSecret = Array.from({ length: 6 }, () => randomInt(0, 10)).join('')
+    const cliSessionSecret = ulid()
 
     // Display ASCII art for holocron
     console.log('\n')
@@ -661,12 +691,11 @@ cli
 
     console.log(pc.bold('\nVerification Code:'))
 
-    const formattedCode = cliSessionSecret.split('').join(' ')
     const padding = 3
-    const contentWidth = formattedCode.length + padding * 2
+    const contentWidth = cliSessionSecret.length + padding * 2
 
     console.log(`\n    ╔${'═'.repeat(contentWidth)}╗`)
-    console.log(`    ║${' '.repeat(padding)}${formattedCode}${' '.repeat(padding)}║`)
+    console.log(`    ║${' '.repeat(padding)}${cliSessionSecret}${' '.repeat(padding)}║`)
     console.log(`    ╚${'═'.repeat(contentWidth)}╝`)
     console.log(pc.yellow('\nMake sure this code matches the one shown in your browser.'))
     console.log(pc.gray('═'.repeat(50)))
@@ -720,8 +749,8 @@ cli
             userId: data.userId,
             userEmail: data.userEmail,
             orgs: data.orgs || [],
-            // Reset websocketIds when logging in as a new user
-            websocketIds: existingConfig?.userId === data.userId ? existingConfig.websocketIds : undefined,
+            // Preserve dev sessions when logging in as same user
+            devSessions: existingConfig?.userId === data.userId ? existingConfig.devSessions : undefined,
           }
 
           await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2))
@@ -825,6 +854,7 @@ cli
         console.error(pc.red(`siteId not found in ${DOCS_JSON_BASENAME}`))
         process.exit(1)
       }
+
       const preferredHost = 'holocron.so'
       const previewDomain = (docsJson?.domains || []).sort((a, b) => {
         const aIsFb = a.endsWith(preferredHost)
@@ -837,27 +867,37 @@ cli
         console.error(pc.red(`This ${DOCS_JSON_BASENAME} has no domains, cannot preview the website`))
         process.exit(1)
       }
-      // const githubBranch = getCurrentGitBranch()
 
-      // Get config to check for lastWebsocketId
+      // Get config to check for saved IDs
       const config = getUserConfig()
 
+      // Get or create persistent dev chat
+      console.log(pc.blue('Connecting to dev session...'))
+
+      const { data: devChatData, error: devChatError } = await apiClient.api.getOrCreateDevChat.post({
+        siteId,
+      })
+
+      if (devChatError || !devChatData) {
+        console.error(pc.red('Failed to connect to dev session: ' + (devChatError?.message || 'Unknown error')))
+        process.exit(1)
+      }
+
+      const devChatId = devChatData.chatId
+      const branchId = devChatData.branchId
+
       const [websocketRes] = await Promise.all([
-        // apiClient.api.getPreviewUrlForSiteId.post({
-        //     githubBranch,
-        //     siteId,
-        // }),
-        startWebSocketWithTunnel(config?.websocketIds?.[siteId]),
+        startWebSocketWithTunnel(config?.devSessions?.[siteId]),
       ])
 
       const { websocketId, ws } = websocketRes
 
-      // Save the websocket ID for next time if we have a config
-      if (config && websocketId !== config.websocketIds?.[siteId]) {
-        if (!config.websocketIds) {
-          config.websocketIds = {}
+      // Save dev session (chatId and websocketId are the same)
+      if (config && config.devSessions?.[siteId] !== devChatId) {
+        if (!config.devSessions) {
+          config.devSessions = {}
         }
-        config.websocketIds[siteId] = websocketId
+        config.devSessions[siteId] = devChatId
         await saveUserConfig(config)
       }
 
@@ -870,7 +910,8 @@ cli
       console.log(pc.cyan(`Opening ${previewUrl.toString()} in browser...`))
       openUrlInBrowser(previewUrl.toString())
 
-      const filesInDraft: FilesInDraft = Object.fromEntries(
+      // Read all local files
+      const allLocalFiles: Record<string, { content: string; githubPath: string }> = Object.fromEntries(
         await Promise.all(
           filePaths.map(async (filePath) => {
             const fullPath = path.resolve(dir, filePath)
@@ -892,6 +933,88 @@ cli
           }),
         ),
       )
+
+      // Fetch server file hashes
+      console.log(pc.blue('Fetching remote file hashes...'))
+      const { data: dbFilesData, error: dbFilesError } = await apiClient.api.getBranchFilesWithHashes.post({
+        branchId,
+      })
+
+      if (dbFilesError) {
+        console.error(pc.yellow('Warning: Could not fetch remote file hashes'))
+      }
+
+      // Build server hash map
+      const serverHashMap = new Map<string, string>()
+      if (dbFilesData?.files) {
+        for (const file of dbFilesData.files) {
+          serverHashMap.set(file.githubPath, file.sha1)
+        }
+      }
+
+      // filesInDraft ONLY contains files with different hashes compared to server
+      // This is the diff that gets synced to database
+      const filesInDraft: FilesInDraft = {}
+
+      // Find files with different hashes
+      for (const [githubPath, fileData] of Object.entries(allLocalFiles)) {
+        const localHash = gitBlobSha(fileData.content)
+        const serverHash = serverHashMap.get(githubPath)
+
+        if (localHash !== serverHash) {
+          filesInDraft[githubPath] = fileData
+        }
+      }
+
+      // Find deleted files (in server but not local)
+      for (const [githubPath] of serverHashMap) {
+        if (!allLocalFiles[githubPath]) {
+          filesInDraft[githubPath] = {
+            content: null,
+            githubPath,
+            deletedLines: 1,
+          }
+        }
+      }
+
+      // Sync function sends entire filesInDraft
+      const syncToDatabase = async () => {
+        if (Object.keys(filesInDraft).length === 0) {
+          return
+        }
+
+        console.log(pc.gray(`Syncing ${Object.keys(filesInDraft).length} changed files to database...`))
+
+        const { error } = await apiClient.api.updateChatFilesInDraft.post({
+          chatId: devChatId,
+          filesInDraft,
+        })
+
+        if (error) {
+          console.error(pc.yellow('Warning: Database sync failed: ' + error.message))
+        } else {
+          // Update server hash map after successful sync
+          for (const [githubPath, fileData] of Object.entries(filesInDraft)) {
+            if (fileData.content === null) {
+              serverHashMap.delete(githubPath)
+            } else {
+              const hash = gitBlobSha(fileData.content)
+              serverHashMap.set(githubPath, hash)
+            }
+          }
+        }
+      }
+
+      // Initial sync
+      await syncToDatabase()
+      if (Object.keys(filesInDraft).length > 0) {
+        console.log(pc.green('Files synced to database'))
+      } else {
+        console.log(pc.green('All files up to date'))
+      }
+
+      // Debounced sync for file changes
+      const debouncedSync = debounce(2000, syncToDatabase)
 
       // Create RPC client with the upstream WebSocket
       const client = createIframeRpcClient({ ws })
@@ -930,11 +1053,14 @@ cli
         const content = isMediaFile ? '' : await fs.promises.readFile(fullPath, 'utf-8')
         const githubPath = path.posix.join(githubFolder, path.posix.relative(dir, filePath.replace(/\\/g, '/')))
 
-        // Update the local filesInDraft
+        // File changed, add to filesInDraft
         filesInDraft[githubPath] = {
           content,
           githubPath,
         }
+
+        // Trigger database sync (debounced)
+        debouncedSync()
 
         // Send only the updated file through the tunnel to all browsers
         const updatedFile = { [githubPath]: filesInDraft[githubPath] }
@@ -944,7 +1070,7 @@ cli
             filesInDraft: updatedFile,
           },
           revalidate,
-        })
+        }).catch((e) => console.error)
       }
 
       watcher.on('add', (x) => handleFileUpdate(x, true))
@@ -952,9 +1078,17 @@ cli
 
       watcher.on('unlink', (filePath) => {
         const githubPath = path.posix.join(githubFolder, path.posix.relative(dir, filePath.replace(/\\/g, '/')))
-        // Handle file deletion
-        if (filesInDraft[githubPath]) {
-          delete filesInDraft[githubPath]
+        
+        // If file existed on server, add deletion to filesInDraft
+        if (serverHashMap.has(githubPath)) {
+          filesInDraft[githubPath] = {
+            content: null,
+            githubPath,
+            deletedLines: 1,
+          }
+
+          // Trigger database sync (debounced)
+          debouncedSync()
 
           // Send null value to signal file deletion
           const deletedFile: FilesInDraft = {
@@ -969,8 +1103,9 @@ cli
             state: {
               filesInDraft: deletedFile,
             },
+            // when a page is removed we run the server loader. this way we redirect to existing page if we are currently in the deleted page.
             revalidate: true,
-          })
+          }).catch((e) => console.error)
         }
       })
     } catch (error) {

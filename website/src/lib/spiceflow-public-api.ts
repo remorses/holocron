@@ -695,6 +695,92 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
       }
     }
   })
+  .route({
+    method: 'POST',
+    path: '/sites/feedback',
+    detail: {
+      summary: 'List feedback for a site',
+      description: 'Returns paginated feedback for a site with optional filtering by opinion'
+    },
+    request: z.object({
+      siteId: z.string(),
+      limit: z.number().min(1).max(100).optional().default(50),
+      offset: z.number().min(0).optional().default(0),
+      opinion: z.enum(['good', 'bad']).optional()
+    }),
+    async handler({ request, state }) {
+      const body = await request.json()
+      const { siteId, limit = 50, offset = 0, opinion } = body
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        include: {
+          branches: {
+            orderBy: { createdAt: 'asc' },
+            take: 1
+          }
+        }
+      })
+
+      if (!site) {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      const branch = site.branches[0]
+      if (!branch) {
+        throw new Response(JSON.stringify({ error: 'No branch found for site' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      const where = {
+        branchId: branch.branchId,
+        ...(opinion && { opinion })
+      }
+
+      const [feedback, total] = await Promise.all([
+        prisma.pageFeedback.findMany({
+          where,
+          select: {
+            id: true,
+            url: true,
+            opinion: true,
+            message: true,
+            discussionUrl: true,
+            createdAt: true
+          },
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip: offset
+        }),
+        prisma.pageFeedback.count({ where })
+      ])
+
+      return {
+        success: true,
+        siteId,
+        branchId: branch.branchId,
+        feedback,
+        pagination: {
+          total,
+          limit,
+          offset,
+          hasMore: offset + limit < total
+        }
+      }
+    }
+  })
   .onError(({ error, request }) => {
     notifyError(error, `Public API error: ${request.method} ${request.url}`)
 

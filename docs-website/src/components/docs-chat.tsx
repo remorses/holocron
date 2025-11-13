@@ -299,7 +299,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             className='fixed inset-0 bg-black/50 z-40'
             onClick={() => {
               usePersistentDocsState.setState({
-                drawerState: 'closed',
+                drawerState: 'minimized',
               })
             }}
             aria-hidden='true'
@@ -313,7 +313,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             return
           }
           usePersistentDocsState.setState({
-            drawerState: open ? 'open' : 'closed',
+            drawerState: open ? 'open' : 'minimized',
           })
         }}
         open={drawerState !== 'closed'}
@@ -689,6 +689,27 @@ export function MessagePartRenderer({
       </ToolPreviewContainer>
     )
   }
+
+  if (part.type === 'tool-submitFeedback') {
+    if (!part.input) return null
+
+    const success = part.output?.success
+    const error = part.output?.error
+
+    return (
+      <ToolPreviewContainer>
+        <Dot toolCallId={part.toolCallId} />
+        Submitting {part.input.opinion} feedback
+        {success && (
+          <div className='text-sm text-green-600 dark:text-green-400 mt-1'>
+            ✓ Feedback submitted successfully
+          </div>
+        )}
+        {error && <ErrorPreview error={error} />}
+      </ToolPreviewContainer>
+    )
+  }
+
   // if (
   //     part.type.startsWith('tool-') &&
   //     process.env.NODE_ENV === 'development'
@@ -805,6 +826,7 @@ function ContextButton({ contextOptions }) {
 function Footer() {
   const { isGenerating, draftText, submit, stop } = useChatContext()
   const chatId = usePersistentDocsState((x) => x.chatId)
+  const drawerState = usePersistentDocsState((x) => x.drawerState)
 
   const rootLoaderData = useRouteLoaderData(
     'routes/_catchall',
@@ -864,6 +886,7 @@ function Footer() {
         >
           <ContextButton contextOptions={contextOptions} />
           <ChatTextarea
+            key={drawerState}
             disabled={false}
             placeholder='Ask me anything...'
             className={cn('chat-textarea')}

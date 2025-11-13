@@ -34,6 +34,10 @@ use `git ls-files | tree --fromfile` to see files in the repo. this command will
 
 - always add the {} block body in arrow functions: arrow functions should never be written as `onClick={(x) => setState('')}`. NEVER. instead you should ALWAYS write `onClick={() => {setState('')}}`. this way it's easy to add new statements in the arrow function without refactoring it.
 
+- in array operations .map, .filter, .reduce and .flatMap are preferred over .forEach and for of loops. For example prefer doing `.push(...array.map(x => x.items))` over mutating array variables inside for loops. Always think of how to turn for loops into expressions using .map, .filter or .flatMap if you ever are about to write a for loop.
+
+- if you encounter typescript errors like "undefined | T is not assignable to T" after .filter(Boolean) operations: use a guarded function instead of Boolean: `.filter(isTruthy)`. implemented as `function isTruthy<T>(value: T): value is NonNullable<T> { return Boolean(value) }`
+
 - minimize useless comments: do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation. if a comment is required because the part of the code was result of difficult back and forth with me, keep it very short.
 
 - ALWAYS add all information encapsulated in my prompt to comments: when my prompt is super detailed and in depth, all this information should be added to comments in your code. this is because if the prompt is very detailed it must be the fruit of a lot of research. all this information would be lost if you don't put it in the code. next LLM calls would misinterpret the code and miss context.
@@ -56,7 +60,7 @@ use `git ls-files | tree --fromfile` to see files in the repo. this command will
 
 - when creating urls from a path and a base url, prefer using `new URL(path, baseUrl).toString()` instead of normal string interpolation. use type-safe react-router `href` or spiceflow `this.safePath` (available inside routes) if possible
 
-- for node built-in imports, never import singular names. instead do `import fs from 'node:fs'`, same for path, os, etc.
+- for node built-in imports, never import singular exported names. instead do `import fs from 'node:fs'`, same for path, os, etc.
 
 - NEVER start the development server with pnpm dev yourself. there is no reason to do so, even with &
 
@@ -285,6 +289,18 @@ if after doing this we still have duplicate packages, you will have to ask the u
 
 - hooks should be put in the src/hooks.tsx file. do not create a new file for each new hook. also notice that you should never create custom hooks, only do it if asked for.
 
+## zustand
+
+zustand is the preferred way to created global React state. put it in files like state.ts or x-state.ts where x is something that describe a portion of app state in case of multiple global states or multiple apps
+
+- minimize number of props. do not use props if you can use zustand state instead. the app has global zustand state that lets you get a piece of state down from the component tree by using something like `useStore(x => x.something)` or `useLoaderData<typeof loader>()` or even useRouteLoaderData if you are deep in the react component tree
+
+- do not consider local state truthful when interacting with server. when interacting with the server with rpc or api calls never use state from the render function as input for the api call. this state can easily become stale or not get updated in the closure context. instead prefer using zustand `useStore.getState().stateValue`. notice that useLoaderData or useParams should be fine in this case.
+
+- NEVER add zustand state setter methods. instead use useStore.setState to set state. For example never add a method `setVariable` in the state type. Instead call `setState` directly
+
+- zustand already merges new partial state with the previous state. NEVER DO `useStore.setState({ ...useStore.getInitialState(), ... })` unless for resetting state
+
 # sentry
 
 this project uses sentry to notify about unexpected errors.
@@ -387,6 +403,13 @@ sometimes tests work directly on database data, using prisma. to run these tests
 never write tests yourself that call prisma or interact with database or emails. for these, ask the user to write them for you.
 
 # changelog
+
+## 1.1.2
+
+### Patch Changes
+
+- Header comment in generated AGENTS.md instructing not to edit directly
+- Instructions to create ./MY_AGENTS.md for custom instructions
 
 after you make a change that is noteworthy, add an entry in the CHANGELOG.md file in the root of the package. there are 2 kinds of packages, public and private packages. private packages have a private: true field in package.json, public packages do not and instead have a version field in package.json. public packages are the ones that are published to npm.
 
@@ -835,6 +858,11 @@ when you build the website always pipe the output to a file so you can later gre
 this project uses shadcn components placed in the website/src/components/ui folder. never add a new shadcn component yourself by writing code. instead use the shadcn cli installed locally.
 
 try to reuse these available components when you can, for example for buttons, tooltips, scroll areas, etc.
+
+## reusing shadcn components
+
+when creating a new React component or adding jsx before creating your own buttons or other elements first check the files inside `src/components/ui` and `src/components` to see what is already available. So you can reuse things like Button and Tooltip components instead of creating your own.
+
 # tailwind v4
 
 this project uses tailwind v4. this new tailwind version does not use tailwind.config.js. instead it does all configuration in css files.
@@ -848,6 +876,8 @@ for margin, padding, gaps, widths and heights it is preferable to use multiples 
 4 is equal to 16px which is the default font size of the page. this way every spacing is a multiple of the height and width of a default letter.
 
 user interfaces are mostly text so using the letter width and height as a base unit makes it easier to reason about the layout and sizes.
+
+use grow instead of flex-1.
 
 # lucide icons
 
@@ -973,6 +1003,8 @@ github.md
 fly is a deployment platform. some packages use it to deploy the website. you can find the deployment scripts searching for **/deployment.ts
 
 usually there are 2 fly apps for each package, one staging environment and one production. these are 2 different apps at 2 different urls, you can target the right app usually by using `pnpm fly:preview` or `pnpm fly:prod`. sometimes there is only `pnpm fly` and you can use that instead. These scripts will append the right --app argument to work on the right fly app.
+
+Never deploy with fly yourself. ask the user to do it
 
 ## reading logs
 

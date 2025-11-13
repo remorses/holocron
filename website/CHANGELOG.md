@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-01-30 15:30
+
+- Add POST /api/v1/sites/feedback endpoint to list site feedback with pagination
+- Support filtering feedback by opinion (good/bad)
+- Return total count and pagination metadata (hasMore indicator)
+- Limit results to max 100 items per request with default of 50
+
 ## 2025-01-30 14:00
 
 - Block navigation when user has unsaved changes in chat view

@@ -10,6 +10,7 @@ import {
   useLocation,
 } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import 'docs-website/src/lib/mount-importmap'
 
 export function meta() {
   return [
@@ -95,7 +96,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <h1 className={titleClass}>
           {error.status} {error.statusText}
         </h1>
-        <p className={messageClass}>{error.data}</p>
+
         <a href={getMailtoLink(errorDetails)} className={linkClass}>
           Contact support →
         </a>
@@ -127,6 +128,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 export default function App() {
   useNProgress()
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />

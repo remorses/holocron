@@ -96,9 +96,9 @@ const setDocsJsonState = ({ values, githubFolder, previousValues }) => {
   }
   useWebsiteState.setState({ filesInDraft: newFilesInDraft })
   docsRpcClient.setDocsState({
-    // revalidate: true, // TODO
+    // revalidate: true, // TODO, should we always call revalidate for changes in docsJson? no. usually only for changes that update MCP or API reference. because these things are server only and use server components?
     state: { filesInDraft: newChanges },
-  })
+  }).catch((e) => console.error)
 }
 
 function ChatForm({ children, disabled }) {
@@ -307,7 +307,7 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
           filesInDraft: { ...filesInDraft },
           currentSlug,
         })
-        try {
+
           await docsRpcClient.setDocsState({
             state: {
               filesInDraft: filesInDraft,
@@ -316,10 +316,8 @@ export default function Chat({ ref }: { ref?: React.RefObject<HTMLDivElement> })
             },
             revalidate,
             idempotenceKey: toolPart.toolCallId,
-          })
-        } catch (e) {
-          console.error('failed setDocsState', e)
-        }
+          }).catch((e) => console.error)
+
       }
 
       // Handle selectText tool output

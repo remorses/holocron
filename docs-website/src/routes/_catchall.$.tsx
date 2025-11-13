@@ -4,7 +4,8 @@ import frontMatter from 'front-matter'
 import { parse as parseCookies, serialize as serializeCookie } from 'cookie'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { isRouteErrorResponse, data, redirect } from 'react-router'
+import { isRouteErrorResponse, data, redirect, useRevalidator } from 'react-router'
+import { useEffect } from 'react'
 
 import type { Route as RootRoute } from './_catchall'
 import type { Route } from './+types/_catchall.$'
@@ -17,7 +18,9 @@ import { getFumadocsSource } from '../lib/source'
 
 import { getOpenapiDocument } from '../lib/openapi.server'
 import { getFilesForSource, removeGithubFolder } from '../lib/source.server'
-import { ClientPage, ClientErrorBoundary } from './_catchall-$-client'
+import { ClientPage, MdxErrorDisplay } from './_catchall-$-client'
+import { useDocsState } from '../lib/docs-state'
+import { PasswordProtection } from '../components/password-protection'
 import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 import { FilesInDraft } from '../lib/docs-state'
 import { getDocsJson, withBasePath, withoutBasePath } from '../lib/utils'
@@ -510,17 +513,17 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         orderBy: {
           slug: 'asc',
         },
-        include: {
-          content: true,
-          mediaAssets: {
-            include: {
-              asset: true,
-            },
-          },
+        select: {
+          slug: true,
         },
       }),
     ])
-    page = indexPage || anotherPage
+
+    if (indexPage) {
+      page = indexPage
+    } else if (!fumadocsPage && anotherPage) {
+      throw redirect(withBasePath(anotherPage.slug + url.search))
+    }
   }
 
   // Initialize with normal flow values (page content or defaults)
@@ -658,23 +661,38 @@ export function ErrorBoundary({
 
   params,
 }: Route.ErrorBoundaryProps) {
+  const revalidator = useRevalidator()
+  const filesInDraft = useDocsState((state) => state.filesInDraft)
+
+  if (isRouteErrorResponse(error) && error.status === 401) {
+    return <PasswordProtection siteName={error.data?.siteName} />
+  }
+
+  const isRetryableErrorWithClientLoader = 'markdown' in (error as any) && (error as any).markdown
+
+  // TODO revalidate on 404 causes a loop?
+  // useEffect(() => {
+  //   if (isRouteErrorResponse(error) && error.status === 404 && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
+  //     console.log('Revalidating files in draft due to 404 error', filesInDraft)
+  //     revalidator.revalidate()
+  //   }
+  // }, [filesInDraft, isRetryableErrorWithClientLoader, revalidator.state])
+
+  const isMdxError = error instanceof Error && 'line' in error
+  const markdown = error?.['markdown']
+
+  if (isMdxError && markdown) {
+    return <MdxErrorDisplay error={error} markdown={markdown} />
+  }
+
   const containerClass =
     'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
   const titleClass = 'text-2xl mb-3 text-primary'
   const messageClass = 'text-base mb-2 text-muted-foreground'
   const preClass = 'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
 
-  // Check if we're in a chat context
   const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
   const chatId = url?.searchParams.get('chatId')
-
-  const isRetryableErrorWithClientLoader =
-    (isRouteErrorResponse(error) && error.status === 404) || ('markdown' in (error as any) && (error as any).markdown)
-
-  // Handle client-side errors in client component
-  if (isRetryableErrorWithClientLoader && error instanceof Error) {
-    return <ClientErrorBoundary error={error} />
-  }
 
   if (isRouteErrorResponse(error)) {
     const { status, statusText } = error
@@ -693,7 +711,7 @@ export function ErrorBoundary({
         <h1 className={titleClass}>
           {error.status} {error.statusText}
         </h1>
-        <p className={messageClass}>{error.data}</p>
+
       </div>
     )
   } else if (error instanceof Error) {

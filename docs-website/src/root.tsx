@@ -1,10 +1,12 @@
-import { Meta, Links, Outlet, ScrollRestoration, Scripts } from 'react-router'
+import { Meta, Links, Outlet, ScrollRestoration, Scripts, isRouteErrorResponse } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Route } from './+types/root'
 import { imageLoader } from './lib/image-loader'
 import { serveRawMarkdown } from './lib/serve-raw-markdown.server'
 import { withoutBasePath } from './lib/utils'
+import './lib/mount-importmap'
 import './app.css'
+import { PasswordProtection } from './components/password-protection'
 
 const queryClient = new QueryClient({
   defaultOptions: {

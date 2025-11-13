@@ -23,34 +23,8 @@ import { openai } from '@ai-sdk/openai'
 import { experimental_transcribe as transcribe } from 'ai'
 import { applyJsonCComments } from './json-c-comments'
 import { filesSchema, publicApiApp } from './spiceflow-public-api'
+import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 
-
-
-// Utility to get client IP from request, handling Cloudflare proxy headers
-function getClientIp(request: Request): string {
-  // Cloudflare adds the real IP in CF-Connecting-IP header
-  const cfIp = request.headers.get('CF-Connecting-IP')
-  if (cfIp) return cfIp
-
-  // Fallback to X-Forwarded-For
-  const forwardedFor = request.headers.get('X-Forwarded-For')
-  if (forwardedFor) {
-    // X-Forwarded-For can contain multiple IPs, take the first one
-    return forwardedFor.split(',')[0].trim()
-  }
-
-  // Fallback to X-Real-IP
-  const realIp = request.headers.get('X-Real-IP')
-  if (realIp) return realIp
-
-  // Default fallback
-  return '0.0.0.0'
-}
-
-// Utility to hash IP address using SHA-256
-function hashIp(ip: string): string {
-  return createHash('sha256').update(ip).digest('hex')
-}
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -390,196 +364,6 @@ export const app = new Spiceflow({ basePath: '/api' })
       return {
         success: true,
         chatId: newChat.chatId,
-      }
-    },
-  })
-  // currently not used
-  .route({
-    method: 'POST',
-    path: '/submitRateFeedback',
-    detail: {
-      hide: true,
-    },
-    request: z.object({
-      branchId: z.string().min(1, 'siteId is required'),
-      url: z.string().min(1, 'url is required'),
-      opinion: z.enum(['good', 'bad']),
-      message: z.string().min(1, 'message is required'),
-    }),
-    async handler({ request, state: { userId } }) {
-      const { branchId, url, opinion, message } = await request.json()
-
-      // Get client IP and hash it
-      const clientIp = getClientIp(request)
-      const ipHash = hashIp(clientIp)
-
-      // Check rate limit: max 5 feedbacks per hour per IP
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-      const recentFeedbackCount = await prisma.pageFeedback.count({
-        where: {
-          ipHash,
-          createdAt: {
-            gte: oneHourAgo,
-          },
-        },
-      })
-
-      if (recentFeedbackCount >= 5) {
-        throw new AppError('You have reached the feedback limit. Please try again later (max 5 feedbacks per hour).')
-      }
-
-      // if (!userId) {
-      //     throw new AppError('User not authenticated')
-      // }
-
-      // Check user has access to the site
-      const site = await prisma.site.findFirst({
-        where: {
-          branches: {
-            some: { branchId },
-          },
-        },
-        include: {
-          githubInstallations: {
-            where: {
-              appId: env.GITHUB_APP_ID,
-            },
-            include: {
-              github: true,
-            },
-          },
-        },
-      })
-
-      if (!site) {
-        throw new AppError('Site not found or access denied')
-      }
-
-      const DocsCategory = 'Docs Feedback'
-      let discussionUrl = `https://github.com/${site.githubOwner}/${site.githubRepo}/discussions`
-
-      const githubInstallation = site.githubInstallations.find((x) => x.appId === env.GITHUB_APP_ID)
-      // Create GitHub discussion using GraphQL API
-      if (githubInstallation?.github?.oauthToken) {
-        try {
-          const octokit = await getOctokit({
-            installationId: githubInstallation.installationId,
-          })
-
-          // Get repository info and discussion categories
-          const repositoryInfo: {
-            repository: {
-              id: string
-              discussionCategories: {
-                nodes: { id: string; name: string }[]
-              }
-            }
-          } = await octokit.graphql(`
-                        query {
-                            repository(owner: "${site.githubOwner}", name: "${site.githubRepo}") {
-                                id
-                                discussionCategories(first: 25) {
-                                    nodes { id name }
-                                }
-                            }
-                        }
-                    `)
-
-          const repository = repositoryInfo.repository
-          const category = repository.discussionCategories.nodes.find((cat) => cat.name === DocsCategory)
-
-          if (!category) {
-            console.warn(`Discussion category "${DocsCategory}" not found in repository`)
-            // Fall back to creating issue instead
-            const issueTitle = `Documentation feedback: ${url}`
-            const issueBody = `**Feedback Type:** ${opinion}\n**Page URL:** ${url}\n**User Message:**\n\n${message}\n\n> Forwarded from user feedback on docs site.`
-
-            if (!site.githubOwner || !site.githubRepo) {
-              throw new AppError('GitHub owner and repo must be set for the site')
-            }
-            const { data: issue } = await octokit.rest.issues.create({
-              owner: site.githubOwner,
-              repo: site.githubRepo,
-              title: issueTitle,
-              body: issueBody,
-              labels: ['documentation', 'feedback', opinion === 'bad' ? 'bug' : 'enhancement'],
-            })
-
-            discussionUrl = issue.html_url
-          } else {
-            const title = `Feedback for ${url}`
-            const body = `[${opinion}] ${message}\n\n> Forwarded from user feedback.`
-
-            // Search for existing discussion
-            const searchResult: {
-              search: {
-                nodes: { id: string; url: string }[]
-              }
-            } = await octokit.graphql(`
-                            query {
-                                search(type: DISCUSSION, query: ${JSON.stringify(`${title} in:title repo:${site.githubOwner}/${site.githubRepo}`)}, first: 1) {
-                                    nodes {
-                                        ... on Discussion { id, url }
-                                    }
-                                }
-                            }
-                        `)
-
-            const existingDiscussion = searchResult.search.nodes[0]
-
-            if (existingDiscussion) {
-              // Add comment to existing discussion
-              await octokit.graphql(`
-                                mutation {
-                                    addDiscussionComment(input: { body: ${JSON.stringify(body)}, discussionId: "${existingDiscussion.id}" }) {
-                                        comment { id }
-                                    }
-                                }
-                            `)
-              discussionUrl = existingDiscussion.url
-            } else {
-              // Create new discussion
-              const result: {
-                createDiscussion: {
-                  discussion: { id: string; url: string }
-                }
-              } = await octokit.graphql(`
-                                mutation {
-                                    createDiscussion(input: {
-                                        repositoryId: "${repository.id}",
-                                        categoryId: "${category.id}",
-                                        body: ${JSON.stringify(body)},
-                                        title: ${JSON.stringify(title)}
-                                    }) {
-                                        discussion { id, url }
-                                    }
-                                }
-                            `)
-
-              discussionUrl = result.createDiscussion.discussion.url
-            }
-          }
-        } catch (error) {
-          console.error('Failed to create GitHub discussion for feedback:', error)
-          // Don't throw error - feedback will still be saved
-        }
-      }
-
-      // Store feedback in database
-      await prisma.pageFeedback.create({
-        data: {
-          branchId,
-          url,
-          opinion,
-          message,
-          discussionUrl,
-          ipHash,
-        },
-      })
-
-      return {
-        success: true,
-        githubUrl: discussionUrl,
       }
     },
   })
@@ -1302,6 +1086,193 @@ export const app = new Spiceflow({ basePath: '/api' })
       }
     },
   })
+  .route({
+    method: 'POST',
+    path: '/getBranchFilesWithHashes',
+    detail: {
+      hide: true,
+    },
+    request: z.object({
+      branchId: z.string(),
+    }),
+    async handler({ request, state: { userId } }) {
+      const { branchId } = await request.json()
+
+      const branch = await prisma.siteBranch.findFirst({
+        where: {
+          branchId,
+          OR: [
+            {
+              site: {
+                org: {
+                  users: {
+                    some: { userId },
+                  },
+                },
+              },
+            },
+            {
+              site: {
+                visibility: 'public',
+              },
+            },
+          ],
+        },
+        include: {
+          site: true,
+        },
+      })
+
+      if (!branch) {
+        throw new AppError('Branch not found or you do not have access')
+      }
+
+      const [pages, metaFiles, mediaAssets] = await Promise.all([
+        prisma.markdownPage.findMany({
+          where: { branchId },
+          select: {
+            githubPath: true,
+            githubSha: true,
+          },
+        }),
+        prisma.metaFile.findMany({
+          where: { branchId },
+          select: {
+            githubPath: true,
+            githubSha: true,
+          },
+        }),
+        prisma.mediaAsset.findMany({
+          where: { branchId },
+          select: {
+            githubPath: true,
+            githubSha: true,
+          },
+        }),
+      ])
+
+      const files = [
+        ...pages.map((page) => ({
+          githubPath: page.githubPath,
+          sha1: page.githubSha || '',
+        })),
+        ...metaFiles.map((meta) => ({
+          githubPath: meta.githubPath,
+          sha1: meta.githubSha,
+        })),
+        ...mediaAssets.map((asset) => ({
+          githubPath: asset.githubPath,
+          sha1: asset.githubSha,
+        })),
+      ]
+
+      // Include docsJson hash
+      const docsJsonContent = branch.docsJsonComments
+        ? applyJsonCComments(branch.docsJson, branch.docsJsonComments as any, 2)
+        : JSON.stringify(branch.docsJson, null, 2)
+      const docsJsonPath = branch.site?.githubFolder ? `${branch.site.githubFolder}/holocron.jsonc` : 'holocron.jsonc'
+      files.push({
+        githubPath: docsJsonPath,
+        sha1: createHash('sha1').update(docsJsonContent, 'utf-8').digest('hex'),
+      })
+
+      if (branch.cssStyles) {
+        const cssPath = branch.site?.githubFolder ? `${branch.site.githubFolder}/styles.css` : 'styles.css'
+        files.push({
+          githubPath: cssPath,
+          sha1: createHash('sha1').update(branch.cssStyles, 'utf-8').digest('hex'),
+        })
+      }
+
+      return {
+        files,
+      }
+    },
+  })
+  .route({
+    method: 'POST',
+    path: '/getOrCreateDevChat',
+    detail: {
+      hide: true,
+    },
+    request: z.object({
+      siteId: z.string(),
+      branchId: z.string().optional(),
+    }),
+    async handler({ request, state: { userId } }) {
+      let { siteId, branchId } = await request.json()
+
+      if (!userId) {
+        throw new AppError('User not authenticated')
+      }
+
+      let branch
+
+      if (branchId) {
+        branch = await prisma.siteBranch.findFirst({
+          where: {
+            branchId,
+            site: {
+              siteId,
+              org: {
+                users: {
+                  some: { userId },
+                },
+              },
+            },
+          },
+        })
+      } else {
+        branch = await prisma.siteBranch.findFirst({
+          where: {
+            site: {
+              siteId,
+              org: {
+                users: {
+                  some: { userId },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        })
+      }
+
+      if (!branch) {
+        throw new AppError('Branch not found or you do not have access')
+      }
+
+      let chat = await prisma.chat.findFirst({
+        where: {
+          userId,
+          branchId: branch.branchId,
+          title: '__dev_session__',
+        },
+      })
+
+      if (!chat) {
+        chat = await prisma.chat.create({
+          data: {
+            chatId: ulid(),
+            userId,
+            branchId: branch.branchId,
+            title: '__dev_session__',
+            type: 'hidden',
+            filesInDraft: {},
+          },
+        })
+      }
+
+      return {
+        chatId: chat.chatId,
+        branchId: branch.branchId,
+        filesInDraft: (chat.filesInDraft as FilesInDraft) || {},
+      }
+    },
+  })
+
   .route({
     method: 'POST',
     path: '/databaseNightlyCleanup',

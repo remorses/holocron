@@ -42,12 +42,18 @@ export const selectTextInputSchema = z.object({
   endLine: z.number().describe('Ending line number to select (1-based)'),
 })
 
+export const submitFeedbackInputSchema = z.object({
+  opinion: z.enum(['good', 'bad']).describe('User opinion: good or bad'),
+  message: z.string().min(1).describe('Feedback message from the user'),
+})
+
 // Export types with capitalized names
 export type SearchDocsInput = z.infer<typeof searchDocsInputSchema>
 export type GoToPageInput = z.infer<typeof goToPageInputSchema>
 export type GetCurrentPageInput = z.infer<typeof getCurrentPageInputSchema>
 export type FetchUrlInput = z.infer<typeof fetchUrlInputSchema>
 export type SelectTextInput = z.infer<typeof selectTextInputSchema>
+export type SubmitFeedbackInput = z.infer<typeof submitFeedbackInputSchema>
 
 // Just export the schemas - each project can use the tool() function directly
 // This avoids complex type inference issues with tool creator functions
@@ -101,5 +107,13 @@ export type DocsTools = {
   todoread: {
     input: {}
     output: { todos: TodoInfo[] }
+  }
+  submitFeedback: {
+    input: SubmitFeedbackInput
+    output: {
+      success: boolean
+      githubUrl?: string
+      error?: string
+    }
   }
 }
