@@ -65,14 +65,10 @@ type PageData = BaseLoaderData & {
   locale: string
   i18n: any
   tree: any
+  frontmatter: ProcessorDataFrontmatter
 }
 
 export type LoaderData = OpenAPIScalarData | OpenAPIFumadocsData | PageData
-
-// Extend globalThis to include our type-safe variable
-declare global {
-  var lastServerLoaderData: LoaderData | null
-}
 
 export function meta({ data, matches, location }: Route.MetaArgs): any {
   if (!data) return []
@@ -122,6 +118,12 @@ export function meta({ data, matches, location }: Route.MetaArgs): any {
     }))
     : []
 
+  // Check if page has noindex or is hidden in frontmatter
+  const pageData = data as LoaderData
+  const hasNoindex = pageData.type === 'page' && 
+    (pageData.frontmatter?.noindex === true || 
+     pageData.frontmatter?.visibility === 'hidden')
+
   return [
     {
       title: data.title ? `${data.title}${suffix ? ` - ${suffix}` : ''}` : '',
@@ -130,6 +132,14 @@ export function meta({ data, matches, location }: Route.MetaArgs): any {
       name: 'description',
       content: data.description || docsJson?.description,
     },
+    ...(hasNoindex 
+      ? [
+        {
+          name: 'robots',
+          content: 'noindex, nofollow',
+        },
+      ]
+      : []),
     ...customMetaTags,
     ...(og
       ? [
@@ -663,6 +673,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       tree,
       lastEditedAt: page?.lastEditedAt || new Date(),
       mediaAssets: page?.mediaAssets || [],
+      frontmatter,
     },
     {
       headers,
