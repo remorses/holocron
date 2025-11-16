@@ -2,6 +2,8 @@ import { SortedResult as BaseSortedResult } from 'fumadocs-core/server'
 import { client } from './search-api'
 import type { SearchSectionsResponse } from 'searchapi/sdk'
 import type { FileUpdate } from './edit-tool'
+import YAML from 'js-yaml'
+import { ProcessorDataFrontmatter } from './mdx-heavy'
 
 export interface SortedResult extends BaseSortedResult {
   line?: number
@@ -125,9 +127,15 @@ function searchFilesInDraft(filesInDraft: Record<string, FileUpdate>, searchQuer
         .pop() || 'Untitled'
 
     if (frontmatterMatch) {
-      const titleMatch = frontmatterMatch[1].match(/title:\s*['"]?([^'"\n]+)['"]?/)
-      if (titleMatch) {
-        title = titleMatch[1].trim()
+      const yamlContent = frontmatterMatch[1]
+      const parsed = YAML.load(yamlContent) as ProcessorDataFrontmatter
+      
+      if (parsed?.visibility === 'hidden' || parsed?.noindex === true) {
+        continue
+      }
+      
+      if (parsed?.title) {
+        title = String(parsed.title).trim()
       }
     }
 

@@ -13,6 +13,7 @@ import dedent from 'string-dedent'
 
 import { client as searchApi } from 'docs-website/src/lib/search-api'
 import { HolocronSite } from '@holocron.so/cli/src'
+import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 
 // Export schemas for reuse
 export const filesSchema = z.array(
@@ -672,18 +673,23 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
           slug: true,
           githubPath: true,
           githubSha: true,
-          frontmatter: withFrontmatter,
+          frontmatter: true,
           createdAt: true,
           lastEditedAt: true
         },
         orderBy: { slug: 'asc' }
       })
 
+      const visiblePages = pages.filter(page => {
+        const frontmatter = page.frontmatter as ProcessorDataFrontmatter | null
+        return frontmatter?.visibility !== 'hidden'
+      })
+
       return {
         success: true,
         siteId,
         branchId: branch.branchId,
-        pages: pages.map(page => ({
+        pages: visiblePages.map(page => ({
           pageId: page.pageId,
           slug: page.slug,
           githubPath: page.githubPath,

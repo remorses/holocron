@@ -165,9 +165,9 @@ const injectData = () => {
     const data: ProcessorData = file.data
     data.ast = tree
     const frontmatterYaml = data.ast?.children.find((node) => node.type === 'yaml')?.value
-    let frontmatter: Record<string, any> = {}
+    let frontmatter: ProcessorDataFrontmatter = {}
     if (frontmatterYaml) {
-      frontmatter = YAML.load(frontmatterYaml) as any
+      frontmatter = YAML.load(frontmatterYaml) as ProcessorDataFrontmatter
     }
     data.frontmatter = frontmatter
     if (!frontmatter.title && data.title) {
@@ -305,6 +305,8 @@ export interface ProcessorDataFrontmatter {
   description?: string
   icon?: string
   notionPageId?: string
+  visibility?: 'visible' | 'hidden'
+  noindex?: boolean
   // full?: boolean // hides the table of contents
   badge?: {
     content?: string

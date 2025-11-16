@@ -4,6 +4,7 @@ import { searchDocsWithSearchApi, formatSearchApiSearchResults } from './search-
 import { getFumadocsSource } from './source'
 import { getDocsJson } from './utils'
 import type { DocsJsonType } from './docs-json'
+import { ProcessorDataFrontmatter } from './mdx-heavy'
 
 export async function generateLlmsFullTxt({
   domain,
@@ -91,6 +92,7 @@ export async function generateLlmsFullTxt({
         },
         select: {
           slug: true,
+          frontmatter: true,
           content: {
             select: {
               markdown: true,
@@ -98,9 +100,14 @@ export async function generateLlmsFullTxt({
           },
         },
       })
+      
+      const visiblePages = markdownPages.filter((page) => {
+        const frontmatter = page.frontmatter as ProcessorDataFrontmatter | null
+        return frontmatter?.visibility !== 'hidden' && frontmatter?.noindex !== true
+      })
 
       // Create a map for quick lookup
-      const pageContentMap = new Map(markdownPages.map((page) => [page.slug, page.content?.markdown || '']))
+      const pageContentMap = new Map(visiblePages.map((page) => [page.slug, page.content?.markdown || '']))
 
       // Add each page in the batch
       for (const page of batch) {

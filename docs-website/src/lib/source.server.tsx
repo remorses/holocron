@@ -34,11 +34,15 @@ export async function getFilesForSource({
   ])
 
   const files = allPages
+    .filter((x) => {
+      const frontmatter = x.frontmatter as ProcessorDataFrontmatter | null
+      return frontmatter?.visibility !== 'hidden'
+    })
     .map((x) => {
       let p = removeGithubFolder(x.githubPath, githubFolder)
 
       const res: MyVirtualFile = {
-        data: { ...(x.frontmatter as any) },
+        data: { ...(x.frontmatter as ProcessorDataFrontmatter) },
         path: p,
         type: 'page',
 
@@ -84,7 +88,13 @@ export async function getFilesForSource({
     }
   }
 
-  return deduplicateBy(files, (file) => file.path)
+  const dedupedFiles = deduplicateBy(files, (file) => file.path)
+  
+  return dedupedFiles.filter((file) => {
+    if (file.type !== 'page') return true
+    const frontmatter = file.data as ProcessorDataFrontmatter | undefined
+    return frontmatter?.visibility !== 'hidden'
+  })
 }
 
 /**
@@ -129,6 +139,7 @@ export function getFilesFromFilesInDraft(filesInDraft: FilesInDraft, githubFolde
       try {
         data = frontMatter<ProcessorDataFrontmatter>(draft.content || '').attributes || {}
       } catch {}
+      
       files.push({
         path: normalizedPath,
         data,

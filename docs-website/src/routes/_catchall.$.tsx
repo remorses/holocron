@@ -528,7 +528,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   // Initialize with normal flow values (page content or defaults)
   let markdown = page?.content?.markdown ?? null
-  let frontmatter: ProcessorDataFrontmatter = (page?.frontmatter as any) || {}
+  let frontmatter: ProcessorDataFrontmatter = (page?.frontmatter as ProcessorDataFrontmatter) || {}
   let ast: Root | null = page?.content?.mdast as any
   let toc: any[] | null = null
   let githubPath = page?.githubPath || ''
@@ -563,7 +563,17 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           const data = f.data as ProcessorData
 
           markdown = draft.content
-          frontmatter = (data.frontmatter as any) || {}
+          frontmatter = data.frontmatter || {}
+          
+          if (frontmatter?.visibility === 'hidden') {
+            console.log('Draft page is hidden:', slug)
+            throw new Response('null', {
+              status: 404,
+              statusText: 'Page not found',
+              headers: { 'Content-Type': 'application/json' },
+            })
+          }
+          
           ast = data.ast
           toc = data.toc
           githubPath = draftGithubPath
@@ -573,6 +583,15 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         }
       }
     }
+  }
+
+  if (frontmatter?.visibility === 'hidden') {
+    console.log('Page is hidden:', slug)
+    throw new Response('null', {
+      status: 404,
+      statusText: 'Page not found',
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   if (!page && markdown == null) {
