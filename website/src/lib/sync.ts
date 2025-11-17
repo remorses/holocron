@@ -585,7 +585,7 @@ export async function syncSite({
     if (asset.type !== 'page') return []
 
     pageCount++ // Increment page count
-    const filesToSync: SearchApiFile[] = []
+    const filesToSyncForSearch: SearchApiFile[] = []
     const slug = getSlugFromPath({
       githubPath: asset.githubPath,
       githubFolder,
@@ -595,7 +595,7 @@ export async function syncSite({
 
     if (processedSlugs.has(slug)) {
       console.log(`Skipping duplicate page with slug: ${slug}`)
-      return filesToSync
+      return filesToSyncForSearch
     }
 
     let data: ProcessorData
@@ -694,9 +694,9 @@ export async function syncSite({
 
     const structuredData = data.structuredData
 
-    // Create search API file for this page
-    if (asset.markdown) {
-      filesToSync.push({
+    // Create search API file for this page (skip if noindex or hidden)
+    if (asset.markdown && data.frontmatter.visibility !== 'hidden' && data.frontmatter.noindex !== true) {
+      filesToSyncForSearch.push({
         filename: asset.githubPath,
         content: asset.markdown,
         metadata: {
@@ -810,7 +810,7 @@ export async function syncSite({
 
     console.log(` -> Upserted page: ${data.title} (ID: ${slug}, path: ${asset.githubPath})`)
 
-    return filesToSync
+    return filesToSyncForSearch
   }
 
   async function syncDeletedAsset(asset: AssetForSync): Promise<SearchApiFile[]> {

@@ -42,6 +42,7 @@ import { createInvalidTool, INVALID_TOOL_NAME } from 'contesto/src/lib/invalid-t
 import { getHost } from './get-host'
 import { moonshot } from './moonshot'
 import { submitRateFeedback } from './submit-feedback'
+import { trackEvent } from '@holocron.so/analytics/src/server/route'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -129,6 +130,20 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
       })
 
       return result
+    },
+  })
+  .route({
+    method: 'POST',
+    path: '/track',
+    async handler({ request }) {
+      try {
+        const json = await request.json()
+        await trackEvent({ json, token: env.TINYBIRD_TOKEN })
+        return Response.json({ ok: true })
+      } catch (error) {
+        notifyError(error, 'Failed to track analytics event')
+        return Response.json({ ok: false }, { status: 500 })
+      }
     },
   })
   .route({

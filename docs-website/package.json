@@ -32,6 +32,7 @@
     "@cloudflare/workers-types": "^4.20250712.0",
     "@emotion/is-prop-valid": "^1.4.0",
     "@floating-ui/react": "^0.27.16",
+    "@holocron.so/analytics": "workspace:*",
     "@holocron.so/cli": "workspace:*",
     "@iconify-json/lucide": "^1.2.49",
     "@lancedb/lancedb": "^0.21.2",

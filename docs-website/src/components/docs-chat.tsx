@@ -107,7 +107,8 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     abortController,
   }: Partial<ChatState>) => {
     const generateId = createIdGenerator()
-    const currentSlug = location.pathname
+    // Use currentSlug from state if available (e.g., set by comment button), otherwise use pathname
+    const currentSlug = useDocsState.getState()?.currentSlug || location.pathname
     const currentOrigin =
       typeof window !== 'undefined' ? window.location.origin : ''
 

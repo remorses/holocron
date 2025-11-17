@@ -3,6 +3,7 @@ import { VirtualFile } from 'fumadocs-core/source'
 import { FilesInDraft } from './docs-state'
 import { getFumadocsSource } from './source'
 import { DocsJsonType } from './docs-json'
+import { ProcessorDataFrontmatter } from './mdx-heavy'
 
 export interface GetTreeFromFilesParams {
   files: VirtualFile[]
@@ -75,6 +76,13 @@ export const getTreeFromFiles = ({
     } else {
       // Parse frontmatter for page files
       const { attributes: frontmatter } = frontMatter(fileData.content)
+
+      if ((frontmatter as ProcessorDataFrontmatter)?.visibility === 'hidden') {
+        if (existingIndex >= 0) {
+          allFiles.splice(existingIndex, 1)
+        }
+        return
+      }
 
       draftFile = {
         data: frontmatter,
