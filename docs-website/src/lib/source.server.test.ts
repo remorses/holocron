@@ -510,7 +510,7 @@ describe('getFumadocsSource with tabs', () => {
         📄 [index] Essentials Home (/essentials)
         📄 Code Blocks (/essentials/code)
         📄 Getting Started (/essentials/getting-started)
-       📁 v2 [TAB]
+      📁 v2 [TAB]
         📄 [index] V2 Home (/v2)
         📄 New Features (/v2/new-features)"
     `)
@@ -574,6 +574,100 @@ describe('getFumadocsSource with tabs', () => {
       📁 v2 [TAB]
         📄 [index] V2 Home (/v2)
         📄 New Features (/v2/new-features)"
+    `)
+  })
+
+  test('tab folder with only a single non-index page should still show as tab', () => {
+    const files: VirtualFile[] = [
+      // Root pages
+      { path: 'index.mdx', data: { title: 'Home' }, type: 'page' },
+      { path: 'about.mdx', data: { title: 'About' }, type: 'page' },
+      
+      // Blog folder with only ONE non-index page
+      { path: 'blog/hello-world.mdx', data: { title: 'Hello World' }, type: 'page' },
+      
+      // Docs folder with content
+      { path: 'docs/index.mdx', data: { title: 'Docs Home' }, type: 'page' },
+      { path: 'docs/getting-started.mdx', data: { title: 'Getting Started' }, type: 'page' },
+    ]
+    
+    const docsJson: DocsJsonType = {
+      siteId: 'test-site',
+      name: 'Test Site', 
+      tabs: [
+        {
+          tab: 'Blog',
+          folder: 'blog',
+          description: 'Blog posts',
+        },
+      ],
+    }
+    
+    const source = getFumadocsSource({
+      files,
+      defaultLanguage: 'en',
+      languages: ['en'],
+      docsJson,
+    })
+    
+    const tree = source.getPageTree()
+    console.log('Tab with single non-index page:')
+    console.log(treeToText(tree))
+    
+    expect(treeToText(tree)).toMatchInlineSnapshot(`
+      "📁 Docs [TAB]
+        📄 Home (/)
+        📄 About (/about)
+        📁 Docs Home
+          📄 [index] Docs Home (/docs)
+          📄 Getting Started (/docs/getting-started)
+      📁 Blog [TAB]
+        📄 Hello World (/blog/hello-world)"
+    `)
+  })
+
+  test('tab for a single page file (not a folder)', () => {
+    const files: VirtualFile[] = [
+      // Root pages
+      { path: 'index.mdx', data: { title: 'Home' }, type: 'page' },
+      { path: 'about.mdx', data: { title: 'About Us' }, type: 'page' },
+      
+      // Docs folder with content
+      { path: 'docs/index.mdx', data: { title: 'Docs Home' }, type: 'page' },
+      { path: 'docs/getting-started.mdx', data: { title: 'Getting Started' }, type: 'page' },
+    ]
+    
+    const docsJson: DocsJsonType = {
+      siteId: 'test-site',
+      name: 'Test Site', 
+      tabs: [
+        {
+          tab: 'About',
+          folder: 'about',
+          description: 'About page as a tab',
+        },
+      ],
+    }
+    
+    const source = getFumadocsSource({
+      files,
+      defaultLanguage: 'en',
+      languages: ['en'],
+      docsJson,
+    })
+    
+    const tree = source.getPageTree()
+    console.log('Tab for single page file:')
+    console.log(treeToText(tree))
+    
+    expect(treeToText(tree)).toMatchInlineSnapshot(`
+      "📁 Docs [TAB]
+        📄 Home (/)
+        📁 Docs Home
+          📄 [index] Docs Home (/docs)
+          📄 Getting Started (/docs/getting-started)
+      📁 About [TAB]
+        📄 About Us (/about)"
     `)
   })
 })

@@ -146,6 +146,31 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
         if (child.type === 'folder' && child.root) {
           // This folder is already marked as a tab
           tabItems.push(child)
+        } else if (child.type === 'page') {
+          // Check if this page matches any tab configuration
+          const pageSlug = child.url.replace(/^\/+/, '')
+          const matchingTab = tabs.find(tab => {
+            if ('folder' in tab && tab.folder) {
+              const normalizedFolder = tab.folder.replace(/^\/+|\/+$/g, '')
+              return normalizedFolder === pageSlug
+            }
+            return false
+          })
+
+          if (matchingTab && 'folder' in matchingTab) {
+            // Wrap this page in a folder to make it a tab
+            const pageTab: typeof node.children[0] = {
+              type: 'folder',
+              name: matchingTab.tab,
+              root: true,
+              description: matchingTab.description,
+              children: [child],
+            }
+            tabItems.push(pageTab)
+          } else {
+            // Not a tab, goes to docs
+            docsItems.push(child)
+          }
         } else {
           // Everything else goes to docs
           docsItems.push(child)
