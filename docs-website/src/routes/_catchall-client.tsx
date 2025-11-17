@@ -12,6 +12,7 @@ import { GithubIcon, XIcon } from 'lucide-react'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import { lazy, startTransition, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { init as initTracker } from '@holocron.so/analytics/src/track'
 import {
   Outlet,
   useLoaderData,
@@ -39,7 +40,7 @@ import JSONC from 'tiny-jsonc'
 import { LOCALE_LABELS } from '../lib/locales'
 import { Markdown } from 'contesto/src/lib/markdown'
 import { mdxComponents } from '../components/mdx-components'
-import { cn, isInsidePreviewIframe, isDocsJson } from '../lib/utils'
+import { cn, isInsidePreviewIframe, isDocsJson, getBasePath } from '../lib/utils'
 import { DynamicIcon } from '../lib/icon'
 import { PoweredBy } from '../components/poweredby'
 import { CustomSearchDialog } from '../components/search'
@@ -292,6 +293,15 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       }
     }
   }, [editorPreviewMode, loaderData])
+
+  useEffect(() => {
+    if (loaderData?.site?.siteId) {
+      const namespace = loaderData.site.siteId
+      const basePath = getBasePath()
+      const eventsEndpoint = basePath + '/holocronInternalAPI/track'
+      initTracker({ namespace, eventsEndpoint })
+    }
+  }, [loaderData?.site?.siteId])
 
   const localRevalidator = useRevalidator()
   revalidator = localRevalidator
