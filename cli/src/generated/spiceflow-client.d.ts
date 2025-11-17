@@ -117,7 +117,7 @@ export declare const apiClient: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -178,9 +178,9 @@ export declare const apiClient: {
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                                 title: string;
+                                siteId: string;
                                 branchId: string;
                                 createdAt: Date;
-                                siteId: string;
                                 githubBranch: string;
                                 updatedAt: Date;
                                 cssStyles: string;
@@ -202,10 +202,10 @@ export declare const apiClient: {
                                 }[];
                             } & {
                                 title: string;
-                                branchId: string;
-                                createdAt: Date;
                                 siteId: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                branchId: string;
+                                createdAt: Date;
                                 githubBranch: string;
                                 updatedAt: Date;
                                 docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
@@ -213,15 +213,15 @@ export declare const apiClient: {
                                 lastGithubSyncAt: Date | null;
                                 lastGithubSyncCommit: string | null;
                             })[];
+                            orgId: string;
                             name: string | null;
                             visibility: import("db/src/generated/enums").SiteVisibility;
+                            siteId: string;
                             githubFolder: string;
                             createdAt: Date;
-                            siteId: string;
-                            orgId: string;
-                            defaultLocale: string;
                             githubOwner: string | null;
                             githubRepo: string | null;
+                            defaultLocale: string;
                             githubRepoId: number;
                         };
                     }>>;
@@ -281,8 +281,8 @@ export declare const apiClient: {
                             siteId: string;
                             branchId: string;
                             feedback: {
-                                id: string;
                                 url: string;
+                                id: string;
                                 message: string | null;
                                 createdAt: Date;
                                 opinion: import("db/src/generated/enums").PageOpinion;
@@ -344,7 +344,7 @@ export declare const apiClient: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "medium" | "low";
+                    priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -420,6 +420,7 @@ export declare const apiClient: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
+                branchId?: string | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -510,15 +511,15 @@ export declare const apiClient: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
+                    orgId?: string | undefined;
                     name?: string | null | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     githubFolder?: string | undefined;
                     createdAt?: Date | undefined;
-                    orgId?: string | undefined;
-                    defaultLocale?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
+                    defaultLocale?: string | undefined;
                     githubRepoId?: number | undefined;
                 };
             }>>;
@@ -579,7 +580,7 @@ export declare const apiClient: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -774,7 +775,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -835,9 +836,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                                 title: string;
+                                siteId: string;
                                 branchId: string;
                                 createdAt: Date;
-                                siteId: string;
                                 githubBranch: string;
                                 updatedAt: Date;
                                 cssStyles: string;
@@ -859,10 +860,10 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 }[];
                             } & {
                                 title: string;
-                                branchId: string;
-                                createdAt: Date;
                                 siteId: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                branchId: string;
+                                createdAt: Date;
                                 githubBranch: string;
                                 updatedAt: Date;
                                 docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
@@ -870,15 +871,15 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 lastGithubSyncAt: Date | null;
                                 lastGithubSyncCommit: string | null;
                             })[];
+                            orgId: string;
                             name: string | null;
                             visibility: import("db/src/generated/enums").SiteVisibility;
+                            siteId: string;
                             githubFolder: string;
                             createdAt: Date;
-                            siteId: string;
-                            orgId: string;
-                            defaultLocale: string;
                             githubOwner: string | null;
                             githubRepo: string | null;
+                            defaultLocale: string;
                             githubRepoId: number;
                         };
                     }>>;
@@ -938,8 +939,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                             siteId: string;
                             branchId: string;
                             feedback: {
-                                id: string;
                                 url: string;
+                                id: string;
                                 message: string | null;
                                 createdAt: Date;
                                 opinion: import("db/src/generated/enums").PageOpinion;
@@ -1001,7 +1002,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "medium" | "low";
+                    priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1077,6 +1078,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
+                branchId?: string | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1167,15 +1169,15 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
+                    orgId?: string | undefined;
                     name?: string | null | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     githubFolder?: string | undefined;
                     createdAt?: Date | undefined;
-                    orgId?: string | undefined;
-                    defaultLocale?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
+                    defaultLocale?: string | undefined;
                     githubRepoId?: number | undefined;
                 };
             }>>;
@@ -1236,7 +1238,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1432,7 +1434,7 @@ export declare const apiClientWithDurableFetch: {
                     post: (request: {
                         siteId: string;
                         name?: string | undefined;
-                        visibility?: "private" | "public" | undefined;
+                        visibility?: "public" | "private" | undefined;
                         githubOwner?: string | undefined;
                         githubRepo?: string | undefined;
                         githubFolder?: string | undefined;
@@ -1493,9 +1495,9 @@ export declare const apiClientWithDurableFetch: {
                                     domainType: import("db/src/generated/enums").DomainType;
                                 }[];
                                 title: string;
+                                siteId: string;
                                 branchId: string;
                                 createdAt: Date;
-                                siteId: string;
                                 githubBranch: string;
                                 updatedAt: Date;
                                 cssStyles: string;
@@ -1517,10 +1519,10 @@ export declare const apiClientWithDurableFetch: {
                                 }[];
                             } & {
                                 title: string;
-                                branchId: string;
-                                createdAt: Date;
                                 siteId: string;
                                 docsJson: import("@prisma/client/runtime/client").JsonValue;
+                                branchId: string;
+                                createdAt: Date;
                                 githubBranch: string;
                                 updatedAt: Date;
                                 docsJsonComments: import("@prisma/client/runtime/client").JsonValue;
@@ -1528,15 +1530,15 @@ export declare const apiClientWithDurableFetch: {
                                 lastGithubSyncAt: Date | null;
                                 lastGithubSyncCommit: string | null;
                             })[];
+                            orgId: string;
                             name: string | null;
                             visibility: import("db/src/generated/enums").SiteVisibility;
+                            siteId: string;
                             githubFolder: string;
                             createdAt: Date;
-                            siteId: string;
-                            orgId: string;
-                            defaultLocale: string;
                             githubOwner: string | null;
                             githubRepo: string | null;
+                            defaultLocale: string;
                             githubRepoId: number;
                         };
                     }>>;
@@ -1596,8 +1598,8 @@ export declare const apiClientWithDurableFetch: {
                             siteId: string;
                             branchId: string;
                             feedback: {
-                                id: string;
                                 url: string;
+                                id: string;
                                 message: string | null;
                                 createdAt: Date;
                                 opinion: import("db/src/generated/enums").PageOpinion;
@@ -1659,7 +1661,7 @@ export declare const apiClientWithDurableFetch: {
                 todos?: {
                     content: string;
                     status: "pending" | "in_progress" | "completed" | "cancelled";
-                    priority: "high" | "medium" | "low";
+                    priority: "high" | "low" | "medium";
                     id: string;
                 }[] | undefined;
             }, options?: {
@@ -1735,6 +1737,7 @@ export declare const apiClientWithDurableFetch: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
+                branchId?: string | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1825,15 +1828,15 @@ export declare const apiClientWithDurableFetch: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
+                    orgId?: string | undefined;
                     name?: string | null | undefined;
+                    metadata?: import("@prisma/client/runtime/client").JsonValue | undefined;
                     visibility?: import("db/src/generated/enums").SiteVisibility | undefined;
                     githubFolder?: string | undefined;
                     createdAt?: Date | undefined;
-                    orgId?: string | undefined;
-                    defaultLocale?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
+                    defaultLocale?: string | undefined;
                     githubRepoId?: number | undefined;
                 };
             }>>;
@@ -1894,7 +1897,7 @@ export declare const apiClientWithDurableFetch: {
         updateSiteVisibility: {
             post: (request: {
                 siteId: string;
-                visibility: "private" | "public";
+                visibility: "public" | "private";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;

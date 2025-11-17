@@ -476,18 +476,27 @@ export const app = new Spiceflow({ basePath: '/api' })
     request: z.object({
       chatId: z.string().min(1, 'chatId is required'),
       filesInDraft: z.record(z.string(), fileUpdateSchema),
+      branchId: z.string().optional(),
     }),
     async handler({ request, state: { userId } }) {
-      const { chatId, filesInDraft } = await request.json()
+      const { chatId, filesInDraft, branchId } = await request.json()
 
       if (!userId) {
         throw new AppError('Missing userId')
       }
 
-      // Update only filesInDraft, not lastPushedFiles
-      await prisma.chat.update({
+
+
+      // Upsert chat - create if doesn't exist, update if exists
+      await prisma.chat.upsert({
         where: { chatId, userId },
-        data: {
+        update: {
+          filesInDraft: filesInDraft as any,
+        },
+        create: {
+          chatId,
+          userId,
+          branchId: branchId || '',
           filesInDraft: filesInDraft as any,
         },
       })
