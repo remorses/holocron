@@ -173,7 +173,7 @@ const NavigationTabSchema = z
         hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
-      .describe('OpenAPI tab configuration'),
+      .describe('OpenAPI tab configuration. Still experimental DO NOT USE'),
     z
       .object({
         tab: z.string().describe('Tab label'),
@@ -181,13 +181,13 @@ const NavigationTabSchema = z
         hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
-      .describe('MCP tab configuration'),
+      .describe('MCP tab configuration. Still experimental DO NOT USE'),
     z
       .object({
-        tab: z.string().describe('Tab label'),
-        folder: z.string().describe('Content folder path for this tab'),
+        tab: z.string().describe('Tab label, the text shown in the tabs in the user interface in the website.'),
+        folder: z.string().describe('folder path for this tab. It should not start or end with a slash /. All content inside that folder will be hidden from the main version of the website, a tab with `label` will be shown, files under this folder will be shown only when user goes inside that tab. Useful for versioning and splitting content for example into guides, wiki, glossary, etc. MUST be a valid folder with pages inside'),
         description: z.string().optional().describe('Tab description'),
-        hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
+        hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active. Only the main content of the page is displayed in that case. Useful for tabs that are not docs like blog, changelog, etc'),
       })
       .strict()
       .describe('Folder tab configuration'),

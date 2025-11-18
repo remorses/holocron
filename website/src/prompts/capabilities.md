@@ -11,3 +11,4 @@ here is a non exhaustive list of things you can do. use this list to suggest the
 - add a banner to the website, for example for news or announcements
 - add redirects, useful for example if user is migrating from an existing website and some urls are different
 - add a custom domain to the website. showing a form to the user via updateHolocronJsonc and then telling the user the DNS record to add
+- add a tab in the site, using the tabs field. use this also for versioning of the docs
