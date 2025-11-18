@@ -73,7 +73,7 @@ const markdownTextMiddleware: Route.MiddlewareFunction = async ({ request }, nex
       return new Response(result.markdown, {
         status: 200,
         headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Type': 'text/markdown; charset=utf-8, text/plain',
           'Cache-Control': 'public, max-age=300, s-maxage=300',
           'Cache-Tag': result.cacheTag,
         },
