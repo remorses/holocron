@@ -43,6 +43,18 @@ const markdownTextMiddleware: Route.MiddlewareFunction = async ({ request }, nex
   const path = withoutBasePath(url.pathname)
   const host = url.hostname
 
+  const acceptHeader = request.headers.get('Accept') || ''
+  const wantsMarkdown = acceptHeader.includes('text/markdown')
+
+  if (wantsMarkdown && !path.endsWith('.md') && !path.endsWith('.mdx')) {
+    const hasMediaExtension = mediaExtensions.some((ext) => path.endsWith('.' + ext))
+    if (!hasMediaExtension) {
+      const redirectUrl = new URL(request.url)
+      redirectUrl.pathname = url.pathname + '.md'
+      return Response.redirect(redirectUrl.toString(), 302)
+    }
+  }
+
   if (path.endsWith('.md') || path.endsWith('.mdx')) {
     const showLineNumbers =
       url.searchParams.get('showLineNumbers') != null && url.searchParams.get('showLineNumbers') !== 'false'
