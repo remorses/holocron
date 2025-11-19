@@ -618,7 +618,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
         tabMode={navTabMode}
         sidebar={{
           defaultOpenLevel: 2,
-          collapsible: true,
+          collapsible: false, // TODO there is a bug in fumadocs where content does not shift collapsing sidebar
           ...(tabs.length > 0 ? { tabs } : {}),
           footer: (
             <div className='flex w-full text-center grow justify-center items-start'>

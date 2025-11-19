@@ -222,7 +222,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
         getPageContent: async (githubPathWrong) => {
           const slug = cleanSlug(githubPathWrong)
           const sourcePage = source.getPage(slug.split('/').filter(Boolean))
-          const githubPath = sourcePage?.file.path || ''
+          const githubPath = sourcePage?.path || ''
           if (!githubPath) {
             const error = new Error(`File not found for slug: ${slug}`)
             console.error(error)

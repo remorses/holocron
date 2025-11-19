@@ -161,7 +161,7 @@ export async function loader({ request, params: { orgId, branchId, chatId } }: R
     }
 
     const allFiles = source.getPages()
-    return allFiles.map((page) => page.file.path).sort()
+    return allFiles.map((page) => page.path).sort()
   })()
 
   const host = siteBranch.domains

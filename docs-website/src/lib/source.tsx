@@ -1,7 +1,7 @@
 import { loader, MetaData, PageData, PageFile, VirtualFile, PageTreeTransformer, LoaderOutput } from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
-import { PageTree } from 'fumadocs-core/server'
+import * as PageTree from 'fumadocs-core/page-tree'
 
 import { DynamicIcon } from './icon'
 import { ProcessorDataFrontmatter, StructuredData } from './mdx-heavy'
@@ -37,6 +37,17 @@ export function getFumadocsSource({
     transformers.push(createTabsTransformer(docsJson.tabs))
   }
 
+  // TODO why is this needed? did fumadocs remove attachFile
+  transformers.push({
+    file(node, filePath) {
+      if (!filePath) return node
+      const file = this.storage.read(filePath)
+      if (file?.format !== 'page') return node
+
+      return attachFile(node, file as unknown as PageFile)
+    },
+  })
+
   const source = loader<
     {
       pageData: ProcessorDataFrontmatter
@@ -52,7 +63,6 @@ export function getFumadocsSource({
       hideLocale: 'default-locale',
     },
     pageTree: {
-      attachFile,
       transformers,
     },
     icon(icon) {

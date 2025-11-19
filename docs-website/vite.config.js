@@ -29,6 +29,9 @@ export default defineConfig({
     exclude: ['@lancedb/lancedb', 'isolated-vm', '@resvg/resvg-js'],
   },
 
+  ssr: {
+    noExternal: ['unframer'],
+  },
   test: {
     pool: 'threads',
     exclude: ['**/dist/**', '**/esm/**', '**/node_modules/**', '**/e2e/**'],

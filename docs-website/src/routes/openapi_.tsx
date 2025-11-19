@@ -50,6 +50,7 @@ export const Page = ({ loaderData: { processed } }) => {
           ]}
           processed={processed}
           hasHead={false}
+          disablePlayground={false}
         />
       </Suspense>
     </div>
