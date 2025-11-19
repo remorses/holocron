@@ -626,7 +626,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     },
     request: z.object({
       siteId: z.string(),
-      withFrontmatter: z.boolean().optional()
+      withFrontmatter: z.boolean().default(true).optional()
     }),
     async handler({ request, state }) {
       const body = await request.json()
