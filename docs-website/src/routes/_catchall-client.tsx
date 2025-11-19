@@ -198,7 +198,7 @@ async function websocketIdHandling(websocketId: string) {
 
   const connect = () => {
     console.log('connecting over preview websocketId', websocketId)
-    const tunnelDomain = process.env.NODE_ENV === 'development' ? 'preview.holocron.so' : WEBSITE_DOMAIN
+    const tunnelDomain = process.env.NODE_ENV === 'production' ? WEBSITE_DOMAIN : 'preview.holocron.so'
     const websocketUrl = `wss://${tunnelDomain}/_tunnel/downstream?id=${websocketId}`
     ws = new WebSocket(websocketUrl)
 
