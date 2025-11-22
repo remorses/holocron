@@ -8,18 +8,19 @@ import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import frontMatter from 'front-matter'
 import {
     PageArticle,
-    PageBreadcrumb,
-    PageFooter,
-    PageLastUpdate,
     PageRoot,
     PageTOC,
     PageTOCItems,
+    PageTOCPopoverItems,
+    PageTOCTitle,
     PageTOCPopover,
     PageTOCPopoverContent,
-    PageTOCPopoverItems,
     PageTOCPopoverTrigger,
-    PageTOCTitle,
-} from 'fumadocs-ui/layouts/docs/page'
+    PageBreadcrumb,
+    PageFooter,
+    PageLastUpdate,
+} from '../components/fumadocs-ui-page'
+
 import {
     Edit3Icon,
     ExternalLinkIcon,

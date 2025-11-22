@@ -1,7 +1,7 @@
 import { loader as fumadocsLoader, VirtualFile } from 'fumadocs-core/source'
 import { isTruthy } from 'docs-website/src/lib/utils'
 
-import { loader, MetaData, PageData, PageFile } from 'fumadocs-core/source'
+import { loader, MetaData, PageData } from 'fumadocs-core/source'
 import { idToTitle } from 'fumadocs-openapi/utils/id-to-title'
 import type { OpenAPIV3 } from 'openapi-types'
 import * as PageTree from 'fumadocs-core/page-tree'
@@ -10,6 +10,8 @@ import { FilesInDraft } from './docs-state'
 import { DynamicIcon } from './icon'
 import { ProcessorDataFrontmatter } from './mdx-heavy'
 import { attachFile } from './source'
+
+type PageFile = any
 
 export function getOperations(openapiDocument) {
   const ops: { path: string; method: string }[] = Object.entries(openapiDocument.paths ?? {}).flatMap(
@@ -26,7 +28,7 @@ export function getPageTreeForOpenAPI({
   filesInDraft,
   docsJson,
   openapiDocument,
-}: {
+  }: {
   docsJson: DocsJsonType
   filesInDraft: FilesInDraft
   openapiDocument: OpenAPIV3.Document

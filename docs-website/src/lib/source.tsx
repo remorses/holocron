@@ -1,4 +1,6 @@
-import { loader, MetaData, PageData, PageFile, VirtualFile, PageTreeTransformer, LoaderOutput } from 'fumadocs-core/source'
+import { loader, MetaData, PageData, VirtualFile, PageTreeTransformer, LoaderOutput } from 'fumadocs-core/source'
+
+type PageFile = any
 
 import { I18nConfig } from 'fumadocs-core/i18n'
 import * as PageTree from 'fumadocs-core/page-tree'
