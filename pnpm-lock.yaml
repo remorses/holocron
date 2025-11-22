@@ -16,7 +16,7 @@ importers:
         version: 24.6.2
       unframer:
         specifier: latest
-        version: 3.2.16(@emotion/is-prop-valid@1.4.0)(@modelcontextprotocol/sdk@1.20.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 3.2.17(@emotion/is-prop-valid@1.4.0)(@modelcontextprotocol/sdk@1.20.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.4
@@ -1248,6 +1248,9 @@ importers:
       next:
         specifier: 16.0.3
         version: 16.0.3(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      react:
+        specifier: ^19.2.0
+        version: 19.2.0
       react-router:
         specifier: ^7.9.6
         version: 7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -2551,7 +2554,7 @@ importers:
         version: 7.16.0
       unframer:
         specifier: latest
-        version: 3.2.16(@emotion/is-prop-valid@1.4.0)(@modelcontextprotocol/sdk@1.20.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 3.2.17(@emotion/is-prop-valid@1.4.0)(@modelcontextprotocol/sdk@1.20.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       use-stick-to-bottom:
         specifier: ^1.1.1
         version: 1.1.1(react@19.2.0)
@@ -14659,6 +14662,14 @@ packages:
 
   unframer@3.2.16:
     resolution: {integrity: sha512-SwRiwNI6QCBJEZwQwbpq5uQahb20xv0UqICCPIxYDOcRvnQM1dJ116W5aLcs+7ryxBqTclBXqfoxdhxvr4yIOA==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+
+  unframer@3.2.17:
+    resolution: {integrity: sha512-6Cw12p6JYQMkrZSjdPsPncvn6601dLrjhyr8Nf8JZ7JHitJOxhUfB9/YsZJOSIcgMm/RL22rjQ5T7P71YT3Y0Q==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -30270,6 +30281,31 @@ snapshots:
       ufo: 1.6.1
 
   unframer@3.2.16(@emotion/is-prop-valid@1.4.0)(@modelcontextprotocol/sdk@1.20.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      '@antfu/ni': 25.0.0
+      '@babel/core': 7.28.5
+      '@biomejs/js-api': 0.7.1(@biomejs/wasm-nodejs@1.9.4)
+      '@biomejs/wasm-nodejs': 1.9.4
+      async-sema: 3.1.1
+      cac: 6.7.14
+      esbuild: 0.25.12
+      esbuild-plugins-node-modules-polyfill: 1.7.1(esbuild@0.25.12)
+      nanospinner: 1.2.2
+      picocolors: 1.1.1
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      real-framer-motion: framer-motion@12.23.24(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      spiceflow: 1.17.12(@modelcontextprotocol/sdk@1.20.0)
+      string-dedent: 3.0.2
+      undici: 7.16.0
+    transitivePeerDependencies:
+      - '@biomejs/wasm-bundler'
+      - '@biomejs/wasm-web'
+      - '@emotion/is-prop-valid'
+      - '@modelcontextprotocol/sdk'
+      - supports-color
+
+  unframer@3.2.17(@emotion/is-prop-valid@1.4.0)(@modelcontextprotocol/sdk@1.20.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       '@antfu/ni': 25.0.0
       '@babel/core': 7.28.5
