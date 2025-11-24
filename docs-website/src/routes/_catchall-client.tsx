@@ -606,7 +606,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
                     * { --fd-sidebar-width: 0px !important; }
                 `}</style>
       )}
-      <DocsLayoutNotebook
+      <DocsLayout
         searchToggle={{
           enabled: searchEnabled,
           components: {},
@@ -637,7 +637,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
         <SourceContext.Provider value={{ source, locale: loaderData.locale || 'en' }}>
           {children}
         </SourceContext.Provider>
-      </DocsLayoutNotebook>
+      </DocsLayout>
     </div>
   )
 }
