@@ -321,7 +321,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         modal={false}
       >
         <SheetContent
-          className='bg-background lg:min-w-[600px] min-w-full'
+          className='bg-background lg:min-w-[600px] min-w-full resize-x overflow-y-auto'
           style={drawerContentStyle}
         >
           <ChatTopBar />

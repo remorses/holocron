@@ -20,13 +20,13 @@
     "tsup": "8.5.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5",
+    "vite": "^7.2.6",
     "vite-node": "^3.2.4",
     "vitest": "^3.2.4"
   },
   "pnpm": {
     "overrides": {
-      "vite": "npm:rolldown-vite@latest"
+      "vite": "npm:rolldown-vite@7.2.6"
     }
   },
   "repository": "https://github.com/remorses/",
