@@ -38,7 +38,7 @@ export async function getFilesForSource({
       const frontmatter = x.frontmatter as ProcessorDataFrontmatter | null
       return frontmatter?.visibility !== 'hidden'
     })
-    .map((x) => {
+    .map((x): MyVirtualFile => {
       let p = removeGithubFolder(x.githubPath, githubFolder)
 
       const res: MyVirtualFile = {

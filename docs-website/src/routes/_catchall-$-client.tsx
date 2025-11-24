@@ -16,7 +16,6 @@ import {
     PageTOCItems,
     PageTOCPopover,
     PageTOCPopoverContent,
-    PageTOCPopoverItems,
     PageTOCPopoverTrigger,
     PageTOCTitle,
 } from 'fumadocs-ui/layouts/docs/page'

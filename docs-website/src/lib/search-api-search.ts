@@ -1,4 +1,4 @@
-import { SortedResult as BaseSortedResult } from 'fumadocs-core/server'
+import { SortedResult as BaseSortedResult } from 'fumadocs-core/search/server'
 import { client } from './search-api'
 import type { SearchSectionsResponse } from 'searchapi/sdk'
 import type { FileUpdate } from './edit-tool'

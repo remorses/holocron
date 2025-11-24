@@ -7,7 +7,7 @@ import { Parser } from 'acorn'
 import { LooseParser } from 'acorn-loose'
 import acornJsx from 'acorn-jsx'
 
-import { TOCItemType } from 'fumadocs-core/server'
+import { TOCItemType } from 'fumadocs-core/toc'
 
 import { trySync } from './utils'
 import { remarkCodeGroup, remarkMermaidCode, remarkSingleAccordionItems } from './remark-plugins'
