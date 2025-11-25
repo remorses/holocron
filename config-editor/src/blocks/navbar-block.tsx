@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
-import { PlusIcon, TrashIcon, GripVerticalIcon } from 'lucide-react'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
+import { DragGroup } from '../components/drag-group'
 import type { DocsJsonType } from '../types'
 
 type NavbarBlockValues = Pick<DocsJsonType, 'navbar'>
@@ -37,10 +38,11 @@ export function NavbarBlock({ defaultValues, onSave, onPreview, disabled }: Navb
     },
   })
 
-  const { fields, append, remove, move } = useFieldArray({
+  const fieldArray = useFieldArray({
     control,
     name: 'navbar.links',
   })
+  const { fields, append, remove } = fieldArray
 
   const onSubmit = async (data: NavbarBlockValues) => {
     setIsSaving(true)
@@ -65,46 +67,48 @@ export function NavbarBlock({ defaultValues, onSave, onPreview, disabled }: Navb
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Links</p>
-          {fields.map((field, index) => (
-            <div key={field.id} className="rounded-md border p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <GripVerticalIcon className="size-4 text-muted-foreground cursor-grab shrink-0" />
-                <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                <div className="flex-1" />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => { remove(index) }}
-                  disabled={disabled}
-                  className="size-7"
-                >
-                  <TrashIcon className="size-3" />
-                </Button>
-              </div>
-              <FieldWrapper label="Label" required error={formState.errors.navbar?.links?.[index]?.label?.message}>
-                <Input
-                  {...register(`navbar.links.${index}.label`, { required: 'Label is required' })}
-                  placeholder="Documentation"
-                  disabled={disabled}
-                />
-              </FieldWrapper>
-              <FieldWrapper label="URL" required error={formState.errors.navbar?.links?.[index]?.href?.message}>
-                <Input
-                  {...register(`navbar.links.${index}.href`, { required: 'URL is required' })}
-                  placeholder="https://docs.example.com"
-                  disabled={disabled}
-                />
-              </FieldWrapper>
-              <FieldWrapper label="Icon (optional)" description="Lucide icon name">
-                <Input
-                  {...register(`navbar.links.${index}.icon`)}
-                  placeholder="BookOpen"
-                  disabled={disabled}
-                />
-              </FieldWrapper>
-            </div>
-          ))}
+          <DragGroup fieldArray={fieldArray}>
+            {fields.map((field, index) => (
+              <DragGroup.Item key={field.id} id={field.id} className="rounded-md border p-3 space-y-2 bg-card">
+                <div className="flex items-center gap-2">
+                  <DragGroup.Handle />
+                  <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                  <div className="flex-1" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { remove(index) }}
+                    disabled={disabled}
+                    className="size-7"
+                  >
+                    <TrashIcon className="size-3" />
+                  </Button>
+                </div>
+                <FieldWrapper label="Label" required error={formState.errors.navbar?.links?.[index]?.label?.message}>
+                  <Input
+                    {...register(`navbar.links.${index}.label`, { required: 'Label is required' })}
+                    placeholder="Documentation"
+                    disabled={disabled}
+                  />
+                </FieldWrapper>
+                <FieldWrapper label="URL" required error={formState.errors.navbar?.links?.[index]?.href?.message}>
+                  <Input
+                    {...register(`navbar.links.${index}.href`, { required: 'URL is required' })}
+                    placeholder="https://docs.example.com"
+                    disabled={disabled}
+                  />
+                </FieldWrapper>
+                <FieldWrapper label="Icon (optional)" description="Lucide icon name">
+                  <Input
+                    {...register(`navbar.links.${index}.icon`)}
+                    placeholder="BookOpen"
+                    disabled={disabled}
+                  />
+                </FieldWrapper>
+              </DragGroup.Item>
+            ))}
+          </DragGroup>
 
           <Button
             type="button"

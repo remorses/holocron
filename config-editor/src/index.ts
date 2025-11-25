@@ -16,3 +16,4 @@ export { IntegrationsBlock } from './blocks/integrations-block'
 
 export { BlockWrapper } from './components/block-wrapper'
 export { FieldWrapper } from './components/field-wrapper'
+export { DragGroup } from './components/drag-group'
