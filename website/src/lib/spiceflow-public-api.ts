@@ -130,40 +130,14 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         metadata
       })
 
-      const [branch, syncErrors] = await Promise.all([
-        prisma.siteBranch.findUnique({
-          where: { branchId: result.branchId }
-        }),
-        prisma.markdownPageSyncError.findMany({
-          where: {
-            page: {
-              branchId: result.branchId
-            }
-          },
-          include: {
-            page: {
-              select: {
-                githubPath: true,
-                slug: true
-              }
-            }
-          }
-        })
-      ])
-
-      const errors = syncErrors.map((error) => ({
-        githubPath: error.page.githubPath,
-        line: error.line,
-        errorMessage: error.errorMessage,
-        errorType: error.errorType
-      }))
+      const errors = [...result.markdownErrors, ...result.configErrors]
 
       return {
         success: true,
         siteId: result.siteId,
         branchId: result.branchId,
         chatId: result.chatId,
-        docsJson: (branch?.docsJson || {}) as DocsJsonType,
+        docsJson: result.docsJson,
         errors
       }
     }
@@ -224,7 +198,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         githubFolder: site.githubFolder || '',
       })
 
-      const { pageCount, configErrors } = await syncSite({
+      const { pageCount, configErrors, markdownErrors } = await syncSite({
         files: assets,
         githubFolder: site.githubFolder || '',
         branchId: branch.branchId,
@@ -233,40 +207,17 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         ignorePatterns: (docsJson)?.ignore || []
       })
 
-      await prisma.siteBranch.update({
-        where: { branchId: branch.branchId },
-        data: {
-          lastGithubSyncAt: new Date()
-        }
-      })
-
-      const [updatedBranch, syncErrors] = await Promise.all([
+      const [, updatedBranch] = await Promise.all([
+        prisma.siteBranch.update({
+          where: { branchId: branch.branchId },
+          data: {
+            lastGithubSyncAt: new Date()
+          }
+        }),
         prisma.siteBranch.findUnique({
           where: { branchId: branch.branchId }
         }),
-        prisma.markdownPageSyncError.findMany({
-          where: {
-            page: {
-              branchId: branch.branchId
-            }
-          },
-          include: {
-            page: {
-              select: {
-                githubPath: true,
-                slug: true
-              }
-            }
-          }
-        })
       ])
-
-      const markdownErrors = syncErrors.map((error) => ({
-        githubPath: error.page.githubPath,
-        line: error.line,
-        errorMessage: error.errorMessage,
-        errorType: error.errorType
-      }))
 
       const errors = [...markdownErrors, ...configErrors]
 

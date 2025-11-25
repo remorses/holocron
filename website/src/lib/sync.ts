@@ -231,6 +231,15 @@ export type ConfigError = {
   errorType: ConfigErrorType
 }
 
+export type MarkdownErrorType = 'mdxParse' | 'mdParse' | 'render'
+
+export type MarkdownSyncError = {
+  githubPath: string
+  line: number
+  errorMessage: string
+  errorType: MarkdownErrorType
+}
+
 export async function syncSite({
   branchId,
   siteId,
@@ -246,11 +255,12 @@ export async function syncSite({
   name: string
   signal?: AbortSignal
   ignorePatterns?: string[]
-}): Promise<{ pageCount: number; configErrors: ConfigError[] }> {
+}): Promise<{ pageCount: number; configErrors: ConfigError[]; markdownErrors: MarkdownSyncError[] }> {
   const concurrencyLimit = 1 // TODO increase this to speed up sync
   const semaphore = new Sema(concurrencyLimit)
   let pageCount = 0
   const configErrors: ConfigError[] = []
+  const markdownErrors: MarkdownSyncError[] = []
 
   // Helper function to check if a file should be ignored
   const shouldIgnoreFile = (githubPath: string): boolean => {
@@ -755,6 +765,16 @@ export async function syncSite({
 
     errors = deduplicateBy(errors, (x) => String(x.line || 0))
 
+    // Collect errors for return
+    for (const error of errors) {
+      markdownErrors.push({
+        githubPath: asset.githubPath,
+        line: error.line,
+        errorMessage: error.errorMessage,
+        errorType: error.errorType,
+      })
+    }
+
     // Execute all operations in a single transaction array for data consistency
     // Create MarkdownBlob FIRST to satisfy foreign key constraint
     const transactionOps: Prisma.PrismaPromise<any>[] = []
@@ -1049,7 +1069,7 @@ export async function syncSite({
   // No cleanup needed for search API as it handles file updates automatically
 
   console.log('Import script finished.')
-  return { pageCount, configErrors }
+  return { pageCount, configErrors, markdownErrors }
 }
 
 function groupByN<T>(array: T[], n: number): T[][] {

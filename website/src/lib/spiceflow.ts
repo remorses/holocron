@@ -13,7 +13,7 @@ import { getSession } from './better-auth'
 import { env } from './env'
 import { AppError, notifyError } from './errors'
 import { createPullRequestSuggestion, getOctokit, pushToPrOrBranch } from './github.server'
-import { filesFromGithub, assetsFromFilesList, syncSite } from './sync'
+import { filesFromGithub, assetsFromFilesList, syncSite, ConfigError, MarkdownSyncError } from './sync'
 
 import { createHash } from 'crypto'
 import { fileUpdateSchema } from 'docs-website/src/lib/edit-tool'
@@ -770,6 +770,8 @@ export const app = new Spiceflow({ basePath: '/api' })
       }
 
       let pageCount: number
+      let configErrors: ConfigError[] = []
+      let markdownErrors: MarkdownSyncError[] = []
 
       // For updates (existing sites), we need to sync again
       if (siteId) {
@@ -794,6 +796,8 @@ export const app = new Spiceflow({ basePath: '/api' })
           ignorePatterns: (docsJson as any)?.ignore || [],
         })
         pageCount = syncResult.pageCount
+        configErrors = syncResult.configErrors
+        markdownErrors = syncResult.markdownErrors
       } else {
         // For new sites, createSite already synced the files
         const result = await prisma.markdownPage.count({
@@ -802,37 +806,15 @@ export const app = new Spiceflow({ basePath: '/api' })
         pageCount = result
       }
 
-      // Get the generated docsJson and any sync errors
-      const [branch, syncErrors] = await Promise.all([
-        prisma.siteBranch.findUnique({
-          where: { branchId: finalBranchId },
-          include: {
-            site: true,
-          },
-        }),
-        prisma.markdownPageSyncError.findMany({
-          where: {
-            page: {
-              branchId: finalBranchId,
-            },
-          },
-          include: {
-            page: {
-              select: {
-                githubPath: true,
-                slug: true,
-              },
-            },
-          },
-        }),
-      ])
+      // Get the generated docsJson
+      const branch = await prisma.siteBranch.findUnique({
+        where: { branchId: finalBranchId },
+        include: {
+          site: true,
+        },
+      })
 
-      const errors = syncErrors.map((error) => ({
-        githubPath: error.page.githubPath,
-        line: error.line,
-        errorMessage: error.errorMessage,
-        errorType: error.errorType,
-      }))
+      const errors = [...markdownErrors, ...configErrors]
 
       // Get docsJsonComments from the branch
       const branchDocsJsonComments = (branch?.docsJsonComments || {}) as any

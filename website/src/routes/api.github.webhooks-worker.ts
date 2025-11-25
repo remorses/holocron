@@ -6,7 +6,7 @@ import { prisma } from 'db'
 import { env } from 'website/src/lib/env'
 import { notifyError } from 'website/src/lib/errors'
 import { getOctokit } from 'website/src/lib/github.server'
-import { isDocsJsonFile, syncSite, filesFromGithub, ConfigError } from 'website/src/lib/sync'
+import { isDocsJsonFile, syncSite, filesFromGithub, ConfigError, MarkdownSyncError } from 'website/src/lib/sync'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
@@ -156,7 +156,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
       branch: githubBranch,
     })
 
-    const { pageCount, configErrors } = await syncSite({
+    const { pageCount, configErrors, markdownErrors } = await syncSite({
       branchId: siteBranch.branchId,
       siteId: siteBranch.site.siteId,
       githubFolder: siteBranch.site.githubFolder,
@@ -182,6 +182,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
       commitSha: latestCommit.id,
       branchId: siteBranch.branchId,
       configErrors,
+      markdownErrors,
     })
   } catch (error) {
     logger.error('Error during sync process:', error)
@@ -395,6 +396,7 @@ async function reportErrorsToGithub({
   commitSha,
   branchId,
   configErrors = [],
+  markdownErrors = [],
 }: {
   installationId: number
   owner: string
@@ -402,43 +404,27 @@ async function reportErrorsToGithub({
   commitSha: string
   branchId: string
   configErrors?: ConfigError[]
+  markdownErrors?: MarkdownSyncError[]
 }) {
   try {
     const octokit = await getOctokit({ installationId })
 
-    // Get all sync errors for this branch and the site branch with domains
-    const [syncErrors, siteBranch] = await Promise.all([
-      prisma.markdownPageSyncError.findMany({
-        where: {
-          page: {
-            branchId,
+    // Get the site branch with domains for the website URL
+    const siteBranch = await prisma.siteBranch.findFirst({
+      where: {
+        branchId,
+      },
+      include: {
+        domains: {
+          where: {
+            domainType: 'internalDomain',
+          },
+          select: {
+            host: true,
           },
         },
-        include: {
-          page: {
-            select: {
-              githubPath: true,
-              slug: true,
-            },
-          },
-        },
-      }),
-      prisma.siteBranch.findFirst({
-        where: {
-          branchId,
-        },
-        include: {
-          domains: {
-            where: {
-              domainType: 'internalDomain',
-            },
-            select: {
-              host: true,
-            },
-          },
-        },
-      }),
-    ])
+      },
+    })
 
     // Get the first internal domain for the website URL
     const websiteUrl = (() => {
@@ -448,7 +434,7 @@ async function reportErrorsToGithub({
       return DEFAULT_DOCS_URL
     })()
 
-    const totalErrors = syncErrors.length + configErrors.length
+    const totalErrors = markdownErrors.length + configErrors.length
 
     if (totalErrors === 0) {
       // Create a successful check run if no errors
@@ -468,12 +454,12 @@ async function reportErrorsToGithub({
     }
 
     // Check if all errors are recoverable render errors (config errors are never recoverable)
-    const nonRenderErrors = syncErrors.filter((error) => error.errorType !== 'render')
+    const nonRenderErrors = markdownErrors.filter((error) => error.errorType !== 'render')
     const hasOnlyRenderErrors = nonRenderErrors.length === 0 && configErrors.length === 0
 
-    // Convert sync errors to GitHub annotations (max 50 per request)
-    const markdownAnnotations = syncErrors.slice(0, 40).map((error) => ({
-      path: error.page.githubPath,
+    // Convert markdown errors to GitHub annotations (max 50 per request)
+    const markdownAnnotations = markdownErrors.slice(0, 40).map((error) => ({
+      path: error.githubPath,
       start_line: error.line,
       end_line: error.line,
       annotation_level: error.errorType === 'render' ? ('warning' as const) : ('failure' as const),
@@ -492,7 +478,7 @@ async function reportErrorsToGithub({
     const annotations = [...markdownAnnotations, ...configAnnotations]
 
     const errorsByType: Record<string, number> = {}
-    for (const error of syncErrors) {
+    for (const error of markdownErrors) {
       errorsByType[error.errorType] = (errorsByType[error.errorType] || 0) + 1
     }
     for (const error of configErrors) {
