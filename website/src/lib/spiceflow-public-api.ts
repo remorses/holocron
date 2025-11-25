@@ -224,7 +224,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         githubFolder: site.githubFolder || '',
       })
 
-      const { pageCount } = await syncSite({
+      const { pageCount, configErrors } = await syncSite({
         files: assets,
         githubFolder: site.githubFolder || '',
         branchId: branch.branchId,
@@ -261,12 +261,14 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         })
       ])
 
-      const errors = syncErrors.map((error) => ({
+      const markdownErrors = syncErrors.map((error) => ({
         githubPath: error.page.githubPath,
         line: error.line,
         errorMessage: error.errorMessage,
         errorType: error.errorType
       }))
+
+      const errors = [...markdownErrors, ...configErrors]
 
       return {
         success: true,

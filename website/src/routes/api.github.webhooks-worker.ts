@@ -6,7 +6,7 @@ import { prisma } from 'db'
 import { env } from 'website/src/lib/env'
 import { notifyError } from 'website/src/lib/errors'
 import { getOctokit } from 'website/src/lib/github.server'
-import { isDocsJsonFile, syncSite, filesFromGithub } from 'website/src/lib/sync'
+import { isDocsJsonFile, syncSite, filesFromGithub, ConfigError } from 'website/src/lib/sync'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
@@ -156,7 +156,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
       branch: githubBranch,
     })
 
-    const { pageCount } = await syncSite({
+    const { pageCount, configErrors } = await syncSite({
       branchId: siteBranch.branchId,
       siteId: siteBranch.site.siteId,
       githubFolder: siteBranch.site.githubFolder,
@@ -181,6 +181,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
       repoName,
       commitSha: latestCommit.id,
       branchId: siteBranch.branchId,
+      configErrors,
     })
   } catch (error) {
     logger.error('Error during sync process:', error)
@@ -393,12 +394,14 @@ async function reportErrorsToGithub({
   repoName,
   commitSha,
   branchId,
+  configErrors = [],
 }: {
   installationId: number
   owner: string
   repoName: string
   commitSha: string
   branchId: string
+  configErrors?: ConfigError[]
 }) {
   try {
     const octokit = await getOctokit({ installationId })
@@ -445,7 +448,9 @@ async function reportErrorsToGithub({
       return DEFAULT_DOCS_URL
     })()
 
-    if (syncErrors.length === 0) {
+    const totalErrors = syncErrors.length + configErrors.length
+
+    if (totalErrors === 0) {
       // Create a successful check run if no errors
       await octokit.rest.checks.create({
         owner,
@@ -456,18 +461,18 @@ async function reportErrorsToGithub({
         conclusion: 'success',
         output: {
           title: 'Documentation sync successful',
-          summary: `All markdown files processed successfully.\n\n📖 [View documentation](${websiteUrl})`,
+          summary: `All files processed successfully.\n\n📖 [View documentation](${websiteUrl})`,
         },
       })
       return
     }
 
-    // Check if all errors are recoverable render errors
+    // Check if all errors are recoverable render errors (config errors are never recoverable)
     const nonRenderErrors = syncErrors.filter((error) => error.errorType !== 'render')
-    const hasOnlyRenderErrors = nonRenderErrors.length === 0
+    const hasOnlyRenderErrors = nonRenderErrors.length === 0 && configErrors.length === 0
 
     // Convert sync errors to GitHub annotations (max 50 per request)
-    const annotations = syncErrors.slice(0, 50).map((error) => ({
+    const markdownAnnotations = syncErrors.slice(0, 40).map((error) => ({
       path: error.page.githubPath,
       start_line: error.line,
       end_line: error.line,
@@ -475,13 +480,24 @@ async function reportErrorsToGithub({
       message: `${error.errorType}: ${error.errorMessage}`,
     }))
 
-    const errorsByType = syncErrors.reduce(
-      (acc, error) => {
-        acc[error.errorType] = (acc[error.errorType] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>,
-    )
+    // Add config error annotations (use line 1 for config file errors)
+    const configAnnotations = configErrors.slice(0, 10).map((error) => ({
+      path: error.githubPath,
+      start_line: 1,
+      end_line: 1,
+      annotation_level: 'failure' as const,
+      message: `${error.errorType}: ${error.errorMessage}`,
+    }))
+
+    const annotations = [...markdownAnnotations, ...configAnnotations]
+
+    const errorsByType: Record<string, number> = {}
+    for (const error of syncErrors) {
+      errorsByType[error.errorType] = (errorsByType[error.errorType] || 0) + 1
+    }
+    for (const error of configErrors) {
+      errorsByType[error.errorType] = (errorsByType[error.errorType] || 0) + 1
+    }
 
     const summary = Object.entries(errorsByType)
       .map(([type, count]) => `${count} ${type} error(s)`)
@@ -497,8 +513,8 @@ async function reportErrorsToGithub({
         status: 'completed',
         conclusion: 'neutral',
         output: {
-          title: `Documentation sync completed with ${syncErrors.length} recoverable error(s)`,
-          summary: `Found ${summary} in markdown files. These are recoverable rendering errors that don't prevent the sync from completing.\n\n📖 [View documentation](${websiteUrl})`,
+          title: `Documentation sync completed with ${totalErrors} recoverable error(s)`,
+          summary: `Found ${summary}. These are recoverable rendering errors that don't prevent the sync from completing.\n\n📖 [View documentation](${websiteUrl})`,
           annotations,
         },
       })
@@ -512,14 +528,14 @@ async function reportErrorsToGithub({
         status: 'completed',
         conclusion: 'failure',
         output: {
-          title: `Documentation sync failed with ${syncErrors.length} error(s)`,
-          summary: `Found ${summary} in markdown files.\n\n📖 [View documentation](${websiteUrl})`,
+          title: `Documentation sync failed with ${totalErrors} error(s)`,
+          summary: `Found ${summary}.\n\n📖 [View documentation](${websiteUrl})`,
           annotations,
         },
       })
     }
 
-    logger.log(`Reported ${syncErrors.length} errors to GitHub Checks API for commit ${commitSha}`)
+    logger.log(`Reported ${totalErrors} errors to GitHub Checks API for commit ${commitSha}`)
   } catch (error) {
     logger.error('Failed to report errors to GitHub Checks API:', error)
     notifyError(error, 'GitHub Checks API error reporting')

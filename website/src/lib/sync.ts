@@ -223,6 +223,14 @@ export async function* assetsFromFilesList({
   }
 }
 
+export type ConfigErrorType = 'configValidation' | 'domainTaken' | 'domainCloudflareConflict' | 'noDomains'
+
+export type ConfigError = {
+  githubPath: string
+  errorMessage: string
+  errorType: ConfigErrorType
+}
+
 export async function syncSite({
   branchId,
   siteId,
@@ -238,10 +246,11 @@ export async function syncSite({
   name: string
   signal?: AbortSignal
   ignorePatterns?: string[]
-}): Promise<{ pageCount: number }> {
+}): Promise<{ pageCount: number; configErrors: ConfigError[] }> {
   const concurrencyLimit = 1 // TODO increase this to speed up sync
   const semaphore = new Sema(concurrencyLimit)
   let pageCount = 0
+  const configErrors: ConfigError[] = []
 
   // Helper function to check if a file should be ignored
   const shouldIgnoreFile = (githubPath: string): boolean => {
@@ -332,6 +341,15 @@ export async function syncSite({
     if (!validationResult.success) {
       console.error(`Invalid holocron.jsonc schema:`, validationResult.error.format())
       notifyError(validationResult.error, `Invalid holocron.jsonc for site ${siteId}`)
+      const errorMessages = validationResult.error.issues.map((issue) => {
+        const path = issue.path.join('.')
+        return path ? `${path}: ${issue.message}` : issue.message
+      })
+      configErrors.push({
+        githubPath: asset.githubPath,
+        errorMessage: errorMessages.join('; '),
+        errorType: 'configValidation',
+      })
       return []
     }
 
@@ -395,6 +413,11 @@ export async function syncSite({
           })
           if (domainTaken) {
             console.log(`Domain ${host} is already taken, skipping.`)
+            configErrors.push({
+              githubPath: asset.githubPath,
+              errorMessage: `Domain "${host}" is already taken by another site`,
+              errorType: 'domainTaken',
+            })
             continue
           }
           const domainType: DomainType =
@@ -411,6 +434,11 @@ export async function syncSite({
             if (takenInCloudflare) console.log(takenInCloudflare)
             if (takenInCloudflare?.id) {
               console.log(`Domain ${host} is already taken in Cloudflare, skipping.`)
+              configErrors.push({
+                githubPath: asset.githubPath,
+                errorMessage: `Domain "${host}" is already configured in Cloudflare`,
+                errorType: 'domainCloudflareConflict',
+              })
               continue
             }
           }
@@ -431,6 +459,11 @@ export async function syncSite({
           } catch (e) {
             if (typeof e?.message === 'string' && e.message.includes('409 Conflict')) {
               console.log(`stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`)
+              configErrors.push({
+                githubPath: asset.githubPath,
+                errorMessage: `Domain "${host}" conflict: ${e.message}`,
+                errorType: 'domainCloudflareConflict',
+              })
             } else {
               throw e
             }
@@ -445,6 +478,16 @@ export async function syncSite({
         }
       }
     }
+
+    // Check if the site has at least one domain after processing
+    if (branchDomains.length === 0) {
+      configErrors.push({
+        githubPath: asset.githubPath,
+        errorMessage: 'Site must have at least one domain configured. Add a "domains" array in your config.',
+        errorType: 'noDomains',
+      })
+    }
+
     return []
   }
 
@@ -1006,7 +1049,7 @@ export async function syncSite({
   // No cleanup needed for search API as it handles file updates automatically
 
   console.log('Import script finished.')
-  return { pageCount }
+  return { pageCount, configErrors }
 }
 
 function groupByN<T>(array: T[], n: number): T[][] {
