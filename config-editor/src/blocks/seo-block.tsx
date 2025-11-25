@@ -7,7 +7,7 @@ import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType } from '../types'
+import type { DocsJsonType, SeoFormValues, MetatagEntry } from '../types'
 
 type SeoBlockValues = Pick<DocsJsonType, 'description' | 'seo'>
 
@@ -18,23 +18,27 @@ type SeoBlockProps = {
   disabled?: boolean
 }
 
+function metatagsToEntries(metatags: Record<string, string> | undefined): MetatagEntry[] {
+  return Object.entries(metatags || {}).map(([name, content]) => ({ name, content }))
+}
+
+function entriesToMetatags(entries: MetatagEntry[]): Record<string, string> {
+  return entries.reduce<Record<string, string>>((acc, { name, content }) => {
+    if (name && content) {
+      acc[name] = content
+    }
+    return acc
+  }, {})
+}
+
 export function SeoBlock({ defaultValues, onSave, onPreview, disabled }: SeoBlockProps) {
   const [isSaving, setIsSaving] = useState(false)
 
-  const defaultMetatags = Object.entries(defaultValues.seo?.metatags || {}).map(([name, content]) => ({
-    name,
-    content,
-  }))
-
-  const { register, handleSubmit, formState, control, reset } = useForm<{
-    description: string
-    indexing: 'navigable' | 'all' | 'default'
-    metatags: { name: string; content: string }[]
-  }>({
+  const { register, handleSubmit, formState, control, reset } = useForm<SeoFormValues>({
     defaultValues: {
       description: defaultValues.description || '',
       indexing: defaultValues.seo?.indexing || 'default',
-      metatags: defaultMetatags,
+      metatags: metatagsToEntries(defaultValues.seo?.metatags),
     },
   })
 
@@ -43,16 +47,10 @@ export function SeoBlock({ defaultValues, onSave, onPreview, disabled }: SeoBloc
     name: 'metatags',
   })
 
-  const onSubmit = async (data: { description: string; indexing: 'navigable' | 'all' | 'default'; metatags: { name: string; content: string }[] }) => {
+  const onSubmit = async (data: SeoFormValues) => {
     setIsSaving(true)
     try {
-      const metatags: Record<string, string> = {}
-      data.metatags.forEach((m) => {
-        if (m.name && m.content) {
-          metatags[m.name] = m.content
-        }
-      })
-
+      const metatags = entriesToMetatags(data.metatags)
       await onSave({
         description: data.description || undefined,
         seo: {

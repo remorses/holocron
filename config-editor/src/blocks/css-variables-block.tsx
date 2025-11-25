@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { ColorPickerButton } from '../components/color-picker-button'
-import type { DocsJsonType } from '../types'
+import type { DocsJsonType, CssVariablesFormValues, CssVariableEntry } from '../types'
 
 type CssVariablesBlockValues = Pick<DocsJsonType, 'cssVariables'>
 
@@ -16,19 +16,26 @@ type CssVariablesBlockProps = {
   disabled?: boolean
 }
 
+function recordToEntries(record: Record<string, string> | undefined): CssVariableEntry[] {
+  return Object.entries(record || {}).map(([name, value]) => ({ name, value }))
+}
+
+function entriesToRecord(entries: CssVariableEntry[]): Record<string, string> {
+  return entries.reduce<Record<string, string>>((acc, { name, value }) => {
+    if (name && value) {
+      acc[name] = value
+    }
+    return acc
+  }, {})
+}
+
 export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }: CssVariablesBlockProps) {
   const [isSaving, setIsSaving] = useState(false)
 
-  const lightVars = Object.entries(defaultValues.cssVariables?.light || {}).map(([name, value]) => ({ name, value }))
-  const darkVars = Object.entries(defaultValues.cssVariables?.dark || {}).map(([name, value]) => ({ name, value }))
-
-  const { register, handleSubmit, formState, control, reset } = useForm<{
-    light: { name: string; value: string }[]
-    dark: { name: string; value: string }[]
-  }>({
+  const { register, handleSubmit, formState, control, reset } = useForm<CssVariablesFormValues>({
     defaultValues: {
-      light: lightVars.length > 0 ? lightVars : [],
-      dark: darkVars.length > 0 ? darkVars : [],
+      light: recordToEntries(defaultValues.cssVariables?.light),
+      dark: recordToEntries(defaultValues.cssVariables?.dark),
     },
   })
 
@@ -42,23 +49,11 @@ export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }
     name: 'dark',
   })
 
-  const onSubmit = async (data: { light: { name: string; value: string }[]; dark: { name: string; value: string }[] }) => {
+  const onSubmit = async (data: CssVariablesFormValues) => {
     setIsSaving(true)
     try {
-      const light: Record<string, string> = {}
-      const dark: Record<string, string> = {}
-
-      data.light.forEach((v) => {
-        if (v.name && v.value) {
-          light[v.name] = v.value
-        }
-      })
-      data.dark.forEach((v) => {
-        if (v.name && v.value) {
-          dark[v.name] = v.value
-        }
-      })
-
+      const light = entriesToRecord(data.light)
+      const dark = entriesToRecord(data.dark)
       const hasVars = Object.keys(light).length > 0 || Object.keys(dark).length > 0
       await onSave({
         cssVariables: hasVars ? { light, dark } : undefined,

@@ -11,14 +11,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@holocron.so/cli": "workspace:*",
     "@radix-ui/react-popover": "^1.1.6",
     "@radix-ui/react-select": "^2.1.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.4",
+    "@uiw/react-color": "^2.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "@uiw/react-color": "^2.3.0",
     "framer-motion": "^11.18.0",
     "lucide-react": "^0.525.0",
     "react": "^19.2.0",

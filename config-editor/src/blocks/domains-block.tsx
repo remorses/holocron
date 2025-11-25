@@ -4,8 +4,7 @@ import { PlusIcon, TrashIcon, AlertCircleIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
-import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType } from '../types'
+import type { DocsJsonType, DomainsFormValues } from '../types'
 
 type DomainsBlockValues = Pick<DocsJsonType, 'domains'>
 
@@ -28,7 +27,7 @@ export function DomainsBlock({
 }: DomainsBlockProps) {
   const [isSaving, setIsSaving] = useState(false)
 
-  const { register, handleSubmit, formState, control, reset } = useForm<{ domains: { value: string }[] }>({
+  const { register, handleSubmit, formState, control, reset } = useForm<DomainsFormValues>({
     defaultValues: {
       domains: (defaultValues.domains || []).map((d) => ({ value: d })),
     },
@@ -39,7 +38,7 @@ export function DomainsBlock({
     name: 'domains',
   })
 
-  const onSubmit = async (data: { domains: { value: string }[] }) => {
+  const onSubmit = async (data: DomainsFormValues) => {
     setIsSaving(true)
     try {
       const domains = data.domains.map((d) => d.value).filter(Boolean)

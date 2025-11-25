@@ -384,7 +384,7 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
           'Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.',
         ),
       theme: z
-        .enum(themeNames as [string, ...string[]])
+        .enum(themeNames as unknown as [string, ...string[]])
         .optional()
         .describe(
           'Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged',

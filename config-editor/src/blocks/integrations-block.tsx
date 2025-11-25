@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType } from '../types'
+import type { DocsJsonType, IntegrationsFormValues } from '../types'
 
 type IntegrationsBlockValues = Pick<DocsJsonType, 'integrations'>
 
@@ -89,15 +89,13 @@ export function IntegrationsBlock({ defaultValues, onSave, onPreview, disabled }
   const [isSaving, setIsSaving] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
-  const { register, handleSubmit, formState, reset } = useForm<{
-    integrations: Record<string, Record<string, string>>
-  }>({
+  const { register, handleSubmit, formState, reset } = useForm<IntegrationsFormValues>({
     defaultValues: {
-      integrations: defaultValues.integrations as Record<string, Record<string, string>> || {},
+      integrations: (defaultValues.integrations as IntegrationsFormValues['integrations']) || {},
     },
   })
 
-  const onSubmit = async (data: { integrations: Record<string, Record<string, string>> }) => {
+  const onSubmit = async (data: IntegrationsFormValues) => {
     setIsSaving(true)
     try {
       const integrations: Record<string, Record<string, string>> = {}

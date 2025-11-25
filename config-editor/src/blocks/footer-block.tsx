@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, UseFormRegister, Control } from 'react-hook-form'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType } from '../types'
+import { DragGroup } from '../components/drag-group'
+import type { DocsJsonType, FooterFormValues, SocialEntry, FooterLinkColumn } from '../types'
 
 type FooterBlockValues = Pick<DocsJsonType, 'footer'>
 
@@ -18,39 +19,43 @@ type FooterBlockProps = {
 
 const SOCIAL_PLATFORMS = ['twitter', 'github', 'discord', 'linkedin', 'youtube', 'facebook', 'instagram'] as const
 
+function socialsToEntries(socials: Record<string, string> | undefined): SocialEntry[] {
+  return SOCIAL_PLATFORMS.map((platform) => ({
+    platform,
+    url: socials?.[platform] || '',
+  }))
+}
+
+function entriesToSocials(entries: SocialEntry[]): Record<string, string> {
+  return entries.reduce<Record<string, string>>((acc, { platform, url }) => {
+    if (url) {
+      acc[platform] = url
+    }
+    return acc
+  }, {})
+}
+
 export function FooterBlock({ defaultValues, onSave, onPreview, disabled }: FooterBlockProps) {
   const [isSaving, setIsSaving] = useState(false)
 
-  const defaultSocials = SOCIAL_PLATFORMS.map((platform) => ({
-    platform,
-    url: defaultValues.footer?.socials?.[platform] || '',
-  }))
-
-  const { register, handleSubmit, formState, control, reset, watch } = useForm<{
-    socials: { platform: string; url: string }[]
-    links: { header: string; items: { label: string; href: string }[] }[]
-  }>({
+  const { register, handleSubmit, formState, control, reset } = useForm<FooterFormValues>({
     defaultValues: {
-      socials: defaultSocials,
-      links: defaultValues.footer?.links || [],
+      socials: socialsToEntries(defaultValues.footer?.socials),
+      links: (defaultValues.footer?.links || []) as FooterLinkColumn[],
     },
   })
 
-  const { fields: linkColumns, append: appendColumn, remove: removeColumn } = useFieldArray({
+  const columnsFieldArray = useFieldArray({
     control,
     name: 'links',
   })
 
-  const onSubmit = async (data: { socials: { platform: string; url: string }[]; links: { header: string; items: { label: string; href: string }[] }[] }) => {
+  const { fields: linkColumns, append: appendColumn, remove: removeColumn } = columnsFieldArray
+
+  const onSubmit = async (data: FooterFormValues) => {
     setIsSaving(true)
     try {
-      const socials: Record<string, string> = {}
-      data.socials.forEach((s) => {
-        if (s.url) {
-          socials[s.platform] = s.url
-        }
-      })
-
+      const socials = entriesToSocials(data.socials)
       const links = data.links
         .map((col) => ({
           header: col.header,
@@ -92,17 +97,22 @@ export function FooterBlock({ defaultValues, onSave, onPreview, disabled }: Foot
 
         <div className="space-y-2 pt-2 border-t">
           <p className="text-xs font-medium text-muted-foreground">Link Columns</p>
-          {linkColumns.map((column, colIndex) => (
-            <FooterColumn
-              key={column.id}
-              colIndex={colIndex}
-              register={register}
-              control={control}
-              formState={formState}
-              disabled={disabled}
-              onRemove={() => { removeColumn(colIndex) }}
-            />
-          ))}
+          <DragGroup fieldArray={columnsFieldArray} className="space-y-2">
+            {linkColumns.map((column, colIndex) => (
+              <DragGroup.Item key={column.id} id={column.id} className="flex gap-2 items-start">
+                <DragGroup.Handle className="mt-3" />
+                <div className="flex-1">
+                  <FooterColumn
+                    colIndex={colIndex}
+                    register={register}
+                    control={control}
+                    disabled={disabled}
+                    onRemove={() => { removeColumn(colIndex) }}
+                  />
+                </div>
+              </DragGroup.Item>
+            ))}
+          </DragGroup>
 
           <Button
             type="button"
@@ -131,14 +141,12 @@ function FooterColumn({
   colIndex,
   register,
   control,
-  formState,
   disabled,
   onRemove,
 }: {
   colIndex: number
-  register: any
-  control: any
-  formState: any
+  register: UseFormRegister<FooterFormValues>
+  control: Control<FooterFormValues>
   disabled?: boolean
   onRemove: () => void
 }) {

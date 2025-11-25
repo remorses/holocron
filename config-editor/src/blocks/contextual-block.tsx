@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
 import { Label } from '../components/ui/label'
 import { BlockWrapper } from '../components/block-wrapper'
-import { contextualOptions, type ContextualOption, type DocsJsonType } from '../types'
+import { contextualOptions, type ContextualOption, type DocsJsonType, type ContextualFormValues } from '../types'
 
 const contextualLabels: Record<ContextualOption, { label: string; description: string }> = {
   copy: { label: 'Copy', description: 'Copy code to clipboard' },
@@ -33,13 +33,11 @@ export function ContextualBlock({ defaultValues, onSave, onPreview, disabled }: 
     {} as Record<ContextualOption, boolean>,
   )
 
-  const { handleSubmit, formState, control, reset } = useForm<{
-    options: Record<ContextualOption, boolean>
-  }>({
+  const { handleSubmit, formState, control, reset } = useForm<ContextualFormValues>({
     defaultValues: { options: defaultOptions },
   })
 
-  const onSubmit = async (data: { options: Record<ContextualOption, boolean> }) => {
+  const onSubmit = async (data: ContextualFormValues) => {
     setIsSaving(true)
     try {
       const options = Object.entries(data.options)
