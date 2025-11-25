@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType, IntegrationsFormValues } from '../types'
+import { integrationDefinitions, type DocsJsonType, type IntegrationsFormValues } from '../types'
 
 type IntegrationsBlockValues = Pick<DocsJsonType, 'integrations'>
 
@@ -15,75 +15,6 @@ type IntegrationsBlockProps = {
   onPreview?: (data: IntegrationsBlockValues) => void
   disabled?: boolean
 }
-
-const INTEGRATIONS = [
-  {
-    id: 'ga4',
-    name: 'Google Analytics 4',
-    fields: [{ key: 'measurementId', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX' }],
-    docsUrl: 'https://support.google.com/analytics/answer/9539598',
-  },
-  {
-    id: 'gtm',
-    name: 'Google Tag Manager',
-    fields: [{ key: 'tagId', label: 'Tag ID', placeholder: 'GTM-XXXXXXX' }],
-    docsUrl: 'https://support.google.com/tagmanager/answer/6102821',
-  },
-  {
-    id: 'posthog',
-    name: 'PostHog',
-    fields: [
-      { key: 'apiKey', label: 'API Key', placeholder: 'phc_...' },
-      { key: 'apiHost', label: 'API Host (optional)', placeholder: 'https://app.posthog.com' },
-    ],
-    docsUrl: 'https://posthog.com/docs',
-  },
-  {
-    id: 'plausible',
-    name: 'Plausible',
-    fields: [
-      { key: 'domain', label: 'Domain', placeholder: 'example.com' },
-      { key: 'server', label: 'Server (optional)', placeholder: 'https://plausible.io' },
-    ],
-    docsUrl: 'https://plausible.io/docs',
-  },
-  {
-    id: 'amplitude',
-    name: 'Amplitude',
-    fields: [{ key: 'apiKey', label: 'API Key', placeholder: 'your-api-key' }],
-    docsUrl: 'https://www.docs.developers.amplitude.com/',
-  },
-  {
-    id: 'mixpanel',
-    name: 'Mixpanel',
-    fields: [{ key: 'projectToken', label: 'Project Token', placeholder: 'your-project-token' }],
-    docsUrl: 'https://docs.mixpanel.com/',
-  },
-  {
-    id: 'intercom',
-    name: 'Intercom',
-    fields: [{ key: 'appId', label: 'App ID', placeholder: 'your-app-id' }],
-    docsUrl: 'https://developers.intercom.com/',
-  },
-  {
-    id: 'segment',
-    name: 'Segment',
-    fields: [{ key: 'key', label: 'Write Key', placeholder: 'your-write-key' }],
-    docsUrl: 'https://segment.com/docs/',
-  },
-  {
-    id: 'fathom',
-    name: 'Fathom',
-    fields: [{ key: 'siteId', label: 'Site ID', placeholder: 'XXXXX' }],
-    docsUrl: 'https://usefathom.com/docs',
-  },
-  {
-    id: 'pirsch',
-    name: 'Pirsch',
-    fields: [{ key: 'id', label: 'Site ID', placeholder: 'your-site-id' }],
-    docsUrl: 'https://docs.pirsch.io/',
-  },
-] as const
 
 export function IntegrationsBlock({ defaultValues, onSave, onPreview, disabled }: IntegrationsBlockProps) {
   const [isSaving, setIsSaving] = useState(false)
@@ -132,7 +63,7 @@ export function IntegrationsBlock({ defaultValues, onSave, onPreview, disabled }
       description="Third-party analytics and support integrations"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-        {INTEGRATIONS.map((integration) => {
+        {integrationDefinitions.map((integration) => {
           const isExpanded = expanded[integration.id]
           const hasValue = integration.fields.some(
             (f) => (defaultValues.integrations as any)?.[integration.id]?.[f.key]

@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
 import { DragGroup } from '../components/drag-group'
-import type { DocsJsonType, FooterFormValues, SocialEntry, FooterLinkColumn } from '../types'
+import { socialPlatforms, type DocsJsonType, type FooterFormValues, type SocialEntry, type FooterLinkColumn } from '../types'
 
 type FooterBlockValues = Pick<DocsJsonType, 'footer'>
 
@@ -17,10 +17,8 @@ type FooterBlockProps = {
   disabled?: boolean
 }
 
-const SOCIAL_PLATFORMS = ['twitter', 'github', 'discord', 'linkedin', 'youtube', 'facebook', 'instagram'] as const
-
 function socialsToEntries(socials: Record<string, string> | undefined): SocialEntry[] {
-  return SOCIAL_PLATFORMS.map((platform) => ({
+  return socialPlatforms.map((platform) => ({
     platform,
     url: socials?.[platform] || '',
   }))
@@ -81,7 +79,7 @@ export function FooterBlock({ defaultValues, onSave, onPreview, disabled }: Foot
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Social Links</p>
           <div className="space-y-2">
-            {SOCIAL_PLATFORMS.map((platform, index) => (
+            {socialPlatforms.map((platform, index) => (
               <div key={platform} className="flex gap-2 items-center">
                 <span className="text-xs w-16 capitalize">{platform}</span>
                 <Input

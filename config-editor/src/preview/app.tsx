@@ -17,6 +17,7 @@ import {
 import type { DocsJsonType } from '../types'
 
 const INITIAL_CONFIG: DocsJsonType = {
+  siteId: 'preview-site',
   name: 'My Documentation',
   description: 'Documentation for my awesome project',
   logo: {

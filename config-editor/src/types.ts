@@ -1,10 +1,30 @@
-export { type DocsJsonType, themeNames, type ThemeName } from '@holocron.so/cli/src/docs-json.js'
+import {
+  type DocsJsonType,
+  themeNames,
+  type ThemeName,
+  contextualOptions,
+  type ContextualOption,
+  socialPlatforms,
+  type SocialPlatform,
+  integrationDefinitions,
+  type IntegrationDefinition,
+  type IntegrationField,
+} from '@holocron.so/cli/src/docs-json.js'
 
-export const contextualOptions = ['copy', 'view', 'chatgpt', 'claude'] as const
+export {
+  type DocsJsonType,
+  themeNames,
+  type ThemeName,
+  contextualOptions,
+  type ContextualOption,
+  socialPlatforms,
+  type SocialPlatform,
+  integrationDefinitions,
+  type IntegrationDefinition,
+  type IntegrationField,
+}
 
-export type ContextualOption = (typeof contextualOptions)[number]
-
-export type BlockProps<T extends Partial<import('@holocron.so/cli/src/docs-json.js').DocsJsonType>> = {
+export type BlockProps<T extends Partial<DocsJsonType>> = {
   defaultValues: T
   onSave: (data: T) => Promise<void>
   onPreview?: (data: T) => void

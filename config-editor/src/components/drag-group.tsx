@@ -70,6 +70,8 @@ function DragItem({ id, children, className }: DragItemProps) {
       dragListener={false}
       dragControls={controls}
       className={className}
+      layout="position"
+      transition={{ duration: 0.15 }}
     >
       <DragItemContext.Provider value={{ controls }}>
         {children}

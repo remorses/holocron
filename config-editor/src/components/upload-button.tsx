@@ -58,6 +58,7 @@ export function UploadButton({
       />
 
       <Button
+        type='button'
         onClick={() => {
           inputRef.current?.click()
         }}

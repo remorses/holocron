@@ -7,6 +7,82 @@ export const themeNames = ['black', 'catppuccin', 'dusk', 'neutral', 'ocean', 'p
 
 export type ThemeName = (typeof themeNames)[number]
 
+export const socialPlatforms = ['twitter', 'github', 'discord', 'linkedin', 'youtube', 'facebook', 'instagram'] as const
+
+export type SocialPlatform = (typeof socialPlatforms)[number]
+
+export type IntegrationField = { key: string; label: string; placeholder: string }
+export type IntegrationDefinition = { id: string; name: string; fields: IntegrationField[]; docsUrl: string }
+
+export const integrationDefinitions: IntegrationDefinition[] = [
+  {
+    id: 'ga4',
+    name: 'Google Analytics 4',
+    fields: [{ key: 'measurementId', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX' }],
+    docsUrl: 'https://support.google.com/analytics/answer/9539598',
+  },
+  {
+    id: 'gtm',
+    name: 'Google Tag Manager',
+    fields: [{ key: 'tagId', label: 'Tag ID', placeholder: 'GTM-XXXXXXX' }],
+    docsUrl: 'https://support.google.com/tagmanager/answer/6102821',
+  },
+  {
+    id: 'posthog',
+    name: 'PostHog',
+    fields: [
+      { key: 'apiKey', label: 'API Key', placeholder: 'phc_...' },
+      { key: 'apiHost', label: 'API Host (optional)', placeholder: 'https://app.posthog.com' },
+    ],
+    docsUrl: 'https://posthog.com/docs',
+  },
+  {
+    id: 'plausible',
+    name: 'Plausible',
+    fields: [
+      { key: 'domain', label: 'Domain', placeholder: 'example.com' },
+      { key: 'server', label: 'Server (optional)', placeholder: 'https://plausible.io' },
+    ],
+    docsUrl: 'https://plausible.io/docs',
+  },
+  {
+    id: 'amplitude',
+    name: 'Amplitude',
+    fields: [{ key: 'apiKey', label: 'API Key', placeholder: 'your-api-key' }],
+    docsUrl: 'https://www.docs.developers.amplitude.com/',
+  },
+  {
+    id: 'mixpanel',
+    name: 'Mixpanel',
+    fields: [{ key: 'projectToken', label: 'Project Token', placeholder: 'your-project-token' }],
+    docsUrl: 'https://docs.mixpanel.com/',
+  },
+  {
+    id: 'intercom',
+    name: 'Intercom',
+    fields: [{ key: 'appId', label: 'App ID', placeholder: 'your-app-id' }],
+    docsUrl: 'https://developers.intercom.com/',
+  },
+  {
+    id: 'segment',
+    name: 'Segment',
+    fields: [{ key: 'key', label: 'Write Key', placeholder: 'your-write-key' }],
+    docsUrl: 'https://segment.com/docs/',
+  },
+  {
+    id: 'fathom',
+    name: 'Fathom',
+    fields: [{ key: 'siteId', label: 'Site ID', placeholder: 'XXXXX' }],
+    docsUrl: 'https://usefathom.com/docs',
+  },
+  {
+    id: 'pirsch',
+    name: 'Pirsch',
+    fields: [{ key: 'id', label: 'Site ID', placeholder: 'your-site-id' }],
+    docsUrl: 'https://docs.pirsch.io/',
+  },
+]
+
 const Color = z
   .string()
   .regex(/^(#|rgb|rgba|hsl|hsla)\b/i, {
@@ -74,8 +150,12 @@ const ErrorsSchema = z
   .strict()
   .describe('Error pages configuration')
 
+export const contextualOptions = ['copy', 'view', 'chatgpt', 'claude'] as const
+
+export type ContextualOption = (typeof contextualOptions)[number]
+
 const ContextualSchema = z
-  .object({ options: z.array(z.enum(['copy', 'view', 'chatgpt', 'claude'])) })
+  .object({ options: z.array(z.enum(contextualOptions as unknown as [string, ...string[]])) })
   .strict()
   .describe('Contextual action options (e.g., on code blocks)')
 
@@ -159,7 +239,7 @@ const SearchSchema = z
 
 const SeoSchema = z
   .object({
-    metatags: z.record(z.string(), z.string()).describe('Additional meta tags'),
+    metatags: z.record(z.string(), z.string()).optional().describe('Additional meta tags'),
     indexing: z.enum(['navigable', 'all']).optional().describe('SEO indexing mode'),
   })
   .strict()
@@ -407,6 +487,7 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
         .describe(
           'Password protection for the documentation site. Visitors will be required to enter one of the specified passwords to access the content. Multiple passwords can be configured for different users or teams.',
         ),
+      integrations: IntegrationsSchema.optional().describe('Third-party analytics and support integrations'),
     })
     .strict()
 }
