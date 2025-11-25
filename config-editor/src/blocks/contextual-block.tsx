@@ -4,16 +4,14 @@ import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
 import { Label } from '../components/ui/label'
 import { BlockWrapper } from '../components/block-wrapper'
-import type { DocsJsonType } from '../types'
+import { contextualOptions, type ContextualOption, type DocsJsonType } from '../types'
 
-const CONTEXTUAL_OPTIONS = [
-  { value: 'copy', label: 'Copy', description: 'Copy code to clipboard' },
-  { value: 'view', label: 'View', description: 'View source code' },
-  { value: 'chatgpt', label: 'ChatGPT', description: 'Open in ChatGPT' },
-  { value: 'claude', label: 'Claude', description: 'Open in Claude' },
-] as const
-
-type ContextualOption = typeof CONTEXTUAL_OPTIONS[number]['value']
+const contextualLabels: Record<ContextualOption, { label: string; description: string }> = {
+  copy: { label: 'Copy', description: 'Copy code to clipboard' },
+  view: { label: 'View', description: 'View source code' },
+  chatgpt: { label: 'ChatGPT', description: 'Open in ChatGPT' },
+  claude: { label: 'Claude', description: 'Open in Claude' },
+}
 
 type ContextualBlockValues = Pick<DocsJsonType, 'contextual'>
 
@@ -27,17 +25,18 @@ type ContextualBlockProps = {
 export function ContextualBlock({ defaultValues, onSave, onPreview, disabled }: ContextualBlockProps) {
   const [isSaving, setIsSaving] = useState(false)
 
-  const { handleSubmit, formState, control, reset, watch, setValue } = useForm<{
+  const defaultOptions = contextualOptions.reduce(
+    (acc, opt) => {
+      acc[opt] = defaultValues.contextual?.options?.includes(opt) ?? false
+      return acc
+    },
+    {} as Record<ContextualOption, boolean>,
+  )
+
+  const { handleSubmit, formState, control, reset } = useForm<{
     options: Record<ContextualOption, boolean>
   }>({
-    defaultValues: {
-      options: {
-        copy: defaultValues.contextual?.options?.includes('copy') ?? false,
-        view: defaultValues.contextual?.options?.includes('view') ?? false,
-        chatgpt: defaultValues.contextual?.options?.includes('chatgpt') ?? false,
-        claude: defaultValues.contextual?.options?.includes('claude') ?? false,
-      },
-    },
+    defaultValues: { options: defaultOptions },
   })
 
   const onSubmit = async (data: { options: Record<ContextualOption, boolean> }) => {
@@ -63,14 +62,14 @@ export function ContextualBlock({ defaultValues, onSave, onPreview, disabled }: 
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-3">
-          {CONTEXTUAL_OPTIONS.map((option) => (
-            <div key={option.value} className="flex items-start gap-3">
+          {contextualOptions.map((option) => (
+            <div key={option} className="flex items-start gap-3">
               <Controller
-                name={`options.${option.value}`}
+                name={`options.${option}`}
                 control={control}
                 render={({ field }) => (
                   <Checkbox
-                    id={`contextual-${option.value}`}
+                    id={`contextual-${option}`}
                     checked={field.value}
                     onChange={(e) => { field.onChange(e.target.checked) }}
                     disabled={disabled}
@@ -78,10 +77,10 @@ export function ContextualBlock({ defaultValues, onSave, onPreview, disabled }: 
                 )}
               />
               <div className="space-y-0.5">
-                <Label htmlFor={`contextual-${option.value}`} className="text-sm font-medium">
-                  {option.label}
+                <Label htmlFor={`contextual-${option}`} className="text-sm font-medium">
+                  {contextualLabels[option].label}
                 </Label>
-                <p className="text-xs text-muted-foreground">{option.description}</p>
+                <p className="text-xs text-muted-foreground">{contextualLabels[option].description}</p>
               </div>
             </div>
           ))}

@@ -3,7 +3,9 @@ import dedent from 'dedent'
 
 const DOCS_JSON_BASENAME = 'holocron.jsonc'
 
-const themeNames = ['black', 'catppuccin', 'dusk', 'neutral', 'ocean', 'purple', 'vitepress']
+export const themeNames = ['black', 'catppuccin', 'dusk', 'neutral', 'ocean', 'purple', 'vitepress'] as const
+
+export type ThemeName = (typeof themeNames)[number]
 
 const Color = z
   .string()

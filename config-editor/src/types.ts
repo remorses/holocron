@@ -1,3 +1,11 @@
+export const themeNames = ['black', 'catppuccin', 'dusk', 'neutral', 'ocean', 'purple', 'vitepress'] as const
+
+export type ThemeName = (typeof themeNames)[number]
+
+export const contextualOptions = ['copy', 'view', 'chatgpt', 'claude'] as const
+
+export type ContextualOption = (typeof contextualOptions)[number]
+
 export type DocsJsonType = {
   $schema?: string
   siteId?: string

@@ -4,17 +4,7 @@ import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType } from '../types'
-
-const THEMES = [
-  { value: 'neutral', label: 'Neutral', description: 'Clean and minimal' },
-  { value: 'black', label: 'Black', description: 'High contrast dark theme' },
-  { value: 'catppuccin', label: 'Catppuccin', description: 'Warm pastel colors' },
-  { value: 'dusk', label: 'Dusk', description: 'Soft twilight tones' },
-  { value: 'ocean', label: 'Ocean', description: 'Cool blue tones' },
-  { value: 'purple', label: 'Purple', description: 'Rich purple accents' },
-  { value: 'vitepress', label: 'VitePress', description: 'VitePress-inspired theme' },
-] as const
+import { themeNames, type DocsJsonType } from '../types'
 
 type ThemeBlockValues = Pick<DocsJsonType, 'theme'>
 
@@ -59,11 +49,9 @@ export function ThemeBlock({ defaultValues, onSave, onPreview, disabled }: Theme
                   <SelectValue placeholder="Select a theme" />
                 </SelectTrigger>
                 <SelectContent>
-                  {THEMES.map((theme) => (
-                    <SelectItem key={theme.value} value={theme.value}>
-                      <div className="flex flex-col">
-                        <span>{theme.label}</span>
-                      </div>
+                  {themeNames.map((theme) => (
+                    <SelectItem key={theme} value={theme} className="capitalize">
+                      {theme}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -26,6 +26,7 @@ export * from './components/edit-preview'
 
 // UI components
 export * from './components/show-more'
-
+export * from './components/color-picker-button'
+export * from './components/upload-button'
 
 export { jsxDedent }

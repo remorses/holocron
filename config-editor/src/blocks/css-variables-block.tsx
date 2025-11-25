@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
+import { ColorPickerButton } from '../components/color-picker-button'
 import type { DocsJsonType } from '../types'
 
 type CssVariablesBlockValues = Pick<DocsJsonType, 'cssVariables'>
@@ -90,6 +91,17 @@ export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }
                 disabled={disabled}
                 className="flex-1"
               />
+              <Controller
+                control={control}
+                name={`light.${index}.value`}
+                render={({ field: colorField }) => (
+                  <ColorPickerButton
+                    value={colorField.value}
+                    onChange={colorField.onChange}
+                    disabled={disabled}
+                  />
+                )}
+              />
               <Input
                 {...register(`light.${index}.value`)}
                 placeholder="#3b82f6"
@@ -130,6 +142,17 @@ export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }
                 placeholder="--primary"
                 disabled={disabled}
                 className="flex-1"
+              />
+              <Controller
+                control={control}
+                name={`dark.${index}.value`}
+                render={({ field: colorField }) => (
+                  <ColorPickerButton
+                    value={colorField.value}
+                    onChange={colorField.onChange}
+                    disabled={disabled}
+                  />
+                )}
               />
               <Input
                 {...register(`dark.${index}.value`)}

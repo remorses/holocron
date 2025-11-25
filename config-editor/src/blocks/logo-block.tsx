@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { UploadButton } from '../components/upload-button'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
@@ -46,14 +47,6 @@ export function LogoBlock({ defaultValues, onSave, onPreview, disabled, uploadFu
     }
   }
 
-  const handleUpload = async (file: File, field: 'light' | 'dark') => {
-    if (!uploadFunction) {
-      return
-    }
-    const url = await uploadFunction(file)
-    setValue(`logo.${field}`, url, { shouldDirty: true })
-  }
-
   return (
     <BlockWrapper title="Logo" description="Logo shown in the top left of the navbar">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -87,41 +80,37 @@ export function LogoBlock({ defaultValues, onSave, onPreview, disabled, uploadFu
 
           <TabsContent value="upload" className="space-y-3">
             <FieldWrapper label="Light mode">
-              <div className="flex gap-2 items-center">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  disabled={disabled || !uploadFunction}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      handleUpload(file, 'light')
-                    }
-                  }}
-                  className="text-xs"
-                />
-              </div>
+              <UploadButton
+                accept="image/*"
+                disabled={disabled || !uploadFunction}
+                uploadFunction={uploadFunction!}
+                onUploadFinished={({ src }) => {
+                  setValue('logo.light', src, { shouldDirty: true })
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Upload Light Logo
+              </UploadButton>
               {watch('logo.light') && (
-                <p className="text-xs text-muted-foreground truncate">{watch('logo.light')}</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">{watch('logo.light')}</p>
               )}
             </FieldWrapper>
             <FieldWrapper label="Dark mode">
-              <div className="flex gap-2 items-center">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  disabled={disabled || !uploadFunction}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      handleUpload(file, 'dark')
-                    }
-                  }}
-                  className="text-xs"
-                />
-              </div>
+              <UploadButton
+                accept="image/*"
+                disabled={disabled || !uploadFunction}
+                uploadFunction={uploadFunction!}
+                onUploadFinished={({ src }) => {
+                  setValue('logo.dark', src, { shouldDirty: true })
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Upload Dark Logo
+              </UploadButton>
               {watch('logo.dark') && (
-                <p className="text-xs text-muted-foreground truncate">{watch('logo.dark')}</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">{watch('logo.dark')}</p>
               )}
             </FieldWrapper>
           </TabsContent>

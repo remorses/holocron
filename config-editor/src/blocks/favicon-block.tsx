@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { UploadButton } from '../components/upload-button'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
@@ -37,14 +38,6 @@ export function FaviconBlock({ defaultValues, onSave, onPreview, disabled, uploa
     }
   }
 
-  const handleUpload = async (file: File, field: 'light' | 'dark') => {
-    if (!uploadFunction) {
-      return
-    }
-    const url = await uploadFunction(file)
-    setValue(`favicon.${field}`, url, { shouldDirty: true })
-  }
-
   return (
     <BlockWrapper title="Favicon" description="Browser tab icon for your site">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -73,37 +66,37 @@ export function FaviconBlock({ defaultValues, onSave, onPreview, disabled, uploa
 
           <TabsContent value="upload" className="space-y-3">
             <FieldWrapper label="Light mode">
-              <Input
-                type="file"
+              <UploadButton
                 accept="image/*,.ico"
                 disabled={disabled || !uploadFunction}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    handleUpload(file, 'light')
-                  }
+                uploadFunction={uploadFunction!}
+                onUploadFinished={({ src }) => {
+                  setValue('favicon.light', src, { shouldDirty: true })
                 }}
-                className="text-xs"
-              />
+                variant="outline"
+                size="sm"
+              >
+                Upload Light Favicon
+              </UploadButton>
               {watch('favicon.light') && (
-                <p className="text-xs text-muted-foreground truncate">{watch('favicon.light')}</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">{watch('favicon.light')}</p>
               )}
             </FieldWrapper>
             <FieldWrapper label="Dark mode">
-              <Input
-                type="file"
+              <UploadButton
                 accept="image/*,.ico"
                 disabled={disabled || !uploadFunction}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    handleUpload(file, 'dark')
-                  }
+                uploadFunction={uploadFunction!}
+                onUploadFinished={({ src }) => {
+                  setValue('favicon.dark', src, { shouldDirty: true })
                 }}
-                className="text-xs"
-              />
+                variant="outline"
+                size="sm"
+              >
+                Upload Dark Favicon
+              </UploadButton>
               {watch('favicon.dark') && (
-                <p className="text-xs text-muted-foreground truncate">{watch('favicon.dark')}</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">{watch('favicon.dark')}</p>
               )}
             </FieldWrapper>
           </TabsContent>
