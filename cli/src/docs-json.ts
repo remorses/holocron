@@ -369,7 +369,7 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
         .array(z.string())
         .optional()
         .describe(
-          `Custom domains to connect to this documentation site. Each domain should point to cname.${websiteDomain} via CNAME record. Domains will be connected when ${docsJsonBasename} is pushed to the main branch.`,
+          `Custom domains to connect to this documentation site. Each domain should point to cname.${websiteDomain} via CNAME record. Domains will be connected when ${docsJsonBasename} is pushed to the main branch. The initial domain with the platofrm subdomain like holocronsites.com should NEVER be removed. Instead if user asks you to replace the domain, you will still have to keep this internal domain ALWAYS.`,
         ),
       hideSidebar: z
         .boolean()
