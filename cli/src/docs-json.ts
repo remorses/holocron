@@ -83,6 +83,27 @@ export const integrationDefinitions: IntegrationDefinition[] = [
   },
 ]
 
+export type CssVariableDefinition = { name: string; label: string; light: string; dark: string }
+
+export const cssVariableDefinitions: CssVariableDefinition[] = [
+  { name: '--color-fd-background', label: 'Background', light: '#fafafa', dark: '#050505' },
+  { name: '--color-fd-foreground', label: 'Foreground', light: '#0a0a0a', dark: '#fafafa' },
+  { name: '--color-fd-primary', label: 'Primary', light: '#171717', dark: '#fafafa' },
+  { name: '--color-fd-primary-foreground', label: 'Primary Foreground', light: '#fafafa', dark: '#171717' },
+  { name: '--color-fd-secondary', label: 'Secondary', light: '#f5f5f5', dark: '#212121' },
+  { name: '--color-fd-secondary-foreground', label: 'Secondary Foreground', light: '#171717', dark: '#fafafa' },
+  { name: '--color-fd-muted', label: 'Muted', light: '#f5f5f5', dark: '#141414' },
+  { name: '--color-fd-muted-foreground', label: 'Muted Foreground', light: '#737373', dark: '#999999' },
+  { name: '--color-fd-accent', label: 'Accent', light: '#f0f0f0', dark: '#262626' },
+  { name: '--color-fd-accent-foreground', label: 'Accent Foreground', light: '#171717', dark: '#ffffff' },
+  { name: '--color-fd-card', label: 'Card', light: '#fefefe', dark: '#0a0a0a' },
+  { name: '--color-fd-card-foreground', label: 'Card Foreground', light: '#0a0a0a', dark: '#fafafa' },
+  { name: '--color-fd-popover', label: 'Popover', light: '#ffffff', dark: '#0a0a0a' },
+  { name: '--color-fd-popover-foreground', label: 'Popover Foreground', light: '#272727', dark: '#fafafa' },
+  { name: '--color-fd-border', label: 'Border', light: '#99999933', dark: '#80808033' },
+  { name: '--color-fd-ring', label: 'Ring', light: '#a3a3a3', dark: '#595959' },
+]
+
 const Color = z
   .string()
   .regex(/^(#|rgb|rgba|hsl|hsla)\b/i, {

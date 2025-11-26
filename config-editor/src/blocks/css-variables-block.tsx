@@ -3,9 +3,10 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { BlockWrapper } from '../components/block-wrapper'
 import { ColorPickerButton } from '../components/color-picker-button'
-import type { DocsJsonType, CssVariablesFormValues, CssVariableEntry } from '../types'
+import { cssVariableDefinitions, type DocsJsonType, type CssVariablesFormValues, type CssVariableEntry } from '../types'
 
 type CssVariablesBlockValues = Pick<DocsJsonType, 'cssVariables'>
 
@@ -32,7 +33,7 @@ function entriesToRecord(entries: CssVariableEntry[]): Record<string, string> {
 export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }: CssVariablesBlockProps) {
   const [isSaving, setIsSaving] = useState(false)
 
-  const { register, handleSubmit, formState, control, reset } = useForm<CssVariablesFormValues>({
+  const { handleSubmit, formState, control, reset, watch, setValue } = useForm<CssVariablesFormValues>({
     defaultValues: {
       light: recordToEntries(defaultValues.cssVariables?.light),
       dark: recordToEntries(defaultValues.cssVariables?.dark),
@@ -70,51 +71,65 @@ export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }
       description="Custom CSS variables for light and dark modes"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="rounded-md bg-muted/50 p-3">
-          <p className="text-xs text-muted-foreground">
-            Variable names should start with <code className="bg-muted px-1 rounded">--</code>
-          </p>
-        </div>
-
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Light Mode</p>
-          {lightFields.map((field, index) => (
-            <div key={field.id} className="flex gap-2 items-start">
-              <Input
-                {...register(`light.${index}.name`)}
-                placeholder="--primary"
-                disabled={disabled}
-                className="flex-1"
-              />
-              <Controller
-                control={control}
-                name={`light.${index}.value`}
-                render={({ field: colorField }) => (
-                  <ColorPickerButton
-                    value={colorField.value}
-                    onChange={colorField.onChange}
-                    disabled={disabled}
-                  />
-                )}
-              />
-              <Input
-                {...register(`light.${index}.value`)}
-                placeholder="#3b82f6"
-                disabled={disabled}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => { removeLight(index) }}
-                disabled={disabled}
-                className="size-9 shrink-0"
-              >
-                <TrashIcon className="size-4" />
-              </Button>
-            </div>
-          ))}
+          {lightFields.map((field, index) => {
+            const colorValue = watch(`light.${index}.value`)
+            return (
+              <div key={field.id} className="flex gap-2 items-start">
+                <Controller
+                  control={control}
+                  name={`light.${index}.name`}
+                  render={({ field: nameField }) => (
+                    <Select
+                      value={nameField.value}
+                      onValueChange={(newName) => {
+                        nameField.onChange(newName)
+                        const def = cssVariableDefinitions.find((d) => d.name === newName)
+                        if (def) {
+                          setValue(`light.${index}.value`, def.light, { shouldDirty: true })
+                        }
+                      }}
+                      disabled={disabled}
+                    >
+                      <SelectTrigger className="w-[120px] shrink-0">
+                        <SelectValue placeholder="Variable" />
+                      </SelectTrigger>
+                      <SelectContent className="min-w-[180px]">
+                        {cssVariableDefinitions.map((def) => (
+                          <SelectItem key={def.name} value={def.name}>
+                            {def.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <ColorPickerButton
+                  value={colorValue}
+                  onChange={(newColor) => { setValue(`light.${index}.value`, newColor, { shouldDirty: true }) }}
+                  disabled={disabled}
+                />
+                <Input
+                  value={colorValue}
+                  onChange={(e) => { setValue(`light.${index}.value`, e.target.value, { shouldDirty: true }) }}
+                  placeholder="#3b82f6"
+                  disabled={disabled}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { removeLight(index) }}
+                  disabled={disabled}
+                  className="size-9 shrink-0"
+                >
+                  <TrashIcon className="size-4" />
+                </Button>
+              </div>
+            )
+          })}
           <Button
             type="button"
             variant="outline"
@@ -130,43 +145,63 @@ export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }
 
         <div className="space-y-2 pt-2 border-t">
           <p className="text-xs font-medium text-muted-foreground">Dark Mode</p>
-          {darkFields.map((field, index) => (
-            <div key={field.id} className="flex gap-2 items-start">
-              <Input
-                {...register(`dark.${index}.name`)}
-                placeholder="--primary"
-                disabled={disabled}
-                className="flex-1"
-              />
-              <Controller
-                control={control}
-                name={`dark.${index}.value`}
-                render={({ field: colorField }) => (
-                  <ColorPickerButton
-                    value={colorField.value}
-                    onChange={colorField.onChange}
-                    disabled={disabled}
-                  />
-                )}
-              />
-              <Input
-                {...register(`dark.${index}.value`)}
-                placeholder="#60a5fa"
-                disabled={disabled}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => { removeDark(index) }}
-                disabled={disabled}
-                className="size-9 shrink-0"
-              >
-                <TrashIcon className="size-4" />
-              </Button>
-            </div>
-          ))}
+          {darkFields.map((field, index) => {
+            const colorValue = watch(`dark.${index}.value`)
+            return (
+              <div key={field.id} className="flex gap-2 items-start">
+                <Controller
+                  control={control}
+                  name={`dark.${index}.name`}
+                  render={({ field: nameField }) => (
+                    <Select
+                      value={nameField.value}
+                      onValueChange={(newName) => {
+                        nameField.onChange(newName)
+                        const def = cssVariableDefinitions.find((d) => d.name === newName)
+                        if (def) {
+                          setValue(`dark.${index}.value`, def.dark, { shouldDirty: true })
+                        }
+                      }}
+                      disabled={disabled}
+                    >
+                      <SelectTrigger className="w-[120px] shrink-0">
+                        <SelectValue placeholder="Variable" />
+                      </SelectTrigger>
+                      <SelectContent className="min-w-[180px]">
+                        {cssVariableDefinitions.map((def) => (
+                          <SelectItem key={def.name} value={def.name}>
+                            {def.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <ColorPickerButton
+                  value={colorValue}
+                  onChange={(newColor) => { setValue(`dark.${index}.value`, newColor, { shouldDirty: true }) }}
+                  disabled={disabled}
+                />
+                <Input
+                  value={colorValue}
+                  onChange={(e) => { setValue(`dark.${index}.value`, e.target.value, { shouldDirty: true }) }}
+                  placeholder="#60a5fa"
+                  disabled={disabled}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { removeDark(index) }}
+                  disabled={disabled}
+                  className="size-9 shrink-0"
+                >
+                  <TrashIcon className="size-4" />
+                </Button>
+              </div>
+            )
+          })}
           <Button
             type="button"
             variant="outline"

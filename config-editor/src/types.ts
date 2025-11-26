@@ -9,6 +9,8 @@ import {
   integrationDefinitions,
   type IntegrationDefinition,
   type IntegrationField,
+  cssVariableDefinitions,
+  type CssVariableDefinition,
 } from '@holocron.so/cli/src/docs-json.js'
 
 export {
@@ -22,6 +24,8 @@ export {
   integrationDefinitions,
   type IntegrationDefinition,
   type IntegrationField,
+  cssVariableDefinitions,
+  type CssVariableDefinition,
 }
 
 export type BlockProps<T extends Partial<DocsJsonType>> = {
