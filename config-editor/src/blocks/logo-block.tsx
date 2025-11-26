@@ -62,6 +62,7 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
           <div className="flex flex-col gap-3">
             <FieldWrapper label="Light mode">
               <UploadButton
+                className="mx-1"
                 accept="image/*"
                 disabled={disabled || !uploadFunction}
                 uploadFunction={uploadFunction!}
@@ -79,6 +80,7 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
             </FieldWrapper>
             <FieldWrapper label="Dark mode">
               <UploadButton
+                className="mx-1"
                 accept="image/*"
                 disabled={disabled || !uploadFunction}
                 uploadFunction={uploadFunction!}

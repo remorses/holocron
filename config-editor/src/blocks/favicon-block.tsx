@@ -49,6 +49,7 @@ export function FaviconBlock({ disabled, uploadFunction }: FaviconBlockProps) {
         <TabsContent value="upload" className="space-y-3">
           <FieldWrapper label="Light mode">
             <UploadButton
+              className="mx-1"
               accept="image/*,.ico"
               disabled={disabled || !uploadFunction}
               uploadFunction={uploadFunction!}
@@ -66,6 +67,7 @@ export function FaviconBlock({ disabled, uploadFunction }: FaviconBlockProps) {
           </FieldWrapper>
           <FieldWrapper label="Dark mode">
             <UploadButton
+              className="mx-1"
               accept="image/*,.ico"
               disabled={disabled || !uploadFunction}
               uploadFunction={uploadFunction!}
