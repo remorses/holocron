@@ -30,7 +30,16 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
 
   return (
     <BlockWrapper title="Logo" description="Logo shown in the top left of the navbar">
-      <Tabs value={mode} onValueChange={(v) => { setMode(v as LogoMode) }}>
+      <Tabs value={mode} onValueChange={(v) => {
+        const newMode = v as LogoMode
+        setMode(newMode)
+        if (newMode === 'none') {
+          setValue('logo.light', '', { shouldDirty: true })
+          setValue('logo.dark', '', { shouldDirty: true })
+          setValue('logo.href', '', { shouldDirty: true })
+          setValue('logo.text', '', { shouldDirty: true })
+        }
+      }}>
         <TabsList className="w-full">
           <TabsTrigger value="none" className="flex-1 text-xs">None</TabsTrigger>
           <TabsTrigger value="url" className="flex-1 text-xs">URL</TabsTrigger>
