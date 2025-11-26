@@ -11,7 +11,7 @@ import {
   type IntegrationField,
   cssVariableDefinitions,
   type CssVariableDefinition,
-} from '@holocron.so/cli/src/docs-json.js'
+} from '@holocron.so/cli/src/docs-json'
 
 export {
   type DocsJsonType,
