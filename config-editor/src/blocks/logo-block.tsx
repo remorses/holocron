@@ -79,40 +79,42 @@ export function LogoBlock({ defaultValues, onSave, onPreview, disabled, uploadFu
           </TabsContent>
 
           <TabsContent value="upload" className="space-y-3">
-            <FieldWrapper label="Light mode">
-              <UploadButton
-                accept="image/*"
-                disabled={disabled || !uploadFunction}
-                uploadFunction={uploadFunction!}
-                onUploadFinished={({ src }) => {
-                  setValue('logo.light', src, { shouldDirty: true })
-                }}
-                variant="outline"
-                size="sm"
-              >
-                Upload Light Logo
-              </UploadButton>
-              {watch('logo.light') && (
-                <p className="text-xs text-muted-foreground truncate mt-1">{watch('logo.light')}</p>
-              )}
-            </FieldWrapper>
-            <FieldWrapper label="Dark mode">
-              <UploadButton
-                accept="image/*"
-                disabled={disabled || !uploadFunction}
-                uploadFunction={uploadFunction!}
-                onUploadFinished={({ src }) => {
-                  setValue('logo.dark', src, { shouldDirty: true })
-                }}
-                variant="outline"
-                size="sm"
-              >
-                Upload Dark Logo
-              </UploadButton>
-              {watch('logo.dark') && (
-                <p className="text-xs text-muted-foreground truncate mt-1">{watch('logo.dark')}</p>
-              )}
-            </FieldWrapper>
+            <div className="flex gap-4">
+              <FieldWrapper label="Light mode" className="flex-1">
+                <UploadButton
+                  accept="image/*"
+                  disabled={disabled || !uploadFunction}
+                  uploadFunction={uploadFunction!}
+                  onUploadFinished={({ src }) => {
+                    setValue('logo.light', src, { shouldDirty: true })
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  Upload Light Logo
+                </UploadButton>
+                {watch('logo.light') && (
+                  <p className="text-xs text-muted-foreground truncate mt-1">{watch('logo.light')}</p>
+                )}
+              </FieldWrapper>
+              <FieldWrapper label="Dark mode" className="flex-1">
+                <UploadButton
+                  accept="image/*"
+                  disabled={disabled || !uploadFunction}
+                  uploadFunction={uploadFunction!}
+                  onUploadFinished={({ src }) => {
+                    setValue('logo.dark', src, { shouldDirty: true })
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  Upload Dark Logo
+                </UploadButton>
+                {watch('logo.dark') && (
+                  <p className="text-xs text-muted-foreground truncate mt-1">{watch('logo.dark')}</p>
+                )}
+              </FieldWrapper>
+            </div>
           </TabsContent>
         </Tabs>
 

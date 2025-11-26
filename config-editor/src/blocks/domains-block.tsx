@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import { PlusIcon, TrashIcon, AlertCircleIcon } from 'lucide-react'
+import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
@@ -58,15 +58,6 @@ export function DomainsBlock({
             Point your domain to <code className="bg-muted px-1 rounded">{cnameTarget}</code> via CNAME record
           </p>
         </div>
-
-        {internalDomain && (
-          <div className="flex items-start gap-2 rounded-md bg-yellow-500/10 p-3 text-xs">
-            <AlertCircleIcon className="size-4 text-yellow-600 shrink-0 mt-0.5" />
-            <p className="text-yellow-700 dark:text-yellow-400">
-              The internal domain <code className="bg-muted px-1 rounded">{internalDomain}</code> should never be removed
-            </p>
-          </div>
-        )}
 
         <div className="space-y-2">
           {fields.map((field, index) => {
