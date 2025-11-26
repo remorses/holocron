@@ -1,5 +1,6 @@
-import { useState, useEffect, ReactNode } from 'react'
+import { useEffect, ReactNode } from 'react'
 import { useForm, FormProvider, FieldValues, DefaultValues } from 'react-hook-form'
+import { create } from 'zustand'
 import {
   LogoBlock,
   FaviconBlock,
@@ -15,115 +16,128 @@ import {
   CssVariablesBlock,
   IntegrationsBlock,
 } from '../index'
-import { Button } from '../components/ui/button'
+
 import type { DocsJsonType } from '../types'
 
-const INITIAL_CONFIG: DocsJsonType = {
-  siteId: 'preview-site',
-  name: 'My Documentation',
-  description: 'Documentation for my awesome project',
-  logo: {
-    light: 'https://example.com/logo-light.svg',
-    dark: 'https://example.com/logo-dark.svg',
-    href: '/',
-  },
-  favicon: {
-    light: 'https://example.com/favicon.svg',
-    dark: 'https://example.com/favicon-dark.svg',
-  },
-  theme: 'neutral',
-  navbar: {
-    links: [
-      { label: 'Docs', href: '/docs' },
-      { label: 'API', href: '/api' },
-    ],
-    primary: { type: 'github', href: 'https://github.com/example/repo' },
-  },
-  banner: {
-    content: '<a href="/changelog">New release v2.0!</a>',
-    dismissible: true,
-  },
-  footer: {
-    socials: {
-      twitter: 'https://twitter.com/example',
-      github: 'https://github.com/example',
-    },
-    links: [
-      {
-        header: 'Resources',
-        items: [
-          { label: 'Documentation', href: '/docs' },
-          { label: 'API Reference', href: '/api' },
-        ],
-      },
-    ],
-  },
-  domains: ['docs.example.com', 'example-docs.holocronsites.com'],
-  redirects: [
-    { source: '/old', destination: '/new', permanent: true },
-  ],
-  seo: {
-    indexing: 'all',
-    metatags: {
-      'og:type': 'website',
-    },
-  },
-  passwords: [],
-  contextual: {
-    options: ['copy', 'view'],
-  },
-  cssVariables: {
-    light: { '--accent': '#3b82f6' },
-    dark: { '--accent': '#60a5fa' },
-  },
-  integrations: {
-    ga4: { measurementId: 'G-XXXXXXXXXX' },
-  },
+type ConfigStore = {
+  config: DocsJsonType
+  lastSaved: string | null
 }
 
-type FormBlockProps<T extends FieldValues> = {
-  defaultValues: DefaultValues<T>
-  onSave: (data: T) => Promise<void>
-  onPreview?: (data: T) => void
+const useConfigStore = create<ConfigStore>()(() => ({
+  config: {
+    siteId: 'preview-site',
+    name: 'My Documentation',
+    description: 'Documentation for my awesome project',
+    logo: {
+      light: 'https://example.com/logo-light.svg',
+      dark: 'https://example.com/logo-dark.svg',
+      href: '/',
+    },
+    favicon: {
+      light: 'https://example.com/favicon.svg',
+      dark: 'https://example.com/favicon-dark.svg',
+    },
+    theme: 'neutral',
+    navbar: {
+      links: [
+        { label: 'Docs', href: '/docs' },
+        { label: 'API', href: '/api' },
+      ],
+      primary: { type: 'github', href: 'https://github.com/example/repo' },
+    },
+    banner: {
+      content: '<a href="/changelog">New release v2.0!</a>',
+      dismissible: true,
+    },
+    footer: {
+      socials: {
+        twitter: 'https://twitter.com/example',
+        github: 'https://github.com/example',
+      },
+      links: [
+        {
+          header: 'Resources',
+          items: [
+            { label: 'Documentation', href: '/docs' },
+            { label: 'API Reference', href: '/api' },
+          ],
+        },
+      ],
+    },
+    domains: ['docs.example.com', 'example-docs.holocronsites.com'],
+    redirects: [
+      { source: '/old', destination: '/new', permanent: true },
+    ],
+    seo: {
+      indexing: 'all',
+      metatags: {
+        'og:type': 'website',
+      },
+    },
+    passwords: [],
+    contextual: {
+      options: ['copy', 'view'],
+    },
+    cssVariables: {
+      light: { '--accent': '#3b82f6' },
+      dark: { '--accent': '#60a5fa' },
+    },
+    integrations: {
+      ga4: { measurementId: 'G-XXXXXXXXXX' },
+    },
+  },
+  lastSaved: null,
+}))
+
+type FormBlockProps = {
+  defaultValues: DefaultValues<FieldValues>
   children: ReactNode
 }
 
-function FormBlock<T extends FieldValues>({ defaultValues, onSave, onPreview, children }: FormBlockProps<T>) {
-  const form = useForm<T>({ defaultValues })
+function FormBlock({ defaultValues, children }: FormBlockProps) {
+  const form = useForm({ defaultValues })
   const { handleSubmit, watch, reset } = form
 
   useEffect(() => {
     const subscription = watch((data) => {
       console.log('Preview:', data)
-      onPreview?.(data as T)
     })
     return () => { subscription.unsubscribe() }
-  }, [watch, onPreview])
+  }, [watch])
 
-  const onSubmit = async (data: T) => {
-    await onSave(data)
+  const handleSave = async (data: FieldValues) => {
+    await new Promise((resolve) => { setTimeout(resolve, 500) })
+    const { config } = useConfigStore.getState()
+    useConfigStore.setState({
+      config: { ...config, ...data },
+      lastSaved: JSON.stringify(data, null, 2),
+    })
     reset(data)
     console.log('Saved:', data)
   }
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(handleSave)}>
         {children}
       </form>
     </FormProvider>
   )
 }
 
-export function App() {
-  const [config, setConfig] = useState<DocsJsonType>(INITIAL_CONFIG)
-  const [lastSaved, setLastSaved] = useState<string | null>(null)
+async function handleSave<T>(partial: T) {
+  await new Promise((resolve) => { setTimeout(resolve, 500) })
+  const { config } = useConfigStore.getState()
+  useConfigStore.setState({
+    config: { ...config, ...partial },
+    lastSaved: JSON.stringify(partial, null, 2),
+  })
+}
 
-  const handleSave = async <T,>(partial: T) => {
-    await new Promise((resolve) => { setTimeout(resolve, 500) })
-    setConfig((prev) => ({ ...prev, ...partial }))
-    setLastSaved(JSON.stringify(partial, null, 2))
-  }
+export function App() {
+  const config = useConfigStore((s) => s.config)
+  const lastSaved = useConfigStore((s) => s.lastSaved)
 
   const uploadFunction = async (file: File) => {
     await new Promise((resolve) => { setTimeout(resolve, 300) })
@@ -138,67 +152,66 @@ export function App() {
           <p className="text-sm text-muted-foreground">Narrow width layout preview</p>
         </div>
 
-        <FormBlock defaultValues={{ logo: config.logo }} onSave={handleSave}>
+        <FormBlock defaultValues={{ logo: config.logo }}>
           <LogoBlock uploadFunction={uploadFunction} />
         </FormBlock>
 
-        <FormBlock defaultValues={{ favicon: config.favicon }} onSave={handleSave}>
+        <FormBlock defaultValues={{ favicon: config.favicon }}>
           <FaviconBlock uploadFunction={uploadFunction} />
         </FormBlock>
 
-        <FormBlock defaultValues={{ theme: config.theme }} onSave={handleSave}>
+        <FormBlock defaultValues={{ theme: config.theme }}>
           <ThemeBlock />
         </FormBlock>
 
-        <FormBlock defaultValues={{ banner: config.banner }} onSave={handleSave}>
+        <FormBlock defaultValues={{ banner: config.banner }}>
           <BannerBlock />
         </FormBlock>
 
-        <FormBlock defaultValues={{ navbar: { links: config.navbar?.links || [], primary: config.navbar?.primary } }} onSave={handleSave}>
+        <FormBlock defaultValues={{ navbar: { links: config.navbar?.links || [], primary: config.navbar?.primary } }}>
           <NavbarBlock />
         </FormBlock>
 
-        {/* TODO: Refactor remaining blocks that have data transformations */}
         <FooterBlock
           defaultValues={{ footer: config.footer }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
         />
 
         <DomainsBlock
           defaultValues={{ domains: config.domains }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
           cnameTarget="cname.holocronsites.com"
           internalDomain="example-docs.holocronsites.com"
         />
 
         <RedirectsBlock
           defaultValues={{ redirects: config.redirects }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
         />
 
         <SeoBlock
           defaultValues={{ description: config.description, seo: config.seo }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
         />
 
         <PasswordsBlock
           defaultValues={{ passwords: config.passwords }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
         />
 
         <ContextualBlock
           defaultValues={{ contextual: config.contextual }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
         />
 
         <CssVariablesBlock
           defaultValues={{ cssVariables: config.cssVariables }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
         />
 
         <IntegrationsBlock
           defaultValues={{ integrations: config.integrations }}
-          onSave={(data) => { return handleSave(data) }}
+          onSave={handleSave}
         />
 
         {lastSaved && (
