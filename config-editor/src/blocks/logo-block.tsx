@@ -59,8 +59,8 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
         </TabsContent>
 
         <TabsContent value="upload" className="space-y-3">
-          <div className="flex gap-4">
-            <FieldWrapper label="Light mode" className="flex-1">
+          <div className="flex flex-col gap-3">
+            <FieldWrapper label="Light mode">
               <UploadButton
                 accept="image/*"
                 disabled={disabled || !uploadFunction}
@@ -77,7 +77,7 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
                 <p className="text-xs text-muted-foreground truncate mt-1">{watch('logo.light')}</p>
               )}
             </FieldWrapper>
-            <FieldWrapper label="Dark mode" className="flex-1">
+            <FieldWrapper label="Dark mode">
               <UploadButton
                 accept="image/*"
                 disabled={disabled || !uploadFunction}
