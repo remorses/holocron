@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
+import { useForm, FormProvider, FieldValues, DefaultValues } from 'react-hook-form'
 import {
   LogoBlock,
   FaviconBlock,
@@ -14,6 +15,7 @@ import {
   CssVariablesBlock,
   IntegrationsBlock,
 } from '../index'
+import { Button } from '../components/ui/button'
 import type { DocsJsonType } from '../types'
 
 const INITIAL_CONFIG: DocsJsonType = {
@@ -79,15 +81,53 @@ const INITIAL_CONFIG: DocsJsonType = {
   },
 }
 
+type FormBlockProps<T extends FieldValues> = {
+  defaultValues: DefaultValues<T>
+  onSave: (data: T) => Promise<void>
+  onPreview?: (data: T) => void
+  children: ReactNode
+}
+
+function FormBlock<T extends FieldValues>({ defaultValues, onSave, onPreview, children }: FormBlockProps<T>) {
+  const form = useForm<T>({ defaultValues })
+  const { handleSubmit, watch, reset } = form
+
+  useEffect(() => {
+    const subscription = watch((data) => {
+      console.log('Preview:', data)
+      onPreview?.(data as T)
+    })
+    return () => { subscription.unsubscribe() }
+  }, [watch, onPreview])
+
+  const onSubmit = async (data: T) => {
+    await onSave(data)
+    reset(data)
+    console.log('Saved:', data)
+  }
+
+  return (
+    <FormProvider {...form}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        {children}
+      </form>
+    </FormProvider>
+  )
+}
+
 export function App() {
   const [config, setConfig] = useState<DocsJsonType>(INITIAL_CONFIG)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
 
-  const handleSave = async (partial: Partial<DocsJsonType>) => {
+  const handleSave = async <T,>(partial: T) => {
     await new Promise((resolve) => { setTimeout(resolve, 500) })
     setConfig((prev) => ({ ...prev, ...partial }))
     setLastSaved(JSON.stringify(partial, null, 2))
-    console.log('Saved:', partial)
+  }
+
+  const uploadFunction = async (file: File) => {
+    await new Promise((resolve) => { setTimeout(resolve, 300) })
+    return URL.createObjectURL(file)
   }
 
   return (
@@ -98,79 +138,67 @@ export function App() {
           <p className="text-sm text-muted-foreground">Narrow width layout preview</p>
         </div>
 
-        <LogoBlock
-          defaultValues={{ logo: config.logo }}
-          onSave={(data) => handleSave(data)}
-          uploadFunction={async (file) => {
-            await new Promise((resolve) => { setTimeout(resolve, 300) })
-            return URL.createObjectURL(file)
-          }}
-        />
+        <FormBlock defaultValues={{ logo: config.logo }} onSave={handleSave}>
+          <LogoBlock uploadFunction={uploadFunction} />
+        </FormBlock>
 
-        <FaviconBlock
-          defaultValues={{ favicon: config.favicon }}
-          onSave={(data) => handleSave(data)}
-          uploadFunction={async (file) => {
-            await new Promise((resolve) => { setTimeout(resolve, 300) })
-            return URL.createObjectURL(file)
-          }}
-        />
+        <FormBlock defaultValues={{ favicon: config.favicon }} onSave={handleSave}>
+          <FaviconBlock uploadFunction={uploadFunction} />
+        </FormBlock>
 
-        <ThemeBlock
-          defaultValues={{ theme: config.theme }}
-          onSave={(data) => handleSave(data)}
-        />
+        <FormBlock defaultValues={{ theme: config.theme }} onSave={handleSave}>
+          <ThemeBlock />
+        </FormBlock>
 
-        <BannerBlock
-          defaultValues={{ banner: config.banner }}
-          onSave={(data) => handleSave(data)}
-        />
+        <FormBlock defaultValues={{ banner: config.banner }} onSave={handleSave}>
+          <BannerBlock />
+        </FormBlock>
 
-        <NavbarBlock
-          defaultValues={{ navbar: config.navbar }}
-          onSave={(data) => handleSave(data)}
-        />
+        <FormBlock defaultValues={{ navbar: { links: config.navbar?.links || [], primary: config.navbar?.primary } }} onSave={handleSave}>
+          <NavbarBlock />
+        </FormBlock>
 
+        {/* TODO: Refactor remaining blocks that have data transformations */}
         <FooterBlock
           defaultValues={{ footer: config.footer }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
         />
 
         <DomainsBlock
           defaultValues={{ domains: config.domains }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
           cnameTarget="cname.holocronsites.com"
           internalDomain="example-docs.holocronsites.com"
         />
 
         <RedirectsBlock
           defaultValues={{ redirects: config.redirects }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
         />
 
         <SeoBlock
           defaultValues={{ description: config.description, seo: config.seo }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
         />
 
         <PasswordsBlock
           defaultValues={{ passwords: config.passwords }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
         />
 
         <ContextualBlock
           defaultValues={{ contextual: config.contextual }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
         />
 
         <CssVariablesBlock
           defaultValues={{ cssVariables: config.cssVariables }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
         />
 
         <IntegrationsBlock
           defaultValues={{ integrations: config.integrations }}
-          onSave={(data) => handleSave(data)}
+          onSave={(data) => { return handleSave(data) }}
         />
 
         {lastSaved && (
