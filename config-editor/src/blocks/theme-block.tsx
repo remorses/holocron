@@ -7,11 +7,7 @@ import { themeNames, type DocsJsonType } from '../types'
 
 export type ThemeBlockValues = Pick<DocsJsonType, 'theme'>
 
-type ThemeBlockProps = {
-  disabled?: boolean
-}
-
-export function ThemeBlock({ disabled }: ThemeBlockProps) {
+export function ThemeBlock() {
   const { control, formState } = useFormContext<ThemeBlockValues>()
 
   return (
@@ -24,7 +20,6 @@ export function ThemeBlock({ disabled }: ThemeBlockProps) {
             <Select
               value={field.value || 'neutral'}
               onValueChange={field.onChange}
-              disabled={disabled}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a theme" />
@@ -41,7 +36,7 @@ export function ThemeBlock({ disabled }: ThemeBlockProps) {
         />
       </FieldWrapper>
       <div className="flex justify-end pt-4">
-        <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+        <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
           Save
         </Button>
       </div>

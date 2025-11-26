@@ -7,11 +7,7 @@ import { FieldWrapper } from '../components/field-wrapper'
 import { DragGroup } from '../components/drag-group'
 import { socialPlatforms, type FooterFormValues, type FooterLinkColumn } from '../types'
 
-type FooterBlockProps = {
-  disabled?: boolean
-}
-
-export function FooterBlock({ disabled }: FooterBlockProps) {
+export function FooterBlock() {
   const { register, formState, control } = useFormContext<FooterFormValues>()
 
   const columnsFieldArray = useFieldArray({
@@ -33,7 +29,6 @@ export function FooterBlock({ disabled }: FooterBlockProps) {
                 <Input
                   {...register(`socials.${index}.url`)}
                   placeholder={`https://${platform}.com/...`}
-                  disabled={disabled}
                   className="flex-1"
                 />
               </div>
@@ -52,7 +47,6 @@ export function FooterBlock({ disabled }: FooterBlockProps) {
                     colIndex={colIndex}
                     register={register}
                     control={control}
-                    disabled={disabled}
                     onRemove={() => { removeColumn(colIndex) }}
                   />
                 </div>
@@ -65,7 +59,6 @@ export function FooterBlock({ disabled }: FooterBlockProps) {
             variant="outline"
             size="sm"
             onClick={() => { appendColumn({ header: '', items: [{ label: '', href: '' }] }) }}
-            disabled={disabled}
             className="w-full"
           >
             <PlusIcon className="size-4 mr-1" />
@@ -74,7 +67,7 @@ export function FooterBlock({ disabled }: FooterBlockProps) {
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+          <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
@@ -87,13 +80,11 @@ function FooterColumn({
   colIndex,
   register,
   control,
-  disabled,
   onRemove,
 }: {
   colIndex: number
   register: UseFormRegister<FooterFormValues>
   control: Control<FooterFormValues>
-  disabled?: boolean
   onRemove: () => void
 }) {
   const { fields: items, append: appendItem, remove: removeItem } = useFieldArray({
@@ -110,7 +101,6 @@ function FooterColumn({
           variant="ghost"
           size="icon"
           onClick={onRemove}
-          disabled={disabled}
           className="size-7"
         >
           <TrashIcon className="size-3" />
@@ -121,7 +111,6 @@ function FooterColumn({
         <Input
           {...register(`links.${colIndex}.header`)}
           placeholder="Resources"
-          disabled={disabled}
         />
       </FieldWrapper>
 
@@ -133,12 +122,10 @@ function FooterColumn({
                 <Input
                   {...register(`links.${colIndex}.items.${itemIndex}.label`)}
                   placeholder="Label"
-                  disabled={disabled}
                 />
                 <Input
                   {...register(`links.${colIndex}.items.${itemIndex}.href`)}
                   placeholder="https://..."
-                  disabled={disabled}
                 />
               </div>
               <Button
@@ -146,7 +133,6 @@ function FooterColumn({
                 variant="ghost"
                 size="icon"
                 onClick={() => { removeItem(itemIndex) }}
-                disabled={disabled}
                 className="size-7 shrink-0"
               >
                 <TrashIcon className="size-3" />
@@ -159,7 +145,6 @@ function FooterColumn({
           variant="ghost"
           size="sm"
           onClick={() => { appendItem({ label: '', href: '' }) }}
-          disabled={disabled}
           className="w-full text-xs h-7"
         >
           <PlusIcon className="size-3 mr-1" />

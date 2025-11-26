@@ -13,11 +13,7 @@ export type NavbarBlockValues = Pick<DocsJsonType, 'navbar'>
 
 type PrimaryType = 'none' | 'button' | 'github'
 
-type NavbarBlockProps = {
-  disabled?: boolean
-}
-
-export function NavbarBlock({ disabled }: NavbarBlockProps) {
+export function NavbarBlock() {
   const { register, formState, control, watch } = useFormContext<NavbarBlockValues>()
 
   const [primaryType, setPrimaryType] = useState<PrimaryType>(() => {
@@ -50,7 +46,6 @@ export function NavbarBlock({ disabled }: NavbarBlockProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => { remove(index) }}
-                  disabled={disabled}
                   className="size-7"
                 >
                   <TrashIcon className="size-3" />
@@ -60,21 +55,18 @@ export function NavbarBlock({ disabled }: NavbarBlockProps) {
                 <Input
                   {...register(`navbar.links.${index}.label`, { required: 'Label is required' })}
                   placeholder="Documentation"
-                  disabled={disabled}
                 />
               </FieldWrapper>
               <FieldWrapper label="URL" required error={formState.errors.navbar?.links?.[index]?.href?.message}>
                 <Input
                   {...register(`navbar.links.${index}.href`, { required: 'URL is required' })}
                   placeholder="https://docs.example.com"
-                  disabled={disabled}
                 />
               </FieldWrapper>
               <FieldWrapper label="Icon (optional)" description="Lucide icon name">
                 <Input
                   {...register(`navbar.links.${index}.icon`)}
                   placeholder="BookOpen"
-                  disabled={disabled}
                 />
               </FieldWrapper>
             </DragGroup.Item>
@@ -86,7 +78,6 @@ export function NavbarBlock({ disabled }: NavbarBlockProps) {
           variant="outline"
           size="sm"
           onClick={() => { append({ label: '', href: '', icon: '' }) }}
-          disabled={disabled}
           className="w-full"
         >
           <PlusIcon className="size-4 mr-1" />
@@ -112,14 +103,12 @@ export function NavbarBlock({ disabled }: NavbarBlockProps) {
               <Input
                 {...register('navbar.primary.label' as any)}
                 placeholder="Get Started"
-                disabled={disabled}
               />
             </FieldWrapper>
             <FieldWrapper label="Button URL">
               <Input
                 {...register('navbar.primary.href' as any)}
                 placeholder="https://example.com/signup"
-                disabled={disabled}
               />
             </FieldWrapper>
           </TabsContent>
@@ -129,14 +118,13 @@ export function NavbarBlock({ disabled }: NavbarBlockProps) {
               <Input
                 {...register('navbar.primary.href' as any)}
                 placeholder="https://github.com/org/repo"
-                disabled={disabled}
               />
             </FieldWrapper>
           </TabsContent>
         </Tabs>
       </div>
       <div className="flex justify-end pt-4">
-        <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+        <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
           Save
         </Button>
       </div>

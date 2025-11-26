@@ -13,11 +13,10 @@ type LogoMode = 'none' | 'url' | 'upload'
 export type LogoBlockValues = Pick<DocsJsonType, 'logo'>
 
 type LogoBlockProps = {
-  disabled?: boolean
   uploadFunction?: (file: File) => Promise<string>
 }
 
-export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
+export function LogoBlock({ uploadFunction }: LogoBlockProps) {
   const { register, formState, watch, setValue } = useFormContext<LogoBlockValues>()
 
   const [mode, setMode] = useState<LogoMode>(() => {
@@ -55,14 +54,12 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
             <Input
               {...register('logo.light')}
               placeholder="https://example.com/logo-light.svg"
-              disabled={disabled}
             />
           </FieldWrapper>
           <FieldWrapper label="Dark mode" error={formState.errors.logo?.dark?.message}>
             <Input
               {...register('logo.dark')}
               placeholder="https://example.com/logo-dark.svg"
-              disabled={disabled}
             />
           </FieldWrapper>
         </TabsContent>
@@ -73,7 +70,7 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
               <UploadButton
                 className="mx-1"
                 accept="image/*"
-                disabled={disabled || !uploadFunction}
+                disabled={!uploadFunction}
                 uploadFunction={uploadFunction!}
                 onUploadFinished={({ src }) => {
                   setValue('logo.light', src, { shouldDirty: true })
@@ -91,7 +88,7 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
               <UploadButton
                 className="mx-1"
                 accept="image/*"
-                disabled={disabled || !uploadFunction}
+                disabled={!uploadFunction}
                 uploadFunction={uploadFunction!}
                 onUploadFinished={({ src }) => {
                   setValue('logo.dark', src, { shouldDirty: true })
@@ -115,20 +112,18 @@ export function LogoBlock({ disabled, uploadFunction }: LogoBlockProps) {
             <Input
               {...register('logo.href')}
               placeholder="/"
-              disabled={disabled}
             />
           </FieldWrapper>
           <FieldWrapper label="Logo text (optional)" description="Text shown next to an icon-only logo">
             <Input
               {...register('logo.text')}
               placeholder="My Docs"
-              disabled={disabled}
             />
           </FieldWrapper>
         </div>
       )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+        <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
           Save
         </Button>
       </div>

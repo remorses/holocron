@@ -7,11 +7,7 @@ import { BlockWrapper } from '../components/block-wrapper'
 import { ColorPickerButton } from '../components/color-picker-button'
 import { cssVariableDefinitions, type CssVariablesFormValues } from '../types'
 
-type CssVariablesBlockProps = {
-  disabled?: boolean
-}
-
-export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
+export function CssVariablesBlock() {
   const { formState, control, watch, setValue } = useFormContext<CssVariablesFormValues>()
 
   const { fields: lightFields, append: appendLight, remove: removeLight } = useFieldArray({
@@ -49,7 +45,6 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
                           setValue(`light.${index}.value`, def.light, { shouldDirty: true })
                         }
                       }}
-                      disabled={disabled}
                     >
                       <SelectTrigger className="w-[120px] shrink-0">
                         <SelectValue placeholder="Variable" />
@@ -67,13 +62,11 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
                 <ColorPickerButton
                   value={colorValue}
                   onChange={(newColor) => { setValue(`light.${index}.value`, newColor, { shouldDirty: true }) }}
-                  disabled={disabled}
                 />
                 <Input
                   value={colorValue}
                   onChange={(e) => { setValue(`light.${index}.value`, e.target.value, { shouldDirty: true }) }}
                   placeholder="#3b82f6"
-                  disabled={disabled}
                   className="flex-1"
                 />
                 <Button
@@ -81,7 +74,6 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => { removeLight(index) }}
-                  disabled={disabled}
                   className="size-9 shrink-0"
                 >
                   <TrashIcon className="size-4" />
@@ -94,7 +86,6 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
             variant="outline"
             size="sm"
             onClick={() => { appendLight({ name: '', value: '' }) }}
-            disabled={disabled}
             className="w-full"
           >
             <PlusIcon className="size-4 mr-1" />
@@ -121,7 +112,6 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
                           setValue(`dark.${index}.value`, def.dark, { shouldDirty: true })
                         }
                       }}
-                      disabled={disabled}
                     >
                       <SelectTrigger className="w-[120px] shrink-0">
                         <SelectValue placeholder="Variable" />
@@ -139,13 +129,11 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
                 <ColorPickerButton
                   value={colorValue}
                   onChange={(newColor) => { setValue(`dark.${index}.value`, newColor, { shouldDirty: true }) }}
-                  disabled={disabled}
                 />
                 <Input
                   value={colorValue}
                   onChange={(e) => { setValue(`dark.${index}.value`, e.target.value, { shouldDirty: true }) }}
                   placeholder="#60a5fa"
-                  disabled={disabled}
                   className="flex-1"
                 />
                 <Button
@@ -153,7 +141,6 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => { removeDark(index) }}
-                  disabled={disabled}
                   className="size-9 shrink-0"
                 >
                   <TrashIcon className="size-4" />
@@ -166,7 +153,6 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
             variant="outline"
             size="sm"
             onClick={() => { appendDark({ name: '', value: '' }) }}
-            disabled={disabled}
             className="w-full"
           >
             <PlusIcon className="size-4 mr-1" />
@@ -175,7 +161,7 @@ export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+          <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>

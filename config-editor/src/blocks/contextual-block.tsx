@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useFormContext, Controller } from 'react-hook-form'
 import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
@@ -12,11 +13,8 @@ const contextualLabels: Record<ContextualOption, { label: string; description: s
   claude: { label: 'Claude', description: 'Open in Claude' },
 }
 
-type ContextualBlockProps = {
-  disabled?: boolean
-}
-
-export function ContextualBlock({ disabled }: ContextualBlockProps) {
+export function ContextualBlock() {
+  const id = useId()
   const { formState, control } = useFormContext<ContextualFormValues>()
 
   return (
@@ -33,15 +31,14 @@ export function ContextualBlock({ disabled }: ContextualBlockProps) {
                 control={control}
                 render={({ field }) => (
                   <Checkbox
-                    id={`contextual-${option}`}
+                    id={`${id}-${option}`}
                     checked={field.value}
                     onChange={(e) => { field.onChange(e.target.checked) }}
-                    disabled={disabled}
                   />
                 )}
               />
               <div className="space-y-0.5">
-                <Label htmlFor={`contextual-${option}`} className="text-sm font-medium">
+                <Label htmlFor={`${id}-${option}`} className="text-sm font-medium">
                   {contextualLabels[option].label}
                 </Label>
                 <p className="text-xs text-muted-foreground">{contextualLabels[option].description}</p>
@@ -51,7 +48,7 @@ export function ContextualBlock({ disabled }: ContextualBlockProps) {
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+          <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>

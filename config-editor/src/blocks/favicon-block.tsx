@@ -13,11 +13,10 @@ type FaviconMode = 'url' | 'upload'
 export type FaviconBlockValues = Pick<DocsJsonType, 'favicon'>
 
 type FaviconBlockProps = {
-  disabled?: boolean
   uploadFunction?: (file: File) => Promise<string>
 }
 
-export function FaviconBlock({ disabled, uploadFunction }: FaviconBlockProps) {
+export function FaviconBlock({ uploadFunction }: FaviconBlockProps) {
   const [mode, setMode] = useState<FaviconMode>('url')
   const { register, formState, watch, setValue } = useFormContext<FaviconBlockValues>()
 
@@ -34,14 +33,12 @@ export function FaviconBlock({ disabled, uploadFunction }: FaviconBlockProps) {
             <Input
               {...register('favicon.light')}
               placeholder="https://example.com/favicon-light.svg"
-              disabled={disabled}
             />
           </FieldWrapper>
           <FieldWrapper label="Dark mode" error={formState.errors.favicon?.dark?.message}>
             <Input
               {...register('favicon.dark')}
               placeholder="https://example.com/favicon-dark.svg"
-              disabled={disabled}
             />
           </FieldWrapper>
         </TabsContent>
@@ -51,7 +48,7 @@ export function FaviconBlock({ disabled, uploadFunction }: FaviconBlockProps) {
             <UploadButton
               className="mx-1"
               accept="image/*,.ico"
-              disabled={disabled || !uploadFunction}
+              disabled={!uploadFunction}
               uploadFunction={uploadFunction!}
               onUploadFinished={({ src }) => {
                 setValue('favicon.light', src, { shouldDirty: true })
@@ -69,7 +66,7 @@ export function FaviconBlock({ disabled, uploadFunction }: FaviconBlockProps) {
             <UploadButton
               className="mx-1"
               accept="image/*,.ico"
-              disabled={disabled || !uploadFunction}
+              disabled={!uploadFunction}
               uploadFunction={uploadFunction!}
               onUploadFinished={({ src }) => {
                 setValue('favicon.dark', src, { shouldDirty: true })
@@ -86,7 +83,7 @@ export function FaviconBlock({ disabled, uploadFunction }: FaviconBlockProps) {
         </TabsContent>
       </Tabs>
       <div className="flex justify-end pt-4">
-        <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+        <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
           Save
         </Button>
       </div>

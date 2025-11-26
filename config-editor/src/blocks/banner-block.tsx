@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useFormContext, Controller } from 'react-hook-form'
 import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
@@ -9,11 +10,8 @@ import type { DocsJsonType } from '../types'
 
 export type BannerBlockValues = Pick<DocsJsonType, 'banner'>
 
-type BannerBlockProps = {
-  disabled?: boolean
-}
-
-export function BannerBlock({ disabled }: BannerBlockProps) {
+export function BannerBlock() {
+  const id = useId()
   const { register, formState, control } = useFormContext<BannerBlockValues>()
 
   return (
@@ -26,7 +24,6 @@ export function BannerBlock({ disabled }: BannerBlockProps) {
         <Textarea
           {...register('banner.content')}
           placeholder="<a href='/changelog'>Check out our new features!</a>"
-          disabled={disabled}
           rows={3}
         />
       </FieldWrapper>
@@ -37,17 +34,16 @@ export function BannerBlock({ disabled }: BannerBlockProps) {
           control={control}
           render={({ field }) => (
             <Switch
-              id="banner-dismissible"
+              id={`${id}-dismissible`}
               checked={field.value || false}
               onCheckedChange={field.onChange}
-              disabled={disabled}
             />
           )}
         />
-        <Label htmlFor="banner-dismissible" className="text-xs">Allow users to dismiss the banner</Label>
+        <Label htmlFor={`${id}-dismissible`} className="text-xs">Allow users to dismiss the banner</Label>
       </div>
       <div className="flex justify-end pt-4">
-        <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+        <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
           Save
         </Button>
       </div>

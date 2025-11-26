@@ -7,11 +7,7 @@ import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
 import type { PasswordsFormValues } from '../types'
 
-type PasswordsBlockProps = {
-  disabled?: boolean
-}
-
-export function PasswordsBlock({ disabled }: PasswordsBlockProps) {
+export function PasswordsBlock() {
   const [showPasswords, setShowPasswords] = useState<Record<number, boolean>>({})
 
   const { register, formState, control } = useFormContext<PasswordsFormValues>()
@@ -45,7 +41,6 @@ export function PasswordsBlock({ disabled }: PasswordsBlockProps) {
                         })}
                         type={showPasswords[index] ? 'text' : 'password'}
                         placeholder="Enter password"
-                        disabled={disabled}
                         className="pr-10"
                       />
                       <Button
@@ -67,7 +62,6 @@ export function PasswordsBlock({ disabled }: PasswordsBlockProps) {
                     <Input
                       {...register(`passwords.${index}.name`)}
                       placeholder="Team Access"
-                      disabled={disabled}
                     />
                   </FieldWrapper>
                 </div>
@@ -76,7 +70,6 @@ export function PasswordsBlock({ disabled }: PasswordsBlockProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => { remove(index) }}
-                  disabled={disabled}
                   className="shrink-0 mt-6"
                 >
                   <TrashIcon className="size-4" />
@@ -91,7 +84,6 @@ export function PasswordsBlock({ disabled }: PasswordsBlockProps) {
           variant="outline"
           size="sm"
           onClick={() => { append({ password: '', name: '' }) }}
-          disabled={disabled}
           className="w-full"
         >
           <PlusIcon className="size-4 mr-1" />
@@ -99,7 +91,7 @@ export function PasswordsBlock({ disabled }: PasswordsBlockProps) {
         </Button>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+          <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>

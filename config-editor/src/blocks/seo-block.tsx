@@ -8,11 +8,7 @@ import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
 import type { SeoFormValues } from '../types'
 
-type SeoBlockProps = {
-  disabled?: boolean
-}
-
-export function SeoBlock({ disabled }: SeoBlockProps) {
+export function SeoBlock() {
   const { register, formState, control } = useFormContext<SeoFormValues>()
 
   const { fields, append, remove } = useFieldArray({
@@ -30,7 +26,6 @@ export function SeoBlock({ disabled }: SeoBlockProps) {
           <Textarea
             {...register('description')}
             placeholder="Documentation for..."
-            disabled={disabled}
             rows={2}
           />
         </FieldWrapper>
@@ -43,7 +38,6 @@ export function SeoBlock({ disabled }: SeoBlockProps) {
               <Select
                 value={field.value || 'default'}
                 onValueChange={field.onChange}
-                disabled={disabled}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Default" />
@@ -66,12 +60,10 @@ export function SeoBlock({ disabled }: SeoBlockProps) {
                 <Input
                   {...register(`metatags.${index}.name`)}
                   placeholder="name"
-                  disabled={disabled}
                 />
                 <Input
                   {...register(`metatags.${index}.content`)}
                   placeholder="content"
-                  disabled={disabled}
                 />
               </div>
               <Button
@@ -79,7 +71,6 @@ export function SeoBlock({ disabled }: SeoBlockProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => { remove(index) }}
-                disabled={disabled}
                 className="size-7 shrink-0"
               >
                 <TrashIcon className="size-3" />
@@ -92,7 +83,6 @@ export function SeoBlock({ disabled }: SeoBlockProps) {
             variant="outline"
             size="sm"
             onClick={() => { append({ name: '', content: '' }) }}
-            disabled={disabled}
             className="w-full"
           >
             <PlusIcon className="size-4 mr-1" />
@@ -101,7 +91,7 @@ export function SeoBlock({ disabled }: SeoBlockProps) {
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+          <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>

@@ -7,11 +7,7 @@ import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
 import { integrationDefinitions, type IntegrationsFormValues } from '../types'
 
-type IntegrationsBlockProps = {
-  disabled?: boolean
-}
-
-export function IntegrationsBlock({ disabled }: IntegrationsBlockProps) {
+export function IntegrationsBlock() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   const { register, formState, watch } = useFormContext<IntegrationsFormValues>()
@@ -59,7 +55,6 @@ export function IntegrationsBlock({ disabled }: IntegrationsBlockProps) {
                       <Input
                         {...register(`integrations.${integration.id}.${field.key}`)}
                         placeholder={field.placeholder}
-                        disabled={disabled}
                       />
                     </FieldWrapper>
                   ))}
@@ -79,7 +74,7 @@ export function IntegrationsBlock({ disabled }: IntegrationsBlockProps) {
         })}
 
         <div className="flex justify-end pt-4">
-          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+          <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>

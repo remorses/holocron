@@ -6,13 +6,11 @@ import { BlockWrapper } from '../components/block-wrapper'
 import type { DomainsFormValues } from '../types'
 
 type DomainsBlockProps = {
-  disabled?: boolean
   cnameTarget?: string
   internalDomain?: string
 }
 
 export function DomainsBlock({
-  disabled,
   cnameTarget = 'cname.holocronsites.com',
   internalDomain,
 }: DomainsBlockProps) {
@@ -49,7 +47,7 @@ export function DomainsBlock({
                       },
                     })}
                     placeholder="docs.example.com"
-                    disabled={disabled || isInternal}
+                    disabled={isInternal}
                   />
                   {formState.errors.domains?.[index]?.value && (
                     <p className="text-xs text-destructive mt-1">
@@ -62,7 +60,7 @@ export function DomainsBlock({
                   variant="ghost"
                   size="icon"
                   onClick={() => { remove(index) }}
-                  disabled={disabled || isInternal}
+                  disabled={isInternal}
                   className="shrink-0"
                 >
                   <TrashIcon className="size-4" />
@@ -77,7 +75,6 @@ export function DomainsBlock({
           variant="outline"
           size="sm"
           onClick={() => { append({ value: '' }) }}
-          disabled={disabled}
           className="w-full"
         >
           <PlusIcon className="size-4 mr-1" />
@@ -85,7 +82,7 @@ export function DomainsBlock({
         </Button>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
+          <Button type="submit" size="sm" disabled={formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
