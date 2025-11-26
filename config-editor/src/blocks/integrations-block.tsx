@@ -1,72 +1,37 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 import { ChevronDownIcon, ChevronRightIcon, ExternalLinkIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import { integrationDefinitions, type DocsJsonType, type IntegrationsFormValues } from '../types'
-
-type IntegrationsBlockValues = Pick<DocsJsonType, 'integrations'>
+import { integrationDefinitions, type IntegrationsFormValues } from '../types'
 
 type IntegrationsBlockProps = {
-  defaultValues: IntegrationsBlockValues
-  onSave: (data: IntegrationsBlockValues) => Promise<void>
-  onPreview?: (data: IntegrationsBlockValues) => void
   disabled?: boolean
 }
 
-export function IntegrationsBlock({ defaultValues, onSave, onPreview, disabled }: IntegrationsBlockProps) {
-  const [isSaving, setIsSaving] = useState(false)
+export function IntegrationsBlock({ disabled }: IntegrationsBlockProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
-  const { register, handleSubmit, formState, reset } = useForm<IntegrationsFormValues>({
-    defaultValues: {
-      integrations: (defaultValues.integrations as IntegrationsFormValues['integrations']) || {},
-    },
-  })
-
-  const onSubmit = async (data: IntegrationsFormValues) => {
-    setIsSaving(true)
-    try {
-      const integrations: Record<string, Record<string, string>> = {}
-
-      Object.entries(data.integrations).forEach(([key, value]) => {
-        const hasValue = Object.values(value).some((v) => v)
-        if (hasValue) {
-          const cleanedValue: Record<string, string> = {}
-          Object.entries(value).forEach(([k, v]) => {
-            if (v) {
-              cleanedValue[k] = v
-            }
-          })
-          integrations[key] = cleanedValue
-        }
-      })
-
-      await onSave({
-        integrations: Object.keys(integrations).length > 0 ? integrations as any : undefined,
-      })
-      reset(data)
-    } finally {
-      setIsSaving(false)
-    }
-  }
+  const { register, formState, watch } = useFormContext<IntegrationsFormValues>()
 
   const toggleExpanded = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
   }
+
+  const integrations = watch('integrations')
 
   return (
     <BlockWrapper
       title="Integrations"
       description="Third-party analytics and support integrations"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+      <div className="space-y-2">
         {integrationDefinitions.map((integration) => {
           const isExpanded = expanded[integration.id]
           const hasValue = integration.fields.some(
-            (f) => (defaultValues.integrations as any)?.[integration.id]?.[f.key]
+            (f) => integrations?.[integration.id]?.[f.key]
           )
 
           return (
@@ -114,11 +79,11 @@ export function IntegrationsBlock({ defaultValues, onSave, onPreview, disabled }
         })}
 
         <div className="flex justify-end pt-4">
-          <Button type="submit" size="sm" disabled={disabled || isSaving || !formState.isDirty} isLoading={isSaving}>
+          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
-      </form>
+      </div>
     </BlockWrapper>
   )
 }

@@ -1,44 +1,18 @@
-import { useState } from 'react'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useFormContext, useFieldArray, Controller } from 'react-hook-form'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { BlockWrapper } from '../components/block-wrapper'
 import { ColorPickerButton } from '../components/color-picker-button'
-import { cssVariableDefinitions, type DocsJsonType, type CssVariablesFormValues, type CssVariableEntry } from '../types'
-
-type CssVariablesBlockValues = Pick<DocsJsonType, 'cssVariables'>
+import { cssVariableDefinitions, type CssVariablesFormValues } from '../types'
 
 type CssVariablesBlockProps = {
-  defaultValues: CssVariablesBlockValues
-  onSave: (data: CssVariablesBlockValues) => Promise<void>
-  onPreview?: (data: CssVariablesBlockValues) => void
   disabled?: boolean
 }
 
-function recordToEntries(record: Record<string, string> | undefined): CssVariableEntry[] {
-  return Object.entries(record || {}).map(([name, value]) => ({ name, value }))
-}
-
-function entriesToRecord(entries: CssVariableEntry[]): Record<string, string> {
-  return entries.reduce<Record<string, string>>((acc, { name, value }) => {
-    if (name && value) {
-      acc[name] = value
-    }
-    return acc
-  }, {})
-}
-
-export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }: CssVariablesBlockProps) {
-  const [isSaving, setIsSaving] = useState(false)
-
-  const { handleSubmit, formState, control, reset, watch, setValue } = useForm<CssVariablesFormValues>({
-    defaultValues: {
-      light: recordToEntries(defaultValues.cssVariables?.light),
-      dark: recordToEntries(defaultValues.cssVariables?.dark),
-    },
-  })
+export function CssVariablesBlock({ disabled }: CssVariablesBlockProps) {
+  const { formState, control, watch, setValue } = useFormContext<CssVariablesFormValues>()
 
   const { fields: lightFields, append: appendLight, remove: removeLight } = useFieldArray({
     control,
@@ -50,27 +24,12 @@ export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }
     name: 'dark',
   })
 
-  const onSubmit = async (data: CssVariablesFormValues) => {
-    setIsSaving(true)
-    try {
-      const light = entriesToRecord(data.light)
-      const dark = entriesToRecord(data.dark)
-      const hasVars = Object.keys(light).length > 0 || Object.keys(dark).length > 0
-      await onSave({
-        cssVariables: hasVars ? { light, dark } : undefined,
-      })
-      reset(data)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   return (
     <BlockWrapper
       title="CSS Variables"
       description="Custom CSS variables for light and dark modes"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-4">
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Light Mode</p>
           {lightFields.map((field, index) => {
@@ -216,11 +175,11 @@ export function CssVariablesBlock({ defaultValues, onSave, onPreview, disabled }
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || isSaving || !formState.isDirty} isLoading={isSaving}>
+          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
-      </form>
+      </div>
     </BlockWrapper>
   )
 }

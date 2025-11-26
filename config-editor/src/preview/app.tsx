@@ -17,7 +17,32 @@ import {
   IntegrationsBlock,
 } from '../index'
 
-import type { DocsJsonType } from '../types'
+import { socialPlatforms, contextualOptions, type DocsJsonType, type ContextualOption } from '../types'
+
+function socialsToEntries(socials: Record<string, string> | undefined) {
+  return socialPlatforms.map((platform) => ({
+    platform,
+    url: socials?.[platform] || '',
+  }))
+}
+
+function metatagsToEntries(metatags: Record<string, string> | undefined) {
+  return Object.entries(metatags || {}).map(([name, content]) => ({ name, content }))
+}
+
+function recordToEntries(record: Record<string, string> | undefined) {
+  return Object.entries(record || {}).map(([name, value]) => ({ name, value }))
+}
+
+function contextualToOptions(contextual: { options?: ContextualOption[] } | undefined) {
+  return contextualOptions.reduce(
+    (acc, opt) => {
+      acc[opt] = contextual?.options?.includes(opt) ?? false
+      return acc
+    },
+    {} as Record<ContextualOption, boolean>,
+  )
+}
 
 type ConfigStore = {
   config: DocsJsonType
@@ -126,18 +151,9 @@ function FormBlock({ defaultValues, children }: FormBlockProps) {
   )
 }
 
-async function handleSave<T>(partial: T) {
-  await new Promise((resolve) => { setTimeout(resolve, 500) })
-  const { config } = useConfigStore.getState()
-  useConfigStore.setState({
-    config: { ...config, ...partial },
-    lastSaved: JSON.stringify(partial, null, 2),
-  })
-}
-
 export function App() {
-  const config = useConfigStore((s) => s.config)
-  const lastSaved = useConfigStore((s) => s.lastSaved)
+  const config = useConfigStore((s: ConfigStore) => s.config)
+  const lastSaved = useConfigStore((s: ConfigStore) => s.lastSaved)
 
   const uploadFunction = async (file: File) => {
     await new Promise((resolve) => { setTimeout(resolve, 300) })
@@ -172,47 +188,37 @@ export function App() {
           <NavbarBlock />
         </FormBlock>
 
-        <FooterBlock
-          defaultValues={{ footer: config.footer }}
-          onSave={handleSave}
-        />
+        <FormBlock defaultValues={{ socials: socialsToEntries(config.footer?.socials), links: config.footer?.links || [] }}>
+          <FooterBlock />
+        </FormBlock>
 
-        <DomainsBlock
-          defaultValues={{ domains: config.domains }}
-          onSave={handleSave}
-          cnameTarget="cname.holocronsites.com"
-          internalDomain="example-docs.holocronsites.com"
-        />
+        <FormBlock defaultValues={{ domains: (config.domains || []).map((d: string) => ({ value: d })) }}>
+          <DomainsBlock cnameTarget="cname.holocronsites.com" internalDomain="example-docs.holocronsites.com" />
+        </FormBlock>
 
-        <RedirectsBlock
-          defaultValues={{ redirects: config.redirects }}
-          onSave={handleSave}
-        />
+        <FormBlock defaultValues={{ redirects: config.redirects || [] }}>
+          <RedirectsBlock />
+        </FormBlock>
 
-        <SeoBlock
-          defaultValues={{ description: config.description, seo: config.seo }}
-          onSave={handleSave}
-        />
+        <FormBlock defaultValues={{ description: config.description || '', indexing: config.seo?.indexing || 'default', metatags: metatagsToEntries(config.seo?.metatags) }}>
+          <SeoBlock />
+        </FormBlock>
 
-        <PasswordsBlock
-          defaultValues={{ passwords: config.passwords }}
-          onSave={handleSave}
-        />
+        <FormBlock defaultValues={{ passwords: config.passwords || [] }}>
+          <PasswordsBlock />
+        </FormBlock>
 
-        <ContextualBlock
-          defaultValues={{ contextual: config.contextual }}
-          onSave={handleSave}
-        />
+        <FormBlock defaultValues={{ options: contextualToOptions(config.contextual as { options?: ContextualOption[] } | undefined) }}>
+          <ContextualBlock />
+        </FormBlock>
 
-        <CssVariablesBlock
-          defaultValues={{ cssVariables: config.cssVariables }}
-          onSave={handleSave}
-        />
+        <FormBlock defaultValues={{ light: recordToEntries(config.cssVariables?.light), dark: recordToEntries(config.cssVariables?.dark) }}>
+          <CssVariablesBlock />
+        </FormBlock>
 
-        <IntegrationsBlock
-          defaultValues={{ integrations: config.integrations }}
-          onSave={handleSave}
-        />
+        <FormBlock defaultValues={{ integrations: config.integrations || {} }}>
+          <IntegrationsBlock />
+        </FormBlock>
 
         {lastSaved && (
           <div className="fixed bottom-4 right-4 max-w-xs bg-card border rounded-lg p-3 shadow-lg">

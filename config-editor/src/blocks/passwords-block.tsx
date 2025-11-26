@@ -1,46 +1,25 @@
 import { useState } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useFormContext, useFieldArray } from 'react-hook-form'
 import { PlusIcon, TrashIcon, EyeIcon, EyeOffIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType } from '../types'
-
-type PasswordsBlockValues = Pick<DocsJsonType, 'passwords'>
+import type { PasswordsFormValues } from '../types'
 
 type PasswordsBlockProps = {
-  defaultValues: PasswordsBlockValues
-  onSave: (data: PasswordsBlockValues) => Promise<void>
-  onPreview?: (data: PasswordsBlockValues) => void
   disabled?: boolean
 }
 
-export function PasswordsBlock({ defaultValues, onSave, onPreview, disabled }: PasswordsBlockProps) {
-  const [isSaving, setIsSaving] = useState(false)
+export function PasswordsBlock({ disabled }: PasswordsBlockProps) {
   const [showPasswords, setShowPasswords] = useState<Record<number, boolean>>({})
 
-  const { register, handleSubmit, formState, control, reset } = useForm<PasswordsBlockValues>({
-    defaultValues: {
-      passwords: defaultValues.passwords || [],
-    },
-  })
+  const { register, formState, control } = useFormContext<PasswordsFormValues>()
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'passwords',
   })
-
-  const onSubmit = async (data: PasswordsBlockValues) => {
-    setIsSaving(true)
-    try {
-      const passwords = (data.passwords || []).filter((p) => p.password)
-      await onSave({ passwords: passwords.length > 0 ? passwords : undefined })
-      reset(data)
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   const toggleShowPassword = (index: number) => {
     setShowPasswords((prev) => ({ ...prev, [index]: !prev[index] }))
@@ -51,7 +30,7 @@ export function PasswordsBlock({ defaultValues, onSave, onPreview, disabled }: P
       title="Password Protection"
       description="Require a password to access your documentation"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-4">
         <div className="space-y-3">
           {fields.map((field, index) => (
             <div key={field.id} className="rounded-md border p-3 space-y-3">
@@ -120,11 +99,11 @@ export function PasswordsBlock({ defaultValues, onSave, onPreview, disabled }: P
         </Button>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || isSaving || !formState.isDirty} isLoading={isSaving}>
+          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
-      </form>
+      </div>
     </BlockWrapper>
   )
 }

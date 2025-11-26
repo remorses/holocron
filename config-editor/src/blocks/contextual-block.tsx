@@ -1,10 +1,9 @@
-import { useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useFormContext, Controller } from 'react-hook-form'
 import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
 import { Label } from '../components/ui/label'
 import { BlockWrapper } from '../components/block-wrapper'
-import { contextualOptions, type ContextualOption, type DocsJsonType, type ContextualFormValues } from '../types'
+import { contextualOptions, type ContextualOption, type ContextualFormValues } from '../types'
 
 const contextualLabels: Record<ContextualOption, { label: string; description: string }> = {
   copy: { label: 'Copy', description: 'Copy code to clipboard' },
@@ -13,52 +12,19 @@ const contextualLabels: Record<ContextualOption, { label: string; description: s
   claude: { label: 'Claude', description: 'Open in Claude' },
 }
 
-type ContextualBlockValues = Pick<DocsJsonType, 'contextual'>
-
 type ContextualBlockProps = {
-  defaultValues: ContextualBlockValues
-  onSave: (data: ContextualBlockValues) => Promise<void>
-  onPreview?: (data: ContextualBlockValues) => void
   disabled?: boolean
 }
 
-export function ContextualBlock({ defaultValues, onSave, onPreview, disabled }: ContextualBlockProps) {
-  const [isSaving, setIsSaving] = useState(false)
-
-  const defaultOptions = contextualOptions.reduce(
-    (acc, opt) => {
-      acc[opt] = defaultValues.contextual?.options?.includes(opt) ?? false
-      return acc
-    },
-    {} as Record<ContextualOption, boolean>,
-  )
-
-  const { handleSubmit, formState, control, reset } = useForm<ContextualFormValues>({
-    defaultValues: { options: defaultOptions },
-  })
-
-  const onSubmit = async (data: ContextualFormValues) => {
-    setIsSaving(true)
-    try {
-      const options = Object.entries(data.options)
-        .filter(([_, enabled]) => enabled)
-        .map(([key]) => key as ContextualOption)
-
-      await onSave({
-        contextual: options.length > 0 ? { options } : undefined,
-      })
-      reset(data)
-    } finally {
-      setIsSaving(false)
-    }
-  }
+export function ContextualBlock({ disabled }: ContextualBlockProps) {
+  const { formState, control } = useFormContext<ContextualFormValues>()
 
   return (
     <BlockWrapper
       title="Contextual Actions"
       description="Action buttons shown on code blocks and page headers"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-4">
         <div className="space-y-3">
           {contextualOptions.map((option) => (
             <div key={option} className="flex items-start gap-3">
@@ -85,11 +51,11 @@ export function ContextualBlock({ defaultValues, onSave, onPreview, disabled }: 
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || isSaving || !formState.isDirty} isLoading={isSaving}>
+          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
-      </form>
+      </div>
     </BlockWrapper>
   )
 }

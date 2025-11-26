@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useFormContext, useFieldArray, Controller } from 'react-hook-form'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -7,66 +6,23 @@ import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { DocsJsonType, SeoFormValues, MetatagEntry } from '../types'
-
-type SeoBlockValues = Pick<DocsJsonType, 'description' | 'seo'>
+import type { SeoFormValues } from '../types'
 
 type SeoBlockProps = {
-  defaultValues: SeoBlockValues
-  onSave: (data: SeoBlockValues) => Promise<void>
-  onPreview?: (data: SeoBlockValues) => void
   disabled?: boolean
 }
 
-function metatagsToEntries(metatags: Record<string, string> | undefined): MetatagEntry[] {
-  return Object.entries(metatags || {}).map(([name, content]) => ({ name, content }))
-}
-
-function entriesToMetatags(entries: MetatagEntry[]): Record<string, string> {
-  return entries.reduce<Record<string, string>>((acc, { name, content }) => {
-    if (name && content) {
-      acc[name] = content
-    }
-    return acc
-  }, {})
-}
-
-export function SeoBlock({ defaultValues, onSave, onPreview, disabled }: SeoBlockProps) {
-  const [isSaving, setIsSaving] = useState(false)
-
-  const { register, handleSubmit, formState, control, reset } = useForm<SeoFormValues>({
-    defaultValues: {
-      description: defaultValues.description || '',
-      indexing: defaultValues.seo?.indexing || 'default',
-      metatags: metatagsToEntries(defaultValues.seo?.metatags),
-    },
-  })
+export function SeoBlock({ disabled }: SeoBlockProps) {
+  const { register, formState, control } = useFormContext<SeoFormValues>()
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'metatags',
   })
 
-  const onSubmit = async (data: SeoFormValues) => {
-    setIsSaving(true)
-    try {
-      const metatags = entriesToMetatags(data.metatags)
-      await onSave({
-        description: data.description || undefined,
-        seo: {
-          metatags: Object.keys(metatags).length > 0 ? metatags : undefined,
-          indexing: data.indexing === 'default' ? undefined : data.indexing,
-        },
-      })
-      reset(data)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   return (
     <BlockWrapper title="SEO" description="Search engine optimization settings">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-4">
         <FieldWrapper
           label="Default description"
           description="Used for pages without a description in frontmatter"
@@ -145,11 +101,11 @@ export function SeoBlock({ defaultValues, onSave, onPreview, disabled }: SeoBloc
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || isSaving || !formState.isDirty} isLoading={isSaving}>
+          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
-      </form>
+      </div>
     </BlockWrapper>
   )
 }

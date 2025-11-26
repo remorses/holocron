@@ -74,3 +74,11 @@ export type FooterFormValues = {
 export type IntegrationsFormValues = {
   integrations: Record<string, Record<string, string>>
 }
+
+export type RedirectsFormValues = {
+  redirects: { source: string; destination: string; permanent?: boolean }[]
+}
+
+export type PasswordsFormValues = {
+  passwords: { password: string; name?: string }[]
+}

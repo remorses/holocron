@@ -1,47 +1,18 @@
-import { useState } from 'react'
-import { useForm, useFieldArray, UseFormRegister, Control } from 'react-hook-form'
+import { useFormContext, useFieldArray, UseFormRegister, Control } from 'react-hook-form'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
 import { DragGroup } from '../components/drag-group'
-import { socialPlatforms, type DocsJsonType, type FooterFormValues, type SocialEntry, type FooterLinkColumn } from '../types'
-
-type FooterBlockValues = Pick<DocsJsonType, 'footer'>
+import { socialPlatforms, type FooterFormValues, type FooterLinkColumn } from '../types'
 
 type FooterBlockProps = {
-  defaultValues: FooterBlockValues
-  onSave: (data: FooterBlockValues) => Promise<void>
-  onPreview?: (data: FooterBlockValues) => void
   disabled?: boolean
 }
 
-function socialsToEntries(socials: Record<string, string> | undefined): SocialEntry[] {
-  return socialPlatforms.map((platform) => ({
-    platform,
-    url: socials?.[platform] || '',
-  }))
-}
-
-function entriesToSocials(entries: SocialEntry[]): Record<string, string> {
-  return entries.reduce<Record<string, string>>((acc, { platform, url }) => {
-    if (url) {
-      acc[platform] = url
-    }
-    return acc
-  }, {})
-}
-
-export function FooterBlock({ defaultValues, onSave, onPreview, disabled }: FooterBlockProps) {
-  const [isSaving, setIsSaving] = useState(false)
-
-  const { register, handleSubmit, formState, control, reset } = useForm<FooterFormValues>({
-    defaultValues: {
-      socials: socialsToEntries(defaultValues.footer?.socials),
-      links: (defaultValues.footer?.links || []) as FooterLinkColumn[],
-    },
-  })
+export function FooterBlock({ disabled }: FooterBlockProps) {
+  const { register, formState, control } = useFormContext<FooterFormValues>()
 
   const columnsFieldArray = useFieldArray({
     control,
@@ -50,32 +21,9 @@ export function FooterBlock({ defaultValues, onSave, onPreview, disabled }: Foot
 
   const { fields: linkColumns, append: appendColumn, remove: removeColumn } = columnsFieldArray
 
-  const onSubmit = async (data: FooterFormValues) => {
-    setIsSaving(true)
-    try {
-      const socials = entriesToSocials(data.socials)
-      const links = data.links
-        .map((col) => ({
-          header: col.header,
-          items: col.items.filter((item) => item.label && item.href),
-        }))
-        .filter((col) => col.items.length > 0)
-
-      await onSave({
-        footer: {
-          socials: Object.keys(socials).length > 0 ? socials : undefined,
-          links: links.length > 0 ? links : undefined,
-        },
-      })
-      reset(data)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   return (
     <BlockWrapper title="Footer" description="Footer content shown at the bottom of all pages">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-4">
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Social Links</p>
           <div className="space-y-2">
@@ -126,11 +74,11 @@ export function FooterBlock({ defaultValues, onSave, onPreview, disabled }: Foot
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={disabled || isSaving || !formState.isDirty} isLoading={isSaving}>
+          <Button type="submit" size="sm" disabled={disabled || formState.isSubmitting || !formState.isDirty} isLoading={formState.isSubmitting}>
             Save
           </Button>
         </div>
-      </form>
+      </div>
     </BlockWrapper>
   )
 }
