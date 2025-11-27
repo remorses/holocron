@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
 import { Label } from '../components/ui/label'
 import { BlockWrapper } from '../components/block-wrapper'
-import { contextualOptions, type ContextualOption, type ContextualFormValues } from '../types'
+import { contextualOptions, type ContextualOption, type ContextualFormValues, type DocsJsonType, type BlockTransform } from '../types'
 
 const contextualLabels: Record<ContextualOption, { label: string; description: string }> = {
   copy: { label: 'Copy', description: 'Copy code to clipboard' },
@@ -56,3 +56,28 @@ export function ContextualBlock() {
     </BlockWrapper>
   )
 }
+
+ContextualBlock.transform = {
+  toForm(config) {
+    const enabledOptions = config.contextual?.options ?? []
+    return {
+      options: contextualOptions.reduce(
+        (acc, opt) => {
+          acc[opt] = enabledOptions.includes(opt)
+          return acc
+        },
+        {} as Record<ContextualOption, boolean>,
+      ),
+    }
+  },
+  toConfig(form) {
+    const selectedOptions = Object.entries(form.options || {})
+      .filter(([_, enabled]) => enabled)
+      .map(([option]) => option as ContextualOption)
+    return {
+      contextual: {
+        options: selectedOptions,
+      },
+    }
+  },
+} satisfies BlockTransform<ContextualFormValues>

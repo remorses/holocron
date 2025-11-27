@@ -6,7 +6,7 @@ import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
-import type { SeoFormValues } from '../types'
+import type { SeoFormValues, DocsJsonType, BlockTransform } from '../types'
 
 export function SeoBlock() {
   const { register, formState, control } = useFormContext<SeoFormValues>()
@@ -99,3 +99,34 @@ export function SeoBlock() {
     </BlockWrapper>
   )
 }
+
+SeoBlock.transform = {
+  toForm(config) {
+    return {
+      description: config.description ?? '',
+      indexing: config.seo?.indexing ?? 'default',
+      metatags: Object.entries(config.seo?.metatags || {}).map(([name, content]) => ({
+        name,
+        content,
+      })),
+    }
+  },
+  toConfig(form) {
+    const metatags = form.metatags?.reduce(
+      (acc, entry) => {
+        if (entry.name && entry.content) {
+          acc[entry.name] = entry.content
+        }
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+    return {
+      description: form.description,
+      seo: {
+        indexing: form.indexing === 'default' ? undefined : form.indexing,
+        metatags,
+      },
+    }
+  },
+} satisfies BlockTransform<SeoFormValues>

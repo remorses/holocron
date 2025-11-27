@@ -5,7 +5,7 @@ import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
 import { FieldWrapper } from '../components/field-wrapper'
 import { DragGroup } from '../components/drag-group'
-import { socialPlatforms, type FooterFormValues, type FooterLinkColumn } from '../types'
+import { socialPlatforms, type FooterFormValues, type FooterLinkColumn, type DocsJsonType, type BlockTransform } from '../types'
 
 export function FooterBlock() {
   const { register, formState, control } = useFormContext<FooterFormValues>()
@@ -75,6 +75,38 @@ export function FooterBlock() {
     </BlockWrapper>
   )
 }
+
+FooterBlock.transform = {
+  toForm(config) {
+    return {
+      socials: socialPlatforms.map((platform) => ({
+        platform,
+        url: config.footer?.socials?.[platform] || '',
+      })),
+      links: (config.footer?.links ?? []).map((link) => ({
+        header: link.header ?? '',
+        items: link.items,
+      })),
+    }
+  },
+  toConfig(form) {
+    const socials = form.socials?.reduce(
+      (acc, entry) => {
+        if (entry.url) {
+          acc[entry.platform] = entry.url
+        }
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+    return {
+      footer: {
+        socials,
+        links: form.links,
+      },
+    }
+  },
+} satisfies BlockTransform<FooterFormValues>
 
 function FooterColumn({
   colIndex,

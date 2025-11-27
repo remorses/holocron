@@ -82,3 +82,8 @@ export type RedirectsFormValues = {
 export type PasswordsFormValues = {
   passwords: { password: string; name?: string }[]
 }
+
+export type BlockTransform<TForm> = {
+  toForm: (config: DocsJsonType) => TForm
+  toConfig: (form: TForm) => Partial<DocsJsonType>
+}

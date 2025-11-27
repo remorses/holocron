@@ -3,7 +3,7 @@ import { PlusIcon, TrashIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { BlockWrapper } from '../components/block-wrapper'
-import type { DomainsFormValues } from '../types'
+import type { DomainsFormValues, DocsJsonType, BlockTransform } from '../types'
 
 type DomainsBlockProps = {
   cnameTarget?: string
@@ -90,3 +90,16 @@ export function DomainsBlock({
     </BlockWrapper>
   )
 }
+
+DomainsBlock.transform = {
+  toForm(config) {
+    return {
+      domains: (config.domains ?? []).map((d) => ({ value: d })),
+    }
+  },
+  toConfig(form) {
+    return {
+      domains: form.domains?.map((d) => d.value).filter(Boolean),
+    }
+  },
+} satisfies BlockTransform<DomainsFormValues>

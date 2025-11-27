@@ -5,7 +5,7 @@ import { Input } from '../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { BlockWrapper } from '../components/block-wrapper'
 import { ColorPickerButton } from '../components/color-picker-button'
-import { cssVariableDefinitions, type CssVariablesFormValues } from '../types'
+import { cssVariableDefinitions, type CssVariablesFormValues, type DocsJsonType, type BlockTransform } from '../types'
 
 export function CssVariablesBlock() {
   const { formState, control, watch, setValue } = useFormContext<CssVariablesFormValues>()
@@ -169,3 +169,41 @@ export function CssVariablesBlock() {
     </BlockWrapper>
   )
 }
+
+CssVariablesBlock.transform = {
+  toForm(config) {
+    return {
+      light: Object.entries(config.cssVariables?.light || {}).map(([name, value]) => ({
+        name,
+        value,
+      })),
+      dark: Object.entries(config.cssVariables?.dark || {}).map(([name, value]) => ({
+        name,
+        value,
+      })),
+    }
+  },
+  toConfig(form) {
+    const light = form.light?.reduce(
+      (acc, entry) => {
+        if (entry.name && entry.value) {
+          acc[entry.name] = entry.value
+        }
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+    const dark = form.dark?.reduce(
+      (acc, entry) => {
+        if (entry.name && entry.value) {
+          acc[entry.name] = entry.value
+        }
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+    return {
+      cssVariables: { light, dark },
+    }
+  },
+} satisfies BlockTransform<CssVariablesFormValues>
