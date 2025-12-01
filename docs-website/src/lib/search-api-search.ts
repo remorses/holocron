@@ -5,6 +5,14 @@ import type { FileUpdate } from './edit-tool'
 import YAML from 'js-yaml'
 import { ProcessorDataFrontmatter } from './mdx-heavy'
 
+function filenameToSlug(filename: string): string {
+  const slug = '/' + filename
+    .replace(/\.mdx?$/, '')
+    .replace(/\/index$/, '')
+    .replace(/^index$/, '')
+  return slug || '/'
+}
+
 export interface SortedResult extends BaseSortedResult {
   line?: number
   basePath?: string // Path without fragment
@@ -76,7 +84,7 @@ function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[
     // Add page-level result
     const firstResult = results[0]
     const pageTitle = firstResult.metadata?.title || filename
-    const pageSlug = firstResult.metadata?.slug || '/' + filename.replace(/\.mdx?$/, '')
+    const pageSlug = firstResult.metadata?.slug || filenameToSlug(filename)
 
     grouped.push({
       id: 'page-' + filename,
@@ -87,7 +95,7 @@ function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[
 
     // Add section-level results
     for (const result of results) {
-      const basePath = result.metadata?.slug || '/' + result.filename.replace(/\.mdx?$/, '')
+      const basePath = result.metadata?.slug || filenameToSlug(result.filename)
       const fragment = result.sectionSlug && result.sectionSlug !== 'frontmatter-0' ? result.sectionSlug : undefined
       const sectionUrl = fragment ? `${basePath}#${fragment}` : basePath
 
@@ -140,7 +148,7 @@ function searchFilesInDraft(filesInDraft: Record<string, FileUpdate>, searchQuer
     }
 
     // Create slug from file path
-    const slug = '/' + filePath.replace(/\.mdx?$/, '')
+    const slug = filenameToSlug(filePath)
 
     // Add page-level result
     results.push({
