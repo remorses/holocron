@@ -175,11 +175,11 @@ CssVariablesBlock.transform = {
     return {
       light: Object.entries(config.cssVariables?.light || {}).map(([name, value]) => ({
         name,
-        value,
+        value: String(value ?? ''),
       })),
       dark: Object.entries(config.cssVariables?.dark || {}).map(([name, value]) => ({
         name,
-        value,
+        value: String(value ?? ''),
       })),
     }
   },

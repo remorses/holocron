@@ -107,7 +107,7 @@ SeoBlock.transform = {
       indexing: config.seo?.indexing ?? 'default',
       metatags: Object.entries(config.seo?.metatags || {}).map(([name, content]) => ({
         name,
-        content,
+        content: String(content ?? ''),
       })),
     }
   },
