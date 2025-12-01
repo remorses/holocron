@@ -121,11 +121,15 @@ const ColorMode = z
 
 const IconNameSchema = z.string().describe('Icon name or SVG path')
 
+const optionalUrlSchema = z
+  .union([z.string().url(), z.literal(''), z.null()])
+  .optional()
+
 const LogoSchema = z
   .object({
     light: z.string().describe('Logo for light mode'),
     dark: z.string().describe('Logo for dark mode'),
-    href: z.string().url().optional().describe('Logo click target URL'),
+    href: optionalUrlSchema.describe('Logo click target URL'),
     text: z
       .string()
       .optional()
@@ -186,7 +190,7 @@ const NavigationAnchorItem = z
     icon: IconNameSchema.optional().describe('Optional icon for this section'),
     color: ColorMode.optional().describe('Optional custom color'),
     hidden: z.boolean().optional().describe('Whether the anchor/section is hidden by default'),
-    href: z.string().url().optional().describe('Optional link or path for this anchor'),
+    href: optionalUrlSchema.describe('Optional link or path for this anchor'),
   })
   .strict()
   .describe('Anchor item for navigation')
@@ -392,7 +396,7 @@ const IntegrationsSchema = z
     posthog: z
       .object({
         apiKey: z.string().describe('PostHog API key'),
-        apiHost: z.string().url().optional().describe('PostHog host URL'),
+        apiHost: optionalUrlSchema.describe('PostHog host URL'),
       })
       .optional(),
     plausible: z
@@ -435,7 +439,7 @@ const PasswordSchema = z
 export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websiteDomain: string, docsJsonBasename: string }) {
   return z
     .object({
-      $schema: z.string().url().optional().describe('Schema URL for IDE autocomplete'),
+      $schema: optionalUrlSchema.describe('Schema URL for IDE autocomplete'),
       siteId: z
         .string()
         .describe(
