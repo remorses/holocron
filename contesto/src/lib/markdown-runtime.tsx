@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { memo, useRef, useState } from 'react'
 
 import { SafeMdxRenderer } from 'safe-mdx'
@@ -22,44 +22,33 @@ export const StreamingMarkdownRuntimeComponent = memo(function MarkdownRuntimeCo
 
   let [markdownCache] = useState(() => new Map())
 
-  const { data: resultAst } = useSuspenseQuery({
+  const { data: resultAst, isError } = useQuery({
     queryKey: ['markdown-ast', markdown, isStreaming],
 
-    queryFn: async ({}) => {
+    queryFn: async () => {
       if (!markdown) return []
 
-      try {
-        // const file = await processorWithAst(processor).process(markdown)
-        // const ast = file.data.ast
-        const ast = await parseMarkdownIncremental({
-          cache: markdownCache,
-          markdown,
-          trailingNodes: 2,
-          processor,
-        })
-        onAst?.(ast)
+      const ast = await parseMarkdownIncremental({
+        cache: markdownCache,
+        markdown,
+        trailingNodes: 2,
+        processor,
+      })
+      onAst?.(ast)
 
-        return ast
-      } catch (err) {
-        if (err instanceof Promise) {
-          throw err
-        }
-        if (!isStreaming) {
-          console.log(`no streaming markdown right now, throwing error for invalid markdown`, markdown)
-          throw err
-        }
-        console.error('Markdown lexing error, showing previous markdown content:', err)
-        // React Query with placeholderData will show previous data on error
-        throw err
-      }
+      return ast
     },
-    retry(failureCount, error) {
-      if (isStreaming) return true
-      return false
-    },
-
-    // placeholderData: keepPreviousData,
+    retry: isStreaming,
+    throwOnError: false,
   })
+
+  if (isError || !resultAst) {
+    return (
+      <div className={cn('select-text whitespace-pre-wrap', className)} ref={container}>
+        {markdown}
+      </div>
+    )
+  }
 
   return (
     <div className={cn('select-text ', className)} ref={container}>
