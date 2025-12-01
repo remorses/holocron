@@ -105,10 +105,12 @@ export const cssVariableDefinitions: CssVariableDefinition[] = [
 ]
 
 const Color = z
-  .string()
-  .regex(/^(#|rgb|rgba|hsl|hsla)\b/i, {
-    message: 'Must be a valid color: value must start with #, rgb, rgba, hsl, or hsla',
-  })
+  .union([
+    z.string().regex(/^(#|rgb|rgba|hsl|hsla)\b/i, {
+      message: 'Must be a valid color: value must start with #, rgb, rgba, hsl, or hsla',
+    }),
+    z.literal(''),
+  ])
   .describe('Hex, rgb, rgba, hsl, or hsla color string')
 
 const ColorMode = z
@@ -121,9 +123,9 @@ const ColorMode = z
 
 const IconNameSchema = z.string().describe('Icon name or SVG path')
 
-const optionalUrlSchema = z
-  .union([z.string().url(), z.literal(''), z.null()])
-  .optional()
+const optionalUrlSchema = z.union([z.string().url(), z.literal(''), z.null()]).optional()
+
+const urlOrEmptySchema = z.union([z.string().url(), z.literal('')])
 
 const LogoSchema = z
   .object({
@@ -157,7 +159,7 @@ const RedirectSchema = z
 
 const BannerSchema = z
   .object({
-    content: z.string().min(1).describe('Banner HTML/MDX content'),
+    content: z.string().describe('Banner HTML/MDX content'),
     dismissible: z.boolean().optional().describe('Whether the banner can be dismissed'),
   })
   .strict()
@@ -186,7 +188,7 @@ const ContextualSchema = z
 
 const NavigationAnchorItem = z
   .object({
-    anchor: z.string().min(1).describe('Anchor name/section for this navigation entry'),
+    anchor: z.string().describe('Anchor name/section for this navigation entry'),
     icon: IconNameSchema.optional().describe('Optional icon for this section'),
     color: ColorMode.optional().describe('Optional custom color'),
     hidden: z.boolean().optional().describe('Whether the anchor/section is hidden by default'),
@@ -198,7 +200,7 @@ const NavigationAnchorItem = z
 const NavbarLink = z
   .object({
     label: z.string().describe('Link text'),
-    href: z.string().url().describe('Link URL'),
+    href: urlOrEmptySchema.describe('Link URL'),
     icon: IconNameSchema.optional().describe('Optional icon'),
   })
   .strict()
@@ -213,13 +215,13 @@ const NavbarSchema = z
           .object({
             type: z.literal('button').describe('CTA type button'),
             label: z.string().describe('Button label'),
-            href: z.string().url().describe('Button link URL'),
+            href: urlOrEmptySchema.describe('Button link URL'),
           })
           .strict(),
         z
           .object({
             type: z.literal('github').describe('CTA type GitHub'),
-            href: z.string().url().describe('GitHub repo URL'),
+            href: urlOrEmptySchema.describe('GitHub repo URL'),
           })
           .strict(),
       ])
@@ -237,7 +239,7 @@ const FooterLinkColumn = z
         z
           .object({
             label: z.string().describe('Item text'),
-            href: z.string().url().describe('Item link URL'),
+            href: urlOrEmptySchema.describe('Item link URL'),
           })
           .strict(),
       )
@@ -249,7 +251,7 @@ const FooterLinkColumn = z
 
 const FooterSchema = z
   .object({
-    socials: z.record(z.string(), z.string().url()).optional().describe('Social media links'),
+    socials: z.record(z.string(), urlOrEmptySchema).optional().describe('Social media links'),
     links: z.array(FooterLinkColumn).min(1).optional().describe('Footer link sections'),
   })
   .strict()
@@ -364,7 +366,7 @@ const IntegrationsSchema = z
     fathom: z.object({ siteId: z.string().describe('Fathom site ID') }).optional(),
     frontchat: z
       .object({
-        snippetId: z.string().min(6).describe('Frontchat snippet ID'),
+        snippetId: z.string().describe('Frontchat snippet ID'),
       })
       .optional(),
     ga4: z
@@ -375,10 +377,10 @@ const IntegrationsSchema = z
     gtm: z.object({ tagId: z.string().describe('GTM Tag ID') }).optional(),
     heap: z.object({ appId: z.string().describe('Heap App ID') }).optional(),
     hotjar: z.object({ hjid: z.string(), hjsv: z.string() }).optional().describe('Hotjar site and snippet version'),
-    intercom: z.object({ appId: z.string().min(6).describe('Intercom App ID') }).optional(),
+    intercom: z.object({ appId: z.string().describe('Intercom App ID') }).optional(),
     koala: z
       .object({
-        publicApiKey: z.string().min(2).describe('Koala public key'),
+        publicApiKey: z.string().describe('Koala public key'),
       })
       .optional(),
     logrocket: z.object({ appId: z.string().describe('LogRocket App ID') }).optional(),
@@ -386,9 +388,13 @@ const IntegrationsSchema = z
     osano: z
       .object({
         scriptSource: z
-          .string()
-          .url()
-          .refine((val) => val.startsWith('https://cmp.osano.com/') && val.endsWith('/osano.js'))
+          .union([
+            z
+              .string()
+              .url()
+              .refine((val) => val.startsWith('https://cmp.osano.com/') && val.endsWith('/osano.js')),
+            z.literal(''),
+          ])
           .describe('Osano script URL'),
       })
       .optional(),
@@ -430,7 +436,7 @@ const CSSVariablesSchema = z
 
 const PasswordSchema = z
   .object({
-    password: z.string().min(1).describe('Password required to access the protected content'),
+    password: z.string().describe('Password required to access the protected content'),
     name: z.string().optional().describe('Optional name or label for this password (e.g., "Team Access", "Client Portal")'),
   })
   .strict()
@@ -501,7 +507,7 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
       poweredBy: z
         .object({
           name: z.string().describe('Name to display in the powered by text'),
-          url: z.string().url().describe('URL to link to when clicking the powered by text'),
+          url: urlOrEmptySchema.describe('URL to link to when clicking the powered by text'),
         })
         .optional()
         .meta({ hidden: true })
