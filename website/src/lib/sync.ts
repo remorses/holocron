@@ -1554,13 +1554,16 @@ function getSlugFromPath({ githubPath = '', githubFolder }) {
   if (githubPath.startsWith(githubFolder)) {
     githubPath = githubPath.substring(githubFolder.length)
   }
-  // replace again after base path removal
   if (githubPath.startsWith('/')) {
     githubPath = githubPath.substring(1)
   }
 
-  githubPath = githubPath.replace(mdxRegex, '')
-  return '/' + githubPath
+  githubPath = githubPath
+    .replace(mdxRegex, '')
+    .replace(/\/index$/, '')
+    .replace(/^index$/, '')
+
+  return '/' + githubPath || '/'
 }
 
 /**

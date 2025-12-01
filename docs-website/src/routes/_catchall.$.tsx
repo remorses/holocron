@@ -363,8 +363,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   const fumadocsPage = source.getPage(slugs, locale)
-
-  const slug = fumadocsPage?.url || '/' + slugs.join('/')
+  const slug = fumadocsPage?.url ?? '/' + slugs.join('/')
 
   // Check signal before page queries
   if (request.signal.aborted) {
@@ -546,7 +545,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   // Override with draft content if available
   if (Object.keys(filesInDraft).length > 0) {
     const githubFolder = site?.githubFolder || ''
-
     // Look for draft files that could serve this slug
     for (const [draftGithubPath, draft] of Object.entries(filesInDraft)) {
       if (!draft?.content) continue
