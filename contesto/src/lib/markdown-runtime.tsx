@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { memo, useRef, useState } from 'react'
 
 import { SafeMdxRenderer } from 'safe-mdx'
@@ -40,9 +40,13 @@ export const StreamingMarkdownRuntimeComponent = memo(function MarkdownRuntimeCo
     },
     retry: isStreaming,
     throwOnError: false,
+    // keepPreviousData returns last successful query data when current query fails or is loading,
+    // preventing flicker during streaming when markdown temporarily becomes invalid mid-parse
+    placeholderData: isStreaming ? keepPreviousData : undefined,
   })
 
-  if (isError || !resultAst) {
+  // fallback to raw markdown only when no previous data available
+  if (!resultAst && (isError || !markdown)) {
     return (
       <div className={cn('select-text whitespace-pre-wrap', className)} ref={container}>
         {markdown}
