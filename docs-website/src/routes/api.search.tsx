@@ -61,6 +61,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     branchId: branchId,
     query,
     filesInDraft,
+    githubFolder: site.githubFolder || '',
   })
   return new Response(JSON.stringify(results, null, 2), {
     headers: {

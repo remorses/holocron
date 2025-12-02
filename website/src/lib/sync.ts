@@ -515,10 +515,7 @@ export async function syncSite({
   async function syncMediaAsset(asset: AssetForSync): Promise<SearchApiFile[]> {
     if (asset.type !== 'mediaAsset') return []
 
-    let slug = getSlugFromPath({
-      githubPath: asset.githubPath,
-      githubFolder,
-    })
+    let slug = generateSlugFromPath(asset.githubPath, githubFolder)
     mediaAssetSlugs.add(slug)
     const downloadUrl = asset.downloadUrl
 
@@ -639,10 +636,7 @@ export async function syncSite({
 
     pageCount++ // Increment page count
     const filesToSyncForSearch: SearchApiFile[] = []
-    const slug = getSlugFromPath({
-      githubPath: asset.githubPath,
-      githubFolder,
-    })
+    const slug = generateSlugFromPath(asset.githubPath, githubFolder)
 
     const extension = asset.githubPath.endsWith('.mdx') ? 'mdx' : 'md'
 
@@ -1544,28 +1538,6 @@ function isValidUrl(string: string): boolean {
 }
 
 // TODO handle locales
-function getSlugFromPath({ githubPath = '', githubFolder }) {
-  if (githubPath.startsWith('/')) {
-    githubPath = githubPath.substring(1)
-  }
-  if (githubFolder.startsWith('/')) {
-    githubFolder = githubFolder.substring(1)
-  }
-  if (githubPath.startsWith(githubFolder)) {
-    githubPath = githubPath.substring(githubFolder.length)
-  }
-  if (githubPath.startsWith('/')) {
-    githubPath = githubPath.substring(1)
-  }
-
-  githubPath = githubPath
-    .replace(mdxRegex, '')
-    .replace(/\/index$/, '')
-    .replace(/^index$/, '')
-
-  return '/' + githubPath || '/'
-}
-
 /**
  * Utility function that waits until the given promise resolves, but does not block the event loop.
  * Returns the input promise, to allow for fire-and-forget async processing.

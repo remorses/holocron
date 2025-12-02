@@ -4,14 +4,7 @@ import type { SearchSectionsResponse } from 'searchapi/sdk'
 import type { FileUpdate } from './edit-tool'
 import YAML from 'js-yaml'
 import { ProcessorDataFrontmatter } from './mdx-heavy'
-
-function filenameToSlug(filename: string): string {
-  const slug = '/' + filename
-    .replace(/\.mdx?$/, '')
-    .replace(/\/index$/, '')
-    .replace(/^index$/, '')
-  return slug || '/'
-}
+import { generateSlugFromPath } from './utils'
 
 export interface SortedResult extends BaseSortedResult {
   line?: number
@@ -24,11 +17,13 @@ export async function searchDocsWithSearchApi({
   branchId,
   exact,
   filesInDraft,
+  githubFolder = '',
 }: {
   query: string | string[]
   branchId?: string | null
   exact?: boolean
   filesInDraft?: Record<string, FileUpdate>
+  githubFolder?: string
 }): Promise<SortedResult[]> {
   if (!branchId) {
     console.log(`no branchId`)
@@ -56,19 +51,19 @@ export async function searchDocsWithSearchApi({
       maxChunksPerFile: 4,
     })
 
-    searchResults = formatSearchApiResults(result)
+    searchResults = formatSearchApiResults(result, githubFolder)
   }
 
   // Search in filesInDraft if provided
   if (filesInDraft && Object.keys(filesInDraft).length > 0) {
-    const draftResults = searchFilesInDraft(filesInDraft, searchQuery)
+    const draftResults = searchFilesInDraft(filesInDraft, searchQuery, githubFolder)
     searchResults = [...searchResults, ...draftResults]
   }
 
   return searchResults
 }
 
-function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[] {
+function formatSearchApiResults(response: SearchSectionsResponse, githubFolder: string): SortedResult[] {
   const grouped: SortedResult[] = []
   const pageGroups = new Map<string, typeof response.results>()
 
@@ -84,7 +79,7 @@ function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[
     // Add page-level result
     const firstResult = results[0]
     const pageTitle = firstResult.metadata?.title || filename
-    const pageSlug = firstResult.metadata?.slug || filenameToSlug(filename)
+    const pageSlug = firstResult.metadata?.slug || generateSlugFromPath(filename, githubFolder)
 
     grouped.push({
       id: 'page-' + filename,
@@ -95,7 +90,7 @@ function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[
 
     // Add section-level results
     for (const result of results) {
-      const basePath = result.metadata?.slug || filenameToSlug(result.filename)
+      const basePath = result.metadata?.slug || generateSlugFromPath(result.filename, githubFolder)
       const fragment = result.sectionSlug && result.sectionSlug !== 'frontmatter-0' ? result.sectionSlug : undefined
       const sectionUrl = fragment ? `${basePath}#${fragment}` : basePath
 
@@ -114,7 +109,7 @@ function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[
   return grouped
 }
 
-function searchFilesInDraft(filesInDraft: Record<string, FileUpdate>, searchQuery: string): SortedResult[] {
+function searchFilesInDraft(filesInDraft: Record<string, FileUpdate>, searchQuery: string, githubFolder: string): SortedResult[] {
   const results: SortedResult[] = []
   const queryRegex = new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
 
@@ -148,7 +143,7 @@ function searchFilesInDraft(filesInDraft: Record<string, FileUpdate>, searchQuer
     }
 
     // Create slug from file path
-    const slug = filenameToSlug(filePath)
+    const slug = generateSlugFromPath(filePath, githubFolder)
 
     // Add page-level result
     results.push({
