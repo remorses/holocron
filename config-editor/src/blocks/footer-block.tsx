@@ -85,7 +85,10 @@ FooterBlock.transform = {
       })),
       links: (config.footer?.links ?? []).map((link) => ({
         header: link.header ?? '',
-        items: link.items,
+        items: link.items.map((item) => ({
+          label: item.label ?? '',
+          href: item.href ?? '',
+        })),
       })),
     }
   },
