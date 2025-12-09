@@ -33,14 +33,15 @@ export function DomainsBlock({
 
         <div className="space-y-2">
           {fields.map((field, index) => {
-            const domainValue = watch(`domains.${index}.value`)
-            const isInternal = Boolean(internalDomain && domainValue === internalDomain)
+
+            const isInternal = Boolean(internalDomain && field.value === internalDomain)
             return (
               <div key={field.id} className="flex gap-2 items-start">
                 <div className="flex-1">
                   <Input
                     {...register(`domains.${index}.value`, {
                       required: 'Domain is required',
+                      disabled: isInternal,
                       pattern: {
                         value: /^[a-zA-Z0-9][a-zA-Z0-9-_.]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$/,
                         message: 'Invalid domain format',
