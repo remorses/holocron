@@ -4,9 +4,7 @@ description: 'Configure page metadata and display properties'
 icon: 'file-text'
 ---
 
-## Overview
-
-Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.
+Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed, indexed, and appears in navigation.
 
 ```yaml
 ---
@@ -16,57 +14,267 @@ icon: 'file'
 ---
 ```
 
-## Required Properties
+## Core Fields
 
 ### title
 
-The page title that appears in the sidebar navigation and as the main H1 heading on the page.
+The page title that appears in the sidebar navigation and as the main H1 heading.
+
+**Type:** `string` (required)
 
 ```yaml
+---
 title: 'Getting Started'
+---
 ```
 
 ### description
 
-Meta description used for SEO and displayed in search results. Also shown in the document overview.
+Meta description used for SEO and displayed in search results. Shown under the title in search engine results pages.
 
-```yaml
-description: 'Learn how to set up and configure your project'
-```
-
-## Optional Properties
-
-### icon
-
-Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title in the sidebar.
-
-```yaml
-icon: 'rocket'        # Shows rocket icon
-icon: 'book-open'     # Shows book-open icon
-icon: 'settings'      # Shows settings icon
-```
-
-<Tip>
-
-Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for your page.
-
-</Tip>
-
-## Example
-
-Here's a complete frontmatter example:
+**Type:** `string` (recommended)
 
 ```yaml
 ---
-title: 'API Reference'
-description: 'Complete API documentation with examples and response schemas'
-icon: 'code'
+description: 'Learn how to set up and configure your project in 5 minutes'
+---
+```
+
+### icon
+
+Icon from [Lucide icons](https://lucide.dev) displayed next to the page title in the sidebar.
+
+**Type:** `string` (optional)
+
+```yaml
+---
+icon: 'rocket'        # Shows rocket icon
+icon: 'book-open'     # Shows book-open icon  
+icon: 'settings'      # Shows settings icon
+icon: 'api'          # Shows API icon
+---
+```
+
+Browse the full icon library at [lucide.dev](https://lucide.dev).
+
+## Visibility Control
+
+### visibility
+
+Controls whether the page is completely hidden or visible. Hidden pages return 404 and are removed from all navigation and search.
+
+**Type:** `'visible' | 'hidden'` (optional, default: `'visible'`)
+
+```yaml
+---
+title: 'Secret Documentation'
+visibility: hidden
+---
+```
+
+**When `visibility: hidden`:**
+- ❌ Returns 404 (completely inaccessible)
+- ❌ Hidden from sidebar navigation
+- ❌ Hidden from search engines
+- ❌ Hidden from internal search
+- ❌ Not included in llms.txt
+- ❌ No OG image generation
+
+**Use case:** Pages that should be completely inaccessible (admin docs, deprecated content, work in progress you don't want anyone to see).
+
+### noindex
+
+Excludes the page from search indexing while keeping it accessible via direct URL and visible in navigation.
+
+**Type:** `boolean` (optional, default: `false`)
+
+```yaml
+---
+title: 'Internal Guide'
+description: 'Team reference documentation'
+noindex: true
+---
+```
+
+**When `noindex: true`:**
+- ✅ Page loads normally (200 response)
+- ✅ Shows in sidebar navigation
+- ✅ Accessible via direct URL
+- ❌ Hidden from search engines (Google, Bing)
+- ❌ Hidden from internal site search
+- ❌ Not included in llms.txt
+
+**Use case:** Internal documentation, work-in-progress content you want team members to access but don't want indexed, or content you're testing before making searchable.
+
+**Comparison:**
+
+| Feature | `visibility: hidden` | `noindex: true` | Default |
+|---------|---------------------|-----------------|---------|
+| Page accessible | ❌ 404 | ✅ 200 | ✅ 200 |
+| Shows in sidebar | ❌ | ✅ | ✅ |
+| Search engines | ❌ | ❌ | ✅ |
+| Internal search | ❌ | ❌ | ✅ |
+
+## Visual Elements
+
+### badge
+
+Visual label displayed next to the page title in the sidebar. Use for highlighting new features, beta status, or version information.
+
+**Type:** `object` (optional)
+
+```yaml
+---
+title: 'New Feature'
+badge:
+  content: 'NEW'
+  color: 'blue'
+---
+```
+
+**Properties:**
+- `content` (string): The text to display in the badge
+- `color` (string): Badge color - supports theme color names
+
+**Examples:**
+
+```yaml
+# Highlight new pages
+badge:
+  content: 'NEW'
+  color: 'blue'
+
+# Mark beta features  
+badge:
+  content: 'BETA'
+  color: 'orange'
+
+# Show version info
+badge:
+  content: 'v2.0'
+  color: 'green'
+
+# Warn about deprecation
+badge:
+  content: 'DEPRECATED'
+  color: 'red'
+
+# Indicate premium features
+badge:
+  content: 'PRO'
+  color: 'purple'
+```
+
+## SEO & Metadata
+
+### Custom Meta Tags
+
+Add custom meta tags for Open Graph, Twitter Cards, and other SEO purposes. Tags with colons must be wrapped in quotes.
+
+```yaml
+---
+title: 'Advanced Guide'
+description: 'Deep dive into advanced features'
+"og:title": 'Complete Advanced Guide'
+"og:description": 'Everything you need to know about advanced features'
+"og:image": 'https://example.com/images/advanced-guide.jpg'
+"og:type": 'article'
+"twitter:card": 'summary_large_image'
+"twitter:image": 'https://example.com/images/twitter-card.jpg'
+keywords: ['advanced', 'guide', 'tutorial']
+---
+```
+
+**Common SEO fields:**
+
+```yaml
+# Open Graph
+"og:title": 'Custom social media title'
+"og:description": 'Description for social shares'
+"og:image": 'https://example.com/image.jpg'
+"og:type": 'article'
+"og:url": 'https://example.com/page'
+
+# Twitter
+"twitter:card": 'summary_large_image'
+"twitter:site": '@yourhandle'
+"twitter:creator": '@authorhandle'
+"twitter:title": 'Custom Twitter title'
+"twitter:description": 'Description for Twitter'
+"twitter:image": 'https://example.com/twitter-image.jpg'
+
+# Search keywords (improves internal search)
+keywords: ['api', 'authentication', 'oauth']
+```
+
+## Complete Example
+
+Here's a comprehensive example using multiple frontmatter fields:
+
+```yaml
+---
+title: 'Authentication Guide'
+description: 'Learn how to implement OAuth 2.0 authentication in your application'
+icon: 'shield-check'
+badge:
+  content: 'UPDATED'
+  color: 'green'
+"og:title": 'Complete OAuth 2.0 Authentication Guide'
+"og:description": 'Step-by-step guide to implementing secure authentication'
+"og:image": 'https://docs.example.com/images/auth-guide.jpg'
+keywords: ['oauth', 'authentication', 'security', 'login']
 ---
 
 # Your markdown content starts here
 ```
 
 This creates a page with:
-- "API Reference" in the sidebar and as the H1
-- SEO description for search engines
-- Code icon in the sidebar
+- **Title:** "Authentication Guide" in sidebar and as H1
+- **Icon:** Shield with checkmark icon
+- **Badge:** Green "UPDATED" label
+- **SEO:** Custom Open Graph tags for social media
+- **Search:** Enhanced with relevant keywords
+
+## Advanced Use Cases
+
+### Work in Progress Content
+
+For content you're actively developing but want accessible to your team:
+
+```yaml
+---
+title: 'Feature X Documentation'
+description: 'Documentation for the upcoming Feature X release'
+noindex: true
+badge:
+  content: 'WIP'
+  color: 'orange'
+---
+```
+
+### Internal Team Documentation
+
+For content only meant for internal reference:
+
+```yaml
+---
+title: 'Internal Deployment Guide'
+description: 'Step-by-step deployment instructions for team members'
+noindex: true
+badge:
+  content: 'INTERNAL'
+  color: 'gray'
+---
+```
+
+### Completely Hidden Pages
+
+For sensitive or deprecated content that should be completely inaccessible:
+
+```yaml
+---
+title: 'Deprecated API v1'
+description: 'Old API documentation - use v2 instead'
+visibility: hidden
+---
+```

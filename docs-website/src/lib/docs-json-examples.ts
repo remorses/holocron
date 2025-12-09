@@ -10,7 +10,7 @@ export const defaultDocsJsonComments = {
 }
 
 export const defaultStartingHolocronJson: DocsJsonType = {
-  $schema: `https://${WEBSITE_DOMAIN}/holocron.json`,
+  $schema: new URL('/holocron.json', env.PUBLIC_URL).href,
   siteId: '',
   name: 'Docs',
   disableEditButton: false,

@@ -1,5 +1,6 @@
 packages:
   - ./*
+  - config-editor
   - fumadocs/packages/*
   - fumadocs/examples/react-router
   - fumadocs/apps/react-router-18n
@@ -10,6 +11,3 @@ preferSymlinkedExecutables: true
 hoistWorkspacePackages: true
 
 neverBuiltDependencies: []
-
-overrides:
-  unframer: link:../../../.local/share/pnpm/global/5/node_modules/unframer

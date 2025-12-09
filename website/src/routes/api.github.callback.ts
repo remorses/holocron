@@ -82,7 +82,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const appId = String(installation?.data?.app_id || '')
-  let orgId = userId
+
+  const orgId = userId
+
+  await prisma.org.upsert({
+    where: {
+      orgId,
+    },
+    create: {
+      orgId,
+      users: {
+        create: {
+          userId,
+          role: 'ADMIN',
+        },
+      },
+    },
+    update: {},
+  })
   const createInstallation: Prisma.GithubInstallationUncheckedCreateInput = {
     installationId,
     // orgId,
@@ -107,7 +124,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     accountType,
     memberLogins: members,
   }
-  installation.data.id
+
   await Promise.all([
     prisma.githubInstallation.upsert({
       where: {

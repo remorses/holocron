@@ -1,5 +1,11 @@
 # holocron
 
+## 0.6.0
+
+### Minor Changes
+
+- remove unused `url` field from folder tabs schema
+
 ## 0.5.0
 
 ### Minor Changes

@@ -24,6 +24,7 @@ import {
 export function TeamSwitcher({
   sites,
   className = '',
+  currentSiteId,
 }: {
   sites: {
     name: string | null
@@ -44,15 +45,17 @@ export function TeamSwitcher({
     }[]
   }[]
   className?: string
+  currentSiteId?: string
 }) {
   const navigate = useNavigate()
   const params = useParams()
-  const { siteId: currentSiteId } = params
+  const paramsSiteId = params.siteId
   const [open, setOpen] = React.useState(false)
 
   if (!sites.length) return <div className={className} />
 
-  const activeSite = sites.find((site) => site.siteId === currentSiteId) || sites[0] || null
+  const activeSiteId = currentSiteId || paramsSiteId
+  const activeSite = sites.find((site) => site.siteId === activeSiteId) || sites[0] || null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -119,10 +122,10 @@ export function TeamSwitcher({
                         />
                       </div>
                       <span className='truncate grow'>{site.name || site.org.name}</span>
-                      {currentSiteId === site.siteId ? <CheckIcon
+                      {activeSiteId === site.siteId ? <CheckIcon
                         className={cn(
                           'ml-auto h-4 w-4 shrink-0',
-                          currentSiteId === site.siteId ? 'opacity-100' : 'opacity-0',
+                          activeSiteId === site.siteId ? 'opacity-100' : 'opacity-0',
                         )}
                       /> : <Badge className='mr-0' variant='outline'>{totalPages} {totalPages === 1 ? 'page' : 'pages'}</Badge>}
 

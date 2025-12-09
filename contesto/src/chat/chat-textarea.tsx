@@ -58,6 +58,14 @@ export function ChatTextarea({
     }
   }, [caretOffset])
 
+  // Set cursor to end when value is pre-filled (e.g., from cookie)
+  React.useEffect(() => {
+    if (value && ref.current && ref.current.selectionStart === 0) {
+      const length = value.length
+      ref.current.setSelectionRange(length, length)
+    }
+  }, [value])
+
   // Re-calculates the position of the combobox popover in case the changes on
   // the textarea value have shifted the trigger character.
   React.useEffect(() => {

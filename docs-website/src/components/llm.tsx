@@ -76,7 +76,7 @@ export function AskAIButton() {
     <button
       onClick={() => {
         usePersistentDocsState.setState((prev) => ({
-          drawerState: prev.drawerState === 'closed' ? 'open' : 'closed',
+          drawerState: prev.drawerState === 'open' ? 'minimized' : 'open',
         }))
       }}
       className={cn(

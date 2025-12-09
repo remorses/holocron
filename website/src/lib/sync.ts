@@ -223,6 +223,23 @@ export async function* assetsFromFilesList({
   }
 }
 
+export type ConfigErrorType = 'configValidation' | 'domainTaken' | 'domainCloudflareConflict' | 'noDomains'
+
+export type ConfigError = {
+  githubPath: string
+  errorMessage: string
+  errorType: ConfigErrorType
+}
+
+export type MarkdownErrorType = 'mdxParse' | 'mdParse' | 'render'
+
+export type MarkdownSyncError = {
+  githubPath: string
+  line: number
+  errorMessage: string
+  errorType: MarkdownErrorType
+}
+
 export async function syncSite({
   branchId,
   siteId,
@@ -238,10 +255,12 @@ export async function syncSite({
   name: string
   signal?: AbortSignal
   ignorePatterns?: string[]
-}): Promise<{ pageCount: number }> {
+}): Promise<{ pageCount: number; configErrors: ConfigError[]; markdownErrors: MarkdownSyncError[] }> {
   const concurrencyLimit = 1 // TODO increase this to speed up sync
   const semaphore = new Sema(concurrencyLimit)
   let pageCount = 0
+  const configErrors: ConfigError[] = []
+  const markdownErrors: MarkdownSyncError[] = []
 
   // Helper function to check if a file should be ignored
   const shouldIgnoreFile = (githubPath: string): boolean => {
@@ -332,6 +351,15 @@ export async function syncSite({
     if (!validationResult.success) {
       console.error(`Invalid holocron.jsonc schema:`, validationResult.error.format())
       notifyError(validationResult.error, `Invalid holocron.jsonc for site ${siteId}`)
+      const errorMessages = validationResult.error.issues.map((issue) => {
+        const path = issue.path.join('.')
+        return path ? `${path}: ${issue.message}` : issue.message
+      })
+      configErrors.push({
+        githubPath: asset.githubPath,
+        errorMessage: errorMessages.join('; '),
+        errorType: 'configValidation',
+      })
       return []
     }
 
@@ -395,6 +423,11 @@ export async function syncSite({
           })
           if (domainTaken) {
             console.log(`Domain ${host} is already taken, skipping.`)
+            configErrors.push({
+              githubPath: asset.githubPath,
+              errorMessage: `Domain "${host}" is already taken by another site`,
+              errorType: 'domainTaken',
+            })
             continue
           }
           const domainType: DomainType =
@@ -411,6 +444,11 @@ export async function syncSite({
             if (takenInCloudflare) console.log(takenInCloudflare)
             if (takenInCloudflare?.id) {
               console.log(`Domain ${host} is already taken in Cloudflare, skipping.`)
+              configErrors.push({
+                githubPath: asset.githubPath,
+                errorMessage: `Domain "${host}" is already configured in Cloudflare`,
+                errorType: 'domainCloudflareConflict',
+              })
               continue
             }
           }
@@ -431,6 +469,11 @@ export async function syncSite({
           } catch (e) {
             if (typeof e?.message === 'string' && e.message.includes('409 Conflict')) {
               console.log(`stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`)
+              configErrors.push({
+                githubPath: asset.githubPath,
+                errorMessage: `Domain "${host}" conflict: ${e.message}`,
+                errorType: 'domainCloudflareConflict',
+              })
             } else {
               throw e
             }
@@ -445,6 +488,16 @@ export async function syncSite({
         }
       }
     }
+
+    // Check if the site has at least one domain after processing
+    if (branchDomains.length === 0) {
+      configErrors.push({
+        githubPath: asset.githubPath,
+        errorMessage: 'Site must have at least one domain configured. Add a "domains" array in your config.',
+        errorType: 'noDomains',
+      })
+    }
+
     return []
   }
 
@@ -462,10 +515,7 @@ export async function syncSite({
   async function syncMediaAsset(asset: AssetForSync): Promise<SearchApiFile[]> {
     if (asset.type !== 'mediaAsset') return []
 
-    let slug = getSlugFromPath({
-      githubPath: asset.githubPath,
-      githubFolder,
-    })
+    let slug = generateSlugFromPath(asset.githubPath, githubFolder)
     mediaAssetSlugs.add(slug)
     const downloadUrl = asset.downloadUrl
 
@@ -585,17 +635,14 @@ export async function syncSite({
     if (asset.type !== 'page') return []
 
     pageCount++ // Increment page count
-    const filesToSync: SearchApiFile[] = []
-    const slug = getSlugFromPath({
-      githubPath: asset.githubPath,
-      githubFolder,
-    })
+    const filesToSyncForSearch: SearchApiFile[] = []
+    const slug = generateSlugFromPath(asset.githubPath, githubFolder)
 
     const extension = asset.githubPath.endsWith('.mdx') ? 'mdx' : 'md'
 
     if (processedSlugs.has(slug)) {
       console.log(`Skipping duplicate page with slug: ${slug}`)
-      return filesToSync
+      return filesToSyncForSearch
     }
 
     let data: ProcessorData
@@ -694,9 +741,9 @@ export async function syncSite({
 
     const structuredData = data.structuredData
 
-    // Create search API file for this page
-    if (asset.markdown) {
-      filesToSync.push({
+    // Create search API file for this page (skip if noindex or hidden)
+    if (asset.markdown && data.frontmatter.visibility !== 'hidden' && data.frontmatter.noindex !== true) {
+      filesToSyncForSearch.push({
         filename: asset.githubPath,
         content: asset.markdown,
         metadata: {
@@ -711,6 +758,16 @@ export async function syncSite({
     console.log(`Upserting page with slug: ${slug}, title: ${data.frontmatter.title}...`)
 
     errors = deduplicateBy(errors, (x) => String(x.line || 0))
+
+    // Collect errors for return
+    for (const error of errors) {
+      markdownErrors.push({
+        githubPath: asset.githubPath,
+        line: error.line,
+        errorMessage: error.errorMessage,
+        errorType: error.errorType,
+      })
+    }
 
     // Execute all operations in a single transaction array for data consistency
     // Create MarkdownBlob FIRST to satisfy foreign key constraint
@@ -810,7 +867,7 @@ export async function syncSite({
 
     console.log(` -> Upserted page: ${data.title} (ID: ${slug}, path: ${asset.githubPath})`)
 
-    return filesToSync
+    return filesToSyncForSearch
   }
 
   async function syncDeletedAsset(asset: AssetForSync): Promise<SearchApiFile[]> {
@@ -1006,7 +1063,7 @@ export async function syncSite({
   // No cleanup needed for search API as it handles file updates automatically
 
   console.log('Import script finished.')
-  return { pageCount }
+  return { pageCount, configErrors, markdownErrors }
 }
 
 function groupByN<T>(array: T[], n: number): T[][] {
@@ -1481,25 +1538,6 @@ function isValidUrl(string: string): boolean {
 }
 
 // TODO handle locales
-function getSlugFromPath({ githubPath = '', githubFolder }) {
-  if (githubPath.startsWith('/')) {
-    githubPath = githubPath.substring(1)
-  }
-  if (githubFolder.startsWith('/')) {
-    githubFolder = githubFolder.substring(1)
-  }
-  if (githubPath.startsWith(githubFolder)) {
-    githubPath = githubPath.substring(githubFolder.length)
-  }
-  // replace again after base path removal
-  if (githubPath.startsWith('/')) {
-    githubPath = githubPath.substring(1)
-  }
-
-  githubPath = githubPath.replace(mdxRegex, '')
-  return '/' + githubPath
-}
-
 /**
  * Utility function that waits until the given promise resolves, but does not block the event loop.
  * Returns the input promise, to allow for fire-and-forget async processing.

@@ -1,5 +1,6 @@
 'use client'
-import type { PageTree, TOCItemType } from 'fumadocs-core/server'
+import type * as PageTree from 'fumadocs-core/page-tree'
+import type { TOCItemType } from 'fumadocs-core/toc'
 
 import { create } from 'zustand'
 import { createIdGenerator, UIMessage } from 'ai'

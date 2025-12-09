@@ -4,14 +4,16 @@ import React from 'react'
 import { useNProgress } from 'docs-website/src/lib/nprogress'
 import { Banner } from 'fumadocs-ui/components/banner'
 import { FrameworkProvider } from 'fumadocs-core/framework'
-import { LinkItemType } from 'fumadocs-ui/layouts/links'
-import { DocsLayout as DocsLayoutNotebook } from 'fumadocs-ui/layouts/notebook'
+import { LinkItemType } from 'fumadocs-ui/layouts/shared'
+import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import type { Option } from 'fumadocs-ui/components/layout/root-toggle'
 import { RootProvider } from 'fumadocs-ui/provider/base'
+import { useSidebar } from 'fumadocs-ui/contexts/sidebar'
 import { GithubIcon, XIcon } from 'lucide-react'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import { lazy, startTransition, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { init as initTracker } from '@holocron.so/analytics/src/track'
 import {
   Outlet,
   useLoaderData,
@@ -39,7 +41,7 @@ import JSONC from 'tiny-jsonc'
 import { LOCALE_LABELS } from '../lib/locales'
 import { Markdown } from 'contesto/src/lib/markdown'
 import { mdxComponents } from '../components/mdx-components'
-import { cn, isInsidePreviewIframe } from '../lib/utils'
+import { cn, isInsidePreviewIframe, isDocsJson, getBasePath } from '../lib/utils'
 import { DynamicIcon } from '../lib/icon'
 import { PoweredBy } from '../components/poweredby'
 import { CustomSearchDialog } from '../components/search'
@@ -197,7 +199,8 @@ async function websocketIdHandling(websocketId: string) {
 
   const connect = () => {
     console.log('connecting over preview websocketId', websocketId)
-    const websocketUrl = `wss://${WEBSITE_DOMAIN}/_tunnel/downstream?id=${websocketId}`
+    const tunnelDomain = process.env.NODE_ENV === 'production' ? WEBSITE_DOMAIN : 'preview.holocron.so'
+    const websocketUrl = `wss://${tunnelDomain}/_tunnel/downstream?id=${websocketId}`
     ws = new WebSocket(websocketUrl)
 
     ws.onopen = () => {
@@ -292,6 +295,15 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     }
   }, [editorPreviewMode, loaderData])
 
+  useEffect(() => {
+    if (loaderData?.site?.siteId) {
+      const namespace = loaderData.site.siteId
+      const basePath = getBasePath()
+      const eventsEndpoint = basePath + '/holocronInternalAPI/track'
+      initTracker({ namespace, eventsEndpoint })
+    }
+  }, [loaderData?.site?.siteId])
+
   const localRevalidator = useRevalidator()
   revalidator = localRevalidator
 
@@ -375,6 +387,9 @@ export function ClientApp() {
   const { previewWebsocketId, } = loaderData || {}
   const docsJson = useDocsJson()
   useNProgress()
+
+
+
   // Inline DocsProvider
   const { i18n, cssStyles, themeCSS: initialThemeCSS } = loaderData || {}
   const locale = i18n?.defaultLanguage
@@ -546,10 +561,12 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
   })()
 
   // Build tabs from docsJson if present
+  // Note: Folder tabs are already in the tree via createTabsTransformer in source.tsx
+  // We only need to build tabs for OpenAPI/MCP tabs that aren't folders
   const tabs: Option[] = (() => {
     if (!docsJson?.tabs) return []
 
-    const tabs = docsJson.tabs
+    const nonFolderTabs = docsJson.tabs
       .map((tab) => {
         if ('openapi' in tab) {
           // OpenAPI tab
@@ -559,17 +576,23 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
             description: `API Reference`,
           }
         }
+        if ('mcp' in tab) {
+          // MCP tab
+          return {
+            title: tab.tab,
+            url: tab.mcp,
+            description: 'MCP Tools',
+          }
+        }
+        // Folder tabs are already in tree, don't add them here
         return null
       })
       .filter(Boolean) as Option[]
-    if (tabs.length) {
-      tabs.unshift({
-        title: 'Docs',
-        url: '/',
-        description: '',
-      })
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DocsLayoutWrapper] Built non-folder tabs for sidebar:', JSON.stringify(nonFolderTabs, null, 2))
     }
-    return tabs
+    return nonFolderTabs
   })()
 
   return (
@@ -583,7 +606,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
                     * { --fd-sidebar-width: 0px !important; }
                 `}</style>
       )}
-      <DocsLayoutNotebook
+      <DocsLayout
         searchToggle={{
           enabled: searchEnabled,
           components: {},
@@ -597,8 +620,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
         sidebar={{
           defaultOpenLevel: 2,
           collapsible: true,
-
-          tabs,
+          ...(tabs.length > 0 ? { tabs } : {}),
           footer: (
             <div className='flex w-full text-center grow justify-center items-start'>
               <PoweredBy className='text-[12x]' />
@@ -615,7 +637,7 @@ function DocsLayoutWrapper({ children, docsJson }: { children: React.ReactNode; 
         <SourceContext.Provider value={{ source, locale: loaderData.locale || 'en' }}>
           {children}
         </SourceContext.Provider>
-      </DocsLayoutNotebook>
+      </DocsLayout>
     </div>
   )
 }

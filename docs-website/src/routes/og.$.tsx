@@ -48,6 +48,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // Get page metadata from frontmatter or use defaults
   const frontmatter: ProcessorDataFrontmatter = page?.frontmatter as ProcessorDataFrontmatter || {}
+  
+  if (frontmatter?.visibility === 'hidden') {
+    throw new Response('Not found', { status: 404 })
+  }
+  
   const title = frontmatter.title || siteBranch.site.name || 'Documentation'
   const description = frontmatter.description || docsJson?.description || ''
 

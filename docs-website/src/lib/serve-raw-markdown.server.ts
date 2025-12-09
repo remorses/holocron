@@ -4,6 +4,7 @@ import { LOCALES } from './locales'
 import { getFumadocsSource } from './source'
 import { getCacheTagForPage } from './cache-tags'
 import { withoutBasePath, getDocsJson } from './utils'
+import { ProcessorDataFrontmatter } from './mdx-heavy'
 
 export async function serveRawMarkdown({
   domain,
@@ -116,6 +117,12 @@ export async function serveRawMarkdown({
         },
       }),
     ])
+    
+    const indexFrontmatter = indexPage?.frontmatter as ProcessorDataFrontmatter | null
+    if (indexFrontmatter?.visibility === 'hidden') {
+      return null
+    }
+    
     const markdown = indexPage?.content?.markdown || null
     if (markdown) {
       const formattedMarkdown = formatFileWithLines(markdown, showLineNumbers, startLine, endLine)
@@ -130,6 +137,11 @@ export async function serveRawMarkdown({
   }
 
   if (!page) {
+    return null
+  }
+
+  const frontmatter = page.frontmatter as ProcessorDataFrontmatter | null
+  if (frontmatter?.visibility === 'hidden') {
     return null
   }
 

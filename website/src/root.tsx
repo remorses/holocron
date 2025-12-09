@@ -96,7 +96,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <h1 className={titleClass}>
           {error.status} {error.statusText}
         </h1>
-        <p className={messageClass}>{error.data}</p>
+
         <a href={getMailtoLink(errorDetails)} className={linkClass}>
           Contact support →
         </a>

@@ -13,6 +13,7 @@ import dedent from 'string-dedent'
 
 import { client as searchApi } from 'docs-website/src/lib/search-api'
 import { HolocronSite } from '@holocron.so/cli/src'
+import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 
 // Export schemas for reuse
 export const filesSchema = z.array(
@@ -129,40 +130,14 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         metadata
       })
 
-      const [branch, syncErrors] = await Promise.all([
-        prisma.siteBranch.findUnique({
-          where: { branchId: result.branchId }
-        }),
-        prisma.markdownPageSyncError.findMany({
-          where: {
-            page: {
-              branchId: result.branchId
-            }
-          },
-          include: {
-            page: {
-              select: {
-                githubPath: true,
-                slug: true
-              }
-            }
-          }
-        })
-      ])
-
-      const errors = syncErrors.map((error) => ({
-        githubPath: error.page.githubPath,
-        line: error.line,
-        errorMessage: error.errorMessage,
-        errorType: error.errorType
-      }))
+      const errors = [...result.markdownErrors, ...result.configErrors]
 
       return {
         success: true,
         siteId: result.siteId,
         branchId: result.branchId,
         chatId: result.chatId,
-        docsJson: (branch?.docsJson || {}) as DocsJsonType,
+        docsJson: result.docsJson,
         errors
       }
     }
@@ -223,7 +198,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         githubFolder: site.githubFolder || '',
       })
 
-      const { pageCount } = await syncSite({
+      const { pageCount, configErrors, markdownErrors } = await syncSite({
         files: assets,
         githubFolder: site.githubFolder || '',
         branchId: branch.branchId,
@@ -232,40 +207,19 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
         ignorePatterns: (docsJson)?.ignore || []
       })
 
-      await prisma.siteBranch.update({
-        where: { branchId: branch.branchId },
-        data: {
-          lastGithubSyncAt: new Date()
-        }
-      })
-
-      const [updatedBranch, syncErrors] = await Promise.all([
+      const [, updatedBranch] = await Promise.all([
+        prisma.siteBranch.update({
+          where: { branchId: branch.branchId },
+          data: {
+            lastGithubSyncAt: new Date()
+          }
+        }),
         prisma.siteBranch.findUnique({
           where: { branchId: branch.branchId }
         }),
-        prisma.markdownPageSyncError.findMany({
-          where: {
-            page: {
-              branchId: branch.branchId
-            }
-          },
-          include: {
-            page: {
-              select: {
-                githubPath: true,
-                slug: true
-              }
-            }
-          }
-        })
       ])
 
-      const errors = syncErrors.map((error) => ({
-        githubPath: error.page.githubPath,
-        line: error.line,
-        errorMessage: error.errorMessage,
-        errorType: error.errorType
-      }))
+      const errors = [...markdownErrors, ...configErrors]
 
       return {
         success: true,
@@ -625,7 +579,7 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
     },
     request: z.object({
       siteId: z.string(),
-      withFrontmatter: z.boolean().optional()
+      withFrontmatter: z.boolean().default(true).optional()
     }),
     async handler({ request, state }) {
       const body = await request.json()
@@ -672,18 +626,23 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
           slug: true,
           githubPath: true,
           githubSha: true,
-          frontmatter: withFrontmatter,
+          frontmatter: true,
           createdAt: true,
           lastEditedAt: true
         },
         orderBy: { slug: 'asc' }
       })
 
+      const visiblePages = pages.filter(page => {
+        const frontmatter = page.frontmatter as ProcessorDataFrontmatter | null
+        return frontmatter?.visibility !== 'hidden'
+      })
+
       return {
         success: true,
         siteId,
         branchId: branch.branchId,
-        pages: pages.map(page => ({
+        pages: visiblePages.map(page => ({
           pageId: page.pageId,
           slug: page.slug,
           githubPath: page.githubPath,
@@ -692,6 +651,92 @@ export const publicApiApp = new Spiceflow({ basePath: '/v1', disableSuperJsonUnl
           createdAt: page.createdAt,
           lastEditedAt: page.lastEditedAt
         }))
+      }
+    }
+  })
+  .route({
+    method: 'POST',
+    path: '/sites/getFeedback',
+    detail: {
+      summary: 'List feedback for a site',
+      description: 'Returns paginated feedback for a site with optional filtering by opinion'
+    },
+    request: z.object({
+      siteId: z.string(),
+      limit: z.number().min(1).max(100).optional().default(50),
+      offset: z.number().min(0).optional().default(0),
+      opinion: z.enum(['good', 'bad']).optional()
+    }),
+    async handler({ request, state }) {
+      const body = await request.json()
+      const { siteId, limit = 50, offset = 0, opinion } = body
+
+      const site = await prisma.site.findFirst({
+        where: {
+          siteId,
+          org: {
+            users: {
+              some: { userId: state.userId }
+            }
+          }
+        },
+        include: {
+          branches: {
+            orderBy: { createdAt: 'asc' },
+            take: 1
+          }
+        }
+      })
+
+      if (!site) {
+        throw new Response(JSON.stringify({ error: 'Site not found or access denied' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      const branch = site.branches[0]
+      if (!branch) {
+        throw new Response(JSON.stringify({ error: 'No branch found for site' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      const where = {
+        branchId: branch.branchId,
+        ...(opinion && { opinion })
+      }
+
+      const [feedback, total] = await Promise.all([
+        prisma.pageFeedback.findMany({
+          where,
+          select: {
+            id: true,
+            url: true,
+            opinion: true,
+            message: true,
+            discussionUrl: true,
+            createdAt: true
+          },
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip: offset
+        }),
+        prisma.pageFeedback.count({ where })
+      ])
+
+      return {
+        success: true,
+        siteId,
+        branchId: branch.branchId,
+        feedback,
+        pagination: {
+          total,
+          limit,
+          offset,
+          hasMore: offset + limit < total
+        }
       }
     }
   })

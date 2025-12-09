@@ -5,6 +5,47 @@ Optionally grep for what you need with curl https://fumadocs.dev/llms-full.txt |
 
 You can also search for files in the folder fumadocs to do the same thing
 
+the fumadocs repo should be changed as little as possible. NEVER add new code there, unless it is a few lines to make things compile
+
+instead if you want to reuse fumadocs code for complex integrations, copy paste it into docs-website folder instead so we do not depend too much on fumadocs.
+
+when testing docs-website and need to curl a website do not simply use localhost:777. instead first find a host actually used. see docs-dev/holocron.jsonc for domains that can be used like
+http://holocron-ysx261dl.localhost:7777
+
+## updating fumadocs with upstream
+
+we currently keep fumadocs on branch fumabase. every once in a while we must download upastream changes and merge them into fumabase branch. 
+
+to see the current changes that were made to fumadocs read fumadocs/.changeset files. it will tell you changes made including breaking changes
+
+you can also read the various packages folders CHANGELOG.md files. use these to understand what to change to fix tsc errors and such
+
+to do this
+- git fetch upstream
+- try to merge
+- pnpm i on root to install dependencies missing
+- resolve conflicts. try to keep fumadocs with as little custom changes as possible
+
+then there is the step of fixing type errors. sometimes the user will update the fumadocs submodule himself, in that case start from here:
+
+- try running pnpm build:pnpm inside fumadocs folder: `pnpm --filter fumadocs-root build:pnpm` this will compile fuamdocs and type check it. 
+- if there are type errors here you can try first running pnpm i from repo root (NEVER from fumadocs folder) and deduplicate some packages if needed
+- run pnpm typecheck in this repo root t otypecheck code that depends on fumadocs
+- try to fix type errors. if there are duplicate packages in node modules that cause them
+- NEVER add code inside fumadocs packages. instead read the fumadocs changelogs and understand changes to make to fix tsc errors! this usually means updating code inside docs-website/src
+
+## fumadocs examples
+
+for which components to use for fumadocs take a look at the files
+
+fumadocs/apps/docs/app/docs/[...slug]/page.tsx
+fumadocs/packages/create-app/template/react-router/app/docs/page.tsx
+
+...
+
+also look at this file to see how to implement fumadocs vendored styles components, where code is in our folder instead of fumadocs
+fumadocs/packages/ui/src/_registry/index.ts
+
 # core guidelines
 
 when summarizing changes at the end of the message, be super short, a few words and in bullet points, use bold text to highlight important keywords. use markdown.
@@ -26,6 +67,10 @@ always use kebab case for new filenames. never use uppercase letters in filename
 
 use `git ls-files | tree --fromfile` to see files in the repo. this command will ignore files ignored by git
 
+## handling unexpected file contents after a read or write
+
+if you find code that was not there since the last time you read the file it means the user or another agent edited the file. do not revert the changes that were added. instead keep them and integrate them with your new changes
+
 # typescript
 
 - ALWAYS use normal imports instead of dynamic imports, unless there is an issue with es module only packages and you are in a commonjs package (this is rare).
@@ -33,6 +78,10 @@ use `git ls-files | tree --fromfile` to see files in the repo. this command will
 - use a single object argument instead of multiple positional args: use object arguments for new typescript functions if the function would accept more than one argument, so it is more readable, ({a,b,c}) instead of (a,b,c). this way you can use the object as a sort of named argument feature, where order of arguments does not matter and it's easier to discover parameters.
 
 - always add the {} block body in arrow functions: arrow functions should never be written as `onClick={(x) => setState('')}`. NEVER. instead you should ALWAYS write `onClick={() => {setState('')}}`. this way it's easy to add new statements in the arrow function without refactoring it.
+
+- in array operations .map, .filter, .reduce and .flatMap are preferred over .forEach and for of loops. For example prefer doing `.push(...array.map(x => x.items))` over mutating array variables inside for loops. Always think of how to turn for loops into expressions using .map, .filter or .flatMap if you ever are about to write a for loop.
+
+- if you encounter typescript errors like "undefined | T is not assignable to T" after .filter(Boolean) operations: use a guarded function instead of Boolean: `.filter(isTruthy)`. implemented as `function isTruthy<T>(value: T): value is NonNullable<T> { return Boolean(value) }`
 
 - minimize useless comments: do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation. if a comment is required because the part of the code was result of difficult back and forth with me, keep it very short.
 
@@ -56,7 +105,7 @@ use `git ls-files | tree --fromfile` to see files in the repo. this command will
 
 - when creating urls from a path and a base url, prefer using `new URL(path, baseUrl).toString()` instead of normal string interpolation. use type-safe react-router `href` or spiceflow `this.safePath` (available inside routes) if possible
 
-- for node built-in imports, never import singular names. instead do `import fs from 'node:fs'`, same for path, os, etc.
+- for node built-in imports, never import singular exported names. instead do `import fs from 'node:fs'`, same for path, os, etc.
 
 - NEVER start the development server with pnpm dev yourself. there is no reason to do so, even with &
 
@@ -285,6 +334,18 @@ if after doing this we still have duplicate packages, you will have to ask the u
 
 - hooks should be put in the src/hooks.tsx file. do not create a new file for each new hook. also notice that you should never create custom hooks, only do it if asked for.
 
+## zustand
+
+zustand is the preferred way to created global React state. put it in files like state.ts or x-state.ts where x is something that describe a portion of app state in case of multiple global states or multiple apps
+
+- minimize number of props. do not use props if you can use zustand state instead. the app has global zustand state that lets you get a piece of state down from the component tree by using something like `useStore(x => x.something)` or `useLoaderData<typeof loader>()` or even useRouteLoaderData if you are deep in the react component tree
+
+- do not consider local state truthful when interacting with server. when interacting with the server with rpc or api calls never use state from the render function as input for the api call. this state can easily become stale or not get updated in the closure context. instead prefer using zustand `useStore.getState().stateValue`. notice that useLoaderData or useParams should be fine in this case.
+
+- NEVER add zustand state setter methods. instead use useStore.setState to set state. For example never add a method `setVariable` in the state type. Instead call `setState` directly
+
+- zustand already merges new partial state with the previous state. NEVER DO `useStore.setState({ ...useStore.getInitialState(), ... })` unless for resetting state
+
 # sentry
 
 this project uses sentry to notify about unexpected errors.
@@ -355,6 +416,8 @@ AppError messages will be forwarded to the user as is. normal Error instances in
 
 do not write new test files unless asked. do not write tests if there is not already a test or describe block for that function or module.
 
+if the inputs for the tests is an array of repetitive fields and long content, generate this input data programmatically instead of hardcoding everything. only hardcode the important parts and generate other repetitive fields in a .map or .reduce
+
 tests should validate complex and non-obvious logic. if a test looks like a placeholder, do not add it.
 
 use vitest to run tests. tests should be run from the current package directory and not root. try using the test script instead of vitest directly. additional vitest flags can be added at the end, like --run to disable watch mode or -u to update snapshots.
@@ -386,49 +449,7 @@ sometimes tests work directly on database data, using prisma. to run these tests
 
 never write tests yourself that call prisma or interact with database or emails. for these, ask the user to write them for you.
 
-# changelog
-
-after you make a change that is noteworthy, add an entry in the CHANGELOG.md file in the root of the package. there are 2 kinds of packages, public and private packages. private packages have a private: true field in package.json, public packages do not and instead have a version field in package.json. public packages are the ones that are published to npm.
-
-If the current package has a version field and it is not private then include the version in the changelog too like in the examples, otherwise use the current date and time.
-
-If you use the version you MUST use a bumped version compared to the current package.json version, and you should update the package.json version field to that version. But do not publish. I will handle that myself.
-
-to write a changelog.md file for a public package, use the following format, add a heading with the new version and a bullet list of your changes, like this:
-
-```md
-## 0.1.3
-
-### Patch Changes
-
-- bug fixes
-
-## 0.1.2
-
-### Patch Changes
-
-- add support for githubPath
-```
-
-for private packages, which do not have versions, you must instead use the current date and time, for example:
-
-```md
-# Changelog
-
-## 2025-01-24 19:50
-
-- Added a feature to improve user experience
-- Fixed a bug that caused the app to crash on startup
-```
-
-these are just examples. be clear and concise in your changelog entries.
-
-use present tense. be detailed but concise, omit useless verbs like "implement", "added", just put the subject there instead, so it is shorter. it's implicit we are adding features or fixes. do not use nested bullet points. always show example code snippets if applicable, and use proper markdown formatting.
-
-```
-
-the website package has a dependency on docs-website. instead of duplicating code that is needed both in website and docs-website keep a file in docs-website instead and import from there for the website package.
-
+changelogs.md
 # writing docs
 
 when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you had to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
@@ -542,10 +563,10 @@ this simply means to always include a check in prisma queries to make sure that 
 
 ```typescript
 const resource = await prisma.resource.findFirst({
-    where: { resourceId, parentResource: { users: { some: { userId } } } },
-})
+  where: { resourceId, parentResource: { users: { some: { userId } } } },
+});
 if (!resource) {
-    throw new AppError(`cannot find resource`)
+  throw new AppError(`cannot find resource`);
 }
 ```
 
@@ -575,6 +596,27 @@ if (!user.subscription) {
     )
 }
 ````
+
+## foreign key constraints
+
+sometimes you will get errors like "Invalid `upsert()` invocation: Foreign key constraint violated on the constraint: `filed1_filed2_fkey`". This can be caused by the following issue
+
+- a field that has a relation to table X is being passed a value where no table X exists for that id. You can fix the issue by making sure that the table exists before doing the create or upsert
+- With upsert, even if the create branch is valid, the update branch can violate the FK.
+
+```ts
+await prisma.child.upsert({
+  where: { id: 1 },
+  create: {
+    parent: { connect: { id: 1 } },
+  },
+  update: {
+    parent: { connect: { id: 9999 } }, // no such parent
+  },
+});
+```
+-
+
 # react router v7
 
 the website uses react-router v7.
@@ -835,6 +877,11 @@ when you build the website always pipe the output to a file so you can later gre
 this project uses shadcn components placed in the website/src/components/ui folder. never add a new shadcn component yourself by writing code. instead use the shadcn cli installed locally.
 
 try to reuse these available components when you can, for example for buttons, tooltips, scroll areas, etc.
+
+## reusing shadcn components
+
+when creating a new React component or adding jsx before creating your own buttons or other elements first check the files inside `src/components/ui` and `src/components` to see what is already available. So you can reuse things like Button and Tooltip components instead of creating your own.
+
 # tailwind v4
 
 this project uses tailwind v4. this new tailwind version does not use tailwind.config.js. instead it does all configuration in css files.
@@ -848,6 +895,8 @@ for margin, padding, gaps, widths and heights it is preferable to use multiples 
 4 is equal to 16px which is the default font size of the page. this way every spacing is a multiple of the height and width of a default letter.
 
 user interfaces are mostly text so using the letter width and height as a base unit makes it easier to reason about the layout and sizes.
+
+use grow instead of flex-1.
 
 # lucide icons
 
@@ -949,12 +998,49 @@ the Stripe billing portal is used to
 - send user to payment to create a sub via `stripe.checkout.sessions.create`
 - let user change plan, cancel or change payment method ("manage subscription") via `stripe.billingPortal.sessions.create`
 
+## customerId
+
+every time you are about to do a call to `checkout.sessions.create` make sure that we create the Stripe customer first. So that we do not get duplicate Stripe customers for different subscriptions:
+
+```ts
+
+let customerId = org.stripeCustomerId
+
+if (!customerId) {
+    const customer = await stripe.customers.create({
+        email: org.email || undefined,
+        name: org.name || undefined,
+    })
+
+    customerId = customer.id
+
+    await prisma.org.update({
+        where: { id: orgId },
+        data: { stripeCustomerId: customerId },
+    })
+}
+
+ await stripe.checkout.sessions.create({ customer: customerId, ... })
+```
+
 ## subscriptions
 
 a subscription is active if state is in
 
 - trialing
 - active
+
+```ts
+await prisma.subscription.findFirst({
+  where: {
+    orgId: orgId,
+    status: {
+      in: ["active", "trialing"],
+    },
+    // ...
+  },
+});
+```
 
 a subscription can be reactivated if state is NOT in
 
@@ -964,15 +1050,14 @@ a subscription can be reactivated if state is NOT in
 
 > If sub is in any of these states the user will not be able to use the billing portal to reactivate it. Meaning we should treat a subscription in these states as completely missing. Forcing the user to create a new one instead of shoging the "manage subscription" button that redirects the user to the billing portal. BUT customer id must be preserved, reusing previous sub customerId in `stripe.billingPortal.sessions.create({ customer: prevCustomerId })`
 
-
-##
-
 github.md
 # fly
 
 fly is a deployment platform. some packages use it to deploy the website. you can find the deployment scripts searching for **/deployment.ts
 
 usually there are 2 fly apps for each package, one staging environment and one production. these are 2 different apps at 2 different urls, you can target the right app usually by using `pnpm fly:preview` or `pnpm fly:prod`. sometimes there is only `pnpm fly` and you can use that instead. These scripts will append the right --app argument to work on the right fly app.
+
+Never deploy with fly yourself. ask the user to do it
 
 ## reading logs
 

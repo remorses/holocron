@@ -1,7 +1,7 @@
 import { loader, MetaData, PageData, PageFile, VirtualFile, PageTreeTransformer, LoaderOutput } from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
-import { PageTree } from 'fumadocs-core/server'
+import * as PageTree from 'fumadocs-core/page-tree'
 
 import { DynamicIcon } from './icon'
 import { ProcessorDataFrontmatter, StructuredData } from './mdx-heavy'
@@ -33,7 +33,7 @@ export function getFumadocsSource({
   const transformers: PageTreeTransformer[] = []
 
   // Add tabs transformer if tabs are configured in docsJson
-  if (docsJson?.tabs && docsJson.tabs.length > 0) {
+  if (docsJson?.tabs?.length) {
     transformers.push(createTabsTransformer(docsJson.tabs))
   }
 
@@ -104,6 +104,8 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
     })
   }
 
+
+
   return {
     folder(node, folderPath, metaPath) {
       if (!tabs || tabs.length === 0) return node
@@ -114,6 +116,7 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
       const matchingTab = tabs.find(tab => {
         if ('folder' in tab && tab.folder) {
           const normalizedFolder = tab.folder.replace(/^\/+|\/+$/g, '')
+
           return normalizedFolder === normalizedPath
         }
         return false
@@ -132,6 +135,7 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
       return node
     },
     root(node) {
+
       if (!tabs || tabs.length === 0) return node
 
       // Group all non-tab items into a "Docs" tab
@@ -142,11 +146,37 @@ function createTabsTransformer(tabs: DocsJsonType['tabs']): PageTreeTransformer 
         if (child.type === 'folder' && child.root) {
           // This folder is already marked as a tab
           tabItems.push(child)
+        } else if (child.type === 'page') {
+          // Check if this page matches any tab configuration
+          const pageSlug = child.url.replace(/^\/+/, '')
+          const matchingTab = tabs.find(tab => {
+            if ('folder' in tab && tab.folder) {
+              const normalizedFolder = tab.folder.replace(/^\/+|\/+$/g, '')
+              return normalizedFolder === pageSlug
+            }
+            return false
+          })
+
+          if (matchingTab && 'folder' in matchingTab) {
+            // Wrap this page in a folder to make it a tab
+            const pageTab: typeof node.children[0] = {
+              type: 'folder',
+              name: matchingTab.tab,
+              root: true,
+              description: matchingTab.description,
+              children: [child],
+            }
+            tabItems.push(pageTab)
+          } else {
+            // Not a tab, goes to docs
+            docsItems.push(child)
+          }
         } else {
           // Everything else goes to docs
           docsItems.push(child)
         }
       })
+
 
       // Create main docs tab if there are any non-tab items
       if (docsItems.length > 0) {

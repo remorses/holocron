@@ -37,6 +37,7 @@ export const env = {
   GOOGLE_SEARCH_API_KEY: process.env.GOOGLE_SEARCH_API_KEY,
   ZEN_API_KEY: process.env.ZEN_API_KEY,
   MOONSHOT_API_KEY: process.env.MOONSHOT_API_KEY,
+  TINYBIRD_TOKEN: process.env.TINYBIRD_TOKEN,
 }
 
 // console.log(env)

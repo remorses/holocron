@@ -30,13 +30,16 @@ import {
     TwitterIcon
 } from 'lucide-react'
 import { lazy, Suspense, useEffect } from 'react'
-import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
+import { useLoaderData, useRevalidator, useRouteLoaderData, isRouteErrorResponse } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
 import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
 import { mdxComponents } from '../components/mdx-components'
+import { PasswordProtection } from '../components/password-protection'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
 import { ScalarOpenApi } from '../components/scalar'
+import { FloatingCommentButton } from '../components/floating-comment-button'
+import { docsApiClient } from '../lib/docs-spiceflow-client'
 import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 import { DocsJsonType } from '../lib/docs-json'
 import { updateFileInDocsEditor, useDocsState } from '../lib/docs-state'
@@ -172,7 +175,7 @@ function PageContent(props: Route.ComponentProps): any {
           </PageTOCPopoverContent>
         </PageTOCPopover>
       )}
-      <PageArticle className='docs-page-article'>
+      <PageArticle className='docs-page-article lg:pr-8'>
         <PageBreadcrumb />
         <h1 className='text-3xl font-semibold'>{title}</h1>
         <p className='text-lg text-fd-muted-foreground'>{description}</p>
@@ -190,29 +193,22 @@ function PageContent(props: Route.ComponentProps): any {
         <div className='prose flex-1 text-fd-foreground/80'>
           <DocsMarkdown />
         </div>
+        <FloatingCommentButton />
         <div className='grow'></div>
         <Rate
           onRateAction={async (url, feedback) => {
-            const apiUrl = new URL('/api/submitRateFeedback', process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`)
-            const response = await fetch(apiUrl.toString(), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                branchId,
-                url,
-                opinion: feedback.opinion,
-                message: feedback.message,
-              }),
+            const { data, error } = await docsApiClient.holocronInternalAPI.submitRateFeedback.post({
+              branchId,
+              url,
+              opinion: feedback.opinion,
+              message: feedback.message,
             })
 
-            if (!response.ok) {
+            if (error) {
               throw new Error('Failed to submit feedback')
             }
 
-            const result = await response.json()
-            return { githubUrl: result.githubUrl }
+            return { githubUrl: data.githubUrl }
           }}
         />
         <div className='flex items-center gap-2'>
@@ -318,7 +314,7 @@ function SocialIcon({ platform }: { platform: string }) {
   }
 }
 
-function MdxErrorDisplay({ error, markdown }: { error: any; markdown: string }) {
+export function MdxErrorDisplay({ error, markdown }: { error: any; markdown: string }) {
   // Extract error details
   const errorLine = error.line || 1
   const errorColumn = error.column || 1
@@ -538,28 +534,4 @@ function EditorToggle() {
       )}
     </button>
   )
-}
-
-export function ClientErrorBoundary({ error }: { error: Error }) {
-  const revalidator = useRevalidator()
-  const filesInDraft = useDocsState((state) => state.filesInDraft)
-
-  const isRetryableErrorWithClientLoader = 'markdown' in (error as any) && (error as any).markdown
-
-  useEffect(() => {
-    if (isRetryableErrorWithClientLoader && Object.keys(filesInDraft).length > 0 && revalidator.state === 'idle') {
-      console.log('Revalidating files in draft due to 404 error', filesInDraft)
-      revalidator.revalidate()
-    }
-  }, [filesInDraft, isRetryableErrorWithClientLoader, revalidator.state])
-
-  // Check if this is an MDX/remark error with line information
-  const isMdxError = error instanceof Error && 'line' in error
-  const markdown = error?.['markdown']
-
-  if (isMdxError && markdown) {
-    return <MdxErrorDisplay error={error} markdown={markdown} />
-  }
-
-  return null
 }

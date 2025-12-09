@@ -1,4 +1,4 @@
-import { Meta, Links, Outlet, ScrollRestoration, Scripts } from 'react-router'
+import { Meta, Links, Outlet, ScrollRestoration, Scripts, isRouteErrorResponse } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Route } from './+types/root'
 import { imageLoader } from './lib/image-loader'
@@ -6,6 +6,7 @@ import { serveRawMarkdown } from './lib/serve-raw-markdown.server'
 import { withoutBasePath } from './lib/utils'
 import './lib/mount-importmap'
 import './app.css'
+import { PasswordProtection } from './components/password-protection'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,18 @@ const markdownTextMiddleware: Route.MiddlewareFunction = async ({ request }, nex
   const path = withoutBasePath(url.pathname)
   const host = url.hostname
 
+  const acceptHeader = request.headers.get('Accept') || ''
+  const wantsMarkdown = acceptHeader.includes('text/markdown')
+
+  if (wantsMarkdown && !path.endsWith('.md') && !path.endsWith('.mdx')) {
+    const hasMediaExtension = mediaExtensions.some((ext) => path.endsWith('.' + ext))
+    if (!hasMediaExtension) {
+      const redirectUrl = new URL(request.url)
+      redirectUrl.pathname = url.pathname + '.md'
+      return Response.redirect(redirectUrl.toString(), 302)
+    }
+  }
+
   if (path.endsWith('.md') || path.endsWith('.mdx')) {
     const showLineNumbers =
       url.searchParams.get('showLineNumbers') != null && url.searchParams.get('showLineNumbers') !== 'false'
@@ -60,7 +73,7 @@ const markdownTextMiddleware: Route.MiddlewareFunction = async ({ request }, nex
       return new Response(result.markdown, {
         status: 200,
         headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Type': 'text/markdown; charset=utf-8, text/plain',
           'Cache-Control': 'public, max-age=300, s-maxage=300',
           'Cache-Tag': result.cacheTag,
         },

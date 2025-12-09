@@ -407,7 +407,7 @@ export async function* generateMessageStream({
 
       if (mdxOrMdRegex.test(x.githubPath)) {
         const parsed = fm(x.content)
-        const frontmatter = parsed.attributes as any
+        const frontmatter = parsed.attributes as ProcessorDataFrontmatter
 
         if (frontmatter && frontmatter.icon) {
           const iconName = String(frontmatter.icon)

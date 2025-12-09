@@ -107,7 +107,8 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     abortController,
   }: Partial<ChatState>) => {
     const generateId = createIdGenerator()
-    const currentSlug = location.pathname
+    // Use currentSlug from state if available (e.g., set by comment button), otherwise use pathname
+    const currentSlug = useDocsState.getState()?.currentSlug || location.pathname
     const currentOrigin =
       typeof window !== 'undefined' ? window.location.origin : ''
 
@@ -299,7 +300,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             className='fixed inset-0 bg-black/50 z-40'
             onClick={() => {
               usePersistentDocsState.setState({
-                drawerState: 'closed',
+                drawerState: 'minimized',
               })
             }}
             aria-hidden='true'
@@ -313,14 +314,14 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             return
           }
           usePersistentDocsState.setState({
-            drawerState: open ? 'open' : 'closed',
+            drawerState: open ? 'open' : 'minimized',
           })
         }}
         open={drawerState !== 'closed'}
         modal={false}
       >
         <SheetContent
-          className='bg-background lg:min-w-[600px] min-w-full'
+          className='bg-background lg:min-w-[600px] min-w-full resize-x overflow-y-auto'
           style={drawerContentStyle}
         >
           <ChatTopBar />
@@ -689,6 +690,27 @@ export function MessagePartRenderer({
       </ToolPreviewContainer>
     )
   }
+
+  if (part.type === 'tool-submitFeedback') {
+    if (!part.input) return null
+
+    const success = part.output?.success
+    const error = part.output?.error
+
+    return (
+      <ToolPreviewContainer>
+        <Dot toolCallId={part.toolCallId} />
+        Submitting {part.input.opinion} feedback
+        {success && (
+          <div className='text-sm text-green-600 dark:text-green-400 mt-1'>
+            ✓ Feedback submitted successfully
+          </div>
+        )}
+        {error && <ErrorPreview error={error} />}
+      </ToolPreviewContainer>
+    )
+  }
+
   // if (
   //     part.type.startsWith('tool-') &&
   //     process.env.NODE_ENV === 'development'
@@ -805,6 +827,7 @@ function ContextButton({ contextOptions }) {
 function Footer() {
   const { isGenerating, draftText, submit, stop } = useChatContext()
   const chatId = usePersistentDocsState((x) => x.chatId)
+  const drawerState = usePersistentDocsState((x) => x.drawerState)
 
   const rootLoaderData = useRouteLoaderData(
     'routes/_catchall',
@@ -864,6 +887,7 @@ function Footer() {
         >
           <ContextButton contextOptions={contextOptions} />
           <ChatTextarea
+            key={drawerState}
             disabled={false}
             placeholder='Ask me anything...'
             className={cn('chat-textarea')}

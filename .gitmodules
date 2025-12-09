@@ -2,3 +2,6 @@
 	path = fumadocs
 	url = https://github.com/remorses/fumadocs.git
 	branch = fumabase
+[submodule "embeddable-analytics"]
+	path = embeddable-analytics
+	url = https://github.com/remorses/embeddable-analytics.git

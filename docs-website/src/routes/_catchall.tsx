@@ -3,7 +3,15 @@ import { parse as parseCookies, serialize as serializeCookie } from 'cookie'
 
 import { loader as fumadocsLoader } from 'fumadocs-core/source'
 import { prisma } from 'db'
-import { data, isRouteErrorResponse, Links, Meta, redirect, Scripts, ScrollRestoration } from 'react-router'
+import {
+  data,
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  redirect,
+  Scripts,
+  ScrollRestoration,
+} from 'react-router'
 // @ts-ignore
 import type { Route } from './+types/root'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
@@ -13,11 +21,15 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
 import { getOpenapiDocument } from 'docs-website/src/lib/openapi.server'
-import { ClientLayout, ClientApp } from 'docs-website/src/routes/_catchall-client'
+import {
+  ClientLayout,
+  ClientApp,
+} from 'docs-website/src/routes/_catchall-client'
 import { FilesInDraft } from '../lib/docs-state'
 import { getDocsJson } from '../lib/utils'
 import { themeModules } from '../lib/themes'
 import { getHost } from '../lib/get-host'
+import { PasswordProtection } from '../components/password-protection'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -50,11 +62,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     // Remove websocketId from search params for redirect
     const redirectUrl = new URL(url)
     redirectUrl.searchParams.delete('websocketId')
+    redirectUrl.searchParams.set('chatId', websocketId)
 
     // Create a plain Set-Cookie header (session cookie, JS-readable)
     // Explicitly set HttpOnly=false for JavaScript access
     const isSecure = process.env.NODE_ENV === 'production'
     const cookieValue = `__websocket_preview=${encodeURIComponent(websocketId)}; Path=/; HttpOnly=false${isSecure ? '; Secure' : ''}`
+
 
     throw redirect(redirectUrl.toString(), {
       headers: {
@@ -139,6 +153,23 @@ export async function loader({ request }: Route.LoaderArgs) {
     docsJson.hideSidebar = true
   }
 
+  const sitePassword = cookies.site_password
+  let isPasswordValid =
+    sitePassword && docsJson.passwords?.some((p) => p.password === sitePassword)
+
+  let hasPasswords = !!docsJson?.passwords?.length
+
+  // hasPasswords = true // for testing only
+
+  if (hasPasswords && !isPasswordValid) {
+    throw data(
+      { message: 'Password required', siteName: site.name },
+      {
+        status: 401,
+      },
+    )
+  }
+
   console.time(`${timerId} - create fumadocs source`)
   const source = getFumadocsSource({
     defaultLanguage: site.defaultLocale,
@@ -208,12 +239,16 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Check for editor preview mode query parameter
   const editorPreviewMode = url.searchParams.get('editorPreviewMode') === 'true'
 
+  // Strip passwords from docsJson before sending to client
+  const { passwords, ...safeDocsJson } = (siteBranch.docsJson ||
+    {}) as DocsJsonType
+
   console.timeEnd(`${timerId} - total root loader time`)
   return {
     openapiUrl,
     openapiRenderer,
     ...rest,
-    docsJson: siteBranch.docsJson as DocsJsonType,
+    docsJson: safeDocsJson as DocsJsonType,
     languages,
     files,
     i18n,
@@ -248,11 +283,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
   const titleClass = 'text-3xl font-semibold mb-3 text-primary'
   const messageClass = 'text-base mb-2 text-muted-foreground'
-  const preClass = 'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+  const preClass =
+    'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
 
   // Check if we're in a chat context
-  const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
+  const url =
+    typeof window !== 'undefined' ? new URL(window.location.href) : null
   const chatId = url?.searchParams.get('chatId')
+
+  if (isRouteErrorResponse(error) && error.status === 401) {
+    return <PasswordProtection siteName={error.data?.siteName} />
+  }
 
   if (isRouteErrorResponse(error)) {
     const { status, statusText } = error
@@ -271,7 +312,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <h1 className={titleClass}>
           {error.status} {error.statusText}
         </h1>
-        <p className={messageClass}>{error.data}</p>
       </div>
     )
   } else if (error instanceof Error) {

@@ -87,3 +87,11 @@ when reusing .md files from a repo for the docs website adapt them to be suitabl
 If the user references a name that is not familiar to you or looks like a misspelling try searching for it on the web
 
 if the web search reveals the name is a github repository, use gitchamber to list and read the repo files
+
+## tabs and versioning
+
+if user asks to split the website into "versions" you can use the tabs feature to create different versions of the website. Each version can have its own set of pages and different sidebar structure. 
+
+When passing folder to tab you MUST use a valid folder file path. Pages inside that folder slug will show a different sidebar (isolated from other files) and a different active tab in the website.
+
+You can also use tabs for splitting content into groups of pages: for example when adding a API reference, wiki, glossary, blog, changelog, etc.

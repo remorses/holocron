@@ -3,13 +3,114 @@ import dedent from 'dedent'
 
 const DOCS_JSON_BASENAME = 'holocron.jsonc'
 
-const themeNames = ['black', 'catppuccin', 'dusk', 'neutral', 'ocean', 'purple', 'vitepress']
+export const themeNames = ['black', 'catppuccin', 'dusk', 'neutral', 'ocean', 'purple', 'vitepress'] as const
+
+export type ThemeName = (typeof themeNames)[number]
+
+export const socialPlatforms = ['twitter', 'github', 'discord', 'linkedin', 'youtube', 'facebook', 'instagram'] as const
+
+export type SocialPlatform = (typeof socialPlatforms)[number]
+
+export type IntegrationField = { key: string; label: string; placeholder: string }
+export type IntegrationDefinition = { id: string; name: string; fields: IntegrationField[]; docsUrl: string }
+
+export const integrationDefinitions: IntegrationDefinition[] = [
+  {
+    id: 'ga4',
+    name: 'Google Analytics 4',
+    fields: [{ key: 'measurementId', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX' }],
+    docsUrl: 'https://support.google.com/analytics/answer/9539598',
+  },
+  {
+    id: 'gtm',
+    name: 'Google Tag Manager',
+    fields: [{ key: 'tagId', label: 'Tag ID', placeholder: 'GTM-XXXXXXX' }],
+    docsUrl: 'https://support.google.com/tagmanager/answer/6102821',
+  },
+  {
+    id: 'posthog',
+    name: 'PostHog',
+    fields: [
+      { key: 'apiKey', label: 'API Key', placeholder: 'phc_...' },
+      { key: 'apiHost', label: 'API Host (optional)', placeholder: 'https://app.posthog.com' },
+    ],
+    docsUrl: 'https://posthog.com/docs',
+  },
+  {
+    id: 'plausible',
+    name: 'Plausible',
+    fields: [
+      { key: 'domain', label: 'Domain', placeholder: 'example.com' },
+      { key: 'server', label: 'Server (optional)', placeholder: 'https://plausible.io' },
+    ],
+    docsUrl: 'https://plausible.io/docs',
+  },
+  {
+    id: 'amplitude',
+    name: 'Amplitude',
+    fields: [{ key: 'apiKey', label: 'API Key', placeholder: 'your-api-key' }],
+    docsUrl: 'https://www.docs.developers.amplitude.com/',
+  },
+  {
+    id: 'mixpanel',
+    name: 'Mixpanel',
+    fields: [{ key: 'projectToken', label: 'Project Token', placeholder: 'your-project-token' }],
+    docsUrl: 'https://docs.mixpanel.com/',
+  },
+  {
+    id: 'intercom',
+    name: 'Intercom',
+    fields: [{ key: 'appId', label: 'App ID', placeholder: 'your-app-id' }],
+    docsUrl: 'https://developers.intercom.com/',
+  },
+  {
+    id: 'segment',
+    name: 'Segment',
+    fields: [{ key: 'key', label: 'Write Key', placeholder: 'your-write-key' }],
+    docsUrl: 'https://segment.com/docs/',
+  },
+  {
+    id: 'fathom',
+    name: 'Fathom',
+    fields: [{ key: 'siteId', label: 'Site ID', placeholder: 'XXXXX' }],
+    docsUrl: 'https://usefathom.com/docs',
+  },
+  {
+    id: 'pirsch',
+    name: 'Pirsch',
+    fields: [{ key: 'id', label: 'Site ID', placeholder: 'your-site-id' }],
+    docsUrl: 'https://docs.pirsch.io/',
+  },
+]
+
+export type CssVariableDefinition = { name: string; label: string; light: string; dark: string }
+
+export const cssVariableDefinitions: CssVariableDefinition[] = [
+  { name: '--color-fd-background', label: 'Background', light: '#fafafa', dark: '#050505' },
+  { name: '--color-fd-foreground', label: 'Foreground', light: '#0a0a0a', dark: '#fafafa' },
+  { name: '--color-fd-primary', label: 'Primary', light: '#171717', dark: '#fafafa' },
+  { name: '--color-fd-primary-foreground', label: 'Primary Foreground', light: '#fafafa', dark: '#171717' },
+  { name: '--color-fd-secondary', label: 'Secondary', light: '#f5f5f5', dark: '#212121' },
+  { name: '--color-fd-secondary-foreground', label: 'Secondary Foreground', light: '#171717', dark: '#fafafa' },
+  { name: '--color-fd-muted', label: 'Muted', light: '#f5f5f5', dark: '#141414' },
+  { name: '--color-fd-muted-foreground', label: 'Muted Foreground', light: '#737373', dark: '#999999' },
+  { name: '--color-fd-accent', label: 'Accent', light: '#f0f0f0', dark: '#262626' },
+  { name: '--color-fd-accent-foreground', label: 'Accent Foreground', light: '#171717', dark: '#ffffff' },
+  { name: '--color-fd-card', label: 'Card', light: '#fefefe', dark: '#0a0a0a' },
+  { name: '--color-fd-card-foreground', label: 'Card Foreground', light: '#0a0a0a', dark: '#fafafa' },
+  { name: '--color-fd-popover', label: 'Popover', light: '#ffffff', dark: '#0a0a0a' },
+  { name: '--color-fd-popover-foreground', label: 'Popover Foreground', light: '#272727', dark: '#fafafa' },
+  { name: '--color-fd-border', label: 'Border', light: '#99999933', dark: '#80808033' },
+  { name: '--color-fd-ring', label: 'Ring', light: '#a3a3a3', dark: '#595959' },
+]
 
 const Color = z
-  .string()
-  .regex(/^(#|rgb|rgba|hsl|hsla)\b/i, {
-    message: 'Must be a valid color: value must start with #, rgb, rgba, hsl, or hsla',
-  })
+  .union([
+    z.string().regex(/^(#|rgb|rgba|hsl|hsla)\b/i, {
+      message: 'Must be a valid color: value must start with #, rgb, rgba, hsl, or hsla',
+    }),
+    z.literal(''),
+  ])
   .describe('Hex, rgb, rgba, hsl, or hsla color string')
 
 const ColorMode = z
@@ -22,11 +123,15 @@ const ColorMode = z
 
 const IconNameSchema = z.string().describe('Icon name or SVG path')
 
+const optionalUrlSchema = z.union([z.string().url(), z.literal(''), z.null()]).optional()
+
+const urlOrEmptySchema = z.union([z.string().url(), z.literal('')])
+
 const LogoSchema = z
   .object({
     light: z.string().describe('Logo for light mode'),
     dark: z.string().describe('Logo for dark mode'),
-    href: z.string().url().optional().describe('Logo click target URL'),
+    href: optionalUrlSchema.describe('Logo click target URL'),
     text: z
       .string()
       .optional()
@@ -54,7 +159,7 @@ const RedirectSchema = z
 
 const BannerSchema = z
   .object({
-    content: z.string().min(1).describe('Banner HTML/MDX content'),
+    content: z.string().describe('Banner HTML/MDX content'),
     dismissible: z.boolean().optional().describe('Whether the banner can be dismissed'),
   })
   .strict()
@@ -72,18 +177,22 @@ const ErrorsSchema = z
   .strict()
   .describe('Error pages configuration')
 
+export const contextualOptions = ['copy', 'view', 'chatgpt', 'claude'] as const
+
+export type ContextualOption = (typeof contextualOptions)[number]
+
 const ContextualSchema = z
-  .object({ options: z.array(z.enum(['copy', 'view', 'chatgpt', 'claude'])) })
+  .object({ options: z.array(z.enum(contextualOptions as unknown as [string, ...string[]])) })
   .strict()
   .describe('Contextual action options (e.g., on code blocks)')
 
 const NavigationAnchorItem = z
   .object({
-    anchor: z.string().min(1).describe('Anchor name/section for this navigation entry'),
+    anchor: z.string().describe('Anchor name/section for this navigation entry'),
     icon: IconNameSchema.optional().describe('Optional icon for this section'),
     color: ColorMode.optional().describe('Optional custom color'),
     hidden: z.boolean().optional().describe('Whether the anchor/section is hidden by default'),
-    href: z.string().url().optional().describe('Optional link or path for this anchor'),
+    href: optionalUrlSchema.describe('Optional link or path for this anchor'),
   })
   .strict()
   .describe('Anchor item for navigation')
@@ -91,7 +200,7 @@ const NavigationAnchorItem = z
 const NavbarLink = z
   .object({
     label: z.string().describe('Link text'),
-    href: z.string().url().describe('Link URL'),
+    href: urlOrEmptySchema.describe('Link URL'),
     icon: IconNameSchema.optional().describe('Optional icon'),
   })
   .strict()
@@ -106,13 +215,13 @@ const NavbarSchema = z
           .object({
             type: z.literal('button').describe('CTA type button'),
             label: z.string().describe('Button label'),
-            href: z.string().url().describe('Button link URL'),
+            href: urlOrEmptySchema.describe('Button link URL'),
           })
           .strict(),
         z
           .object({
             type: z.literal('github').describe('CTA type GitHub'),
-            href: z.string().url().describe('GitHub repo URL'),
+            href: urlOrEmptySchema.describe('GitHub repo URL'),
           })
           .strict(),
       ])
@@ -130,7 +239,7 @@ const FooterLinkColumn = z
         z
           .object({
             label: z.string().describe('Item text'),
-            href: z.string().url().describe('Item link URL'),
+            href: urlOrEmptySchema.describe('Item link URL'),
           })
           .strict(),
       )
@@ -142,7 +251,7 @@ const FooterLinkColumn = z
 
 const FooterSchema = z
   .object({
-    socials: z.record(z.string(), z.string().url()).optional().describe('Social media links'),
+    socials: z.record(z.string(), urlOrEmptySchema).optional().describe('Social media links'),
     links: z.array(FooterLinkColumn).min(1).optional().describe('Footer link sections'),
   })
   .strict()
@@ -157,7 +266,7 @@ const SearchSchema = z
 
 const SeoSchema = z
   .object({
-    metatags: z.record(z.string(), z.string()).describe('Additional meta tags'),
+    metatags: z.record(z.string(), z.string()).optional().describe('Additional meta tags'),
     indexing: z.enum(['navigable', 'all']).optional().describe('SEO indexing mode'),
   })
   .strict()
@@ -173,7 +282,7 @@ const NavigationTabSchema = z
         hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
-      .describe('OpenAPI tab configuration'),
+      .describe('OpenAPI tab configuration. Still experimental DO NOT USE'),
     z
       .object({
         tab: z.string().describe('Tab label'),
@@ -181,14 +290,13 @@ const NavigationTabSchema = z
         hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
       })
       .strict()
-      .describe('MCP tab configuration'),
+      .describe('MCP tab configuration. Still experimental DO NOT USE'),
     z
       .object({
-        tab: z.string().describe('Tab label'),
-        folder: z.string().describe('Content folder path for this tab'),
+        tab: z.string().describe('Tab label, the text shown in the tabs in the user interface in the website.'),
+        folder: z.string().describe('folder path for this tab. It should not start or end with a slash /. All content inside that folder will be hidden from the main version of the website, a tab with `label` will be shown, files under this folder will be shown only when user goes inside that tab. Useful for versioning and splitting content for example into guides, wiki, glossary, etc. MUST be a valid folder with pages inside'),
         description: z.string().optional().describe('Tab description'),
-        url: z.string().optional().describe('URL pattern that activates this tab'),
-        hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active'),
+        hideSidebar: z.boolean().optional().describe('Hide the sidebar when this tab is active. Only the main content of the page is displayed in that case. Useful for tabs that are not docs like blog, changelog, etc'),
       })
       .strict()
       .describe('Folder tab configuration'),
@@ -258,7 +366,7 @@ const IntegrationsSchema = z
     fathom: z.object({ siteId: z.string().describe('Fathom site ID') }).optional(),
     frontchat: z
       .object({
-        snippetId: z.string().min(6).describe('Frontchat snippet ID'),
+        snippetId: z.string().describe('Frontchat snippet ID'),
       })
       .optional(),
     ga4: z
@@ -269,10 +377,10 @@ const IntegrationsSchema = z
     gtm: z.object({ tagId: z.string().describe('GTM Tag ID') }).optional(),
     heap: z.object({ appId: z.string().describe('Heap App ID') }).optional(),
     hotjar: z.object({ hjid: z.string(), hjsv: z.string() }).optional().describe('Hotjar site and snippet version'),
-    intercom: z.object({ appId: z.string().min(6).describe('Intercom App ID') }).optional(),
+    intercom: z.object({ appId: z.string().describe('Intercom App ID') }).optional(),
     koala: z
       .object({
-        publicApiKey: z.string().min(2).describe('Koala public key'),
+        publicApiKey: z.string().describe('Koala public key'),
       })
       .optional(),
     logrocket: z.object({ appId: z.string().describe('LogRocket App ID') }).optional(),
@@ -280,9 +388,13 @@ const IntegrationsSchema = z
     osano: z
       .object({
         scriptSource: z
-          .string()
-          .url()
-          .refine((val) => val.startsWith('https://cmp.osano.com/') && val.endsWith('/osano.js'))
+          .union([
+            z
+              .string()
+              .url()
+              .refine((val) => val.startsWith('https://cmp.osano.com/') && val.endsWith('/osano.js')),
+            z.literal(''),
+          ])
           .describe('Osano script URL'),
       })
       .optional(),
@@ -290,7 +402,7 @@ const IntegrationsSchema = z
     posthog: z
       .object({
         apiKey: z.string().describe('PostHog API key'),
-        apiHost: z.string().url().optional().describe('PostHog host URL'),
+        apiHost: optionalUrlSchema.describe('PostHog host URL'),
       })
       .optional(),
     plausible: z
@@ -322,10 +434,18 @@ const CSSVariablesSchema = z
         All keys should start with --. The same keys should be specified to both light and dark.
     `)
 
+const PasswordSchema = z
+  .object({
+    password: z.string().describe('Password required to access the protected content'),
+    name: z.string().optional().describe('Optional name or label for this password (e.g., "Team Access", "Client Portal")'),
+  })
+  .strict()
+  .describe('Password protection entry')
+
 export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websiteDomain: string, docsJsonBasename: string }) {
   return z
     .object({
-      $schema: z.string().url().optional().describe('Schema URL for IDE autocomplete'),
+      $schema: optionalUrlSchema.describe('Schema URL for IDE autocomplete'),
       siteId: z
         .string()
         .describe(
@@ -362,7 +482,7 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
         .array(z.string())
         .optional()
         .describe(
-          `Custom domains to connect to this documentation site. Each domain should point to cname.${websiteDomain} via CNAME record. Domains will be connected when ${docsJsonBasename} is pushed to the main branch.`,
+          `Custom domains to connect to this documentation site. Each domain should point to cname.${websiteDomain} via CNAME record. Domains will be connected when ${docsJsonBasename} is pushed to the main branch. The initial domain with the platofrm subdomain like holocronsites.com should NEVER be removed. Instead if user asks you to replace the domain, you will still have to keep this internal domain ALWAYS.`,
         ),
       hideSidebar: z
         .boolean()
@@ -375,7 +495,7 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
           'Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.',
         ),
       theme: z
-        .enum(themeNames as [string, ...string[]])
+        .enum(themeNames as unknown as [string, ...string[]])
         .optional()
         .describe(
           'Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged',
@@ -387,11 +507,18 @@ export function getDocsConfigSchema({ websiteDomain, docsJsonBasename }: { websi
       poweredBy: z
         .object({
           name: z.string().describe('Name to display in the powered by text'),
-          url: z.string().url().describe('URL to link to when clicking the powered by text'),
+          url: urlOrEmptySchema.describe('URL to link to when clicking the powered by text'),
         })
         .optional()
         .meta({ hidden: true })
         .describe('Custom powered by attribution'),
+      passwords: z
+        .array(PasswordSchema)
+        .optional()
+        .describe(
+          'Password protection for the documentation site. Visitors will be required to enter one of the specified passwords to access the content. Multiple passwords can be configured for different users or teams.',
+        ),
+      integrations: IntegrationsSchema.optional().describe('Third-party analytics and support integrations'),
     })
     .strict()
 }

@@ -6,7 +6,7 @@ import { defaultDocsJsonComments, defaultStartingHolocronJson } from 'docs-websi
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { applyJsonCComments, extractJsonCComments } from './json-c-comments'
 import { env } from './env'
-import { assetsFromFilesList, syncSite } from './sync'
+import { assetsFromFilesList, syncSite, ConfigError, MarkdownSyncError } from './sync'
 import { slugKebabCaseKeepExtension } from './utils'
 import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
 
@@ -38,6 +38,8 @@ interface CreateSiteResult {
   domains: string[]
   pageCount: number
   cloudflareDomain: string
+  configErrors: ConfigError[]
+  markdownErrors: MarkdownSyncError[]
 }
 
 export async function createSite({
@@ -190,7 +192,7 @@ export async function createSite({
     }),
   ])
 
-  const { pageCount } = syncResult
+  const { pageCount, configErrors, markdownErrors } = syncResult
   const chatId = chat.chatId
 
   return {
@@ -202,5 +204,7 @@ export async function createSite({
     domains,
     pageCount,
     cloudflareDomain: domainForBasePath,
+    configErrors,
+    markdownErrors,
   }
 }
