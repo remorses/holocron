@@ -67,11 +67,10 @@ export function DomainsBlock({
 
         <div className='space-y-2'>
           {fields.map((field, index) => {
-            const domainValue = watch(`domains.${index}.value`)
+
             const isInternal = Boolean(
               internalDomain &&
-                typeof domainValue === 'string' &&
-                domainValue.endsWith(internalDomain),
+              field.value.endsWith(internalDomain),
             )
             return (
               <div key={field.id} className='flex gap-2 items-start'>
@@ -79,6 +78,7 @@ export function DomainsBlock({
                   <Input
                     {...register(`domains.${index}.value`, {
                       required: 'Domain is required',
+                      disabled: isInternal,
                       pattern: {
                         value:
                           /^[a-zA-Z0-9][a-zA-Z0-9-_.]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$/,
