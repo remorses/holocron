@@ -280,9 +280,10 @@ export type WebsiteTools = {
 // Create fallback model with Baseten Kimi K2 as primary
 let model: LanguageModelV2 = createFallback({
   models: [
+    baseten('deepseek-ai/DeepSeek-V3.2'),
     baseten('moonshotai/Kimi-K2-Instruct-0905'),
-    moonshot('kimi-k2-turbo-preview'),
     google('gemini-2.5-flash'),
+    moonshot('kimi-k2-turbo-preview'),
     // groq('moonshotai/kimi-k2-instruct-0905'),
     // togetherai('moonshotai/Kimi-K2-Instruct-0905'), // TODO together can't even parse tool calls
     // fireworks('accounts/fireworks/models/kimi-k2-instruct'), // TODO fireworks returns duplicate tool call ids.
