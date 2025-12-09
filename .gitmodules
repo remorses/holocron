@@ -5,3 +5,4 @@
 [submodule "embeddable-analytics"]
 	path = embeddable-analytics
 	url = https://github.com/remorses/embeddable-analytics.git
+	branch = main
