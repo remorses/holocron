@@ -32,6 +32,7 @@ import {
   NoSuchToolError,
   LanguageModel,
   readUIMessageStream,
+  ToolSet,
 } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 import { LanguageModelV2, type LanguageModelV2Middleware } from '@ai-sdk/provider'
@@ -795,7 +796,7 @@ export async function* generateMessageStream({
 
   const result = streamText({
     model,
-    tools,
+    tools: tools as ToolSet,
     onError: (error) => {
       console.log(`Error in streamText:`, error)
       throw error

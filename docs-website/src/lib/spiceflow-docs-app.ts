@@ -7,7 +7,7 @@ import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import { groq } from '@ai-sdk/groq'
 import { createFallback } from 'ai-fallback'
-import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages, smoothStream, LanguageModel } from 'ai'
+import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages, smoothStream, LanguageModel, ToolSet } from 'ai'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
 import { Spiceflow } from 'spiceflow'
@@ -463,7 +463,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
             strictJsonSchema: true,
           } satisfies OpenAIResponsesProviderOptions,
         },
-        tools,
+        tools: tools as ToolSet,
         async onFinish({ response }) { },
       })
 
