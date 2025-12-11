@@ -280,6 +280,7 @@ export type WebsiteTools = {
 // Create fallback model with Baseten Kimi K2 as primary
 let model: LanguageModelV2 = createFallback({
   models: [
+    baseten('moonshotai/Kimi-K2-Instruct-0905'),
     baseten('deepseek-ai/DeepSeek-V3.2'),
     baseten('moonshotai/Kimi-K2-Instruct-0905'),
     google('gemini-2.5-flash'),
