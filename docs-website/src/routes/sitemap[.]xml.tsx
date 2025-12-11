@@ -1,9 +1,10 @@
 import { prisma } from 'db'
 import type { Route } from './+types/sitemap[.]xml'
+import { getHost } from '../lib/get-host'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
-  const domain = url.hostname
+  const domain = getHost(request)
 
   const siteBranch = await prisma.siteBranch.findFirst({
     where: {

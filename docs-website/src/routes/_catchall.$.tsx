@@ -203,7 +203,7 @@ const mediaExtensions = [
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const path = withoutBasePath(url.pathname)
-  const host = url.hostname
+  const host = getHost(request)
 
   // Handle raw markdown files
   if (path.endsWith('.md') || path.endsWith('.mdx')) {

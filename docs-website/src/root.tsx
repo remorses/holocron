@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Route } from './+types/root'
 import { imageLoader } from './lib/image-loader'
 import { serveRawMarkdown } from './lib/serve-raw-markdown.server'
+import { getHost } from './lib/get-host'
 import { withoutBasePath } from './lib/utils'
 import './lib/mount-importmap'
 import './app.css'
@@ -41,7 +42,7 @@ const mediaExtensions = [
 const markdownTextMiddleware: Route.MiddlewareFunction = async ({ request }, next) => {
   const url = new URL(request.url)
   const path = withoutBasePath(url.pathname)
-  const host = url.hostname
+  const host = getHost(request)
 
   const acceptHeader = request.headers.get('Accept') || ''
   const wantsMarkdown = acceptHeader.includes('text/markdown')
