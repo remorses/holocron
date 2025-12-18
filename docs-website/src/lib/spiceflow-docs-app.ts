@@ -56,13 +56,13 @@ const baseten = createOpenAICompatible({
   },
 })
 
-// Create fallback model with Baseten Kimi K2 as primary
+// Create fallback model with Gemini 3 as primary
 let model: LanguageModelV2 = createFallback({
   models: [
+    google('gemini-3-flash-preview'),
+    google('gemini-2.5-flash'),
     baseten('moonshotai/Kimi-K2-Instruct-0905'),
     moonshot('kimi-k2-turbo-preview'),
-    google('gemini-2.5-flash'),
-    // groq('moonshotai/kimi-k2-instruct-0905'),
   ],
   onError: (error, modelId) => {
     console.error(`Error with model ${modelId}:`, error)
