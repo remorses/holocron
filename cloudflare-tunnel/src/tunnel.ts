@@ -12,7 +12,30 @@ type Env = {
 
 type Attachment = {
   role: 'up' | 'down'
+  ids: string[]
+  multiplexed?: boolean
 }
+
+export type MultiplexedDataMessage = {
+  id: string
+  data: string | ArrayBuffer
+}
+
+export type MultiplexedClosedMessage = {
+  id: string
+  event: 'upstream_closed'
+}
+
+export type MultiplexedErrorMessage = {
+  id: string
+  event: 'upstream_error'
+  error?: {
+    message?: string
+    name?: string
+  }
+}
+
+export type MultiplexedMessage = MultiplexedDataMessage | MultiplexedClosedMessage | MultiplexedErrorMessage
 
 export default {
   async fetch(req: CFRequest, env: Env, ctx?: ExecutionContext): Promise<Response> {
@@ -24,8 +47,16 @@ export default {
     // Intercept only the tunnel path
     if (url.pathname.startsWith('/_tunnel/')) {
       url.pathname = url.pathname.replace('/_tunnel', '')
-      const id = env.TUNNEL_DO.idFromName(url.searchParams.get('id') ?? 'default')
-      const res = await env.TUNNEL_DO.get(id).fetch(new Request(url.toString(), req))
+      const ids = url.searchParams.getAll('id')
+      const namespace = url.searchParams.get('namespace')
+
+      if (ids.length > 1 && !namespace) {
+        return addCors(new Response('namespace required for multiple ids', { status: 400 }))
+      }
+
+      const doName = namespace ?? ids[0] ?? 'default'
+      const doId = env.TUNNEL_DO.idFromName(doName)
+      const res = await env.TUNNEL_DO.get(doId).fetch(new Request(url.toString(), req))
       return addCors(res)
     }
 
@@ -61,26 +92,49 @@ export class Tunnel {
   }
 
   async fetch(req: Request) {
-    if (req.headers.get('Upgrade') !== 'websocket') return addCors(new Response('Upgrade required', { status: 400 }))
+    if (req.headers.get('Upgrade') !== 'websocket') {
+      return addCors(new Response('Upgrade required', { status: 400 }))
+    }
 
     const url = new URL(req.url)
-    const role = url.pathname.startsWith('/upstream') ? 'up' : 'down'
+    const isUpstream = url.pathname.startsWith('/upstream')
+    const isMultiplexer = url.pathname.startsWith('/multiplexer')
+    const ids = url.searchParams.getAll('id')
     const pair = new WebSocketPair()
     const [client, server] = Object.values(pair)
 
-    if (role === 'up') {
-      this.closeAllUpstreams({ code: 4009, reason: 'Upstream already connected' })
-      this.ctx.acceptWebSocket(server)
-      server.serializeAttachment({ role: 'up' } satisfies Attachment)
+    if (isUpstream) {
+      const id = ids[0]
+      if (!id) {
+        return addCors(new Response('id required', { status: 400 }))
+      }
+
+      this.closeUpstreamsForId(id, { code: 4009, reason: 'Upstream already connected' })
+      this.ctx.acceptWebSocket(server, [`up:${id}`])
+      server.serializeAttachment({ role: 'up', ids: [id] } satisfies Attachment)
     } else {
-      const existingUps = this.getUpstreams()
-      if (existingUps.length === 0) {
+      if (ids.length === 0) {
+        return addCors(new Response('id required', { status: 400 }))
+      }
+
+      const availableIds = ids.filter((id) => {
+        return this.ctx.getWebSockets(`up:${id}`).length > 0
+      })
+      if (availableIds.length === 0) {
         server.accept()
         server.close(4008, 'No upstream available')
         return addCors(new Response(null, { status: 101, webSocket: client }))
       }
-      this.ctx.acceptWebSocket(server)
-      server.serializeAttachment({ role: 'down' } satisfies Attachment)
+
+      const tags = ids.map((id) => {
+        return `down:${id}`
+      })
+      this.ctx.acceptWebSocket(server, tags)
+      server.serializeAttachment({
+        role: 'down',
+        ids,
+        multiplexed: isMultiplexer,
+      } satisfies Attachment)
     }
 
     return addCors(new Response(null, { status: 101, webSocket: client }))
@@ -90,92 +144,128 @@ export class Tunnel {
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
     const attachment = ws.deserializeAttachment() as Attachment | undefined
+    if (!attachment) {
+      return
+    }
 
-    if (attachment?.role === 'up') {
-      // Fan-out message from upstream to all downstreams
-      const downs = this.getDownstreams()
+    if (attachment.role === 'up') {
+      const upstreamId = attachment.ids[0]
+      const downs = this.ctx.getWebSockets(`down:${upstreamId}`)
       for (const down of downs) {
         try {
-          down.send(message)
-        } catch { }
+          const downAttachment = down.deserializeAttachment() as Attachment
+          const shouldWrap = downAttachment.multiplexed || downAttachment.ids.length > 1
+          const payload = shouldWrap
+            ? JSON.stringify({ id: upstreamId, data: message } satisfies MultiplexedDataMessage)
+            : message
+          down.send(payload)
+        } catch {}
       }
-    } else if (attachment?.role === 'down') {
-      const ups = this.getUpstreams()
+    } else if (attachment.role === 'down') {
+      const shouldUnwrap = attachment.multiplexed || attachment.ids.length > 1
+
+      let targetId: string
+      let payload: string | ArrayBuffer
+
+      if (shouldUnwrap && typeof message === 'string') {
+        try {
+          const parsed = JSON.parse(message)
+          if (parsed.id && attachment.ids.includes(parsed.id)) {
+            targetId = parsed.id
+            payload = typeof parsed.data === 'string' ? parsed.data : JSON.stringify(parsed.data)
+          } else {
+            targetId = attachment.ids[0]
+            payload = message
+          }
+        } catch {
+          targetId = attachment.ids[0]
+          payload = message
+        }
+      } else {
+        targetId = attachment.ids[0]
+        payload = message
+      }
+
+      const ups = this.ctx.getWebSockets(`up:${targetId}`)
       if (ups.length > 0) {
         try {
-          ups[0].send(message)
-        } catch { }
+          ups[0].send(payload)
+        } catch {}
       }
     }
   }
 
   async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
     const attachment = ws.deserializeAttachment() as Attachment | undefined
+    if (!attachment) {
+      return
+    }
 
-    if (attachment?.role === 'up') {
-      // Upstream closed, close all downstreams
-      const downs = this.getDownstreams()
+    if (attachment.role === 'up') {
+      const upstreamId = attachment.ids[0]
+      const downs = this.ctx.getWebSockets(`down:${upstreamId}`)
       for (const down of downs) {
         try {
-          down.close(1012, 'upstream closed')
-        } catch { }
+          const downAttachment = down.deserializeAttachment() as Attachment
+          const shouldWrap = downAttachment.multiplexed || downAttachment.ids.length > 1
+          if (shouldWrap) {
+            down.send(
+              JSON.stringify({ id: upstreamId, event: 'upstream_closed' } satisfies MultiplexedClosedMessage)
+            )
+          } else {
+            down.close(1012, 'upstream closed')
+          }
+        } catch {}
       }
-
-      this.closeAllUpstreams({ code: 1012, reason: 'upstream closed' })
     }
-    // If downstream closes, it's automatically removed from the live set
   }
 
-  async webSocketError(ws: WebSocket, error: any) {
-    // Handle the same as close
+  async webSocketError(ws: WebSocket, error: unknown) {
     const attachment = ws.deserializeAttachment() as Attachment | undefined
+    if (!attachment) {
+      return
+    }
 
-    if (attachment?.role === 'up') {
-      // Upstream errored, close all downstreams
-      const downs = this.getDownstreams()
+    if (attachment.role === 'up') {
+      const upstreamId = attachment.ids[0]
+      const errorInfo = (() => {
+        if (error instanceof Error) {
+          return { message: error.message, name: error.name }
+        }
+        if (typeof error === 'string') {
+          return { message: error }
+        }
+        return undefined
+      })()
+
+      const downs = this.ctx.getWebSockets(`down:${upstreamId}`)
       for (const down of downs) {
         try {
-          down.close(1011, 'upstream error')
-        } catch { }
+          const downAttachment = down.deserializeAttachment() as Attachment
+          const shouldWrap = downAttachment.multiplexed || downAttachment.ids.length > 1
+          if (shouldWrap) {
+            down.send(
+              JSON.stringify({
+                id: upstreamId,
+                event: 'upstream_error',
+                error: errorInfo,
+              } satisfies MultiplexedErrorMessage)
+            )
+          } else {
+            down.close(1011, 'upstream error')
+          }
+        } catch {}
       }
-
-      this.closeAllUpstreams({ code: 1011, reason: 'upstream error' })
     }
   }
 
-  private closeAllUpstreams({ code, reason }: { code: number; reason: string }) {
-    const ups = this.getUpstreams()
+  private closeUpstreamsForId(id: string, { code, reason }: { code: number; reason: string }) {
+    const ups = this.ctx.getWebSockets(`up:${id}`)
     for (const up of ups) {
       try {
         up.close(code, reason)
-      } catch { }
+      } catch {}
     }
-  }
-
-  /* ------ Helper methods to get live sockets ------ */
-
-  private getUpstreams(): WebSocket[] {
-    const sockets = this.ctx.getWebSockets()
-    const ups: WebSocket[] = []
-    for (const ws of sockets) {
-      const attachment = ws.deserializeAttachment() as Attachment | undefined
-      if (attachment?.role === 'up') {
-        ups.push(ws)
-      }
-    }
-    return ups
-  }
-
-  private getDownstreams(): WebSocket[] {
-    const sockets = this.ctx.getWebSockets()
-    const downs: WebSocket[] = []
-    for (const ws of sockets) {
-      const attachment = ws.deserializeAttachment() as Attachment | undefined
-      if (attachment?.role === 'down') {
-        downs.push(ws)
-      }
-    }
-    return downs
   }
 }
 

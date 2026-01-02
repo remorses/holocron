@@ -95,7 +95,7 @@ describe.concurrent('Tunnel WebSocket', () => {
     client2.close()
   })
 
-  test('connecting upstream twice should fail', async () => {
+  test('connecting upstream twice replaces the first', async () => {
     const tunnelId = getTunnelId()
 
     // Connect first upstream
@@ -105,26 +105,30 @@ describe.concurrent('Tunnel WebSocket', () => {
       upstream1.on('error', reject)
     })
 
-    // Try to connect second upstream - should be rejected
-    const upstream2 = new WebSocket(`${WS_URL}/upstream?id=${tunnelId}`)
-
-    const closePromise = new Promise<{ code: number; reason: string }>((resolve) => {
-      upstream2.on('close', (code, reason) => {
+    const upstream1ClosePromise = new Promise<{ code: number; reason: string }>((resolve) => {
+      upstream1.on('close', (code, reason) => {
         resolve({ code, reason: reason.toString() })
       })
     })
 
-    // Wait for the second connection to be closed
-    const closeEvent = await closePromise
+    // Connect second upstream - should replace the first
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      upstream2.on('open', resolve)
+      upstream2.on('error', reject)
+    })
+
+    // First upstream should be closed
+    const closeEvent = await upstream1ClosePromise
 
     expect(closeEvent.code).toBe(4009)
     expect(closeEvent.reason).toBe('Upstream already connected')
 
-    // First upstream should still be connected
-    expect(upstream1.readyState).toBe(WebSocket.OPEN)
+    // Second upstream should still be connected
+    expect(upstream2.readyState).toBe(WebSocket.OPEN)
 
     // Clean up
-    upstream1.close()
+    upstream2.close()
   })
 
   test('clients disconnect when upstream closes', async () => {
@@ -234,5 +238,646 @@ describe.concurrent('Tunnel WebSocket', () => {
 
     expect(closeEvent.code).toBe(4008)
     expect(closeEvent.reason).toBe('No upstream available')
+  })
+
+  test('single id with namespace works', async () => {
+    const namespace = getTunnelId()
+    const id = 'channel-1'
+
+    const upstream = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id}`)
+    await new Promise((resolve, reject) => {
+      upstream.on('open', resolve)
+      upstream.on('error', reject)
+    })
+
+    const client = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const clientMessagePromise = new Promise<string>((resolve) => {
+      client.on('message', (data) => {
+        resolve(data.toString())
+      })
+    })
+
+    upstream.send('hello with namespace')
+    const received = await clientMessagePromise
+    expect(received).toBe('hello with namespace')
+
+    upstream.close()
+    client.close()
+  })
+
+  test('multi-subscribe receives wrapped messages from multiple upstreams', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; data: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream1.send('from upstream 1')
+    upstream2.send('from upstream 2')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toContainEqual({ id: id1, data: 'from upstream 1' })
+    expect(messages).toContainEqual({ id: id2, data: 'from upstream 2' })
+
+    upstream1.close()
+    upstream2.close()
+    client.close()
+  })
+
+  test('multi-subscribe downstream can send to specific upstream', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const upstream1Messages: string[] = []
+    const upstream2Messages: string[] = []
+    upstream1.on('message', (data) => {
+      upstream1Messages.push(data.toString())
+    })
+    upstream2.on('message', (data) => {
+      upstream2Messages.push(data.toString())
+    })
+
+    client.send(JSON.stringify({ id: id1, data: 'to upstream 1' }))
+    client.send(JSON.stringify({ id: id2, data: 'to upstream 2' }))
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(upstream1Messages).toContain('to upstream 1')
+    expect(upstream2Messages).toContain('to upstream 2')
+
+    upstream1.close()
+    upstream2.close()
+    client.close()
+  })
+
+  test('multi-subscribe client receives upstream_closed event but stays connected', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; event?: string; data?: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream1.close()
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toContainEqual({ id: id1, event: 'upstream_closed' })
+    expect(client.readyState).toBe(WebSocket.OPEN)
+
+    upstream2.send('still working')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
+
+    expect(messages).toContainEqual({ id: id2, data: 'still working' })
+
+    upstream2.close()
+    client.close()
+  })
+
+  test('multiple upstreams with same id in namespace replaces old upstream', async () => {
+    const namespace = getTunnelId()
+    const id = 'channel-1'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id}`)
+    await new Promise((resolve, reject) => {
+      upstream1.on('open', resolve)
+      upstream1.on('error', reject)
+    })
+
+    const upstream1ClosePromise = new Promise<{ code: number; reason: string }>((resolve) => {
+      upstream1.on('close', (code, reason) => {
+        resolve({ code, reason: reason.toString() })
+      })
+    })
+
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id}`)
+    await new Promise((resolve, reject) => {
+      upstream2.on('open', resolve)
+      upstream2.on('error', reject)
+    })
+
+    const closeEvent = await upstream1ClosePromise
+    expect(closeEvent.code).toBe(4009)
+    expect(closeEvent.reason).toBe('Upstream already connected')
+
+    expect(upstream2.readyState).toBe(WebSocket.OPEN)
+
+    upstream2.close()
+  })
+
+  test('different ids in same namespace are isolated', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client1 = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}`)
+    const client2 = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        client1.on('open', resolve)
+        client1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        client2.on('open', resolve)
+        client2.on('error', reject)
+      }),
+    ])
+
+    const client1Messages: string[] = []
+    const client2Messages: string[] = []
+    client1.on('message', (data) => {
+      client1Messages.push(data.toString())
+    })
+    client2.on('message', (data) => {
+      client2Messages.push(data.toString())
+    })
+
+    upstream1.send('only for client 1')
+    upstream2.send('only for client 2')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(client1Messages).toEqual(['only for client 1'])
+    expect(client2Messages).toEqual(['only for client 2'])
+
+    upstream1.close()
+    upstream2.close()
+    client1.close()
+    client2.close()
+  })
+
+  test('multi-subscribe client connects with partial upstream availability', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    await new Promise((resolve, reject) => {
+      upstream1.on('open', resolve)
+      upstream1.on('error', reject)
+    })
+
+    const client = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; data: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream1.send('from upstream 1')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
+
+    expect(messages).toContainEqual({ id: id1, data: 'from upstream 1' })
+
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      upstream2.on('open', resolve)
+      upstream2.on('error', reject)
+    })
+
+    upstream2.send('from upstream 2')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
+
+    expect(messages).toContainEqual({ id: id2, data: 'from upstream 2' })
+
+    upstream1.close()
+    upstream2.close()
+    client.close()
+  })
+
+  test('both upstreams close sends two upstream_closed events', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; event?: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream1.close()
+    upstream2.close()
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300)
+    })
+
+    expect(messages).toContainEqual({ id: id1, event: 'upstream_closed' })
+    expect(messages).toContainEqual({ id: id2, event: 'upstream_closed' })
+    expect(client.readyState).toBe(WebSocket.OPEN)
+
+    client.close()
+  })
+
+  test('mixed single and multi-subscribe clients receive correct format', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+
+    const upstream = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    await new Promise((resolve, reject) => {
+      upstream.on('open', resolve)
+      upstream.on('error', reject)
+    })
+
+    const singleClient = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}`)
+    const multiClient = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=other-id`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        singleClient.on('open', resolve)
+        singleClient.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        multiClient.on('open', resolve)
+        multiClient.on('error', reject)
+      }),
+    ])
+
+    const singleMessages: string[] = []
+    const multiMessages: string[] = []
+    singleClient.on('message', (data) => {
+      singleMessages.push(data.toString())
+    })
+    multiClient.on('message', (data) => {
+      multiMessages.push(data.toString())
+    })
+
+    upstream.send('hello')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
+
+    expect(singleMessages).toEqual(['hello'])
+    expect(multiMessages).toEqual([JSON.stringify({ id: id1, data: 'hello' })])
+
+    upstream.close()
+    singleClient.close()
+    multiClient.close()
+  })
+
+  test('multiple multi-subscribe clients all receive messages', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client1 = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+    const client2 = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        client1.on('open', resolve)
+        client1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        client2.on('open', resolve)
+        client2.on('error', reject)
+      }),
+    ])
+
+    const client1Messages: Array<{ id: string; data: string }> = []
+    const client2Messages: Array<{ id: string; data: string }> = []
+    client1.on('message', (data) => {
+      client1Messages.push(JSON.parse(data.toString()))
+    })
+    client2.on('message', (data) => {
+      client2Messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream1.send('from 1')
+    upstream2.send('from 2')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(client1Messages).toContainEqual({ id: id1, data: 'from 1' })
+    expect(client1Messages).toContainEqual({ id: id2, data: 'from 2' })
+    expect(client2Messages).toContainEqual({ id: id1, data: 'from 1' })
+    expect(client2Messages).toContainEqual({ id: id2, data: 'from 2' })
+
+    upstream1.close()
+    upstream2.close()
+    client1.close()
+    client2.close()
+  })
+
+  test('multi-subscribe client message to unavailable upstream is silently dropped', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    await new Promise((resolve, reject) => {
+      upstream1.on('open', resolve)
+      upstream1.on('error', reject)
+    })
+
+    const client = new WebSocket(`${WS_URL}/downstream?namespace=${namespace}&id=${id1}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const upstream1Messages: string[] = []
+    upstream1.on('message', (data) => {
+      upstream1Messages.push(data.toString())
+    })
+
+    client.send(JSON.stringify({ id: id1, data: 'to upstream 1' }))
+    client.send(JSON.stringify({ id: id2, data: 'to non-existent upstream' }))
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(upstream1Messages).toEqual(['to upstream 1'])
+    expect(client.readyState).toBe(WebSocket.OPEN)
+
+    upstream1.close()
+    client.close()
+  })
+
+  test('multiplexer with single id receives wrapped messages', async () => {
+    const tunnelId = getTunnelId()
+
+    const upstream = new WebSocket(`${WS_URL}/upstream?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      upstream.on('open', resolve)
+      upstream.on('error', reject)
+    })
+
+    const client = new WebSocket(`${WS_URL}/multiplexer?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; data: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream.send('hello')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
+
+    expect(messages).toEqual([{ id: tunnelId, data: 'hello' }])
+
+    upstream.close()
+    client.close()
+  })
+
+  test('multiplexer client can send wrapped messages to upstream', async () => {
+    const tunnelId = getTunnelId()
+
+    const upstream = new WebSocket(`${WS_URL}/upstream?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      upstream.on('open', resolve)
+      upstream.on('error', reject)
+    })
+
+    const client = new WebSocket(`${WS_URL}/multiplexer?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const upstreamMessages: string[] = []
+    upstream.on('message', (data) => {
+      upstreamMessages.push(data.toString())
+    })
+
+    client.send(JSON.stringify({ id: tunnelId, data: 'hello from multiplexer' }))
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
+
+    expect(upstreamMessages).toEqual(['hello from multiplexer'])
+
+    upstream.close()
+    client.close()
+  })
+
+  test('multiplexer receives upstream_closed event instead of disconnect', async () => {
+    const tunnelId = getTunnelId()
+
+    const upstream = new WebSocket(`${WS_URL}/upstream?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      upstream.on('open', resolve)
+      upstream.on('error', reject)
+    })
+
+    const client = new WebSocket(`${WS_URL}/multiplexer?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; event?: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream.close()
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toEqual([{ id: tunnelId, event: 'upstream_closed' }])
+    expect(client.readyState).toBe(WebSocket.OPEN)
+
+    client.close()
+  })
+
+  test('multiplexer with namespace and multiple ids works', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client = new WebSocket(`${WS_URL}/multiplexer?namespace=${namespace}&id=${id1}&id=${id2}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; data: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    upstream1.send('from 1')
+    upstream2.send('from 2')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toContainEqual({ id: id1, data: 'from 1' })
+    expect(messages).toContainEqual({ id: id2, data: 'from 2' })
+
+    upstream1.close()
+    upstream2.close()
+    client.close()
   })
 })
