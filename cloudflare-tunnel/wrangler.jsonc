@@ -26,6 +26,10 @@
       "pattern": "mcp.unframer.co/_tunnel/*",
       "zone_name": "unframer.co",
     },
+    {
+      "pattern": "opentui.net/_tunnel/*",
+      "zone_name": "opentui.net",
+    },
   ],
 
   "durable_objects": {
@@ -52,6 +56,10 @@
         {
           "pattern": "preview.unframer.co/_tunnel/*",
           "zone_name": "unframer.co",
+        },
+        {
+          "pattern": "preview.opentui.net/_tunnel/*",
+          "zone_name": "opentui.net",
         },
       ],
       "durable_objects": {
