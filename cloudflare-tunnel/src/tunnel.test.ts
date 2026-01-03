@@ -880,4 +880,133 @@ describe.concurrent('Tunnel WebSocket', () => {
     upstream2.close()
     client.close()
   })
+
+  test('namespace-only multiplexer discovers existing upstreams and new ones', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+    const id3 = 'channel-3'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client = new WebSocket(`${WS_URL}/multiplexer?namespace=${namespace}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    const messages: Array<{ id: string; event?: string; data?: string }> = []
+    client.on('message', (data) => {
+      messages.push(JSON.parse(data.toString()))
+    })
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toContainEqual({ id: id1, event: 'upstream_discovered' })
+    expect(messages).toContainEqual({ id: id2, event: 'upstream_discovered' })
+
+    const upstream3 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id3}`)
+    await new Promise((resolve, reject) => {
+      upstream3.on('open', resolve)
+      upstream3.on('error', reject)
+    })
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toContainEqual({ id: id3, event: 'upstream_connected' })
+
+    upstream1.send('from 1')
+    upstream2.send('from 2')
+    upstream3.send('from 3')
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toContainEqual({ id: id1, data: 'from 1' })
+    expect(messages).toContainEqual({ id: id2, data: 'from 2' })
+    expect(messages).toContainEqual({ id: id3, data: 'from 3' })
+
+    upstream1.close()
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(messages).toContainEqual({ id: id1, event: 'upstream_closed' })
+    expect(client.readyState).toBe(WebSocket.OPEN)
+
+    upstream2.close()
+    upstream3.close()
+    client.close()
+  })
+
+  test('namespace-only multiplexer can send to any upstream', async () => {
+    const namespace = getTunnelId()
+    const id1 = 'channel-1'
+    const id2 = 'channel-2'
+
+    const upstream1 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id1}`)
+    const upstream2 = new WebSocket(`${WS_URL}/upstream?namespace=${namespace}&id=${id2}`)
+
+    await Promise.all([
+      new Promise((resolve, reject) => {
+        upstream1.on('open', resolve)
+        upstream1.on('error', reject)
+      }),
+      new Promise((resolve, reject) => {
+        upstream2.on('open', resolve)
+        upstream2.on('error', reject)
+      }),
+    ])
+
+    const client = new WebSocket(`${WS_URL}/multiplexer?namespace=${namespace}`)
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
+
+    const upstream1Messages: string[] = []
+    const upstream2Messages: string[] = []
+    upstream1.on('message', (data) => {
+      upstream1Messages.push(data.toString())
+    })
+    upstream2.on('message', (data) => {
+      upstream2Messages.push(data.toString())
+    })
+
+    client.send(JSON.stringify({ id: id1, data: 'to upstream 1' }))
+    client.send(JSON.stringify({ id: id2, data: 'to upstream 2' }))
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200)
+    })
+
+    expect(upstream1Messages).toEqual(['to upstream 1'])
+    expect(upstream2Messages).toEqual(['to upstream 2'])
+
+    upstream1.close()
+    upstream2.close()
+    client.close()
+  })
 })

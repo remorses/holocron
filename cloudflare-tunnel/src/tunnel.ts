@@ -14,6 +14,7 @@ type Attachment = {
   role: 'up' | 'down'
   ids: string[]
   multiplexed?: boolean
+  subscribeAll?: boolean
 }
 
 export type MultiplexedDataMessage = {
@@ -35,7 +36,22 @@ export type MultiplexedErrorMessage = {
   }
 }
 
-export type MultiplexedMessage = MultiplexedDataMessage | MultiplexedClosedMessage | MultiplexedErrorMessage
+export type MultiplexedConnectedMessage = {
+  id: string
+  event: 'upstream_connected'
+}
+
+export type MultiplexedDiscoveredMessage = {
+  id: string
+  event: 'upstream_discovered'
+}
+
+export type MultiplexedMessage =
+  | MultiplexedDataMessage
+  | MultiplexedClosedMessage
+  | MultiplexedErrorMessage
+  | MultiplexedConnectedMessage
+  | MultiplexedDiscoveredMessage
 
 export default {
   async fetch(req: CFRequest, env: Env, ctx?: ExecutionContext): Promise<Response> {
@@ -112,6 +128,25 @@ export class Tunnel {
       this.closeUpstreamsForId(id, { code: 4009, reason: 'Upstream already connected' })
       this.ctx.acceptWebSocket(server, [`up:${id}`])
       server.serializeAttachment({ role: 'up', ids: [id] } satisfies Attachment)
+
+      this.notifyWildcardSubscribers(id, 'upstream_connected')
+    } else if (isMultiplexer && ids.length === 0) {
+      this.ctx.acceptWebSocket(server, ['down:*'])
+      server.serializeAttachment({
+        role: 'down',
+        ids: [],
+        multiplexed: true,
+        subscribeAll: true,
+      } satisfies Attachment)
+
+      const existingUpstreamIds = this.getAllUpstreamIds()
+      for (const upstreamId of existingUpstreamIds) {
+        try {
+          server.send(
+            JSON.stringify({ id: upstreamId, event: 'upstream_discovered' } satisfies MultiplexedDiscoveredMessage)
+          )
+        } catch {}
+      }
     } else {
       if (ids.length === 0) {
         return addCors(new Response('id required', { status: 400 }))
@@ -161,36 +196,55 @@ export class Tunnel {
           down.send(payload)
         } catch {}
       }
-    } else if (attachment.role === 'down') {
-      const shouldUnwrap = attachment.multiplexed || attachment.ids.length > 1
 
-      let targetId: string
+      const wildcardDowns = this.ctx.getWebSockets('down:*')
+      for (const down of wildcardDowns) {
+        try {
+          down.send(JSON.stringify({ id: upstreamId, data: message } satisfies MultiplexedDataMessage))
+        } catch {}
+      }
+    } else if (attachment.role === 'down') {
+      const shouldUnwrap = attachment.multiplexed || attachment.subscribeAll || attachment.ids.length > 1
+
+      let targetId: string | undefined
       let payload: string | ArrayBuffer
 
       if (shouldUnwrap && typeof message === 'string') {
         try {
           const parsed = JSON.parse(message)
-          if (parsed.id && attachment.ids.includes(parsed.id)) {
+          if (parsed.id && (attachment.subscribeAll || attachment.ids.includes(parsed.id))) {
             targetId = parsed.id
             payload = typeof parsed.data === 'string' ? parsed.data : JSON.stringify(parsed.data)
-          } else {
+          } else if (!attachment.subscribeAll) {
             targetId = attachment.ids[0]
             payload = message
+          } else {
+            return
           }
         } catch {
-          targetId = attachment.ids[0]
-          payload = message
+          if (!attachment.subscribeAll) {
+            targetId = attachment.ids[0]
+            payload = message
+          } else {
+            return
+          }
         }
       } else {
-        targetId = attachment.ids[0]
-        payload = message
+        if (!attachment.subscribeAll) {
+          targetId = attachment.ids[0]
+          payload = message
+        } else {
+          return
+        }
       }
 
-      const ups = this.ctx.getWebSockets(`up:${targetId}`)
-      if (ups.length > 0) {
-        try {
-          ups[0].send(payload)
-        } catch {}
+      if (targetId) {
+        const ups = this.ctx.getWebSockets(`up:${targetId}`)
+        if (ups.length > 0) {
+          try {
+            ups[0].send(payload)
+          } catch {}
+        }
       }
     }
   }
@@ -217,6 +271,8 @@ export class Tunnel {
           }
         } catch {}
       }
+
+      this.notifyWildcardSubscribers(upstreamId, 'upstream_closed')
     }
   }
 
@@ -256,6 +312,8 @@ export class Tunnel {
           }
         } catch {}
       }
+
+      this.notifyWildcardSubscribers(upstreamId, 'upstream_error', errorInfo)
     }
   }
 
@@ -264,6 +322,43 @@ export class Tunnel {
     for (const up of ups) {
       try {
         up.close(code, reason)
+      } catch {}
+    }
+  }
+
+  private getAllUpstreamIds(): string[] {
+    const allSockets = this.ctx.getWebSockets()
+    const upstreamIds: string[] = []
+    for (const ws of allSockets) {
+      const attachment = ws.deserializeAttachment() as Attachment | undefined
+      if (attachment?.role === 'up' && attachment.ids[0]) {
+        upstreamIds.push(attachment.ids[0])
+      }
+    }
+    return upstreamIds
+  }
+
+  private notifyWildcardSubscribers(
+    upstreamId: string,
+    event: 'upstream_connected' | 'upstream_closed' | 'upstream_error',
+    errorInfo?: { message?: string; name?: string }
+  ) {
+    const wildcardDowns = this.ctx.getWebSockets('down:*')
+    for (const down of wildcardDowns) {
+      try {
+        if (event === 'upstream_error') {
+          down.send(
+            JSON.stringify({
+              id: upstreamId,
+              event: 'upstream_error',
+              error: errorInfo,
+            } satisfies MultiplexedErrorMessage)
+          )
+        } else if (event === 'upstream_closed') {
+          down.send(JSON.stringify({ id: upstreamId, event: 'upstream_closed' } satisfies MultiplexedClosedMessage))
+        } else {
+          down.send(JSON.stringify({ id: upstreamId, event: 'upstream_connected' } satisfies MultiplexedConnectedMessage))
+        }
       } catch {}
     }
   }
