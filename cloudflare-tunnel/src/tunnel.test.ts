@@ -214,6 +214,37 @@ describe.concurrent('Tunnel WebSocket', () => {
     client2.close()
   })
 
+  test('client can send initialMessage on connection', async () => {
+    const tunnelId = getTunnelId()
+
+    const upstream = new WebSocket(`${WS_URL}/upstream?id=${tunnelId}`)
+    await new Promise((resolve, reject) => {
+      upstream.on('open', resolve)
+      upstream.on('error', reject)
+    })
+
+    const upstreamMessages: string[] = []
+    upstream.on('message', (data) => {
+      upstreamMessages.push(data.toString())
+    })
+
+    const initialMessage = JSON.stringify({ type: 'handshake', clientId: '123' })
+    const client = new WebSocket(
+      `${WS_URL}/downstream?id=${tunnelId}&initialMessage=${encodeURIComponent(initialMessage)}`
+    )
+    await new Promise((resolve, reject) => {
+      client.on('open', resolve)
+      client.on('error', reject)
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 200))
+
+    expect(upstreamMessages).toContain(initialMessage)
+
+    upstream.close()
+    client.close()
+  })
+
   test('client connection fails when no upstream is connected', async () => {
     const tunnelId = getTunnelId()
 

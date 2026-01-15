@@ -170,6 +170,18 @@ export class Tunnel {
         ids,
         multiplexed: isMultiplexer,
       } satisfies Attachment)
+
+      const initialMessage = url.searchParams.get('initialMessage')
+      if (initialMessage) {
+        for (const id of availableIds) {
+          const ups = this.ctx.getWebSockets(`up:${id}`)
+          for (const up of ups) {
+            try {
+              up.send(initialMessage)
+            } catch {}
+          }
+        }
+      }
     }
 
     return addCors(new Response(null, { status: 101, webSocket: client }))
