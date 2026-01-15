@@ -47,6 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
         <Links />
         <script defer src='https://assets.onedollarstats.com/stonks.js'></script>
+        <script async src='https://cdn.seline.com/seline.js' data-token='e8bd76517fea591'></script>
       </head>
       <body className='h-full flex flex-col grow dark:bg-root-background '>
         {children}
