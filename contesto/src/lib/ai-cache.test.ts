@@ -16,7 +16,7 @@ describe(
       const middleware = createAiCacheMiddleware({})
 
       const model = wrapLanguageModel({
-        model: openai('gpt-4o-mini'),
+        model: openai('gpt-5-mini'),
         middleware: [middleware],
       })
       const res = streamText({
@@ -35,7 +35,7 @@ describe(
       const middleware = createAiCacheMiddleware({})
 
       const model = wrapLanguageModel({
-        model: openai('gpt-4o-mini'),
+        model: openai('gpt-5-mini'),
         middleware: [middleware],
       })
 
@@ -57,7 +57,7 @@ describe(
       })
 
       const model = wrapLanguageModel({
-        model: openai('gpt-4o-mini'),
+        model: openai('gpt-5-mini'),
         middleware: [middleware],
       })
 
@@ -91,7 +91,7 @@ describe(
       const middleware = createAiCacheMiddleware({})
 
       const model = wrapLanguageModel({
-        model: openai('gpt-4o-mini'),
+        model: openai('gpt-5-mini'),
         middleware: [middleware],
       })
 
