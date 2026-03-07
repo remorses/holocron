@@ -1241,7 +1241,7 @@ async function generateAndSaveChatTitle(params: {
   if (textMessages.trim()) {
     try {
       const { object } = await generateObject({
-        model: openai('gpt-4o-mini'),
+        model: openai('gpt-5-mini'),
         schema: z.object({
           title: z.string().describe('A short, descriptive title for the changes, 2-6 words.'),
           description: z

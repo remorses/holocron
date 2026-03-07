@@ -11,7 +11,7 @@ describe('process-chat', () => {
     const middleware = createAiCacheMiddleware({})
 
     const model = wrapLanguageModel({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5-mini'),
       middleware: [middleware],
     })
 
@@ -62,7 +62,7 @@ describe('process-chat', () => {
     const middleware = createAiCacheMiddleware({})
 
     const model = wrapLanguageModel({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5-mini'),
       middleware: [middleware],
     })
 
@@ -126,7 +126,7 @@ describe('process-chat', () => {
     const middleware = createAiCacheMiddleware({})
 
     const model = wrapLanguageModel({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5-mini'),
       middleware: [middleware],
     })
 
@@ -190,7 +190,7 @@ describe('process-chat', () => {
     const middleware = createAiCacheMiddleware({})
 
     const model = wrapLanguageModel({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5-mini'),
       middleware: [middleware],
     })
 
@@ -259,7 +259,7 @@ describe('process-chat', () => {
     const middleware = createAiCacheMiddleware({})
 
     const model = wrapLanguageModel({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5-mini'),
       middleware: [middleware],
     })
 
