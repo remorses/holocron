@@ -18,14 +18,8 @@
       "pattern": "fumabase.com/_tunnel/*",
       "zone_name": "fumabase.com",
     },
-    {
-      "pattern": "unframer.co/_tunnel/*",
-      "zone_name": "unframer.co",
-    },
-    {
-      "pattern": "mcp.unframer.co/_tunnel/*",
-      "zone_name": "unframer.co",
-    },
+    // TODO: deploy this to prod after deploying MCP worker to prod (pnpm deployment:prod)
+    // unframer.co/_tunnel/* and mcp.unframer.co/_tunnel/* moved to the MCP worker (plugin-mcp)
     {
       "pattern": "opentui.net/_tunnel/*",
       "zone_name": "opentui.net",
@@ -49,14 +43,8 @@
           "pattern": "preview.holocron.so/_tunnel/*",
           "zone_name": "holocron.so",
         },
-        {
-          "pattern": "mcp.preview.unframer.co/_tunnel/*",
-          "zone_name": "unframer.co",
-        },
-        {
-          "pattern": "preview.unframer.co/_tunnel/*",
-          "zone_name": "unframer.co",
-        },
+        // mcp.preview.unframer.co/_tunnel/* and preview.unframer.co/_tunnel/*
+        // moved to the MCP worker (plugin-mcp)
         {
           "pattern": "preview.opentui.net/_tunnel/*",
           "zone_name": "opentui.net",
