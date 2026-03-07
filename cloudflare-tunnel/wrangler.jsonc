@@ -18,8 +18,9 @@
       "pattern": "fumabase.com/_tunnel/*",
       "zone_name": "fumabase.com",
     },
-    // TODO: deploy this to prod after deploying MCP worker to prod (pnpm deployment:prod)
     // unframer.co/_tunnel/* and mcp.unframer.co/_tunnel/* moved to the MCP worker (plugin-mcp)
+    // Deploy this to prod FIRST (step 1), then deploy MCP worker (step 2)
+    // Command: cd /Users/morse/Documents/GitHub/fumabase/cloudflare-tunnel && pnpm deployment:prod
     {
       "pattern": "opentui.net/_tunnel/*",
       "zone_name": "opentui.net",
