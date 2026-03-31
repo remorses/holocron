@@ -383,8 +383,11 @@ const realChatExamples: Record<string, ModelMessage[]> = {
           toolCallId: 'call_1',
           toolName: 'read_file',
           output: {
-            content:
-              '{\n  "name": "my-project",\n  "scripts": {\n    "dev": "vite",\n    "build": "vite build",\n    "test": "vitest",\n    "lint": "eslint ."\n  }\n}',
+            type: 'json',
+            value: {
+              content:
+                '{\n  "name": "my-project",\n  "scripts": {\n    "dev": "vite",\n    "build": "vite build",\n    "test": "vitest",\n    "lint": "eslint ."\n  }\n}',
+            },
           },
         },
       ],
@@ -428,9 +431,12 @@ const realChatExamples: Record<string, ModelMessage[]> = {
           toolCallId: 'call_1',
           toolName: 'write_file',
           output: {
-            success: true,
-            path: './README.md',
-            size: 156,
+            type: 'json',
+            value: {
+              success: true,
+              path: './README.md',
+              size: 156,
+            },
           },
         },
       ],
@@ -473,32 +479,35 @@ const realChatExamples: Record<string, ModelMessage[]> = {
           toolCallId: 'call_1',
           toolName: 'list_directory',
           output: {
-            files: [
-              {
-                name: 'index.ts',
-                type: 'file',
-                size: 1250,
-                modified: '2024-01-15T10:30:00Z',
-              },
-              {
-                name: 'components',
-                type: 'directory',
-                size: 4096,
-                modified: '2024-01-15T09:15:00Z',
-              },
-              {
-                name: 'utils.ts',
-                type: 'file',
-                size: 890,
-                modified: '2024-01-14T16:20:00Z',
-              },
-              {
-                name: 'types.ts',
-                type: 'file',
-                size: 456,
-                modified: '2024-01-14T14:45:00Z',
-              },
-            ],
+            type: 'json',
+            value: {
+              files: [
+                {
+                  name: 'index.ts',
+                  type: 'file',
+                  size: 1250,
+                  modified: '2024-01-15T10:30:00Z',
+                },
+                {
+                  name: 'components',
+                  type: 'directory',
+                  size: 4096,
+                  modified: '2024-01-15T09:15:00Z',
+                },
+                {
+                  name: 'utils.ts',
+                  type: 'file',
+                  size: 890,
+                  modified: '2024-01-14T16:20:00Z',
+                },
+                {
+                  name: 'types.ts',
+                  type: 'file',
+                  size: 456,
+                  modified: '2024-01-14T14:45:00Z',
+                },
+              ],
+            },
           },
         },
       ],
@@ -540,9 +549,12 @@ const realChatExamples: Record<string, ModelMessage[]> = {
           toolCallId: 'call_1',
           toolName: 'execute_command',
           output: {
-            stdout: 'M  src/index.ts\nA  src/new-feature.ts\n?? temp.log',
-            stderr: '',
-            exit_code: 0,
+            type: 'json',
+            value: {
+              stdout: 'M  src/index.ts\nA  src/new-feature.ts\n?? temp.log',
+              stderr: '',
+              exit_code: 0,
+            },
           },
         },
       ],

@@ -597,22 +597,25 @@ export function createSampleChatExample(): ModelMessage[] {
           toolCallId: 'call_1',
           toolName: 'search_web',
           output: {
-            results: [
-              {
-                title: 'Breakthrough in Multimodal AI Understanding',
-                url: 'https://example.com/ai-multimodal',
-                snippet:
-                  'Researchers have developed new architectures that seamlessly integrate text, image, and audio processing...',
-              },
-              {
-                title: 'Language Models Show Improved Reasoning',
-                url: 'https://example.com/llm-reasoning',
-                snippet:
-                  'Recent studies demonstrate significant improvements in logical reasoning and mathematical problem solving...',
-              },
-            ],
-            total_count: 150,
-          } as any,
+            type: 'json',
+            value: {
+              results: [
+                {
+                  title: 'Breakthrough in Multimodal AI Understanding',
+                  url: 'https://example.com/ai-multimodal',
+                  snippet:
+                    'Researchers have developed new architectures that seamlessly integrate text, image, and audio processing...',
+                },
+                {
+                  title: 'Language Models Show Improved Reasoning',
+                  url: 'https://example.com/llm-reasoning',
+                  snippet:
+                    'Recent studies demonstrate significant improvements in logical reasoning and mathematical problem solving...',
+                },
+              ],
+              total_count: 150,
+            },
+          },
         },
       ],
     },
