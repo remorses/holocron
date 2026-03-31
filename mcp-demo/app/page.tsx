@@ -1,5 +1,5 @@
 import { MCPServerPage } from 'fumadocs-mcp/src'
-import type { Tool, CoreMessage } from 'fumadocs-mcp/src'
+import type { Tool, ModelMessage } from 'fumadocs-mcp/src'
 import { Chat } from './chat'
 
 // Real MCP server information
@@ -352,7 +352,7 @@ const realMCPTools: Tool[] = [
 ]
 
 // Real chat examples showing actual MCP tool usage
-const realChatExamples: Record<string, CoreMessage[]> = {
+const realChatExamples: Record<string, ModelMessage[]> = {
   read_file: [
     {
       role: 'user',
@@ -369,7 +369,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'read_file',
-          args: {
+          input: {
             path: './package.json',
           },
         },
@@ -382,7 +382,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-result',
           toolCallId: 'call_1',
           toolName: 'read_file',
-          result: {
+          output: {
             content:
               '{\n  "name": "my-project",\n  "scripts": {\n    "dev": "vite",\n    "build": "vite build",\n    "test": "vitest",\n    "lint": "eslint ."\n  }\n}',
           },
@@ -412,7 +412,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'write_file',
-          args: {
+          input: {
             path: './README.md',
             content:
               '# My Project\n\nA brief description of what this project does.\n\n## Installation\n\n```bash\nnpm install\n```\n\n## Usage\n\n```bash\nnpm run dev\n```\n\n## Contributing\n\nPull requests are welcome!',
@@ -427,7 +427,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-result',
           toolCallId: 'call_1',
           toolName: 'write_file',
-          result: {
+          output: {
             success: true,
             path: './README.md',
             size: 156,
@@ -458,7 +458,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'list_directory',
-          args: {
+          input: {
             path: './src',
             detailed: true,
           },
@@ -472,7 +472,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-result',
           toolCallId: 'call_1',
           toolName: 'list_directory',
-          result: {
+          output: {
             files: [
               {
                 name: 'index.ts',
@@ -526,7 +526,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'execute_command',
-          args: {
+          input: {
             command: 'git status --porcelain',
           },
         },
@@ -539,7 +539,7 @@ const realChatExamples: Record<string, CoreMessage[]> = {
           type: 'tool-result',
           toolCallId: 'call_1',
           toolName: 'execute_command',
-          result: {
+          output: {
             stdout: 'M  src/index.ts\nA  src/new-feature.ts\n?? temp.log',
             stderr: '',
             exit_code: 0,

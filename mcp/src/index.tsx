@@ -6,7 +6,7 @@ Tabs /**
  * similar to OpenAPI documentation but specifically for MCP tools.
  */
 export type { Tool } from '@modelcontextprotocol/sdk/types.js'
-export type { CoreMessage } from 'ai'
+export type { ModelMessage } from 'ai'
 export { Chat } from './chat'
 
 import { type ReactNode } from 'react'
@@ -14,7 +14,7 @@ import { Schema } from 'fumadocs-openapi/render/schema'
 import { getContext } from 'fumadocs-openapi/render/api-page'
 import { processDocument } from 'fumadocs-openapi/utils/process-document'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 import type { RenderContext } from 'fumadocs-openapi/types'
 import { heading } from 'fumadocs-openapi/render/heading'
 import { Markdown } from 'fumadocs-openapi/render/markdown'
@@ -46,7 +46,7 @@ export interface MCPPageProps {
   /**
    * Custom tool example for chat demonstration
    */
-  chatExample?: CoreMessage[]
+  chatExample?: ModelMessage[]
 
   /**
    * Custom context for rendering
@@ -94,7 +94,7 @@ export interface MCPServerPageProps {
   /**
    * Custom tool examples for chat demonstrations
    */
-  toolExamples?: Record<string, CoreMessage[]>
+  toolExamples?: Record<string, ModelMessage[]>
 
   /**
    * Custom context for rendering
@@ -126,7 +126,7 @@ export interface MCPToolProps {
   /**
    * Chat messages example for this tool
    */
-  chatExample?: CoreMessage[]
+  chatExample?: ModelMessage[]
 
   /**
    * Whether to show the playground
@@ -564,7 +564,7 @@ export const sampleTools = {
 /**
  * Utility function to create a sample chat example
  */
-export function createSampleChatExample(): CoreMessage[] {
+export function createSampleChatExample(): ModelMessage[] {
   return [
     {
       role: 'user',

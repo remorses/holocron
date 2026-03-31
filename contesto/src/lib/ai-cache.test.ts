@@ -27,7 +27,7 @@ describe(
       await res.consumeStream()
       const text = await res.text
       expect(text).toMatchInlineSnapshot(
-        `"Once in a quiet village, a little girl named Mia found a tiny, glowing seed in the forest. She planted it in her garden, and overnight, a magnificent tree grew, its leaves shimmering like stars. The villagers gathered, awed by its beauty. Each night, the tree whispered secrets of the universe to Mia. She shared these stories, filling the village with wonder and unity. From then on, they celebrated the tree, thankful for its magic and the bonds it created among them."`,
+        `"Lina found a small paper boat on the windowsill and set it in a puddle after the rain. She watched it drift past fallen leaves and a bright yellow dandelion. A gentle breeze nudged the boat toward the garden gate, where a kind neighbor scooped it up and smiled. Lina waved, feeling like the whole world had made room for one tiny adventure."`,
       )
     })
 
@@ -75,16 +75,16 @@ describe(
           'Generate information about a software engineer named John who is 30 years old, very long one with super long names',
       })
       expect(stableString(params)).toMatchInlineSnapshot(
-        `"{"prompt":[{"content":[{"text":"Generate information about a software engineer named John who is 30 years old, very long one with super long names","type":"text"}],"role":"user"}],"responseFormat":{"schema":{"$schema":"http://json-schema.org/draft-07/schema#","additionalProperties":false,"properties":{"age":{"type":"number"},"name":{"type":"string"},"occupation":{"type":"string"}},"required":["name","age","occupation"],"type":"object"},"type":"json"},"temperature":1}"`,
+        `"{"headers":{"user-agent":"ai/6.0.142"},"prompt":[{"content":[{"text":"Generate information about a software engineer named John who is 30 years old, very long one with super long names","type":"text"}],"role":"user"}],"responseFormat":{"schema":{"$schema":"http://json-schema.org/draft-07/schema#","additionalProperties":false,"properties":{"age":{"type":"number"},"name":{"type":"string"},"occupation":{"type":"string"}},"required":["name","age","occupation"],"type":"object"},"type":"json"},"temperature":1}"`,
       )
 
       expect(result.object).toMatchInlineSnapshot(`
-              {
-                "age": 30,
-                "name": "Johnathan Alexander Prescott",
-                "occupation": "Senior Software Engineer specializing in Full-Stack Development and Artificial Intelligence Solutions with over a decade of experience in building scalable web applications and intricate backend architectures.",
-              }
-            `)
+        {
+          "age": 30,
+          "name": "John Alexander Benjamin Christopher Daniel Edward Frederick Gregory Harrison Ignatius Jeremiah Konstantin Leopold Montgomery Nathaniel Oliver Percival Quentin Reginald Sebastian Thaddeus Ulysses Victor Winston Xavier Yves Zachary-Alexei-Balthazar-Cassius-Donovan-Ezekiel-Fitzgerald-Galileo-Hamilton-Ibrahim-Joaquin-Kai-Laurent-Marian-Nikolai-Orlando-Peregrine-Quincy-Raffaello-Salvatore-Theodore-Ulrich-Vladimir-Willoughby-Xander-Yorick-Zadkiel",
+          "occupation": "Software Engineer",
+        }
+      `)
     })
 
     it('should return cached result on second call', async () => {
@@ -113,7 +113,7 @@ describe(
 
       // Both results should be identical
       expect(result1.text).toBe(result2.text)
-      expect(result1.text).toMatchInlineSnapshot(`"2 + 2 equals 4."`)
+      expect(result1.text).toMatchInlineSnapshot(`"2 + 2 = 4"`)
     })
   },
   1000 * 10,

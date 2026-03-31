@@ -1,7 +1,7 @@
-import { LanguageModelV2, LanguageModelV2CallOptions, LanguageModelV2StreamPart } from '@ai-sdk/provider'
+import { LanguageModelV3, LanguageModelV3CallOptions, LanguageModelV3StreamPart } from '@ai-sdk/provider'
 
 interface TestProviderSettings {
-  model: LanguageModelV2
+  model: LanguageModelV3
   errorAfterCharacters?: number
   errorMessage?: string
 }
@@ -10,9 +10,9 @@ export function createTestProviderWithErrors(settings: TestProviderSettings): Te
   return new TestProviderWithErrors(settings)
 }
 
-export class TestProviderWithErrors implements LanguageModelV2 {
-  readonly specificationVersion = 'v2' as const
-  private model: LanguageModelV2
+export class TestProviderWithErrors implements LanguageModelV3 {
+  readonly specificationVersion = 'v3' as const
+  private model: LanguageModelV3
   private errorAfterCharacters: number
   private errorMessage: string
   private hasStreamedOnce: boolean = false
@@ -35,15 +35,15 @@ export class TestProviderWithErrors implements LanguageModelV2 {
     return this.model.supportedUrls
   }
 
-  doGenerate(options: LanguageModelV2CallOptions) {
+  doGenerate(options: LanguageModelV3CallOptions) {
     return this.model.doGenerate(options)
   }
 
-  async doStream(options: LanguageModelV2CallOptions) {
+  async doStream(options: LanguageModelV3CallOptions) {
     console.trace(`calling doStream`)
     const result = await this.model.doStream(options)
 
-    const wrappedStream = new ReadableStream<LanguageModelV2StreamPart>({
+    const wrappedStream = new ReadableStream<LanguageModelV3StreamPart>({
       start: async (controller) => {
         const reader = result.stream.getReader()
         let characterCount = 0
@@ -66,7 +66,7 @@ export class TestProviderWithErrors implements LanguageModelV2 {
             controller.enqueue(value)
 
             if (!this.hasStreamedOnce && characterCount >= this.errorAfterCharacters) {
-              const errorChunk: LanguageModelV2StreamPart = {
+              const errorChunk: LanguageModelV3StreamPart = {
                 type: 'error',
                 error: new Error(this.errorMessage),
               }

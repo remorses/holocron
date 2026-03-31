@@ -9,7 +9,7 @@ import { MCPPage, MCPTool, createSampleMCPTool, createSampleChatExample, sampleT
 import { getContext } from 'fumadocs-openapi/render/api-page'
 import { processDocument } from 'fumadocs-openapi/utils/process-document'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 
 /**
  * Example 1: Complete MCP Tool Page
@@ -41,7 +41,7 @@ export async function IndividualMCPToolExample() {
   const document = await processDocument(dummyDocument)
   const ctx = await getContext(document)
 
-  const chatExample: CoreMessage[] = [
+  const chatExample: ModelMessage[] = [
     {
       role: 'user',
       content: 'Can you read the contents of config.json?',
@@ -197,7 +197,7 @@ export async function CustomMCPToolExample() {
     },
   }
 
-  const customChatExample: CoreMessage[] = [
+  const customChatExample: ModelMessage[] = [
     {
       role: 'user',
       content: 'Send an email to john@example.com about the project update',
@@ -304,7 +304,7 @@ export async function MCPServerResponseExample() {
     },
   }
 
-  const serverChatExample: CoreMessage[] = [
+  const serverChatExample: ModelMessage[] = [
     {
       role: 'user',
       content: 'Create a README.md file with some basic content',

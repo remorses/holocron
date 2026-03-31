@@ -1,4 +1,3 @@
-import { LanguageModelV2ToolCall } from '@ai-sdk/provider'
 import { tool, ToolCallRepairFunction } from 'ai'
 import z from 'zod'
 

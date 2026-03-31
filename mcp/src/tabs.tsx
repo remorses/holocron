@@ -2,14 +2,14 @@
 
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 import { Chat } from './chat'
 
 export interface ChatExampleProps {
   /**
    * Chat messages to display
    */
-  messages: CoreMessage[]
+  messages: ModelMessage[]
 
   /**
    * Tool name for context
