@@ -8,7 +8,7 @@
 
 import './styles/globals.css'
 import React, { Fragment, type ReactNode } from 'react'
-import { Spiceflow, serveStatic } from 'spiceflow'
+import { Spiceflow, serveStatic, redirect } from 'spiceflow'
 import { Head } from 'spiceflow/react'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { mdxParse } from 'safe-mdx/parse'
@@ -160,10 +160,19 @@ export function createHolocronApp({
       )
     })
     .page('/*', async ({ params }) => {
-      const rawSlug = (params as Record<string, string>)['*'] || 'index'
+      const rawSlug = (params as Record<string, string>)['*'] || ''
       const slug = rawSlug === '' ? 'index' : rawSlug
 
-      const pageData = findPage(navigation, slug)
+      let pageData = findPage(navigation, slug)
+
+      // Root path with no index page → redirect to first page in navigation
+      if (!pageData && (slug === 'index' || slug === '')) {
+        const firstPage = navigation[0] ? findFirstPageInTab(navigation[0]) : undefined
+        if (firstPage) {
+          throw redirect(firstPage.href)
+        }
+      }
+
       if (!pageData) {
         return <div>Page not found: {slug}</div>
       }

@@ -3,6 +3,11 @@
 @import './editorial-prism.css';
 @custom-variant dark (@media (prefers-color-scheme: dark));
 
+/* Scan holocron's own components for Tailwind class usage — without this,
+   Tailwind v4 skips node_modules and no utility classes get generated. */
+@source "../components";
+@source "../app-factory.tsx";
+
 @plugin "@tailwindcss/typography";
 
 :root {
