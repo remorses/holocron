@@ -24,8 +24,6 @@ import {
   type ConfigNavTab,
   type ConfigNavGroup,
   type ConfigNavPageEntry,
-  normalizeNavigation,
-  isConfigNavGroup,
 } from '../config.ts'
 import {
   type Navigation,
@@ -128,9 +126,9 @@ export function syncNavigation({
     }
   }
 
-  // 4. Build enriched navigation from normalized config
-  const normalized = normalizeNavigation(config.navigation)
-  const navigation: Navigation = normalized.tabs.map((tab) => {
+  // 4. Build enriched navigation — config.navigation.tabs is already
+  // normalized by readConfig(), always an array of ConfigNavTab
+  const navigation: Navigation = config.navigation.tabs.map((tab) => {
     return enrichTab(tab)
   })
 

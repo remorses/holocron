@@ -1,66 +1,46 @@
 /**
- * Holocron config types + reader.
+ * Holocron config — normalized types + reader.
  *
- * Schema is ported from mintlify's schema.json — see holocron/schema.json
- * for the full JSON Schema reference.
+ * The docs.json schema (holocron/schema.json) has many union variants for
+ * navigation, logo, favicon, navbar, etc. We normalize everything inside
+ * readConfig() so consuming code never deals with unions — just clean,
+ * predictable types with exactly one shape per field.
  *
- * Supports two file names:
- *   1. holocron.jsonc  — our format (JSONC with comments)
- *   2. docs.json       — mintlify new format (drop-in compatible)
- *
- * Navigation schema: tabs contain groups, groups contain pages (strings
- * or nested groups). When no tabs are defined, the navigation is a flat
- * array of groups rendered under a single implicit tab.
- *
- * Types are kept close to docs.json so we minimize transformations.
+ * Supports two file names (first found wins):
+ *   1. holocron.jsonc — our format (JSONC with comments)
+ *   2. docs.json — mintlify format (drop-in compatible)
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
 
-/* ── Config types (close to docs.json / mintlify schema) ─────────────── */
+/* ── Normalized config types (no unions, always one shape) ───────────── */
 
 export type HolocronConfig = {
-  $schema?: string
   name: string
-  logo?: string | { light: string; dark: string; href?: string }
-  favicon?: string
-  colors?: {
+  logo: { light: string; dark: string; href?: string }
+  favicon: { light: string; dark: string }
+  colors: {
     primary: string
     light?: string
     dark?: string
   }
-  /** Navigation tree. Can be:
-   *  - Object with tabs, global anchors (docs.json format)
-   *  - Array of tabs (simplified)
-   *  - Array of groups (single implicit tab) */
-  navigation: ConfigNavigation | ConfigNavTab[] | ConfigNavGroup[]
-  /** Navbar — top header bar links and primary CTA button.
-   *  Replaces old topbarLinks / topbarCtaButton from mint.json. */
-  navbar?: {
-    links?: Array<{ label: string; href: string }>
-    primary?: { type?: 'button' | 'link'; label: string; href: string }
+  navigation: {
+    tabs: ConfigNavTab[]
+    anchors: ConfigAnchor[]
   }
-  /** Redirects from old paths to new destinations */
-  redirects?: Array<{ source: string; destination: string }>
-  /** Footer config */
-  footer?: {
-    socials?: Record<string, string>
+  navbar: {
+    links: Array<{ label: string; href: string }>
+    primary?: { label: string; href: string }
+  }
+  redirects: Array<{ source: string; destination: string; permanent?: boolean }>
+  footer: {
+    socials: Record<string, string>
   }
 }
 
-/** Navigation object (docs.json format) — contains tabs + global anchors */
-export type ConfigNavigation = {
-  tabs?: ConfigNavTab[]
-  global?: {
-    /** Anchors — persistent links rendered as tabs in the tab bar.
-     *  Can point to external URLs (GitHub, blog, etc). */
-    anchors?: ConfigAnchor[]
-  }
-}
-
-/** An anchor — a persistent link shown in the tab bar.
- *  Uses { anchor, href, icon? } matching docs.json schema. */
+/** An anchor — persistent link rendered as a tab in the tab bar.
+ *  Can point to external URLs (GitHub, blog, etc). */
 export type ConfigAnchor = {
   anchor: string
   href: string
@@ -83,88 +63,37 @@ export type ConfigNavGroup = {
 /** A page entry is either a slug string or a nested group */
 export type ConfigNavPageEntry = string | ConfigNavGroup
 
-/* ── Type guards ─────────────────────────────────────────────────────── */
-
-export function isConfigNavTab(entry: ConfigNavTab | ConfigNavGroup): entry is ConfigNavTab {
-  return 'tab' in entry && 'groups' in entry
-}
+/* ── Type guard (only one still needed, for page entries) ────────────── */
 
 export function isConfigNavGroup(entry: ConfigNavPageEntry): entry is ConfigNavGroup {
   return typeof entry === 'object' && 'group' in entry
 }
 
-function isConfigNavigation(nav: unknown): nav is ConfigNavigation {
-  return typeof nav === 'object' && nav !== null && !Array.isArray(nav)
-}
-
-/* ── Normalize navigation to tabs + anchors ──────────────────────────── */
-
-export type NormalizedNavigation = {
-  tabs: ConfigNavTab[]
-  anchors: ConfigAnchor[]
-}
-
-/**
- * Normalize the various navigation formats into a flat list of tabs + anchors.
- *
- * Supports:
- *   - Object with tabs + global.anchors (docs.json format)
- *   - Array of ConfigNavTab[]
- *   - Array of ConfigNavGroup[] (single implicit tab)
- */
-export function normalizeNavigation(nav: HolocronConfig['navigation']): NormalizedNavigation {
-  // docs.json object format: { tabs: [...], global: { anchors: [...] } }
-  if (isConfigNavigation(nav)) {
-    return {
-      tabs: nav.tabs ?? [],
-      anchors: nav.global?.anchors ?? [],
-    }
-  }
-
-  // Array format — check if it's tabs or groups
-  if (!Array.isArray(nav) || nav.length === 0) {
-    return { tabs: [], anchors: [] }
-  }
-
-  const first = nav[0]
-  if (first && 'tab' in first && 'groups' in first) {
-    return { tabs: nav as ConfigNavTab[], anchors: [] }
-  }
-
-  // Flat groups — wrap in a single implicit tab
-  return {
-    tabs: [{ tab: '', groups: nav as ConfigNavGroup[] }],
-    anchors: [],
-  }
-}
-
 /* ── JSONC parser (strips comments + trailing commas) ───────────────── */
 
 function stripJsonc(text: string): string {
-  // Remove single-line comments (// ...)
   let result = text.replace(/\/\/.*$/gm, '')
-  // Remove multi-line comments (/* ... */)
   result = result.replace(/\/\*[\s\S]*?\*\//g, '')
-  // Remove trailing commas before } or ]
   result = result.replace(/,\s*([\]}])/g, '$1')
   return result
 }
 
-/* ── Config file reader ──────────────────────────────────────────────── */
+/* ── Config reader + normalizer ──────────────────────────────────────── */
 
 const CONFIG_FILE_NAMES = ['holocron.jsonc', 'docs.json'] as const
 
 /**
- * Find and read the config file from the given root directory.
- * Tries holocron.jsonc first, then docs.json.
+ * Read and normalize the config file. All docs.json union variants are
+ * collapsed into a single canonical shape so consumers never deal with
+ * type discrimination.
  */
 export function readConfig({ root }: { root: string }): HolocronConfig {
   for (const name of CONFIG_FILE_NAMES) {
     const filePath = path.join(root, name)
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      const parsed = JSON.parse(stripJsonc(raw)) as HolocronConfig
-      return parsed
+      const parsed = JSON.parse(stripJsonc(raw))
+      return normalize(parsed)
     }
   }
   throw new Error(
@@ -182,3 +111,240 @@ export function resolveConfigPath({ root }: { root: string }): string | undefine
   }
   return undefined
 }
+
+/* ── Normalization from raw docs.json → HolocronConfig ───────────────── */
+
+function normalize(raw: Record<string, unknown>): HolocronConfig {
+  return {
+    name: (raw.name as string) || 'Documentation',
+    logo: normalizeLogo(raw.logo),
+    favicon: normalizeFavicon(raw.favicon),
+    colors: normalizeColors(raw.colors),
+    navigation: normalizeNavigation(raw.navigation),
+    navbar: normalizeNavbar(raw.navbar),
+    redirects: normalizeRedirects(raw.redirects),
+    footer: normalizeFooter(raw.footer),
+  }
+}
+
+/** logo: string | { light, dark, href? } → { light, dark, href? } */
+function normalizeLogo(raw: unknown): HolocronConfig['logo'] {
+  if (!raw) {
+    return { light: '', dark: '' }
+  }
+  if (typeof raw === 'string') {
+    return { light: raw, dark: raw }
+  }
+  const obj = raw as Record<string, string>
+  return {
+    light: obj.light || '',
+    dark: obj.dark || obj.light || '',
+    href: obj.href,
+  }
+}
+
+/** favicon: string | { light, dark } → { light, dark } */
+function normalizeFavicon(raw: unknown): HolocronConfig['favicon'] {
+  if (!raw) {
+    return { light: '', dark: '' }
+  }
+  if (typeof raw === 'string') {
+    return { light: raw, dark: raw }
+  }
+  const obj = raw as Record<string, string>
+  return {
+    light: obj.light || '',
+    dark: obj.dark || obj.light || '',
+  }
+}
+
+function normalizeColors(raw: unknown): HolocronConfig['colors'] {
+  if (!raw || typeof raw !== 'object') {
+    return { primary: '#000000' }
+  }
+  const obj = raw as Record<string, string>
+  return {
+    primary: obj.primary || '#000000',
+    light: obj.light,
+    dark: obj.dark,
+  }
+}
+
+/**
+ * navigation can be:
+ *   - Object { tabs, global: { anchors }, anchors }  (docs.json format)
+ *   - Object { groups }                               (docs.json root groups)
+ *   - Object { pages }                                (docs.json root pages)
+ *   - Array of tabs [{ tab, groups }]
+ *   - Array of groups [{ group, pages }]
+ *
+ * Tabs themselves can be:
+ *   - { tab, groups }  → content tab with sidebar groups
+ *   - { tab, href }    → link-only tab (converted to anchor)
+ *   - { tab, pages }   → tab with pages but no groups wrapper
+ *
+ * Always normalize to { tabs: ConfigNavTab[], anchors: ConfigAnchor[] }
+ */
+function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
+  if (!raw) {
+    return { tabs: [], anchors: [] }
+  }
+
+  // Array format
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) {
+      return { tabs: [], anchors: [] }
+    }
+    const first = raw[0]
+    // Array of tabs
+    if (first && typeof first === 'object' && 'tab' in first) {
+      return normalizeTabsAndAnchors(raw as Array<Record<string, unknown>>, [])
+    }
+    // Array of groups → wrap in single implicit tab
+    return {
+      tabs: [{ tab: '', groups: raw as ConfigNavGroup[] }],
+      anchors: [],
+    }
+  }
+
+  // Object format
+  if (typeof raw === 'object') {
+    const obj = raw as Record<string, unknown>
+
+    // Collect anchors from both global.anchors and root anchors
+    const globalObj = obj.global as Record<string, unknown> | undefined
+    const globalAnchors = (globalObj?.anchors ?? []) as ConfigAnchor[]
+    const rootAnchors = (obj.anchors ?? []) as ConfigAnchor[]
+    const allAnchors = [...globalAnchors, ...rootAnchors]
+
+    // Has explicit tabs
+    if (obj.tabs) {
+      return normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, allAnchors)
+    }
+
+    // Root groups (no tabs wrapper)
+    if (obj.groups) {
+      return {
+        tabs: [{ tab: '', groups: obj.groups as ConfigNavGroup[] }],
+        anchors: allAnchors,
+      }
+    }
+
+    // Root pages (no groups wrapper)
+    if (obj.pages) {
+      return {
+        tabs: [{ tab: '', groups: [{ group: '', pages: obj.pages as ConfigNavPageEntry[] }] }],
+        anchors: allAnchors,
+      }
+    }
+
+    return { tabs: [], anchors: allAnchors }
+  }
+
+  return { tabs: [], anchors: [] }
+}
+
+/**
+ * Normalize raw tab objects into ConfigNavTab[] + extra anchors.
+ * Handles tab variants:
+ *   { tab, groups }  → kept as ConfigNavTab
+ *   { tab, href }    → converted to anchor (link-only tab)
+ *   { tab, pages }   → wrapped in a single group
+ */
+function normalizeTabsAndAnchors(
+  rawTabs: Array<Record<string, unknown>>,
+  existingAnchors: ConfigAnchor[],
+): HolocronConfig['navigation'] {
+  const tabs: ConfigNavTab[] = []
+  const anchors: ConfigAnchor[] = [...existingAnchors]
+
+  for (const raw of rawTabs) {
+    const name = (raw.tab as string) || ''
+
+    // Link-only tab → convert to anchor
+    if (raw.href && !raw.groups && !raw.pages) {
+      anchors.push({ anchor: name, href: raw.href as string, icon: raw.icon as string | undefined })
+      continue
+    }
+
+    // Tab with groups → standard content tab
+    if (raw.groups) {
+      tabs.push({ tab: name, groups: raw.groups as ConfigNavGroup[] })
+      continue
+    }
+
+    // Tab with pages but no groups → wrap in single unnamed group
+    if (raw.pages) {
+      tabs.push({ tab: name, groups: [{ group: '', pages: raw.pages as ConfigNavPageEntry[] }] })
+      continue
+    }
+
+    // Tab with no content — skip
+  }
+
+  return { tabs, anchors }
+}
+
+/** Known type → display label mapping for navbar items */
+const TYPE_LABELS: Record<string, string> = {
+  github: 'GitHub',
+  discord: 'Discord',
+  slack: 'Slack',
+  button: 'Button',
+  link: 'Link',
+}
+
+/**
+ * navbar can be:
+ *   - { links: [{ label, href } | { type: "github", href }], primary: { label, href } | { type: "github", href } }
+ *
+ * Always normalize to { label, href }. Derive label from type if missing.
+ */
+function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
+  if (!raw || typeof raw !== 'object') {
+    return { links: [] }
+  }
+  const obj = raw as Record<string, unknown>
+
+  const rawLinks = (obj.links ?? []) as Array<Record<string, string>>
+  const links = rawLinks.map((link) => {
+    return {
+      label: link.label || TYPE_LABELS[link.type || ''] || link.type || '',
+      href: link.href || link.url || '',
+    }
+  })
+
+  const rawPrimary = obj.primary as Record<string, string> | undefined
+  const primary = rawPrimary
+    ? {
+        label: rawPrimary.label || TYPE_LABELS[rawPrimary.type || ''] || rawPrimary.type || 'Button',
+        href: rawPrimary.href || rawPrimary.url || '',
+      }
+    : undefined
+
+  return { links, primary }
+}
+
+function normalizeRedirects(raw: unknown): HolocronConfig['redirects'] {
+  if (!Array.isArray(raw)) {
+    return []
+  }
+  return raw.map((r: Record<string, unknown>) => {
+    return {
+      source: (r.source as string) || '',
+      destination: (r.destination as string) || '',
+      permanent: r.permanent as boolean | undefined,
+    }
+  })
+}
+
+function normalizeFooter(raw: unknown): HolocronConfig['footer'] {
+  if (!raw || typeof raw !== 'object') {
+    return { socials: {} }
+  }
+  const obj = raw as Record<string, unknown>
+  const socials = (obj.socials ?? {}) as Record<string, string>
+  return { socials }
+}
+
+

@@ -39,10 +39,13 @@ import {
 } from './components/markdown.tsx'
 import { slugify, extractText } from './components/toc-tree.ts'
 import { buildImageManifest } from './lib/image-cache.ts'
-import { normalizeNavigation, type HolocronConfig } from './config.ts'
+import type { HolocronConfig } from './config.ts'
 import {
   type Navigation,
-  getTabs,
+  type NavTab,
+  type NavPage,
+  isNavPage,
+  isNavGroup,
   getActiveGroups,
   findPage,
   collectAllPages,
@@ -117,12 +120,8 @@ export function createHolocronApp({
 }) {
   const cacheDir = path.resolve(distDir, '.cache/images')
 
-  // Build tab items for the tab bar from navigation tabs + global anchors.
-  // Navigation tabs link to their first page; anchors are rendered as
-  // additional tab items (can be external URLs like GitHub, Changelog).
-  const normalized = normalizeNavigation(config.navigation)
-  const navTabs = getTabs(navigation)
-  const navTabItems: TabItem[] = navTabs
+  // Build tab items: navigation tabs + anchors (all normalized, no unions)
+  const navTabItems: TabItem[] = navigation
     .filter((t) => {
       return t.tab !== ''
     })
@@ -133,29 +132,18 @@ export function createHolocronApp({
         href: firstPage?.href || '/',
       }
     })
-  const anchorItems: TabItem[] = normalized.anchors.map((a) => {
+  const anchorItems: TabItem[] = config.navigation.anchors.map((a) => {
     return { label: a.anchor, href: a.href }
   })
   const tabItems: TabItem[] = [...navTabItems, ...anchorItems]
 
   // navbar.links → header links (top-right, in logo bar)
-  const headerLinks: HeaderLink[] = (config.navbar?.links ?? []).map((link) => {
-    return {
-      href: link.href,
-      label: link.label,
-    }
+  const headerLinks: HeaderLink[] = config.navbar.links.map((link) => {
+    return { href: link.href, label: link.label }
   })
 
-  // Resolve logo
-  const logoSrc = (() => {
-    if (!config.logo) {
-      return undefined
-    }
-    if (typeof config.logo === 'string') {
-      return config.logo
-    }
-    return config.logo.light
-  })()
+  // Logo — already normalized to { light, dark }
+  const logoSrc = config.logo.light || undefined
 
   return new Spiceflow()
     .use(serveStatic({ root: './public' }))
@@ -172,7 +160,7 @@ export function createHolocronApp({
               href='https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap'
               rel='stylesheet'
             />
-            {config.favicon && <link rel='icon' href={config.favicon} />}
+            {config.favicon.light && <link rel='icon' href={config.favicon.light} />}
             <Head.Title>{config.name}</Head.Title>
           </Head>
           <body>{children}</body>
@@ -373,11 +361,17 @@ async function loadMdxContent(loaders: PageLoaders, slug: string): Promise<strin
   return undefined
 }
 
-function findFirstPageInTab(tab: { groups: Array<{ pages: Array<unknown> }> }) {
+function findFirstPageInTab(tab: NavTab): NavPage | undefined {
   for (const group of tab.groups) {
     for (const entry of group.pages) {
-      if (entry && typeof entry === 'object' && 'href' in entry) {
-        return entry as { href: string }
+      if (isNavPage(entry)) {
+        return entry
+      }
+      if (isNavGroup(entry)) {
+        const found = findFirstPageInTab({ tab: '', groups: [entry] })
+        if (found) {
+          return found
+        }
       }
     }
   }

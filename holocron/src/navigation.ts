@@ -1,16 +1,15 @@
 /**
  * Enriched navigation tree types + utility functions.
  *
- * The enriched tree has the same shape as the docs.json config, but page
+ * The enriched tree has the same shape as the normalized config, but page
  * slug strings are replaced with NavPage objects containing parsed metadata
  * (title, headings, gitSha for cache invalidation).
  *
- * Utility functions operate on this tree directly — no intermediate types.
- * Functions like getTabs(), getActiveGroups(), findPage() take the tree as
- * input and extract what's needed for rendering.
+ * Navigation is always NavTab[] — normalization happens in readConfig(),
+ * so these functions never deal with union discrimination.
  */
 
-import type { FlatTocItem, TocTreeNode, VisualLevel } from './components/toc-tree.ts'
+import type { FlatTocItem, VisualLevel } from './components/toc-tree.ts'
 
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
@@ -47,8 +46,8 @@ export type NavHeading = {
   slug: string // anchor id
 }
 
-/** The full enriched navigation — either tabs or groups */
-export type Navigation = NavTab[] | NavGroup[]
+/** The full enriched navigation — always an array of tabs */
+export type Navigation = NavTab[]
 
 /* ── Type guards ─────────────────────────────────────────────────────── */
 
@@ -60,38 +59,18 @@ export function isNavGroup(entry: NavPageEntry): entry is NavGroup {
   return 'group' in entry
 }
 
-export function isNavTabArray(nav: Navigation): nav is NavTab[] {
-  const first = nav[0]
-  return nav.length > 0 && first !== undefined && 'tab' in first
-}
-
 /* ── Utility functions ──────────────────────────────────────────────── */
 
 /**
- * Get all tabs from the navigation. If the navigation is a flat array of
- * groups (no tabs), wraps them in a single implicit tab.
- */
-export function getTabs(nav: Navigation): NavTab[] {
-  if (isNavTabArray(nav)) {
-    return nav
-  }
-  // No explicit tabs — wrap all groups in a single implicit tab
-  return [{ tab: '', groups: nav }]
-}
-
-/**
  * Find the active tab based on the current URL path.
- * Matches by longest URL prefix — e.g. path "/api/overview" matches tab
- * with first page href "/api/..." over tab with href "/".
+ * Matches by longest URL prefix.
  */
 export function getActiveTab(nav: Navigation, pathname: string): NavTab {
-  const tabs = getTabs(nav)
-  if (tabs.length <= 1) {
-    return tabs[0] ?? { tab: '', groups: [] }
+  if (nav.length <= 1) {
+    return nav[0] ?? { tab: '', groups: [] }
   }
 
-  // For each tab, find the first page's href prefix
-  const tabsWithPrefix = tabs.map((tab) => {
+  const tabsWithPrefix = nav.map((tab) => {
     const firstPage = findFirstPage(tab.groups)
     const prefix = firstPage
       ? firstPage.href.split('/').slice(0, -1).join('/') || '/'
@@ -99,7 +78,6 @@ export function getActiveTab(nav: Navigation, pathname: string): NavTab {
     return { tab, prefix }
   })
 
-  // Sort by prefix length descending (longest match first)
   const sorted = tabsWithPrefix.sort((a, b) => {
     return b.prefix.length - a.prefix.length
   })
@@ -110,7 +88,7 @@ export function getActiveTab(nav: Navigation, pathname: string): NavTab {
     }
   }
 
-  return tabs[0] ?? { tab: '', groups: [] }
+  return nav[0] ?? { tab: '', groups: [] }
 }
 
 /**
@@ -121,11 +99,10 @@ export function getActiveGroups(nav: Navigation, pathname: string): NavGroup[] {
 }
 
 /**
- * Find a page by slug anywhere in the navigation tree. BFS traversal.
+ * Find a page by slug anywhere in the navigation tree.
  */
 export function findPage(nav: Navigation, slug: string): NavPage | undefined {
-  const tabs = getTabs(nav)
-  for (const tab of tabs) {
+  for (const tab of nav) {
     const found = findPageInGroups(tab.groups, slug)
     if (found) {
       return found
@@ -172,12 +149,10 @@ function findFirstPage(groups: NavGroup[]): NavPage | undefined {
 
 /**
  * Collect all NavPage objects from the navigation tree.
- * Useful for building search index, sitemap, etc.
  */
 export function collectAllPages(nav: Navigation): NavPage[] {
   const pages: NavPage[] = []
-  const tabs = getTabs(nav)
-  for (const tab of tabs) {
+  for (const tab of nav) {
     collectPagesFromGroups(tab.groups, pages)
   }
   return pages
@@ -197,7 +172,6 @@ function collectPagesFromGroups(groups: NavGroup[], out: NavPage[]): void {
 
 /**
  * Build a Map<slug, NavPage> from the cached navigation tree.
- * Used during sync to look up existing pages by slug for SHA comparison.
  */
 export function buildPageIndex(nav: Navigation): Map<string, NavPage> {
   const pages = collectAllPages(nav)
@@ -210,10 +184,6 @@ export function buildPageIndex(nav: Navigation): Map<string, NavPage> {
 
 /**
  * Flatten NavGroup[] into FlatTocItem[] for the sidebar component.
- *
- * Maps our docs.json-shaped types into the existing flat list format
- * used by TableOfContents. Groups become visual level 0, pages level 1
- * (or 0 if top-level), headings h2→level 1, h3→level 2, etc.
  */
 export function flattenForSidebar(groups: NavGroup[]): FlatTocItem[] {
   const result: FlatTocItem[] = []
@@ -231,18 +201,16 @@ export function flattenForSidebar(groups: NavGroup[]): FlatTocItem[] {
       const groupHref = `#group-${slugifyGroup(group.group)}`
       const visualLevel = Math.min(depth, 3) as VisualLevel
 
-      // Add group node
       result.push({
         label: group.group,
         href: groupHref,
-        type: 'page', // groups render like page-level items in the TOC
+        type: 'page',
         visualLevel,
         prefix: '',
         parentHref,
         pageHref: groupHref,
       })
 
-      // Walk entries inside this group
       for (const entry of group.pages) {
         if (isNavPage(entry)) {
           walkPage({ page: entry, depth: depth + 1, parentHref: groupHref })
@@ -274,7 +242,6 @@ export function flattenForSidebar(groups: NavGroup[]): FlatTocItem[] {
       pageHref: page.href,
     })
 
-    // Add headings as children
     for (const heading of page.headings) {
       const headingLevel = Math.min(depth + (heading.depth - 1), 3) as VisualLevel
       result.push({
