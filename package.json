@@ -2,14 +2,10 @@
     "name": "root",
     "private": true,
     "scripts": {
-        "test": "NODE_ENV=test vitest",
         "watch": "pnpm -r watch",
-        "build": "pnpm -r build",
-        "release": "pnpm build && changeset"
+        "build": "pnpm -r build"
     },
     "devDependencies": {
-        "@changesets/cli": "^2.30.0",
-        "prettier": "^3.8.1",
         "tsx": "^4.21.0",
         "typescript": "^6.0.2",
         "vite": "^8.0.3",
