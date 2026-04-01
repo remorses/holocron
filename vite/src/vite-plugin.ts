@@ -15,13 +15,13 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import url from 'node:url'
 import type { Plugin, PluginOption, ResolvedConfig } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
+import react from '@vitejs/plugin-react'
 
 export type HolocronPluginOptions = {
   /** Path to config file. Defaults to auto-discovery (holocron.jsonc, docs.json) */
@@ -32,6 +32,12 @@ export type HolocronPluginOptions = {
 
 const VIRTUAL_CONFIG = 'virtual:holocron-config'
 const RESOLVED_CONFIG = '\0' + VIRTUAL_CONFIG
+
+const VIRTUAL_MDX = 'virtual:holocron-mdx'
+const RESOLVED_MDX = '\0' + VIRTUAL_MDX
+
+const VIRTUAL_APP = 'virtual:holocron-app'
+const RESOLVED_APP = '\0' + VIRTUAL_APP
 
 /**
  * Workaround for Vite 7 + @vitejs/plugin-rsc: the built-in vite:asset load
@@ -64,11 +70,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let publicDirPath: string
   let distDirPath: string
 
-  const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-  const isDev = import.meta.url.endsWith('.ts')
-  const appEntry = isDev
-    ? path.resolve(__dirname, 'app.tsx')
-    : path.resolve(__dirname, '../src/app.tsx')
+  let hasUserReactPlugin = false
 
   const holocronPlugin: Plugin = {
     name: 'holocron',
@@ -78,6 +80,13 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       pagesDir = options.pagesDir
         ? path.resolve(root, options.pagesDir)
         : path.resolve(root, 'pages')
+
+      // Check if user already added a react plugin — skip ours if so
+      const allPlugins = (viteConfig.plugins || []) as unknown[]
+      hasUserReactPlugin = allPlugins.flat(Infinity).filter(Boolean).some((p) => {
+        const name = (p as { name?: string })?.name || ''
+        return name.startsWith('vite:react')
+      })
     },
 
     async configResolved(resolved: ResolvedConfig) {
@@ -108,13 +117,35 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (id === VIRTUAL_CONFIG) {
         return RESOLVED_CONFIG
       }
+      if (id === VIRTUAL_MDX) {
+        return RESOLVED_MDX
+      }
+      if (id === VIRTUAL_APP || id.endsWith('/' + VIRTUAL_APP)) {
+        return RESOLVED_APP
+      }
     },
 
     load(id) {
       if (id === RESOLVED_CONFIG) {
+        // Lightweight — no MDX content, safe for client bundle
         return [
           `export const config = ${JSON.stringify(config)}`,
           `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
+        ].join('\n')
+      }
+      if (id === RESOLVED_MDX) {
+        // Server-only — pre-processed MDX content keyed by slug
+        return `export default ${JSON.stringify(syncResult.mdxContent)}`
+      }
+      if (id === RESOLVED_APP) {
+        return [
+          `import { config, navigation } from '${VIRTUAL_CONFIG}'`,
+          `import mdxContent from '${VIRTUAL_MDX}'`,
+          `import { createHolocronApp } from '@holocron.so/vite/src/app-factory'`,
+          `export const app = createHolocronApp({ config, navigation, mdxContent })`,
+          // Auto-start the server in production (when import.meta.hot is not available).
+          // In dev mode, spiceflow's SSR middleware handles requests instead.
+          `if (!import.meta.hot) { app.listen(Number(process.env.PORT || 3000)) }`,
         ].join('\n')
       }
     },
@@ -152,8 +183,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   return [
     rawImportPlugin(),
     holocronPlugin,
-    spiceflowPlugin({ entry: appEntry }),
+    spiceflowPlugin({ entry: VIRTUAL_APP }),
     tsconfigPaths(),
     tailwindcss(),
+    // Include @vitejs/plugin-react by default unless the user already
+    // added their own (detected by plugin name starting with "vite:react").
+    ...(hasUserReactPlugin ? [] : [react()]),
   ]
 }
