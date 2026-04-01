@@ -1,0 +1,21 @@
+{
+    "name": "root",
+    "private": true,
+    "scripts": {
+        "test": "NODE_ENV=test vitest",
+        "watch": "pnpm -r watch",
+        "build": "pnpm -r build",
+        "release": "pnpm build && changeset"
+    },
+    "devDependencies": {
+        "@changesets/cli": "^2.30.0",
+        "prettier": "^3.8.1",
+        "tsx": "^4.21.0",
+        "typescript": "^6.0.2",
+        "vite": "^8.0.3",
+        "vitest": "^4.1.2"
+    },
+    "repository": "https://github.com/remorses/",
+    "author": "remorses <beats.by.morse@gmail.com>",
+    "license": ""
+}
