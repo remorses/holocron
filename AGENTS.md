@@ -44,3 +44,8 @@ MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on dis
 ## spiceflow
 
 holocron docs website generator uses spiceflow deeply. I am also the author of spiceflow so if there is any issues there and we need to change code there clearly say so and create a plan and present it to me. the spiceflow source code can be downloaded with chamber to be read, then you can use the kimaki cli to find the source code to modify after plan is approved
+
+
+## integration tests and example
+
+after you make changes to holocron vite you will have to run `pnpm build` again inside vite so that the example and integration tests can use the updated code from dist.
