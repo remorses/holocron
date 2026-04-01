@@ -1,0 +1,27 @@
+{
+  "name": "integration-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node dist/rsc/index.js",
+    "test-e2e": "playwright test",
+    "pretest-e2e-start": "rm -rf dist *.tsbuildinfo && pnpm build",
+    "test-e2e-start": "E2E_START=1 playwright test"
+  },
+  "dependencies": {
+    "@holocron.so/vite": "workspace:^",
+    "@playwright/test": "^1.50.1",
+    "@tailwindcss/vite": "^4.2.0",
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "spiceflow": "file:/Users/morse/Documents/GitHub/spiceflow-rsc/spiceflow",
+    "tailwindcss": "^4.2.0",
+    "vite": "^8.0.3",
+    "vite-tsconfig-paths": "^6.0.3"
+  }
+}
