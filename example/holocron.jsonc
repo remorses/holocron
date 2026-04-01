@@ -1,0 +1,12 @@
+{
+  "name": "Holocron Example",
+  "colors": {
+    "primary": "#6366f1"
+  },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["introduction", "quickstart"]
+    }
+  ]
+}

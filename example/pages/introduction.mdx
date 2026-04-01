@@ -1,0 +1,27 @@
+---
+title: Introduction
+description: Welcome to Holocron — a Mintlify drop-in replacement as a Vite plugin.
+---
+
+## What is Holocron?
+
+Holocron turns your MDX files into a beautiful documentation site. Point your `vite.config.ts` at the plugin and start writing docs.
+
+## Features
+
+- **MDX support** — write documentation in Markdown with embedded JSX components
+- **Mintlify compatible** — drop-in replacement for `docs.json` configuration
+- **Vite powered** — fast dev server with hot module replacement
+- **React Server Components** — zero-JS pages by default, interactive where you need it
+
+## Quick example
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```

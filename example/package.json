@@ -1,0 +1,21 @@
+{
+  "name": "example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node dist/rsc/index.js"
+  },
+  "dependencies": {
+    "@holocron.so/vite": "workspace:^",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "vite": "^8.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}

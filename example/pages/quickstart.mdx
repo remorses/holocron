@@ -1,0 +1,61 @@
+---
+title: Quickstart
+description: Get up and running with Holocron in under a minute.
+---
+
+## Installation
+
+Install the plugin and its peer dependencies:
+
+```bash
+pnpm add @holocron.so/vite react react-dom vite
+```
+
+## Project structure
+
+Create the following files in your project:
+
+```
+my-docs/
+├── pages/
+│   └── introduction.mdx
+├── holocron.jsonc
+├── vite.config.ts
+└── package.json
+```
+
+## Configuration
+
+Create a `holocron.jsonc` file at the project root:
+
+```json
+{
+  "name": "My Docs",
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["introduction"]
+    }
+  ]
+}
+```
+
+## Development
+
+Start the dev server:
+
+```bash
+pnpm dev
+```
+
+Build for production:
+
+```bash
+pnpm build
+```
+
+Start the production server:
+
+```bash
+pnpm start
+```
