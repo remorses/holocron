@@ -106,9 +106,12 @@ function groupBySections(root: Root): MdastSection[] {
 export function createHolocronApp({
   config,
   navigation,
+  mdxContent,
 }: {
   config: HolocronConfig
   navigation: Navigation
+  /** Pre-processed MDX content keyed by page slug. Server-only. */
+  mdxContent: Record<string, string>
 }) {
   // Build tab items: navigation tabs + anchors
   const navTabItems: TabItem[] = navigation
@@ -165,9 +168,12 @@ export function createHolocronApp({
         return <div>Page not found: {slug}</div>
       }
 
-      // MDX is already final — paths rewritten, dimensions injected at build time
-      const mdxContent = pageData.mdx
-      const mdast = mdxParse(mdxContent) as Root
+      // MDX content is separate from nav tree (server-only, not in client bundle)
+      const pageMdx = mdxContent[slug]
+      if (!pageMdx) {
+        return <div>MDX content not found for: {slug}</div>
+      }
+      const mdast = mdxParse(pageMdx) as Root
 
       // Extract hero nodes
       const heroNodes = mdast.children.filter(isHeroNode)
@@ -256,7 +262,7 @@ export function createHolocronApp({
         const syntheticRoot: Root = { type: 'root', children: nodes }
         return (
           <SafeMdxRenderer
-            markdown={mdxContent}
+            markdown={pageMdx}
             mdast={syntheticRoot as MyRootContent}
             components={mdxComponents}
             renderNode={renderNode}

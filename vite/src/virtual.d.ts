@@ -6,3 +6,10 @@ declare module 'virtual:holocron-config' {
   export const config: HolocronConfig
   export const navigation: Navigation
 }
+
+declare module 'virtual:holocron-mdx' {
+  /** Pre-processed MDX content keyed by page slug. Server-only — never
+   *  sent to the client bundle. */
+  const content: Record<string, string>
+  export default content
+}

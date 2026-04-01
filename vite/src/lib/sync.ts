@@ -35,18 +35,23 @@ import {
 } from '../navigation.ts'
 
 const CACHE_FILENAME = 'holocron-cache.json'
+const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 export type SyncResult = {
   navigation: Navigation
+  /** Pre-processed MDX content keyed by page slug. Kept separate from the
+   *  navigation tree so only the server bundle includes it — the client
+   *  only receives the lightweight nav tree (titles, headings, slugs). */
+  mdxContent: Record<string, string>
   parsedCount: number
   cachedCount: number
 }
 
 /**
- * Sync MDX files to the enriched navigation tree. All image processing
- * happens here — the returned NavPage.mdx fields are final and ready
- * to render without any I/O.
+ * Sync MDX files to the enriched navigation tree + MDX content map.
+ * Image processing happens here at build time. The navigation tree is
+ * lightweight (no MDX). MDX content is returned separately for server-only use.
  */
 export async function syncNavigation({
   config,
@@ -63,14 +68,17 @@ export async function syncNavigation({
 }): Promise<SyncResult> {
   // 1. Load caches from previous build
   const cachePath = path.join(distDir, CACHE_FILENAME)
+  const mdxCachePath = path.join(distDir, MDX_CACHE_FILENAME)
   const oldNav = readCache(cachePath)
   const oldPages = oldNav ? buildPageIndex(oldNav) : new Map<string, NavPage>()
+  const oldMdxContent = readMdxCache(mdxCachePath)
   const imageCache = loadImageCache({ distDir })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
   let parsedCount = 0
   let cachedCount = 0
+  const mdxContent: Record<string, string> = {}
 
   // 2. Enrich a single page slug
   async function enrichPage(slug: string): Promise<NavPage> {
@@ -81,10 +89,12 @@ export async function syncNavigation({
     const content = fs.readFileSync(mdxPath, 'utf-8')
     const sha = gitBlobSha(content)
 
-    // Cache hit — MDX unchanged AND has mdx field (not old cache format)
+    // Cache hit — MDX unchanged and we have cached MDX content
     const cached = oldPages.get(slug)
-    if (cached && cached.gitSha === sha && cached.mdx) {
+    const cachedMdx = oldMdxContent[slug]
+    if (cached && cached.gitSha === sha && cachedMdx) {
       cachedCount++
+      mdxContent[slug] = cachedMdx
       return cached
     }
 
@@ -102,8 +112,6 @@ export async function syncNavigation({
         continue
       }
 
-      // Process image (SHA-cached — skips sharp if unchanged).
-      // Per-image try/catch so one bad image doesn't fail the whole build.
       let meta
       try {
         meta = await processImage({ filePath: resolved.filePath, cache: imageCache })
@@ -115,7 +123,6 @@ export async function syncNavigation({
         continue
       }
 
-      // Determine final public src
       const publicSrc = (() => {
         if (resolved.needsCopy) {
           const destName = copyToPublic({ filePath: resolved.filePath, imageOutputDir })
@@ -132,6 +139,9 @@ export async function syncNavigation({
       ? rewriteMdxImages(processed.mdast, resolvedImages)
       : content
 
+    // Store MDX content separately from the nav tree
+    mdxContent[slug] = finalMdx
+
     return {
       slug,
       href: slugToHref(slug),
@@ -139,7 +149,6 @@ export async function syncNavigation({
       description: processed.description,
       gitSha: sha,
       headings: processed.headings,
-      mdx: finalMdx,
     }
   }
 
@@ -179,9 +188,10 @@ export async function syncNavigation({
 
   // 5. Write caches
   writeCache(cachePath, navigation)
+  writeMdxCache(mdxCachePath, mdxContent)
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, parsedCount, cachedCount }
+  return { navigation, mdxContent, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -274,6 +284,23 @@ function writeCache(cachePath: string, nav: Navigation): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
   fs.writeFileSync(cachePath, JSON.stringify(nav, null, 2))
+}
+
+function readMdxCache(cachePath: string): Record<string, string> {
+  if (!fs.existsSync(cachePath)) {
+    return {}
+  }
+  try {
+    return JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as Record<string, string>
+  } catch {
+    return {}
+  }
+}
+
+function writeMdxCache(cachePath: string, content: Record<string, string>): void {
+  const dir = path.dirname(cachePath)
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(cachePath, JSON.stringify(content))
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */

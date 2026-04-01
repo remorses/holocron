@@ -37,9 +37,6 @@ export type NavPage = {
   description?: string
   gitSha: string
   headings: NavHeading[]
-  /** Final MDX content with image paths rewritten and dimensions/placeholders
-   *  injected. Ready to parse and render — zero processing needed at request time. */
-  mdx: string
 }
 
 /** A heading extracted from the MDX content */
