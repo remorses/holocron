@@ -9,6 +9,7 @@ import { mdxParse } from 'safe-mdx/parse'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import { mdxToMarkdown } from 'mdast-util-mdx'
 import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
+import GithubSlugger from 'github-slugger'
 import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
@@ -32,6 +33,8 @@ export function processMdx(content: string): ProcessedMdx {
   const frontmatter = extractFrontmatter(content)
   const mdast = mdxParse(content) as Root
 
+  // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
+  const slugger = new GithubSlugger()
   const headings: NavHeading[] = []
   for (const node of mdast.children) {
     if (node.type === 'heading') {
@@ -40,7 +43,7 @@ export function processMdx(content: string): ProcessedMdx {
       headings.push({
         depth: heading.depth,
         text,
-        slug: slugify(text),
+        slug: slugger.slug(text),
       })
     }
   }
@@ -293,11 +296,4 @@ function extractText(children: PhrasingContent[]): string {
     .join('')
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
+

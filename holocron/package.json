@@ -57,11 +57,13 @@
   "scripts": {
     "build": "rm -rf dist *.tsbuildinfo && tsc",
     "typecheck": "tsc",
+    "test": "vitest --run",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@orama/orama": "^3.1.18",
     "@tailwindcss/typography": "^0.5.19",
+    "github-slugger": "^2.0.0",
     "image-size": "^2.0.2",
     "mdast-util-frontmatter": "^2.0.1",
     "mdast-util-mdx": "^3.0.0",
@@ -83,6 +85,7 @@
     "tailwindcss": "^4.2.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.3",
-    "vite-tsconfig-paths": "^6.0.3"
+    "vite-tsconfig-paths": "^6.0.3",
+    "vitest": "^4.1.2"
   }
 }
