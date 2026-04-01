@@ -113,15 +113,18 @@ export function createHolocronApp({
   config,
   navigation,
   pageLoaders,
+  pagesDirPrefix,
 }: {
   config: HolocronConfig
   navigation: Navigation
   pageLoaders: PageLoaders
+  /** Prefix for glob key matching, e.g. "/pages" */
+  pagesDirPrefix: string
 }) {
   // Single in-memory image cache shared across all page renders.
   // Reads dist/holocron-images.json on startup, auto-flushes on process exit.
   const imageCache = createImageCache({ distDir })
-  process.on('beforeExit', () => {
+  process.once('beforeExit', () => {
     imageCache.flush()
   })
 
@@ -181,7 +184,7 @@ export function createHolocronApp({
         return <div>Page not found: {slug}</div>
       }
 
-      let mdxContent = await loadMdxContent(pageLoaders, slug)
+      let mdxContent = await loadMdxContent(pageLoaders, slug, pagesDirPrefix)
       if (!mdxContent) {
         return <div>MDX content not found for: {slug}</div>
       }
@@ -360,9 +363,9 @@ export function createHolocronApp({
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
-async function loadMdxContent(loaders: PageLoaders, slug: string): Promise<string | undefined> {
+async function loadMdxContent(loaders: PageLoaders, slug: string, prefix: string): Promise<string | undefined> {
   for (const ext of ['.mdx', '.md']) {
-    const key = `/pages/${slug}${ext}`
+    const key = `${prefix}/${slug}${ext}`
     if (loaders[key]) {
       return loaders[key]()
     }

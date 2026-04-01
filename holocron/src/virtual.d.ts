@@ -5,6 +5,8 @@ declare module 'virtual:holocron-config' {
   import type { Navigation } from './navigation.ts'
   export const config: HolocronConfig
   export const navigation: Navigation
+  /** Resolved pages dir prefix for glob key matching (e.g. "/pages") */
+  export const pagesDirPrefix: string
 }
 
 declare module 'virtual:holocron-pages' {

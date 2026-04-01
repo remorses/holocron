@@ -15,6 +15,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import url from 'node:url'
 import type { Plugin, PluginOption, ResolvedConfig } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
@@ -70,7 +71,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   // because Vite needs to process JSX, CSS imports, and virtual modules.
   // In dev (tsx): import.meta.url ends with .ts, app.tsx is a sibling.
   // In compiled (dist/): import.meta.url ends with .js, app.tsx is in ../src/.
-  const __dirname = path.dirname(new URL(import.meta.url).pathname)
+  const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
   const isDev = import.meta.url.endsWith('.ts')
   const appEntry = isDev
     ? path.resolve(__dirname, 'app.tsx')
@@ -94,7 +95,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
 
       // Read config
-      config = readConfig({ root })
+      config = readConfig({ root, configPath: options.configPath })
 
       // Sync MDX → navigation tree (with SHA caching from dist/)
       // Also copies relative images to public/_holocron/images/
@@ -128,10 +129,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       if (id === RESOLVED_CONFIG) {
-        // Serialize both config and navigation into the virtual module
+        // Serialize config, navigation, and pagesDir prefix into the virtual module.
+        // pagesDir prefix is needed so loadMdxContent can match glob keys correctly
+        // regardless of the user's pagesDir setting.
+        const relPagesDir = path.relative(root, pagesDir).replace(/\\/g, '/')
         return [
           `export const config = ${JSON.stringify(config)}`,
           `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
+          `export const pagesDirPrefix = ${JSON.stringify('/' + relPagesDir)}`,
         ].join('\n')
       }
     },
@@ -143,12 +148,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       const isMdx = file.endsWith('.mdx') || file.endsWith('.md')
-      const configFile = resolveConfigPath({ root })
+      const configFile = resolveConfigPath({ root, configPath: options.configPath })
       const isConfig = configFile && file === configFile
 
       if (isMdx || isConfig) {
         if (isConfig) {
-          config = readConfig({ root })
+          config = readConfig({ root, configPath: options.configPath })
         }
         syncResult = syncNavigation({
           config,

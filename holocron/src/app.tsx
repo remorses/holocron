@@ -9,10 +9,10 @@
  * so it can be tested independently.
  */
 
-import { config, navigation } from 'virtual:holocron-config'
+import { config, navigation, pagesDirPrefix } from 'virtual:holocron-config'
 import { pages } from 'virtual:holocron-pages'
 
 import { createHolocronApp } from './app-factory.tsx'
 
-export const app = createHolocronApp({ config, navigation, pageLoaders: pages })
+export const app = createHolocronApp({ config, navigation, pageLoaders: pages, pagesDirPrefix })
 export type App = typeof app

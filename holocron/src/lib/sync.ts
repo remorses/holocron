@@ -75,6 +75,38 @@ export function syncNavigation({
   // Image output dir inside public — namespaced to avoid collisions
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
+  /**
+   * Resolve relative image paths for an MDX file: copy to public/_holocron/images/
+   * with content-hash filenames. Returns a rewrites map (original → public path).
+   * Uses content hash so same image from multiple pages copies once, and changed
+   * images get new filenames for cache busting.
+   */
+  function resolveRelativeImages(mdxDir: string, relativePaths: string[]): Record<string, string> {
+    const rewrites: Record<string, string> = {}
+    for (const relativeSrc of relativePaths) {
+      const sourcePath = path.resolve(mdxDir, relativeSrc)
+      if (!fs.existsSync(sourcePath)) {
+        continue
+      }
+
+      const imgBuf = fs.readFileSync(sourcePath)
+      const hash = crypto.createHash('sha1').update(imgBuf).digest('hex').slice(0, 8)
+      const ext = path.extname(relativeSrc)
+      const basename = path.basename(relativeSrc, ext)
+      const destName = `${hash}-${basename}${ext}`
+      const destPath = path.join(imageOutputDir, destName)
+      const publicSrc = `/_holocron/images/${destName}`
+
+      if (!fs.existsSync(destPath)) {
+        fs.mkdirSync(imageOutputDir, { recursive: true })
+        fs.copyFileSync(sourcePath, destPath)
+      }
+
+      rewrites[relativeSrc] = publicSrc
+    }
+    return rewrites
+  }
+
   // 2. Enrich a single page slug
   function enrichPage(slug: string): NavPage {
     const mdxPath = resolveMdxPath(pagesDir, slug)
@@ -83,11 +115,21 @@ export function syncNavigation({
     }
     const content = fs.readFileSync(mdxPath, 'utf-8')
     const sha = gitBlobSha(content)
+    const mdxDir = path.dirname(mdxPath)
 
-    // Check cache
+    // Check cache — MDX unchanged
     const cached = oldPages.get(slug)
     if (cached && cached.gitSha === sha) {
       cachedCount++
+      // Even on cache hit, re-resolve images because image content may have
+      // changed while the MDX that references them stayed the same.
+      if (cached.imageRewrites && Object.keys(cached.imageRewrites).length > 0) {
+        const freshRewrites = resolveRelativeImages(mdxDir, Object.keys(cached.imageRewrites))
+        // If rewrites changed (image was updated → new hash), update the page
+        if (JSON.stringify(freshRewrites) !== JSON.stringify(cached.imageRewrites)) {
+          return { ...cached, imageRewrites: freshRewrites }
+        }
+      }
       return cached
     }
 
@@ -95,36 +137,10 @@ export function syncNavigation({
     const processed = processMdx(content)
     parsedCount++
 
-    // Resolve relative images: copy to public/_holocron/images/, store
-    // rewrites map on the NavPage. At render time, app-factory applies
-    // the rewrites to the raw MDX before parsing so image srcs point to
-    // their public copies. Uses content hash for dedup + cache busting.
-    const imageRewrites: Record<string, string> = {}
-    if (processed.relativeImages.length > 0) {
-      const mdxDir = path.dirname(mdxPath)
-
-      for (const relativeSrc of processed.relativeImages) {
-        const sourcePath = path.resolve(mdxDir, relativeSrc)
-        if (!fs.existsSync(sourcePath)) {
-          continue
-        }
-
-        const imgBuf = fs.readFileSync(sourcePath)
-        const hash = crypto.createHash('sha1').update(imgBuf).digest('hex').slice(0, 8)
-        const ext = path.extname(relativeSrc)
-        const basename = path.basename(relativeSrc, ext)
-        const destName = `${hash}-${basename}${ext}`
-        const destPath = path.join(imageOutputDir, destName)
-        const publicSrc = `/_holocron/images/${destName}`
-
-        if (!fs.existsSync(destPath)) {
-          fs.mkdirSync(imageOutputDir, { recursive: true })
-          fs.copyFileSync(sourcePath, destPath)
-        }
-
-        imageRewrites[relativeSrc] = publicSrc
-      }
-    }
+    // Resolve relative images
+    const imageRewrites = processed.relativeImages.length > 0
+      ? resolveRelativeImages(mdxDir, processed.relativeImages)
+      : {}
 
     const hasRewrites = Object.keys(imageRewrites).length > 0
     return {

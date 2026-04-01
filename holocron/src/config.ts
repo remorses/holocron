@@ -69,11 +69,64 @@ export function isConfigNavGroup(entry: ConfigNavPageEntry): entry is ConfigNavG
   return typeof entry === 'object' && 'group' in entry
 }
 
-/* ── JSONC parser (strips comments + trailing commas) ───────────────── */
+/* ── JSONC parser (string-aware, won't corrupt URLs in strings) ─────── */
 
+/**
+ * Strip comments and trailing commas from JSONC. Walks character by
+ * character to skip string contents — so "https://..." is never touched.
+ */
 function stripJsonc(text: string): string {
-  let result = text.replace(/\/\/.*$/gm, '')
-  result = result.replace(/\/\*[\s\S]*?\*\//g, '')
+  let result = ''
+  let i = 0
+  const len = text.length
+
+  while (i < len) {
+    const ch = text[i]
+    const next = text[i + 1]
+
+    // String literal — copy verbatim including escapes
+    if (ch === '"') {
+      let j = i + 1
+      while (j < len) {
+        if (text[j] === '\\') {
+          j += 2
+          continue
+        }
+        if (text[j] === '"') {
+          j++
+          break
+        }
+        j++
+      }
+      result += text.slice(i, j)
+      i = j
+      continue
+    }
+
+    // Single-line comment
+    if (ch === '/' && next === '/') {
+      i += 2
+      while (i < len && text[i] !== '\n') {
+        i++
+      }
+      continue
+    }
+
+    // Multi-line comment
+    if (ch === '/' && next === '*') {
+      i += 2
+      while (i < len - 1 && !(text[i] === '*' && text[i + 1] === '/')) {
+        i++
+      }
+      i += 2
+      continue
+    }
+
+    result += ch
+    i++
+  }
+
+  // Remove trailing commas before } or ]
   result = result.replace(/,\s*([\]}])/g, '$1')
   return result
 }
@@ -87,13 +140,22 @@ const CONFIG_FILE_NAMES = ['holocron.jsonc', 'docs.json'] as const
  * collapsed into a single canonical shape so consumers never deal with
  * type discrimination.
  */
-export function readConfig({ root }: { root: string }): HolocronConfig {
+export function readConfig({ root, configPath }: { root: string; configPath?: string }): HolocronConfig {
+  // Explicit config path takes priority
+  if (configPath) {
+    const resolved = path.resolve(root, configPath)
+    if (fs.existsSync(resolved)) {
+      const raw = fs.readFileSync(resolved, 'utf-8')
+      return normalize(JSON.parse(stripJsonc(raw)))
+    }
+    throw new Error(`Config file not found at: ${resolved}`)
+  }
+  // Auto-discovery
   for (const name of CONFIG_FILE_NAMES) {
     const filePath = path.join(root, name)
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      const parsed = JSON.parse(stripJsonc(raw))
-      return normalize(parsed)
+      return normalize(JSON.parse(stripJsonc(raw)))
     }
   }
   throw new Error(
@@ -102,7 +164,11 @@ export function readConfig({ root }: { root: string }): HolocronConfig {
 }
 
 /** Resolve the config file path (for watching in dev mode) */
-export function resolveConfigPath({ root }: { root: string }): string | undefined {
+export function resolveConfigPath({ root, configPath }: { root: string; configPath?: string }): string | undefined {
+  if (configPath) {
+    const resolved = path.resolve(root, configPath)
+    return fs.existsSync(resolved) ? resolved : undefined
+  }
   for (const name of CONFIG_FILE_NAMES) {
     const filePath = path.join(root, name)
     if (fs.existsSync(filePath)) {
@@ -211,19 +277,19 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
   if (typeof raw === 'object') {
     const obj = raw as Record<string, unknown>
 
-    // Collect anchors from both global.anchors and root anchors
+    // Collect anchors from both global.anchors and root anchors (with guards)
     const globalObj = obj.global as Record<string, unknown> | undefined
-    const globalAnchors = (globalObj?.anchors ?? []) as ConfigAnchor[]
-    const rootAnchors = (obj.anchors ?? []) as ConfigAnchor[]
+    const globalAnchors = Array.isArray(globalObj?.anchors) ? globalObj.anchors as ConfigAnchor[] : []
+    const rootAnchors = Array.isArray(obj.anchors) ? obj.anchors as ConfigAnchor[] : []
     const allAnchors = [...globalAnchors, ...rootAnchors]
 
     // Has explicit tabs
-    if (obj.tabs) {
+    if (Array.isArray(obj.tabs)) {
       return normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, allAnchors)
     }
 
     // Root groups (no tabs wrapper)
-    if (obj.groups) {
+    if (Array.isArray(obj.groups)) {
       return {
         tabs: [{ tab: '', groups: obj.groups as ConfigNavGroup[] }],
         anchors: allAnchors,
@@ -231,7 +297,7 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
     }
 
     // Root pages (no groups wrapper)
-    if (obj.pages) {
+    if (Array.isArray(obj.pages)) {
       return {
         tabs: [{ tab: '', groups: [{ group: '', pages: obj.pages as ConfigNavPageEntry[] }] }],
         anchors: allAnchors,
