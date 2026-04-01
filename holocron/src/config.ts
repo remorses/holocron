@@ -69,67 +69,7 @@ export function isConfigNavGroup(entry: ConfigNavPageEntry): entry is ConfigNavG
   return typeof entry === 'object' && 'group' in entry
 }
 
-/* ── JSONC parser (string-aware, won't corrupt URLs in strings) ─────── */
-
-/**
- * Strip comments and trailing commas from JSONC. Walks character by
- * character to skip string contents — so "https://..." is never touched.
- */
-function stripJsonc(text: string): string {
-  let result = ''
-  let i = 0
-  const len = text.length
-
-  while (i < len) {
-    const ch = text[i]
-    const next = text[i + 1]
-
-    // String literal — copy verbatim including escapes
-    if (ch === '"') {
-      let j = i + 1
-      while (j < len) {
-        if (text[j] === '\\') {
-          j += 2
-          continue
-        }
-        if (text[j] === '"') {
-          j++
-          break
-        }
-        j++
-      }
-      result += text.slice(i, j)
-      i = j
-      continue
-    }
-
-    // Single-line comment
-    if (ch === '/' && next === '/') {
-      i += 2
-      while (i < len && text[i] !== '\n') {
-        i++
-      }
-      continue
-    }
-
-    // Multi-line comment
-    if (ch === '/' && next === '*') {
-      i += 2
-      while (i < len - 1 && !(text[i] === '*' && text[i + 1] === '/')) {
-        i++
-      }
-      i += 2
-      continue
-    }
-
-    result += ch
-    i++
-  }
-
-  // Remove trailing commas before } or ]
-  result = result.replace(/,\s*([\]}])/g, '$1')
-  return result
-}
+import { parseJsonc } from './lib/jsonc.ts'
 
 /* ── Config reader + normalizer ──────────────────────────────────────── */
 
@@ -146,7 +86,7 @@ export function readConfig({ root, configPath }: { root: string; configPath?: st
     const resolved = path.resolve(root, configPath)
     if (fs.existsSync(resolved)) {
       const raw = fs.readFileSync(resolved, 'utf-8')
-      return normalize(JSON.parse(stripJsonc(raw)))
+      return normalize(parseJsonc(raw) as Record<string, unknown>)
     }
     throw new Error(`Config file not found at: ${resolved}`)
   }
@@ -155,7 +95,7 @@ export function readConfig({ root, configPath }: { root: string; configPath?: st
     const filePath = path.join(root, name)
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      return normalize(JSON.parse(stripJsonc(raw)))
+      return normalize(parseJsonc(raw) as Record<string, unknown>)
     }
   }
   throw new Error(
