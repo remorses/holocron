@@ -13,5 +13,8 @@
     },
     "repository": "https://github.com/remorses/",
     "author": "remorses <beats.by.morse@gmail.com>",
-    "license": ""
+    "license": "",
+    "pnpm": {
+        "onlyBuiltDependencies": ["sharp"]
+    }
 }
