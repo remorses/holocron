@@ -1,4 +1,5 @@
 {
+  "$schema": "https://mintlify.com/docs.json",
   "name": "Holocron Example",
   "colors": {
     "primary": "#6366f1"
