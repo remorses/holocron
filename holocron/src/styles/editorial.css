@@ -1,0 +1,194 @@
+/*
+ * Editorial page styles.
+ *
+ * Key design decisions:
+ * - Inter variable font at weight 460 (between normal and medium)
+ * - Near-black text (#111) not pure black, with 40% opacity for secondary
+ * - Narrow 550px content column for optimal reading
+ * - Negative letter-spacing on headings for tight, refined feel
+ * - 7-layer box shadows for realistic depth
+ * - Display P3 accent colors (wider gamut than sRGB)
+ * - Staggered entrance animations with subtle translateY
+ * - Custom cubic-bezier easings with slight overshoot ("snappy", "swift")
+ * - Fading header gradient pseudo-element
+ * - Small font sizes (14px body) for editorial/compact aesthetic
+ *
+ * Design tokens are defined in globals.css :root (no prefix).
+ * Conflicting names with shadcn: --brand-primary, --brand-secondary,
+ * --link-accent, --page-border.
+ */
+
+/* ========================================================================
+   Inter — variable font (v4.1). Only roman (no italic) to keep payload
+   small (~350 KB woff2). Covers all weights 100-900.
+   Source: github.com/rsms/inter
+   ======================================================================== */
+
+@font-face {
+  font-family: 'Inter var';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+}
+
+/* ========================================================================
+   JetBrainsMono Nerd Font Mono — patched with box-drawing glyphs that
+   tile perfectly (no gaps). Only load regular 400 to keep payload small.
+   Source: github.com/ryanoasis/nerd-fonts
+   ======================================================================== */
+
+@font-face {
+  font-family: 'JetBrainsMono NF Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/JetBrainsMonoNerdFontMono-Regular.ttf') format('truetype');
+}
+
+/* ========================================================================
+   Selection
+   ======================================================================== */
+
+.slot-page {
+  font-optical-sizing: auto;
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1;
+}
+
+.slot-page ::selection {
+  background: var(--selection-bg);
+}
+
+/* Bold and inline code inside prose punch through the reduced opacity */
+.editorial-prose strong,
+.editorial-prose .inline-code {
+  opacity: calc(1 / 0.82);
+}
+
+/* ========================================================================
+   Stagger-in animation
+   ======================================================================== */
+
+@keyframes stagger-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+.editorial-article > * {
+  animation: stagger-in 0.5s ease both;
+}
+
+.editorial-article > :nth-child(1) { animation-delay: 0s; }
+.editorial-article > :nth-child(2) { animation-delay: 0.05s; }
+.editorial-article > :nth-child(3) { animation-delay: 0.1s; }
+.editorial-article > :nth-child(4) { animation-delay: 0.15s; }
+.editorial-article > :nth-child(5) { animation-delay: 0.2s; }
+.editorial-article > :nth-child(6) { animation-delay: 0.25s; }
+.editorial-article > :nth-child(7) { animation-delay: 0.3s; }
+.editorial-article > :nth-child(8) { animation-delay: 0.35s; }
+.editorial-article > :nth-child(n + 9) { animation-delay: 0.4s; }
+*/
+
+/* Images and their wrappers must never overflow the content column */
+.slot-main img {
+  max-width: 100% !important;
+  height: auto;
+}
+
+/* Force all children of bleed to respect container width */
+.slot-main .bleed > * {
+  max-width: 100% !important;
+}
+
+.slot-main .bleed {
+  overflow: hidden;
+}
+
+/* ========================================================================
+   Bleed — code blocks and images extend beyond the prose column so that
+   the code text (after line numbers) aligns with the prose left edge.
+   36px = 8px div padding-left + 28px line-number span (border-box, includes padding).
+   ======================================================================== */
+
+.bleed {
+  margin-left: calc(-1 * var(--bleed));
+  margin-right: calc(-1 * var(--bleed));
+}
+
+/* ========================================================================
+   Inline code — subtle background pill via ::before pseudo-element.
+   Position relative, ::before with absolute inset creates a pill that
+   extends slightly above/below the text.
+   ======================================================================== */
+
+.inline-code {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-code);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 13px;
+  letter-spacing: 0.01em;
+  padding: 2px 4px;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.inline-code::before {
+  content: '';
+  position: absolute;
+  inset: -1px 0;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+  z-index: -1;
+}
+
+.inline-code {
+  @variant dark {
+    color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+.inline-code::before {
+  @variant dark {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* ========================================================================
+   Header fade gradient
+   ======================================================================== */
+
+.slot-page::before {
+  content: '';
+  pointer-events: none;
+  z-index: 9;
+  position: fixed;
+  top: var(--fade-top);
+  left: 0;
+  right: 0;
+  height: var(--fade-height);
+  background: linear-gradient(
+    var(--fade-0) 0px,
+    var(--fade-1) 19%,
+    var(--fade-2) 34%,
+    var(--fade-3) 47%,
+    var(--fade-4) 56.5%,
+    var(--fade-5) 65%,
+    var(--fade-6) 73%,
+    var(--fade-7) 80.2%,
+    var(--fade-8) 86.1%,
+    var(--fade-9) 91%,
+    var(--fade-10) 95.2%,
+    var(--fade-11) 98.2%,
+    var(--fade-12) 100%
+  );
+}

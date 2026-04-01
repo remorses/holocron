@@ -1,0 +1,85 @@
+{
+  "name": "@holocron.so/vite",
+  "version": "0.0.1",
+  "description": "Vite plugin for building documentation websites from MDX files with mintlify-compatible config",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remorses/playwriter",
+    "directory": "holocron"
+  },
+  "homepage": "https://holocron.so",
+  "bugs": "https://github.com/remorses/playwriter/issues",
+  "keywords": [
+    "docs",
+    "documentation",
+    "mdx",
+    "vite",
+    "vite-plugin",
+    "mintlify",
+    "react-server-components"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite-plugin.d.ts",
+      "default": "./dist/vite-plugin.js"
+    },
+    "./navigation": {
+      "types": "./dist/navigation.d.ts",
+      "default": "./dist/navigation.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
+    "./src": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./src/*": {
+      "types": "./src/*.tsx",
+      "default": "./src/*.tsx"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "rm -rf dist *.tsbuildinfo && tsc",
+    "typecheck": "tsc",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "@orama/orama": "^3.1.18",
+    "@tailwindcss/typography": "^0.5.19",
+    "image-size": "^2.0.2",
+    "prismjs": "^1.30.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "safe-mdx": "^1.3.9",
+    "spiceflow": "1.18.0-rsc.22"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.0",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^25.0.3",
+    "@types/prismjs": "^1.26.6",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.3",
+    "vite-tsconfig-paths": "^6.0.3"
+  }
+}
