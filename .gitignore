@@ -5,3 +5,5 @@ esm
 *.tsbuildinfo
 .ultra.cache.json
 coverage
+*.png
+*.pdf
