@@ -1,20 +1,19 @@
 /**
  * Holocron app factory — creates the Spiceflow app with all routes.
  *
- * Separated from app.tsx so the rendering logic doesn't depend on virtual
- * modules and can be tested independently.
+ * All MDX content and image metadata is pre-processed at build time.
+ * Request-time rendering is just: parse mdast → render RSC components.
+ * Zero file I/O, zero sharp, zero image-size — works on Cloudflare.
  */
 
 import './styles/globals.css'
 import React, { Fragment, type ReactNode } from 'react'
 import { Spiceflow, serveStatic } from 'spiceflow'
 import { Head } from 'spiceflow/react'
-import { publicDir, distDir } from 'spiceflow'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { mdxParse } from 'safe-mdx/parse'
 import type { Root, Heading, RootContent, Image } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
-import path from 'node:path'
 import {
   EditorialPage,
   Aside,
@@ -38,7 +37,6 @@ import {
   type EditorialSection,
 } from './components/markdown.tsx'
 import { slugify, extractText } from './components/toc-tree.ts'
-import { createImageCache } from './lib/image-cache.ts'
 import type { HolocronConfig } from './config.ts'
 import {
   type Navigation,
@@ -52,11 +50,7 @@ import {
   flattenForSidebar,
 } from './navigation.ts'
 
-/* ── Types ───────────────────────────────────────────────────────────── */
-
-type PageLoaders = Record<string, () => Promise<string>>
-
-/* ── MDX section splitting (same logic as website/src/pages/index.tsx) ── */
+/* ── MDX section splitting ──────────────────────────────────────────── */
 
 function isAsideNode(node: RootContent): boolean {
   return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Aside'
@@ -112,23 +106,11 @@ function groupBySections(root: Root): MdastSection[] {
 export function createHolocronApp({
   config,
   navigation,
-  pageLoaders,
-  pagesDirPrefix,
 }: {
   config: HolocronConfig
   navigation: Navigation
-  pageLoaders: PageLoaders
-  /** Prefix for glob key matching, e.g. "/pages" */
-  pagesDirPrefix: string
 }) {
-  // Single in-memory image cache shared across all page renders.
-  // Reads dist/holocron-images.json on startup, auto-flushes on process exit.
-  const imageCache = createImageCache({ distDir })
-  process.once('beforeExit', () => {
-    imageCache.flush()
-  })
-
-  // Build tab items: navigation tabs + anchors (all normalized, no unions)
+  // Build tab items: navigation tabs + anchors
   const navTabItems: TabItem[] = navigation
     .filter((t) => {
       return t.tab !== ''
@@ -145,12 +127,11 @@ export function createHolocronApp({
   })
   const tabItems: TabItem[] = [...navTabItems, ...anchorItems]
 
-  // navbar.links → header links (top-right, in logo bar)
+  // navbar.links → header links
   const headerLinks: HeaderLink[] = config.navbar.links.map((link) => {
     return { href: link.href, label: link.label }
   })
 
-  // Logo — already normalized to { light, dark }
   const logoSrc = config.logo.light || undefined
 
   return new Spiceflow()
@@ -184,22 +165,9 @@ export function createHolocronApp({
         return <div>Page not found: {slug}</div>
       }
 
-      let mdxContent = await loadMdxContent(pageLoaders, slug, pagesDirPrefix)
-      if (!mdxContent) {
-        return <div>MDX content not found for: {slug}</div>
-      }
-
-      // Apply image path rewrites — relative paths (./img.png) are replaced
-      // with their public copies (/_holocron/images/hash-img.png)
-      if (pageData.imageRewrites) {
-        for (const [original, replacement] of Object.entries(pageData.imageRewrites)) {
-          mdxContent = mdxContent.replaceAll(original, replacement)
-        }
-      }
-
+      // MDX is already final — paths rewritten, dimensions injected at build time
+      const mdxContent = pageData.mdx
       const mdast = mdxParse(mdxContent) as Root
-
-      const imageManifest = await imageCache.buildManifest({ mdast, publicDir })
 
       // Extract hero nodes
       const heroNodes = mdast.children.filter(isHeroNode)
@@ -215,22 +183,23 @@ export function createHolocronApp({
       // Split into sections
       const mdastSections = groupBySections(contentMdast)
 
-      // Image component with placeholder injection
-      function PixelatedImageWithPlaceholder(props: {
+      // Image component — reads width/height/placeholder from its own JSX attrs
+      // (injected at build time by rewriteMdxImages)
+      function PixelatedImageWithProps(props: {
         src: string
         alt: string
         width?: number
         height?: number
+        placeholder?: string
         className?: string
       }) {
-        const data = imageManifest[props.src]
         return (
           <PixelatedImage
             src={props.src}
             alt={props.alt}
-            width={data?.width ?? (props.width || 0)}
-            height={data?.height ?? (props.height || 0)}
-            placeholder={data?.placeholder}
+            width={props.width || 0}
+            height={props.height || 0}
+            placeholder={props.placeholder}
             className={props.className || ''}
           />
         )
@@ -245,7 +214,7 @@ export function createHolocronApp({
         li: Li,
         Caption,
         ComparisonTable,
-        PixelatedImage: PixelatedImageWithPlaceholder,
+        PixelatedImage: PixelatedImageWithProps,
         Bleed,
         Aside,
         FullWidth,
@@ -255,7 +224,7 @@ export function createHolocronApp({
       function renderNode(node: MyRootContent, transform: (node: MyRootContent) => ReactNode): ReactNode | undefined {
         if (node.type === 'image') {
           const imgNode = node as Image
-          return <PixelatedImageWithPlaceholder src={imgNode.url} alt={imgNode.alt || ''} />
+          return <PixelatedImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
         }
         if (node.type === 'heading') {
           const heading = node as Heading
@@ -306,7 +275,6 @@ export function createHolocronApp({
 
       const heroContent = heroNodes.length > 0 ? <RenderNodes nodes={heroNodes} /> : undefined
 
-      // Determine active tab href
       const activeTabHref = tabItems.find((t) => {
         return pageData.href.startsWith(t.href) && t.href !== '/'
       })?.href || tabItems[0]?.href
@@ -362,16 +330,6 @@ export function createHolocronApp({
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
-
-async function loadMdxContent(loaders: PageLoaders, slug: string, prefix: string): Promise<string | undefined> {
-  for (const ext of ['.mdx', '.md']) {
-    const key = `${prefix}/${slug}${ext}`
-    if (loaders[key]) {
-      return loaders[key]()
-    }
-  }
-  return undefined
-}
 
 function findFirstPageInTab(tab: NavTab): NavPage | undefined {
   for (const group of tab.groups) {

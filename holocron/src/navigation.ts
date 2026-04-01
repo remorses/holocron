@@ -37,9 +37,9 @@ export type NavPage = {
   description?: string
   gitSha: string
   headings: NavHeading[]
-  /** Map of relative image paths → public paths (e.g. "./img.png" → "/_holocron/images/a1b2c3-img.png").
-   *  Applied at render time to rewrite image srcs in the raw MDX before parsing. */
-  imageRewrites?: Record<string, string>
+  /** Final MDX content with image paths rewritten and dimensions/placeholders
+   *  injected. Ready to parse and render — zero processing needed at request time. */
+  mdx: string
 }
 
 /** A heading extracted from the MDX content */

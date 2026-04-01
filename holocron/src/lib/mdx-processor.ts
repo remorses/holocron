@@ -1,31 +1,32 @@
 /**
- * MDX processor — extracts frontmatter, headings, and relative images.
- *
- * Uses safe-mdx/parse to get an mdast tree, then walks it to extract:
- * - Frontmatter (YAML between --- delimiters)
- * - Headings with depth, text, and slugified anchor ID
- * - Relative image paths for resolution + copying to public
- *
- * Does NOT render the MDX — that happens at request time in the page handler.
+ * MDX processor — extracts frontmatter, headings, and image srcs.
+ * Also provides AST-based image rewriting: mutates mdast image nodes
+ * in place (converting markdown images to JSX, injecting dimensions),
+ * then serializes back to MDX string.
  */
 
 import { mdxParse } from 'safe-mdx/parse'
+import { toMarkdown } from 'mdast-util-to-markdown'
+import { mdxToMarkdown } from 'mdast-util-mdx'
+import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
 import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
+import type { ImageMeta } from './image-processor.ts'
 
 export type ProcessedMdx = {
   title: string
   description?: string
   frontmatter: Record<string, unknown>
   headings: NavHeading[]
-  /** Relative image paths found in the MDX (e.g. "./images/screenshot.png") */
-  relativeImages: string[]
+  /** All non-external image srcs found in the MDX (relative + absolute) */
+  imageSrcs: string[]
+  /** The parsed mdast tree (reused for image rewriting without re-parsing) */
+  mdast: Root
 }
 
 /**
- * Parse MDX content and extract metadata.
- * Frontmatter is extracted via regex (YAML between --- delimiters).
- * Headings are extracted by walking the mdast tree.
+ * Parse MDX content and extract metadata + image srcs.
+ * Returns the mdast tree for reuse by rewriteMdxImages.
  */
 export function processMdx(content: string): ProcessedMdx {
   const frontmatter = extractFrontmatter(content)
@@ -44,51 +45,36 @@ export function processMdx(content: string): ProcessedMdx {
     }
   }
 
-  const relativeImages = collectRelativeImages(mdast)
+  const imageSrcs = collectImageSrcs(mdast)
 
   return {
     title: (frontmatter.title as string) || headings[0]?.text || 'Untitled',
     description: frontmatter.description as string | undefined,
     frontmatter,
     headings,
-    relativeImages,
+    imageSrcs,
+    mdast,
   }
 }
 
-/* ── Relative image collection ──────────────────────────────────────── */
+/* ── Image src collection ────────────────────────────────────────────── */
 
-/** Check if a path is relative (not absolute, not external URL) */
-function isRelativePath(src: string): boolean {
-  return !src.startsWith('/') && !src.startsWith('http://') && !src.startsWith('https://')
+function isExternal(src: string): boolean {
+  return src.startsWith('http://') || src.startsWith('https://')
 }
 
-/** Walk mdast and collect all relative image src paths */
-function collectRelativeImages(root: Root): string[] {
+function collectImageSrcs(root: Root): string[] {
   const srcs: string[] = []
 
   function walk(nodes: RootContent[]) {
     for (const node of nodes) {
-      if (node.type === 'image' && node.url && isRelativePath(node.url)) {
+      if (node.type === 'image' && node.url && !isExternal(node.url)) {
         srcs.push(node.url)
       }
-      // MDX JSX elements: <PixelatedImage src="..." /> or <img src="..." />
-      if (
-        node.type === 'mdxJsxFlowElement' &&
-        'name' in node &&
-        'attributes' in node
-      ) {
-        const name = (node as { name?: string }).name
-        if (name === 'PixelatedImage' || name === 'img') {
-          const attrs = (node as { attributes: Array<{ type: string; name?: string; value?: unknown }> }).attributes
-          const srcAttr = attrs.find((a) => {
-            return a.type === 'mdxJsxAttribute' && a.name === 'src'
-          })
-          if (srcAttr) {
-            const val = getAttrStringValue(srcAttr.value)
-            if (val && isRelativePath(val)) {
-              srcs.push(val)
-            }
-          }
+      if (isJsxImageElement(node)) {
+        const src = getJsxAttrValue(node, 'src')
+        if (src && !isExternal(src)) {
+          srcs.push(src)
         }
       }
       if ('children' in node && Array.isArray(node.children)) {
@@ -101,35 +87,161 @@ function collectRelativeImages(root: Root): string[] {
   return [...new Set(srcs)]
 }
 
-/**
- * Rewrite relative image paths in raw MDX content.
- * Replaces each relative src with its new public path.
- *
- * Handles both markdown images ![alt](./path) and JSX src="./path".
- */
-export function rewriteImagePaths(content: string, rewrites: Record<string, string>): string {
-  let result = content
-  for (const [original, replacement] of Object.entries(rewrites)) {
-    // Escape special regex chars in the original path
-    const escaped = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    // Replace in markdown image syntax: ![...](original) and JSX src="original"
-    result = result.replace(new RegExp(escaped, 'g'), replacement)
-  }
-  return result
+/* ── AST-based image rewriting ───────────────────────────────────────── */
+
+export type ResolvedImage = {
+  /** New public src path */
+  publicSrc: string
+  /** Processed image metadata */
+  meta: ImageMeta
 }
 
-/** Extract string value from an mdxJsxAttribute value (string or expression). */
-function getAttrStringValue(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    return value
+/**
+ * Mutate the mdast tree in place:
+ * - Markdown images (![alt](src)) → converted to mdxJsxFlowElement PixelatedImage
+ * - JSX PixelatedImage/img → src updated, width/height/placeholder attrs added
+ *
+ * Then serializes the mutated tree back to MDX string.
+ */
+export function rewriteMdxImages(mdast: Root, images: Map<string, ResolvedImage>): string {
+  // Walk and mutate the tree. Process root.children and also nested children.
+  mdast.children = mdast.children.flatMap((node) => {
+    return rewriteNode(node, images)
+  })
+
+  // Serialize back to MDX
+  return toMarkdown(mdast, {
+    extensions: [
+      mdxToMarkdown(),
+      frontmatterToMarkdown(['yaml']),
+    ],
+  })
+}
+
+/**
+ * Rewrite a single node. Returns an array because a paragraph containing
+ * only an image gets replaced by a JSX element (1:1), but a paragraph
+ * with mixed content stays as-is (image inside converted to inline JSX).
+ */
+function rewriteNode(node: RootContent, images: Map<string, ResolvedImage>): RootContent[] {
+  // Paragraph containing only a single image → replace with JSX block element
+  if (node.type === 'paragraph' && node.children.length === 1) {
+    const child = node.children[0]
+    if (child && child.type === 'image' && images.has(child.url)) {
+      const resolved = images.get(child.url)!
+      return [createPixelatedImageNode({
+        src: resolved.publicSrc,
+        alt: child.alt || '',
+        meta: resolved.meta,
+      })]
+    }
   }
-  if (value && typeof value === 'object' && 'value' in value) {
-    const v = (value as { value: string }).value
+
+  // Paragraph with mixed content — rewrite inline image nodes
+  if (node.type === 'paragraph') {
+    node.children = node.children.map((child) => {
+      if (child.type === 'image' && images.has(child.url)) {
+        const resolved = images.get(child.url)!
+        child.url = resolved.publicSrc
+      }
+      return child
+    })
+    return [node]
+  }
+
+  // JSX element: PixelatedImage or img
+  if (isJsxImageElement(node)) {
+    const src = getJsxAttrValue(node, 'src')
+    if (src && images.has(src)) {
+      const resolved = images.get(src)!
+      setJsxAttr(node, 'src', resolved.publicSrc)
+      setJsxAttr(node, 'width', String(resolved.meta.width))
+      setJsxAttr(node, 'height', String(resolved.meta.height))
+      setJsxAttr(node, 'placeholder', resolved.meta.placeholder)
+    }
+    return [node]
+  }
+
+  // Standalone image (not in paragraph — shouldn't happen but handle it)
+  if (node.type === 'image' && images.has(node.url)) {
+    const resolved = images.get(node.url)!
+    return [createPixelatedImageNode({
+      src: resolved.publicSrc,
+      alt: node.alt || '',
+      meta: resolved.meta,
+    })]
+  }
+
+  // Recurse into children (cast needed because node types have different children types)
+  if ('children' in node && Array.isArray(node.children)) {
+    const children = node.children as RootContent[]
+    ;(node as { children: RootContent[] }).children = children.flatMap((child) => {
+      return rewriteNode(child, images)
+    })
+  }
+
+  return [node]
+}
+
+/** Create an mdxJsxFlowElement node for PixelatedImage with all attributes */
+function createPixelatedImageNode({ src, alt, meta }: { src: string; alt: string; meta: ImageMeta }): RootContent {
+  return {
+    type: 'mdxJsxFlowElement',
+    name: 'PixelatedImage',
+    attributes: [
+      { type: 'mdxJsxAttribute', name: 'src', value: src },
+      { type: 'mdxJsxAttribute', name: 'alt', value: alt },
+      { type: 'mdxJsxAttribute', name: 'width', value: String(meta.width) },
+      { type: 'mdxJsxAttribute', name: 'height', value: String(meta.height) },
+      { type: 'mdxJsxAttribute', name: 'placeholder', value: meta.placeholder },
+    ],
+    children: [],
+  } as unknown as RootContent
+}
+
+/* ── JSX node helpers ────────────────────────────────────────────────── */
+
+type JsxNode = RootContent & {
+  name?: string
+  attributes: Array<{ type: string; name?: string; value?: unknown }>
+}
+
+function isJsxImageElement(node: RootContent): node is JsxNode {
+  if (node.type !== 'mdxJsxFlowElement' || !('name' in node)) {
+    return false
+  }
+  const name = (node as JsxNode).name
+  return name === 'PixelatedImage' || name === 'img'
+}
+
+function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
+  const attr = node.attributes.find((a) => {
+    return a.type === 'mdxJsxAttribute' && a.name === attrName
+  })
+  if (!attr) {
+    return undefined
+  }
+  if (typeof attr.value === 'string') {
+    return attr.value
+  }
+  if (attr.value && typeof attr.value === 'object' && 'value' in attr.value) {
+    const v = (attr.value as { value: string }).value
     if (typeof v === 'string') {
       return v.replace(/^['"]|['"]$/g, '')
     }
   }
   return undefined
+}
+
+function setJsxAttr(node: JsxNode, attrName: string, value: string): void {
+  const existing = node.attributes.find((a) => {
+    return a.type === 'mdxJsxAttribute' && a.name === attrName
+  })
+  if (existing) {
+    existing.value = value
+  } else {
+    node.attributes.push({ type: 'mdxJsxAttribute', name: attrName, value })
+  }
 }
 
 /* ── Frontmatter extraction ─────────────────────────────────────────── */
@@ -141,8 +253,6 @@ function extractFrontmatter(content: string): Record<string, unknown> {
   if (!match) {
     return {}
   }
-  // Simple YAML-like parser for key: value pairs
-  // Handles: title: My Title, description: Some text
   const result: Record<string, unknown> = {}
   const yamlBlock = match[1] ?? ''
   for (const line of yamlBlock.split('\n')) {
@@ -152,7 +262,6 @@ function extractFrontmatter(content: string): Record<string, unknown> {
     }
     const key = line.slice(0, colonIdx).trim()
     let value: string | boolean = line.slice(colonIdx + 1).trim()
-    // Strip surrounding quotes
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1)
     }

@@ -7,10 +7,10 @@
  *
  * The plugin:
  * - Reads holocron.jsonc / docs.json config
- * - Syncs MDX files to enriched navigation tree (with SHA-based caching)
- * - Generates virtual modules for page loaders and config
+ * - Syncs MDX files + processes images at build time (sharp, image-size)
+ * - Serializes the full navigation tree (with pre-processed MDX) into
+ *   a virtual module — zero I/O needed at request time
  * - Wraps spiceflowPlugin with the holocron app as entry
- * - Registers tailwind and tsconfig-paths plugins
  */
 
 import fs from 'node:fs'
@@ -22,7 +22,6 @@ import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
-import type { Navigation } from './navigation.ts'
 
 export type HolocronPluginOptions = {
   /** Path to config file. Defaults to auto-discovery (holocron.jsonc, docs.json) */
@@ -31,9 +30,7 @@ export type HolocronPluginOptions = {
   pagesDir?: string
 }
 
-const VIRTUAL_PAGES = 'virtual:holocron-pages'
 const VIRTUAL_CONFIG = 'virtual:holocron-config'
-const RESOLVED_PAGES = '\0' + VIRTUAL_PAGES
 const RESOLVED_CONFIG = '\0' + VIRTUAL_CONFIG
 
 /**
@@ -67,10 +64,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let publicDirPath: string
   let distDirPath: string
 
-  // Resolve the holocron app entry — always points to source app.tsx
-  // because Vite needs to process JSX, CSS imports, and virtual modules.
-  // In dev (tsx): import.meta.url ends with .ts, app.tsx is a sibling.
-  // In compiled (dist/): import.meta.url ends with .js, app.tsx is in ../src/.
   const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
   const isDev = import.meta.url.endsWith('.ts')
   const appEntry = isDev
@@ -87,22 +80,22 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         : path.resolve(root, 'pages')
     },
 
-    configResolved(resolved: ResolvedConfig) {
+    async configResolved(resolved: ResolvedConfig) {
       distDirPath = resolved.build?.outDir
         ? path.resolve(root, resolved.build.outDir)
         : path.resolve(root, 'dist')
 
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
 
-      // Read config
       config = readConfig({ root, configPath: options.configPath })
 
-      // Sync MDX → navigation tree (with SHA caching from dist/)
-      // Also copies relative images to public/_holocron/images/
-      syncResult = syncNavigation({
+      // Sync MDX + process images at build time. The returned navigation
+      // tree contains pre-processed MDX (paths rewritten, dimensions injected).
+      syncResult = await syncNavigation({
         config,
         pagesDir,
         publicDir: publicDirPath,
+        projectRoot: root,
         distDir: distDirPath,
       })
 
@@ -112,37 +105,21 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     resolveId(id) {
-      if (id === VIRTUAL_PAGES) {
-        return RESOLVED_PAGES
-      }
       if (id === VIRTUAL_CONFIG) {
         return RESOLVED_CONFIG
       }
     },
 
     load(id) {
-      if (id === RESOLVED_PAGES) {
-        // Generate the import.meta.glob call for the user's pages directory
-        // Path must be relative to root for Vite's glob to work
-        const relPagesDir = path.relative(root, pagesDir).replace(/\\/g, '/')
-        return `export const pages = import.meta.glob('/${relPagesDir}/**/*.{mdx,md}', { query: '?raw', import: 'default' })`
-      }
-
       if (id === RESOLVED_CONFIG) {
-        // Serialize config, navigation, and pagesDir prefix into the virtual module.
-        // pagesDir prefix is needed so loadMdxContent can match glob keys correctly
-        // regardless of the user's pagesDir setting.
-        const relPagesDir = path.relative(root, pagesDir).replace(/\\/g, '/')
         return [
           `export const config = ${JSON.stringify(config)}`,
           `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
-          `export const pagesDirPrefix = ${JSON.stringify('/' + relPagesDir)}`,
         ].join('\n')
       }
     },
 
-    handleHotUpdate({ file, server }) {
-      // Re-sync when MDX files or config changes
+    async handleHotUpdate({ file, server }) {
       if (!file) {
         return
       }
@@ -155,13 +132,13 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (isConfig) {
           config = readConfig({ root, configPath: options.configPath })
         }
-        syncResult = syncNavigation({
+        syncResult = await syncNavigation({
           config,
           pagesDir,
           publicDir: publicDirPath,
+          projectRoot: root,
           distDir: distDirPath,
         })
-        // Invalidate virtual modules so the app picks up changes
         const configModule = server.environments.rsc?.moduleGraph.getModuleById(RESOLVED_CONFIG)
           ?? server.environments.ssr?.moduleGraph.getModuleById(RESOLVED_CONFIG)
         if (configModule) {

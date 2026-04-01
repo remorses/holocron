@@ -1,25 +1,24 @@
 /**
  * Cache sync engine — builds the enriched navigation tree from config + MDX files.
  *
- * Build flow:
- * 1. Read dist/holocron-cache.json (previous enriched tree, if exists)
- * 2. Build a Map<slug, NavPage> from the old cache for SHA lookups
- * 3. Walk the config navigation tree
- * 4. For each page slug: read MDX file, compute git SHA
- *    - SHA matches cached → reuse NavPage (skip parsing)
- *    - SHA differs or new → parse MDX, create new NavPage
- * 5. Assemble enriched tree (same shape as config, strings → NavPage)
- * 6. Write to dist/holocron-cache.json
+ * All processing (MDX parsing, image resolution, sharp placeholders) happens
+ * here at build time. The resulting NavPage.mdx field is the final content —
+ * request-time rendering is just parse + render with zero I/O.
  *
- * The config defines structure (tabs, groups, ordering).
- * The cache only provides per-page metadata (title, headings, SHA).
+ * Build flow:
+ * 1. Read dist/holocron-cache.json + dist/holocron-images.json (previous build)
+ * 2. Walk config navigation tree
+ * 3. For each page: check MDX git SHA → cache hit skips everything
+ * 4. Cache miss: parse MDX, resolve images, process with sharp, rewrite content
+ * 5. Write updated caches
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { processMdx, rewriteImagePaths } from './mdx-processor.ts'
+import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
+import { loadImageCache, saveImageCache, processImage } from './image-processor.ts'
 import {
   type HolocronConfig,
   type ConfigNavTab,
@@ -36,113 +35,103 @@ import {
 } from '../navigation.ts'
 
 const CACHE_FILENAME = 'holocron-cache.json'
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 export type SyncResult = {
   navigation: Navigation
-  /** Number of pages that were re-parsed (not cached) */
   parsedCount: number
-  /** Number of pages reused from cache */
   cachedCount: number
 }
 
 /**
- * Sync MDX files to the enriched navigation tree.
- *
- * @param config - The parsed holocron config
- * @param pagesDir - Absolute path to the pages directory
- * @param distDir - Absolute path to the dist directory (for cache read/write)
+ * Sync MDX files to the enriched navigation tree. All image processing
+ * happens here — the returned NavPage.mdx fields are final and ready
+ * to render without any I/O.
  */
-export function syncNavigation({
+export async function syncNavigation({
   config,
   pagesDir,
   publicDir,
+  projectRoot,
   distDir,
 }: {
   config: HolocronConfig
   pagesDir: string
-  /** Absolute path to the public directory (for copying relative images) */
   publicDir: string
+  projectRoot: string
   distDir: string
-}): SyncResult {
-  // 1. Read existing cache
+}): Promise<SyncResult> {
+  // 1. Load caches from previous build
   const cachePath = path.join(distDir, CACHE_FILENAME)
   const oldNav = readCache(cachePath)
   const oldPages = oldNav ? buildPageIndex(oldNav) : new Map<string, NavPage>()
+  const imageCache = loadImageCache({ distDir })
+
+  const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
   let parsedCount = 0
   let cachedCount = 0
 
-  // Image output dir inside public — namespaced to avoid collisions
-  const imageOutputDir = path.join(publicDir, '_holocron', 'images')
-
-  /**
-   * Resolve relative image paths for an MDX file: copy to public/_holocron/images/
-   * with content-hash filenames. Returns a rewrites map (original → public path).
-   * Uses content hash so same image from multiple pages copies once, and changed
-   * images get new filenames for cache busting.
-   */
-  function resolveRelativeImages(mdxDir: string, relativePaths: string[]): Record<string, string> {
-    const rewrites: Record<string, string> = {}
-    for (const relativeSrc of relativePaths) {
-      const sourcePath = path.resolve(mdxDir, relativeSrc)
-      if (!fs.existsSync(sourcePath)) {
-        continue
-      }
-
-      const imgBuf = fs.readFileSync(sourcePath)
-      const hash = crypto.createHash('sha1').update(imgBuf).digest('hex').slice(0, 8)
-      const ext = path.extname(relativeSrc)
-      const basename = path.basename(relativeSrc, ext)
-      const destName = `${hash}-${basename}${ext}`
-      const destPath = path.join(imageOutputDir, destName)
-      const publicSrc = `/_holocron/images/${destName}`
-
-      if (!fs.existsSync(destPath)) {
-        fs.mkdirSync(imageOutputDir, { recursive: true })
-        fs.copyFileSync(sourcePath, destPath)
-      }
-
-      rewrites[relativeSrc] = publicSrc
-    }
-    return rewrites
-  }
-
   // 2. Enrich a single page slug
-  function enrichPage(slug: string): NavPage {
+  async function enrichPage(slug: string): Promise<NavPage> {
     const mdxPath = resolveMdxPath(pagesDir, slug)
     if (!mdxPath) {
       throw new Error(`MDX file not found for page "${slug}". Looked in ${pagesDir}`)
     }
     const content = fs.readFileSync(mdxPath, 'utf-8')
     const sha = gitBlobSha(content)
-    const mdxDir = path.dirname(mdxPath)
 
-    // Check cache — MDX unchanged
+    // Cache hit — MDX unchanged AND has mdx field (not old cache format)
     const cached = oldPages.get(slug)
-    if (cached && cached.gitSha === sha) {
+    if (cached && cached.gitSha === sha && cached.mdx) {
       cachedCount++
-      // Even on cache hit, re-resolve images because image content may have
-      // changed while the MDX that references them stayed the same.
-      if (cached.imageRewrites && Object.keys(cached.imageRewrites).length > 0) {
-        const freshRewrites = resolveRelativeImages(mdxDir, Object.keys(cached.imageRewrites))
-        // If rewrites changed (image was updated → new hash), update the page
-        if (JSON.stringify(freshRewrites) !== JSON.stringify(cached.imageRewrites)) {
-          return { ...cached, imageRewrites: freshRewrites }
-        }
-      }
       return cached
     }
 
-    // Parse MDX
+    // Cache miss — full processing
     const processed = processMdx(content)
     parsedCount++
 
-    // Resolve relative images
-    const imageRewrites = processed.relativeImages.length > 0
-      ? resolveRelativeImages(mdxDir, processed.relativeImages)
-      : {}
+    const mdxDir = path.dirname(mdxPath)
+    const resolvedImages = new Map<string, ResolvedImage>()
 
-    const hasRewrites = Object.keys(imageRewrites).length > 0
+    // Resolve and process each image
+    for (const src of processed.imageSrcs) {
+      const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
+      if (!resolved) {
+        continue
+      }
+
+      // Process image (SHA-cached — skips sharp if unchanged).
+      // Per-image try/catch so one bad image doesn't fail the whole build.
+      let meta
+      try {
+        meta = await processImage({ filePath: resolved.filePath, cache: imageCache })
+      } catch (e) {
+        console.error(`[holocron] warning: failed to process image ${src}`, e)
+        continue
+      }
+      if (!meta) {
+        continue
+      }
+
+      // Determine final public src
+      const publicSrc = (() => {
+        if (resolved.needsCopy) {
+          const destName = copyToPublic({ filePath: resolved.filePath, imageOutputDir })
+          return `/_holocron/images/${destName}`
+        }
+        return src
+      })()
+
+      resolvedImages.set(src, { publicSrc, meta })
+    }
+
+    // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
+    const finalMdx = resolvedImages.size > 0
+      ? rewriteMdxImages(processed.mdast, resolvedImages)
+      : content
+
     return {
       slug,
       href: slugToHref(slug),
@@ -150,48 +139,122 @@ export function syncNavigation({
       description: processed.description,
       gitSha: sha,
       headings: processed.headings,
-      ...(hasRewrites ? { imageRewrites } : {}),
+      mdx: finalMdx,
     }
   }
 
   // 3. Walk config and enrich
-  function enrichPageEntry(entry: ConfigNavPageEntry): NavPageEntry {
+  async function enrichPageEntry(entry: ConfigNavPageEntry): Promise<NavPageEntry> {
     if (typeof entry === 'string') {
       return enrichPage(entry)
     }
-    // Nested group
     return enrichGroup(entry)
   }
 
-  function enrichGroup(configGroup: ConfigNavGroup): NavGroup {
+  async function enrichGroup(configGroup: ConfigNavGroup): Promise<NavGroup> {
     return {
       group: configGroup.group,
       icon: configGroup.icon,
-      pages: configGroup.pages.map((entry) => {
+      pages: await Promise.all(configGroup.pages.map((entry) => {
         return enrichPageEntry(entry)
-      }),
+      })),
     }
   }
 
-  function enrichTab(configTab: ConfigNavTab): NavTab {
+  async function enrichTab(configTab: ConfigNavTab): Promise<NavTab> {
     return {
       tab: configTab.tab,
-      groups: configTab.groups.map((g) => {
+      groups: await Promise.all(configTab.groups.map((g) => {
         return enrichGroup(g)
-      }),
+      })),
     }
   }
 
-  // 4. Build enriched navigation — config.navigation.tabs is already
-  // normalized by readConfig(), always an array of ConfigNavTab
-  const navigation: Navigation = config.navigation.tabs.map((tab) => {
-    return enrichTab(tab)
-  })
+  // 4. Build enriched navigation
+  const navigation: Navigation = await Promise.all(
+    config.navigation.tabs.map((tab) => {
+      return enrichTab(tab)
+    }),
+  )
 
-  // 5. Write cache
+  // 5. Write caches
   writeCache(cachePath, navigation)
+  saveImageCache({ distDir, cache: imageCache })
 
   return { navigation, parsedCount, cachedCount }
+}
+
+/* ── Image path resolution ───────────────────────────────────────────── */
+
+type ResolvedImagePath = {
+  filePath: string
+  /** Whether the file needs to be copied to public/_holocron/images/ */
+  needsCopy: boolean
+}
+
+/**
+ * Resolve an image src to a filesystem path.
+ *
+ * - Relative (./img.png, ../x.jpg): resolve from MDX dir → needs copy
+ * - Absolute (/images/x.png): try publicDir first (no copy), then projectRoot (needs copy)
+ * - External (https://...): already filtered out by mdx-processor
+ */
+function resolveImagePath({
+  src,
+  mdxDir,
+  publicDir,
+  projectRoot,
+}: {
+  src: string
+  mdxDir: string
+  publicDir: string
+  projectRoot: string
+}): ResolvedImagePath | undefined {
+  const isAbsolute = src.startsWith('/')
+
+  if (!isAbsolute) {
+    // Relative path — resolve from MDX file's directory
+    const filePath = path.resolve(mdxDir, src)
+    if (fs.existsSync(filePath) && isImageFile(filePath)) {
+      return { filePath, needsCopy: true }
+    }
+    return undefined
+  }
+
+  // Absolute path — try publicDir first (no copy needed)
+  const publicPath = path.join(publicDir, src)
+  if (fs.existsSync(publicPath) && isImageFile(publicPath)) {
+    return { filePath: publicPath, needsCopy: false }
+  }
+
+  // Fallback: try project root (some users use / to mean project root)
+  const rootPath = path.join(projectRoot, src)
+  if (fs.existsSync(rootPath) && isImageFile(rootPath)) {
+    return { filePath: rootPath, needsCopy: true }
+  }
+
+  return undefined
+}
+
+function isImageFile(filePath: string): boolean {
+  return IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())
+}
+
+/** Copy image to public/_holocron/images/<hash>-<name>.ext, returns dest filename */
+function copyToPublic({ filePath, imageOutputDir }: { filePath: string; imageOutputDir: string }): string {
+  const buf = fs.readFileSync(filePath)
+  const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 8)
+  const ext = path.extname(filePath)
+  const basename = path.basename(filePath, ext)
+  const destName = `${hash}-${basename}${ext}`
+  const destPath = path.join(imageOutputDir, destName)
+
+  if (!fs.existsSync(destPath)) {
+    fs.mkdirSync(imageOutputDir, { recursive: true })
+    fs.copyFileSync(filePath, destPath)
+  }
+
+  return destName
 }
 
 /* ── Cache I/O ──────────────────────────────────────────────────────── */
@@ -201,8 +264,7 @@ function readCache(cachePath: string): Navigation | null {
     return null
   }
   try {
-    const raw = fs.readFileSync(cachePath, 'utf-8')
-    return JSON.parse(raw) as Navigation
+    return JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as Navigation
   } catch {
     return null
   }
@@ -216,7 +278,6 @@ function writeCache(cachePath: string, nav: Navigation): void {
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
-/** Resolve an MDX file path from a page slug. Tries .mdx then .md */
 function resolveMdxPath(pagesDir: string, slug: string): string | undefined {
   for (const ext of ['.mdx', '.md']) {
     const filePath = path.join(pagesDir, slug + ext)
@@ -227,12 +288,10 @@ function resolveMdxPath(pagesDir: string, slug: string): string | undefined {
   return undefined
 }
 
-/** Convert a page slug to a URL href. "index" → "/", "api/overview" → "/api/overview" */
 function slugToHref(slug: string): string {
   if (slug === 'index') {
     return '/'
   }
-  // Strip trailing /index
   const cleaned = slug.replace(/\/index$/, '')
   return `/${cleaned}`
 }
