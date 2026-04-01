@@ -14,6 +14,7 @@
  */
 
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import type { Plugin, PluginOption, ResolvedConfig } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
@@ -87,6 +88,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         const name = (p as { name?: string })?.name || ''
         return name.startsWith('vite:react')
       })
+
+      // Make spiceflow resolvable from the consumer's project root even when
+      // it's only a transitive dependency of @holocron.so/vite. Without this,
+      // pnpm strict hoisting prevents Vite from finding bare `spiceflow` imports.
+      const _require = createRequire(import.meta.url)
+      const spiceflowDir = path.dirname(_require.resolve('spiceflow/package.json'))
+      return {
+        resolve: {
+          alias: [{ find: 'spiceflow', replacement: spiceflowDir }],
+        },
+      }
     },
 
     async configResolved(resolved: ResolvedConfig) {
