@@ -63,6 +63,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let config: HolocronConfig
   let syncResult: SyncResult
   let pagesDir: string
+  let publicDirPath: string
   let distDirPath: string
 
   // Resolve the holocron app entry — always points to source app.tsx
@@ -90,13 +91,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         ? path.resolve(root, resolved.build.outDir)
         : path.resolve(root, 'dist')
 
+      publicDirPath = resolved.publicDir || path.resolve(root, 'public')
+
       // Read config
       config = readConfig({ root })
 
       // Sync MDX → navigation tree (with SHA caching from dist/)
+      // Also copies relative images to public/_holocron/images/
       syncResult = syncNavigation({
         config,
         pagesDir,
+        publicDir: publicDirPath,
         distDir: distDirPath,
       })
 
@@ -148,6 +153,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         syncResult = syncNavigation({
           config,
           pagesDir,
+          publicDir: publicDirPath,
           distDir: distDirPath,
         })
         // Invalidate virtual modules so the app picks up changes

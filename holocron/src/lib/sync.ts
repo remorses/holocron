@@ -17,8 +17,9 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { processMdx } from './mdx-processor.ts'
+import { processMdx, rewriteImagePaths } from './mdx-processor.ts'
 import {
   type HolocronConfig,
   type ConfigNavTab,
@@ -54,10 +55,13 @@ export type SyncResult = {
 export function syncNavigation({
   config,
   pagesDir,
+  publicDir,
   distDir,
 }: {
   config: HolocronConfig
   pagesDir: string
+  /** Absolute path to the public directory (for copying relative images) */
+  publicDir: string
   distDir: string
 }): SyncResult {
   // 1. Read existing cache
@@ -67,6 +71,9 @@ export function syncNavigation({
 
   let parsedCount = 0
   let cachedCount = 0
+
+  // Image output dir inside public — namespaced to avoid collisions
+  const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
   // 2. Enrich a single page slug
   function enrichPage(slug: string): NavPage {
@@ -88,6 +95,38 @@ export function syncNavigation({
     const processed = processMdx(content)
     parsedCount++
 
+    // Resolve relative images: copy to public/_holocron/images/, store
+    // rewrites map on the NavPage. At render time, app-factory applies
+    // the rewrites to the raw MDX before parsing so image srcs point to
+    // their public copies. Uses content hash for dedup + cache busting.
+    const imageRewrites: Record<string, string> = {}
+    if (processed.relativeImages.length > 0) {
+      const mdxDir = path.dirname(mdxPath)
+
+      for (const relativeSrc of processed.relativeImages) {
+        const sourcePath = path.resolve(mdxDir, relativeSrc)
+        if (!fs.existsSync(sourcePath)) {
+          continue
+        }
+
+        const imgBuf = fs.readFileSync(sourcePath)
+        const hash = crypto.createHash('sha1').update(imgBuf).digest('hex').slice(0, 8)
+        const ext = path.extname(relativeSrc)
+        const basename = path.basename(relativeSrc, ext)
+        const destName = `${hash}-${basename}${ext}`
+        const destPath = path.join(imageOutputDir, destName)
+        const publicSrc = `/_holocron/images/${destName}`
+
+        if (!fs.existsSync(destPath)) {
+          fs.mkdirSync(imageOutputDir, { recursive: true })
+          fs.copyFileSync(sourcePath, destPath)
+        }
+
+        imageRewrites[relativeSrc] = publicSrc
+      }
+    }
+
+    const hasRewrites = Object.keys(imageRewrites).length > 0
     return {
       slug,
       href: slugToHref(slug),
@@ -95,6 +134,7 @@ export function syncNavigation({
       description: processed.description,
       gitSha: sha,
       headings: processed.headings,
+      ...(hasRewrites ? { imageRewrites } : {}),
     }
   }
 

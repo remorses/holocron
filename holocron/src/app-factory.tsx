@@ -38,7 +38,7 @@ import {
   type EditorialSection,
 } from './components/markdown.tsx'
 import { slugify, extractText } from './components/toc-tree.ts'
-import { buildImageManifest } from './lib/image-cache.ts'
+import { createImageCache } from './lib/image-cache.ts'
 import type { HolocronConfig } from './config.ts'
 import {
   type Navigation,
@@ -118,7 +118,12 @@ export function createHolocronApp({
   navigation: Navigation
   pageLoaders: PageLoaders
 }) {
-  const cacheDir = path.resolve(distDir, '.cache/images')
+  // Single in-memory image cache shared across all page renders.
+  // Reads dist/holocron-images.json on startup, auto-flushes on process exit.
+  const imageCache = createImageCache({ distDir })
+  process.on('beforeExit', () => {
+    imageCache.flush()
+  })
 
   // Build tab items: navigation tabs + anchors (all normalized, no unions)
   const navTabItems: TabItem[] = navigation
@@ -176,18 +181,22 @@ export function createHolocronApp({
         return <div>Page not found: {slug}</div>
       }
 
-      const mdxContent = await loadMdxContent(pageLoaders, slug)
+      let mdxContent = await loadMdxContent(pageLoaders, slug)
       if (!mdxContent) {
         return <div>MDX content not found for: {slug}</div>
       }
 
+      // Apply image path rewrites — relative paths (./img.png) are replaced
+      // with their public copies (/_holocron/images/hash-img.png)
+      if (pageData.imageRewrites) {
+        for (const [original, replacement] of Object.entries(pageData.imageRewrites)) {
+          mdxContent = mdxContent.replaceAll(original, replacement)
+        }
+      }
+
       const mdast = mdxParse(mdxContent) as Root
 
-      const imageManifest = await buildImageManifest({
-        mdast,
-        publicDir,
-        cacheDir,
-      })
+      const imageManifest = await imageCache.buildManifest({ mdast, publicDir })
 
       // Extract hero nodes
       const heroNodes = mdast.children.filter(isHeroNode)

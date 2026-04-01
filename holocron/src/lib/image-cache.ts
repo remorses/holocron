@@ -1,35 +1,167 @@
-/*
- * Server-side image metadata cache.
+/**
+ * Image metadata cache — single JSON file at dist/holocron-images.json.
  *
- * Generates and caches image dimensions (via image-size) and tiny 64px
- * placeholders (via sharp) as JSON files in website/.cache/images/.
- * Designed to run during SSR/SSG — not in client components.
+ * Stores dimensions + 64px base64 placeholder for each local image found
+ * in MDX content. Uses git blob SHA for cache invalidation (deterministic
+ * across machines/CI, unlike mtime).
  *
- * Cache invalidation: each JSON stores the source file's mtime. On cache
- * read, if the mtime differs the entry is regenerated.
+ * During build/dev:
+ *   1. createImageCache() loads dist/holocron-images.json into a Record
+ *   2. Page renders call cache.get(src, publicDir) — returns cached if SHA
+ *      matches, otherwise reads the file once, processes, stores in memory
+ *   3. At the end, cache.flush() writes the Record to dist/holocron-images.json
  *
- * The placeholder is stored as a base64 data URI (PNG, ~2–4KB) that
- * PixelatedImage renders with CSS image-rendering: pixelated.
+ * Same image referenced in multiple pages is processed exactly once thanks
+ * to the in-memory Record keyed by src path.
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import type { Root, RootContent } from 'mdast'
 
 const PLACEHOLDER_WIDTH = 64
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp'])
+const CACHE_FILENAME = 'holocron-images.json'
 
 export type ImageMeta = {
   width: number
   height: number
-  /** data:image/png;base64,... */
+  /** Git blob SHA of the source image file */
+  gitSha: string
+  /** data:image/png;base64,... — 64px placeholder for pixelated loading */
   placeholder: string
 }
 
-type CacheEntry = ImageMeta & {
-  /** mtime of the source image when this cache was written */
-  mtime: number
+/** The full cache file: Record<src, ImageMeta> */
+export type ImageCache = Record<string, ImageMeta>
+
+/**
+ * In-memory image cache backed by a single JSON file.
+ * Call get() per image src, then flush() once at the end of build.
+ */
+export function createImageCache({ distDir }: { distDir: string }) {
+  const cachePath = path.join(distDir, CACHE_FILENAME)
+  const cache: ImageCache = readCacheFile(cachePath)
+  // Track in-flight promises so the same image is never read twice even
+  // when multiple pages request it concurrently
+  const inflight: Record<string, Promise<ImageMeta | undefined>> = {}
+
+  return {
+    /**
+     * Get image metadata for a src path. Returns cached if SHA matches,
+     * otherwise reads the file, processes it, and stores in memory.
+     * Each image file is read at most once even on cold cache.
+     */
+    async get({ src, publicDir }: { src: string; publicDir: string }): Promise<ImageMeta | undefined> {
+      const srcPath = src.startsWith('/') ? src.slice(1) : src
+      const filePath = path.join(publicDir, srcPath)
+
+      const ext = path.extname(filePath).toLowerCase()
+      if (!IMAGE_EXTENSIONS.has(ext)) {
+        return undefined
+      }
+
+      // Return from in-memory cache if SHA matches (already processed this build)
+      const existing = cache[src]
+      if (existing) {
+        // Verify file still exists and SHA still matches
+        if (fs.existsSync(filePath)) {
+          const sha = gitBlobShaForFile(filePath)
+          if (sha === existing.gitSha) {
+            return existing
+          }
+        }
+      }
+
+      // Deduplicate concurrent requests for the same image
+      if (inflight[src]) {
+        return inflight[src]
+      }
+
+      const promise = processImage({ src, filePath })
+      inflight[src] = promise
+      const result = await promise
+      delete inflight[src]
+
+      if (result) {
+        cache[src] = result
+      }
+      return result
+    },
+
+    /** Build manifest for all local images in a mdast tree */
+    async buildManifest({ mdast, publicDir }: { mdast: Root; publicDir: string }): Promise<Record<string, ImageMeta>> {
+      const srcs = collectImageSrcs(mdast)
+      const manifest: Record<string, ImageMeta> = {}
+
+      await Promise.all(
+        srcs.map(async (src) => {
+          const meta = await this.get({ src, publicDir })
+          if (meta) {
+            manifest[src] = meta
+          }
+        }),
+      )
+
+      return manifest
+    },
+
+    /** Write the in-memory cache to dist/holocron-images.json */
+    flush(): void {
+      try {
+        const dir = path.dirname(cachePath)
+        fs.mkdirSync(dir, { recursive: true })
+        fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2))
+      } catch (e) {
+        console.error(`image-cache: cannot write ${cachePath}`, e)
+      }
+    },
+  }
 }
+
+/* ── Image processing ────────────────────────────────────────────────── */
+
+async function processImage({ src, filePath }: { src: string; filePath: string }): Promise<ImageMeta | undefined> {
+  if (!fs.existsSync(filePath)) {
+    return undefined
+  }
+
+  const sha = gitBlobShaForFile(filePath)
+
+  const [{ imageSizeFromFile }, sharp] = await Promise.all([
+    import('image-size/fromFile'),
+    import('sharp').then((m) => {
+      return m.default
+    }),
+  ])
+
+  const [size, placeholderBuf] = await Promise.all([
+    imageSizeFromFile(filePath),
+    sharp(filePath)
+      .resize(PLACEHOLDER_WIDTH)
+      .png({ compressionLevel: 9 })
+      .toBuffer(),
+  ])
+
+  return {
+    width: size.width,
+    height: size.height,
+    gitSha: sha,
+    placeholder: `data:image/png;base64,${placeholderBuf.toString('base64')}`,
+  }
+}
+
+function gitBlobShaForFile(filePath: string): string {
+  const buf = fs.readFileSync(filePath)
+  return crypto
+    .createHash('sha1')
+    .update(`blob ${buf.length}\0`)
+    .update(buf)
+    .digest('hex')
+}
+
+/* ── MDX image src collection ────────────────────────────────────────── */
 
 /** Walk mdast tree and collect all local image srcs. */
 export function collectImageSrcs(root: Root): string[] {
@@ -40,7 +172,6 @@ export function collectImageSrcs(root: Root): string[] {
       if (node.type === 'image' && node.url && !node.url.startsWith('http')) {
         srcs.push(node.url)
       }
-      /* mdxJsxFlowElement with name PixelatedImage or img */
       if (
         node.type === 'mdxJsxFlowElement' &&
         'name' in node &&
@@ -70,110 +201,7 @@ export function collectImageSrcs(root: Root): string[] {
   return [...new Set(srcs)]
 }
 
-/**
- * Build a manifest of image metadata for all local images in the mdast.
- * Reads from cache when valid, generates on miss.
- */
-export async function buildImageManifest({
-  mdast,
-  publicDir,
-  cacheDir,
-}: {
-  mdast: Root
-  publicDir: string
-  cacheDir: string
-}): Promise<Record<string, ImageMeta>> {
-  const srcs = collectImageSrcs(mdast)
-  const manifest: Record<string, ImageMeta> = {}
-
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true })
-  } catch (e) {
-    console.error('image-cache: cannot create cache dir (read-only fs?)', e)
-  }
-
-  await Promise.all(
-    srcs.map(async (src) => {
-      const meta = await getOrGenerateImageMeta({ src, publicDir, cacheDir })
-      if (meta) {
-        manifest[src] = meta
-      }
-    }),
-  )
-
-  return manifest
-}
-
-async function getOrGenerateImageMeta({
-  src,
-  publicDir,
-  cacheDir,
-}: {
-  src: string
-  publicDir: string
-  cacheDir: string
-}): Promise<ImageMeta | undefined> {
-  /* Resolve src (e.g. "/screenshot@2x.png") to filesystem path */
-  const srcPath = src.startsWith('/') ? src.slice(1) : src
-  const filePath = path.join(publicDir, srcPath)
-
-  if (!fs.existsSync(filePath)) {
-    return undefined
-  }
-
-  const ext = path.extname(filePath).toLowerCase()
-  if (!IMAGE_EXTENSIONS.has(ext)) {
-    return undefined
-  }
-
-  const stat = fs.statSync(filePath)
-  const cacheName = sanitizeCacheKey(src)
-  const cachePath = path.join(cacheDir, `${cacheName}.json`)
-
-  /* Check cache */
-  if (fs.existsSync(cachePath)) {
-    const cached: CacheEntry = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
-    if (cached.mtime === stat.mtimeMs) {
-      return {
-        width: cached.width,
-        height: cached.height,
-        placeholder: cached.placeholder,
-      }
-    }
-  }
-
-  /* Cache miss — generate */
-  const [{ imageSizeFromFile }, sharp] = await Promise.all([
-    import('image-size/fromFile'),
-    import('sharp').then((m) => {
-      return m.default
-    }),
-  ])
-
-  const [size, placeholderBuf] = await Promise.all([
-    imageSizeFromFile(filePath),
-    sharp(filePath)
-      .resize(PLACEHOLDER_WIDTH)
-      .png({ compressionLevel: 9 })
-      .toBuffer(),
-  ])
-
-  const meta: ImageMeta = {
-    width: size.width,
-    height: size.height,
-    placeholder: `data:image/png;base64,${placeholderBuf.toString('base64')}`,
-  }
-
-  /* Write cache — logs on failure (Vercel has read-only fs) */
-  try {
-    const entry: CacheEntry = { ...meta, mtime: stat.mtimeMs }
-    fs.writeFileSync(cachePath, JSON.stringify(entry))
-  } catch (e) {
-    console.error(`image-cache: cannot write ${cachePath} (read-only fs?)`, e)
-  }
-
-  return meta
-}
+/* ── Helpers ─────────────────────────────────────────────────────────── */
 
 /** Extract string value from an mdxJsxAttribute value (string or expression). */
 export function getAttrStringValue(value: unknown): string | undefined {
@@ -182,9 +210,7 @@ export function getAttrStringValue(value: unknown): string | undefined {
   }
   if (value && typeof value === 'object' && 'value' in value) {
     const v = (value as { value: string }).value
-    /* Expression values may be quoted strings like "'foo'" or numbers like "1280" */
     if (typeof v === 'string') {
-      /* Strip surrounding quotes if present */
       const unquoted = v.replace(/^['"]|['"]$/g, '')
       return unquoted
     }
@@ -206,6 +232,13 @@ export function getJsxAttr(
   return getAttrStringValue(attr.value)
 }
 
-function sanitizeCacheKey(src: string): string {
-  return src.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^_+/, '')
+function readCacheFile(cachePath: string): ImageCache {
+  if (!fs.existsSync(cachePath)) {
+    return {}
+  }
+  try {
+    return JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as ImageCache
+  } catch {
+    return {}
+  }
 }
