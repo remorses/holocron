@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/remorses/playwriter",
-    "directory": "holocron"
+    "directory": "vite"
   },
   "homepage": "https://holocron.so",
   "bugs": "https://github.com/remorses/playwriter/issues",
