@@ -8,7 +8,7 @@ test.describe("home page", () => {
     // Title from frontmatter should be in the document title
     await expect(page).toHaveTitle(/Test Docs/);
     // MDX heading should be rendered
-    await expect(page.getByText("Overview")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
     // MDX paragraph content should be rendered
     await expect(
       page.getByText("home page content for integration testing"),
@@ -31,8 +31,58 @@ test.describe("getting-started page", () => {
   test("renders page title and headings", async ({ page }) => {
     await page.goto("/getting-started");
     await expect(page).toHaveTitle(/Getting Started/);
-    await expect(page.getByText("Installation")).toBeVisible();
-    await expect(page.getByText("Configuration")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Installation" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+  });
+
+  test("expands the current page in the sidebar and shows page heading links", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/getting-started");
+
+    const toc = page.getByRole("navigation", { name: "Table of contents" });
+
+    await expect(toc.getByRole("link", { name: "Getting Started" })).toBeVisible();
+    await expect(toc.getByRole("link", { name: "Installation" })).toBeVisible();
+    await expect(toc.getByRole("link", { name: "Configuration" })).toBeVisible();
+  });
+
+  test("can collapse and re-expand the current page headings in the sidebar", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/getting-started");
+
+    const toc = page.getByRole("navigation", { name: "Table of contents" });
+    const pageRow = toc.getByRole("link", { name: "Getting Started" });
+    const installation = toc.getByRole("link", { name: "Installation" });
+
+    await expect(installation).toBeVisible();
+
+    await pageRow.locator("svg").click();
+    await expect(installation).not.toBeVisible();
+
+    await pageRow.locator("svg").click();
+    await expect(installation).toBeVisible();
+  });
+
+  test("indents page heading links deeper than the page row", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/getting-started");
+
+    const toc = page.getByRole("navigation", { name: "Table of contents" });
+    const pageRow = toc.getByRole("link", { name: "Getting Started" });
+    const installation = toc.getByRole("link", { name: "Installation" });
+
+    const pagePaddingLeft = await pageRow.evaluate((node) => {
+      return Number.parseFloat(window.getComputedStyle(node).paddingLeft);
+    });
+    const headingPaddingLeft = await installation.evaluate((node) => {
+      return Number.parseFloat(window.getComputedStyle(node).paddingLeft);
+    });
+
+    expect(headingPaddingLeft).toBeGreaterThan(pagePaddingLeft);
   });
 
   test("renders code blocks", async ({ page }) => {
@@ -66,6 +116,17 @@ test.describe("navigation", () => {
     expect(html).toContain("Getting Started");
     // Should have the nav group name
     expect(html).toContain("Guides");
+  });
+
+  test("client navigation updates the document title", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+
+    const nav = page.getByRole("navigation", { name: "Table of contents" });
+    await nav.getByRole("link", { name: "Getting Started" }).click();
+
+    await expect(page).toHaveURL(/\/getting-started$/);
+    await expect(page).toHaveTitle(/Getting Started/);
   });
 });
 

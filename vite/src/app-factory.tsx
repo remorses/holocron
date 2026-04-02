@@ -6,7 +6,7 @@
  * Zero file I/O, zero sharp, zero image-size — works on Cloudflare.
  */
 
-import './styles/globals.css'
+import '@holocron.so/vite/styles/globals.css'
 import React, { Fragment, type ReactNode } from 'react'
 import { Spiceflow, serveStatic, redirect } from 'spiceflow'
 import { Head } from 'spiceflow/react'
@@ -35,7 +35,7 @@ import {
   type HeaderLink,
   type HeadingLevel,
   type EditorialSection,
-} from './components/markdown.tsx'
+} from '@holocron.so/vite/components/markdown'
 import { slugify, extractText } from './components/toc-tree.ts'
 import type { HolocronConfig } from './config.ts'
 import {
@@ -302,6 +302,7 @@ export function createHolocronApp({
           </Head>
           <EditorialPage
             toc={tocItems}
+            currentPageHref={pageData.href}
             logo={logoSrc}
             tabs={tabItems}
             activeTab={activeTabHref}

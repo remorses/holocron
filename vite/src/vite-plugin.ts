@@ -16,7 +16,7 @@
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
-import type { Plugin, PluginOption, ResolvedConfig } from 'vite'
+import type { Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -63,6 +63,26 @@ function rawImportPlugin(): Plugin {
   }
 }
 
+type NoExternalValue = string | RegExp | true | (string | RegExp)[] | undefined
+
+function addNoExternal(config: { resolve?: { noExternal?: NoExternalValue } }, pkg: string | RegExp) {
+  config.resolve ??= {}
+  const existing = config.resolve.noExternal
+  const arr = Array.isArray(existing)
+    ? existing
+    : existing === true
+      ? []
+      : existing
+        ? [existing]
+        : []
+  config.resolve.noExternal = [...arr, pkg]
+}
+
+function mergeUnique(existing: string | string[] | undefined, items: string[]): string[] {
+  const arr = Array.isArray(existing) ? existing : existing ? [existing] : []
+  return Array.from(new Set([...arr, ...items]))
+}
+
 export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let root: string
   let config: HolocronConfig
@@ -70,8 +90,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let pagesDir: string
   let publicDirPath: string
   let distDirPath: string
+  let resolveHolocronPackagePath:
+    | ((id: string, importer?: string, ssr?: boolean) => Promise<string | undefined>)
+    | undefined
 
   let hasUserReactPlugin = false
+  const holocronPackagePattern = /^@holocron\.so\/vite(?:\/.*)?$/
 
   const holocronPlugin: Plugin = {
     name: 'holocron',
@@ -94,14 +118,27 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // pnpm strict hoisting prevents Vite from finding bare `spiceflow` imports.
       const _require = createRequire(import.meta.url)
       const spiceflowDir = path.dirname(_require.resolve('spiceflow/package.json'))
-      return {
+      const next: Pick<UserConfig, 'resolve'> = {
         resolve: {
           alias: [{ find: 'spiceflow', replacement: spiceflowDir }],
         },
       }
+      return next
     },
 
     async configResolved(resolved: ResolvedConfig) {
+      // Keep Holocron runtime subpaths looking like package imports in dev.
+      // `@vitejs/plugin-rsc` only records package client sources when the
+      // resolved id still includes `/node_modules/` (see `rsc:virtual-client-package`
+      // in `dist/plugin.js`, around lines 879-883). If Vite realpaths these
+      // imports out of `node_modules`, the markdown/sidebar client boundary stops
+      // hydrating. Use a narrow resolver here instead of global
+      // `resolve.preserveSymlinks`.
+      const preserveSymlinkResolver = resolved.createResolver({ preserveSymlinks: true })
+      resolveHolocronPackagePath = async (id, importer, ssr) => {
+        return await preserveSymlinkResolver(id, importer, false, ssr)
+      }
+
       distDirPath = resolved.build?.outDir
         ? path.resolve(root, resolved.build.outDir)
         : path.resolve(root, 'dist')
@@ -125,7 +162,21 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       )
     },
 
-    resolveId(id) {
+    async resolveId(id, importer) {
+      if (
+        id === '@holocron.so/vite/app-factory' ||
+        id === '@holocron.so/vite/components/markdown' ||
+        id === '@holocron.so/vite/styles/globals.css'
+      ) {
+        const resolved = await resolveHolocronPackagePath?.(
+          id,
+          importer,
+          this.environment.name === 'ssr',
+        )
+        if (resolved) {
+          return resolved
+        }
+      }
       if (id === VIRTUAL_CONFIG) {
         return RESOLVED_CONFIG
       }
@@ -153,7 +204,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return [
           `import { config, navigation } from '${VIRTUAL_CONFIG}'`,
           `import mdxContent from '${VIRTUAL_MDX}'`,
-          `import { createHolocronApp } from '@holocron.so/vite/src/app-factory'`,
+          `import { createHolocronApp } from '@holocron.so/vite/app-factory'`,
           `export const app = createHolocronApp({ config, navigation, mdxContent })`,
           // Auto-start the server in production (when import.meta.hot is not available).
           // In dev mode, spiceflow's SSR middleware handles requests instead.
@@ -192,9 +243,41 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
   }
 
+  // Keep Holocron's exported runtime subpaths in the RSC package-source path.
+  // `@vitejs/plugin-rsc` only emits stable `client-package-proxy/...` imports
+  // for package modules that stay inside the server transform pipeline, so the
+  // wrapper package must be `noExternal` in `rsc`/`ssr` and excluded from the
+  // client optimizer.
+  const holocronRscPackagePlugin: Plugin = {
+    name: 'holocron:rsc-package-source',
+    configEnvironment(name, config) {
+      if (name === 'client') {
+        config.optimizeDeps ??= {}
+        config.optimizeDeps.exclude = mergeUnique(
+          config.optimizeDeps.exclude as string | string[] | undefined,
+          ['@holocron.so/vite'],
+        )
+        config.optimizeDeps.include = mergeUnique(
+          config.optimizeDeps.include as string | string[] | undefined,
+          [
+            '@holocron.so/vite > prismjs',
+            '@holocron.so/vite > prismjs/components/prism-jsx',
+            '@holocron.so/vite > prismjs/components/prism-tsx',
+            '@holocron.so/vite > prismjs/components/prism-bash',
+          ],
+        )
+      }
+
+      if (name === 'rsc' || name === 'ssr') {
+        addNoExternal(config, holocronPackagePattern)
+      }
+    },
+  }
+
   return [
     rawImportPlugin(),
     holocronPlugin,
+    holocronRscPackagePlugin,
     spiceflowPlugin({ entry: VIRTUAL_APP }),
     tsconfigPaths(),
     tailwindcss(),

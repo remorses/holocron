@@ -12,10 +12,12 @@ import { createTocDb, searchToc, type SearchState } from './search.ts'
 import type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem } from './toc-tree.ts'
 
 export type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem }
-import Prism from 'prismjs'
+import * as PrismModule from 'prismjs'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-tsx'
 import 'prismjs/components/prism-bash'
+
+const Prism = ((PrismModule as { default?: unknown }).default ?? PrismModule) as typeof PrismModule
 
 /* Custom "diagram" language for ASCII/Unicode box-drawing diagrams.
    Tokenizes box-drawing chars as neutral structure, text as highlighted labels. */
@@ -245,6 +247,7 @@ function TocLink({
   const defaultPrefixColor = effectiveActive ? 'var(--text-secondary)' : 'var(--text-tertiary)'
   const bg = isHighlighted ? 'var(--border-subtle)' : effectiveActive ? 'var(--border-subtle)' : 'transparent'
   const fontWeight = WEIGHT.regular
+  const leftInset = 8 + item.visualLevel * 6
   return (
     <a
       ref={linkRef}
@@ -256,9 +259,8 @@ function TocLink({
         alignItems: 'flex-start',
         fontSize: 'var(--type-toc-size)',
         fontWeight,
-        // marginLeft: item.prefix ? '-3px' : undefined,
         letterSpacing: 'normal',
-        padding: item.visualLevel > 0 ? '4px 8px' : '2px 8px',
+        padding: item.visualLevel > 0 ? `4px 8px 4px ${leftInset}px` : `2px 8px 2px ${leftInset}px`,
         color: defaultColor,
         fontFamily: 'var(--font-primary)',
         transition: 'color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
@@ -299,7 +301,15 @@ function TocLink({
   )
 }
 
-export function TableOfContents({ items, logo }: { items: FlatTocItem[]; logo?: string }) {
+export function TableOfContents({
+  items,
+  logo,
+  currentPageHref,
+}: {
+  items: FlatTocItem[]
+  logo?: string
+  currentPageHref?: string
+}) {
   const firstHref = items[0]?.href ?? ''
   const fallbackId = firstHref.startsWith('#') ? firstHref.slice(1) : firstHref
   const scrollLockRef = useRef(false)
@@ -318,7 +328,20 @@ export function TableOfContents({ items, logo }: { items: FlatTocItem[]; logo?: 
   // Track which items are expanded. First expandable item starts open.
   const [expanded, setExpanded] = useState<Set<string>>(() => {
     const first = items.find((i) => { return expandableHrefs.has(i.href) })
-    return first ? new Set([first.href]) : new Set()
+    const next = first ? new Set([first.href]) : new Set<string>()
+
+    if (currentPageHref) {
+      let current = itemByHref.get(currentPageHref)
+      if (current && expandableHrefs.has(current.href)) {
+        next.add(current.href)
+      }
+      while (current?.parentHref) {
+        next.add(current.parentHref)
+        current = itemByHref.get(current.parentHref)
+      }
+    }
+
+    return next
   })
 
   // Auto-expand the active item (if expandable) and its ancestors
@@ -326,13 +349,14 @@ export function TableOfContents({ items, logo }: { items: FlatTocItem[]; logo?: 
     if (!activeId) {
       return
     }
-    const activeHref = `#${activeId}`
+    const activeHash = `#${activeId}`
+    const activeHref = `${window.location.pathname}${activeHash}`
     const toExpand: string[] = []
     // Expand the active item itself if it has children
     if (expandableHrefs.has(activeHref) && !expanded.has(activeHref)) {
       toExpand.push(activeHref)
     }
-    let current = itemByHref.get(activeHref)
+    let current = itemByHref.get(activeHref) ?? itemByHref.get(activeHash)
     while (current?.parentHref) {
       if (!expanded.has(current.parentHref)) {
         toExpand.push(current.parentHref)
@@ -1497,6 +1521,7 @@ export type EditorialSection = {
 
 export function EditorialPage({
   toc,
+  currentPageHref,
   logo,
   tabs,
   activeTab,
@@ -1507,6 +1532,7 @@ export function EditorialPage({
   hero,
 }: {
   toc: FlatTocItem[]
+  currentPageHref?: string
   logo?: string
   tabs?: TabItem[]
   activeTab?: string
@@ -1610,7 +1636,7 @@ export function EditorialPage({
               flexDirection: 'column',
             }}
           >
-            <TableOfContents items={toc} logo={logo} />
+            <TableOfContents items={toc} logo={logo} currentPageHref={currentPageHref} />
           </div>
         </div>
 

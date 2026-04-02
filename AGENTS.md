@@ -40,6 +40,56 @@ Types are intentionally kept close to docs.json to minimize transformations. Uti
 
 MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on disk until a page is requested. At request time, the MDX is parsed with `safe-mdx`, split into sections, and rendered with the editorial components.
 
+## Hydration debugging
+
+When a page renders but client behavior is dead (tree rows do not collapse, search input does nothing, title does not update on navigation), debug hydration in this order:
+
+1. **Check whether the client tree hydrated at all**
+   - Use Playwriter in a wide viewport.
+   - Inspect TOC DOM nodes for React markers like `__reactFiber*` / `__reactProps*`.
+   - If they are missing, the issue is not the TOC logic; the client boundary never mounted.
+
+2. **Check the browser resource graph**
+   - Compare Holocron against a known-good Spiceflow app (the `playwriter/website` project is a good reference).
+   - If the page never requests a `virtual:vite-rsc/client-package-proxy/...` module for Holocron components, the package client boundary is not being treated as package source.
+
+3. **Common root causes for missing hydration in Holocron**
+   - **Package externalization**: `@vitejs/plugin-rsc` must keep `@holocron.so/vite/...` subpaths inside the RSC transform pipeline.
+     - Symptom: no React markers on the TOC DOM.
+     - Fix area: `vite/src/vite-plugin.ts` client/ssr/rsc config, especially `resolve.noExternal`.
+   - **Symlink resolution escaping `node_modules`**: when workspace symlinks are real-pathed, `@vitejs/plugin-rsc` may stop treating Holocron imports as package sources.
+     - Symptom: server rendering works, but interactive collapse regresses.
+     - Fix area: `resolve.preserveSymlinks`.
+   - **Browser entry failing before startup**: if `spiceflow`'s browser entry never reaches `hydrateRoot`, the whole page stays static.
+     - Symptom: no React markers, no client behavior, often with browser `unhandledrejection` errors.
+     - Fix area: dep optimization for wrapper-package transitive deps.
+
+4. **Specific error messages and likely causes**
+   - `SyntaxError: ... prism.js does not provide an export named 'default'`
+     - Cause: browser package client chunk imported `prismjs` with default-import interop that only worked on the server side.
+     - Fix area: `vite/src/components/markdown.tsx` Prism import shape.
+   - `Error: Calling require for "scheduler" in an environment that doesn't expose the require function`
+     - Cause: the browser dep optimizer left a raw `require("scheduler")` path in the React DOM client graph.
+     - Fix area: wrapper-package client optimize deps and resolution/aliasing for `scheduler`.
+   - `ReferenceError: module is not defined` from `@vitejs/plugin-rsc/dist/vendor/react-server-dom/...`
+     - Cause: the vendored browser client path is reaching the browser as raw CommonJS instead of going through the correct optimized package chain.
+     - Fix area: ensure the browser client dep graph is optimized through the wrapper package path, not only from the app root.
+   - `Failed to resolve dependency: @holocron.so/vite > spiceflow > @vitejs/plugin-rsc/vendor/react-server-dom/client.browser`
+     - Cause: Vite cannot resolve that exact nested include from the app root even though the runtime graph may still work.
+     - Treat as a signal while debugging, not automatically as the root bug.
+
+5. **Title debugging**
+   - If `document.title` is empty but server markup looks correct, inspect the serialized flight payload and confirm `root.head` contains a real `<title>` tag.
+   - The stable fix was to derive `head` and `title` from the actual page/layout tree (`getHeadSnapshot`) on the server, then sync `document.title` from that payload on the client.
+
+6. **Best comparison target**
+   - The extracted editorial UI originally worked in `playwriter/website`.
+   - When Hydration breaks in Holocron, compare:
+     - loaded browser resources
+     - presence of `client-package-proxy` requests
+     - React markers on TOC DOM
+     - startup browser errors / unhandled rejections
+
 
 ## spiceflow
 

@@ -137,7 +137,7 @@ function hasNextSiblingAtLevel({ items, index, level }: { items: FlatTocItem[]; 
   return false
 }
 
-function addPrefixes({ items }: { items: FlatTocItem[] }) {
+export function addTreePrefixes({ items }: { items: FlatTocItem[] }) {
   const continuations: boolean[] = []
 
   for (let i = 0; i < items.length; i++) {
@@ -207,6 +207,6 @@ export function flattenTocTree({ roots }: { roots: TocTreeNode[] }): FlatTocItem
   }
 
   walk({ nodes: roots, pageDepth: 0, parentHref: null, pageHref: '' })
-  addPrefixes({ items: result })
+  addTreePrefixes({ items: result })
   return result
 }

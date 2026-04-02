@@ -9,7 +9,7 @@
  * so these functions never deal with union discrimination.
  */
 
-import type { FlatTocItem, VisualLevel } from './components/toc-tree.ts'
+import { addTreePrefixes, type FlatTocItem, type VisualLevel } from './components/toc-tree.ts'
 
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
@@ -48,6 +48,11 @@ export type NavHeading = {
 
 /** The full enriched navigation — always an array of tabs */
 export type Navigation = NavTab[]
+
+type SidebarHeadingAncestor = {
+  depth: number
+  href: string
+}
 
 /* ── Type guards ─────────────────────────────────────────────────────── */
 
@@ -188,6 +193,25 @@ export function buildPageIndex(nav: Navigation): Map<string, NavPage> {
 export function flattenForSidebar(groups: NavGroup[]): FlatTocItem[] {
   const result: FlatTocItem[] = []
 
+  function getParentHeading({
+    ancestors,
+    depth,
+  }: {
+    ancestors: SidebarHeadingAncestor[]
+    depth: number
+  }): {
+    parentHref?: string
+    nextAncestors: SidebarHeadingAncestor[]
+  } {
+    const parentIndex = ancestors.findLastIndex((ancestor) => {
+      return ancestor.depth < depth
+    })
+    return {
+      parentHref: ancestors[parentIndex]?.href,
+      nextAncestors: parentIndex === -1 ? [] : ancestors.slice(0, parentIndex + 1),
+    }
+  }
+
   function walkGroups({
     groups,
     depth,
@@ -242,21 +266,30 @@ export function flattenForSidebar(groups: NavGroup[]): FlatTocItem[] {
       pageHref: page.href,
     })
 
+    let headingStack: SidebarHeadingAncestor[] = []
     for (const heading of page.headings) {
+      const { parentHref: parentHeadingHref, nextAncestors } = getParentHeading({
+        ancestors: headingStack,
+        depth: heading.depth,
+      })
+      const headingHref = `${page.href}#${heading.slug}`
       const headingLevel = Math.min(depth + (heading.depth - 1), 3) as VisualLevel
       result.push({
         label: heading.text,
-        href: `${page.href}#${heading.slug}`,
+        href: headingHref,
         type: `h${heading.depth}` as FlatTocItem['type'],
         visualLevel: headingLevel,
         prefix: '',
-        parentHref: page.href,
+        parentHref: parentHeadingHref ?? page.href,
         pageHref: page.href,
       })
+
+      headingStack = [...nextAncestors, { depth: heading.depth, href: headingHref }]
     }
   }
 
   walkGroups({ groups, depth: 0, parentHref: null })
+  addTreePrefixes({ items: result })
   return result
 }
 

@@ -248,6 +248,7 @@ describe('flattenForSidebar', () => {
       label: f.label,
       type: f.type,
       visualLevel: f.visualLevel,
+      prefix: f.prefix,
       parentHref: f.parentHref,
       pageHref: f.pageHref,
     }))).toMatchInlineSnapshot(`
@@ -256,6 +257,7 @@ describe('flattenForSidebar', () => {
           "label": "Reference",
           "pageHref": "#group-reference",
           "parentHref": null,
+          "prefix": "",
           "type": "page",
           "visualLevel": 0,
         },
@@ -263,6 +265,7 @@ describe('flattenForSidebar', () => {
           "label": "Api",
           "pageHref": "/api",
           "parentHref": "#group-reference",
+          "prefix": "└─ ",
           "type": "page",
           "visualLevel": 1,
         },
@@ -270,13 +273,15 @@ describe('flattenForSidebar', () => {
           "label": "Overview",
           "pageHref": "/api",
           "parentHref": "/api",
+          "prefix": "  ├─ ",
           "type": "h2",
           "visualLevel": 2,
         },
         {
           "label": "Methods",
           "pageHref": "/api",
-          "parentHref": "/api",
+          "parentHref": "/api#overview",
+          "prefix": "  │ └─ ",
           "type": "h3",
           "visualLevel": 3,
         },
@@ -284,6 +289,7 @@ describe('flattenForSidebar', () => {
           "label": "Examples",
           "pageHref": "/api",
           "parentHref": "/api",
+          "prefix": "  └─ ",
           "type": "h2",
           "visualLevel": 2,
         },
@@ -323,6 +329,70 @@ describe('flattenForSidebar', () => {
         },
         {
           "label": "Core",
+          "visualLevel": 2,
+        },
+      ]
+    `)
+  })
+
+  test('deep heading nesting keeps ancestry but clamps visual depth', () => {
+    const page = makePage('guide', {
+      headings: [
+        { depth: 2, text: 'Intro', slug: 'intro' },
+        { depth: 3, text: 'Install', slug: 'install' },
+        { depth: 4, text: 'Flags', slug: 'flags' },
+        { depth: 5, text: 'Env', slug: 'env' },
+        { depth: 2, text: 'Next', slug: 'next' },
+      ],
+    })
+    const flat = flattenForSidebar([makeGroup('Docs', [page])])
+    expect(flat.map((f) => ({
+      label: f.label,
+      visualLevel: f.visualLevel,
+      prefix: f.prefix,
+      parentHref: f.parentHref,
+    }))).toMatchInlineSnapshot(`
+      [
+        {
+          "label": "Docs",
+          "parentHref": null,
+          "prefix": "",
+          "visualLevel": 0,
+        },
+        {
+          "label": "Guide",
+          "parentHref": "#group-docs",
+          "prefix": "└─ ",
+          "visualLevel": 1,
+        },
+        {
+          "label": "Intro",
+          "parentHref": "/guide",
+          "prefix": "  ├─ ",
+          "visualLevel": 2,
+        },
+        {
+          "label": "Install",
+          "parentHref": "/guide#intro",
+          "prefix": "  │ ├─ ",
+          "visualLevel": 3,
+        },
+        {
+          "label": "Flags",
+          "parentHref": "/guide#install",
+          "prefix": "  │ ├─ ",
+          "visualLevel": 3,
+        },
+        {
+          "label": "Env",
+          "parentHref": "/guide#flags",
+          "prefix": "  │ └─ ",
+          "visualLevel": 3,
+        },
+        {
+          "label": "Next",
+          "parentHref": "/guide",
+          "prefix": "  └─ ",
           "visualLevel": 2,
         },
       ]
