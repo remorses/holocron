@@ -75,14 +75,20 @@ test.describe("getting-started page", () => {
     const pageRow = toc.getByRole("link", { name: "Getting Started" });
     const installation = toc.getByRole("link", { name: "Installation" });
 
-    const pagePaddingLeft = await pageRow.evaluate((node) => {
-      return Number.parseFloat(window.getComputedStyle(node).paddingLeft);
-    });
-    const headingPaddingLeft = await installation.evaluate((node) => {
-      return Number.parseFloat(window.getComputedStyle(node).paddingLeft);
-    });
+    const pagePaddingLeft = await pageRow.evaluate((node) => Number.parseFloat(window.getComputedStyle(node).paddingLeft));
+    const headingPaddingLeft = await installation.evaluate((node) => Number.parseFloat(window.getComputedStyle(node).paddingLeft));
 
     expect(headingPaddingLeft).toBeGreaterThan(pagePaddingLeft);
+  });
+
+  test("uses the same background color for the page shell and sidebar", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/getting-started");
+
+    const pageBackground = await page.locator(".slot-page").evaluate((node) => window.getComputedStyle(node).backgroundColor);
+    const sidebarBackground = await page.locator("#hc-sidebar").evaluate((node) => window.getComputedStyle(node).backgroundColor);
+
+    expect(sidebarBackground).toBe(pageBackground);
   });
 
   test("renders code blocks", async ({ page }) => {

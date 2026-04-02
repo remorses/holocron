@@ -1,4 +1,4 @@
-/* Holocron sidebar tokens and utilities modeled after Fumadocs with hc-prefixed names. */
+/* Holocron sidebar utilities. Prefer the shared shadcn-style token names over a second color namespace. */
 
 :root {
   --hc-sidebar-drawer-offset: 100%;
@@ -6,36 +6,6 @@
 
 [dir='rtl'] {
   --hc-sidebar-drawer-offset: -100%;
-}
-
-@theme static {
-  --color-hc-background: var(--background);
-  --color-hc-foreground: var(--foreground);
-  --color-hc-muted: var(--muted);
-  --color-hc-muted-foreground: var(--muted-foreground);
-  --color-hc-popover: var(--popover);
-  --color-hc-popover-foreground: var(--popover-foreground);
-  --color-hc-card: var(--card);
-  --color-hc-card-foreground: var(--card-foreground);
-  --color-hc-border: var(--border);
-  --color-hc-primary: var(--primary);
-  --color-hc-primary-foreground: var(--primary-foreground);
-  --color-hc-secondary: var(--secondary);
-  --color-hc-secondary-foreground: var(--secondary-foreground);
-  --color-hc-accent: var(--accent);
-  --color-hc-accent-foreground: var(--accent-foreground);
-  --color-hc-ring: var(--ring);
-  --color-hc-error: var(--destructive);
-}
-
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-hc-border, currentColor);
-  }
 }
 
 @utility hc-scroll-container {
@@ -46,7 +16,7 @@
 
   &::-webkit-scrollbar-thumb {
     border-radius: 5px;
-    background: var(--color-hc-border);
+    background: var(--border);
   }
 
   &::-webkit-scrollbar-track {
@@ -59,11 +29,7 @@
 }
 
 #hc-sidebar {
-  background-color: var(--sidebar);
-  color: var(--sidebar-foreground);
-  border-color: var(--sidebar-border);
-  --color-hc-accent: var(--sidebar-accent);
-  --color-hc-accent-foreground: var(--sidebar-accent-foreground);
-  --color-hc-ring: var(--sidebar-ring);
-  --color-hc-primary-foreground: var(--sidebar-primary-foreground);
+  background-color: var(--background);
+  color: var(--foreground);
+  border-color: var(--border);
 }

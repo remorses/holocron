@@ -27,7 +27,11 @@ The navigation tree is the central data structure. It mirrors the docs.json shap
 
 This enriched tree is written to `dist/holocron-cache.json` after each sync. On the next build, the cache is read back and pages with matching `gitSha` are reused without re-parsing. This makes builds as fast as possible — only changed MDX files get processed. On CI, caching `dist/` between runs gives near-instant rebuilds.
 
-Types are intentionally kept close to docs.json to minimize transformations. Utility functions (`getTabs`, `getActiveGroups`, `findPage`, `flattenForSidebar`) take the tree directly as input.
+Types are intentionally kept close to docs.json to minimize transformations. Utility functions (`getTabs`, `getActiveGroups`, `findPage`, `buildSidebarTree`) take the tree directly as input.
+
+## Styling
+
+Prefer the existing shadcn-style token names (`--background`, `--foreground`, `--muted`, `--accent`, `--border`, etc.) over introducing parallel Fumadocs-style color variable namespaces. If a ported Fumadocs component needs local helpers or utilities, keep those minimal and map them onto the shared shadcn token layer instead of creating a second design system.
 
 ## Architecture
 

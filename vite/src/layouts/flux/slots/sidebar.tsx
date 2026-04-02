@@ -1,10 +1,10 @@
 /**
- * Holocron sidebar skin modeled after Fumadocs Flux, using hc-prefixed tokens.
+ * Holocron sidebar skin modeled after Fumadocs Flux, using the shared shadcn-style token layer.
  */
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ComponentProps } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type ComponentProps } from 'react'
 import * as Base from '../../../components/sidebar/base.tsx'
 import { cn } from '../../../utils/cn.ts'
 import { createPageTreeRenderer } from '../../../components/sidebar/page-tree.tsx'
@@ -28,11 +28,11 @@ function getItemOffset(depth: number) {
 }
 
 function itemClasses({ variant, highlight }: { variant?: 'link' | 'button'; highlight?: boolean }) {
-  return cn(
-    'relative flex flex-row items-center gap-2 rounded-lg p-2 text-start text-hc-muted-foreground wrap-anywhere [&_svg]:size-4 [&_svg]:shrink-0',
-    variant === 'link' && 'transition-colors hover:bg-hc-accent/50 hover:text-hc-accent-foreground/80 hover:transition-none data-[active=true]:bg-hc-primary/10 data-[active=true]:text-hc-primary data-[active=true]:hover:transition-colors',
-    variant === 'button' && 'transition-colors hover:bg-hc-accent/50 hover:text-hc-accent-foreground/80 hover:transition-none',
-    highlight && "data-[active=true]:before:content-[''] data-[active=true]:before:bg-hc-primary data-[active=true]:before:absolute data-[active=true]:before:w-px data-[active=true]:before:inset-y-2.5 data-[active=true]:before:start-2.5",
+    return cn(
+    'relative flex flex-row items-center gap-2 rounded-lg p-2 text-start text-muted-foreground wrap-anywhere [&_svg]:size-4 [&_svg]:shrink-0',
+    variant === 'link' && 'transition-colors hover:bg-accent/50 hover:text-accent-foreground/80 hover:transition-none data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:hover:transition-colors',
+    variant === 'button' && 'transition-colors hover:bg-accent/50 hover:text-accent-foreground/80 hover:transition-none',
+    highlight && "data-[active=true]:before:content-[''] data-[active=true]:before:bg-primary data-[active=true]:before:absolute data-[active=true]:before:w-px data-[active=true]:before:inset-y-2.5 data-[active=true]:before:start-2.5",
   )
 }
 
@@ -48,10 +48,6 @@ function collectFolderIds(nodes: PageTree.Node[], next: Set<string>) {
   }
 }
 
-function folderIdsFromPath(path: PageTree.Node[]): Set<string> {
-  return new Set(path.filter((node): node is PageTree.Folder => { return node.type === 'folder' }).map((node) => { return node.$id }))
-}
-
 type SidebarProps = ComponentProps<'nav'> & {
   tree: PageTree.Root
   currentPageHref?: string
@@ -60,20 +56,20 @@ type SidebarProps = ComponentProps<'nav'> & {
 
 export function Sidebar({ tree, currentPageHref, activeId, className, ...props }: SidebarProps) {
   const activeUrl = activeId && currentPageHref ? `${currentPageHref}#${activeId}` : currentPageHref ?? ''
-  const searchItems = useMemo(() => {
-    return flattenSidebarSearchItems(tree.children)
-  }, [tree])
-  const db = useMemo(() => {
-    return createSidebarDb({ items: searchItems })
-  }, [searchItems])
+  const searchItems = flattenSidebarSearchItems(tree.children)
+  const db = createSidebarDb({ items: searchItems })
 
   const defaultExpanded = useMemo(() => {
     const next = new Set<string>()
     collectFolderIds(tree.children, next)
-    const path = folderIdsFromPath(
-      searchPath(tree.children, currentPageHref || '') ??
-      (currentPageHref ? searchPath(tree.children, currentPageHref) : null) ??
-      [],
+    const path = new Set(
+      (
+        searchPath(tree.children, currentPageHref || '') ??
+        (currentPageHref ? searchPath(tree.children, currentPageHref) : null) ??
+        []
+      )
+        .filter((node): node is PageTree.Folder => { return node.type === 'folder' })
+        .map((node) => { return node.$id }),
     )
     for (const id of path) {
       next.add(id)
@@ -85,7 +81,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
   const [query, setQuery] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [searchState, setSearchState] = useState<SearchState>({
     matchedIds: null,
     expandOverride: null,
@@ -94,8 +90,18 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
   })
 
   useEffect(() => {
-    setExpanded(defaultExpanded)
-  }, [currentPageHref, defaultExpanded, tree])
+    if (expanded.size !== defaultExpanded.size) {
+      setExpanded(defaultExpanded)
+      return
+    }
+
+    for (const id of defaultExpanded) {
+      if (!expanded.has(id)) {
+        setExpanded(defaultExpanded)
+        return
+      }
+    }
+  }, [defaultExpanded, expanded])
 
   const effectiveExpanded = useMemo(() => {
     if (!searchState.expandOverride) {
@@ -104,9 +110,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
     return new Set([...expanded, ...searchState.expandOverride])
   }, [expanded, searchState.expandOverride])
 
-  const itemHrefById = useMemo(() => {
-    return new Map(searchItems.filter((item) => { return item.href }).map((item) => { return [item.id, item.href!] as const }))
-  }, [searchItems])
+  const itemHrefById = new Map(searchItems.filter((item) => { return item.href }).map((item) => { return [item.id, item.href!] as const }))
 
   const toggleFolder = useCallback((id: string, nextOpen: boolean) => {
     setExpanded((prev) => {
@@ -122,10 +126,14 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
 
   const handleQueryChange = useCallback((value: string) => {
     setQuery(value)
-    startTransition(() => {
-      setSearchState(searchSidebar({ db, query: value, items: searchItems }))
-      setHighlightedIndex(0)
-    })
+    setHighlightedIndex(0)
+    startTransition(setSearchState.bind(null, searchSidebar({ db, query: value, items: searchItems })))
+  }, [db, searchItems])
+
+  const handleSearchInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value)
+    setHighlightedIndex(0)
+    startTransition(setSearchState.bind(null, searchSidebar({ db, query: e.target.value, items: searchItems })))
   }, [db, searchItems])
 
   const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -143,10 +151,10 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setHighlightedIndex((prev) => { return Math.min(prev + 1, focusable.length - 1) })
+      setHighlightedIndex((prev) => Math.min(prev + 1, focusable.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setHighlightedIndex((prev) => { return Math.max(prev - 1, 0) })
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0))
     } else if (e.key === 'Enter') {
       e.preventDefault()
       const href = itemHrefById.get(focusable[highlightedIndex] ?? '')
@@ -171,7 +179,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
         className={cn(
           itemClasses({ variant: 'link', highlight: depth >= 1 }),
           isDimmed && 'opacity-[0.35]',
-          isHighlighted && 'bg-hc-accent/60 text-hc-accent-foreground',
+          isHighlighted && 'bg-accent/60 text-accent-foreground',
         )}
         style={{ paddingInlineStart: getItemOffset(depth) }}
       >
@@ -191,13 +199,13 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
     )
 
     return (
-      <Base.SidebarFolder
-        depth={depth}
-        open={open}
-        onOpenChange={(next) => { toggleFolder(item.$id, next) }}
-        collapsible={item.collapsible ?? true}
-        defaultOpen={item.defaultOpen}
-        className='space-y-px'
+        <Base.SidebarFolder
+          depth={depth}
+          open={open}
+          onOpenChange={toggleFolder.bind(null, item.$id)}
+          collapsible={item.collapsible ?? true}
+          defaultOpen={item.defaultOpen}
+          className='space-y-px'
       >
         {item.index ? (
           <Base.SidebarFolderLink
@@ -219,7 +227,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
         <Base.SidebarFolderContent
           className={cn(
             'relative',
-            depth === 1 && "before:content-[''] before:absolute before:w-px before:inset-y-1 before:bg-hc-border before:start-2.5",
+            depth === 1 && "before:content-[''] before:absolute before:w-px before:inset-y-1 before:bg-border before:start-2.5",
           )}
         >
           {children}
@@ -232,7 +240,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
     const depth = Base.useFolderDepth()
     return (
       <Base.SidebarSeparator
-        className='inline-flex items-center gap-2 mb-1.5 px-2 mt-6 empty:mb-0 first:mt-0 text-sm font-semibold text-hc-foreground [&_svg]:size-4 [&_svg]:shrink-0'
+        className='inline-flex items-center gap-2 mb-1.5 px-2 mt-6 empty:mb-0 first:mt-0 text-sm font-semibold text-foreground [&_svg]:size-4 [&_svg]:shrink-0'
         style={{ paddingInlineStart: getItemOffset(depth) }}
       >
         {item.name}
@@ -248,10 +256,10 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
             ref={searchInputRef}
             type='text'
             value={query}
-            onChange={(e) => { handleQueryChange(e.target.value) }}
+            onChange={handleSearchInputChange}
             onKeyDown={handleSearchKeyDown}
             placeholder='Search...'
-            className='inline-flex w-full items-center gap-2 rounded-lg border bg-hc-secondary/50 p-1.5 ps-2 text-sm text-hc-muted-foreground outline-none transition-colors hover:bg-hc-accent hover:text-hc-accent-foreground focus:border-hc-ring'
+            className='inline-flex w-full items-center gap-2 rounded-lg border bg-secondary/50 p-1.5 ps-2 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:border-ring'
             aria-label='Search sidebar'
           />
         </div>

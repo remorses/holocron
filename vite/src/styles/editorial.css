@@ -167,6 +167,10 @@
    Header fade gradient
    ======================================================================== */
 
+/* Disabled for now so the sticky header uses the same flat background as the
+   rest of the page and the sidebar. Restore this block if the fade treatment
+   is needed again.
+
 .slot-page::before {
   content: '';
   pointer-events: none;
@@ -192,3 +196,4 @@
     var(--fade-12) 100%
   );
 }
+*/

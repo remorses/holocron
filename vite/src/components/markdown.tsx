@@ -1200,7 +1200,7 @@ export function EditorialPage({
 
   return (
     <div
-      className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-(--bg) text-(color:--text-primary) [font-family:var(--font-primary)] antialiased [text-rendering:optimizeLegibility]'
+      className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-(color:--text-primary) [font-family:var(--font-primary)] antialiased [text-rendering:optimizeLegibility]'
       style={{
         WebkitFontSmoothing: 'antialiased',
       }}

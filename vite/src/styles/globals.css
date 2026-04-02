@@ -41,14 +41,14 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.871 0.006 286.286);
-  --sidebar-primary: oklch(0.37 0.013 285.805);
-  --sidebar-primary-foreground: oklch(0.871 0.006 286.286);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.871 0.006 286.286);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.871 0.006 286.286);
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 
   /* ===== Editorial design tokens ===== */
   --font-primary:
@@ -136,7 +136,7 @@
   --text-muted: rgba(0, 0, 0, 0.5);
   --text-hover: rgba(0, 0, 0, 0.7);
   --text-tree-label: rgba(0, 0, 0, 0.6);
-  --bg: #fff;
+  --bg: var(--background);
   --page-border: #e3e3e3;
   --divider: rgb(242, 242, 242);
   --border-subtle: rgba(0, 0, 0, 0.08);
@@ -206,14 +206,14 @@
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: #000;
-    --sidebar-foreground: oklch(0.871 0.006 286.286);
-    --sidebar-primary: oklch(0.37 0.013 285.805);
-    --sidebar-primary-foreground: oklch(0.871 0.006 286.286);
-    --sidebar-accent: oklch(0.274 0.006 286.033);
-    --sidebar-accent-foreground: oklch(0.871 0.006 286.286);
-    --sidebar-border: oklch(0.274 0.006 286.033);
-    --sidebar-ring: oklch(0.442 0.017 285.786);
+    --sidebar: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
 
     /* Editorial dark */
     --text-primary: rgba(255, 255, 255, 0.9);
@@ -359,7 +359,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--bg);
+  background: var(--background);
 }
 
 .slot-logo {
@@ -368,6 +368,7 @@
 }
 
 .slot-tabbar {
+  background: var(--background);
   border-bottom: 1px solid var(--page-border);
 }
 
