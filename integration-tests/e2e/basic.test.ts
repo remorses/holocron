@@ -91,6 +91,16 @@ test.describe("getting-started page", () => {
     expect(sidebarBackground).toBe(pageBackground);
   });
 
+  test("dims group names too when search has no matches", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/getting-started");
+
+    await page.getByLabel("Search sidebar").fill("zzzz-no-match");
+
+    const guidesOpacity = await page.getByText("Guides", { exact: true }).evaluate((node) => window.getComputedStyle(node).opacity);
+    expect(Number.parseFloat(guidesOpacity)).toBeLessThan(1);
+  });
+
   test("renders code blocks", async ({ page }) => {
     await page.goto("/getting-started");
     // The code block with the install command should be visible

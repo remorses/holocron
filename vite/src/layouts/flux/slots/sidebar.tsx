@@ -48,6 +48,52 @@ function collectFolderIds(nodes: PageTree.Node[], next: Set<string>) {
   }
 }
 
+function subtreeHasVisibleMatch(node: PageTree.Node, dimmedIds: Set<string>): boolean {
+  if (node.type === 'page') {
+    return !dimmedIds.has(node.$id)
+  }
+
+  if (node.type === 'separator') {
+    return false
+  }
+
+  if (!dimmedIds.has(node.$id)) {
+    return true
+  }
+
+  return node.children.some((child) => {
+    return subtreeHasVisibleMatch(child, dimmedIds)
+  })
+}
+
+function visibleSeparatorIds(nodes: PageTree.Node[], dimmedIds: Set<string>): Set<string> {
+  const visible = new Set<string>()
+  let currentSeparator: string | null = null
+  let sectionHasVisibleMatch = false
+
+  function flushSection() {
+    if (currentSeparator && sectionHasVisibleMatch) {
+      visible.add(currentSeparator)
+    }
+  }
+
+  for (const node of nodes) {
+    if (node.type === 'separator') {
+      flushSection()
+      currentSeparator = node.$id
+      sectionHasVisibleMatch = false
+      continue
+    }
+
+    if (subtreeHasVisibleMatch(node, dimmedIds)) {
+      sectionHasVisibleMatch = true
+    }
+  }
+
+  flushSection()
+  return visible
+}
+
 type SidebarProps = ComponentProps<'nav'> & {
   tree: PageTree.Root
   currentPageHref?: string
@@ -109,6 +155,14 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
     }
     return new Set([...expanded, ...searchState.expandOverride])
   }, [expanded, searchState.expandOverride])
+
+  const visibleSeparators = useMemo(() => {
+    if (!searchState.dimmedIds) {
+      return null
+    }
+
+    return visibleSeparatorIds(tree.children, searchState.dimmedIds)
+  }, [searchState.dimmedIds, tree])
 
   const itemHrefById = new Map(searchItems.filter((item) => { return item.href }).map((item) => { return [item.id, item.href!] as const }))
 
@@ -238,9 +292,13 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
 
   function SidebarSeparatorNode({ item }: { item: PageTree.Separator }) {
     const depth = Base.useFolderDepth()
+    const isDimmed = visibleSeparators ? !visibleSeparators.has(item.$id) : false
     return (
       <Base.SidebarSeparator
-        className='inline-flex items-center gap-2 mb-1.5 px-2 mt-6 empty:mb-0 first:mt-0 text-sm font-semibold text-foreground [&_svg]:size-4 [&_svg]:shrink-0'
+        className={cn(
+          'inline-flex items-center gap-2 mb-1.5 px-2 mt-6 empty:mb-0 first:mt-0 text-sm font-semibold text-foreground [&_svg]:size-4 [&_svg]:shrink-0',
+          isDimmed && 'opacity-[0.35]',
+        )}
         style={{ paddingInlineStart: getItemOffset(depth) }}
       >
         {item.name}

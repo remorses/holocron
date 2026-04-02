@@ -1061,7 +1061,7 @@ export function SidebarBanner({
           fontSize: 'var(--type-toc-size)',
           fontWeight: WEIGHT.prose,
           backgroundColor: 'var(--text-primary)',
-          color: 'var(--bg)',
+          color: 'var(--background)',
           textDecoration: 'none',
           position: 'relative',
           zIndex: 2,

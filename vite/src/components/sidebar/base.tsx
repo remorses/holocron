@@ -52,7 +52,7 @@ export function useFolderDepth(): number {
 export function SidebarViewport({ className, children, ...props }: ScrollAreaProps) {
   return (
     <ScrollArea className={className} {...props}>
-      <ScrollViewport className='p-4 overscroll-contain mask-[linear-gradient(to_bottom,transparent,white_12px,white_calc(100%-12px),transparent)] hc-scroll-container'>
+      <ScrollViewport className='overscroll-contain mask-[linear-gradient(to_bottom,transparent,white_12px,white_calc(100%-12px),transparent)] hc-scroll-container'>
         {children}
       </ScrollViewport>
     </ScrollArea>
