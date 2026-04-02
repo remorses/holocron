@@ -12,5 +12,5 @@ export {
   findPage,
   collectAllPages,
   buildPageIndex,
-  flattenForSidebar,
+  buildSidebarTree,
 } from './navigation.ts'

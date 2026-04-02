@@ -7,12 +7,13 @@ import {
   findPage,
   collectAllPages,
   buildPageIndex,
-  flattenForSidebar,
+  buildSidebarTree,
   type NavTab,
   type NavGroup,
   type NavPage,
   type Navigation,
 } from './navigation.ts'
+import type * as PageTree from './page-tree/index.ts'
 
 /* ── Test fixtures ───────────────────────────────────────────────────── */
 
@@ -202,111 +203,56 @@ describe('buildPageIndex', () => {
   })
 })
 
-/* ── flattenForSidebar ───────────────────────────────────────────────── */
+/* ── buildSidebarTree ──────────────────────────────────────────────── */
 
-describe('flattenForSidebar', () => {
-  test('groups become level 0, pages level 1', () => {
-    const groups: NavGroup[] = [
-      makeGroup('Getting Started', [
-        makePage('intro'),
-        makePage('install'),
-      ]),
-    ]
-    const flat = flattenForSidebar(groups)
-    expect(flat.map((f) => ({ label: f.label, type: f.type, visualLevel: f.visualLevel }))).toMatchInlineSnapshot(`
+function serializeTree(nodes: PageTree.Node[]): unknown[] {
+  return nodes.map((node) => {
+    if (node.type === 'separator') {
+      return { type: node.type, name: node.name }
+    }
+
+    if (node.type === 'page') {
+      return { type: node.type, name: node.name, url: node.url }
+    }
+
+    return {
+      type: node.type,
+      name: node.name,
+      collapsible: node.collapsible,
+      defaultOpen: node.defaultOpen,
+      index: node.index ? { name: node.index.name, url: node.index.url } : undefined,
+      children: serializeTree(node.children),
+    }
+  })
+}
+
+describe('buildSidebarTree', () => {
+  test('renders top-level groups as separators followed by pages', () => {
+    const tree = buildSidebarTree({
+      groups: [makeGroup('Getting Started', [makePage('intro'), makePage('install')])],
+    })
+
+    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
       [
         {
-          "label": "Getting Started",
-          "type": "page",
-          "visualLevel": 0,
+          "name": "Getting Started",
+          "type": "separator",
         },
         {
-          "label": "Intro",
+          "name": "Intro",
           "type": "page",
-          "visualLevel": 1,
+          "url": "/intro",
         },
         {
-          "label": "Install",
+          "name": "Install",
           "type": "page",
-          "visualLevel": 1,
+          "url": "/install",
         },
       ]
     `)
   })
 
-  test('page headings are included as nested items', () => {
-    const pageWithHeadings = makePage('api', {
-      headings: [
-        { depth: 2, text: 'Overview', slug: 'overview' },
-        { depth: 3, text: 'Methods', slug: 'methods' },
-        { depth: 2, text: 'Examples', slug: 'examples' },
-      ],
-    })
-    const groups: NavGroup[] = [makeGroup('Reference', [pageWithHeadings])]
-    const flat = flattenForSidebar(groups)
-    expect(flat.map((f) => ({
-      label: f.label,
-      type: f.type,
-      visualLevel: f.visualLevel,
-      prefix: f.prefix,
-      parentHref: f.parentHref,
-      pageHref: f.pageHref,
-    }))).toMatchInlineSnapshot(`
-      [
-        {
-          "label": "Reference",
-          "pageHref": "#group-reference",
-          "parentHref": null,
-          "prefix": "",
-          "type": "page",
-          "visualLevel": 0,
-        },
-        {
-          "label": "Api",
-          "pageHref": "/api",
-          "parentHref": "#group-reference",
-          "prefix": "└─ ",
-          "type": "page",
-          "visualLevel": 1,
-        },
-        {
-          "label": "Overview",
-          "pageHref": "/api",
-          "parentHref": "/api",
-          "prefix": "  ├─ ",
-          "type": "h2",
-          "visualLevel": 2,
-        },
-        {
-          "label": "Methods",
-          "pageHref": "/api",
-          "parentHref": "/api#overview",
-          "prefix": "  │ └─ ",
-          "type": "h3",
-          "visualLevel": 3,
-        },
-        {
-          "label": "Examples",
-          "pageHref": "/api",
-          "parentHref": "/api",
-          "prefix": "  └─ ",
-          "type": "h2",
-          "visualLevel": 2,
-        },
-      ]
-    `)
-  })
-
-  test('heading hrefs include page href as prefix', () => {
-    const page = makePage('guide', {
-      headings: [{ depth: 2, text: 'Setup', slug: 'setup' }],
-    })
-    const flat = flattenForSidebar([makeGroup('Docs', [page])])
-    const headingItem = flat.find((f) => f.label === 'Setup')
-    expect(headingItem!.href).toBe('/guide#setup')
-  })
-
-  test('nested groups increase visual depth', () => {
+  test('turns nested groups into folders', () => {
     const nestedGroup: NavGroup = {
       group: 'Advanced',
       pages: [
@@ -316,121 +262,121 @@ describe('flattenForSidebar', () => {
         } as NavGroup,
       ],
     }
-    const flat = flattenForSidebar([nestedGroup])
-    expect(flat.map((f) => ({ label: f.label, visualLevel: f.visualLevel }))).toMatchInlineSnapshot(`
+
+    const tree = buildSidebarTree({ groups: [nestedGroup] })
+    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
       [
         {
-          "label": "Advanced",
-          "visualLevel": 0,
+          "name": "Advanced",
+          "type": "separator",
         },
         {
-          "label": "Internals",
-          "visualLevel": 1,
-        },
-        {
-          "label": "Core",
-          "visualLevel": 2,
+          "children": [
+            {
+              "name": "Core",
+              "type": "page",
+              "url": "/core",
+            },
+          ],
+          "collapsible": true,
+          "defaultOpen": undefined,
+          "index": undefined,
+          "name": "Internals",
+          "type": "folder",
         },
       ]
     `)
   })
 
-  test('deep heading nesting keeps ancestry but clamps visual depth', () => {
+  test('injects current page toc under the active page', () => {
     const page = makePage('guide', {
       headings: [
-        { depth: 2, text: 'Intro', slug: 'intro' },
-        { depth: 3, text: 'Install', slug: 'install' },
-        { depth: 4, text: 'Flags', slug: 'flags' },
-        { depth: 5, text: 'Env', slug: 'env' },
-        { depth: 2, text: 'Next', slug: 'next' },
+        { depth: 2, text: 'Overview', slug: 'overview' },
+        { depth: 3, text: 'Methods', slug: 'methods' },
+        { depth: 2, text: 'Examples', slug: 'examples' },
       ],
     })
-    const flat = flattenForSidebar([makeGroup('Docs', [page])])
-    expect(flat.map((f) => ({
-      label: f.label,
-      visualLevel: f.visualLevel,
-      prefix: f.prefix,
-      parentHref: f.parentHref,
-    }))).toMatchInlineSnapshot(`
+
+    const tree = buildSidebarTree({
+      groups: [makeGroup('Docs', [page])],
+      currentPage: page,
+    })
+
+    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
       [
         {
-          "label": "Docs",
-          "parentHref": null,
-          "prefix": "",
-          "visualLevel": 0,
+          "name": "Docs",
+          "type": "separator",
         },
         {
-          "label": "Guide",
-          "parentHref": "#group-docs",
-          "prefix": "└─ ",
-          "visualLevel": 1,
-        },
-        {
-          "label": "Intro",
-          "parentHref": "/guide",
-          "prefix": "  ├─ ",
-          "visualLevel": 2,
-        },
-        {
-          "label": "Install",
-          "parentHref": "/guide#intro",
-          "prefix": "  │ ├─ ",
-          "visualLevel": 3,
-        },
-        {
-          "label": "Flags",
-          "parentHref": "/guide#install",
-          "prefix": "  │ ├─ ",
-          "visualLevel": 3,
-        },
-        {
-          "label": "Env",
-          "parentHref": "/guide#flags",
-          "prefix": "  │ └─ ",
-          "visualLevel": 3,
-        },
-        {
-          "label": "Next",
-          "parentHref": "/guide",
-          "prefix": "  └─ ",
-          "visualLevel": 2,
-        },
-      ]
-    `)
-  })
-
-  test('empty groups produce empty flat list', () => {
-    expect(flattenForSidebar([])).toMatchInlineSnapshot(`[]`)
-  })
-
-  test('multiple groups with pages and headings', () => {
-    const groups: NavGroup[] = [
-      makeGroup('Guide', [
-        makePage('intro', {
-          headings: [{ depth: 2, text: 'Welcome', slug: 'welcome' }],
-        }),
-      ]),
-      makeGroup('API', [
-        makePage('api/ref', {
-          headings: [
-            { depth: 2, text: 'Endpoints', slug: 'endpoints' },
-            { depth: 2, text: 'Auth', slug: 'auth' },
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "name": "Methods",
+                      "type": "page",
+                      "url": "/guide#methods",
+                    },
+                  ],
+                  "collapsible": false,
+                  "defaultOpen": true,
+                  "index": {
+                    "name": "Overview",
+                    "url": "/guide#overview",
+                  },
+                  "name": "Overview",
+                  "type": "folder",
+                },
+                {
+                  "name": "Examples",
+                  "type": "page",
+                  "url": "/guide#examples",
+                },
+              ],
+              "collapsible": true,
+              "defaultOpen": true,
+              "index": undefined,
+              "name": "On this page",
+              "type": "folder",
+            },
           ],
-        }),
-      ]),
-    ]
-    const flat = flattenForSidebar(groups)
-    const labels = flat.map((f) => f.label)
-    expect(labels).toMatchInlineSnapshot(`
-      [
-        "Guide",
-        "Intro",
-        "Welcome",
-        "API",
-        "Api/ref",
-        "Endpoints",
-        "Auth",
+          "collapsible": true,
+          "defaultOpen": true,
+          "index": {
+            "name": "Guide",
+            "url": "/guide",
+          },
+          "name": "Guide",
+          "type": "folder",
+        },
       ]
     `)
+  })
+
+  test('does not inject toc for non-active pages', () => {
+    const page = makePage('guide', {
+      headings: [{ depth: 2, text: 'Overview', slug: 'overview' }],
+    })
+
+    const tree = buildSidebarTree({ groups: [makeGroup('Docs', [page])] })
+    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "Docs",
+          "type": "separator",
+        },
+        {
+          "name": "Guide",
+          "type": "page",
+          "url": "/guide",
+        },
+      ]
+    `)
+  })
+
+  test('empty groups produce an empty tree', () => {
+    expect(serializeTree(buildSidebarTree({ groups: [] }).children)).toMatchInlineSnapshot(`[]`)
   })
 })

@@ -7,9 +7,10 @@
  * --link-accent, --page-border.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
-import { createTocDb, searchToc, type SearchState } from './search.ts'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem } from './toc-tree.ts'
+import { Sidebar } from '../layouts/flux/slots/sidebar.tsx'
+import type { Root as SidebarTreeRoot, Node as SidebarTreeNode } from '../page-tree/index.ts'
 
 export type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem }
 import * as PrismModule from 'prismjs'
@@ -219,390 +220,41 @@ function useActiveTocId({
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
 
-function TocLink({
-  item,
-  isActive,
-  chevron,
-  onToggle,
-  dimmed,
-  isHighlighted,
-  linkRef,
-}: {
-  item: FlatTocItem
-  isActive: boolean
-  chevron?: { expanded: boolean }
-  onToggle?: () => void
-  /** Search: dim non-matching items to opacity 0.3 */
-  dimmed?: boolean
-  /** Search: arrow-key highlighted item */
-  isHighlighted?: boolean
-  linkRef?: React.Ref<HTMLAnchorElement>
-}) {
-  const effectiveActive = isActive && !dimmed
-  const defaultColor = effectiveActive
-    ? 'var(--text-primary)'
-    : dimmed
-      ? 'var(--text-tertiary)'
-      : 'var(--text-tree-label)'
-  const defaultPrefixColor = effectiveActive ? 'var(--text-secondary)' : 'var(--text-tertiary)'
-  const bg = isHighlighted ? 'var(--border-subtle)' : effectiveActive ? 'var(--border-subtle)' : 'transparent'
-  const fontWeight = WEIGHT.regular
-  const leftInset = 8 + item.visualLevel * 6
-  return (
-    <a
-      ref={linkRef}
-      href={item.href}
-      className='block no-underline'
-      tabIndex={dimmed ? -1 : 0}
-      style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        fontSize: 'var(--type-toc-size)',
-        fontWeight,
-        letterSpacing: 'normal',
-        padding: item.visualLevel > 0 ? `4px 8px 4px ${leftInset}px` : `2px 8px 2px ${leftInset}px`,
-        color: defaultColor,
-        fontFamily: 'var(--font-primary)',
-        transition: 'color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
-        borderRadius: '6px',
-        background: bg,
-        opacity: dimmed ? 0.3 : 1,
-      }}
-      onMouseEnter={(e) => {
-        if (!effectiveActive && !dimmed) {
-          e.currentTarget.style.color = 'var(--text-primary)'
-          e.currentTarget.style.background = 'var(--border-subtle)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.color = defaultColor
-        e.currentTarget.style.background = bg
-      }}
-    >
-      <span aria-hidden='true' style={{ color: defaultPrefixColor, whiteSpace: 'pre', fontFamily: 'var(--font-code)', fontSize: '1.2em', display: 'inline-flex', alignItems: 'center', margin: '-2px 0 -2px -2px' }}>
-        {item.prefix}
-      </span>
-      <span style={{ overflowWrap: 'anywhere', fontFamily: 'var(--font-primary)', flex: 1 }}>{item.label}</span>
-      {chevron && (
-        <span
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onToggle?.()
-          }}
-        >
-          <ChevronIcon
-            expanded={chevron.expanded}
-            style={{ color: defaultPrefixColor, marginLeft: '4px' }}
-          />
-        </span>
-      )}
-    </a>
-  )
+function findFirstHeadingId(nodes: SidebarTreeNode[]): string {
+  for (const node of nodes) {
+    if (node.type === 'page' && node.url.includes('#')) {
+      return node.url.slice(node.url.indexOf('#') + 1)
+    }
+
+    if (node.type === 'folder') {
+      if (node.index?.url.includes('#')) {
+        return node.index.url.slice(node.index.url.indexOf('#') + 1)
+      }
+
+      const nested = findFirstHeadingId(node.children)
+      if (nested) {
+        return nested
+      }
+    }
+  }
+
+  return ''
 }
 
 export function TableOfContents({
-  items,
-  logo,
+  tree,
   currentPageHref,
 }: {
-  items: FlatTocItem[]
+  tree: SidebarTreeRoot
   logo?: string
   currentPageHref?: string
 }) {
-  const firstHref = items[0]?.href ?? ''
-  const fallbackId = firstHref.startsWith('#') ? firstHref.slice(1) : firstHref
+  const fallbackId = findFirstHeadingId(tree.children)
   const scrollLockRef = useRef(false)
   const activeId = useActiveTocId({ fallbackId, scrollLockRef })
 
-  /* Derive which items have children (are expandable) */
-  const expandableHrefs = useMemo(() => {
-    return new Set(items.map((i) => { return i.parentHref }).filter(Boolean) as string[])
-  }, [items])
-
-  /* Lookup map for walking the parent chain */
-  const itemByHref = useMemo(() => {
-    return new Map(items.map((i) => { return [i.href, i] as const }))
-  }, [items])
-
-  // Track which items are expanded. First expandable item starts open.
-  const [expanded, setExpanded] = useState<Set<string>>(() => {
-    const first = items.find((i) => { return expandableHrefs.has(i.href) })
-    const next = first ? new Set([first.href]) : new Set<string>()
-
-    if (currentPageHref) {
-      let current = itemByHref.get(currentPageHref)
-      if (current && expandableHrefs.has(current.href)) {
-        next.add(current.href)
-      }
-      while (current?.parentHref) {
-        next.add(current.parentHref)
-        current = itemByHref.get(current.parentHref)
-      }
-    }
-
-    return next
-  })
-
-  // Auto-expand the active item (if expandable) and its ancestors
-  useEffect(() => {
-    if (!activeId) {
-      return
-    }
-    const activeHash = `#${activeId}`
-    const activeHref = `${window.location.pathname}${activeHash}`
-    const toExpand: string[] = []
-    // Expand the active item itself if it has children
-    if (expandableHrefs.has(activeHref) && !expanded.has(activeHref)) {
-      toExpand.push(activeHref)
-    }
-    let current = itemByHref.get(activeHref) ?? itemByHref.get(activeHash)
-    while (current?.parentHref) {
-      if (!expanded.has(current.parentHref)) {
-        toExpand.push(current.parentHref)
-      }
-      current = itemByHref.get(current.parentHref)
-    }
-    if (toExpand.length > 0) {
-      setExpanded((prev) => {
-        return new Set([...prev, ...toExpand])
-      })
-    }
-  }, [activeId, itemByHref]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const toggle = (href: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(href)) {
-        next.delete(href)
-      } else {
-        next.add(href)
-      }
-      return next
-    })
-  }
-
-  // --- Search state ---
-  // useTransition makes typing non-blocking: setQuery is urgent (input stays
-  // responsive), while the TOC re-render from setSearchState is deferred and
-  // interruptible — new keystrokes cancel in-progress renders automatically.
-  const [query, setQuery] = useState('')
-  const [highlightedIndex, setHighlightedIndex] = useState(0)
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const highlightedRef = useRef<HTMLAnchorElement>(null)
-  const [isPending, startTransition] = useTransition()
-
-  // Build Orama search DB once
-  const db = useMemo(() => {
-    return createTocDb({ items })
-  }, [items])
-
-  const [searchState, setSearchState] = useState<SearchState>({
-    matchedHrefs: null,
-    expandOverride: null,
-    dimmedHrefs: null,
-    focusableHrefs: null,
-  })
-
-  const handleQueryChange = useCallback(
-    (value: string) => {
-      setQuery(value)
-      startTransition(() => {
-        const state = searchToc({ db, query: value, items })
-        setSearchState(state)
-        setHighlightedIndex(0)
-      })
-    },
-    [db, items],
-  )
-
-  // Scroll highlighted item into view (only when search is active)
-  useEffect(() => {
-    if (!searchState.focusableHrefs) {
-      return
-    }
-    highlightedRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [highlightedIndex, searchState.focusableHrefs])
-
-  // Global F hotkey to focus search input
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const tag = (e.target as HTMLElement).tagName
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) {
-          return
-        }
-        e.preventDefault()
-        searchInputRef.current?.focus()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [])
-
-  const handleSearchKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        handleQueryChange('')
-        searchInputRef.current?.blur()
-        return
-      }
-      const focusable = searchState.focusableHrefs
-      if (!focusable || focusable.length === 0) {
-        return
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setHighlightedIndex((prev) => {
-          return Math.min(prev + 1, focusable.length - 1)
-        })
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setHighlightedIndex((prev) => {
-          return Math.max(prev - 1, 0)
-        })
-      } else if (e.key === 'Enter') {
-        e.preventDefault()
-        const href = focusable[highlightedIndex]
-        if (href) {
-          handleQueryChange('')
-          searchInputRef.current?.blur()
-          window.location.hash = href
-        }
-      }
-    },
-    [searchState.focusableHrefs, highlightedIndex, handleQueryChange],
-  )
-
-  const isSearchActive = searchState.matchedHrefs !== null
-
-  /* Merge search expand overrides into the expanded set so matched items
-     inside collapsed branches become visible during search. */
-  const effectiveExpanded = useMemo(() => {
-    if (!isSearchActive || !searchState.expandOverride) {
-      return expanded
-    }
-    return new Set([...expanded, ...searchState.expandOverride])
-  }, [expanded, isSearchActive, searchState.expandOverride])
-
-  /* Compute visible items: an item is visible if all its ancestors are
-     effectively expanded. Since items are in document order, parents
-     always come before children so a single forward pass works. */
-  const visibleItems = useMemo(() => {
-    const visible = new Set<string>()
-    return items.filter((item) => {
-      if (item.parentHref === null) {
-        visible.add(item.href)
-        return true
-      }
-      if (effectiveExpanded.has(item.parentHref) && visible.has(item.parentHref)) {
-        visible.add(item.href)
-        return true
-      }
-      return false
-    })
-  }, [items, effectiveExpanded])
-
   return (
-    <aside
-      style={{
-        maxWidth: 'var(--grid-toc-width)',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 0,
-      }}
-    >
-      {/* Search input with F hotkey badge — stays pinned at top */}
-      <div
-        style={{ paddingBottom: '12px', display: 'flex', alignItems: 'center', position: 'relative', flexShrink: 0 }}
-      >
-        <input
-          ref={searchInputRef}
-          type='text'
-          value={query}
-          onChange={(e) => {
-            handleQueryChange(e.target.value)
-          }}
-          onKeyDown={handleSearchKeyDown}
-          placeholder='search...'
-          style={{
-            width: '100%',
-            padding: '2px 24px 2px 8px',
-            fontSize: 'var(--type-toc-size)',
-            fontFamily: 'var(--font-primary)',
-            fontWeight: WEIGHT.prose,
-            color: 'var(--text-primary)',
-            background: 'transparent',
-            border: '1px solid var(--page-border)',
-            borderRadius: '6px',
-            outline: 'none',
-            textTransform: 'lowercase',
-            letterSpacing: 'normal',
-            lineHeight: LINE_HEIGHT.prose,
-            transition: 'border-color 0.15s ease, opacity 0.1s ease',
-            boxSizing: 'border-box',
-            opacity: isPending ? 0.5 : 1,
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'var(--text-tertiary)'
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = 'var(--page-border)'
-          }}
-        />
-        {/* Hotkey badge — hidden when input has text */}
-        {!query && (
-          <span
-            aria-hidden='true'
-            style={{
-              position: 'absolute',
-              right: '6px',
-              fontFamily: 'var(--font-code)',
-              fontSize: '10px',
-              fontWeight: WEIGHT.regular,
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--text-tertiary)',
-              borderRadius: '4px',
-              padding: '0px 4px',
-              lineHeight: '16px',
-              pointerEvents: 'none',
-              textTransform: 'uppercase',
-            }}
-          >
-            F
-          </span>
-        )}
-      </div>
-
-      <nav aria-label='Table of contents' style={{ overflowY: 'auto', minHeight: 0, paddingRight: '4px' }}>
-        {visibleItems.map((item, i) => {
-          const isExpandable = expandableHrefs.has(item.href)
-          const isExpanded =
-            expanded.has(item.href) ||
-            (isSearchActive && Boolean(searchState.expandOverride?.has(item.href)))
-          const isDimmed = isSearchActive && searchState.dimmedHrefs?.has(item.href)
-          const highlightedHref = isSearchActive ? searchState.focusableHrefs?.[highlightedIndex] : undefined
-          const isHighlighted = highlightedHref === item.href
-          const fragment = item.href.includes('#') ? item.href.slice(item.href.indexOf('#')) : item.href
-          return (
-            <div key={item.href} style={item.visualLevel === 0 && i > 0 ? { marginTop: '6px' } : undefined}>
-              <TocLink
-                item={item}
-                isActive={`#${activeId}` === fragment}
-                chevron={isExpandable ? { expanded: isExpanded } : undefined}
-                onToggle={isExpandable ? () => { toggle(item.href) } : undefined}
-                dimmed={isDimmed || false}
-                isHighlighted={isHighlighted}
-                linkRef={isHighlighted ? highlightedRef : undefined}
-              />
-            </div>
-          )
-        })}
-      </nav>
-    </aside>
+    <Sidebar tree={tree} currentPageHref={currentPageHref} activeId={activeId || undefined} />
   )
 }
 
@@ -1520,7 +1172,7 @@ export type EditorialSection = {
 }
 
 export function EditorialPage({
-  toc,
+  sidebarTree,
   currentPageHref,
   logo,
   tabs,
@@ -1531,7 +1183,7 @@ export function EditorialPage({
   sections,
   hero,
 }: {
-  toc: FlatTocItem[]
+  sidebarTree: SidebarTreeRoot
   currentPageHref?: string
   logo?: string
   tabs?: TabItem[]
@@ -1636,7 +1288,7 @@ export function EditorialPage({
               flexDirection: 'column',
             }}
           >
-            <TableOfContents items={toc} logo={logo} currentPageHref={currentPageHref} />
+            <TableOfContents tree={sidebarTree} logo={logo} currentPageHref={currentPageHref} />
           </div>
         </div>
 
