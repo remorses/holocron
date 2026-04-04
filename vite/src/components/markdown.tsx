@@ -1259,6 +1259,7 @@ export function EditorialPage({
   sidebarTree,
   currentPageHref,
   logo,
+  siteName,
   tabs,
   activeTab,
   sidebar,
@@ -1270,6 +1271,8 @@ export function EditorialPage({
   sidebarTree: SidebarTreeRoot
   currentPageHref?: string
   logo?: string
+  /** Site name used for logo aria-label and fallback text */
+  siteName?: string
   tabs?: TabItem[]
   activeTab?: string
   sidebar?: React.ReactNode
@@ -1293,30 +1296,23 @@ export function EditorialPage({
       <div className='slot-navbar'>
         {/* Top row: logo + right links */}
         <div className='mx-auto flex items-center justify-between px-(--mobile-padding) py-(--header-padding-y) lg:max-w-(--grid-max-width) lg:px-0'>
-          <a href='/' className='slot-logo no-underline flex items-center'>
+          <Link href='/' className='slot-logo no-underline flex items-center'>
             {logo ? (
-              <div
-                role='img'
-                aria-label='playwriter'
+              <img
+                src={logo}
+                alt={siteName || 'Logo'}
                 style={{
                   height: 'var(--logo-height)',
-                  /* aspect ratio from SVG viewBox: 730/201 ≈ 3.63 */
-                  aspectRatio: '730 / 201',
-                  backgroundColor: 'var(--logo-color)',
-                  maskImage: `url(${logo})`,
-                  maskSize: 'contain',
-                  maskRepeat: 'no-repeat',
-                  WebkitMaskImage: `url(${logo})`,
-                  WebkitMaskSize: 'contain',
-                  WebkitMaskRepeat: 'no-repeat',
+                  width: 'auto',
                 }}
+                className='dark:invert'
               />
             ) : (
               <span className='text-[15px] font-bold [font-family:var(--font-code)] lowercase tracking-[-0.01em]'>
-                index
+                {siteName || 'docs'}
               </span>
             )}
-          </a>
+          </Link>
           <div className='flex items-center gap-4'>
             {/* Icon links */}
             {headerLinks && headerLinks.length > 0 && (
