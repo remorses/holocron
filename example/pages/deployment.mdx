@@ -1,0 +1,28 @@
+---
+title: Deployment
+description: Build and serve a Holocron site in production.
+---
+
+## Production build
+
+Build the example with:
+
+```bash
+pnpm build
+```
+
+## Output
+
+The Vite build emits a server-rendered app that can be started locally with:
+
+```bash
+pnpm start
+```
+
+## Static assets
+
+Fonts, images, and processed MDX assets are bundled alongside the site so the production output stays self-contained.
+
+## Deployment targets
+
+Holocron is designed so the expensive MDX and image work happens at build time, keeping request-time rendering lightweight.

@@ -1,0 +1,28 @@
+---
+title: Theming
+description: Customize the look and feel of a Holocron documentation site.
+---
+
+## Color tokens
+
+Holocron prefers a shared shadcn-style token layer built around `--background`, `--foreground`, `--accent`, `--muted`, and `--border`.
+
+## Primary color
+
+The simplest customization is setting a brand color in `holocron.jsonc`:
+
+```json
+{
+  "colors": {
+    "primary": "#6366f1"
+  }
+}
+```
+
+## Editorial styling
+
+The example site also ships with a narrow editorial content column, subtle borders, and type tokens for prose, headings, captions, and code.
+
+## Keeping one design system
+
+When porting components, keep their class structure if it helps, but map them onto the existing token layer instead of introducing a second color namespace.

@@ -1,0 +1,30 @@
+---
+title: Configuration
+description: Configure Holocron with `holocron.jsonc` or Mintlify-compatible `docs.json`.
+---
+
+## Supported config files
+
+Holocron checks for `holocron.jsonc` first and falls back to `docs.json` for Mintlify compatibility.
+
+## Example
+
+```json
+{
+  "name": "My Docs",
+  "logo": "/logo.svg",
+  "colors": {
+    "primary": "#6366f1"
+  },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["introduction", "quickstart"]
+    }
+  ]
+}
+```
+
+## Normalization
+
+Holocron normalizes the schema into a predictable internal shape so the rest of the app does not have to branch across all the input unions from Mintlify's schema.

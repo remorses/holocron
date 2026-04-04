@@ -1,0 +1,35 @@
+---
+title: Navigation
+description: Organize tabs, groups, and pages for a larger docs site.
+---
+
+## Navigation basics
+
+Holocron follows the Mintlify `docs.json` navigation shape closely. Top-level groups become sidebar sections, and pages inside those groups become leaf items or nested trees.
+
+## Grouping content
+
+Use groups to break a larger docs site into clear sections such as onboarding, guides, and reference material.
+
+```json
+{
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["introduction", "quickstart"]
+    },
+    {
+      "group": "Reference",
+      "pages": ["configuration", "deployment"]
+    }
+  ]
+}
+```
+
+## Tabs and anchors
+
+When a docs site grows further, tabs help split the sidebar into multiple top-level areas while `global.anchors` add external destinations such as GitHub or a changelog.
+
+## Headings in the sidebar
+
+The current page can also expose an `On this page` subtree so readers can move between sections without leaving the main navigation column.

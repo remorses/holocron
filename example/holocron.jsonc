@@ -1,13 +1,36 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Holocron Example",
+  "name": "Playwriter",
+  "logo": "/playwriter-logo.svg",
+  "favicon": "/favicon-32.png",
   "colors": {
-    "primary": "#6366f1"
+    "primary": "#3e9fff"
   },
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": ["introduction", "quickstart"]
-    }
-  ]
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["index"]
+          },
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["navigation", "theming", "search"]
+          },
+          {
+            "group": "Reference",
+            "pages": ["configuration", "deployment"]
+          }
+        ]
+      },
+      { "tab": "GitHub", "href": "https://github.com/remorses/playwriter" },
+      { "tab": "Changelog", "href": "https://github.com/remorses/playwriter/releases" }
+    ]
+  }
 }

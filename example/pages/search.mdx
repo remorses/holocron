@@ -1,0 +1,20 @@
+---
+title: Search
+description: Search across the sidebar tree and current page structure.
+---
+
+## Sidebar search
+
+The sidebar search indexes the rendered navigation tree rather than a separate bespoke search structure. That keeps filtering, expansion, and highlighting in sync.
+
+## Search behavior
+
+Matching items stay fully visible, while unrelated items can be dimmed so the relevant branch is easier to scan.
+
+## Keyboard support
+
+Arrow keys move through search results and `Enter` jumps to the highlighted item. Escape clears the current search query.
+
+## Group dimming
+
+Top-level group labels should dim too when an entire section has no visible matches, so the whole sidebar reflects the same search state.
