@@ -5,6 +5,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type ComponentProps } from 'react'
+import { router } from 'spiceflow/react'
 import * as Base from '../../../components/sidebar/base.tsx'
 import { cn } from '../../../utils/cn.ts'
 import { createPageTreeRenderer } from '../../../components/sidebar/page-tree.tsx'
@@ -46,6 +47,20 @@ function collectFolderIds(nodes: PageTree.Node[], next: Set<string>) {
     }
     collectFolderIds(node.children, next)
   }
+}
+
+function sameIds(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) {
+    return false
+  }
+
+  for (const value of a) {
+    if (!b.has(value)) {
+      return false
+    }
+  }
+
+  return true
 }
 
 function subtreeHasVisibleMatch(node: PageTree.Node, dimmedIds: Set<string>): boolean {
@@ -94,14 +109,30 @@ function visibleSeparatorIds(nodes: PageTree.Node[], dimmedIds: Set<string>): Se
   return visible
 }
 
+function findFirstPageHref(nodes: PageTree.Node[]): string | undefined {
+  for (const node of nodes) {
+    if (node.type === 'page') {
+      return node.url
+    }
+
+    if (node.type === 'folder') {
+      const nested = node.index?.url ?? findFirstPageHref(node.children)
+      if (nested) {
+        return nested
+      }
+    }
+  }
+}
+
 type SidebarProps = ComponentProps<'nav'> & {
   tree: PageTree.Root
   currentPageHref?: string
-  activeId?: string
+  activeHref?: string
+  onNavigationItemClick?: (href: string) => void
 }
 
-export function Sidebar({ tree, currentPageHref, activeId, className, ...props }: SidebarProps) {
-  const activeUrl = activeId && currentPageHref ? `${currentPageHref}#${activeId}` : currentPageHref ?? ''
+export function Sidebar({ tree, currentPageHref, activeHref, className, onNavigationItemClick, ...props }: SidebarProps) {
+  const effectiveActiveHref = activeHref ?? currentPageHref ?? ''
   const searchItems = flattenSidebarSearchItems(tree.children)
   const db = createSidebarDb({ items: searchItems })
 
@@ -136,18 +167,10 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
   })
 
   useEffect(() => {
-    if (expanded.size !== defaultExpanded.size) {
-      setExpanded(defaultExpanded)
-      return
-    }
-
-    for (const id of defaultExpanded) {
-      if (!expanded.has(id)) {
-        setExpanded(defaultExpanded)
-        return
-      }
-    }
-  }, [defaultExpanded, expanded])
+    setExpanded((prev) => {
+      return sameIds(prev, defaultExpanded) ? prev : defaultExpanded
+    })
+  }, [defaultExpanded])
 
   const effectiveExpanded = useMemo(() => {
     if (!searchState.expandOverride) {
@@ -214,7 +237,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
       const href = itemHrefById.get(focusable[highlightedIndex] ?? '')
       if (href) {
         handleQueryChange('')
-        window.location.href = href.startsWith('#') ? href : href
+        router.push(href)
       }
     }
   }, [handleQueryChange, highlightedIndex, itemHrefById, searchState.focusableIds])
@@ -228,7 +251,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
       <Base.SidebarItem
         href={item.url}
         external={item.external}
-        active={isActiveUrl(item.url, activeUrl || currentPageHref || '')}
+        active={isActiveUrl(item.url, effectiveActiveHref)}
         data-dimmed={isDimmed}
         className={cn(
           itemClasses({ variant: 'link', highlight: depth >= 1 }),
@@ -246,6 +269,8 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
     const depth = Base.useFolderDepth() + 1
     const open = effectiveExpanded.has(item.$id)
     const isDimmed = searchState.dimmedIds?.has(item.$id) ?? false
+    const pageUsesFirstChildSelection = item.index?.url === currentPageHref && item.children.length > 0
+    const folderHref = pageUsesFirstChildSelection ? findFirstPageHref(item.children) ?? item.index?.url : item.index?.url
     const folderClassName = cn(
       item.index ? itemClasses({ variant: 'link', highlight: depth > 1 }) : itemClasses({ variant: item.collapsible === false ? undefined : 'button', highlight: false }),
       'w-full',
@@ -263,8 +288,8 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
       >
         {item.index ? (
           <Base.SidebarFolderLink
-            href={item.index.url}
-            active={isActiveUrl(item.index.url, activeUrl || currentPageHref || '')}
+            href={folderHref}
+            active={pageUsesFirstChildSelection ? false : isActiveUrl(item.index.url, effectiveActiveHref)}
             className={folderClassName}
             style={{ paddingInlineStart: getItemOffset(depth - 1) }}
           >
@@ -307,9 +332,40 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
   }
 
   return (
-    <TreeContextProvider tree={tree} activeUrl={activeUrl || currentPageHref || ''} fallbackUrl={currentPageHref}>
-      <nav id='hc-sidebar' aria-label='Table of contents' className={cn('flex min-h-0 flex-col text-sm', className)} {...props}>
-        <div className='px-4 pt-4 pb-2'>
+    <TreeContextProvider tree={tree} activeUrl={effectiveActiveHref} fallbackUrl={currentPageHref}>
+      <nav
+        id='hc-sidebar'
+        aria-label='Table of contents'
+        className={cn('flex min-h-0 flex-col text-sm', className)}
+        onClickCapture={(event) => {
+          const target = event.target
+          if (!(target instanceof Element)) {
+            return
+          }
+
+          if (target.matches('[data-icon], [data-icon] *')) {
+            return
+          }
+
+          const link = target.closest('a[href]')
+          if (!(link instanceof HTMLAnchorElement)) {
+            return
+          }
+
+          const url = new URL(link.href, window.location.href)
+          if (url.pathname !== window.location.pathname) {
+            return
+          }
+
+          if (!url.hash) {
+            event.preventDefault()
+          }
+
+          onNavigationItemClick?.(`${url.pathname}${url.hash}`)
+        }}
+        {...props}
+      >
+        <div className='pt-4 pb-4'>
           <input
             ref={searchInputRef}
             type='text'
@@ -322,7 +378,7 @@ export function Sidebar({ tree, currentPageHref, activeId, className, ...props }
           />
         </div>
         <Base.SidebarViewport>
-          <SidebarPageTree currentUrl={activeUrl || currentPageHref || ''} Item={SidebarItemNode} Folder={SidebarFolderNode} Separator={SidebarSeparatorNode} />
+          <SidebarPageTree currentUrl={effectiveActiveHref} Item={SidebarItemNode} Folder={SidebarFolderNode} Separator={SidebarSeparatorNode} />
         </Base.SidebarViewport>
       </nav>
     </TreeContextProvider>

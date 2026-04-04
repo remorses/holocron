@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { Link } from 'spiceflow/react'
 import { ScrollArea, ScrollViewport, type ScrollAreaProps } from '../ui/scroll-area.tsx'
 import { cn } from '../../utils/cn.ts'
 
@@ -86,17 +87,30 @@ export function SidebarItem({
   const ref = useRef<HTMLAnchorElement>(null)
   useAutoScroll(active, ref)
 
+  if (external) {
+    return (
+      <a
+        ref={ref}
+        data-active={active}
+        className={className}
+        target='_blank'
+        rel='noreferrer'
+        {...props}
+      >
+        {children}
+      </a>
+    )
+  }
+
   return (
-    <a
+    <Link
       ref={ref}
       data-active={active}
       className={className}
-      target={external ? '_blank' : props.target}
-      rel={external ? 'noreferrer' : props.rel}
       {...props}
     >
       {children}
-    </a>
+    </Link>
   )
 }
 
@@ -147,8 +161,18 @@ export function SidebarFolderTrigger({ className, children, onClick, ...props }:
       }}
       {...props}
     >
-      {children}
-      <ChevronDownIcon className={cn('ms-auto transition-transform', !folder.open && '-rotate-90 rtl:rotate-90')} />
+      <span className='min-w-0 flex-1 wrap-anywhere'>{children}</span>
+      <span
+        data-icon='true'
+        className='ms-auto inline-flex shrink-0 items-center'
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          folder.setOpen(!folder.open)
+        }}
+      >
+        <ChevronDownIcon className={cn('transition-transform', folder.open ? 'rotate-0' : 'rotate-90 rtl:-rotate-90')} />
+      </span>
     </button>
   )
 }
@@ -172,34 +196,59 @@ export function SidebarFolderLink({
     return null
   }
 
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (folder.collapsible) {
+      if (active) {
+        folder.setOpen(!folder.open)
+      } else {
+        folder.setOpen(true)
+      }
+    }
+    onClick?.(e)
+  }
+
+  const chevron = folder.collapsible && (
+    <span
+      data-icon='true'
+      className='ms-auto inline-flex shrink-0 items-center'
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        folder.setOpen(!folder.open)
+      }}
+    >
+      <ChevronDownIcon className={cn('transition-transform', folder.open ? 'rotate-0' : 'rotate-90 rtl:-rotate-90')} />
+    </span>
+  )
+
+  if (external) {
+    return (
+      <a
+        ref={ref}
+        data-active={active}
+        className={className}
+        target='_blank'
+        rel='noreferrer'
+        onClick={handleClick}
+        {...props}
+      >
+        <span className='min-w-0 flex-1 wrap-anywhere'>{children}</span>
+        {chevron}
+      </a>
+    )
+  }
+
   return (
-    <a
+    <Link
       ref={ref}
       data-active={active}
       className={className}
-      target={external ? '_blank' : props.target}
-      rel={external ? 'noreferrer' : props.rel}
-      onClick={(e) => {
-        if (folder.collapsible) {
-          if (e.target instanceof Element && e.target.matches('[data-icon], [data-icon] *')) {
-            folder.setOpen(!folder.open)
-            e.preventDefault()
-          } else if (active) {
-            folder.setOpen(!folder.open)
-          } else {
-            folder.setOpen(true)
-          }
-        }
-
-        onClick?.(e)
-      }}
+      onClick={handleClick}
       {...props}
     >
-      {children}
-      {folder.collapsible && (
-        <ChevronDownIcon className={cn('ms-auto shrink-0 transition-transform', !folder.open && '-rotate-90 rtl:rotate-90')} />
-      )}
-    </a>
+      <span className='min-w-0 flex-1 wrap-anywhere'>{children}</span>
+      {chevron}
+    </Link>
   )
 }
 

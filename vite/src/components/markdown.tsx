@@ -8,6 +8,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { Link } from 'spiceflow/react'
 import type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem } from './toc-tree.ts'
 import { Sidebar } from '../layouts/flux/slots/sidebar.tsx'
 import type { Root as SidebarTreeRoot, Node as SidebarTreeNode } from '../page-tree/index.ts'
@@ -132,66 +133,85 @@ const headingStyleByLevel: Record<HeadingLevel, React.CSSProperties> = {
 
 /* flattenTocTree and helpers moved to toc-tree.ts (server-safe, no 'use client'). */
 
-/** Single useSyncExternalStore that handles both initial hash and scroll-based
- *  active heading tracking. A ref holds the current value, the IntersectionObserver
- *  updates it and notifies React via the subscribe callback. Server snapshot
- *  returns fallbackId to avoid hydration mismatch. Hash is read inside subscribe
- *  (not during render) to keep render pure. All callbacks are stable via useCallback. */
-function useActiveTocId({
+type ActiveTocSnapshot = {
+  activeId: string
+  visibleIds: string[]
+}
+
+function sameStringArrays(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  return a.every((value, index) => {
+    return value === b[index]
+  })
+}
+
+function sortVisibleHeadingIds(ids: Iterable<string>): string[] {
+  return [...ids].sort((a, b) => {
+    const elA = document.getElementById(a)
+    const elB = document.getElementById(b)
+    if (!elA || !elB) {
+      return 0
+    }
+    return elA.getBoundingClientRect().top - elB.getBoundingClientRect().top
+  })
+}
+
+/** Track both the observer-driven active heading and the headings currently in view.
+ * TableOfContents can then derive the effective active item from viewport evidence
+ * plus the latest manual click instead of adding more mirrored flags. */
+function useActiveTocState({
   fallbackId,
-  scrollLockRef,
 }: {
   fallbackId: string
-  scrollLockRef: React.RefObject<boolean>
 }) {
-  const activeRef = useRef(fallbackId)
+  const snapshotRef = useRef<ActiveTocSnapshot>({ activeId: fallbackId, visibleIds: [] })
 
   const subscribe = useCallback((onStoreChange: () => void) => {
-    const emit = (next: string) => {
-      if (activeRef.current === next) {
+    const visibleIds = new Set<string>()
+
+    const emit = (next: ActiveTocSnapshot) => {
+      if (
+        snapshotRef.current.activeId === next.activeId &&
+        sameStringArrays(snapshotRef.current.visibleIds, next.visibleIds)
+      ) {
         return
       }
-      activeRef.current = next
+
+      snapshotRef.current = next
       onStoreChange()
     }
 
-    // Read hash on first subscribe to fix flash on initial paint
+    const emitFromVisibleIds = () => {
+      const nextVisibleIds = sortVisibleHeadingIds(visibleIds)
+      const nextActiveId = nextVisibleIds.at(-1) ?? snapshotRef.current.activeId
+      emit({ activeId: nextActiveId, visibleIds: nextVisibleIds })
+    }
+
     const hash = window.location.hash.replace(/^#/, '')
     if (hash) {
-      emit(hash)
+      emit({ activeId: hash, visibleIds: snapshotRef.current.visibleIds })
     }
 
     const headings = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
 
     const observer = new IntersectionObserver(
       (entries) => {
-        /* Skip observer updates during programmatic smooth scroll to prevent
-           activeId from bouncing through intermediate headings. The lock is
-           set before scrollIntoView and released on scrollend. */
-        if (scrollLockRef.current) {
-          return
-        }
-        const visible: string[] = []
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.target.id) {
-            visible.push(entry.target.id)
+          if (!entry.target.id) {
+            return
+          }
+
+          if (entry.isIntersecting) {
+            visibleIds.add(entry.target.id)
+          } else {
+            visibleIds.delete(entry.target.id)
           }
         })
 
-        if (visible.length > 0) {
-          const sorted = visible.sort((a, b) => {
-            const elA = document.getElementById(a)
-            const elB = document.getElementById(b)
-            if (!elA || !elB) {
-              return 0
-            }
-            return elA.getBoundingClientRect().top - elB.getBoundingClientRect().top
-          })
-          const last = sorted[sorted.length - 1]
-          if (last) {
-            emit(last)
-          }
-        }
+        emitFromVisibleIds()
       },
       {
         /* -80px ≈ header-row-height; accounts for sticky header covering top of viewport */
@@ -204,18 +224,31 @@ function useActiveTocId({
       observer.observe(heading)
     })
 
+    const onHashChange = () => {
+      const nextHash = window.location.hash.replace(/^#/, '')
+      if (!nextHash) {
+        return
+      }
+
+      emit({ activeId: nextHash, visibleIds: snapshotRef.current.visibleIds })
+    }
+
+    window.addEventListener('hashchange', onHashChange)
+
     return () => {
+      window.removeEventListener('hashchange', onHashChange)
       observer.disconnect()
     }
   }, [])
 
   const getSnapshot = useCallback(() => {
-    return activeRef.current
+    return snapshotRef.current
   }, [])
 
-  const getServerSnapshot = useCallback(() => {
-    return fallbackId
-  }, [fallbackId])
+  // getServerSnapshot must return a cached value to avoid an infinite loop.
+  // React calls getServerSnapshot during render and compares by reference.
+  const serverSnapshot = useMemo(() => ({ activeId: fallbackId, visibleIds: [] as string[] }), [fallbackId])
+  const getServerSnapshot = useCallback(() => serverSnapshot, [serverSnapshot])
 
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
@@ -250,11 +283,32 @@ export function TableOfContents({
   currentPageHref?: string
 }) {
   const fallbackId = findFirstHeadingId(tree.children)
-  const scrollLockRef = useRef(false)
-  const activeId = useActiveTocId({ fallbackId, scrollLockRef })
+  const { activeId: observerActiveId, visibleIds } = useActiveTocState({ fallbackId })
+  const [manualSelectionHref, setManualSelectionHref] = useState<string | null>(null)
+  const observerActiveHref = observerActiveId && currentPageHref ? `${currentPageHref}#${observerActiveId}` : currentPageHref
+
+  useEffect(() => {
+    if (!manualSelectionHref) {
+      return
+    }
+
+    const manualSelectionId = manualSelectionHref.slice(manualSelectionHref.indexOf('#') + 1)
+    if (visibleIds.includes(manualSelectionId)) {
+      return
+    }
+
+    setManualSelectionHref(null)
+  }, [manualSelectionHref, visibleIds])
+
+  const activeHref = manualSelectionHref ?? observerActiveHref
 
   return (
-    <Sidebar tree={tree} currentPageHref={currentPageHref} activeId={activeId || undefined} />
+    <Sidebar
+      tree={tree}
+      currentPageHref={currentPageHref}
+      activeHref={activeHref}
+      onNavigationItemClick={setManualSelectionHref}
+    />
   )
 }
 
@@ -264,7 +318,7 @@ export function TableOfContents({
 
 export function BackButton() {
   return (
-    <a
+    <Link
       href='/'
       className='fixed top-5 right-5 z-[100000] flex items-center justify-center w-10 h-10 rounded-full no-underline'
       style={{
@@ -297,7 +351,7 @@ export function BackButton() {
           strokeLinejoin='round'
         />
       </svg>
-    </a>
+    </Link>
   )
 }
 
@@ -1047,10 +1101,9 @@ export function SidebarBanner({
       }}
     >
       {text}
-      <a
-        href={buttonHref}
-        className='no-underline'
-        style={{
+      {(() => {
+        const isExternal = buttonHref.startsWith('http')
+        const bannerStyle = {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1063,19 +1116,26 @@ export function SidebarBanner({
           backgroundColor: 'var(--text-primary)',
           color: 'var(--background)',
           textDecoration: 'none',
-          position: 'relative',
+          position: 'relative' as const,
           zIndex: 2,
           transition: 'opacity 0.15s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = '0.85'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = '1'
-        }}
-      >
-        {buttonLabel}
-      </a>
+        }
+        const handleEnter = (e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.opacity = '0.85' }
+        const handleLeave = (e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.opacity = '1' }
+
+        if (isExternal) {
+          return (
+            <a href={buttonHref} target='_blank' rel='noopener noreferrer' className='no-underline' style={bannerStyle} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+              {buttonLabel}
+            </a>
+          )
+        }
+        return (
+          <Link href={buttonHref} className='no-underline' style={bannerStyle} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+            {buttonLabel}
+          </Link>
+        )
+      })()}
       {imageUrl && (
         <img
           src={imageUrl}
@@ -1099,49 +1159,73 @@ export function SidebarBanner({
 
 function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
   const isExternal = tab.href.startsWith('http')
-  return (
-    <a
-      href={tab.href}
-      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className='slot-tab no-underline text-(length:--type-toc-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
+  const tabClassName = 'slot-tab no-underline text-(length:--type-toc-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
+  const tabStyle = {
+    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+    textShadow: isActive ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : 'none',
+  }
+  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isActive) {
+      e.currentTarget.style.color = 'var(--text-primary)'
+      const indicator = e.currentTarget.querySelector<HTMLElement>('[data-tab-indicator]')
+      if (indicator) {
+        indicator.style.backgroundColor = 'var(--text-tertiary)'
+      }
+    }
+  }
+  const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isActive) {
+      e.currentTarget.style.color = 'var(--text-secondary)'
+      const indicator = e.currentTarget.querySelector<HTMLElement>('[data-tab-indicator]')
+      if (indicator) {
+        indicator.style.backgroundColor = 'transparent'
+      }
+    }
+  }
+  const indicator = (
+    <div
+      data-tab-indicator
       style={{
-        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-        textShadow: isActive ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : 'none',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        width: '100%',
+        height: '1.5px',
+        backgroundColor: isActive ? 'var(--text-primary)' : 'transparent',
+        borderRadius: '1px',
+        transition: 'background-color 0.15s ease',
       }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.color = 'var(--text-primary)'
-          const indicator = e.currentTarget.querySelector<HTMLElement>('[data-tab-indicator]')
-          if (indicator) {
-            indicator.style.backgroundColor = 'var(--text-tertiary)'
-          }
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.color = 'var(--text-secondary)'
-          const indicator = e.currentTarget.querySelector<HTMLElement>('[data-tab-indicator]')
-          if (indicator) {
-            indicator.style.backgroundColor = 'transparent'
-          }
-        }
-      }}
+    />
+  )
+
+  if (isExternal) {
+    return (
+      <a
+        href={tab.href}
+        target='_blank'
+        rel='noopener noreferrer'
+        className={tabClassName}
+        style={tabStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {tab.label}
+        {indicator}
+      </a>
+    )
+  }
+
+  return (
+    <Link
+      href={tab.href}
+      className={tabClassName}
+      style={tabStyle}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {tab.label}
-      <div
-        data-tab-indicator
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          height: '1.5px',
-          backgroundColor: isActive ? 'var(--text-primary)' : 'transparent',
-          borderRadius: '1px',
-          transition: 'background-color 0.15s ease',
-        }}
-      />
-    </a>
+      {indicator}
+    </Link>
   )
 }
 

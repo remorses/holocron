@@ -67,6 +67,25 @@ test.describe("getting-started page", () => {
     await expect(installation).toBeVisible();
   });
 
+  test("clicking the page node selects the first heading child", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 400 });
+    await page.goto("/getting-started");
+
+    const toc = page.getByRole("navigation", { name: "Table of contents" });
+    const pageRow = toc.getByRole("link", { name: "Getting Started" });
+    const installation = toc.getByRole("link", { name: "Installation" });
+
+    await installation.click();
+    await expect(installation).toHaveAttribute("data-active", "true");
+
+    await pageRow.click();
+    await expect(page).toHaveURL(/\/getting-started#installation$/);
+    await expect(pageRow).toHaveAttribute("data-active", "false");
+    await expect(installation).toHaveAttribute("data-active", "true");
+  });
+
   test("indents page heading links deeper than the page row", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/getting-started");
