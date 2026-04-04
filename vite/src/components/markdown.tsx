@@ -342,7 +342,7 @@ function NavGroupNode({
     return (
       <div className='flex flex-col gap-2'>
         <div
-          className='text-[10px] cursor-default mt-3 mb-0.5'
+          className='text-xs cursor-default mt-3 mb-0.5'
           style={{
             fontVariationSettings: '"wght" 500',
             color: 'var(--sidebar-section-foreground)',

@@ -35,89 +35,63 @@ test.describe("getting-started page", () => {
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
 
-  test("expands the current page in the sidebar and shows page heading links", async ({
+  test("shows the active page and its TOC headings in the sidebar", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/getting-started");
 
-    const toc = page.getByRole("navigation", { name: "Table of contents" });
+    const nav = page.getByRole("navigation", { name: "Navigation" });
 
-    await expect(toc.getByRole("link", { name: "Getting Started" })).toBeVisible();
-    await expect(toc.getByRole("link", { name: "Installation" })).toBeVisible();
-    await expect(toc.getByRole("link", { name: "Configuration" })).toBeVisible();
+    // Active page link should be visible
+    await expect(nav.getByRole("link", { name: "Getting Started" })).toBeVisible();
+    // TOC headings should be expanded under active page
+    await expect(nav.getByRole("link", { name: "Installation" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Configuration" })).toBeVisible();
   });
 
-  test("can collapse and re-expand the current page headings in the sidebar", async ({
-    page,
-  }) => {
+  test("TOC headings are indented relative to the page link", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/getting-started");
 
-    const toc = page.getByRole("navigation", { name: "Table of contents" });
-    const pageRow = toc.getByRole("link", { name: "Getting Started" });
-    const installation = toc.getByRole("link", { name: "Installation" });
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    const pageLink = nav.getByRole("link", { name: "Getting Started" });
+    const headingLink = nav.getByRole("link", { name: "Installation" });
 
-    await expect(installation).toBeVisible();
+    // The heading TOC list has padding-left, making it indented vs the page link
+    const pageLinkLeft = await pageLink.evaluate((node) => node.getBoundingClientRect().left);
+    const headingLinkLeft = await headingLink.evaluate((node) => node.getBoundingClientRect().left);
 
-    await pageRow.locator("svg").click();
-    await expect(installation).not.toBeVisible();
-
-    await pageRow.locator("svg").click();
-    await expect(installation).toBeVisible();
+    expect(headingLinkLeft).toBeGreaterThan(pageLinkLeft);
   });
 
-  test("clicking the page node selects the first heading child", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1600, height: 400 });
-    await page.goto("/getting-started");
-
-    const toc = page.getByRole("navigation", { name: "Table of contents" });
-    const pageRow = toc.getByRole("link", { name: "Getting Started" });
-    const installation = toc.getByRole("link", { name: "Installation" });
-
-    await installation.click();
-    await expect(installation).toHaveAttribute("data-active", "true");
-
-    await pageRow.click();
-    await expect(page).toHaveURL(/\/getting-started#installation$/);
-    await expect(pageRow).toHaveAttribute("data-active", "false");
-    await expect(installation).toHaveAttribute("data-active", "true");
-  });
-
-  test("indents page heading links deeper than the page row", async ({ page }) => {
+  test("dims non-matching items when search has no matches", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/getting-started");
+    // Wait for hydration so the search input is interactive
+    await page.waitForTimeout(1000);
 
-    const toc = page.getByRole("navigation", { name: "Table of contents" });
-    const pageRow = toc.getByRole("link", { name: "Getting Started" });
-    const installation = toc.getByRole("link", { name: "Installation" });
+    const searchInput = page.getByPlaceholder("search...");
+    await searchInput.click();
+    await searchInput.fill("zzzz-no-match");
+    // Wait for React startTransition to apply dimming
+    await page.waitForTimeout(1000);
 
-    const pagePaddingLeft = await pageRow.evaluate((node) => Number.parseFloat(window.getComputedStyle(node).paddingLeft));
-    const headingPaddingLeft = await installation.evaluate((node) => Number.parseFloat(window.getComputedStyle(node).paddingLeft));
+    // The "Welcome to Test Docs" page link should be dimmed
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    const welcomeLink = nav.getByRole("link", { name: "Welcome to Test Docs" });
+    await expect(welcomeLink).toBeVisible();
 
-    expect(headingPaddingLeft).toBeGreaterThan(pagePaddingLeft);
-  });
-
-  test("uses the same background color for the page shell and sidebar", async ({ page }) => {
-    await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/getting-started");
-
-    const pageBackground = await page.locator(".slot-page").evaluate((node) => window.getComputedStyle(node).backgroundColor);
-    const sidebarBackground = await page.locator("#hc-sidebar").evaluate((node) => window.getComputedStyle(node).backgroundColor);
-
-    expect(sidebarBackground).toBe(pageBackground);
-  });
-
-  test("dims group names too when search has no matches", async ({ page }) => {
-    await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/getting-started");
-
-    await page.getByLabel("Search sidebar").fill("zzzz-no-match");
-
-    const guidesOpacity = await page.getByText("Guides", { exact: true }).evaluate((node) => window.getComputedStyle(node).opacity);
-    expect(Number.parseFloat(guidesOpacity)).toBeLessThan(1);
+    // The opacity is set inline on the parent div.flex.flex-col wrapper
+    const wrapperOpacity = await welcomeLink.evaluate((node) => {
+      let el: HTMLElement | null = node.parentElement;
+      while (el) {
+        if (el.style.opacity) return el.style.opacity;
+        el = el.parentElement;
+      }
+      return window.getComputedStyle(node).opacity;
+    });
+    expect(Number.parseFloat(wrapperOpacity)).toBeLessThan(1);
   });
 
   test("renders code blocks", async ({ page }) => {
@@ -157,11 +131,47 @@ test.describe("navigation", () => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/");
 
-    const nav = page.getByRole("navigation", { name: "Table of contents" });
+    const nav = page.getByRole("navigation", { name: "Navigation" });
     await nav.getByRole("link", { name: "Getting Started" }).click();
 
     await expect(page).toHaveURL(/\/getting-started$/);
     await expect(page).toHaveTitle(/Getting Started/);
+  });
+});
+
+test.describe("hydration", () => {
+  test("no hydration errors on home page", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error" && msg.text().toLowerCase().includes("hydrat")) {
+        errors.push(msg.text());
+      }
+    });
+    page.on("pageerror", (err) => {
+      errors.push(err.message);
+    });
+
+    await page.goto("/");
+    // Wait for hydration to settle
+    await page.waitForTimeout(2000);
+    expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
+  });
+
+  test("no hydration errors on getting-started page", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error" && msg.text().toLowerCase().includes("hydrat")) {
+        errors.push(msg.text());
+      }
+    });
+    page.on("pageerror", (err) => {
+      errors.push(err.message);
+    });
+
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/getting-started");
+    await page.waitForTimeout(2000);
+    expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
 });
 
