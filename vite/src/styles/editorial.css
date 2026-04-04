@@ -61,10 +61,58 @@
   background: var(--selection-bg);
 }
 
+/* ========================================================================
+   Editorial typography — heading & prose base classes.
+   Replaces JS style objects (WEIGHT, LINE_HEIGHT, headingStyleByLevel, etc.)
+   with CSS classes so components use className instead of inline style spreads.
+   ======================================================================== */
+
+.editorial-prose {
+  font-family: var(--font-primary);
+  font-weight: var(--weight-prose);
+  line-height: var(--lh-prose);
+  letter-spacing: var(--ls-prose);
+  color: var(--text-primary);
+  margin: 0;
+}
+
 /* Bold and inline code inside prose punch through the reduced opacity */
 .editorial-prose strong,
 .editorial-prose .inline-code {
   opacity: calc(1 / 0.82);
+}
+
+.editorial-heading {
+  font-family: var(--font-primary);
+  font-weight: var(--weight-heading);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-prose);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  scroll-margin-top: var(--header-height);
+}
+
+.editorial-h1 {
+  font-size: var(--type-heading-1-size);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.editorial-h2 {
+  font-size: var(--type-heading-2-size);
+  padding-top: 10px;
+  padding-bottom: 4px;
+}
+
+.editorial-h3 {
+  font-size: var(--type-heading-3-size);
+  padding-top: 4px;
+  padding-bottom: 2px;
+  color: var(--text-secondary);
 }
 
 /* ========================================================================

@@ -32,24 +32,10 @@ Prism.languages.diagram = {
 }
 
 /* =========================================================================
-   Typography primitives — reduced set after merging near-identical values.
-   4 weights (regular/prose/heading/bold), 2 line-heights (heading/prose).
-   Mirrors CSS variables in globals.css. Used in inline styles for type safety.
+   Typography — weights and spacing are defined as CSS custom properties in
+   globals.css (--weight-*, --lh-*, --ls-*). Base classes live in
+   editorial.css (.editorial-prose, .editorial-heading, .editorial-h1/h2/h3).
    ========================================================================= */
-
-const WEIGHT = { regular: 400, prose: 475, heading: 560, bold: 700 } as const
-const LINE_HEIGHT = { heading: 1.4, prose: 1.6 } as const
-const LETTER_SPACING = { prose: '-0.09px', code: '0.01em' } as const
-
-/** Shared prose style — body text, lists, captions. Spread and override per component. */
-const proseStyle = {
-  fontFamily: 'var(--font-primary)',
-  fontWeight: WEIGHT.prose,
-  lineHeight: LINE_HEIGHT.prose,
-  letterSpacing: LETTER_SPACING.prose,
-  color: 'var(--text-primary)',
-  margin: 0,
-} satisfies React.CSSProperties
 
 /* =========================================================================
    TOC sidebar (fixed left) — Agentation-style navigation
@@ -63,35 +49,10 @@ const headingTagByLevel: Record<HeadingLevel, 'h1' | 'h2' | 'h3'> = {
   3: 'h3',
 }
 
-const headingStyleByLevel: Record<HeadingLevel, React.CSSProperties> = {
-  1: {
-    fontSize: 'var(--type-heading-1-size)',
-    fontWeight: WEIGHT.heading,
-    lineHeight: LINE_HEIGHT.heading,
-    letterSpacing: LETTER_SPACING.prose,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    paddingTop: '24px',
-    paddingBottom: '24px',
-  },
-  2: {
-    fontSize: 'var(--type-heading-2-size)',
-    fontWeight: WEIGHT.heading,
-    lineHeight: LINE_HEIGHT.heading,
-    letterSpacing: LETTER_SPACING.prose,
-    paddingTop: '10px',
-    paddingBottom: '4px',
-  },
-  3: {
-    fontSize: 'var(--type-heading-3-size)',
-    fontWeight: WEIGHT.heading,
-    lineHeight: LINE_HEIGHT.heading,
-    letterSpacing: LETTER_SPACING.prose,
-    paddingTop: '4px',
-    paddingBottom: '2px',
-    color: 'var(--text-secondary)',
-  },
+const headingClassByLevel: Record<HeadingLevel, string> = {
+  1: 'editorial-heading editorial-h1',
+  2: 'editorial-heading editorial-h2',
+  3: 'editorial-heading editorial-h3',
 }
 
 /* ── Chevron icon for expandable nested groups ───────────────────────── */
@@ -617,13 +578,13 @@ export function SideNav({
           style={{
             padding: '2px 24px 2px 8px',
             fontFamily: 'var(--font-primary)',
-            fontWeight: WEIGHT.prose,
+            fontWeight: 'var(--weight-prose)',
             color: 'var(--text-primary)',
             background: 'transparent',
             border: '1px solid var(--page-border)',
             borderRadius: '6px',
             letterSpacing: 'normal',
-            lineHeight: LINE_HEIGHT.prose,
+            lineHeight: 'var(--lh-prose)',
             transition: 'border-color 0.15s ease, opacity 0.1s ease',
             opacity: isPending ? 0.5 : 1,
           }}
@@ -637,7 +598,7 @@ export function SideNav({
             style={{
               fontFamily: 'var(--font-code)',
               fontSize: '10px',
-              fontWeight: WEIGHT.regular,
+              fontWeight: 'var(--weight-regular)',
               color: 'var(--text-secondary)',
               border: '1px solid var(--text-tertiary)',
               borderRadius: '4px',
@@ -731,16 +692,9 @@ export function SectionHeading({
   return (
     <Tag
       id={id}
+      className={headingClassByLevel[level] || 'editorial-heading'}
       data-toc-heading='true'
       data-toc-level={level}
-      style={{
-        fontFamily: 'var(--font-primary)',
-        color: 'var(--text-primary)',
-        margin: 0,
-        padding: 0,
-        scrollMarginTop: 'var(--header-height)',
-        ...headingStyleByLevel[level],
-      }}
     >
       <span style={{ whiteSpace: level === 1 ? 'nowrap' : 'normal' }}>{children}</span>
       {level === 1 ? <span style={{ flex: 1, height: '1px', background: 'var(--divider)' }} /> : null}
@@ -755,10 +709,7 @@ export function P({ children, className = '' }: { children: React.ReactNode; cla
   return (
     <div
       className={`editorial-prose ${className}`}
-      style={{
-        ...proseStyle,
-        opacity: 0.82,
-      }}
+      style={{ opacity: 0.82 }}
     >
       {children}
     </div>
@@ -768,8 +719,8 @@ export function P({ children, className = '' }: { children: React.ReactNode; cla
 export function Caption({ children }: { children: React.ReactNode }) {
   return (
     <div
+      className='editorial-prose'
       style={{
-        ...proseStyle,
         fontSize: 'var(--type-caption-size)',
         textAlign: 'center',
         color: 'var(--text-secondary)',
@@ -788,7 +739,7 @@ export function A({ href, children }: { href: string; children: React.ReactNode 
       rel='noopener noreferrer'
       style={{
         color: 'var(--link-accent, #0969da)',
-        fontWeight: WEIGHT.heading,
+        fontWeight: 'var(--weight-heading)',
         textDecoration: 'none',
       }}
       onMouseEnter={(e) => {
@@ -860,11 +811,8 @@ export function Section({
 export function OL({ children }: { children: React.ReactNode }) {
   return (
     <ol
-      className='m-0 pl-5'
-      style={{
-        ...proseStyle,
-        listStyleType: 'decimal',
-      }}
+      className='editorial-prose m-0 pl-5'
+      style={{ listStyleType: 'decimal' }}
     >
       {children}
     </ol>
@@ -874,11 +822,8 @@ export function OL({ children }: { children: React.ReactNode }) {
 export function List({ children }: { children: React.ReactNode }) {
   return (
     <ul
-      className='m-0 pl-5'
-      style={{
-        ...proseStyle,
-        listStyleType: 'disc',
-      }}
+      className='editorial-prose m-0 pl-5'
+      style={{ listStyleType: 'disc' }}
     >
       {children}
     </ul>
@@ -896,7 +841,7 @@ export function Li({ children }: { children: React.ReactNode }) {
 export function CodeBlock({
   children,
   lang = 'jsx',
-  lineHeight = '1.85',
+  lineHeight = '1.6',
   showLineNumbers = true,
 }: {
   children: string
@@ -934,7 +879,7 @@ export function CodeBlock({
               padding: '12px 8px 8px',
               fontFamily: 'var(--font-code)',
               fontSize: 'var(--type-code-size)',
-              fontWeight: WEIGHT.regular,
+              fontWeight: 'var(--weight-regular)',
               lineHeight,
               letterSpacing: 'normal',
               color: 'var(--text-primary)',
@@ -1250,7 +1195,7 @@ export function ChartPlaceholder({ height = 200, label }: { height?: number; lab
               background: 'rgba(59, 130, 246, 0.15)',
               color: '#3b82f6',
               fontFamily: 'var(--font-code)',
-              fontWeight: WEIGHT.prose,
+              fontWeight: 'var(--weight-prose)',
               fontSize: 'var(--type-table-size)',
             }}
           >
@@ -1282,10 +1227,10 @@ export function ComparisonTable({
           style={{
             fontFamily: 'var(--font-primary)',
             fontSize: 'var(--type-table-size)',
-            fontWeight: WEIGHT.regular,
+            fontWeight: 'var(--weight-regular)',
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
-            letterSpacing: LETTER_SPACING.code,
+            letterSpacing: 'var(--ls-code)',
             padding: '0 0 6px',
           }}
         >
@@ -1309,7 +1254,7 @@ export function ComparisonTable({
                   style={{
                     padding: '4px 12px 4px 0',
                     fontSize: 'var(--type-table-size)',
-                    fontWeight: WEIGHT.regular,
+                    fontWeight: 'var(--weight-regular)',
                     fontFamily: 'var(--font-primary)',
                     color: 'var(--text-muted)',
                     borderBottom: '1px solid var(--page-border)',
@@ -1329,7 +1274,7 @@ export function ComparisonTable({
                   style={{
                     padding: '4px 12px 4px 0',
                     fontSize: 'var(--type-table-size)',
-                    fontWeight: WEIGHT.prose,
+                    fontWeight: 'var(--weight-prose)',
                     fontFamily: 'var(--font-code)',
                     color: 'var(--text-primary)',
                     borderBottom: '1px solid var(--page-border)',
@@ -1342,7 +1287,7 @@ export function ComparisonTable({
                   style={{
                     padding: '4px 12px 4px 0',
                     fontSize: 'var(--type-table-size)',
-                    fontWeight: WEIGHT.prose,
+                    fontWeight: 'var(--weight-prose)',
                     fontFamily: 'var(--font-code)',
                     color: 'var(--text-primary)',
                     borderBottom: '1px solid var(--page-border)',
@@ -1355,7 +1300,7 @@ export function ComparisonTable({
                   style={{
                     padding: '4px 12px 4px 0',
                     fontSize: 'var(--type-table-size)',
-                    fontWeight: WEIGHT.prose,
+                    fontWeight: 'var(--weight-prose)',
                     fontFamily: 'var(--font-code)',
                     color: 'var(--text-primary)',
                     borderBottom: '1px solid var(--page-border)',
@@ -1458,8 +1403,8 @@ export function SidebarBanner({
         borderRadius: 'var(--border-radius-md)',
         padding: '10px',
         fontSize: 'var(--type-toc-size)',
-        fontWeight: WEIGHT.prose,
-        lineHeight: LINE_HEIGHT.heading,
+        fontWeight: 'var(--weight-prose)',
+        lineHeight: 'var(--lh-heading)',
         color: 'var(--text-tree-label)',
         overflow: 'visible',
       }}
@@ -1476,7 +1421,7 @@ export function SidebarBanner({
           marginTop: '8px',
           borderRadius: 'var(--border-radius-md)',
           fontSize: 'var(--type-toc-size)',
-          fontWeight: WEIGHT.prose,
+          fontWeight: 'var(--weight-prose)',
           backgroundColor: 'var(--text-primary)',
           color: 'var(--background)',
           textDecoration: 'none',

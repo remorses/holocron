@@ -323,7 +323,7 @@ export function createHolocronApp({
           const lang = codeNode.lang || 'bash'
           const isDiagram = lang === 'diagram'
           return (
-            <CodeBlock lang={lang} lineHeight={isDiagram ? '1.3' : '1.85'} showLineNumbers={!isDiagram}>
+            <CodeBlock lang={lang} lineHeight={isDiagram ? '1.3' : '1.6'} showLineNumbers={!isDiagram}>
               {codeNode.value}
             </CodeBlock>
           )

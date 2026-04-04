@@ -46,6 +46,16 @@
     'JetBrainsMono NF Mono', 'JetBrains Mono', 'SF Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', Menlo,
     Courier, monospace;
 
+  /* Editorial typography weights & rhythm */
+  --weight-regular: 400;
+  --weight-prose: 475;
+  --weight-heading: 560;
+  --weight-bold: 700;
+  --lh-heading: 1.4;
+  --lh-prose: 1.6;
+  --ls-prose: -0.09px;
+  --ls-code: 0.01em;
+
   /* Editorial type scale */
   --type-body-size: 14px;
   --type-heading-1-size: 15px;
