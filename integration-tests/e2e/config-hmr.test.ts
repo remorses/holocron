@@ -58,19 +58,91 @@ test.describe("MDX content HMR @dev", () => {
   });
 });
 
+test.describe("new MDX file HMR @dev", () => {
+  const newPageSlug = "hmr-new-page";
+  const newPageFile = path.join(pagesDir, `${newPageSlug}.mdx`);
+  const newPageTitle = "Brand New Page";
+
+  let originalConfig: string;
+
+  test.beforeEach(() => {
+    originalConfig = fs.readFileSync(configPath, "utf-8");
+  });
+
+  test.afterEach(() => {
+    fs.writeFileSync(configPath, originalConfig);
+    if (fs.existsSync(newPageFile)) {
+      fs.unlinkSync(newPageFile);
+    }
+  });
+
+  test("creating a new MDX file after hydration updates the UI without page refresh", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+    await page.waitForTimeout(2000);
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav.getByText(newPageTitle)).not.toBeVisible();
+
+    await page.evaluate(() => {
+      (window as any).__hmr_test_no_reload = true;
+    });
+
+    // Create the MDX file AFTER hydration — this is a new file that was
+    // never registered via addWatchFile, so it exercises the fallback path
+    // (manual invalidation + rsc:update).
+    fs.writeFileSync(
+      newPageFile,
+      [
+        "---",
+        `title: ${newPageTitle}`,
+        "---",
+        "",
+        `Content for the brand new page.`,
+      ].join("\n"),
+    );
+
+    // Update config to reference the new page
+    const updatedConfig = JSON.stringify(
+      {
+        name: "Test Docs",
+        colors: { primary: "#0969da" },
+        navigation: [
+          { group: "Guides", pages: ["index", "getting-started"] },
+          { group: "New", pages: [newPageSlug] },
+        ],
+      },
+      null,
+      2,
+    );
+    fs.writeFileSync(configPath, updatedConfig);
+
+    await expect(
+      nav.getByRole("link", { name: newPageTitle }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    const noReload = await page.evaluate(
+      () => (window as any).__hmr_test_no_reload,
+    );
+    expect(noReload, "Page did a full reload instead of HMR update").toBe(
+      true,
+    );
+  });
+});
+
 test.describe("config HMR @dev", () => {
   const hmrPageSlug = "hmr-test-page";
   const hmrPageFile = path.join(pagesDir, `${hmrPageSlug}.mdx`);
   const hmrGroupName = "HMR Test Group";
   const hmrPageTitle = "HMR Test Page";
 
-  // Original config content — restored in afterEach
   let originalConfig: string;
 
   test.beforeEach(() => {
     originalConfig = fs.readFileSync(configPath, "utf-8");
 
-    // Create a minimal MDX page for the new nav entry to point at
     fs.writeFileSync(
       hmrPageFile,
       [
@@ -86,10 +158,8 @@ test.describe("config HMR @dev", () => {
   });
 
   test.afterEach(() => {
-    // Restore original config so subsequent tests aren't affected
     fs.writeFileSync(configPath, originalConfig);
 
-    // Clean up the temporary MDX page
     if (fs.existsSync(hmrPageFile)) {
       fs.unlinkSync(hmrPageFile);
     }
