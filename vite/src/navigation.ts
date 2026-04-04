@@ -268,17 +268,6 @@ function buildSidebarPageNode({
     index: item,
     collapsible: true,
     defaultOpen: true,
-    children: [buildPageTocFolder({ page, idPrefix })],
-  }
-}
-
-function buildPageTocFolder({ page, idPrefix }: { page: NavPage; idPrefix: string }): PageTree.Folder {
-  return {
-    $id: `toc:${page.href}`,
-    type: 'folder',
-    name: 'On this page',
-    collapsible: true,
-    defaultOpen: true,
     children: buildHeadingNodes({ page, idPrefix }),
   }
 }

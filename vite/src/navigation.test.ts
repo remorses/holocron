@@ -313,33 +313,24 @@ describe('buildSidebarTree', () => {
             {
               "children": [
                 {
-                  "children": [
-                    {
-                      "name": "Methods",
-                      "type": "page",
-                      "url": "/guide#methods",
-                    },
-                  ],
-                  "collapsible": false,
-                  "defaultOpen": true,
-                  "index": {
-                    "name": "Overview",
-                    "url": "/guide#overview",
-                  },
-                  "name": "Overview",
-                  "type": "folder",
-                },
-                {
-                  "name": "Examples",
+                  "name": "Methods",
                   "type": "page",
-                  "url": "/guide#examples",
+                  "url": "/guide#methods",
                 },
               ],
-              "collapsible": true,
+              "collapsible": false,
               "defaultOpen": true,
-              "index": undefined,
-              "name": "On this page",
+              "index": {
+                "name": "Overview",
+                "url": "/guide#overview",
+              },
+              "name": "Overview",
               "type": "folder",
+            },
+            {
+              "name": "Examples",
+              "type": "page",
+              "url": "/guide#examples",
             },
           ],
           "collapsible": true,
