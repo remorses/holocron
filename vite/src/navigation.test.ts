@@ -7,13 +7,12 @@ import {
   findPage,
   collectAllPages,
   buildPageIndex,
-  buildSidebarTree,
+  flattenForSidebar,
   type NavTab,
   type NavGroup,
   type NavPage,
   type Navigation,
 } from './navigation.ts'
-import type * as PageTree from './page-tree/index.ts'
 
 /* ── Test fixtures ───────────────────────────────────────────────────── */
 
@@ -203,56 +202,91 @@ describe('buildPageIndex', () => {
   })
 })
 
-/* ── buildSidebarTree ──────────────────────────────────────────────── */
+/* ── flattenForSidebar ──────────────────────────────────────────────── */
 
-function serializeTree(nodes: PageTree.Node[]): unknown[] {
-  return nodes.map((node) => {
-    if (node.type === 'separator') {
-      return { type: node.type, name: node.name }
-    }
+describe('flattenForSidebar', () => {
+  test('flattens groups and pages into flat items', () => {
+    const items = flattenForSidebar([
+      makeGroup('Getting Started', [makePage('intro'), makePage('install')]),
+    ])
 
-    if (node.type === 'page') {
-      return { type: node.type, name: node.name, url: node.url }
-    }
-
-    return {
-      type: node.type,
-      name: node.name,
-      collapsible: node.collapsible,
-      defaultOpen: node.defaultOpen,
-      index: node.index ? { name: node.index.name, url: node.index.url } : undefined,
-      children: serializeTree(node.children),
-    }
-  })
-}
-
-describe('buildSidebarTree', () => {
-  test('renders top-level groups as separators followed by pages', () => {
-    const tree = buildSidebarTree({
-      groups: [makeGroup('Getting Started', [makePage('intro'), makePage('install')])],
-    })
-
-    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
+    expect(items.map((i) => ({ label: i.label, href: i.href, type: i.type, visualLevel: i.visualLevel }))).toMatchInlineSnapshot(`
       [
         {
-          "name": "Getting Started",
-          "type": "separator",
+          "href": "#group-getting-started",
+          "label": "Getting Started",
+          "type": "page",
+          "visualLevel": 0,
         },
         {
-          "name": "Intro",
+          "href": "/intro",
+          "label": "Intro",
           "type": "page",
-          "url": "/intro",
+          "visualLevel": 1,
         },
         {
-          "name": "Install",
+          "href": "/install",
+          "label": "Install",
           "type": "page",
-          "url": "/install",
+          "visualLevel": 1,
         },
       ]
     `)
   })
 
-  test('turns nested groups into folders', () => {
+  test('includes page headings as flat children', () => {
+    const page = makePage('guide', {
+      headings: [
+        { depth: 2, text: 'Overview', slug: 'overview' },
+        { depth: 3, text: 'Methods', slug: 'methods' },
+        { depth: 2, text: 'Examples', slug: 'examples' },
+      ],
+    })
+
+    const items = flattenForSidebar([makeGroup('Docs', [page])])
+
+    expect(items.map((i) => ({ label: i.label, href: i.href, type: i.type, visualLevel: i.visualLevel, parentHref: i.parentHref }))).toMatchInlineSnapshot(`
+      [
+        {
+          "href": "#group-docs",
+          "label": "Docs",
+          "parentHref": null,
+          "type": "page",
+          "visualLevel": 0,
+        },
+        {
+          "href": "/guide",
+          "label": "Guide",
+          "parentHref": "#group-docs",
+          "type": "page",
+          "visualLevel": 1,
+        },
+        {
+          "href": "/guide#overview",
+          "label": "Overview",
+          "parentHref": "/guide",
+          "type": "h2",
+          "visualLevel": 2,
+        },
+        {
+          "href": "/guide#methods",
+          "label": "Methods",
+          "parentHref": "/guide#overview",
+          "type": "h3",
+          "visualLevel": 3,
+        },
+        {
+          "href": "/guide#examples",
+          "label": "Examples",
+          "parentHref": "/guide",
+          "type": "h2",
+          "visualLevel": 2,
+        },
+      ]
+    `)
+  })
+
+  test('handles nested groups', () => {
     const nestedGroup: NavGroup = {
       group: 'Advanced',
       pages: [
@@ -263,111 +297,29 @@ describe('buildSidebarTree', () => {
       ],
     }
 
-    const tree = buildSidebarTree({ groups: [nestedGroup] })
-    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
+    const items = flattenForSidebar([nestedGroup])
+    expect(items.map((i) => ({ label: i.label, visualLevel: i.visualLevel, parentHref: i.parentHref }))).toMatchInlineSnapshot(`
       [
         {
-          "name": "Advanced",
-          "type": "separator",
+          "label": "Advanced",
+          "parentHref": null,
+          "visualLevel": 0,
         },
         {
-          "children": [
-            {
-              "name": "Core",
-              "type": "page",
-              "url": "/core",
-            },
-          ],
-          "collapsible": true,
-          "defaultOpen": undefined,
-          "index": undefined,
-          "name": "Internals",
-          "type": "folder",
+          "label": "Internals",
+          "parentHref": "#group-advanced",
+          "visualLevel": 1,
+        },
+        {
+          "label": "Core",
+          "parentHref": "#group-internals",
+          "visualLevel": 2,
         },
       ]
     `)
   })
 
-  test('injects current page toc under the active page', () => {
-    const page = makePage('guide', {
-      headings: [
-        { depth: 2, text: 'Overview', slug: 'overview' },
-        { depth: 3, text: 'Methods', slug: 'methods' },
-        { depth: 2, text: 'Examples', slug: 'examples' },
-      ],
-    })
-
-    const tree = buildSidebarTree({
-      groups: [makeGroup('Docs', [page])],
-      currentPage: page,
-    })
-
-    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
-      [
-        {
-          "name": "Docs",
-          "type": "separator",
-        },
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "name": "Methods",
-                  "type": "page",
-                  "url": "/guide#methods",
-                },
-              ],
-              "collapsible": false,
-              "defaultOpen": true,
-              "index": {
-                "name": "Overview",
-                "url": "/guide#overview",
-              },
-              "name": "Overview",
-              "type": "folder",
-            },
-            {
-              "name": "Examples",
-              "type": "page",
-              "url": "/guide#examples",
-            },
-          ],
-          "collapsible": true,
-          "defaultOpen": true,
-          "index": {
-            "name": "Guide",
-            "url": "/guide",
-          },
-          "name": "Guide",
-          "type": "folder",
-        },
-      ]
-    `)
-  })
-
-  test('does not inject toc for non-active pages', () => {
-    const page = makePage('guide', {
-      headings: [{ depth: 2, text: 'Overview', slug: 'overview' }],
-    })
-
-    const tree = buildSidebarTree({ groups: [makeGroup('Docs', [page])] })
-    expect(serializeTree(tree.children)).toMatchInlineSnapshot(`
-      [
-        {
-          "name": "Docs",
-          "type": "separator",
-        },
-        {
-          "name": "Guide",
-          "type": "page",
-          "url": "/guide",
-        },
-      ]
-    `)
-  })
-
-  test('empty groups produce an empty tree', () => {
-    expect(serializeTree(buildSidebarTree({ groups: [] }).children)).toMatchInlineSnapshot(`[]`)
+  test('empty groups produce empty array', () => {
+    expect(flattenForSidebar([])).toMatchInlineSnapshot(`[]`)
   })
 })

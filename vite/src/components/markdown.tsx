@@ -7,11 +7,11 @@
  * --link-accent, --page-border.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { Link } from 'spiceflow/react'
+import { createTocDb, searchToc, type SearchState } from './search.ts'
 import type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem } from './toc-tree.ts'
-import { Sidebar } from '../layouts/flux/slots/sidebar.tsx'
-import type { Root as SidebarTreeRoot, Node as SidebarTreeNode } from '../page-tree/index.ts'
 
 export type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem }
 import * as PrismModule from 'prismjs'
@@ -48,37 +48,6 @@ const proseStyle = {
   color: 'var(--text-primary)',
   margin: 0,
 } satisfies React.CSSProperties
-
-function ChevronIcon({ expanded, style }: { expanded: boolean; style?: React.CSSProperties }) {
-  return (
-    <span
-      style={{
-        flexShrink: 0,
-        alignSelf: 'center',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '4px',
-        margin: '-4px',
-        cursor: 'pointer',
-        ...style,
-      }}
-    >
-      <svg
-        aria-hidden='true'
-        viewBox='0 0 16 16'
-        width='12'
-        height='12'
-        style={{
-          transition: 'transform 0.15s ease',
-          transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
-        }}
-      >
-        <path d='M6 4l4 4-4 4' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-      </svg>
-    </span>
-  )
-}
 
 /* =========================================================================
    TOC sidebar (fixed left)
@@ -131,184 +100,416 @@ const headingStyleByLevel: Record<HeadingLevel, React.CSSProperties> = {
   },
 }
 
-/* flattenTocTree and helpers moved to toc-tree.ts (server-safe, no 'use client'). */
+/* flattenTocTree and helpers moved to toc-tree.ts (server-safe, no 'use client').
+   useActiveTocState moved to hooks/use-active-toc.ts (shared with toc-panel.tsx). */
 
-type ActiveTocSnapshot = {
-  activeId: string
-  visibleIds: string[]
+function ChevronIcon({ expanded, style }: { expanded: boolean; style?: React.CSSProperties }) {
+  return (
+    <span
+      style={{
+        flexShrink: 0,
+        alignSelf: 'center',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '4px',
+        margin: '-4px',
+        cursor: 'pointer',
+        ...style,
+      }}
+    >
+      <svg
+        aria-hidden='true'
+        viewBox='0 0 16 16'
+        width='12'
+        height='12'
+        style={{
+          transition: 'transform 0.15s ease',
+          transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+        }}
+      >
+        <path d='M6 4l4 4-4 4' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+      </svg>
+    </span>
+  )
 }
 
-function sameStringArrays(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) {
-    return false
-  }
-
-  return a.every((value, index) => {
-    return value === b[index]
-  })
-}
-
-function sortVisibleHeadingIds(ids: Iterable<string>): string[] {
-  return [...ids].sort((a, b) => {
-    const elA = document.getElementById(a)
-    const elB = document.getElementById(b)
-    if (!elA || !elB) {
-      return 0
-    }
-    return elA.getBoundingClientRect().top - elB.getBoundingClientRect().top
-  })
-}
-
-/** Track both the observer-driven active heading and the headings currently in view.
- * TableOfContents can then derive the effective active item from viewport evidence
- * plus the latest manual click instead of adding more mirrored flags. */
-function useActiveTocState({
-  fallbackId,
+function TocLink({
+  item,
+  isActive,
+  chevron,
+  onToggle,
+  dimmed,
+  isHighlighted,
+  linkRef,
 }: {
-  fallbackId: string
+  item: FlatTocItem
+  isActive: boolean
+  chevron?: { expanded: boolean }
+  onToggle?: () => void
+  /** Search: dim non-matching items to opacity 0.3 */
+  dimmed?: boolean
+  /** Search: arrow-key highlighted item */
+  isHighlighted?: boolean
+  linkRef?: React.Ref<HTMLAnchorElement>
 }) {
-  const snapshotRef = useRef<ActiveTocSnapshot>({ activeId: fallbackId, visibleIds: [] })
-
-  const subscribe = useCallback((onStoreChange: () => void) => {
-    const visibleIds = new Set<string>()
-
-    const emit = (next: ActiveTocSnapshot) => {
-      if (
-        snapshotRef.current.activeId === next.activeId &&
-        sameStringArrays(snapshotRef.current.visibleIds, next.visibleIds)
-      ) {
-        return
-      }
-
-      snapshotRef.current = next
-      onStoreChange()
-    }
-
-    const emitFromVisibleIds = () => {
-      const nextVisibleIds = sortVisibleHeadingIds(visibleIds)
-      const nextActiveId = nextVisibleIds.at(-1) ?? snapshotRef.current.activeId
-      emit({ activeId: nextActiveId, visibleIds: nextVisibleIds })
-    }
-
-    const hash = window.location.hash.replace(/^#/, '')
-    if (hash) {
-      emit({ activeId: hash, visibleIds: snapshotRef.current.visibleIds })
-    }
-
-    const headings = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.target.id) {
-            return
-          }
-
-          if (entry.isIntersecting) {
-            visibleIds.add(entry.target.id)
-          } else {
-            visibleIds.delete(entry.target.id)
-          }
-        })
-
-        emitFromVisibleIds()
-      },
-      {
-        /* -80px ≈ header-row-height; accounts for sticky header covering top of viewport */
-        rootMargin: '-80px 0px -75% 0px',
-        threshold: 0,
-      },
-    )
-
-    headings.forEach((heading) => {
-      observer.observe(heading)
-    })
-
-    const onHashChange = () => {
-      const nextHash = window.location.hash.replace(/^#/, '')
-      if (!nextHash) {
-        return
-      }
-
-      emit({ activeId: nextHash, visibleIds: snapshotRef.current.visibleIds })
-    }
-
-    window.addEventListener('hashchange', onHashChange)
-
-    return () => {
-      window.removeEventListener('hashchange', onHashChange)
-      observer.disconnect()
-    }
-  }, [])
-
-  const getSnapshot = useCallback(() => {
-    return snapshotRef.current
-  }, [])
-
-  // getServerSnapshot must return a cached value to avoid an infinite loop.
-  // React calls getServerSnapshot during render and compares by reference.
-  const serverSnapshot = useMemo(() => ({ activeId: fallbackId, visibleIds: [] as string[] }), [fallbackId])
-  const getServerSnapshot = useCallback(() => serverSnapshot, [serverSnapshot])
-
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
-}
-
-function findFirstHeadingId(nodes: SidebarTreeNode[]): string {
-  for (const node of nodes) {
-    if (node.type === 'page' && node.url.includes('#')) {
-      return node.url.slice(node.url.indexOf('#') + 1)
-    }
-
-    if (node.type === 'folder') {
-      if (node.index?.url.includes('#')) {
-        return node.index.url.slice(node.index.url.indexOf('#') + 1)
-      }
-
-      const nested = findFirstHeadingId(node.children)
-      if (nested) {
-        return nested
-      }
-    }
-  }
-
-  return ''
+  const effectiveActive = isActive && !dimmed
+  const defaultColor = effectiveActive
+    ? 'var(--text-primary)'
+    : dimmed
+      ? 'var(--text-tertiary)'
+      : 'var(--text-tree-label)'
+  const defaultPrefixColor = effectiveActive ? 'var(--text-secondary)' : 'var(--text-tertiary)'
+  const bg = isHighlighted ? 'var(--border-subtle)' : effectiveActive ? 'var(--border-subtle)' : 'transparent'
+  const fontWeight = WEIGHT.regular
+  const leftInset = 8 + item.visualLevel * 6
+  return (
+    <a
+      ref={linkRef}
+      href={item.href}
+      className='block no-underline'
+      tabIndex={dimmed ? -1 : 0}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        fontSize: 'var(--type-toc-size)',
+        fontWeight,
+        letterSpacing: 'normal',
+        padding: item.visualLevel > 0 ? `4px 8px 4px ${leftInset}px` : `2px 8px 2px ${leftInset}px`,
+        color: defaultColor,
+        fontFamily: 'var(--font-primary)',
+        transition: 'color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
+        borderRadius: '6px',
+        background: bg,
+        opacity: dimmed ? 0.3 : 1,
+      }}
+      onMouseEnter={(e) => {
+        if (!effectiveActive && !dimmed) {
+          e.currentTarget.style.color = 'var(--text-primary)'
+          e.currentTarget.style.background = 'var(--border-subtle)'
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = defaultColor
+        e.currentTarget.style.background = bg
+      }}
+    >
+      <span aria-hidden='true' style={{ color: defaultPrefixColor, whiteSpace: 'pre', fontFamily: 'var(--font-code)', fontSize: '1.2em', display: 'inline-flex', alignItems: 'center', margin: '-2px 0 -2px -2px' }}>
+        {item.prefix}
+      </span>
+      <span style={{ overflowWrap: 'anywhere', fontFamily: 'var(--font-primary)', flex: 1 }}>{item.label}</span>
+      {chevron && (
+        <span
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onToggle?.()
+          }}
+        >
+          <ChevronIcon
+            expanded={chevron.expanded}
+            style={{ color: defaultPrefixColor, marginLeft: '4px' }}
+          />
+        </span>
+      )}
+    </a>
+  )
 }
 
 export function TableOfContents({
-  tree,
+  items,
   currentPageHref,
 }: {
-  tree: SidebarTreeRoot
+  items: FlatTocItem[]
   logo?: string
   currentPageHref?: string
 }) {
-  const fallbackId = findFirstHeadingId(tree.children)
-  const { activeId: observerActiveId, visibleIds } = useActiveTocState({ fallbackId })
-  const [manualSelectionHref, setManualSelectionHref] = useState<string | null>(null)
-  const observerActiveHref = observerActiveId && currentPageHref ? `${currentPageHref}#${observerActiveId}` : currentPageHref
+  const firstHref = items[0]?.href ?? ''
+  const fallbackId = firstHref.startsWith('#') ? firstHref.slice(1) : firstHref
+  const { activeId } = useActiveTocState({ fallbackId })
 
+  /* Derive which items have children (are expandable) */
+  const expandableHrefs = useMemo(() => {
+    return new Set(items.map((i) => { return i.parentHref }).filter(Boolean) as string[])
+  }, [items])
+
+  /* Lookup map for walking the parent chain */
+  const itemByHref = useMemo(() => {
+    return new Map(items.map((i) => { return [i.href, i] as const }))
+  }, [items])
+
+  // Track which items are expanded. First expandable item starts open.
+  const [expanded, setExpanded] = useState<Set<string>>(() => {
+    const first = items.find((i) => { return expandableHrefs.has(i.href) })
+    const next = first ? new Set([first.href]) : new Set<string>()
+
+    if (currentPageHref) {
+      let current = itemByHref.get(currentPageHref)
+      if (current && expandableHrefs.has(current.href)) {
+        next.add(current.href)
+      }
+      while (current?.parentHref) {
+        next.add(current.parentHref)
+        current = itemByHref.get(current.parentHref)
+      }
+    }
+
+    return next
+  })
+
+  // Auto-expand the active item (if expandable) and its ancestors
   useEffect(() => {
-    if (!manualSelectionHref) {
+    if (!activeId) {
       return
     }
+    const activeHash = `#${activeId}`
+    const activeHref = `${window.location.pathname}${activeHash}`
+    const toExpand: string[] = []
+    if (expandableHrefs.has(activeHref) && !expanded.has(activeHref)) {
+      toExpand.push(activeHref)
+    }
+    let current = itemByHref.get(activeHref) ?? itemByHref.get(activeHash)
+    while (current?.parentHref) {
+      if (!expanded.has(current.parentHref)) {
+        toExpand.push(current.parentHref)
+      }
+      current = itemByHref.get(current.parentHref)
+    }
+    if (toExpand.length > 0) {
+      setExpanded((prev) => {
+        return new Set([...prev, ...toExpand])
+      })
+    }
+  }, [activeId, itemByHref]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const manualSelectionId = manualSelectionHref.slice(manualSelectionHref.indexOf('#') + 1)
-    if (visibleIds.includes(manualSelectionId)) {
+  const toggle = (href: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(href)) {
+        next.delete(href)
+      } else {
+        next.add(href)
+      }
+      return next
+    })
+  }
+
+  // --- Search state ---
+  const [query, setQuery] = useState('')
+  const [highlightedIndex, setHighlightedIndex] = useState(0)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const highlightedRef = useRef<HTMLAnchorElement>(null)
+  const [isPending, startTransition] = useTransition()
+
+  // Build Orama search DB once
+  const db = useMemo(() => {
+    return createTocDb({ items })
+  }, [items])
+
+  const [searchState, setSearchState] = useState<SearchState>({
+    matchedHrefs: null,
+    expandOverride: null,
+    dimmedHrefs: null,
+    focusableHrefs: null,
+  })
+
+  const handleQueryChange = useCallback(
+    (value: string) => {
+      setQuery(value)
+      startTransition(() => {
+        const state = searchToc({ db, query: value, items })
+        setSearchState(state)
+        setHighlightedIndex(0)
+      })
+    },
+    [db, items],
+  )
+
+  // Scroll highlighted item into view (only when search is active)
+  useEffect(() => {
+    if (!searchState.focusableHrefs) {
       return
     }
+    highlightedRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [highlightedIndex, searchState.focusableHrefs])
 
-    setManualSelectionHref(null)
-  }, [manualSelectionHref, visibleIds])
+  // Global F hotkey to focus search input
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (e.target as HTMLElement).tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) {
+          return
+        }
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [])
 
-  const activeHref = manualSelectionHref ?? observerActiveHref
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        handleQueryChange('')
+        searchInputRef.current?.blur()
+        return
+      }
+      const focusable = searchState.focusableHrefs
+      if (!focusable || focusable.length === 0) {
+        return
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setHighlightedIndex((prev) => {
+          return Math.min(prev + 1, focusable.length - 1)
+        })
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setHighlightedIndex((prev) => {
+          return Math.max(prev - 1, 0)
+        })
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        const href = focusable[highlightedIndex]
+        if (href) {
+          handleQueryChange('')
+          searchInputRef.current?.blur()
+          window.location.hash = href
+        }
+      }
+    },
+    [searchState.focusableHrefs, highlightedIndex, handleQueryChange],
+  )
+
+  const isSearchActive = searchState.matchedHrefs !== null
+
+  /* Merge search expand overrides into the expanded set */
+  const effectiveExpanded = useMemo(() => {
+    if (!isSearchActive || !searchState.expandOverride) {
+      return expanded
+    }
+    return new Set([...expanded, ...searchState.expandOverride])
+  }, [expanded, isSearchActive, searchState.expandOverride])
+
+  /* Compute visible items: an item is visible if all its ancestors are
+     effectively expanded. */
+  const visibleItems = useMemo(() => {
+    const visible = new Set<string>()
+    return items.filter((item) => {
+      if (item.parentHref === null) {
+        visible.add(item.href)
+        return true
+      }
+      if (effectiveExpanded.has(item.parentHref) && visible.has(item.parentHref)) {
+        visible.add(item.href)
+        return true
+      }
+      return false
+    })
+  }, [items, effectiveExpanded])
 
   return (
-    <Sidebar
-      tree={tree}
-      currentPageHref={currentPageHref}
-      activeHref={activeHref}
-      onNavigationItemClick={setManualSelectionHref}
-    />
+    <aside
+      style={{
+        maxWidth: 'var(--grid-toc-width)',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+      }}
+    >
+      {/* Search input with F hotkey badge */}
+      <div
+        style={{ paddingBottom: '12px', display: 'flex', alignItems: 'center', position: 'relative', flexShrink: 0 }}
+      >
+        <input
+          ref={searchInputRef}
+          type='text'
+          value={query}
+          onChange={(e) => {
+            handleQueryChange(e.target.value)
+          }}
+          onKeyDown={handleSearchKeyDown}
+          placeholder='search...'
+          style={{
+            width: '100%',
+            padding: '2px 24px 2px 8px',
+            fontSize: 'var(--type-toc-size)',
+            fontFamily: 'var(--font-primary)',
+            fontWeight: WEIGHT.prose,
+            color: 'var(--text-primary)',
+            background: 'transparent',
+            border: '1px solid var(--page-border)',
+            borderRadius: '6px',
+            outline: 'none',
+            textTransform: 'lowercase',
+            letterSpacing: 'normal',
+            lineHeight: LINE_HEIGHT.prose,
+            transition: 'border-color 0.15s ease, opacity 0.1s ease',
+            boxSizing: 'border-box',
+            opacity: isPending ? 0.5 : 1,
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--text-tertiary)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--page-border)'
+          }}
+        />
+        {/* Hotkey badge — hidden when input has text */}
+        {!query && (
+          <span
+            aria-hidden='true'
+            style={{
+              position: 'absolute',
+              right: '6px',
+              fontFamily: 'var(--font-code)',
+              fontSize: '10px',
+              fontWeight: WEIGHT.regular,
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--text-tertiary)',
+              borderRadius: '4px',
+              padding: '0px 4px',
+              lineHeight: '16px',
+              pointerEvents: 'none',
+              textTransform: 'uppercase',
+            }}
+          >
+            F
+          </span>
+        )}
+      </div>
+
+      <nav aria-label='Table of contents' style={{ overflowY: 'auto', minHeight: 0, paddingRight: '4px' }}>
+        {visibleItems.map((item, i) => {
+          const isExpandable = expandableHrefs.has(item.href)
+          const isExpanded =
+            expanded.has(item.href) ||
+            (isSearchActive && Boolean(searchState.expandOverride?.has(item.href)))
+          const isDimmed = isSearchActive && searchState.dimmedHrefs?.has(item.href)
+          const highlightedHref = isSearchActive ? searchState.focusableHrefs?.[highlightedIndex] : undefined
+          const isHighlighted = highlightedHref === item.href
+          const fragment = item.href.includes('#') ? item.href.slice(item.href.indexOf('#')) : item.href
+          return (
+            <div key={item.href} style={item.visualLevel === 0 && i > 0 ? { marginTop: '6px' } : undefined}>
+              <TocLink
+                item={item}
+                isActive={`#${activeId}` === fragment}
+                chevron={isExpandable ? { expanded: isExpanded } : undefined}
+                onToggle={isExpandable ? () => { toggle(item.href) } : undefined}
+                dimmed={isDimmed || false}
+                isHighlighted={isHighlighted}
+                linkRef={isHighlighted ? highlightedRef : undefined}
+              />
+            </div>
+          )
+        })}
+      </nav>
+    </aside>
   )
 }
 
@@ -1256,7 +1457,7 @@ export type EditorialSection = {
 }
 
 export function EditorialPage({
-  sidebarTree,
+  toc,
   currentPageHref,
   logo,
   siteName,
@@ -1268,7 +1469,7 @@ export function EditorialPage({
   sections,
   hero,
 }: {
-  sidebarTree: SidebarTreeRoot
+  toc: FlatTocItem[]
   currentPageHref?: string
   logo?: string
   /** Site name used for logo aria-label and fallback text */
@@ -1368,7 +1569,7 @@ export function EditorialPage({
               flexDirection: 'column',
             }}
           >
-            <TableOfContents tree={sidebarTree} logo={logo} currentPageHref={currentPageHref} />
+            <TableOfContents items={toc} logo={logo} currentPageHref={currentPageHref} />
           </div>
         </div>
 

@@ -37,6 +37,7 @@ import {
   type EditorialSection,
 } from '@holocron.so/vite/components/markdown'
 import { slugify, extractText } from './components/toc-tree.ts'
+import { TableOfContentsPanel } from './components/toc-panel.tsx'
 import type { HolocronConfig } from './config.ts'
 import {
   type Navigation,
@@ -47,7 +48,7 @@ import {
   getActiveGroups,
   findPage,
   collectAllPages,
-  buildSidebarTree,
+  flattenForSidebar,
 } from './navigation.ts'
 
 /* ── MDX section splitting ──────────────────────────────────────────── */
@@ -194,7 +195,7 @@ export function createHolocronApp({
 
       // Sidebar items for current tab
       const activeGroups = getActiveGroups(navigation, pageData.href)
-      const sidebarTree = buildSidebarTree({ groups: activeGroups, currentPage: pageData })
+      const tocItems = flattenForSidebar(activeGroups)
 
       // Split into sections
       const mdastSections = groupBySections(contentMdast)
@@ -221,6 +222,13 @@ export function createHolocronApp({
         )
       }
 
+      // Bind current page headings so MDX users can write <TableOfContentsPanel />
+      // without passing headings manually. Custom headings can still be passed to override.
+      const currentHeadings = pageData.headings
+      function BoundTableOfContentsPanel(props: Partial<React.ComponentProps<typeof TableOfContentsPanel>>) {
+        return <TableOfContentsPanel headings={currentHeadings} {...props} />
+      }
+
       const mdxComponents = {
         p: P,
         a: A,
@@ -235,6 +243,7 @@ export function createHolocronApp({
         Aside,
         FullWidth,
         Hero,
+        TableOfContentsPanel: BoundTableOfContentsPanel,
       }
 
       function renderNode(node: MyRootContent, transform: (node: MyRootContent) => ReactNode): ReactNode | undefined {
@@ -302,7 +311,7 @@ export function createHolocronApp({
             {pageData.description && <Head.Meta name='description' content={pageData.description} />}
           </Head>
           <EditorialPage
-            sidebarTree={sidebarTree}
+            toc={tocItems}
             currentPageHref={pageData.href}
             logo={logoSrc}
             siteName={config.name}

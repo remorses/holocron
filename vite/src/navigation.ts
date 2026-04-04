@@ -2,14 +2,14 @@
  * Enriched navigation tree types + utility functions.
  *
  * The enriched tree has the same shape as the normalized config, but page
- * slug strings are replaced with NavPage objects containing parsed metadata.
+ * slug strings are replaced with NavPage objects containing parsed metadata
+ * (title, headings, gitSha for cache invalidation).
  *
- * Sidebar rendering now adapts this navigation into a Fumadocs-style page tree,
- * keeping top-level groups as separators and injecting the current page TOC as
- * a synthetic subtree under the active page.
+ * Navigation is always NavTab[] — normalization happens in readConfig(),
+ * so these functions never deal with union discrimination.
  */
 
-import type * as PageTree from './page-tree/index.ts'
+import { addTreePrefixes, type FlatTocItem, type VisualLevel } from './components/toc-tree.ts'
 
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
@@ -182,143 +182,115 @@ export function buildPageIndex(nav: Navigation): Map<string, NavPage> {
 
 /* ── Bridge to sidebar rendering ────────────────────────────────────── */
 
-export function buildSidebarTree({
-  groups,
-  currentPage,
-}: {
-  groups: NavGroup[]
-  currentPage?: NavPage
-}): PageTree.Root {
-  return {
-    $id: 'root',
-    name: 'Documentation',
-    children: groups.flatMap((group, index) => {
-      const children: PageTree.Node[] = []
-      if (group.group) {
-        children.push({
-          $id: `separator:${index}:${slugifyGroup(group.group)}`,
-          type: 'separator',
-          name: group.group,
-        })
-      }
-      children.push(...group.pages.map((entry, entryIndex) => {
-        return buildSidebarNode({
-          entry,
-          currentPageHref: currentPage?.href,
-          idPrefix: `${index}:${entryIndex}`,
-        })
-      }))
-      return children
-    }),
-  }
+type SidebarHeadingAncestor = {
+  depth: number
+  href: string
 }
 
-function buildSidebarNode({
-  entry,
-  currentPageHref,
-  idPrefix,
-}: {
-  entry: NavPageEntry
-  currentPageHref?: string
-  idPrefix: string
-}): PageTree.Node {
-  if (isNavPage(entry)) {
-    return buildSidebarPageNode({ page: entry, currentPageHref, idPrefix })
-  }
+/**
+ * Flatten NavGroup[] into FlatTocItem[] for the sidebar component.
+ */
+export function flattenForSidebar(groups: NavGroup[]): FlatTocItem[] {
+  const result: FlatTocItem[] = []
 
-  return {
-    $id: `group:${idPrefix}:${slugifyGroup(entry.group)}`,
-    type: 'folder',
-    name: entry.group,
-    collapsible: true,
-    children: entry.pages.map((child, index) => {
-      return buildSidebarNode({
-        entry: child,
-        currentPageHref,
-        idPrefix: `${idPrefix}:${index}`,
-      })
-    }),
-  }
-}
-
-function buildSidebarPageNode({
-  page,
-  currentPageHref,
-  idPrefix,
-}: {
-  page: NavPage
-  currentPageHref?: string
-  idPrefix: string
-}): PageTree.Node {
-  const item: PageTree.Item = {
-    $id: `page:${page.href}`,
-    type: 'page',
-    name: page.title,
-    url: page.href,
-  }
-
-  if (page.href !== currentPageHref || page.headings.length === 0) {
-    return item
-  }
-
-  return {
-    $id: `page-folder:${page.href}`,
-    type: 'folder',
-    name: page.title,
-    index: item,
-    collapsible: true,
-    defaultOpen: true,
-    children: buildHeadingNodes({ page, idPrefix }),
-  }
-}
-
-function buildHeadingNodes({ page, idPrefix }: { page: NavPage; idPrefix: string }): PageTree.Node[] {
-  const roots: Array<{ heading: NavHeading; children: Array<{ heading: NavHeading; children: any[] }> }> = []
-  const stack: Array<{ heading: NavHeading; children: Array<{ heading: NavHeading; children: any[] }> }> = []
-
-  for (const heading of page.headings) {
-    const node = { heading, children: [] as Array<{ heading: NavHeading; children: any[] }> }
-    while (stack.length > 0 && (stack.at(-1)?.heading.depth ?? 0) >= heading.depth) {
-      stack.pop()
-    }
-
-    const parent = stack.at(-1)
-    if (parent) {
-      parent.children.push(node)
-    } else {
-      roots.push(node)
-    }
-    stack.push(node)
-  }
-
-  function toPageTreeNode(node: { heading: NavHeading; children: Array<{ heading: NavHeading; children: any[] }> }, path: string): PageTree.Node {
-    const item: PageTree.Item = {
-      $id: `heading:${page.href}#${node.heading.slug}`,
-      type: 'page',
-      name: node.heading.text,
-      url: `${page.href}#${node.heading.slug}`,
-    }
-
-    if (node.children.length === 0) {
-      return item
-    }
-
+  function getParentHeading({
+    ancestors,
+    depth,
+  }: {
+    ancestors: SidebarHeadingAncestor[]
+    depth: number
+  }): {
+    parentHref?: string
+    nextAncestors: SidebarHeadingAncestor[]
+  } {
+    const parentIndex = ancestors.findLastIndex((ancestor) => {
+      return ancestor.depth < depth
+    })
     return {
-      $id: `heading-folder:${page.href}#${node.heading.slug}`,
-      type: 'folder',
-      name: node.heading.text,
-      index: item,
-      collapsible: false,
-      defaultOpen: true,
-      children: node.children.map((child, index) => {
-        return toPageTreeNode(child, `${path}:${index}`)
-      }),
+      parentHref: ancestors[parentIndex]?.href,
+      nextAncestors: parentIndex === -1 ? [] : ancestors.slice(0, parentIndex + 1),
     }
   }
 
-  return roots.map((node, index) => {
-    return toPageTreeNode(node, `${idPrefix}:${index}`)
-  })
+  function walkGroups({
+    groups,
+    depth,
+    parentHref,
+  }: {
+    groups: NavGroup[]
+    depth: number
+    parentHref: string | null
+  }) {
+    for (const group of groups) {
+      const groupHref = `#group-${slugifyGroup(group.group)}`
+      const visualLevel = Math.min(depth, 3) as VisualLevel
+
+      result.push({
+        label: group.group,
+        href: groupHref,
+        type: 'page',
+        visualLevel,
+        prefix: '',
+        parentHref,
+        pageHref: groupHref,
+      })
+
+      for (const entry of group.pages) {
+        if (isNavPage(entry)) {
+          walkPage({ page: entry, depth: depth + 1, parentHref: groupHref })
+        } else if (isNavGroup(entry)) {
+          walkGroups({ groups: [entry], depth: depth + 1, parentHref: groupHref })
+        }
+      }
+    }
+  }
+
+  function walkPage({
+    page,
+    depth,
+    parentHref,
+  }: {
+    page: NavPage
+    depth: number
+    parentHref: string | null
+  }) {
+    const visualLevel = Math.min(depth, 3) as VisualLevel
+
+    result.push({
+      label: page.title,
+      href: page.href,
+      type: 'page',
+      visualLevel,
+      prefix: '',
+      parentHref,
+      pageHref: page.href,
+    })
+
+    let headingStack: SidebarHeadingAncestor[] = []
+    for (const heading of page.headings) {
+      const { parentHref: parentHeadingHref, nextAncestors } = getParentHeading({
+        ancestors: headingStack,
+        depth: heading.depth,
+      })
+      const headingHref = `${page.href}#${heading.slug}`
+      const headingLevel = Math.min(depth + (heading.depth - 1), 3) as VisualLevel
+      result.push({
+        label: heading.text,
+        href: headingHref,
+        type: `h${heading.depth}` as FlatTocItem['type'],
+        visualLevel: headingLevel,
+        prefix: '',
+        parentHref: parentHeadingHref ?? page.href,
+        pageHref: page.href,
+      })
+
+      headingStack = [...nextAncestors, { depth: heading.depth, href: headingHref }]
+    }
+  }
+
+  walkGroups({ groups, depth: 0, parentHref: null })
+  addTreePrefixes({ items: result })
+  return result
 }
 
 function slugifyGroup(text: string): string {

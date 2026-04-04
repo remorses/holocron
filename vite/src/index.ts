@@ -12,5 +12,6 @@ export {
   findPage,
   collectAllPages,
   buildPageIndex,
-  buildSidebarTree,
+  flattenForSidebar,
 } from './navigation.ts'
+export { TableOfContentsPanel } from './components/toc-panel.tsx'
