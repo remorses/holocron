@@ -19,6 +19,7 @@ import * as PrismModule from 'prismjs'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-tsx'
 import 'prismjs/components/prism-bash'
+import 'prismjs/components/prism-json'
 
 const Prism = ((PrismModule as { default?: unknown }).default ?? PrismModule) as typeof PrismModule
 
@@ -1386,8 +1387,12 @@ export type TabItem = {
 
 /** Aside is a marker component for MDX. On desktop, its children are extracted
  *  by the section grouping logic and rendered in the right sidebar slot.
- *  On mobile, SectionRow renders it inline. The component itself is a pass-through. */
-export function Aside({ children }: { children: React.ReactNode }) {
+ *  On mobile, SectionRow renders it inline. The component itself is a pass-through.
+ *
+ *  Use `<Aside full>` to merge all sections below into one row so the aside
+ *  stays sticky for the rest of the page (or until the next `<Aside>`). */
+export function Aside({ children, full }: { children: React.ReactNode; full?: boolean }) {
+  void full // marker prop — used at parse time, not at render time
   return <>{children}</>
 }
 

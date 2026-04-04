@@ -56,6 +56,11 @@ function isAsideNode(node: RootContent): boolean {
   return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Aside'
 }
 
+function hasFullProp(node: RootContent): boolean {
+  const attrs = (node as { attributes?: Array<{ name: string }> }).attributes
+  return attrs?.some((a) => a.name === 'full') ?? false
+}
+
 function isFullWidthNode(node: RootContent): boolean {
   return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'FullWidth'
 }
@@ -96,6 +101,57 @@ function groupBySections(root: Root): MdastSection[] {
 
   if (current.contentNodes.length > 0 || current.asideNodes.length > 0) {
     sections.push(current)
+  }
+
+  return sections
+}
+
+/**
+ * Build sections with support for `<Aside full>`.
+ *
+ * A full aside merges all content after it into one section (no splitting
+ * at ## headings) until the next `<Aside>` of any kind or end of document.
+ * Sections before the first full aside are split normally at ## headings.
+ *
+ * This means a single `<Aside full>` at the top of a page makes its aside
+ * span every section. Two full asides partition the page into two big rows.
+ */
+function buildSections(root: Root): MdastSection[] {
+  const children = root.children
+
+  // Find indices of all <Aside full> nodes
+  const fullAsideIndices: number[] = []
+  for (let i = 0; i < children.length; i++) {
+    const node = children[i]!
+    if (isAsideNode(node) && hasFullProp(node)) {
+      fullAsideIndices.push(i)
+    }
+  }
+
+  // No full asides → split normally (existing behavior)
+  if (fullAsideIndices.length === 0) {
+    return groupBySections(root)
+  }
+
+  const sections: MdastSection[] = []
+  const firstIdx = fullAsideIndices[0]!
+
+  // Range before first full aside → split normally at ## headings
+  if (firstIdx > 0) {
+    const before: Root = { type: 'root', children: children.slice(0, firstIdx) }
+    sections.push(...groupBySections(before))
+  }
+
+  // Each full aside range: merge all content until the next full aside (or end)
+  for (let r = 0; r < fullAsideIndices.length; r++) {
+    const start = fullAsideIndices[r]!
+    const end = fullAsideIndices[r + 1] ?? children.length
+
+    const rangeNodes = children.slice(start + 1, end)
+    const contentNodes = rangeNodes.filter((n) => !isAsideNode(n) && !isFullWidthNode(n))
+    const asideNodes = [children[start]!]
+
+    sections.push({ contentNodes, asideNodes })
   }
 
   return sections
@@ -195,8 +251,8 @@ export function createHolocronApp({
       // Sidebar groups for current tab
       const activeGroups = getActiveGroups(navigation, pageData.href)
 
-      // Split into sections
-      const mdastSections = groupBySections(contentMdast)
+      // Split into sections (respects <Aside full> merging)
+      const mdastSections = buildSections(contentMdast)
 
       // Image component — reads width/height/placeholder from its own JSX attrs
       // (injected at build time by rewriteMdxImages)
