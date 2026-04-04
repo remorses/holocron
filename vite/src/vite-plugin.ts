@@ -120,7 +120,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const spiceflowDir = path.dirname(_require.resolve('spiceflow/package.json'))
       const next: Pick<UserConfig, 'resolve'> = {
         resolve: {
-          alias: [{ find: 'spiceflow', replacement: spiceflowDir }],
+          alias: [
+            { find: /^spiceflow$/, replacement: path.join(spiceflowDir, 'dist/index.js') },
+            { find: /^spiceflow\/vite$/, replacement: path.join(spiceflowDir, 'dist/vite.js') },
+            { find: /^spiceflow\/react$/, replacement: path.join(spiceflowDir, 'dist/react/index.js') },
+          ],
         },
       }
       return next
