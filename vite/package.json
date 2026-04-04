@@ -43,6 +43,10 @@
       "types": "./dist/components/markdown.d.ts",
       "default": "./dist/components/markdown.js"
     },
+    "./components/toc-panel": {
+      "types": "./dist/components/toc-panel.d.ts",
+      "default": "./dist/components/toc-panel.js"
+    },
     "./styles/globals.css": {
       "default": "./src/styles/globals.css"
     },
