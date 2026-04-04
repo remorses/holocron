@@ -97,6 +97,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let hasUserReactPlugin = false
   const holocronPackagePattern = /^@holocron\.so\/vite(?:\/.*)?$/
 
+  /** Resolved absolute path to the config file (holocron.jsonc or docs.json) */
+  let configFilePath: string | undefined
+
   const holocronPlugin: Plugin = {
     name: 'holocron',
 
@@ -150,6 +153,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
 
       config = readConfig({ root, configPath: options.configPath })
+      configFilePath = resolveConfigPath({ root, configPath: options.configPath })
 
       // Sync MDX + process images at build time. The returned navigation
       // tree contains pre-processed MDX (paths rewritten, dimensions injected).
@@ -194,14 +198,31 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
     load(id) {
       if (id === RESOLVED_CONFIG) {
-        // Lightweight — no MDX content, safe for client bundle
+        // Register the config file as a dependency so it enters the module
+        // graph. When the file changes, Vite associates the change with this
+        // virtual module — @tailwindcss/vite sees a JS module in ctx.modules
+        // and skips its full-reload, and @vitejs/plugin-rsc handles the HMR
+        // via rsc:update automatically.
+        if (configFilePath) {
+          this.addWatchFile(configFilePath)
+        }
         return [
           `export const config = ${JSON.stringify(config)}`,
           `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {
-        // Server-only — pre-processed MDX content keyed by slug
+        // Register every known MDX file as a dependency so edits to existing
+        // pages flow through the module graph (same mechanism as config above).
+        // New MDX files that don't exist yet are handled separately in hotUpdate.
+        for (const slug of Object.keys(syncResult.mdxContent)) {
+          for (const ext of ['.mdx', '.md']) {
+            const mdxPath = path.join(pagesDir, slug + ext)
+            if (fs.existsSync(mdxPath)) {
+              this.addWatchFile(mdxPath)
+            }
+          }
+        }
         return `export default ${JSON.stringify(syncResult.mdxContent)}`
       }
       if (id === RESOLVED_APP) {
@@ -217,16 +238,40 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
     },
 
-    async handleHotUpdate({ file, server }) {
-      if (!file) {
+    configureServer(server) {
+      // Config file is read with fs.readFileSync (not imported), so Vite
+      // wouldn't watch it by default. addWatchFile in load() registers it
+      // as a dependency of the virtual module, but the file must also be
+      // watched by chokidar to trigger change events.
+      if (configFilePath) {
+        server.watcher.add(configFilePath)
+      }
+    },
+
+    // hotUpdate — per-environment HMR hook. For watched files (config +
+    // existing MDX), addWatchFile puts our virtual module in ctx.modules so
+    // @tailwindcss/vite skips its full-reload and @vitejs/plugin-rsc handles
+    // the update naturally. We just need to refresh config/syncResult before
+    // the RSC plugin re-transforms the module, and suppress client-side HMR
+    // (which would find no boundary and trigger a page reload).
+    // For NEW MDX files (not yet watched), ctx.modules is empty so we fall
+    // back to manual invalidation + rsc:update.
+    async hotUpdate(ctx) {
+      const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
+      const isConfig = configFilePath && ctx.file === configFilePath
+
+      if (!isMdx && !isConfig) {
         return
       }
 
-      const isMdx = file.endsWith('.mdx') || file.endsWith('.md')
-      const configFile = resolveConfigPath({ root, configPath: options.configPath })
-      const isConfig = configFile && file === configFile
+      const isWatched = ctx.modules.some((m) => {
+        return m.id === RESOLVED_CONFIG || m.id === RESOLVED_MDX
+      })
 
-      if (isMdx || isConfig) {
+      // Re-read config + re-sync once per file-change event (client env
+      // runs first). Must complete before the RSC plugin calls transformRequest
+      // on our virtual module, which re-invokes load() with the fresh data.
+      if (this.environment.name === 'client') {
         if (isConfig) {
           config = readConfig({ root, configPath: options.configPath })
         }
@@ -237,13 +282,36 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           projectRoot: root,
           distDir: distDirPath,
         })
-        const configModule = server.environments.rsc?.moduleGraph.getModuleById(RESOLVED_CONFIG)
-          ?? server.environments.ssr?.moduleGraph.getModuleById(RESOLVED_CONFIG)
-        if (configModule) {
-          server.environments.rsc?.moduleGraph.invalidateModule(configModule)
-          server.environments.ssr?.moduleGraph.invalidateModule(configModule)
+      }
+
+      if (isWatched) {
+        // The virtual module is in ctx.modules — the RSC plugin will
+        // transform it (getting fresh data from load()) and send rsc:update.
+        // Return [] only in client env to prevent dead-end propagation
+        // from triggering a browser full-reload.
+        if (this.environment.name === 'client') {
+          return []
+        }
+        return
+      }
+
+      // Unwatched file (new MDX page): manually invalidate + notify.
+      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX]) {
+        const mod = this.environment.moduleGraph.getModuleById(resolvedId)
+        if (mod) {
+          this.environment.moduleGraph.invalidateModule(mod)
         }
       }
+
+      if (this.environment.name === 'client') {
+        ctx.server.environments.client?.hot.send({
+          type: 'custom',
+          event: 'rsc:update',
+          data: { file: ctx.file },
+        })
+      }
+
+      return []
     },
   }
 
