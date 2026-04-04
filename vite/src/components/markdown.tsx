@@ -10,10 +10,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { Link } from 'spiceflow/react'
-import { createTocDb, searchToc, type SearchState } from './search.ts'
-import type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem } from './toc-tree.ts'
+import type { TocNodeType, TocTreeNode } from './toc-tree.ts'
+import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup } from '../navigation.ts'
+import { createSearchDb, searchSidebar, emptySearchState, type SearchEntry, type SearchState } from './search.ts'
 
-export type { TocNodeType, VisualLevel, TocTreeNode, FlatTocItem }
+export type { TocNodeType, TocTreeNode }
 import * as PrismModule from 'prismjs'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-tsx'
@@ -50,18 +51,10 @@ const proseStyle = {
 } satisfies React.CSSProperties
 
 /* =========================================================================
-   TOC sidebar (fixed left)
+   TOC sidebar (fixed left) — Agentation-style navigation
    ========================================================================= */
 
 export type HeadingLevel = 1 | 2 | 3
-
-/* Multi-page TOC tree types. Pages are root nodes that contain headings or
-   nested sub-pages. The recursive tree is flattened to FlatTocItem[] before
-   rendering, clamping visual depth to 4 levels (0-3) so the sidebar never
-   gets too wide regardless of page nesting depth. */
-
-/* TocNodeType, VisualLevel, TocTreeNode, FlatTocItem — defined in toc-tree.ts,
-   re-exported above for backward compatibility. */
 
 const headingTagByLevel: Record<HeadingLevel, 'h1' | 'h2' | 'h3'> = {
   1: 'h1',
@@ -100,33 +93,18 @@ const headingStyleByLevel: Record<HeadingLevel, React.CSSProperties> = {
   },
 }
 
-/* flattenTocTree and helpers moved to toc-tree.ts (server-safe, no 'use client').
-   useActiveTocState moved to hooks/use-active-toc.ts (shared with toc-panel.tsx). */
+/* ── Chevron icon for expandable nested groups ───────────────────────── */
 
-function ChevronIcon({ expanded, style }: { expanded: boolean; style?: React.CSSProperties }) {
+function ChevronIcon({ expanded, className }: { expanded: boolean; className?: string }) {
   return (
-    <span
-      style={{
-        flexShrink: 0,
-        alignSelf: 'center',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '4px',
-        margin: '-4px',
-        cursor: 'pointer',
-        ...style,
-      }}
-    >
+    <span className={`shrink-0 self-center inline-flex items-center justify-center p-1 -m-1 cursor-pointer ${className ?? ''}`}>
       <svg
         aria-hidden='true'
         viewBox='0 0 16 16'
         width='12'
         height='12'
-        style={{
-          transition: 'transform 0.15s ease',
-          transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
-        }}
+        className='transition-transform duration-150'
+        style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
       >
         <path d='M6 4l4 4-4 4' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
       </svg>
@@ -134,202 +112,449 @@ function ChevronIcon({ expanded, style }: { expanded: boolean; style?: React.CSS
   )
 }
 
-function TocLink({
-  item,
-  isActive,
-  chevron,
-  onToggle,
-  dimmed,
-  isHighlighted,
-  linkRef,
-}: {
-  item: FlatTocItem
-  isActive: boolean
-  chevron?: { expanded: boolean }
-  onToggle?: () => void
-  /** Search: dim non-matching items to opacity 0.3 */
-  dimmed?: boolean
-  /** Search: arrow-key highlighted item */
-  isHighlighted?: boolean
-  linkRef?: React.Ref<HTMLAnchorElement>
-}) {
-  const effectiveActive = isActive && !dimmed
-  const defaultColor = effectiveActive
-    ? 'var(--text-primary)'
-    : dimmed
-      ? 'var(--text-tertiary)'
-      : 'var(--text-tree-label)'
-  const defaultPrefixColor = effectiveActive ? 'var(--text-secondary)' : 'var(--text-tertiary)'
-  const bg = isHighlighted ? 'var(--border-subtle)' : effectiveActive ? 'var(--border-subtle)' : 'transparent'
-  const fontWeight = WEIGHT.regular
-  const leftInset = 8 + item.visualLevel * 6
+/* ── Inline TOC (flat heading list under active page) ────────────────── */
+
+/** Flat list of headings shown under the active page in the sidebar.
+ *  All headings are rendered at the same level regardless of depth,
+ *  matching the Agentation website pattern. Includes a guide line and
+ *  animated active indicator bar. */
+function TocInline({ headings, activeId, searchState, pageHref }: { headings: NavHeading[]; activeId: string; searchState: SearchState; pageHref: string }) {
+  const listRef = useRef<HTMLUListElement>(null)
+  const indicatorRef = useRef<HTMLDivElement>(null)
+
+  const updateIndicator = useCallback(() => {
+    const list = listRef.current
+    const indicator = indicatorRef.current
+    if (!list || !indicator) return
+
+    const activeLink = list.querySelector<HTMLElement>(`a[href="#${activeId}"]`)
+    if (!activeLink) {
+      indicator.style.opacity = '0'
+      return
+    }
+
+    const listRect = list.getBoundingClientRect()
+    const linkRect = activeLink.getBoundingClientRect()
+    const top = linkRect.top - listRect.top
+    const height = linkRect.height
+
+    indicator.style.transform = `translateY(${top}px)`
+    indicator.style.height = `${height}px`
+    indicator.style.opacity = '1'
+  }, [activeId])
+
+  useEffect(() => {
+    updateIndicator()
+  }, [activeId, updateIndicator])
+
+  useEffect(() => {
+    const list = listRef.current
+    if (!list) return
+    const observer = new ResizeObserver(updateIndicator)
+    observer.observe(list)
+    return () => observer.disconnect()
+  }, [updateIndicator])
+
   return (
-    <a
-      ref={linkRef}
-      href={item.href}
-      className='block no-underline'
-      tabIndex={dimmed ? -1 : 0}
-      style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        fontSize: 'var(--type-toc-size)',
-        fontWeight,
-        letterSpacing: 'normal',
-        padding: item.visualLevel > 0 ? `4px 8px 4px ${leftInset}px` : `2px 8px 2px ${leftInset}px`,
-        color: defaultColor,
-        fontFamily: 'var(--font-primary)',
-        transition: 'color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
-        borderRadius: '6px',
-        background: bg,
-        opacity: dimmed ? 0.3 : 1,
-      }}
-      onMouseEnter={(e) => {
-        if (!effectiveActive && !dimmed) {
-          e.currentTarget.style.color = 'var(--text-primary)'
-          e.currentTarget.style.background = 'var(--border-subtle)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.color = defaultColor
-        e.currentTarget.style.background = bg
-      }}
-    >
-      <span aria-hidden='true' style={{ color: defaultPrefixColor, whiteSpace: 'pre', fontFamily: 'var(--font-code)', fontSize: '1.2em', display: 'inline-flex', alignItems: 'center', margin: '-2px 0 -2px -2px' }}>
-        {item.prefix}
-      </span>
-      <span style={{ overflowWrap: 'anywhere', fontFamily: 'var(--font-primary)', flex: 1 }}>{item.label}</span>
-      {chevron && (
-        <span
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onToggle?.()
-          }}
-        >
-          <ChevronIcon
-            expanded={chevron.expanded}
-            style={{ color: defaultPrefixColor, marginLeft: '4px' }}
-          />
-        </span>
-      )}
-    </a>
+    <div className='relative mt-1.5 pl-0.5 pb-2'>
+      {/* Guide line (decorative, outside <ul> for valid HTML) */}
+      <div
+        aria-hidden
+        className='pointer-events-none absolute rounded-full'
+        style={{
+          insetBlockStart: 'calc(6px + 6px)',
+          insetBlockEnd: 0,
+          insetInlineStart: 0,
+          width: '1.5px',
+          backgroundColor: 'var(--border-subtle)',
+        }}
+      />
+      {/* Active indicator bar (decorative, outside <ul>) */}
+      <div
+        ref={indicatorRef}
+        aria-hidden
+        className='pointer-events-none absolute rounded-full'
+        style={{
+          insetInlineStart: 0,
+          width: '1.5px',
+          backgroundColor: 'var(--sidebar-toc-indicator)',
+          transition: 'transform 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.15s',
+          opacity: 0,
+        }}
+      />
+      <ul
+        ref={listRef}
+        className='relative list-none m-0 p-0 flex flex-col gap-1.5 pt-1.5 pl-3 text-xs leading-[1.33] box-content'
+      >
+        {headings.map((heading) => {
+          const isActive = heading.slug === activeId
+          const headingHref = `${pageHref}#${heading.slug}`
+          const isDimmed = searchState.dimmedHrefs?.has(headingHref) ?? false
+          return (
+            <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.15s ease' }}>
+              <a
+                href={`#${heading.slug}`}
+                className='block leading-4 no-underline transition-colors duration-[120ms]'
+                tabIndex={isDimmed ? -1 : 0}
+                style={{
+                  color: isActive ? 'var(--sidebar-toc-foreground-active)' : 'var(--sidebar-toc-foreground)',
+                  fontWeight: isActive ? 500 : 400,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--sidebar-foreground-hover)'
+                    e.currentTarget.style.fontVariationSettings = '"wght" 500'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--sidebar-toc-foreground)'
+                    e.currentTarget.style.fontVariationSettings = ''
+                  }
+                }}
+              >
+                {heading.text}
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 
-export function TableOfContents({
-  items,
-  currentPageHref,
+/* ── Animated expand/collapse container ──────────────────────────────── */
+
+function ExpandableContainer({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState(0)
+
+  useEffect(() => {
+    if (!contentRef.current) return
+    const observer = new ResizeObserver(() => {
+      if (contentRef.current) {
+        setHeight(contentRef.current.scrollHeight)
+      }
+    })
+    observer.observe(contentRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      aria-hidden={!open}
+      inert={!open || undefined}
+      style={{
+        overflow: 'hidden',
+        height: open ? `${height}px` : '0px',
+        opacity: open ? 1 : 0,
+        transition: 'height 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s ease',
+      }}
+    >
+      <div ref={contentRef}>{children}</div>
+    </div>
+  )
+}
+
+/* ── Nav page link ───────────────────────────────────────────────────── */
+
+function NavPageLink({
+  page,
+  currentPage,
+  activeHeadingId,
+  depth,
+  searchState,
 }: {
-  items: FlatTocItem[]
-  logo?: string
-  currentPageHref?: string
+  page: NavPage
+  currentPage?: NavPage
+  activeHeadingId: string
+  depth: number
+  searchState: SearchState
 }) {
-  const firstHref = items[0]?.href ?? ''
-  const fallbackId = firstHref.startsWith('#') ? firstHref.slice(1) : firstHref
+  const isActive = page.href === currentPage?.href
+  const isDimmed = searchState.dimmedHrefs?.has(page.href) ?? false
+  const isSearchActive = searchState.matchedHrefs !== null
+  /* When search is active and this page matched, expand its TOC so headings are visible */
+  const showToc = isSearchActive
+    ? (searchState.matchedHrefs?.has(page.href) ?? false) && page.headings.length > 0
+    : isActive && page.headings.length > 0
+  return (
+    <div className='flex flex-col' style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.15s ease' }}>
+      <Link
+        href={page.href}
+        className='block text-xs no-underline transition-colors duration-150'
+        tabIndex={isDimmed ? -1 : 0}
+        style={{
+          fontVariationSettings: isActive ? '"wght" 550' : '"wght" 450',
+          color: isActive ? 'var(--sidebar-foreground-active)' : 'var(--sidebar-foreground)',
+          paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
+          transition: 'color 0.15s, font-variation-settings 0.25s',
+        }}
+        onMouseEnter={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.color = 'var(--sidebar-foreground-hover)'
+            e.currentTarget.style.fontVariationSettings = '"wght" 550'
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.color = 'var(--sidebar-foreground)'
+            e.currentTarget.style.fontVariationSettings = '"wght" 450'
+          }
+        }}
+      >
+        {page.title}
+      </Link>
+      <ExpandableContainer open={showToc}>
+        {page.headings.length > 0 && (
+          <TocInline headings={page.headings} activeId={activeHeadingId} searchState={searchState} pageHref={page.href} />
+        )}
+      </ExpandableContainer>
+    </div>
+  )
+}
+
+/* ── Nav group node ──────────────────────────────────────────────────── */
+
+function NavGroupNode({
+  group,
+  depth,
+  parentPath,
+  currentPage,
+  expandedGroups,
+  onToggleGroup,
+  activeHeadingId,
+  searchState,
+}: {
+  group: NavGroup
+  depth: number
+  /** Ancestor group names joined by \0 — ensures unique keys even for duplicate group labels */
+  parentPath: string
+  currentPage?: NavPage
+  expandedGroups: Set<string>
+  onToggleGroup: (groupKey: string) => void
+  activeHeadingId: string
+  searchState: SearchState
+}) {
+  const groupKey = parentPath ? `${parentPath}\0${group.group}` : group.group
+
+  if (depth === 0) {
+    return (
+      <div className='flex flex-col gap-2'>
+        <div
+          className='text-[10px] cursor-default mt-3 mb-0.5'
+          style={{
+            fontVariationSettings: '"wght" 500',
+            color: 'var(--sidebar-section-foreground)',
+          }}
+        >
+          {group.group}
+        </div>
+        {group.pages.map((entry) => {
+          if (isNavPage(entry)) {
+            return (
+              <NavPageLink
+                key={entry.href}
+                page={entry}
+                currentPage={currentPage}
+                activeHeadingId={activeHeadingId}
+                depth={0}
+                searchState={searchState}
+              />
+            )
+          }
+          if (isNavGroup(entry)) {
+            return (
+              <NavGroupNode
+                key={entry.group}
+                group={entry}
+                depth={depth + 1}
+                parentPath={groupKey}
+                currentPage={currentPage}
+                expandedGroups={expandedGroups}
+                onToggleGroup={onToggleGroup}
+                activeHeadingId={activeHeadingId}
+                searchState={searchState}
+              />
+            )
+          }
+          return null
+        })}
+      </div>
+    )
+  }
+
+  /* Merge search expand overrides into the manual expanded state */
+  const isExpanded = expandedGroups.has(groupKey) || (searchState.expandGroupKeys?.has(groupKey) ?? false)
+  return (
+    <div className='flex flex-col'>
+      <button
+        type='button'
+        onClick={() => onToggleGroup(groupKey)}
+        aria-expanded={isExpanded}
+        className='flex items-center gap-1 text-xs border-none bg-transparent cursor-pointer p-0 text-left transition-colors duration-150'
+        style={{
+          fontVariationSettings: '"wght" 500',
+          color: 'var(--sidebar-foreground)',
+          paddingLeft: depth > 0 ? `${(depth - 1) * 12}px` : undefined,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = 'var(--sidebar-foreground-hover)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = 'var(--sidebar-foreground)'
+        }}
+      >
+        <ChevronIcon expanded={isExpanded} className='text-(color:--sidebar-section-foreground)' />
+        {group.group}
+      </button>
+      <ExpandableContainer open={isExpanded}>
+        <div className='flex flex-col gap-2 pt-2'>
+          {group.pages.map((entry) => {
+            if (isNavPage(entry)) {
+              return (
+                <NavPageLink
+                  key={entry.href}
+                  page={entry}
+                  currentPage={currentPage}
+                  activeHeadingId={activeHeadingId}
+                  depth={depth}
+                  searchState={searchState}
+                />
+              )
+            }
+            if (isNavGroup(entry)) {
+              return (
+                <NavGroupNode
+                  key={entry.group}
+                  group={entry}
+                  depth={depth + 1}
+                  parentPath={groupKey}
+                  currentPage={currentPage}
+                  expandedGroups={expandedGroups}
+                  onToggleGroup={onToggleGroup}
+                  activeHeadingId={activeHeadingId}
+                  searchState={searchState}
+                />
+              )
+            }
+            return null
+          })}
+        </div>
+      </ExpandableContainer>
+    </div>
+  )
+}
+
+/* ── SideNav — Agentation-style sidebar navigation ───────────────────── */
+
+function groupContainsPage(group: NavGroup, page: NavPage): boolean {
+  for (const entry of group.pages) {
+    if (isNavPage(entry) && entry.href === page.href) return true
+    if (isNavGroup(entry) && groupContainsPage(entry, page)) return true
+  }
+  return false
+}
+
+/** Collect path-based keys for all ancestor groups containing a page */
+function collectAncestorKeys(groups: NavGroup[], pageHref: string, parentPath: string, out: Set<string>) {
+  for (const group of groups) {
+    const key = parentPath ? `${parentPath}\0${group.group}` : group.group
+    if (groupContainsPage(group, { href: pageHref } as NavPage)) {
+      out.add(key)
+    }
+    for (const entry of group.pages) {
+      if (isNavGroup(entry)) {
+        collectAncestorKeys([entry], pageHref, key, out)
+      }
+    }
+  }
+}
+
+/** Build a flat SearchEntry[] from the NavGroup tree for Orama indexing */
+function buildSearchEntries(groups: NavGroup[], parentPath: string): SearchEntry[] {
+  const entries: SearchEntry[] = []
+  for (const group of groups) {
+    const key = parentPath ? `${parentPath}\0${group.group}` : group.group
+    for (const entry of group.pages) {
+      if (isNavPage(entry)) {
+        entries.push({ label: entry.title, href: entry.href, groupPath: key, pageHref: null })
+        for (const h of entry.headings) {
+          entries.push({ label: h.text, href: `${entry.href}#${h.slug}`, groupPath: key, pageHref: entry.href })
+        }
+      } else if (isNavGroup(entry)) {
+        entries.push(...buildSearchEntries([entry], key))
+      }
+    }
+  }
+  return entries
+}
+
+export function SideNav({
+  groups,
+  currentPage,
+}: {
+  groups: NavGroup[]
+  currentPage?: NavPage
+}) {
+  const fallbackId = currentPage?.headings[0]?.slug ?? ''
   const { activeId } = useActiveTocState({ fallbackId })
 
-  /* Derive which items have children (are expandable) */
-  const expandableHrefs = useMemo(() => {
-    return new Set(items.map((i) => { return i.parentHref }).filter(Boolean) as string[])
-  }, [items])
-
-  /* Lookup map for walking the parent chain */
-  const itemByHref = useMemo(() => {
-    return new Map(items.map((i) => { return [i.href, i] as const }))
-  }, [items])
-
-  // Track which items are expanded. First expandable item starts open.
-  const [expanded, setExpanded] = useState<Set<string>>(() => {
-    const first = items.find((i) => { return expandableHrefs.has(i.href) })
-    const next = first ? new Set([first.href]) : new Set<string>()
-
-    if (currentPageHref) {
-      let current = itemByHref.get(currentPageHref)
-      if (current && expandableHrefs.has(current.href)) {
-        next.add(current.href)
-      }
-      while (current?.parentHref) {
-        next.add(current.parentHref)
-        current = itemByHref.get(current.parentHref)
-      }
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
+    const initial = new Set<string>()
+    if (currentPage) {
+      collectAncestorKeys(groups, currentPage.href, '', initial)
     }
-
-    return next
+    return initial
   })
 
-  // Auto-expand the active item (if expandable) and its ancestors
+  // Re-expand ancestor groups when currentPage changes (client-side navigation)
   useEffect(() => {
-    if (!activeId) {
-      return
-    }
-    const activeHash = `#${activeId}`
-    const activeHref = `${window.location.pathname}${activeHash}`
-    const toExpand: string[] = []
-    if (expandableHrefs.has(activeHref) && !expanded.has(activeHref)) {
-      toExpand.push(activeHref)
-    }
-    let current = itemByHref.get(activeHref) ?? itemByHref.get(activeHash)
-    while (current?.parentHref) {
-      if (!expanded.has(current.parentHref)) {
-        toExpand.push(current.parentHref)
-      }
-      current = itemByHref.get(current.parentHref)
-    }
-    if (toExpand.length > 0) {
-      setExpanded((prev) => {
-        return new Set([...prev, ...toExpand])
-      })
-    }
-  }, [activeId, itemByHref]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const toggle = (href: string) => {
-    setExpanded((prev) => {
+    if (!currentPage) return
+    setExpandedGroups((prev) => {
       const next = new Set(prev)
-      if (next.has(href)) {
-        next.delete(href)
+      collectAncestorKeys(groups, currentPage.href, '', next)
+      return next
+    })
+  }, [currentPage?.href, groups])
+
+  const toggleGroup = useCallback((groupKey: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(groupKey)) {
+        next.delete(groupKey)
       } else {
-        next.add(href)
+        next.add(groupKey)
       }
       return next
     })
-  }
+  }, [])
 
-  // --- Search state ---
+  // --- Search ---
+  const searchEntries = useMemo(() => buildSearchEntries(groups, ''), [groups])
+  const db = useMemo(() => createSearchDb({ entries: searchEntries }), [searchEntries])
+
   const [query, setQuery] = useState('')
+  const [searchState, setSearchState] = useState<SearchState>(emptySearchState)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const highlightedRef = useRef<HTMLAnchorElement>(null)
   const [isPending, startTransition] = useTransition()
 
-  // Build Orama search DB once
-  const db = useMemo(() => {
-    return createTocDb({ items })
-  }, [items])
-
-  const [searchState, setSearchState] = useState<SearchState>({
-    matchedHrefs: null,
-    expandOverride: null,
-    dimmedHrefs: null,
-    focusableHrefs: null,
-  })
-
   const handleQueryChange = useCallback(
     (value: string) => {
       setQuery(value)
       startTransition(() => {
-        const state = searchToc({ db, query: value, items })
-        setSearchState(state)
+        setSearchState(searchSidebar({ db, query: value, entries: searchEntries }))
         setHighlightedIndex(0)
       })
     },
-    [db, items],
+    [db, searchEntries],
   )
 
-  // Scroll highlighted item into view (only when search is active)
+  // Scroll highlighted item into view
   useEffect(() => {
-    if (!searchState.focusableHrefs) {
-      return
-    }
+    if (!searchState.focusableHrefs) return
     highlightedRef.current?.scrollIntoView({ block: 'nearest' })
   }, [highlightedIndex, searchState.focusableHrefs])
 
@@ -338,17 +563,13 @@ export function TableOfContents({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey) {
         const tag = (e.target as HTMLElement).tagName
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) {
-          return
-        }
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
         e.preventDefault()
         searchInputRef.current?.focus()
       }
     }
     document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-    }
+    return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
   const handleSearchKeyDown = useCallback(
@@ -360,19 +581,13 @@ export function TableOfContents({
         return
       }
       const focusable = searchState.focusableHrefs
-      if (!focusable || focusable.length === 0) {
-        return
-      }
+      if (!focusable || focusable.length === 0) return
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setHighlightedIndex((prev) => {
-          return Math.min(prev + 1, focusable.length - 1)
-        })
+        setHighlightedIndex((prev) => Math.min(prev + 1, focusable.length - 1))
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
-        setHighlightedIndex((prev) => {
-          return Math.max(prev - 1, 0)
-        })
+        setHighlightedIndex((prev) => Math.max(prev - 1, 0))
       } else if (e.key === 'Enter') {
         e.preventDefault()
         const href = focusable[highlightedIndex]
@@ -386,87 +601,39 @@ export function TableOfContents({
     [searchState.focusableHrefs, highlightedIndex, handleQueryChange],
   )
 
-  const isSearchActive = searchState.matchedHrefs !== null
-
-  /* Merge search expand overrides into the expanded set */
-  const effectiveExpanded = useMemo(() => {
-    if (!isSearchActive || !searchState.expandOverride) {
-      return expanded
-    }
-    return new Set([...expanded, ...searchState.expandOverride])
-  }, [expanded, isSearchActive, searchState.expandOverride])
-
-  /* Compute visible items: an item is visible if all its ancestors are
-     effectively expanded. */
-  const visibleItems = useMemo(() => {
-    const visible = new Set<string>()
-    return items.filter((item) => {
-      if (item.parentHref === null) {
-        visible.add(item.href)
-        return true
-      }
-      if (effectiveExpanded.has(item.parentHref) && visible.has(item.parentHref)) {
-        visible.add(item.href)
-        return true
-      }
-      return false
-    })
-  }, [items, effectiveExpanded])
-
   return (
-    <aside
-      style={{
-        maxWidth: 'var(--grid-toc-width)',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 0,
-      }}
-    >
+    <aside className='flex flex-col max-w-(--grid-toc-width) min-h-0'>
       {/* Search input with F hotkey badge */}
-      <div
-        style={{ paddingBottom: '12px', display: 'flex', alignItems: 'center', position: 'relative', flexShrink: 0 }}
-      >
+      <div className='pb-3 flex items-center relative shrink-0'>
         <input
           ref={searchInputRef}
           type='text'
           value={query}
-          onChange={(e) => {
-            handleQueryChange(e.target.value)
-          }}
+          onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           placeholder='search...'
+          className='w-full text-xs outline-none lowercase box-border'
           style={{
-            width: '100%',
             padding: '2px 24px 2px 8px',
-            fontSize: 'var(--type-toc-size)',
             fontFamily: 'var(--font-primary)',
             fontWeight: WEIGHT.prose,
             color: 'var(--text-primary)',
             background: 'transparent',
             border: '1px solid var(--page-border)',
             borderRadius: '6px',
-            outline: 'none',
-            textTransform: 'lowercase',
             letterSpacing: 'normal',
             lineHeight: LINE_HEIGHT.prose,
             transition: 'border-color 0.15s ease, opacity 0.1s ease',
-            boxSizing: 'border-box',
             opacity: isPending ? 0.5 : 1,
           }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'var(--text-tertiary)'
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = 'var(--page-border)'
-          }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--text-tertiary)' }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--page-border)' }}
         />
-        {/* Hotkey badge — hidden when input has text */}
         {!query && (
           <span
             aria-hidden='true'
+            className='absolute right-1.5 pointer-events-none uppercase'
             style={{
-              position: 'absolute',
-              right: '6px',
               fontFamily: 'var(--font-code)',
               fontSize: '10px',
               fontWeight: WEIGHT.regular,
@@ -475,8 +642,6 @@ export function TableOfContents({
               borderRadius: '4px',
               padding: '0px 4px',
               lineHeight: '16px',
-              pointerEvents: 'none',
-              textTransform: 'uppercase',
             }}
           >
             F
@@ -484,30 +649,20 @@ export function TableOfContents({
         )}
       </div>
 
-      <nav aria-label='Table of contents' style={{ overflowY: 'auto', minHeight: 0, paddingRight: '4px' }}>
-        {visibleItems.map((item, i) => {
-          const isExpandable = expandableHrefs.has(item.href)
-          const isExpanded =
-            expanded.has(item.href) ||
-            (isSearchActive && Boolean(searchState.expandOverride?.has(item.href)))
-          const isDimmed = isSearchActive && searchState.dimmedHrefs?.has(item.href)
-          const highlightedHref = isSearchActive ? searchState.focusableHrefs?.[highlightedIndex] : undefined
-          const isHighlighted = highlightedHref === item.href
-          const fragment = item.href.includes('#') ? item.href.slice(item.href.indexOf('#')) : item.href
-          return (
-            <div key={item.href} style={item.visualLevel === 0 && i > 0 ? { marginTop: '6px' } : undefined}>
-              <TocLink
-                item={item}
-                isActive={`#${activeId}` === fragment}
-                chevron={isExpandable ? { expanded: isExpanded } : undefined}
-                onToggle={isExpandable ? () => { toggle(item.href) } : undefined}
-                dimmed={isDimmed || false}
-                isHighlighted={isHighlighted}
-                linkRef={isHighlighted ? highlightedRef : undefined}
-              />
-            </div>
-          )
-        })}
+      <nav aria-label='Navigation' className='overflow-y-auto min-h-0 pr-1 flex flex-col gap-2'>
+        {groups.map((group) => (
+          <NavGroupNode
+            key={group.group}
+            group={group}
+            depth={0}
+            parentPath=''
+            currentPage={currentPage}
+            expandedGroups={expandedGroups}
+            onToggleGroup={toggleGroup}
+            activeHeadingId={activeId}
+            searchState={searchState}
+          />
+        ))}
       </nav>
     </aside>
   )
@@ -1457,8 +1612,8 @@ export type EditorialSection = {
 }
 
 export function EditorialPage({
-  toc,
-  currentPageHref,
+  groups,
+  currentPage,
   logo,
   siteName,
   tabs,
@@ -1469,8 +1624,8 @@ export function EditorialPage({
   sections,
   hero,
 }: {
-  toc: FlatTocItem[]
-  currentPageHref?: string
+  groups: NavGroup[]
+  currentPage?: NavPage
   logo?: string
   /** Site name used for logo aria-label and fallback text */
   siteName?: string
@@ -1569,7 +1724,7 @@ export function EditorialPage({
               flexDirection: 'column',
             }}
           >
-            <TableOfContents items={toc} logo={logo} currentPageHref={currentPageHref} />
+            <SideNav groups={groups} currentPage={currentPage} />
           </div>
         </div>
 

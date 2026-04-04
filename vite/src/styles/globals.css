@@ -129,6 +129,15 @@
   --code-line-nr: rgba(0, 0, 0, 0.3);
   --selection-bg: rgba(0, 0, 0, 0.08);
 
+  /* Sidebar navigation (shadcn naming convention) */
+  --sidebar-foreground: rgba(0, 0, 0, 0.55);
+  --sidebar-foreground-hover: rgba(0, 0, 0, 0.75);
+  --sidebar-foreground-active: rgba(0, 0, 0, 0.9);
+  --sidebar-section-foreground: rgba(0, 0, 0, 0.4);
+  --sidebar-toc-foreground: rgba(0, 0, 0, 0.5);
+  --sidebar-toc-foreground-active: rgba(0, 0, 0, 0.9);
+  --sidebar-toc-indicator: rgba(0, 0, 0, 0.9);
+
   /* Button / back button */
   --btn-bg: #fff;
   --btn-shadow:
@@ -204,6 +213,15 @@
     --border-subtle: rgba(255, 255, 255, 0.12);
     --code-line-nr: rgba(255, 255, 255, 0.3);
     --selection-bg: rgba(255, 255, 255, 0.1);
+
+    /* Sidebar navigation dark */
+    --sidebar-foreground: rgba(255, 255, 255, 0.55);
+    --sidebar-foreground-hover: rgba(255, 255, 255, 0.75);
+    --sidebar-foreground-active: rgba(255, 255, 255, 0.9);
+    --sidebar-section-foreground: rgba(255, 255, 255, 0.4);
+    --sidebar-toc-foreground: rgba(255, 255, 255, 0.5);
+    --sidebar-toc-foreground-active: rgba(255, 255, 255, 0.9);
+    --sidebar-toc-indicator: rgba(255, 255, 255, 0.9);
 
     --btn-bg: rgb(30, 30, 30);
     --btn-shadow:

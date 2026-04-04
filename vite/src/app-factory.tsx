@@ -48,7 +48,6 @@ import {
   getActiveGroups,
   findPage,
   collectAllPages,
-  flattenForSidebar,
 } from './navigation.ts'
 
 /* ── MDX section splitting ──────────────────────────────────────────── */
@@ -193,9 +192,8 @@ export function createHolocronApp({
       })
       const contentMdast: Root = { type: 'root', children: contentChildren }
 
-      // Sidebar items for current tab
+      // Sidebar groups for current tab
       const activeGroups = getActiveGroups(navigation, pageData.href)
-      const tocItems = flattenForSidebar(activeGroups)
 
       // Split into sections
       const mdastSections = groupBySections(contentMdast)
@@ -311,8 +309,8 @@ export function createHolocronApp({
             {pageData.description && <Head.Meta name='description' content={pageData.description} />}
           </Head>
           <EditorialPage
-            toc={tocItems}
-            currentPageHref={pageData.href}
+            groups={activeGroups}
+            currentPage={pageData}
             logo={logoSrc}
             siteName={config.name}
             tabs={tabItems}
