@@ -248,14 +248,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
     },
 
-    // hotUpdate — per-environment HMR hook. For watched files (config +
-    // existing MDX), addWatchFile puts our virtual module in ctx.modules so
-    // @tailwindcss/vite skips its full-reload and @vitejs/plugin-rsc handles
-    // the update naturally. We just need to refresh config/syncResult before
-    // the RSC plugin re-transforms the module, and suppress client-side HMR
-    // (which would find no boundary and trigger a page reload).
-    // For NEW MDX files (not yet watched), ctx.modules is empty so we fall
-    // back to manual invalidation + rsc:update.
+    // hotUpdate — per-environment HMR hook.
+    //
+    // addWatchFile in load() puts our virtual module in ctx.modules for
+    // existing files, so @tailwindcss/vite sees a JS module and skips its
+    // full-reload. For new/deleted MDX files, we inject virtual modules
+    // into ctx.modules (same pattern as vite:import-glob).
+    //
+    // We return [] in ALL environments because ctx.modules also contains
+    // the raw .mdx/.jsonc file entries which the RSC plugin would try to
+    // transformRequest as JS and fail. Instead we invalidate the virtual
+    // modules ourselves and send rsc:update manually.
     async hotUpdate(ctx) {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
@@ -264,13 +267,20 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return
       }
 
-      const isWatched = ctx.modules.some((m) => {
-        return m.id === RESOLVED_CONFIG || m.id === RESOLVED_MDX
-      })
+      // For new/deleted MDX files (type !== "update"), the file isn't
+      // registered via addWatchFile yet so our virtual modules won't be
+      // in ctx.modules. Inject them — mirroring how vite:import-glob
+      // adds glob-owning modules on create/delete. This makes downstream
+      // plugins (Tailwind) see a JS module and skip their full-reload.
+      if (ctx.type !== 'update' && isMdx && ctx.file.startsWith(pagesDir)) {
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX]) {
+          const mod = this.environment.moduleGraph.getModuleById(resolvedId)
+          if (mod && !ctx.modules.includes(mod)) {
+            ctx.modules = [...ctx.modules, mod]
+          }
+        }
+      }
 
-      // Re-read config + re-sync once per file-change event (client env
-      // runs first). Must complete before the RSC plugin calls transformRequest
-      // on our virtual module, which re-invokes load() with the fresh data.
       if (this.environment.name === 'client') {
         if (isConfig) {
           config = readConfig({ root, configPath: options.configPath })
@@ -282,33 +292,19 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           projectRoot: root,
           distDir: distDirPath,
         })
-      }
 
-      if (isWatched) {
-        // The virtual module is in ctx.modules — the RSC plugin will
-        // transform it (getting fresh data from load()) and send rsc:update.
-        // Return [] only in client env to prevent dead-end propagation
-        // from triggering a browser full-reload.
-        if (this.environment.name === 'client') {
-          return []
-        }
-        return
-      }
-
-      // Unwatched file (new MDX page): manually invalidate + notify.
-      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX]) {
-        const mod = this.environment.moduleGraph.getModuleById(resolvedId)
-        if (mod) {
-          this.environment.moduleGraph.invalidateModule(mod)
-        }
-      }
-
-      if (this.environment.name === 'client') {
         ctx.server.environments.client?.hot.send({
           type: 'custom',
           event: 'rsc:update',
           data: { file: ctx.file },
         })
+      }
+
+      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX]) {
+        const mod = this.environment.moduleGraph.getModuleById(resolvedId)
+        if (mod) {
+          this.environment.moduleGraph.invalidateModule(mod)
+        }
       }
 
       return []
