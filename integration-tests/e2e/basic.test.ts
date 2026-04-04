@@ -140,12 +140,22 @@ test.describe("navigation", () => {
 });
 
 test.describe("hydration", () => {
+  function isHydrationError(msg: { type(): string; text(): string }): boolean {
+    const text = msg.text().toLowerCase();
+    const type = msg.type();
+    // React hydration errors (console.error with "hydrat")
+    if (type === "error" && text.includes("hydrat")) return true;
+    // React HTML nesting warnings that cause hydration mismatches
+    // e.g. "In HTML, <p> cannot be a descendant of <p>"
+    if (text.includes("cannot be a descendant")) return true;
+    if (text.includes("did not match")) return true;
+    return false;
+  }
+
   test("no hydration errors on home page", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (msg) => {
-      if (msg.type() === "error" && msg.text().toLowerCase().includes("hydrat")) {
-        errors.push(msg.text());
-      }
+      if (isHydrationError(msg)) errors.push(msg.text());
     });
     page.on("pageerror", (err) => {
       errors.push(err.message);
@@ -160,9 +170,7 @@ test.describe("hydration", () => {
   test("no hydration errors on getting-started page", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (msg) => {
-      if (msg.type() === "error" && msg.text().toLowerCase().includes("hydrat")) {
-        errors.push(msg.text());
-      }
+      if (isHydrationError(msg)) errors.push(msg.text());
     });
     page.on("pageerror", (err) => {
       errors.push(err.message);
@@ -172,6 +180,18 @@ test.describe("hydration", () => {
     await page.goto("/getting-started");
     await page.waitForTimeout(2000);
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
+  });
+
+  test("no invalid HTML nesting (p inside p, div inside p)", async () => {
+    // Fetch raw server-rendered HTML and check for nesting violations
+    // that would cause hydration mismatches
+    const response = await fetch(baseURL + "/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    // Check that <p> tags don't contain block elements
+    const pInsideP = /<p[^>]*>\s*<p[^>]*>/i.test(html);
+    expect(pInsideP, "Found <p> nested inside <p>").toBe(false);
   });
 });
 

@@ -748,9 +748,12 @@ export function SectionHeading({
   )
 }
 
+// Uses <div> instead of <p> to avoid hydration mismatches when MDX content
+// contains explicit <p> or <h1> tags whose text children also get wrapped
+// by this component (p→P mapping), creating invalid nested <p> elements.
 export function P({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <p
+    <div
       className={`editorial-prose ${className}`}
       style={{
         ...proseStyle,
@@ -758,13 +761,13 @@ export function P({ children, className = '' }: { children: React.ReactNode; cla
       }}
     >
       {children}
-    </p>
+    </div>
   )
 }
 
 export function Caption({ children }: { children: React.ReactNode }) {
   return (
-    <p
+    <div
       style={{
         ...proseStyle,
         fontSize: 'var(--type-caption-size)',
@@ -773,7 +776,7 @@ export function Caption({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-    </p>
+    </div>
   )
 }
 
