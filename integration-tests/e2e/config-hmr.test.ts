@@ -132,6 +132,78 @@ test.describe("new MDX file HMR @dev", () => {
   });
 });
 
+test.describe("deleted MDX file HMR @dev", () => {
+  const deletedSlug = "hmr-delete-target";
+  const deletedFile = path.join(pagesDir, `${deletedSlug}.mdx`);
+  const deletedTitle = "Page To Delete";
+
+  let originalConfig: string;
+
+  test.beforeEach(() => {
+    originalConfig = fs.readFileSync(configPath, "utf-8");
+
+    fs.writeFileSync(
+      deletedFile,
+      ["---", `title: ${deletedTitle}`, "---", "", "Will be deleted."].join(
+        "\n",
+      ),
+    );
+
+    const updatedConfig = JSON.stringify(
+      {
+        name: "Test Docs",
+        colors: { primary: "#0969da" },
+        navigation: [
+          { group: "Guides", pages: ["index", "getting-started", deletedSlug] },
+        ],
+      },
+      null,
+      2,
+    );
+    fs.writeFileSync(configPath, updatedConfig);
+  });
+
+  test.afterEach(() => {
+    fs.writeFileSync(configPath, originalConfig);
+    if (fs.existsSync(deletedFile)) {
+      fs.unlinkSync(deletedFile);
+    }
+  });
+
+  test("deleting an MDX file removes it from the sidebar without page refresh", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+    await page.waitForTimeout(2000);
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(
+      nav.getByRole("link", { name: deletedTitle }),
+    ).toBeVisible();
+
+    await page.evaluate(() => {
+      (window as any).__hmr_test_no_reload = true;
+    });
+
+    fs.unlinkSync(deletedFile);
+
+    // Remove the page from config so syncNavigation doesn't error
+    fs.writeFileSync(configPath, originalConfig);
+
+    await expect(
+      nav.getByRole("link", { name: deletedTitle }),
+    ).not.toBeVisible({ timeout: 10_000 });
+
+    const noReload = await page.evaluate(
+      () => (window as any).__hmr_test_no_reload,
+    );
+    expect(noReload, "Page did a full reload instead of HMR update").toBe(
+      true,
+    );
+  });
+});
+
 test.describe("config HMR @dev", () => {
   const hmrPageSlug = "hmr-test-page";
   const hmrPageFile = path.join(pagesDir, `${hmrPageSlug}.mdx`);

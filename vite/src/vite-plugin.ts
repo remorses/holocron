@@ -281,6 +281,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
+      // Re-read config + re-sync once per file-change event. We gate on
+      // 'client' because Vite's handleHMRUpdate processes the client env
+      // loop first (line 26572 in vite/dist/node/chunks/node.js), then
+      // non-client envs (line 26595). By the time RSC/SSR hooks fire,
+      // the shared config/syncResult is already fresh.
       if (this.environment.name === 'client') {
         if (isConfig) {
           config = readConfig({ root, configPath: options.configPath })
