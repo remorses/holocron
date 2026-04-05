@@ -7,7 +7,7 @@
  * --link-accent, --page-border.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { Link } from 'spiceflow/react'
 import type { TocNodeType, TocTreeNode } from './toc-tree.ts'
@@ -1816,18 +1816,27 @@ export function EditorialPage({
         </div>
 
         {sections ? (
-          /* Section-based layout: single subgrid container holds ALL sections.
-             On mobile: flex column with --section-gap between per-section
-             wrappers. Each per-section wrapper is itself a flex column with
-             --prose-gap so content + its aside stay tightly coupled. On
-             desktop: each per-section wrapper becomes `display: contents`
-             (via lg:contents) so its children (content + aside) flow into
-             the outer subgrid directly — content in col 1, aside in col 2.
-             Explicit `grid-row` per item lets a shared `<Aside full>` cell
-             span multiple rows so its `position: sticky` scrolls alongside
-             the whole range. First/last sections get zero edge spacing
-             automatically from flex/grid gap semantics. */
-          <div className='flex flex-col gap-(--section-gap) lg:grid lg:grid-cols-subgrid lg:col-[2/-1] lg:gap-y-(--section-gap)'>
+          /* Section-based layout: single outer subgrid container holds ALL
+             sections, with uniform --section-gap between rows.
+
+             Per-section (non-shared) aside:
+             The wrapper is itself an INNER subgrid spanning cols [1/-1].
+             Content and aside live inside it. The aside's sticky containing
+             block is this wrapper, so sticky scope = one section's bounds.
+             When user scrolls past the section, its aside unsticks before
+             the next section's aside sticks — no overlap.
+
+             Shared <Aside full> (asideRowSpan > 1):
+             Content stays in its section's wrapper, but the aside is LIFTED
+             OUT into the outer subgrid as a separate grid item with
+             `grid-row: start / span N`. Its sticky containing block = the
+             multi-row grid area, so it stays pinned across the whole range.
+             On mobile the aside is rendered again INSIDE the wrapper with
+             `lg:hidden` so it still stacks at the end of its range.
+
+             First/last sections get zero edge spacing automatically from
+             flex/grid gap semantics. */
+          <div className='flex flex-col gap-y-(--section-gap) lg:grid lg:grid-cols-subgrid lg:col-[2/-1]'>
             {sections.map((section, i) => {
               const row = i + 1
               if (section.fullWidth) {
@@ -1842,29 +1851,47 @@ export function EditorialPage({
                 )
               }
               const span = section.asideRowSpan ?? 1
-              // For a shared aside attached to the last sub-section, start
-              // from `row - span + 1` so the cell covers the entire range.
-              const asideGridRow = span > 1 ? `${row - span + 1} / span ${span}` : `${row}`
+              const isShared = span > 1
+              const asideClass =
+                'slot-aside flex flex-col gap-3 bg-foreground/[0.03] text-(length:--type-toc-size) leading-[1.5]'
               return (
-                <div
-                  key={i}
-                  className='flex flex-col gap-(--prose-gap) lg:contents'
-                >
+                <Fragment key={i}>
                   <div
-                    className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'
+                    className='flex flex-col gap-y-(--prose-gap) lg:grid lg:grid-cols-subgrid lg:col-[1/-1]'
                     style={{ gridRow: row }}
                   >
-                    {section.content}
+                    <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
+                      {section.content}
+                    </div>
+                    {/* Per-section aside: stays inside the wrapper so its
+                        sticky scope is this one section. */}
+                    {section.aside && !isShared && (
+                      <div
+                        className={`${asideClass} lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
+                      >
+                        {section.aside}
+                      </div>
+                    )}
+                    {/* Shared aside on mobile only: stacks inside the LAST
+                        sub-section's wrapper in DOM order. */}
+                    {section.aside && isShared && (
+                      <div className={`${asideClass} lg:hidden`}>
+                        {section.aside}
+                      </div>
+                    )}
                   </div>
-                  {section.aside && (
+                  {/* Shared aside on desktop: separate outer-subgrid item
+                      spanning multiple rows via grid-row start/span. Sticky
+                      containing block = multi-row grid area. */}
+                  {section.aside && isShared && (
                     <div
-                      className='flex flex-col gap-3 p-3 rounded-(--border-radius-md) border border-(--border-subtle) text-(length:--type-toc-size) leading-[1.5] text-(color:--text-tree-label) lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto'
-                      style={{ gridRow: asideGridRow }}
+                      className={`hidden ${asideClass} lg:flex lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
+                      style={{ gridRow: `${row - span + 1} / span ${span}` }}
                     >
                       {section.aside}
                     </div>
                   )}
-                </div>
+                </Fragment>
               )
             })}
           </div>
