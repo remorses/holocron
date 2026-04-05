@@ -269,3 +269,170 @@ getComputedStyle(aside).position === 'sticky'
 // Container row-gap matches --section-gap
 getComputedStyle(container).rowGap === '48px'
 ```
+
+## CSS variable audit — which tokens are actually used (2026-04-05)
+
+All CSS vars live in `vite/src/styles/globals.css` (+ Prism dark overrides in
+`editorial-prism.css`). After a full audit of JSX/CSS references across
+`vite/src/`, ~40 tokens are defined but never referenced.
+
+### Definitely removable (zero references anywhere)
+
+- `--toc-left` — leftover TOC offset, replaced by grid geometry
+- `--fade-top`, `--fade-height`, `--fade-0` … `--fade-12` (15 tokens) — the
+  `.slot-page::before` fade gradient block in `editorial.css` is commented out
+- `--spacing-xxs` … `--spacing-xxl` (7 tokens) — Tailwind's `p-4`/`gap-6`
+  spacing utilities handle all spacing; these custom tokens were never wired up
+- `--transition-hover` — components use `transition-colors duration-150` instead
+- `--duration-snappy`, `--ease-snappy`, `--duration-swift`, `--ease-swift`,
+  `--duration-smooth`, `--ease-smooth` (6 tokens) — no custom cubic-beziers used
+- `--logo-color` — logo now just uses `var(--foreground)` directly in CSS,
+  the indirection is unused
+- `--brand-secondary` — only `--brand-primary` is consumed (by toc-panel)
+- `--overlay-filter`, `--overlay-bg`, `--overlay-shadow` — no glass overlay
+- `--font-secondary` (Newsreader serif) — never applied
+- `--weight-bold` — only prose/heading/regular weights are used
+- `--radius-lg`, `--radius-sm` — only `--radius-md` is referenced (scrollbars)
+
+### Shadcn tokens with no consumers (present via @theme inline)
+
+These color tokens exist in `:root` + their `--color-*` twins in `@theme
+inline`, but nothing in the editorial system actually uses them: `--card`,
+`--card-foreground`, `--popover`, `--popover-foreground`, `--primary`,
+`--primary-foreground`, `--secondary`, `--secondary-foreground`, `--muted`,
+`--muted-foreground`, `--accent`, `--accent-foreground`, `--destructive`,
+`--destructive-foreground`, `--input`, `--chart-1` … `--chart-5`.
+
+The Holocron repo has **no `components/ui/` folder** and no shadcn primitives.
+These tokens are dead unless a user MDX file references tailwind classes like
+`bg-card`. Keep as an opt-in safety net OR drop for a leaner editorial-only
+token set.
+
+### Actually used shadcn tokens (keep)
+
+`--background`, `--foreground`, `--border`, `--ring`, `--radius` (via
+`--radius-md`). The `@apply border-border outline-ring/50` + `@apply
+bg-background text-foreground` in `@layer base` relies on these.
+
+### Editorial palette (all used)
+
+`--text-primary`, `--text-secondary`, `--text-tertiary`, `--text-muted`,
+`--text-hover`, `--text-tree-label`, `--page-border`, `--divider`,
+`--border-subtle`, `--code-line-nr`, `--selection-bg`, all `--sidebar-*`
+tokens, `--btn-bg`, `--btn-shadow`, `--link-accent`, `--brand-primary`.
+
+### How to audit CSS var usage
+
+Use `grep` (rg has a quirk where `-oh "var\(--..."` triggers help output — 
+unknown why, possibly the `--` in the regex interacts with arg parsing):
+
+```bash
+# extract all var() references
+grep -rho "var(--[a-zA-Z0-9-]*" vite/src --include="*.tsx" --include="*.css" | sort -u
+
+# extract tailwind arbitrary-value var refs like gap-(--x) or text-(color:--x)
+grep -rho "[a-z]*-(--[a-zA-Z0-9-]*" vite/src --include="*.tsx" --include="*.css" | sort -u
+grep -rho ":--[a-zA-Z0-9-]*" vite/src --include="*.tsx" --include="*.css" | sort -u
+```
+
+Then diff against the `--xxx:` definitions in `globals.css`.
+
+### Pitfall — commented-out CSS still matches grep
+
+The `.slot-page::before` fade gradient in `editorial.css` is wrapped in
+`/* ... */`. `grep` finds the var refs inside the comment, so a "used"
+variable may actually be dead. Always open the file and check context
+before assuming a var is live.
+
+## Zod v4 `z.toJSONSchema()` gotchas + config schema source-of-truth pattern
+
+**File**: `vite/src/schema.ts` (Zod schemas) →
+`vite/scripts/generate-schema.ts` (generator) →
+`vite/schema.json` (generated, 641 lines covering MVP subset of Mintlify
+docs.json).
+
+### Key Zod v4 quirks when generating draft-07 JSON Schema
+
+1. **`reused: 'ref'` auto-names every reused subschema** as
+   `__schema0`, `__schema1`, ... Use `reused: 'inline'` and rely on
+   explicit `.meta({ id: 'X' })` + `metadata: z.globalRegistry` to
+   extract ONLY the named schemas into `definitions/`.
+
+2. **`.optional()` on a schema with `id` creates `allOf: [{ $ref }]`
+   wrapper**. JSON Schema forbids siblings next to `$ref`, so Zod wraps
+   in allOf when the optional wrapper wants to add anything. Post-process
+   to unwrap: if node has only `allOf` with 1 item and no other keys,
+   replace node with that item.
+
+3. **Zod writes `id` field INSIDE each definition** (duplicate of the
+   definitions/ key). Strip it in post-processing.
+
+4. **`z.record(z.enum([...]), z.string())` creates EXHAUSTIVE record** —
+   every enum key becomes REQUIRED in JSON Schema output. Use
+   `z.partialRecord(z.enum([...]), z.string())` for optional keys.
+   Needed for things like `footer.socials` where users pick any subset
+   of platforms.
+
+5. **draft-07 uses `definitions/`, draft-2020-12 uses `$defs/`**. Set
+   `target: 'draft-7'` to keep the classic naming.
+
+6. **Descriptions with `dedent`**: `.describe(dedent\`...\`)` gets
+   preserved in the JSON Schema output with literal `\n` line breaks.
+   IDE tooltips render them correctly. Keep description source lines
+   ≤ 100 chars per rule.
+
+### Post-processing shape (`scripts/generate-schema.ts`)
+
+```ts
+const clean = (node) => {
+  if (Array.isArray(node)) return node.map(clean)
+  if (!node || typeof node !== 'object') return node
+  // Unwrap allOf: [{ $ref }] when it's the only key
+  if (Array.isArray(node.allOf) && node.allOf.length === 1 &&
+      Object.keys(node).length === 1) return clean(node.allOf[0])
+  // Strip duplicate id
+  const result = {}
+  for (const [k, v] of Object.entries(node)) {
+    if (k !== 'id') result[k] = clean(v)
+  }
+  return result
+}
+```
+
+### Source-of-truth pattern for config types
+
+- **Zod schemas in `schema.ts`** = single source of truth for INPUT shape
+- **`HolocronConfigRaw = z.input<typeof holocronConfigSchema>`** for the
+  raw user-written shape (before normalize())
+- **Normalized types in `config.ts` DERIVE from Zod via `z.output<>`**
+  where shapes overlap (`ConfigAnchor`, `ConfigNavGroup`,
+  `ConfigNavPageEntry`, colors, redirects, footer.socials)
+- **Wrapper types stay hand-written** for fields where `normalize()`
+  collapses unions (`logo`, `favicon`, `navigation`, `navbar`, `ConfigNavTab`)
+
+### Type derivation pitfall — hand-written types can silently lie
+
+Before this refactor, `ConfigAnchor.icon` was typed `string | undefined`
+but `normalize()` never transformed it — so at runtime, `icon` could be
+`{ name, style?, library? }`. Deriving from Zod exposed the truth and
+broke `sync.ts` which assigned `configGroup.icon` to `NavGroup.icon: string
+| undefined`. Fix was to add an `iconToString()` helper at the
+enrichment boundary that extracts `.name` from icon objects. Always
+derive from the validation source rather than hand-writing narrower
+types — the compiler will surface all the places that need adapters.
+
+### Regen-check test pattern (catches out-of-sync schema.json)
+
+Add a vitest test that calls `z.toJSONSchema()` + clean() and compares
+to `fs.readFileSync('schema.json', 'utf-8')`. Fails CI if someone edits
+`schema.ts` but forgets `pnpm generate-schema`. See `src/schema.test.ts`.
+
+### AJV `validateSchema()` to confirm draft-07 compliance
+
+```ts
+const ajv = new Ajv({ allErrors: true, strict: false })
+ajv.validateSchema(schema)  // returns true if valid
+```
+
+Also `npx ajv-cli@5 validate -s schema.json -d config.jsonc
+--strict=false` validates real user configs against generated schema.

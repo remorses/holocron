@@ -1,10 +1,16 @@
 /**
  * Holocron config — normalized types + reader.
  *
- * The docs.json schema (vite/schema.json, generated from src/schema.ts) has many union variants for
- * navigation, logo, favicon, navbar, etc. We normalize everything inside
- * readConfig() so consuming code never deals with unions — just clean,
- * predictable types with exactly one shape per field.
+ * The docs.json schema (vite/schema.json, generated from src/schema.ts) has
+ * many union variants for navigation, logo, favicon, navbar, etc. We
+ * normalize the wrapper fields (logo, favicon, navigation, navbar) inside
+ * readConfig() so consuming code never deals with those unions.
+ *
+ * TYPES SOURCE: `src/schema.ts` is the single source of truth. Types for
+ * anchors, groups, pages, colors, redirects, and footer.socials are
+ * DERIVED from the Zod schemas via `z.output<>`. Only the normalized
+ * wrapper shapes that `normalize()` actually collapses (logo, favicon,
+ * navigation, navbar) are defined here.
  *
  * Supports two file names (first found wins):
  *   1. holocron.jsonc — our format (JSONC with comments)
@@ -13,18 +19,42 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import type { z } from 'zod'
+import type {
+  anchorSchema,
+  groupSchema,
+  colorsSchema,
+  redirectSchema,
+  footerSchema,
+} from './schema.ts'
+import { parseJsonc } from './lib/jsonc.ts'
 
-/* ── Normalized config types (no unions, always one shape) ───────────── */
+/* ── Types derived from Zod (schema.ts = source of truth) ────────────── */
+
+/** An anchor — persistent link rendered as a tab in the tab bar.
+ *  Can point to external URLs (GitHub, blog, etc). */
+export type ConfigAnchor = z.output<typeof anchorSchema>
+
+/** A sidebar group containing pages and/or nested groups. Recursive. */
+export type ConfigNavGroup = z.output<typeof groupSchema>
+
+/** A page entry is either a slug string or a nested group. */
+export type ConfigNavPageEntry = string | ConfigNavGroup
+
+/* ── Normalized wrapper types (union-collapsed by normalize()) ───────── */
+
+/** A top-level tab in the navigation (contains sidebar groups).
+ *  Link-only tabs are converted to anchors during normalization. */
+export type ConfigNavTab = {
+  tab: string
+  groups: ConfigNavGroup[]
+}
 
 export type HolocronConfig = {
   name: string
   logo: { light: string; dark: string; href?: string }
   favicon: { light: string; dark: string }
-  colors: {
-    primary: string
-    light?: string
-    dark?: string
-  }
+  colors: z.output<typeof colorsSchema>
   navigation: {
     tabs: ConfigNavTab[]
     anchors: ConfigAnchor[]
@@ -33,43 +63,17 @@ export type HolocronConfig = {
     links: Array<{ label: string; href: string }>
     primary?: { label: string; href: string }
   }
-  redirects: Array<{ source: string; destination: string; permanent?: boolean }>
+  redirects: Array<z.output<typeof redirectSchema>>
   footer: {
-    socials: Record<string, string>
+    socials: NonNullable<z.output<typeof footerSchema>['socials']>
   }
 }
 
-/** An anchor — persistent link rendered as a tab in the tab bar.
- *  Can point to external URLs (GitHub, blog, etc). */
-export type ConfigAnchor = {
-  anchor: string
-  href: string
-  icon?: string
-}
-
-/** A top-level tab in the navigation (contains sidebar groups) */
-export type ConfigNavTab = {
-  tab: string
-  groups: ConfigNavGroup[]
-}
-
-/** A sidebar group containing pages and/or nested groups */
-export type ConfigNavGroup = {
-  group: string
-  icon?: string
-  pages: ConfigNavPageEntry[]
-}
-
-/** A page entry is either a slug string or a nested group */
-export type ConfigNavPageEntry = string | ConfigNavGroup
-
-/* ── Type guard (only one still needed, for page entries) ────────────── */
+/* ── Type guard (for page entries) ───────────────────────────────────── */
 
 export function isConfigNavGroup(entry: ConfigNavPageEntry): entry is ConfigNavGroup {
   return typeof entry === 'object' && 'group' in entry
 }
-
-import { parseJsonc } from './lib/jsonc.ts'
 
 /* ── Config reader + normalizer ──────────────────────────────────────── */
 
@@ -269,7 +273,11 @@ function normalizeTabsAndAnchors(
 
     // Link-only tab → convert to anchor
     if (raw.href && !raw.groups && !raw.pages) {
-      anchors.push({ anchor: name, href: raw.href as string, icon: raw.icon as string | undefined })
+      anchors.push({
+        anchor: name,
+        href: raw.href as string,
+        icon: raw.icon as ConfigAnchor['icon'],
+      })
       continue
     }
 

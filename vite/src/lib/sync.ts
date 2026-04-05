@@ -38,6 +38,13 @@ const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
+/** Extract an icon name string from either a string or icon object. */
+function iconToString(icon: ConfigNavGroup['icon']): string | undefined {
+  if (!icon) return undefined
+  if (typeof icon === 'string') return icon
+  return icon.name
+}
+
 export type SyncResult = {
   navigation: Navigation
   /** Pre-processed MDX content keyed by page slug. Kept separate from the
@@ -163,7 +170,7 @@ export async function syncNavigation({
   async function enrichGroup(configGroup: ConfigNavGroup): Promise<NavGroup> {
     return {
       group: configGroup.group,
-      icon: configGroup.icon,
+      icon: iconToString(configGroup.icon),
       pages: await Promise.all(configGroup.pages.map((entry) => {
         return enrichPageEntry(entry)
       })),
