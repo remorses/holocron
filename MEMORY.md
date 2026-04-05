@@ -729,3 +729,38 @@ Pitfalls:
 - MEMORY.md was added with `git add -N` early in the session — it ended up
   auto-staged in later `git add file1 file2` calls because `-N` keeps the
   intent-to-add flag. Use `git restore --staged` to unstage if needed.
+
+## Expand/collapse containers: never `useState(0)` for height — use CSS grid `0fr↔1fr` to avoid hydration layout shift
+
+Symptom: sidebar groups that contain the current page animate in from height 0
+on every page load, causing a visible layout shift even though the loader-driven
+`expandedGroups` state already knew which groups should be open at SSR time.
+
+Root cause: the old `ExpandableContainer` in `vite/src/components/markdown.tsx`
+measured `scrollHeight` via `ResizeObserver` and kept it in `useState`. During
+SSR and the first client render, that state was `0`, so `height: 0px` rendered
+for EVERY container — even `open={true}` ones. Only after the effect ran post-
+mount did React re-render with the real height, and the CSS transition animated
+0 → scrollHeight. That's a visible shift per load, not per toggle.
+
+Fix: CSS grid with `grid-template-rows: 1fr | 0fr`. Browsers interpolate
+between fractional track sizes (Chrome 117+, Safari 17.4+, Firefox 125+). The
+child wraps content in `overflow: hidden` + `min-height: 0`. No JS measurement,
+no ResizeObserver, no `useState` for height. SSR renders with the correct final
+height for open containers because the browser sizes the track from content
+synchronously during layout.
+
+Belt-and-suspenders: use a module-level "first paint done" flag exposed via
+`useSyncExternalStore(subscribe, getSnapshot, () => false)`. It returns `false`
+on the server and initial client render, then flips to `true` on the first
+`requestAnimationFrame`. Set `transition: canAnimate ? '...' : 'none'` so the
+opacity fade doesn't run during hydration either. Subsequent toggles animate
+normally.
+
+Why NOT `useSyncExternalStore` to read `scrollHeight` during render: the value
+we need can only be measured AFTER the DOM exists, and the element ref doesn't
+exist during the first render. Height measurement is fundamentally post-mount;
+the fix is to stop measuring heights at all and let CSS do it.
+
+Applies to any expand/collapse UI pattern. Never do `useState(0)` + measure +
+`setHeight` + animate height — it always causes first-paint layout shift.
