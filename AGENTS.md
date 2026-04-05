@@ -200,3 +200,49 @@ holocron docs website generator uses spiceflow deeply. I am also the author of s
 ## integration tests and example
 
 after you make changes to holocron vite you will have to run `pnpm build` again inside vite so that the example and integration tests can use the updated code from dist.
+
+### integration-tests fixture architecture
+
+The `integration-tests/` package is organized as a set of **fixtures**, one per configuration shape. Each fixture is a self-contained mini-site with its own `holocron.jsonc` (or `docs.json`) + `pages/`, and its own matching test directory. Each fixture exercises a different permutation of Holocron config fields so we can cover every config shape a user might actually write.
+
+```
+integration-tests/
+├── fixtures/
+│   ├── basic/                # navigation: [{group, pages}] shorthand
+│   │   ├── holocron.jsonc
+│   │   └── pages/*.mdx
+│   ├── tabs/                 # navigation.tabs with groups + external link tabs
+│   │   ├── holocron.jsonc
+│   │   └── pages/*.mdx
+│   └── <name>/               # one folder per config variation
+├── e2e/
+│   ├── basic/                # tests for the basic fixture
+│   │   ├── basic.test.ts
+│   │   └── config-hmr.test.ts
+│   └── tabs/                 # tests for the tabs fixture
+│       └── tabs.test.ts
+├── scripts/
+│   ├── fixtures.ts           # discovers fixtures/* subdirs with a config file
+│   └── build-fixtures.ts     # runs `vite build` once per fixture
+├── vite.config.ts            # shared by every fixture
+└── playwright.config.ts      # one webServer + one project per fixture
+```
+
+**How it works**: `scripts/fixtures.ts` walks `fixtures/` and returns every subdirectory containing a `holocron.jsonc` or `docs.json`. `playwright.config.ts` allocates one free port per fixture (persisted via `E2E_PORT_<NAME>` env vars so re-imports get stable ports), then spawns one webServer per fixture (via `vite <fixtureRoot> --config vite.config.ts --port <N>` in dev, or `node <fixtureRoot>/dist/rsc/index.js` in build mode) and one Playwright project per fixture with `testDir: e2e/<name>` and `use.baseURL: http://localhost:<N>`.
+
+Tests use Playwright's `request` fixture (not raw `fetch()`) so per-project `baseURL` is picked up automatically.
+
+**When you hit a config bug — add a fixture**: if a user reports that some combination of `navigation`, `navbar`, `anchors`, `redirects`, `footer.socials`, `logo`, or any other config fields misbehaves, add a new fixture under `fixtures/<descriptive-name>/` with the minimal reproduction config + MDX pages, add a matching `e2e/<name>/<name>.test.ts`, reproduce the bug as a failing test, then fix the bug in `vite/src/`.
+
+**Adding a fixture, step by step**:
+1. Create `fixtures/<name>/holocron.jsonc` (or `docs.json`)
+2. Create `fixtures/<name>/pages/*.mdx` with whatever pages the config references
+3. Create `e2e/<name>/<name>.test.ts` with assertions on the rendered output
+4. Done — `playwright.config.ts` discovers the fixture automatically. No other changes needed.
+
+**Running tests**:
+- `pnpm test-e2e` — runs every fixture in dev mode (one Vite server per fixture)
+- `pnpm test-e2e-start` — builds every fixture, runs every fixture in prod mode
+- `pnpm test-e2e --project=<name>` — runs one specific fixture
+
+After changing `vite/src/` you must run `pnpm build` in the `vite/` package before re-running integration tests.

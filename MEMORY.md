@@ -967,3 +967,109 @@ padding creates clearance inside the clip boundary:
 highlight fits entirely within the element's own box — no parent clip
 interaction. Text shifts 4px when highlighted, but that's a feature
 (indicates "selected"). This approach survives any overflow scheme.
+
+## integration-tests multi-fixture layout + Vite 8 CLI gotchas (2026-04-05)
+
+Reworked `integration-tests/` to support many fixtures under `fixtures/<name>/`,
+one per config shape. Each fixture is a self-contained mini-site
+(`holocron.jsonc` + `pages/`) pointed at via `vite <root>`. Playwright spawns
+one webServer per fixture (each on its own free port) and one project per
+fixture with `testDir: e2e/<name>`. Tests under `e2e/<name>/` only run
+against the matching server.
+
+### Vite 8 CLI flag changes (don't get caught)
+
+- `--root` is **gone** as a flag. Use root as a POSITIONAL arg:
+  `vite fixtures/basic --config vite.config.ts --port 5175 --strictPort`.
+- `--strict-port` → `--strictPort` (camelCase).
+- Config path via `--config` is resolved from CWD, not from the positional
+  root arg. So you can share one `vite.config.ts` at project root and
+  point many fixtures at it.
+
+### Playwright config is re-imported per worker — persist ports via env vars
+
+`playwright.config.ts` is evaluated MULTIPLE times: once in the main process
+(for webServer + project setup) and again for each test worker. If you call
+`getFreePort()` at module scope, each re-import gets FRESH ports and the
+project's `use.baseURL` port stops matching the webServer's port — tests
+fail with ECONNREFUSED to a port nothing is listening on.
+
+Fix: allocate ports in the main process and write them to env vars, then
+on re-import read from env first and only allocate if absent. Child
+workers inherit env so they see the same ports. Key by fixture name:
+
+```ts
+function envKey(name: string) {
+  return `E2E_PORT_${name.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}`
+}
+const port = process.env[envKey(name)]
+  ? Number(process.env[envKey(name)])
+  : await getFreePort()
+process.env[envKey(name)] = String(port)
+```
+
+The original single-fixture config used the same trick with one
+`E2E_PORT` var — this generalizes it to N fixtures.
+
+### Tests must use `request` fixture, not raw `fetch(baseURL + …)`
+
+The old tests had `const baseURL = http://localhost:${process.env.E2E_PORT}`
+at module top and used `fetch(baseURL + "/path")`. This only works with
+one global port. In multi-project mode each project has its OWN baseURL
+(`use.baseURL`), and only Playwright's `request` fixture (or `page.request`)
+picks it up automatically. Refactored every raw `fetch()` to
+`async ({ request }) => { await request.get("/path") }`. `APIResponse`
+uses `.status()` (method, parens) instead of `.status` property.
+
+### Open bug: "Failed to resolve import fixtures/<name>/holocron.jsonc from virtual:holocron-config"
+
+When Playwright spawns TWO vite servers simultaneously (one per fixture),
+both crash during transform with repeated:
+
+```
+[vite] Internal server error: Failed to resolve import
+  "fixtures/basic/holocron.jsonc" from " virtual:holocron-config".
+  Does the file exist?
+  Plugin: vite:import-analysis
+  File:  virtual:holocron-config:1:0
+```
+
+Running ONE server by itself works fine. Running TWO (via Playwright's
+multi-webServer config) triggers the error. The import path that fails
+is always the FIRST fixture's config path (`fixtures/basic/holocron.jsonc`)
+regardless of which server reports the error, suggesting some kind of
+state bleed between concurrent vite servers — probably the `addWatchFile`
+call in `vite/src/vite-plugin.ts` load() hook inscribing an absolute path
+that another server's workspace-root mapping converts to a relative
+import specifier.
+
+Debug next steps:
+1. Reproduce by starting two vite servers manually with different fixture
+   roots and hitting both with curl — does the error trigger?
+2. Check if removing the `this.addWatchFile(configFilePath)` from
+   `load(RESOLVED_CONFIG)` avoids the crash (at the cost of losing config
+   HMR).
+3. Check if the file watch is being added to the WRONG environment's
+   module graph — plugin hooks run in all environments (client/ssr/rsc)
+   so four environments × two servers might tangle.
+4. Look at Vite 8 changelog for breaking changes around
+   `this.addWatchFile()` in virtual module load hooks.
+
+### Fixture architecture quick-ref for future sessions
+
+```
+integration-tests/
+├── fixtures/<name>/           # self-contained mini-site
+│   ├── holocron.jsonc  (or docs.json)
+│   └── pages/*.mdx
+├── e2e/<name>/<name>.test.ts  # tests for this fixture
+├── scripts/fixtures.ts        # discovers fixtures/* with config files
+├── scripts/build-fixtures.ts  # loops, runs vite build per fixture
+├── playwright.config.ts       # multi-project + multi-webServer
+└── vite.config.ts             # shared by every fixture
+```
+
+Each fixture's `dist/` lives inside the fixture folder (e.g.
+`fixtures/basic/dist/`), kept out of git via `fixtures/*/dist/` in
+`.gitignore`. Adding a new config type = drop a folder under `fixtures/`
++ test file under `e2e/<name>/` and everything else is discovered.

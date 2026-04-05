@@ -121,7 +121,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // pnpm strict hoisting prevents Vite from finding bare `spiceflow` imports.
       const _require = createRequire(import.meta.url)
       const spiceflowDir = path.dirname(_require.resolve('spiceflow/package.json'))
-      const next: Pick<UserConfig, 'resolve'> = {
+      // Resolve root to absolute for computing `cacheDir`. viteConfig.root may
+      // be relative at this point; path.resolve turns it into an absolute
+      // path relative to the current cwd.
+      const absoluteRoot = path.resolve(process.cwd(), root)
+      const next: Pick<UserConfig, 'resolve' | 'cacheDir'> = {
         resolve: {
           alias: [
             { find: /^spiceflow$/, replacement: path.join(spiceflowDir, 'dist/index.js') },
@@ -129,6 +133,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             { find: /^spiceflow\/react$/, replacement: path.join(spiceflowDir, 'dist/react/index.js') },
           ],
         },
+        // Scope the Vite dep-optimizer cache to the project root. By default
+        // Vite writes to `<firstAncestorWithNodeModules>/node_modules/.vite/`
+        // — when two Holocron sites run as separate processes with different
+        // roots but share a parent's `node_modules/`, they race on the same
+        // cache directory and corrupt each other's optimized deps. Keep the
+        // cache inside the project root so concurrent runs (e.g. multi-fixture
+        // integration tests) stay isolated.
+        cacheDir: path.join(absoluteRoot, 'node_modules/.vite'),
       }
       return next
     },
@@ -145,6 +157,20 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       resolveHolocronPackagePath = async (id, importer, ssr) => {
         return await preserveSymlinkResolver(id, importer, false, ssr)
       }
+
+      // CRITICAL: overwrite `root` with the RESOLVED absolute path. In the
+      // `config()` hook above, `viteConfig.root` comes straight from the
+      // user's config (or the CLI positional arg) and may still be a
+      // RELATIVE path like "fixtures/basic". Feeding that to
+      // `resolveConfigPath` produces a relative config path, which then
+      // flows into `this.addWatchFile()` in load() — and Vite tries to
+      // resolve that relative path as an import of the virtual module,
+      // crashing with "Failed to resolve import fixtures/.../holocron.jsonc
+      // from virtual:holocron-config".
+      root = resolved.root
+      pagesDir = options.pagesDir
+        ? path.resolve(root, options.pagesDir)
+        : path.resolve(root, 'pages')
 
       distDirPath = resolved.build?.outDir
         ? path.resolve(root, resolved.build.outDir)

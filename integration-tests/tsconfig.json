@@ -12,5 +12,5 @@
     "rewriteRelativeImportExtensions": true,
     "noEmit": true
   },
-  "include": ["e2e", "*.ts"]
+  "include": ["e2e", "scripts", "*.ts"]
 }

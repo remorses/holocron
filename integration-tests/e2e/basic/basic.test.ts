@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const baseURL = `http://localhost:${Number(process.env.E2E_PORT || 6174)}`;
-
 test.describe("home page", () => {
   test("renders page title and MDX content", async ({ page }) => {
     await page.goto("/");
@@ -15,11 +13,11 @@ test.describe("home page", () => {
     ).toBeVisible();
   });
 
-  test("HTML response contains rendered content", async () => {
-    const response = await fetch(baseURL + "/", {
+  test("HTML response contains rendered content", async ({ request }) => {
+    const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
     });
-    expect(response.status).toBe(200);
+    expect(response.status()).toBe(200);
     const html = await response.text();
     expect(html).toContain("Welcome to Test Docs");
     expect(html).toContain("Overview");
@@ -102,11 +100,11 @@ test.describe("getting-started page", () => {
     ).toBeVisible();
   });
 
-  test("HTML response contains rendered content", async () => {
-    const response = await fetch(baseURL + "/getting-started", {
+  test("HTML response contains rendered content", async ({ request }) => {
+    const response = await request.get("/getting-started", {
       headers: { "sec-fetch-dest": "document" },
     });
-    expect(response.status).toBe(200);
+    expect(response.status()).toBe(200);
     const html = await response.text();
     expect(html).toContain("Getting Started");
     expect(html).toContain("Installation");
@@ -115,8 +113,8 @@ test.describe("getting-started page", () => {
 });
 
 test.describe("navigation", () => {
-  test("sidebar contains links to both pages", async () => {
-    const response = await fetch(baseURL + "/", {
+  test("sidebar contains links to both pages", async ({ request }) => {
+    const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
@@ -182,10 +180,12 @@ test.describe("hydration", () => {
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
 
-  test("no invalid HTML nesting (p inside p, div inside p)", async () => {
+  test("no invalid HTML nesting (p inside p, div inside p)", async ({
+    request,
+  }) => {
     // Fetch raw server-rendered HTML and check for nesting violations
     // that would cause hydration mismatches
-    const response = await fetch(baseURL + "/", {
+    const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
@@ -196,15 +196,15 @@ test.describe("hydration", () => {
 });
 
 test.describe("not found", () => {
-  test("returns 404 status for unknown page", async () => {
-    const response = await fetch(baseURL + "/does-not-exist", {
+  test("returns 404 status for unknown page", async ({ request }) => {
+    const response = await request.get("/does-not-exist", {
       headers: { "sec-fetch-dest": "document" },
     });
-    expect(response.status).toBe(404);
+    expect(response.status()).toBe(404);
   });
 
-  test("renders the full editorial layout on 404", async () => {
-    const response = await fetch(baseURL + "/does-not-exist", {
+  test("renders the full editorial layout on 404", async ({ request }) => {
+    const response = await request.get("/does-not-exist", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
@@ -215,8 +215,8 @@ test.describe("not found", () => {
     expect(html).toMatch(/href="\/getting-started"/);
   });
 
-  test("shows the missing path and a link back home", async () => {
-    const response = await fetch(baseURL + "/does-not-exist", {
+  test("shows the missing path and a link back home", async ({ request }) => {
+    const response = await request.get("/does-not-exist", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
@@ -226,8 +226,10 @@ test.describe("not found", () => {
     expect(html).toContain("Back to documentation");
   });
 
-  test("uses site name in the 404 page title and sets noindex", async () => {
-    const response = await fetch(baseURL + "/does-not-exist", {
+  test("uses site name in the 404 page title and sets noindex", async ({
+    request,
+  }) => {
+    const response = await request.get("/does-not-exist", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
@@ -235,11 +237,11 @@ test.describe("not found", () => {
     expect(html).toMatch(/<meta[^>]*name="robots"[^>]*content="noindex"/);
   });
 
-  test("renders 404 for nested paths", async () => {
-    const response = await fetch(baseURL + "/foo/bar/baz", {
+  test("renders 404 for nested paths", async ({ request }) => {
+    const response = await request.get("/foo/bar/baz", {
       headers: { "sec-fetch-dest": "document" },
     });
-    expect(response.status).toBe(404);
+    expect(response.status()).toBe(404);
     const html = await response.text();
     expect(html).toContain("/foo/bar/baz");
   });

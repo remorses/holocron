@@ -1,4 +1,6 @@
 node_modules/
 dist/
+fixtures/*/dist/
+fixtures/*/node_modules/
 test-results/
 playwright-report/

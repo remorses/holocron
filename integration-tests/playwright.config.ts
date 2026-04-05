@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { createServer, type AddressInfo } from "node:net";
+import { discoverFixtures } from "./scripts/fixtures.ts";
 
 function getFreePort(): Promise<number> {
   return new Promise((resolve) => {
@@ -11,40 +12,69 @@ function getFreePort(): Promise<number> {
   });
 }
 
-const port = Number(process.env.E2E_PORT) || (await getFreePort());
-process.env.E2E_PORT = String(port);
+const fixtures = discoverFixtures();
+if (fixtures.length === 0) {
+  throw new Error(
+    "No fixtures found under fixtures/. Add at least one fixture folder with a holocron.jsonc or docs.json.",
+  );
+}
 
 const isStart = Boolean(process.env.E2E_START);
-const command = isStart
-  ? `PORT=${port} pnpm start`
-  : `pnpm dev --port ${port} --strict-port`;
+
+// Playwright imports this config file multiple times (once for the main
+// process, again for test workers). We must persist the per-fixture ports
+// across re-imports via env vars — otherwise each re-import gets fresh
+// ports and the test baseURL stops matching the webServer port.
+function envKey(fixtureName: string): string {
+  return `E2E_PORT_${fixtureName.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}`;
+}
+
+const fixturePorts = await Promise.all(
+  fixtures.map(async (fixture) => {
+    const key = envKey(fixture.name);
+    const existing = process.env[key];
+    const port = existing ? Number(existing) : await getFreePort();
+    process.env[key] = String(port);
+    return { fixture, port };
+  }),
+);
+
+const webServers = fixturePorts.map(({ fixture, port }) => {
+  const command = isStart
+    ? `PORT=${port} node ${fixture.rootRel}/dist/rsc/index.js`
+    : `pnpm exec vite ${fixture.rootRel} --config vite.config.ts --port ${port} --strictPort`;
+  return {
+    command,
+    stdout: "pipe" as const,
+    stderr: "pipe" as const,
+    port,
+    reuseExistingServer: false,
+  };
+});
+
+const projects = fixturePorts.map(({ fixture, port }) => ({
+  name: fixture.name,
+  testDir: `e2e/${fixture.name}`,
+  use: {
+    ...devices["Desktop Chrome"],
+    viewport: null,
+    deviceScaleFactor: undefined,
+    baseURL: `http://localhost:${port}`,
+  },
+}));
 
 export default defineConfig({
-  testDir: "e2e",
   use: {
-    baseURL: `http://localhost:${port}`,
     actionTimeout: 5000,
     navigationTimeout: 10000,
     trace: "on-first-retry",
   },
-  projects: [
-    {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: null,
-        deviceScaleFactor: undefined,
-      },
-    },
-  ],
-  webServer: {
-    command,
-    stdout: "pipe",
-    stderr: "pipe",
-    port,
-  },
+  projects,
+  webServer: webServers,
   fullyParallel: false,
   workers: 1,
+  // Config-HMR tests tagged @dev only run against the dev server; build-mode
+  // tests skip them (and vice-versa). Non-tagged tests run in both modes.
   grepInvert: isStart ? /@dev/ : /@build/,
   forbidOnly: !!process.env["CI"],
   retries: process.env["CI"] ? 2 : 0,

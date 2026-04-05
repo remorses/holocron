@@ -2,10 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 
-// integration-tests/ is the project root for these tests
-const projectRoot = path.resolve(import.meta.dirname, "..");
-const configPath = path.join(projectRoot, "holocron.jsonc");
-const pagesDir = path.join(projectRoot, "pages");
+// The fixture root for these tests is fixtures/basic/ inside integration-tests/.
+// Tests live at e2e/basic/*.test.ts, so we go up two levels then into fixtures/basic.
+const fixtureRoot = path.resolve(import.meta.dirname, "../../fixtures/basic");
+const configPath = path.join(fixtureRoot, "holocron.jsonc");
+const pagesDir = path.join(fixtureRoot, "pages");
 
 /**
  * @dev — only runs with the dev server (skipped during build/start tests).

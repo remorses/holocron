@@ -1,0 +1,27 @@
+{
+  // Fixture: navigation.tabs with groups + external link-only tabs.
+  // Mirrors the shape used in example/holocron.jsonc.
+  "name": "Tabs Docs",
+  "colors": {
+    "primary": "#3e9fff"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["index"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["quickstart", "theming"]
+          }
+        ]
+      },
+      { "tab": "GitHub", "href": "https://github.com/remorses/holocron" },
+      { "tab": "Changelog", "href": "https://github.com/remorses/holocron/releases" }
+    ]
+  }
+}
