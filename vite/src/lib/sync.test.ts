@@ -425,6 +425,88 @@ title: API Reference
     expect(apiPage.headings.length).toBe(3)
   })
 
+  test('preserves group fields (icon, hidden, root, tag, expanded) through sync', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          {
+            group: 'Guide',
+            icon: { name: 'book', library: 'lucide' },
+            hidden: false,
+            root: 'guide/index',
+            tag: 'New',
+            expanded: true,
+            pages: ['guide/index', 'guide/setup'],
+          },
+        ],
+      },
+      {
+        'guide/index': `---\ntitle: Guide\n---\n\n## Intro`,
+        'guide/setup': `---\ntitle: Setup\n---\n\n## Steps`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const group = result.navigation[0]!.groups[0]!
+    expect(group.icon).toMatchInlineSnapshot(`
+      {
+        "library": "lucide",
+        "name": "book",
+      }
+    `)
+    expect(group.hidden).toBe(false)
+    expect(group.root).toBe('/guide') // 'guide/index' collapses to '/guide'
+    expect(group.tag).toBe('New')
+    expect(group.expanded).toBe(true)
+  })
+
+  test('preserves tab fields (icon, hidden, align) through sync', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: {
+          tabs: [
+            {
+              tab: 'Docs',
+              icon: 'book',
+              align: 'start',
+              groups: [{ group: 'G', pages: ['p'] }],
+            },
+            {
+              tab: 'Hidden',
+              hidden: true,
+              align: 'end',
+              groups: [{ group: 'H', pages: ['p2'] }],
+            },
+          ],
+        },
+      },
+      {
+        p: `---\ntitle: P\n---\n\n## x`,
+        p2: `---\ntitle: P2\n---\n\n## y`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.navigation[0]!.icon).toBe('book')
+    expect(result.navigation[0]!.align).toBe('start')
+    expect(result.navigation[1]!.hidden).toBe(true)
+    expect(result.navigation[1]!.align).toBe('end')
+  })
+
   test('title falls back to first heading when no frontmatter', async () => {
     const project = tracked(createProject(
       {

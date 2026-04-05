@@ -1,0 +1,72 @@
+{
+  // Fixture: exercises config fields that were previously parsed but not
+  // wired through to runtime behaviour. Validates:
+  //   - root `description` → <meta name="description"> site-wide fallback
+  //   - `favicon: { light, dark }` with distinct files → paired <link> tags
+  //   - `redirects[]` (exact, named param, wildcard splat, 301 vs 302)
+  //   - `navigation.tabs[].hidden` → tab absent from DOM
+  //   - `navigation.anchors[].hidden` → anchor absent from DOM
+  //   - `group.hidden` → group absent from sidebar
+  //   - `group.expanded: true` → group starts expanded (children visible
+  //     in initial SSR HTML without client interaction)
+  //   - wrapper groups whose only descendants are hidden → pruned
+  "name": "Fields Docs",
+  "description": "A fixture that wires every previously-ignored config field through to runtime.",
+  "favicon": { "light": "/favicon-light.svg", "dark": "/favicon-dark.svg" },
+  "colors": { "primary": "#0969da" },
+  "redirects": [
+    { "source": "/old", "destination": "/new", "permanent": true },
+    { "source": "/blog/*", "destination": "/posts/:splat" },
+    { "source": "/users/:id", "destination": "/u/:id" }
+  ],
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Outer",
+            "pages": [
+              "index",
+              {
+                "group": "Expanded Nested",
+                "expanded": true,
+                "pages": ["expanded-child"]
+              },
+              {
+                "group": "Collapsed Nested",
+                "pages": ["new", "u/42", "posts/hello"]
+              },
+              {
+                "group": "Hidden Nested",
+                "hidden": true,
+                "pages": ["hidden-child"]
+              },
+              {
+                "group": "Empty Wrapper",
+                "pages": [
+                  {
+                    "group": "Hidden Only",
+                    "hidden": true,
+                    "pages": ["hidden-child"]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Secret",
+        "hidden": true,
+        "groups": [{ "group": "S", "pages": ["hidden-child"] }]
+      }
+    ],
+    "global": {
+      "anchors": [
+        { "anchor": "Visible Anchor", "href": "https://example.com/a" },
+        { "anchor": "Hidden Anchor", "href": "https://example.com/b", "hidden": true }
+      ]
+    }
+  }
+}

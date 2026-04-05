@@ -7,6 +7,7 @@ import {
   findPage,
   collectAllPages,
   buildPageIndex,
+  hasVisibleSidebarEntries,
   type NavTab,
   type NavGroup,
   type NavPage,
@@ -198,6 +199,89 @@ describe('buildPageIndex', () => {
   test('missing slug returns undefined', () => {
     const index = buildPageIndex(twoTabNav)
     expect(index.get('nope')).toBeUndefined()
+  })
+})
+
+/* ── hasVisibleSidebarEntries ────────────────────────────────────────── */
+
+describe('hasVisibleSidebarEntries', () => {
+  test('group with one visible page → true', () => {
+    const g: NavGroup = {
+      group: 'G',
+      pages: [makePage('a')],
+    }
+    expect(hasVisibleSidebarEntries(g)).toBe(true)
+  })
+
+  test('hidden group → false (regardless of children)', () => {
+    const g: NavGroup = {
+      group: 'G',
+      hidden: true,
+      pages: [makePage('a')],
+    }
+    expect(hasVisibleSidebarEntries(g)).toBe(false)
+  })
+
+  test('group with zero pages → true (intentional section divider)', () => {
+    const g: NavGroup = { group: 'G', pages: [] }
+    expect(hasVisibleSidebarEntries(g)).toBe(true)
+  })
+
+  test('wrapper with only a hidden-group child → false', () => {
+    const hiddenChild: NavGroup = {
+      group: 'Hidden',
+      hidden: true,
+      pages: [makePage('secret')],
+    }
+    const wrapper: NavGroup = {
+      group: 'Wrapper',
+      pages: [hiddenChild],
+    }
+    expect(hasVisibleSidebarEntries(wrapper)).toBe(false)
+  })
+
+  test('wrapper with a visible-group child (containing pages) → true', () => {
+    const visibleChild: NavGroup = {
+      group: 'Visible',
+      pages: [makePage('p')],
+    }
+    const wrapper: NavGroup = {
+      group: 'Wrapper',
+      pages: [visibleChild],
+    }
+    expect(hasVisibleSidebarEntries(wrapper)).toBe(true)
+  })
+
+  test('deeply-nested hidden-only chain collapses to false', () => {
+    // wrapper > middle > hidden-leaf (all nested groups have pages but
+    // the leaf is hidden). The whole chain should be pruned.
+    const hiddenLeaf: NavGroup = {
+      group: 'Leaf',
+      hidden: true,
+      pages: [makePage('x')],
+    }
+    const middle: NavGroup = {
+      group: 'Middle',
+      pages: [hiddenLeaf],
+    }
+    const wrapper: NavGroup = {
+      group: 'Wrapper',
+      pages: [middle],
+    }
+    expect(hasVisibleSidebarEntries(wrapper)).toBe(false)
+  })
+
+  test('group with both hidden and visible children → true', () => {
+    const hiddenChild: NavGroup = {
+      group: 'Hidden',
+      hidden: true,
+      pages: [makePage('a')],
+    }
+    const wrapper: NavGroup = {
+      group: 'Wrapper',
+      pages: [hiddenChild, makePage('b')],
+    }
+    expect(hasVisibleSidebarEntries(wrapper)).toBe(true)
   })
 })
 

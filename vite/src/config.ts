@@ -23,6 +23,8 @@ import type { z } from 'zod'
 import type {
   anchorSchema,
   groupSchema,
+  iconSchema,
+  tabBaseSchema,
   colorsSchema,
   redirectSchema,
   footerSchema,
@@ -30,6 +32,10 @@ import type {
 import { parseJsonc } from './lib/jsonc.ts'
 
 /* ── Types derived from Zod (schema.ts = source of truth) ────────────── */
+
+/** An icon — either a string (image path or icon name) or a structured
+ *  `{ name, library?, style? }` object. */
+export type ConfigIcon = z.output<typeof iconSchema>
 
 /** An anchor — persistent link rendered as a tab in the tab bar.
  *  Can point to external URLs (GitHub, blog, etc). */
@@ -41,17 +47,37 @@ export type ConfigNavGroup = z.output<typeof groupSchema>
 /** A page entry is either a slug string or a nested group. */
 export type ConfigNavPageEntry = string | ConfigNavGroup
 
+/** Base fields shared by every tab variant (tab, icon, hidden, align). */
+export type NavTabBase = z.output<typeof tabBaseSchema>
+
 /* ── Normalized wrapper types (union-collapsed by normalize()) ───────── */
 
 /** A top-level tab in the navigation (contains sidebar groups).
  *  Link-only tabs are converted to anchors during normalization. */
-export type ConfigNavTab = {
-  tab: string
+export type ConfigNavTab = NavTabBase & {
   groups: ConfigNavGroup[]
+}
+
+/** A navbar icon link (top-right of header). The normalized form has
+ *  `label` and `href` required (derived from raw type/url aliases). */
+export type ConfigNavbarLink = {
+  label: string
+  href: string
+  type?: string
+  icon?: ConfigIcon
+}
+
+/** The navbar primary CTA button (right of navbar). Normalized: label
+ *  and href are required, url aliased into href, type preserved. */
+export type ConfigNavbarPrimary = {
+  label: string
+  href: string
+  type?: string
 }
 
 export type HolocronConfig = {
   name: string
+  description?: string
   logo: { light: string; dark: string; href?: string }
   favicon: { light: string; dark: string }
   colors: z.output<typeof colorsSchema>
@@ -60,8 +86,8 @@ export type HolocronConfig = {
     anchors: ConfigAnchor[]
   }
   navbar: {
-    links: Array<{ label: string; href: string }>
-    primary?: { label: string; href: string }
+    links: ConfigNavbarLink[]
+    primary?: ConfigNavbarPrimary
   }
   redirects: Array<z.output<typeof redirectSchema>>
   footer: {
@@ -127,6 +153,7 @@ export function resolveConfigPath({ root, configPath }: { root: string; configPa
 function normalize(raw: Record<string, unknown>): HolocronConfig {
   return {
     name: (raw.name as string) || 'Documentation',
+    description: typeof raw.description === 'string' ? raw.description : undefined,
     logo: normalizeLogo(raw.logo),
     favicon: normalizeFavicon(raw.favicon),
     colors: normalizeColors(raw.colors),
@@ -270,26 +297,41 @@ function normalizeTabsAndAnchors(
 
   for (const raw of rawTabs) {
     const name = (raw.tab as string) || ''
+    const icon = raw.icon as ConfigIcon | undefined
+    const hidden = raw.hidden as boolean | undefined
+    const align = raw.align as ('start' | 'end') | undefined
+    const extras = {
+      ...(icon !== undefined && { icon }),
+      ...(hidden !== undefined && { hidden }),
+    }
+    const tabExtras = {
+      ...extras,
+      ...(align !== undefined && { align }),
+    }
 
     // Link-only tab → convert to anchor
     if (raw.href && !raw.groups && !raw.pages) {
       anchors.push({
         anchor: name,
         href: raw.href as string,
-        icon: raw.icon as ConfigAnchor['icon'],
+        ...extras,
       })
       continue
     }
 
     // Tab with groups → standard content tab
     if (raw.groups) {
-      tabs.push({ tab: name, groups: raw.groups as ConfigNavGroup[] })
+      tabs.push({ tab: name, ...tabExtras, groups: raw.groups as ConfigNavGroup[] })
       continue
     }
 
     // Tab with pages but no groups → wrap in single unnamed group
     if (raw.pages) {
-      tabs.push({ tab: name, groups: [{ group: '', pages: raw.pages as ConfigNavPageEntry[] }] })
+      tabs.push({
+        tab: name,
+        ...tabExtras,
+        groups: [{ group: '', pages: raw.pages as ConfigNavPageEntry[] }],
+      })
       continue
     }
 
@@ -320,21 +362,44 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
   }
   const obj = raw as Record<string, unknown>
 
-  const rawLinks = (obj.links ?? []) as Array<Record<string, string>>
-  const links = rawLinks.map((link) => {
+  const rawLinks = (obj.links ?? []) as Array<Record<string, unknown>>
+  const links: ConfigNavbarLink[] = rawLinks.map((link) => {
+    const type = typeof link.type === 'string' ? link.type : undefined
+    const label =
+      (typeof link.label === 'string' && link.label) ||
+      TYPE_LABELS[type || ''] ||
+      type ||
+      ''
+    const href =
+      (typeof link.href === 'string' && link.href) ||
+      (typeof link.url === 'string' && link.url) ||
+      ''
+    const icon = link.icon as ConfigIcon | undefined
     return {
-      label: link.label || TYPE_LABELS[link.type || ''] || link.type || '',
-      href: link.href || link.url || '',
+      label,
+      href,
+      ...(type !== undefined && { type }),
+      ...(icon !== undefined && { icon }),
     }
   })
 
-  const rawPrimary = obj.primary as Record<string, string> | undefined
-  const primary = rawPrimary
-    ? {
-        label: rawPrimary.label || TYPE_LABELS[rawPrimary.type || ''] || rawPrimary.type || 'Button',
-        href: rawPrimary.href || rawPrimary.url || '',
-      }
-    : undefined
+  const rawPrimary = obj.primary as Record<string, unknown> | undefined
+  let primary: ConfigNavbarPrimary | undefined
+  if (rawPrimary) {
+    const type = typeof rawPrimary.type === 'string' ? rawPrimary.type : undefined
+    primary = {
+      label:
+        (typeof rawPrimary.label === 'string' && rawPrimary.label) ||
+        TYPE_LABELS[type || ''] ||
+        type ||
+        'Button',
+      href:
+        (typeof rawPrimary.href === 'string' && rawPrimary.href) ||
+        (typeof rawPrimary.url === 'string' && rawPrimary.url) ||
+        '',
+      ...(type !== undefined && { type }),
+    }
+  }
 
   return { links, primary }
 }

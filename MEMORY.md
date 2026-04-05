@@ -1171,3 +1171,180 @@ match the existing pattern at `app-factory.tsx:369`.
 
 Middleware that returns `undefined` (no Response) falls through to
 subsequent handlers — exactly what we want when no redirect matches.
+
+## data.ts exports — only if DERIVED, never as pure aliases
+
+`data.ts` re-exports `config` + `navigation` from `virtual:holocron-config`.
+Consumers should read raw config fields via `config.description`,
+`config.logo.href`, `config.colors`, `config.footer.socials`,
+`config.navbar.primary` directly — **do not add named exports that are
+pure aliases** like:
+
+```ts
+// BAD — pure alias, no transformation, adds a second name for the
+// same data and forces readers to look up what it points to.
+export const brandColors = config.colors
+export const socials = config.footer.socials
+export const primaryCta = config.navbar.primary
+```
+
+Named exports are only justified when they actually DERIVE something:
+
+```ts
+// GOOD — compiles a match table (real work done once at module load)
+export const redirectTable = buildRedirectTable(config.redirects)
+
+// GOOD — walks the navigation tree to find the first page
+export const firstPage = navigation[0] ? findFirstPageInTab(navigation[0]) : undefined
+
+// GOOD — collapses empty-string sentinel from the normalizer into
+// `undefined` so consumers can write `if (logoSrc)` cleanly. Matches
+// the pre-existing pattern for `siteName`/`logoSrc`/`faviconLight`.
+export const logoDark: string | undefined = config.logo.dark || undefined
+```
+
+Rule of thumb: if the right-hand side is just `config.X.Y`, delete the
+export and have consumers write `config.X.Y`. If the right-hand side
+runs a function or converts sentinel values, keep it.
+
+When this pattern slipped in during the schema-field-wiring work, the
+immediate cost was a long import list in `app-factory.tsx` and
+`markdown.tsx` for values that were already one dot-access away from
+`config`. Reverted.
+
+## Pattern matcher pitfalls (from the redirects review)
+
+Four gotchas the oracle flagged on our first-pass `lib/redirects.ts`
+implementation. Worth remembering for ANY path/pattern matcher:
+
+1. **Exact patterns MUST beat parameter/wildcard patterns, regardless
+   of declaration order.** Users write `/users/:id` first, then
+   `/users/new` as a more-specific exception. A naive "first-match-wins"
+   loop routes `/users/new` to `:id`. Fix: split rules into an exact
+   `Map<string, Rule>` + a pattern `Rule[]`, check the map first.
+
+2. **Preserve query strings + hash fragments on redirect.** `GET /old?ref=x`
+   → `/new` without the `?ref=x` loses analytics / tracking. When the
+   destination has no `?`, append `url.search`. Same for `url.hash`.
+
+3. **Empty splat capture.** `/blog/*` against `/blog/` should match with
+   `:splat = ""`. Against `/blog` (no trailing slash) should NOT match.
+   Verify both cases in tests.
+
+4. **Last-write vs first-write for duplicate rules.** If users duplicate
+   the same exact source, first declaration should win (principle of
+   least surprise — later rules are "fallbacks"). `Map.set` is
+   last-write-wins by default — guard with `!map.has(source)` before
+   setting.
+
+Companion pitfall from the SAME review pass: **page-level `<meta>` tags
+need to emit EVERY variant of the thing they're overriding.** Spiceflow's
+`Head` dedups meta tags by key (`meta:property:og:description` vs
+`meta:name:description` are DIFFERENT keys). When the site-level layout
+emits both `name="description"` AND `property="og:description"`, the
+page-level override must ALSO emit both — emitting only
+`name="description"` leaves the site's `og:description` stuck.
+
+## Hidden groups: prune empty wrappers, preserve intentional section labels
+
+When filtering `group.hidden: true` out of the sidebar, there's a
+subtle UX question: what about a parent group whose ONLY children were
+all hidden groups?
+
+The rule that works:
+- `group.hidden === true` → prune (always)
+- `group.pages.length === 0` → render (intentional section label divider)
+- `group.pages.length > 0` AND every descendant is hidden → prune
+- otherwise → render
+
+Implemented as `hasVisibleSidebarEntries(group)` in `navigation.ts`,
+called from `NavGroupNode` in `markdown.tsx`. The distinction matters
+because users write empty groups as deliberate section dividers in the
+sidebar — we shouldn't prune those. Only groups that WOULD have had
+content but all got filtered out.
+
+## Redirects in spiceflow — stuck with a custom regex matcher + `.use()` middleware
+
+Tried FOUR integration points with spiceflow during the schema-wiring
+work. None of the "delegate to spiceflow's routing" approaches worked
+without tradeoffs. Landing on a custom regex matcher inside `.use()`
+middleware, because it's the simplest reliable option.
+
+### What we tried
+
+**`.get('/old', handler)`** — does NOT work.
+`spiceflow.js → resolveRoutes` (line ~1025) does
+`shouldEnterReact = hasPageMatch || ...`. Whenever ANY `.page()`
+matches, spiceflow enters the React pipeline and ignores all
+non-React routes that also matched. Holocron always has
+`.page('/*')`, so `.get('/old')` is never called.
+
+**`.loader('/old', handler)`** — works for non-overlapping rules,
+breaks for overlaps. `spiceflow.js → renderReact` (line ~543) runs
+all matched loaders in parallel via `Promise.all`, then sorts them
+by specificity AFTER running them. When both `/blog/*` and
+`/blog/index` throw a redirect, Promise.all rejects with whichever
+throws first synchronously — which is the LESS specific one
+(appears earlier in the sorted array). Mintlify's idiomatic
+"wildcard + exception" pattern (`/blog/*` + `/blog/index`) breaks.
+
+**`.page('/old', handler)`** — works (pages use `pickBestRoute`
+which picks ONE handler by specificity, so no race). But requires
+Vite RSC runtime for tests; can't be exercised via bare `new
+Spiceflow()` + `.handle()`. Also, the catch-all `.loader('/*')`
+still runs for every redirect request (wasted work walking
+`navigation`) before the page throws.
+
+**`TrieRouter` deep import** — works, but requires importing
+`spiceflow/dist/trie-router/router` which isn't in spiceflow's
+`package.json` `exports` map. Could break on spiceflow updates.
+
+### Why custom regex matcher + `.use()` middleware is fine
+
+- `.use()` runs BEFORE any route resolution, so it's not affected by
+  the `.get()` vs `.page()` vs `.loader()` issues.
+- ~50 lines of code, tested in isolation with 20+ unit tests.
+- Bare `new Spiceflow().use(...)` works in tests — no RSC runtime
+  needed.
+- No deep imports, no spiceflow internals.
+- No dependency on spiceflow's routing semantics (stable across
+  spiceflow updates).
+
+### Implementation shape
+
+```ts
+// lib/redirects.ts
+export function buildRedirectTable(rules) {
+  // exact map + pattern[] split so exact matches beat :param/* rules
+}
+export function matchRedirect(table, pathname) {
+  // exact lookup first (O(1) Map), then patterns in declaration order
+}
+export function interpolateDestination(template, params) {
+  return template.replace(/:(\w+)/g, (_, n) => params[n] ?? '')
+}
+
+// app-factory.tsx
+.use(async ({ request }) => {
+  const url = new URL(request.url)
+  const match = matchRedirect(redirectTable, url.pathname)
+  if (match) {
+    let dest = interpolateDestination(match.destination, match.params)
+    if (!dest.includes('?') && url.search) dest += url.search
+    if (!dest.includes('#') && url.hash) dest += url.hash
+    throw redirect(dest, { status: match.permanent ? 301 : 302 })
+  }
+})
+```
+
+### Future: worth migrating to spiceflow routes if
+
+1. **Spiceflow changes loader execution to sequential, most-specific-first.**
+   Then `.loader()` works cleanly with overlap patterns. Would be a
+   1-line refactor here.
+2. **Spiceflow exports `TrieRouter` from its public API.** Then we
+   can delegate matching to spiceflow's trie without the deep import
+   wart.
+
+Neither is worth chasing until we have other reasons to touch
+redirects.

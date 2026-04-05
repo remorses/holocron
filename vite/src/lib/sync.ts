@@ -29,6 +29,7 @@ import {
   type Navigation,
   type NavTab,
   type NavGroup,
+  type NavIcon,
   type NavPage,
   type NavPageEntry,
   buildPageIndex,
@@ -38,11 +39,24 @@ const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
-/** Extract an icon name string from either a string or icon object. */
-function iconToString(icon: ConfigNavGroup['icon']): string | undefined {
+/** Serialize a config icon into the enriched-tree shape. Preserves the
+ *  structured form (`{ name, library, style }`) when users pass it so
+ *  renderers can route to the correct icon library. Undefined fields
+ *  are omitted to keep cache files + test snapshots clean. */
+function serializeIcon(icon: ConfigNavGroup['icon']): NavIcon | undefined {
   if (!icon) return undefined
   if (typeof icon === 'string') return icon
-  return icon.name
+  return {
+    name: icon.name,
+    ...(icon.library !== undefined && { library: icon.library }),
+    ...(icon.style !== undefined && { style: icon.style }),
+  }
+}
+
+/** Resolve a group's `root` slug to an href using the same rule as pages. */
+function rootToHref(root: string | undefined): string | undefined {
+  if (!root) return undefined
+  return slugToHref(root)
 }
 
 export type SyncResult = {
@@ -170,7 +184,11 @@ export async function syncNavigation({
   async function enrichGroup(configGroup: ConfigNavGroup): Promise<NavGroup> {
     return {
       group: configGroup.group,
-      icon: iconToString(configGroup.icon),
+      icon: serializeIcon(configGroup.icon),
+      hidden: configGroup.hidden,
+      root: rootToHref(configGroup.root),
+      tag: configGroup.tag,
+      expanded: configGroup.expanded,
       pages: await Promise.all(configGroup.pages.map((entry) => {
         return enrichPageEntry(entry)
       })),
@@ -180,6 +198,9 @@ export async function syncNavigation({
   async function enrichTab(configTab: ConfigNavTab): Promise<NavTab> {
     return {
       tab: configTab.tab,
+      icon: serializeIcon(configTab.icon),
+      hidden: configTab.hidden,
+      align: configTab.align,
       groups: await Promise.all(configTab.groups.map((g) => {
         return enrichGroup(g)
       })),

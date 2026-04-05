@@ -15,20 +15,35 @@
  */
 
 import { config, navigation } from 'virtual:holocron-config'
-import type { NavPage, NavTab, NavGroup, NavPageEntry } from './navigation.ts'
+import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigation.ts'
 import { isNavPage, isNavGroup } from './navigation.ts'
 import type { SearchEntry } from './components/search.ts'
 
 export { config, navigation }
 
-export type TabItem = { label: string; href: string }
-export type HeaderLink = { label: string; href: string; icon?: React.ReactNode }
+/** A top-level tab or anchor rendered in the tab bar. */
+export type TabItem = {
+  label: string
+  href: string
+  icon?: NavIcon
+  align?: 'start' | 'end'
+}
 
-/* ── Site identity ───────────────────────────────────────────────────── */
+/** A link in the top navbar (icon-only typically). */
+export type HeaderLink = {
+  label: string
+  href: string
+  icon?: NavIcon
+  type?: string
+}
 
-export const siteName: string = config.name
-export const logoSrc: string | undefined = config.logo.light || undefined
-export const faviconLight: string | undefined = config.favicon.light || undefined
+/* ── Derived / compiled data ─────────────────────────────────────────── */
+
+// `data.ts` only exports things that are ACTUALLY derived (tree walks).
+// Plain config fields — `config.name`, `config.logo.light`,
+// `config.favicon.dark`, `config.description`, `config.redirects`, etc.
+// — are NOT re-exported; consumers read them off `config` directly.
+// See MEMORY.md "data.ts exports — only if DERIVED, never as pure aliases".
 
 /* ── Navigation helpers (also exported for server use) ───────────────── */
 
@@ -61,6 +76,28 @@ export function collectAncestorGroupKeys(pageHref: string): string[] {
     walkGroups(tab.groups, pageHref, '', out)
   }
   return out
+}
+
+/** Walk a groups tree and return path-based keys of every group that has
+ *  `expanded: true` set in config — these should be pre-opened in the
+ *  sidebar on first render. */
+export function collectDefaultExpandedKeys(groups: NavGroup[]): string[] {
+  const out: string[] = []
+  walkExpandedGroups(groups, '', out)
+  return out
+}
+
+function walkExpandedGroups(groups: NavGroup[], parentPath: string, out: string[]): void {
+  for (const group of groups) {
+    const key = parentPath ? `${parentPath}\0${group.group}` : group.group
+    if (group.expanded === true) {
+      out.push(key)
+    }
+    const nestedGroups = group.pages.filter(isNavGroup) as NavGroup[]
+    if (nestedGroups.length > 0) {
+      walkExpandedGroups(nestedGroups, key, out)
+    }
+  }
 }
 
 function walkGroups(
@@ -96,20 +133,27 @@ function groupContainsPage(group: NavGroup, pageHref: string): boolean {
 
 function buildTabItems(): TabItem[] {
   const navTabs: TabItem[] = navigation
-    .filter((t) => t.tab !== '')
+    .filter((t) => t.tab !== '' && !t.hidden)
     .map((t) => {
       const firstPage = findFirstPageInTab(t)
-      return { label: t.tab, href: firstPage?.href || '/' }
+      return {
+        label: t.tab,
+        href: firstPage?.href || '/',
+        icon: t.icon,
+        align: t.align,
+      }
     })
-  const anchors: TabItem[] = config.navigation.anchors.map((a) => {
-    return { label: a.anchor, href: a.href }
-  })
+  const anchors: TabItem[] = config.navigation.anchors
+    .filter((a) => !a.hidden)
+    .map((a) => {
+      return { label: a.anchor, href: a.href, icon: a.icon }
+    })
   return [...navTabs, ...anchors]
 }
 
 function buildHeaderLinks(): HeaderLink[] {
   return config.navbar.links.map((link) => {
-    return { href: link.href, label: link.label }
+    return { href: link.href, label: link.label, icon: link.icon, type: link.type }
   })
 }
 

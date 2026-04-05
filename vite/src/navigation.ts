@@ -9,18 +9,29 @@
  * so these functions never deal with union discrimination.
  */
 
+import type {
+  ConfigIcon,
+  ConfigNavGroup,
+  NavTabBase,
+} from './config.ts'
+
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
-/** An enriched tab — same as ConfigNavTab but groups are enriched */
-export type NavTab = {
-  tab: string
+/** An icon in the enriched tree. Same shape as the config-layer icon —
+ *  renderers decide how to display each variant (string path → `<img>` or
+ *  library icon; object → library/style aware lookup). */
+export type NavIcon = ConfigIcon
+
+/** An enriched tab — reuses the schema-derived base (tab/icon/hidden/align)
+ *  and swaps in enriched groups. */
+export type NavTab = NavTabBase & {
   groups: NavGroup[]
 }
 
-/** An enriched group — pages are NavPage objects or nested NavGroup */
-export type NavGroup = {
-  group: string
-  icon?: string
+/** An enriched group — reuses the schema-derived group shape and swaps
+ *  in `NavPageEntry[]` for the `pages` field (page slugs become NavPage
+ *  objects). The `root` slug is resolved to an href at enrich time. */
+export type NavGroup = Omit<ConfigNavGroup, 'pages'> & {
   pages: NavPageEntry[]
 }
 
@@ -55,6 +66,25 @@ export function isNavPage(entry: NavPageEntry): entry is NavPage {
 
 export function isNavGroup(entry: NavPageEntry): entry is NavGroup {
   return 'group' in entry
+}
+
+/** Whether a group should appear in the sidebar after `hidden` filtering.
+ *
+ *  Rules:
+ *  - Hidden groups (`group.hidden === true`) always return `false`.
+ *  - Groups with ZERO defined pages return `true` — treat them as
+ *    intentional section-label dividers the user wrote explicitly.
+ *  - Groups that have defined children but ALL of them are hidden (or
+ *    recursively contain no visible pages) return `false`.
+ *  - Otherwise `true`. */
+export function hasVisibleSidebarEntries(group: NavGroup): boolean {
+  if (group.hidden) return false
+  if (group.pages.length === 0) return true
+  for (const entry of group.pages) {
+    if (isNavPage(entry)) return true
+    if (isNavGroup(entry) && hasVisibleSidebarEntries(entry)) return true
+  }
+  return false
 }
 
 /* ── Utility functions ──────────────────────────────────────────────── */

@@ -350,3 +350,151 @@ describe('footer normalization', () => {
     expect(config.footer.socials).toMatchInlineSnapshot(`{}`)
   })
 })
+
+/* ── Description + extended navbar/tab fields ─────────────────────────── */
+
+describe('description normalization', () => {
+  test('preserves description when present', () => {
+    const root = setupConfig('holocron.jsonc', {
+      name: 'X',
+      description: 'Docs site for X',
+    })
+    const config = readConfig({ root })
+    expect(config.description).toBe('Docs site for X')
+  })
+
+  test('description is undefined when missing', () => {
+    const root = setupConfig('holocron.jsonc', { name: 'X' })
+    const config = readConfig({ root })
+    expect(config.description).toBeUndefined()
+  })
+})
+
+describe('navbar link icon + type preservation', () => {
+  test('keeps icon (string path) on links', () => {
+    const root = setupConfig('holocron.jsonc', {
+      navbar: {
+        links: [{ type: 'github', href: 'https://gh.example', icon: '/gh.svg' }],
+      },
+    })
+    const config = readConfig({ root })
+    expect(config.navbar.links[0]).toMatchInlineSnapshot(`
+      {
+        "href": "https://gh.example",
+        "icon": "/gh.svg",
+        "label": "GitHub",
+        "type": "github",
+      }
+    `)
+  })
+
+  test('keeps icon (structured object) on links', () => {
+    const root = setupConfig('holocron.jsonc', {
+      navbar: {
+        links: [
+          {
+            label: 'Home',
+            href: '/',
+            icon: { name: 'home', library: 'lucide' },
+          },
+        ],
+      },
+    })
+    const config = readConfig({ root })
+    expect(config.navbar.links[0]!.icon).toMatchInlineSnapshot(`
+      {
+        "library": "lucide",
+        "name": "home",
+      }
+    `)
+  })
+
+  test('omits type/icon keys when unset (keeps snapshots clean)', () => {
+    const root = setupConfig('holocron.jsonc', {
+      navbar: { links: [{ label: 'Plain', href: '/x' }] },
+    })
+    const config = readConfig({ root })
+    expect(config.navbar.links[0]).toMatchInlineSnapshot(`
+      {
+        "href": "/x",
+        "label": "Plain",
+      }
+    `)
+  })
+
+  test('preserves primary.type', () => {
+    const root = setupConfig('holocron.jsonc', {
+      navbar: {
+        primary: { type: 'github', href: 'https://gh.example' },
+      },
+    })
+    const config = readConfig({ root })
+    expect(config.navbar.primary).toMatchInlineSnapshot(`
+      {
+        "href": "https://gh.example",
+        "label": "GitHub",
+        "type": "github",
+      }
+    `)
+  })
+})
+
+describe('tab icon / hidden / align preservation', () => {
+  test('preserves tab.icon, tab.hidden, tab.align on content tabs', () => {
+    const root = setupConfig('holocron.jsonc', {
+      navigation: [
+        {
+          tab: 'Docs',
+          icon: 'book',
+          align: 'start',
+          groups: [{ group: 'Start', pages: ['intro'] }],
+        },
+        {
+          tab: 'Hidden',
+          hidden: true,
+          groups: [{ group: 'Hide', pages: ['secret'] }],
+        },
+      ],
+    })
+    const config = readConfig({ root })
+    expect(config.navigation.tabs[0]).toMatchInlineSnapshot(`
+      {
+        "align": "start",
+        "groups": [
+          {
+            "group": "Start",
+            "pages": [
+              "intro",
+            ],
+          },
+        ],
+        "icon": "book",
+        "tab": "Docs",
+      }
+    `)
+    expect(config.navigation.tabs[1]!.hidden).toBe(true)
+  })
+
+  test('preserves icon + hidden on anchors (from link-only tabs)', () => {
+    const root = setupConfig('holocron.jsonc', {
+      navigation: [
+        {
+          tab: 'GitHub',
+          href: 'https://github.com/example',
+          icon: '/gh.svg',
+          hidden: true,
+        },
+        { tab: 'Docs', groups: [{ group: 'Start', pages: ['intro'] }] },
+      ],
+    })
+    const config = readConfig({ root })
+    expect(config.navigation.anchors[0]).toMatchInlineSnapshot(`
+      {
+        "anchor": "GitHub",
+        "hidden": true,
+        "href": "https://github.com/example",
+        "icon": "/gh.svg",
+      }
+    `)
+  })
+})

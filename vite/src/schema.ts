@@ -224,26 +224,28 @@ export const groupSchema: z.ZodType<GroupInput> = z
 
 /* ── Tab variants ─────────────────────────────────────────────────────── */
 
-const baseTabFields = {
-  tab: z.string().min(1).describe('The name of the tab'),
-  icon: iconSchema.optional(),
-  hidden: z
-    .boolean()
-    .optional()
-    .describe('Whether the tab is hidden by default'),
-  align: z
-    .enum(['start', 'end'])
-    .optional()
-    .describe('Tab alignment in the navigation'),
-}
+/** Fields common to every tab variant: name, icon, hidden, align.
+ *  Exported so the enriched-tree `NavTab` type can re-use its output shape. */
+export const tabBaseSchema = z
+  .object({
+    tab: z.string().min(1).describe('The name of the tab'),
+    icon: iconSchema.optional(),
+    hidden: z
+      .boolean()
+      .optional()
+      .describe('Whether the tab is hidden by default'),
+    align: z
+      .enum(['start', 'end'])
+      .optional()
+      .describe('Tab alignment in the navigation'),
+  })
+  .meta({ id: 'tabBaseSchema' })
 
-const tabWithGroupsSchema = z.object({
-  ...baseTabFields,
+const tabWithGroupsSchema = tabBaseSchema.extend({
   groups: z.array(groupSchema).describe('The sidebar groups inside the tab'),
 })
 
-const tabWithPagesSchema = z.object({
-  ...baseTabFields,
+const tabWithPagesSchema = tabBaseSchema.extend({
   get pages() {
     return z
       .array(z.union([z.string(), groupSchema]))
@@ -256,8 +258,7 @@ const tabWithPagesSchema = z.object({
   },
 })
 
-const tabWithHrefSchema = z.object({
-  ...baseTabFields,
+const tabWithHrefSchema = tabBaseSchema.extend({
   href: z
     .string()
     .describe(

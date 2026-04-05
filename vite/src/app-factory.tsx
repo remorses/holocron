@@ -64,13 +64,13 @@ import {
   type NavHeading,
 } from './navigation.ts'
 import {
+  config,
   navigation,
-  siteName,
   firstPage,
-  faviconLight as faviconHref,
   collectAncestorGroupKeys,
   resolveActiveTabHref,
 } from './data.ts'
+import { registerRedirects } from './lib/redirects.ts'
 
 /* ── MDX section splitting ──────────────────────────────────────────── */
 
@@ -355,8 +355,16 @@ export type HolocronLoaderData = {
 /* ── App factory ─────────────────────────────────────────────────────── */
 
 export function createHolocronApp() {
-  return new Spiceflow()
-    .use(serveStatic({ root: './public' }))
+  let app = new Spiceflow().use(serveStatic({ root: './public' }))
+
+  // Install config-driven redirects as `.use()` middleware. Runs
+  // before loader/layout/page — on match, throws a redirect Response
+  // that short-circuits the request pipeline. See lib/redirects.ts
+  // and MEMORY.md for why middleware + custom matcher instead of
+  // spiceflow routes.
+  app = registerRedirects(app, config.redirects)
+
+  return app
     .loader('/*', async ({ params, response }): Promise<HolocronLoaderData> => {
       const rawSlug = (params as Record<string, string>)['*'] || ''
       const slug = rawSlug === '' ? 'index' : rawSlug
@@ -380,7 +388,7 @@ export function createHolocronApp() {
           ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(firstPage.href) : [],
           activeTabHref: resolveActiveTabHref(firstPage?.href),
           notFoundPath: '/' + rawSlug,
-          headTitle: `Page not found — ${siteName}`,
+          headTitle: `Page not found — ${config.name}`,
           headRobots: 'noindex',
         }
       }
@@ -388,16 +396,23 @@ export function createHolocronApp() {
       return {
         currentPageHref: currentPage.href,
         currentPageTitle: currentPage.title,
-        currentPageDescription: currentPage.description,
+        currentPageDescription: currentPage.description ?? config.description,
         currentHeadings: currentPage.headings,
         ancestorGroupKeys: collectAncestorGroupKeys(currentPage.href),
         activeTabHref: resolveActiveTabHref(currentPage.href),
         notFoundPath: undefined,
-        headTitle: `${currentPage.title} — ${siteName}`,
+        headTitle: `${currentPage.title} — ${config.name}`,
         headRobots: undefined,
       }
     })
     .layout('/*', async ({ children }) => {
+      // Favicon: emit a single <link> when only one variant is set (or when
+      // both normalize to the same asset), or two with prefers-color-scheme
+      // media queries when the user explicitly provided distinct light/dark
+      // files.
+      const { light: faviconLight, dark: faviconDark } = config.favicon
+      const hasBoth =
+        Boolean(faviconLight) && Boolean(faviconDark) && faviconLight !== faviconDark
       return (
         <html lang='en'>
           <Head>
@@ -411,8 +426,24 @@ export function createHolocronApp() {
               rel='stylesheet'
               precedence='default'
             />
-            {faviconHref && <link rel='icon' href={faviconHref} />}
-            <Head.Title>{siteName}</Head.Title>
+            {hasBoth ? (
+              <>
+                <link rel='icon' href={faviconLight} media='(prefers-color-scheme: light)' />
+                <link rel='icon' href={faviconDark} media='(prefers-color-scheme: dark)' />
+              </>
+            ) : (
+              (faviconLight || faviconDark) && (
+                <link rel='icon' href={faviconLight || faviconDark} />
+              )
+            )}
+            {config.description && (
+              <>
+                <Head.Meta name='description' content={config.description} />
+                <Head.Meta property='og:description' content={config.description} />
+              </>
+            )}
+            <Head.Meta property='og:site_name' content={config.name} />
+            <Head.Title>{config.name}</Head.Title>
           </Head>
           <body>{children}</body>
         </html>
@@ -478,7 +509,10 @@ export function createHolocronApp() {
           <Head>
             <Head.Title>{loaderData.headTitle}</Head.Title>
             {loaderData.currentPageDescription && (
-              <Head.Meta name='description' content={loaderData.currentPageDescription} />
+              <>
+                <Head.Meta name='description' content={loaderData.currentPageDescription} />
+                <Head.Meta property='og:description' content={loaderData.currentPageDescription} />
+              </>
             )}
           </Head>
           <EditorialPage sections={sections} hero={hero} />

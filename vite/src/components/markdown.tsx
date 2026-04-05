@@ -12,15 +12,15 @@ import { flushSync } from 'react-dom'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { Link, router } from 'spiceflow/react'
 import type { TocNodeType, TocTreeNode } from './toc-tree.ts'
-import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, getActiveGroups } from '../navigation.ts'
+import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, getActiveGroups, hasVisibleSidebarEntries } from '../navigation.ts'
 import { createSearchDb, searchSidebar, emptySearchState, type SearchState } from './search.ts'
 import {
+  config as siteConfig,
   navigation as siteNavigation,
-  siteName as defaultSiteName,
-  logoSrc as defaultLogoSrc,
   tabs as siteTabs,
   headerLinks as siteHeaderLinks,
   searchEntries as siteSearchEntries,
+  collectDefaultExpandedKeys,
 } from '../data.ts'
 import { useHolocronData } from '../router.ts'
 
@@ -399,6 +399,12 @@ function NavGroupNode({
   highlightedHref: string | null
   highlightedRef: React.RefObject<HTMLAnchorElement | null>
 }) {
+  // Respect user's `hidden: true` — skip both chrome and nested pages.
+  // Pages under a hidden group remain routable, they're just absent
+  // from the sidebar. Also prune groups that have no visible entries
+  // (e.g. a wrapper group whose only descendants are all hidden).
+  if (!hasVisibleSidebarEntries(group)) return null
+
   const groupKey = parentPath ? `${parentPath}\0${group.group}` : group.group
 
   if (depth === 0) {
@@ -544,8 +550,18 @@ export function SideNav() {
   const fallbackId = currentHeadings[0]?.slug ?? ''
   const { activeId } = useActiveTocState({ fallbackId })
 
+  // Seed expanded-groups with:
+  //  - Ancestors of the current page (always — ensures the current page is
+  //    visible in the sidebar after deep-linking / SSR).
+  //  - Groups that the config marks `expanded: true` by default.
+  // Both sets use the same path-based key (`\0`-joined group names), so
+  // merging them into one Set is safe.
+  const defaultExpandedKeys = useMemo(
+    () => collectDefaultExpandedKeys(groups),
+    [groups],
+  )
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    () => new Set(ancestorGroupKeys),
+    () => new Set([...ancestorGroupKeys, ...defaultExpandedKeys]),
   )
 
   // Re-expand ancestor groups when currentPage changes (client-side navigation).
@@ -1868,8 +1884,9 @@ export function EditorialPage({
   hero?: React.ReactNode
 }) {
   const { activeTabHref } = useHolocronData()
-  const logo = defaultLogoSrc
-  const siteName = defaultSiteName
+  const logo = siteConfig.logo.light
+  const logoLinkHref = siteConfig.logo.href || '/'
+  const siteName = siteConfig.name
   const tabs = siteTabs
   const headerLinks = siteHeaderLinks
   const activeTab = activeTabHref
@@ -1886,7 +1903,7 @@ export function EditorialPage({
       <div className='slot-navbar'>
         {/* Top row: logo + right links */}
         <div className='mx-auto flex items-center justify-between px-(--mobile-padding) py-(--header-padding-y) lg:max-w-(--grid-max-width) lg:px-0'>
-          <Link href='/' className='slot-logo no-underline flex items-center'>
+          <Link href={logoLinkHref} className='slot-logo no-underline flex items-center'>
             {logo ? (
               <img
                 src={logo}
@@ -1917,7 +1934,15 @@ export function EditorialPage({
                       aria-label={link.label}
                       className='no-underline flex items-center text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
                     >
-                      {link.icon}
+                      {/* Only string (URL path) icons render here. Structured
+                          icon objects ({ name, library, style }) are rendered
+                          by the icon resolver component once it ships — until
+                          then they're stored in the config data but silently
+                          skipped in the UI (matching previous behaviour where
+                          `link.icon` was always `undefined`). */}
+                      {typeof link.icon === 'string' && (
+                        <img src={link.icon} alt='' width={16} height={16} style={{ display: 'block' }} />
+                      )}
                     </a>
                   )
                 })}
