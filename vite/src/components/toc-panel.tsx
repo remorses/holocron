@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
+import { useHolocronData } from '../router.ts'
 
 /** Simple className joiner — filters falsy values and joins. */
 function cn(...args: (string | false | null | undefined)[]): string {
@@ -101,14 +102,17 @@ function useThumb({
 /* ── Main component ──────────────────────────────────────────────────── */
 
 export function TableOfContentsPanel({
-  headings,
+  headings: propHeadings,
   title = 'On this page',
   className,
 }: {
-  headings: NavHeading[]
+  /** Optional — falls back to the active page's headings from loader data. */
+  headings?: NavHeading[]
   title?: string
   className?: string
 }) {
+  const { currentHeadings } = useHolocronData()
+  const headings = propHeadings ?? currentHeadings
   const fallbackId = headings[0]?.slug ?? ''
   const { activeId: observerActiveId, visibleIds } = useActiveTocState({ fallbackId })
   const [manualId, setManualId] = useState<string | null>(null)

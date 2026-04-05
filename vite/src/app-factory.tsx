@@ -1,6 +1,19 @@
 /**
  * Holocron app factory — creates the Spiceflow app with all routes.
  *
+ * Architecture:
+ *
+ *   .loader('/*')  → per-request minimal data (current page, headings,
+ *                    ancestor keys). RSC-flight serialized to both server
+ *                    page handler and client components (via useHolocronData).
+ *
+ *   .page('/*')    → parses MDX, renders sections/hero as server JSX,
+ *                    hands them to EditorialPage.
+ *
+ * Static site data (navigation tree, tabs, header links, search entries)
+ * lives in `./data.ts` and is bundled into the client chunk ONCE — never
+ * re-shipped through the per-request loader payload.
+ *
  * All MDX content and image metadata is pre-processed at build time.
  * Request-time rendering is just: parse mdast → render RSC components.
  * Zero file I/O, zero sharp, zero image-size — works on Cloudflare.
@@ -14,6 +27,7 @@ import { SafeMdxRenderer } from 'safe-mdx'
 import { mdxParse } from 'safe-mdx/parse'
 import type { Root, Heading, RootContent, Image } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
+import mdxContent from 'virtual:holocron-mdx'
 import {
   EditorialPage,
   Aside,
@@ -31,25 +45,25 @@ import {
   List,
   OL,
   Li,
-  type TabItem,
-  type HeaderLink,
   type HeadingLevel,
   type EditorialSection,
 } from '@holocron.so/vite/components/markdown'
 import { slugify, extractText } from './components/toc-tree.ts'
 import { TableOfContentsPanel } from './components/toc-panel.tsx'
 import { NotFound } from './components/not-found.tsx'
-import type { HolocronConfig } from './config.ts'
 import {
-  type Navigation,
-  type NavTab,
-  type NavPage,
-  isNavPage,
-  isNavGroup,
-  getActiveGroups,
   findPage,
   collectAllPages,
+  type NavHeading,
 } from './navigation.ts'
+import {
+  navigation,
+  siteName,
+  firstPage,
+  faviconLight as faviconHref,
+  collectAncestorGroupKeys,
+  resolveActiveTabHref,
+} from './data.ts'
 
 /* ── MDX section splitting ──────────────────────────────────────────── */
 
@@ -70,9 +84,28 @@ function isHeroNode(node: RootContent): boolean {
   return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Hero'
 }
 
+/** Filter out mdast node types that render to nothing so they don't create
+ *  empty grid rows. Frontmatter (`yaml`/`toml`) and link reference definitions
+ *  are the main culprits — they appear as top-level children but produce no
+ *  visible output. Leaving them in would add an extra empty `slot-main` +
+ *  `--section-gap` before the first real section. */
+function isInvisibleNode(node: RootContent): boolean {
+  const t = (node as { type: string }).type
+  return t === 'yaml' || t === 'toml' || t === 'definition'
+}
+
 type MdastSection = {
   contentNodes: RootContent[]
   asideNodes: RootContent[]
+  /** How many section rows this section's aside spans on desktop.
+   *  1 (default) for per-section asides; N for a shared `<Aside full>`
+   *  range, where N is the number of sub-sections.
+   *
+   *  For a shared full aside, the aside is attached to the LAST sub-section
+   *  of its range (so on mobile it stacks at the end of the content range).
+   *  On desktop the renderer computes the starting grid row from the
+   *  section's own index and the span: `start = thisRow - span + 1`. */
+  asideRowSpan?: number
   fullWidth?: boolean
 }
 
@@ -81,7 +114,12 @@ function groupBySections(root: Root): MdastSection[] {
   let current: MdastSection = { contentNodes: [], asideNodes: [] }
 
   for (const node of root.children) {
-    if (node.type === 'heading' && (node as Heading).depth === 2) {
+    // Split on ANY heading depth (#, ##, ###, ####, #####, ######) so every
+    // heading gets its own grid row with --section-gap above it. This keeps
+    // vertical rhythm uniform regardless of heading hierarchy — headings
+    // always stand out with 48px breathing room, and content under a
+    // heading flows with the tighter --prose-gap inside each section.
+    if (node.type === 'heading') {
       if (current.contentNodes.length > 0 || current.asideNodes.length > 0) {
         sections.push(current)
       }
@@ -110,15 +148,23 @@ function groupBySections(root: Root): MdastSection[] {
 /**
  * Build sections with support for `<Aside full>`.
  *
- * A full aside merges all content after it into one section (no splitting
- * at ## headings) until the next `<Aside>` of any kind or end of document.
- * Sections before the first full aside are split normally at ## headings.
+ * A full aside spans every sub-section between itself and the next
+ * `<Aside full>` (or EOF). Unlike the earlier "merged" approach, we STILL
+ * split content at EVERY heading level inside a full-aside range — each
+ * sub-section gets its own row in the page grid, separated by `--section-gap`.
+ * The shared
+ * aside is attached to the first sub-section with `asideRowSpan` set to the
+ * number of sub-sections, so on desktop it lives in a CSS grid cell spanning
+ * all those rows (`grid-row: N / span M`). Inside that tall cell a
+ * `position: sticky` aside can scroll alongside the whole range.
  *
- * This means a single `<Aside full>` at the top of a page makes its aside
- * span every section. Two full asides partition the page into two big rows.
+ * Sections BEFORE the first full aside still use normal per-section asides
+ * (asideRowSpan = 1).
  */
 function buildSections(root: Root): MdastSection[] {
-  const children = root.children
+  // Strip invisible nodes (frontmatter, link definitions) from the top level
+  // so they don't get swept into a leading empty section by groupBySections.
+  const children = root.children.filter((n) => !isInvisibleNode(n))
 
   // Find indices of all <Aside full> nodes
   const fullAsideIndices: number[] = []
@@ -131,7 +177,7 @@ function buildSections(root: Root): MdastSection[] {
 
   // No full asides → split normally (existing behavior)
   if (fullAsideIndices.length === 0) {
-    return groupBySections(root)
+    return groupBySections({ type: 'root', children } as Root)
   }
 
   const sections: MdastSection[] = []
@@ -143,59 +189,200 @@ function buildSections(root: Root): MdastSection[] {
     sections.push(...groupBySections(before))
   }
 
-  // Each full aside range: merge all content until the next full aside (or end)
+  // Each full-aside range: split at ## into sub-sections; first sub-section
+  // owns the shared aside with row-span = number of sub-sections.
   for (let r = 0; r < fullAsideIndices.length; r++) {
     const start = fullAsideIndices[r]!
     const end = fullAsideIndices[r + 1] ?? children.length
 
     const rangeNodes = children.slice(start + 1, end)
-    const contentNodes = rangeNodes.filter((n) => !isAsideNode(n) && !isFullWidthNode(n))
-    const asideNodes = [children[start]!]
+    const contentOnly = rangeNodes.filter((n) => !isAsideNode(n) && !isFullWidthNode(n))
+    const asideNode = children[start]!
 
-    sections.push({ contentNodes, asideNodes })
+    const contentRoot: Root = { type: 'root', children: contentOnly }
+    const subSections = groupBySections(contentRoot)
+
+    if (subSections.length === 0) {
+      sections.push({ contentNodes: [], asideNodes: [asideNode], asideRowSpan: 1 })
+      continue
+    }
+
+    // Attach the shared aside to the LAST sub-section (for clean mobile stacking
+    // at the end of its range). Desktop rendering uses asideRowSpan to compute
+    // an explicit `grid-row: start / span N` that covers all sub-sections.
+    const lastSub = subSections[subSections.length - 1]!
+    lastSub.asideNodes = [asideNode]
+    lastSub.asideRowSpan = subSections.length
+    sections.push(...subSections)
   }
 
   return sections
 }
 
+/* ── MDX render helpers (module-scope, shared across all requests) ──── */
+
+function PixelatedImageWithProps(props: {
+  src: string
+  alt: string
+  width?: number
+  height?: number
+  placeholder?: string
+  className?: string
+}) {
+  return (
+    <PixelatedImage
+      src={props.src}
+      alt={props.alt}
+      width={props.width || 0}
+      height={props.height || 0}
+      placeholder={props.placeholder}
+      className={props.className || ''}
+    />
+  )
+}
+
+const mdxComponents = {
+  p: P,
+  a: A,
+  code: Code,
+  ul: List,
+  ol: OL,
+  li: Li,
+  Caption,
+  ComparisonTable,
+  PixelatedImage: PixelatedImageWithProps,
+  Bleed,
+  Aside,
+  FullWidth,
+  Hero,
+  // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
+  // No more per-page closure binding.
+  TableOfContentsPanel,
+}
+
+function renderNode(
+  node: MyRootContent,
+  transform: (node: MyRootContent) => ReactNode,
+): ReactNode | undefined {
+  if (node.type === 'image') {
+    const imgNode = node as Image
+    return <PixelatedImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
+  }
+  if (node.type === 'heading') {
+    const heading = node as Heading
+    const text = extractText(heading.children)
+    const id = slugify(text)
+    const level = Math.min(heading.depth - 1, 3) as HeadingLevel
+    return (
+      <SectionHeading key={id} id={id} level={level}>
+        {heading.children.map((child, i) => {
+          return <Fragment key={i}>{transform(child as MyRootContent)}</Fragment>
+        })}
+      </SectionHeading>
+    )
+  }
+  if (node.type === 'code') {
+    const codeNode = node as { lang?: string; value: string }
+    const lang = codeNode.lang || 'bash'
+    const isDiagram = lang === 'diagram'
+    return (
+      <CodeBlock lang={lang} lineHeight={isDiagram ? '1.3' : '1.6'} showLineNumbers={!isDiagram}>
+        {codeNode.value}
+      </CodeBlock>
+    )
+  }
+  return undefined
+}
+
+function RenderNodes({ markdown, nodes }: { markdown: string; nodes: RootContent[] }) {
+  const syntheticRoot: Root = { type: 'root', children: nodes }
+  return (
+    <SafeMdxRenderer
+      markdown={markdown}
+      mdast={syntheticRoot as MyRootContent}
+      components={mdxComponents}
+      renderNode={renderNode}
+    />
+  )
+}
+
+/* ── Loader data type ────────────────────────────────────────────────── */
+
+/**
+ * Per-request data produced by `.loader('/*')`. Serialized via RSC flight
+ * to both the page handler (via `loaderData`) and every client component
+ * (via `useHolocronData()` from `@holocron.so/vite/react`).
+ *
+ * Intentionally MINIMAL — static data (navigation tree, tabs, header
+ * links, search entries) lives in `./data.ts` and is bundled into the
+ * client chunk once. Only per-request state flows through this payload.
+ */
+export type HolocronLoaderData = {
+  /** Active page href, or `undefined` on 404. */
+  currentPageHref: string | undefined
+  /** Active page title, or `undefined` on 404. */
+  currentPageTitle: string | undefined
+  /** Active page description (for meta tag), or `undefined`. */
+  currentPageDescription: string | undefined
+  /** Flat heading list for the active page — used by TOC scroll tracking. */
+  currentHeadings: NavHeading[]
+  /** Path-based keys (`\0`-joined) of groups that should start expanded. */
+  ancestorGroupKeys: string[]
+  /** Href of the tab that contains the active page. */
+  activeTabHref: string | undefined
+  /** Original requested path when a 404 occurred (includes leading slash). */
+  notFoundPath: string | undefined
+  /** Fully-composed `<title>` text (includes site name suffix). */
+  headTitle: string
+  /** Value for `<meta name="robots">`, or `undefined` to omit the tag. */
+  headRobots: string | undefined
+}
+
 /* ── App factory ─────────────────────────────────────────────────────── */
 
-export function createHolocronApp({
-  config,
-  navigation,
-  mdxContent,
-}: {
-  config: HolocronConfig
-  navigation: Navigation
-  /** Pre-processed MDX content keyed by page slug. Server-only. */
-  mdxContent: Record<string, string>
-}) {
-  // Build tab items: navigation tabs + anchors
-  const navTabItems: TabItem[] = navigation
-    .filter((t) => {
-      return t.tab !== ''
-    })
-    .map((t) => {
-      const firstPage = findFirstPageInTab(t)
-      return {
-        label: t.tab,
-        href: firstPage?.href || '/',
-      }
-    })
-  const anchorItems: TabItem[] = config.navigation.anchors.map((a) => {
-    return { label: a.anchor, href: a.href }
-  })
-  const tabItems: TabItem[] = [...navTabItems, ...anchorItems]
-
-  // navbar.links → header links
-  const headerLinks: HeaderLink[] = config.navbar.links.map((link) => {
-    return { href: link.href, label: link.label }
-  })
-
-  const logoSrc = config.logo.light || undefined
-
+export function createHolocronApp() {
   return new Spiceflow()
     .use(serveStatic({ root: './public' }))
+    .loader('/*', async ({ params, response }): Promise<HolocronLoaderData> => {
+      const rawSlug = (params as Record<string, string>)['*'] || ''
+      const slug = rawSlug === '' ? 'index' : rawSlug
+
+      const currentPage = findPage(navigation, slug)
+      const hasMdx = currentPage ? mdxContent[slug] !== undefined : false
+
+      // Root path with no index page → redirect to first page in navigation
+      if (!currentPage && (slug === 'index' || slug === '') && firstPage) {
+        throw redirect(firstPage.href)
+      }
+
+      // 404 case — either the page isn't in navigation, or its MDX is missing
+      if (!currentPage || !hasMdx) {
+        response.status = 404
+        return {
+          currentPageHref: undefined,
+          currentPageTitle: undefined,
+          currentPageDescription: undefined,
+          currentHeadings: [],
+          ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(firstPage.href) : [],
+          activeTabHref: resolveActiveTabHref(firstPage?.href),
+          notFoundPath: '/' + rawSlug,
+          headTitle: `Page not found — ${siteName}`,
+          headRobots: 'noindex',
+        }
+      }
+
+      return {
+        currentPageHref: currentPage.href,
+        currentPageTitle: currentPage.title,
+        currentPageDescription: currentPage.description,
+        currentHeadings: currentPage.headings,
+        ancestorGroupKeys: collectAncestorGroupKeys(currentPage.href),
+        activeTabHref: resolveActiveTabHref(currentPage.href),
+        notFoundPath: undefined,
+        headTitle: `${currentPage.title} — ${siteName}`,
+        headRobots: undefined,
+      }
+    })
     .layout('/*', async ({ children }) => {
       return (
         <html lang='en'>
@@ -210,199 +397,77 @@ export function createHolocronApp({
               rel='stylesheet'
               precedence='default'
             />
-            {config.favicon.light && <link rel='icon' href={config.favicon.light} />}
-            <Head.Title>{config.name}</Head.Title>
+            {faviconHref && <link rel='icon' href={faviconHref} />}
+            <Head.Title>{siteName}</Head.Title>
           </Head>
           <body>{children}</body>
         </html>
       )
     })
-    .page('/*', async ({ params, response }) => {
-      const rawSlug = (params as Record<string, string>)['*'] || ''
-      const slug = rawSlug === '' ? 'index' : rawSlug
+    .page('/*', async ({ params, loaderData: rawLoaderData }) => {
+      // Spiceflow's page-handler context does not (yet) thread the loader
+      // return type into its own `loaderData` slot — only the typed client
+      // router exposes it. Cast once here so the rest of the handler is safe.
+      const loaderData = rawLoaderData as unknown as HolocronLoaderData
 
-      let pageData = findPage(navigation, slug)
-
-      // Root path with no index page → redirect to first page in navigation
-      if (!pageData && (slug === 'index' || slug === '')) {
-        const firstPage = navigation[0] ? findFirstPageInTab(navigation[0]) : undefined
-        if (firstPage) {
-          throw redirect(firstPage.href)
-        }
-      }
-
-      // MDX content is separate from nav tree (server-only, not in client bundle)
-      const pageMdx = pageData ? mdxContent[slug] : undefined
-
-      // No matching page, or MDX file is missing → render a nice 404 page
-      // inside the normal EditorialPage shell so the user can still navigate.
-      if (!pageData || !pageMdx) {
-        response.status = 404
-
-        // Use first tab's first page as fallback home + sidebar context
-        const fallbackFirstPage = navigation[0] ? findFirstPageInTab(navigation[0]) : undefined
-        const fallbackGroups = fallbackFirstPage
-          ? getActiveGroups(navigation, fallbackFirstPage.href)
-          : []
-
-        const missingPath = '/' + rawSlug
-
+      // 404 branch — render inside the normal shell so the user can navigate
+      if (loaderData.notFoundPath) {
         return (
           <>
             <Head>
-              <Head.Title>{`Page not found — ${config.name}`}</Head.Title>
-              <Head.Meta name='robots' content='noindex' />
+              <Head.Title>{loaderData.headTitle}</Head.Title>
+              {loaderData.headRobots && (
+                <Head.Meta name='robots' content={loaderData.headRobots} />
+              )}
             </Head>
-            <EditorialPage
-              groups={fallbackGroups}
-              logo={logoSrc}
-              siteName={config.name}
-              tabs={tabItems}
-              activeTab={tabItems[0]?.href}
-              headerLinks={headerLinks}
-            >
-              <NotFound path={missingPath} homeHref={fallbackFirstPage?.href || '/'} />
+            <EditorialPage>
+              <NotFound
+                path={loaderData.notFoundPath}
+                homeHref={firstPage?.href || '/'}
+              />
             </EditorialPage>
           </>
         )
       }
 
+      // Happy path — parse MDX and render sections + hero as server JSX
+      const rawSlug = (params as Record<string, string>)['*'] || ''
+      const slug = rawSlug === '' ? 'index' : rawSlug
+      const pageMdx = mdxContent[slug]!
+
       const mdast = mdxParse(pageMdx) as Root
-
-      // Extract hero nodes
       const heroNodes = mdast.children.filter(isHeroNode)
-      const contentChildren = mdast.children.filter((node) => {
-        return !isHeroNode(node)
-      })
+      const contentChildren = mdast.children.filter((node) => !isHeroNode(node))
       const contentMdast: Root = { type: 'root', children: contentChildren }
-
-      // Sidebar groups for current tab
-      const activeGroups = getActiveGroups(navigation, pageData.href)
-
-      // Split into sections (respects <Aside full> merging)
       const mdastSections = buildSections(contentMdast)
 
-      // Image component — reads width/height/placeholder from its own JSX attrs
-      // (injected at build time by rewriteMdxImages)
-      function PixelatedImageWithProps(props: {
-        src: string
-        alt: string
-        width?: number
-        height?: number
-        placeholder?: string
-        className?: string
-      }) {
-        return (
-          <PixelatedImage
-            src={props.src}
-            alt={props.alt}
-            width={props.width || 0}
-            height={props.height || 0}
-            placeholder={props.placeholder}
-            className={props.className || ''}
-          />
-        )
-      }
-
-      // Bind current page headings so MDX users can write <TableOfContentsPanel />
-      // without passing headings manually. Custom headings can still be passed to override.
-      const currentHeadings = pageData.headings
-      function BoundTableOfContentsPanel(props: Partial<React.ComponentProps<typeof TableOfContentsPanel>>) {
-        return <TableOfContentsPanel headings={currentHeadings} {...props} />
-      }
-
-      const mdxComponents = {
-        p: P,
-        a: A,
-        code: Code,
-        ul: List,
-        ol: OL,
-        li: Li,
-        Caption,
-        ComparisonTable,
-        PixelatedImage: PixelatedImageWithProps,
-        Bleed,
-        Aside,
-        FullWidth,
-        Hero,
-        TableOfContentsPanel: BoundTableOfContentsPanel,
-      }
-
-      function renderNode(node: MyRootContent, transform: (node: MyRootContent) => ReactNode): ReactNode | undefined {
-        if (node.type === 'image') {
-          const imgNode = node as Image
-          return <PixelatedImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
-        }
-        if (node.type === 'heading') {
-          const heading = node as Heading
-          const text = extractText(heading.children)
-          const id = slugify(text)
-          const level = Math.min(heading.depth - 1, 3) as HeadingLevel
-          return (
-            <SectionHeading key={id} id={id} level={level}>
-              {heading.children.map((child, i) => {
-                return <Fragment key={i}>{transform(child as MyRootContent)}</Fragment>
-              })}
-            </SectionHeading>
-          )
-        }
-        if (node.type === 'code') {
-          const codeNode = node as { lang?: string; value: string }
-          const lang = codeNode.lang || 'bash'
-          const isDiagram = lang === 'diagram'
-          return (
-            <CodeBlock lang={lang} lineHeight={isDiagram ? '1.3' : '1.6'} showLineNumbers={!isDiagram}>
-              {codeNode.value}
-            </CodeBlock>
-          )
-        }
-        return undefined
-      }
-
-      function RenderNodes({ nodes }: { nodes: RootContent[] }) {
-        const syntheticRoot: Root = { type: 'root', children: nodes }
-        return (
-          <SafeMdxRenderer
-            markdown={pageMdx}
-            mdast={syntheticRoot as MyRootContent}
-            components={mdxComponents}
-            renderNode={renderNode}
-          />
-        )
-      }
-
       const sections: EditorialSection[] = mdastSections.map((section) => {
-        const aside = section.asideNodes.length > 0 ? <RenderNodes nodes={section.asideNodes} /> : undefined
+        const aside =
+          section.asideNodes.length > 0 ? (
+            <RenderNodes markdown={pageMdx} nodes={section.asideNodes} />
+          ) : undefined
         return {
-          content: <RenderNodes nodes={section.contentNodes} />,
+          content: <RenderNodes markdown={pageMdx} nodes={section.contentNodes} />,
           aside,
           fullWidth: section.fullWidth,
+          asideRowSpan: section.asideRowSpan,
         }
       })
 
-      const heroContent = heroNodes.length > 0 ? <RenderNodes nodes={heroNodes} /> : undefined
-
-      const activeTabHref = tabItems.find((t) => {
-        return pageData.href.startsWith(t.href) && t.href !== '/'
-      })?.href || tabItems[0]?.href
+      const hero =
+        heroNodes.length > 0 ? (
+          <RenderNodes markdown={pageMdx} nodes={heroNodes} />
+        ) : undefined
 
       return (
         <>
           <Head>
-            <Head.Title>{`${pageData.title} — ${config.name}`}</Head.Title>
-            {pageData.description && <Head.Meta name='description' content={pageData.description} />}
+            <Head.Title>{loaderData.headTitle}</Head.Title>
+            {loaderData.currentPageDescription && (
+              <Head.Meta name='description' content={loaderData.currentPageDescription} />
+            )}
           </Head>
-          <EditorialPage
-            groups={activeGroups}
-            currentPage={pageData}
-            logo={logoSrc}
-            siteName={config.name}
-            tabs={tabItems}
-            activeTab={activeTabHref}
-            headerLinks={headerLinks}
-            sections={sections}
-            hero={heroContent}
-          />
+          <EditorialPage sections={sections} hero={hero} />
         </>
       )
     })
@@ -438,21 +503,12 @@ export function createHolocronApp({
     })
 }
 
-/* ── Helpers ─────────────────────────────────────────────────────────── */
+/* ── Public type for the client router ───────────────────────────────── */
 
-function findFirstPageInTab(tab: NavTab): NavPage | undefined {
-  for (const group of tab.groups) {
-    for (const entry of group.pages) {
-      if (isNavPage(entry)) {
-        return entry
-      }
-      if (isNavGroup(entry)) {
-        const found = findFirstPageInTab({ tab: '', groups: [entry] })
-        if (found) {
-          return found
-        }
-      }
-    }
-  }
-  return undefined
-}
+/**
+ * The fully-typed Spiceflow app instance. Use this with `createRouter<App>()`
+ * in client code to get typed `useLoaderData`, `href`, and `router` bindings.
+ * The actual router module (`./router.ts`) already does this — client
+ * components should import from `@holocron.so/vite/react` directly.
+ */
+export type HolocronApp = ReturnType<typeof createHolocronApp>

@@ -14,3 +14,7 @@ export {
   buildPageIndex,
 } from './navigation.ts'
 export { TableOfContentsPanel } from './components/toc-panel.tsx'
+
+/* ── Typed client router + loader data ───────────────────────────────── */
+
+export type { HolocronApp, HolocronLoaderData } from './app-factory.tsx'

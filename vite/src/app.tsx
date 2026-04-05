@@ -1,14 +1,13 @@
 /**
  * Holocron Spiceflow app entry — server-rendered documentation site.
  *
- * Imports config + navigation (lightweight, client-safe) and MDX content
- * (server-only) from virtual modules.
+ * Static site data (config, navigation, tabs, etc.) comes from `./data.ts`
+ * which imports from `virtual:holocron-config`. MDX content and the app
+ * factory live in `./app-factory.tsx` — this file just instantiates the
+ * app and exposes the typed entrypoint.
  */
 
-import { config, navigation } from 'virtual:holocron-config'
-import mdxContent from 'virtual:holocron-mdx'
+import { createHolocronApp, type HolocronApp } from './app-factory.tsx'
 
-import { createHolocronApp } from './app-factory.tsx'
-
-export const app = createHolocronApp({ config, navigation, mdxContent })
-export type App = typeof app
+export const app = createHolocronApp()
+export type App = HolocronApp

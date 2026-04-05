@@ -35,6 +35,14 @@
       "types": "./dist/navigation.d.ts",
       "default": "./dist/navigation.js"
     },
+    "./react": {
+      "types": "./dist/router.d.ts",
+      "default": "./dist/router.js"
+    },
+    "./data": {
+      "types": "./dist/data.d.ts",
+      "default": "./dist/data.js"
+    },
     "./app-factory": {
       "types": "./dist/app-factory.d.ts",
       "default": "./dist/app-factory.js"

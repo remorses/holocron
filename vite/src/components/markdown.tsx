@@ -11,8 +11,17 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { Link } from 'spiceflow/react'
 import type { TocNodeType, TocTreeNode } from './toc-tree.ts'
-import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup } from '../navigation.ts'
-import { createSearchDb, searchSidebar, emptySearchState, type SearchEntry, type SearchState } from './search.ts'
+import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, getActiveGroups } from '../navigation.ts'
+import { createSearchDb, searchSidebar, emptySearchState, type SearchState } from './search.ts'
+import {
+  navigation as siteNavigation,
+  siteName as defaultSiteName,
+  logoSrc as defaultLogoSrc,
+  tabs as siteTabs,
+  headerLinks as siteHeaderLinks,
+  searchEntries as siteSearchEntries,
+} from '../data.ts'
+import { useHolocronData } from '../router.ts'
 
 export type { TocNodeType, TocTreeNode }
 import * as PrismModule from 'prismjs'
@@ -152,6 +161,7 @@ function TocInline({ headings, activeId, searchState, pageHref }: { headings: Na
           const isActive = heading.slug === activeId
           const headingHref = `${pageHref}#${heading.slug}`
           const isDimmed = searchState.dimmedHrefs?.has(headingHref) ?? false
+          const isSearchActive = searchState.matchedHrefs !== null
           return (
             <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.15s ease' }}>
               <a
@@ -159,8 +169,8 @@ function TocInline({ headings, activeId, searchState, pageHref }: { headings: Na
                 className='block leading-4 no-underline transition-colors duration-[120ms]'
                 tabIndex={isDimmed ? -1 : 0}
                 style={{
-                  color: isActive ? 'var(--sidebar-toc-foreground-active)' : 'var(--sidebar-toc-foreground)',
-                  fontWeight: isActive ? 500 : 400,
+                  color: (isSearchActive && !isDimmed) ? 'var(--sidebar-toc-foreground-active)' : isActive ? 'var(--sidebar-toc-foreground-active)' : 'var(--sidebar-toc-foreground)',
+                  fontWeight: (isSearchActive && !isDimmed) ? 500 : isActive ? 500 : 400,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -222,18 +232,18 @@ function ExpandableContainer({ open, children }: { open: boolean; children: Reac
 
 function NavPageLink({
   page,
-  currentPage,
+  currentPageHref,
   activeHeadingId,
   depth,
   searchState,
 }: {
   page: NavPage
-  currentPage?: NavPage
+  currentPageHref?: string
   activeHeadingId: string
   depth: number
   searchState: SearchState
 }) {
-  const isActive = page.href === currentPage?.href
+  const isActive = page.href === currentPageHref
   const isDimmed = searchState.dimmedHrefs?.has(page.href) ?? false
   const isSearchActive = searchState.matchedHrefs !== null
   /* When search is active and this page matched, expand its TOC so headings are visible */
@@ -247,8 +257,8 @@ function NavPageLink({
         className='block text-xs no-underline transition-colors duration-150'
         tabIndex={isDimmed ? -1 : 0}
         style={{
-          fontVariationSettings: isActive ? '"wght" 550' : '"wght" 450',
-          color: isActive ? 'var(--sidebar-foreground-active)' : 'var(--sidebar-foreground)',
+          fontVariationSettings: (isActive || (isSearchActive && !isDimmed)) ? '"wght" 550' : '"wght" 450',
+          color: (isSearchActive && !isDimmed) ? 'var(--sidebar-foreground-active)' : isActive ? 'var(--sidebar-foreground-active)' : 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
           transition: 'color 0.15s, font-variation-settings 0.25s',
         }}
@@ -282,7 +292,7 @@ function NavGroupNode({
   group,
   depth,
   parentPath,
-  currentPage,
+  currentPageHref,
   expandedGroups,
   onToggleGroup,
   activeHeadingId,
@@ -292,7 +302,7 @@ function NavGroupNode({
   depth: number
   /** Ancestor group names joined by \0 — ensures unique keys even for duplicate group labels */
   parentPath: string
-  currentPage?: NavPage
+  currentPageHref?: string
   expandedGroups: Set<string>
   onToggleGroup: (groupKey: string) => void
   activeHeadingId: string
@@ -318,7 +328,7 @@ function NavGroupNode({
               <NavPageLink
                 key={entry.href}
                 page={entry}
-                currentPage={currentPage}
+                currentPageHref={currentPageHref}
                 activeHeadingId={activeHeadingId}
                 depth={0}
                 searchState={searchState}
@@ -332,7 +342,7 @@ function NavGroupNode({
                 group={entry}
                 depth={depth + 1}
                 parentPath={groupKey}
-                currentPage={currentPage}
+                currentPageHref={currentPageHref}
                 expandedGroups={expandedGroups}
                 onToggleGroup={onToggleGroup}
                 activeHeadingId={activeHeadingId}
@@ -378,7 +388,7 @@ function NavGroupNode({
                 <NavPageLink
                   key={entry.href}
                   page={entry}
-                  currentPage={currentPage}
+                  currentPageHref={currentPageHref}
                   activeHeadingId={activeHeadingId}
                   depth={depth}
                   searchState={searchState}
@@ -392,7 +402,7 @@ function NavGroupNode({
                   group={entry}
                   depth={depth + 1}
                   parentPath={groupKey}
-                  currentPage={currentPage}
+                  currentPageHref={currentPageHref}
                   expandedGroups={expandedGroups}
                   onToggleGroup={onToggleGroup}
                   activeHeadingId={activeHeadingId}
@@ -410,75 +420,47 @@ function NavGroupNode({
 
 /* ── SideNav — Agentation-style sidebar navigation ───────────────────── */
 
-function groupContainsPage(group: NavGroup, page: NavPage): boolean {
-  for (const entry of group.pages) {
-    if (isNavPage(entry) && entry.href === page.href) return true
-    if (isNavGroup(entry) && groupContainsPage(entry, page)) return true
-  }
-  return false
-}
+/**
+ * Zero-prop sidebar — reads navigation from the shared static module
+ * (`data.ts`) and per-request state (currentPageHref, ancestorGroupKeys)
+ * from the Spiceflow loader via `useHolocronData()`.
+ *
+ * Static imports like `siteNavigation` and `siteSearchEntries` are
+ * bundled into the client chunk ONCE and cached — they never travel
+ * through the per-request flight payload.
+ */
+export function SideNav() {
+  const {
+    currentPageHref,
+    currentHeadings,
+    ancestorGroupKeys,
+  } = useHolocronData()
 
-/** Collect path-based keys for all ancestor groups containing a page */
-function collectAncestorKeys(groups: NavGroup[], pageHref: string, parentPath: string, out: Set<string>) {
-  for (const group of groups) {
-    const key = parentPath ? `${parentPath}\0${group.group}` : group.group
-    if (groupContainsPage(group, { href: pageHref } as NavPage)) {
-      out.add(key)
-    }
-    for (const entry of group.pages) {
-      if (isNavGroup(entry)) {
-        collectAncestorKeys([entry], pageHref, key, out)
-      }
-    }
-  }
-}
+  // Active tab's groups. Derived from static nav + current href.
+  const groups = useMemo(
+    () => getActiveGroups(siteNavigation, currentPageHref ?? '/'),
+    [currentPageHref],
+  )
 
-/** Build a flat SearchEntry[] from the NavGroup tree for Orama indexing */
-function buildSearchEntries(groups: NavGroup[], parentPath: string): SearchEntry[] {
-  const entries: SearchEntry[] = []
-  for (const group of groups) {
-    const key = parentPath ? `${parentPath}\0${group.group}` : group.group
-    for (const entry of group.pages) {
-      if (isNavPage(entry)) {
-        entries.push({ label: entry.title, href: entry.href, groupPath: key, pageHref: null })
-        for (const h of entry.headings) {
-          entries.push({ label: h.text, href: `${entry.href}#${h.slug}`, groupPath: key, pageHref: entry.href })
-        }
-      } else if (isNavGroup(entry)) {
-        entries.push(...buildSearchEntries([entry], key))
-      }
-    }
-  }
-  return entries
-}
-
-export function SideNav({
-  groups,
-  currentPage,
-}: {
-  groups: NavGroup[]
-  currentPage?: NavPage
-}) {
-  const fallbackId = currentPage?.headings[0]?.slug ?? ''
+  const fallbackId = currentHeadings[0]?.slug ?? ''
   const { activeId } = useActiveTocState({ fallbackId })
 
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
-    const initial = new Set<string>()
-    if (currentPage) {
-      collectAncestorKeys(groups, currentPage.href, '', initial)
-    }
-    return initial
-  })
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    () => new Set(ancestorGroupKeys),
+  )
 
-  // Re-expand ancestor groups when currentPage changes (client-side navigation)
+  // Re-expand ancestor groups when currentPage changes (client-side navigation).
+  // ancestorGroupKeys comes from the loader — it updates atomically with the
+  // new flight payload, no manual tree walk needed.
   useEffect(() => {
-    if (!currentPage) return
     setExpandedGroups((prev) => {
       const next = new Set(prev)
-      collectAncestorKeys(groups, currentPage.href, '', next)
+      for (const key of ancestorGroupKeys) {
+        next.add(key)
+      }
       return next
     })
-  }, [currentPage?.href, groups])
+  }, [ancestorGroupKeys])
 
   const toggleGroup = useCallback((groupKey: string) => {
     setExpandedGroups((prev) => {
@@ -493,8 +475,12 @@ export function SideNav({
   }, [])
 
   // --- Search ---
-  const searchEntries = useMemo(() => buildSearchEntries(groups, ''), [groups])
-  const db = useMemo(() => createSearchDb({ entries: searchEntries }), [searchEntries])
+  // Use the static flat entry list from data.ts — built once at module load,
+  // not per render. The Orama DB is still memoized per mount.
+  const db = useMemo(
+    () => createSearchDb({ entries: siteSearchEntries }),
+    [],
+  )
 
   const [query, setQuery] = useState('')
   const [searchState, setSearchState] = useState<SearchState>(emptySearchState)
@@ -507,11 +493,11 @@ export function SideNav({
     (value: string) => {
       setQuery(value)
       startTransition(() => {
-        setSearchState(searchSidebar({ db, query: value, entries: searchEntries }))
+        setSearchState(searchSidebar({ db, query: value, entries: siteSearchEntries }))
         setHighlightedIndex(0)
       })
     },
-    [db, searchEntries],
+    [db],
   )
 
   // Scroll highlighted item into view
@@ -618,7 +604,7 @@ export function SideNav({
             group={group}
             depth={0}
             parentPath=''
-            currentPage={currentPage}
+            currentPageHref={currentPageHref}
             expandedGroups={expandedGroups}
             onToggleGroup={toggleGroup}
             activeHeadingId={activeId}
@@ -1322,23 +1308,26 @@ export function ComparisonTable({
    Active tab has 1.5px bottom indicator + faux bold via text-shadow.
    ========================================================================= */
 
-export type TabItem = {
-  label: string
-  href: string
-}
+export type { TabItem, HeaderLink } from '../data.ts'
 
 /* =========================================================================
    Aside — MDX component for right-sidebar content.
-   On desktop, extracted from content flow and rendered in grid column 5
-   via SectionRow. On mobile, renders inline as a styled callout.
+   On desktop, extracted from content flow and placed in the page grid's
+   second subgrid column (col 2 of the sections subgrid). On mobile,
+   renders inline as a styled callout at the end of its section.
    ========================================================================= */
 
 /** Aside is a marker component for MDX. On desktop, its children are extracted
  *  by the section grouping logic and rendered in the right sidebar slot.
- *  On mobile, SectionRow renders it inline. The component itself is a pass-through.
+ *  On mobile, it stacks inline after its section's content.
+ *  The component itself is a pass-through.
  *
- *  Use `<Aside full>` to merge all sections below into one row so the aside
- *  stays sticky for the rest of the page (or until the next `<Aside>`). */
+ *  Use `<Aside full>` to make the aside span every heading-introduced
+ *  sub-section after it (until the next `<Aside>` of any kind, or end of
+ *  page). Splits happen at every heading level (#, ##, ###, ...) so the
+ *  sub-sections still get `--section-gap` between them; the aside sits in
+ *  a grid cell with `grid-row: start / span N` so `position: sticky` keeps
+ *  it pinned alongside the full range. */
 export function Aside({ children, full }: { children: React.ReactNode; full?: boolean }) {
   void full // marker prop — used at parse time, not at render time
   return <>{children}</>
@@ -1359,24 +1348,6 @@ export function FullWidth({ children }: { children: React.ReactNode }) {
 
 export function Hero({ children, ...props }: { children: React.ReactNode } & React.ComponentPropsWithoutRef<'div'>) {
   return <div {...props}>{children}</div>
-}
-
-/* =========================================================================
-   SectionRow — renders one content section as a grid row.
-   Content goes in column 3, aside in column 5 (sticky).
-   ========================================================================= */
-
-export function SectionRow({ content, aside }: { content: React.ReactNode; aside?: React.ReactNode }) {
-  return (
-    <div className='contents lg:grid lg:grid-cols-subgrid lg:col-[2/-1]'>
-      <div className='slot-main flex flex-col gap-5 lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>{content}</div>
-      {aside && (
-        <div className='flex flex-col gap-3 my-2 p-3 rounded-(--border-radius-md) border border-(--border-subtle) text-(length:--type-toc-size) leading-[1.5] text-(color:--text-tree-label) lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto lg:my-0'>
-          {aside}
-        </div>
-      )}
-    </div>
-  )
 }
 
 /* =========================================================================
@@ -1466,7 +1437,7 @@ export function SidebarBanner({
   )
 }
 
-function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
+function TabLink({ tab, isActive }: { tab: { label: string; href: string }; isActive: boolean }) {
   const isExternal = tab.href.startsWith('http')
   const tabClassName = 'slot-tab no-underline text-(length:--type-toc-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
   const tabStyle = {
@@ -1552,47 +1523,48 @@ function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
    The grid centers the content column. The TOC column is sticky.
    ========================================================================= */
 
-export type HeaderLink = {
-  href: string
-  label: string
-  icon?: React.ReactNode
-}
-
 export type EditorialSection = {
   content: React.ReactNode
   aside?: React.ReactNode
   fullWidth?: boolean
+  /** How many grid rows this section's aside spans on desktop.
+   *  1 (default) for per-section asides. For a shared `<Aside full>`, the
+   *  aside is attached to the LAST sub-section of its range and the renderer
+   *  computes `grid-row: (thisRow - span + 1) / span ${span}` so the aside
+   *  cell covers every sub-section row. Inside that tall cell,
+   *  `position: sticky` keeps the aside pinned alongside all those rows. */
+  asideRowSpan?: number
 }
 
+/**
+ * Top-level page shell.
+ *
+ * All static site data (logo, site name, tabs, header links) comes from
+ * the shared `data.ts` module. Per-request state (active tab href) comes
+ * from the Spiceflow loader via `useHolocronData()`. JSX content
+ * (sections, hero, children) is still passed as props because it's
+ * request-specific pre-rendered server output.
+ */
 export function EditorialPage({
-  groups,
-  currentPage,
-  logo,
-  siteName,
-  tabs,
-  activeTab,
   sidebar,
-  headerLinks,
   children,
   sections,
   hero,
 }: {
-  groups: NavGroup[]
-  currentPage?: NavPage
-  logo?: string
-  /** Site name used for logo aria-label and fallback text */
-  siteName?: string
-  tabs?: TabItem[]
-  activeTab?: string
   sidebar?: React.ReactNode
-  headerLinks?: HeaderLink[]
   children?: React.ReactNode
   /** When provided, renders section rows with aside support instead of flat children */
   sections?: EditorialSection[]
   /** Page-level hero content rendered above the 3-column grid, aligned with center column. */
   hero?: React.ReactNode
 }) {
-  const hasTabBar = tabs && tabs.length > 0
+  const { activeTabHref } = useHolocronData()
+  const logo = defaultLogoSrc
+  const siteName = defaultSiteName
+  const tabs = siteTabs
+  const headerLinks = siteHeaderLinks
+  const activeTab = activeTabHref
+  const hasTabBar = tabs.length > 0
 
   return (
     <div
@@ -1677,33 +1649,68 @@ export function EditorialPage({
               flexDirection: 'column',
             }}
           >
-            <SideNav groups={groups} currentPage={currentPage} />
+            <SideNav />
           </div>
         </div>
 
         {sections ? (
-          <>
-            {/* Section-based layout: each section is a subgrid row with
-                content in column 3 and optional aside in column 5 (sticky). */}
-            <div className='contents lg:grid lg:grid-cols-subgrid lg:col-[2/-1]'>
-              <div className='slot-main flex flex-col gap-5 lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'></div>
-            </div>
+          /* Section-based layout: single subgrid container holds ALL sections.
+             On mobile: flex column with --section-gap between per-section
+             wrappers. Each per-section wrapper is itself a flex column with
+             --prose-gap so content + its aside stay tightly coupled. On
+             desktop: each per-section wrapper becomes `display: contents`
+             (via lg:contents) so its children (content + aside) flow into
+             the outer subgrid directly — content in col 1, aside in col 2.
+             Explicit `grid-row` per item lets a shared `<Aside full>` cell
+             span multiple rows so its `position: sticky` scrolls alongside
+             the whole range. First/last sections get zero edge spacing
+             automatically from flex/grid gap semantics. */
+          <div className='flex flex-col gap-(--section-gap) lg:grid lg:grid-cols-subgrid lg:col-[2/-1] lg:gap-y-(--section-gap)'>
             {sections.map((section, i) => {
+              const row = i + 1
               if (section.fullWidth) {
                 return (
-                  <div key={i} className='lg:col-[2/-1] text-(length:--type-body-size) my-5'>
-                    <div className='flex flex-col gap-5'>{section.content}</div>
+                  <div
+                    key={i}
+                    className='flex flex-col gap-(--prose-gap) text-(length:--type-body-size) lg:col-[1/-1]'
+                    style={{ gridRow: row }}
+                  >
+                    {section.content}
                   </div>
                 )
               }
-              return <SectionRow key={i} content={section.content} aside={section.aside} />
+              const span = section.asideRowSpan ?? 1
+              // For a shared aside attached to the last sub-section, start
+              // from `row - span + 1` so the cell covers the entire range.
+              const asideGridRow = span > 1 ? `${row - span + 1} / span ${span}` : `${row}`
+              return (
+                <div
+                  key={i}
+                  className='flex flex-col gap-(--prose-gap) lg:contents'
+                >
+                  <div
+                    className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'
+                    style={{ gridRow: row }}
+                  >
+                    {section.content}
+                  </div>
+                  {section.aside && (
+                    <div
+                      className='flex flex-col gap-3 p-3 rounded-(--border-radius-md) border border-(--border-subtle) text-(length:--type-toc-size) leading-[1.5] text-(color:--text-tree-label) lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto'
+                      style={{ gridRow: asideGridRow }}
+                    >
+                      {section.aside}
+                    </div>
+                  )}
+                </div>
+              )
             })}
-          </>
+          </div>
         ) : (
           <>
             {/* Flat layout: single article column + optional static sidebar */}
             <div className='slot-main pb-24 lg:col-[2] text-(length:--type-body-size)'>
-              <article className='flex flex-col gap-[20px]'>{children}</article>
+              <article className='flex flex-col gap-(--prose-gap)'>{children}</article>
             </div>
 
             <div className='slot-sidebar-right'>

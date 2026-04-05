@@ -227,10 +227,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
       if (id === RESOLVED_APP) {
         return [
-          `import { config, navigation } from '${VIRTUAL_CONFIG}'`,
-          `import mdxContent from '${VIRTUAL_MDX}'`,
           `import { createHolocronApp } from '@holocron.so/vite/app-factory'`,
-          `export const app = createHolocronApp({ config, navigation, mdxContent })`,
+          `export const app = createHolocronApp()`,
           // Auto-start the server in production (when import.meta.hot is not available).
           // In dev mode, spiceflow's SSR middleware handles requests instead.
           `if (!import.meta.hot) { app.listen(Number(process.env.PORT || 3000)) }`,
