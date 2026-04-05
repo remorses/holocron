@@ -55,6 +55,82 @@ CSS variables can also be used to change a color in dark/light mode. or change t
 - **Sync engine** (`lib/sync.ts`) — walks the config navigation, computes git blob SHAs, diffs against cache, parses only changed files.
 - **Components** (`components/`) — editorial UI copied from `website/src/components/`. Same styles, same design tokens.
 
+## Page layout — grid hierarchy
+
+The editorial page layout is built from a minimal set of CSS Grids. Understand these before touching `EditorialPage` in `components/markdown.tsx`.
+
+### Hierarchy diagram
+
+```
+slot-page (flex flex-col gap-(--layout-gap))
+├── slot-navbar (logo + tab bar)
+├── Hero mini-grid (3-col, only when hero prop is set)
+│   └── hero content (col 2, aligned with page grid's content col)
+└── Page grid — the ONLY explicit 3-col grid
+    grid-template-columns: 210px 520px 210px (toc, content, sidebar)
+    gap-x: 50px, gap-y: 48px (--section-gap between rows)
+    justify-between (distributes extra width)
+    ├── .slot-sidebar-left         (col 1, row 1/span 100, sticky TOC)
+    ├── Inner per-section wrapper  (subgrid, col-[2/-1], grid-row: 1)
+    │   ├── slot-main              (col 1 = content, H1 + paragraphs + …)
+    │   └── per-section aside      (col 2 = sidebar, sticky-scoped to wrapper)
+    ├── Inner per-section wrapper  (subgrid, col-[2/-1], grid-row: 2)
+    │   ├── slot-main
+    │   └── per-section aside
+    ├── Shared full aside          (col 3, grid-row: N / span M via CSS var)
+    ├── Inner per-section wrapper  (subgrid, col-[2/-1], grid-row: 3)
+    │   └── slot-main
+    └── .slot-sidebar-right        (col 3, flat-layout only)
+```
+
+### Grids used and why
+
+**1. Page grid** (`markdown.tsx` EditorialPage) — the only explicit 3-col grid. Defines column widths and is the single source of truth. Every other grid inherits from it.
+- Column widths live only here: `--grid-toc-width` (210), `--grid-content-width` (520), `--grid-sidebar-width` (210), `--grid-gap` (50).
+- `justify-between` distributes extra width up to `--grid-max-width` (1100px), so actual column gaps are `50px + distributed`.
+- `gap-y-(--section-gap)` (48px) gives uniform rhythm between section rows.
+- On mobile: collapses to `grid-cols-1`, sidebars go `display: none`, everything stacks.
+
+**2. Inner per-section wrapper** (subgrid, `lg:col-[2/-1]`, one per section) — pairs content with its per-section aside.
+- Spans both page-grid cols 2-3 via subgrid inheritance → content in inner-col 1 (page col 2), aside in inner-col 2 (page col 3).
+- **Key responsibility: sticky scoping.** Per-section asides inside this wrapper have a containing block = this wrapper = one section's bounds. Scrolling past the section unsticks its aside before the next section's aside sticks. No overlap between asides.
+- On mobile: becomes `flex flex-col gap-y-(--prose-gap)` → content + aside stack tightly (20px gap).
+
+**3. Hero mini-grid** (only when `hero` prop is set) — replicates the page grid's 3-col definition explicitly to align hero content with the page grid's content column. Not a subgrid because hero lives OUTSIDE the page grid in DOM (sibling in the flex flow).
+
+### How the grids interact
+
+**Column alignment contract.** Every grid in this page uses the same 3 column widths defined via CSS vars. Subgrids inherit tracks through `grid-cols-subgrid`. The hero mini-grid redeclares the column template explicitly.
+
+**Gap inheritance chain** (column-gap, through subgrid):
+```
+Page grid:          50px (explicit --grid-gap)
+  → Inner subgrid:  normal → inherits from page grid → 50px
+```
+Axis rule: use `gap-y-(--token)` on subgrid wrappers (not `gap-(--token)`) so the column-gap inherits and isn't clobbered.
+
+**Row placement**. Each inner wrapper gets an explicit `style={{ gridRow: i + 1 }}`. Shared `<Aside full>` gets `style={{ '--shared-row': '${start} / span ${N}' }}` plus class `lg:[grid-row:var(--shared-row)]` — grid-row is ONLY read at lg, so on mobile the aside gets `grid-row: auto` and auto-places at the end of its range instead of forcing an implicit second column in grid-cols-1.
+
+**Sticky scoping via containing blocks**. `position: sticky` is bounded by its grid cell:
+- TOC sidebar → page grid cell at col 1, row 1/span 100 (whole page).
+- Per-section aside → inner subgrid cell (one section).
+- Shared `<Aside full>` → multi-row grid area via `grid-row: start / span N` (its range of sections).
+
+**NEVER use `display: contents`** on a wrapper whose children need sticky scoping — it removes the wrapper from layout, so descendants inherit the grand-parent as their containing block, collapsing all sticky scopes together. This was the cause of a multi-aside overlap bug (see MEMORY.md).
+
+### Responsive behavior
+
+- **Mobile** (< lg / 1080px): page grid is `grid-cols-1`. All items stack in DOM order. Inner wrappers become flex-col (20px prose-gap between content + aside). Sidebars hidden. Shared aside auto-places at end of its range.
+- **Desktop** (≥ lg): full 3-col grid. Subgrids inherit columns. Sticky asides scoped by containing block.
+
+### Key design rules
+
+1. **Page grid owns column widths.** No other grid re-declares them (except the hero mini-grid, deliberately).
+2. **Use `gap-y-...` on subgrids**, never `gap-(--token)` (breaks column-gap inheritance).
+3. **Never `display: contents` around sticky-scoped children.**
+4. **Inline `gridRow` style applies at ALL breakpoints** — if you only want it at lg, use a CSS custom property + `lg:[grid-row:var(--x)]` class.
+5. **Axis ownership**: page grid owns horizontal (via `--grid-*`); section rhythm owns vertical (via `--section-gap`, `--prose-gap`).
+
 ## MDX content loading
 
 MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on disk until a page is requested. At request time, the MDX is parsed with `safe-mdx`, split into sections, and rendered with the editorial components.

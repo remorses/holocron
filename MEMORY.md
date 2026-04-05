@@ -588,10 +588,39 @@ wrapper becomes a real inner subgrid item. Aside's sticky containing block
 = the wrapper = one section's bounds.
 
 For `<Aside full>` with span > 1, render the aside as a SEPARATE outer-
-subgrid child (escaping the per-section wrapper) with `grid-row: start /
-span N` so sticky still works across the multi-row range. Dual-path
-rendering (inside wrapper vs outside) is the cost of keeping both
-per-section and shared-span asides sticky-correct.
+grid child (escaping the per-section wrapper) with `grid-row: start /
+span N` so sticky still works across the multi-row range.
+
+**Flatten update (2026-04-05)**: the outer sections subgrid was removed
+entirely. Per-section wrappers + shared asides are now direct children of
+the page grid. Shared asides are rendered ONCE (no dual render) in DOM
+after their last sub-section, with `lg:col-[3]` + explicit `grid-row`.
+Their sticky containing block becomes the page grid's multi-row area.
+This simplification removed 1 grid level + 1 dual-render branch.
+
+## Pre-existing title test flake (documented, not fixed)
+
+`integration-tests/e2e/basic.test.ts:31 renders page title and headings`
+is flaky at HEAD. When run AFTER the home page test, document.title
+resolves to just the siteName ("Test Docs") instead of the expected
+"Getting Started — Test Docs". When run in isolation, the test passes.
+
+Root cause suspected: spiceflow's `getHeadStore` uses `React.cache(() =>
+({ tags: [] }))`. On server each request gets a fresh store. But across
+consecutive Playwright navigations in the same Vite dev server, tag
+ordering might get mangled such that `CollectedHead`'s
+`reversed.find(title)` returns the layout's siteName title instead of
+the page's headTitle.
+
+DEBUGGING LESSON: before blaming your own changes for a test regression,
+check the same test with `git checkout HEAD` on the touched files. If
+the test fails at HEAD too, the flake is pre-existing. Waste less time
+chasing a red herring.
+
+Workaround options (not applied):
+- Add retry to the flaky test (`test.describe.configure({ retries: 2 })`)
+- Skip the test until spiceflow fixes head-store deduplication
+- Report as spiceflow bug with minimal repro
 
 ## Per-section aside + row height coupling (pitfall)
 
