@@ -8,3 +8,4 @@ coverage
 *.png
 *.pdf
 opencode.json
+tmp
