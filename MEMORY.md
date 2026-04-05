@@ -436,3 +436,296 @@ ajv.validateSchema(schema)  // returns true if valid
 
 Also `npx ajv-cli@5 validate -s schema.json -d config.jsonc
 --strict=false` validates real user configs against generated schema.
+
+## Styling discipline — Tailwind tokens over CSS vars, and "positioning-only" primitives
+
+Two lessons from the Aside/Callout component planning (2026-04-05):
+
+### Do NOT invent `--callout-*-bg` / `--callout-*-border` / `--callout-*-fg` vars per variant
+
+When adding a new visual-variant component (e.g. Callout with note/warning/info/
+tip/check/danger types), the reflex is to declare N×3 CSS vars in `globals.css`
+and reference them from the component. **Don't.** The user wants:
+
+- Use **Tailwind / shadcn tokens** that already exist (`bg-muted`,
+  `border-border`, `text-muted-foreground`, `bg-(color:--destructive)`, etc.).
+- Where Tailwind doesn't have a semantic color for the variant, put the
+  variant-color map **inline in the component** (small TS object of
+  `{ bg, border, fg }` per type) — NOT as new CSS vars.
+- Do NOT proliferate `globals.css` with per-component tokens. CSS vars are
+  only justified when they deduplicate a value used in many places (see the
+  "CSS variable audit" section above).
+
+Rule of thumb: if a color is only referenced from ONE component file, keep it
+in that file. Promote to a CSS var only when a second consumer appears.
+
+### Aside is a positioning-only primitive — no visual styles
+
+The `<Aside>` MDX marker component (`markdown.tsx`) is NOT a styled card. It's
+a positioning primitive: on desktop, extract children into the right grid column
+with sticky positioning; on mobile, stack inline at end of section. That's it.
+
+Anti-pattern: decorating the Aside wrapper with `p-3 border border-subtle
+rounded text-muted-foreground` — this double-frames any Callout/card component
+placed inside it and couples visual presentation to positioning.
+
+Correct split:
+- **Aside** = positioning + a subtle `bg-muted` tint to visually group the
+  right column. No padding, no border, no text-color, no font-size overrides.
+- **Callout** = the framed card primitive (padding, border, rounded, color
+  variant). Nests cleanly inside Aside with no double borders because Aside
+  has no border of its own.
+
+If plain text in an Aside looks raw against the tint, wrap it in a `<Callout>`.
+Don't add padding back to Aside.
+
+### Mintlify Callout API — shape reference
+
+For compatibility with Mintlify docs.json users, the Callout component should
+accept:
+
+- `children: ReactNode`
+- `icon?: ReactNode | string` (ReactNode = inline svg; string = URL/path or
+  icon-library name; bare icon-library names can be ignored unless a lucide/
+  FA dep is added)
+- `iconType?: 'regular' | 'solid' | 'light' | 'thin' | 'sharp-solid' | 'duotone' | 'brands'`
+  (FontAwesome style, accepted for API parity, no-op without FA)
+- `color?: string` (hex, drives bg tint + border + icon color via alpha blending)
+- Plus typed aliases: `Note`, `Warning`, `Info`, `Tip`, `Check`, `Danger`
+  (each just a `<Callout type="...">` wrapper with preset color + icon).
+
+All must be registered in `app-factory.tsx`'s `mdxComponents` map so MDX pages
+can use them directly.
+
+### Example dev server runs on Vite's default 5173, NOT 3000
+
+The `example/` workspace runs `vite dev` with no custom port config. It binds
+to **5173** by default. When starting the tunnel, use `-p 5173`:
+
+```bash
+tmux send-keys -t holocron-dev "kimaki tunnel --kill -p 5173 -- pnpm -F example dev" Enter
+```
+
+Using `-p 3000` makes the tunnel wait forever on port 3000 while Vite sits
+on 5173 — tunnel never connects. Always double-check `package.json`'s
+`dev` script and the Vite output line (`Local: http://localhost:XXXX/`)
+before picking the tunnel port.
+
+### Verify visual components in both light AND dark mode
+
+When adding any styled component (Callout, Aside, cards, etc.) to Holocron,
+always verify rendering in both color schemes before calling it done. The
+Holocron theme switches automatically via `@media (prefers-color-scheme: dark)`.
+The user's system may be in either mode, so a single screenshot covers only
+one branch.
+
+Playwriter pattern:
+
+```js
+// current system scheme
+await page.screenshot({ path: 'tmp/x-dark.png', fullPage: true })
+
+// force light
+await page.emulateMedia({ colorScheme: 'light' })
+await page.waitForTimeout(500)
+await page.screenshot({ path: 'tmp/x-light.png', fullPage: true })
+```
+
+Then hand each screenshot to the `image-understanding` agent and ask it to
+verify contrast, bg tint visibility, icon colors, and absence of double-
+border artifacts per variant. A single visual bug (e.g. Tailwind `/10` bg
+opacity collapsing on the dark background) only shows up in the mode it
+affects.
+
+## Subgrid gap inheritance — `gap` shorthand overrides parent gaps (pitfall)
+
+CSS subgrid inherits tracks (columns/rows) from parent AND inherits gaps
+from parent by default. BUT if you set `gap`, `column-gap`, or `row-gap`
+on the subgrid, you override the inherited value.
+
+Tailwind's `gap-(--foo)` sets BOTH `column-gap` and `row-gap`. If you use
+it on a subgrid to get vertical spacing between items (say `gap-(--prose-gap)`
+for flex-col on mobile), at lg breakpoint when the element becomes a grid
+subgrid, that same class silently overrides the inherited `column-gap`
+from the parent grid.
+
+Concrete example from Holocron sections refactor:
+- Page grid: `lg:gap-x-(--grid-gap)` → 50px column gap
+- Outer sections wrapper (subgrid): `gap-(--section-gap)` → overrides to 48px
+- Inner section wrapper (subgrid): `gap-(--prose-gap)` → overrides to 20px
+
+Result: gap between content and aside was 20px, not 50px — much too tight.
+
+Fix: use axis-specific gap classes on subgrid wrappers so you only set the
+axis you actually need. For a flex-col-on-mobile + subgrid-on-desktop
+wrapper, use `gap-y-(--prose-gap)` (row-gap only). Column-gap stays unset
+and the subgrid inherits it from the parent grid.
+
+Rule of thumb: **never use `gap-(--token)` on an element that becomes a
+subgrid at any breakpoint**. Always use `gap-x-...` or `gap-y-...`
+depending on which axis you need. The other axis will correctly inherit.
+
+## `display: contents` breaks `position: sticky` scoping (pitfall)
+
+`position: sticky` is scoped by the sticky element's **containing block**,
+which is its nearest grid/block/flex ancestor. When a wrapper uses
+`display: contents`, it vanishes from layout — the nearest layout ancestor
+for its children becomes the GRAND-parent.
+
+In the sections refactor this created an overlap bug: per-section wrappers
+used `lg:contents` to flatten content+aside into the outer subgrid. Every
+aside's sticky containing block became **the entire sections grid** (not
+just its own section's row), so multiple asides pinned at `top: 120px`
+simultaneously and overlapped during scroll.
+
+Symptoms:
+- At scroll position X, aside A (row 1) AND aside B (row 2) both at `top: 120`
+- User sees two stacked asides instead of just the current section's aside
+
+Fix: don't use `display: contents` on a wrapper whose children need sticky
+scoping. Use `lg:grid lg:grid-cols-subgrid lg:col-[1/-1]` instead — the
+wrapper becomes a real inner subgrid item. Aside's sticky containing block
+= the wrapper = one section's bounds.
+
+For `<Aside full>` with span > 1, render the aside as a SEPARATE outer-
+subgrid child (escaping the per-section wrapper) with `grid-row: start /
+span N` so sticky still works across the multi-row range. Dual-path
+rendering (inside wrapper vs outside) is the cost of keeping both
+per-section and shared-span asides sticky-correct.
+
+## Per-section aside + row height coupling (pitfall)
+
+CSS grid rows size to `max(item-heights)` across all items in the row,
+regardless of `align-self`. When an `<Aside>` (non-full) is taller than its
+section's content, the row stretches to the aside's height — creating empty
+space in the content column below the short content. `align-self: start`
+only changes item alignment within the cell, NOT the cell/row sizing.
+
+Example: a short one-paragraph section (~72px) paired with an aside of
+3 lines (~130px) → row is 130px → 58px of dead space below the paragraph,
+then `--section-gap` (48px) on top → ~106px visible gap before the next
+section heading.
+
+Workaround for authors: use `<Aside full>` when the aside is taller than its
+section's content. Full asides span multiple rows via `grid-row: N / span M`
+and don't couple to a single row's height.
+
+Structural fix (if needed later): move per-section asides out of the
+subgrid row flow and into `position: absolute` or a separate parallel
+flex column. Keep `<Aside full>` using the grid-row span approach.
+
+## `.editorial-prose { margin: 0 }` SHADOWS Tailwind margin utilities (cascade trap)
+
+In `vite/src/styles/editorial.css` the `.editorial-prose` class sets `margin: 0`.
+In `globals.css` the imports are ordered:
+
+```css
+@import 'tailwindcss';        /* utilities: .-ml-5 {...}, .mt-4 {...} */
+@import './editorial.css';    /* .editorial-prose { margin: 0; } */
+```
+
+Both `.editorial-prose` and Tailwind utilities have single-class specificity (0,1,0).
+CSS tie-breaks by **document order** → whatever is imported LAST wins. Since
+`editorial.css` imports AFTER tailwindcss, **any `.editorial-prose` element with
+a Tailwind margin utility gets margin zeroed out**.
+
+Symptom (wasted time on this 2026-04-05): applying `-ml-5` to an `<ol>`/`<ul>`
+that also has `editorial-prose` → class is generated by Tailwind, present on the
+element, but computed `margin-left: 0px` because `.editorial-prose { margin: 0 }`
+wins the cascade.
+
+**Fix**: use an inline `style={{ marginLeft: '...' }}`. Inline styles beat any
+class rule regardless of import order. Or use `!important` in arbitrary syntax
+(`!-ml-5` in Tailwind v4), but inline is clearer for a one-off value.
+
+Same trap applies to any margin utility on an editorial-prose element:
+`my-*`, `mt-*`, `mb-*`, `mx-*`, `ml-*`, `mr-*`. All are silently dead.
+
+## Bleed tokens + `.no-bleed` scope disable (2026-04-05)
+
+Three bleed tokens in `globals.css`, all mobile-first (`0px`) with a single
+`@variant lg { ... }` block that enables the full values at ≥1080px:
+
+| token           | lg value | consumer                                     |
+|-----------------|----------|----------------------------------------------|
+| `--bleed`       | 44px     | code blocks (`.bleed` class, editorial.css)  |
+| `--bleed-image` | 28px     | images (`<Bleed>` wrapper, inline style)     |
+| `--bleed-list`  | 32px     | lists (`<OL>`/`<List>` inline style)         |
+
+All three are consumed as `calc(-1 * var(--bleed-*))` for left/right negative
+margin. The Tailwind v4 `@variant lg { ... }` block inside `:root` compiles to
+`@media (width >= 1080px) { --bleed: 44px; ... }` — verified via DOM CSS
+inspection.
+
+**`.no-bleed` scope override** (`editorial.css`):
+
+```css
+.no-bleed {
+  --bleed: 0px;
+  --bleed-image: 0px;
+  --bleed-list: 0px;
+}
+```
+
+Because CSS custom properties cascade to descendants, any element inside a
+`.no-bleed` ancestor picks up `0` for all three tokens — lists, code blocks,
+and images automatically shrink to fit. **Applied to `<Callout>` `baseClass`**
+(`markdown.tsx:1450`) so callout contents stay inside their frame.
+
+**List alignment math**:
+- `ul pl-5` (20px) + `li paddingLeft: 12px` = 32px total text offset from ul
+  border. `--bleed-list: 32px` at lg therefore makes `li` text flush with prose
+  paragraphs, with bullets/numbers hanging in the gutter at -32px to -12px.
+
+**Verified end-to-end** (playwriter DOM inspection):
+- Normal list in `.slot-main` with lg tokens → `--bleed-list: 32px`, `marginLeft: -32px`
+- List inside a `.no-bleed` callout → `--bleed-list: 0px`, `marginLeft: 0px`
+- Mobile viewport (`< 1080px`) → all tokens 0, no bleed
+
+**Why not a Tailwind `@custom-variant`?** Considered defining one variant that
+unions (inside-callout, mobile) and applies tokens via `@variant`. The plain
+CSS approach with three `--bleed-*` tokens + one `.no-bleed` class is simpler:
+same mechanism across consumers, no variant indirection, fewer moving pieces.
+
+**margin-left MUST be an inline style** on lists (not a Tailwind `-ml-*`
+utility). `.editorial-prose` sets `margin: 0` in `editorial.css`, which
+imports after tailwindcss in `globals.css`; at equal specificity editorial
+wins the cascade and zeroes any margin utility. Inline styles beat class
+rules regardless of import order.
+
+**Nested lists**: a nested ul/ol inside an li inherits the same component → also
+picks up `-32px`, which makes it bleed further left instead of indenting. No
+consumer MDX currently has nested lists, but when one appears, add a CSS reset:
+
+```css
+.slot-main ul ul, .slot-main ul ol,
+.slot-main ol ul, .slot-main ol ol { margin-left: 0; }
+```
+
+## Commit splitting with critique hunks (workflow tip)
+
+When a session touches many unrelated changes (schema refactor + loader refactor
++ spacing refactor + docs, all in the same working tree), split per-file with
+`git add file1 file2` and per-hunk with `critique hunks add 'path:@-O,L+N,L'`.
+
+Workflow that worked well:
+
+1. `git diff --stat && git status -s -u` — map the full change surface
+2. Read each changed file's diff to understand goals (use `head`/`sed` for
+   large diffs to paginate without blowing context)
+3. Draft a commit plan grouping by feature/concern, noting which hunks go where
+4. For mixed files (e.g. markdown.tsx has loader-refactor hunks AND spacing
+   hunks), stage the feature-matched hunks explicitly with
+   `critique hunks add 'path:@offset'`
+5. After committing, `critique hunks list` to see remaining hunks — their
+   offsets update after each commit, so re-run before picking the next batch
+
+Pitfalls:
+- Hunk IDs change after each commit (offsets shift). Always re-run
+  `critique hunks list` before the next `critique hunks add`.
+- `git stash` without `-k` refuses if the index has been manually touched with
+  `git add -N`. Either commit/restore or use `git add -N` then `git diff --stat`
+  to refresh the index.
+- MEMORY.md was added with `git add -N` early in the session — it ended up
+  auto-staged in later `git add file1 file2` calls because `-N` keeps the
+  intent-to-add flag. Use `git restore --staged` to unstage if needed.
