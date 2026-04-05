@@ -764,3 +764,89 @@ the fix is to stop measuring heights at all and let CSS do it.
 
 Applies to any expand/collapse UI pattern. Never do `useState(0)` + measure +
 `setHeight` + animate height — it always causes first-paint layout shift.
+
+## useEffect removal patterns — three common cases that are NOT effects
+
+When auditing a component for removable useEffects, classify each effect into
+one of these buckets first. Most are removable.
+
+**Bucket 1: "Adjusting state when a prop changes"** → render-phase setState
+Symptom: `useEffect([propA])` that calls `setState(derived from propA)`.
+React docs explicitly document the alternative at
+https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+
+```tsx
+const prevPropRef = useRef(propA)
+if (prevPropRef.current !== propA) {
+  prevPropRef.current = propA
+  setState(next)  // React bails out of render, restarts with new state
+}
+```
+
+Use this ONLY when the state genuinely needs to persist across prop changes
+(e.g. merging a Set of user-toggled keys with new defaults). If state is
+purely derived from props, use `useMemo` or just compute during render.
+
+**Bucket 2: "Side effect triggered by a state change caused by an event
+handler"** → move to event handler with `flushSync`
+Symptom: `useEffect([stateA])` where stateA is only written by event handlers.
+The effect runs imperative DOM work (scrollIntoView, focus, select) after
+React re-renders.
+
+```tsx
+import { flushSync } from 'react-dom'
+
+const onClick = () => {
+  flushSync(() => setState(next))  // synchronous re-render
+  ref.current?.scrollIntoView()     // ref points at new element
+}
+```
+
+`flushSync` forces React to commit synchronously so refs/DOM reflect the new
+state before the handler continues. Colocates the side effect with its cause.
+
+**Bucket 3: "Two effects with identical dependency chain"** → merge into one
+Symptom: two `useEffect` calls whose dep arrays reduce to the same value
+(often because one depends on a `useCallback` whose deps match the other).
+
+Merge pattern: inline the callback inside the effect body. It closes over
+the current values directly, the `useCallback` wrapper becomes unnecessary,
+and the effect has exactly one dependency.
+
+```tsx
+// Before: 2 effects, 1 useCallback
+const fn = useCallback(() => { ...uses activeId }, [activeId])
+useEffect(() => { fn() }, [fn])
+useEffect(() => { observer.observe(el); return () => observer.disconnect() }, [fn])
+
+// After: 1 effect, no useCallback
+useEffect(() => {
+  const fn = () => { ...uses activeId }
+  fn()
+  observer.observe(el)
+  return () => observer.disconnect()
+}, [activeId])
+```
+
+**What's left after applying all three:** legitimate effects only — global
+event listeners on `document`/`window`, subscriptions to external stores
+(or better: `useSyncExternalStore`), and DOM measurement that genuinely
+needs to happen post-mount.
+
+## pnpm-lock.yaml gets rewritten with relative paths in worktrees (do NOT commit)
+
+When running `pnpm install` inside a git worktree whose path differs from the
+main repo path, pnpm rewrites `file:` dependencies in `pnpm-lock.yaml` to use
+relative paths that climb out of the worktree directory. Example from a
+worktree at `~/.local/share/opencode/worktree/.../holocron-branch/`:
+
+```diff
+- spiceflow@file:../spiceflow-rsc/spiceflow:
++ spiceflow@file:../../../../../../Documents/GitHub/spiceflow-rsc/spiceflow:
+```
+
+These path rewrites are worktree-specific and will break the main repo
+checkout if committed. Always check `git diff pnpm-lock.yaml` for `file:`
+path changes before staging and exclude the file from commits when the only
+changes are path rewrites. Use `git commit path/to/specific/files` (selective
+staging) rather than `git add -A` in worktrees.
