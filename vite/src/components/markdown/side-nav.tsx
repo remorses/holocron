@@ -194,7 +194,7 @@ export function SideNav() {
       <div className='pb-3 pl-1 flex items-center relative shrink-0'>
         <span
           aria-hidden='true'
-          className='absolute left-2 pointer-events-none inline-flex items-center justify-center'
+          className='absolute left-3 pointer-events-none inline-flex items-center justify-center'
           style={{ color: 'var(--text-secondary)' }}
         >
           <SearchIcon />
@@ -205,10 +205,10 @@ export function SideNav() {
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          placeholder='search...'
-          className='w-full text-sm outline-none lowercase box-border'
+          placeholder='Search...'
+          className='w-full text-sm outline-none box-border'
           style={{
-            padding: '6px 28px 6px 28px',
+            padding: '6px 34px 6px 34px',
             fontFamily: 'var(--font-primary)',
             fontWeight: 'var(--weight-prose)',
             color: 'var(--text-primary)',
@@ -226,11 +226,11 @@ export function SideNav() {
         {!query && (
           <span
             aria-hidden='true'
-            className='absolute right-1.5 pointer-events-none uppercase'
+            className='absolute right-2.5 pointer-events-none uppercase'
             style={{
               fontFamily: 'var(--font-code)',
-              fontSize: '10px',
-              fontWeight: 'var(--weight-regular)',
+              fontSize: '12px',
+              fontWeight: 600,
               color: 'var(--text-secondary)',
               border: '1px solid var(--text-tertiary)',
               borderRadius: '4px',
