@@ -121,11 +121,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // pnpm strict hoisting prevents Vite from finding bare `spiceflow` imports.
       const _require = createRequire(import.meta.url)
       const spiceflowDir = path.dirname(_require.resolve('spiceflow/package.json'))
-      // Resolve root to absolute for computing `cacheDir`. viteConfig.root may
-      // be relative at this point; path.resolve turns it into an absolute
-      // path relative to the current cwd.
-      const absoluteRoot = path.resolve(process.cwd(), root)
-      const next: Pick<UserConfig, 'resolve' | 'cacheDir'> = {
+      const next: Pick<UserConfig, 'resolve'> = {
         resolve: {
           alias: [
             { find: /^spiceflow$/, replacement: path.join(spiceflowDir, 'dist/index.js') },
@@ -133,14 +129,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             { find: /^spiceflow\/react$/, replacement: path.join(spiceflowDir, 'dist/react/index.js') },
           ],
         },
-        // Scope the Vite dep-optimizer cache to the project root. By default
-        // Vite writes to `<firstAncestorWithNodeModules>/node_modules/.vite/`
-        // — when two Holocron sites run as separate processes with different
-        // roots but share a parent's `node_modules/`, they race on the same
-        // cache directory and corrupt each other's optimized deps. Keep the
-        // cache inside the project root so concurrent runs (e.g. multi-fixture
-        // integration tests) stay isolated.
-        cacheDir: path.join(absoluteRoot, 'node_modules/.vite'),
       }
       return next
     },
