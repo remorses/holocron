@@ -1097,55 +1097,63 @@ Each fixture's `dist/` lives inside the fixture folder (e.g.
 `.gitignore`. Adding a new config type = drop a folder under `fixtures/`
 + test file under `e2e/<name>/` and everything else is discovered.
 
-## Schema field-usage audit — what's wired vs ignored (2026-04-05)
+## Schema field-usage audit — status after commit b4d1676e (2026-04-05)
 
-`schema.json` regenerated cleanly with **0 diff** vs `schema.ts`. Full trace of
-every schema field through `schema.ts` → `config.ts normalize()` →
-`data.ts` → `app-factory.tsx` / `markdown.tsx` / `sync.ts`:
+`schema.json` regenerated cleanly with **0 diff** vs `schema.ts`. Full
+trace of every schema field through `schema.ts` → `config.ts normalize()`
+→ `data.ts` → `app-factory.tsx` / `markdown.tsx` / `sync.ts`:
 
 **WIRED (rendered / drives behaviour):**
-- Root: `name`
-- `logo.light` (header img)
+- Root: `name`, `description` (site-wide `<meta>` fallback)
+- `logo.light` (header img), `logo.href` (logo `<Link>` destination)
 - `favicon.light` (layout `<link rel="icon">`)
-- `navigation.tabs` (tab bar), `navigation.global.anchors` +
-  `navigation.anchors` (also merged into tab bar), `navigation.groups` /
-  `navigation.pages` (alt input shapes, collapsed into tabs)
-- `navbar.links[]` — label, type (for label derivation only), href/url
-- Page slugs, `tab.tab`, `tab.href` (link-only tab → anchor),
-  `tab.groups`/`tab.pages`, `group.group`, `group.pages`, `anchor.anchor`,
-  `anchor.href`
+- `favicon.dark` (second `<link>` with `media="(prefers-color-scheme: dark)"` —
+  spiceflow dedup currently drops one variant, spiceflow-side fix pending)
+- `redirects[]` — regex matcher in `.use()` middleware
+- `navigation.tabs` + `tab.hidden` (filtered) + `navigation.global.anchors` +
+  `navigation.anchors` + `anchor.hidden` (filtered)
+- `navigation.groups` / `navigation.pages` (alt input shapes)
+- `group.hidden` (pruned from sidebar at every depth, including
+  transitive-empty parents via `hasVisibleSidebarEntries`)
+- `group.expanded: true` (seeded into initial expanded-groups Set in
+  `NavSidebar` — first-render only)
+- `navbar.links[]` — label, type (for label derivation), href/url
+- `navbar.links[].icon` (only string-URL form renders via `<img>`)
+  — **caveat**: this means `navbar.links` is practically broken for
+  the common case. If the user writes `{ "type": "github", "href": "..." }`
+  with no explicit `icon` URL, the `<a>` tag renders EMPTY (only
+  `aria-label` set for screen readers). Users expecting automatic
+  GitHub/Discord/etc. icons see nothing. Needs either (a) a built-in
+  SVG map keyed by `link.type` for known platforms, or (b) a text
+  fallback showing the label when no visible icon is available.
+- Page slugs, `tab.tab`, `tab.href`, `tab.groups`/`tab.pages`,
+  `group.group`, `group.pages`, `anchor.anchor`, `anchor.href`
 
-**DROPPED OR IGNORED (parsed, normalized in some cases, but NEVER rendered):**
-- Root: `description`
-- `colors.primary` / `colors.light` / `colors.dark` — normalized but never
-  written to `--brand-primary` or any CSS var
-- `redirects[]` — fully normalized, zero redirect middleware
-- `footer.socials` — fully normalized, no `<footer>` rendered anywhere
-- `logo.dark` — stored, but `<img>` uses only `.light` + `dark:invert`
-- `logo.href` — stored, but logo `<Link href='/'>` is hard-coded
-  (`markdown.tsx:1889`)
-- `favicon.dark` — stored but only `faviconLight` is read in layout
-- `navbar.primary` — fully normalized to `{label, href}`, **never rendered**
-- `navbar.links[].icon` — dropped in `normalizeNavbar`; `HeaderLink.icon`
-  is always `undefined` even though `{link.icon}` is referenced at
-  `markdown.tsx:1920`
-- `tab.icon`, `tab.hidden`, `tab.align` — never enriched, never rendered
-- `group.icon` — **the only "half-wired" field**: enriched into
-  `NavGroup.icon` by `sync.ts` via `iconToString`, but `NavGroupNode`
-  never renders it
-- `group.hidden`, `group.root`, `group.tag`, `group.expanded` — never
-  enriched, never rendered (users' manual toggles ignore the default)
-- `anchor.icon` — kept on `ConfigAnchor` but stripped when building
-  `TabItem` in `buildTabItems()`
-- `anchor.hidden` — never applied
-- `icon.style` (fa variant), `icon.library` (fa/lucide/tabler) — never
-  resolved; `iconToString` collapses the object to just `icon.name`
+**PRESERVED through pipeline but NOT RENDERED (renderer work needed):**
 
-When wiring any of these, remember: add the field to `HolocronConfig`
-in `config.ts`, preserve it through `normalize*()`, add the field to
-`NavTab`/`NavGroup` in `navigation.ts`, enrich in `sync.ts`, expose via
-`data.ts` exports, then render in `markdown.tsx` or the
-appropriate new component.
+These fields now flow all the way through `config` → `NavTab` / `NavGroup`
+/ `TabItem` / `HeaderLink` — ready to be consumed by a renderer that
+doesn't exist yet. Each requires styling/design decisions:
+
+- `colors.primary` / `colors.light` / `colors.dark` — need CSS var
+  injection at `<style>` level (e.g. override `--brand-primary`)
+- `footer.socials` — no `<footer>` element rendered anywhere
+- `navbar.primary` + `.type` — no primary-CTA button component exists
+- `logo.dark` — need `<picture>` with media-query source switching
+  (current hack: `dark:invert` on single `.light` asset)
+- `tab.icon`, `group.icon`, `anchor.icon`, `navbar.links[].icon`
+  (object form) — all need an icon resolver component that dispatches
+  on `icon.library` (fontawesome/lucide/tabler) and `icon.style`
+  (fontawesome style variant)
+- `tab.align` (`start`/`end`) — tab bar needs a flex-split layout
+- `group.tag` — needs a badge component
+- `group.root` — group label needs to become a `<Link>` pointing at
+  the root page's href (already resolved in `sync.ts`)
+
+When rendering any of these, remember: all the data plumbing is DONE.
+You only need to read them off the enriched tree / data exports / the
+Nav* types in `navigation.ts`, and drop them into the UI with the
+right styling. No further `config.ts` or `sync.ts` changes needed.
 
 ## Redirects middleware in Spiceflow (API reference for holocron)
 
@@ -1348,3 +1356,180 @@ export function interpolateDestination(template, params) {
 
 Neither is worth chasing until we have other reasons to touch
 redirects.
+
+## Icon resolver pattern — string icons are LUCIDE names by convention
+
+**CRITICAL BUG in current code:** `markdown.tsx` renders
+`navbar.links[].icon` strings as `<img src={icon}>`. Wrong. Mintlify's
+convention (and what fumabase implements) is that string icon values
+are **lucide icon names** by default, NOT image paths. So
+`icon: "home"` means "render the lucide home icon", not
+`<img src="home">`.
+
+### Dispatch rules (copied from fumabase `docs-website/src/lib/icon.tsx`)
+
+For each `icon: string | { name, library, style }`:
+
+1. **Emoji** (matches `/^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)...$/u`)
+   → `<span>{icon}</span>`
+2. **URL** (starts with `http://` / `https://` / `/`) → `<img src={icon} />`
+3. **Otherwise** (default for strings) → library icon name, resolve via
+   iconify set. Default library is `lucide`.
+
+### fumabase uses runtime API fetch; holocron should use build-time resolution
+
+Fumabase has a server endpoint `/api/icons/:provider/icon/:name.svg`
+that looks up icons from `@iconify-json/lucide` and returns SVG
+markup. Client fetches per-icon on render.
+
+Holocron builds statically at Vite-plugin time with a known config,
+so we can:
+1. Walk `navigation` + `navbar.links` + `navbar.primary` +
+   `footer.socials` at Vite plugin init.
+2. Collect every referenced icon name + library.
+3. Resolve each via `@iconify-json/lucide.icons[name]` (+ aliases map).
+4. Serialize the `{name: svgBody}` map into a virtual module
+   (`virtual:holocron-icons`).
+5. At render time, `<Icon>` reads from the map — zero runtime
+   fetches, zero client bundle bloat, zero hydration flicker.
+
+### Type → icon auto-fill (the "invisible github link" fix)
+
+`normalizeNavbar` should auto-fill `link.icon` from `link.type` when
+the user omits the icon. Map known platform types to lucide names:
+```ts
+const TYPE_ICONS = {
+  github: 'github',    slack: 'slack',
+  twitter: 'twitter',
+  x: 'x',
+  linkedin: 'linkedin',
+  youtube: 'youtube',
+  // ... aligned with schema.ts `socialPlatformKeys`
+}
+```
+Users writing `{ "type": "github", "href": "..." }` (the dominant
+Mintlify pattern) get the GitHub icon automatically without setting
+`icon`.
+
+### Reference paths in fumabase
+
+- `fumabase/docs-website/src/lib/icon.tsx` — runtime `DynamicIcon`
+  component with emoji/URL/lucide dispatch (lines 11-120)
+- `fumabase/docs-website/src/lib/icons.server.tsx` — server-side
+  `getIconJsx()` using `@iconify-json/lucide` (23 lines)
+- `fumabase/docs-website/src/routes/api.icons.$provider.icon.$icon.ts`
+  — SVG-returning endpoint (34 lines)
+- `fumabase/docs-website/src/routes/_catchall-client.tsx:529-560` —
+  how navbar.links + navbar.primary consume the resolver
+- `fumabase/docs-website/src/routes/_catchall-client.tsx:12` —
+  hard-coded `GithubIcon`/`XIcon` imports from `lucide-react`  for
+  primary-CTA special cases
+
+## 2026-04-06 markdown.tsx split — file layout + pitfalls
+
+The 2082-line `components/markdown.tsx` was split into
+`components/markdown/` subdirectory. `app-factory.tsx` (562 lines) and
+`config.ts` (429 lines) were also trimmed. Zero behaviour changes —
+only file moves + extraction.
+
+### New file map (use this to find components)
+
+- `components/markdown/index.tsx` — public barrel, re-exports everything.
+  Also re-exports `TableOfContentsPanel` from the sibling `toc-panel.tsx`
+  so the MDX components map can import from one place.
+- `components/markdown/editorial-page.tsx` — `EditorialPage`, `EditorialSection`
+- `components/markdown/side-nav.tsx` — `SideNav` (left sidebar + search input)
+- `components/markdown/nav-tree.tsx` — `NavPageLink`, `NavGroupNode`, `TocInline`
+- `components/markdown/expandable-container.tsx` — `ExpandableContainer`
+  + module-scope first-paint store (`useFirstPaintDone`)
+- `components/markdown/icons.tsx` — `ChevronIcon`, `SearchIcon`
+- `components/markdown/back-button.tsx` — `BackButton`
+- `components/markdown/typography.tsx` — `SectionHeading`, `P`, `Caption`,
+  `A`, `Code`, type `HeadingLevel`
+- `components/markdown/layout.tsx` — `Bleed`, `Divider`, `Section`,
+  `OL`, `List`, `Li`
+- `components/markdown/code-block.tsx` — `CodeBlock` + Prism setup +
+  `diagram` language grammar
+- `components/markdown/image.tsx` — `PixelatedImage`, `LazyVideo`,
+  `ChartPlaceholder`
+- `components/markdown/table.tsx` — `ComparisonTable`
+- `components/markdown/markers.tsx` — `Aside`, `FullWidth`, `Hero`
+  (pass-through marker components read by the section splitter)
+- `components/markdown/callout.tsx` — `Callout` + `Note/Warning/Info/
+  Tip/Check/Danger` + preset icons + `hexToRgba`
+- `components/markdown/sidebar-banner.tsx` — `SidebarBanner`
+- `components/markdown/tab-link.tsx` — `TabLink` (used by editorial-page)
+
+Non-UI logic moved out of `components/` to `lib/`:
+
+- `lib/search.ts` (was `components/search.ts`) — Orama index + query
+- `lib/toc-tree.ts` (was `components/toc-tree.ts`) — `slugify`,
+  `extractText`, `generateTocTree`
+- `lib/mdx-sections.ts` (NEW, from `app-factory.tsx`) — `buildSections`,
+  `isHeroNode`, `isAsideNode`, etc.
+- `lib/mdx-components-map.tsx` (NEW, from `app-factory.tsx`) —
+  `mdxComponents`, `renderNode`, `RenderNodes`
+- `lib/site-head.tsx` (NEW, from `app-factory.tsx`) — `SiteHead`
+  (favicon links, fonts, og:* meta)
+- `lib/normalize-config.ts` (NEW, from `config.ts`) — all 7 `normalize*`
+  functions
+
+### package.json exports for directory-style subpath
+
+When converting a `foo.tsx` file-export into a `foo/` directory with
+`index.tsx`, the `package.json` exports entry needs `/index.{d.ts,js}`:
+
+```json
+"./components/markdown": {
+  "types": "./dist/components/markdown/index.d.ts",
+  "default": "./dist/components/markdown/index.js"
+}
+```
+
+Forgetting to update `package.json` silently breaks `@holocron.so/vite/
+components/markdown` imports (self-imports and external consumers both).
+
+### Self-imports inside the package
+
+`app-factory.tsx` and `lib/mdx-components-map.tsx` both import from
+`'@holocron.so/vite/components/markdown'` — a self-import. This works
+because:
+
+1. `package.json` has an `exports` entry for the subpath.
+2. `vite-plugin.ts` resolveId() resolves this subpath to the source
+   file (via `preserveSymlinks` resolver, so `@vitejs/plugin-rsc`
+   keeps the module in the `node_modules/` package-source path — see
+   MEMORY.md section on hydration debugging).
+
+The self-import pattern is DELIBERATE — it keeps the client boundary
+on the package side so `@vitejs/plugin-rsc` emits stable
+`client-package-proxy/...` chunks. Don't "simplify" it to a relative
+import; that breaks hydration.
+
+### Pre-existing integration test flakes (not caused by this refactor)
+
+When running `pnpm test-e2e` against the `basic` fixture these tests
+were already failing BEFORE the refactor (verified by running against
+the pre-refactor baseline via `git stash -u`):
+
+- `basic.test.ts` → `not found › returns 404 status for unknown page`
+- `basic.test.ts` → `not found › renders 404 for nested paths`
+- `config-hmr.test.ts` → `new MDX file HMR @dev › ...`
+- `config-hmr.test.ts` → `deleted MDX file HMR @dev › ...`
+- `config-hmr.test.ts` → `config HMR @dev › adding a navigation group...`
+
+The 404 tests return 200 instead of 404; the HMR tests don't see the
+new page appear within the 10s timeout. Likely related to dev-mode
+config-hmr.test.ts running in `dev` + shared port config. They were
+introduced in commit `aba17df5`. **Do not debug unless specifically
+asked** — they are flakes independent of any changes you make in
+`vite/src/`.
+
+### Validation pattern for this kind of refactor
+
+1. `pnpm -F @holocron.so/vite build` (regenerates `schema.json` + tsc)
+2. `pnpm -F @holocron.so/vite typecheck`
+3. `pnpm -F @holocron.so/vite test` → all 326 tests should pass
+4. `pnpm -F integration-tests test-e2e --grep-invert "config HMR @dev|
+   new MDX file|deleted MDX file|returns 404 status|renders 404 for nested"`
+   (skips the pre-existing flakes documented above)

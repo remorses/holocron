@@ -1,9 +1,6 @@
-/*
- * Sidebar search powered by Orama — full-text, typo-tolerant, in-memory.
- *
- * Operates on SearchEntry[] — a flat list of all searchable items (groups,
- * pages, headings) derived from the NavGroup[] tree. Each entry carries a
- * groupPath for auto-expanding ancestor groups on match.
+/**
+ * Sidebar search — Orama full-text index + query over SearchEntry[].
+ * Pure logic, no React/DOM. Feeds the SideNav search input.
  */
 
 import { create, insertMultiple, search, type AnyOrama } from '@orama/orama'

@@ -1,0 +1,66 @@
+'use client'
+
+/**
+ * Editorial markdown components — public barrel.
+ *
+ * All components use CSS variables from globals.css (no prefix).
+ * Conflicting names with shadcn: --brand-primary, --brand-secondary,
+ * --link-accent, --page-border.
+ */
+
+export type { TocNodeType, TocTreeNode } from '../../lib/toc-tree.ts'
+export type { TabItem, HeaderLink } from '../../data.ts'
+
+export { SideNav } from './side-nav.tsx'
+export { BackButton } from './back-button.tsx'
+export { ExpandableContainer } from './expandable-container.tsx'
+export { ChevronIcon, SearchIcon } from './icons.tsx'
+
+export {
+  SectionHeading,
+  P,
+  Caption,
+  A,
+  Code,
+  type HeadingLevel,
+} from './typography.tsx'
+
+export {
+  Bleed,
+  Divider,
+  Section,
+  OL,
+  List,
+  Li,
+} from './layout.tsx'
+
+export { CodeBlock } from './code-block.tsx'
+export { PixelatedImage, LazyVideo, ChartPlaceholder } from './image.tsx'
+export { ComparisonTable } from './table.tsx'
+
+export { Aside, FullWidth, Hero } from './markers.tsx'
+
+export {
+  Callout,
+  Note,
+  Warning,
+  Info,
+  Tip,
+  Check,
+  Danger,
+  type CalloutType,
+  type CalloutProps,
+} from './callout.tsx'
+
+export { SidebarBanner } from './sidebar-banner.tsx'
+export { TabLink } from './tab-link.tsx'
+
+export {
+  EditorialPage,
+  type EditorialSection,
+} from './editorial-page.tsx'
+
+// `TableOfContentsPanel` lives in a sibling component file but is
+// re-exported here for convenience so the MDX component map can import
+// everything from one place.
+export { TableOfContentsPanel } from '../toc-panel.tsx'

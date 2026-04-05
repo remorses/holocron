@@ -1,0 +1,90 @@
+'use client'
+
+/**
+ * Layout primitives: Bleed wrapper, Divider, Section, ordered/unordered
+ * lists, and list items.
+ */
+
+import React from 'react'
+import { SectionHeading, type HeadingLevel } from './typography.tsx'
+
+export function Bleed({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        marginLeft: 'calc(-1 * var(--bleed-image))',
+        marginRight: 'calc(-1 * var(--bleed-image))',
+        display: 'flex',
+        justifyContent: 'center',
+        maxWidth: 'calc(100% + 2 * var(--bleed-image))',
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+export function Divider() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div style={{ height: '1px', background: 'var(--divider)', flex: 1 }} />
+    </div>
+  )
+}
+
+export function Section({
+  id,
+  title,
+  level = 1,
+  children,
+}: {
+  id: string
+  title: string
+  level?: HeadingLevel
+  children: React.ReactNode
+}) {
+  return (
+    <>
+      <SectionHeading id={id} level={level}>
+        {title}
+      </SectionHeading>
+      {children}
+    </>
+  )
+}
+
+/* Lists bleed left so bullets/numbers hang in the gutter while li TEXT
+   aligns with prose paragraphs. `--bleed-list` is 32px at lg (= ul pl-5
+   20px + li paddingLeft 12px) and 0 at mobile / inside `.no-bleed`.
+
+   margin-left MUST be an inline style — `.editorial-prose` sets
+   `margin: 0` in editorial.css which imports AFTER tailwindcss, so any
+   `-ml-*` / `ml-*` utility loses the cascade on equal specificity. */
+export function OL({ children }: { children: React.ReactNode }) {
+  return (
+    <ol
+      className='editorial-prose pl-5 flex flex-col gap-(--list-gap)'
+      style={{ listStyleType: 'decimal', marginLeft: 'calc(-1 * var(--bleed-list))' }}
+    >
+      {children}
+    </ol>
+  )
+}
+
+export function List({ children }: { children: React.ReactNode }) {
+  return (
+    <ul
+      className='editorial-prose pl-5 flex flex-col gap-(--list-gap)'
+      style={{ listStyleType: 'disc', marginLeft: 'calc(-1 * var(--bleed-list))' }}
+    >
+      {children}
+    </ul>
+  )
+}
+
+// Li has no vertical padding — the parent ul/ol uses `gap-(--list-gap)`
+// for inter-item spacing so first/last items get zero edge space.
+export function Li({ children }: { children: React.ReactNode }) {
+  return <li style={{ paddingLeft: '12px' }}>{children}</li>
+}

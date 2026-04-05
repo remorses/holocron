@@ -48,8 +48,8 @@
       "default": "./dist/app-factory.js"
     },
     "./components/markdown": {
-      "types": "./dist/components/markdown.d.ts",
-      "default": "./dist/components/markdown.js"
+      "types": "./dist/components/markdown/index.d.ts",
+      "default": "./dist/components/markdown/index.js"
     },
     "./components/toc-panel": {
       "types": "./dist/components/toc-panel.d.ts",

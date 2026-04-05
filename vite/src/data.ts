@@ -17,7 +17,7 @@
 import { config, navigation } from 'virtual:holocron-config'
 import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigation.ts'
 import { isNavPage, isNavGroup } from './navigation.ts'
-import type { SearchEntry } from './components/search.ts'
+import type { SearchEntry } from './lib/search.ts'
 
 export { config, navigation }
 

@@ -1,5 +1,6 @@
 /**
- * Holocron app factory — creates the Spiceflow app with all routes.
+ * Holocron app factory — creates the Spiceflow app with all routes
+ * (.loader, .layout, .page, /api/search).
  *
  * Architecture:
  *
@@ -20,43 +21,16 @@
  */
 
 import '@holocron.so/vite/styles/globals.css'
-import React, { Fragment, type ReactNode } from 'react'
+import React from 'react'
 import { Spiceflow, serveStatic, redirect } from 'spiceflow'
 import { Head } from 'spiceflow/react'
-import { SafeMdxRenderer } from 'safe-mdx'
 import { mdxParse } from 'safe-mdx/parse'
-import type { Root, Heading, RootContent, Image } from 'mdast'
-import type { MyRootContent } from 'safe-mdx'
+import type { Root } from 'mdast'
 import mdxContent from 'virtual:holocron-mdx'
 import {
   EditorialPage,
-  Aside,
-  FullWidth,
-  Hero,
-  P,
-  A,
-  Code,
-  Caption,
-  CodeBlock,
-  SectionHeading,
-  ComparisonTable,
-  PixelatedImage,
-  Bleed,
-  List,
-  OL,
-  Li,
-  Callout,
-  Note,
-  Warning,
-  Info,
-  Tip,
-  Check,
-  Danger,
-  type HeadingLevel,
   type EditorialSection,
 } from '@holocron.so/vite/components/markdown'
-import { slugify, extractText } from './components/toc-tree.ts'
-import { TableOfContentsPanel } from './components/toc-panel.tsx'
 import { NotFound } from './components/not-found.tsx'
 import {
   findPage,
@@ -71,254 +45,9 @@ import {
   resolveActiveTabHref,
 } from './data.ts'
 import { registerRedirects } from './lib/redirects.ts'
-
-/* ── MDX section splitting ──────────────────────────────────────────── */
-
-function isAsideNode(node: RootContent): boolean {
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Aside'
-}
-
-function hasFullProp(node: RootContent): boolean {
-  const attrs = (node as { attributes?: Array<{ name: string }> }).attributes
-  return attrs?.some((a) => a.name === 'full') ?? false
-}
-
-function isFullWidthNode(node: RootContent): boolean {
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'FullWidth'
-}
-
-function isHeroNode(node: RootContent): boolean {
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Hero'
-}
-
-/** Filter out mdast node types that render to nothing so they don't create
- *  empty grid rows. Frontmatter (`yaml`/`toml`) and link reference definitions
- *  are the main culprits — they appear as top-level children but produce no
- *  visible output. Leaving them in would add an extra empty `slot-main` +
- *  `--section-gap` before the first real section. */
-function isInvisibleNode(node: RootContent): boolean {
-  const t = (node as { type: string }).type
-  return t === 'yaml' || t === 'toml' || t === 'definition'
-}
-
-type MdastSection = {
-  contentNodes: RootContent[]
-  asideNodes: RootContent[]
-  /** How many section rows this section's aside spans on desktop.
-   *  1 (default) for per-section asides; N for a shared `<Aside full>`
-   *  range, where N is the number of sub-sections.
-   *
-   *  For a shared full aside, the aside is attached to the LAST sub-section
-   *  of its range (so on mobile it stacks at the end of the content range).
-   *  On desktop the renderer computes the starting grid row from the
-   *  section's own index and the span: `start = thisRow - span + 1`. */
-  asideRowSpan?: number
-  fullWidth?: boolean
-}
-
-function groupBySections(root: Root): MdastSection[] {
-  const sections: MdastSection[] = []
-  let current: MdastSection = { contentNodes: [], asideNodes: [] }
-
-  for (const node of root.children) {
-    // Split on ANY heading depth (#, ##, ###, ####, #####, ######) so every
-    // heading gets its own grid row with --section-gap above it. This keeps
-    // vertical rhythm uniform regardless of heading hierarchy — headings
-    // always stand out with 48px breathing room, and content under a
-    // heading flows with the tighter --prose-gap inside each section.
-    if (node.type === 'heading') {
-      if (current.contentNodes.length > 0 || current.asideNodes.length > 0) {
-        sections.push(current)
-      }
-      current = { contentNodes: [node], asideNodes: [] }
-    } else if (isFullWidthNode(node)) {
-      if (current.contentNodes.length > 0 || current.asideNodes.length > 0) {
-        sections.push(current)
-      }
-      const children = 'children' in node ? (node as { children: RootContent[] }).children : []
-      sections.push({ contentNodes: children, asideNodes: [], fullWidth: true })
-      current = { contentNodes: [], asideNodes: [] }
-    } else if (isAsideNode(node)) {
-      current.asideNodes.push(node)
-    } else {
-      current.contentNodes.push(node)
-    }
-  }
-
-  if (current.contentNodes.length > 0 || current.asideNodes.length > 0) {
-    sections.push(current)
-  }
-
-  return sections
-}
-
-/**
- * Build sections with support for `<Aside full>`.
- *
- * A full aside spans every sub-section between itself and the next
- * `<Aside full>` (or EOF). Unlike the earlier "merged" approach, we STILL
- * split content at EVERY heading level inside a full-aside range — each
- * sub-section gets its own row in the page grid, separated by `--section-gap`.
- * The shared
- * aside is attached to the first sub-section with `asideRowSpan` set to the
- * number of sub-sections, so on desktop it lives in a CSS grid cell spanning
- * all those rows (`grid-row: N / span M`). Inside that tall cell a
- * `position: sticky` aside can scroll alongside the whole range.
- *
- * Sections BEFORE the first full aside still use normal per-section asides
- * (asideRowSpan = 1).
- */
-function buildSections(root: Root): MdastSection[] {
-  // Strip invisible nodes (frontmatter, link definitions) from the top level
-  // so they don't get swept into a leading empty section by groupBySections.
-  const children = root.children.filter((n) => !isInvisibleNode(n))
-
-  // Find indices of all <Aside full> nodes
-  const fullAsideIndices: number[] = []
-  for (let i = 0; i < children.length; i++) {
-    const node = children[i]!
-    if (isAsideNode(node) && hasFullProp(node)) {
-      fullAsideIndices.push(i)
-    }
-  }
-
-  // No full asides → split normally (existing behavior)
-  if (fullAsideIndices.length === 0) {
-    return groupBySections({ type: 'root', children } as Root)
-  }
-
-  const sections: MdastSection[] = []
-  const firstIdx = fullAsideIndices[0]!
-
-  // Range before first full aside → split normally at ## headings
-  if (firstIdx > 0) {
-    const before: Root = { type: 'root', children: children.slice(0, firstIdx) }
-    sections.push(...groupBySections(before))
-  }
-
-  // Each full-aside range: split at ## into sub-sections; first sub-section
-  // owns the shared aside with row-span = number of sub-sections.
-  for (let r = 0; r < fullAsideIndices.length; r++) {
-    const start = fullAsideIndices[r]!
-    const end = fullAsideIndices[r + 1] ?? children.length
-
-    const rangeNodes = children.slice(start + 1, end)
-    const contentOnly = rangeNodes.filter((n) => !isAsideNode(n) && !isFullWidthNode(n))
-    const asideNode = children[start]!
-
-    const contentRoot: Root = { type: 'root', children: contentOnly }
-    const subSections = groupBySections(contentRoot)
-
-    if (subSections.length === 0) {
-      sections.push({ contentNodes: [], asideNodes: [asideNode], asideRowSpan: 1 })
-      continue
-    }
-
-    // Attach the shared aside to the LAST sub-section (for clean mobile stacking
-    // at the end of its range). Desktop rendering uses asideRowSpan to compute
-    // an explicit `grid-row: start / span N` that covers all sub-sections.
-    const lastSub = subSections[subSections.length - 1]!
-    lastSub.asideNodes = [asideNode]
-    lastSub.asideRowSpan = subSections.length
-    sections.push(...subSections)
-  }
-
-  return sections
-}
-
-/* ── MDX render helpers (module-scope, shared across all requests) ──── */
-
-function PixelatedImageWithProps(props: {
-  src: string
-  alt: string
-  width?: number
-  height?: number
-  placeholder?: string
-  className?: string
-}) {
-  return (
-    <PixelatedImage
-      src={props.src}
-      alt={props.alt}
-      width={props.width || 0}
-      height={props.height || 0}
-      placeholder={props.placeholder}
-      className={props.className || ''}
-    />
-  )
-}
-
-const mdxComponents = {
-  p: P,
-  a: A,
-  code: Code,
-  ul: List,
-  ol: OL,
-  li: Li,
-  Caption,
-  ComparisonTable,
-  PixelatedImage: PixelatedImageWithProps,
-  Bleed,
-  Aside,
-  FullWidth,
-  Hero,
-  Callout,
-  Note,
-  Warning,
-  Info,
-  Tip,
-  Check,
-  Danger,
-  // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
-  // No more per-page closure binding.
-  TableOfContentsPanel,
-}
-
-function renderNode(
-  node: MyRootContent,
-  transform: (node: MyRootContent) => ReactNode,
-): ReactNode | undefined {
-  if (node.type === 'image') {
-    const imgNode = node as Image
-    return <PixelatedImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
-  }
-  if (node.type === 'heading') {
-    const heading = node as Heading
-    const text = extractText(heading.children)
-    const id = slugify(text)
-    const level = Math.min(heading.depth - 1, 3) as HeadingLevel
-    return (
-      <SectionHeading key={id} id={id} level={level}>
-        {heading.children.map((child, i) => {
-          return <Fragment key={i}>{transform(child as MyRootContent)}</Fragment>
-        })}
-      </SectionHeading>
-    )
-  }
-  if (node.type === 'code') {
-    const codeNode = node as { lang?: string; value: string }
-    const lang = codeNode.lang || 'bash'
-    const isDiagram = lang === 'diagram'
-    return (
-      <CodeBlock lang={lang} lineHeight={isDiagram ? '1.3' : '1.6'} showLineNumbers={!isDiagram}>
-        {codeNode.value}
-      </CodeBlock>
-    )
-  }
-  return undefined
-}
-
-function RenderNodes({ markdown, nodes }: { markdown: string; nodes: RootContent[] }) {
-  const syntheticRoot: Root = { type: 'root', children: nodes }
-  return (
-    <SafeMdxRenderer
-      markdown={markdown}
-      mdast={syntheticRoot as MyRootContent}
-      components={mdxComponents}
-      renderNode={renderNode}
-    />
-  )
-}
+import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
+import { RenderNodes } from './lib/mdx-components-map.tsx'
+import { SiteHead } from './lib/site-head.tsx'
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -406,45 +135,9 @@ export function createHolocronApp() {
       }
     })
     .layout('/*', async ({ children }) => {
-      // Favicon: emit a single <link> when only one variant is set (or when
-      // both normalize to the same asset), or two with prefers-color-scheme
-      // media queries when the user explicitly provided distinct light/dark
-      // files.
-      const { light: faviconLight, dark: faviconDark } = config.favicon
-      const hasBoth =
-        Boolean(faviconLight) && Boolean(faviconDark) && faviconLight !== faviconDark
       return (
         <html lang='en'>
-          <Head>
-            <Head.Meta charSet='utf-8' />
-            <Head.Meta name='viewport' content='width=device-width, initial-scale=1' />
-            <link rel='preconnect' href='https://fonts.googleapis.com' />
-            <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='' />
-            <link href='https://rsms.me/inter/inter.css' rel='stylesheet' precedence='default' />
-            <link
-              href='https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap'
-              rel='stylesheet'
-              precedence='default'
-            />
-            {hasBoth ? (
-              <>
-                <link rel='icon' href={faviconLight} media='(prefers-color-scheme: light)' />
-                <link rel='icon' href={faviconDark} media='(prefers-color-scheme: dark)' />
-              </>
-            ) : (
-              (faviconLight || faviconDark) && (
-                <link rel='icon' href={faviconLight || faviconDark} />
-              )
-            )}
-            {config.description && (
-              <>
-                <Head.Meta name='description' content={config.description} />
-                <Head.Meta property='og:description' content={config.description} />
-              </>
-            )}
-            <Head.Meta property='og:site_name' content={config.name} />
-            <Head.Title>{config.name}</Head.Title>
-          </Head>
+          <SiteHead config={config} />
           <body>{children}</body>
         </html>
       )
