@@ -20,6 +20,7 @@ import { Icon } from '../icon.tsx'
 export function TocInline({ headings, activeId, searchState, pageHref, highlightedHref, highlightedRef }: { headings: NavHeading[]; activeId: string; searchState: SearchState; pageHref: string; highlightedHref: string | null; highlightedRef: React.RefObject<HTMLAnchorElement | null> }) {
   const listRef = useRef<HTMLUListElement>(null)
   const indicatorRef = useRef<HTMLDivElement>(null)
+  const isSearchActive = searchState.matchedHrefs !== null
 
   // Single effect: position the active-heading indicator bar and keep it
   // aligned when the list resizes. The update closure is defined inside the
@@ -44,7 +45,9 @@ export function TocInline({ headings, activeId, searchState, pageHref, highlight
 
       indicator.style.transform = `translateY(${top}px)`
       indicator.style.height = `${height}px`
-      indicator.style.opacity = '1'
+      // Dim the indicator when search is filtering so the active-heading
+      // bar doesn't compete visually with the search highlight.
+      indicator.style.opacity = isSearchActive ? '0.3' : '1'
     }
 
     updateIndicator()
@@ -54,7 +57,7 @@ export function TocInline({ headings, activeId, searchState, pageHref, highlight
     const observer = new ResizeObserver(updateIndicator)
     observer.observe(list)
     return () => observer.disconnect()
-  }, [activeId])
+  }, [activeId, isSearchActive])
 
   return (
     <div className='relative mt-1.5 pl-0.5 pb-2'>
