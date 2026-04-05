@@ -196,11 +196,51 @@ test.describe("hydration", () => {
 });
 
 test.describe("not found", () => {
-  test("returns 404 for unknown page", async () => {
+  test("returns 404 status for unknown page", async () => {
+    const response = await fetch(baseURL + "/does-not-exist", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    expect(response.status).toBe(404);
+  });
+
+  test("renders the full editorial layout on 404", async () => {
     const response = await fetch(baseURL + "/does-not-exist", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
-    expect(html).toContain("not found");
+    // Navbar slot and sidebar slot are both present
+    expect(html).toContain("slot-navbar");
+    expect(html).toContain("slot-sidebar-left");
+    // Known sidebar page link is rendered (from the test docs holocron.jsonc)
+    expect(html).toMatch(/href="\/getting-started"/);
+  });
+
+  test("shows the missing path and a link back home", async () => {
+    const response = await fetch(baseURL + "/does-not-exist", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    expect(html).toContain("404");
+    expect(html).toContain("Page not found");
+    expect(html).toContain("/does-not-exist");
+    expect(html).toContain("Back to documentation");
+  });
+
+  test("uses site name in the 404 page title and sets noindex", async () => {
+    const response = await fetch(baseURL + "/does-not-exist", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    expect(html).toMatch(/<title[^>]*>Page not found — /);
+    expect(html).toMatch(/<meta[^>]*name="robots"[^>]*content="noindex"/);
+  });
+
+  test("renders 404 for nested paths", async () => {
+    const response = await fetch(baseURL + "/foo/bar/baz", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    expect(response.status).toBe(404);
+    const html = await response.text();
+    expect(html).toContain("/foo/bar/baz");
   });
 });

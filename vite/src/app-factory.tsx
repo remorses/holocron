@@ -38,6 +38,7 @@ import {
 } from '@holocron.so/vite/components/markdown'
 import { slugify, extractText } from './components/toc-tree.ts'
 import { TableOfContentsPanel } from './components/toc-panel.tsx'
+import { NotFound } from './components/not-found.tsx'
 import type { HolocronConfig } from './config.ts'
 import {
   type Navigation,
@@ -216,7 +217,7 @@ export function createHolocronApp({
         </html>
       )
     })
-    .page('/*', async ({ params }) => {
+    .page('/*', async ({ params, response }) => {
       const rawSlug = (params as Record<string, string>)['*'] || ''
       const slug = rawSlug === '' ? 'index' : rawSlug
 
@@ -230,15 +231,42 @@ export function createHolocronApp({
         }
       }
 
-      if (!pageData) {
-        return <div>Page not found: {slug}</div>
+      // MDX content is separate from nav tree (server-only, not in client bundle)
+      const pageMdx = pageData ? mdxContent[slug] : undefined
+
+      // No matching page, or MDX file is missing → render a nice 404 page
+      // inside the normal EditorialPage shell so the user can still navigate.
+      if (!pageData || !pageMdx) {
+        response.status = 404
+
+        // Use first tab's first page as fallback home + sidebar context
+        const fallbackFirstPage = navigation[0] ? findFirstPageInTab(navigation[0]) : undefined
+        const fallbackGroups = fallbackFirstPage
+          ? getActiveGroups(navigation, fallbackFirstPage.href)
+          : []
+
+        const missingPath = '/' + rawSlug
+
+        return (
+          <>
+            <Head>
+              <Head.Title>{`Page not found — ${config.name}`}</Head.Title>
+              <Head.Meta name='robots' content='noindex' />
+            </Head>
+            <EditorialPage
+              groups={fallbackGroups}
+              logo={logoSrc}
+              siteName={config.name}
+              tabs={tabItems}
+              activeTab={tabItems[0]?.href}
+              headerLinks={headerLinks}
+            >
+              <NotFound path={missingPath} homeHref={fallbackFirstPage?.href || '/'} />
+            </EditorialPage>
+          </>
+        )
       }
 
-      // MDX content is separate from nav tree (server-only, not in client bundle)
-      const pageMdx = mdxContent[slug]
-      if (!pageMdx) {
-        return <div>MDX content not found for: {slug}</div>
-      }
       const mdast = mdxParse(pageMdx) as Root
 
       // Extract hero nodes
