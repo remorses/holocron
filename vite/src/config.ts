@@ -63,11 +63,15 @@ export type ConfigNavbarLink = {
 }
 
 /** The navbar primary CTA button (right of navbar). Normalized: label
- *  and href are required, url aliased into href, type preserved. */
+ *  and href are required, url aliased into href, type preserved. An
+ *  `icon` is auto-filled from `type` when omitted (see TYPE_ICONS in
+ *  normalize-config.ts) so a `{ type: 'github' }` primary always
+ *  renders the github glyph. */
 export type ConfigNavbarPrimary = {
   label: string
   href: string
   type?: string
+  icon?: ConfigIcon
 }
 
 export type HolocronConfig = {

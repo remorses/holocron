@@ -24,6 +24,38 @@ const TYPE_LABELS: Record<string, string> = {
   link: 'Link',
 }
 
+/** Known `type` → default lucide icon name. Applied when the user writes
+ *  `{ type: 'github', href: '...' }` without an explicit `icon`, so the
+ *  navbar link is never rendered invisible. Keys are aligned with the
+ *  `socialPlatformKeys` list in schema.ts. All values verified to exist
+ *  in @iconify-json/lucide. */
+const TYPE_ICONS: Record<string, string> = {
+  github: 'github',
+  slack: 'slack',
+  // lucide has no dedicated 'discord' icon — fall back to message-circle
+  discord: 'message-circle',
+  twitter: 'twitter',
+  'x-twitter': 'twitter',
+  // lucide 'x' is the close-X symbol, not the X/Twitter brand logo. Map
+  // social type 'x' to the twitter glyph so users don't get a cross mark.
+  x: 'twitter',
+  linkedin: 'linkedin',
+  youtube: 'youtube',
+  facebook: 'facebook',
+  instagram: 'instagram',
+  website: 'globe',
+  'earth-americas': 'globe',
+  'hacker-news': 'newspaper',
+  medium: 'book-open',
+  telegram: 'send',
+  bluesky: 'cloud',
+  threads: 'at-sign',
+  reddit: 'message-square',
+  podcast: 'rss',
+  button: 'external-link',
+  link: 'external-link',
+}
+
 export function normalize(raw: Record<string, unknown>): HolocronConfig {
   return {
     name: (raw.name as string) || 'Documentation',
@@ -239,7 +271,16 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
       (typeof link.href === 'string' && link.href) ||
       (typeof link.url === 'string' && link.url) ||
       ''
-    const icon = link.icon as ConfigIcon | undefined
+    // Auto-fill icon from type when user writes `{ type: 'github', href: ... }`
+    // with no explicit icon. Without this, the navbar link would render
+    // empty (only aria-label set) — the original "invisible github link" bug.
+    const rawIcon = link.icon as ConfigIcon | undefined
+    const icon: ConfigIcon | undefined =
+      rawIcon !== undefined
+        ? rawIcon
+        : type && TYPE_ICONS[type]
+          ? TYPE_ICONS[type]
+          : undefined
     return {
       label,
       href,
@@ -252,6 +293,15 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
   let primary: ConfigNavbarPrimary | undefined
   if (rawPrimary) {
     const type = typeof rawPrimary.type === 'string' ? rawPrimary.type : undefined
+    // Same auto-fill logic for primary CTA — a `type: 'github'` primary
+    // button without an explicit icon should render the github glyph.
+    const rawIcon = rawPrimary.icon as ConfigIcon | undefined
+    const icon: ConfigIcon | undefined =
+      rawIcon !== undefined
+        ? rawIcon
+        : type && TYPE_ICONS[type]
+          ? TYPE_ICONS[type]
+          : undefined
     primary = {
       label:
         (typeof rawPrimary.label === 'string' && rawPrimary.label) ||
@@ -263,6 +313,7 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
         (typeof rawPrimary.url === 'string' && rawPrimary.url) ||
         '',
       ...(type !== undefined && { type }),
+      ...(icon !== undefined && { icon }),
     }
   }
 

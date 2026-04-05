@@ -432,6 +432,7 @@ describe('navbar link icon + type preservation', () => {
     expect(config.navbar.primary).toMatchInlineSnapshot(`
       {
         "href": "https://gh.example",
+        "icon": "github",
         "label": "GitHub",
         "type": "github",
       }

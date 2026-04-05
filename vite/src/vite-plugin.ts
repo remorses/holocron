@@ -22,6 +22,8 @@ import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
+import { collectIconRefs } from './lib/collect-icons.ts'
+import { resolveIconSvgs, type IconAtlas } from './lib/resolve-icons.ts'
 import react from '@vitejs/plugin-react'
 
 export type HolocronPluginOptions = {
@@ -39,6 +41,9 @@ const RESOLVED_MDX = '\0' + VIRTUAL_MDX
 
 const VIRTUAL_APP = 'virtual:holocron-app'
 const RESOLVED_APP = '\0' + VIRTUAL_APP
+
+const VIRTUAL_ICONS = 'virtual:holocron-icons'
+const RESOLVED_ICONS = '\0' + VIRTUAL_ICONS
 
 /**
  * Workaround for Vite 7 + @vitejs/plugin-rsc: the built-in vite:asset load
@@ -87,6 +92,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let root: string
   let config: HolocronConfig
   let syncResult: SyncResult
+  let iconAtlas: IconAtlas
   let pagesDir: string
   let publicDirPath: string
   let distDirPath: string
@@ -179,8 +185,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         distDir: distDirPath,
       })
 
+      // Walk the config+navigation, extract referenced icons, resolve each
+      // via @iconify-json/lucide, and stash the serialized atlas. Only
+      // the icons actually referenced in this site's config ship to the
+      // client — typically < 20 icons → 2-5 KB gzipped.
+      const iconRefs = collectIconRefs({ config, navigation: syncResult.navigation })
+      iconAtlas = resolveIconSvgs(iconRefs)
+
       console.error(
-        `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached)`,
+        `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached), resolved ${Object.keys(iconAtlas.icons).length} icons`,
       )
     },
 
@@ -207,6 +220,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
       if (id === VIRTUAL_APP || id.endsWith('/' + VIRTUAL_APP)) {
         return RESOLVED_APP
+      }
+      if (id === VIRTUAL_ICONS) {
+        return RESOLVED_ICONS
       }
     },
 
@@ -247,6 +263,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           // In dev mode, spiceflow's SSR middleware handles requests instead.
           `if (!import.meta.hot) { app.listen(Number(process.env.PORT || 3000)) }`,
         ].join('\n')
+      }
+      if (id === RESOLVED_ICONS) {
+        // Static atlas — one JSON.stringify at build time, no runtime cost.
+        // Walks back to configResolved for the input, so any config edit that
+        // changes icons goes through the hotUpdate path below.
+        return `export const iconAtlas = ${JSON.stringify(iconAtlas)}`
       }
     },
 
@@ -309,6 +331,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           projectRoot: root,
           distDir: distDirPath,
         })
+        // Config changes can add/remove icons — re-resolve the atlas so
+        // new icons land in the client bundle on the next request.
+        const iconRefs = collectIconRefs({ config, navigation: syncResult.navigation })
+        iconAtlas = resolveIconSvgs(iconRefs)
 
         ctx.server.environments.client?.hot.send({
           type: 'custom',
@@ -317,7 +343,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         })
       }
 
-      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX]) {
+      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_ICONS]) {
         const mod = this.environment.moduleGraph.getModuleById(resolvedId)
         if (mod) {
           this.environment.moduleGraph.invalidateModule(mod)

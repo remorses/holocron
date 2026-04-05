@@ -571,6 +571,9 @@
         "url": {
           "description": "Alias for `href` for Mintlify compatibility",
           "type": "string"
+        },
+        "icon": {
+          "$ref": "#/definitions/iconSchema"
         }
       },
       "additionalProperties": false,

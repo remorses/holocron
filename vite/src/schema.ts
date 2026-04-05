@@ -172,6 +172,10 @@ export const anchorSchema = z
 /**
  * A page entry is either a string slug pointing at an MDX file, or a
  * nested group. Defined here with a forward reference for recursion.
+ *
+ * Holocron follows Mintlify's convention: individual pages carry their
+ * `icon` in MDX frontmatter (not in the navigation config), so there is
+ * no page-object form in the navigation schema.
  */
 export type PageEntryInput = string | GroupInput
 
@@ -406,6 +410,7 @@ const navbarPrimarySchema = z
       .string()
       .optional()
       .describe('Alias for `href` for Mintlify compatibility'),
+    icon: iconSchema.optional(),
   })
   .describe('The primary CTA button rendered at the right of the navbar')
   .meta({ id: 'navbarPrimarySchema' })

@@ -13,3 +13,12 @@ declare module 'virtual:holocron-mdx' {
   const content: Record<string, string>
   export default content
 }
+
+declare module 'virtual:holocron-icons' {
+  import type { IconAtlas } from './lib/resolve-icons.ts'
+  /** Serialized icon atlas — keys are `library:name` (e.g. `lucide:github`),
+   *  values are `{ body, width, height }`. Populated at Vite plugin init
+   *  by walking the config+navigation and resolving via
+   *  @iconify-json/lucide. Only referenced icons are included. */
+  export const iconAtlas: IconAtlas
+}
