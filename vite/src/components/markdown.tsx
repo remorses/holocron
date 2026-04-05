@@ -10,7 +10,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { flushSync } from 'react-dom'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
-import { Link } from 'spiceflow/react'
+import { Link, router } from 'spiceflow/react'
 import type { TocNodeType, TocTreeNode } from './toc-tree.ts'
 import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, getActiveGroups } from '../navigation.ts'
 import { createSearchDb, searchSidebar, emptySearchState, type SearchState } from './search.ts'
@@ -84,13 +84,35 @@ function ChevronIcon({ expanded, className }: { expanded: boolean; className?: s
   )
 }
 
+/* ── Search icon (magnifier) for sidebar search input ─────────────────── */
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden='true'
+      viewBox='0 0 24 24'
+      width='14'
+      height='14'
+      fill='none'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      className={className}
+    >
+      <circle cx='11' cy='11' r='8' />
+      <path d='m21 21-4.34-4.34' />
+    </svg>
+  )
+}
+
 /* ── Inline TOC (flat heading list under active page) ────────────────── */
 
 /** Flat list of headings shown under the active page in the sidebar.
  *  All headings are rendered at the same level regardless of depth,
  *  matching the Agentation website pattern. Includes a guide line and
  *  animated active indicator bar. */
-function TocInline({ headings, activeId, searchState, pageHref }: { headings: NavHeading[]; activeId: string; searchState: SearchState; pageHref: string }) {
+function TocInline({ headings, activeId, searchState, pageHref, highlightedHref, highlightedRef }: { headings: NavHeading[]; activeId: string; searchState: SearchState; pageHref: string; highlightedHref: string | null; highlightedRef: React.RefObject<HTMLAnchorElement | null> }) {
   const listRef = useRef<HTMLUListElement>(null)
   const indicatorRef = useRef<HTMLDivElement>(null)
 
@@ -165,15 +187,20 @@ function TocInline({ headings, activeId, searchState, pageHref }: { headings: Na
           const headingHref = `${pageHref}#${heading.slug}`
           const isDimmed = searchState.dimmedHrefs?.has(headingHref) ?? false
           const isSearchActive = searchState.matchedHrefs !== null
+          const isHighlighted = highlightedHref === headingHref
           return (
             <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.15s ease' }}>
               <a
+                ref={isHighlighted ? highlightedRef : undefined}
                 href={`#${heading.slug}`}
                 className='block leading-4 no-underline transition-colors duration-[120ms]'
                 tabIndex={isDimmed ? -1 : 0}
                 style={{
                   color: (isSearchActive && !isDimmed) ? 'var(--sidebar-toc-foreground-active)' : isActive ? 'var(--sidebar-toc-foreground-active)' : 'var(--sidebar-toc-foreground)',
                   fontWeight: (isSearchActive && !isDimmed) ? 500 : isActive ? 500 : 400,
+                  background: isHighlighted ? 'var(--selection-bg)' : undefined,
+                  borderRadius: isHighlighted ? '4px' : undefined,
+                  boxShadow: isHighlighted ? '0 0 0 4px var(--selection-bg)' : undefined,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -263,7 +290,18 @@ function ExpandableContainer({ open, children }: { open: boolean; children: Reac
           : 'none',
       }}
     >
-      <div style={{ overflow: 'hidden', minHeight: 0 }}>{children}</div>
+      {/* Inner clip. `overflow: hidden` + `min-height: 0` makes the grid
+        * track collapsible. `paddingInline: 4px` + `marginInline: -4px`
+        * creates 4px of horizontal clearance INSIDE the clip so children's
+        * search-highlight box-shadow (4px spread) renders without being
+        * cut off. See MEMORY.md "box-shadow for 'bleed' highlight outlines"
+        * for context. */}
+      <div style={{
+        overflow: 'hidden',
+        minHeight: 0,
+        paddingInline: '4px',
+        marginInline: '-4px',
+      }}>{children}</div>
     </div>
   )
 }
@@ -276,16 +314,21 @@ function NavPageLink({
   activeHeadingId,
   depth,
   searchState,
+  highlightedHref,
+  highlightedRef,
 }: {
   page: NavPage
   currentPageHref?: string
   activeHeadingId: string
   depth: number
   searchState: SearchState
+  highlightedHref: string | null
+  highlightedRef: React.RefObject<HTMLAnchorElement | null>
 }) {
   const isActive = page.href === currentPageHref
   const isDimmed = searchState.dimmedHrefs?.has(page.href) ?? false
   const isSearchActive = searchState.matchedHrefs !== null
+  const isHighlighted = highlightedHref === page.href
   /* When search is active and this page matched, expand its TOC so headings are visible */
   const showToc = isSearchActive
     ? (searchState.matchedHrefs?.has(page.href) ?? false) && page.headings.length > 0
@@ -293,6 +336,7 @@ function NavPageLink({
   return (
     <div className='flex flex-col' style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.15s ease' }}>
       <Link
+        ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
         className='block text-xs no-underline transition-colors duration-150'
         tabIndex={isDimmed ? -1 : 0}
@@ -301,6 +345,9 @@ function NavPageLink({
           color: (isSearchActive && !isDimmed) ? 'var(--sidebar-foreground-active)' : isActive ? 'var(--sidebar-foreground-active)' : 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
           transition: 'color 0.15s, font-variation-settings 0.25s',
+          background: isHighlighted ? 'var(--selection-bg)' : undefined,
+          borderRadius: isHighlighted ? '4px' : undefined,
+          boxShadow: isHighlighted ? '0 0 0 4px var(--selection-bg)' : undefined,
         }}
         onMouseEnter={(e) => {
           if (!isActive) {
@@ -319,7 +366,7 @@ function NavPageLink({
       </Link>
       <ExpandableContainer open={showToc}>
         {page.headings.length > 0 && (
-          <TocInline headings={page.headings} activeId={activeHeadingId} searchState={searchState} pageHref={page.href} />
+          <TocInline headings={page.headings} activeId={activeHeadingId} searchState={searchState} pageHref={page.href} highlightedHref={highlightedHref} highlightedRef={highlightedRef} />
         )}
       </ExpandableContainer>
     </div>
@@ -337,6 +384,8 @@ function NavGroupNode({
   onToggleGroup,
   activeHeadingId,
   searchState,
+  highlightedHref,
+  highlightedRef,
 }: {
   group: NavGroup
   depth: number
@@ -347,6 +396,8 @@ function NavGroupNode({
   onToggleGroup: (groupKey: string) => void
   activeHeadingId: string
   searchState: SearchState
+  highlightedHref: string | null
+  highlightedRef: React.RefObject<HTMLAnchorElement | null>
 }) {
   const groupKey = parentPath ? `${parentPath}\0${group.group}` : group.group
 
@@ -372,6 +423,8 @@ function NavGroupNode({
                 activeHeadingId={activeHeadingId}
                 depth={0}
                 searchState={searchState}
+                highlightedHref={highlightedHref}
+                highlightedRef={highlightedRef}
               />
             )
           }
@@ -387,6 +440,8 @@ function NavGroupNode({
                 onToggleGroup={onToggleGroup}
                 activeHeadingId={activeHeadingId}
                 searchState={searchState}
+                highlightedHref={highlightedHref}
+                highlightedRef={highlightedRef}
               />
             )
           }
@@ -432,6 +487,8 @@ function NavGroupNode({
                   activeHeadingId={activeHeadingId}
                   depth={depth}
                   searchState={searchState}
+                  highlightedHref={highlightedHref}
+                  highlightedRef={highlightedRef}
                 />
               )
             }
@@ -447,6 +504,8 @@ function NavGroupNode({
                   onToggleGroup={onToggleGroup}
                   activeHeadingId={activeHeadingId}
                   searchState={searchState}
+                  highlightedHref={highlightedHref}
+                  highlightedRef={highlightedRef}
                 />
               )
             }
@@ -537,6 +596,14 @@ export function SideNav() {
   const highlightedRef = useRef<HTMLAnchorElement>(null)
   const [isPending, startTransition] = useTransition()
 
+  // Derive the href of the currently highlighted match — passed down through
+  // NavGroupNode/NavPageLink/TocInline so the matching link renders a tint.
+  const highlightedHref: string | null = (
+    searchState.focusableHrefs && searchState.focusableHrefs.length > 0
+      ? searchState.focusableHrefs[highlightedIndex] ?? null
+      : null
+  )
+
   const handleQueryChange = useCallback(
     (value: string) => {
       setQuery(value)
@@ -573,19 +640,21 @@ export function SideNav() {
       const focusable = searchState.focusableHrefs
       if (!focusable || focusable.length === 0) return
       if (e.key === 'ArrowDown') {
+        // Wrap-around: at last item, jump back to first.
         e.preventDefault()
         // `flushSync` forces React to commit the state change synchronously so
         // `highlightedRef` points at the newly highlighted element before we
         // scroll it into view. Handles the side effect at its event-handler
         // source instead of reacting to `highlightedIndex` changes in an effect.
         flushSync(() => {
-          setHighlightedIndex((prev) => Math.min(prev + 1, focusable.length - 1))
+          setHighlightedIndex((prev) => (prev + 1) % focusable.length)
         })
         highlightedRef.current?.scrollIntoView({ block: 'nearest' })
       } else if (e.key === 'ArrowUp') {
+        // Wrap-around: at first item, jump to last.
         e.preventDefault()
         flushSync(() => {
-          setHighlightedIndex((prev) => Math.max(prev - 1, 0))
+          setHighlightedIndex((prev) => (prev - 1 + focusable.length) % focusable.length)
         })
         highlightedRef.current?.scrollIntoView({ block: 'nearest' })
       } else if (e.key === 'Enter') {
@@ -594,7 +663,10 @@ export function SideNav() {
         if (href) {
           handleQueryChange('')
           searchInputRef.current?.blur()
-          window.location.hash = href
+          // router.push handles both path + hash hrefs (e.g. "/guides/intro"
+          // or "/guides/intro#setup"). Never set window.location.hash — that
+          // produces broken URLs like "current-url#/guides/intro".
+          router.push(href)
         }
       }
     },
@@ -603,8 +675,18 @@ export function SideNav() {
 
   return (
     <aside className='flex flex-col max-w-(--grid-toc-width) min-h-0'>
-      {/* Search input with F hotkey badge */}
-      <div className='pb-3 flex items-center relative shrink-0'>
+      {/* Search input — leading magnifier icon + F hotkey kbd on the right.
+          Input stays a real text field (not a button opening a dialog).
+          `pl-1` mirrors the nav below so the search input aligns
+          horizontally with the nav links. */}
+      <div className='pb-3 pl-1 flex items-center relative shrink-0'>
+        <span
+          aria-hidden='true'
+          className='absolute left-2 pointer-events-none inline-flex items-center justify-center'
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          <SearchIcon />
+        </span>
         <input
           ref={searchInputRef}
           type='text'
@@ -612,9 +694,9 @@ export function SideNav() {
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           placeholder='search...'
-          className='w-full text-xs outline-none lowercase box-border'
+          className='w-full text-sm outline-none lowercase box-border'
           style={{
-            padding: '2px 24px 2px 8px',
+            padding: '6px 28px 6px 28px',
             fontFamily: 'var(--font-primary)',
             fontWeight: 'var(--weight-prose)',
             color: 'var(--text-primary)',
@@ -649,7 +731,11 @@ export function SideNav() {
         )}
       </div>
 
-      <nav aria-label='Navigation' className='overflow-y-auto min-h-0 pr-1 flex flex-col gap-2'>
+      {/* `pl-1` gives the search-highlight box-shadow 4px of horizontal
+          clearance inside nav's overflow-y-auto clip (browsers force both
+          axes to auto when one is). `pr-1` was already there for scrollbar
+          clearance. */}
+      <nav aria-label='Navigation' className='overflow-y-auto min-h-0 pl-1 pr-1 flex flex-col gap-2'>
         {groups.map((group) => (
           <NavGroupNode
             key={group.group}
@@ -661,6 +747,8 @@ export function SideNav() {
             onToggleGroup={toggleGroup}
             activeHeadingId={activeId}
             searchState={searchState}
+            highlightedHref={highlightedHref}
+            highlightedRef={highlightedRef}
           />
         ))}
       </nav>

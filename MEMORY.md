@@ -879,3 +879,91 @@ checkout if committed. Always check `git diff pnpm-lock.yaml` for `file:`
 path changes before staging and exclude the file from commits when the only
 changes are path rewrites. Use `git commit path/to/specific/files` (selective
 staging) rather than `git add -A` in worktrees.
+
+## Sidebar search — architecture & navigation gotchas (markdown.tsx)
+
+Sidebar search lives in `SideNav()` at `vite/src/components/markdown.tsx`
+(search input around line 555, keyboard handlers ~509-550, state ~477-501).
+The Orama DB + search logic is in `vite/src/components/search.ts`, and
+`siteSearchEntries` is built once at module load in `vite/src/data.ts`
+(`buildSearchEntries` → only pages + headings, no groups).
+
+**SearchState shape** (`search.ts:23-32`):
+- `matchedHrefs: Set<string> | null` — hrefs that matched query
+- `expandGroupKeys: Set<string> | null` — groups to auto-expand (ancestors
+  of matches, via \0-joined groupPath walk)
+- `dimmedHrefs: Set<string> | null` — hrefs to render at opacity 0.3
+- `focusableHrefs: string[] | null` — matched hrefs in document order, used
+  for arrow-key cycling
+
+Dimmed items get `tabIndex={-1}` in `NavPageLink` (line 258) and `TocInline`
+(line 170), so **browser-native Tab/Shift+Tab naturally skips them** — Tab
+cycling through filtered items already works without custom handlers.
+
+**Programmatic navigation — DO NOT use `window.location.hash = href`.** The
+href values are full paths (`/some/page` or `/some/page#slug`), so setting
+hash produces `current-url#/some/page` which is broken. Use
+`router.push(href)` from `spiceflow/react` (the same `router` that `<Link>`
+uses internally — see `node_modules/spiceflow/dist/react/components.js:152`).
+
+**Icon convention in markdown.tsx**: inline SVG components only (no
+`lucide-react` dep). Examples: `ChevronIcon` (~line 69), callout icons
+(~line 1372). New icons should follow the same pattern — `currentColor`
+stroke/fill, `viewBox='0 0 24 24'` (or 16 if tiny), wrapper `<span>` for
+layout.
+
+**Selection highlight color**: `--selection-bg` token already exists in
+`globals.css` (`rgba(0,0,0,0.08)` light / `rgba(255,255,255,0.1)` dark).
+Semantically perfect for "currently highlighted search result" — don't
+invent a new `--search-highlight-*` token.
+
+**Common pitfalls seen in this file's search implementation**:
+- `highlightedRef` declared but not attached to any element → `scrollIntoView`
+  in the effect is a no-op. Must conditionally attach `ref` to the DOM node
+  whose href matches `focusableHrefs[highlightedIndex]`.
+- `highlightedIndex` state lives in `SideNav` but never propagates into
+  `NavPageLink`/`TocInline` children. Derive `highlightedHref` in `SideNav`
+  and thread it through as a single prop — simpler than passing the index.
+- ArrowUp/Down use `Math.min`/`Math.max` clamp (no wrap). Wrap-around
+  (modulo) is friendlier: at last item, ArrowDown goes to first:
+  `(prev + 1) % length` and `(prev - 1 + length) % length`.
+
+## `box-shadow` for "bleed" highlight outlines gets clipped by `overflow-y-auto` parents
+
+Used `boxShadow: '0 0 0 4px var(--selection-bg)'` as a 4px spread outline
+around the highlighted sidebar item. Visually perfect — creates a pill
+that extends 4px beyond the element's text box without changing layout.
+
+**Problem**: the sidebar `<nav>` has `overflow-y-auto` for scrolling. Per
+CSS spec, when one axis is `auto`, the other axis can't stay `visible` —
+browsers force it to `auto` too. So `overflow-y-auto` also clips
+horizontally. A 4px leftward `box-shadow` gets cut off at the nav's left
+edge, and the pill looks like it's missing its left bevel.
+
+Same problem for `ExpandableContainer` (uses `overflow: hidden` for
+height animations) — any `box-shadow`/negative-margin extension from
+children inside it also gets clipped.
+
+**Fixes that don't work**:
+- `padding + margin: -Npx` on the highlighted element itself — the
+  negative margin extends past the element's natural box, but that
+  extension is STILL inside the overflow-clipped parent → clipped.
+- `overflow-x: visible; overflow-y: auto` on the parent — CSS normalizes
+  this to `overflow: auto auto` (both axes).
+
+**Fix that works**: add horizontal padding (`pl-1` = 4px) to every
+clipping ancestor that the highlight might need to bleed into. That
+padding creates clearance inside the clip boundary:
+- Add `pl-1` to the scroll `<nav>` container.
+- Keep `pr-1` (was already there for scrollbar clearance).
+- To maintain visual alignment between search input and nav items, add
+  `pl-1` to the search input wrapper `<div>` too.
+- Nested items inside `ExpandableContainer`: either use a different
+  highlight mechanism that doesn't bleed, or switch to inner `padding`
+  on the highlighted element itself (no outer bleed).
+
+**Cleaner alternative**: use inner `padding` (2px 4px) + `background` +
+`borderRadius` on the highlighted element, no outer bleed at all. The
+highlight fits entirely within the element's own box — no parent clip
+interaction. Text shifts 4px when highlighted, but that's a feature
+(indicates "selected"). This approach survives any overflow scheme.
