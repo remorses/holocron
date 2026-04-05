@@ -98,7 +98,7 @@ export function TocInline({ headings, activeId, searchState, pageHref, highlight
               <a
                 ref={isHighlighted ? highlightedRef : undefined}
                 href={`#${heading.slug}`}
-                className='block leading-4 no-underline transition-colors duration-[120ms]'
+                className={`block leading-4 no-underline ${!isDimmed ? 'hover:[background:var(--selection-bg)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--selection-bg)]' : ''}`}
                 tabIndex={isDimmed ? -1 : 0}
                 style={{
                   color: (isSearchActive && !isDimmed) ? 'var(--sidebar-toc-foreground-active)' : isActive ? 'var(--sidebar-toc-foreground-active)' : 'var(--sidebar-toc-foreground)',
@@ -106,18 +106,6 @@ export function TocInline({ headings, activeId, searchState, pageHref, highlight
                   background: isHighlighted ? 'var(--selection-bg)' : undefined,
                   borderRadius: isHighlighted ? '4px' : undefined,
                   boxShadow: isHighlighted ? '0 0 0 4px var(--selection-bg)' : undefined,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.color = 'var(--sidebar-foreground-hover)'
-                    e.currentTarget.style.fontVariationSettings = '"wght" 500'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.color = 'var(--sidebar-toc-foreground)'
-                    e.currentTarget.style.fontVariationSettings = ''
-                  }
                 }}
               >
                 {heading.text}
@@ -160,7 +148,7 @@ export function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className='flex items-center gap-1.5 text-xs no-underline transition-colors duration-150'
+        className={`flex items-center gap-1.5 text-xs no-underline ${!isDimmed ? 'hover:[background:var(--selection-bg)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--selection-bg)]' : ''}`}
         tabIndex={isDimmed ? -1 : 0}
         style={{
           fontVariationSettings: (isActive || (isSearchActive && !isDimmed)) ? '"wght" 550' : '"wght" 450',
@@ -170,18 +158,6 @@ export function NavPageLink({
           background: isHighlighted ? 'var(--selection-bg)' : undefined,
           borderRadius: isHighlighted ? '4px' : undefined,
           boxShadow: isHighlighted ? '0 0 0 4px var(--selection-bg)' : undefined,
-        }}
-        onMouseEnter={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.color = 'var(--sidebar-foreground-hover)'
-            e.currentTarget.style.fontVariationSettings = '"wght" 550'
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.color = 'var(--sidebar-foreground)'
-            e.currentTarget.style.fontVariationSettings = '"wght" 450'
-          }
         }}
       >
         <Icon icon={page.icon} size={12} />
@@ -287,17 +263,11 @@ export function NavGroupNode({
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className='flex items-center gap-1 text-xs border-none bg-transparent cursor-pointer p-0 text-left transition-colors duration-150'
+        className='flex items-center gap-1 text-xs border-none bg-transparent cursor-pointer p-0 text-left hover:[background:var(--selection-bg)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--selection-bg)]'
         style={{
           fontVariationSettings: '"wght" 500',
           color: 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${(depth - 1) * 12}px` : undefined,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'var(--sidebar-foreground-hover)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'var(--sidebar-foreground)'
         }}
       >
         <ChevronIcon expanded={isExpanded} className='text-(color:--sidebar-section-foreground)' />
