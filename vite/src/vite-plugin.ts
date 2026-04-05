@@ -347,11 +347,36 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
   }
 
+  // Spiceflow adds `optimizeDeps.include` entries in the form
+  // `'spiceflow > dep'`. Vite's nestedResolveBasedir looks up the left side
+  // (`spiceflow`) starting from the consumer's project root — but when
+  // @holocron.so/vite wraps spiceflow, the consumer only installs
+  // @holocron.so/vite, so `spiceflow` is not directly resolvable from root
+  // and the lookup fails. Rewrite every `'spiceflow > ...'` entry to
+  // `'@holocron.so/vite > spiceflow > ...'` so Vite starts the lookup from
+  // our own package (which IS in the consumer's node_modules). This plugin
+  // must run AFTER spiceflowPlugin so the strings it rewrites are already
+  // in the include array.
+  const rewriteSpiceflowNestedIds: Plugin = {
+    name: 'holocron:rewrite-spiceflow-nested-ids',
+    configEnvironment(_name, config) {
+      if (!config.optimizeDeps?.include) return
+      config.optimizeDeps.include = (
+        config.optimizeDeps.include as string[]
+      ).map((entry) =>
+        typeof entry === 'string' && entry.startsWith('spiceflow >')
+          ? `@holocron.so/vite > ${entry}`
+          : entry,
+      )
+    },
+  }
+
   return [
     rawImportPlugin(),
     holocronPlugin,
     holocronRscPackagePlugin,
     spiceflowPlugin({ entry: VIRTUAL_APP }),
+    rewriteSpiceflowNestedIds,
     tsconfigPaths(),
     tailwindcss(),
     // Include @vitejs/plugin-react by default unless the user already
