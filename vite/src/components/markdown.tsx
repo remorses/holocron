@@ -8,6 +8,7 @@
  */
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import { flushSync } from 'react-dom'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { Link } from 'spiceflow/react'
 import type { TocNodeType, TocTreeNode } from './toc-tree.ts'
@@ -93,38 +94,40 @@ function TocInline({ headings, activeId, searchState, pageHref }: { headings: Na
   const listRef = useRef<HTMLUListElement>(null)
   const indicatorRef = useRef<HTMLDivElement>(null)
 
-  const updateIndicator = useCallback(() => {
-    const list = listRef.current
-    const indicator = indicatorRef.current
-    if (!list || !indicator) return
+  // Single effect: position the active-heading indicator bar and keep it
+  // aligned when the list resizes. The update closure is defined inside the
+  // effect so it closes over the current `activeId` without needing a
+  // `useCallback`, and the effect has exactly one dependency.
+  useEffect(() => {
+    const updateIndicator = () => {
+      const list = listRef.current
+      const indicator = indicatorRef.current
+      if (!list || !indicator) return
 
-    const activeLink = list.querySelector<HTMLElement>(`a[href="#${activeId}"]`)
-    if (!activeLink) {
-      indicator.style.opacity = '0'
-      return
+      const activeLink = list.querySelector<HTMLElement>(`a[href="#${activeId}"]`)
+      if (!activeLink) {
+        indicator.style.opacity = '0'
+        return
+      }
+
+      const listRect = list.getBoundingClientRect()
+      const linkRect = activeLink.getBoundingClientRect()
+      const top = linkRect.top - listRect.top
+      const height = linkRect.height
+
+      indicator.style.transform = `translateY(${top}px)`
+      indicator.style.height = `${height}px`
+      indicator.style.opacity = '1'
     }
 
-    const listRect = list.getBoundingClientRect()
-    const linkRect = activeLink.getBoundingClientRect()
-    const top = linkRect.top - listRect.top
-    const height = linkRect.height
-
-    indicator.style.transform = `translateY(${top}px)`
-    indicator.style.height = `${height}px`
-    indicator.style.opacity = '1'
-  }, [activeId])
-
-  useEffect(() => {
     updateIndicator()
-  }, [activeId, updateIndicator])
 
-  useEffect(() => {
     const list = listRef.current
     if (!list) return
     const observer = new ResizeObserver(updateIndicator)
     observer.observe(list)
     return () => observer.disconnect()
-  }, [updateIndicator])
+  }, [activeId])
 
   return (
     <div className='relative mt-1.5 pl-0.5 pb-2'>
@@ -487,9 +490,17 @@ export function SideNav() {
   )
 
   // Re-expand ancestor groups when currentPage changes (client-side navigation).
-  // ancestorGroupKeys comes from the loader — it updates atomically with the
-  // new flight payload, no manual tree walk needed.
-  useEffect(() => {
+  // `ancestorGroupKeys` comes from the loader — it updates atomically with the
+  // new flight payload. Instead of syncing in a `useEffect`, we adjust the
+  // state during render: compare the incoming prop against a ref, call
+  // `setExpandedGroups` if it changed, and React will bail out of this render
+  // pass and restart with the merged Set. This is the recommended React
+  // pattern for "adjusting state when a prop changes" (no extra paint, no
+  // effect scheduling). See:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const prevAncestorKeysRef = useRef(ancestorGroupKeys)
+  if (prevAncestorKeysRef.current !== ancestorGroupKeys) {
+    prevAncestorKeysRef.current = ancestorGroupKeys
     setExpandedGroups((prev) => {
       const next = new Set(prev)
       for (const key of ancestorGroupKeys) {
@@ -497,7 +508,7 @@ export function SideNav() {
       }
       return next
     })
-  }, [ancestorGroupKeys])
+  }
 
   const toggleGroup = useCallback((groupKey: string) => {
     setExpandedGroups((prev) => {
@@ -537,12 +548,6 @@ export function SideNav() {
     [db],
   )
 
-  // Scroll highlighted item into view
-  useEffect(() => {
-    if (!searchState.focusableHrefs) return
-    highlightedRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [highlightedIndex, searchState.focusableHrefs])
-
   // Global F hotkey to focus search input
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -569,10 +574,20 @@ export function SideNav() {
       if (!focusable || focusable.length === 0) return
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setHighlightedIndex((prev) => Math.min(prev + 1, focusable.length - 1))
+        // `flushSync` forces React to commit the state change synchronously so
+        // `highlightedRef` points at the newly highlighted element before we
+        // scroll it into view. Handles the side effect at its event-handler
+        // source instead of reacting to `highlightedIndex` changes in an effect.
+        flushSync(() => {
+          setHighlightedIndex((prev) => Math.min(prev + 1, focusable.length - 1))
+        })
+        highlightedRef.current?.scrollIntoView({ block: 'nearest' })
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
-        setHighlightedIndex((prev) => Math.max(prev - 1, 0))
+        flushSync(() => {
+          setHighlightedIndex((prev) => Math.max(prev - 1, 0))
+        })
+        highlightedRef.current?.scrollIntoView({ block: 'nearest' })
       } else if (e.key === 'Enter') {
         e.preventDefault()
         const href = focusable[highlightedIndex]
