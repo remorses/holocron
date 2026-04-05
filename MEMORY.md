@@ -1357,73 +1357,135 @@ export function interpolateDestination(template, params) {
 Neither is worth chasing until we have other reasons to touch
 redirects.
 
-## Icon resolver pattern — string icons are LUCIDE names by convention
+## Icon resolver — build-time lucide atlas + virtual:holocron-icons (SHIPPED 2026-04-06)
 
-**CRITICAL BUG in current code:** `markdown.tsx` renders
-`navbar.links[].icon` strings as `<img src={icon}>`. Wrong. Mintlify's
-convention (and what fumabase implements) is that string icon values
-are **lucide icon names** by default, NOT image paths. So
-`icon: "home"` means "render the lucide home icon", not
-`<img src="home">`.
+**Bug fixed:** `navbar.links[].icon` strings used to render as
+`<img src={icon}>` — wrong. Mintlify's convention (and now holocron's)
+is that string icons are **lucide icon names** by default. Also fixed:
+`{ "type": "github", "href": "..." }` without an explicit icon used
+to render an empty `<a>` tag (only aria-label set) — invisible. Now
+the normalizer auto-fills `link.icon` from `link.type`.
 
-### Dispatch rules (copied from fumabase `docs-website/src/lib/icon.tsx`)
+### Architecture — build-time atlas, client-side lookup
 
-For each `icon: string | { name, library, style }`:
+1. `lib/collect-icons.ts` — walks `config.navbar.links[].icon`,
+   `config.navbar.primary.icon`, `config.navigation.anchors[].icon`,
+   and recursively every `tab.icon` / `group.icon` in the enriched
+   navigation. Dispatches via `iconToRef()`: emoji/URL icons skipped
+   (they render inline), library-name strings map to
+   `{library:'lucide', name}`, objects use `library ?? 'lucide'`.
+   Returns a de-duped `IconRef[]` keyed by `library:name`.
+2. `lib/resolve-icons.ts` — imports
+   `{ icons as lucideIcons } from '@iconify-json/lucide'`, follows
+   aliases (`lucideIcons.aliases?.[name]?.parent` — e.g. `home` →
+   `house`), and emits
+   `{ icons: { 'lucide:github': { body, width, height } } }`.
+3. `vite-plugin.ts` — computes the atlas in `configResolved` (once
+   per build) and re-computes in `hotUpdate` when the config
+   changes. Serves it via the `virtual:holocron-icons` virtual module
+   using `JSON.stringify(iconAtlas)`.
+4. `components/icon.tsx` — `<Icon icon size className>` client
+   component. Imports `iconAtlas` from the virtual module. Emoji →
+   `<span>`, URL → `<img>`, otherwise → inline `<svg>` rendered via
+   `dangerouslySetInnerHTML={{ __html: entry.body }}` with
+   `viewBox="0 0 24 24"`. Icons inherit `currentColor` so they work
+   in both dark + light mode without extra CSS.
 
-1. **Emoji** (matches `/^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)...$/u`)
-   → `<span>{icon}</span>`
-2. **URL** (starts with `http://` / `https://` / `/`) → `<img src={icon} />`
-3. **Otherwise** (default for strings) → library icon name, resolve via
-   iconify set. Default library is `lucide`.
+### Why bundled-client, not server-rendered
 
-### fumabase uses runtime API fetch; holocron should use build-time resolution
+Atlas payload for a typical site is 2-5 KB gzipped (<20 icons × ~180
+bytes body + JSON overhead). Shipping it to the client keeps the call
+sites simple — every `'use client'` component (TabLink, NavGroupNode,
+navbar links) just calls `<Icon>`. Server-rendering + passing
+pre-materialized SVG JSX as props would need a structural refactor
+for negligible payload savings.
 
-Fumabase has a server endpoint `/api/icons/:provider/icon/:name.svg`
-that looks up icons from `@iconify-json/lucide` and returns SVG
-markup. Client fetches per-icon on render.
+Fumabase does runtime-fetch-per-icon because its config is per-tenant
+and changes without rebuilds. Holocron's config is known at Vite
+plugin init → build-time resolution wins on every axis (no network
+round-trip, no loading state, no hydration flicker).
 
-Holocron builds statically at Vite-plugin time with a known config,
-so we can:
-1. Walk `navigation` + `navbar.links` + `navbar.primary` +
-   `footer.socials` at Vite plugin init.
-2. Collect every referenced icon name + library.
-3. Resolve each via `@iconify-json/lucide.icons[name]` (+ aliases map).
-4. Serialize the `{name: svgBody}` map into a virtual module
-   (`virtual:holocron-icons`).
-5. At render time, `<Icon>` reads from the map — zero runtime
-   fetches, zero client bundle bloat, zero hydration flicker.
+### Dispatch rules for the `<Icon>` component
 
-### Type → icon auto-fill (the "invisible github link" fix)
+For each `icon: string | { name, library?, style? } | undefined`:
 
-`normalizeNavbar` should auto-fill `link.icon` from `link.type` when
-the user omits the icon. Map known platform types to lucide names:
-```ts
-const TYPE_ICONS = {
-  github: 'github',    slack: 'slack',
-  twitter: 'twitter',
-  x: 'x',
-  linkedin: 'linkedin',
-  youtube: 'youtube',
-  // ... aligned with schema.ts `socialPlatformKeys`
-}
-```
+1. `undefined` / `''` → return `null` (no layout slot).
+2. **Emoji** (unicode property escape regex matches) →
+   `<span style={{ fontSize: size }}>{icon}</span>`.
+3. **URL** (starts with `http://` / `https://` / `/`) →
+   `<img src={icon} width={size} height={size}>`.
+4. **Otherwise (lucide name)** → look up `iconAtlas.icons['lucide:' + name]`,
+   render inline `<svg>` via `dangerouslySetInnerHTML`.
+5. **Object form** `{ name, library?, style? }` → `library` defaults
+   to `'lucide'` (matches Mintlify). `style` is ignored (FontAwesome
+   concept). Missing from atlas → `null` + `console.warn`.
+
+### Type → icon auto-fill (fixes "invisible github link")
+
+`normalizeNavbar` in `lib/normalize-config.ts` auto-fills
+`link.icon` AND `primary.icon` from their `type` when the user
+omits the icon, via a `TYPE_ICONS` map aligned with `schema.ts`
+`socialPlatformKeys`. Notable mappings:
+
+- `discord` → `message-circle` (lucide has no discord icon)
+- `x` / `x-twitter` → `twitter` (lucide's `x` is a close-X symbol,
+  not the X/Twitter brand logo)
+- `website` / `earth-americas` → `globe`
+- `button` / `link` → `external-link`
+
 Users writing `{ "type": "github", "href": "..." }` (the dominant
-Mintlify pattern) get the GitHub icon automatically without setting
-`icon`.
+Mintlify pattern) now get the GitHub icon automatically.
 
-### Reference paths in fumabase
+### Sizes used in holocron UI
+
+- navbar link icons: 16px
+- navbar primary CTA: 14px
+- tab / anchor icons: 14px
+- group icon at depth 0: 13px
+- group icon next to chevron: 12px
+- emoji: `fontSize: size` (scales with the same `size` prop)
+
+### Integration tests — fixture at `fixtures/fields/`
+
+The `navbar` block in `fields/holocron.jsonc` exercises all 5 icon
+variants (type-only, string lucide name, URL, emoji, object form)
+plus a label-only fallback and a primary CTA. Tests in
+`e2e/fields/fields.test.ts` (describe `navbar icon resolution`)
+assert each variant renders the right element (svg / img / span)
+with the right attributes.
+
+### Pitfalls & notes
+
+- **Empty atlas key leaks missing icons silently.** The resolver logs
+  a warning but emits no entry. `<Icon>` returns null for missing
+  keys → nothing renders. Always check the `[holocron] resolved N
+  icons` log for expected count.
+- **Lucide body uses `currentColor` + `stroke-width`.** SVG color
+  inherits from the parent's `text-*` class. Our navbar/tab/group
+  styles set `color: var(--text-secondary)` with hover →
+  `--text-primary`, so icons color correctly in both modes.
+- **Alias resolution is CRITICAL for common names.** `home`, `user`,
+  etc. are aliases in lucide. The resolver must check
+  `lucideIcons.aliases?.[name]?.parent` BEFORE `lucideIcons.icons[name]`.
+- **iconify-json/lucide is ~490 KB** on disk. It's a Vite-plugin-only
+  import (Node, build-time) and never touches any client or server
+  bundle. Only the resolved SVG bodies get serialized.
+- **HMR recomputes the atlas** in `vite-plugin.ts:hotUpdate` when
+  config changes — invalidates `virtual:holocron-icons` and sends an
+  `rsc:update` so newly referenced icons ship without a dev restart.
+
+### Reference paths in fumabase (runtime-fetch pattern, NOT what we do)
 
 - `fumabase/docs-website/src/lib/icon.tsx` — runtime `DynamicIcon`
-  component with emoji/URL/lucide dispatch (lines 11-120)
+  component with emoji/URL/lucide dispatch + `useEffect` + `fetch`
 - `fumabase/docs-website/src/lib/icons.server.tsx` — server-side
-  `getIconJsx()` using `@iconify-json/lucide` (23 lines)
+  `getIconJsx()` using `@iconify-json/lucide`
 - `fumabase/docs-website/src/routes/api.icons.$provider.icon.$icon.ts`
-  — SVG-returning endpoint (34 lines)
+  — SVG-returning endpoint
 - `fumabase/docs-website/src/routes/_catchall-client.tsx:529-560` —
   how navbar.links + navbar.primary consume the resolver
 - `fumabase/docs-website/src/routes/_catchall-client.tsx:12` —
-  hard-coded `GithubIcon`/`XIcon` imports from `lucide-react`  for
-  primary-CTA special cases
+  hard-coded `GithubIcon`/`XIcon` from `lucide-react` for primary CTA
 
 ## 2026-04-06 markdown.tsx split — file layout + pitfalls
 
