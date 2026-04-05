@@ -170,6 +170,8 @@ export async function syncNavigation({
       description: processed.description,
       gitSha: sha,
       headings: processed.headings,
+      // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
+      ...(processed.icon && { icon: processed.icon }),
     }
   }
 

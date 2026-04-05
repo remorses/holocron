@@ -38,7 +38,9 @@ export type NavGroup = Omit<ConfigNavGroup, 'pages'> & {
 /** Either an enriched page or a nested group */
 export type NavPageEntry = NavPage | NavGroup
 
-/** A fully enriched page with parsed metadata + cache SHA */
+/** A fully enriched page with parsed metadata + cache SHA.
+ *  `icon` is extracted from MDX frontmatter (Mintlify convention:
+ *  `icon: rocket` in YAML front matter). */
 export type NavPage = {
   slug: string
   href: string
@@ -46,6 +48,7 @@ export type NavPage = {
   description?: string
   gitSha: string
   headings: NavHeading[]
+  icon?: NavIcon
 }
 
 /** A heading extracted from the MDX content */

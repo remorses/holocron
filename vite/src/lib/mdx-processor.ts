@@ -17,6 +17,9 @@ import type { ImageMeta } from './image-processor.ts'
 export type ProcessedMdx = {
   title: string
   description?: string
+  /** Icon from frontmatter — Mintlify convention: `icon: rocket` in YAML.
+   *  A string value is either a lucide icon name, an emoji, or a URL. */
+  icon?: string
   frontmatter: Record<string, unknown>
   headings: NavHeading[]
   /** All non-external image srcs found in the MDX (relative + absolute) */
@@ -53,6 +56,7 @@ export function processMdx(content: string): ProcessedMdx {
   return {
     title: (frontmatter.title as string) || headings[0]?.text || 'Untitled',
     description: frontmatter.description as string | undefined,
+    icon: typeof frontmatter.icon === 'string' && frontmatter.icon !== '' ? frontmatter.icon : undefined,
     frontmatter,
     headings,
     imageSrcs,

@@ -17,6 +17,7 @@ import {
 import { useHolocronData } from '../../router.ts'
 import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
+import { Icon } from '../icon.tsx'
 
 export type EditorialSection = {
   content: React.ReactNode
@@ -59,6 +60,7 @@ export function EditorialPage({
   const siteName = siteConfig.name
   const tabs = siteTabs
   const headerLinks = siteHeaderLinks
+  const primary = siteConfig.navbar.primary
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
 
@@ -91,7 +93,12 @@ export function EditorialPage({
             )}
           </Link>
           <div className='flex items-center gap-4'>
-            {/* Icon links */}
+            {/* Icon links. Icons are resolved by `<Icon>` — dispatches on
+                emoji / URL / lucide name / structured object. When the user
+                wrote `{ type: 'github' }` without an explicit icon, the
+                normalizer already auto-filled `link.icon = 'github'`, so
+                these links are never invisible. Label-only links (no icon
+                resolvable) fall back to rendering the label text. */}
             {headerLinks && headerLinks.length > 0 && (
               <div className='flex items-center gap-3'>
                 {headerLinks.map((link) => {
@@ -102,21 +109,33 @@ export function EditorialPage({
                       target='_blank'
                       rel='noopener noreferrer'
                       aria-label={link.label}
-                      className='no-underline flex items-center text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
+                      className='no-underline flex items-center gap-1.5 text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
                     >
-                      {/* Only string (URL path) icons render here. Structured
-                          icon objects ({ name, library, style }) are rendered
-                          by the icon resolver component once it ships — until
-                          then they're stored in the config data but silently
-                          skipped in the UI (matching previous behaviour where
-                          `link.icon` was always `undefined`). */}
-                      {typeof link.icon === 'string' && (
-                        <img src={link.icon} alt='' width={16} height={16} style={{ display: 'block' }} />
+                      <Icon icon={link.icon} size={16} />
+                      {!link.icon && (
+                        <span className='text-xs'>{link.label}</span>
                       )}
                     </a>
                   )
                 })}
               </div>
+            )}
+            {/* Primary CTA button. `type: 'github'` / `type: 'button'` drive
+                the default label + icon via TYPE_LABELS/TYPE_ICONS in
+                normalize-config.ts. Rendered as a compact pill at the right
+                of the navbar so users who configure `navbar.primary` see it
+                without extra setup. */}
+            {primary && primary.href && (
+              <a
+                href={primary.href}
+                target={primary.href.startsWith('http') ? '_blank' : undefined}
+                rel={primary.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                aria-label={primary.label}
+                className='slot-navbar-primary no-underline inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-(--border-subtle) text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary) hover:border-(--text-secondary)'
+              >
+                <Icon icon={primary.icon} size={14} />
+                <span>{primary.label}</span>
+              </a>
             )}
           </div>
         </div>

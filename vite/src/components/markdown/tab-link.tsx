@@ -7,10 +7,12 @@
 
 import React from 'react'
 import { Link } from 'spiceflow/react'
+import type { TabItem } from '../../data.ts'
+import { Icon } from '../icon.tsx'
 
-export function TabLink({ tab, isActive }: { tab: { label: string; href: string }; isActive: boolean }) {
+export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
   const isExternal = tab.href.startsWith('http')
-  const tabClassName = 'slot-tab no-underline text-(length:--type-toc-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
+  const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 text-(length:--type-toc-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
   const tabStyle = {
     color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
     textShadow: isActive ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : 'none',
@@ -60,6 +62,7 @@ export function TabLink({ tab, isActive }: { tab: { label: string; href: string 
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
+        <Icon icon={tab.icon} size={14} />
         {tab.label}
         {indicator}
       </a>
@@ -74,6 +77,7 @@ export function TabLink({ tab, isActive }: { tab: { label: string; href: string 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      <Icon icon={tab.icon} size={14} />
       {tab.label}
       {indicator}
     </Link>

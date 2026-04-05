@@ -11,6 +11,7 @@ import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, ha
 import type { SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from './icons.tsx'
 import { ExpandableContainer } from './expandable-container.tsx'
+import { Icon } from '../icon.tsx'
 
 /** Flat list of headings shown under the active page in the sidebar.
  *  All headings are rendered at the same level regardless of depth,
@@ -159,7 +160,7 @@ export function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className='block text-xs no-underline transition-colors duration-150'
+        className='flex items-center gap-1.5 text-xs no-underline transition-colors duration-150'
         tabIndex={isDimmed ? -1 : 0}
         style={{
           fontVariationSettings: (isActive || (isSearchActive && !isDimmed)) ? '"wght" 550' : '"wght" 450',
@@ -183,6 +184,7 @@ export function NavPageLink({
           }
         }}
       >
+        <Icon icon={page.icon} size={12} />
         {page.title}
       </Link>
       <ExpandableContainer open={showToc}>
@@ -230,12 +232,13 @@ export function NavGroupNode({
     return (
       <div className='flex flex-col gap-2'>
         <div
-          className='text-xs cursor-default mt-3 mb-0.5'
+          className='text-xs cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
           style={{
             fontVariationSettings: '"wght" 500',
             color: 'var(--sidebar-section-foreground)',
           }}
         >
+          <Icon icon={group.icon} size={13} />
           {group.group}
         </div>
         {group.pages.map((entry) => {
@@ -298,6 +301,7 @@ export function NavGroupNode({
         }}
       >
         <ChevronIcon expanded={isExpanded} className='text-(color:--sidebar-section-foreground)' />
+        <Icon icon={group.icon} size={12} />
         {group.group}
       </button>
       <ExpandableContainer open={isExpanded}>
