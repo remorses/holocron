@@ -1021,39 +1021,62 @@ picks it up automatically. Refactored every raw `fetch()` to
 `async ({ request }) => { await request.get("/path") }`. `APIResponse`
 uses `.status()` (method, parens) instead of `.status` property.
 
-### Open bug: "Failed to resolve import fixtures/<name>/holocron.jsonc from virtual:holocron-config"
+### RESOLVED bug: "Failed to resolve import fixtures/<name>/holocron.jsonc from virtual:holocron-config"
 
-When Playwright spawns TWO vite servers simultaneously (one per fixture),
-both crash during transform with repeated:
+**Symptom**: Vite crashes during transform of the virtual config module
+with the error above. Originally thought to be a two-server race; turned
+out to be a single-server bug that just happened to surface first in the
+multi-fixture setup.
 
-```
-[vite] Internal server error: Failed to resolve import
-  "fixtures/basic/holocron.jsonc" from " virtual:holocron-config".
-  Does the file exist?
-  Plugin: vite:import-analysis
-  File:  virtual:holocron-config:1:0
-```
+**Root cause**: In `vite/src/vite-plugin.ts` the `config()` hook did
+`root = viteConfig.root || process.cwd()`. When Vite is launched with a
+positional root arg (`vite fixtures/basic ...`), `viteConfig.root` is
+still the RAW CLI string (`"fixtures/basic"`, **relative**), because
+Vite only resolves it later into `resolved.root`. That relative `root`
+was then fed into `resolveConfigPath({ root, configPath })`, which uses
+`path.join(root, 'holocron.jsonc')`. `path.join` does **not** make the
+result absolute (unlike `path.resolve`) — so `configFilePath` stayed
+relative (`"fixtures/basic/holocron.jsonc"`). That relative path was
+passed to `this.addWatchFile(configFilePath)` in the virtual module's
+`load()` hook, and Vite interpreted it as an import specifier of the
+virtual module → "Failed to resolve import".
 
-Running ONE server by itself works fine. Running TWO (via Playwright's
-multi-webServer config) triggers the error. The import path that fails
-is always the FIRST fixture's config path (`fixtures/basic/holocron.jsonc`)
-regardless of which server reports the error, suggesting some kind of
-state bleed between concurrent vite servers — probably the `addWatchFile`
-call in `vite/src/vite-plugin.ts` load() hook inscribing an absolute path
-that another server's workspace-root mapping converts to a relative
-import specifier.
+**Fix** (applied in commit `aba17df5`): overwrite `root` with
+`resolved.root` (canonical absolute path) inside `configResolved`, and
+re-derive `pagesDir`, `configFilePath`, `distDirPath`, `publicDirPath`
+from the absolute `root`. `cacheDir` still computed in `config()` via
+`path.resolve(process.cwd(), root)` — functionally correct because
+`path.resolve` handles the relative case, but there's a minor timing
+inconsistency (see Oracle review in commit notes).
 
-Debug next steps:
-1. Reproduce by starting two vite servers manually with different fixture
-   roots and hitting both with curl — does the error trigger?
-2. Check if removing the `this.addWatchFile(configFilePath)` from
-   `load(RESOLVED_CONFIG)` avoids the crash (at the cost of losing config
-   HMR).
-3. Check if the file watch is being added to the WRONG environment's
-   module graph — plugin hooks run in all environments (client/ssr/rsc)
-   so four environments × two servers might tangle.
-4. Look at Vite 8 changelog for breaking changes around
-   `this.addWatchFile()` in virtual module load hooks.
+**Tip**: in any Vite plugin that reads `viteConfig.root` in `config()`,
+either (a) immediately normalize it via `path.resolve(process.cwd(), root)`,
+or (b) defer all path derivations to `configResolved` where `resolved.root`
+is guaranteed absolute. Don't feed a potentially-relative root into
+`path.join` — that will quietly produce a relative output.
+
+### Concurrent Vite servers need per-root cacheDir or they race on `node_modules/.vite/deps`
+
+Second bug surfaced by running two vite servers simultaneously: flaky
+tests, random ECONNREFUSED and "Failed to fetch dynamically imported
+module" errors, dep re-optimization loops. Root cause: Vite's default
+`cacheDir` is `<firstAncestorWithNodeModules>/node_modules/.vite/`. When
+two servers have different `root`s but share an ancestor's
+`node_modules/`, they both write to the SAME cache dir and corrupt each
+other's optimized deps.
+
+**Fix**: in the holocron plugin's `config()` hook, set
+`cacheDir: path.join(absoluteRoot, 'node_modules/.vite')` so each root
+gets its own cache. Vite creates `<root>/node_modules/` on demand even
+if the fixture has no real dependencies.
+
+**Trade-off flagged by Oracle**: this is a plugin-wide behavior change
+affecting all downstream consumers, not just the integration-test
+harness. An alternative would be to scope the cacheDir override in
+`integration-tests/vite.config.ts` (consumer-level) rather than in the
+plugin itself. Kept in the plugin for now because it's a strictly safer
+default for anyone running multiple holocron sites concurrently (e.g.
+monorepo with parallel docs previews).
 
 ### Fixture architecture quick-ref for future sessions
 
@@ -1073,3 +1096,78 @@ Each fixture's `dist/` lives inside the fixture folder (e.g.
 `fixtures/basic/dist/`), kept out of git via `fixtures/*/dist/` in
 `.gitignore`. Adding a new config type = drop a folder under `fixtures/`
 + test file under `e2e/<name>/` and everything else is discovered.
+
+## Schema field-usage audit — what's wired vs ignored (2026-04-05)
+
+`schema.json` regenerated cleanly with **0 diff** vs `schema.ts`. Full trace of
+every schema field through `schema.ts` → `config.ts normalize()` →
+`data.ts` → `app-factory.tsx` / `markdown.tsx` / `sync.ts`:
+
+**WIRED (rendered / drives behaviour):**
+- Root: `name`
+- `logo.light` (header img)
+- `favicon.light` (layout `<link rel="icon">`)
+- `navigation.tabs` (tab bar), `navigation.global.anchors` +
+  `navigation.anchors` (also merged into tab bar), `navigation.groups` /
+  `navigation.pages` (alt input shapes, collapsed into tabs)
+- `navbar.links[]` — label, type (for label derivation only), href/url
+- Page slugs, `tab.tab`, `tab.href` (link-only tab → anchor),
+  `tab.groups`/`tab.pages`, `group.group`, `group.pages`, `anchor.anchor`,
+  `anchor.href`
+
+**DROPPED OR IGNORED (parsed, normalized in some cases, but NEVER rendered):**
+- Root: `description`
+- `colors.primary` / `colors.light` / `colors.dark` — normalized but never
+  written to `--brand-primary` or any CSS var
+- `redirects[]` — fully normalized, zero redirect middleware
+- `footer.socials` — fully normalized, no `<footer>` rendered anywhere
+- `logo.dark` — stored, but `<img>` uses only `.light` + `dark:invert`
+- `logo.href` — stored, but logo `<Link href='/'>` is hard-coded
+  (`markdown.tsx:1889`)
+- `favicon.dark` — stored but only `faviconLight` is read in layout
+- `navbar.primary` — fully normalized to `{label, href}`, **never rendered**
+- `navbar.links[].icon` — dropped in `normalizeNavbar`; `HeaderLink.icon`
+  is always `undefined` even though `{link.icon}` is referenced at
+  `markdown.tsx:1920`
+- `tab.icon`, `tab.hidden`, `tab.align` — never enriched, never rendered
+- `group.icon` — **the only "half-wired" field**: enriched into
+  `NavGroup.icon` by `sync.ts` via `iconToString`, but `NavGroupNode`
+  never renders it
+- `group.hidden`, `group.root`, `group.tag`, `group.expanded` — never
+  enriched, never rendered (users' manual toggles ignore the default)
+- `anchor.icon` — kept on `ConfigAnchor` but stripped when building
+  `TabItem` in `buildTabItems()`
+- `anchor.hidden` — never applied
+- `icon.style` (fa variant), `icon.library` (fa/lucide/tabler) — never
+  resolved; `iconToString` collapses the object to just `icon.name`
+
+When wiring any of these, remember: add the field to `HolocronConfig`
+in `config.ts`, preserve it through `normalize*()`, add the field to
+`NavTab`/`NavGroup` in `navigation.ts`, enrich in `sync.ts`, expose via
+`data.ts` exports, then render in `markdown.tsx` or the
+appropriate new component.
+
+## Redirects middleware in Spiceflow (API reference for holocron)
+
+To add redirect rules from `config.redirects[]`:
+
+```ts
+import { redirect } from 'spiceflow'
+
+app.use(async ({ request }) => {
+  const url = new URL(request.url)
+  const match = matchRedirect(redirectTable, url.pathname)
+  if (match) {
+    throw redirect(match.destination, match.permanent ? 301 : 302)
+  }
+  // return undefined → continues to next handler
+})
+```
+
+Place the `.use()` call BEFORE `.loader('/*')` in `createHolocronApp()`
+so redirects short-circuit before any loader/layout/page runs. `redirect()`
+is already imported in `app-factory.tsx`. Use `throw` (not `return`) to
+match the existing pattern at `app-factory.tsx:369`.
+
+Middleware that returns `undefined` (no Response) falls through to
+subsequent handlers — exactly what we want when no redirect matches.
