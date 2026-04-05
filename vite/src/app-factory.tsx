@@ -45,6 +45,13 @@ import {
   List,
   OL,
   Li,
+  Callout,
+  Note,
+  Warning,
+  Info,
+  Tip,
+  Check,
+  Danger,
   type HeadingLevel,
   type EditorialSection,
 } from '@holocron.so/vite/components/markdown'
@@ -255,6 +262,13 @@ const mdxComponents = {
   Aside,
   FullWidth,
   Hero,
+  Callout,
+  Note,
+  Warning,
+  Info,
+  Tip,
+  Check,
+  Danger,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.
   TableOfContentsPanel,
