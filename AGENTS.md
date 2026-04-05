@@ -35,6 +35,19 @@ Types are intentionally kept close to docs.json to minimize transformations. Uti
 
 Prefer the existing shadcn-style token names (`--background`, `--foreground`, `--muted`, `--accent`, `--border`, etc.) over introducing parallel Fumadocs-style color variable namespaces. If a ported Fumadocs component needs local helpers or utilities, keep those minimal and map them onto the shared shadcn token layer instead of creating a second design system.
 
+### CSS variables — add only if they deduplicate values
+
+A CSS variable is only justified if it is **used in many places** and serves to deduplicate an otherwise-repeated hardcoded value. If a variable is referenced only once (or never), inline the value directly and delete the variable.
+
+Rules:
+- **Many call sites** → define a CSS var (e.g. `--text-primary` used in dozens of components, `--sticky-top` shared by sidebar + aside).
+- **Single call site** → inline the value. A `--fade-top: 81px` that's only read by one `::before` rule should just be `top: 81px`.
+- **Zero call sites** → delete immediately. Dead variables clutter `globals.css` and mislead future readers into thinking a token layer exists.
+
+When auditing, grep the repo for `var(--name)` references plus Tailwind arbitrary-value patterns (`gap-(--name)`, `text-(color:--name)`, `[var(--name)]`). Remember that refs inside `/* ... */` CSS comments look live but aren't. See MEMORY.md ("CSS variable audit") for the grep commands and the last full audit.
+
+CSS variables can also be used to change a color in dark/light mode. or change the value in desktop or mobile. for example we do this for negative margins in bleed images/code line numbers/lists. this use case is justified and desired.
+
 ## Architecture
 
 - **Vite plugin** (`vite-plugin.ts`) — wraps spiceflowPlugin, tailwind, tsconfig-paths. Generates two virtual modules: `virtual:holocron-pages` (import.meta.glob for lazy MDX loading) and `virtual:holocron-config` (serialized config + navigation tree).
