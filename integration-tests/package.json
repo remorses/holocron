@@ -13,14 +13,14 @@
   "dependencies": {
     "@holocron.so/vite": "workspace:^",
     "@playwright/test": "^1.50.1",
-    "@tailwindcss/vite": "^4.2.0",
+    "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "spiceflow": "file:/Users/morse/Documents/GitHub/spiceflow-rsc/spiceflow",
-    "tailwindcss": "^4.2.0",
+    "tailwindcss": "^4.2.2",
     "vite": "^8.0.3",
     "vite-tsconfig-paths": "^6.0.3"
   }
