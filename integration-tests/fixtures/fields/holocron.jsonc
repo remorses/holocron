@@ -19,6 +19,17 @@
     { "source": "/blog/*", "destination": "/posts/:splat" },
     { "source": "/users/:id", "destination": "/u/:id" }
   ],
+  "navbar": {
+    "links": [
+      { "type": "github", "href": "https://github.com/example/repo" },
+      { "label": "Docs Home", "icon": "home", "href": "https://example.com/docs" },
+      { "label": "CDN Logo", "icon": "https://example.com/logo.svg", "href": "https://example.com/cdn" },
+      { "label": "Waves", "icon": "🌊", "href": "https://example.com/emoji" },
+      { "label": "Custom", "icon": { "name": "rocket", "library": "lucide" }, "href": "https://example.com/rocket" },
+      { "label": "Plain Link", "href": "https://example.com/plain" }
+    ],
+    "primary": { "type": "github", "href": "https://github.com/example/repo/releases" }
+  },
   "navigation": {
     "tabs": [
       {

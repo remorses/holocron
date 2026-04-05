@@ -266,6 +266,128 @@ test.describe("group.expanded default state", () => {
   });
 });
 
+test.describe("navbar icon resolution", () => {
+  // Each helper extracts the content between the opening <a> tag with a
+  // given href and its matching </a>. Navbar links are one-level deep
+  // (<a>{<svg/img/span>...}</a>) so a non-greedy match is sufficient.
+  function linkInnerByHref(html: string, href: string): string | null {
+    const escaped = href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(
+      `<a[^>]*href="${escaped}"[^>]*>([\\s\\S]*?)</a>`,
+    );
+    const match = html.match(re);
+    return match ? match[1]! : null;
+  }
+
+  test("type:github link (no explicit icon) renders the lucide github svg", async ({
+    request,
+  }) => {
+    // This is the "invisible github link" regression. Before the fix, the
+    // link rendered as <a aria-label="GitHub"></a> — completely empty.
+    // After the fix, normalizeNavbar auto-fills link.icon='github' from
+    // link.type='github', and <Icon> resolves it via the lucide atlas.
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    const inner = linkInnerByHref(html, "https://github.com/example/repo");
+    expect(inner).not.toBeNull();
+    expect(inner!).toContain("<svg");
+    expect(inner!).toContain("viewBox=");
+    // lucide github icon body contains an <path> with stroke styling
+    expect(inner!).toContain("stroke=");
+  });
+
+  test("string lucide icon name ('home') resolves via atlas", async ({ request }) => {
+    // 'home' is an alias for 'house' in lucide — the resolver should
+    // follow the alias chain and emit the house SVG body.
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    const inner = linkInnerByHref(html, "https://example.com/docs");
+    expect(inner).not.toBeNull();
+    expect(inner!).toContain("<svg");
+    // Should NOT render an <img> because the string is neither URL nor emoji
+    expect(inner!).not.toContain("<img");
+  });
+
+  test("URL icon (http://...) renders as <img>", async ({ request }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    const inner = linkInnerByHref(html, "https://example.com/cdn");
+    expect(inner).not.toBeNull();
+    expect(inner!).toContain('<img');
+    expect(inner!).toContain('src="https://example.com/logo.svg"');
+    // Must not render an <svg> — URL icons are raster/image
+    expect(inner!).not.toContain("<svg");
+  });
+
+  test("emoji icon renders inside <span>, not an <img> or <svg>", async ({
+    request,
+  }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    const inner = linkInnerByHref(html, "https://example.com/emoji");
+    expect(inner).not.toBeNull();
+    expect(inner!).toContain("🌊");
+    expect(inner!).toContain("<span");
+    expect(inner!).not.toContain("<img");
+    expect(inner!).not.toContain("<svg");
+  });
+
+  test("structured icon object { name, library } resolves via atlas", async ({
+    request,
+  }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    const inner = linkInnerByHref(html, "https://example.com/rocket");
+    expect(inner).not.toBeNull();
+    expect(inner!).toContain("<svg");
+    expect(inner!).toContain("viewBox=");
+  });
+
+  test("link without icon falls back to rendering its label", async ({
+    request,
+  }) => {
+    // Accessibility fallback — a link with no icon and no type still
+    // needs to be visible/clickable, so <Icon> returns null and the
+    // label renders as a small text span.
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    const inner = linkInnerByHref(html, "https://example.com/plain");
+    expect(inner).not.toBeNull();
+    expect(inner!).toContain("Plain Link");
+    expect(inner!).not.toContain("<svg");
+    expect(inner!).not.toContain("<img");
+  });
+
+  test("navbar.primary type:github renders lucide github svg + label", async ({
+    request,
+  }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    const inner = linkInnerByHref(
+      html,
+      "https://github.com/example/repo/releases",
+    );
+    expect(inner).not.toBeNull();
+    expect(inner!).toContain("<svg");
+    // Label defaults to TYPE_LABELS[github] = "GitHub"
+    expect(inner!).toContain("GitHub");
+  });
+});
+
 test.describe("logo link respects logo.href", () => {
   test("without logo.href, logo links to '/'", async ({ request }) => {
     // This fixture does not set `logo.href`, so the logo Link should still

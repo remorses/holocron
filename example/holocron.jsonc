@@ -6,31 +6,47 @@
   "colors": {
     "primary": "#3e9fff"
   },
+  "navbar": {
+    "links": [
+      { "type": "github", "href": "https://github.com/remorses/playwriter" },
+      { "label": "Blog", "icon": "rss", "href": "https://example.com/blog" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/introduction"
+    }
+  },
   "navigation": {
     "tabs": [
       {
         "tab": "Docs",
+        "icon": "book-open",
         "groups": [
           {
             "group": "Overview",
+            "icon": "compass",
             "pages": ["index"]
           },
           {
             "group": "Getting Started",
+            "icon": "rocket",
             "pages": ["introduction", "quickstart"]
           },
           {
             "group": "Guides",
+            "icon": "map",
             "pages": ["navigation", "theming", "search"]
           },
           {
             "group": "Reference",
+            "icon": "book",
             "pages": ["configuration", "deployment"]
           }
         ]
       },
-      { "tab": "GitHub", "href": "https://github.com/remorses/playwriter" },
-      { "tab": "Changelog", "href": "https://github.com/remorses/playwriter/releases" }
+      { "tab": "GitHub", "href": "https://github.com/remorses/playwriter", "icon": "github" },
+      { "tab": "Changelog", "href": "https://github.com/remorses/playwriter/releases", "icon": "newspaper" }
     ]
   }
 }
