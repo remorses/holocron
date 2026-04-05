@@ -41,7 +41,6 @@
   --font-primary:
     'Inter var', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
-  --font-secondary: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-code:
     'JetBrainsMono NF Mono', 'JetBrains Mono', 'SF Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', Menlo,
     Courier, monospace;
@@ -50,7 +49,6 @@
   --weight-regular: 400;
   --weight-prose: 475;
   --weight-heading: 560;
-  --weight-bold: 700;
   --lh-heading: 1.4;
   --lh-prose: 1.6;
   --ls-prose: -0.09px;
@@ -163,32 +161,8 @@
   /* Link accent color (renamed from --accent to avoid shadcn conflict) */
   --link-accent: #0969da;
 
-  /* P3 accent colors (renamed from --primary/--secondary to avoid shadcn conflict) */
+  /* P3 accent color (renamed from --primary to avoid shadcn conflict) */
   --brand-primary: #3e9fff;
-  --brand-secondary: #f09637;
-
-  /* Overlay / glass */
-  --overlay-filter: blur(1rem);
-  --overlay-bg: hsla(0, 0%, 100%, 0.8);
-  --overlay-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.04), 0 1.625rem 3.375rem rgba(0, 0, 0, 0.04), 0 1rem 2rem rgba(0, 0, 0, 0.03),
-    0 0.625rem 1rem rgba(0, 0, 0, 0.024), 0 0.3125rem 0.5rem rgba(0, 0, 0, 0.02),
-    0 0.125rem 0.25rem rgba(0, 0, 0, 0.016), 0 0 0.125rem rgba(0, 0, 0, 0.01);
-
-  /* Header fade gradient stops (white) */
-  --fade-0: rgb(255, 255, 255);
-  --fade-1: rgba(255, 255, 255, 0.737);
-  --fade-2: rgba(255, 255, 255, 0.541);
-  --fade-3: rgba(255, 255, 255, 0.382);
-  --fade-4: rgba(255, 255, 255, 0.278);
-  --fade-5: rgba(255, 255, 255, 0.194);
-  --fade-6: rgba(255, 255, 255, 0.126);
-  --fade-7: rgba(255, 255, 255, 0.075);
-  --fade-8: rgba(255, 255, 255, 0.042);
-  --fade-9: rgba(255, 255, 255, 0.021);
-  --fade-10: rgba(255, 255, 255, 0.008);
-  --fade-11: rgba(255, 255, 255, 0.002);
-  --fade-12: rgba(255, 255, 255, 0);
 
   /* Dark mode overrides — uses prefers-color-scheme media query
        via @custom-variant dark above */
@@ -247,28 +221,6 @@
 
     --link-accent: #aadcff;
     --brand-primary: #60a5fa;
-    --brand-secondary: #f5a623;
-
-    --overlay-bg: hsla(0, 0%, 7%, 0.8);
-    --overlay-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.06), 0 1.625rem 3.375rem rgba(0, 0, 0, 0.3), 0 1rem 2rem rgba(0, 0, 0, 0.2),
-      0 0.625rem 1rem rgba(0, 0, 0, 0.15), 0 0.3125rem 0.5rem rgba(0, 0, 0, 0.1),
-      0 0.125rem 0.25rem rgba(0, 0, 0, 0.08), 0 0 0.125rem rgba(0, 0, 0, 0.05);
-
-    /* Header fade gradient stops (dark) */
-    --fade-0: rgb(17, 17, 17);
-    --fade-1: rgba(17, 17, 17, 0.737);
-    --fade-2: rgba(17, 17, 17, 0.541);
-    --fade-3: rgba(17, 17, 17, 0.382);
-    --fade-4: rgba(17, 17, 17, 0.278);
-    --fade-5: rgba(17, 17, 17, 0.194);
-    --fade-6: rgba(17, 17, 17, 0.126);
-    --fade-7: rgba(17, 17, 17, 0.075);
-    --fade-8: rgba(17, 17, 17, 0.042);
-    --fade-9: rgba(17, 17, 17, 0.021);
-    --fade-10: rgba(17, 17, 17, 0.008);
-    --fade-11: rgba(17, 17, 17, 0.002);
-    --fade-12: rgba(17, 17, 17, 0);
   }
 }
 
@@ -276,7 +228,6 @@
 @supports (color: color(display-p3 1 1 1)) {
   :root {
     --brand-primary: color(display-p3 0.243137 0.623529 1 / 1);
-    --brand-secondary: color(display-p3 0.941176 0.588235 0.215686 / 1);
   }
 }
 
@@ -312,9 +263,7 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
-  --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
 }
 
 @layer base {

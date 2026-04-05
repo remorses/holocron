@@ -210,37 +210,3 @@
   }
 }
 
-/* ========================================================================
-   Header fade gradient
-   ======================================================================== */
-
-/* Disabled for now so the sticky header uses the same flat background as the
-   rest of the page and the sidebar. Restore this block if the fade treatment
-   is needed again.
-
-.slot-page::before {
-  content: '';
-  pointer-events: none;
-  z-index: 9;
-  position: fixed;
-  top: var(--fade-top);
-  left: 0;
-  right: 0;
-  height: var(--fade-height);
-  background: linear-gradient(
-    var(--fade-0) 0px,
-    var(--fade-1) 19%,
-    var(--fade-2) 34%,
-    var(--fade-3) 47%,
-    var(--fade-4) 56.5%,
-    var(--fade-5) 65%,
-    var(--fade-6) 73%,
-    var(--fade-7) 80.2%,
-    var(--fade-8) 86.1%,
-    var(--fade-9) 91%,
-    var(--fade-10) 95.2%,
-    var(--fade-11) 98.2%,
-    var(--fade-12) 100%
-  );
-}
-*/
