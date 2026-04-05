@@ -16,6 +16,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { createRequire } from 'node:module'
 import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
 import { loadImageCache, saveImageCache, processImage } from './image-processor.ts'
@@ -37,15 +38,31 @@ import {
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
+
+const require = createRequire(import.meta.url)
+const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
+
+/** Libraries we can actually resolve at build time. */
+const SUPPORTED_ICON_LIBRARIES = new Set(['lucide'])
 
 /** Serialize a config icon into the enriched-tree shape. Preserves the
  *  structured form (`{ name, library, style }`) when users pass it so
  *  renderers can route to the correct icon library. Undefined fields
- *  are omitted to keep cache files + test snapshots clean. */
-function serializeIcon(icon: ConfigNavGroup['icon']): NavIcon | undefined {
+ *  are omitted to keep cache files + test snapshots clean.
+ *  Object icons with unsupported libraries are stripped so they fall
+ *  through to label rendering instead of silently rendering nothing. */
+function serializeIcon(icon: ConfigNavGroup['icon'], context?: string): NavIcon | undefined {
   if (!icon) return undefined
   if (typeof icon === 'string') return icon
+  const library = icon.library ?? 'lucide'
+  if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
+    console.warn(
+      `[holocron] icon library "${library}" is not supported yet (only lucide). ` +
+      `Icon "${icon.name}"${context ? ` in ${context}` : ''} will be ignored.`,
+    )
+    return undefined
+  }
   return {
     name: icon.name,
     ...(icon.library !== undefined && { library: icon.library }),
@@ -186,7 +203,7 @@ export async function syncNavigation({
   async function enrichGroup(configGroup: ConfigNavGroup): Promise<NavGroup> {
     return {
       group: configGroup.group,
-      icon: serializeIcon(configGroup.icon),
+      icon: serializeIcon(configGroup.icon, `group "${configGroup.group}"`),
       hidden: configGroup.hidden,
       root: rootToHref(configGroup.root),
       tag: configGroup.tag,
@@ -200,7 +217,7 @@ export async function syncNavigation({
   async function enrichTab(configTab: ConfigNavTab): Promise<NavTab> {
     return {
       tab: configTab.tab,
-      icon: serializeIcon(configTab.icon),
+      icon: serializeIcon(configTab.icon, `tab "${configTab.tab}"`),
       hidden: configTab.hidden,
       align: configTab.align,
       groups: await Promise.all(configTab.groups.map((g) => {
@@ -299,12 +316,25 @@ function copyToPublic({ filePath, imageOutputDir }: { filePath: string; imageOut
 
 /* ── Cache I/O ──────────────────────────────────────────────────────── */
 
+type NavCacheEnvelope = {
+  version: string
+  navigation: Navigation
+}
+
 function readCache(cachePath: string): Navigation | null {
   if (!fs.existsSync(cachePath)) {
     return null
   }
   try {
-    return JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as Navigation
+    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    // Package-version envelope — reject caches from older versions so new
+    // fields (e.g. page `icon`) aren't silently missing from cached NavPage
+    // objects. Every publish naturally invalidates stale caches.
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
+      return raw.navigation as Navigation
+    }
+    // Old format (bare array) or different version → discard.
+    return null
   } catch {
     return null
   }
@@ -313,7 +343,8 @@ function readCache(cachePath: string): Navigation | null {
 function writeCache(cachePath: string, nav: Navigation): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(cachePath, JSON.stringify(nav, null, 2))
+  const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, navigation: nav }
+  fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 
 function readMdxCache(cachePath: string): Record<string, string> {

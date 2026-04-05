@@ -15,6 +15,28 @@ import type {
   ConfigNavbarPrimary,
 } from '../config.ts'
 
+/** Libraries we can actually resolve at build time. Object icons with
+ *  unsupported libraries are stripped at normalize time so they fall
+ *  through to the label fallback instead of silently rendering nothing. */
+const SUPPORTED_ICON_LIBRARIES = new Set(['lucide'])
+
+/** Validate an icon value and strip object icons whose library we can't
+ *  resolve. Strings (emoji / URL / lucide names) always pass through.
+ *  Returns the icon or undefined (meaning "no icon"). */
+function sanitizeIcon(icon: ConfigIcon | undefined, context: string): ConfigIcon | undefined {
+  if (!icon) return undefined
+  if (typeof icon === 'string') return icon
+  const library = icon.library ?? 'lucide'
+  if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
+    console.warn(
+      `[holocron] icon library "${library}" is not supported yet (only lucide). ` +
+      `Icon "${icon.name}" in ${context} will be ignored.`,
+    )
+    return undefined
+  }
+  return icon
+}
+
 /** Known type → display label mapping for navbar items */
 const TYPE_LABELS: Record<string, string> = {
   github: 'GitHub',
@@ -203,7 +225,8 @@ function normalizeTabsAndAnchors(
 
   for (const raw of rawTabs) {
     const name = (raw.tab as string) || ''
-    const icon = raw.icon as ConfigIcon | undefined
+    const icon = sanitizeIcon(raw.icon as ConfigIcon | undefined, `tab "${name}"`)
+
     const hidden = raw.hidden as boolean | undefined
     const align = raw.align as ('start' | 'end') | undefined
     const extras = {
@@ -274,7 +297,10 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
     // Auto-fill icon from type when user writes `{ type: 'github', href: ... }`
     // with no explicit icon. Without this, the navbar link would render
     // empty (only aria-label set) — the original "invisible github link" bug.
-    const rawIcon = link.icon as ConfigIcon | undefined
+    const rawIcon = sanitizeIcon(
+      link.icon as ConfigIcon | undefined,
+      `navbar.links[${label || href}]`,
+    )
     const icon: ConfigIcon | undefined =
       rawIcon !== undefined
         ? rawIcon
@@ -295,7 +321,10 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
     const type = typeof rawPrimary.type === 'string' ? rawPrimary.type : undefined
     // Same auto-fill logic for primary CTA — a `type: 'github'` primary
     // button without an explicit icon should render the github glyph.
-    const rawIcon = rawPrimary.icon as ConfigIcon | undefined
+    const rawIcon = sanitizeIcon(
+      rawPrimary.icon as ConfigIcon | undefined,
+      'navbar.primary',
+    )
     const icon: ConfigIcon | undefined =
       rawIcon !== undefined
         ? rawIcon
