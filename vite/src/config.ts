@@ -1,7 +1,7 @@
 /**
  * Holocron config — normalized types + reader.
  *
- * The docs.json schema (holocron/schema.json) has many union variants for
+ * The docs.json schema (vite/schema.json, generated from src/schema.ts) has many union variants for
  * navigation, logo, favicon, navbar, etc. We normalize everything inside
  * readConfig() so consuming code never deals with unions — just clean,
  * predictable types with exactly one shape per field.

@@ -10,7 +10,9 @@ Supports two config file names (first found wins):
 - `holocron.jsonc` — our format (JSONC with comments)
 - `docs.json` — Mintlify new format (direct compatibility)
 
-**Schema**: the JSON Schema for `holocron.jsonc` lives at `holocron/schema.json`, ported from the mintlify docs.json schema at https://mintlify.com/docs.json. This is the source of truth for all supported config fields.
+**Schema**: the source of truth is `vite/src/schema.ts` — Zod schemas that describe the supported input shape. The JSON Schema at `vite/schema.json` is GENERATED from it via `pnpm -F @holocron.so/vite generate-schema` (runs automatically on build). Do not hand-edit `schema.json` — edit `src/schema.ts` and regenerate.
+
+The schema follows the Mintlify docs.json shape (https://mintlify.com/docs.json) for the subset Holocron consumes. Unknown Mintlify fields pass through `.passthrough()` so users can paste a full docs.json without validation errors.
 
 MVP subset we support: `name`, `logo`, `favicon`, `colors`, `navigation` (with `tabs`, `global.anchors`), `navbar` (with `links`, `primary`), `redirects`, `footer.socials`.
 

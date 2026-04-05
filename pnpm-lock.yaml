@@ -55,7 +55,7 @@ importers:
         specifier: ^1.50.1
         version: 1.59.1
       '@tailwindcss/vite':
-        specifier: ^4.2.0
+        specifier: ^4.2.2
         version: 4.2.2(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0))
       '@types/node':
         specifier: ^25.0.3
@@ -76,7 +76,7 @@ importers:
         specifier: file:/Users/morse/Documents/GitHub/spiceflow-rsc/spiceflow
         version: file:../spiceflow-rsc/spiceflow(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0))(zod@4.3.6)
       tailwindcss:
-        specifier: ^4.2.0
+        specifier: ^4.2.2
         version: 4.2.2
       vite:
         specifier: ^8.0.3
@@ -96,6 +96,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.1(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0))
+      dedent:
+        specifier: ^1.7.2
+        version: 1.7.2
       github-slugger:
         specifier: ^2.0.0
         version: 2.0.0
@@ -126,9 +129,12 @@ importers:
       spiceflow:
         specifier: file:/Users/morse/Documents/GitHub/spiceflow-rsc/spiceflow
         version: file:../spiceflow-rsc/spiceflow(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0))(zod@4.3.6)
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@tailwindcss/vite':
-        specifier: ^4.2.0
+        specifier: ^4.2.2
         version: 4.2.2(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0))
       '@types/mdast':
         specifier: ^4.0.4
@@ -149,7 +155,7 @@ importers:
         specifier: ^0.34.5
         version: 0.34.5
       tailwindcss:
-        specifier: ^4.2.0
+        specifier: ^4.2.2
         version: 4.2.2
       typescript:
         specifier: ^5.9.3
@@ -960,6 +966,14 @@ packages:
 
   decode-named-character-reference@1.3.0:
     resolution: {integrity: sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q==}
+
+  dedent@1.7.2:
+    resolution: {integrity: sha512-WzMx3mW98SN+zn3hgemf4OzdmyNhhhKz5Ay0pUfQiMQ3e1g+xmTJWp/pKdwKVXhdSkAEGIIzqeuWrL3mV/AXbA==}
+    peerDependencies:
+      babel-plugin-macros: ^3.1.0
+    peerDependenciesMeta:
+      babel-plugin-macros:
+        optional: true
 
   dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
@@ -2399,6 +2413,8 @@ snapshots:
     dependencies:
       character-entities: 2.0.2
 
+  dedent@1.7.2: {}
+
   dequal@2.0.3: {}
 
   detect-libc@2.1.2: {}
@@ -3318,7 +3334,6 @@ snapshots:
       openapi-types: 12.1.3
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      scheduler: 0.27.0
       superjson: 2.2.6
       zod: 4.3.6
     transitivePeerDependencies:
