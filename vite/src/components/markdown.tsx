@@ -1806,7 +1806,7 @@ export function EditorialPage({
         </div>
       )}
 
-      <div className='grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
+      <div className='grid grid-cols-1 gap-y-(--section-gap) w-full max-w-full mx-auto px-(--mobile-padding) lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
         {/* TOC sidebar: sticky within its grid cell */}
         <div className='slot-sidebar-left'>
           <div
@@ -1823,34 +1823,29 @@ export function EditorialPage({
         </div>
 
         {sections ? (
-          /* Section-based layout: single outer subgrid container holds ALL
-             sections, with uniform --section-gap between rows.
+          /* Flattened sections layout: section wrappers are DIRECT children of
+             the page grid. Page grid's `gap-y-(--section-gap)` provides
+             rhythm between sections.
 
-             Per-section (non-shared) aside:
-             The wrapper is itself an INNER subgrid spanning cols [1/-1].
-             Content and aside live inside it. The aside's sticky containing
-             block is this wrapper, so sticky scope = one section's bounds.
-             When user scrolls past the section, its aside unsticks before
-             the next section's aside sticks — no overlap.
+             Per-section wrapper: inner subgrid spanning `lg:col-[2/-1]` of
+             the page grid. Content at col [1], per-section aside at col [2].
+             Sticky scope for per-section asides = this inner wrapper
+             (one section's bounds).
 
-             Shared <Aside full> (asideRowSpan > 1):
-             Content stays in its section's wrapper, but the aside is LIFTED
-             OUT into the outer subgrid as a separate grid item with
-             `grid-row: start / span N`. Its sticky containing block = the
-             multi-row grid area, so it stays pinned across the whole range.
-             On mobile the aside is rendered again INSIDE the wrapper with
-             `lg:hidden` so it still stacks at the end of its range.
-
-             First/last sections get zero edge spacing automatically from
-             flex/grid gap semantics. */
-          <div className='flex flex-col gap-y-(--section-gap) lg:grid lg:grid-cols-subgrid lg:col-[2/-1]'>
+             Shared <Aside full> (asideRowSpan > 1): a SEPARATE direct
+             page-grid child at `lg:col-[3]` with explicit `grid-row: start /
+             span N`. Sticky containing block = multi-row grid area so
+             sticky pins across the whole range. Rendered once, placed in
+             DOM after the LAST sub-section of its range — on mobile
+             (grid-cols-1), auto-placement by DOM order stacks it at the end. */
+          <Fragment>
             {sections.map((section, i) => {
               const row = i + 1
               if (section.fullWidth) {
                 return (
                   <div
                     key={i}
-                    className='flex flex-col gap-(--prose-gap) text-(length:--type-body-size) lg:col-[1/-1]'
+                    className='flex flex-col gap-(--prose-gap) text-(length:--type-body-size) lg:col-[2/-1]'
                     style={{ gridRow: row }}
                   >
                     {section.content}
@@ -1863,15 +1858,14 @@ export function EditorialPage({
                 'slot-aside flex flex-col gap-3 bg-foreground/[0.03] text-(length:--type-toc-size) leading-[1.5]'
               return (
                 <Fragment key={i}>
+                  {/* Inner per-section wrapper: subgrid, content + per-section aside */}
                   <div
-                    className='flex flex-col gap-y-(--prose-gap) lg:grid lg:grid-cols-subgrid lg:col-[1/-1]'
+                    className='flex flex-col gap-y-(--prose-gap) lg:grid lg:grid-cols-subgrid lg:col-[2/-1]'
                     style={{ gridRow: row }}
                   >
                     <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
                       {section.content}
                     </div>
-                    {/* Per-section aside: stays inside the wrapper so its
-                        sticky scope is this one section. */}
                     {section.aside && !isShared && (
                       <div
                         className={`${asideClass} lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
@@ -1879,21 +1873,16 @@ export function EditorialPage({
                         {section.aside}
                       </div>
                     )}
-                    {/* Shared aside on mobile only: stacks inside the LAST
-                        sub-section's wrapper in DOM order. */}
-                    {section.aside && isShared && (
-                      <div className={`${asideClass} lg:hidden`}>
-                        {section.aside}
-                      </div>
-                    )}
                   </div>
-                  {/* Shared aside on desktop: separate outer-subgrid item
-                      spanning multiple rows via grid-row start/span. Sticky
-                      containing block = multi-row grid area. */}
+                  {/* Shared aside: single element, direct page-grid child.
+                      Desktop: explicit col 3 + row-span (via CSS var read at lg).
+                      Mobile: grid-row stays `auto` → auto-placed by DOM order,
+                      stacks at end of range without forcing an implicit 2nd
+                      column in grid-cols-1. */}
                   {section.aside && isShared && (
                     <div
-                      className={`hidden ${asideClass} lg:flex lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
-                      style={{ gridRow: `${row - span + 1} / span ${span}` }}
+                      className={`${asideClass} lg:col-[3] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
+                      style={{ '--shared-row': `${row - span + 1} / span ${span}` } as React.CSSProperties}
                     >
                       {section.aside}
                     </div>
@@ -1901,7 +1890,7 @@ export function EditorialPage({
                 </Fragment>
               )
             })}
-          </div>
+          </Fragment>
         ) : (
           <>
             {/* Flat layout: single article column + optional static sidebar */}
