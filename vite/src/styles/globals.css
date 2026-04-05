@@ -110,6 +110,13 @@
   --spacing-xl: 3rem;
   --spacing-xxl: 3.5rem;
 
+  /* Markdown vertical rhythm — all content spacing derives from pure flex/grid
+     gaps. No margin-top or padding-y on markdown elements. First and last
+     children automatically get zero spacing at the container edges. */
+  --prose-gap: 20px;    /* between elements inside one section (p, h2, list, code) */
+  --section-gap: 48px;  /* between sections (separates H1/## blocks) */
+  --list-gap: 8px;      /* between list items inside ul/ol */
+
   /* Utility tokens */
   --border-radius-md: 8px;
   --transition-hover: 0.15s ease;

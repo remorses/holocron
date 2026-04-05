@@ -767,7 +767,7 @@ export function Bleed({ children }: { children: React.ReactNode }) {
 
 export function Divider() {
   return (
-    <div style={{ padding: '24px 0', display: 'flex', alignItems: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
       <div style={{ height: '1px', background: 'var(--divider)', flex: 1 }} />
     </div>
   )
@@ -797,7 +797,7 @@ export function Section({
 export function OL({ children }: { children: React.ReactNode }) {
   return (
     <ol
-      className='editorial-prose m-0 pl-5'
+      className='editorial-prose my-0 mr-0 pl-5 -ml-5 flex flex-col gap-(--list-gap)'
       style={{ listStyleType: 'decimal' }}
     >
       {children}
@@ -808,7 +808,7 @@ export function OL({ children }: { children: React.ReactNode }) {
 export function List({ children }: { children: React.ReactNode }) {
   return (
     <ul
-      className='editorial-prose m-0 pl-5'
+      className='editorial-prose my-0 mr-0 pl-5 -ml-5 flex flex-col gap-(--list-gap)'
       style={{ listStyleType: 'disc' }}
     >
       {children}
@@ -816,8 +816,10 @@ export function List({ children }: { children: React.ReactNode }) {
   )
 }
 
+// Li has no vertical padding — the parent ul/ol uses `gap-(--list-gap)`
+// for inter-item spacing so first/last items get zero edge space.
 export function Li({ children }: { children: React.ReactNode }) {
-  return <li style={{ padding: '0 0 8px 12px' }}>{children}</li>
+  return <li style={{ paddingLeft: '12px' }}>{children}</li>
 }
 
 /* =========================================================================
@@ -1207,7 +1209,7 @@ export function ComparisonTable({
   rows: Array<[string, string, string]>
 }) {
   return (
-    <div className='w-full max-w-full overflow-x-auto' style={{ padding: '8px 0' }}>
+    <div className='w-full max-w-full overflow-x-auto'>
       {title && (
         <div
           style={{

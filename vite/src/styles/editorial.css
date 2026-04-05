@@ -93,25 +93,24 @@
   scroll-margin-top: var(--header-height);
 }
 
+/* Headings carry NO vertical padding — all vertical rhythm comes from
+   flex/grid gaps on parent containers (--prose-gap inside a section,
+   --section-gap between sections). First and last children of a flex
+   container automatically get zero edge spacing, so we never need a
+   `:first-child` reset. */
 .editorial-h1 {
   font-size: var(--type-heading-1-size);
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-top: 24px;
-  padding-bottom: 24px;
 }
 
 .editorial-h2 {
   font-size: var(--type-heading-2-size);
-  padding-top: 10px;
-  padding-bottom: 4px;
 }
 
 .editorial-h3 {
   font-size: var(--type-heading-3-size);
-  padding-top: 4px;
-  padding-bottom: 2px;
   color: var(--text-secondary);
 }
 
