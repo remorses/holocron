@@ -64,16 +64,20 @@
   --type-code-size: 12px;
   --type-table-size: 11px;
 
-  /* Bleed: mobile-first (0), enabled at lg where grid has room. */
+  /* Bleed: mobile-first (0), enabled at lg where grid has room.
+     - --bleed       44px: code blocks (.bleed class)
+     - --bleed-image 28px: images (via <Bleed> wrapper)
+     - --bleed-list  32px: lists (OL/List inline style = ul pl-5 + li pl-12)
+     A `.no-bleed` ancestor zeros all three (see editorial.css) — used by
+     <Callout> so its contents stay inside the frame. */
   --bleed: 0px;
   --bleed-image: 0px;
+  --bleed-list: 0px;
   @variant lg {
     --bleed: 44px;
     --bleed-image: 28px;
+    --bleed-list: 32px;
   }
-
-  /* TOC sidebar left offset — shared with tab bar for alignment */
-  --toc-left: max(1rem, calc((100vw - 550px) / 2 - 280px));
 
   /* Header anatomy — all sticky/fade/spacer offsets derive from these.
      Change --logo-height or --tab-bar-height and every dependent value updates. */
@@ -86,10 +90,6 @@
   --layout-gap: 21px;
   --sticky-top: calc(var(--header-height) + var(--layout-gap));
 
-  /* Fade gradient — overlaps bottom of tab bar for smooth content fade */
-  --fade-top: calc(var(--header-row-height) + 19px);
-  --fade-height: 48px;
-
   /* Grid geometry — change one value and max-width recomputes.
      Breakpoint (lg=1080px) ≈ grid-max-width + 40px buffer. */
   --grid-toc-width: 210px;
@@ -98,15 +98,6 @@
   --grid-sidebar-width: var(--grid-toc-width);
   --grid-max-width: min(calc(100vw - 60px), 1100px);
   --mobile-padding: 1.25rem;
-
-  /* Spacing scale */
-  --spacing-xxs: 0.5rem;
-  --spacing-xs: 1rem;
-  --spacing-sm: 1.5rem;
-  --spacing-md: 2rem;
-  --spacing-lg: 2.5rem;
-  --spacing-xl: 3rem;
-  --spacing-xxl: 3.5rem;
 
   /* Markdown vertical rhythm — all content spacing derives from pure flex/grid
      gaps. No margin-top or padding-y on markdown elements. First and last
@@ -117,19 +108,6 @@
 
   /* Utility tokens */
   --border-radius-md: 8px;
-  --transition-hover: 0.15s ease;
-
-  /* Timing */
-  --duration-snappy: 220ms;
-  --ease-snappy: cubic-bezier(0.175, 0.885, 0.32, 1.1);
-  --duration-swift: 800ms;
-  --ease-swift: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --duration-smooth: 300ms;
-  --ease-smooth: cubic-bezier(0.19, 1, 0.22, 1);
-
-  /* Logo color — orange from the hero screenshot gradient */
-  /*--logo-color: #e8602c;*/
-  --logo-color: var(--foreground);
 
   /* Colors — near-black, not pure black */
   --text-primary: rgb(17, 17, 17);

@@ -794,11 +794,18 @@ export function Section({
   )
 }
 
+/* Lists bleed left so bullets/numbers hang in the gutter while li TEXT
+   aligns with prose paragraphs. `--bleed-list` is 32px at lg (= ul pl-5
+   20px + li paddingLeft 12px) and 0 at mobile / inside `.no-bleed`.
+
+   margin-left MUST be an inline style — `.editorial-prose` sets
+   `margin: 0` in editorial.css which imports AFTER tailwindcss, so any
+   `-ml-*` / `ml-*` utility loses the cascade on equal specificity. */
 export function OL({ children }: { children: React.ReactNode }) {
   return (
     <ol
-      className='editorial-prose my-0 mr-0 pl-5 -ml-5 flex flex-col gap-(--list-gap)'
-      style={{ listStyleType: 'decimal' }}
+      className='editorial-prose pl-5 flex flex-col gap-(--list-gap)'
+      style={{ listStyleType: 'decimal', marginLeft: 'calc(-1 * var(--bleed-list))' }}
     >
       {children}
     </ol>
@@ -808,8 +815,8 @@ export function OL({ children }: { children: React.ReactNode }) {
 export function List({ children }: { children: React.ReactNode }) {
   return (
     <ul
-      className='editorial-prose my-0 mr-0 pl-5 -ml-5 flex flex-col gap-(--list-gap)'
-      style={{ listStyleType: 'disc' }}
+      className='editorial-prose pl-5 flex flex-col gap-(--list-gap)'
+      style={{ listStyleType: 'disc', marginLeft: 'calc(-1 * var(--bleed-list))' }}
     >
       {children}
     </ul>
