@@ -62,6 +62,22 @@ test.describe("site-wide description meta", () => {
   });
 });
 
+// React.cache() is the mechanism that lets <Head> in SiteHead (layout) and
+// <Head> in the page component share the same tag store during one RSC render.
+// If that shared store breaks, layout-level tags and page-level tags stop
+// appearing together in the final SSR document.
+test("React.cache() shares the Head store across layout and page SSR", async ({
+  request,
+}) => {
+  const response = await request.get("/", {
+    headers: { "sec-fetch-dest": "document" },
+  });
+  const html = await response.text();
+  expect(html).toMatch(/<meta[^>]*property="og:site_name"/);
+  expect(html).toMatch(/<meta[^>]*name="description"/);
+  expect(html.match(/<title>/g)).toHaveLength(1);
+});
+
 test.describe("dark favicon", () => {
   // NOTE: This test is currently skipped because spiceflow's `<Head>`
   // component dedups `<link rel="icon">` tags by a key that does NOT

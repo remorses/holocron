@@ -1595,3 +1595,83 @@ asked** — they are flakes independent of any changes you make in
 4. `pnpm -F integration-tests test-e2e --grep-invert "config HMR @dev|
    new MDX file|deleted MDX file|returns 404 status|renders 404 for nested"`
    (skips the pre-existing flakes documented above)
+
+## React.cache() broken in Vite RSC — dual React instances (2026-04-06)
+
+### Root cause
+
+`@vitejs/plugin-rsc` pre-bundles `react-server-dom-webpack` in `dist/vendor/`.
+That vendor bundle has its own copy of React. When `renderToReadableStream`
+starts, it sets `ReactSharedInternals.A = DefaultAsyncDispatcher` on the
+**vendor's** React, not on the **user code's** React. So user-code calls to
+`React.cache()` see `A = null` and degrade to uncached — every call creates
+a fresh object.
+
+### Why Head/CollectedHead broke
+
+`Head` pushes tags to a `React.cache()`-backed store. `CollectedHead` reads
+from it. Because `React.cache()` was uncached (returning a new `{ tags: [] }`
+each call), Head and CollectedHead each got isolated stores — `<title>`,
+`<meta>`, `<link>`, favicon, theme script, and fonts never appeared in the SSR
+HTML `<head>`.
+
+### Diagnosis steps
+
+1. Added debug logging showing `React.cache()` returned different objects on
+   consecutive calls in the same function (`same-ref: false`).
+2. Checked `ReactSharedInternals.A` at module load time → null.
+3. Checked `ReactSharedInternals.A` at render time (inside Head fn) → still null.
+4. Confirmed `__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE`
+   EXISTS on user React → it IS the server build, just with A unset.
+5. Disabled wire-cache-dispatcher → A goes back to null. Enabled → A is SET.
+   Proof that the vendor sets it on a different React instance.
+
+### Fix: `wire-cache-dispatcher.ts` (in spiceflow)
+
+Sets up a custom `AsyncLocalStorage`-backed cache dispatcher on the user React's
+internals. Tries both `__SERVER_INTERNALS_*` and `__CLIENT_INTERNALS_*` keys.
+
+`runWithRequestCache()` wraps `buildRscResponse` with `requestCacheStorage.run(new Map(), fn)`.
+All `React.cache()` calls within the same request share that Map via `getCacheForType`.
+
+The dispatcher provides `getCacheForType`, `cacheSignal` (→ null), and
+`getOwner` (→ null, needed in DEV mode or React crashes with
+"dispatcher.getOwner is not a function").
+
+### Why Waku works
+
+Waku uses `@vitejs/plugin-rsc` the same way. Presumably its React deduplication
+works (vendor React and user React are the same instance). The vendor
+pre-bundling issue exists but doesn't manifest because the module resolution
+deduplicates React more effectively in Waku's setup.
+
+### Why NOT a module-level variable (global store)
+
+A global `_currentStore` variable is NOT safe for concurrent requests. Even
+though `renderToReadableStream`'s synchronous rendering phase runs atomically
+in Node.js's event loop, the `buildRscResponse` wrapper is async. Two concurrent
+requests could interleave and clobber each other's store.
+
+### Why NOT native `<title>`/`<meta>` without `<Head>`
+
+React 19 hoists `<title>`, `<meta>`, `<link>` to `<head>`, but NOT `<script>`
+or `<style>` with `dangerouslySetInnerHTML`. Those cause hydration mismatches
+if rendered as siblings of `<head>`/`<body>` inside `<html>`. The `<Head>`
+wrapper + CollectedHead approach handles deduplication correctly.
+
+### `React.cache()` in client React build is a no-op
+
+In the default/client React build (no `react-server` condition), `React.cache(fn)`
+returns `function() { return fn.apply(null, arguments) }` — no caching at all.
+This is by design: caching only works in server components. Tests that validate
+the dispatcher must use the `react-server` condition or be conditionally skipped.
+
+## Default pagesDir changed from `pages/` to project root (2026-04-06)
+
+Mintlify puts MDX files directly in the project root alongside `docs.json`.
+Changed Holocron's default `pagesDir` from `path.resolve(root, 'pages')` to
+`root` to match this convention. The `pagesDir` plugin option remains available
+for users who want a custom layout.
+
+All example and fixture MDX files moved from `pages/` subdirectories to their
+respective roots.
