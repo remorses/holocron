@@ -25,6 +25,7 @@ import React from 'react'
 import { Spiceflow, serveStatic, redirect } from 'spiceflow'
 import { Head } from 'spiceflow/react'
 import { mdxParse } from 'safe-mdx/parse'
+import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
 import mdxContent from 'virtual:holocron-mdx'
 import {
@@ -134,19 +135,48 @@ export function createHolocronApp() {
         headRobots: undefined,
       }
     })
-    .layout('/*', async ({ children }) => {
+    .layout('/*', async ({ children, request }) => {
+      // Read theme cookie to determine initial dark/light class on <html>.
+      // This avoids a flash when the cookie is set. For "system" default
+      // without a cookie, a blocking <script> in SiteHead handles it.
+      const cookies = parseCookies(request.headers.get('cookie') || '')
+      // When strict mode is on, ignore the user's cookie — always use config default
+      const cookieTheme = config.appearance.strict
+        ? null
+        : (cookies['holocron-theme'] as 'light' | 'dark' | undefined) ?? null
+      const isDark =
+        cookieTheme === 'dark' ||
+        (!cookieTheme && config.appearance.default === 'dark')
       return (
-        <html lang='en'>
+        <html
+          lang='en'
+          className={isDark ? 'dark' : undefined}
+          data-default-theme={config.appearance.default}
+          {...(config.appearance.strict ? { 'data-strict-theme': '' } : {})}
+        >
           <SiteHead config={config} />
           <body>{children}</body>
         </html>
       )
     })
-    .page('/*', async ({ params, loaderData: rawLoaderData }) => {
+    .page('/*', async ({ params, loaderData: rawLoaderData, request }) => {
       // Spiceflow's page-handler context does not (yet) thread the loader
       // return type into its own `loaderData` slot — only the typed client
       // router exposes it. Cast once here so the rest of the handler is safe.
       const loaderData = rawLoaderData as unknown as HolocronLoaderData
+
+      // Pre-render banner content server-side via safe-mdx. Skip entirely
+      // when the user dismissed it (cookie value matches current content).
+      let bannerJsx: React.ReactNode | undefined
+      if (config.banner) {
+        const pageCookies = parseCookies(request.headers.get('cookie') || '')
+        const bannerDismissed = pageCookies['holocron-banner-dismissed'] === config.banner.content
+        if (!bannerDismissed) {
+          const bannerMdx = config.banner.content
+          const bannerMdast = mdxParse(bannerMdx) as Root
+          bannerJsx = <RenderNodes markdown={bannerMdx} nodes={bannerMdast.children} />
+        }
+      }
 
       // 404 branch — render inside the normal shell so the user can navigate
       if (loaderData.notFoundPath) {
@@ -158,7 +188,7 @@ export function createHolocronApp() {
                 <Head.Meta name='robots' content={loaderData.headRobots} />
               )}
             </Head>
-            <EditorialPage>
+            <EditorialPage bannerContent={bannerJsx}>
               <NotFound
                 path={loaderData.notFoundPath}
                 homeHref={firstPage?.href || '/'}
@@ -208,7 +238,7 @@ export function createHolocronApp() {
               </>
             )}
           </Head>
-          <EditorialPage sections={sections} hero={hero} />
+          <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} />
         </>
       )
     })
