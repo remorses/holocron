@@ -302,7 +302,8 @@ export function createHolocronApp() {
     }
   })
 
-  app = app.layout('/*', async ({ children, request }: any) => {
+  app = app.layout('/*', async ({ children, request, loaderData: rawLoaderData }: any) => {
+    const loaderData = rawLoaderData as unknown as HolocronLoaderData
     const cookies = parseCookies(request.headers.get('cookie') || '')
     const cookieTheme = config.appearance.strict
       ? null
@@ -310,6 +311,21 @@ export function createHolocronApp() {
     const isDark =
       cookieTheme === 'dark' ||
       (!cookieTheme && config.appearance.default === 'dark')
+
+    // When no page route matches, spiceflow passes children=null.
+    // Render the custom 404 inside the editorial layout so users
+    // can still navigate via the sidebar.
+    const isNotFound = children === null
+    const bannerJsx = getBannerJsx(request)
+    const notFoundContent = (
+      <EditorialPage bannerContent={bannerJsx}>
+        <NotFound
+          path={loaderData?.notFoundPath ?? '/'}
+          homeHref={firstPage?.href || '/'}
+        />
+      </EditorialPage>
+    )
+
     return (
       <html
         lang='en'
@@ -317,8 +333,16 @@ export function createHolocronApp() {
         data-default-theme={config.appearance.default}
         {...(config.appearance.strict ? { 'data-strict-theme': '' } : {})}
       >
-        <SiteHead config={config} />
-        <body>{children}</body>
+        <SiteHead
+          config={config}
+          titleOverride={isNotFound ? (loaderData?.headTitle ?? `Page not found — ${config.name}`) : undefined}
+        />
+        {isNotFound && (
+          <Head>
+            <Head.Meta name='robots' content='noindex' />
+          </Head>
+        )}
+        <body>{children ?? notFoundContent}</body>
       </html>
     )
   })

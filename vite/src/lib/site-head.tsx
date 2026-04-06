@@ -31,7 +31,7 @@ function fontFaceRule(family: string, source: string, format?: string, weight?: 
   return `@font-face {\n  font-family: '${family}';\n  src: url('${source}')${fmt};${w}\n  font-display: swap;\n}`
 }
 
-export function SiteHead({ config }: { config: HolocronConfig }) {
+export function SiteHead({ config, titleOverride }: { config: HolocronConfig; titleOverride?: string }) {
   const { light: faviconLight, dark: faviconDark } = config.favicon
   const hasBoth =
     Boolean(faviconLight) && Boolean(faviconDark) && faviconLight !== faviconDark
@@ -144,7 +144,7 @@ export function SiteHead({ config }: { config: HolocronConfig }) {
             : <Head.Meta key={name} name={name} content={content} />
         ))}
       <Head.Meta property='og:site_name' content={config.name} />
-      <Head.Title>{config.name}</Head.Title>
+      <Head.Title>{titleOverride ?? config.name}</Head.Title>
     </Head>
   )
 }
