@@ -142,11 +142,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     async configResolved(resolved: ResolvedConfig) {
       // Keep Holocron runtime subpaths looking like package imports in dev.
       // `@vitejs/plugin-rsc` only records package client sources when the
-      // resolved id still includes `/node_modules/` (see `rsc:virtual-client-package`
-      // in `dist/plugin.js`, around lines 879-883). If Vite realpaths these
-      // imports out of `node_modules`, the markdown/sidebar client boundary stops
-      // hydrating. Use a narrow resolver here instead of global
-      // `resolve.preserveSymlinks`.
+      // resolved id still includes `/node_modules/`. If Vite realpaths
+      // symlinks, the path escapes node_modules and client boundaries break.
       const preserveSymlinkResolver = resolved.createResolver({ preserveSymlinks: true })
       resolveHolocronPackagePath = async (id, importer, ssr) => {
         return await preserveSymlinkResolver(id, importer, false, ssr)
@@ -198,11 +195,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     async resolveId(id, importer) {
-      if (
-        id === '@holocron.so/vite/app-factory' ||
-        id === '@holocron.so/vite/components/markdown' ||
-        id === '@holocron.so/vite/styles/globals.css'
-      ) {
+      if (id.startsWith('@holocron.so/vite/src/')) {
         const resolved = await resolveHolocronPackagePath?.(
           id,
           importer,
@@ -257,7 +250,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
       if (id === RESOLVED_APP) {
         return [
-          `import { createHolocronApp } from '@holocron.so/vite/app-factory'`,
+          `import { createHolocronApp } from '@holocron.so/vite/src/app-factory'`,
           `export const app = createHolocronApp()`,
           // Auto-start the server in production (when import.meta.hot is not available).
           // In dev mode, spiceflow's SSR middleware handles requests instead.

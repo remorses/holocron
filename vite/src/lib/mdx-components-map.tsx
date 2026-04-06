@@ -32,7 +32,7 @@ import {
   Danger,
   TableOfContentsPanel,
   type HeadingLevel,
-} from '@holocron.so/vite/components/markdown'
+} from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 
 function PixelatedImageWithProps(props: {

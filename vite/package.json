@@ -31,49 +31,7 @@
       "types": "./dist/vite-plugin.d.ts",
       "default": "./dist/vite-plugin.js"
     },
-    "./navigation": {
-      "types": "./dist/navigation.d.ts",
-      "default": "./dist/navigation.js"
-    },
-    "./react": {
-      "types": "./dist/router.d.ts",
-      "default": "./dist/router.js"
-    },
-    "./data": {
-      "types": "./dist/data.d.ts",
-      "default": "./dist/data.js"
-    },
-    "./app-factory": {
-      "types": "./dist/app-factory.d.ts",
-      "default": "./dist/app-factory.js"
-    },
-    "./components/markdown": {
-      "types": "./dist/components/markdown/index.d.ts",
-      "default": "./dist/components/markdown/index.js"
-    },
-    "./components/icon": {
-      "types": "./dist/components/icon.d.ts",
-      "default": "./dist/components/icon.js"
-    },
-    "./components/toc-panel": {
-      "types": "./dist/components/toc-panel.d.ts",
-      "default": "./dist/components/toc-panel.js"
-    },
-    "./styles/globals.css": {
-      "default": "./src/styles/globals.css"
-    },
-    "./config": {
-      "types": "./dist/config.d.ts",
-      "default": "./dist/config.js"
-    },
-    "./src": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
-    "./src/*": {
-      "types": "./src/*.tsx",
-      "default": "./src/*.tsx"
-    }
+    "./src/*": "./src/*"
   },
   "files": [
     "src",

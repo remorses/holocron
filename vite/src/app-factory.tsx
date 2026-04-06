@@ -20,7 +20,7 @@
  * Zero file I/O, zero sharp, zero image-size — works on Cloudflare.
  */
 
-import '@holocron.so/vite/styles/globals.css'
+import './styles/globals.css'
 import React from 'react'
 import { Spiceflow, serveStatic, redirect } from 'spiceflow'
 import { Head } from 'spiceflow/react'
@@ -31,7 +31,7 @@ import mdxContent from 'virtual:holocron-mdx'
 import {
   EditorialPage,
   type EditorialSection,
-} from '@holocron.so/vite/components/markdown'
+} from './components/markdown/index.tsx'
 import { NotFound } from './components/not-found.tsx'
 import {
   findPage,
