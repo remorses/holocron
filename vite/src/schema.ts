@@ -490,6 +490,160 @@ export const footerSchema = z
   .describe('Footer configurations')
   .meta({ id: 'footerSchema' })
 
+/* ── Appearance ───────────────────────────────────────────────────────── */
+
+export const appearanceSchema = z
+  .object({
+    default: z
+      .enum(['system', 'light', 'dark'])
+      .optional()
+      .describe(
+        dedent`
+          Default color mode. Choose \`system\` to match the user's OS
+          setting, or \`light\` or \`dark\` to force a specific mode.
+          Defaults to \`system\`
+        `,
+      ),
+    strict: z
+      .boolean()
+      .optional()
+      .describe(
+        dedent`
+          When \`true\`, hides the light/dark mode toggle so users
+          cannot switch modes. Defaults to \`false\`
+        `,
+      ),
+  })
+  .describe('Light/dark mode settings')
+  .meta({ id: 'appearanceSchema' })
+
+/* ── Search ───────────────────────────────────────────────────────────── */
+
+export const searchSchema = z
+  .object({
+    prompt: z
+      .string()
+      .optional()
+      .describe('Placeholder text displayed in the search bar when empty'),
+  })
+  .describe('Search bar display settings')
+  .meta({ id: 'searchSchema' })
+
+/* ── SEO ──────────────────────────────────────────────────────────────── */
+
+export const seoSchema = z
+  .object({
+    indexing: z
+      .enum(['navigable', 'all'])
+      .optional()
+      .describe(
+        dedent`
+          Which pages search engines should index. \`navigable\` indexes
+          only pages in navigation, \`all\` indexes every page
+        `,
+      ),
+    metatags: z
+      .record(z.string(), z.string())
+      .optional()
+      .describe(
+        dedent`
+          Custom meta tags added to every page. Each key is a meta tag
+          name and the value is its content
+        `,
+      ),
+  })
+  .describe('Search engine optimization settings')
+  .meta({ id: 'seoSchema' })
+
+/* ── Banner ───────────────────────────────────────────────────────────── */
+
+export const bannerSchema = z
+  .object({
+    content: z
+      .string()
+      .min(1)
+      .describe(
+        dedent`
+          The text content displayed in the banner. Supports basic
+          markdown links like \`[text](url)\`
+        `,
+      ),
+    dismissible: z
+      .boolean()
+      .optional()
+      .describe(
+        'Whether to show a dismiss button. Defaults to `false`',
+      ),
+  })
+  .describe('A site-wide banner displayed at the top of every page')
+  .meta({ id: 'bannerSchema' })
+
+/* ── Fonts ────────────────────────────────────────────────────────────── */
+
+const fontBaseSchema = z.object({
+  family: z.string().describe('Font family name (e.g. "Inter", "Open Sans")'),
+  weight: z
+    .number()
+    .optional()
+    .describe('Font weight (e.g. 400, 700)'),
+  source: z
+    .string()
+    .optional()
+    .describe(
+      dedent`
+        URL to a hosted font or path to a local font file. Local files
+        must be placed in the \`public/\` directory and referenced with
+        an absolute path (e.g. \`/fonts/my-font.woff2\`)
+      `,
+    ),
+  format: z
+    .enum(['woff', 'woff2'])
+    .optional()
+    .describe('Font file format. Required when using a local source file'),
+})
+
+export const fontsSchema = z
+  .object({
+    family: z
+      .string()
+      .optional()
+      .describe('Font family name. Google Fonts family names load automatically'),
+    weight: z
+      .number()
+      .optional()
+      .describe('Font weight'),
+    source: z
+      .string()
+      .optional()
+      .describe(
+        dedent`
+          URL to a hosted font or path to a local font file. Local files
+          must be placed in the \`public/\` directory (e.g. \`public/fonts/my-font.woff2\`)
+          and referenced as \`/fonts/my-font.woff2\`
+        `,
+      ),
+    format: z
+      .enum(['woff', 'woff2'])
+      .optional()
+      .describe('Font file format. Required when using a local source file'),
+    heading: fontBaseSchema.optional().describe('Override font settings for headings'),
+    body: fontBaseSchema.optional().describe('Override font settings for body text'),
+  })
+  .describe('Custom fonts for your documentation')
+  .meta({ id: 'fontsSchema' })
+
+/* ── Footer links ─────────────────────────────────────────────────────── */
+
+const footerLinkItemSchema = z.object({
+  label: z.string().min(1).describe('Link text'),
+  href: z.string().describe('Link destination URL'),
+})
+
+const footerLinkColumnSchema = z.object({
+  header: z.string().optional().describe('Column header title'),
+  items: z.array(footerLinkItemSchema).describe('Links in the column'),
+})
+
 /* ── Root config ──────────────────────────────────────────────────────── */
 
 export const holocronConfigSchema = z
@@ -509,13 +663,26 @@ export const holocronConfigSchema = z
     logo: logoSchema.optional(),
     favicon: faviconSchema.optional(),
     colors: colorsSchema.optional(),
+    appearance: appearanceSchema.optional(),
+    fonts: fontsSchema.optional(),
     navigation: navigationSchema.optional(),
     navbar: navbarSchema.optional(),
-    footer: footerSchema.optional(),
+    banner: bannerSchema.optional(),
+    footer: footerSchema
+      .extend({
+        links: z
+          .array(footerLinkColumnSchema)
+          .max(4)
+          .optional()
+          .describe('Link columns displayed in the footer. Maximum 4 columns'),
+      })
+      .optional(),
     redirects: z
       .array(redirectSchema)
       .optional()
       .describe('URL redirect rules applied before routing'),
+    search: searchSchema.optional(),
+    seo: seoSchema.optional(),
   })
   .passthrough()
   .describe(

@@ -24,14 +24,98 @@
     "colors": {
       "$ref": "#/definitions/colorsSchema"
     },
+    "appearance": {
+      "$ref": "#/definitions/appearanceSchema"
+    },
+    "fonts": {
+      "$ref": "#/definitions/fontsSchema"
+    },
     "navigation": {
       "$ref": "#/definitions/navigationSchema"
     },
     "navbar": {
       "$ref": "#/definitions/navbarSchema"
     },
+    "banner": {
+      "$ref": "#/definitions/bannerSchema"
+    },
     "footer": {
-      "$ref": "#/definitions/footerSchema"
+      "type": "object",
+      "properties": {
+        "socials": {
+          "description": "An object in which each key is the name of a social media\nplatform and each value is the URL to your profile.\nFor example: { \"x\": \"https://x.com/mintlify\" }",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "x",
+              "website",
+              "facebook",
+              "youtube",
+              "discord",
+              "slack",
+              "github",
+              "linkedin",
+              "instagram",
+              "hacker-news",
+              "medium",
+              "telegram",
+              "twitter",
+              "x-twitter",
+              "earth-americas",
+              "bluesky",
+              "threads",
+              "reddit",
+              "podcast"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "description": "Link columns displayed in the footer. Maximum 4 columns",
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "header": {
+                "description": "Column header title",
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Link text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "Link destination URL"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "href"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "Links in the column"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "redirects": {
       "description": "URL redirect rules applied before routing",
@@ -39,6 +123,12 @@
       "items": {
         "$ref": "#/definitions/redirectSchema"
       }
+    },
+    "search": {
+      "$ref": "#/definitions/searchSchema"
+    },
+    "seo": {
+      "$ref": "#/definitions/seoSchema"
     }
   },
   "required": [
@@ -130,6 +220,113 @@
       ],
       "additionalProperties": false,
       "description": "The colors to use in your documentation. At the very least, you must\ndefine the primary color. For example:\n{ \"colors\": { \"primary\": \"#ff0000\" } }"
+    },
+    "appearanceSchema": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "description": "Default color mode. Choose `system` to match the user's OS\nsetting, or `light` or `dark` to force a specific mode.\nDefaults to `system`",
+          "type": "string",
+          "enum": [
+            "system",
+            "light",
+            "dark"
+          ]
+        },
+        "strict": {
+          "description": "When `true`, hides the light/dark mode toggle so users\ncannot switch modes. Defaults to `false`",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Light/dark mode settings"
+    },
+    "fontsSchema": {
+      "type": "object",
+      "properties": {
+        "family": {
+          "description": "Font family name. Google Fonts family names load automatically",
+          "type": "string"
+        },
+        "weight": {
+          "description": "Font weight",
+          "type": "number"
+        },
+        "source": {
+          "description": "URL to a hosted font or path to a local font file. Local files\nmust be placed in the `public/` directory (e.g. `public/fonts/my-font.woff2`)\nand referenced as `/fonts/my-font.woff2`",
+          "type": "string"
+        },
+        "format": {
+          "description": "Font file format. Required when using a local source file",
+          "type": "string",
+          "enum": [
+            "woff",
+            "woff2"
+          ]
+        },
+        "heading": {
+          "description": "Override font settings for headings",
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "description": "Font family name (e.g. \"Inter\", \"Open Sans\")"
+            },
+            "weight": {
+              "description": "Font weight (e.g. 400, 700)",
+              "type": "number"
+            },
+            "source": {
+              "description": "URL to a hosted font or path to a local font file. Local files\nmust be placed in the `public/` directory and referenced with\nan absolute path (e.g. `/fonts/my-font.woff2`)",
+              "type": "string"
+            },
+            "format": {
+              "description": "Font file format. Required when using a local source file",
+              "type": "string",
+              "enum": [
+                "woff",
+                "woff2"
+              ]
+            }
+          },
+          "required": [
+            "family"
+          ],
+          "additionalProperties": false
+        },
+        "body": {
+          "description": "Override font settings for body text",
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "description": "Font family name (e.g. \"Inter\", \"Open Sans\")"
+            },
+            "weight": {
+              "description": "Font weight (e.g. 400, 700)",
+              "type": "number"
+            },
+            "source": {
+              "description": "URL to a hosted font or path to a local font file. Local files\nmust be placed in the `public/` directory and referenced with\nan absolute path (e.g. `/fonts/my-font.woff2`)",
+              "type": "string"
+            },
+            "format": {
+              "description": "Font file format. Required when using a local source file",
+              "type": "string",
+              "enum": [
+                "woff",
+                "woff2"
+              ]
+            }
+          },
+          "required": [
+            "family"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "description": "Custom fonts for your documentation"
     },
     "navigationSchema": {
       "anyOf": [
@@ -579,43 +776,24 @@
       "additionalProperties": false,
       "description": "The primary CTA button rendered at the right of the navbar"
     },
-    "footerSchema": {
+    "bannerSchema": {
       "type": "object",
       "properties": {
-        "socials": {
-          "description": "An object in which each key is the name of a social media\nplatform and each value is the URL to your profile.\nFor example: { \"x\": \"https://x.com/mintlify\" }",
-          "type": "object",
-          "propertyNames": {
-            "type": "string",
-            "enum": [
-              "x",
-              "website",
-              "facebook",
-              "youtube",
-              "discord",
-              "slack",
-              "github",
-              "linkedin",
-              "instagram",
-              "hacker-news",
-              "medium",
-              "telegram",
-              "twitter",
-              "x-twitter",
-              "earth-americas",
-              "bluesky",
-              "threads",
-              "reddit",
-              "podcast"
-            ]
-          },
-          "additionalProperties": {
-            "type": "string"
-          }
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The text content displayed in the banner. Supports basic\nmarkdown links like `[text](url)`"
+        },
+        "dismissible": {
+          "description": "Whether to show a dismiss button. Defaults to `false`",
+          "type": "boolean"
         }
       },
+      "required": [
+        "content"
+      ],
       "additionalProperties": false,
-      "description": "Footer configurations"
+      "description": "A site-wide banner displayed at the top of every page"
     },
     "redirectSchema": {
       "type": "object",
@@ -639,6 +817,42 @@
       ],
       "additionalProperties": false,
       "description": "A single URL redirect rule"
+    },
+    "searchSchema": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "description": "Placeholder text displayed in the search bar when empty",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Search bar display settings"
+    },
+    "seoSchema": {
+      "type": "object",
+      "properties": {
+        "indexing": {
+          "description": "Which pages search engines should index. `navigable` indexes\nonly pages in navigation, `all` indexes every page",
+          "type": "string",
+          "enum": [
+            "navigable",
+            "all"
+          ]
+        },
+        "metatags": {
+          "description": "Custom meta tags added to every page. Each key is a meta tag\nname and the value is its content",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Search engine optimization settings"
     }
   }
 }

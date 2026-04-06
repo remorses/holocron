@@ -13,6 +13,7 @@ import type {
   ConfigNavTab,
   ConfigNavbarLink,
   ConfigNavbarPrimary,
+  FooterLinkColumn,
 } from '../config.ts'
 
 /** Libraries we can actually resolve at build time. Object icons with
@@ -85,25 +86,33 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     logo: normalizeLogo(raw.logo),
     favicon: normalizeFavicon(raw.favicon),
     colors: normalizeColors(raw.colors),
+    appearance: normalizeAppearance(raw.appearance),
+    fonts: normalizeFonts(raw.fonts),
     navigation: normalizeNavigation(raw.navigation),
     navbar: normalizeNavbar(raw.navbar),
+    banner: normalizeBanner(raw.banner),
     redirects: normalizeRedirects(raw.redirects),
     footer: normalizeFooter(raw.footer),
+    search: normalizeSearch(raw.search),
+    seo: normalizeSeo(raw.seo),
   }
 }
 
-/** logo: string | { light, dark, href? } → { light, dark, href? } */
+/** logo: string | { light, dark, href? } → { light, dark?, href? }
+ *  `dark` is only set when the user explicitly provided a dark logo.
+ *  Components use this to decide between dark:hidden/dark:block pair
+ *  vs single img with dark:invert fallback. */
 function normalizeLogo(raw: unknown): HolocronConfig['logo'] {
   if (!raw) {
-    return { light: '', dark: '' }
+    return { light: '' }
   }
   if (typeof raw === 'string') {
-    return { light: raw, dark: raw }
+    return { light: raw }
   }
   const obj = raw as Record<string, string>
   return {
     light: obj.light || '',
-    dark: obj.dark || obj.light || '',
+    ...(obj.dark && obj.dark !== obj.light ? { dark: obj.dark } : {}),
     href: obj.href,
   }
 }
@@ -125,13 +134,14 @@ function normalizeFavicon(raw: unknown): HolocronConfig['favicon'] {
 
 function normalizeColors(raw: unknown): HolocronConfig['colors'] {
   if (!raw || typeof raw !== 'object') {
-    return { primary: '#000000' }
+    return { primary: '#000000', _hasUserColors: false }
   }
   const obj = raw as Record<string, string>
   return {
     primary: obj.primary || '#000000',
     light: obj.light,
     dark: obj.dark,
+    _hasUserColors: Boolean(obj.primary || obj.light || obj.dark),
   }
 }
 
@@ -364,9 +374,84 @@ function normalizeRedirects(raw: unknown): HolocronConfig['redirects'] {
 
 function normalizeFooter(raw: unknown): HolocronConfig['footer'] {
   if (!raw || typeof raw !== 'object') {
-    return { socials: {} }
+    return { socials: {}, links: [] }
   }
   const obj = raw as Record<string, unknown>
   const socials = (obj.socials ?? {}) as Record<string, string>
-  return { socials }
+  const rawLinks = Array.isArray(obj.links) ? obj.links : []
+  const links: FooterLinkColumn[] = rawLinks.slice(0, 4).map((col: Record<string, unknown>) => ({
+    header: typeof col.header === 'string' ? col.header : undefined,
+    items: Array.isArray(col.items)
+      ? col.items.map((item: Record<string, string>) => ({
+          label: item.label || '',
+          href: item.href || '',
+        }))
+      : [],
+  }))
+  return { socials, links }
+}
+
+function normalizeAppearance(raw: unknown): HolocronConfig['appearance'] {
+  if (!raw || typeof raw !== 'object') {
+    return { default: 'system', strict: false }
+  }
+  const obj = raw as Record<string, unknown>
+  const def = obj.default
+  return {
+    default: def === 'light' || def === 'dark' ? def : 'system',
+    strict: obj.strict === true,
+  }
+}
+
+function normalizeFonts(raw: unknown): HolocronConfig['fonts'] {
+  if (!raw || typeof raw !== 'object') return undefined
+  const obj = raw as Record<string, unknown>
+  const normFontObj = (v: unknown): { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2' } | undefined => {
+    if (!v || typeof v !== 'object') return undefined
+    const o = v as Record<string, unknown>
+    if (typeof o.family !== 'string') return undefined
+    return {
+      family: o.family,
+      weight: typeof o.weight === 'number' ? o.weight : undefined,
+      source: typeof o.source === 'string' ? o.source : undefined,
+      format: o.format === 'woff' || o.format === 'woff2' ? o.format : undefined,
+    }
+  }
+  return {
+    family: typeof obj.family === 'string' ? obj.family : undefined,
+    weight: typeof obj.weight === 'number' ? obj.weight : undefined,
+    source: typeof obj.source === 'string' ? obj.source : undefined,
+    format: obj.format === 'woff' || obj.format === 'woff2' ? obj.format : undefined,
+    heading: normFontObj(obj.heading),
+    body: normFontObj(obj.body),
+  }
+}
+
+function normalizeBanner(raw: unknown): HolocronConfig['banner'] {
+  if (!raw || typeof raw !== 'object') return undefined
+  const obj = raw as Record<string, unknown>
+  if (typeof obj.content !== 'string' || !obj.content) return undefined
+  return {
+    content: obj.content,
+    dismissible: obj.dismissible === true,
+  }
+}
+
+function normalizeSearch(raw: unknown): HolocronConfig['search'] {
+  if (!raw || typeof raw !== 'object') return { prompt: undefined }
+  const obj = raw as Record<string, unknown>
+  return {
+    prompt: typeof obj.prompt === 'string' ? obj.prompt : undefined,
+  }
+}
+
+function normalizeSeo(raw: unknown): HolocronConfig['seo'] {
+  if (!raw || typeof raw !== 'object') return {}
+  const obj = raw as Record<string, unknown>
+  const indexing = obj.indexing === 'navigable' || obj.indexing === 'all' ? obj.indexing : undefined
+  const metatags =
+    obj.metatags && typeof obj.metatags === 'object'
+      ? (obj.metatags as Record<string, string>)
+      : undefined
+  return { indexing, metatags }
 }

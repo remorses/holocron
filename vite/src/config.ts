@@ -22,6 +22,11 @@ import type {
   colorsSchema,
   redirectSchema,
   footerSchema,
+  appearanceSchema,
+  fontsSchema,
+  seoSchema,
+  searchSchema,
+  bannerSchema,
 } from './schema.ts'
 import { parseJsonc } from './lib/jsonc.ts'
 import { normalize } from './lib/normalize-config.ts'
@@ -74,12 +79,24 @@ export type ConfigNavbarPrimary = {
   icon?: ConfigIcon
 }
 
+export type FooterLinkItem = { label: string; href: string }
+export type FooterLinkColumn = { header?: string; items: FooterLinkItem[] }
+
 export type HolocronConfig = {
   name: string
   description?: string
-  logo: { light: string; dark: string; href?: string }
+  logo: { light: string; dark?: string; href?: string }
   favicon: { light: string; dark: string }
-  colors: z.output<typeof colorsSchema>
+  colors: z.output<typeof colorsSchema> & { _hasUserColors: boolean }
+  appearance: { default: 'system' | 'light' | 'dark'; strict: boolean }
+  fonts?: {
+    family?: string
+    weight?: number
+    source?: string
+    format?: 'woff' | 'woff2'
+    heading?: { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2' }
+    body?: { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2' }
+  }
   navigation: {
     tabs: ConfigNavTab[]
     anchors: ConfigAnchor[]
@@ -88,10 +105,14 @@ export type HolocronConfig = {
     links: ConfigNavbarLink[]
     primary?: ConfigNavbarPrimary
   }
+  banner?: { content: string; dismissible: boolean }
   redirects: Array<z.output<typeof redirectSchema>>
   footer: {
     socials: NonNullable<z.output<typeof footerSchema>['socials']>
+    links: FooterLinkColumn[]
   }
+  search: { prompt?: string }
+  seo: { indexing?: 'navigable' | 'all'; metatags?: Record<string, string> }
 }
 
 /* ── Type guard (for page entries) ───────────────────────────────────── */
