@@ -349,7 +349,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_ICONS]) {
+      // Invalidate the app module too — per-page routes are registered at
+      // module init from mdxContent, so adding/deleting pages requires the
+      // app factory to re-run and rebuild the route table.
+      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_ICONS, RESOLVED_APP]) {
         const mod = this.environment.moduleGraph.getModuleById(resolvedId)
         if (mod) {
           this.environment.moduleGraph.invalidateModule(mod)

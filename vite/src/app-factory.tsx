@@ -185,8 +185,10 @@ export function createHolocronApp() {
     if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.startsWith('/api')) return
 
     // Strip base from pathname for lookup (spiceflow may or may not
-    // strip the base depending on middleware vs route context)
-    const stripped = base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname
+    // strip the base depending on middleware vs route context).
+    // Use boundary check so /docsgetting-started doesn't match base=/docs.
+    const hasBase = !!base && (pathname === base || pathname.startsWith(base + '/'))
+    const stripped = hasBase ? pathname.slice(base.length) || '/' : pathname
     if (!hrefToSlug.has(stripped)) return
 
     const mdPath = stripped === '/' ? '/index.md' : `${stripped}.md`
@@ -214,6 +216,7 @@ export function createHolocronApp() {
       headers: {
         'content-type': 'application/xml; charset=utf-8',
         'cache-control': 's-maxage=3600, stale-while-revalidate=86400',
+        'x-content-type-options': 'nosniff',
       },
     })
   })
@@ -229,6 +232,7 @@ export function createHolocronApp() {
         headers: {
           'content-type': 'text/markdown; charset=utf-8',
           'cache-control': 's-maxage=300, stale-while-revalidate=86400',
+          'x-content-type-options': 'nosniff',
         },
       })
     })
