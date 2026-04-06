@@ -13,6 +13,7 @@ import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, emptySearchState, type SearchState } from '../../lib/search.ts'
 import {
+  config as siteConfig,
   navigation as siteNavigation,
   searchEntries as siteSearchEntries,
   collectDefaultExpandedKeys,
@@ -205,7 +206,7 @@ export function SideNav() {
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          placeholder='Search...'
+          placeholder={siteConfig.search.prompt || 'Search...'}
           className='w-full text-sm outline-none box-border'
           style={{
             padding: '6px 34px 6px 34px',

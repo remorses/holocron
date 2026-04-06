@@ -18,6 +18,9 @@ import { useHolocronData } from '../../router.ts'
 import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
 import { Icon } from '../icon.tsx'
+import { ThemeToggle } from '../theme-toggle.tsx'
+import { Footer } from './footer.tsx'
+import { BannerDismiss } from './banner.tsx'
 
 export type EditorialSection = {
   content: React.ReactNode
@@ -46,6 +49,7 @@ export function EditorialPage({
   children,
   sections,
   hero,
+  bannerContent,
 }: {
   sidebar?: React.ReactNode
   children?: React.ReactNode
@@ -53,6 +57,8 @@ export function EditorialPage({
   sections?: EditorialSection[]
   /** Page-level hero content rendered above the 3-column grid, aligned with center column. */
   hero?: React.ReactNode
+  /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
+  bannerContent?: React.ReactNode
 }) {
   const { activeTabHref } = useHolocronData()
   const logo = siteConfig.logo.light
@@ -63,29 +69,47 @@ export function EditorialPage({
   const primary = siteConfig.navbar.primary
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
+  const banner = siteConfig.banner
 
   return (
     <div
       className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-(color:--text-primary) [font-family:var(--font-primary)] antialiased [text-rendering:optimizeLegibility]'
       style={{
         WebkitFontSmoothing: 'antialiased',
-      }}
+        '--banner-height': bannerContent ? '36px' : '0px',
+      } as React.CSSProperties}
     >
-      {/* Header + Tab bar: full-width, sticky at top */}
+      {bannerContent && (
+        <div className='slot-banner flex h-(--banner-height) items-center justify-center gap-2 bg-foreground px-4 text-background text-xs -mb-(--layout-gap)'>
+          <div className='flex-1 text-center truncate [&_a]:underline [&_a]:font-medium [&_a]:hover:opacity-80 [&_p]:inline'>
+            {bannerContent}
+          </div>
+          {banner?.dismissible && <BannerDismiss content={banner.content} />}
+        </div>
+      )}
+
+      {/* Header + Tab bar: full-width, sticky below banner */}
       <div className='slot-navbar'>
         {/* Top row: logo + right links */}
         <div className='mx-auto flex items-center justify-between px-(--mobile-padding) py-(--header-padding-y) lg:max-w-(--grid-max-width) lg:px-0'>
           <Link href={logoLinkHref} className='slot-logo no-underline flex items-center'>
             {logo ? (
-              <img
-                src={logo}
-                alt={siteName || 'Logo'}
-                style={{
-                  height: 'var(--logo-height)',
-                  width: 'auto',
-                }}
-                className='dark:invert'
-              />
+              <>
+                <img
+                  src={logo}
+                  alt={siteName || 'Logo'}
+                  style={{ height: 'var(--logo-height)', width: 'auto' }}
+                  className={siteConfig.logo.dark ? 'dark:hidden' : 'dark:invert'}
+                />
+                {siteConfig.logo.dark && (
+                  <img
+                    src={siteConfig.logo.dark}
+                    alt={siteName || 'Logo'}
+                    style={{ height: 'var(--logo-height)', width: 'auto' }}
+                    className='hidden dark:block'
+                  />
+                )}
+              </>
             ) : (
               <span className='text-[15px] font-bold [font-family:var(--font-code)] lowercase tracking-[-0.01em]'>
                 {siteName || 'docs'}
@@ -137,6 +161,8 @@ export function EditorialPage({
                 <span>{primary.label}</span>
               </a>
             )}
+            {/* Theme toggle — hidden when appearance.strict is true */}
+            {!siteConfig.appearance.strict && <ThemeToggle />}
           </div>
         </div>
 
@@ -266,6 +292,9 @@ export function EditorialPage({
           </>
         )}
       </div>
+
+      {/* Site footer: logo + socials + link columns */}
+      <Footer />
     </div>
   )
 }
