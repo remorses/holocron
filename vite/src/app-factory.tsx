@@ -46,6 +46,7 @@ import {
   resolveActiveTabHref,
 } from './data.ts'
 import { registerRedirects } from './lib/redirects.ts'
+import { registerRawMarkdown } from './lib/raw-markdown.ts'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
 import { SiteHead } from './lib/site-head.tsx'
@@ -93,6 +94,7 @@ export function createHolocronApp() {
   // and MEMORY.md for why middleware + custom matcher instead of
   // spiceflow routes.
   app = registerRedirects(app, config.redirects)
+  app = registerRawMarkdown(app, mdxContent)
 
   return app
     .loader('/*', async ({ params, response }): Promise<HolocronLoaderData> => {
