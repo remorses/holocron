@@ -52,7 +52,7 @@ import {
   collectAncestorGroupKeys,
   resolveActiveTabHref,
 } from './data.ts'
-import { registerRedirects } from './lib/redirects.ts'
+import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
 import { isAgentRequest } from './lib/raw-markdown.ts'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
@@ -160,8 +160,19 @@ export function createHolocronApp() {
   // (used by createRouter<HolocronApp>()) retains loader type info.
   let app: any = new Spiceflow().use(serveStatic({ root: './public' }))
 
-  // ── Middleware ──────────────────────────────────────────────────
-  app = registerRedirects(app, config.redirects)
+  // ── Redirects ───────────────────────────────────────────────────
+  // All redirects are .get() routes — spiceflow's trie router handles
+  // specificity natively (exact beats :param beats *).
+  for (const rule of deduplicateRedirects(config.redirects)) {
+    app = app.get(rule.source, ({ request, params }: { request: Request; params: Record<string, string> }) => {
+      const url = new URL(request.url)
+      // Map spiceflow's * capture to :splat for destination interpolation
+      const allParams = { ...params, splat: params['*'] ?? '' }
+      let dest = interpolateDestination(rule.destination, allParams)
+      if (!dest.includes('?') && url.search) dest += url.search
+      throw redirect(dest, { status: rule.permanent ? 301 : 302 })
+    })
+  }
 
   // Base path from Vite config (e.g. '/docs' or '/'). Used to build
   // public-facing URLs for sitemaps and agent redirects. Spiceflow strips
