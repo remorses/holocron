@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 // Tests live at e2e/basic/*.test.ts, so we go up two levels then into fixtures/basic.
 const fixtureRoot = path.resolve(import.meta.dirname, "../../fixtures/basic");
 const configPath = path.join(fixtureRoot, "holocron.jsonc");
-const pagesDir = path.join(fixtureRoot, "pages");
+const pagesDir = fixtureRoot;
 
 /**
  * @dev — only runs with the dev server (skipped during build/start tests).

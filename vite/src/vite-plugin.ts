@@ -29,7 +29,7 @@ import react from '@vitejs/plugin-react'
 export type HolocronPluginOptions = {
   /** Path to config file. Defaults to auto-discovery (holocron.jsonc, docs.json) */
   configPath?: string
-  /** Path to pages directory. Defaults to './pages' */
+  /** Path to pages directory. Defaults to '.' (project root, matching Mintlify convention) */
   pagesDir?: string
 }
 
@@ -113,7 +113,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       root = viteConfig.root || process.cwd()
       pagesDir = options.pagesDir
         ? path.resolve(root, options.pagesDir)
-        : path.resolve(root, 'pages')
+        : root
 
       // Check if user already added a react plugin — skip ours if so
       const allPlugins = (viteConfig.plugins || []) as unknown[]
@@ -164,7 +164,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       root = resolved.root
       pagesDir = options.pagesDir
         ? path.resolve(root, options.pagesDir)
-        : path.resolve(root, 'pages')
+        : root
 
       distDirPath = resolved.build?.outDir
         ? path.resolve(root, resolved.build.outDir)
