@@ -1,0 +1,25 @@
+---
+title: Getting Started
+description: Quick start guide
+---
+
+## Installation
+
+Run the following command to install:
+
+```bash
+npm install @holocron.so/vite
+```
+
+## Configuration
+
+Add the plugin to your vite config:
+
+```ts
+import { holocron } from '@holocron.so/vite/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [holocron()]
+})
+```

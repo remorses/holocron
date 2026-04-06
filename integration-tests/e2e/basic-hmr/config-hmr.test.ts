@@ -2,9 +2,23 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 
-// The fixture root for these tests is fixtures/basic/ inside integration-tests/.
-// Tests live at e2e/basic/*.test.ts, so we go up two levels then into fixtures/basic.
-const fixtureRoot = path.resolve(import.meta.dirname, "../../fixtures/basic");
+declare global {
+  interface Window {
+    __hmr_test_no_reload?: boolean;
+  }
+}
+
+function markNoReload(): void {
+  window.__hmr_test_no_reload = true;
+}
+
+function readNoReload(): boolean | undefined {
+  return window.__hmr_test_no_reload;
+}
+
+// The fixture root for these tests is fixtures/basic-hmr/ inside integration-tests/.
+// Tests live at e2e/basic-hmr/*.test.ts, so we go up two levels then into fixtures/basic-hmr.
+const fixtureRoot = path.resolve(import.meta.dirname, "../../fixtures/basic-hmr");
 const configPath = path.join(fixtureRoot, "holocron.jsonc");
 const pagesDir = fixtureRoot;
 
@@ -39,9 +53,7 @@ test.describe.serial("MDX content HMR @dev", () => {
     await expect(page.getByText("Run the following command")).toBeVisible();
     await expect(page.getByText("HMR injected paragraph")).not.toBeVisible();
 
-    await page.evaluate(() => {
-      (window as any).__hmr_test_no_reload = true;
-    });
+    await page.evaluate(markNoReload);
 
     const updatedMdx = originalMdx.replace(
       "## Installation",
@@ -53,9 +65,7 @@ test.describe.serial("MDX content HMR @dev", () => {
       timeout: 10_000,
     });
 
-    const noReload = await page.evaluate(
-      () => (window as any).__hmr_test_no_reload,
-    );
+    const noReload = await page.evaluate(readNoReload);
     expect(noReload, "Page did a full reload instead of HMR update").toBe(
       true,
     );
@@ -90,9 +100,7 @@ test.describe.serial("new MDX file HMR @dev", () => {
     const nav = page.getByRole("navigation", { name: "Navigation" });
     await expect(nav.getByText(newPageTitle)).not.toBeVisible();
 
-    await page.evaluate(() => {
-      (window as any).__hmr_test_no_reload = true;
-    });
+    await page.evaluate(markNoReload);
 
     // Create the MDX file AFTER hydration — this is a new file that was
     // never registered via addWatchFile, so it exercises the fallback path
@@ -127,9 +135,7 @@ test.describe.serial("new MDX file HMR @dev", () => {
       nav.getByRole("link", { name: newPageTitle }),
     ).toBeVisible({ timeout: 10_000 });
 
-    const noReload = await page.evaluate(
-      () => (window as any).__hmr_test_no_reload,
-    );
+    const noReload = await page.evaluate(readNoReload);
     expect(noReload, "Page did a full reload instead of HMR update").toBe(
       true,
     );
@@ -186,9 +192,7 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
       nav.getByRole("link", { name: deletedTitle }),
     ).toBeVisible();
 
-    await page.evaluate(() => {
-      (window as any).__hmr_test_no_reload = true;
-    });
+    await page.evaluate(markNoReload);
 
     fs.unlinkSync(deletedFile);
 
@@ -199,9 +203,7 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
       nav.getByRole("link", { name: deletedTitle }),
     ).not.toBeVisible({ timeout: 10_000 });
 
-    const noReload = await page.evaluate(
-      () => (window as any).__hmr_test_no_reload,
-    );
+    const noReload = await page.evaluate(readNoReload);
     expect(noReload, "Page did a full reload instead of HMR update").toBe(
       true,
     );
@@ -258,9 +260,7 @@ test.describe.serial("config HMR @dev", () => {
     // Track whether a full page navigation/reload happens.
     // We set a JS variable on the window — if it disappears after the
     // config change, a full reload occurred (which we don't want).
-    await page.evaluate(() => {
-      (window as any).__hmr_test_no_reload = true;
-    });
+    await page.evaluate(markNoReload);
 
     // Mutate the config: add a new navigation group with our test page
     const updatedConfig = JSON.stringify(
@@ -287,9 +287,7 @@ test.describe.serial("config HMR @dev", () => {
     ).toBeVisible({ timeout: 5_000 });
 
     // Verify no full page reload happened
-    const noReload = await page.evaluate(
-      () => (window as any).__hmr_test_no_reload,
-    );
+    const noReload = await page.evaluate(readNoReload);
     expect(noReload, "Page did a full reload instead of HMR update").toBe(
       true,
     );
@@ -303,9 +301,7 @@ test.describe.serial("config HMR @dev", () => {
 
     await expect(page).toHaveTitle(/Test Docs/);
 
-    await page.evaluate(() => {
-      (window as any).__hmr_test_no_reload = true;
-    });
+    await page.evaluate(markNoReload);
 
     // Change site name in config
     const updatedConfig = JSON.stringify(
@@ -324,9 +320,7 @@ test.describe.serial("config HMR @dev", () => {
     // Title should update to include the new name
     await expect(page).toHaveTitle(/Updated Docs Name/, { timeout: 10_000 });
 
-    const noReload = await page.evaluate(
-      () => (window as any).__hmr_test_no_reload,
-    );
+    const noReload = await page.evaluate(readNoReload);
     expect(noReload, "Page did a full reload instead of HMR update").toBe(
       true,
     );

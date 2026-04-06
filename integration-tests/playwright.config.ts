@@ -1,13 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
-import { createServer, type AddressInfo } from "node:net";
+import { createServer } from "node:net";
 import { discoverFixtures } from "./scripts/fixtures.ts";
 
 function getFreePort(): Promise<number> {
   return new Promise((resolve) => {
     const server = createServer();
     server.listen(0, () => {
-      const port = (server.address() as AddressInfo).port;
-      server.close(() => resolve(port));
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        throw new Error("Expected server.listen(0) to return an AddressInfo");
+      }
+      const port = address.port;
+      server.close(resolve.bind(null, port));
     });
   });
 }
@@ -53,9 +57,9 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
 });
 
 // Fixtures whose test files mutate shared state (config, MDX pages) on disk
-// must run single-threaded so HMR tests don't race with read-only tests
-// hitting the same Vite server. Other fixtures are safe to parallelize.
-const SERIAL_FIXTURES = new Set(["basic"]);
+// must avoid in-project parallelism so multiple mutating files don't race on
+// the same Vite server. Read-only fixtures can still run fully parallel.
+const SERIAL_FIXTURES = new Set(["basic-hmr"]);
 
 const projects = fixturePorts.map(({ fixture, port }) => ({
   name: fixture.name,

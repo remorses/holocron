@@ -81,7 +81,6 @@ describe('logo normalization', () => {
     const config = readConfig({ root })
     expect(config.logo).toMatchInlineSnapshot(`
       {
-        "dark": "/logo.svg",
         "light": "/logo.svg",
       }
     `)
@@ -106,7 +105,6 @@ describe('logo normalization', () => {
     const config = readConfig({ root })
     expect(config.logo).toMatchInlineSnapshot(`
       {
-        "dark": "",
         "light": "",
       }
     `)

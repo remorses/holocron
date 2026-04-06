@@ -313,6 +313,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // loop first (line 26572 in vite/dist/node/chunks/node.js), then
       // non-client envs (line 26595). By the time RSC/SSR hooks fire,
       // the shared config/syncResult is already fresh.
+      let clientHotModules: NonNullable<ReturnType<typeof this.environment.moduleGraph.getModuleById>>[] = []
       if (this.environment.name === 'client') {
         if (isConfig) {
           config = readConfig({ root, configPath: options.configPath })
@@ -334,6 +335,18 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           event: 'rsc:update',
           data: { file: ctx.file },
         })
+
+        // `rsc:update` refreshes the server-rendered page tree, but client
+        // chrome like `SideNav` imports `data.ts`, which in turn imports the
+        // virtual config module directly. Return those virtual modules from the
+        // client HMR hook as well so Vite updates the client graph instead of
+        // leaving navigation/search/title state stale until a full reload.
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_ICONS]) {
+          const mod = this.environment.moduleGraph.getModuleById(resolvedId)
+          if (mod) {
+            clientHotModules.push(mod)
+          }
+        }
       }
 
       for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_ICONS]) {
@@ -343,7 +356,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      return []
+      return this.environment.name === 'client' ? clientHotModules : []
     },
   }
 
