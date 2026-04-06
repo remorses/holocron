@@ -38,6 +38,13 @@ test.describe("raw markdown via .md path suffix", () => {
     const cacheControl = res.headers()["cache-control"] || "";
     expect(cacheControl).toContain("s-maxage=300");
   });
+
+  test("raw markdown includes powered-by footer", async ({ request }) => {
+    const res = await request.get("/index.md");
+    const body = await res.text();
+    expect(body).toContain("Powered by");
+    expect(body).toContain("holocron.so");
+  });
 });
 
 test.describe("agent detection redirects to .md URL", () => {
@@ -57,6 +64,17 @@ test.describe("agent detection redirects to .md URL", () => {
     expect(res.url()).toContain("/getting-started.md");
     const body = await res.text();
     expect(body).toContain("## Installation");
+  });
+
+  test("mixed-case Accept: Text/Markdown also redirects", async ({
+    request,
+  }) => {
+    const res = await request.get("/getting-started", {
+      headers: { accept: "Text/Markdown" },
+    });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/markdown");
+    expect(res.url()).toContain("/getting-started.md");
   });
 
   test("Accept: text/markdown on root redirects to /index.md", async ({
@@ -122,6 +140,39 @@ test.describe("agent detection redirects to .md URL", () => {
       headers: { "user-agent": "claude-code/1.0" },
     });
     expect(res.status()).toBe(404);
+  });
+});
+
+test.describe("sitemap.xml", () => {
+  test("GET /sitemap.xml returns valid XML sitemap", async ({ request }) => {
+    const res = await request.get("/sitemap.xml");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("application/xml");
+    const body = await res.text();
+    expect(body).toContain('<?xml version="1.0"');
+    expect(body).toContain("<urlset");
+    expect(body).toContain("</urlset>");
+  });
+
+  test("sitemap contains all page URLs", async ({ request }) => {
+    const res = await request.get("/sitemap.xml");
+    const body = await res.text();
+    // The basic fixture has index + getting-started pages
+    expect(body).toContain("<loc>");
+    expect(body).toMatch(/\/getting-started<\/loc>/);
+  });
+
+  test("sitemap includes .md hint comment", async ({ request }) => {
+    const res = await request.get("/sitemap.xml");
+    const body = await res.text();
+    expect(body).toContain("append .md to the URL");
+    expect(body).toContain(".md -->");
+  });
+
+  test("sitemap has cache-control header", async ({ request }) => {
+    const res = await request.get("/sitemap.xml");
+    const cacheControl = res.headers()["cache-control"] || "";
+    expect(cacheControl).toContain("s-maxage=3600");
   });
 });
 

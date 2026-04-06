@@ -211,4 +211,85 @@ export function buildPageIndex(nav: Navigation): Map<string, NavPage> {
   }))
 }
 
+/* ── Href ↔ slug mapping ─────────────────────────────────────────────── */
+
+/**
+ * Canonical slug → href normalization.
+ * Same logic as sync.ts `slugToHref()` — duplicated here to avoid
+ * importing the sync module (which pulls in heavy build-time deps).
+ *
+ *   `"index"`           → `"/"`
+ *   `"guide/index"`     → `"/guide"`
+ *   `"getting-started"` → `"/getting-started"`
+ */
+export function slugToHref(slug: string): string {
+  if (slug === 'index') return '/'
+  return `/${slug.replace(/\/index$/, '')}`
+}
+
+/**
+ * Build a bidirectional href → slug map from mdxContent keys.
+ * Uses `slugToHref()` for normalization so the mapping is consistent
+ * everywhere (raw markdown middleware, page pipeline, sitemap).
+ */
+export function buildHrefToSlugMap(mdxContent: Record<string, string>): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const slug of Object.keys(mdxContent)) {
+    map.set(slugToHref(slug), slug)
+  }
+  return map
+}
+
+/* ── Filesystem-aware page lookup ────────────────────────────────────── */
+
+/**
+ * Lightweight title extraction from raw MDX — avoids importing the full
+ * mdast parser at runtime. Checks frontmatter `title:` first, then
+ * falls back to the first `# heading`.
+ */
+function extractTitleFromMdx(mdx: string): string {
+  // Check frontmatter title: line
+  const fmMatch = mdx.match(/^---\s*\n([\s\S]*?)\n---/)
+  if (fmMatch?.[1]) {
+    const titleLine = fmMatch[1].match(/^title:\s*(.+)/m)
+    if (titleLine?.[1]) return titleLine[1].replace(/^["']|["']$/g, '').trim()
+  }
+  // Fall back to first # heading
+  const headingMatch = mdx.match(/^#\s+(.+)/m)
+  if (headingMatch?.[1]) return headingMatch[1].trim()
+  return 'Untitled'
+}
+
+/**
+ * Find a page by slug, checking both the navigation tree AND mdxContent.
+ *
+ * 1. First: look up in navigation (enriched NavPage with title, headings, icon)
+ * 2. Fallback: if the slug exists in mdxContent but not in navigation,
+ *    build a minimal NavPage so the page is still serveable.
+ *
+ * This ensures pages that exist on disk are always serveable even if
+ * not listed in the navigation config.
+ */
+export function findPageBySlug(
+  nav: Navigation,
+  slug: string,
+  mdxContent: Record<string, string>,
+): NavPage | undefined {
+  // Prefer navigation — gives us full metadata (title, headings, icon, etc.)
+  const navPage = findPage(nav, slug)
+  if (navPage) return navPage
+
+  // Fallback: file exists on disk but not in navigation config
+  const mdx = mdxContent[slug]
+  if (!mdx) return undefined
+
+  return {
+    slug,
+    href: slugToHref(slug),
+    title: extractTitleFromMdx(mdx),
+    gitSha: '',
+    headings: [],
+  }
+}
+
 

@@ -1,5 +1,5 @@
 /**
- * Raw markdown middleware for AI agents.
+ * Raw markdown middleware + sitemap for AI agents.
  *
  * Serves the raw MDX source of any page as `text/markdown` when the URL
  * path ends with `.md`. When an AI agent is detected (via User-Agent,
@@ -7,16 +7,25 @@
  * the `.md` URL so every cache layer sees a single canonical URL per
  * content variant — no `Vary` header gymnastics needed.
  *
+ * Also serves `/sitemap.xml` with all page URLs. An XML comment at
+ * the top tells agents they can append `.md` to get raw markdown.
+ *
+ * Sitemap is in middleware (not a `.get()` route) because spiceflow's
+ * `/*` catch-all page handler would match `/sitemap.xml` before a
+ * specific `.get('/sitemap.xml')` route registered after it.
+ *
  * Installed as a `.use()` middleware that runs AFTER redirects (so
  * `/old-path.md` redirects correctly) but BEFORE loader/layout/page
  * (so matching requests short-circuit the RSC pipeline entirely).
  *
  * Flow:
- *   1. Path ends with `.md`  → serve raw markdown directly
- *   2. Agent detected        → 302 redirect to `{path}.md`
- *   3. Normal browser        → fall through to RSC pipeline
+ *   1. `/sitemap.xml`        → serve XML sitemap
+ *   2. Path ends with `.md`  → serve raw markdown directly
+ *   3. Agent detected        → 302 redirect to `{path}.md`
+ *   4. Normal browser        → fall through to RSC pipeline
  */
 import type { Spiceflow } from 'spiceflow'
+import { buildHrefToSlugMap } from '../navigation.ts'
 
 /* ── Agent detection ─────────────────────────────────────────────────── */
 
@@ -31,6 +40,7 @@ const AGENT_UA_PATTERNS = [
   /anthropic/i,
   /chatgpt-user/i,
   /gpt-?bot/i,
+  /oai-searchbot/i,
   /opencode/i,
   /cohere-ai/i,
   /perplexitybot/i,
@@ -38,8 +48,8 @@ const AGENT_UA_PATTERNS = [
 
 /** Check if the request comes from an AI agent or explicitly asks for markdown. */
 export function isAgentRequest(request: Request): boolean {
-  // Accept header contains text/markdown
-  const accept = request.headers.get('accept') || ''
+  // Accept header contains text/markdown (case-insensitive per HTTP spec)
+  const accept = (request.headers.get('accept') ?? '').toLowerCase()
   if (accept.includes('text/markdown')) return true
 
   // ChatGPT's RFC 9421 Signature-Agent header
@@ -50,19 +60,42 @@ export function isAgentRequest(request: Request): boolean {
   return AGENT_UA_PATTERNS.some((pattern) => pattern.test(ua))
 }
 
+/* ── Sitemap ─────────────────────────────────────────────────────────── */
+
+function buildSitemapXml(origin: string, hrefs: string[]): string {
+  const urls = hrefs
+    .map((href) => `  <url><loc>${origin}${href}</loc></url>`)
+    .join('\n')
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<!-- To get the raw markdown content of any page, append .md to the URL. -->',
+    '<!-- Example: ' + origin + '/getting-started.md -->',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    urls,
+    '</urlset>',
+  ].join('\n')
+}
+
+const POWERED_BY_FOOTER = '\n\n---\n\n*Powered by [holocron.so](https://holocron.so)*\n'
+
 /* ── Middleware ───────────────────────────────────────────────────────── */
 
 /**
- * Install raw-markdown middleware on a Spiceflow app.
+ * Install raw-markdown middleware + sitemap on a Spiceflow app.
  *
+ * - `/sitemap.xml` → XML sitemap with all page URLs
  * - `.md` suffix → serve raw MDX content as `text/markdown`
  * - Agent request on normal path → 302 redirect to `{path}.md`
- *   (keeps caching clean: one URL per content variant)
  */
 export function registerRawMarkdown<App extends Spiceflow<any, any, any, any, any, any>>(
   app: App,
   mdxContent: Record<string, string>,
 ): App {
+  // Pre-compute href→slug map once at startup using the shared
+  // normalization from navigation.ts (slugToHref).
+  const hrefToSlug = buildHrefToSlugMap(mdxContent)
+
   return app.use(({ request }: { request: Request }) => {
     // Only handle GET/HEAD — POST etc. should never serve markdown
     if (request.method !== 'GET' && request.method !== 'HEAD') return
@@ -75,16 +108,33 @@ export function registerRawMarkdown<App extends Spiceflow<any, any, any, any, an
       pathname = pathname.slice(0, -1)
     }
 
+    // ── /sitemap.xml → XML sitemap ───────────────────────────────
+    if (pathname === '/sitemap.xml') {
+      const hrefs = Array.from(hrefToSlug.keys()).sort()
+      const xml = buildSitemapXml(url.origin, hrefs)
+      return new Response(xml, {
+        headers: {
+          'content-type': 'application/xml; charset=utf-8',
+          'cache-control': 's-maxage=3600, stale-while-revalidate=86400',
+        },
+      })
+    }
+
     // ── Path ends with .md → serve raw markdown directly ──────────
     // Only `.md` (not `.mdx`) — Vite intercepts `.mdx` in dev mode.
     if (pathname.endsWith('.md')) {
-      const stripped = pathname.slice(0, -3)
-      const slug = stripped === '/' || stripped === '' ? 'index' : stripped.slice(1)
+      const href = pathname.slice(0, -3)
+      // `/index.md` → href `/index` → normalize to `/` (the canonical href).
+      // Also handles nested `/section/index.md` → `/section`.
+      const normalizedHref =
+        href === '' || href === '/index' ? '/' : href.endsWith('/index') ? href.slice(0, -'/index'.length) : href
+      const slug = hrefToSlug.get(normalizedHref)
+      if (!slug) return // fall through → 404 handled by page handler
 
       const mdx = mdxContent[slug]
-      if (!mdx) return // fall through → 404 handled by page handler
+      if (!mdx) return
 
-      return new Response(mdx, {
+      return new Response(mdx + POWERED_BY_FOOTER, {
         headers: {
           'content-type': 'text/markdown; charset=utf-8',
           'cache-control': 's-maxage=300, stale-while-revalidate=86400',
@@ -97,11 +147,10 @@ export function registerRawMarkdown<App extends Spiceflow<any, any, any, any, an
     // resource for raw markdown. CDNs and proxies don't need `Vary`.
     if (isAgentRequest(request)) {
       // Verify the page actually exists before redirecting
-      const slug = pathname === '/' || pathname === '' ? 'index' : pathname.slice(1)
-      if (!mdxContent[slug]) return // fall through → normal 404
+      if (!hrefToSlug.has(pathname)) return // fall through → normal 404
 
       const mdPath = pathname === '/' ? '/index.md' : `${pathname}.md`
-      const destination = mdPath + url.search + url.hash
+      const destination = mdPath + url.search
       return Response.redirect(new URL(destination, url.origin).href, 302)
     }
   }) as App

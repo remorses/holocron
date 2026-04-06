@@ -34,7 +34,7 @@ import {
 } from './components/markdown/index.tsx'
 import { NotFound } from './components/not-found.tsx'
 import {
-  findPage,
+  findPageBySlug,
   collectAllPages,
   type NavHeading,
 } from './navigation.ts'
@@ -101,8 +101,8 @@ export function createHolocronApp() {
       const rawSlug = (params as Record<string, string>)['*'] || ''
       const slug = rawSlug === '' ? 'index' : rawSlug
 
-      const currentPage = findPage(navigation, slug)
-      const hasMdx = currentPage ? mdxContent[slug] !== undefined : false
+      const currentPage = findPageBySlug(navigation, slug, mdxContent)
+      const hasMdx = mdxContent[slug] !== undefined
 
       // Root path with no index page → redirect to first page in navigation
       if (!currentPage && (slug === 'index' || slug === '') && firstPage) {
