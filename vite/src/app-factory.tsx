@@ -1,23 +1,28 @@
 /**
- * Holocron app factory — creates the Spiceflow app with all routes
- * (.loader, .layout, .page, /api/search).
+ * Holocron app factory — creates the Spiceflow app with per-page routes.
  *
  * Architecture:
  *
- *   .loader('/*')  → per-request minimal data (current page, headings,
- *                    ancestor keys). RSC-flight serialized to both server
- *                    page handler and client components (via useHolocronData).
+ *   For each MDX page on disk:
+ *     .page(href)    → parses MDX, renders sections/hero as server JSX
  *
- *   .page('/*')    → parses MDX, renders sections/hero as server JSX,
- *                    hands them to EditorialPage.
+ *   Shared across all pages:
+ *     .loader('/*')  → per-request minimal data (current page, headings, etc.)
+ *     .layout('/*')  → HTML shell with SiteHead + theme
+ *
+ *   Explicit GET routes (no catch-all needed — registered per-page):
+ *     .get('/<page>.md')   → raw markdown for AI agents
+ *     .get('/sitemap.xml') → XML sitemap
+ *     .get('/api/search')  → search API
+ *
+ *   Middleware (cross-cutting):
+ *     .use(serveStatic)     → public files
+ *     .use(redirects)       → config-driven redirects
+ *     .use(agentRedirect)   → 302 AI agents to .md URLs
  *
  * Static site data (navigation tree, tabs, header links, search entries)
  * lives in `./data.ts` and is bundled into the client chunk ONCE — never
  * re-shipped through the per-request loader payload.
- *
- * All MDX content and image metadata is pre-processed at build time.
- * Request-time rendering is just: parse mdast → render RSC components.
- * Zero file I/O, zero sharp, zero image-size — works on Cloudflare.
  */
 
 import './styles/globals.css'
@@ -36,6 +41,8 @@ import { NotFound } from './components/not-found.tsx'
 import {
   findPageBySlug,
   collectAllPages,
+  slugToHref,
+  buildHrefToSlugMap,
   type NavHeading,
 } from './navigation.ts'
 import {
@@ -46,7 +53,7 @@ import {
   resolveActiveTabHref,
 } from './data.ts'
 import { registerRedirects } from './lib/redirects.ts'
-import { registerRawMarkdown } from './lib/raw-markdown.ts'
+import { isAgentRequest } from './lib/raw-markdown.ts'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
 import { SiteHead } from './lib/site-head.tsx'
@@ -83,196 +90,256 @@ export type HolocronLoaderData = {
   headRobots: string | undefined
 }
 
+/* ── Constants ───────────────────────────────────────────────────────── */
+
+const POWERED_BY_FOOTER = '\n\n---\n\n*Powered by [holocron.so](https://holocron.so)*\n'
+
+/* ── Shared helpers ──────────────────────────────────────────────────── */
+
+function getBannerJsx(request: Request): React.ReactNode | undefined {
+  if (!config.banner) return undefined
+  const pageCookies = parseCookies(request.headers.get('cookie') || '')
+  if (pageCookies['holocron-banner-dismissed'] === config.banner.content) return undefined
+  const bannerMdx = config.banner.content
+  const bannerMdast = mdxParse(bannerMdx) as Root
+  return <RenderNodes markdown={bannerMdx} nodes={bannerMdast.children} />
+}
+
+function renderMdxPage(
+  slug: string,
+  loaderData: HolocronLoaderData,
+  bannerJsx: React.ReactNode | undefined,
+) {
+  const pageMdx = mdxContent[slug]!
+
+  const mdast = mdxParse(pageMdx) as Root
+  const heroNodes = mdast.children.filter(isHeroNode)
+  const contentChildren = mdast.children.filter((node) => !isHeroNode(node))
+  const contentMdast: Root = { type: 'root', children: contentChildren }
+  const mdastSections = buildSections(contentMdast)
+
+  const sections: EditorialSection[] = mdastSections.map((section) => {
+    const aside =
+      section.asideNodes.length > 0 ? (
+        <RenderNodes markdown={pageMdx} nodes={section.asideNodes} />
+      ) : undefined
+    return {
+      content: <RenderNodes markdown={pageMdx} nodes={section.contentNodes} />,
+      aside,
+      fullWidth: section.fullWidth,
+      asideRowSpan: section.asideRowSpan,
+    }
+  })
+
+  const hero =
+    heroNodes.length > 0 ? (
+      <RenderNodes markdown={pageMdx} nodes={heroNodes} />
+    ) : undefined
+
+  return (
+    <>
+      <Head>
+        <Head.Title>{loaderData.headTitle}</Head.Title>
+        {loaderData.currentPageDescription && (
+          <>
+            <Head.Meta name='description' content={loaderData.currentPageDescription} />
+            <Head.Meta property='og:description' content={loaderData.currentPageDescription} />
+          </>
+        )}
+      </Head>
+      <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} />
+    </>
+  )
+}
+
 /* ── App factory ─────────────────────────────────────────────────────── */
 
 export function createHolocronApp() {
-  let app = new Spiceflow().use(serveStatic({ root: './public' }))
+  // Use `any` during the imperative route-registration loop, then cast
+  // back to a properly-typed Spiceflow chain at the end so HolocronApp
+  // (used by createRouter<HolocronApp>()) retains loader type info.
+  let app: any = new Spiceflow().use(serveStatic({ root: './public' }))
 
-  // Install config-driven redirects as `.use()` middleware. Runs
-  // before loader/layout/page — on match, throws a redirect Response
-  // that short-circuits the request pipeline. See lib/redirects.ts
-  // and MEMORY.md for why middleware + custom matcher instead of
-  // spiceflow routes.
+  // ── Middleware ──────────────────────────────────────────────────
   app = registerRedirects(app, config.redirects)
-  app = registerRawMarkdown(app, mdxContent)
 
-  return app
-    .loader('/*', async ({ params, response }): Promise<HolocronLoaderData> => {
-      const rawSlug = (params as Record<string, string>)['*'] || ''
-      const slug = rawSlug === '' ? 'index' : rawSlug
+  // Agent redirect: detect AI agents on normal page URLs → 302 to .md
+  const hrefToSlug = buildHrefToSlugMap(mdxContent)
+  app = app.use(({ request }: { request: Request }) => {
+    if (request.method !== 'GET' && request.method !== 'HEAD') return
+    if (!isAgentRequest(request)) return
 
-      const currentPage = findPageBySlug(navigation, slug, mdxContent)
-      const hasMdx = mdxContent[slug] !== undefined
+    const url = new URL(request.url)
+    let pathname = url.pathname
+    if (pathname !== '/' && pathname.endsWith('/')) {
+      pathname = pathname.slice(0, -1)
+    }
+    // Don't redirect .md, .xml, or /api requests
+    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.startsWith('/api')) return
+    if (!hrefToSlug.has(pathname)) return
 
-      // Root path with no index page → redirect to first page in navigation
-      if (!currentPage && (slug === 'index' || slug === '') && firstPage) {
-        throw redirect(firstPage.href)
-      }
+    const mdPath = pathname === '/' ? '/index.md' : `${pathname}.md`
+    return Response.redirect(new URL(mdPath + url.search, url.origin).href, 302)
+  })
 
-      // 404 case — either the page isn't in navigation, or its MDX is missing
-      if (!currentPage || !hasMdx) {
-        response.status = 404
-        return {
-          currentPageHref: undefined,
-          currentPageTitle: undefined,
-          currentPageDescription: undefined,
-          currentHeadings: [],
-          ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(firstPage.href) : [],
-          activeTabHref: resolveActiveTabHref(firstPage?.href),
-          notFoundPath: '/' + rawSlug,
-          headTitle: `Page not found — ${config.name}`,
-          headRobots: 'noindex',
-        }
-      }
+  // ── Explicit GET routes ────────────────────────────────────────
 
-      return {
-        currentPageHref: currentPage.href,
-        currentPageTitle: currentPage.title,
-        currentPageDescription: currentPage.description ?? config.description,
-        currentHeadings: currentPage.headings,
-        ancestorGroupKeys: collectAncestorGroupKeys(currentPage.href),
-        activeTabHref: resolveActiveTabHref(currentPage.href),
-        notFoundPath: undefined,
-        headTitle: `${currentPage.title} — ${config.name}`,
-        headRobots: undefined,
-      }
+  // /sitemap.xml
+  app = app.get('/sitemap.xml', ({ request }: { request: Request }) => {
+    const url = new URL(request.url)
+    const hrefs = Array.from(hrefToSlug.keys()).sort()
+    const urls = hrefs
+      .map((href: string) => `  <url><loc>${url.origin}${href}</loc></url>`)
+      .join('\n')
+    const xml = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<!-- To get the raw markdown content of any page, append .md to the URL. -->',
+      `<!-- Example: ${url.origin}/getting-started.md -->`,
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+      urls,
+      '</urlset>',
+    ].join('\n')
+    return new Response(xml, {
+      headers: {
+        'content-type': 'application/xml; charset=utf-8',
+        'cache-control': 's-maxage=3600, stale-while-revalidate=86400',
+      },
     })
-    .layout('/*', async ({ children, request }) => {
-      // Read theme cookie to determine initial dark/light class on <html>.
-      // This avoids a flash when the cookie is set. For "system" default
-      // without a cookie, a blocking <script> in SiteHead handles it.
-      const cookies = parseCookies(request.headers.get('cookie') || '')
-      // When strict mode is on, ignore the user's cookie — always use config default
-      const cookieTheme = config.appearance.strict
-        ? null
-        : (cookies['holocron-theme'] as 'light' | 'dark' | undefined) ?? null
-      const isDark =
-        cookieTheme === 'dark' ||
-        (!cookieTheme && config.appearance.default === 'dark')
-      return (
-        <html
-          lang='en'
-          className={isDark ? 'dark' : undefined}
-          data-default-theme={config.appearance.default}
-          {...(config.appearance.strict ? { 'data-strict-theme': '' } : {})}
-        >
-          <SiteHead config={config} />
-          <body>{children}</body>
-        </html>
-      )
-    })
-    .page('/*', async ({ params, loaderData: rawLoaderData, request }) => {
-      // Spiceflow's page-handler context does not (yet) thread the loader
-      // return type into its own `loaderData` slot — only the typed client
-      // router exposes it. Cast once here so the rest of the handler is safe.
-      const loaderData = rawLoaderData as unknown as HolocronLoaderData
+  })
 
-      // Pre-render banner content server-side via safe-mdx. Skip entirely
-      // when the user dismissed it (cookie value matches current content).
-      let bannerJsx: React.ReactNode | undefined
-      if (config.banner) {
-        const pageCookies = parseCookies(request.headers.get('cookie') || '')
-        const bannerDismissed = pageCookies['holocron-banner-dismissed'] === config.banner.content
-        if (!bannerDismissed) {
-          const bannerMdx = config.banner.content
-          const bannerMdast = mdxParse(bannerMdx) as Root
-          bannerJsx = <RenderNodes markdown={bannerMdx} nodes={bannerMdast.children} />
-        }
-      }
+  // Per-page .md routes
+  for (const slug of Object.keys(mdxContent)) {
+    const href = slugToHref(slug)
+    const mdPath = href === '/' ? '/index.md' : `${href}.md`
+    const mdx = mdxContent[slug]!
 
-      // 404 branch — render inside the normal shell so the user can navigate
-      if (loaderData.notFoundPath) {
-        return (
-          <>
-            <Head>
-              <Head.Title>{loaderData.headTitle}</Head.Title>
-              {loaderData.headRobots && (
-                <Head.Meta name='robots' content={loaderData.headRobots} />
-              )}
-            </Head>
-            <EditorialPage bannerContent={bannerJsx}>
-              <NotFound
-                path={loaderData.notFoundPath}
-                homeHref={firstPage?.href || '/'}
-              />
-            </EditorialPage>
-          </>
-        )
-      }
-
-      // Happy path — parse MDX and render sections + hero as server JSX
-      const rawSlug = (params as Record<string, string>)['*'] || ''
-      const slug = rawSlug === '' ? 'index' : rawSlug
-      const pageMdx = mdxContent[slug]!
-
-      const mdast = mdxParse(pageMdx) as Root
-      const heroNodes = mdast.children.filter(isHeroNode)
-      const contentChildren = mdast.children.filter((node) => !isHeroNode(node))
-      const contentMdast: Root = { type: 'root', children: contentChildren }
-      const mdastSections = buildSections(contentMdast)
-
-      const sections: EditorialSection[] = mdastSections.map((section) => {
-        const aside =
-          section.asideNodes.length > 0 ? (
-            <RenderNodes markdown={pageMdx} nodes={section.asideNodes} />
-          ) : undefined
-        return {
-          content: <RenderNodes markdown={pageMdx} nodes={section.contentNodes} />,
-          aside,
-          fullWidth: section.fullWidth,
-          asideRowSpan: section.asideRowSpan,
-        }
-      })
-
-      const hero =
-        heroNodes.length > 0 ? (
-          <RenderNodes markdown={pageMdx} nodes={heroNodes} />
-        ) : undefined
-
-      return (
-        <>
-          <Head>
-            <Head.Title>{loaderData.headTitle}</Head.Title>
-            {loaderData.currentPageDescription && (
-              <>
-                <Head.Meta name='description' content={loaderData.currentPageDescription} />
-                <Head.Meta property='og:description' content={loaderData.currentPageDescription} />
-              </>
-            )}
-          </Head>
-          <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} />
-        </>
-      )
-    })
-    .get('/api/search', async ({ request }) => {
-      const url = new URL(request.url)
-      const query = url.searchParams.get('q') || ''
-
-      const allPages = collectAllPages(navigation)
-      const results = allPages
-        .flatMap((page) => {
-          return [
-            { title: page.title, href: page.href, type: 'page' as const },
-            ...page.headings.map((h) => {
-              return {
-                title: h.text,
-                href: `${page.href}#${h.slug}`,
-                type: 'heading' as const,
-              }
-            }),
-          ]
-        })
-        .filter((item) => {
-          return item.title.toLowerCase().includes(query.toLowerCase())
-        })
-        .slice(0, 20)
-
-      return new Response(JSON.stringify(results), {
+    app = app.get(mdPath, () => {
+      return new Response(mdx + POWERED_BY_FOOTER, {
         headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 's-maxage=300, stale-while-revalidate=86400',
+          'content-type': 'text/markdown; charset=utf-8',
+          'cache-control': 's-maxage=300, stale-while-revalidate=86400',
         },
       })
+    })
+  }
+
+  // /api/search
+  app = app.get('/api/search', ({ request }: { request: Request }) => {
+    const url = new URL(request.url)
+    const query = url.searchParams.get('q') || ''
+    const allPages = collectAllPages(navigation)
+    const results = allPages
+      .flatMap((page) => [
+        { title: page.title, href: page.href, type: 'page' as const },
+        ...page.headings.map((h) => ({
+          title: h.text,
+          href: `${page.href}#${h.slug}`,
+          type: 'heading' as const,
+        })),
+      ])
+      .filter((item) => item.title.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 20)
+
+    return new Response(JSON.stringify(results), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 's-maxage=300, stale-while-revalidate=86400',
+      },
+    })
+  })
+
+  // ── Shared loader + layout ─────────────────────────────────────
+
+  app = app.loader('/*', async ({ params, response }: any): Promise<HolocronLoaderData> => {
+    const rawSlug = (params as Record<string, string>)['*'] || ''
+    const slug = rawSlug === '' ? 'index' : rawSlug
+
+    const currentPage = findPageBySlug(navigation, slug, mdxContent)
+    const hasMdx = mdxContent[slug] !== undefined
+
+    // Root path with no index page → redirect to first page in navigation
+    if (!currentPage && (slug === 'index' || slug === '') && firstPage) {
+      throw redirect(firstPage.href)
+    }
+
+    // 404 case
+    if (!currentPage || !hasMdx) {
+      response.status = 404
+      return {
+        currentPageHref: undefined,
+        currentPageTitle: undefined,
+        currentPageDescription: undefined,
+        currentHeadings: [],
+        ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(firstPage.href) : [],
+        activeTabHref: resolveActiveTabHref(firstPage?.href),
+        notFoundPath: '/' + rawSlug,
+        headTitle: `Page not found — ${config.name}`,
+        headRobots: 'noindex',
+      }
+    }
+
+    return {
+      currentPageHref: currentPage.href,
+      currentPageTitle: currentPage.title,
+      currentPageDescription: currentPage.description ?? config.description,
+      currentHeadings: currentPage.headings,
+      ancestorGroupKeys: collectAncestorGroupKeys(currentPage.href),
+      activeTabHref: resolveActiveTabHref(currentPage.href),
+      notFoundPath: undefined,
+      headTitle: `${currentPage.title} — ${config.name}`,
+      headRobots: undefined,
+    }
+  })
+
+  app = app.layout('/*', async ({ children, request }: any) => {
+    const cookies = parseCookies(request.headers.get('cookie') || '')
+    const cookieTheme = config.appearance.strict
+      ? null
+      : (cookies['holocron-theme'] as 'light' | 'dark' | undefined) ?? null
+    const isDark =
+      cookieTheme === 'dark' ||
+      (!cookieTheme && config.appearance.default === 'dark')
+    return (
+      <html
+        lang='en'
+        className={isDark ? 'dark' : undefined}
+        data-default-theme={config.appearance.default}
+        {...(config.appearance.strict ? { 'data-strict-theme': '' } : {})}
+      >
+        <SiteHead config={config} />
+        <body>{children}</body>
+      </html>
+    )
+  })
+
+  // ── Per-page .page() routes ────────────────────────────────────
+  for (const slug of Object.keys(mdxContent)) {
+    const pageHref = slugToHref(slug)
+
+    app = app.page(pageHref, async ({ loaderData: rawLoaderData, request }: any) => {
+      const loaderData = rawLoaderData as unknown as HolocronLoaderData
+      const bannerJsx = getBannerJsx(request)
+      return renderMdxPage(slug, loaderData, bannerJsx)
+    })
+  }
+
+  // Cast to a typed chain so HolocronApp (used by createRouter) keeps
+  // the loader('/*') type → useLoaderData('/*') returns HolocronLoaderData.
+  return app as ReturnType<typeof createTypedChain>
+}
+
+/** Type-only helper: a minimal Spiceflow chain with the loader typed.
+ *  Never called at runtime — only used for `ReturnType<>` extraction. */
+function createTypedChain() {
+  return new Spiceflow()
+    .loader('/*', async (_ctx: any): Promise<HolocronLoaderData> => {
+      return undefined as any
+    })
+    .layout('/*', async (_ctx: any) => {
+      return undefined as any
+    })
+    .page('/*', async (_ctx: any) => {
+      return undefined as any
     })
 }
 
