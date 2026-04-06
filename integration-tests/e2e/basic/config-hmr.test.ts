@@ -15,7 +15,10 @@ const pagesDir = fixtureRoot;
  * update: the sidebar reflects the new navigation entry without a full
  * page reload.
  */
-test.describe("MDX content HMR @dev", () => {
+// All HMR describes are serial — they mutate shared fixture files
+// (holocron.jsonc, MDX pages) and share a single Vite dev server.
+// Running them concurrently would corrupt each other's beforeEach/afterEach state.
+test.describe.serial("MDX content HMR @dev", () => {
   const mdxFile = path.join(pagesDir, "getting-started.mdx");
   let originalMdx: string;
 
@@ -59,7 +62,7 @@ test.describe("MDX content HMR @dev", () => {
   });
 });
 
-test.describe("new MDX file HMR @dev", () => {
+test.describe.serial("new MDX file HMR @dev", () => {
   const newPageSlug = "hmr-new-page";
   const newPageFile = path.join(pagesDir, `${newPageSlug}.mdx`);
   const newPageTitle = "Brand New Page";
@@ -133,7 +136,7 @@ test.describe("new MDX file HMR @dev", () => {
   });
 });
 
-test.describe("deleted MDX file HMR @dev", () => {
+test.describe.serial("deleted MDX file HMR @dev", () => {
   const deletedSlug = "hmr-delete-target";
   const deletedFile = path.join(pagesDir, `${deletedSlug}.mdx`);
   const deletedTitle = "Page To Delete";
@@ -205,7 +208,7 @@ test.describe("deleted MDX file HMR @dev", () => {
   });
 });
 
-test.describe("config HMR @dev", () => {
+test.describe.serial("config HMR @dev", () => {
   const hmrPageSlug = "hmr-test-page";
   const hmrPageFile = path.join(pagesDir, `${hmrPageSlug}.mdx`);
   const hmrGroupName = "HMR Test Group";

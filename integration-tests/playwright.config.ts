@@ -52,9 +52,15 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
   };
 });
 
+// Fixtures whose test files mutate shared state (config, MDX pages) on disk
+// must run single-threaded so HMR tests don't race with read-only tests
+// hitting the same Vite server. Other fixtures are safe to parallelize.
+const SERIAL_FIXTURES = new Set(["basic"]);
+
 const projects = fixturePorts.map(({ fixture, port }) => ({
   name: fixture.name,
   testDir: `e2e/${fixture.name}`,
+  fullyParallel: !SERIAL_FIXTURES.has(fixture.name),
   use: {
     ...devices["Desktop Chrome"],
     viewport: null,
@@ -71,8 +77,11 @@ export default defineConfig({
   },
   projects,
   webServer: webServers,
-  fullyParallel: false,
-  workers: 1,
+  fullyParallel: true,
+  // Default workers (half CPU count) for local runs; CI stays single-threaded
+  // for stability. Fixtures with HMR tests (basic) are pinned to
+  // fullyParallel: false at the project level — see SERIAL_FIXTURES above.
+  workers: process.env["CI"] ? 1 : undefined,
   // Config-HMR tests tagged @dev only run against the dev server; build-mode
   // tests skip them (and vice-versa). Non-tagged tests run in both modes.
   grepInvert: isStart ? /@dev/ : /@build/,
