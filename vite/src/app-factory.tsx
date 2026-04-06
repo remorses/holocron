@@ -163,6 +163,13 @@ export function createHolocronApp() {
   // ── Middleware ──────────────────────────────────────────────────
   app = registerRedirects(app, config.redirects)
 
+  // Base path from Vite config (e.g. '/docs' or '/'). Used to build
+  // public-facing URLs for sitemaps and agent redirects. Spiceflow strips
+  // the base before routing, so route paths are base-less (e.g. '/intro'),
+  // but external URLs must include the base (e.g. '/docs/intro').
+  const rawBase = import.meta.env.BASE_URL || '/'
+  const base = rawBase === '/' ? '' : rawBase.replace(/\/$/, '')
+
   // Agent redirect: detect AI agents on normal page URLs → 302 to .md
   const hrefToSlug = buildHrefToSlugMap(mdxContent)
   app = app.use(({ request }: { request: Request }) => {
@@ -176,10 +183,14 @@ export function createHolocronApp() {
     }
     // Don't redirect .md, .xml, or /api requests
     if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.startsWith('/api')) return
-    if (!hrefToSlug.has(pathname)) return
 
-    const mdPath = pathname === '/' ? '/index.md' : `${pathname}.md`
-    return Response.redirect(new URL(mdPath + url.search, url.origin).href, 302)
+    // Strip base from pathname for lookup (spiceflow may or may not
+    // strip the base depending on middleware vs route context)
+    const stripped = base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname
+    if (!hrefToSlug.has(stripped)) return
+
+    const mdPath = stripped === '/' ? '/index.md' : `${stripped}.md`
+    return Response.redirect(new URL(base + mdPath + url.search, url.origin).href, 302)
   })
 
   // ── Explicit GET routes ────────────────────────────────────────
@@ -189,12 +200,12 @@ export function createHolocronApp() {
     const url = new URL(request.url)
     const hrefs = Array.from(hrefToSlug.keys()).sort()
     const urls = hrefs
-      .map((href: string) => `  <url><loc>${url.origin}${href}</loc></url>`)
+      .map((href: string) => `  <url><loc>${url.origin}${base}${href}</loc></url>`)
       .join('\n')
     const xml = [
       '<?xml version="1.0" encoding="UTF-8"?>',
       '<!-- To get the raw markdown content of any page, append .md to the URL. -->',
-      `<!-- Example: ${url.origin}/getting-started.md -->`,
+      `<!-- Example: ${url.origin}${base}/getting-started.md -->`,
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
       urls,
       '</urlset>',

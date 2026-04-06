@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { createServer } from "node:net";
+import fs from "node:fs";
+import path from "node:path";
 import { discoverFixtures } from "./scripts/fixtures.ts";
 
 function getFreePort(): Promise<number> {
@@ -44,9 +46,14 @@ const fixturePorts = await Promise.all(
 );
 
 const webServers = fixturePorts.map(({ fixture, port }) => {
+  // Use a per-fixture vite.config.ts if present, otherwise the shared one
+  const fixtureConfig = path.join(fixture.rootDir, "vite.config.ts");
+  const configFlag = fs.existsSync(fixtureConfig)
+    ? `--config ${fixture.rootRel}/vite.config.ts`
+    : `--config vite.config.ts`;
   const command = isStart
     ? `PORT=${port} node ${fixture.rootRel}/dist/rsc/index.js`
-    : `pnpm exec vite ${fixture.rootRel} --config vite.config.ts --port ${port} --strictPort`;
+    : `pnpm exec vite ${fixture.rootRel} ${configFlag} --port ${port} --strictPort`;
   return {
     command,
     stdout: "pipe" as const,

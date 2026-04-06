@@ -1,0 +1,9 @@
+{
+  "name": "Base Path Test",
+  "navigation": [
+    {
+      "group": "Docs",
+      "pages": ["intro", "guide"]
+    }
+  ]
+}
