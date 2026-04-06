@@ -19,7 +19,7 @@ import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
 import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
-import { Footer } from './footer.tsx'
+import { Footer, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner.tsx'
 
 export type EditorialSection = {
@@ -70,6 +70,8 @@ export function EditorialPage({
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
+  // Sidebar spans exactly the content rows — no wasted implicit rows.
+  const sidebarRowSpan = sections ? sections.length : 1
 
   return (
     <div
@@ -188,7 +190,7 @@ export function EditorialPage({
 
       <div className='grid grid-cols-1 gap-y-(--section-gap) w-full max-w-full mx-auto px-(--mobile-padding) lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
         {/* TOC sidebar: sticky within its grid cell */}
-        <div className='slot-sidebar-left'>
+        <div className='slot-sidebar-left' style={{ gridRow: `1 / span ${sidebarRowSpan}` }}>
           <div
             style={{
               position: 'sticky',
@@ -293,8 +295,11 @@ export function EditorialPage({
         )}
       </div>
 
-      {/* Site footer: logo + socials + link columns */}
-      <Footer />
+      {/* Site footer + branding — mt-auto pushes to bottom on short pages */}
+      <div className='mt-auto'>
+        <Footer />
+        <PoweredBy />
+      </div>
     </div>
   )
 }

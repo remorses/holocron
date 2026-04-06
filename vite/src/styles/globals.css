@@ -314,9 +314,8 @@
   @variant lg {
     display: block;
     grid-column: 1;
-    /* Span all rows so the TOC doesn't inflate the first row's height.
-       Large span value because implicit rows don't support -1. */
-    grid-row: 1 / span 100;
+    /* grid-row is set dynamically via inline style so the sidebar spans
+       exactly the number of content rows — no wasted implicit rows. */
   }
 }
 

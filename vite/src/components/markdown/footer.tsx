@@ -45,7 +45,7 @@ export function Footer() {
   const logoLinkHref = logo.href || '/'
 
   return (
-    <footer className='mt-auto border-t border-(--page-border) bg-background'>
+    <footer className='border-t border-(--page-border) bg-background'>
       <div className='mx-auto w-full max-w-full px-(--mobile-padding) py-10 lg:max-w-(--grid-max-width) lg:px-0'>
         {/* Top row: logo + social icons */}
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
@@ -112,5 +112,21 @@ export function Footer() {
         )}
       </div>
     </footer>
+  )
+}
+
+export function PoweredBy() {
+  return (
+    <div className='flex items-center justify-center py-6'>
+      <a
+        href='https://holocron.so?utm_source=powered-by'
+        target='_blank'
+        rel='noopener noreferrer'
+        className='no-underline flex items-baseline gap-1 text-xs opacity-40 hover:opacity-70 transition-opacity duration-150'
+      >
+        <span>Powered by</span>
+        <span className='font-bold'>Holocron</span>
+      </a>
+    </div>
   )
 }
