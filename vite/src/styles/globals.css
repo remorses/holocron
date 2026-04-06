@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import './editorial.css';
 @import './editorial-prism.css';
-@custom-variant dark (@media (prefers-color-scheme: dark));
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* Scan holocron's own components for Tailwind class usage — without this,
    Tailwind v4 skips node_modules and no utility classes get generated. */
@@ -80,7 +80,10 @@
   }
 
   /* Header anatomy — all sticky/fade/spacer offsets derive from these.
-     Change --logo-height or --tab-bar-height and every dependent value updates. */
+     Change --logo-height or --tab-bar-height and every dependent value updates.
+     --banner-height is set via inline style on .slot-page when a banner
+     is present (defaults to 0px). */
+  --banner-height: 0px;
   --header-padding-y: 16px;
   --logo-height: 30px;
   --header-row-height: calc(2 * var(--header-padding-y) + var(--logo-height));
@@ -271,14 +274,12 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-@variant dark {
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-  }
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Layout slots — only important page entities use CSS classes.
