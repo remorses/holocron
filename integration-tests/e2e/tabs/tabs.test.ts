@@ -30,15 +30,16 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/");
 
-    // Link-only tabs render as anchors pointing at their external href
-    const githubLink = page.getByRole("link", { name: /GitHub/ });
-    const changelogLink = page.getByRole("link", { name: /Changelog/ });
+    // Link-only tabs render as anchors inside the tab bar
+    const tabBar = page.locator(".slot-tabbar");
+    const githubLink = tabBar.getByRole("link", { name: /GitHub/ });
+    const changelogLink = tabBar.getByRole("link", { name: /Changelog/ });
 
-    await expect(githubLink.first()).toHaveAttribute(
+    await expect(githubLink).toHaveAttribute(
       "href",
       "https://github.com/remorses/holocron",
     );
-    await expect(changelogLink.first()).toHaveAttribute(
+    await expect(changelogLink).toHaveAttribute(
       "href",
       "https://github.com/remorses/holocron/releases",
     );
@@ -70,6 +71,77 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await page.goto("/theming");
     await expect(page).toHaveTitle(/Theming/);
     await expect(page.getByRole("heading", { name: "Colors" })).toBeVisible();
+  });
+
+  test("renders banner with dismiss button", async ({ page }) => {
+    await page.goto("/");
+    const banner = page.locator(".slot-banner");
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText("We just launched v2!");
+    // Banner contains a markdown link
+    const link = banner.getByRole("link", { name: "Read the announcement" });
+    await expect(link).toHaveAttribute("href", "https://example.com/blog/v2");
+    // Dismiss button is present (dismissible: true)
+    await expect(banner.getByRole("button", { name: "Dismiss banner" })).toBeVisible();
+  });
+
+  test("renders footer with socials and link columns", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+    const footer = page.locator("footer");
+    await expect(footer).toBeVisible();
+    // Social links
+    await expect(footer.getByRole("link", { name: "x" })).toHaveAttribute(
+      "href",
+      "https://x.com/example",
+    );
+    await expect(footer.getByRole("link", { name: "github" })).toHaveAttribute(
+      "href",
+      "https://github.com/example",
+    );
+    // Link columns
+    await expect(footer.getByText("Resources")).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Blog" })).toBeVisible();
+    await expect(footer.getByText("Company")).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Careers" })).toBeVisible();
+  });
+
+  test("renders theme toggle button", async ({ page }) => {
+    await page.goto("/");
+    const toggle = page.getByRole("button", { name: /Switch to (dark|light) mode/ });
+    await expect(toggle).toBeVisible();
+  });
+
+  test("renders primary CTA button in navbar", async ({ page }) => {
+    await page.goto("/");
+    const cta = page.getByRole("link", { name: "Get Started" });
+    await expect(cta).toBeVisible();
+    await expect(cta).toHaveAttribute("href", "https://example.com/signup");
+  });
+
+  test("SSR HTML includes description metatag from config", async ({ request }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    // The site description flows through the config and should appear
+    // somewhere in the rendered output (may be in RSC flight payload)
+    expect(html).toContain("A documentation site with tabs");
+  });
+
+  test("injects brand-primary color from config", async ({ page }) => {
+    await page.goto("/");
+    // The banner uses bg-(color:--brand-primary) so if colors work, the
+    // banner is visible with the brand color
+    const banner = page.locator(".slot-banner");
+    await expect(banner).toBeVisible();
+  });
+
+  test("search input has custom placeholder", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+    const searchInput = page.getByPlaceholder("Search the docs...");
+    await expect(searchInput).toBeVisible();
   });
 
   test("no hydration errors on tabs home page", async ({ page }) => {

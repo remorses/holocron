@@ -1,9 +1,62 @@
 {
   // Fixture: navigation.tabs with groups + external link-only tabs.
-  // Mirrors the shape used in example/holocron.jsonc.
+  // Also exercises: banner, footer (socials + link columns), appearance,
+  // search prompt, SEO metatags, and colors (light/dark overrides).
   "name": "Tabs Docs",
+  "description": "A documentation site with tabs, banner, footer, and appearance settings.",
   "colors": {
-    "primary": "#3e9fff"
+    "primary": "#3e9fff",
+    "light": "#60a5fa",
+    "dark": "#1d4ed8"
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "banner": {
+    "content": "We just launched v2! [Read the announcement](https://example.com/blog/v2)",
+    "dismissible": true
+  },
+  "search": {
+    "prompt": "Search the docs..."
+  },
+  "seo": {
+    "metatags": {
+      "og:site_name": "Tabs Docs",
+      "twitter:card": "summary_large_image"
+    }
+  },
+  "navbar": {
+    "links": [
+      { "type": "github", "href": "https://github.com/example/repo" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://example.com/signup"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/example",
+      "github": "https://github.com/example",
+      "linkedin": "https://linkedin.com/company/example"
+    },
+    "links": [
+      {
+        "header": "Resources",
+        "items": [
+          { "label": "Blog", "href": "https://example.com/blog" },
+          { "label": "Pricing", "href": "https://example.com/pricing" }
+        ]
+      },
+      {
+        "header": "Company",
+        "items": [
+          { "label": "About", "href": "https://example.com/about" },
+          { "label": "Careers", "href": "https://example.com/careers" }
+        ]
+      }
+    ]
   },
   "navigation": {
     "tabs": [
