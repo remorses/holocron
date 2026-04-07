@@ -13,11 +13,8 @@ import GithubSlugger from 'github-slugger'
 import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
-<<<<<<< HEAD
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
-=======
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
->>>>>>> dev
 
 export type ProcessedMdx = {
   normalizedContent: string
@@ -39,45 +36,24 @@ export type ProcessedMdx = {
  * Returns the mdast tree for reuse by rewriteMdxImages.
  */
 export function processMdx(content: string): ProcessedMdx {
-<<<<<<< HEAD
   const normalizedContent = normalizeMdx(content)
-  const frontmatter = extractFrontmatter(content)
-  const mdast = mdxParse(normalizedContent) as Root
-=======
   const frontmatter = parsePageFrontmatter(content)
-  const mdast = mdxParse(content)
->>>>>>> dev
+  const mdast = mdxParse(normalizedContent) as Root
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
   const slugger = new GithubSlugger()
   const headings: NavHeading[] = []
   for (const node of mdast.children) {
-<<<<<<< HEAD
     const heading = extractHeading(node, slugger)
     if (heading) headings.push(heading)
-=======
-    if (node.type === 'heading') {
-      const text = extractText(node.children)
-      headings.push({
-        depth: node.depth,
-        text,
-        slug: slugger.slug(text),
-      })
-    }
->>>>>>> dev
   }
 
   const imageSrcs = collectImageSrcs(mdast)
 
   return {
-<<<<<<< HEAD
     normalizedContent,
-    title: (frontmatter.title as string) || headings[0]?.text || 'Untitled',
-    description: frontmatter.description as string | undefined,
-=======
     title: frontmatter.title || headings[0]?.text || 'Untitled',
     description: frontmatter.description,
->>>>>>> dev
     icon: typeof frontmatter.icon === 'string' && frontmatter.icon !== '' ? frontmatter.icon : undefined,
     frontmatter,
     headings,
