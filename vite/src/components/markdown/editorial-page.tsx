@@ -13,6 +13,7 @@ import React, { Fragment } from 'react'
 import { Link } from 'spiceflow/react'
 import {
   config as siteConfig,
+  resolvedLogo as siteLogo,
   tabs as siteTabs,
   headerLinks as siteHeaderLinks,
   versionItems as siteVersionItems,
@@ -80,8 +81,8 @@ export function EditorialPage({
   bannerContent?: React.ReactNode
 }) {
   const { activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
-  const logo = siteConfig.logo.light
-  const logoLinkHref = siteConfig.logo.href || '/'
+  const logo = siteLogo.light
+  const logoLinkHref = siteLogo.href || '/'
   const siteName = siteConfig.name
   const tabs = siteTabs
   const headerLinks = siteHeaderLinks
@@ -119,28 +120,22 @@ export function EditorialPage({
           {/* Left side: logo + version/dropdown selects */}
           <div className='flex items-center gap-3'>
             <Link href={logoLinkHref} className='slot-logo no-underline flex items-center shrink-0'>
-              {logo ? (
-                <>
+              <>
+                <img
+                  src={logo}
+                  alt={siteName || 'Logo'}
+                  style={{ height: 'var(--logo-height)', width: 'auto' }}
+                  className={siteLogo.dark ? 'dark:hidden' : 'dark:invert'}
+                />
+                {siteLogo.dark && (
                   <img
-                    src={logo}
+                    src={siteLogo.dark}
                     alt={siteName || 'Logo'}
                     style={{ height: 'var(--logo-height)', width: 'auto' }}
-                    className={siteConfig.logo.dark ? 'dark:hidden' : 'dark:invert'}
+                    className='hidden dark:block'
                   />
-                  {!!siteConfig.logo.dark && (
-                    <img
-                      src={siteConfig.logo.dark}
-                      alt={siteName || 'Logo'}
-                      style={{ height: 'var(--logo-height)', width: 'auto' }}
-                      className='hidden dark:block'
-                    />
-                  )}
-                </>
-              ) : (
-                <span className='text-[15px] font-bold [font-family:var(--font-code)] lowercase tracking-[-0.01em]'>
-                  {siteName || 'docs'}
-                </span>
-              )}
+                )}
+              </>
             </Link>
             {versionItems.length > 0 && (
               <span className='hidden lg:inline-flex'>
