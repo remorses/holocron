@@ -1,55 +1,78 @@
-import type { Heading, Root, PhrasingContent } from 'mdast'
+import type { Heading, Root } from 'mdast'
+import { mdastHeadingId } from 'mdast-heading-id'
+import { micromarkHeadingId } from 'micromark-heading-id'
 import { visit } from 'unist-util-visit'
 import { createElement, literalAttribute } from './jsx-utils.ts'
 
-const HEADING_ID_RE = /^(.*?)(?:\s+)?\{#([A-Za-z0-9_-]+)\}$/
-const HEADING_MARKER_RE = /^\/\*holocron-heading-id:([A-Za-z0-9_-]+)\*\/$/
+type IdStringNode = { type: 'idString'; value: string }
 
-export function remarkHeadingIds() {
+/**
+ * Mintlify supports `{#custom-id}` on markdown headings. We need parser-level
+ * support so the id survives in mdast (`data.id` + `data.hProperties.id`) and
+ * then a final JSX heading rewrite so the normalized output still parses in
+ * safe-mdx, which doesn't consume mdast data fields directly.
+ */
+export function remarkHeadingIds(this: any) {
+  const data = this.data() as any
+
+  ;(data.micromarkExtensions || (data.micromarkExtensions = [])).push(
+    micromarkHeadingId(),
+  )
+  ;(data.fromMarkdownExtensions || (data.fromMarkdownExtensions = [])).push(
+    mdastHeadingId(),
+  )
+
   return (tree) => {
-    for (let index = 0; index < tree.children.length; index++) {
-      const node = tree.children[index]
-      const next = tree.children[index + 1]
-      if (!node || node.type !== 'heading' || !next || next.type !== 'mdxFlowExpression') {
-        continue
+    visit(tree as never, 'idString', (_node, _index, parent) => {
+      if (!parent) {
+        throw new Error('Unexpected idString under no parent.')
       }
-      const markerMatch = HEADING_MARKER_RE.exec(next.value.trim())
-      if (!markerMatch) {
-        continue
+      const parentNode = parent as { type?: string }
+      if (parentNode.type !== 'heading') {
+        throw new Error(`Unexpected idString under ${parentNode.type}.`)
       }
-      const heading = node as Heading
-      tree.children.splice(index, 2, createElement(
-        `h${heading.depth}`,
-        [literalAttribute('id', markerMatch[1] ?? '')],
-        heading.children as unknown as PhrasingContent[],
-      ) as never)
-    }
+    })
 
     visit(tree, 'heading', (node, index, parent) => {
+      const heading = node as Heading
+      const ids = heading.children.filter((child) => (child as { type?: string }).type === 'idString') as unknown as IdStringNode[]
+      if (ids.length === 0) {
+        return
+      }
+      if (ids.length > 1) {
+        throw new Error(`Found ${ids.length} ids under heading ${heading.depth}.`)
+      }
+
+      const idNode = ids[0]
+      if (!idNode?.value) {
+        return
+      }
+
+      const explicitId = idNode.value
+      if (!heading.data) heading.data = {}
+      if (!heading.data.hProperties) heading.data.hProperties = {}
+      ;(heading.data as { id?: string }).id = explicitId
+      ;(heading.data.hProperties as { id?: string }).id = explicitId
+
+      idNode.value = ''
+
+      const nodeIndex = heading.children.indexOf(idNode as never)
+      if (nodeIndex >= 1) {
+        const previous = heading.children[nodeIndex - 1]
+        if (previous?.type === 'text') {
+          previous.value = previous.value.trimEnd()
+        }
+      }
+      heading.children.splice(nodeIndex, 1)
+
       if (!parent || typeof index !== 'number') {
         return
       }
 
-      const heading = node as Heading
-      const lastChild = heading.children.at(-1)
-      if (!lastChild || lastChild.type !== 'text') {
-        return
-      }
-
-      const match = HEADING_ID_RE.exec(lastChild.value)
-      if (!match) {
-        return
-      }
-
-      const [, cleanedText, id] = match
-      if (!cleanedText || !id) {
-        return
-      }
-      lastChild.value = cleanedText.trimEnd()
       parent.children.splice(index, 1, createElement(
         `h${heading.depth}`,
-        [literalAttribute('id', id)],
-        heading.children as unknown as PhrasingContent[],
+        [literalAttribute('id', explicitId)],
+        heading.children as unknown as unknown[],
       ) as never)
     })
   }

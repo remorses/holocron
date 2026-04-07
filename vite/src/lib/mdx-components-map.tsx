@@ -138,13 +138,9 @@ export const mdxComponents = {
   Tree,
   'Tree.Folder': TreeFolder,
   'Tree.File': TreeFile,
-  TreeFolder,
-  TreeFile,
   Color,
   'Color.Row': ColorRow,
   'Color.Item': ColorItem,
-  ColorRow,
-  ColorItem,
   Icon: MintlifyIcon,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.

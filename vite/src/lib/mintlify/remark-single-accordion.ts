@@ -2,6 +2,11 @@ import type { Root } from 'mdast'
 import { visit } from 'unist-util-visit'
 import { createElement } from './jsx-utils.ts'
 
+/**
+ * Mintlify allows a lone <Accordion>, but the renderer styles accordions as a
+ * grouped stack. Wrap single items up front so both single and grouped author
+ * syntax go through the same component structure.
+ */
 export function remarkSingleAccordionItems() {
   return (tree) => {
     visit(tree, 'mdxJsxFlowElement', (node, index, parent) => {

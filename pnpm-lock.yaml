@@ -130,6 +130,9 @@ importers:
       just-bash:
         specifier: ^2.14.0
         version: 2.14.0
+      mdast-heading-id:
+        specifier: ^2.0.0
+        version: 2.0.0
       mdast-util-frontmatter:
         specifier: ^2.0.1
         version: 2.0.1
@@ -142,6 +145,9 @@ importers:
       mermaid:
         specifier: ^11.12.0
         version: 11.14.0
+      micromark-heading-id:
+        specifier: ^2.0.0
+        version: 2.0.0
       prismjs:
         specifier: ^1.30.0
         version: 1.30.0
@@ -1945,6 +1951,9 @@ packages:
     engines: {node: '>= 20'}
     hasBin: true
 
+  mdast-heading-id@2.0.0:
+    resolution: {integrity: sha512-JVh0xKqsI3INPzJEqqCiuq3BGde5x6AlBTQAetLQQr9qTiDjX4dCvFhIiGmyPt1rftiHELQPI5obGphIOTXeWQ==}
+
   mdast-util-find-and-replace@3.0.2:
     resolution: {integrity: sha512-Tmd1Vg/m3Xz43afeNxDIhWRtFZgM2VLyaf4vSTYwudTyeuTneoL3qtWMA5jeLyz/O1vDJmmV4QuScFCA2tBPwg==}
 
@@ -2059,6 +2068,9 @@ packages:
 
   micromark-factory-whitespace@2.0.1:
     resolution: {integrity: sha512-Ob0nuZ3PKt/n0hORHyvoD9uZhr+Za8sFoP+OnMcnWK5lngSzALgQYKMr9RJVOWLqQYuyn6ulqGWSXdwf6F80lQ==}
+
+  micromark-heading-id@2.0.0:
+    resolution: {integrity: sha512-TdR5WCmwuCroK8QrfX0/4w9bjj3ayN0GzatxGV/lWQKmM75kNKVZEmdvKZS4MOskARxWXu1WHdIJjMSVMBegow==}
 
   micromark-util-character@2.1.1:
     resolution: {integrity: sha512-wv8tdUTJ3thSFFFJKtpYKOYiGP2+v96Hvk4Tu8KpCAsTMs6yi+nVmGh1syvSCsaxz45J6Jbw+9DD6g97+NV67Q==}
@@ -4321,6 +4333,8 @@ snapshots:
 
   marked@16.4.2: {}
 
+  mdast-heading-id@2.0.0: {}
+
   mdast-util-find-and-replace@3.0.2:
     dependencies:
       '@types/mdast': 4.0.4
@@ -4687,6 +4701,10 @@ snapshots:
       micromark-util-character: 2.1.1
       micromark-util-symbol: 2.0.1
       micromark-util-types: 2.0.2
+
+  micromark-heading-id@2.0.0:
+    dependencies:
+      micromark-util-symbol: 2.0.1
 
   micromark-util-character@2.1.1:
     dependencies:

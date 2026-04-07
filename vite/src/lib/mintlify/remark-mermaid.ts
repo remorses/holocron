@@ -3,6 +3,10 @@ import { visit } from 'unist-util-visit'
 import { parseCodeMeta } from './code-meta.ts'
 import { booleanExpression, createElement, expressionAttribute, literalAttribute } from './jsx-utils.ts'
 
+/**
+ * Mermaid fences need to become an explicit component node so the runtime can
+ * render SVG diagrams instead of treating them like ordinary highlighted code.
+ */
 export function remarkMermaidCode() {
   return (tree) => {
     visit(tree, 'code', (node, index, parent) => {

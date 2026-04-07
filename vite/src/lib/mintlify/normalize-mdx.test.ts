@@ -74,7 +74,7 @@ A-->B
     `)
   })
 
-  test('flattens dotted Mintlify component names for safe-mdx rendering', async () => {
+  test('preserves dotted Mintlify component names', async () => {
     const result = await normalizeMdx(`
 <Tree>
   <Tree.Folder name="src" defaultOpen>
@@ -91,15 +91,15 @@ A-->B
 
     expect(result).toMatchInlineSnapshot(`
       "<Tree>
-        <TreeFolder name=\"src\" defaultOpen>
-          <TreeFile name=\"app.tsx\" />
-        </TreeFolder>
+        <Tree.Folder name=\"src\" defaultOpen>
+          <Tree.File name=\"app.tsx\" />
+        </Tree.Folder>
       </Tree>
 
       <Color>
-        <ColorRow title=\"Brand colors\">
-          <ColorItem name=\"Primary\" value=\"#0969da\" />
-        </ColorRow>
+        <Color.Row title=\"Brand colors\">
+          <Color.Item name=\"Primary\" value=\"#0969da\" />
+        </Color.Row>
       </Color>
       "
     `)

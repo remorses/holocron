@@ -3,6 +3,11 @@ import { visit } from 'unist-util-visit'
 import { parseCodeMeta } from './code-meta.ts'
 import { createElement, expressionAttribute, literalAttribute, stringArrayExpression } from './jsx-utils.ts'
 
+/**
+ * Mintlify authors use <CodeGroup> as structural sugar around titled fences.
+ * Holocron's renderer only understands explicit Tabs/Tab JSX, so normalize the
+ * authoring syntax here before safe-mdx tries to render the page.
+ */
 export function remarkCodeGroup() {
   return (tree) => {
     visit(tree, 'mdxJsxFlowElement', (node, index, parent) => {
