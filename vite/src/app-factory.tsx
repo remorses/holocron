@@ -13,7 +13,7 @@
  *   Explicit GET routes (no catch-all needed — registered per-page):
  *     .get('/<page>.md')   → raw markdown for AI agents
  *     .get('/sitemap.xml') → XML sitemap
- *     .get('/api/search')  → search API
+ *     .get('/holocron-api/search')  → search API
  *
  *   Middleware (cross-cutting):
  *     .use(serveStatic)     → public files
@@ -193,8 +193,8 @@ export function createHolocronApp() {
     if (pathname !== '/' && pathname.endsWith('/')) {
       pathname = pathname.slice(0, -1)
     }
-    // Don't redirect .md, .xml, or /api requests
-    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/api')) return
+    // Don't redirect .md, .xml, or /holocron-api/ requests
+    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/holocron-api/')) return
 
     // Strip base from pathname for lookup (spiceflow may or may not
     // strip the base depending on middleware vs route context).
@@ -268,8 +268,8 @@ export function createHolocronApp() {
     })
   })
 
-  // /api/search
-  app = app.get('/api/search', ({ request }: { request: Request }) => {
+  // /holocron-api/search
+  app = app.get('/holocron-api/search', ({ request }: { request: Request }) => {
     const url = new URL(request.url)
     const query = url.searchParams.get('q') || ''
     const allPages = collectAllPages(navigation)
