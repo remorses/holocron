@@ -277,7 +277,7 @@ export function EditorialPage({
                     {/* Aside column: assistant input (first row only) + per-section aside */}
                     {(i === 0 || (section.aside && !isShared)) && (
                       <div
-                         className={`flex flex-col gap-3 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                         className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
                       >
                         {i === 0 && ENABLE_ASSISTANT && <SidebarAssistant />}
                         {section.aside && !isShared && (
