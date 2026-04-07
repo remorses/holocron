@@ -47,6 +47,12 @@ Types are intentionally kept close to docs.json to minimize transformations. Uti
 
 Prefer the existing shadcn-style token names (`--background`, `--foreground`, `--muted`, `--accent`, `--border`, etc.) over introducing parallel Fumadocs-style color variable namespaces. If a ported Fumadocs component needs local helpers or utilities, keep those minimal and map them onto the shared shadcn token layer instead of creating a second design system.
 
+### Container spacing — use flex column gap
+
+Any container-like MDX component (`Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, API fields/examples, tiles, tree wrappers, etc.) must own its inner vertical rhythm with `flex flex-col gap-*` on the container body, just like the root page/layout wrappers do. Do not rely on paragraph margins inside containers — many editorial nodes render with margins stripped, so raw MDX children will visually collapse unless the container explicitly provides gap spacing.
+
+When a container can receive arbitrary MDX children, also add `no-bleed` on that container/body so nested code blocks, lists, and images do not leak outside the card frame.
+
 ### CSS variables — add only if they deduplicate values
 
 A CSS variable is only justified if it is **used in many places** and serves to deduplicate an otherwise-repeated hardcoded value. If a variable is referenced only once (or never), inline the value directly and delete the variable.

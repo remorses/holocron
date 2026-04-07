@@ -1,0 +1,25 @@
+import type { Root } from 'mdast'
+import { visit } from 'unist-util-visit'
+import { parseCodeMeta } from './code-meta.ts'
+import { booleanExpression, createElement, expressionAttribute, literalAttribute } from './jsx-utils.ts'
+
+export function remarkMermaidCode() {
+  return (tree) => {
+    visit(tree, 'code', (node, index, parent) => {
+      if (node.type !== 'code' || node.lang !== 'mermaid' || !parent || typeof index !== 'number') {
+        return
+      }
+
+      const meta = parseCodeMeta(node.meta)
+      const attributes: object[] = [literalAttribute('chart', node.value)]
+      if (typeof meta.placement === 'string') {
+        attributes.push(literalAttribute('placement', meta.placement))
+      }
+      if (typeof meta.actions === 'boolean') {
+        attributes.push(expressionAttribute('actions', booleanExpression(meta.actions)))
+      }
+
+      parent.children.splice(index, 1, createElement('Mermaid', attributes) as never)
+    })
+  }
+}
