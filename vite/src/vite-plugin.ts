@@ -410,7 +410,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     configEnvironment(_name, config) {
       if (!config.optimizeDeps?.include) return
       config.optimizeDeps.include = (
-        config.optimizeDeps.include as string[]
+        config.optimizeDeps.include
       ).map((entry) =>
         typeof entry === 'string' && entry.startsWith('spiceflow >')
           ? `@holocron.so/vite > ${entry}`

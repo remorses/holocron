@@ -12,6 +12,7 @@ import type { SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from './icons.tsx'
 import { ExpandableContainer } from './expandable-container.tsx'
 import { Icon } from '../icon.tsx'
+import { NavBadge } from './nav-badge.tsx'
 
 /** Flat list of headings shown under the active page in the sidebar.
  *  All headings are rendered at the same level regardless of depth,
@@ -56,7 +57,7 @@ export function TocInline({ headings, activeId, searchState, pageHref, highlight
     if (!list) return
     const observer = new ResizeObserver(updateIndicator)
     observer.observe(list)
-    return () => observer.disconnect()
+    return observer.disconnect.bind(observer)
   }, [activeId, isSearchActive])
 
   return (
@@ -138,6 +139,7 @@ export function NavPageLink({
   highlightedHref: string | null
   highlightedRef: React.RefObject<HTMLAnchorElement | null>
 }) {
+  if (page.frontmatter.hidden) return null
   const isActive = page.href === currentPageHref
   const isDimmed = searchState.dimmedHrefs?.has(page.href) ?? false
   const isSearchActive = searchState.matchedHrefs !== null
@@ -164,7 +166,11 @@ export function NavPageLink({
         }}
       >
         <Icon icon={page.icon} size={12} />
-        {page.title}
+        <span>{page.frontmatter.sidebarTitle ?? page.title}</span>
+        <span className='ml-auto inline-flex items-center gap-1'>
+          {page.frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}
+          {page.frontmatter.tag && <NavBadge label={page.frontmatter.tag} />}
+        </span>
       </Link>
       <ExpandableContainer open={showToc}>
         {page.headings.length > 0 && (

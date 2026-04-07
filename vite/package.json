@@ -57,6 +57,7 @@
     "cookie": "^1.1.1",
     "dedent": "^1.7.2",
     "fflate": "^0.8.2",
+    "gray-matter": "^4.0.3",
     "github-slugger": "^2.0.0",
     "image-size": "^2.0.2",
     "just-bash": "^2.14.0",

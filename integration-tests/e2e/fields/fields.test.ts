@@ -170,6 +170,14 @@ test.describe("redirects", () => {
 });
 
 test.describe("hidden filters", () => {
+  test("page with frontmatter hidden does NOT appear in sidebar", async ({ request }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    expect(html).not.toContain("Hidden Page");
+  });
+
   test("hidden tab does NOT appear in tab bar", async ({ request }) => {
     const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
@@ -223,6 +231,68 @@ test.describe("hidden filters", () => {
     expect(response.status()).toBe(200);
     const html = await response.text();
     expect(html).toContain("Reachable via URL, absent from sidebar");
+  });
+
+  test("page with frontmatter hidden is still routable", async ({ request }) => {
+    const response = await request.get("/hidden-page", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("This page uses page-level `hidden: true`.");
+  });
+});
+
+test.describe("page frontmatter metadata", () => {
+  test("sidebarTitle and badges render in the sidebar", async ({ request }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+
+    expect(html).toContain(">Meta<");
+    expect(html).toContain(">BETA<");
+    expect(html).toContain(">Deprecated<");
+    expect(html).not.toContain(">Meta Page Long Title<");
+  });
+
+  test("page-level SEO metadata overrides generated defaults", async ({ request }) => {
+    const response = await request.get("/meta-page", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+
+    expect(html).toContain('property="og:title" content="Custom OG Title"');
+    expect(html).toContain('property="og:description" content="Custom OG Description"');
+    expect(html).toContain('property="og:image" content="https://example.com/custom-og.png"');
+    expect(html).toContain('property="og:url" content="https://example.com/meta-page-social"');
+    expect(html).toContain('property="og:type" content="article"');
+    expect(html).toContain('property="og:image:width" content="1400"');
+    expect(html).toContain('property="og:image:height" content="700"');
+    expect(html).toContain('name="twitter:title" content="Custom Twitter Title"');
+    expect(html).toContain('name="twitter:description" content="Custom Twitter Description"');
+    expect(html).toContain('name="twitter:image" content="https://example.com/custom-twitter.png"');
+    expect(html).toContain('name="twitter:card" content="summary"');
+    expect(html).toContain('name="twitter:site" content="@fieldsdocs"');
+    expect(html).toContain('name="twitter:image:width" content="1400"');
+    expect(html).toContain('name="twitter:image:height" content="700"');
+    expect(html).toContain('name="keywords" content="configuration, setup"');
+    expect(html).toContain('name="robots" content="noarchive"');
+  });
+
+  test("page-level noindex emits robots=noindex and excludes the page from sitemap", async ({ request }) => {
+    const pageResponse = await request.get("/noindex-page", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const pageHtml = await pageResponse.text();
+    expect(pageHtml).toContain('name="robots" content="noindex"');
+    expect(pageHtml).toContain('name="keywords" content="private, internal"');
+
+    const sitemapResponse = await request.get("/sitemap.xml");
+    const sitemap = await sitemapResponse.text();
+    expect(sitemap).not.toContain("/noindex-page");
+    expect(sitemap).not.toContain("/hidden-page");
+    expect(sitemap).toContain("/meta-page");
   });
 });
 

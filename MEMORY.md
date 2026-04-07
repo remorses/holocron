@@ -70,6 +70,10 @@ static data → data.ts → client bundle (once, cached)
 dynamic data → .loader('/*') → RSC flight (minimal, per-request)
 ```
 
+## Runtime site data via loader
+
+For the planned source-driven/runtime docs path, `data.ts` should read site data from the root Spiceflow loader, not from separate request props or a second static module path. Spiceflow exposes loader data globally (`getLoaderData`) as well as in components, so global-scope access is valid even when the site data becomes request-scoped.
+
 ## App type derivation
 
 ```tsx

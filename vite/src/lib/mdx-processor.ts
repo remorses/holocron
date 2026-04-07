@@ -13,7 +13,11 @@ import GithubSlugger from 'github-slugger'
 import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
+<<<<<<< HEAD
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
+=======
+import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
+>>>>>>> dev
 
 export type ProcessedMdx = {
   normalizedContent: string
@@ -22,7 +26,7 @@ export type ProcessedMdx = {
   /** Icon from frontmatter — Mintlify convention: `icon: rocket` in YAML.
    *  A string value is either a lucide icon name, an emoji, or a URL. */
   icon?: string
-  frontmatter: Record<string, unknown>
+  frontmatter: PageFrontmatter
   headings: NavHeading[]
   /** All non-external image srcs found in the MDX (relative + absolute) */
   imageSrcs: string[]
@@ -35,24 +39,45 @@ export type ProcessedMdx = {
  * Returns the mdast tree for reuse by rewriteMdxImages.
  */
 export function processMdx(content: string): ProcessedMdx {
+<<<<<<< HEAD
   const normalizedContent = normalizeMdx(content)
   const frontmatter = extractFrontmatter(content)
   const mdast = mdxParse(normalizedContent) as Root
+=======
+  const frontmatter = parsePageFrontmatter(content)
+  const mdast = mdxParse(content)
+>>>>>>> dev
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
   const slugger = new GithubSlugger()
   const headings: NavHeading[] = []
   for (const node of mdast.children) {
+<<<<<<< HEAD
     const heading = extractHeading(node, slugger)
     if (heading) headings.push(heading)
+=======
+    if (node.type === 'heading') {
+      const text = extractText(node.children)
+      headings.push({
+        depth: node.depth,
+        text,
+        slug: slugger.slug(text),
+      })
+    }
+>>>>>>> dev
   }
 
   const imageSrcs = collectImageSrcs(mdast)
 
   return {
+<<<<<<< HEAD
     normalizedContent,
     title: (frontmatter.title as string) || headings[0]?.text || 'Untitled',
     description: frontmatter.description as string | undefined,
+=======
+    title: frontmatter.title || headings[0]?.text || 'Untitled',
+    description: frontmatter.description,
+>>>>>>> dev
     icon: typeof frontmatter.icon === 'string' && frontmatter.icon !== '' ? frontmatter.icon : undefined,
     frontmatter,
     headings,
@@ -134,9 +159,7 @@ export type ResolvedImage = {
  */
 export function rewriteMdxImages(mdast: Root, images: Map<string, ResolvedImage>): string {
   // Walk and mutate the tree. Process root.children and also nested children.
-  mdast.children = mdast.children.flatMap((node) => {
-    return rewriteNode(node, images)
-  })
+  mdast.children = mdast.children.flatMap((node) => rewriteNode(node, images))
 
   // Serialize back to MDX
   return toMarkdown(mdast, {
@@ -284,39 +307,6 @@ function setJsxAttr(node: JsxNode, attrName: string, value: string): void {
   }
 }
 
-/* ── Frontmatter extraction ─────────────────────────────────────────── */
-
-const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---/
-
-function extractFrontmatter(content: string): Record<string, unknown> {
-  const match = content.match(FRONTMATTER_RE)
-  if (!match) {
-    return {}
-  }
-  const result: Record<string, unknown> = {}
-  const yamlBlock = match[1] ?? ''
-  for (const line of yamlBlock.split('\n')) {
-    const colonIdx = line.indexOf(':')
-    if (colonIdx === -1) {
-      continue
-    }
-    const key = line.slice(0, colonIdx).trim()
-    let value: string | boolean = line.slice(colonIdx + 1).trim()
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1)
-    }
-    if (value === 'true') {
-      value = true
-    } else if (value === 'false') {
-      value = false
-    }
-    if (key) {
-      result[key] = value
-    }
-  }
-  return result
-}
-
 /* ── Heading text extraction ────────────────────────────────────────── */
 
 function extractText(children: PhrasingContent[]): string {
@@ -326,7 +316,7 @@ function extractText(children: PhrasingContent[]): string {
         return child.value
       }
       if ('children' in child) {
-        return extractText(child.children as PhrasingContent[])
+        return extractText(child.children)
       }
       return ''
     })

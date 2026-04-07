@@ -16,6 +16,8 @@ import type {
   ConfigDropdownItem,
   NavTabBase,
 } from './config.ts'
+import type { PageFrontmatter } from './lib/page-frontmatter.ts'
+import { isHiddenPage, parsePageFrontmatter } from './lib/page-frontmatter.ts'
 
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
@@ -51,6 +53,7 @@ export type NavPage = {
   gitSha: string
   headings: NavHeading[]
   icon?: NavIcon
+  frontmatter: PageFrontmatter
 }
 
 /** A heading extracted from the MDX content */
@@ -99,10 +102,14 @@ export function hasVisibleSidebarEntries(group: NavGroup): boolean {
   if (group.hidden) return false
   if (group.pages.length === 0) return true
   for (const entry of group.pages) {
-    if (isNavPage(entry)) return true
+    if (isNavPage(entry) && !isHiddenPage(entry.frontmatter)) return true
     if (isNavGroup(entry) && hasVisibleSidebarEntries(entry)) return true
   }
   return false
+}
+
+export function isVisibleNavPage(page: NavPage): boolean {
+  return !isHiddenPage(page.frontmatter)
 }
 
 /* ── Utility functions ──────────────────────────────────────────────── */
@@ -258,12 +265,8 @@ export function buildHrefToSlugMap(mdxContent: Record<string, string>): Map<stri
  * falls back to the first `# heading`.
  */
 function extractTitleFromMdx(mdx: string): string {
-  // Check frontmatter title: line
-  const fmMatch = mdx.match(/^---\s*\n([\s\S]*?)\n---/)
-  if (fmMatch?.[1]) {
-    const titleLine = fmMatch[1].match(/^title:\s*(.+)/m)
-    if (titleLine?.[1]) return titleLine[1].replace(/^["']|["']$/g, '').trim()
-  }
+  const frontmatter = parsePageFrontmatter(mdx)
+  if (frontmatter.title) return frontmatter.title
   // Fall back to first # heading
   const headingMatch = mdx.match(/^#\s+(.+)/m)
   if (headingMatch?.[1]) return headingMatch[1].trim()
@@ -293,13 +296,16 @@ export function findPageBySlug(
   const mdx = mdxContent[slug]
   if (!mdx) return undefined
 
+  const frontmatter = parsePageFrontmatter(mdx)
+
   return {
     slug,
     href: slugToHref(slug),
     title: extractTitleFromMdx(mdx),
+    description: frontmatter.description,
     gitSha: '',
     headings: [],
+    icon: frontmatter.icon,
+    frontmatter,
   }
 }
-
-

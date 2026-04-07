@@ -161,8 +161,8 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel }: OgImag
           {!!description && (
             <div
               style={{
-                fontSize: 31,
-                lineHeight: 1.55,
+                fontSize: 45,
+                lineHeight: 1.62,
                 color: '#1f1f1f',
                 opacity: 0.75,
                 maxWidth: 860,
