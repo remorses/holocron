@@ -14,10 +14,11 @@
  * `virtual:holocron-mdx` module. Only the app factory imports MDX content.
  */
 
-import { config, navigation } from 'virtual:holocron-config'
+import { config, navigation, switchers } from 'virtual:holocron-config'
 import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigation.ts'
 import { isNavPage, isNavGroup } from './navigation.ts'
 import type { SearchEntry } from './lib/search.ts'
+import type { ConfigIcon } from './config.ts'
 
 export { config, navigation }
 
@@ -132,17 +133,25 @@ function groupContainsPage(group: NavGroup, pageHref: string): boolean {
 /* ── Static derived data ─────────────────────────────────────────────── */
 
 function buildTabItems(): TabItem[] {
-  const navTabs: TabItem[] = navigation
-    .filter((t) => t.tab !== '' && !t.hidden)
-    .map((t) => {
-      const firstPage = findFirstPageInTab(t)
-      return {
-        label: t.tab,
-        href: firstPage?.href || '/',
-        icon: t.icon,
-        align: t.align,
-      }
-    })
+  // When versions or dropdowns with content are the root organizational
+  // pattern, all flattened tabs come from switcher inner navs. The select
+  // dropdowns replace the tab bar's role, so skip content tabs entirely
+  // and only render anchors (global links like GitHub, Changelog).
+  const hasSwitchers = switchers.versions.length > 0 || switchers.dropdowns.some((d) => !!d.navigation)
+
+  const navTabs: TabItem[] = hasSwitchers
+    ? []
+    : navigation
+        .filter((t) => t.tab !== '' && !t.hidden)
+        .map((t) => {
+          const firstPage = findFirstPageInTab(t)
+          return {
+            label: t.tab,
+            href: firstPage?.href || '/',
+            icon: t.icon,
+            align: t.align,
+          }
+        })
   const anchors: TabItem[] = config.navigation.anchors
     .filter((a) => !a.hidden)
     .map((a) => {
@@ -200,10 +209,24 @@ export const headerLinks: HeaderLink[] = buildHeaderLinks()
 export const searchEntries: SearchEntry[] = buildSearchEntries()
 
 /** First tab's first page — used as the default landing destination
- *  (e.g. for the root `/` redirect and 404 fallback home link). */
-export const firstPage: NavPage | undefined = navigation[0]
-  ? findFirstPageInTab(navigation[0])
-  : undefined
+ *  (e.g. for the root `/` redirect and 404 fallback home link).
+ *  When versions exist, prefer the default version's first page
+ *  so `/` redirects to the version marked `default: true`. */
+export const firstPage: NavPage | undefined = (() => {
+  // When versions exist, use the default version's first page
+  if (switchers.versions.length > 0) {
+    const defaultVersion =
+      switchers.versions.find((v) => v.default) ?? switchers.versions[0]
+    if (defaultVersion) {
+      for (const tab of defaultVersion.navigation.tabs) {
+        const page = findFirstPageInTab(tab)
+        if (page) return page
+      }
+    }
+  }
+  // Fallback: first tab's first page
+  return navigation[0] ? findFirstPageInTab(navigation[0]) : undefined
+})()
 
 /* ── Active-state resolvers (pure, per-href) ─────────────────────────── */
 
@@ -213,4 +236,108 @@ export function resolveActiveTabHref(pageHref: string | undefined): string | und
   return (
     tabs.find((t) => pageHref.startsWith(t.href) && t.href !== '/')?.href ?? tabs[0]?.href
   )
+}
+
+/* ── Version / dropdown switcher data ────────────────────────────────── */
+
+export type VersionSelectItem = {
+  label: string
+  tag?: string
+  href: string
+  pageHrefs: string[]
+}
+
+export type DropdownSelectItem = {
+  label: string
+  icon?: ConfigIcon
+  href: string
+  external?: boolean
+  pageHrefs: string[]
+}
+
+function collectPageHrefsFromTabs(tabs: NavTab[]): string[] {
+  const hrefs: string[] = []
+  for (const tab of tabs) {
+    collectPagesFromGroupsFlat(tab.groups, hrefs)
+  }
+  return hrefs
+}
+
+function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[]): void {
+  for (const group of groups) {
+    for (const entry of group.pages) {
+      if (isNavPage(entry)) {
+        out.push(entry.href)
+      } else if (isNavGroup(entry)) {
+        collectPagesFromGroupsFlat([entry], out)
+      }
+    }
+  }
+}
+
+function buildVersionSelectItems(): VersionSelectItem[] {
+  return switchers.versions
+    .filter((v) => !v.hidden)
+    .map((v) => {
+      const pageHrefs = collectPageHrefsFromTabs(v.navigation.tabs)
+      const firstHref = pageHrefs[0] || '/'
+      return {
+        label: v.version,
+        ...(v.tag && { tag: v.tag }),
+        href: firstHref,
+        pageHrefs,
+      }
+    })
+}
+
+/** True if the href looks like an external URL (absolute with protocol). */
+function isExternalHref(href: string): boolean {
+  return /^(https?:)?\/\//.test(href)
+}
+
+function buildDropdownSelectItems(): DropdownSelectItem[] {
+  return switchers.dropdowns
+    .filter((d) => !d.hidden)
+    .map((d) => {
+      if (d.href && !d.navigation) {
+        // Link-only dropdown — external only if the href is a full URL
+        return {
+          label: d.dropdown,
+          ...(d.icon && { icon: d.icon }),
+          href: d.href,
+          ...(isExternalHref(d.href) && { external: true }),
+          pageHrefs: [],
+        }
+      }
+      const pageHrefs = d.navigation ? collectPageHrefsFromTabs(d.navigation.tabs) : []
+      const firstHref = pageHrefs[0] || d.href || '/'
+      return {
+        label: d.dropdown,
+        ...(d.icon && { icon: d.icon }),
+        href: firstHref,
+        pageHrefs,
+      }
+    })
+}
+
+export const versionItems: VersionSelectItem[] = buildVersionSelectItems()
+export const dropdownItems: DropdownSelectItem[] = buildDropdownSelectItems()
+
+export function resolveActiveVersionHref(pageHref: string | undefined): string | undefined {
+  if (!pageHref || versionItems.length === 0) return undefined
+  const match = versionItems.find((v) => v.pageHrefs.includes(pageHref))
+  if (match) return match.href
+  // Default version fallback
+  const defaultVersion = switchers.versions.find((v) => v.default)
+  if (defaultVersion) {
+    const item = versionItems.find((vi) => vi.label === defaultVersion.version)
+    return item?.href
+  }
+  return versionItems[0]?.href
+}
+
+export function resolveActiveDropdownHref(pageHref: string | undefined): string | undefined {
+  if (!pageHref || dropdownItems.length === 0) return undefined
+  const match = dropdownItems.find((d) => !d.external && d.pageHrefs.includes(pageHref))
+  return match?.href ?? dropdownItems.find((d) => !d.external)?.href
 }

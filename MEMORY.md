@@ -1107,8 +1107,7 @@ trace of every schema field through `schema.ts` → `config.ts normalize()`
 - Root: `name`, `description` (site-wide `<meta>` fallback)
 - `logo.light` (header img), `logo.href` (logo `<Link>` destination)
 - `favicon.light` (layout `<link rel="icon">`)
-- `favicon.dark` (second `<link>` with `media="(prefers-color-scheme: dark)"` —
-  spiceflow dedup currently drops one variant, spiceflow-side fix pending)
+- `favicon.dark` (second `<link>` with `media="(prefers-color-scheme: dark)"`)
 - `redirects[]` — regex matcher in `.use()` middleware
 - `navigation.tabs` + `tab.hidden` (filtered) + `navigation.global.anchors` +
   `navigation.anchors` + `anchor.hidden` (filtered)
@@ -1675,3 +1674,14 @@ for users who want a custom layout.
 
 All example and fixture MDX files moved from `pages/` subdirectories to their
 respective roots.
+
+## Switcher (versions/dropdowns) — inner tabs leak into tab bar (2026-04-07)
+
+When `navigation.versions` or `navigation.dropdowns` are present, each item's
+inner navigation (tabs/groups/pages) is flattened into the main `navigation.tabs`
+array so every page gets a route. But `buildTabItems()` in `data.ts` must skip
+those tabs — otherwise ALL version/dropdown tabs render in the header tab bar
+simultaneously. Fix: when `hasSwitchers`, return only anchors from `buildTabItems()`.
+
+Related: `firstPage` must prefer the `default: true` version's first page for
+the `/` redirect, not the first flattened tab (which could be from v1).

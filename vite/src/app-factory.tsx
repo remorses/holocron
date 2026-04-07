@@ -51,6 +51,8 @@ import {
   firstPage,
   collectAncestorGroupKeys,
   resolveActiveTabHref,
+  resolveActiveVersionHref,
+  resolveActiveDropdownHref,
 } from './data.ts'
 import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
 import { isAgentRequest } from './lib/raw-markdown.ts'
@@ -83,6 +85,10 @@ export type HolocronLoaderData = {
   ancestorGroupKeys: string[]
   /** Href of the tab that contains the active page. */
   activeTabHref: string | undefined
+  /** Href of the version item that contains the active page. */
+  activeVersionHref: string | undefined
+  /** Href of the dropdown item that contains the active page. */
+  activeDropdownHref: string | undefined
   /** Original requested path when a 404 occurred (includes leading slash). */
   notFoundPath: string | undefined
   /** Fully-composed `<title>` text (includes site name suffix). */
@@ -317,6 +323,8 @@ export function createHolocronApp() {
         currentHeadings: [],
         ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(firstPage.href) : [],
         activeTabHref: resolveActiveTabHref(firstPage?.href),
+        activeVersionHref: resolveActiveVersionHref(firstPage?.href),
+        activeDropdownHref: resolveActiveDropdownHref(firstPage?.href),
         notFoundPath: '/' + rawSlug,
         headTitle: `Page not found — ${config.name}`,
         headRobots: 'noindex',
@@ -330,6 +338,8 @@ export function createHolocronApp() {
       currentHeadings: currentPage.headings,
       ancestorGroupKeys: collectAncestorGroupKeys(currentPage.href),
       activeTabHref: resolveActiveTabHref(currentPage.href),
+      activeVersionHref: resolveActiveVersionHref(currentPage.href),
+      activeDropdownHref: resolveActiveDropdownHref(currentPage.href),
       notFoundPath: undefined,
       headTitle: `${currentPage.title} — ${config.name}`,
       headRobots: undefined,

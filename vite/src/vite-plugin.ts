@@ -232,6 +232,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return [
           `export const config = ${JSON.stringify(config)}`,
           `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
+          `export const switchers = ${JSON.stringify(syncResult.switchers)}`,
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {

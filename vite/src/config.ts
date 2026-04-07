@@ -82,6 +82,22 @@ export type ConfigNavbarPrimary = {
 export type FooterLinkItem = { label: string; href: string }
 export type FooterLinkColumn = { header?: string; items: FooterLinkItem[] }
 
+export type ConfigVersionItem = {
+  version: string
+  default?: boolean
+  tag?: string
+  hidden?: boolean
+  navigation: { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] }
+}
+
+export type ConfigDropdownItem = {
+  dropdown: string
+  icon?: ConfigIcon
+  hidden?: boolean
+  href?: string
+  navigation?: { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] }
+}
+
 export type HolocronConfig = {
   name: string
   description?: string
@@ -100,6 +116,8 @@ export type HolocronConfig = {
   navigation: {
     tabs: ConfigNavTab[]
     anchors: ConfigAnchor[]
+    versions: ConfigVersionItem[]
+    dropdowns: ConfigDropdownItem[]
   }
   navbar: {
     links: ConfigNavbarLink[]

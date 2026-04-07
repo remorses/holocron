@@ -15,10 +15,13 @@ import {
   config as siteConfig,
   tabs as siteTabs,
   headerLinks as siteHeaderLinks,
+  versionItems as siteVersionItems,
+  dropdownItems as siteDropdownItems,
 } from '../../data.ts'
 import { useHolocronData } from '../../router.ts'
 import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
+import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { Footer, PoweredBy } from './footer.tsx'
@@ -63,13 +66,15 @@ export function EditorialPage({
   /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
   bannerContent?: React.ReactNode
 }) {
-  const { activeTabHref } = useHolocronData()
+  const { activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
   const logo = siteConfig.logo.light
   const logoLinkHref = siteConfig.logo.href || '/'
   const siteName = siteConfig.name
   const tabs = siteTabs
   const headerLinks = siteHeaderLinks
   const primary = siteConfig.navbar.primary
+  const versionItems = siteVersionItems
+  const dropdownSelectItems = siteDropdownItems
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
@@ -97,30 +102,48 @@ export function EditorialPage({
       <div className='slot-navbar'>
         {/* Top row: logo + right links */}
         <div className='mx-auto flex items-center justify-between px-(--mobile-padding) py-(--header-padding-y) lg:max-w-(--grid-max-width) lg:px-0'>
-          <Link href={logoLinkHref} className='slot-logo no-underline flex items-center'>
-            {logo ? (
-              <>
-                <img
-                  src={logo}
-                  alt={siteName || 'Logo'}
-                  style={{ height: 'var(--logo-height)', width: 'auto' }}
-                  className={siteConfig.logo.dark ? 'dark:hidden' : 'dark:invert'}
-                />
-                {siteConfig.logo.dark && (
+          {/* Left side: logo + version/dropdown selects */}
+          <div className='flex items-center gap-3'>
+            <Link href={logoLinkHref} className='slot-logo no-underline flex items-center'>
+              {logo ? (
+                <>
                   <img
-                    src={siteConfig.logo.dark}
+                    src={logo}
                     alt={siteName || 'Logo'}
                     style={{ height: 'var(--logo-height)', width: 'auto' }}
-                    className='hidden dark:block'
+                    className={siteConfig.logo.dark ? 'dark:hidden' : 'dark:invert'}
                   />
-                )}
-              </>
-            ) : (
-              <span className='text-[15px] font-bold [font-family:var(--font-code)] lowercase tracking-[-0.01em]'>
-                {siteName || 'docs'}
-              </span>
+                  {siteConfig.logo.dark && (
+                    <img
+                      src={siteConfig.logo.dark}
+                      alt={siteName || 'Logo'}
+                      style={{ height: 'var(--logo-height)', width: 'auto' }}
+                      className='hidden dark:block'
+                    />
+                  )}
+                </>
+              ) : (
+                <span className='text-[15px] font-bold [font-family:var(--font-code)] lowercase tracking-[-0.01em]'>
+                  {siteName || 'docs'}
+                </span>
+              )}
+            </Link>
+            {versionItems.length > 0 && (
+              <NavSelect
+                items={versionItems}
+                activeHref={activeVersionHref}
+                ariaLabel='Select version'
+              />
             )}
-          </Link>
+            {dropdownSelectItems.length > 0 && (
+              <NavSelect
+                items={dropdownSelectItems}
+                activeHref={activeDropdownHref}
+                ariaLabel='Select section'
+              />
+            )}
+          </div>
+          {/* Right side: icon links + CTA + theme toggle */}
           <div className='flex items-center gap-4'>
             {/* Icon links. Icons are resolved by `<Icon>` — dispatches on
                 emoji / URL / lucide name / structured object. When the user

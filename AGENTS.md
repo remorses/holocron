@@ -14,14 +14,20 @@ Supports two config file names (first found wins):
 
 The schema follows the Mintlify docs.json shape (https://mintlify.com/docs.json) for the subset Holocron consumes. Unknown Mintlify fields pass through `.passthrough()` so users can paste a full docs.json without validation errors.
 
-MVP subset we support: `name`, `logo`, `favicon`, `colors`, `navigation` (with `tabs`, `global.anchors`), `navbar` (with `links`, `primary`), `redirects`, `footer.socials`.
+MVP subset we support: `name`, `logo`, `favicon`, `colors`, `navigation` (with `tabs`, `global.anchors`, `versions`, `dropdowns`, `products`), `navbar` (with `links`, `primary`), `redirects`, `footer.socials`.
 
 ### How config maps to UI
 
 - **`navbar.links`** → simple text links in the logo bar (top-right, next to logo)
 - **`navigation.global.anchors`** → rendered as tabs in the tab bar (can be external URLs like GitHub, Changelog)
 - **`navigation.tabs`** → also rendered as tabs; clicking switches the sidebar content
+- **`navigation.versions`** → native `<select>` dropdown in the header (right of logo). Each version wraps its own inner navigation (tabs/groups/pages). Selecting a version navigates to its first page; sidebar updates to show that version's groups. The version marked `default: true` determines the `/` redirect target.
+- **`navigation.dropdowns`** → native `<select>` dropdown in the header (next to version select). Same as versions but can also be link-only (`href` without content → opens external URL). `navigation.products` is normalized into dropdowns at config time.
 - **`navigation` groups** → sidebar sections with collapsible pages
+
+### Switcher architecture (versions/dropdowns)
+
+All version/dropdown inner tabs are flattened into the main `navigation.tabs` array so every page gets a route. But `buildTabItems()` in `data.ts` must **exclude** switcher-owned tabs from the header tab bar — the `<select>` dropdowns replace that role. Only anchors (global links) appear in the tab bar when switchers are active. The `switchers` metadata (enriched inner nav trees) is serialized alongside `config` and `navigation` in the `virtual:holocron-config` module.
 
 ## Navigation tree as cache
 
@@ -47,6 +53,10 @@ Rules:
 When auditing, grep the repo for `var(--name)` references plus Tailwind arbitrary-value patterns (`gap-(--name)`, `text-(color:--name)`, `[var(--name)]`). Remember that refs inside `/* ... */` CSS comments look live but aren't. See MEMORY.md ("CSS variable audit") for the grep commands and the last full audit.
 
 CSS variables can also be used to change a color in dark/light mode. or change the value in desktop or mobile. for example we do this for negative margins in bleed images/code line numbers/lists. this use case is justified and desired.
+
+### `currentColor` inside data-URI SVGs is always black
+
+SVG icons rendered **inline** (as `<svg>` elements in the DOM) inherit `currentColor` from the parent's CSS `color` property — this is how our `<Icon>` component works and why icons respond to dark mode. But SVG used as a CSS `background-image` data URI (`url("data:image/svg+xml,...")`) does **NOT** inherit `currentColor`. The data-URI SVG is not part of the document tree, so `currentColor` resolves to black regardless of the parent's color. Always use inline SVG elements (not background-image) for icons or decorations that need to adapt to light/dark mode.
 
 ## Architecture
 

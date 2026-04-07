@@ -12,6 +12,8 @@
 import type {
   ConfigIcon,
   ConfigNavGroup,
+  ConfigVersionItem,
+  ConfigDropdownItem,
   NavTabBase,
 } from './config.ts'
 
@@ -58,8 +60,21 @@ export type NavHeading = {
   slug: string // anchor id
 }
 
-/** The full enriched navigation — always an array of tabs */
+export type NavVersionItem = Omit<ConfigVersionItem, 'navigation'> & {
+  navigation: { tabs: NavTab[]; anchors: ConfigVersionItem['navigation']['anchors'] }
+}
+
+export type NavDropdownItem = Omit<ConfigDropdownItem, 'navigation'> & {
+  navigation?: { tabs: NavTab[]; anchors: NonNullable<ConfigDropdownItem['navigation']>['anchors'] }
+}
+
 export type Navigation = NavTab[]
+
+export type NavigationWithSwitchers = {
+  tabs: NavTab[]
+  versions: NavVersionItem[]
+  dropdowns: NavDropdownItem[]
+}
 
 /* ── Type guards ─────────────────────────────────────────────────────── */
 

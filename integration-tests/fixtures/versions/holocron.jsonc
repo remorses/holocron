@@ -1,0 +1,30 @@
+{
+  // Fixture: navigation.versions with two versions.
+  // Exercises: version switcher dropdown, default version, tags.
+  "name": "Versioned Docs",
+  "navigation": {
+    "versions": [
+      {
+        "version": "v1.0",
+        "tag": "Legacy",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["v1/overview", "v1/quickstart"]
+          }
+        ]
+      },
+      {
+        "version": "v2.0",
+        "default": true,
+        "tag": "Latest",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["v2/overview", "v2/quickstart"]
+          }
+        ]
+      }
+    ]
+  }
+}

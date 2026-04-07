@@ -25,14 +25,19 @@ import {
   type ConfigNavTab,
   type ConfigNavGroup,
   type ConfigNavPageEntry,
+  type ConfigVersionItem,
+  type ConfigDropdownItem,
 } from '../config.ts'
 import {
   type Navigation,
+  type NavigationWithSwitchers,
   type NavTab,
   type NavGroup,
   type NavIcon,
   type NavPage,
   type NavPageEntry,
+  type NavVersionItem,
+  type NavDropdownItem,
   buildPageIndex,
 } from '../navigation.ts'
 
@@ -78,6 +83,8 @@ function rootToHref(root: string | undefined): string | undefined {
 
 export type SyncResult = {
   navigation: Navigation
+  /** Version/dropdown metadata with enriched inner navigation. */
+  switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
   /** Pre-processed MDX content keyed by page slug. Kept separate from the
    *  navigation tree so only the server bundle includes it — the client
    *  only receives the lightweight nav tree (titles, headings, slugs). */
@@ -233,12 +240,46 @@ export async function syncNavigation({
     }),
   )
 
+  async function enrichVersionItem(v: ConfigVersionItem): Promise<NavVersionItem> {
+    const innerTabs = await Promise.all(v.navigation.tabs.map(enrichTab))
+    return {
+      version: v.version,
+      ...(v.default !== undefined && { default: v.default }),
+      ...(v.tag !== undefined && { tag: v.tag }),
+      ...(v.hidden !== undefined && { hidden: v.hidden }),
+      navigation: { tabs: innerTabs, anchors: v.navigation.anchors },
+    }
+  }
+
+  async function enrichDropdownItem(d: ConfigDropdownItem): Promise<NavDropdownItem> {
+    if (!d.navigation) {
+      return {
+        dropdown: d.dropdown,
+        ...(d.icon !== undefined && { icon: serializeIcon(d.icon, `dropdown "${d.dropdown}"`) }),
+        ...(d.hidden !== undefined && { hidden: d.hidden }),
+        ...(d.href !== undefined && { href: d.href }),
+      }
+    }
+    const innerTabs = await Promise.all(d.navigation.tabs.map(enrichTab))
+    return {
+      dropdown: d.dropdown,
+      ...(d.icon !== undefined && { icon: serializeIcon(d.icon, `dropdown "${d.dropdown}"`) }),
+      ...(d.hidden !== undefined && { hidden: d.hidden }),
+      ...(d.href !== undefined && { href: d.href }),
+      navigation: { tabs: innerTabs, anchors: d.navigation.anchors },
+    }
+  }
+
+  const versions = await Promise.all(config.navigation.versions.map(enrichVersionItem))
+  const dropdowns = await Promise.all(config.navigation.dropdowns.map(enrichDropdownItem))
+  const switchers = { versions, dropdowns }
+
   // 5. Write caches
   writeCache(cachePath, navigation)
   writeMdxCache(mdxCachePath, mdxContent)
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, mdxContent, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */

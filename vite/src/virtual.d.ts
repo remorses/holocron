@@ -2,9 +2,10 @@
 
 declare module 'virtual:holocron-config' {
   import type { HolocronConfig } from './config.ts'
-  import type { Navigation } from './navigation.ts'
+  import type { Navigation, NavVersionItem, NavDropdownItem } from './navigation.ts'
   export const config: HolocronConfig
   export const navigation: Navigation
+  export const switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
 }
 
 declare module 'virtual:holocron-mdx' {

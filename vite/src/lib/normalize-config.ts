@@ -13,6 +13,8 @@ import type {
   ConfigNavTab,
   ConfigNavbarLink,
   ConfigNavbarPrimary,
+  ConfigVersionItem,
+  ConfigDropdownItem,
   FooterLinkColumn,
 } from '../config.ts'
 
@@ -145,40 +147,110 @@ function normalizeColors(raw: unknown): HolocronConfig['colors'] {
   }
 }
 
-/**
- * navigation can be:
- *   - Object { tabs, global: { anchors }, anchors }  (docs.json format)
- *   - Object { groups }                               (docs.json root groups)
- *   - Object { pages }                                (docs.json root pages)
- *   - Array of tabs [{ tab, groups }]
- *   - Array of groups [{ group, pages }]
- *
- * Tabs themselves can be:
- *   - { tab, groups }  → content tab with sidebar groups
- *   - { tab, href }    → link-only tab (converted to anchor)
- *   - { tab, pages }   → tab with pages but no groups wrapper
- *
- * Always normalize to { tabs: ConfigNavTab[], anchors: ConfigAnchor[] }
- */
+const EMPTY_NAV: HolocronConfig['navigation'] = { tabs: [], anchors: [], versions: [], dropdowns: [] }
+
+/** Normalize inner navigation content (tabs/groups/pages) of a switcher item. */
+function normalizeInnerNavigation(raw: Record<string, unknown>): { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] } {
+  const innerAnchors = Array.isArray(raw.anchors) ? raw.anchors as ConfigAnchor[] : []
+
+  if (Array.isArray(raw.tabs)) {
+    return normalizeTabsAndAnchors(raw.tabs as Array<Record<string, unknown>>, innerAnchors)
+  }
+  if (Array.isArray(raw.groups)) {
+    return {
+      tabs: [{ tab: '', groups: raw.groups as ConfigNavGroup[] }],
+      anchors: innerAnchors,
+    }
+  }
+  if (Array.isArray(raw.pages)) {
+    return {
+      tabs: [{ tab: '', groups: [{ group: '', pages: raw.pages as ConfigNavPageEntry[] }] }],
+      anchors: innerAnchors,
+    }
+  }
+  return { tabs: [], anchors: innerAnchors }
+}
+
+/** Normalize `navigation.versions` into ConfigVersionItem[]. */
+function normalizeVersions(rawVersions: unknown[]): ConfigVersionItem[] {
+  return rawVersions.map((v) => {
+    const obj = v as Record<string, unknown>
+    const version = (obj.version as string) || ''
+    return {
+      version,
+      ...(obj.default === true && { default: true }),
+      ...(typeof obj.tag === 'string' && { tag: obj.tag }),
+      ...(obj.hidden === true && { hidden: true }),
+      navigation: normalizeInnerNavigation(obj),
+    }
+  })
+}
+
+/** Normalize `navigation.dropdowns` into ConfigDropdownItem[]. */
+function normalizeDropdowns(rawDropdowns: unknown[]): ConfigDropdownItem[] {
+  return rawDropdowns.map((d) => {
+    const obj = d as Record<string, unknown>
+    const name = (obj.dropdown as string) || ''
+    const icon = sanitizeIcon(obj.icon as ConfigIcon | undefined, `dropdown "${name}"`)
+    const href = typeof obj.href === 'string' ? obj.href : undefined
+
+    // Link-only dropdown (has href, no content)
+    if (href && !obj.tabs && !obj.groups && !obj.pages) {
+      return {
+        dropdown: name,
+        ...(icon !== undefined && { icon }),
+        ...(obj.hidden === true && { hidden: true }),
+        href,
+      }
+    }
+
+    return {
+      dropdown: name,
+      ...(icon !== undefined && { icon }),
+      ...(obj.hidden === true && { hidden: true }),
+      ...(href && { href }),
+      navigation: normalizeInnerNavigation(obj),
+    }
+  })
+}
+
+/** Normalize `navigation.products` → ConfigDropdownItem[] (product → dropdown). */
+function normalizeProducts(rawProducts: unknown[]): ConfigDropdownItem[] {
+  return normalizeDropdowns(
+    rawProducts.map((p) => {
+      const obj = p as Record<string, unknown>
+      return {
+        ...obj,
+        dropdown: obj.product as string || '',
+      }
+    }),
+  )
+}
+
+/** Normalize all navigation variants to { tabs, anchors, versions, dropdowns }.
+ *  Version/dropdown inner tabs are flattened into the main tabs for routing. */
 function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
   if (!raw) {
-    return { tabs: [], anchors: [] }
+    return EMPTY_NAV
   }
 
   // Array format
   if (Array.isArray(raw)) {
     if (raw.length === 0) {
-      return { tabs: [], anchors: [] }
+      return EMPTY_NAV
     }
     const first = raw[0]
     // Array of tabs
     if (first && typeof first === 'object' && 'tab' in first) {
-      return normalizeTabsAndAnchors(raw as Array<Record<string, unknown>>, [])
+      const base = normalizeTabsAndAnchors(raw as Array<Record<string, unknown>>, [])
+      return { ...base, versions: [], dropdowns: [] }
     }
     // Array of groups → wrap in single implicit tab
     return {
       tabs: [{ tab: '', groups: raw as ConfigNavGroup[] }],
       anchors: [],
+      versions: [],
+      dropdowns: [],
     }
   }
 
@@ -192,9 +264,49 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
     const rootAnchors = Array.isArray(obj.anchors) ? obj.anchors as ConfigAnchor[] : []
     const allAnchors = [...globalAnchors, ...rootAnchors]
 
-    // Has explicit tabs
+    // Normalize versions/dropdowns/products from the raw navigation
+    const versions = Array.isArray(obj.versions) ? normalizeVersions(obj.versions) : []
+    const dropdowns = [
+      ...(Array.isArray(obj.dropdowns) ? normalizeDropdowns(obj.dropdowns) : []),
+      ...(Array.isArray(obj.products) ? normalizeProducts(obj.products) : []),
+    ]
+
+    // Flatten all version/dropdown inner tabs into the main tabs array
+    // so every page from every version/dropdown gets a route.
+    const flatTabs: ConfigNavTab[] = []
+    const flatAnchors: ConfigAnchor[] = [...allAnchors]
+
+    for (const v of versions) {
+      flatTabs.push(...v.navigation.tabs)
+      flatAnchors.push(...v.navigation.anchors)
+    }
+    for (const d of dropdowns) {
+      if (d.navigation) {
+        flatTabs.push(...d.navigation.tabs)
+        flatAnchors.push(...d.navigation.anchors)
+      }
+    }
+
+    // Has versions/dropdowns/products as root organizational keys
+    if (versions.length > 0 || dropdowns.length > 0) {
+      // Also allow top-level tabs/groups/pages alongside versions/dropdowns
+      if (Array.isArray(obj.tabs)) {
+        const base = normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, [])
+        flatTabs.push(...base.tabs)
+        flatAnchors.push(...base.anchors)
+      } else if (Array.isArray(obj.groups)) {
+        flatTabs.push({ tab: '', groups: obj.groups as ConfigNavGroup[] })
+      } else if (Array.isArray(obj.pages)) {
+        flatTabs.push({ tab: '', groups: [{ group: '', pages: obj.pages as ConfigNavPageEntry[] }] })
+      }
+
+      return { tabs: flatTabs, anchors: flatAnchors, versions, dropdowns }
+    }
+
+    // Has explicit tabs (no versions/dropdowns)
     if (Array.isArray(obj.tabs)) {
-      return normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, allAnchors)
+      const base = normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, allAnchors)
+      return { ...base, versions: [], dropdowns: [] }
     }
 
     // Root groups (no tabs wrapper)
@@ -202,6 +314,8 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
       return {
         tabs: [{ tab: '', groups: obj.groups as ConfigNavGroup[] }],
         anchors: allAnchors,
+        versions: [],
+        dropdowns: [],
       }
     }
 
@@ -210,13 +324,15 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
       return {
         tabs: [{ tab: '', groups: [{ group: '', pages: obj.pages as ConfigNavPageEntry[] }] }],
         anchors: allAnchors,
+        versions: [],
+        dropdowns: [],
       }
     }
 
-    return { tabs: [], anchors: allAnchors }
+    return { tabs: [], anchors: allAnchors, versions: [], dropdowns: [] }
   }
 
-  return { tabs: [], anchors: [] }
+  return EMPTY_NAV
 }
 
 /**
@@ -229,7 +345,7 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
 function normalizeTabsAndAnchors(
   rawTabs: Array<Record<string, unknown>>,
   existingAnchors: ConfigAnchor[],
-): HolocronConfig['navigation'] {
+): { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] } {
   const tabs: ConfigNavTab[] = []
   const anchors: ConfigAnchor[] = [...existingAnchors]
 
