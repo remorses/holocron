@@ -1,14 +1,9 @@
 /**
  * Generated fallback logo route helpers + renderer backed by Takumi's ImageResponse.
- *
- * The font is referenced via `new URL(..., import.meta.url)` so Vite can emit
- * and rewrite it into production server output.
  */
 
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import React from 'react'
+import fontDataUrl from '../assets/neug-asia-script-demo.ttf?url&inline'
 import { ImageResponse } from 'takumi-js/response'
 import type { HolocronConfig } from '../config.ts'
 
@@ -69,42 +64,16 @@ export type GeneratedLogoOptions = {
 }
 
 const FONT_FAMILY = 'Neug Asia Script Demo'
-const fontUrl = new URL('../assets/neug-asia-script-demo.ttf', import.meta.url)
-const FONT_ASSET_PREFIX = 'neug-asia-script-demo'
-const isBuiltRuntime = import.meta.url.endsWith('.js')
+let cachedFontData: Promise<ArrayBuffer> | undefined
 
-let cachedFontData: Buffer | undefined
-
-function findEmittedFontPath(searchDir: string): string | undefined {
-  if (!fs.existsSync(searchDir)) return undefined
-  const assetName = fs
-    .readdirSync(searchDir)
-    .find((entry) => entry.startsWith(FONT_ASSET_PREFIX) && entry.endsWith('.ttf'))
-  return assetName ? path.join(searchDir, assetName) : undefined
-}
-
-function getFontPath(): string {
-  const directFontPath = fileURLToPath(fontUrl)
-  if (fs.existsSync(directFontPath)) return directFontPath
-
-  const moduleDir = path.dirname(fileURLToPath(import.meta.url))
-  const emittedFontPath =
-    findEmittedFontPath(path.join(moduleDir, 'assets')) ||
-    findEmittedFontPath(path.join(moduleDir, '../client/assets'))
-
-  if (emittedFontPath) return emittedFontPath
-
-  throw new Error(`Generated logo font not found at ${directFontPath}`)
-}
-
-function getFontData(): Buffer {
-  cachedFontData ??= fs.readFileSync(getFontPath())
+function getFontData(): Promise<ArrayBuffer> {
+  cachedFontData ??= fetch(fontDataUrl).then((response) => {
+    if (!response.ok) {
+      throw new Error(`Failed to load generated logo font: ${response.status} ${response.statusText}`)
+    }
+    return response.arrayBuffer()
+  })
   return cachedFontData
-}
-
-function getTakumiModule() {
-  if (!isBuiltRuntime) return undefined
-  return import('@takumi-rs/wasm/vite').then((module) => module.default)
 }
 
 function getLogoSize(text: string): { width: number; height: number } {
@@ -150,12 +119,11 @@ export function createGeneratedLogoResponse(options: GeneratedLogoOptions): Imag
     width,
     height,
     format: 'png',
-    module: getTakumiModule(),
     loadDefaultFonts: false,
     fonts: [
       {
         name: FONT_FAMILY,
-        data: getFontData(),
+        data: getFontData,
         weight: 400,
         style: 'normal',
       },
