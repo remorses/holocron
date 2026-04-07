@@ -38,8 +38,25 @@ import {
   type NavPageEntry,
   type NavVersionItem,
   type NavDropdownItem,
+  isNavPage,
+  isNavGroup,
   buildPageIndex,
 } from '../navigation.ts'
+
+/** Collect all NavPage objects from a single enriched tab (for validation). */
+function collectAllPagesFromTab(tab: NavTab): NavPage[] {
+  const pages: NavPage[] = []
+  function walk(groups: NavGroup[]) {
+    for (const g of groups) {
+      for (const entry of g.pages) {
+        if (isNavPage(entry)) pages.push(entry)
+        else if (isNavGroup(entry)) walk([entry])
+      }
+    }
+  }
+  walk(tab.groups)
+  return pages
+}
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
@@ -273,6 +290,40 @@ export async function syncNavigation({
   const versions = await Promise.all(config.navigation.versions.map(enrichVersionItem))
   const dropdowns = await Promise.all(config.navigation.dropdowns.map(enrichDropdownItem))
   const switchers = { versions, dropdowns }
+
+  // 4c. Validate no duplicate page hrefs across versions/dropdowns
+  if (versions.length > 0 || dropdowns.length > 0) {
+    const hrefOwners = new Map<string, string>()
+    for (const v of versions) {
+      for (const tab of v.navigation.tabs) {
+        for (const page of collectAllPagesFromTab(tab)) {
+          const existing = hrefOwners.get(page.href)
+          if (existing) {
+            throw new Error(
+              `[holocron] duplicate page href "${page.href}" in version "${v.version}" and ${existing}. ` +
+              `Each version/dropdown must use unique page paths (e.g. /v1/... and /v2/...).`,
+            )
+          }
+          hrefOwners.set(page.href, `version "${v.version}"`)
+        }
+      }
+    }
+    for (const d of dropdowns) {
+      if (!d.navigation) continue
+      for (const tab of d.navigation.tabs) {
+        for (const page of collectAllPagesFromTab(tab)) {
+          const existing = hrefOwners.get(page.href)
+          if (existing) {
+            throw new Error(
+              `[holocron] duplicate page href "${page.href}" in dropdown "${d.dropdown}" and ${existing}. ` +
+              `Each version/dropdown must use unique page paths.`,
+            )
+          }
+          hrefOwners.set(page.href, `dropdown "${d.dropdown}"`)
+        }
+      }
+    }
+  }
 
   // 5. Write caches
   writeCache(cachePath, navigation)

@@ -107,15 +107,35 @@ export function hasVisibleSidebarEntries(group: NavGroup): boolean {
 
 /* ── Utility functions ──────────────────────────────────────────────── */
 
+/** Check if a tab contains a page with the given href (exact match, recursive). */
+function tabContainsHref(tab: NavTab, href: string): boolean {
+  return groupsContainHref(tab.groups, href)
+}
+
+function groupsContainHref(groups: NavGroup[], href: string): boolean {
+  for (const group of groups) {
+    for (const entry of group.pages) {
+      if (isNavPage(entry) && entry.href === href) return true
+      if (isNavGroup(entry) && groupsContainHref([entry], href)) return true
+    }
+  }
+  return false
+}
+
 /**
  * Find the active tab based on the current URL path.
- * Matches by longest URL prefix.
+ * Uses exact page-membership matching first, falls back to prefix heuristic.
  */
 export function getActiveTab(nav: Navigation, pathname: string): NavTab {
   if (nav.length <= 1) {
     return nav[0] ?? { tab: '', groups: [] }
   }
 
+  // Exact match: find the tab that actually contains this page href
+  const exact = nav.find((tab) => tabContainsHref(tab, pathname))
+  if (exact) return exact
+
+  // Fallback: longest URL prefix (for pages not in navigation tree)
   const tabsWithPrefix = nav.map((tab) => {
     const firstPage = findFirstPage(tab.groups)
     const prefix = firstPage
