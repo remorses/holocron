@@ -6,8 +6,6 @@
 export { holocron, type HolocronPluginOptions } from './vite-plugin.ts'
 export type { HolocronConfig, ConfigAnchor, ConfigNavTab, ConfigNavGroup, ConfigNavPageEntry } from './config.ts'
 export type { Navigation, NavTab, NavGroup, NavPage, NavPageEntry, NavHeading } from './navigation.ts'
-export type { HolocronSource, HolocronSourceContext } from './source.ts'
-export type { HolocronFileEntry, HolocronSiteData, TabItem, HeaderLink } from './site-data.ts'
 export {
   getActiveTab,
   getActiveGroups,

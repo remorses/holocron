@@ -1,0 +1,33 @@
+{
+  // Fixture: navigation.dropdowns with content sections + external link.
+  // Also exercises: products normalized into dropdowns.
+  "name": "Dropdown Docs",
+  "navigation": {
+    "dropdowns": [
+      {
+        "dropdown": "Documentation",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": ["docs/intro", "docs/setup"]
+          }
+        ]
+      },
+      {
+        "dropdown": "API Reference",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "Endpoints",
+            "pages": ["api/overview", "api/users"]
+          }
+        ]
+      },
+      {
+        "dropdown": "Blog",
+        "href": "https://example.com/blog"
+      }
+    ]
+  }
+}

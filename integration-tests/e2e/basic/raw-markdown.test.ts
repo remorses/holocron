@@ -195,3 +195,38 @@ test.describe("raw markdown does not interfere with normal requests", () => {
     expect(contentType).not.toContain("text/markdown");
   });
 });
+
+test.describe("docs.zip", () => {
+  test("GET /docs.zip returns a zip file", async ({ request }) => {
+    const res = await request.get("/docs.zip");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("application/zip");
+    expect(res.headers()["content-disposition"]).toContain("docs.zip");
+  });
+
+  test("zip contains markdown files for each page", async ({ request }) => {
+    const { unzipSync } = await import("fflate");
+    const res = await request.get("/docs.zip");
+    const buffer = await res.body();
+    const files = unzipSync(new Uint8Array(buffer));
+    const filenames = Object.keys(files).sort();
+    expect(filenames).toContain("index.md");
+    expect(filenames).toContain("getting-started.md");
+  });
+
+  test("zip file contents include page markdown", async ({ request }) => {
+    const { unzipSync, strFromU8 } = await import("fflate");
+    const res = await request.get("/docs.zip");
+    const buffer = await res.body();
+    const files = unzipSync(new Uint8Array(buffer));
+    const indexMd = strFromU8(files["index.md"]!);
+    expect(indexMd).toContain("## Overview");
+    expect(indexMd).toContain("holocron.so");
+  });
+
+  test("zip has cache-control and nosniff headers", async ({ request }) => {
+    const res = await request.get("/docs.zip");
+    expect(res.headers()["cache-control"]).toContain("s-maxage=300");
+    expect(res.headers()["x-content-type-options"]).toBe("nosniff");
+  });
+});

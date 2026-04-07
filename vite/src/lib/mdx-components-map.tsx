@@ -79,11 +79,11 @@ export function renderNode(
   transform: (node: MyRootContent) => ReactNode,
 ): ReactNode | undefined {
   if (node.type === 'image') {
-    const imgNode = node as Image
+    const imgNode = node
     return <PixelatedImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
   }
   if (node.type === 'heading') {
-    const heading = node as Heading
+    const heading = node
     const text = extractText(heading.children)
     const id = slugify(text)
     const level = Math.min(heading.depth - 1, 3) as HeadingLevel

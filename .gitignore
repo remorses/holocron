@@ -9,3 +9,5 @@ coverage
 *.pdf
 opencode.json
 tmp
+.tmp-*
+play

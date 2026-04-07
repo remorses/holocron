@@ -113,6 +113,12 @@ export function collectIconRefs({
     if (ref) refs.push(ref)
   }
 
+  // dropdown icons (dropdowns may have icons shown in the select)
+  for (const dropdown of config.navigation.dropdowns) {
+    const ref = iconToRef(dropdown.icon)
+    if (ref) refs.push(ref)
+  }
+
   // de-dupe by `library:name` key
   const seen = new Set<string>()
   const unique: IconRef[] = []

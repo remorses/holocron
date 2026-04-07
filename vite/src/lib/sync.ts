@@ -25,20 +25,41 @@ import {
   type ConfigNavTab,
   type ConfigNavGroup,
   type ConfigNavPageEntry,
+  type ConfigVersionItem,
+  type ConfigDropdownItem,
 } from '../config.ts'
 import {
   type Navigation,
+  type NavigationWithSwitchers,
   type NavTab,
   type NavGroup,
   type NavIcon,
   type NavPage,
   type NavPageEntry,
+  type NavVersionItem,
+  type NavDropdownItem,
+  isNavPage,
+  isNavGroup,
   buildPageIndex,
 } from '../navigation.ts'
 
+/** Collect all NavPage objects from a single enriched tab (for validation). */
+function collectAllPagesFromTab(tab: NavTab): NavPage[] {
+  const pages: NavPage[] = []
+  function walk(groups: NavGroup[]) {
+    for (const g of groups) {
+      for (const entry of g.pages) {
+        if (isNavPage(entry)) pages.push(entry)
+        else if (isNavGroup(entry)) walk([entry])
+      }
+    }
+  }
+  walk(tab.groups)
+  return pages
+}
+
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
-
 const require = createRequire(import.meta.url)
 const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
@@ -78,6 +99,8 @@ function rootToHref(root: string | undefined): string | undefined {
 
 export type SyncResult = {
   navigation: Navigation
+  /** Version/dropdown metadata with enriched inner navigation. */
+  switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
   /** Pre-processed MDX content keyed by page slug. Kept separate from the
    *  navigation tree so only the server bundle includes it — the client
    *  only receives the lightweight nav tree (titles, headings, slugs). */
@@ -189,6 +212,7 @@ export async function syncNavigation({
       headings: processed.headings,
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
+      frontmatter: processed.frontmatter,
     }
   }
 
@@ -208,9 +232,7 @@ export async function syncNavigation({
       root: rootToHref(configGroup.root),
       tag: configGroup.tag,
       expanded: configGroup.expanded,
-      pages: await Promise.all(configGroup.pages.map((entry) => {
-        return enrichPageEntry(entry)
-      })),
+      pages: await Promise.all(configGroup.pages.map(enrichPageEntry)),
     }
   }
 
@@ -220,25 +242,88 @@ export async function syncNavigation({
       icon: serializeIcon(configTab.icon, `tab "${configTab.tab}"`),
       hidden: configTab.hidden,
       align: configTab.align,
-      groups: await Promise.all(configTab.groups.map((g) => {
-        return enrichGroup(g)
-      })),
+      groups: await Promise.all(configTab.groups.map(enrichGroup)),
     }
   }
 
   // 4. Build enriched navigation
-  const navigation: Navigation = await Promise.all(
-    config.navigation.tabs.map((tab) => {
-      return enrichTab(tab)
-    }),
-  )
+  const navigation: Navigation = await Promise.all(config.navigation.tabs.map(enrichTab))
+
+  async function enrichVersionItem(v: ConfigVersionItem): Promise<NavVersionItem> {
+    const innerTabs = await Promise.all(v.navigation.tabs.map(enrichTab))
+    return {
+      version: v.version,
+      ...(v.default !== undefined && { default: v.default }),
+      ...(v.tag !== undefined && { tag: v.tag }),
+      ...(v.hidden !== undefined && { hidden: v.hidden }),
+      navigation: { tabs: innerTabs, anchors: v.navigation.anchors },
+    }
+  }
+
+  async function enrichDropdownItem(d: ConfigDropdownItem): Promise<NavDropdownItem> {
+    if (!d.navigation) {
+      return {
+        dropdown: d.dropdown,
+        ...(d.icon !== undefined && { icon: serializeIcon(d.icon, `dropdown "${d.dropdown}"`) }),
+        ...(d.hidden !== undefined && { hidden: d.hidden }),
+        ...(d.href !== undefined && { href: d.href }),
+      }
+    }
+    const innerTabs = await Promise.all(d.navigation.tabs.map(enrichTab))
+    return {
+      dropdown: d.dropdown,
+      ...(d.icon !== undefined && { icon: serializeIcon(d.icon, `dropdown "${d.dropdown}"`) }),
+      ...(d.hidden !== undefined && { hidden: d.hidden }),
+      ...(d.href !== undefined && { href: d.href }),
+      navigation: { tabs: innerTabs, anchors: d.navigation.anchors },
+    }
+  }
+
+  const versions = await Promise.all(config.navigation.versions.map(enrichVersionItem))
+  const dropdowns = await Promise.all(config.navigation.dropdowns.map(enrichDropdownItem))
+  const switchers = { versions, dropdowns }
+
+  // 4c. Validate no duplicate page hrefs across versions/dropdowns
+  if (versions.length > 0 || dropdowns.length > 0) {
+    const hrefOwners = new Map<string, string>()
+
+    for (const v of versions) {
+      for (const tab of v.navigation.tabs) {
+        for (const page of collectAllPagesFromTab(tab)) {
+          const existing = hrefOwners.get(page.href)
+          if (existing) {
+            throw new Error(
+              `[holocron] duplicate page href "${page.href}" in version "${v.version}" and ${existing}. ` +
+              `Each version/dropdown must use unique page paths (e.g. /v1/... and /v2/...).`,
+            )
+          }
+          hrefOwners.set(page.href, `version "${v.version}"`)
+        }
+      }
+    }
+    for (const d of dropdowns) {
+      if (!d.navigation) continue
+      for (const tab of d.navigation.tabs) {
+        for (const page of collectAllPagesFromTab(tab)) {
+          const existing = hrefOwners.get(page.href)
+          if (existing) {
+            throw new Error(
+              `[holocron] duplicate page href "${page.href}" in dropdown "${d.dropdown}" and ${existing}. ` +
+              `Each version/dropdown must use unique page paths.`,
+            )
+          }
+          hrefOwners.set(page.href, `dropdown "${d.dropdown}"`)
+        }
+      }
+    }
+  }
 
   // 5. Write caches
   writeCache(cachePath, navigation)
   writeMdxCache(mdxCachePath, mdxContent)
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, mdxContent, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -333,7 +418,6 @@ function readCache(cachePath: string): Navigation | null {
     if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
       return raw.navigation as Navigation
     }
-    // Old format (bare array) or different version → discard.
     return null
   } catch {
     return null

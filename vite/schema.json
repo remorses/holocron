@@ -447,6 +447,114 @@
           "additionalProperties": false
         },
         {
+          "type": "object",
+          "properties": {
+            "versions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/versionSchema"
+              },
+              "description": "Version entries for the version switcher"
+            },
+            "global": {
+              "type": "object",
+              "properties": {
+                "anchors": {
+                  "description": "Anchors displayed across all tabs. Useful for external links like\na GitHub repo or a changelog that should always be visible",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/anchorSchema"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "Navigation items rendered globally across all tabs and pages"
+            },
+            "anchors": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/anchorSchema"
+              }
+            }
+          },
+          "required": [
+            "versions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dropdowns": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/dropdownSchema"
+              },
+              "description": "Dropdown entries for the dropdown switcher"
+            },
+            "global": {
+              "type": "object",
+              "properties": {
+                "anchors": {
+                  "description": "Anchors displayed across all tabs. Useful for external links like\na GitHub repo or a changelog that should always be visible",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/anchorSchema"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "Navigation items rendered globally across all tabs and pages"
+            },
+            "anchors": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/anchorSchema"
+              }
+            }
+          },
+          "required": [
+            "dropdowns"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "products": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/productSchema"
+              },
+              "description": "Product entries for the product switcher"
+            },
+            "global": {
+              "type": "object",
+              "properties": {
+                "anchors": {
+                  "description": "Anchors displayed across all tabs. Useful for external links like\na GitHub repo or a changelog that should always be visible",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/anchorSchema"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "Navigation items rendered globally across all tabs and pages"
+            },
+            "anchors": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/anchorSchema"
+              }
+            }
+          },
+          "required": [
+            "products"
+          ],
+          "additionalProperties": false
+        },
+        {
           "type": "array",
           "items": {
             "$ref": "#/definitions/tabSchema"
@@ -461,7 +569,7 @@
           "description": "A shorthand array of root groups"
         }
       ],
-      "description": "The site navigation. Can be an object with `tabs`, `groups`, or\n`pages`, or a shorthand array of tabs or groups"
+      "description": "The site navigation. Can be an object with `tabs`, `groups`,\n`pages`, `versions`, `dropdowns`, or `products`, or a\nshorthand array of tabs or groups"
     },
     "tabSchema": {
       "anyOf": [
@@ -706,6 +814,190 @@
       ],
       "additionalProperties": false,
       "description": "A persistent link rendered as a tab in the tab bar"
+    },
+    "versionSchema": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the version"
+        },
+        "default": {
+          "description": "Whether this is the default version",
+          "type": "boolean"
+        },
+        "tag": {
+          "description": "Badge label displayed next to the version in the selector.\nUse to highlight versions such as \"Latest\", \"Beta\", \"Deprecated\"",
+          "type": "string"
+        },
+        "hidden": {
+          "description": "Whether this version is hidden from the selector",
+          "type": "boolean"
+        },
+        "tabs": {
+          "description": "Tabs within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tabSchema"
+          }
+        },
+        "groups": {
+          "description": "Sidebar groups within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/groupSchema"
+          }
+        },
+        "pages": {
+          "description": "Pages within this item (flat, no groups wrapper)",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/groupSchema"
+              }
+            ]
+          }
+        },
+        "anchors": {
+          "description": "Anchors within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/anchorSchema"
+          }
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "A version entry for the version switcher dropdown"
+    },
+    "dropdownSchema": {
+      "type": "object",
+      "properties": {
+        "dropdown": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the dropdown item"
+        },
+        "icon": {
+          "$ref": "#/definitions/iconSchema"
+        },
+        "hidden": {
+          "description": "Whether this dropdown item is hidden",
+          "type": "boolean"
+        },
+        "href": {
+          "description": "A URL for a link-only dropdown item. When set, selecting this\nitem navigates to the URL instead of switching sidebar content",
+          "type": "string"
+        },
+        "tabs": {
+          "description": "Tabs within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tabSchema"
+          }
+        },
+        "groups": {
+          "description": "Sidebar groups within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/groupSchema"
+          }
+        },
+        "pages": {
+          "description": "Pages within this item (flat, no groups wrapper)",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/groupSchema"
+              }
+            ]
+          }
+        },
+        "anchors": {
+          "description": "Anchors within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/anchorSchema"
+          }
+        }
+      },
+      "required": [
+        "dropdown"
+      ],
+      "additionalProperties": false,
+      "description": "A dropdown navigation item, either with content or a link"
+    },
+    "productSchema": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the product"
+        },
+        "description": {
+          "description": "Description of the product",
+          "type": "string"
+        },
+        "icon": {
+          "$ref": "#/definitions/iconSchema"
+        },
+        "href": {
+          "description": "A URL for a link-only product entry",
+          "type": "string"
+        },
+        "tabs": {
+          "description": "Tabs within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tabSchema"
+          }
+        },
+        "groups": {
+          "description": "Sidebar groups within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/groupSchema"
+          }
+        },
+        "pages": {
+          "description": "Pages within this item (flat, no groups wrapper)",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/groupSchema"
+              }
+            ]
+          }
+        },
+        "anchors": {
+          "description": "Anchors within this item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/anchorSchema"
+          }
+        }
+      },
+      "required": [
+        "product"
+      ],
+      "additionalProperties": false,
+      "description": "A product entry for the product switcher. Normalized into a\ndropdown item at runtime"
     },
     "navbarSchema": {
       "type": "object",

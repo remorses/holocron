@@ -1,0 +1,31 @@
+---
+title: v1 Getting Started
+---
+
+# Getting Started with v1
+
+Install the legacy version:
+
+```bash
+npm install playwriter@1
+```
+
+## Basic usage
+
+```js
+import { launch } from 'playwriter'
+
+const browser = await launch()
+const page = await browser.newPage()
+await page.goto('https://example.com')
+await page.screenshot({ path: 'screenshot.png' })
+```
+
+## Limitations
+
+v1 does not support:
+- Stateful sandbox execution
+- Chrome extension integration
+- Advanced selectors
+
+Upgrade to v2 for these features.

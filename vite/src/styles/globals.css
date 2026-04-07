@@ -110,7 +110,7 @@
   --list-gap: 8px;      /* between list items inside ul/ol */
 
   /* Utility tokens */
-  --border-radius-md: 8px;
+  --border-radius-md: 16px;
 
   /* Colors — near-black, not pure black */
   --text-primary: rgb(17, 17, 17);

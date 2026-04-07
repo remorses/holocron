@@ -283,6 +283,94 @@ export const tabSchema = z
   )
   .meta({ id: 'tabSchema' })
 
+/* ── Version ──────────────────────────────────────────────────────────── */
+
+/** Inner content fields reused by version, dropdown, and product schemas. */
+const innerNavigationFields = {
+  tabs: z.array(tabSchema).optional().describe('Tabs within this item'),
+  groups: z.array(groupSchema).optional().describe('Sidebar groups within this item'),
+  get pages() {
+    return z
+      .array(z.union([z.string(), groupSchema]))
+      .optional()
+      .describe('Pages within this item (flat, no groups wrapper)')
+  },
+  anchors: z.array(anchorSchema).optional().describe('Anchors within this item'),
+}
+
+export const versionSchema = z
+  .object({
+    version: z.string().min(1).describe('Display name of the version'),
+    default: z
+      .boolean()
+      .optional()
+      .describe('Whether this is the default version'),
+    tag: z
+      .string()
+      .optional()
+      .describe(
+        dedent`
+          Badge label displayed next to the version in the selector.
+          Use to highlight versions such as "Latest", "Beta", "Deprecated"
+        `,
+      ),
+    hidden: z
+      .boolean()
+      .optional()
+      .describe('Whether this version is hidden from the selector'),
+    ...innerNavigationFields,
+  })
+  .describe('A version entry for the version switcher dropdown')
+  .meta({ id: 'versionSchema' })
+
+/* ── Dropdown ─────────────────────────────────────────────────────────── */
+
+export const dropdownSchema = z
+  .object({
+    dropdown: z.string().min(1).describe('Display name of the dropdown item'),
+    icon: iconSchema.optional(),
+    hidden: z
+      .boolean()
+      .optional()
+      .describe('Whether this dropdown item is hidden'),
+    href: z
+      .string()
+      .optional()
+      .describe(
+        dedent`
+          A URL for a link-only dropdown item. When set, selecting this
+          item navigates to the URL instead of switching sidebar content
+        `,
+      ),
+    ...innerNavigationFields,
+  })
+  .describe('A dropdown navigation item, either with content or a link')
+  .meta({ id: 'dropdownSchema' })
+
+/* ── Product ──────────────────────────────────────────────────────────── */
+
+export const productSchema = z
+  .object({
+    product: z.string().min(1).describe('Display name of the product'),
+    description: z
+      .string()
+      .optional()
+      .describe('Description of the product'),
+    icon: iconSchema.optional(),
+    href: z
+      .string()
+      .optional()
+      .describe('A URL for a link-only product entry'),
+    ...innerNavigationFields,
+  })
+  .describe(
+    dedent`
+      A product entry for the product switcher. Normalized into a
+      dropdown item at runtime
+    `,
+  )
+  .meta({ id: 'productSchema' })
+
 /* ── Navigation ───────────────────────────────────────────────────────── */
 
 const navigationGlobalSchema = z
@@ -336,18 +424,46 @@ const navigationPagesObjectSchema = z.object({
   anchors: z.array(anchorSchema).optional(),
 })
 
+const navigationVersionsObjectSchema = z.object({
+  versions: z
+    .array(versionSchema)
+    .describe('Version entries for the version switcher'),
+  global: navigationGlobalSchema.optional(),
+  anchors: z.array(anchorSchema).optional(),
+})
+
+const navigationDropdownsObjectSchema = z.object({
+  dropdowns: z
+    .array(dropdownSchema)
+    .describe('Dropdown entries for the dropdown switcher'),
+  global: navigationGlobalSchema.optional(),
+  anchors: z.array(anchorSchema).optional(),
+})
+
+const navigationProductsObjectSchema = z.object({
+  products: z
+    .array(productSchema)
+    .describe('Product entries for the product switcher'),
+  global: navigationGlobalSchema.optional(),
+  anchors: z.array(anchorSchema).optional(),
+})
+
 export const navigationSchema = z
   .union([
     navigationTabsObjectSchema,
     navigationGroupsObjectSchema,
     navigationPagesObjectSchema,
+    navigationVersionsObjectSchema,
+    navigationDropdownsObjectSchema,
+    navigationProductsObjectSchema,
     z.array(tabSchema).describe('A shorthand array of tabs'),
     z.array(groupSchema).describe('A shorthand array of root groups'),
   ])
   .describe(
     dedent`
-      The site navigation. Can be an object with \`tabs\`, \`groups\`, or
-      \`pages\`, or a shorthand array of tabs or groups
+      The site navigation. Can be an object with \`tabs\`, \`groups\`,
+      \`pages\`, \`versions\`, \`dropdowns\`, or \`products\`, or a
+      shorthand array of tabs or groups
     `,
   )
   .meta({ id: 'navigationSchema' })

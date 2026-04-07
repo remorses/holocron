@@ -188,7 +188,7 @@ export function SideNav() {
       <div className='pb-3 pl-1 flex items-center relative shrink-0'>
         <span
           aria-hidden='true'
-          className='absolute left-3 pointer-events-none inline-flex items-center justify-center'
+          className='absolute left-3.5 pointer-events-none inline-flex items-center justify-center'
           style={{ color: 'var(--text-secondary)' }}
         >
           <SearchIcon />
@@ -202,13 +202,13 @@ export function SideNav() {
           placeholder={siteConfig.search.prompt || 'Search...'}
           className='w-full text-sm outline-none box-border'
           style={{
-            padding: '6px 34px 6px 34px',
+            padding: '6px 34px 6px 28px',
             fontFamily: 'var(--font-primary)',
             fontWeight: 'var(--weight-prose)',
             color: 'var(--text-primary)',
             background: 'transparent',
             border: '1px solid var(--page-border)',
-            borderRadius: '6px',
+            borderRadius: '12px',
             letterSpacing: 'normal',
             lineHeight: 'var(--lh-prose)',
             transition: 'border-color 0.15s ease, opacity 0.1s ease',

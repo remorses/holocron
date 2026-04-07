@@ -12,8 +12,12 @@
 import type {
   ConfigIcon,
   ConfigNavGroup,
+  ConfigVersionItem,
+  ConfigDropdownItem,
   NavTabBase,
 } from './config.ts'
+import type { PageFrontmatter } from './lib/page-frontmatter.ts'
+import { isHiddenPage, parsePageFrontmatter } from './lib/page-frontmatter.ts'
 
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
@@ -49,6 +53,7 @@ export type NavPage = {
   gitSha: string
   headings: NavHeading[]
   icon?: NavIcon
+  frontmatter: PageFrontmatter
 }
 
 /** A heading extracted from the MDX content */
@@ -58,8 +63,21 @@ export type NavHeading = {
   slug: string // anchor id
 }
 
-/** The full enriched navigation — always an array of tabs */
+export type NavVersionItem = Omit<ConfigVersionItem, 'navigation'> & {
+  navigation: { tabs: NavTab[]; anchors: ConfigVersionItem['navigation']['anchors'] }
+}
+
+export type NavDropdownItem = Omit<ConfigDropdownItem, 'navigation'> & {
+  navigation?: { tabs: NavTab[]; anchors: NonNullable<ConfigDropdownItem['navigation']>['anchors'] }
+}
+
 export type Navigation = NavTab[]
+
+export type NavigationWithSwitchers = {
+  tabs: NavTab[]
+  versions: NavVersionItem[]
+  dropdowns: NavDropdownItem[]
+}
 
 /* ── Type guards ─────────────────────────────────────────────────────── */
 
@@ -84,42 +102,41 @@ export function hasVisibleSidebarEntries(group: NavGroup): boolean {
   if (group.hidden) return false
   if (group.pages.length === 0) return true
   for (const entry of group.pages) {
-    if (isNavPage(entry)) return true
+    if (isNavPage(entry) && !isHiddenPage(entry.frontmatter)) return true
     if (isNavGroup(entry) && hasVisibleSidebarEntries(entry)) return true
   }
   return false
 }
 
+export function isVisibleNavPage(page: NavPage): boolean {
+  return !isHiddenPage(page.frontmatter)
+}
+
 /* ── Utility functions ──────────────────────────────────────────────── */
 
-/**
- * Find the active tab based on the current URL path.
- * Matches by longest URL prefix.
- */
+/** Check if a tab contains a page with the given href (exact match, recursive). */
+function tabContainsHref(tab: NavTab, href: string): boolean {
+  return groupsContainHref(tab.groups, href)
+}
+
+function groupsContainHref(groups: NavGroup[], href: string): boolean {
+  for (const group of groups) {
+    for (const entry of group.pages) {
+      if (isNavPage(entry) && entry.href === href) return true
+      if (isNavGroup(entry) && groupsContainHref([entry], href)) return true
+    }
+  }
+  return false
+}
+
+/** Find the active tab by exact page-membership matching. */
 export function getActiveTab(nav: Navigation, pathname: string): NavTab {
   if (nav.length <= 1) {
     return nav[0] ?? { tab: '', groups: [] }
   }
 
-  const tabsWithPrefix = nav.map((tab) => {
-    const firstPage = findFirstPage(tab.groups)
-    const prefix = firstPage
-      ? firstPage.href.split('/').slice(0, -1).join('/') || '/'
-      : '/'
-    return { tab, prefix }
-  })
-
-  const sorted = tabsWithPrefix.sort((a, b) => {
-    return b.prefix.length - a.prefix.length
-  })
-
-  for (const { tab, prefix } of sorted) {
-    if (prefix === '/' || pathname.startsWith(prefix)) {
-      return tab
-    }
-  }
-
-  return nav[0] ?? { tab: '', groups: [] }
+  const exact = nav.find((tab) => tabContainsHref(tab, pathname))
+  return exact ?? nav[0] ?? { tab: '', groups: [] }
 }
 
 /**
@@ -248,12 +265,8 @@ export function buildHrefToSlugMap(mdxContent: Record<string, string>): Map<stri
  * falls back to the first `# heading`.
  */
 function extractTitleFromMdx(mdx: string): string {
-  // Check frontmatter title: line
-  const fmMatch = mdx.match(/^---\s*\n([\s\S]*?)\n---/)
-  if (fmMatch?.[1]) {
-    const titleLine = fmMatch[1].match(/^title:\s*(.+)/m)
-    if (titleLine?.[1]) return titleLine[1].replace(/^["']|["']$/g, '').trim()
-  }
+  const frontmatter = parsePageFrontmatter(mdx)
+  if (frontmatter.title) return frontmatter.title
   // Fall back to first # heading
   const headingMatch = mdx.match(/^#\s+(.+)/m)
   if (headingMatch?.[1]) return headingMatch[1].trim()
@@ -283,13 +296,16 @@ export function findPageBySlug(
   const mdx = mdxContent[slug]
   if (!mdx) return undefined
 
+  const frontmatter = parsePageFrontmatter(mdx)
+
   return {
     slug,
     href: slugToHref(slug),
     title: extractTitleFromMdx(mdx),
+    description: frontmatter.description,
     gitSha: '',
     headings: [],
+    icon: frontmatter.icon,
+    frontmatter,
   }
 }
-
-

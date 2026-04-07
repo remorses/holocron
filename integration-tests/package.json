@@ -20,5 +20,8 @@
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.3",
     "vite-tsconfig-paths": "^6.0.3"
+  },
+  "devDependencies": {
+    "fflate": "^0.8.2"
   }
 }

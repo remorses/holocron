@@ -40,7 +40,7 @@ export function extractText(children: PhrasingContent[]): string {
         return child.value
       }
       if ('children' in child) {
-        return extractText(child.children as PhrasingContent[])
+        return extractText(child.children)
       }
       return ''
     })

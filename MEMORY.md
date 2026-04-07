@@ -70,10 +70,6 @@ static data → data.ts → client bundle (once, cached)
 dynamic data → .loader('/*') → RSC flight (minimal, per-request)
 ```
 
-## Loader-backed site data
-
-For the source-driven docs runtime, `data.ts` should read from the root loader instead of importing a separate static site module. Spiceflow's loader store is accessible both via hooks and `getLoaderData()` at module scope, so global reads still work even when the site object is request-scoped.
-
 ## App type derivation
 
 ```tsx
@@ -1082,10 +1078,6 @@ plugin itself. Kept in the plugin for now because it's a strictly safer
 default for anyone running multiple holocron sites concurrently (e.g.
 monorepo with parallel docs previews).
 
-### Spiceflow standalone trace needs absolute outDir
-
-For `vite <relative-root> --config ...` multi-fixture builds, Spiceflow's standalone trace plugin must resolve `build.outDir` against `config.root` before calling `traceAndCopyDependencies()`. Using raw relative `outDir` makes the trace step look for `process.cwd()/dist/rsc/index.js` (for us `integration-tests/dist/...`) instead of the actual fixture output under `fixtures/<name>/dist/...`.
-
 ### Fixture architecture quick-ref for future sessions
 
 ```
@@ -1115,8 +1107,7 @@ trace of every schema field through `schema.ts` → `config.ts normalize()`
 - Root: `name`, `description` (site-wide `<meta>` fallback)
 - `logo.light` (header img), `logo.href` (logo `<Link>` destination)
 - `favicon.light` (layout `<link rel="icon">`)
-- `favicon.dark` (second `<link>` with `media="(prefers-color-scheme: dark)"` —
-  spiceflow dedup currently drops one variant, spiceflow-side fix pending)
+- `favicon.dark` (second `<link>` with `media="(prefers-color-scheme: dark)"`)
 - `redirects[]` — regex matcher in `.use()` middleware
 - `navigation.tabs` + `tab.hidden` (filtered) + `navigation.global.anchors` +
   `navigation.anchors` + `anchor.hidden` (filtered)
@@ -1683,3 +1674,14 @@ for users who want a custom layout.
 
 All example and fixture MDX files moved from `pages/` subdirectories to their
 respective roots.
+
+## Switcher (versions/dropdowns) — inner tabs leak into tab bar (2026-04-07)
+
+When `navigation.versions` or `navigation.dropdowns` are present, each item's
+inner navigation (tabs/groups/pages) is flattened into the main `navigation.tabs`
+array so every page gets a route. But `buildTabItems()` in `data.ts` must skip
+those tabs — otherwise ALL version/dropdown tabs render in the header tab bar
+simultaneously. Fix: when `hasSwitchers`, return only anchors from `buildTabItems()`.
+
+Related: `firstPage` must prefer the `default: true` version's first page for
+the `/` redirect, not the first flattened tab (which could be from v1).

@@ -18,10 +18,11 @@
     }
   },
   "navigation": {
-    "tabs": [
+    "versions": [
       {
-        "tab": "Docs",
-        "icon": "book-open",
+        "version": "v2",
+        "default": true,
+        "tag": "Latest",
         "groups": [
           {
             "group": "Overview",
@@ -45,8 +46,26 @@
           }
         ]
       },
-      { "tab": "GitHub", "href": "https://github.com/remorses/playwriter", "icon": "github" },
-      { "tab": "Changelog", "href": "https://github.com/remorses/playwriter/releases", "icon": "newspaper" }
-    ]
+      {
+        "version": "v1",
+        "tag": "Legacy",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["v1/overview"]
+          },
+          {
+            "group": "Getting Started",
+            "pages": ["v1/getting-started"]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        { "anchor": "GitHub", "href": "https://github.com/remorses/playwriter", "icon": "github" },
+        { "anchor": "Changelog", "href": "https://github.com/remorses/playwriter/releases", "icon": "newspaper" }
+      ]
+    }
   }
 }

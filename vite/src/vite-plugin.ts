@@ -24,13 +24,7 @@ import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
 import { collectIconRefs } from './lib/collect-icons.ts'
 import { resolveIconSvgs, type IconAtlas } from './lib/resolve-icons.ts'
-import { gitBlobSha } from './lib/git-sha.ts'
-import { collectAllPages } from './navigation.ts'
-import { buildSiteData, type HolocronSiteData } from './site-data.ts'
 import react from '@vitejs/plugin-react'
-
-const require = createRequire(import.meta.url)
-const { version: PACKAGE_VERSION } = require('../package.json') as { version: string }
 
 export type HolocronPluginOptions = {
   /** Path to config file. Defaults to auto-discovery (holocron.jsonc, docs.json) */
@@ -44,12 +38,6 @@ const RESOLVED_CONFIG = '\0' + VIRTUAL_CONFIG
 
 const VIRTUAL_MDX = 'virtual:holocron-mdx'
 const RESOLVED_MDX = '\0' + VIRTUAL_MDX
-
-const VIRTUAL_SITE = 'virtual:holocron-site'
-const RESOLVED_SITE = '\0' + VIRTUAL_SITE
-
-const VIRTUAL_SOURCE = 'virtual:holocron-source'
-const RESOLVED_SOURCE = '\0' + VIRTUAL_SOURCE
 
 const VIRTUAL_APP = 'virtual:holocron-app'
 const RESOLVED_APP = '\0' + VIRTUAL_APP
@@ -105,11 +93,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let config: HolocronConfig
   let syncResult: SyncResult
   let iconAtlas: IconAtlas
-  let staticSite: HolocronSiteData | undefined
   let pagesDir: string
   let publicDirPath: string
   let distDirPath: string
-  let sourceFilePath: string | undefined
   let resolveHolocronPackagePath:
     | ((id: string, importer?: string, ssr?: boolean) => Promise<string | undefined>)
     | undefined
@@ -185,12 +171,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
       resolvedBase = resolved.base === '/' ? '' : resolved.base.replace(/\/$/, '')
 
-      sourceFilePath = resolveSourcePath(root)
-
-      if (sourceFilePath) {
-        return
-      }
-
       config = readConfig({ root, configPath: options.configPath })
       configFilePath = resolveConfigPath({ root, configPath: options.configPath })
 
@@ -210,14 +190,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // client — typically < 20 icons → 2-5 KB gzipped.
       const iconRefs = collectIconRefs({ config, navigation: syncResult.navigation })
       iconAtlas = resolveIconSvgs(iconRefs)
-      staticSite = buildSiteData({
-        version: PACKAGE_VERSION,
-        config,
-        navigation: syncResult.navigation,
-        files: collectAllPages(syncResult.navigation).map((page) => ({ slug: page.slug, sha: page.gitSha })),
-        icons: iconAtlas,
-        configSha: gitBlobSha(JSON.stringify(config)),
-      })
 
       console.error(
         `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached), resolved ${Object.keys(iconAtlas.icons).length} icons`,
@@ -241,12 +213,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (id === VIRTUAL_MDX) {
         return RESOLVED_MDX
       }
-      if (id === VIRTUAL_SITE) {
-        return RESOLVED_SITE
-      }
-      if (id === VIRTUAL_SOURCE) {
-        return RESOLVED_SOURCE
-      }
       if (id === VIRTUAL_APP || id.endsWith('/' + VIRTUAL_APP)) {
         return RESOLVED_APP
       }
@@ -269,12 +235,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           `export const config = ${JSON.stringify(config)}`,
           `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
           `export const base = ${JSON.stringify(resolvedBase)}`,
+          `export const switchers = ${JSON.stringify(syncResult.switchers)}`,
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {
-        if (sourceFilePath) {
-          return `export default {}`
-        }
         // Register every known MDX file as a dependency so edits to existing
         // pages flow through the module graph (same mechanism as config above).
         // New MDX files that don't exist yet are handled separately in hotUpdate.
@@ -287,26 +251,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
         }
         return `export default ${JSON.stringify(syncResult.mdxContent)}`
-      }
-      if (id === RESOLVED_SITE) {
-        return `export default ${JSON.stringify(staticSite)}`
-      }
-      if (id === RESOLVED_SOURCE) {
-        if (sourceFilePath) {
-          this.addWatchFile(sourceFilePath)
-          return `export { default } from ${JSON.stringify(sourceFilePath)}`
-        }
-        return [
-          `import site from '${VIRTUAL_SITE}'`,
-          `import mdxContent from '${VIRTUAL_MDX}'`,
-          `const source = {`,
-          `  async loadConfig() { return site.config },`,
-          `  async listFiles() { return site.files },`,
-          `  async loadFile(slug) { return mdxContent[slug] ?? null },`,
-          `  async loadCache() { return site },`,
-          `}`,
-          `export default source`,
-        ].join('\n')
       }
       if (id === RESOLVED_APP) {
         return [
@@ -333,9 +277,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (configFilePath) {
         server.watcher.add(configFilePath)
       }
-      if (sourceFilePath) {
-        server.watcher.add(sourceFilePath)
-      }
     },
 
     // hotUpdate — per-environment HMR hook.
@@ -352,25 +293,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     async hotUpdate(ctx) {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
-      const isSource = sourceFilePath && ctx.file === sourceFilePath
 
-      if (!isMdx && !isConfig && !isSource) {
+      if (!isMdx && !isConfig) {
         return
-      }
-
-      if (sourceFilePath) {
-        ctx.server.environments.client?.hot.send({
-          type: 'custom',
-          event: 'rsc:update',
-          data: { file: ctx.file },
-        })
-        for (const resolvedId of [RESOLVED_SOURCE, RESOLVED_APP]) {
-          const mod = this.environment.moduleGraph.getModuleById(resolvedId)
-          if (mod) {
-            this.environment.moduleGraph.invalidateModule(mod)
-          }
-        }
-        return []
       }
 
       // For new/deleted MDX files (type !== "update"), the file isn't
@@ -379,7 +304,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // adds glob-owning modules on create/delete. This makes downstream
       // plugins (Tailwind) see a JS module and skip their full-reload.
       if (ctx.type !== 'update' && isMdx && ctx.file.startsWith(pagesDir)) {
-        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_SITE, RESOLVED_SOURCE]) {
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod && !ctx.modules.includes(mod)) {
             ctx.modules = [...ctx.modules, mod]
@@ -408,14 +333,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // new icons land in the client bundle on the next request.
         const iconRefs = collectIconRefs({ config, navigation: syncResult.navigation })
         iconAtlas = resolveIconSvgs(iconRefs)
-        staticSite = buildSiteData({
-          version: PACKAGE_VERSION,
-          config,
-          navigation: syncResult.navigation,
-          files: collectAllPages(syncResult.navigation).map((page) => ({ slug: page.slug, sha: page.gitSha })),
-          icons: iconAtlas,
-          configSha: gitBlobSha(JSON.stringify(config)),
-        })
 
         ctx.server.environments.client?.hot.send({
           type: 'custom',
@@ -423,13 +340,23 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           data: { file: ctx.file },
         })
 
-        clientHotModules = []
+        // `rsc:update` refreshes the server-rendered page tree, but client
+        // chrome like `SideNav` imports `data.ts`, which in turn imports the
+        // virtual config module directly. Return those virtual modules from the
+        // client HMR hook as well so Vite updates the client graph instead of
+        // leaving navigation/search/title state stale until a full reload.
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_ICONS]) {
+          const mod = this.environment.moduleGraph.getModuleById(resolvedId)
+          if (mod) {
+            clientHotModules.push(mod)
+          }
+        }
       }
 
       // Invalidate the app module too — per-page routes are registered at
       // module init from mdxContent, so adding/deleting pages requires the
       // app factory to re-run and rebuild the route table.
-      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_SITE, RESOLVED_SOURCE, RESOLVED_ICONS, RESOLVED_APP]) {
+      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_ICONS, RESOLVED_APP]) {
         const mod = this.environment.moduleGraph.getModuleById(resolvedId)
         if (mod) {
           this.environment.moduleGraph.invalidateModule(mod)
@@ -491,7 +418,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     configEnvironment(_name, config) {
       if (!config.optimizeDeps?.include) return
       config.optimizeDeps.include = (
-        config.optimizeDeps.include as string[]
+        config.optimizeDeps.include
       ).map((entry) =>
         typeof entry === 'string' && entry.startsWith('spiceflow >')
           ? `@holocron.so/vite > ${entry}`
@@ -512,20 +439,4 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     // added their own (detected by plugin name starting with "vite:react").
     ...(hasUserReactPlugin ? [] : [react()]),
   ]
-}
-
-function resolveSourcePath(root: string): string | undefined {
-  for (const name of [
-    'holocron.source.ts',
-    'holocron.source.tsx',
-    'holocron.source.mts',
-    'holocron.source.js',
-    'holocron.source.mjs',
-  ]) {
-    const filePath = path.join(root, name)
-    if (fs.existsSync(filePath)) {
-      return filePath
-    }
-  }
-  return undefined
 }

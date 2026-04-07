@@ -15,15 +15,21 @@ import {
   config as siteConfig,
   tabs as siteTabs,
   headerLinks as siteHeaderLinks,
+  versionItems as siteVersionItems,
+  dropdownItems as siteDropdownItems,
 } from '../../data.ts'
 import { useHolocronData } from '../../router.ts'
 import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
+import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { Footer, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner.tsx'
 import { SidebarAssistant } from '../sidebar-assistant.tsx'
+import { ChatDrawer } from '../chat-drawer.tsx'
+import { MobileBar } from '../mobile-bar.tsx'
+import { NavDrawer } from '../nav-drawer.tsx'
 
 export type EditorialSection = {
   content: React.ReactNode
@@ -36,6 +42,16 @@ export type EditorialSection = {
    *  cell covers every sub-section row. Inside that tall cell,
    *  `position: sticky` keeps the aside pinned alongside all those rows. */
   asideRowSpan?: number
+}
+
+function getSharedAsideStartRow(row: number, span: number) {
+  return row - span + 1
+}
+
+function sectionStartsSharedAsideAtTop(section: EditorialSection, index: number) {
+  if (!section.aside) return false
+  const span = section.asideRowSpan ?? 1
+  return span > 1 && getSharedAsideStartRow(index + 1, span) === 1
 }
 
 /**
@@ -63,18 +79,21 @@ export function EditorialPage({
   /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
   bannerContent?: React.ReactNode
 }) {
-  const { activeTabHref } = useHolocronData()
+  const { activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
   const logo = siteConfig.logo.light
   const logoLinkHref = siteConfig.logo.href || '/'
   const siteName = siteConfig.name
   const tabs = siteTabs
   const headerLinks = siteHeaderLinks
   const primary = siteConfig.navbar.primary
+  const versionItems = siteVersionItems
+  const dropdownSelectItems = siteDropdownItems
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
   // Sidebar spans exactly the content rows — no wasted implicit rows.
   const sidebarRowSpan = sections ? sections.length : 1
+  const pageStartsWithSharedAside = sections?.some(sectionStartsSharedAsideAtTop) ?? false
 
   return (
     <div
@@ -84,12 +103,12 @@ export function EditorialPage({
         '--banner-height': bannerContent ? '36px' : '0px',
       } as React.CSSProperties}
     >
-      {bannerContent && (
+      {!!bannerContent && (
         <div className='slot-banner flex h-(--banner-height) items-center justify-center gap-2 bg-foreground px-4 text-background text-xs -mb-(--layout-gap)'>
           <div className='flex-1 text-center truncate [&_a]:underline [&_a]:font-medium [&_a]:hover:opacity-80 [&_p]:inline'>
             {bannerContent}
           </div>
-          {banner?.dismissible && <BannerDismiss content={banner.content} />}
+          {!!banner?.dismissible && <BannerDismiss content={banner.content} />}
         </div>
       )}
 
@@ -97,31 +116,53 @@ export function EditorialPage({
       <div className='slot-navbar'>
         {/* Top row: logo + right links */}
         <div className='mx-auto flex items-center justify-between px-(--mobile-padding) py-(--header-padding-y) lg:max-w-(--grid-max-width) lg:px-0'>
-          <Link href={logoLinkHref} className='slot-logo no-underline flex items-center'>
-            {logo ? (
-              <>
-                <img
-                  src={logo}
-                  alt={siteName || 'Logo'}
-                  style={{ height: 'var(--logo-height)', width: 'auto' }}
-                  className={siteConfig.logo.dark ? 'dark:hidden' : 'dark:invert'}
-                />
-                {siteConfig.logo.dark && (
+          {/* Left side: logo + version/dropdown selects */}
+          <div className='flex items-center gap-3'>
+            <Link href={logoLinkHref} className='slot-logo no-underline flex items-center shrink-0'>
+              {logo ? (
+                <>
                   <img
-                    src={siteConfig.logo.dark}
+                    src={logo}
                     alt={siteName || 'Logo'}
                     style={{ height: 'var(--logo-height)', width: 'auto' }}
-                    className='hidden dark:block'
+                    className={siteConfig.logo.dark ? 'dark:hidden' : 'dark:invert'}
                   />
-                )}
-              </>
-            ) : (
-              <span className='text-[15px] font-bold [font-family:var(--font-code)] lowercase tracking-[-0.01em]'>
-                {siteName || 'docs'}
+                  {!!siteConfig.logo.dark && (
+                    <img
+                      src={siteConfig.logo.dark}
+                      alt={siteName || 'Logo'}
+                      style={{ height: 'var(--logo-height)', width: 'auto' }}
+                      className='hidden dark:block'
+                    />
+                  )}
+                </>
+              ) : (
+                <span className='text-[15px] font-bold [font-family:var(--font-code)] lowercase tracking-[-0.01em]'>
+                  {siteName || 'docs'}
+                </span>
+              )}
+            </Link>
+            {versionItems.length > 0 && (
+              <span className='hidden lg:inline-flex'>
+                <NavSelect
+                  items={versionItems}
+                  activeHref={activeVersionHref}
+                  ariaLabel='Select version'
+                />
               </span>
             )}
-          </Link>
-          <div className='flex items-center gap-4'>
+            {dropdownSelectItems.length > 0 && (
+              <span className='hidden lg:inline-flex'>
+                <NavSelect
+                  items={dropdownSelectItems}
+                  activeHref={activeDropdownHref}
+                  ariaLabel='Select section'
+                />
+              </span>
+            )}
+          </div>
+          {/* Right side: icon links + CTA + theme toggle — hidden on mobile, shown in nav drawer instead */}
+          <div className='hidden lg:flex items-center gap-4'>
             {/* Icon links. Icons are resolved by `<Icon>` — dispatches on
                 emoji / URL / lucide name / structured object. When the user
                 wrote `{ type: 'github' }` without an explicit icon, the
@@ -154,7 +195,7 @@ export function EditorialPage({
                 normalize-config.ts. Rendered as a compact pill at the right
                 of the navbar so users who configure `navbar.primary` see it
                 without extra setup. */}
-            {primary && primary.href && (
+            {!!primary?.href && (
               <a
                 href={primary.href}
                 target={primary.href.startsWith('http') ? '_blank' : undefined}
@@ -171,9 +212,12 @@ export function EditorialPage({
           </div>
         </div>
 
-        {/* Tab row */}
+        {/* Mobile bar: Ask AI + Menu — shown under logo bar on mobile */}
+        <MobileBar />
+
+        {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar && (
-          <div className='slot-tabbar'>
+          <div className='slot-tabbar hidden lg:block'>
             <div className='mx-auto flex h-(--tab-bar-height) max-w-full items-stretch gap-6 overflow-x-auto px-(--mobile-padding) lg:max-w-(--grid-max-width) lg:px-0'>
               {tabs.map((tab) => {
                 return <TabLink key={tab.href} tab={tab} isActive={tab.href === (activeTab ?? tabs[0]?.href)} />
@@ -185,7 +229,7 @@ export function EditorialPage({
 
       {/* Hero: rendered above the 3-column grid, using the same column widths
           so hero content aligns with the center content column (col 2). */}
-      {hero && (
+      {!!hero && (
         <div className='mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
           <div className='lg:col-start-2'>{hero}</div>
         </div>
@@ -239,6 +283,14 @@ export function EditorialPage({
               }
               const span = section.asideRowSpan ?? 1
               const isShared = span > 1
+              const sharedAsideStartRow = getSharedAsideStartRow(row, span)
+              const hasPerSectionAside = Boolean(section.aside) && !isShared
+              const hasSharedAside = Boolean(section.aside) && isShared
+              const showPerSectionAsideColumn = i === 0 || hasPerSectionAside
+              const renderAssistantInPerSectionAside =
+                i === 0 && ENABLE_ASSISTANT && !pageStartsWithSharedAside
+              const renderAssistantInSharedAside =
+                ENABLE_ASSISTANT && sharedAsideStartRow === 1
               const asideClass =
                 'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
               return (
@@ -252,12 +304,12 @@ export function EditorialPage({
                       {section.content}
                     </div>
                     {/* Aside column: assistant input (first row only) + per-section aside */}
-                    {(i === 0 || (section.aside && !isShared)) && (
+                    {showPerSectionAsideColumn && (
                       <div
-                         className={`flex flex-col gap-3 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                          className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
                       >
-                        {i === 0 && ENABLE_ASSISTANT && <SidebarAssistant />}
-                        {section.aside && !isShared && (
+                        {renderAssistantInPerSectionAside && <SidebarAssistant />}
+                        {hasPerSectionAside && (
                           <div className='slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'>
                             {section.aside}
                           </div>
@@ -270,11 +322,15 @@ export function EditorialPage({
                       Mobile: grid-row stays `auto` → auto-placed by DOM order,
                       stacks at end of range without forcing an implicit 2nd
                       column in grid-cols-1. */}
-                  {section.aside && isShared && (
+                  {hasSharedAside && (
                     <div
                       className={`${asideClass} lg:col-[3] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
-                      style={{ '--shared-row': `${row - span + 1} / span ${span}` } as React.CSSProperties}
+                      style={{ '--shared-row': `${sharedAsideStartRow} / span ${span}` } as React.CSSProperties}
                     >
+                      {/* A shared aside that starts on row 1 owns the whole
+                          desktop right rail, so the assistant must render
+                          inside that sticky stack to avoid overlap. */}
+                      {renderAssistantInSharedAside && <SidebarAssistant />}
                       {section.aside}
                     </div>
                   )}
@@ -310,6 +366,12 @@ export function EditorialPage({
         <Footer />
         <PoweredBy />
       </div>
+
+      {/* AI assistant drawer — slides in from right when activated */}
+      {ENABLE_ASSISTANT && <ChatDrawer />}
+
+      {/* Mobile navigation drawer (lg:hidden) */}
+      <NavDrawer />
     </div>
   )
 }
