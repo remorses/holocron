@@ -24,11 +24,15 @@ function cleanFixtureDist(rootDir: string): void {
 function buildFixture(rootRel: string): Promise<void> {
   return new Promise((resolve, reject) => {
     console.log(`\n[build-fixtures] → ${rootRel}`);
+    const fixtureConfig = path.join(rootRel, "vite.config.ts");
+    const configPath = fs.existsSync(path.join(integrationTestsDir, fixtureConfig))
+      ? fixtureConfig
+      : "vite.config.ts";
     // Vite 8 uses `root` as a positional arg (not --root). Config path is
     // resolved from cwd, so relative `vite.config.ts` works here.
     const child = spawn(
       "pnpm",
-      ["exec", "vite", "build", rootRel, "--config", "vite.config.ts"],
+      ["exec", "vite", "build", rootRel, "--config", configPath],
       {
         cwd: integrationTestsDir,
         stdio: "inherit",

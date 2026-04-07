@@ -239,7 +239,8 @@ test.describe("hidden filters", () => {
     });
     expect(response.status()).toBe(200);
     const html = await response.text();
-    expect(html).toContain("This page uses page-level `hidden: true`.");
+    expect(html).toContain("This page uses page-level");
+    expect(html).toContain("hidden: true");
   });
 });
 

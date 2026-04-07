@@ -96,6 +96,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let pagesDir: string
   let publicDirPath: string
   let distDirPath: string
+  let viteBase = '/'
   let resolveHolocronPackagePath:
     | ((id: string, importer?: string, ssr?: boolean) => Promise<string | undefined>)
     | undefined
@@ -134,6 +135,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             { find: /^spiceflow\/vite$/, replacement: path.join(spiceflowDir, 'dist/vite.js') },
             { find: /^spiceflow\/react$/, replacement: path.join(spiceflowDir, 'dist/react/index.js') },
           ],
+          dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
         },
       }
       return next
@@ -168,6 +170,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         : path.resolve(root, 'dist')
 
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
+      viteBase = resolved.base || '/'
 
       config = readConfig({ root, configPath: options.configPath })
       configFilePath = resolveConfigPath({ root, configPath: options.configPath })
@@ -233,6 +236,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           `export const config = ${JSON.stringify(config)}`,
           `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
           `export const switchers = ${JSON.stringify(syncResult.switchers)}`,
+          `export const base = ${JSON.stringify(viteBase)}`,
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {
