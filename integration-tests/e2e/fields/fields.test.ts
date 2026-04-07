@@ -79,14 +79,7 @@ test("React.cache() shares the Head store across layout and page SSR", async ({
 });
 
 test.describe("dark favicon", () => {
-  // NOTE: This test is currently skipped because spiceflow's `<Head>`
-  // component dedups `<link rel="icon">` tags by a key that does NOT
-  // include the `media` attribute (see
-  // spiceflow/dist/react/head-processing.js → getLinkKey). Two icon
-  // links with different `media` values collapse into one. Fixing
-  // requires a small change in spiceflow — see the MEMORY note
-  // "Dark favicon blocked by spiceflow link dedup".
-  test.skip("emits paired <link rel='icon'> with prefers-color-scheme media queries", async ({
+  test("emits paired <link rel='icon'> with prefers-color-scheme media queries", async ({
     request,
   }) => {
     const response = await request.get("/", {
@@ -97,9 +90,6 @@ test.describe("dark favicon", () => {
     expect(html).toContain('href="/favicon-dark.svg"');
   });
 
-  // Until spiceflow ships the fix, the layout still renders the LIGHT
-  // variant so users with only one favicon (or `light == dark`) continue
-  // to get a working icon.
   test("at least the light favicon link is emitted", async ({ request }) => {
     const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
