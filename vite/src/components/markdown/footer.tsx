@@ -7,7 +7,7 @@
  */
 
 import React from 'react'
-import { config as siteConfig } from '../../data.ts'
+import { config as siteConfig, resolvedLogo as siteLogo } from '../../data.ts'
 import { Icon } from '../icon.tsx'
 
 /** Map social platform keys to lucide icon names. Aligned with the
@@ -41,7 +41,7 @@ export function Footer() {
   const hasLinks = links.length > 0
   if (!hasSocials && !hasLinks) return null
 
-  const logo = siteConfig.logo
+  const logo = siteLogo
   const logoLinkHref = logo.href || '/'
 
   return (
@@ -50,22 +50,16 @@ export function Footer() {
         {/* Top row: logo + social icons */}
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <a href={logoLinkHref} className='no-underline flex items-center'>
-            {logo.light ? (
-              <>
-                {logo.dark ? (
-                  <>
-                    <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:hidden' />
-                    <img src={logo.dark} alt={siteConfig.name || 'Logo'} className='h-6 w-auto hidden dark:block' />
-                  </>
-                ) : (
-                  <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:invert' />
-                )}
-              </>
-            ) : (
-              <span className='text-sm font-bold text-(color:--text-primary) [font-family:var(--font-code)] lowercase'>
-                {siteConfig.name || 'docs'}
-              </span>
-            )}
+            <>
+              {logo.dark ? (
+                <>
+                  <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:hidden' />
+                  <img src={logo.dark} alt={siteConfig.name || 'Logo'} className='h-6 w-auto hidden dark:block' />
+                </>
+              ) : (
+                <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:invert' />
+              )}
+            </>
           </a>
           {hasSocials && (
             <div className='flex items-center gap-3'>

@@ -19,6 +19,7 @@ import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigat
 import { isNavPage, isNavGroup } from './navigation.ts'
 import type { SearchEntry } from './lib/search.ts'
 import type { ConfigIcon } from './config.ts'
+import { resolveLogo } from './lib/generated-logo.tsx'
 
 export { config, navigation }
 
@@ -207,6 +208,13 @@ export const headerLinks: HeaderLink[] = buildHeaderLinks()
 
 /** Flat search entry list for Orama. Pages + headings, with ancestor keys. */
 export const searchEntries: SearchEntry[] = buildSearchEntries()
+
+const baseUrl = import.meta.env.BASE_URL || '/'
+
+/** Resolved logo URLs for UI chrome. Falls back to generated images so
+ *  header/footer can always render a normal <img> instead of special-casing
+ *  a monospace text placeholder. */
+export const resolvedLogo = resolveLogo(config.logo, config.name, baseUrl)
 
 /** First tab's first page — used as the default landing destination
  *  (e.g. for the root `/` redirect and 404 fallback home link).

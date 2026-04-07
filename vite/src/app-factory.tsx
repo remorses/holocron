@@ -59,6 +59,10 @@ import { isAgentRequest } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
+import {
+  decodeGeneratedLogoText,
+  type GeneratedLogoTheme,
+} from './lib/generated-logo.tsx'
 import { SiteHead } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
@@ -167,6 +171,10 @@ function renderMdxPage(
       <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} />
     </>
   )
+}
+
+function parseGeneratedLogoTheme(theme: string | undefined): GeneratedLogoTheme | undefined {
+  return theme === 'light' || theme === 'dark' ? theme : undefined
 }
 
 /* ── App factory ─────────────────────────────────────────────────────── */
@@ -321,6 +329,20 @@ export function createHolocronApp() {
       pageLabel: `${requestUrl.host}${page.href}`,
     })
     response.headers.set('cache-control', 'public, max-age=3600, s-maxage=3600')
+    return response
+  })
+
+  // /holocron-api/logo/:theme/<text>.png — generated fallback logo images.
+  app = app.get('/holocron-api/logo/:theme/*', async ({ params }: { params: Record<string, string> }) => {
+    const theme = parseGeneratedLogoTheme(params.theme)
+    if (!theme) {
+      return new Response('Not found', { status: 404 })
+    }
+
+    const text = decodeGeneratedLogoText(params['*'] || '')
+    const { createGeneratedLogoResponse } = await import('./lib/generated-logo.tsx')
+    const response = createGeneratedLogoResponse({ text, theme })
+    response.headers.set('cache-control', 'public, max-age=31536000, s-maxage=31536000, immutable')
     return response
   })
 
