@@ -21,14 +21,14 @@ export function SidebarAssistant() {
   }
 
   return (
-    <div className='w-full rounded-2xl bg-muted p-px'>
+    <div className='w-full rounded-xl bg-foreground/8 px-0.5 pt-px pb-0.5'>
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
         <svg width='12' height='12' viewBox='0 0 16 16' fill='currentColor' className='text-(color:--text-secondary) shrink-0'>
           <path d='M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9-3a1 1 0 11-2 0 1 1 0 012 0zM6.92 7.42a.75.75 0 01.99-.37.25.25 0 01.14.22v3.48a.25.25 0 01-.25.25H7a.75.75 0 010-1.5h.25V8.35a.75.75 0 01-.33-.93z' />
         </svg>
         <span className='text-[11px] text-(color:--text-secondary)'>Ask AI about this page</span>
       </div>
-      <div className='bg-background rounded-[15px] p-2 flex flex-col gap-1.5 shadow-sm'>
+      <div className='bg-background rounded-[11px] p-2 flex flex-col gap-1.5 shadow-sm'>
         <textarea
           ref={inputRef}
           value={inputValue}
