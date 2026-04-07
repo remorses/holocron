@@ -23,6 +23,7 @@ function makePage(slug: string, overrides?: Partial<NavPage>): NavPage {
     title: slug.charAt(0).toUpperCase() + slug.slice(1),
     gitSha: 'abc123',
     headings: [],
+    frontmatter: {},
     ...overrides,
   }
 }
@@ -284,5 +285,4 @@ describe('hasVisibleSidebarEntries', () => {
     expect(hasVisibleSidebarEntries(wrapper)).toBe(true)
   })
 })
-
 

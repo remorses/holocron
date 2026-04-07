@@ -107,12 +107,14 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
   });
 
   test("renders theme toggle button", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/");
     const toggle = page.getByRole("button", { name: /Switch to (dark|light) mode/ });
     await expect(toggle).toBeVisible();
   });
 
   test("renders primary CTA button in navbar", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/");
     const cta = page.getByRole("link", { name: "Get Started" });
     await expect(cta).toBeVisible();

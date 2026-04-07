@@ -103,12 +103,12 @@ export function EditorialPage({
         '--banner-height': bannerContent ? '36px' : '0px',
       } as React.CSSProperties}
     >
-      {bannerContent && (
+      {!!bannerContent && (
         <div className='slot-banner flex h-(--banner-height) items-center justify-center gap-2 bg-foreground px-4 text-background text-xs -mb-(--layout-gap)'>
           <div className='flex-1 text-center truncate [&_a]:underline [&_a]:font-medium [&_a]:hover:opacity-80 [&_p]:inline'>
             {bannerContent}
           </div>
-          {banner?.dismissible && <BannerDismiss content={banner.content} />}
+          {!!banner?.dismissible && <BannerDismiss content={banner.content} />}
         </div>
       )}
 
@@ -127,7 +127,7 @@ export function EditorialPage({
                     style={{ height: 'var(--logo-height)', width: 'auto' }}
                     className={siteConfig.logo.dark ? 'dark:hidden' : 'dark:invert'}
                   />
-                  {siteConfig.logo.dark && (
+                  {!!siteConfig.logo.dark && (
                     <img
                       src={siteConfig.logo.dark}
                       alt={siteName || 'Logo'}
@@ -195,7 +195,7 @@ export function EditorialPage({
                 normalize-config.ts. Rendered as a compact pill at the right
                 of the navbar so users who configure `navbar.primary` see it
                 without extra setup. */}
-            {primary && primary.href && (
+            {!!primary?.href && (
               <a
                 href={primary.href}
                 target={primary.href.startsWith('http') ? '_blank' : undefined}
@@ -229,7 +229,7 @@ export function EditorialPage({
 
       {/* Hero: rendered above the 3-column grid, using the same column widths
           so hero content aligns with the center content column (col 2). */}
-      {hero && (
+      {!!hero && (
         <div className='mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
           <div className='lg:col-start-2'>{hero}</div>
         </div>

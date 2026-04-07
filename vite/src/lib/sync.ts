@@ -60,6 +60,7 @@ function collectAllPagesFromTab(tab: NavTab): NavPage[] {
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
+const CACHE_FORMAT_VERSION = 2
 
 const require = createRequire(import.meta.url)
 const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
@@ -213,6 +214,7 @@ export async function syncNavigation({
       headings: processed.headings,
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
+      frontmatter: processed.frontmatter,
     }
   }
 
@@ -232,9 +234,7 @@ export async function syncNavigation({
       root: rootToHref(configGroup.root),
       tag: configGroup.tag,
       expanded: configGroup.expanded,
-      pages: await Promise.all(configGroup.pages.map((entry) => {
-        return enrichPageEntry(entry)
-      })),
+      pages: await Promise.all(configGroup.pages.map(enrichPageEntry)),
     }
   }
 
@@ -244,18 +244,12 @@ export async function syncNavigation({
       icon: serializeIcon(configTab.icon, `tab "${configTab.tab}"`),
       hidden: configTab.hidden,
       align: configTab.align,
-      groups: await Promise.all(configTab.groups.map((g) => {
-        return enrichGroup(g)
-      })),
+      groups: await Promise.all(configTab.groups.map(enrichGroup)),
     }
   }
 
   // 4. Build enriched navigation
-  const navigation: Navigation = await Promise.all(
-    config.navigation.tabs.map((tab) => {
-      return enrichTab(tab)
-    }),
-  )
+  const navigation: Navigation = await Promise.all(config.navigation.tabs.map(enrichTab))
 
   async function enrichVersionItem(v: ConfigVersionItem): Promise<NavVersionItem> {
     const innerTabs = await Promise.all(v.navigation.tabs.map(enrichTab))
@@ -411,7 +405,12 @@ function copyToPublic({ filePath, imageOutputDir }: { filePath: string; imageOut
 
 type NavCacheEnvelope = {
   version: string
+  format: number
   navigation: Navigation
+}
+
+function hasFrontmatterCache(nav: Navigation): boolean {
+  return Array.from(buildPageIndex(nav).values()).every((page) => page.frontmatter !== undefined)
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -423,8 +422,9 @@ function readCache(cachePath: string): Navigation | null {
     // Package-version envelope — reject caches from older versions so new
     // fields (e.g. page `icon`) aren't silently missing from cached NavPage
     // objects. Every publish naturally invalidates stale caches.
-    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
-      return raw.navigation as Navigation
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION && raw.format === CACHE_FORMAT_VERSION) {
+      const navigation = raw.navigation as Navigation
+      return hasFrontmatterCache(navigation) ? navigation : null
     }
     // Old format (bare array) or different version → discard.
     return null
@@ -436,7 +436,7 @@ function readCache(cachePath: string): Navigation | null {
 function writeCache(cachePath: string, nav: Navigation): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, navigation: nav }
+  const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, format: CACHE_FORMAT_VERSION, navigation: nav }
   fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 

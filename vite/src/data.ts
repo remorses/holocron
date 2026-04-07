@@ -16,7 +16,7 @@
 
 import { config, navigation, switchers } from 'virtual:holocron-config'
 import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigation.ts'
-import { isNavPage, isNavGroup } from './navigation.ts'
+import { isNavPage, isNavGroup, isVisibleNavPage } from './navigation.ts'
 import type { SearchEntry } from './lib/search.ts'
 import type { ConfigIcon } from './config.ts'
 
@@ -59,7 +59,7 @@ export function findFirstPageInTab(tab: NavTab): NavPage | undefined {
 
 function findFirstPageInGroup(group: NavGroup): NavPage | undefined {
   for (const entry of group.pages) {
-    if (isNavPage(entry)) return entry
+    if (isNavPage(entry) && isVisibleNavPage(entry)) return entry
     if (isNavGroup(entry)) {
       const found = findFirstPageInGroup(entry)
       if (found) return found
@@ -94,7 +94,7 @@ function walkExpandedGroups(groups: NavGroup[], parentPath: string, out: string[
     if (group.expanded === true) {
       out.push(key)
     }
-    const nestedGroups = group.pages.filter(isNavGroup) as NavGroup[]
+    const nestedGroups = group.pages.filter(isNavGroup)
     if (nestedGroups.length > 0) {
       walkExpandedGroups(nestedGroups, key, out)
     }
@@ -114,7 +114,7 @@ function walkGroups(
       out.push(key)
       matchedAny = true
     }
-    const nestedGroups = group.pages.filter(isNavGroup) as NavGroup[]
+    const nestedGroups = group.pages.filter(isNavGroup)
     if (nestedGroups.length > 0) {
       walkGroups(nestedGroups, pageHref, key, out)
     }
@@ -183,13 +183,23 @@ function collectEntriesFromGroups(
     const key = parentPath ? `${parentPath}\0${group.group}` : group.group
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
-        out.push({ label: entry.title, href: entry.href, groupPath: key, pageHref: null })
+        if (!isVisibleNavPage(entry)) continue
+        out.push({
+          label: entry.frontmatter.sidebarTitle ?? entry.title,
+          href: entry.href,
+          groupPath: key,
+          pageHref: null,
+          searchText: [entry.title, entry.frontmatter.sidebarTitle, ...(entry.frontmatter.keywords ?? [])]
+            .filter(Boolean)
+            .join(' '),
+        })
         for (const h of entry.headings) {
           out.push({
             label: h.text,
             href: `${entry.href}#${h.slug}`,
             groupPath: key,
             pageHref: entry.href,
+            searchText: h.text,
           })
         }
       } else if (isNavGroup(entry)) {
@@ -267,7 +277,7 @@ function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[]): void {
   for (const group of groups) {
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
-        out.push(entry.href)
+        if (isVisibleNavPage(entry)) out.push(entry.href)
       } else if (isNavGroup(entry)) {
         collectPagesFromGroupsFlat([entry], out)
       }
