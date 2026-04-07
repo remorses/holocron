@@ -1,8 +1,8 @@
 /**
  * Generated fallback logo route helpers + renderer backed by Takumi's ImageResponse.
  *
- * The font lives under `src/assets/` and is resolved via `package.json` so it
- * works from both source imports and the published dist build.
+ * The font is referenced via `new URL(..., import.meta.url)` so Vite can emit
+ * and rewrite it into production server output.
  */
 
 import fs from 'node:fs'
@@ -69,14 +69,42 @@ export type GeneratedLogoOptions = {
 }
 
 const FONT_FAMILY = 'Neug Asia Script Demo'
-const packageRoot = path.dirname(fileURLToPath(new URL('../../package.json', import.meta.url)))
-const fontPath = path.join(packageRoot, 'src/assets/neug-asia-script-demo.ttf')
+const fontUrl = new URL('../assets/neug-asia-script-demo.ttf', import.meta.url)
+const FONT_ASSET_PREFIX = 'neug-asia-script-demo'
+const isBuiltRuntime = import.meta.url.endsWith('.js')
 
 let cachedFontData: Buffer | undefined
 
+function findEmittedFontPath(searchDir: string): string | undefined {
+  if (!fs.existsSync(searchDir)) return undefined
+  const assetName = fs
+    .readdirSync(searchDir)
+    .find((entry) => entry.startsWith(FONT_ASSET_PREFIX) && entry.endsWith('.ttf'))
+  return assetName ? path.join(searchDir, assetName) : undefined
+}
+
+function getFontPath(): string {
+  const directFontPath = fileURLToPath(fontUrl)
+  if (fs.existsSync(directFontPath)) return directFontPath
+
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url))
+  const emittedFontPath =
+    findEmittedFontPath(path.join(moduleDir, 'assets')) ||
+    findEmittedFontPath(path.join(moduleDir, '../client/assets'))
+
+  if (emittedFontPath) return emittedFontPath
+
+  throw new Error(`Generated logo font not found at ${directFontPath}`)
+}
+
 function getFontData(): Buffer {
-  cachedFontData ??= fs.readFileSync(fontPath)
+  cachedFontData ??= fs.readFileSync(getFontPath())
   return cachedFontData
+}
+
+function getTakumiModule() {
+  if (!isBuiltRuntime) return undefined
+  return import('@takumi-rs/wasm/vite').then((module) => module.default)
 }
 
 function getLogoSize(text: string): { width: number; height: number } {
@@ -122,6 +150,7 @@ export function createGeneratedLogoResponse(options: GeneratedLogoOptions): Imag
     width,
     height,
     format: 'png',
+    module: getTakumiModule(),
     loadDefaultFonts: false,
     fonts: [
       {
