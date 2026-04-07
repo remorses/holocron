@@ -178,6 +178,59 @@ title: Setup
     `)
   })
 
+  test('preserves typed page frontmatter metadata on NavPage', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['api'] }],
+      },
+      {
+        api: `---
+title: API Overview
+description: Typed metadata should survive sync.
+sidebarTitle: API
+tag: BETA
+deprecated: true
+hidden: true
+noindex: true
+keywords: ["configuration", "setup"]
+robots: noarchive
+"og:title": Social API Overview
+"twitter:card": summary
+---
+
+## Endpoint`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const page = findPage(result.navigation, 'api')!
+    expect(page.frontmatter).toMatchInlineSnapshot(`
+      {
+        "deprecated": true,
+        "description": "Typed metadata should survive sync.",
+        "hidden": true,
+        "keywords": [
+          "configuration",
+          "setup",
+        ],
+        "noindex": true,
+        "og:title": "Social API Overview",
+        "robots": "noarchive",
+        "sidebarTitle": "API",
+        "tag": "BETA",
+        "title": "API Overview",
+        "twitter:card": "summary",
+      }
+    `)
+  })
+
   test('MDX content is stored separately from navigation tree', async () => {
     const project = tracked(createProject(
       {

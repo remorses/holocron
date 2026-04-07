@@ -5,13 +5,7 @@ import {
   generateTocTree,
 } from './toc-tree.ts'
 import { mdxParse } from 'safe-mdx/parse'
-import type { Root, PhrasingContent } from 'mdast'
-
-/* ── Helper: parse real MDX string into mdast ────────────────────────── */
-
-function parse(mdx: string): Root {
-  return mdxParse(mdx) as Root
-}
+import type { PhrasingContent } from 'mdast'
 
 /* ── slugify ─────────────────────────────────────────────────────────── */
 
@@ -94,7 +88,7 @@ describe('extractText', () => {
 
 describe('generateTocTree', () => {
   test('flat h2 headings become root-level siblings', () => {
-    const mdast = parse(`## First
+    const mdast = mdxParse(`## First
 
 Some text.
 
@@ -129,7 +123,7 @@ More text.
   })
 
   test('h3 nests under preceding h2', () => {
-    const mdast = parse(`## Parent
+    const mdast = mdxParse(`## Parent
 
 Intro text.
 
@@ -163,7 +157,7 @@ Intro text.
   })
 
   test('deep nesting h2 → h3 → h4', () => {
-    const mdast = parse(`## Section
+    const mdast = mdxParse(`## Section
 
 ### Subsection
 
@@ -176,7 +170,7 @@ Intro text.
   })
 
   test('skipped level: h2 → h4 (h4 still nests under h2)', () => {
-    const mdast = parse(`## Top
+    const mdast = mdxParse(`## Top
 
 #### Skipped to h4`)
     const tree = generateTocTree(mdast)
@@ -187,7 +181,7 @@ Intro text.
   })
 
   test('new h2 after nested children resets depth', () => {
-    const mdast = parse(`## First
+    const mdast = mdxParse(`## First
 
 ### Nested
 
@@ -200,12 +194,12 @@ Intro text.
   })
 
   test('empty document produces empty tree', () => {
-    const mdast = parse(`Just plain text, no headings at all.`)
+    const mdast = mdxParse(`Just plain text, no headings at all.`)
     expect(generateTocTree(mdast)).toMatchInlineSnapshot(`[]`)
   })
 
   test('non-heading nodes are ignored', () => {
-    const mdast = parse(`Some paragraph text.
+    const mdast = mdxParse(`Some paragraph text.
 
 ## Only Heading
 
@@ -216,7 +210,7 @@ More paragraph text.`)
   })
 
   test('realistic MDX page with frontmatter and mixed content', () => {
-    const mdast = parse(`---
+    const mdast = mdxParse(`---
 title: API Reference
 ---
 
@@ -256,10 +250,9 @@ Creates a new user.
   })
 
   test('heading with inline formatting', () => {
-    const mdast = parse(`## Install with **npm** or *yarn*`)
+    const mdast = mdxParse(`## Install with **npm** or *yarn*`)
     const tree = generateTocTree(mdast)
     expect(tree[0]!.label).toBe('Install with npm or yarn')
   })
 })
-
 

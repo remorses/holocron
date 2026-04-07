@@ -19,6 +19,95 @@ description: A test page
     `)
   })
 
+  test('parses page SEO metadata, keywords, and sidebar fields from YAML frontmatter', () => {
+    const result = processMdx(`---
+title: API Overview
+sidebarTitle: API
+tag: BETA
+deprecated: true
+hidden: false
+noindex: true
+keywords: ["configuration", "setup"]
+robots: noarchive
+"og:title": Social API Overview
+"og:image": https://example.com/og.png
+"twitter:card": summary
+---
+
+# Content`)
+
+    expect(result.frontmatter).toMatchInlineSnapshot(`
+      {
+        "deprecated": true,
+        "hidden": false,
+        "keywords": [
+          "configuration",
+          "setup",
+        ],
+        "noindex": true,
+        "og:image": "https://example.com/og.png",
+        "og:title": "Social API Overview",
+        "robots": "noarchive",
+        "sidebarTitle": "API",
+        "tag": "BETA",
+        "title": "API Overview",
+        "twitter:card": "summary",
+      }
+    `)
+  })
+
+  test('coerces numeric SEO dimension fields without dropping the rest of frontmatter', () => {
+    const result = processMdx(`---
+title: Numeric Widths
+sidebarTitle: Numeric
+"og:image:width": 1400
+"twitter:image:height": 700
+---
+
+# Content`)
+
+    expect(result.frontmatter).toMatchInlineSnapshot(`
+      {
+        "og:image:width": "1400",
+        "sidebarTitle": "Numeric",
+        "title": "Numeric Widths",
+        "twitter:image:height": "700",
+      }
+    `)
+  })
+
+  test('preserves additional frontmatter fields without failing parsing', () => {
+    const result = processMdx(`---
+title: Extra Fields
+customString: hello
+customNumber: 42
+customList:
+  - one
+  - two
+customObject:
+  enabled: true
+  ratio: 1.5
+---
+
+# Content`)
+
+    expect(result.frontmatter).toMatchInlineSnapshot(`
+      {
+        "customList": [
+          "one",
+          "two",
+        ],
+        "customNumber": 42,
+        "customObject": {
+          "enabled": true,
+          "ratio": 1.5,
+        },
+        "customString": "hello",
+        "title": "Extra Fields",
+      }
+    `)
+  })
+
   test('extracts headings with depth, text, slug', () => {
     const result = processMdx(`## Getting Started
 

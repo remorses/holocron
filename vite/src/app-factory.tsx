@@ -68,6 +68,7 @@ import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl } from './lib/og-utils.ts'
+import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -103,6 +104,8 @@ export type HolocronLoaderData = {
   headTitle: string
   /** Value for `<meta name="robots">`, or `undefined` to omit the tag. */
   headRobots: string | undefined
+  /** Parsed frontmatter for the active page. */
+  currentPageFrontmatter: PageFrontmatter | undefined
 }
 
 /* ── Constants ───────────────────────────────────────────────────────── */
@@ -116,7 +119,7 @@ function getBannerJsx(request: Request): React.ReactNode | undefined {
   const pageCookies = parseCookies(request.headers.get('cookie') || '')
   if (pageCookies['holocron-banner-dismissed'] === config.banner.content) return undefined
   const bannerMdx = config.banner.content
-  const bannerMdast = mdxParse(bannerMdx) as Root
+  const bannerMdast = mdxParse(bannerMdx)
   return <RenderNodes markdown={bannerMdx} nodes={bannerMdast.children} />
 }
 
@@ -127,8 +130,17 @@ function renderMdxPage(
   ogImageUrl: string,
 ) {
   const pageMdx = mdxContent[slug]!
+  const pageSeoMeta = getPageSeoMeta(loaderData.currentPageFrontmatter)
+  const pageKeywords = serializeKeywords(loaderData.currentPageFrontmatter?.keywords)
+  const pageOgImage = pageSeoMeta['og:image'] ?? ogImageUrl
+  const pageTwitterImage = pageSeoMeta['twitter:image'] ?? pageOgImage
+  const pageOgDescription = pageSeoMeta['og:description'] ?? loaderData.currentPageDescription
+  const pageTwitterDescription = pageSeoMeta['twitter:description'] ?? loaderData.currentPageDescription
+  const pageOgTitle = pageSeoMeta['og:title'] ?? loaderData.headTitle
+  const pageTwitterTitle = pageSeoMeta['twitter:title'] ?? loaderData.headTitle
+  const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
 
-  const mdast = mdxParse(pageMdx) as Root
+  const mdast = mdxParse(pageMdx)
   const heroNodes = mdast.children.filter(isHeroNode)
   const contentChildren = mdast.children.filter((node) => !isHeroNode(node))
   const contentMdast: Root = { type: 'root', children: contentChildren }
@@ -156,17 +168,36 @@ function renderMdxPage(
     <>
       <Head>
         <Head.Title>{loaderData.headTitle}</Head.Title>
-        <Head.Meta property='og:title' content={loaderData.headTitle} />
+        <Head.Meta property='og:title' content={pageOgTitle} />
+        <Head.Meta name='twitter:title' content={pageTwitterTitle} />
         {loaderData.currentPageDescription && (
           <>
             <Head.Meta name='description' content={loaderData.currentPageDescription} />
-            <Head.Meta property='og:description' content={loaderData.currentPageDescription} />
-            <Head.Meta name='twitter:description' content={loaderData.currentPageDescription} />
           </>
         )}
-        <Head.Meta property='og:image' content={ogImageUrl} />
-        <Head.Meta name='twitter:image' content={ogImageUrl} />
-        <Head.Meta name='twitter:card' content='summary_large_image' />
+        {pageOgDescription && <Head.Meta property='og:description' content={pageOgDescription} />}
+        {pageTwitterDescription && <Head.Meta name='twitter:description' content={pageTwitterDescription} />}
+        {pageKeywords && <Head.Meta name='keywords' content={pageKeywords} />}
+        {loaderData.headRobots && <Head.Meta name='robots' content={loaderData.headRobots} />}
+        <Head.Meta property='og:image' content={pageOgImage} />
+        <Head.Meta name='twitter:image' content={pageTwitterImage} />
+        <Head.Meta name='twitter:card' content={pageTwitterCard} />
+        {Object.entries(pageSeoMeta)
+          .filter(([name]) => ![
+            'robots',
+            'og:title',
+            'og:description',
+            'og:image',
+            'twitter:title',
+            'twitter:description',
+            'twitter:image',
+            'twitter:card',
+          ].includes(name))
+          .map(([name, content]) => (
+            name.startsWith('og:')
+              ? <Head.Meta key={name} property={name} content={content} />
+              : <Head.Meta key={name} name={name} content={content} />
+          ))}
       </Head>
       <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} />
     </>
@@ -236,7 +267,10 @@ export function createHolocronApp() {
   // /sitemap.xml
   app = app.get('/sitemap.xml', ({ request }: { request: Request }) => {
     const url = new URL(request.url)
-    const hrefs = Array.from(hrefToSlug.keys()).sort()
+    const hrefs = collectAllPages(navigation)
+      .filter((page) => isIndexablePage(page.frontmatter))
+      .map((page) => page.href)
+      .sort()
     const urls = hrefs
       .map((href: string) => `  <url><loc>${url.origin}${base}${href}</loc></url>`)
       .join('\n')
@@ -282,7 +316,9 @@ export function createHolocronApp() {
       files[slug + '.md'] = strToU8(mdx + POWERED_BY_FOOTER)
     }
     const zipped = zipSync(files)
-    return new Response(zipped.buffer as ArrayBuffer, {
+    const zipBody = new Uint8Array(zipped.byteLength)
+    zipBody.set(zipped)
+    return new Response(zipBody.buffer, {
       headers: {
         'content-type': 'application/zip',
         'content-disposition': 'attachment; filename="docs.zip"',
@@ -352,16 +388,24 @@ export function createHolocronApp() {
     const query = url.searchParams.get('q') || ''
     const allPages = collectAllPages(navigation)
     const results = allPages
+      .filter((page) => !page.frontmatter.hidden)
       .flatMap((page) => [
-        { title: page.title, href: page.href, type: 'page' as const },
+        {
+          title: page.frontmatter.sidebarTitle ?? page.title,
+          href: page.href,
+          type: 'page' as const,
+          searchText: [page.title, page.frontmatter.sidebarTitle, ...(page.frontmatter.keywords ?? [])].filter(Boolean).join(' '),
+        },
         ...page.headings.map((h) => ({
           title: h.text,
           href: `${page.href}#${h.slug}`,
           type: 'heading' as const,
+          searchText: h.text,
         })),
       ])
-      .filter((item) => item.title.toLowerCase().includes(query.toLowerCase()))
+      .filter((item) => item.searchText.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 20)
+      .map(({ title, href, type }) => ({ title, href, type }))
 
     return new Response(JSON.stringify(results), {
       headers: {
@@ -471,7 +515,7 @@ export function createHolocronApp() {
 
         if (chunk.type === 'text-end') {
           if (textBuffer.trim()) {
-            const mdast = mdxParse(textBuffer) as Root
+            const mdast = mdxParse(textBuffer)
             const jsx = (
               <ChatRenderNodes
                 markdown={textBuffer}
@@ -554,6 +598,7 @@ export function createHolocronApp() {
         notFoundPath: '/' + rawSlug,
         headTitle: `Page not found — ${config.name}`,
         headRobots: 'noindex',
+        currentPageFrontmatter: undefined,
       }
     }
 
@@ -568,7 +613,8 @@ export function createHolocronApp() {
       activeDropdownHref: resolveActiveDropdownHref(currentPage.href),
       notFoundPath: undefined,
       headTitle: `${currentPage.title} — ${config.name}`,
-      headRobots: undefined,
+      headRobots: getPageRobots(currentPage.frontmatter),
+      currentPageFrontmatter: currentPage.frontmatter,
     }
   })
 

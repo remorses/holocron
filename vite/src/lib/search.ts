@@ -11,6 +11,7 @@ import { create, insertMultiple, search, type AnyOrama } from '@orama/orama'
 export type SearchEntry = {
   label: string
   href: string
+  searchText: string
   /** Path-based group key ("\0"-joined ancestor names) for auto-expanding. null for top-level groups. */
   groupPath: string | null
   /** Page href this entry belongs to (null for groups and pages themselves). */
@@ -38,14 +39,15 @@ export const emptySearchState: SearchState = {
 /* ── Orama DB ────────────────────────────────────────────────────────── */
 
 const tocSchema = {
-  title: 'string',
+  href: 'string',
+  text: 'string',
 } as const
 
 /** Create and populate an Orama DB from search entries. Synchronous. */
 export function createSearchDb({ entries }: { entries: SearchEntry[] }): AnyOrama {
   const db = create({ schema: tocSchema })
   insertMultiple(db, entries.map((e) => {
-    return { title: e.label }
+    return { href: e.href, text: e.searchText }
   })) as string[]
   return db
 }
@@ -66,10 +68,10 @@ export function searchSidebar({ db, query, entries }: {
 
   const results = search(db, {
     term: trimmed,
-    properties: ['title'],
+    properties: ['text'],
     tolerance: 1,
     limit: entries.length,
-  }) as { hits: Array<{ id: string; score: number; document: { title: string } }> }
+  }) as { hits: Array<{ id: string; score: number; document: { href: string; text: string } }> }
 
   if (results.hits.length === 0) {
     return {
@@ -80,13 +82,12 @@ export function searchSidebar({ db, query, entries }: {
     }
   }
 
-  /* Map matched titles back to hrefs. */
-  const matchedTitles = new Set(results.hits.map((h) => { return h.document.title }))
+  const matchedSearchHrefs = new Set(results.hits.map((h) => { return h.document.href }))
   const matchedHrefs = new Set<string>()
   const expandGroupKeys = new Set<string>()
 
   for (const entry of entries) {
-    if (matchedTitles.has(entry.label)) {
+    if (matchedSearchHrefs.has(entry.href)) {
       matchedHrefs.add(entry.href)
 
       /* Expand the group this entry lives in */

@@ -16,7 +16,7 @@
 
 import { config, navigation, switchers } from 'virtual:holocron-config'
 import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigation.ts'
-import { isNavPage, isNavGroup } from './navigation.ts'
+import { isNavPage, isNavGroup, isVisibleNavPage } from './navigation.ts'
 import type { SearchEntry } from './lib/search.ts'
 import type { ConfigIcon } from './config.ts'
 import { resolveLogo } from './lib/generated-logo.tsx'
@@ -60,7 +60,7 @@ export function findFirstPageInTab(tab: NavTab): NavPage | undefined {
 
 function findFirstPageInGroup(group: NavGroup): NavPage | undefined {
   for (const entry of group.pages) {
-    if (isNavPage(entry)) return entry
+    if (isNavPage(entry) && isVisibleNavPage(entry)) return entry
     if (isNavGroup(entry)) {
       const found = findFirstPageInGroup(entry)
       if (found) return found
@@ -95,7 +95,7 @@ function walkExpandedGroups(groups: NavGroup[], parentPath: string, out: string[
     if (group.expanded === true) {
       out.push(key)
     }
-    const nestedGroups = group.pages.filter(isNavGroup) as NavGroup[]
+    const nestedGroups = group.pages.filter(isNavGroup)
     if (nestedGroups.length > 0) {
       walkExpandedGroups(nestedGroups, key, out)
     }
@@ -115,7 +115,7 @@ function walkGroups(
       out.push(key)
       matchedAny = true
     }
-    const nestedGroups = group.pages.filter(isNavGroup) as NavGroup[]
+    const nestedGroups = group.pages.filter(isNavGroup)
     if (nestedGroups.length > 0) {
       walkGroups(nestedGroups, pageHref, key, out)
     }
@@ -184,13 +184,23 @@ function collectEntriesFromGroups(
     const key = parentPath ? `${parentPath}\0${group.group}` : group.group
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
-        out.push({ label: entry.title, href: entry.href, groupPath: key, pageHref: null })
+        if (!isVisibleNavPage(entry)) continue
+        out.push({
+          label: entry.frontmatter.sidebarTitle ?? entry.title,
+          href: entry.href,
+          groupPath: key,
+          pageHref: null,
+          searchText: [entry.title, entry.frontmatter.sidebarTitle, ...(entry.frontmatter.keywords ?? [])]
+            .filter(Boolean)
+            .join(' '),
+        })
         for (const h of entry.headings) {
           out.push({
             label: h.text,
             href: `${entry.href}#${h.slug}`,
             groupPath: key,
             pageHref: entry.href,
+            searchText: h.text,
           })
         }
       } else if (isNavGroup(entry)) {
@@ -263,21 +273,21 @@ export type DropdownSelectItem = {
   pageHrefs: string[]
 }
 
-function collectPageHrefsFromTabs(tabs: NavTab[]): string[] {
+function collectPageHrefsFromTabs(tabs: NavTab[], includeHidden: boolean): string[] {
   const hrefs: string[] = []
   for (const tab of tabs) {
-    collectPagesFromGroupsFlat(tab.groups, hrefs)
+    collectPagesFromGroupsFlat(tab.groups, hrefs, includeHidden)
   }
   return hrefs
 }
 
-function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[]): void {
+function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[], includeHidden: boolean): void {
   for (const group of groups) {
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
-        out.push(entry.href)
+        if (includeHidden || isVisibleNavPage(entry)) out.push(entry.href)
       } else if (isNavGroup(entry)) {
-        collectPagesFromGroupsFlat([entry], out)
+        collectPagesFromGroupsFlat([entry], out, includeHidden)
       }
     }
   }
@@ -287,8 +297,9 @@ function buildVersionSelectItems(): VersionSelectItem[] {
   return switchers.versions
     .filter((v) => !v.hidden)
     .map((v) => {
-      const pageHrefs = collectPageHrefsFromTabs(v.navigation.tabs)
-      const firstHref = pageHrefs[0] || '/'
+      const pageHrefs = collectPageHrefsFromTabs(v.navigation.tabs, true)
+      const visiblePageHrefs = collectPageHrefsFromTabs(v.navigation.tabs, false)
+      const firstHref = visiblePageHrefs[0] || pageHrefs[0] || '/'
       return {
         label: v.version,
         ...(v.tag && { tag: v.tag }),
@@ -317,8 +328,9 @@ function buildDropdownSelectItems(): DropdownSelectItem[] {
           pageHrefs: [],
         }
       }
-      const pageHrefs = d.navigation ? collectPageHrefsFromTabs(d.navigation.tabs) : []
-      const firstHref = pageHrefs[0] || d.href || '/'
+      const pageHrefs = d.navigation ? collectPageHrefsFromTabs(d.navigation.tabs, true) : []
+      const visiblePageHrefs = d.navigation ? collectPageHrefsFromTabs(d.navigation.tabs, false) : []
+      const firstHref = visiblePageHrefs[0] || pageHrefs[0] || d.href || '/'
       return {
         label: d.dropdown,
         ...(d.icon && { icon: d.icon }),

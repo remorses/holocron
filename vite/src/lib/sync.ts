@@ -60,7 +60,6 @@ function collectAllPagesFromTab(tab: NavTab): NavPage[] {
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
-
 const require = createRequire(import.meta.url)
 const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
@@ -213,6 +212,7 @@ export async function syncNavigation({
       headings: processed.headings,
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
+      frontmatter: processed.frontmatter,
     }
   }
 
@@ -232,9 +232,7 @@ export async function syncNavigation({
       root: rootToHref(configGroup.root),
       tag: configGroup.tag,
       expanded: configGroup.expanded,
-      pages: await Promise.all(configGroup.pages.map((entry) => {
-        return enrichPageEntry(entry)
-      })),
+      pages: await Promise.all(configGroup.pages.map(enrichPageEntry)),
     }
   }
 
@@ -244,18 +242,12 @@ export async function syncNavigation({
       icon: serializeIcon(configTab.icon, `tab "${configTab.tab}"`),
       hidden: configTab.hidden,
       align: configTab.align,
-      groups: await Promise.all(configTab.groups.map((g) => {
-        return enrichGroup(g)
-      })),
+      groups: await Promise.all(configTab.groups.map(enrichGroup)),
     }
   }
 
   // 4. Build enriched navigation
-  const navigation: Navigation = await Promise.all(
-    config.navigation.tabs.map((tab) => {
-      return enrichTab(tab)
-    }),
-  )
+  const navigation: Navigation = await Promise.all(config.navigation.tabs.map(enrichTab))
 
   async function enrichVersionItem(v: ConfigVersionItem): Promise<NavVersionItem> {
     const innerTabs = await Promise.all(v.navigation.tabs.map(enrichTab))
@@ -426,7 +418,6 @@ function readCache(cachePath: string): Navigation | null {
     if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
       return raw.navigation as Navigation
     }
-    // Old format (bare array) or different version → discard.
     return null
   } catch {
     return null

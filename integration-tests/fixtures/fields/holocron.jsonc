@@ -10,6 +10,8 @@
   //   - `group.expanded: true` → group starts expanded (children visible
   //     in initial SSR HTML without client interaction)
   //   - wrapper groups whose only descendants are hidden → pruned
+  //   - page frontmatter for sidebar labels, tags, deprecation, hidden,
+  //     keywords, noindex, and page-level SEO metadata
   "name": "Fields Docs",
   "description": "A fixture that wires every previously-ignored config field through to runtime.",
   "favicon": { "light": "/favicon-light.svg", "dark": "/favicon-dark.svg" },
@@ -39,6 +41,9 @@
             "group": "Outer",
             "pages": [
               "index",
+              "meta-page",
+              "noindex-page",
+              "hidden-page",
               {
                 "group": "Expanded Nested",
                 "expanded": true,

@@ -75,7 +75,7 @@ function NavDrawerInner() {
     setPortalTarget(document.body)
   }, [])
 
-  if (!portalTarget) return null
+  if (!portalTarget || !isOpen) return null
 
   return createPortal(
     <div style={{ position: 'relative', zIndex: 200 }}>
@@ -95,6 +95,7 @@ function NavDrawerInner() {
 
       {/* Drawer panel — slides from left */}
       <div
+        aria-hidden={!isOpen}
         style={{
           position: 'fixed',
           left: 0,
@@ -186,7 +187,7 @@ function NavDrawerInner() {
                   <span>{link.label}</span>
                 </a>
               ))}
-              {primary?.href && (
+              {!!primary?.href && (
                 <a
                   href={primary.href}
                   target={primary.href.startsWith('http') ? '_blank' : undefined}
