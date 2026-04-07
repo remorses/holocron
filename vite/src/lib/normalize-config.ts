@@ -171,24 +171,31 @@ function normalizeInnerNavigation(raw: Record<string, unknown>): { tabs: ConfigN
   return { tabs: [], anchors: innerAnchors }
 }
 
-/** Normalize `navigation.versions` into ConfigVersionItem[]. */
+/** Normalize `navigation.versions` into ConfigVersionItem[].
+ *  Versions with no inner content (no tabs/groups/pages) are dropped. */
 function normalizeVersions(rawVersions: unknown[]): ConfigVersionItem[] {
-  return rawVersions.map((v) => {
+  return rawVersions.flatMap((v) => {
     const obj = v as Record<string, unknown>
     const version = (obj.version as string) || ''
-    return {
+    const nav = normalizeInnerNavigation(obj)
+    if (nav.tabs.length === 0) {
+      console.warn(`[holocron] version "${version}" has no content — skipping.`)
+      return []
+    }
+    return [{
       version,
       ...(obj.default === true && { default: true }),
       ...(typeof obj.tag === 'string' && { tag: obj.tag }),
       ...(obj.hidden === true && { hidden: true }),
-      navigation: normalizeInnerNavigation(obj),
-    }
+      navigation: nav,
+    }]
   })
 }
 
-/** Normalize `navigation.dropdowns` into ConfigDropdownItem[]. */
+/** Normalize `navigation.dropdowns` into ConfigDropdownItem[].
+ *  Dropdowns with no href and no inner content are dropped. */
 function normalizeDropdowns(rawDropdowns: unknown[]): ConfigDropdownItem[] {
-  return rawDropdowns.map((d) => {
+  return rawDropdowns.flatMap((d) => {
     const obj = d as Record<string, unknown>
     const name = (obj.dropdown as string) || ''
     const icon = sanitizeIcon(obj.icon as ConfigIcon | undefined, `dropdown "${name}"`)
@@ -196,21 +203,29 @@ function normalizeDropdowns(rawDropdowns: unknown[]): ConfigDropdownItem[] {
 
     // Link-only dropdown (has href, no content)
     if (href && !obj.tabs && !obj.groups && !obj.pages) {
-      return {
+      const item: ConfigDropdownItem = {
         dropdown: name,
         ...(icon !== undefined && { icon }),
         ...(obj.hidden === true && { hidden: true }),
         href,
       }
+      return [item]
     }
 
-    return {
+    const nav = normalizeInnerNavigation(obj)
+    if (nav.tabs.length === 0 && !href) {
+      console.warn(`[holocron] dropdown "${name}" has no content and no href — skipping.`)
+      return []
+    }
+
+    const item: ConfigDropdownItem = {
       dropdown: name,
       ...(icon !== undefined && { icon }),
       ...(obj.hidden === true && { hidden: true }),
-      ...(href && { href }),
-      navigation: normalizeInnerNavigation(obj),
+      ...(href ? { href } : {}),
+      navigation: nav,
     }
+    return [item]
   })
 }
 
@@ -271,19 +286,17 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
       ...(Array.isArray(obj.products) ? normalizeProducts(obj.products) : []),
     ]
 
-    // Flatten all version/dropdown inner tabs into the main tabs array
-    // so every page from every version/dropdown gets a route.
+    // Flatten version/dropdown inner tabs for routing. Inner anchors stay
+    // scoped to their switcher item — only global/root anchors go here.
     const flatTabs: ConfigNavTab[] = []
     const flatAnchors: ConfigAnchor[] = [...allAnchors]
 
     for (const v of versions) {
       flatTabs.push(...v.navigation.tabs)
-      flatAnchors.push(...v.navigation.anchors)
     }
     for (const d of dropdowns) {
       if (d.navigation) {
         flatTabs.push(...d.navigation.tabs)
-        flatAnchors.push(...d.navigation.anchors)
       }
     }
 

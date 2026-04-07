@@ -294,6 +294,7 @@ export async function syncNavigation({
   // 4c. Validate no duplicate page hrefs across versions/dropdowns
   if (versions.length > 0 || dropdowns.length > 0) {
     const hrefOwners = new Map<string, string>()
+
     for (const v of versions) {
       for (const tab of v.navigation.tabs) {
         for (const page of collectAllPagesFromTab(tab)) {

@@ -122,39 +122,14 @@ function groupsContainHref(groups: NavGroup[], href: string): boolean {
   return false
 }
 
-/**
- * Find the active tab based on the current URL path.
- * Uses exact page-membership matching first, falls back to prefix heuristic.
- */
+/** Find the active tab by exact page-membership matching. */
 export function getActiveTab(nav: Navigation, pathname: string): NavTab {
   if (nav.length <= 1) {
     return nav[0] ?? { tab: '', groups: [] }
   }
 
-  // Exact match: find the tab that actually contains this page href
   const exact = nav.find((tab) => tabContainsHref(tab, pathname))
-  if (exact) return exact
-
-  // Fallback: longest URL prefix (for pages not in navigation tree)
-  const tabsWithPrefix = nav.map((tab) => {
-    const firstPage = findFirstPage(tab.groups)
-    const prefix = firstPage
-      ? firstPage.href.split('/').slice(0, -1).join('/') || '/'
-      : '/'
-    return { tab, prefix }
-  })
-
-  const sorted = tabsWithPrefix.sort((a, b) => {
-    return b.prefix.length - a.prefix.length
-  })
-
-  for (const { tab, prefix } of sorted) {
-    if (prefix === '/' || pathname.startsWith(prefix)) {
-      return tab
-    }
-  }
-
-  return nav[0] ?? { tab: '', groups: [] }
+  return exact ?? nav[0] ?? { tab: '', groups: [] }
 }
 
 /**
