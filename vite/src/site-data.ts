@@ -1,18 +1,17 @@
 /**
- * Shared static site data.
- *
- * Imports raw config + navigation tree from `virtual:holocron-config` and
- * derives the values needed across both the server handler and the client
- * chrome components (tabs, header links, search entries, etc.).
+ * Pure site-data builders and selectors shared by source resolution and UI.
  */
 
-import { base, config, navigation } from 'virtual:holocron-config'
-import type { NavPage, NavTab, NavGroup, NavIcon } from './navigation.ts'
-import { isNavPage, isNavGroup } from './navigation.ts'
+import type { HolocronConfig } from './config.ts'
 import type { SearchEntry } from './lib/search.ts'
+import type { IconAtlas } from './lib/resolve-icons.ts'
+import type { Navigation, NavGroup, NavIcon, NavPage, NavPageEntry, NavTab } from './navigation.ts'
+import { isNavGroup, isNavPage } from './navigation.ts'
 
-export { config, navigation }
-export { base }
+export type HolocronFileEntry = {
+  slug: string
+  sha: string
+}
 
 export type TabItem = {
   label: string
@@ -26,6 +25,19 @@ export type HeaderLink = {
   href: string
   icon?: NavIcon
   type?: string
+}
+
+export type HolocronSiteData = {
+  version: string
+  config: HolocronConfig
+  navigation: Navigation
+  files: HolocronFileEntry[]
+  icons: IconAtlas
+  configSha: string
+  tabs: TabItem[]
+  headerLinks: HeaderLink[]
+  searchEntries: SearchEntry[]
+  firstPage: NavPage | undefined
 }
 
 export function findFirstPageInTab(tab: NavTab): NavPage | undefined {
@@ -47,7 +59,7 @@ function findFirstPageInGroup(group: NavGroup): NavPage | undefined {
   return undefined
 }
 
-export function collectAncestorGroupKeys(pageHref: string): string[] {
+export function collectAncestorGroupKeys(navigation: Navigation, pageHref: string): string[] {
   const out: string[] = []
   for (const tab of navigation) {
     walkGroups(tab.groups, pageHref, '', out)
@@ -103,7 +115,7 @@ function groupContainsPage(group: NavGroup, pageHref: string): boolean {
   return false
 }
 
-function buildTabItems(): TabItem[] {
+export function buildTabItems(config: HolocronConfig, navigation: Navigation): TabItem[] {
   const navTabs: TabItem[] = navigation
     .filter((t) => t.tab !== '' && !t.hidden)
     .map((t) => {
@@ -123,13 +135,13 @@ function buildTabItems(): TabItem[] {
   return [...navTabs, ...anchors]
 }
 
-function buildHeaderLinks(): HeaderLink[] {
+export function buildHeaderLinks(config: HolocronConfig): HeaderLink[] {
   return config.navbar.links.map((link) => {
     return { href: link.href, label: link.label, icon: link.icon, type: link.type }
   })
 }
 
-function buildSearchEntries(): SearchEntry[] {
+export function buildSearchEntries(navigation: Navigation): SearchEntry[] {
   const entries: SearchEntry[] = []
   for (const tab of navigation) {
     collectEntriesFromGroups(tab.groups, '', entries)
@@ -162,16 +174,44 @@ function collectEntriesFromGroups(
   }
 }
 
-export const tabs: TabItem[] = buildTabItems()
-export const headerLinks: HeaderLink[] = buildHeaderLinks()
-export const searchEntries: SearchEntry[] = buildSearchEntries()
-export const firstPage: NavPage | undefined = navigation[0]
-  ? findFirstPageInTab(navigation[0])
-  : undefined
-
-export function resolveActiveTabHref(pageHref: string | undefined): string | undefined {
+export function resolveActiveTabHref(tabs: TabItem[], pageHref: string | undefined): string | undefined {
   if (!pageHref) return tabs[0]?.href
   return (
     tabs.find((t) => pageHref.startsWith(t.href) && t.href !== '/')?.href ?? tabs[0]?.href
   )
+}
+
+export function buildSiteData(input: {
+  version: string
+  config: HolocronConfig
+  navigation: Navigation
+  files: HolocronFileEntry[]
+  icons: IconAtlas
+  configSha: string
+}): HolocronSiteData {
+  const tabs = buildTabItems(input.config, input.navigation)
+  return {
+    ...input,
+    tabs,
+    headerLinks: buildHeaderLinks(input.config),
+    searchEntries: buildSearchEntries(input.navigation),
+    firstPage: input.navigation[0] ? findFirstPageInTab(input.navigation[0]) : undefined,
+  }
+}
+
+export function buildHrefToSlugMapFromFiles(files: HolocronFileEntry[]): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const file of files) {
+    map.set(slugToHref(file.slug), file.slug)
+  }
+  return map
+}
+
+export function findFile(files: HolocronFileEntry[], slug: string): HolocronFileEntry | undefined {
+  return files.find((file) => file.slug === slug)
+}
+
+function slugToHref(slug: string): string {
+  if (slug === 'index') return '/'
+  return `/${slug.replace(/\/index$/, '')}`
 }

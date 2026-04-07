@@ -8,21 +8,14 @@ import { SafeMdxRenderer } from 'safe-mdx'
 import type { Root, Heading, RootContent, Image } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
 import {
-  Aside,
-  FullWidth,
-  Hero,
-  P,
-  A,
-  Code,
-  Caption,
-  CodeBlock,
-  SectionHeading,
-  ComparisonTable,
-  PixelatedImage,
-  Bleed,
-  List,
-  OL,
-  Li,
+  type HeadingLevel,
+} from '../components/markdown/typography.tsx'
+import { P, A, Code, Caption, SectionHeading } from '../components/markdown/typography.tsx'
+import { Bleed, List, OL, Li } from '../components/markdown/layout.tsx'
+import { ComparisonTable } from '../components/markdown/table.tsx'
+import { PixelatedImage } from '../components/markdown/image.tsx'
+import { Aside, FullWidth, Hero } from '../components/markdown/markers.tsx'
+import {
   Callout,
   Note,
   Warning,
@@ -30,9 +23,9 @@ import {
   Tip,
   Check,
   Danger,
-  TableOfContentsPanel,
-  type HeadingLevel,
-} from '../components/markdown/index.tsx'
+} from '../components/markdown/callout.tsx'
+import { TableOfContentsPanel } from '../components/toc-panel.tsx'
+import { CodeBlock } from '../components/markdown/code-block.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 
 function PixelatedImageWithProps(props: {

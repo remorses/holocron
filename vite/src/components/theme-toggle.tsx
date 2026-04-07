@@ -7,7 +7,7 @@
  * Hidden when `appearance.strict` is true.
  */
 
-import React, { useCallback, useSyncExternalStore } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { serialize } from 'cookie'
 
 function getTheme(): 'light' | 'dark' {
@@ -51,10 +51,17 @@ function setTheme(theme: 'light' | 'dark') {
 }
 
 export function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribe, getTheme, () => 'light')
+  const [theme, setThemeState] = useState<'light' | 'dark'>(() => getTheme())
+
+  useEffect(() => {
+    return subscribe(() => {
+      setThemeState(getTheme())
+    })
+  }, [])
 
   const toggle = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
+    setThemeState(theme === 'dark' ? 'light' : 'dark')
   }, [theme])
 
   return (

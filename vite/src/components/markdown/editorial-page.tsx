@@ -41,7 +41,7 @@ export type EditorialSection = {
 /**
  * Top-level page shell.
  *
- * All static site data (logo, site name, tabs, header links) comes from
+ * Static site data (logo, site name, tabs, header links) comes from
  * the shared `data.ts` module. Per-request state (active tab href) comes
  * from the Spiceflow loader via `useHolocronData()`. JSX content
  * (sections, hero, children) is still passed as props because it's

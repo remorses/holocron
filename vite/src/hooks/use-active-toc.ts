@@ -9,7 +9,7 @@
  * the right-sidebar TableOfContentsPanel can share the same scroll state.
  */
 
-import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export type ActiveTocSnapshot = {
   activeId: string
@@ -45,32 +45,32 @@ export function useActiveTocState({
 }: {
   fallbackId: string
 }) {
-  const snapshotRef = useRef<ActiveTocSnapshot>({ activeId: fallbackId, visibleIds: [] })
+  const [snapshot, setSnapshot] = useState<ActiveTocSnapshot>({ activeId: fallbackId, visibleIds: [] })
 
-  const subscribe = useCallback((onStoreChange: () => void) => {
+  useEffect(() => {
     const visibleIds = new Set<string>()
 
     const emit = (next: ActiveTocSnapshot) => {
-      if (
-        snapshotRef.current.activeId === next.activeId &&
-        sameStringArrays(snapshotRef.current.visibleIds, next.visibleIds)
-      ) {
-        return
-      }
-
-      snapshotRef.current = next
-      onStoreChange()
+      setSnapshot((current) => {
+        if (
+          current.activeId === next.activeId &&
+          sameStringArrays(current.visibleIds, next.visibleIds)
+        ) {
+          return current
+        }
+        return next
+      })
     }
 
     const emitFromVisibleIds = () => {
       const nextVisibleIds = sortVisibleHeadingIds(visibleIds)
-      const nextActiveId = nextVisibleIds.at(-1) ?? snapshotRef.current.activeId
+      const nextActiveId = nextVisibleIds.at(-1) ?? fallbackId
       emit({ activeId: nextActiveId, visibleIds: nextVisibleIds })
     }
 
     const hash = window.location.hash.replace(/^#/, '')
     if (hash) {
-      emit({ activeId: hash, visibleIds: snapshotRef.current.visibleIds })
+      emit({ activeId: hash, visibleIds: [] })
     }
 
     const headings = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
@@ -108,7 +108,7 @@ export function useActiveTocState({
         return
       }
 
-      emit({ activeId: nextHash, visibleIds: snapshotRef.current.visibleIds })
+      emit({ activeId: nextHash, visibleIds: sortVisibleHeadingIds(visibleIds) })
     }
 
     window.addEventListener('hashchange', onHashChange)
@@ -117,16 +117,7 @@ export function useActiveTocState({
       window.removeEventListener('hashchange', onHashChange)
       observer.disconnect()
     }
-  }, [])
+  }, [fallbackId])
 
-  const getSnapshot = useCallback(() => {
-    return snapshotRef.current
-  }, [])
-
-  // getServerSnapshot must return a cached value to avoid an infinite loop.
-  // React calls getServerSnapshot during render and compares by reference.
-  const serverSnapshot = useMemo(() => ({ activeId: fallbackId, visibleIds: [] as string[] }), [fallbackId])
-  const getServerSnapshot = useCallback(() => serverSnapshot, [serverSnapshot])
-
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  return useMemo(() => snapshot, [snapshot])
 }

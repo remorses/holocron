@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Layout primitives: Bleed wrapper, Divider, Section, ordered/unordered
  * lists, and list items.

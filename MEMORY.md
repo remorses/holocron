@@ -70,6 +70,10 @@ static data → data.ts → client bundle (once, cached)
 dynamic data → .loader('/*') → RSC flight (minimal, per-request)
 ```
 
+## Loader-backed site data
+
+For the source-driven docs runtime, `data.ts` should read from the root loader instead of importing a separate static site module. Spiceflow's loader store is accessible both via hooks and `getLoaderData()` at module scope, so global reads still work even when the site object is request-scoped.
+
 ## App type derivation
 
 ```tsx
@@ -1077,6 +1081,10 @@ harness. An alternative would be to scope the cacheDir override in
 plugin itself. Kept in the plugin for now because it's a strictly safer
 default for anyone running multiple holocron sites concurrently (e.g.
 monorepo with parallel docs previews).
+
+### Spiceflow standalone trace needs absolute outDir
+
+For `vite <relative-root> --config ...` multi-fixture builds, Spiceflow's standalone trace plugin must resolve `build.outDir` against `config.root` before calling `traceAndCopyDependencies()`. Using raw relative `outDir` makes the trace step look for `process.cwd()/dist/rsc/index.js` (for us `integration-tests/dist/...`) instead of the actual fixture output under `fixtures/<name>/dist/...`.
 
 ### Fixture architecture quick-ref for future sessions
 

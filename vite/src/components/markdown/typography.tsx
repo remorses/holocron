@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Editorial typography primitives: headings, prose paragraph, caption,
  * inline link, inline code.
@@ -81,16 +79,11 @@ export function A({ href, children }: { href: string; children: React.ReactNode 
       href={href}
       target='_blank'
       rel='noopener noreferrer'
+      className='hover:underline'
       style={{
         color: 'var(--link-accent, #0969da)',
         fontWeight: 'var(--weight-heading)',
         textDecoration: 'none',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.textDecoration = 'underline'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.textDecoration = 'none'
       }}
     >
       {children}

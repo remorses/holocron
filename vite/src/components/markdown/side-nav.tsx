@@ -2,8 +2,8 @@
 
 /**
  * SideNav — Agentation-style left sidebar.
- * Reads navigation from `data.ts` (static) and active page state from
- * `useHolocronData()` (per-request). Hosts the sidebar search input.
+ * Reads site data and active page state from the root loader via
+ * `data.ts` / `useHolocronData()`. Hosts the sidebar search input.
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
@@ -23,13 +23,8 @@ import { SearchIcon } from './icons.tsx'
 import { NavGroupNode } from './nav-tree.tsx'
 
 /**
- * Zero-prop sidebar — reads navigation from the shared static module
- * (`data.ts`) and per-request state (currentPageHref, ancestorGroupKeys)
- * from the Spiceflow loader via `useHolocronData()`.
- *
- * Static imports like `siteNavigation` and `siteSearchEntries` are
- * bundled into the client chunk ONCE and cached — they never travel
- * through the per-request flight payload.
+ * Zero-prop sidebar — reads site data and per-request state from the
+ * shared root loader payload.
  */
 export function SideNav() {
   const {
@@ -38,7 +33,7 @@ export function SideNav() {
     ancestorGroupKeys,
   } = useHolocronData()
 
-  // Active tab's groups. Derived from static nav + current href.
+  // Active tab's groups. Derived from site navigation + current href.
   const groups = useMemo(
     () => getActiveGroups(siteNavigation, currentPageHref ?? '/'),
     [currentPageHref],
@@ -95,8 +90,6 @@ export function SideNav() {
   }, [])
 
   // --- Search ---
-  // Use the static flat entry list from data.ts — built once at module load,
-  // not per render. The Orama DB is still memoized per mount.
   const db = useMemo(
     () => createSearchDb({ entries: siteSearchEntries }),
     [],

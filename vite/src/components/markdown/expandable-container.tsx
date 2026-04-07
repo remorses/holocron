@@ -6,7 +6,7 @@
  * store so groups containing the current page don't animate from height 0.
  */
 
-import React, { useSyncExternalStore } from 'react'
+import React, { useEffect, useState } from 'react'
 
 /**
  * First-paint guard. `false` during SSR and during the initial client render,
@@ -17,24 +17,17 @@ import React, { useSyncExternalStore } from 'react'
  * initial paint — otherwise groups containing the current page would animate
  * in from height 0 on every page load, causing a visible layout shift.
  */
-let firstPaintDone = false
-const firstPaintListeners = new Set<() => void>()
-if (typeof window !== 'undefined') {
-  requestAnimationFrame(() => {
-    firstPaintDone = true
-    for (const fn of firstPaintListeners) fn()
-  })
-}
-
-function subscribeFirstPaint(cb: () => void) {
-  firstPaintListeners.add(cb)
-  return () => { firstPaintListeners.delete(cb) }
-}
-const getFirstPaintSnapshot = () => firstPaintDone
-const getFirstPaintServerSnapshot = () => false
-
 function useFirstPaintDone(): boolean {
-  return useSyncExternalStore(subscribeFirstPaint, getFirstPaintSnapshot, getFirstPaintServerSnapshot)
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setDone(true)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  return done
 }
 
 /**

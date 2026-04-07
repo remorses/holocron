@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * MDX marker components — parsed at build time, consumed by the section
  * splitter in lib/mdx-sections.ts. They render as pass-throughs at runtime.

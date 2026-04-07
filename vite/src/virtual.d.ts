@@ -5,6 +5,7 @@ declare module 'virtual:holocron-config' {
   import type { Navigation } from './navigation.ts'
   export const config: HolocronConfig
   export const navigation: Navigation
+  export const base: string
 }
 
 declare module 'virtual:holocron-mdx' {
@@ -12,6 +13,18 @@ declare module 'virtual:holocron-mdx' {
    *  sent to the client bundle. */
   const content: Record<string, string>
   export default content
+}
+
+declare module 'virtual:holocron-site' {
+  import type { HolocronSiteData } from './site-data.ts'
+  const site: HolocronSiteData
+  export default site
+}
+
+declare module 'virtual:holocron-source' {
+  import type { HolocronSource } from './source.ts'
+  const source: HolocronSource
+  export default source
 }
 
 declare module 'virtual:holocron-icons' {

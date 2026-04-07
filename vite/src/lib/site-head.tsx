@@ -133,6 +133,7 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
         <>
           <Head.Meta name='description' content={config.description} />
           <Head.Meta property='og:description' content={config.description} />
+          <Head.Meta name='holocron:site-description' content={config.description} />
         </>
       )}
       {/* Custom SEO metatags — og:* uses property=, everything else uses name= */}

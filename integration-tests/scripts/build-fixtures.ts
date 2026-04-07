@@ -8,7 +8,7 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { discoverFixtures, integrationTestsDir } from "./fixtures.ts";
+import { discoverFixtures, integrationTestsDir, type Fixture } from "./fixtures.ts";
 
 function cleanFixtureDist(rootDir: string): void {
   const distDir = path.join(rootDir, "dist");
@@ -21,14 +21,19 @@ function cleanFixtureDist(rootDir: string): void {
   }
 }
 
-function buildFixture(rootRel: string): Promise<void> {
+function buildFixture(fixture: Fixture): Promise<void> {
   return new Promise((resolve, reject) => {
+    const { rootDir, rootRel } = fixture;
     console.log(`\n[build-fixtures] → ${rootRel}`);
     // Vite 8 uses `root` as a positional arg (not --root). Config path is
     // resolved from cwd, so relative `vite.config.ts` works here.
+    const fixtureConfig = path.join(rootDir, "vite.config.ts");
+    const configFlag = fs.existsSync(fixtureConfig)
+      ? `${rootRel}/vite.config.ts`
+      : "vite.config.ts";
     const child = spawn(
       "pnpm",
-      ["exec", "vite", "build", rootRel, "--config", "vite.config.ts"],
+      ["exec", "vite", "build", rootRel, "--config", configFlag],
       {
         cwd: integrationTestsDir,
         stdio: "inherit",
@@ -64,6 +69,6 @@ console.log(
 for (const fixture of fixtures) {
   cleanFixtureDist(fixture.rootDir);
 }
-await Promise.all(fixtures.map((fixture) => buildFixture(fixture.rootRel)));
+await Promise.all(fixtures.map((fixture) => buildFixture(fixture)));
 
 console.log(`\n[build-fixtures] done — built ${fixtures.length} fixture(s)`);

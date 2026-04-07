@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * ComparisonTable — 3-column table for comparing features across products.
  */

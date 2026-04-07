@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Mintlify-compatible callouts. Generic <Callout> + typed aliases
  * (Note/Warning/Info/Tip/Check/Danger). Renders a framed card with a

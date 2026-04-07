@@ -1,11 +1,9 @@
-'use client'
-
 /**
  * CodeBlock with Prism syntax highlighting and line numbers.
  * Also registers a custom "diagram" language for ASCII/Unicode box-drawing.
  */
 
-import React, { useMemo } from 'react'
+import React from 'react'
 import * as PrismModule from 'prismjs'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-tsx'
@@ -38,13 +36,8 @@ export function CodeBlock({
   /* Use Prism.highlight() to get highlighted HTML as a string. Works on both
      server and client (no DOM dependency), avoiding hydration mismatch issues
      that occur with useEffect + highlightElement. */
-  const highlightedHtml = useMemo(() => {
-    const grammar = lang ? Prism.languages[lang] : undefined
-    if (!grammar) {
-      return undefined
-    }
-    return Prism.highlight(children, grammar, lang)
-  }, [children, lang])
+  const grammar = lang ? Prism.languages[lang] : undefined
+  const highlightedHtml = grammar ? Prism.highlight(children, grammar, lang) : undefined
 
   return (
     <figure className='m-0 bleed'>
