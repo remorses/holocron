@@ -51,22 +51,19 @@ export function NavSelect({ items, activeHref, className, ariaLabel }: NavSelect
     if (item.tag) return `${item.label} (${item.tag})`
     return item.label
   }
+  const activeLabel = activeItem ? formatLabel(activeItem) : ''
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 rounded-md border border-(--border-subtle) px-2 py-1 text-(color:--text-secondary) transition-colors duration-150 hover:border-(--text-secondary) hover:text-(color:--text-primary) ${className ?? ''}`}
+      className={`relative inline-flex items-center gap-1.5 rounded-md border border-(--border-subtle) px-2 py-1 text-(color:--text-secondary) transition-colors duration-150 hover:border-(--text-secondary) hover:text-(color:--text-primary) ${className ?? ''}`}
     >
-      {activeItem?.icon && (
-        <Icon icon={activeItem.icon} size={14} />
-      )}
       <select
         aria-label={ariaLabel}
         value={activeItem?.href ?? ''}
         onChange={onChange}
-        className='appearance-none bg-transparent text-xs cursor-pointer border-none outline-none text-current'
+        className='absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md border-none opacity-0 outline-none'
         style={{
           fontFamily: 'var(--font-primary)',
-          color: 'inherit',
         }}
       >
         {items.map((item) => (
@@ -75,6 +72,10 @@ export function NavSelect({ items, activeHref, className, ariaLabel }: NavSelect
           </option>
         ))}
       </select>
+      {activeItem?.icon && (
+        <Icon icon={activeItem.icon} size={14} />
+      )}
+      <span className='text-xs text-current'>{activeLabel}</span>
       {/* Inline SVG — data-URI SVGs can't inherit currentColor */}
       <svg
         aria-hidden='true'
