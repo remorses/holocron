@@ -7,6 +7,8 @@
  * for per-section and shared `<Aside full>` asides.
  */
 
+const ENABLE_ASSISTANT = true
+
 import React, { Fragment } from 'react'
 import { Link } from 'spiceflow/react'
 import {
@@ -21,6 +23,7 @@ import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { Footer, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner.tsx'
+import { SidebarAssistant } from '../sidebar-assistant.tsx'
 
 export type EditorialSection = {
   content: React.ReactNode
@@ -237,7 +240,7 @@ export function EditorialPage({
               const span = section.asideRowSpan ?? 1
               const isShared = span > 1
               const asideClass =
-                'slot-aside flex flex-col gap-3 bg-foreground/[0.03] text-(length:--type-toc-size) leading-[1.5]'
+                'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
               return (
                 <Fragment key={i}>
                   {/* Inner per-section wrapper: subgrid, content + per-section aside */}
@@ -248,11 +251,17 @@ export function EditorialPage({
                     <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
                       {section.content}
                     </div>
-                    {section.aside && !isShared && (
+                    {/* Aside column: assistant input (first row only) + per-section aside */}
+                    {(i === 0 || (section.aside && !isShared)) && (
                       <div
-                        className={`${asideClass} lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
+                         className={`flex flex-col gap-3 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
                       >
-                        {section.aside}
+                        {i === 0 && ENABLE_ASSISTANT && <SidebarAssistant />}
+                        {section.aside && !isShared && (
+                          <div className='slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'>
+                            {section.aside}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -293,6 +302,7 @@ export function EditorialPage({
             </div>
           </>
         )}
+
       </div>
 
       {/* Site footer + branding — mt-auto pushes to bottom on short pages */}
