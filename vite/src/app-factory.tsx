@@ -54,6 +54,7 @@ import {
 } from './data.ts'
 import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
 import { isAgentRequest } from './lib/raw-markdown.ts'
+import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
 import { SiteHead } from './lib/site-head.tsx'
@@ -193,7 +194,7 @@ export function createHolocronApp() {
       pathname = pathname.slice(0, -1)
     }
     // Don't redirect .md, .xml, or /api requests
-    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.startsWith('/api')) return
+    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/api')) return
 
     // Strip base from pathname for lookup (spiceflow may or may not
     // strip the base depending on middleware vs route context).
@@ -248,6 +249,24 @@ export function createHolocronApp() {
       })
     })
   }
+
+  // /docs.zip — all markdown files in a single zip archive.
+  // Agents can fetch this one endpoint to get the entire docs site.
+  app = app.get('/docs.zip', () => {
+    const files: Record<string, Uint8Array> = {}
+    for (const [slug, mdx] of Object.entries(mdxContent)) {
+      files[slug + '.md'] = strToU8(mdx + POWERED_BY_FOOTER)
+    }
+    const zipped = zipSync(files)
+    return new Response(zipped.buffer as ArrayBuffer, {
+      headers: {
+        'content-type': 'application/zip',
+        'content-disposition': 'attachment; filename="docs.zip"',
+        'cache-control': 's-maxage=300, stale-while-revalidate=86400',
+        'x-content-type-options': 'nosniff',
+      },
+    })
+  })
 
   // /api/search
   app = app.get('/api/search', ({ request }: { request: Request }) => {

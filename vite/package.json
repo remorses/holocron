@@ -53,6 +53,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "cookie": "^1.1.1",
     "dedent": "^1.7.2",
+    "fflate": "^0.8.2",
     "github-slugger": "^2.0.0",
     "image-size": "^2.0.2",
     "mdast-util-frontmatter": "^2.0.1",
