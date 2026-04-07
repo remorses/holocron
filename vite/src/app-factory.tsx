@@ -27,7 +27,7 @@
 
 import './styles/globals.css'
 import React from 'react'
-import { Spiceflow, serveStatic, redirect } from 'spiceflow'
+import { Spiceflow, type AnySpiceflow, serveStatic, redirect } from 'spiceflow'
 import { Head } from 'spiceflow/react'
 import { mdxParse } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
@@ -155,10 +155,10 @@ function renderMdxPage(
 /* ── App factory ─────────────────────────────────────────────────────── */
 
 export function createHolocronApp() {
-  // Use `any` during the imperative route-registration loop, then cast
-  // back to a properly-typed Spiceflow chain at the end so HolocronApp
-  // (used by createRouter<HolocronApp>()) retains loader type info.
-  let app: any = new Spiceflow().use(serveStatic({ root: './public' }))
+  // AnySpiceflow during the imperative route-registration loop (TS can't
+  // track type evolution across loop iterations), then cast back to a
+  // typed chain at the end so HolocronApp retains loader type info.
+  let app: AnySpiceflow = new Spiceflow().use(serveStatic({ root: './public' }))
 
   // ── Redirects ───────────────────────────────────────────────────
   // All redirects are .get() routes — spiceflow's trie router handles
@@ -276,8 +276,8 @@ export function createHolocronApp() {
 
   // ── Shared loader + layout ─────────────────────────────────────
 
-  app = app.loader('/*', async ({ params, response }: any): Promise<HolocronLoaderData> => {
-    const rawSlug = (params as Record<string, string>)['*'] || ''
+  app = app.loader('/*', async ({ params, response }): Promise<HolocronLoaderData> => {
+    const rawSlug = params['*'] || ''
     const slug = rawSlug === '' ? 'index' : rawSlug
 
     const currentPage = findPageBySlug(navigation, slug, mdxContent)
@@ -317,8 +317,8 @@ export function createHolocronApp() {
     }
   })
 
-  app = app.layout('/*', async ({ children, request, loaderData: rawLoaderData }: any) => {
-    const loaderData = rawLoaderData as unknown as HolocronLoaderData
+  app = app.layout('/*', async ({ children, request, loaderData: rawLoaderData }) => {
+    const loaderData = rawLoaderData as HolocronLoaderData
     const cookies = parseCookies(request.headers.get('cookie') || '')
     const cookieTheme = config.appearance.strict
       ? null
@@ -366,32 +366,16 @@ export function createHolocronApp() {
   for (const slug of Object.keys(mdxContent)) {
     const pageHref = slugToHref(slug)
 
-    app = app.page(pageHref, async ({ loaderData: rawLoaderData, request }: any) => {
-      const loaderData = rawLoaderData as unknown as HolocronLoaderData
+    app = app.page(pageHref, async ({ loaderData: rawLoaderData, request }) => {
+      const loaderData = rawLoaderData as HolocronLoaderData
       const bannerJsx = getBannerJsx(request)
       return renderMdxPage(slug, loaderData, bannerJsx)
     })
   }
 
-  // Cast to a typed chain so HolocronApp (used by createRouter) keeps
-  // the loader('/*') type → useLoaderData('/*') returns HolocronLoaderData.
-  return app as ReturnType<typeof createTypedChain>
+  return app
 }
 
-/** Type-only helper: a minimal Spiceflow chain with the loader typed.
- *  Never called at runtime — only used for `ReturnType<>` extraction. */
-function createTypedChain() {
-  return new Spiceflow()
-    .loader('/*', async (_ctx: any): Promise<HolocronLoaderData> => {
-      return undefined as any
-    })
-    .layout('/*', async (_ctx: any) => {
-      return undefined as any
-    })
-    .page('/*', async (_ctx: any) => {
-      return undefined as any
-    })
-}
 
 /* ── Public type for the client router ───────────────────────────────── */
 

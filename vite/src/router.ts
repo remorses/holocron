@@ -18,7 +18,7 @@
  */
 
 import { createRouter, router, useRouterState } from 'spiceflow/react'
-import type { HolocronApp } from './app-factory.tsx'
+import type { HolocronApp, HolocronLoaderData } from './app-factory.tsx'
 
 // `router` and `useRouterState` are re-exported directly from `spiceflow/react`
 // (they are the same singleton `createRouter` returns). This avoids a
@@ -38,4 +38,4 @@ export const href = typed.href
  * Returns the full per-request loader data produced by `.loader('/*')` in
  * app-factory.tsx.
  */
-export const useHolocronData = () => useLoaderData('/*')
+export const useHolocronData = () => useLoaderData('/*') as HolocronLoaderData
