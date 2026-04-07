@@ -102,7 +102,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
   // main content, --type-toc-size inside an Aside).
   // `no-bleed` zeros the --bleed* tokens for descendants so lists, code
   // blocks, and images stay inside the callout frame (see editorial.css).
-  const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-(--border-radius-md) border'
+  const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-(--border-radius-md) border-2'
   const presetIcon = type ? CALLOUT_ICONS[type] : undefined
   const resolvedIcon = resolveIcon(icon, presetIcon)
 
