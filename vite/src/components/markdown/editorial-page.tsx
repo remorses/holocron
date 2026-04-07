@@ -27,6 +27,9 @@ import { ThemeToggle } from '../theme-toggle.tsx'
 import { Footer, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner.tsx'
 import { SidebarAssistant } from '../sidebar-assistant.tsx'
+import { ChatDrawer } from '../chat-drawer.tsx'
+import { MobileBar } from '../mobile-bar.tsx'
+import { NavDrawer } from '../nav-drawer.tsx'
 
 export type EditorialSection = {
   content: React.ReactNode
@@ -104,7 +107,7 @@ export function EditorialPage({
         <div className='mx-auto flex items-center justify-between px-(--mobile-padding) py-(--header-padding-y) lg:max-w-(--grid-max-width) lg:px-0'>
           {/* Left side: logo + version/dropdown selects */}
           <div className='flex items-center gap-3'>
-            <Link href={logoLinkHref} className='slot-logo no-underline flex items-center'>
+            <Link href={logoLinkHref} className='slot-logo no-underline flex items-center shrink-0'>
               {logo ? (
                 <>
                   <img
@@ -129,22 +132,26 @@ export function EditorialPage({
               )}
             </Link>
             {versionItems.length > 0 && (
-              <NavSelect
-                items={versionItems}
-                activeHref={activeVersionHref}
-                ariaLabel='Select version'
-              />
+              <span className='hidden lg:inline-flex'>
+                <NavSelect
+                  items={versionItems}
+                  activeHref={activeVersionHref}
+                  ariaLabel='Select version'
+                />
+              </span>
             )}
             {dropdownSelectItems.length > 0 && (
-              <NavSelect
-                items={dropdownSelectItems}
-                activeHref={activeDropdownHref}
-                ariaLabel='Select section'
-              />
+              <span className='hidden lg:inline-flex'>
+                <NavSelect
+                  items={dropdownSelectItems}
+                  activeHref={activeDropdownHref}
+                  ariaLabel='Select section'
+                />
+              </span>
             )}
           </div>
-          {/* Right side: icon links + CTA + theme toggle */}
-          <div className='flex items-center gap-4'>
+          {/* Right side: icon links + CTA + theme toggle — hidden on mobile, shown in nav drawer instead */}
+          <div className='hidden lg:flex items-center gap-4'>
             {/* Icon links. Icons are resolved by `<Icon>` — dispatches on
                 emoji / URL / lucide name / structured object. When the user
                 wrote `{ type: 'github' }` without an explicit icon, the
@@ -194,9 +201,12 @@ export function EditorialPage({
           </div>
         </div>
 
-        {/* Tab row */}
+        {/* Mobile bar: Ask AI + Menu — shown under logo bar on mobile */}
+        <MobileBar />
+
+        {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar && (
-          <div className='slot-tabbar'>
+          <div className='slot-tabbar hidden lg:block'>
             <div className='mx-auto flex h-(--tab-bar-height) max-w-full items-stretch gap-6 overflow-x-auto px-(--mobile-padding) lg:max-w-(--grid-max-width) lg:px-0'>
               {tabs.map((tab) => {
                 return <TabLink key={tab.href} tab={tab} isActive={tab.href === (activeTab ?? tabs[0]?.href)} />
@@ -333,6 +343,12 @@ export function EditorialPage({
         <Footer />
         <PoweredBy />
       </div>
+
+      {/* AI assistant drawer — slides in from right when activated */}
+      {ENABLE_ASSISTANT && <ChatDrawer />}
+
+      {/* Mobile navigation drawer (lg:hidden) */}
+      <NavDrawer />
     </div>
   )
 }
