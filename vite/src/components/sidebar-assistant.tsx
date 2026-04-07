@@ -36,8 +36,7 @@ export function SidebarAssistant() {
           onKeyDown={handleKeyDown}
           placeholder='How can I help?'
           rows={1}
-          className='w-full resize-none border-0 bg-transparent text-xs leading-5 text-(color:--text-primary) placeholder:text-(color:--text-tertiary) outline-none'
-          style={{ minHeight: '20px', maxHeight: '20px' }}
+          className='w-full resize-none border-0 bg-transparent text-xs leading-5 text-(color:--text-primary) placeholder:text-(color:--text-tertiary) outline-none [field-sizing:content] min-h-5 max-h-40'
         />
         <div className='flex items-center justify-end'>
           <button
