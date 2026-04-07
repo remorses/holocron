@@ -51,6 +51,16 @@ test.describe("versions fixture — navigation.versions with version switcher", 
     expect(html).toContain("v1 Overview");
   });
 
+  test("hidden v1 page still resolves the owning version in the selector", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/v1/hidden-page");
+
+    const versionSelect = page.getByRole("combobox", {
+      name: "Select version",
+    });
+    await expect(versionSelect).toHaveValue("/v1/overview");
+  });
+
   test("v2 pages are routable", async ({ request }) => {
     const response = await request.get("/v2/overview");
     expect(response.status()).toBe(200);

@@ -17,7 +17,7 @@ import type {
   NavTabBase,
 } from './config.ts'
 import type { PageFrontmatter } from './lib/page-frontmatter.ts'
-import { isHiddenPage } from './lib/page-frontmatter.ts'
+import { isHiddenPage, parsePageFrontmatter } from './lib/page-frontmatter.ts'
 
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
@@ -265,91 +265,12 @@ export function buildHrefToSlugMap(mdxContent: Record<string, string>): Map<stri
  * falls back to the first `# heading`.
  */
 function extractTitleFromMdx(mdx: string): string {
-  const frontmatter = extractPageFrontmatter(mdx)
+  const frontmatter = parsePageFrontmatter(mdx)
   if (frontmatter.title) return frontmatter.title
   // Fall back to first # heading
   const headingMatch = mdx.match(/^#\s+(.+)/m)
   if (headingMatch?.[1]) return headingMatch[1].trim()
   return 'Untitled'
-}
-
-function extractPageFrontmatter(mdx: string): PageFrontmatter {
-  const fmMatch = mdx.match(/^---\s*\n([\s\S]*?)\n---/)
-  const yamlBlock = fmMatch?.[1]
-  if (!yamlBlock) return {}
-
-  const stringKeys = [
-    'title',
-    'description',
-    'icon',
-    'sidebarTitle',
-    'tag',
-    'robots',
-    'og:title',
-    'og:description',
-    'og:image',
-    'og:url',
-    'og:type',
-    'og:image:width',
-    'og:image:height',
-    'twitter:title',
-    'twitter:description',
-    'twitter:image',
-    'twitter:card',
-    'twitter:site',
-    'twitter:image:width',
-    'twitter:image:height',
-  ] as const
-
-  const frontmatter: PageFrontmatter = {}
-  for (const key of stringKeys) {
-    const value = extractYamlString(yamlBlock, key)
-    if (value !== undefined) frontmatter[key] = value
-  }
-
-  for (const key of ['deprecated', 'hidden', 'noindex'] as const) {
-    const value = extractYamlBoolean(yamlBlock, key)
-    if (value !== undefined) frontmatter[key] = value
-  }
-
-  const keywords = extractYamlStringArray(yamlBlock, 'keywords')
-  if (keywords) frontmatter.keywords = keywords
-
-  return frontmatter
-}
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function extractYamlValue(yamlBlock: string, key: string): string | undefined {
-  const escapedKey = escapeRegex(key)
-  const match = yamlBlock.match(new RegExp(`^(?:"${escapedKey}"|'${escapedKey}'|${escapedKey}):\\s*(.+)$`, 'm'))
-  return match?.[1]?.trim()
-}
-
-function extractYamlString(yamlBlock: string, key: string): string | undefined {
-  const value = extractYamlValue(yamlBlock, key)
-  if (!value) return undefined
-  return value.replace(/^["']|["']$/g, '').trim()
-}
-
-function extractYamlBoolean(yamlBlock: string, key: string): boolean | undefined {
-  const value = extractYamlValue(yamlBlock, key)
-  if (value === 'true') return true
-  if (value === 'false') return false
-  return undefined
-}
-
-function extractYamlStringArray(yamlBlock: string, key: string): string[] | undefined {
-  const value = extractYamlValue(yamlBlock, key)
-  if (!value?.startsWith('[') || !value.endsWith(']')) return undefined
-  const body = value.slice(1, -1).trim()
-  if (!body) return []
-  return body
-    .split(',')
-    .map((part) => part.trim().replace(/^["']|["']$/g, ''))
-    .filter(Boolean)
 }
 
 /**
@@ -375,14 +296,16 @@ export function findPageBySlug(
   const mdx = mdxContent[slug]
   if (!mdx) return undefined
 
+  const frontmatter = parsePageFrontmatter(mdx)
+
   return {
     slug,
     href: slugToHref(slug),
     title: extractTitleFromMdx(mdx),
-    description: extractPageFrontmatter(mdx).description,
+    description: frontmatter.description,
     gitSha: '',
     headings: [],
-    icon: extractPageFrontmatter(mdx).icon,
-    frontmatter: extractPageFrontmatter(mdx),
+    icon: frontmatter.icon,
+    frontmatter,
   }
 }

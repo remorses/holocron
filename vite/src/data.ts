@@ -265,21 +265,21 @@ export type DropdownSelectItem = {
   pageHrefs: string[]
 }
 
-function collectPageHrefsFromTabs(tabs: NavTab[]): string[] {
+function collectPageHrefsFromTabs(tabs: NavTab[], includeHidden: boolean): string[] {
   const hrefs: string[] = []
   for (const tab of tabs) {
-    collectPagesFromGroupsFlat(tab.groups, hrefs)
+    collectPagesFromGroupsFlat(tab.groups, hrefs, includeHidden)
   }
   return hrefs
 }
 
-function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[]): void {
+function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[], includeHidden: boolean): void {
   for (const group of groups) {
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
-        if (isVisibleNavPage(entry)) out.push(entry.href)
+        if (includeHidden || isVisibleNavPage(entry)) out.push(entry.href)
       } else if (isNavGroup(entry)) {
-        collectPagesFromGroupsFlat([entry], out)
+        collectPagesFromGroupsFlat([entry], out, includeHidden)
       }
     }
   }
@@ -289,8 +289,9 @@ function buildVersionSelectItems(): VersionSelectItem[] {
   return switchers.versions
     .filter((v) => !v.hidden)
     .map((v) => {
-      const pageHrefs = collectPageHrefsFromTabs(v.navigation.tabs)
-      const firstHref = pageHrefs[0] || '/'
+      const pageHrefs = collectPageHrefsFromTabs(v.navigation.tabs, true)
+      const visiblePageHrefs = collectPageHrefsFromTabs(v.navigation.tabs, false)
+      const firstHref = visiblePageHrefs[0] || pageHrefs[0] || '/'
       return {
         label: v.version,
         ...(v.tag && { tag: v.tag }),
@@ -319,8 +320,9 @@ function buildDropdownSelectItems(): DropdownSelectItem[] {
           pageHrefs: [],
         }
       }
-      const pageHrefs = d.navigation ? collectPageHrefsFromTabs(d.navigation.tabs) : []
-      const firstHref = pageHrefs[0] || d.href || '/'
+      const pageHrefs = d.navigation ? collectPageHrefsFromTabs(d.navigation.tabs, true) : []
+      const visiblePageHrefs = d.navigation ? collectPageHrefsFromTabs(d.navigation.tabs, false) : []
+      const firstHref = visiblePageHrefs[0] || pageHrefs[0] || d.href || '/'
       return {
         label: d.dropdown,
         ...(d.icon && { icon: d.icon }),

@@ -11,10 +11,9 @@ import { mdxToMarkdown } from 'mdast-util-mdx'
 import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
 import GithubSlugger from 'github-slugger'
 import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
-import { parse as parseYaml } from 'yaml'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
-import { pageFrontmatterSchema, type PageFrontmatter } from './page-frontmatter.ts'
+import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
 
 export type ProcessedMdx = {
   title: string
@@ -35,7 +34,7 @@ export type ProcessedMdx = {
  * Returns the mdast tree for reuse by rewriteMdxImages.
  */
 export function processMdx(content: string): ProcessedMdx {
-  const frontmatter = extractFrontmatter(content)
+  const frontmatter = parsePageFrontmatter(content)
   const mdast = mdxParse(content)
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
@@ -248,25 +247,6 @@ function setJsxAttr(node: JsxNode, attrName: string, value: string): void {
   } else {
     node.attributes.push({ type: 'mdxJsxAttribute', name: attrName, value })
   }
-}
-
-/* ── Frontmatter extraction ─────────────────────────────────────────── */
-
-const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---/
-
-function extractFrontmatter(content: string): PageFrontmatter {
-  const match = content.match(FRONTMATTER_RE)
-  if (!match) {
-    return {}
-  }
-  const yamlBlock = match[1] ?? ''
-  const parsed = parseYaml(yamlBlock)
-  const result = pageFrontmatterSchema.safeParse(parsed)
-  if (!result.success) {
-    console.warn('[holocron] invalid frontmatter ignored:', result.error.issues)
-    return {}
-  }
-  return result.data
 }
 
 /* ── Heading text extraction ────────────────────────────────────────── */

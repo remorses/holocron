@@ -1,4 +1,7 @@
 import { z } from 'zod'
+import matter from 'gray-matter'
+
+const stringOrNumberToStringSchema = z.union([z.string(), z.number()]).transform(String)
 
 export const pageSeoMetaKeys = [
   'robots',
@@ -36,19 +39,29 @@ export const pageFrontmatterSchema = z.object({
   'og:image': z.string().optional(),
   'og:url': z.string().optional(),
   'og:type': z.string().optional(),
-  'og:image:width': z.string().optional(),
-  'og:image:height': z.string().optional(),
+  'og:image:width': stringOrNumberToStringSchema.optional(),
+  'og:image:height': stringOrNumberToStringSchema.optional(),
   'twitter:title': z.string().optional(),
   'twitter:description': z.string().optional(),
   'twitter:image': z.string().optional(),
   'twitter:card': z.string().optional(),
   'twitter:site': z.string().optional(),
-  'twitter:image:width': z.string().optional(),
-  'twitter:image:height': z.string().optional(),
-})
+  'twitter:image:width': stringOrNumberToStringSchema.optional(),
+  'twitter:image:height': stringOrNumberToStringSchema.optional(),
+}).passthrough()
 
 export type PageFrontmatter = z.output<typeof pageFrontmatterSchema>
 export type PageSeoMeta = Partial<Record<PageSeoMetaKey, string>>
+
+export function parsePageFrontmatter(content: string): PageFrontmatter {
+  const parsed = matter(content).data
+  const result = pageFrontmatterSchema.safeParse(parsed)
+  if (!result.success) {
+    console.warn('[holocron] invalid frontmatter ignored:', result.error.issues)
+    return {}
+  }
+  return result.data
+}
 
 export function getPageSeoMeta(frontmatter: PageFrontmatter | undefined): PageSeoMeta {
   if (!frontmatter) return {}

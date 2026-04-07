@@ -60,8 +60,6 @@ function collectAllPagesFromTab(tab: NavTab): NavPage[] {
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
-const CACHE_FORMAT_VERSION = 2
-
 const require = createRequire(import.meta.url)
 const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
@@ -405,12 +403,7 @@ function copyToPublic({ filePath, imageOutputDir }: { filePath: string; imageOut
 
 type NavCacheEnvelope = {
   version: string
-  format: number
   navigation: Navigation
-}
-
-function hasFrontmatterCache(nav: Navigation): boolean {
-  return Array.from(buildPageIndex(nav).values()).every((page) => page.frontmatter !== undefined)
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -422,11 +415,9 @@ function readCache(cachePath: string): Navigation | null {
     // Package-version envelope — reject caches from older versions so new
     // fields (e.g. page `icon`) aren't silently missing from cached NavPage
     // objects. Every publish naturally invalidates stale caches.
-    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION && raw.format === CACHE_FORMAT_VERSION) {
-      const navigation = raw.navigation as Navigation
-      return hasFrontmatterCache(navigation) ? navigation : null
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
+      return raw.navigation as Navigation
     }
-    // Old format (bare array) or different version → discard.
     return null
   } catch {
     return null
@@ -436,7 +427,7 @@ function readCache(cachePath: string): Navigation | null {
 function writeCache(cachePath: string, nav: Navigation): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, format: CACHE_FORMAT_VERSION, navigation: nav }
+  const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, navigation: nav }
   fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 

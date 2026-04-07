@@ -8,6 +8,7 @@ import {
   collectAllPages,
   buildPageIndex,
   hasVisibleSidebarEntries,
+  findPageBySlug,
   type NavTab,
   type NavGroup,
   type NavPage,
@@ -164,6 +165,34 @@ describe('findPage', () => {
   })
 })
 
+describe('findPageBySlug fallback', () => {
+  test('parses YAML frontmatter for pages that are not in navigation', () => {
+    const page = findPageBySlug([], 'orphan-page', {
+      'orphan-page': `---
+title: Orphan Page
+description: Routed without nav config.
+noindex: true
+keywords:
+  - orphan
+  - setup
+"og:image:width": 1400
+---
+
+# Orphan Page`,
+    })
+
+    expect(page).toMatchObject({
+      title: 'Orphan Page',
+      description: 'Routed without nav config.',
+      frontmatter: {
+        noindex: true,
+        keywords: ['orphan', 'setup'],
+        'og:image:width': '1400',
+      },
+    })
+  })
+})
+
 /* ── collectAllPages ─────────────────────────────────────────────────── */
 
 describe('collectAllPages', () => {
@@ -285,4 +314,3 @@ describe('hasVisibleSidebarEntries', () => {
     expect(hasVisibleSidebarEntries(wrapper)).toBe(true)
   })
 })
-

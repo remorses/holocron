@@ -56,6 +56,58 @@ robots: noarchive
     `)
   })
 
+  test('coerces numeric SEO dimension fields without dropping the rest of frontmatter', () => {
+    const result = processMdx(`---
+title: Numeric Widths
+sidebarTitle: Numeric
+"og:image:width": 1400
+"twitter:image:height": 700
+---
+
+# Content`)
+
+    expect(result.frontmatter).toMatchInlineSnapshot(`
+      {
+        "og:image:width": "1400",
+        "sidebarTitle": "Numeric",
+        "title": "Numeric Widths",
+        "twitter:image:height": "700",
+      }
+    `)
+  })
+
+  test('preserves additional frontmatter fields without failing parsing', () => {
+    const result = processMdx(`---
+title: Extra Fields
+customString: hello
+customNumber: 42
+customList:
+  - one
+  - two
+customObject:
+  enabled: true
+  ratio: 1.5
+---
+
+# Content`)
+
+    expect(result.frontmatter).toMatchInlineSnapshot(`
+      {
+        "customList": [
+          "one",
+          "two",
+        ],
+        "customNumber": 42,
+        "customObject": {
+          "enabled": true,
+          "ratio": 1.5,
+        },
+        "customString": "hello",
+        "title": "Extra Fields",
+      }
+    `)
+  })
+
   test('extracts headings with depth, text, slug', () => {
     const result = processMdx(`## Getting Started
 
