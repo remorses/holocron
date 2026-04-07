@@ -5,13 +5,13 @@ import { runRemarkPlugin } from './remark-test-utils.ts'
 describe('remarkCodeGroup', () => {
   test('converts a CodeGroup into Tabs and Tab nodes', () => {
     const result = runRemarkPlugin(`
-<CodeGroup>
+<CodeGroup dropdown>
 
-\`\`\`ts title="TypeScript"
+\`\`\`ts helloWorld.ts theme={null}
 console.log('ts')
 \`\`\`
 
-\`\`\`js title="JavaScript"
+\`\`\`js helloWorld.js
 console.log('js')
 \`\`\`
 
@@ -19,14 +19,14 @@ console.log('js')
 `, remarkCodeGroup)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Tabs items={[\"TypeScript\", \"JavaScript\"]}>
-        <Tab title=\"TypeScript\">
+      "<Tabs dropdown items={[\"helloWorld.ts\", \"helloWorld.js\"]}>
+        <Tab title=\"helloWorld.ts\">
           \`\`\`ts
           console.log('ts')
           \`\`\`
         </Tab>
 
-        <Tab title=\"JavaScript\">
+        <Tab title=\"helloWorld.js\">
           \`\`\`js
           console.log('js')
           \`\`\`

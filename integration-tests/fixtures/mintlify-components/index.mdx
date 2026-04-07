@@ -86,11 +86,11 @@ export function rootCodeBlock() {
 
 <CodeGroup>
 
-```ts TypeScript
+```ts helloWorld.ts theme={null}
 console.log('TypeScript example')
 ```
 
-```js JavaScript
+```js helloWorld.js
 console.log('JavaScript example')
 ```
 
@@ -105,6 +105,19 @@ console.log('JavaScript example')
   <Tab title="pnpm">
     ```bash
     pnpm add holocron
+    ```
+  </Tab>
+</Tabs>
+
+<Tabs items={["npm", "pnpm"]}>
+  <Tab title="npm">
+    ```bash
+    npm run docs
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm docs
     ```
   </Tab>
 </Tabs>
@@ -150,7 +163,7 @@ console.log('JavaScript example')
 
 ## Mermaid
 
-```mermaid placement="top-left" actions=false
+```mermaid placement="top-left" actions={false}
 flowchart LR
   Start --> Finish
 ```

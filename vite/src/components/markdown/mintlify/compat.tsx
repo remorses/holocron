@@ -8,6 +8,7 @@
 
 import React from 'react'
 import { Icon as SiteIcon } from '../../icon.tsx'
+import { useMintlifyState } from './state.tsx'
 
 function Chevron() {
   return (
@@ -135,10 +136,17 @@ export function Frame({ caption, hint, children }: { caption?: string; hint?: st
 }
 
 export function Prompt({ description, children }: { description: string; children: React.ReactNode }) {
+  const plainText = typeof children === 'string' || typeof children === 'number'
   return sectionCard(
     <div className='flex flex-col gap-3'>
       <div className='text-xs font-semibold uppercase tracking-wide text-(color:--text-secondary)'>{description}</div>
-      <pre className='overflow-x-auto rounded-lg bg-muted/50 p-3 text-sm text-(color:--text-primary)'><code>{children}</code></pre>
+      <div
+        className={plainText
+          ? 'rounded-lg bg-muted/50 p-3 text-sm text-(color:--text-primary) [font-family:var(--font-code)] whitespace-pre-wrap'
+          : 'flex flex-col gap-3 rounded-lg bg-muted/30 p-3 text-sm text-(color:--text-primary)'}
+      >
+        {children}
+      </div>
     </div>,
   )
 }
@@ -267,13 +275,20 @@ export function Update({
 }
 
 export function View({ title, icon, children }: { title: string; icon?: string; children: React.ReactNode }) {
+  const state = useMintlifyState()
+  const active = state?.activeView === title
   return sectionCard(
     <div className='flex flex-col gap-3'>
-      <div className='flex items-center gap-2 text-sm font-semibold text-(color:--text-primary)'>
+      <button
+        type='button'
+        onClick={() => state?.setActiveView(active ? null : title)}
+        className='flex items-center gap-2 text-left text-sm font-semibold text-(color:--text-primary)'
+      >
         <SiteIcon icon={icon} size={16} />
         <span>{title}</span>
-      </div>
-      <div className='flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>
+        <Chevron />
+      </button>
+      {active ? <div className='flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div> : null}
     </div>,
   )
 }

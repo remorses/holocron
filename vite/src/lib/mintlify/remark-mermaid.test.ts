@@ -5,7 +5,7 @@ import { runRemarkPlugin } from './remark-test-utils.ts'
 describe('remarkMermaidCode', () => {
   test('rewrites mermaid fences to Mermaid JSX with parsed meta props', () => {
     const result = runRemarkPlugin(`
-\`\`\`mermaid placement="top-left" actions=false
+\`\`\`mermaid placement="top-left" actions={false}
 flowchart LR
 A-->B
 \`\`\`

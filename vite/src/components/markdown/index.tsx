@@ -38,6 +38,10 @@ export { CodeBlock } from './code-block.tsx'
 export { PixelatedImage, LazyVideo, ChartPlaceholder } from './image.tsx'
 export { ComparisonTable } from './table.tsx'
 export {
+  MintlifyStateProvider,
+  useMintlifyState,
+} from './mintlify/state.tsx'
+export {
   Badge,
   Card,
   Columns,

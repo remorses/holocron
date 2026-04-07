@@ -31,9 +31,13 @@ export function remarkCodeGroup() {
         return
       }
 
+      const attributes = node.attributes.filter((attribute) => {
+        return !(attribute.type === 'mdxJsxAttribute' && attribute.name === 'items')
+      })
+
       parent.children.splice(index, 1, createElement(
         'Tabs',
-        [expressionAttribute('items', stringArrayExpression(tabBlocks.map((block) => block.title)))],
+        [...attributes, expressionAttribute('items', stringArrayExpression(tabBlocks.map((block) => block.title)))],
         tabBlocks.map((block) => {
           return createElement('Tab', [literalAttribute('title', block.title)], [
             {

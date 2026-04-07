@@ -1,9 +1,20 @@
-import React, { Children, isValidElement, useId, useMemo } from 'react'
+'use client'
+
+import React, { Children, isValidElement, useId, useMemo, useState } from 'react'
+import { useMintlifyState } from './state.tsx'
 
 type TabChildProps = {
   title?: string
   value?: string
   children?: React.ReactNode
+}
+
+type TabsProps = {
+  children: React.ReactNode
+  items?: string[]
+  defaultTabIndex?: number
+  sync?: boolean
+  borderBottom?: boolean
 }
 
 type TabElement = React.ReactElement<TabChildProps>
@@ -20,50 +31,57 @@ export function Tabs({
   children,
   items,
   defaultTabIndex = 0,
-}: {
-  children: React.ReactNode
-  items?: string[]
-  defaultTabIndex?: number
-}) {
+  sync = true,
+  borderBottom = true,
+}: TabsProps) {
   const tabs = useMemo(() => Children.toArray(children).filter(isTabElement), [children])
-  const labels = items && items.length === tabs.length
-    ? items
-    : tabs.map((tab, index) => getTabTitle(tab, index))
+  const labels = items && items.length === tabs.length ? items : tabs.map((tab, index) => getTabTitle(tab, index))
   const maxIndex = Math.max(labels.length - 1, 0)
-  const activeIndex = Math.min(defaultTabIndex, maxIndex)
-  const groupName = useId().replace(/:/g, '')
+  const fallbackIndex = Math.min(defaultTabIndex, maxIndex)
+  const fallbackLabel = labels[fallbackIndex] ?? labels[0] ?? ''
+  const [localLabel, setLocalLabel] = useState(fallbackLabel)
+  const state = useMintlifyState()
+  const groupId = useId()
+  const groupKey = `tabs:${labels.join('|') || groupId}`
+  const activeLabel = sync ? (state?.tabs[groupKey] ?? fallbackLabel) : localLabel
+  const activeIndex = Math.max(labels.indexOf(activeLabel), 0)
+  const activeTab = tabs[activeIndex]
+
+  function setActive(label: string) {
+    if (sync && state) {
+      state.setTab(groupKey, label)
+      return
+    }
+    setLocalLabel(label)
+  }
 
   return (
     <div className='no-bleed overflow-hidden rounded-(--border-radius-md) border border-(--border-subtle) bg-card'>
-      <div className='overflow-x-auto border-b border-(--border-subtle) bg-muted/40 p-2'>
-        <div className='flex min-w-max flex-wrap gap-1'>
-        {labels.map((label, index) => {
-          const inputId = `${groupName}-${index}`
-          return (
-            <div key={`${label}-${index}`} className='contents'>
-              <input
-                id={inputId}
-                data-tab-label={label}
-                className='peer sr-only'
-                type='radio'
-                name={groupName}
-                defaultChecked={index === activeIndex}
-              />
-              <label
-                htmlFor={inputId}
-                role='button'
+      <div className={`${borderBottom ? 'border-b border-(--border-subtle)' : ''} overflow-x-auto bg-muted/40 p-2`}>
+        <div role='tablist' className='flex min-w-max gap-1'>
+          {labels.map((label, index) => {
+            const active = index === activeIndex
+            return (
+              <button
                 key={`${label}-${index}`}
-                className='cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium text-(color:--text-secondary) transition-colors peer-checked:bg-background peer-checked:text-(color:--text-primary)'
+                type='button'
+                role='tab'
+                aria-selected={active}
+                onClick={() => setActive(label)}
+                className='cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors'
+                style={{
+                  backgroundColor: active ? 'var(--background)' : 'transparent',
+                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                }}
               >
                 {label}
-              </label>
-              <div className='order-last hidden w-full peer-checked:block' data-tab-panel={label}>
-                {tabs[index]?.props.children}
-              </div>
-            </div>
-          )
-        })}
+              </button>
+            )
+          })}
         </div>
+      </div>
+      <div role='tabpanel' className='p-0'>
+        {activeTab?.props.children}
       </div>
     </div>
   )

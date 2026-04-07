@@ -4,6 +4,7 @@ test.describe("mintlify components fixture", () => {
   test("loads the page and renders representative components", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/");
+    await page.waitForTimeout(1200);
 
     await expect(page).toHaveTitle(/Mintlify Components/);
     await expect(page.getByRole("heading", { name: "Mintlify Components" })).toBeVisible();
@@ -16,12 +17,12 @@ test.describe("mintlify components fixture", () => {
     await expect(page.getByText("Accordion list item")).toBeVisible();
     await expect(page.getByText("console.log('accordion code block')")).toBeVisible();
     await expect(page.getByText("return 'top-level code block'")).toBeVisible();
-    const npmTab = page.getByRole("button", { name: "npm", exact: true });
-    const pnpmTab = page.getByRole("button", { name: "pnpm", exact: true });
+    const npmTab = page.getByRole("tab", { name: "npm", exact: true }).first();
+    const pnpmTab = page.getByRole("tab", { name: "pnpm", exact: true }).first();
     await expect(npmTab).toBeVisible();
-    await expect(page.locator('input[data-tab-label="npm"]:checked')).toHaveCount(1);
     await pnpmTab.click();
-    await expect(page.locator('input[data-tab-label="pnpm"]:checked')).toHaveCount(1);
+    await expect(page.getByText("pnpm add holocron")).toBeVisible();
+    await expect(page.getByText("pnpm docs")).toBeVisible();
     await expect(page.getByText("Expandable content body.")).toBeVisible();
     await expect(page.getByText("Expandable list item")).toBeVisible();
     await expect(page.getByText('{ "expandable": true }')).toBeVisible();
@@ -31,7 +32,11 @@ test.describe("mintlify components fixture", () => {
     await expect(page.getByRole("heading", { name: "Tree" })).toBeVisible();
     await expect(page.getByText("Initial component fixture release.")).toBeVisible();
     await expect(page.getByText("Added nested content coverage")).toBeVisible();
+    await expect(page.getByText("JavaScript-specific content.")).not.toBeVisible();
+    await page.getByRole("button", { name: "JavaScript", exact: true }).click();
     await expect(page.getByText("JavaScript-specific content.")).toBeVisible();
+    await expect(page.getByText("Python-specific content.")).not.toBeVisible();
+    await page.getByRole("button", { name: "Python", exact: true }).click();
     await expect(page.getByText("Python-specific content.")).toBeVisible();
   });
 

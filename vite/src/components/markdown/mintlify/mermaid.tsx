@@ -21,7 +21,7 @@ export function Mermaid({ chart }: { chart: string; placement?: string; actions?
         if (!mermaidInitialized) {
           mermaid.initialize({
             startOnLoad: false,
-            securityLevel: 'loose',
+            securityLevel: 'strict',
             theme: 'neutral',
           })
           mermaidInitialized = true

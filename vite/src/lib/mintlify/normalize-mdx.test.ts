@@ -17,11 +17,11 @@ describe('normalizeMdx', () => {
     const result = await normalizeMdx(`
 <CodeGroup>
 
-\`\`\`ts title=\"TypeScript\"
+\`\`\`ts helloWorld.ts
 console.log('ts')
 \`\`\`
 
-\`\`\`js title=\"JavaScript\"
+\`\`\`js helloWorld.js
 console.log('js')
 \`\`\`
 
@@ -29,14 +29,14 @@ console.log('js')
 `)
 
     expect(result).toMatchInlineSnapshot(`
-      "<Tabs items={[\"TypeScript\", \"JavaScript\"]}>
-        <Tab title=\"TypeScript\">
+      "<Tabs items={[\"helloWorld.ts\", \"helloWorld.js\"]}>
+        <Tab title=\"helloWorld.ts\">
           \`\`\`ts
           console.log('ts')
           \`\`\`
         </Tab>
 
-        <Tab title=\"JavaScript\">
+        <Tab title=\"helloWorld.js\">
           \`\`\`js
           console.log('js')
           \`\`\`
@@ -48,7 +48,7 @@ console.log('js')
 
   test('rewrites mermaid fences to Mermaid JSX', async () => {
     const result = await normalizeMdx(`
-\`\`\`mermaid placement=\"top-left\" actions=false
+\`\`\`mermaid placement=\"top-left\" actions={false}
 flowchart LR
 A-->B
 \`\`\`
