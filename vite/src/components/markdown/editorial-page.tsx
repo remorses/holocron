@@ -44,6 +44,16 @@ export type EditorialSection = {
   asideRowSpan?: number
 }
 
+function getSharedAsideStartRow(row: number, span: number) {
+  return row - span + 1
+}
+
+function sectionStartsSharedAsideAtTop(section: EditorialSection, index: number) {
+  if (!section.aside) return false
+  const span = section.asideRowSpan ?? 1
+  return span > 1 && getSharedAsideStartRow(index + 1, span) === 1
+}
+
 /**
  * Top-level page shell.
  *
@@ -83,6 +93,7 @@ export function EditorialPage({
   const banner = siteConfig.banner
   // Sidebar spans exactly the content rows — no wasted implicit rows.
   const sidebarRowSpan = sections ? sections.length : 1
+  const pageStartsWithSharedAside = sections?.some(sectionStartsSharedAsideAtTop) ?? false
 
   return (
     <div
@@ -272,6 +283,14 @@ export function EditorialPage({
               }
               const span = section.asideRowSpan ?? 1
               const isShared = span > 1
+              const sharedAsideStartRow = getSharedAsideStartRow(row, span)
+              const hasPerSectionAside = Boolean(section.aside) && !isShared
+              const hasSharedAside = Boolean(section.aside) && isShared
+              const showPerSectionAsideColumn = i === 0 || hasPerSectionAside
+              const renderAssistantInPerSectionAside =
+                i === 0 && ENABLE_ASSISTANT && !pageStartsWithSharedAside
+              const renderAssistantInSharedAside =
+                ENABLE_ASSISTANT && sharedAsideStartRow === 1
               const asideClass =
                 'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
               return (
@@ -285,12 +304,12 @@ export function EditorialPage({
                       {section.content}
                     </div>
                     {/* Aside column: assistant input (first row only) + per-section aside */}
-                    {(i === 0 || (section.aside && !isShared)) && (
+                    {showPerSectionAsideColumn && (
                       <div
-                         className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                          className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
                       >
-                        {i === 0 && ENABLE_ASSISTANT && <SidebarAssistant />}
-                        {section.aside && !isShared && (
+                        {renderAssistantInPerSectionAside && <SidebarAssistant />}
+                        {hasPerSectionAside && (
                           <div className='slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'>
                             {section.aside}
                           </div>
@@ -303,11 +322,15 @@ export function EditorialPage({
                       Mobile: grid-row stays `auto` → auto-placed by DOM order,
                       stacks at end of range without forcing an implicit 2nd
                       column in grid-cols-1. */}
-                  {section.aside && isShared && (
+                  {hasSharedAside && (
                     <div
                       className={`${asideClass} lg:col-[3] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
-                      style={{ '--shared-row': `${row - span + 1} / span ${span}` } as React.CSSProperties}
+                      style={{ '--shared-row': `${sharedAsideStartRow} / span ${span}` } as React.CSSProperties}
                     >
+                      {/* A shared aside that starts on row 1 owns the whole
+                          desktop right rail, so the assistant must render
+                          inside that sticky stack to avoid overlap. */}
+                      {renderAssistantInSharedAside && <SidebarAssistant />}
                       {section.aside}
                     </div>
                   )}
