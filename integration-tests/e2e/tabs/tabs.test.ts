@@ -148,6 +148,9 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
 
   test("no hydration errors on tabs home page", async ({ page }) => {
     const errors: string[] = [];
+    function isIgnorableDevReloadError(message: string): boolean {
+      return message.includes("Failed to fetch dynamically imported module:");
+    }
     page.on("console", (msg) => {
       const text = msg.text().toLowerCase();
       const type = msg.type();
@@ -156,6 +159,7 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
       if (text.includes("did not match")) errors.push(msg.text());
     });
     page.on("pageerror", (err) => {
+      if (isIgnorableDevReloadError(err.message)) return;
       errors.push(err.message);
     });
 

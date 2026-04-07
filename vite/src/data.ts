@@ -14,14 +14,14 @@
  * `virtual:holocron-mdx` module. Only the app factory imports MDX content.
  */
 
-import { config, navigation, switchers } from 'virtual:holocron-config'
+import { config, navigation, switchers, base } from 'virtual:holocron-config'
 import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigation.ts'
 import { isNavPage, isNavGroup, isVisibleNavPage } from './navigation.ts'
 import type { SearchEntry } from './lib/search.ts'
 import type { ConfigIcon } from './config.ts'
 import { resolveLogo } from './lib/generated-logo.tsx'
 
-export { config, navigation }
+export { config, navigation, base }
 
 /** A top-level tab or anchor rendered in the tab bar. */
 export type TabItem = {
@@ -185,12 +185,13 @@ function collectEntriesFromGroups(
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
         if (!isVisibleNavPage(entry)) continue
+        const frontmatter = entry.frontmatter ?? {}
         out.push({
-          label: entry.frontmatter.sidebarTitle ?? entry.title,
+          label: frontmatter.sidebarTitle ?? entry.title,
           href: entry.href,
           groupPath: key,
           pageHref: null,
-          searchText: [entry.title, entry.frontmatter.sidebarTitle, ...(entry.frontmatter.keywords ?? [])]
+          searchText: [entry.title, frontmatter.sidebarTitle, ...(frontmatter.keywords ?? [])]
             .filter(Boolean)
             .join(' '),
         })
@@ -219,7 +220,7 @@ export const headerLinks: HeaderLink[] = buildHeaderLinks()
 /** Flat search entry list for Orama. Pages + headings, with ancestor keys. */
 export const searchEntries: SearchEntry[] = buildSearchEntries()
 
-const baseUrl = import.meta.env.BASE_URL || '/'
+const baseUrl = base || '/'
 
 /** Resolved logo URLs for UI chrome. Falls back to generated images so
  *  header/footer can always render a normal <img> instead of special-casing

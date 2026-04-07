@@ -6,6 +6,7 @@ declare module 'virtual:holocron-config' {
   export const config: HolocronConfig
   export const navigation: Navigation
   export const switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
+  export const base: string
 }
 
 declare module 'virtual:holocron-mdx' {
