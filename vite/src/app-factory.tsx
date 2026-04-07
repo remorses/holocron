@@ -60,6 +60,9 @@ import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
 import { SiteHead } from './lib/site-head.tsx'
+import { encodeFederationPayload } from 'spiceflow/federation'
+import { ChatRenderNodes } from './lib/chat-render.tsx'
+import dedent from 'string-dedent'
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -297,6 +300,160 @@ export function createHolocronApp() {
         'Cache-Control': 's-maxage=300, stale-while-revalidate=86400',
       },
     })
+  })
+
+  // /holocron-api/chat — AI assistant endpoint.
+  // Streams server-rendered JSX parts via federation. The LLM uses
+  // bash-tool to search/read docs in a virtual filesystem.
+  app = app.post('/holocron-api/chat', async ({ request }: { request: Request }) => {
+    const { streamText } = await import('ai')
+    const { openai } = await import('@ai-sdk/openai')
+    const { createBashTool } = await import('bash-tool')
+
+    const body = (await request.json()) as {
+      messages: Array<{ id?: string; role: string; parts: Array<{ type: string; text?: string }> }>
+      previousMessages?: unknown[]
+      currentSlug: string
+    }
+
+    // Build virtual filesystem with all docs
+    const files: Record<string, string> = {}
+    for (const [slug, mdx] of Object.entries(mdxContent)) {
+      files[`/docs/${slug}.mdx`] = mdx
+    }
+
+    const { tools } = await createBashTool({ files })
+
+    // Build system prompt
+    const allPages = collectAllPages(navigation)
+    const pageIndex = allPages
+      .map((p) => `- /docs/${p.slug}.mdx  "${p.title}"`)
+      .join('\n')
+    const currentPageMdx = (() => {
+      // Try to find the mdx content for the current page
+      for (const [slug, mdx] of Object.entries(mdxContent)) {
+        const href = slugToHref(slug)
+        if (href === body.currentSlug || slug === body.currentSlug) {
+          return mdx
+        }
+      }
+      return ''
+    })()
+
+    const systemPrompt = dedent`
+      You are a documentation assistant for ${config.name || 'this site'}.
+
+      The user is currently reading: ${body.currentSlug}
+
+      Current page content:
+      ---
+      ${currentPageMdx.slice(0, 4000)}
+      ---
+
+      All documentation files (use bash to search/read when you need more context):
+      ${pageIndex}
+
+      Use the bash tool to search and read documentation files.
+      Files are at /docs/<slug>.mdx — use grep -rn "term" /docs/ to search, cat /docs/slug.mdx to read.
+      Answer concisely based on the documentation. Include code examples when relevant.
+    `
+
+    // Convert new user messages from UIMessage parts format
+    const newUserMessages = body.messages.map((msg) => ({
+      role: msg.role as 'user' | 'assistant',
+      content:
+        msg.parts
+          ?.filter((p) => p.type === 'text' && p.text)
+          .map((p) => p.text!)
+          .join('\n') || '',
+    }))
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...((body.previousMessages as unknown[]) || []),
+      ...newUserMessages,
+    ]
+
+    const result = streamText({
+      model: openai('gpt-5.4-nano'),
+      tools: { bash: tools.bash },
+      messages: messages as any,
+      stopWhen: (event) => event.steps.length >= 30,
+    })
+
+    // Process UIMessageChunk stream — each chunk type maps 1:1 to a yield.
+    // text-end marks the natural boundary for completed text parts.
+    // Session snapshots are yielded after each completed piece for resumability.
+    const uiStream = result.toUIMessageStream()
+    let textBuffer = ''
+    const toolNames = new Map<string, string>()
+    // Accumulate raw AI SDK messages for session continuity
+    const sessionMessages: unknown[] = [
+      ...((body.previousMessages as unknown[]) || []),
+      ...newUserMessages,
+    ]
+
+    async function* generateParts() {
+      for await (const chunk of uiStream) {
+        if (chunk.type === 'text-delta') {
+          textBuffer += chunk.delta
+          continue
+        }
+
+        if (chunk.type === 'text-end') {
+          if (textBuffer.trim()) {
+            const mdast = mdxParse(textBuffer) as Root
+            const jsx = (
+              <ChatRenderNodes
+                markdown={textBuffer}
+                nodes={mdast.children}
+              />
+            )
+            yield { type: 'text' as const, jsx, text: textBuffer }
+            sessionMessages.push({ role: 'assistant', content: textBuffer })
+            yield { type: 'session' as const, messages: [...sessionMessages] }
+          }
+          textBuffer = ''
+          continue
+        }
+
+        if (chunk.type === 'tool-input-available') {
+          toolNames.set(chunk.toolCallId, chunk.toolName)
+          yield {
+            type: 'tool-call' as const,
+            toolCallId: chunk.toolCallId,
+            toolName: chunk.toolName,
+            args: chunk.input as Record<string, unknown>,
+          }
+          // Push assistant tool-call message (don't snapshot yet — wait for result)
+          sessionMessages.push({
+            role: 'assistant',
+            content: [{ type: 'tool-call', toolCallId: chunk.toolCallId, toolName: chunk.toolName, args: chunk.input }],
+          })
+          continue
+        }
+
+        if (chunk.type === 'tool-output-available') {
+          const rawOutput = chunk.output as { stdout?: string; stderr?: string }
+          yield {
+            type: 'tool-result' as const,
+            toolCallId: chunk.toolCallId,
+            toolName: toolNames.get(chunk.toolCallId) || 'bash',
+            output: (rawOutput?.stdout || '').slice(0, 500),
+            ...(rawOutput?.stderr ? { error: rawOutput.stderr } : {}),
+          }
+          // Push tool result message + snapshot (tool round-trip complete)
+          sessionMessages.push({
+            role: 'tool',
+            content: [{ type: 'tool-result', toolCallId: chunk.toolCallId, result: chunk.output }],
+          })
+          yield { type: 'session' as const, messages: [...sessionMessages] }
+          continue
+        }
+      }
+    }
+
+    return await encodeFederationPayload({ stream: generateParts() })
   })
 
   // ── Shared loader + layout ─────────────────────────────────────
