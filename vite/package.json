@@ -41,10 +41,10 @@
   ],
   "scripts": {
     "generate-schema": "tsx scripts/generate-schema.ts",
-    "build": "pnpm generate-schema && rm -rf dist *.tsbuildinfo && tsc",
+    "build": "pnpm generate-schema && tsc",
     "typecheck": "tsc",
     "test": "vitest --run",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.51",
