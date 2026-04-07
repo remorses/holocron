@@ -63,6 +63,7 @@ import { SiteHead } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
+import { getAbsoluteOgImageUrl } from './lib/og-utils.ts'
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -119,6 +120,7 @@ function renderMdxPage(
   slug: string,
   loaderData: HolocronLoaderData,
   bannerJsx: React.ReactNode | undefined,
+  ogImageUrl: string,
 ) {
   const pageMdx = mdxContent[slug]!
 
@@ -150,12 +152,17 @@ function renderMdxPage(
     <>
       <Head>
         <Head.Title>{loaderData.headTitle}</Head.Title>
+        <Head.Meta property='og:title' content={loaderData.headTitle} />
         {loaderData.currentPageDescription && (
           <>
             <Head.Meta name='description' content={loaderData.currentPageDescription} />
             <Head.Meta property='og:description' content={loaderData.currentPageDescription} />
+            <Head.Meta name='twitter:description' content={loaderData.currentPageDescription} />
           </>
         )}
+        <Head.Meta property='og:image' content={ogImageUrl} />
+        <Head.Meta name='twitter:image' content={ogImageUrl} />
+        <Head.Meta name='twitter:card' content='summary_large_image' />
       </Head>
       <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} />
     </>
@@ -275,6 +282,46 @@ export function createHolocronApp() {
         'x-content-type-options': 'nosniff',
       },
     })
+  })
+
+  app = app.get('/og', async ({ request }: { request: Request }) => {
+    const { createOgImageResponse } = await import('./lib/og.tsx')
+    const { resolveOgIconUrl } = await import('./lib/og-utils.ts')
+    const requestUrl = new URL(request.url)
+    const iconUrl = resolveOgIconUrl(config, request.url)
+    const response = createOgImageResponse({
+      title: config.name,
+      description: config.description,
+      iconUrl,
+      siteName: config.name,
+      pageLabel: `${requestUrl.host}/`,
+    })
+    response.headers.set('cache-control', 'public, max-age=3600, s-maxage=3600')
+    return response
+  })
+
+  app = app.get('/og/*', async ({ request, params }: { request: Request; params: Record<string, string> }) => {
+    const { createOgImageResponse } = await import('./lib/og.tsx')
+    const { resolveOgIconUrl } = await import('./lib/og-utils.ts')
+    const requestUrl = new URL(request.url)
+    const rawSlug = params['*'] || ''
+    const slug = rawSlug.replace(/^\//, '')
+    const page = findPageBySlug(navigation, slug, mdxContent)
+
+    if (!page) {
+      return new Response('Not found', { status: 404 })
+    }
+
+    const iconUrl = resolveOgIconUrl(config, request.url)
+    const response = createOgImageResponse({
+      title: page.title,
+      description: page.description ?? config.description,
+      iconUrl,
+      siteName: config.name,
+      pageLabel: `${requestUrl.host}${page.href}`,
+    })
+    response.headers.set('cache-control', 'public, max-age=3600, s-maxage=3600')
+    return response
   })
 
   // /holocron-api/search
@@ -555,7 +602,8 @@ export function createHolocronApp() {
     app = app.page(pageHref, async ({ loaderData: rawLoaderData, request }) => {
       const loaderData = rawLoaderData as HolocronLoaderData
       const bannerJsx = getBannerJsx(request)
-      return renderMdxPage(slug, loaderData, bannerJsx)
+      const ogImageUrl = getAbsoluteOgImageUrl(request.url, base, loaderData.currentPageHref ?? pageHref)
+      return renderMdxPage(slug, loaderData, bannerJsx, ogImageUrl)
     })
   }
 

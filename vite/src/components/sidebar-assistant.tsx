@@ -112,7 +112,6 @@ export function ChatInput({
 
 export function SidebarAssistant() {
   const [inputValue, setInputValue] = useState('')
-  const hasChatInMemory = chatState((s) => s.parts.length > 0)
 
   const handleSubmit = () => {
     const text = inputValue.trim()
@@ -122,7 +121,10 @@ export function SidebarAssistant() {
   }
 
   const handleFocus = () => {
-    if (hasChatInMemory) {
+    // Read the store lazily on focus instead of subscribing during render.
+    // This keeps the sidebar input SSR-safe in the RSC page shell while
+    // preserving the "reopen existing chat" behavior on the client.
+    if (chatState.getState().parts.length > 0) {
       chatState.setState({ drawerState: 'open' })
     }
   }

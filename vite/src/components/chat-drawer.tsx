@@ -30,6 +30,18 @@ import { TrashIcon, CloseIcon, InfoCircleIcon } from './chat-icons.tsx'
 // ── ChatDrawer ───────────────────────────────────────────────────────
 
 export function ChatDrawer() {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) return null
+
+  return <ChatDrawerInner />
+}
+
+function ChatDrawerInner() {
   const drawerState = chatState((s) => s.drawerState)
   const isGenerating = chatState((s) => s.isGenerating)
   const parts = chatState((s) => s.parts)
@@ -57,9 +69,7 @@ export function ChatDrawer() {
       const currentParts = chatState.getState().parts
       const sessionPart = [...currentParts]
         .reverse()
-        .find((p) => p.type === 'session') as
-        | Extract<ChatPart, { type: 'session' }>
-        | undefined
+        .find((p) => p.type === 'session')
 
       const controller = new AbortController()
       chatState.setState((s) => ({
@@ -161,7 +171,7 @@ export function ChatDrawer() {
     if (draftText.trim()) {
       const text = draftText.trim()
       chatState.setState({ draftText: '' })
-      handleSubmit(text)
+      void handleSubmit(text)
     }
     // Focus the drawer textarea when opening
     setTimeout(() => drawerInputRef.current?.focus(), 100)
@@ -333,7 +343,7 @@ export function ChatDrawer() {
             <ChatInput
               value={inputValue}
               onChange={setInputValue}
-              onSubmit={() => handleSubmit()}
+              onSubmit={handleSubmit}
               onStop={handleStop}
               isGenerating={isGenerating}
               placeholder='How can I help?'

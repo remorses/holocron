@@ -27,6 +27,18 @@ import {
 import { TabLink } from './markdown/tab-link.tsx'
 
 export function NavDrawer() {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) return null
+
+  return <NavDrawerInner />
+}
+
+function NavDrawerInner() {
   const isOpen = chatState((s) => s.navDrawerOpen)
   const { currentPageHref, activeVersionHref, activeDropdownHref, activeTabHref } =
     useHolocronData()
@@ -159,7 +171,7 @@ export function NavDrawer() {
           </div>
 
           {/* Header links + primary CTA */}
-          {((headerLinks && headerLinks.length > 0) || (primary && primary.href)) && (
+          {((headerLinks.length > 0) || Boolean(primary?.href)) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
               {headerLinks?.map((link) => (
                 <a
@@ -174,7 +186,7 @@ export function NavDrawer() {
                   <span>{link.label}</span>
                 </a>
               ))}
-              {primary && primary.href && (
+              {primary?.href && (
                 <a
                   href={primary.href}
                   target={primary.href.startsWith('http') ? '_blank' : undefined}
