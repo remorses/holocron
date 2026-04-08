@@ -66,30 +66,44 @@ test.describe("getting-started page", () => {
   test("dims non-matching items when search has no matches", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/getting-started");
-    // Wait for hydration so the search input is interactive
-    await page.waitForTimeout(1000);
 
     const searchInput = page.getByPlaceholder("search...");
-    await searchInput.click();
-    await searchInput.fill("zzzz-no-match");
-    // Wait for React startTransition to apply dimming
-    await page.waitForTimeout(1000);
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
 
-    // The "Welcome to Test Docs" page link should be dimmed
+    // The first dev visit can trigger Vite's optimize-deps reload. Reload once
+    // after the page is interactive so the actual search assertion runs against
+    // the settled module graph instead of racing the dev-server refresh.
+    await page.reload();
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
+
     const nav = page.getByRole("navigation", { name: "Navigation" });
     const welcomeLink = nav.getByRole("link", { name: "Welcome to Test Docs" });
-    await expect(welcomeLink).toBeVisible();
 
-    // The opacity is set inline on the parent div.flex.flex-col wrapper
-    const wrapperOpacity = await welcomeLink.evaluate((node) => {
-      let el: HTMLElement | null = node.parentElement;
-      while (el) {
-        if (el.style.opacity) return el.style.opacity;
-        el = el.parentElement;
+    let opacity = 1;
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const activeInput = page.getByPlaceholder("search...");
+      await expect(activeInput).toBeVisible({ timeout: 10000 });
+      await activeInput.click();
+      await activeInput.fill("zzzz-no-match");
+      await expect(welcomeLink).toBeVisible();
+
+      opacity = await welcomeLink.evaluate((node) => {
+        let el: HTMLElement | null = node.parentElement;
+        while (el) {
+          if (el.style.opacity) return Number.parseFloat(el.style.opacity);
+          el = el.parentElement;
+        }
+        return Number.parseFloat(window.getComputedStyle(node).opacity);
+      });
+
+      if (opacity < 1) {
+        break;
       }
-      return window.getComputedStyle(node).opacity;
-    });
-    expect(Number.parseFloat(wrapperOpacity)).toBeLessThan(1);
+
+      await page.waitForTimeout(500);
+    }
+
+    expect(opacity).toBeLessThan(1);
   });
 
   test("renders code blocks", async ({ page }) => {
