@@ -73,7 +73,7 @@ export function Tabs({
           })}
         </div>
       </div>
-      <div role='tabpanel' className='p-2'>
+      <div role='tabpanel' className='p-3'>
         {activeTab?.props.children}
       </div>
     </div>
