@@ -7,7 +7,6 @@
 
 import React, { useMemo } from 'react'
 import * as PrismModule from 'prismjs'
-import 'prismjs/components/prism-typescript'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-tsx'
 import 'prismjs/components/prism-bash'
@@ -28,21 +27,13 @@ export function CodeBlock({
   lang = 'jsx',
   lineHeight = '1.6',
   showLineNumbers = true,
-  bleed = true,
 }: {
   children: string
   lang?: string
   lineHeight?: string
   showLineNumbers?: boolean
-  bleed?: boolean
 }) {
   const lines = children.split('\n')
-  const lineNumberDigits = String(lines.length).length
-  const lineNumberWidth = `${lineNumberDigits}ch`
-  const lineNumberGap = lineNumberDigits > 2 ? '18px' : '16px'
-  const leftPadding = bleed && showLineNumbers
-    ? `calc(var(--bleed) - ${lineNumberWidth} - ${lineNumberGap})`
-    : '6px'
 
   /* Use Prism.highlight() to get highlighted HTML as a string. Works on both
      server and client (no DOM dependency), avoiding hydration mismatch issues
@@ -56,7 +47,7 @@ export function CodeBlock({
   }, [children, lang])
 
   return (
-    <figure className={`m-0 ${bleed ? 'bleed' : ''}`.trim()}>
+    <figure className='m-0 bleed'>
       <div className='relative'>
         <pre
           className='overflow-x-auto'
@@ -69,10 +60,7 @@ export function CodeBlock({
           <div
             className='flex'
             style={{
-              paddingTop: '10px',
-              paddingRight: '8px',
-              paddingBottom: '10px',
-              paddingLeft: leftPadding,
+              padding: '12px 8px 8px',
               fontFamily: 'var(--font-code)',
               fontSize: 'var(--type-code-size)',
               fontWeight: 'var(--weight-regular)',
@@ -80,7 +68,6 @@ export function CodeBlock({
               letterSpacing: 'normal',
               color: 'var(--text-primary)',
               tabSize: 2,
-              gap: showLineNumbers ? lineNumberGap : '0px',
             }}
           >
             {showLineNumbers && (
@@ -90,9 +77,9 @@ export function CodeBlock({
                 style={{
                   color: 'var(--code-line-nr)',
                   textAlign: 'right',
-                  width: lineNumberWidth,
+                  paddingRight: '20px',
+                  width: '36px',
                   userSelect: 'none',
-                  fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 {lines.map((_, i) => {

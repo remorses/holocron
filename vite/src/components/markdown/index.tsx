@@ -38,10 +38,6 @@ export { CodeBlock } from './code-block.tsx'
 export { PixelatedImage, LazyVideo, ChartPlaceholder } from './image.tsx'
 export { ComparisonTable } from './table.tsx'
 export {
-  MintlifyStateProvider,
-  useMintlifyState,
-} from './mintlify/state.tsx'
-export {
   Badge,
   Card,
   Columns,
@@ -66,8 +62,8 @@ export {
   Color,
   ColorRow,
   ColorItem,
-  MintlifyIcon,
 } from './mintlify/compat.tsx'
+export { Icon } from '../icon.tsx'
 export { Tabs, Tab } from './mintlify/tabs.tsx'
 export { Accordion, AccordionGroup } from './mintlify/accordion.tsx'
 export { Mermaid } from './mintlify/mermaid.tsx'

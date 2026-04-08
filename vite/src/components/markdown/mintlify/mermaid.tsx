@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { CodeBlock } from '../code-block.tsx'
 
 let mermaidInitialized = false
@@ -8,12 +8,14 @@ let mermaidInitialized = false
 export function Mermaid({ chart }: { chart: string; placement?: string; actions?: boolean }) {
   const [svg, setSvg] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
-  const renderId = useMemo(() => {
-    return `mermaid-${Math.random().toString(36).slice(2, 10)}`
-  }, [])
+  const renderIdRef = useRef<string | null>(null)
+  if (!renderIdRef.current) {
+    renderIdRef.current = `mermaid-${Math.random().toString(36).slice(2, 10)}`
+  }
 
   useEffect(() => {
     let cancelled = false
+    const renderId = renderIdRef.current!
 
     async function renderDiagram() {
       try {
@@ -46,13 +48,13 @@ export function Mermaid({ chart }: { chart: string; placement?: string; actions?
     return () => {
       cancelled = true
     }
-  }, [chart, renderId])
+  }, [chart])
 
   if (!svg) {
     if (failed) {
       return (
         <div className='no-bleed'>
-          <CodeBlock lang='diagram' lineHeight='1.5' showLineNumbers={false} bleed={false}>
+          <CodeBlock lang='diagram' lineHeight='1.5' showLineNumbers={false}>
             {chart}
           </CodeBlock>
         </div>

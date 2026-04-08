@@ -1,11 +1,14 @@
 'use client'
 
-import React, { Children, isValidElement, useId, useMemo, useState } from 'react'
-import { useMintlifyState } from './state.tsx'
+import React, { Children, isValidElement, useMemo, useState } from 'react'
+import { Icon } from '../../icon.tsx'
 
 type TabChildProps = {
   title?: string
   value?: string
+  /** TODO: FA/tabler iconType values render null until atlas includes those packs. */
+  icon?: string
+  iconType?: string
   children?: React.ReactNode
 }
 
@@ -31,29 +34,14 @@ export function Tabs({
   children,
   items,
   defaultTabIndex = 0,
-  sync = true,
   borderBottom = true,
 }: TabsProps) {
   const tabs = useMemo(() => Children.toArray(children).filter(isTabElement), [children])
   const labels = items && items.length === tabs.length ? items : tabs.map((tab, index) => getTabTitle(tab, index))
   const maxIndex = Math.max(labels.length - 1, 0)
-  const fallbackIndex = Math.min(defaultTabIndex, maxIndex)
-  const fallbackLabel = labels[fallbackIndex] ?? labels[0] ?? ''
-  const [localLabel, setLocalLabel] = useState(fallbackLabel)
-  const state = useMintlifyState()
-  const groupId = useId()
-  const groupKey = `tabs:${labels.join('|') || groupId}`
-  const activeLabel = sync ? (state?.tabs[groupKey] ?? fallbackLabel) : localLabel
-  const activeIndex = Math.max(labels.indexOf(activeLabel), 0)
+  const initialIndex = Math.min(defaultTabIndex, maxIndex)
+  const [activeIndex, setActiveIndex] = useState(initialIndex)
   const activeTab = tabs[activeIndex]
-
-  function setActive(label: string) {
-    if (sync && state) {
-      state.setTab(groupKey, label)
-      return
-    }
-    setLocalLabel(label)
-  }
 
   return (
     <div className='no-bleed overflow-hidden rounded-(--border-radius-md) border border-(--border-subtle) bg-card'>
@@ -61,26 +49,31 @@ export function Tabs({
         <div role='tablist' className='flex min-w-max gap-1'>
           {labels.map((label, index) => {
             const active = index === activeIndex
+            const tabIcon = tabs[index]?.props.icon
+            const tabIconType = tabs[index]?.props.iconType
             return (
               <button
                 key={`${label}-${index}`}
                 type='button'
                 role='tab'
                 aria-selected={active}
-                onClick={() => setActive(label)}
+                onClick={() => setActiveIndex(index)}
                 className='cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors'
                 style={{
                   backgroundColor: active ? 'var(--background)' : 'transparent',
                   color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
                 }}
               >
-                {label}
+                <span className='inline-flex items-center gap-1.5'>
+                  {tabIcon && <Icon icon={tabIcon} iconType={tabIconType} size={12} />}
+                  {label}
+                </span>
               </button>
             )
           })}
         </div>
       </div>
-      <div role='tabpanel' className='p-0'>
+      <div role='tabpanel' className='p-2'>
         {activeTab?.props.children}
       </div>
     </div>

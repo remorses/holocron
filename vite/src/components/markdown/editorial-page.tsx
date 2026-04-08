@@ -31,7 +31,7 @@ import { SidebarAssistant } from '../sidebar-assistant.tsx'
 import { ChatDrawer } from '../chat-drawer.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
 import { NavDrawer } from '../nav-drawer.tsx'
-import { MintlifyStateProvider } from './mintlify/state.tsx'
+
 
 export type EditorialSection = {
   content: React.ReactNode
@@ -98,7 +98,6 @@ export function EditorialPage({
   const pageStartsWithSharedAside = sections?.some(sectionStartsSharedAsideAtTop) ?? false
 
   return (
-    <MintlifyStateProvider>
     <div
       className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-(color:--text-primary) [font-family:var(--font-primary)] antialiased [text-rendering:optimizeLegibility]'
       style={{
@@ -370,6 +369,5 @@ export function EditorialPage({
       {/* Mobile navigation drawer (lg:hidden) */}
       <NavDrawer />
     </div>
-    </MintlifyStateProvider>
   )
 }
