@@ -60,7 +60,6 @@ export function CodeBlock({
           <div
             className='flex'
             style={{
-              padding: '12px 8px 8px',
               fontFamily: 'var(--font-code)',
               fontSize: 'var(--type-code-size)',
               fontWeight: 'var(--weight-regular)',
@@ -78,7 +77,7 @@ export function CodeBlock({
                   color: 'var(--code-line-nr)',
                   textAlign: 'right',
                   paddingRight: '20px',
-                  width: '36px',
+                  // width: '36px',
                   userSelect: 'none',
                 }}
               >
