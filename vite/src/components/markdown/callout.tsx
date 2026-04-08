@@ -7,6 +7,7 @@
  */
 
 import React from 'react'
+import { Icon } from '../icon.tsx'
 
 /** Tailwind class map per preset type. Each entry drives bg tint, border,
  *  and icon color (via text-*). The body text stays default (--text-primary);
@@ -77,34 +78,33 @@ export interface CalloutProps {
   /** Custom hex color (e.g. `#FFC107`). Overrides `type` styling and renders
    *  via inline style (Tailwind can't support arbitrary hex statically). */
   color?: string
-  /** Icon: ReactNode rendered as-is, URL/path string rendered as <img>, or
-   *  icon-library name string (ignored — no lucide/FA dep). */
+  /** Icon: ReactNode rendered as-is, or string resolved via <Icon> (lucide/emoji/URL). */
   icon?: React.ReactNode | string
-  /** FontAwesome icon style. Accepted for Mintlify API parity; currently a no-op. */
-  iconType?: 'regular' | 'solid' | 'light' | 'thin' | 'sharp-solid' | 'duotone' | 'brands'
+  /** FontAwesome icon style. Passed through to <Icon> as iconType for atlas key dispatch. */
+  iconType?: 'regular' | 'solid' | 'light' | 'thin' | 'sharp-solid' | 'duotone' | 'brands' | string
 }
 
-function resolveIcon(icon: React.ReactNode | string | undefined, fallback: React.ReactNode | undefined): React.ReactNode | undefined {
+function resolveCalloutIcon(
+  icon: React.ReactNode | string | undefined,
+  iconType: string | undefined,
+  fallback: React.ReactNode | undefined,
+  colorStyle: React.CSSProperties | undefined,
+): React.ReactNode | undefined {
   if (icon === undefined || icon === null) return fallback
   if (typeof icon !== 'string') return icon
-  // URL / path → render as <img>
-  if (/^(https?:|\/)/.test(icon)) {
-    return <img src={icon} alt='' width={16} height={16} style={{ display: 'block' }} />
-  }
-  // Bare icon-library name (lucide/fa/tabler) — not supported without a dep.
-  // Fall through to preset fallback if any.
-  return fallback
+  // String icon → delegate to <Icon> (handles emoji, URL, atlas lookup)
+  return <Icon icon={icon} iconType={iconType} size={16} color={colorStyle?.color} />
 }
 
 export function Callout({ children, type, color, icon, iconType }: CalloutProps) {
-  void iconType // no-op; accepted for Mintlify parity
   // No font-size/line-height here — Callout inherits from parent (body-size in
   // main content, --type-toc-size inside an Aside).
   // `no-bleed` zeros the --bleed* tokens for descendants so lists, code
   // blocks, and images stay inside the callout frame (see editorial.css).
   const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-(--border-radius-md) border-2'
   const presetIcon = type ? CALLOUT_ICONS[type] : undefined
-  const resolvedIcon = resolveIcon(icon, presetIcon)
+  const colorStyle = color ? { color } : undefined
+  const resolvedIcon = resolveCalloutIcon(icon, iconType, presetIcon, colorStyle)
 
   // Custom hex color → inline style, no variant class
   if (color) {
@@ -127,7 +127,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
   }
 
   // Preset variant (or unstyled fallback)
-  const variantClass = type ? CALLOUT_VARIANTS[type] : 'bg-muted border-border'
+  const variantClass = type ? CALLOUT_VARIANTS[type] : 'bg-blue-500/[0.03] border-blue-500/15 text-blue-700 dark:text-blue-400'
   return (
     <div className={`${baseClass} ${variantClass}`}>
       {resolvedIcon && (

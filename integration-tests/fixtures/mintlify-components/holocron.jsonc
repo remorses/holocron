@@ -1,0 +1,12 @@
+{
+  "name": "Mintlify Components Fixture",
+  "colors": {
+    "primary": "#0969da"
+  },
+  "navigation": [
+    {
+      "group": "Reference",
+      "pages": ["index"]
+    }
+  ]
+}

@@ -62,6 +62,7 @@ const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 const require = createRequire(import.meta.url)
 const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
+
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 /** Libraries we can actually resolve at build time. */
@@ -198,7 +199,7 @@ export async function syncNavigation({
     // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
     const finalMdx = resolvedImages.size > 0
       ? rewriteMdxImages(processed.mdast, resolvedImages)
-      : content
+      : processed.normalizedContent
 
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
@@ -406,6 +407,11 @@ type NavCacheEnvelope = {
   navigation: Navigation
 }
 
+type MdxCacheEnvelope = {
+  version: string
+  content: Record<string, string>
+}
+
 function readCache(cachePath: string): Navigation | null {
   if (!fs.existsSync(cachePath)) {
     return null
@@ -436,7 +442,11 @@ function readMdxCache(cachePath: string): Record<string, string> {
     return {}
   }
   try {
-    return JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as Record<string, string>
+    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
+      return (raw as MdxCacheEnvelope).content
+    }
+    return {}
   } catch {
     return {}
   }
@@ -445,7 +455,8 @@ function readMdxCache(cachePath: string): Record<string, string> {
 function writeMdxCache(cachePath: string, content: Record<string, string>): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(cachePath, JSON.stringify(content))
+  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content }
+  fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */

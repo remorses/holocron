@@ -47,6 +47,12 @@ Types are intentionally kept close to docs.json to minimize transformations. Uti
 
 Prefer the existing shadcn-style token names (`--background`, `--foreground`, `--muted`, `--accent`, `--border`, etc.) over introducing parallel Fumadocs-style color variable namespaces. If a ported Fumadocs component needs local helpers or utilities, keep those minimal and map them onto the shared shadcn token layer instead of creating a second design system.
 
+### Container spacing — use flex column gap
+
+Any container-like MDX component (`Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, API fields/examples, tiles, tree wrappers, etc.) must own its inner vertical rhythm with `flex flex-col gap-*` on the container body, just like the root page/layout wrappers do. Do not rely on paragraph margins inside containers — many editorial nodes render with margins stripped, so raw MDX children will visually collapse unless the container explicitly provides gap spacing.
+
+When a container can receive arbitrary MDX children, also add `no-bleed` on that container/body so nested code blocks, lists, and images do not leak outside the card frame.
+
 ### CSS variables — add only if they deduplicate values
 
 A CSS variable is only justified if it is **used in many places** and serves to deduplicate an otherwise-repeated hardcoded value. If a variable is referenced only once (or never), inline the value directly and delete the variable.
@@ -156,6 +162,8 @@ MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on dis
 **Never use `<p>` tags in components other than the `P` component itself** (the MDX `p` mapping in `app-factory.tsx`). In the editorial component system, `safe-mdx` wraps text children in paragraph nodes that map to `P`. If any other component (e.g. `Caption`, `Hero`, custom wrappers) also renders a `<p>`, the text inside it will get wrapped in another `P` → `<p>`, creating invalid `<p>` inside `<p>` nesting. This violates the HTML spec and causes React hydration mismatches.
 
 Use `<div>` instead of `<p>` in all editorial components. Style it identically with inline styles — the visual output is the same, and `<div>` can nest any element without spec violations.
+
+This rule is **not a concern** for container components that receive `{children}` from MDX (like `Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, `Badge`, `Steps`, `Update`, `View`, `Tile`, etc.). Those containers render `{children}` directly and `safe-mdx` handles wrapping text into `P` nodes. The rule only applies when a component **explicitly renders** a `<p>` tag in its own JSX — that `<p>` would nest inside the `P` that `safe-mdx` wraps around the component call, producing `<P><p>…</p></P>`. As long as all text in your component JSX uses `<div>` or `<span>` (never `<p>`), you're safe.
 
 ## Hydration debugging
 

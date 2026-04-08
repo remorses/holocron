@@ -138,6 +138,10 @@ test.describe("navigation", () => {
 });
 
 test.describe("hydration", () => {
+  function isIgnorableDevReloadError(message: string): boolean {
+    return message.includes("Failed to fetch dynamically imported module:");
+  }
+
   function isHydrationError(msg: { type(): string; text(): string }): boolean {
     const text = msg.text().toLowerCase();
     const type = msg.type();
@@ -156,6 +160,7 @@ test.describe("hydration", () => {
       if (isHydrationError(msg)) errors.push(msg.text());
     });
     page.on("pageerror", (err) => {
+      if (isIgnorableDevReloadError(err.message)) return;
       errors.push(err.message);
     });
 
@@ -171,6 +176,7 @@ test.describe("hydration", () => {
       if (isHydrationError(msg)) errors.push(msg.text());
     });
     page.on("pageerror", (err) => {
+      if (isIgnorableDevReloadError(err.message)) return;
       errors.push(err.message);
     });
 

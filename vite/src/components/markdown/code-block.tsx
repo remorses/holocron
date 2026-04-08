@@ -52,7 +52,7 @@ export function CodeBlock({
         <pre
           className='overflow-x-auto'
           style={{
-            borderRadius: 'var(--border-radius-md)',
+            // borderRadius: 'var(--border-radius-md)',
             margin: 0,
             padding: 0,
           }}
@@ -60,7 +60,6 @@ export function CodeBlock({
           <div
             className='flex'
             style={{
-              padding: '12px 8px 8px',
               fontFamily: 'var(--font-code)',
               fontSize: 'var(--type-code-size)',
               fontWeight: 'var(--weight-regular)',
@@ -77,8 +76,9 @@ export function CodeBlock({
                 style={{
                   color: 'var(--code-line-nr)',
                   textAlign: 'right',
-                  paddingRight: '20px',
-                  width: '36px',
+                  paddingRight: 'var(--bleed)',
+                  width: 'var(--bleed)',
+                  overflow: 'hidden',
                   userSelect: 'none',
                 }}
               >

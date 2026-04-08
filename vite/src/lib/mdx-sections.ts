@@ -37,6 +37,11 @@ export function isHeroNode(node: RootContent): boolean {
   return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Hero'
 }
 
+function isHeadingNode(node: RootContent): boolean {
+  if (node.type === 'heading') return true
+  return node.type === 'mdxJsxFlowElement' && 'name' in node && /^h[1-6]$/.test((node as { name?: string }).name ?? '')
+}
+
 /** Filter out mdast node types that render to nothing so they don't create
  *  empty grid rows. Frontmatter (`yaml`/`toml`) and link reference definitions
  *  are the main culprits — they appear as top-level children but produce no
@@ -57,7 +62,7 @@ function groupBySections(root: Root): MdastSection[] {
     // vertical rhythm uniform regardless of heading hierarchy — headings
     // always stand out with 48px breathing room, and content under a
     // heading flows with the tighter --prose-gap inside each section.
-    if (node.type === 'heading') {
+    if (isHeadingNode(node)) {
       if (current.contentNodes.length > 0 || current.asideNodes.length > 0) {
         sections.push(current)
       }

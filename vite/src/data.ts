@@ -185,12 +185,13 @@ function collectEntriesFromGroups(
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
         if (!isVisibleNavPage(entry)) continue
+        const frontmatter = entry.frontmatter ?? {}
         out.push({
-          label: entry.frontmatter.sidebarTitle ?? entry.title,
+          label: frontmatter.sidebarTitle ?? entry.title,
           href: entry.href,
           groupPath: key,
           pageHref: null,
-          searchText: [entry.title, entry.frontmatter.sidebarTitle, ...(entry.frontmatter.keywords ?? [])]
+          searchText: [entry.title, frontmatter.sidebarTitle, ...(frontmatter.keywords ?? [])]
             .filter(Boolean)
             .join(' '),
         })

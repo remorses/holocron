@@ -15,7 +15,7 @@ import type { HolocronConfig } from '../config.ts'
    based on cookie or config default. Must be synchronous and in <head>. */
 /* Blocking script that runs before paint. Sets `.dark` class on <html>.
    When data-strict-theme is set, ignores the cookie and uses config default only. */
-const THEME_SCRIPT = `(function(){var d=document.documentElement;var strict=d.hasAttribute("data-strict-theme");var m=strict?null:document.cookie.match(/holocron-theme=(light|dark)/);var t=m?m[1]:null;if(!t){var def=d.getAttribute("data-default-theme")||"system";t=def==="system"?(window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):def}if(t==="dark")d.classList.add("dark");else d.classList.remove("dark")})()`
+export const THEME_SCRIPT = `(function(){var d=document.documentElement;var strict=d.hasAttribute("data-strict-theme");var m=strict?null:document.cookie.match(/holocron-theme=(light|dark)/);var t=m?m[1]:null;if(!t){var def=d.getAttribute("data-default-theme")||"system";t=def==="system"?(window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):def}if(t==="dark")d.classList.add("dark");else d.classList.remove("dark")})()`
 
 /** Build Google Fonts URL for a family. Returns undefined if the family
  *  looks like a self-hosted font (has a source URL). */
@@ -94,10 +94,9 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
 
   return (
     <Head>
+      {/* Theme styles and fonts are hoisted into <head> via spiceflow Head. */}
       <Head.Meta charSet='utf-8' />
       <Head.Meta name='viewport' content='width=device-width, initial-scale=1' />
-      {/* Blocking theme script — must run before paint */}
-      <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       <link rel='preconnect' href='https://fonts.googleapis.com' />
       <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='' />
       {/* Default fonts (Inter + Newsreader) — only if no custom font overrides */}
@@ -117,7 +116,7 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
       ))}
       {/* Injected styles: colors + font-face + font var overrides */}
       {injectedStyles && (
-        <style dangerouslySetInnerHTML={{ __html: injectedStyles }} />
+        <style href='/holocron-injected-styles' precedence='default' dangerouslySetInnerHTML={{ __html: injectedStyles }} />
       )}
       {hasBoth ? (
         <>

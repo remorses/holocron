@@ -32,6 +32,7 @@ import { ChatDrawer } from '../chat-drawer.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
 import { NavDrawer } from '../nav-drawer.tsx'
 
+
 export type EditorialSection = {
   content: React.ReactNode
   aside?: React.ReactNode

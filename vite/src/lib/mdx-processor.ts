@@ -13,9 +13,11 @@ import GithubSlugger from 'github-slugger'
 import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
+import { normalizeMdx } from './mintlify/normalize-mdx.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
 
 export type ProcessedMdx = {
+  normalizedContent: string
   title: string
   description?: string
   /** Icon from frontmatter — Mintlify convention: `icon: rocket` in YAML.
@@ -34,26 +36,22 @@ export type ProcessedMdx = {
  * Returns the mdast tree for reuse by rewriteMdxImages.
  */
 export function processMdx(content: string): ProcessedMdx {
+  const normalizedContent = normalizeMdx(content)
   const frontmatter = parsePageFrontmatter(content)
-  const mdast = mdxParse(content)
+  const mdast = mdxParse(normalizedContent) as Root
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
   const slugger = new GithubSlugger()
   const headings: NavHeading[] = []
   for (const node of mdast.children) {
-    if (node.type === 'heading') {
-      const text = extractText(node.children)
-      headings.push({
-        depth: node.depth,
-        text,
-        slug: slugger.slug(text),
-      })
-    }
+    const heading = extractHeading(node, slugger)
+    if (heading) headings.push(heading)
   }
 
   const imageSrcs = collectImageSrcs(mdast)
 
   return {
+    normalizedContent,
     title: frontmatter.title || headings[0]?.text || 'Untitled',
     description: frontmatter.description,
     icon: typeof frontmatter.icon === 'string' && frontmatter.icon !== '' ? frontmatter.icon : undefined,
@@ -61,6 +59,31 @@ export function processMdx(content: string): ProcessedMdx {
     headings,
     imageSrcs,
     mdast,
+  }
+}
+
+function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading | undefined {
+  if (node.type === 'heading') {
+    const heading = node as Heading
+    const text = extractText(heading.children)
+    return {
+      depth: heading.depth,
+      text,
+      slug: slugger.slug(text),
+    }
+  }
+
+  if (!isJsxHeadingElement(node) || hasBooleanJsxAttr(node, 'noAnchor')) {
+    return undefined
+  }
+
+  const phrasingChildren = (node as RootContent & { children: PhrasingContent[] }).children
+  const text = extractText(phrasingChildren)
+  const explicitId = getJsxAttrValue(node, 'id')
+  return {
+    depth: Number(node.name?.slice(1) ?? 2),
+    text,
+    slug: explicitId || slugger.slug(text),
   }
 }
 
@@ -219,6 +242,13 @@ function isJsxImageElement(node: RootContent): node is JsxNode {
   return name === 'PixelatedImage' || name === 'img'
 }
 
+function isJsxHeadingElement(node: RootContent): node is JsxNode {
+  if (node.type !== 'mdxJsxFlowElement' || !('name' in node)) {
+    return false
+  }
+  return /^h[1-6]$/.test((node as JsxNode).name || '')
+}
+
 function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
   const attr = node.attributes.find((a) => {
     return a.type === 'mdxJsxAttribute' && a.name === attrName
@@ -236,6 +266,10 @@ function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
     }
   }
   return undefined
+}
+
+function hasBooleanJsxAttr(node: JsxNode, attrName: string): boolean {
+  return node.attributes.some((a) => a.type === 'mdxJsxAttribute' && a.name === attrName)
 }
 
 function setJsxAttr(node: JsxNode, attrName: string, value: string): void {

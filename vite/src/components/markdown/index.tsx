@@ -37,6 +37,36 @@ export {
 export { CodeBlock } from './code-block.tsx'
 export { PixelatedImage, LazyVideo, ChartPlaceholder } from './image.tsx'
 export { ComparisonTable } from './table.tsx'
+export {
+  Badge,
+  Card,
+  Columns,
+  Column,
+  Expandable,
+  Frame,
+  Prompt,
+  ParamField,
+  ResponseField,
+  Steps,
+  Step,
+  Tile,
+  Tooltip,
+  Update,
+  View,
+  Panel,
+  RequestExample,
+  ResponseExample,
+  Tree,
+  TreeFolder,
+  TreeFile,
+  Color,
+  ColorRow,
+  ColorItem,
+} from './mintlify/compat.tsx'
+export { Icon } from '../icon.tsx'
+export { Tabs, Tab } from './mintlify/tabs.tsx'
+export { Accordion, AccordionGroup } from './mintlify/accordion.tsx'
+export { Mermaid } from './mintlify/mermaid.tsx'
 
 export { Aside, FullWidth, Hero } from './markers.tsx'
 

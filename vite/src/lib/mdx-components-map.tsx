@@ -3,18 +3,66 @@
  * Maps MDX element names and mdast nodes to editorial components.
  */
 
-import { Fragment, type ReactNode } from 'react'
+import { Children, Fragment, isValidElement, type ReactNode } from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
 import type { Root, Heading, RootContent, Image } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
-import { Aside, FullWidth, Hero } from '../components/markdown/markers.tsx'
-import { P, A, Code, Caption, SectionHeading, type HeadingLevel } from '../components/markdown/typography.tsx'
-import { CodeBlock } from '../components/markdown/code-block.tsx'
-import { ComparisonTable } from '../components/markdown/table.tsx'
-import { PixelatedImage } from '../components/markdown/image.tsx'
-import { Bleed, List, OL, Li } from '../components/markdown/layout.tsx'
-import { Callout, Note, Warning, Info, Tip, Check, Danger } from '../components/markdown/callout.tsx'
-import { TableOfContentsPanel } from '../components/toc-panel.tsx'
+import {
+  Aside,
+  FullWidth,
+  Hero,
+  P,
+  A,
+  Code,
+  Caption,
+  CodeBlock,
+  SectionHeading,
+  ComparisonTable,
+  PixelatedImage,
+  Bleed,
+  List,
+  OL,
+  Li,
+  Callout,
+  Note,
+  Warning,
+  Info,
+  Tip,
+  Check,
+  Danger,
+  TableOfContentsPanel,
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionGroup,
+  Mermaid,
+  Badge,
+  Card,
+  Columns,
+  Column,
+  Expandable,
+  Frame,
+  Prompt,
+  ParamField,
+  ResponseField,
+  Steps,
+  Step,
+  Tile,
+  Tooltip,
+  Update,
+  View,
+  Panel,
+  RequestExample,
+  ResponseExample,
+  Tree,
+  TreeFolder,
+  TreeFile,
+  Color,
+  ColorRow,
+  ColorItem,
+  Icon,
+  type HeadingLevel,
+} from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 
 function PixelatedImageWithProps(props: {
@@ -39,6 +87,12 @@ function PixelatedImageWithProps(props: {
 
 export const mdxComponents = {
   p: P,
+  h1: createHeadingComponent(1),
+  h2: createHeadingComponent(2),
+  h3: createHeadingComponent(3),
+  h4: createHeadingComponent(4),
+  h5: createHeadingComponent(5),
+  h6: createHeadingComponent(6),
   a: A,
   code: Code,
   ul: List,
@@ -58,9 +112,64 @@ export const mdxComponents = {
   Tip,
   Check,
   Danger,
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionGroup,
+  Mermaid,
+  Badge,
+  Card,
+  Columns,
+  Column,
+  Expandable,
+  Frame,
+  Prompt,
+  ParamField,
+  ResponseField,
+  Steps,
+  Step,
+  Tile,
+  Tooltip,
+  Update,
+  View,
+  Panel,
+  RequestExample,
+  ResponseExample,
+  Tree,
+  'Tree.Folder': TreeFolder,
+  'Tree.File': TreeFile,
+  Color,
+  'Color.Row': ColorRow,
+  'Color.Item': ColorItem,
+  Icon: Icon,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.
   TableOfContentsPanel,
+}
+
+function extractTextFromReactNode(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node)
+  }
+  if (Array.isArray(node)) {
+    return node.map((child) => extractTextFromReactNode(child)).join('')
+  }
+  if (isValidElement(node)) {
+    return extractTextFromReactNode((node.props as { children?: ReactNode }).children)
+  }
+  return ''
+}
+
+function createHeadingComponent(level: HeadingLevel) {
+  return function MdxHeading({ id, noAnchor, children }: { id?: string; noAnchor?: boolean; children: ReactNode }) {
+    const text = Children.toArray(children).map((child) => extractTextFromReactNode(child)).join('')
+    const headingId = id || slugify(text)
+    if (noAnchor) {
+      const Tag = `h${level}` as 'h1' | 'h2' | 'h3'
+      return <Tag className={`editorial-heading editorial-h${level}`}>{children}</Tag>
+    }
+    return <SectionHeading id={headingId} level={level}>{children}</SectionHeading>
+  }
 }
 
 export function renderNode(

@@ -139,7 +139,8 @@ export function NavPageLink({
   highlightedHref: string | null
   highlightedRef: React.RefObject<HTMLAnchorElement | null>
 }) {
-  if (page.frontmatter.hidden) return null
+  const frontmatter = page.frontmatter ?? {}
+  if (frontmatter.hidden) return null
   const isActive = page.href === currentPageHref
   const isDimmed = searchState.dimmedHrefs?.has(page.href) ?? false
   const isSearchActive = searchState.matchedHrefs !== null
@@ -164,14 +165,14 @@ export function NavPageLink({
           borderRadius: isHighlighted ? '4px' : undefined,
           boxShadow: isHighlighted ? '0 0 0 4px var(--selection-bg)' : undefined,
         }}
-      >
-        <Icon icon={page.icon} size={12} />
-        <span>{page.frontmatter.sidebarTitle ?? page.title}</span>
-        <span className='ml-auto inline-flex items-center gap-1'>
-          {page.frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}
-          {page.frontmatter.tag && <NavBadge label={page.frontmatter.tag} />}
-        </span>
-      </Link>
+        >
+          <Icon icon={page.icon} size={12} />
+          <span>{frontmatter.sidebarTitle ?? page.title}</span>
+          <span className='ml-auto inline-flex items-center gap-1'>
+          {frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}
+          {frontmatter.tag && <NavBadge label={frontmatter.tag} />}
+          </span>
+        </Link>
       <ExpandableContainer open={showToc}>
         {page.headings.length > 0 && (
           <TocInline headings={page.headings} activeId={activeHeadingId} searchState={searchState} pageHref={page.href} highlightedHref={highlightedHref} highlightedRef={highlightedRef} />

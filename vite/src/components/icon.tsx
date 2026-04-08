@@ -27,6 +27,20 @@ export type IconProps = {
   /** px — applied to width+height. Emoji spans use this as font-size. */
   size?: number
   className?: string
+/**
+   * Icon library/style — used with string `icon` to construct the atlas key.
+   * Maps to Mintlify's `iconType` prop: "regular", "solid", "light", "thin",
+   * "sharp-solid", "duotone", "brands" (Font Awesome styles) or any
+   * library prefix like "tabler". When omitted, string icons default to
+   * `lucide:{icon}`.
+   *
+   * TODO: The build-time atlas currently only bundles lucide icons. FA and
+   * tabler iconType values will resolve to null (icon not found in atlas)
+   * until those packs are added to collect-icons.ts + icon-atlas generation.
+   */
+  iconType?: string
+  /** Foreground color as a CSS value (hex, var(), Tailwind arbitrary). Applied via `style={{ color }}`. */
+  color?: string
 }
 
 /**
@@ -57,6 +71,7 @@ function renderLibraryIcon(
   key: string,
   size: number,
   className?: string,
+  colorStyle?: React.CSSProperties,
 ): React.ReactElement | null {
   const entry = iconAtlas.icons[key]
   if (!entry) return null
@@ -67,14 +82,29 @@ function renderLibraryIcon(
       width={size}
       height={size}
       className={className}
-      style={{ display: 'inline-block', flexShrink: 0 }}
+      style={{ display: 'inline-block', flexShrink: 0, ...colorStyle }}
       dangerouslySetInnerHTML={{ __html: entry.body }}
     />
   )
 }
 
-export function Icon({ icon, size = 16, className }: IconProps): React.ReactElement | null {
+/** Font Awesome style values that map to the `fontawesome:` atlas prefix. */
+const FA_STYLES = new Set([
+  'regular', 'solid', 'light', 'thin', 'sharp-solid', 'duotone', 'brands',
+])
+
+function resolveAtlasKey(icon: string, iconType?: string): string {
+  if (iconType) {
+    if (FA_STYLES.has(iconType)) return `fontawesome:${icon}`
+    return `${iconType}:${icon}`
+  }
+  return `lucide:${icon}`
+}
+
+export function Icon({ icon, size = 16, className, iconType, color }: IconProps): React.ReactElement | null {
   if (!icon) return null
+
+  const colorStyle = color ? { color } : undefined
 
   if (typeof icon === 'string') {
     if (icon === '') return null
@@ -90,6 +120,7 @@ export function Icon({ icon, size = 16, className }: IconProps): React.ReactElem
             fontSize: `${size}px`,
             lineHeight: 1,
             flexShrink: 0,
+            ...colorStyle,
           }}
         >
           {icon}
@@ -108,12 +139,12 @@ export function Icon({ icon, size = 16, className }: IconProps): React.ReactElem
         />
       )
     }
-    // lucide name (default library)
-    return renderLibraryIcon(`lucide:${icon}`, size, className)
+    // Resolve atlas key using iconType dispatch
+    return renderLibraryIcon(resolveAtlasKey(icon, iconType), size, className, colorStyle)
   }
 
-  // Object form
+  // Object form — iconType is ignored (object already specifies library)
   if (!icon.name) return null
   const library = icon.library ?? 'lucide'
-  return renderLibraryIcon(`${library}:${icon.name}`, size, className)
+  return renderLibraryIcon(`${library}:${icon.name}`, size, className, colorStyle)
 }

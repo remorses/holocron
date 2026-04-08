@@ -64,7 +64,7 @@ import {
   decodeGeneratedLogoText,
   type GeneratedLogoTheme,
 } from './lib/generated-logo.tsx'
-import { SiteHead } from './lib/site-head.tsx'
+import { SiteHead, THEME_SCRIPT } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
@@ -680,6 +680,7 @@ export function createHolocronApp() {
         lang='en'
         className={isDark ? 'dark' : undefined}
         data-default-theme={config.appearance.default}
+        suppressHydrationWarning
         {...(config.appearance.strict ? { 'data-strict-theme': '' } : {})}
       >
         <SiteHead

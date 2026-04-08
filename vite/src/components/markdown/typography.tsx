@@ -7,18 +7,24 @@
 
 import React from 'react'
 
-export type HeadingLevel = 1 | 2 | 3
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
-const headingTagByLevel: Record<HeadingLevel, 'h1' | 'h2' | 'h3'> = {
+const headingTagByLevel: Record<number, string> = {
   1: 'h1',
   2: 'h2',
   3: 'h3',
+  4: 'h4',
+  5: 'h5',
+  6: 'h6',
 }
 
-const headingClassByLevel: Record<HeadingLevel, string> = {
+const headingClassByLevel: Record<number, string> = {
   1: 'editorial-heading editorial-h1',
   2: 'editorial-heading editorial-h2',
   3: 'editorial-heading editorial-h3',
+  4: 'editorial-heading',
+  5: 'editorial-heading',
+  6: 'editorial-heading',
 }
 
 export function SectionHeading({
@@ -27,22 +33,21 @@ export function SectionHeading({
   children,
 }: {
   id: string
-  level?: HeadingLevel
+  level?: number
   children: React.ReactNode
 }) {
-  level ||= 1
-  const Tag = headingTagByLevel[level] || 'h4'
+level ||= 1
+  const tag = headingTagByLevel[level] || 'h4'
+  const cls = headingClassByLevel[level] || 'editorial-heading'
 
-  return (
-    <Tag
-      id={id}
-      className={headingClassByLevel[level] || 'editorial-heading'}
-      data-toc-heading='true'
-      data-toc-level={level}
-    >
-      <span style={{ whiteSpace: level === 1 ? 'nowrap' : 'normal' }}>{children}</span>
-      {level === 1 ? <span style={{ flex: 1, height: '1px', background: 'var(--divider)' }} /> : null}
-    </Tag>
+  return React.createElement(tag, {
+    id,
+    className: cls,
+    'data-toc-heading': 'true',
+    'data-toc-level': level,
+  },
+    <span style={{ whiteSpace: level === 1 ? 'nowrap' : 'normal' }}>{children}</span>,
+    level === 1 ? <span style={{ flex: 1, height: '1px', background: 'var(--divider)' }} /> : null,
   )
 }
 
