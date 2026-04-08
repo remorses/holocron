@@ -365,7 +365,7 @@ export function createHolocronApp() {
         siteName: config.name,
         pageLabel: `${requestUrl.host}/`,
       })
-      response.headers.set('cache-control', 'public, max-age=3600, s-maxage=3600')
+      response.headers.set('cache-control', 's-maxage=3600')
       return response
     })
   }
@@ -391,7 +391,7 @@ export function createHolocronApp() {
         siteName: config.name,
         pageLabel: `${requestUrl.host}${page.href}`,
       })
-      response.headers.set('cache-control', 'public, max-age=3600, s-maxage=3600')
+      response.headers.set('cache-control', 's-maxage=3600')
       return response
     })
   }
@@ -405,8 +405,8 @@ export function createHolocronApp() {
 
     const text = decodeGeneratedLogoText(params['*'] || '')
     const { createGeneratedLogoResponse } = await import('./lib/generated-logo.tsx')
-    const response = createGeneratedLogoResponse({ text, theme })
-    response.headers.set('cache-control', 'public, max-age=31536000, s-maxage=31536000, immutable')
+    const response = await createGeneratedLogoResponse({ text, theme })
+    response.headers.set('cache-control', 's-maxage=31536000, immutable')
     return response
   })
 

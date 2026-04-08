@@ -1,10 +1,15 @@
 /**
  * Generated fallback logo route helpers + renderer backed by Takumi's ImageResponse.
+ *
+ * Uses Renderer.measure() to size the image to the exact text dimensions —
+ * no padding, no character-count heuristics.
  */
 
 import React from 'react'
 import fontDataUrl from '../assets/neug-asia-script-demo.ttf?url&inline'
 import { ImageResponse } from 'takumi-js/response'
+import { Renderer } from 'takumi-js/node'
+import { fromJsx } from 'takumi-js/helpers/jsx'
 import type { HolocronConfig } from '../config.ts'
 
 export type GeneratedLogoTheme = 'light' | 'dark'
@@ -14,10 +19,6 @@ const DEFAULT_LOGO_TEXT = 'documentation'
 const GENERATED_LOGO_ROUTE = '/holocron-api/logo'
 const LIGHT_LOGO_COLOR = '#111111'
 const DARK_LOGO_COLOR = '#ffffff'
-const MIN_LOGO_WIDTH = 280
-const MAX_LOGO_WIDTH = 960
-const LOGO_WIDTH_PER_CHARACTER = 62
-const LOGO_HEIGHT = 180
 
 export function normalizeGeneratedLogoText(text: string): string {
   const normalized = text.trim().replace(/\s+/g, ' ').toLowerCase()
@@ -64,6 +65,8 @@ export type GeneratedLogoOptions = {
 }
 
 const FONT_FAMILY = 'Neug Asia Script Demo'
+const FONT_SIZE = 72
+
 let cachedFontData: Promise<ArrayBuffer> | undefined
 
 function getFontData(): Promise<ArrayBuffer> {
@@ -76,44 +79,57 @@ function getFontData(): Promise<ArrayBuffer> {
   return cachedFontData
 }
 
-function getLogoSize(text: string): { width: number; height: number } {
-  const textLength = Array.from(text).length
-  return {
-    width: Math.max(MIN_LOGO_WIDTH, Math.min(MAX_LOGO_WIDTH, Math.round(textLength * LOGO_WIDTH_PER_CHARACTER))),
-    height: LOGO_HEIGHT,
-  }
+let cachedRenderer: Renderer | undefined
+
+function getRenderer(): Renderer {
+  cachedRenderer ??= new Renderer()
+  return cachedRenderer
+}
+
+const fontConfig: Parameters<Renderer['loadFont']>[0] = {
+  name: FONT_FAMILY,
+  data: getFontData,
+  weight: 700,
+  style: 'normal',
+}
+
+async function measureTextSize(text: string): Promise<{ width: number; height: number }> {
+  const renderer = getRenderer()
+  await renderer.loadFont(fontConfig)
+
+  const { node, stylesheets } = await fromJsx(
+    <span style={{ fontFamily: FONT_FAMILY, fontSize: FONT_SIZE, fontWeight: 700, lineHeight: 1, whiteSpace: 'nowrap' }}>
+      {text}
+    </span>,
+  )
+
+  const measured = await renderer.measure(node, { stylesheets })
+  return { width: Math.ceil(measured.width), height: Math.ceil(measured.height) }
 }
 
 function GeneratedLogoTemplate({ text, theme }: GeneratedLogoOptions) {
   return (
     <div
       style={{
-        width: '100%',
-        height: '100%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: '14px 24px 28px',
+        justifyContent: 'flex-start',
         color: theme === 'dark' ? DARK_LOGO_COLOR : LIGHT_LOGO_COLOR,
+        fontFamily: FONT_FAMILY,
+        fontSize: FONT_SIZE,
+        fontWeight: 700,
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
       }}
     >
-      <div
-        style={{
-          fontFamily: FONT_FAMILY,
-          fontSize: 112,
-          lineHeight: 1,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {text}
-      </div>
+      {text}
     </div>
   )
 }
 
-export function createGeneratedLogoResponse(options: GeneratedLogoOptions): ImageResponse {
+export async function createGeneratedLogoResponse(options: GeneratedLogoOptions): Promise<ImageResponse> {
   const text = normalizeGeneratedLogoText(options.text)
-  const { width, height } = getLogoSize(text)
+  const { width, height } = await measureTextSize(text)
 
   return new ImageResponse(<GeneratedLogoTemplate {...options} text={text} />, {
     width,
@@ -124,7 +140,7 @@ export function createGeneratedLogoResponse(options: GeneratedLogoOptions): Imag
       {
         name: FONT_FAMILY,
         data: getFontData,
-        weight: 400,
+        weight: 700,
         style: 'normal',
       },
     ],
