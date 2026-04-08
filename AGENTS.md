@@ -262,3 +262,10 @@ Tests use Playwright's `request` fixture (not raw `fetch()`) so per-project `bas
 - `pnpm test-e2e --project=<name>` — runs one specific fixture
 
 After changing `vite/src/` you must run `pnpm build` in the `vite/` package before re-running integration tests.
+
+
+## takumi
+
+takumi is the library used to generate images for example for og images
+
+if needed read docs with `curl https://takumi.kane.tw/llms-full.txt`
