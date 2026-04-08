@@ -40,6 +40,7 @@ export { ComparisonTable } from './table.tsx'
 export {
   Badge,
   Card,
+  CardGroup,
   Columns,
   Column,
   Expandable,

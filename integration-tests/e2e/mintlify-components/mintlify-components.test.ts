@@ -22,6 +22,27 @@ test.describe("mintlify components fixture", () => {
     await expect(npmTab).toBeVisible();
     await pnpmTab.click();
     await expect(page.getByText("pnpm add holocron")).toBeVisible();
+
+    const individualDevelopersTab = page.getByRole("tab", {
+      name: "Individual Developers",
+      exact: true,
+    });
+    const smallTeamsTab = page.getByRole("tab", {
+      name: "Small Teams",
+      exact: true,
+    });
+    const growingBusinessesTab = page.getByRole("tab", {
+      name: "Growing Businesses",
+      exact: true,
+    });
+
+    await expect(individualDevelopersTab).toBeVisible();
+    await expect(page.getByText("Ship Faster", { exact: true })).toBeVisible();
+    await smallTeamsTab.click();
+    await expect(page.getByText("No Engineering Overhead", { exact: true })).toBeVisible();
+    await growingBusinessesTab.click();
+    await expect(page.getByText("Enterprise Features", { exact: true })).toBeVisible();
+
     await expect(page.getByText("Expandable content body.")).toBeVisible();
     await expect(page.getByText("Expandable list item")).toBeVisible();
     await expect(page.getByText('{ "expandable": true }')).toBeVisible();
@@ -48,6 +69,7 @@ test.describe("mintlify components fixture", () => {
     expect(html).toContain("Single accordion");
     expect(html).toContain("Nested callout inside accordion");
     expect(html).toContain("top-level code block");
+    expect(html).toContain("Ship Faster");
     expect(html).toContain("Request example");
     expect(html).toContain("2026-04-07");
     expect(html).toContain("Added nested content coverage");

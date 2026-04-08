@@ -1693,3 +1693,9 @@ simultaneously. Fix: when `hasSwitchers`, return only anchors from `buildTabItem
 
 Related: `firstPage` must prefer the `default: true` version's first page for
 the `/` redirect, not the first flattened tab (which could be from v1).
+
+## CardGroup is a real Mintlify alias (2026-04-09)
+
+`<CardGroup>` is not decorative sugar in Mintlify docs — authors use it as the
+actual card grid wrapper, including inside `<Tabs>`. If it is missing from the
+MDX component map, tab panels look empty because the cards are dropped at render time.

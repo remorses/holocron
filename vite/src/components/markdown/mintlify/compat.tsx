@@ -144,6 +144,12 @@ export function Columns({ cols, children }: { cols?: number; children: React.Rea
   )
 }
 
+export function CardGroup({ cols, children }: { cols?: number; children: React.ReactNode }) {
+  // Mintlify authors use <CardGroup> as the card-grid primitive; keep it as
+  // an explicit alias so MDX doesn't silently drop those sections.
+  return <Columns cols={cols}>{children}</Columns>
+}
+
 export function Column({ children }: { children: React.ReactNode }) {
   return <div className='min-w-0'>{children}</div>
 }
