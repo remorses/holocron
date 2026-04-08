@@ -125,6 +125,14 @@
   --code-line-nr: rgba(0, 0, 0, 0.3);
   --selection-bg: rgba(0, 0, 0, 0.08);
 
+  /* Brand color tokens (light) — only fg, bg/border derived via opacity */
+  --brand-blue: #1d4ed8;
+  --brand-green: #047857;
+  --brand-yellow: #92400e;
+  --brand-orange: #c2410c;
+  --brand-red: #b91c1c;
+  --brand-purple: #7e22ce;
+
   /* Sidebar navigation (shadcn naming convention) */
   --sidebar-foreground: rgba(0, 0, 0, 0.55);
   --sidebar-foreground-hover: rgba(0, 0, 0, 0.75);
@@ -186,6 +194,14 @@
     --code-line-nr: rgba(255, 255, 255, 0.3);
     --selection-bg: rgba(255, 255, 255, 0.1);
 
+    /* Brand color tokens (dark) */
+    --brand-blue: #93c5fd;
+    --brand-green: #6ee7b7;
+    --brand-yellow: #fbbf24;
+    --brand-orange: #fb923c;
+    --brand-red: #fca5a5;
+    --brand-purple: #c4b5fd;
+
     /* Sidebar navigation dark */
     --sidebar-foreground: rgba(255, 255, 255, 0.55);
     --sidebar-foreground-hover: rgba(255, 255, 255, 0.75);
@@ -243,6 +259,13 @@
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-green: var(--brand-green);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-red: var(--brand-red);
+  --color-brand-purple: var(--brand-purple);
 
   --radius-md: calc(var(--radius) - 2px);
 }
