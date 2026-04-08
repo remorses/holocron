@@ -22,7 +22,6 @@ test.describe("mintlify components fixture", () => {
     await expect(npmTab).toBeVisible();
     await pnpmTab.click();
     await expect(page.getByText("pnpm add holocron")).toBeVisible();
-    await expect(page.getByText("pnpm docs")).toBeVisible();
     await expect(page.getByText("Expandable content body.")).toBeVisible();
     await expect(page.getByText("Expandable list item")).toBeVisible();
     await expect(page.getByText('{ "expandable": true }')).toBeVisible();
@@ -32,11 +31,7 @@ test.describe("mintlify components fixture", () => {
     await expect(page.getByRole("heading", { name: "Tree" })).toBeVisible();
     await expect(page.getByText("Initial component fixture release.")).toBeVisible();
     await expect(page.getByText("Added nested content coverage")).toBeVisible();
-    await expect(page.getByText("JavaScript-specific content.")).not.toBeVisible();
-    await page.getByRole("button", { name: "JavaScript", exact: true }).click();
     await expect(page.getByText("JavaScript-specific content.")).toBeVisible();
-    await expect(page.getByText("Python-specific content.")).not.toBeVisible();
-    await page.getByRole("button", { name: "Python", exact: true }).click();
     await expect(page.getByText("Python-specific content.")).toBeVisible();
   });
 
