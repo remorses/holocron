@@ -163,6 +163,8 @@ MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on dis
 
 Use `<div>` instead of `<p>` in all editorial components. Style it identically with inline styles — the visual output is the same, and `<div>` can nest any element without spec violations.
 
+This rule is **not a concern** for container components that receive `{children}` from MDX (like `Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, `Badge`, `Steps`, `Update`, `View`, `Tile`, etc.). Those containers render `{children}` directly and `safe-mdx` handles wrapping text into `P` nodes. The rule only applies when a component **explicitly renders** a `<p>` tag in its own JSX — that `<p>` would nest inside the `P` that `safe-mdx` wraps around the component call, producing `<P><p>…</p></P>`. As long as all text in your component JSX uses `<div>` or `<span>` (never `<p>`), you're safe.
+
 ## Hydration debugging
 
 When a page renders but client behavior is dead (tree rows do not collapse, search input does nothing, title does not update on navigation), debug hydration in this order:
