@@ -7,6 +7,7 @@ Read the spiceflow skill before editing any code in this package. Run `playwrite
 ## Config
 
 Supports two config file names (first found wins):
+
 - `holocron.jsonc` — our format (JSONC with comments)
 - `docs.json` — Mintlify new format (direct compatibility)
 
@@ -58,6 +59,7 @@ When a container can receive arbitrary MDX children, also add `no-bleed` on that
 A CSS variable is only justified if it is **used in many places** and serves to deduplicate an otherwise-repeated hardcoded value. If a variable is referenced only once (or never), inline the value directly and delete the variable.
 
 Rules:
+
 - **Many call sites** → define a CSS var (e.g. `--text-primary` used in dozens of components, `--sticky-top` shared by sidebar + aside).
 - **Single call site** → inline the value. A `--fade-top: 81px` that's only read by one `::before` rule should just be `top: 81px`.
 - **Zero call sites** → delete immediately. Dead variables clutter `globals.css` and mislead future readers into thinking a token layer exists.
@@ -65,6 +67,39 @@ Rules:
 When auditing, grep the repo for `var(--name)` references plus Tailwind arbitrary-value patterns (`gap-(--name)`, `text-(color:--name)`, `[var(--name)]`). Remember that refs inside `/* ... */` CSS comments look live but aren't. See MEMORY.md ("CSS variable audit") for the grep commands and the last full audit.
 
 CSS variables can also be used to change a color in dark/light mode. or change the value in desktop or mobile. for example we do this for negative margins in bleed images/code line numbers/lists. this use case is justified and desired.
+
+## CSS variables and colors principles
+
+if possible add as few hard coded colors & values as possible. instead use opacity to create variations of colors for example to add a background to a callout you would only define the fg color and derive the bg and border from the fg one using opacity
+
+you can change alpha with `<div class="bg-sky-500/10"></div>`
+
+or in css with --alpha
+
+```css
+:root {
+    --new-variable: --alpha(var(--color-gray-950) / 10%);
+}
+```
+
+prefer our own CSS variables over CSS theme colors. dark mode values should be changed using CSS variables instead of `dark:`
+
+using something like
+
+```css
+@variant dark {
+    /* shadcn/ui dark */
+    --background: oklch(0.21 0.006 285.885);
+}
+```
+
+you can also change variables based on breakpoints with
+
+```css
+@variant lg {
+    --bleed: 32px;
+}
+```
 
 ### `currentColor` inside data-URI SVGs is always black
 
@@ -108,12 +143,14 @@ slot-page (flex flex-col gap-(--layout-gap))
 ### Grids used and why
 
 **1. Page grid** (`markdown.tsx` EditorialPage) — the only explicit 3-col grid. Defines column widths and is the single source of truth. Every other grid inherits from it.
+
 - Column widths live only here: `--grid-toc-width` (210), `--grid-content-width` (520), `--grid-sidebar-width` (210), `--grid-gap` (50).
 - `justify-between` distributes extra width up to `--grid-max-width` (1100px), so actual column gaps are `50px + distributed`.
 - `gap-y-(--section-gap)` (48px) gives uniform rhythm between section rows.
 - On mobile: collapses to `grid-cols-1`, sidebars go `display: none`, everything stacks.
 
 **2. Inner per-section wrapper** (subgrid, `lg:col-[2/-1]`, one per section) — pairs content with its per-section aside.
+
 - Spans both page-grid cols 2-3 via subgrid inheritance → content in inner-col 1 (page col 2), aside in inner-col 2 (page col 3).
 - **Key responsibility: sticky scoping.** Per-section asides inside this wrapper have a containing block = this wrapper = one section's bounds. Scrolling past the section unsticks its aside before the next section's aside sticks. No overlap between asides.
 - On mobile: becomes `flex flex-col gap-y-(--prose-gap)` → content + aside stack tightly (20px gap).
@@ -125,15 +162,18 @@ slot-page (flex flex-col gap-(--layout-gap))
 **Column alignment contract.** Every grid in this page uses the same 3 column widths defined via CSS vars. Subgrids inherit tracks through `grid-cols-subgrid`. The hero mini-grid redeclares the column template explicitly.
 
 **Gap inheritance chain** (column-gap, through subgrid):
+
 ```
 Page grid:          50px (explicit --grid-gap)
   → Inner subgrid:  normal → inherits from page grid → 50px
 ```
+
 Axis rule: use `gap-y-(--token)` on subgrid wrappers (not `gap-(--token)`) so the column-gap inherits and isn't clobbered.
 
 **Row placement**. Each inner wrapper gets an explicit `style={{ gridRow: i + 1 }}`. Shared `<Aside full>` gets `style={{ '--shared-row': '${start} / span ${N}' }}` plus class `lg:[grid-row:var(--shared-row)]` — grid-row is ONLY read at lg, so on mobile the aside gets `grid-row: auto` and auto-places at the end of its range instead of forcing an implicit second column in grid-cols-1.
 
 **Sticky scoping via containing blocks**. `position: sticky` is bounded by its grid cell:
+
 - TOC sidebar → page grid cell at col 1, row 1/span 100 (whole page).
 - Per-section aside → inner subgrid cell (one section).
 - Shared `<Aside full>` → multi-row grid area via `grid-row: start / span N` (its range of sections).
@@ -170,56 +210,54 @@ This rule is **not a concern** for container components that receive `{children}
 When a page renders but client behavior is dead (tree rows do not collapse, search input does nothing, title does not update on navigation), debug hydration in this order:
 
 1. **Check whether the client tree hydrated at all**
-   - Use Playwriter in a wide viewport.
-   - Inspect TOC DOM nodes for React markers like `__reactFiber*` / `__reactProps*`.
-   - If they are missing, the issue is not the TOC logic; the client boundary never mounted.
+    - Use Playwriter in a wide viewport.
+    - Inspect TOC DOM nodes for React markers like `__reactFiber*` / `__reactProps*`.
+    - If they are missing, the issue is not the TOC logic; the client boundary never mounted.
 
 2. **Check the browser resource graph**
-   - Compare Holocron against a known-good Spiceflow app (the `playwriter/website` project is a good reference).
-   - If the page never requests a `virtual:vite-rsc/client-package-proxy/...` module for Holocron components, the package client boundary is not being treated as package source.
+    - Compare Holocron against a known-good Spiceflow app (the `playwriter/website` project is a good reference).
+    - If the page never requests a `virtual:vite-rsc/client-package-proxy/...` module for Holocron components, the package client boundary is not being treated as package source.
 
 3. **Common root causes for missing hydration in Holocron**
-   - **Package externalization**: `@vitejs/plugin-rsc` must keep `@holocron.so/vite/...` subpaths inside the RSC transform pipeline.
-     - Symptom: no React markers on the TOC DOM.
-     - Fix area: `vite/src/vite-plugin.ts` client/ssr/rsc config, especially `resolve.noExternal`.
-   - **Symlink resolution escaping `node_modules`**: when workspace symlinks are real-pathed, `@vitejs/plugin-rsc` may stop treating Holocron imports as package sources.
-     - Symptom: server rendering works, but interactive collapse regresses.
-     - Fix area: `resolve.preserveSymlinks`.
-   - **Browser entry failing before startup**: if `spiceflow`'s browser entry never reaches `hydrateRoot`, the whole page stays static.
-     - Symptom: no React markers, no client behavior, often with browser `unhandledrejection` errors.
-     - Fix area: dep optimization for wrapper-package transitive deps.
+    - **Package externalization**: `@vitejs/plugin-rsc` must keep `@holocron.so/vite/...` subpaths inside the RSC transform pipeline.
+        - Symptom: no React markers on the TOC DOM.
+        - Fix area: `vite/src/vite-plugin.ts` client/ssr/rsc config, especially `resolve.noExternal`.
+    - **Symlink resolution escaping `node_modules`**: when workspace symlinks are real-pathed, `@vitejs/plugin-rsc` may stop treating Holocron imports as package sources.
+        - Symptom: server rendering works, but interactive collapse regresses.
+        - Fix area: `resolve.preserveSymlinks`.
+    - **Browser entry failing before startup**: if `spiceflow`'s browser entry never reaches `hydrateRoot`, the whole page stays static.
+        - Symptom: no React markers, no client behavior, often with browser `unhandledrejection` errors.
+        - Fix area: dep optimization for wrapper-package transitive deps.
 
 4. **Specific error messages and likely causes**
-   - `SyntaxError: ... prism.js does not provide an export named 'default'`
-     - Cause: browser package client chunk imported `prismjs` with default-import interop that only worked on the server side.
-     - Fix area: `vite/src/components/markdown.tsx` Prism import shape.
-   - `Error: Calling require for "scheduler" in an environment that doesn't expose the require function`
-     - Cause: the browser dep optimizer left a raw `require("scheduler")` path in the React DOM client graph.
-     - Fix area: wrapper-package client optimize deps and resolution/aliasing for `scheduler`.
-   - `ReferenceError: module is not defined` from `@vitejs/plugin-rsc/dist/vendor/react-server-dom/...`
-     - Cause: the vendored browser client path is reaching the browser as raw CommonJS instead of going through the correct optimized package chain.
-     - Fix area: ensure the browser client dep graph is optimized through the wrapper package path, not only from the app root.
-   - `Failed to resolve dependency: @holocron.so/vite > spiceflow > @vitejs/plugin-rsc/vendor/react-server-dom/client.browser`
-     - Cause: Vite cannot resolve that exact nested include from the app root even though the runtime graph may still work.
-     - Treat as a signal while debugging, not automatically as the root bug.
+    - `SyntaxError: ... prism.js does not provide an export named 'default'`
+        - Cause: browser package client chunk imported `prismjs` with default-import interop that only worked on the server side.
+        - Fix area: `vite/src/components/markdown.tsx` Prism import shape.
+    - `Error: Calling require for "scheduler" in an environment that doesn't expose the require function`
+        - Cause: the browser dep optimizer left a raw `require("scheduler")` path in the React DOM client graph.
+        - Fix area: wrapper-package client optimize deps and resolution/aliasing for `scheduler`.
+    - `ReferenceError: module is not defined` from `@vitejs/plugin-rsc/dist/vendor/react-server-dom/...`
+        - Cause: the vendored browser client path is reaching the browser as raw CommonJS instead of going through the correct optimized package chain.
+        - Fix area: ensure the browser client dep graph is optimized through the wrapper package path, not only from the app root.
+    - `Failed to resolve dependency: @holocron.so/vite > spiceflow > @vitejs/plugin-rsc/vendor/react-server-dom/client.browser`
+        - Cause: Vite cannot resolve that exact nested include from the app root even though the runtime graph may still work.
+        - Treat as a signal while debugging, not automatically as the root bug.
 
 5. **Title debugging**
-   - If `document.title` is empty but server markup looks correct, inspect the serialized flight payload and confirm `root.head` contains a real `<title>` tag.
-   - The stable fix was to derive `head` and `title` from the actual page/layout tree (`getHeadSnapshot`) on the server, then sync `document.title` from that payload on the client.
+    - If `document.title` is empty but server markup looks correct, inspect the serialized flight payload and confirm `root.head` contains a real `<title>` tag.
+    - The stable fix was to derive `head` and `title` from the actual page/layout tree (`getHeadSnapshot`) on the server, then sync `document.title` from that payload on the client.
 
 6. **Best comparison target**
-   - The extracted editorial UI originally worked in `playwriter/website`.
-   - When Hydration breaks in Holocron, compare:
-     - loaded browser resources
-     - presence of `client-package-proxy` requests
-     - React markers on TOC DOM
-     - startup browser errors / unhandled rejections
-
+    - The extracted editorial UI originally worked in `playwriter/website`.
+    - When Hydration breaks in Holocron, compare:
+        - loaded browser resources
+        - presence of `client-package-proxy` requests
+        - React markers on TOC DOM
+        - startup browser errors / unhandled rejections
 
 ## spiceflow
 
 holocron docs website generator uses spiceflow deeply. I am also the author of spiceflow so if there is any issues there and we need to change code there clearly say so and create a plan and present it to me. the spiceflow source code can be downloaded with chamber to be read, then you can use the kimaki cli to find the source code to modify after plan is approved
-
 
 ## integration tests and example
 
@@ -259,18 +297,19 @@ Tests use Playwright's `request` fixture (not raw `fetch()`) so per-project `bas
 **When you hit a config bug — add a fixture**: if a user reports that some combination of `navigation`, `navbar`, `anchors`, `redirects`, `footer.socials`, `logo`, or any other config fields misbehaves, add a new fixture under `fixtures/<descriptive-name>/` with the minimal reproduction config + MDX pages, add a matching `e2e/<name>/<name>.test.ts`, reproduce the bug as a failing test, then fix the bug in `vite/src/`.
 
 **Adding a fixture, step by step**:
+
 1. Create `fixtures/<name>/holocron.jsonc` (or `docs.json`)
 2. Create `fixtures/<name>/pages/*.mdx` with whatever pages the config references
 3. Create `e2e/<name>/<name>.test.ts` with assertions on the rendered output
 4. Done — `playwright.config.ts` discovers the fixture automatically. No other changes needed.
 
 **Running tests**:
+
 - `pnpm test-e2e` — runs every fixture in dev mode (one Vite server per fixture)
 - `pnpm test-e2e-start` — builds every fixture, runs every fixture in prod mode
 - `pnpm test-e2e --project=<name>` — runs one specific fixture
 
 After changing `vite/src/` you must run `pnpm build` in the `vite/` package before re-running integration tests.
-
 
 ## takumi
 
