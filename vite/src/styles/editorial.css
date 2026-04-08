@@ -143,13 +143,12 @@
   margin-right: calc(-1 * var(--bleed));
 }
 
-/* Scope-based bleed disable. Any descendant reading --bleed / --bleed-image /
-   --bleed-list picks up 0 through the custom-property cascade. Applied to
-   <Callout> so lists/code/images inside stay inside the card frame. */
+/* Scope-based bleed disable. Any descendant reading --bleed / --bleed-image
+   picks up 0 through the custom-property cascade. Applied to card-like
+   containers so code/images inside stay inside the frame. */
 .no-bleed {
   --bleed: 0px;
   --bleed-image: 0px;
-  --bleed-list: 0px;
 }
 
 /* ========================================================================

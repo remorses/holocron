@@ -67,16 +67,13 @@
   /* Bleed: mobile-first (0), enabled at lg where grid has room.
      - --bleed       44px: code blocks (.bleed class)
      - --bleed-image 28px: images (via <Bleed> wrapper)
-     - --bleed-list  32px: lists (OL/List inline style = ul pl-5 + li pl-12)
-     A `.no-bleed` ancestor zeros all three (see editorial.css) — used by
-     <Callout> so its contents stay inside the frame. */
+     A `.no-bleed` ancestor zeros both (see editorial.css) so card-like
+     containers keep those descendants inside the frame. */
   --bleed: 0px;
   --bleed-image: 0px;
-  --bleed-list: 0px;
   @variant lg {
     --bleed: 32px;
     --bleed-image: 28px;
-    --bleed-list: 32px;
   }
 
   /* Header anatomy — all sticky/fade/spacer offsets derive from these.
