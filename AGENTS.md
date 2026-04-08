@@ -316,3 +316,12 @@ After changing `vite/src/` you must run `pnpm build` in the `vite/` package befo
 takumi is the library used to generate images for example for og images
 
 if needed read docs with `curl https://takumi.kane.tw/llms-full.txt`
+
+
+## testing remark plugins
+
+remark plugins are very useful to change the AST of the mdx, for example to convert <img> tags into our own image component with support for placeholder and static non layout shift size props.
+
+another use case is to add a compat layer to support Mintlify patterns
+
+to test remark plugins use vitest tests with inline snapshots, input is mdx string and output should be mdx string too. see existing tests for examples
