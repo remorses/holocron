@@ -74,7 +74,7 @@
   --bleed-image: 0px;
   --bleed-list: 0px;
   @variant lg {
-    --bleed: 44px;
+    --bleed: 32px;
     --bleed-image: 28px;
     --bleed-list: 32px;
   }
@@ -354,5 +354,3 @@
     grid-column: 3;
   }
 }
-
-
