@@ -60,7 +60,7 @@ import {
   Color,
   ColorRow,
   ColorItem,
-  MintlifyIcon,
+  Icon,
   type HeadingLevel,
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
@@ -90,9 +90,9 @@ export const mdxComponents = {
   h1: createHeadingComponent(1),
   h2: createHeadingComponent(2),
   h3: createHeadingComponent(3),
-  h4: createHeadingComponent(3),
-  h5: createHeadingComponent(3),
-  h6: createHeadingComponent(3),
+  h4: createHeadingComponent(4),
+  h5: createHeadingComponent(5),
+  h6: createHeadingComponent(6),
   a: A,
   code: Code,
   ul: List,
@@ -141,7 +141,7 @@ export const mdxComponents = {
   Color,
   'Color.Row': ColorRow,
   'Color.Item': ColorItem,
-  Icon: MintlifyIcon,
+  Icon: Icon,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.
   TableOfContentsPanel,
