@@ -98,6 +98,34 @@ function rootToHref(root: string | undefined): string | undefined {
   return slugToHref(root)
 }
 
+function redirectSourceToSlug(source: string): string | undefined {
+  if (source.includes(':') || source.includes('*')) return undefined
+  const clean = source.replace(/[?#].*$/, '').replace(/\/+$/, '') || '/'
+  if (!clean.startsWith('/')) return undefined
+  return clean === '/' ? 'index' : clean.slice(1)
+}
+
+function titleFromSlug(slug: string): string {
+  const segment = slug.split('/').pop() || slug
+  return segment
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part[0]!.toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function createRedirectBackedPage(slug: string): NavPage {
+  const title = titleFromSlug(slug)
+  return {
+    slug,
+    href: slugToHref(slug),
+    title,
+    gitSha: `redirect:${slug}`,
+    headings: [],
+    frontmatter: { title },
+  }
+}
+
 export type SyncResult = {
   navigation: Navigation
   /** Version/dropdown metadata with enriched inner navigation. */
@@ -141,11 +169,19 @@ export async function syncNavigation({
   let parsedCount = 0
   let cachedCount = 0
   const mdxContent: Record<string, string> = {}
+  const redirectBackedPageSlugs = new Set(
+    config.redirects
+      .map((rule) => redirectSourceToSlug(rule.source))
+      .filter((slug): slug is string => slug !== undefined),
+  )
 
   // 2. Enrich a single page slug
   async function enrichPage(slug: string): Promise<NavPage> {
     const mdxPath = resolveMdxPath(pagesDir, slug)
     if (!mdxPath) {
+      if (redirectBackedPageSlugs.has(slug)) {
+        return createRedirectBackedPage(slug)
+      }
       throw new Error(`MDX file not found for page "${slug}". Looked in ${pagesDir}`)
     }
     const content = fs.readFileSync(mdxPath, 'utf-8')

@@ -1,0 +1,145 @@
+---
+title: "Payouts"
+sidebarTitle: "Payouts"
+description: "Easily withdraw money from your Polar account at any time"
+---
+
+You can issue a withdrawal, i.e payout, at any time once your balance meets the minimum threshold for your account currency. We will then transfer the balance minus Stripe payout fees (see below) to your Stripe account & issue a payout on their side.
+
+## Minimum Payout Thresholds
+
+The minimum balance required to issue a payout varies based out the payout currency. Certain currencies having a higher limit due to Stripe requirements. These limits can change at a later point.
+
+
+| Currency | Minimum Balance (USD) |
+|----------|----------------------|
+| USD      | $10.00              |
+| EUR      | $13.00              |
+| GBP      | $15.00              |
+| CHF      | $15.00              |
+| AOA      | $30.00              |
+| ALL      | $40.00              |
+| AMD      | $40.00              |
+| AZN      | $40.00              |
+| BAM      | $40.00              |
+| BOB      | $40.00              |
+| BTN      | $40.00              |
+| CLP      | $40.00              |
+| GMD      | $40.00              |
+| GYD      | $40.00              |
+| KHR      | $40.00              |
+| KRW      | $40.00              |
+| LAK      | $40.00              |
+| MDL      | $40.00              |
+| MGA      | $40.00              |
+| MKD      | $40.00              |
+| MNT      | $40.00              |
+| MYR      | $40.00              |
+| MZN      | $40.00              |
+| NAD      | $40.00              |
+| PYG      | $40.00              |
+| RSD      | $40.00              |
+| THB      | $40.00              |
+| TWD      | $40.00              |
+| UZS      | $40.00              |
+| COP      | $50.00              |
+| Other currencies | $10.00 (default) |
+
+## Manual Withdrawal
+
+We require this to be done manually since:
+
+1. Users have requested control for easier accounting vs. frequent & small payouts
+2. Giving users control of Stripe payout fees
+
+## **Stripe Payout Fees**
+
+1. $2 per month of active payout(s)
+2. 0.25% + $0.25 per payout
+3. Cross border fees (currency conversion): 0.25% (EU) - 1% in other countries.
+
+Given the fixed costs, we want to default to manual payouts so you can control when you want to incur them and do it once vs. per each individual transaction in order to reduce the overall fees.
+
+## Reverse invoices
+
+Since we're the Merchant of Record, your customers get an invoice from Polar. Thus, for your accounting, you need to issue an invoice to Polar for the amount we paid out to you. To ease this process, we can automatically generate a **reverse invoice** for you, detailing the sells we made on your behalf, minus our fees.
+
+You can generate them from the **Payouts** page under **Finance** in your Polar dashboard. Click on the ellipsis next to the payout you want to generate a reverse invoice for, and select **Download invoice**.
+
+<img
+  className="block dark:hidden"
+  src="/assets/features/finance/payouts/download.light.png"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/features/finance/payouts/download.dark.png"
+/>
+
+A modal will open, allowing you to:
+
+- Set your billing name and address.
+- Add information shown below your billing address.
+- Add notes shown at the bottom of the invoice.
+- Customize the invoice number. By default, we generate one like `POLAR-0001`, but you can change it to your own format and sequence.
+
+<img
+  className="block dark:hidden"
+  src="/assets/features/finance/payouts/generate.light.png"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/features/finance/payouts/generate.dark.png"
+/>
+
+<Warning>
+  Once the reverse invoice is generated, it cannot be changed. Make sure to
+  double-check the information before generating it.
+</Warning>
+
+### Sample Reverse Invoice
+
+<iframe
+  src="https://polar-public-assets.s3.us-east-2.amazonaws.com/sample-reverse-invoice.pdf"
+  width="100%"
+  height="600px"
+></iframe>
+
+## Tax Forms
+
+### 1099-K Form (US)
+
+Polar will issue 1099-K forms via Stripe to eligible users in the US on an annual basis.
+
+For a given tax year, 1099-K forms are required for set of users who cross a given number of gross volume in USD and a given number of transactions via Polar.
+
+**Why not a 1099-NEC or 1099-MISC?**
+
+TurboTax has [this great article](https://blog.turbotax.intuit.com/self-employed/1099-misc-or-1099-k-whats-the-difference-29903/) on the difference between 1099-K, 1099-NEC & 1099-MISC.
+
+<Tip>
+If you're self-employed and accept credit, debit, or prepaid cards, you may receive Form 1099-K for transactions processed by a third party. This includes creators, influencers, rideshare drivers, or side-giggers. If you're an online seller selling on platforms like Ebay, AirBnB, Etsy, and VRBO, you may also receive Form 1099-K.
+</Tip>
+
+Stripe further clarifies 1099-K requirements for Payment Settlement Entities (PSE) in [this article](https://support.stripe.com/questions/intro-to-1099-k-tax-forms-for-platforms-and-marketplaces).
+
+Effectively, `1099-K` is required for platforms/marketplaces which:
+
+1. Handle payment between someone providing goods/services to purchasers
+2. Such payments are made with credit, debit, or prepaid cards
+3. Receiver is not a contractor/freelancer to the platform/marketplace
+
+Polar meets all of these criteria and therefore issues 1099-K forms to eligible developers on the platform vs. other forms.
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="How long do payouts take?">
+    Payouts typically take 4-7 business days.
+  </Accordion>
+  <Accordion title="When are payouts processed after I request them?">
+    Payouts are processed in batches 24 hours after initiation.
+  </Accordion>
+  <Accordion title="Can I use my personal bank account to receive payouts?">
+    For individual accounts, yes. For business accounts, you will need a business bank account.
+  </Accordion>
+</AccordionGroup>

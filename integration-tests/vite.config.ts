@@ -39,7 +39,21 @@ function scopedCacheDir(): Plugin {
   };
 }
 
+function skipSpiceflowPrerender(): Plugin {
+  return {
+    // Spiceflow skips prerender when a Cloudflare plugin is present.
+    // Integration tests only need the built server bundle, not static
+    // prerender artifacts, so this keeps exact copied fixture package.json
+    // files from breaking build output assumptions (`.js` vs `.mjs`).
+    name: "vite-plugin-cloudflare:integration-tests-skip-prerender",
+  };
+}
+
 export default defineConfig({
   clearScreen: false,
-  plugins: [scopedCacheDir(), holocron()],
+  plugins: [
+    scopedCacheDir(),
+    ...(process.env.E2E_SKIP_PRERENDER === "1" ? [skipSpiceflowPrerender()] : []),
+    holocron(),
+  ],
 });

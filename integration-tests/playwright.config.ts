@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { createServer } from "node:net";
 import fs from "node:fs";
 import path from "node:path";
+import { integrationTestsDir } from "./scripts/fixtures.ts";
 import { discoverFixtures } from "./scripts/fixtures.ts";
 
 function getFreePort(): Promise<number> {
@@ -26,6 +27,23 @@ if (fixtures.length === 0) {
 }
 
 const isStart = Boolean(process.env.E2E_START);
+const logsDir = path.join(integrationTestsDir, ".playwright-logs");
+fs.mkdirSync(logsDir, { recursive: true });
+
+function quoteForShell(value: string): string {
+  return `'${value.replaceAll(`'`, `'\\''`)}'`;
+}
+
+function getServerLogPath(fixtureName: string): string {
+  const mode = isStart ? "start" : "dev";
+  return path.join(logsDir, `${fixtureName}.${mode}.log`);
+}
+
+function resolveBuiltServerEntry(rootDir: string): string {
+  const mjsEntry = path.join(rootDir, "dist/rsc/index.mjs");
+  if (fs.existsSync(mjsEntry)) return mjsEntry;
+  return path.join(rootDir, "dist/rsc/index.js");
+}
 
 // Playwright imports this config file multiple times (once for the main
 // process, again for test workers). We must persist the per-fixture ports
@@ -51,9 +69,13 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
   const configFlag = fs.existsSync(fixtureConfig)
     ? `--config ${fixture.rootRel}/vite.config.ts`
     : `--config vite.config.ts`;
-  const command = isStart
-    ? `PORT=${port} node ${fixture.rootRel}/dist/rsc/index.js`
+  const builtServerEntry = resolveBuiltServerEntry(fixture.rootDir);
+  const serverCommand = isStart
+    ? `PORT=${port} node ${quoteForShell(builtServerEntry)}`
     : `pnpm exec vite ${fixture.rootRel} ${configFlag} --port ${port} --strictPort`;
+  const logPath = getServerLogPath(fixture.name);
+  fs.writeFileSync(logPath, "");
+  const command = `${serverCommand} > ${quoteForShell(logPath)} 2>&1`;
   return {
     command,
     stdout: "pipe" as const,

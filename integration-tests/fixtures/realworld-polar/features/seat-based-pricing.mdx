@@ -1,0 +1,135 @@
+---
+title: "Seat-Based Pricing"
+description: "Sell team products with assignable seats and tiered pricing"
+---
+
+Seat-based pricing allows you to sell products where a billing manager purchases a specific number of seats and can assign them to team members. Each seat holder gets their own access to the product benefits, making it perfect for team subscriptions, perpetual licenses, and multi-user products.
+
+<Info>
+**Seat-based pricing is ideal for:**
+
+- Team subscriptions where one billing manager pays for multiple users
+- Perpetual team licenses with one-time payment
+- Organizational licenses with per-seat pricing
+- Products with flat, graduated, or volume-discounted seat pricing
+</Info>
+
+## Feature Flag
+
+<Warning>
+Seat-based pricing is currently in **private beta**. Contact our support team to enable it for your organization.
+</Warning>
+
+## How it works
+
+With seat-based pricing, a billing manager purchases a product (subscription or one-time) with a specific number of seats. They can then:
+
+1. **Assign seats** to team members via email or external customer ID
+2. **Manage seats** by resending invitations or revoking access
+3. **Scale up** by purchasing additional seats (or a new order for one-time products)
+4. **Track usage** by viewing which seats are claimed, pending, or available
+
+Team members receive an invitation email with a claim link. Once they claim their seat, benefits are automatically granted.
+
+### Subscriptions vs One-Time Purchases
+
+| Feature | Subscriptions | One-Time Purchases |
+|---------|--------------|-------------------|
+| **Payment** | Recurring (monthly/yearly) | Single payment |
+| **Seat Duration** | Active while subscribed | Perpetual (never expire) |
+| **Adding Seats** | Modify subscription | Purchase new order |
+| **Benefits** | While subscription active | Forever after claim |
+
+<Tip>
+Use **subscriptions** for ongoing team access. Use **one-time purchases** for perpetual team licenses.
+</Tip>
+
+## Creating a seat-based product
+
+<Steps>
+  <Step title="Create a new product">
+    From your dashboard, navigate to Products and click **Create Product**.
+  </Step>
+  <Step title="Configure basic settings">
+    Set your product name, description, and media as usual.
+  </Step>
+  <Step title="Select seat-based pricing">
+    Under **Pricing**, select:
+    - **Product type**: Subscription or One-time
+    - **Billing cycle** (subscriptions only): Monthly or Yearly
+    - **Pricing type**: Seat-based
+  </Step>
+  <Step title="Choose a tiering model">
+    Under **Tiering model**, select how seats are priced:
+
+    | Model | Description |
+    |-------|-------------|
+    | **Fixed price per seat** | Every seat costs the same flat rate. Simple and predictable. |
+    | **Graduated** | Seats are priced per tier range independently — seats in tier 1 cost one rate, seats in tier 2 cost another. Total price is the sum across all tiers. |
+    | **Volume discounts** | The per-seat price is determined by the total seats purchased, and that rate applies to all seats. Crossing a tier threshold lowers the price for everyone. |
+
+    **Fixed price per seat** is the default and the simplest option — just enter a single price per seat.
+
+    For **Graduated** and **Volume discounts**, define tiers using a threshold (the seat count at which a new rate begins) and a price per seat for that range.
+
+    **Example** with tiers at 1–10 seats: $10/seat and 11+ seats: $8/seat:
+    - Graduated: 14 seats = 10 × $10 + 4 × $8 = $132 — each range is billed at its own rate
+    - Volume discounts: 14 seats = 14 × $8 = $112 — all seats use the lowest matching rate
+  </Step>
+  <Step title="Add benefits">
+    Configure the benefits that seat holders will receive. These are only granted when a seat is claimed, not when purchased.
+  </Step>
+</Steps>
+
+<Info>
+Unlike standard subscriptions, seat-based products **do not grant benefits to the billing manager**. Benefits are only granted to team members who claim their assigned seats. The billing manager can assign a seat to themselves if they also want to receive benefits — this counts toward the purchased seat total.
+</Info>
+
+## Managing seats
+
+After purchase, the billing manager can assign and manage seats from the **Customer Portal** or via the API.
+
+### Seat statuses
+
+- **Pending**: Seat assigned, invitation sent, awaiting claim
+- **Claimed**: Seat claimed by team member, benefits granted
+- **Revoked**: Seat revoked, benefits removed, can be reassigned
+
+### Key actions
+
+- **Assign seats** by email, external customer ID, or existing Polar customer ID
+- **Resend invitations** for pending seats if the link expired (valid for 24 hours)
+- **Revoke seats** to remove benefits and free the seat for reassignment
+- **Reduce seat count** to lower the number of seats on the subscription (triggers a prorated credit)
+
+<Warning>
+**Revoking a seat** and **reducing the seat count** are different actions:
+
+- **Revoking a seat** removes a specific user's access and frees that seat for reassignment. It does **not** reduce the number of seats on the subscription, and the billing manager continues to pay for the same total.
+- **Reducing the seat count** changes the subscription quantity itself, which results in a prorated credit for the remainder of the billing period.
+
+To stop paying for an unused seat, you must reduce the seat count — not just revoke the assignment.
+</Warning>
+
+### Proration and billing adjustments
+
+When the seat count on a subscription changes mid-billing cycle, charges are prorated automatically:
+
+- **Adding seats**: The billing manager is charged immediately for the new seats, prorated for the remainder of the current billing period. The full per-seat price applies from the next billing cycle onward.
+- **Reducing seat count**: A prorated credit is applied for the removed seats, covering the unused portion of the current billing period.
+
+<Tip>
+Proration ensures billing managers only pay for seats during the time they are active. Encourage customers to adjust their seat count rather than leaving unused seats idle.
+</Tip>
+
+## Limitations
+
+- Seats must be assigned individually (no bulk import via dashboard, use API instead)
+- Claim links expire after 24 hours
+- Billing manager does not receive product benefits
+- Maximum of 1,000 seats per subscription
+- Metadata limited to 10 keys and 1KB total size per seat
+
+## Next steps
+
+For implementation details including API integration, webhook handling, and code examples, see the [Implementing Seat-Based Pricing](/guides/seat-based-pricing) guide.

@@ -1,0 +1,8 @@
+.dark\:bg-background-dark:is(.dark *),
+.chat-assistant-floating-input:is(.dark *)::before {
+  background-color: #070708;
+}
+
+#content-area {
+  max-width: 48rem;
+}

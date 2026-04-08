@@ -1,6 +1,7 @@
 /** Test helpers for running Mintlify remark plugins through the same mdx serializer. */
 
 import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
+import { gfmToMarkdown } from 'mdast-util-gfm'
 import { mdxToMarkdown } from 'mdast-util-mdx'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import type { Root } from 'mdast'
@@ -20,7 +21,7 @@ export function runRemarkPlugin(
     parsed: parsedSnapshot,
     transformed,
     markdown: toMarkdown(transformed, {
-      extensions: [mdxToMarkdown(), frontmatterToMarkdown(['yaml'])],
+      extensions: [gfmToMarkdown(), mdxToMarkdown(), frontmatterToMarkdown(['yaml'])],
     }),
   }
 }

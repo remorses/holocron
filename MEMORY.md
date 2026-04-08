@@ -1074,6 +1074,10 @@ other's optimized deps.
 gets its own cache. Vite creates `<root>/node_modules/` on demand even
 if the fixture has no real dependencies.
 
+### Exact fixtures can emit `.mjs`
+
+If a copied realworld fixture includes its own `package.json` with `"type": "module"`, Vite may emit `dist/rsc/index.mjs` and `dist/ssr/index.mjs` instead of `.js`. The integration harness has to avoid Spiceflow's `index.js` assumptions during local builds and keep the built server on a single extension path in build mode.
+
 **Trade-off flagged by Oracle**: this is a plugin-wide behavior change
 affecting all downstream consumers, not just the integration-test
 harness. An alternative would be to scope the cacheDir override in

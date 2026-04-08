@@ -1,4 +1,5 @@
 import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
+import { gfmToMarkdown } from 'mdast-util-gfm'
 import { mdxToMarkdown } from 'mdast-util-mdx'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import type { Root } from 'mdast'
@@ -26,6 +27,7 @@ export function normalizeMdx(content: string): string {
 
   return toMarkdown(normalized, {
     extensions: [
+      gfmToMarkdown(),
       mdxToMarkdown(),
       frontmatterToMarkdown(['yaml']),
     ],

@@ -1,0 +1,138 @@
+---
+title: "Checkout Links"
+sidebarTitle: "Checkout Links"
+description: "Sell your digital products with ease by sharing a checkout link to select products"
+---
+
+Checkout links can be shared or linked on your website which automatically
+creates a checkout session for customers.
+
+<Tip>
+  Looking for a way to generate Checkout session programmatically? Checkout
+  Links might not be the right tool for you. Instead, you should use the
+  [Checkout API](/features/checkout/session).
+</Tip>
+
+## Create a Checkout Link
+
+Checkout Links can be managed from the **Checkout Links** tabs of the Products section. Click on **New Link** to create a new one.
+
+<Frame>
+  <img
+    className="block dark:hidden"
+    src="/assets/features/checkout/links/create.light.png"
+  />
+  <img
+    className="hidden dark:block"
+    src="/assets/features/checkout/links/create.dark.png"
+  />
+</Frame>
+
+#### Label
+
+This is an internal name for the Checkout Link. It's only visible to you.
+
+#### Products
+
+You can select one or **several** products. With several products, customers will be able to switch between them on the checkout page.
+
+<img
+  className="block dark:hidden"
+  src="/assets/features/checkout/links/checkout_multiple_products.light.png"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/features/checkout/links/checkout_multiple_products.dark.png"
+/>
+
+#### Discount
+
+You can preset a discount on the Checkout Link: it will be **automatically applied** when the customer lands on the checkout page — no action needed from the customer. This is particularly useful for running promotions or offering special pricing through specific links.
+
+If **Allow discount codes** is enabled, customers can still manually enter other discount codes during checkout, even when a discount is preset.
+
+<Tip>
+  Discounts without a code can only be applied through Checkout Link presets or the [Checkout API](/features/checkout/session). Learn more about creating and managing discounts in the [Discounts documentation](/features/discounts).
+</Tip>
+
+#### Metadata
+
+This is an optional key-value object allowing you to store additional information which may be useful for you when handling the order. This metadata will be copied to the generated Checkout object and, if the checkout succeeds, to the resulting Order and/or Subscription.
+
+## Using Checkout Links
+
+You can share the Checkout Link URL on your webpage, social media, or directly to customers.
+
+<img
+  className="block dark:hidden"
+  src="/assets/features/checkout/links/checkout_link.light.png"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/features/checkout/links/checkout_link.dark.png"
+/>
+
+<Warning>
+  Checkout Links will go against our API, and redirect to short-lived Checkout session. This means that the Checkout page the user will end up on, are temporary and expires after a while if no successful purchase is made.
+
+This means that you need to make sure to always use this Checkout Link URL (as shown above). If you mistakenly copy the URL from a Checkout Session, the link will expire.
+
+</Warning>
+
+### Query parameters
+
+You can pass optional query parameters to your Checkout Links.
+
+#### Prepopulate fields
+
+You can prefill the checkout fields with the following query parameters:
+
+<ParamField path="customer_email" type="string">
+  Prefill customer email at checkout
+</ParamField>
+
+<ParamField path="customer_name" type="string">
+  Prefill customer name at checkout
+</ParamField>
+
+<ParamField path="discount_code" type="string">
+  Prefill the discount code field in the checkout form. The code will be pre-populated in the input field so the customer can see it. This only works with discounts that have a code set — see [Discounts](/features/discounts).
+
+  This is different from presetting a discount in the Checkout Link settings: a preset discount is silently and automatically applied, whereas `discount_code` simply pre-populates the code input field.
+</ParamField>
+
+<ParamField path="amount" type="string">
+  Prefill amount in case of Pay What You Want pricing
+</ParamField>
+
+<ParamField path="custom_field_data.{slug}" type="string">
+  Prefill checkout fields data, where `{slug}` is the slug of the custom field.
+</ParamField>
+
+#### Store attribution and reference metadata
+
+The following query parameters will automatically be set on Checkout [`metadata`](/api-reference/checkouts/get-session#response-metadata).
+
+<ParamField path="reference_id" type="string">
+  Your own reference ID for the checkout session.
+</ParamField>
+
+<ParamField path="utm_source" type="string">
+  UTM source of the checkout session.
+</ParamField>
+
+<ParamField path="utm_medium" type="string">
+  UTM medium of the checkout session.
+</ParamField>
+
+<ParamField path="utm_campaign" type="string">
+  UTM campaign of the checkout session.
+</ParamField>
+
+<ParamField path="utm_content" type="string">
+  UTM content of the checkout session.
+</ParamField>
+
+<ParamField path="utm_term" type="string">
+  UTM term of the checkout session.
+</ParamField>

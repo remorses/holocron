@@ -384,6 +384,45 @@ title: Updated Title
     })).rejects.toThrow('MDX file not found for page "nonexistent"')
   })
 
+  test('allows redirect-backed navigation pages without an mdx file', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['merchant-of-record/acceptable-use'] }],
+        redirects: [
+          {
+            source: '/merchant-of-record/acceptable-use',
+            destination: 'https://polar.sh/legal/acceptable-use-policy',
+          },
+        ],
+      },
+      {},
+    ))
+    const config = readConfig({ root: project.root })
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const page = findPage(result.navigation, 'merchant-of-record/acceptable-use')!
+    expect(page).toMatchInlineSnapshot(`
+      {
+        "frontmatter": {
+          "title": "Acceptable Use",
+        },
+        "gitSha": "redirect:merchant-of-record/acceptable-use",
+        "headings": [],
+        "href": "/merchant-of-record/acceptable-use",
+        "slug": "merchant-of-record/acceptable-use",
+        "title": "Acceptable Use",
+      }
+    `)
+    expect(result.mdxContent['merchant-of-record/acceptable-use']).toBeUndefined()
+  })
+
   test('slug to href mapping', async () => {
     const project = tracked(createProject(
       {

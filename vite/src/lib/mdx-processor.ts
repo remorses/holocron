@@ -6,6 +6,7 @@
  */
 
 import { mdxParse } from 'safe-mdx/parse'
+import { gfmToMarkdown } from 'mdast-util-gfm'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import { mdxToMarkdown } from 'mdast-util-mdx'
 import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
@@ -140,6 +141,7 @@ export function rewriteMdxImages(mdast: Root, images: Map<string, ResolvedImage>
   // Serialize back to MDX
   return toMarkdown(mdast, {
     extensions: [
+      gfmToMarkdown(),
       mdxToMarkdown(),
       frontmatterToMarkdown(['yaml']),
     ],

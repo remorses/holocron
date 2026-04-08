@@ -1,0 +1,163 @@
+### Payments & Merchant of Record
+
+We support payments globally except from countries with US sanctions (Cuba, Russia, Iran, North Korea, and Syria).
+
+As your Merchant of Record (MoR) we take on the [liability for international sales taxes](/merchant-of-record/introduction).
+
+### Payouts
+
+Polar uses Stripe Connect Express to issue payouts to residents or businesses in any of the countries below.
+
+<Note>
+**FAQ: Stripe is not supported in my country**
+
+Stripe Connect Express for payouts is a separate product from Stripe Payments.
+
+In some cases, Stripe Payments might not be available for merchants in your country, but Stripe Connect Express is for payouts using cross-border transfers.
+
+Since Polar is the Merchant of Record and uses Stripe Connect Express for payouts, we're able to support sellers in all of the countries below.
+</Note>
+
+* 🇦🇱 Albania
+* 🇩🇿 Algeria
+* 🇦🇴 Angola
+* 🇦🇬 Antigua and Barbuda
+* 🇦🇷 Argentina
+* 🇦🇲 Armenia
+* 🇦🇺 Australia
+* 🇦🇹 Austria
+* 🇦🇿 Azerbaijan
+* 🇧🇸 Bahamas
+* 🇧🇭 Bahrain
+* 🇧🇩 Bangladesh
+* 🇧🇪 Belgium
+* 🇧🇯 Benin
+* 🇧🇹 Bhutan
+* 🇧🇴 Bolivia
+* 🇧🇦 Bosnia and Herzegovina
+* 🇧🇼 Botswana
+* 🇧🇳 Brunei
+* 🇧🇬 Bulgaria
+* 🇰🇭 Cambodia
+* 🇨🇦 Canada
+* 🇨🇱 Chile
+* 🇨🇴 Colombia
+* 🇨🇷 Costa Rica
+* 🇭🇷 Croatia
+* 🇨🇾 Cyprus
+* 🇨🇿 Czech Republic
+* 🇩🇰 Denmark
+* 🇩🇴 Dominican Republic
+* 🇪🇨 Ecuador
+* 🇪🇬 Egypt
+* 🇸🇻 El Salvador
+* 🇪🇪 Estonia
+* 🇪🇹 Ethiopia
+* 🇫🇮 Finland
+* 🇫🇷 France
+* 🇬🇦 Gabon
+* 🇬🇲 Gambia
+* 🇩🇪 Germany
+* 🇬🇷 Greece
+* 🇬🇹 Guatemala
+* 🇬🇾 Guyana
+* 🇭🇰 Hong Kong
+* 🇭🇺 Hungary
+* 🇮🇸 Iceland
+* 🇮🇳 India
+* 🇮🇩 Indonesia
+* 🇮🇪 Ireland
+* 🇮🇱 Israel
+* 🇮🇹 Italy
+* 🇨🇮 Ivory Coast
+* 🇯🇲 Jamaica
+* 🇯🇵 Japan
+* 🇯🇴 Jordan
+* 🇰🇿 Kazakhstan
+* 🇰🇪 Kenya
+* 🇰🇼 Kuwait
+* 🇱🇦 Laos
+* 🇱🇻 Latvia
+* 🇱🇮 Liechtenstein
+* 🇱🇹 Lithuania
+* 🇱🇺 Luxembourg
+* 🇲🇴 Macao
+* 🇲🇬 Madagascar
+* 🇲🇾 Malaysia
+* 🇲🇹 Malta
+* 🇲🇺 Mauritius
+* 🇲🇽 Mexico
+* 🇲🇩 Moldova
+* 🇲🇨 Monaco
+* 🇲🇳 Mongolia
+* 🇲🇦 Morocco
+* 🇲🇿 Mozambique
+* 🇳🇦 Namibia
+* 🇳🇱 Netherlands
+* 🇳🇿 New Zealand
+* 🇳🇪 Niger
+* 🇳🇬 Nigeria
+* 🇲🇰 North Macedonia
+* 🇳🇴 Norway
+* 🇴🇲 Oman
+* 🇵🇰 Pakistan
+* 🇵🇦 Panama
+* 🇵🇾 Paraguay
+* 🇵🇪 Peru
+* 🇵🇭 Philippines
+* 🇵🇱 Poland
+* 🇵🇹 Portugal
+* 🇶🇦 Qatar
+* 🇷🇴 Romania
+* 🇷🇼 Rwanda
+* 🇱🇨 Saint Lucia
+* 🇸🇲 San Marino
+* 🇸🇦 Saudi Arabia
+* 🇸🇳 Senegal
+* 🇷🇸 Serbia
+* 🇸🇬 Singapore
+* 🇸🇰 Slovakia
+* 🇸🇮 Slovenia
+* 🇿🇦 South Africa
+* 🇰🇷 South Korea
+* 🇪🇸 Spain
+* 🇱🇰 Sri Lanka
+* 🇸🇪 Sweden
+* 🇨🇭 Switzerland
+* 🇹🇼 Taiwan
+* 🇹🇿 Tanzania
+* 🇹🇭 Thailand
+* 🇹🇹 Trinidad and Tobago
+* 🇹🇳 Tunisia
+* 🇹🇷 Turkey
+* 🇦🇪 United Arab Emirates
+* 🇬🇧 United Kingdom
+* 🇺🇸 United States
+* 🇺🇾 Uruguay
+* 🇺🇿 Uzbekistan
+* 🇻🇳 Vietnam
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Can I use Polar in countries (e.g. India) where Stripe is invite-only?">
+    <Note>Stripe Connect Express is a different product than the regular Stripe payments.</Note>
+    Yes, any individual or company operating in our [supported countries](/merchant-of-record/supported-countries) can receive payouts from Polar even if Stripe standalone is invite-only there.
+    
+    This is possible as Polar is the Merchant of Record, all payments from customers are made to Polar (US). [Stripe Connect Express](https://docs.stripe.com/connect/express-accounts) is then used to issue payouts, and is supported in more countries via cross-border transfer than Stripe Payments standalone.
+    
+    You might still see a warning in Stripe Connect Express that payments are invite-only, but don't worry. No direct sales are made directly to the Stripe Connect Express account. They're all made to Polar (US) as a platform and the merchant of record. We only use the transfer and payout feature of Stripe Connect Express which is available in all of our [supported countries](/merchant-of-record/supported-countries).
+  </Accordion>
+  <Accordion title="Can I use Polar as an individual to make sales globally?">
+    Yes, given that Stripe Connect Express supports individual as a business type in your region.
+
+    To know which business type is supported in your country, follow steps as below:
+    - Open required [verification information](https://docs.stripe.com/connect/required-verification-information#US+RS+express+recipient+individual+transfers) by Stripe to set up a business or personal account in your country.
+    - Ensure `Platform Country` is set to `United States (US)`.
+    - Ensure `Dashboard Type` is set to `express`.
+    - Ensure `Service Agreement` is set to `recipient`.
+    - Ensure `Capability` is set to `transfers`.
+    - Select the correct `Account Country` relevant to you.
+    - Click on the toggle for `Business Type` which will allow you know if individual, business, company or LLC/LLP is supported by Stripe Connect Express in that region.
+  </Accordion>
+</AccordionGroup>

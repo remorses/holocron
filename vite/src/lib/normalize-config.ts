@@ -4,6 +4,8 @@
  * consumers never deal with type discrimination.
  */
 
+import path from 'node:path'
+
 import type {
   HolocronConfig,
   ConfigIcon,
@@ -22,6 +24,13 @@ import type {
  *  unsupported libraries are stripped at normalize time so they fall
  *  through to the label fallback instead of silently rendering nothing. */
 const SUPPORTED_ICON_LIBRARIES = new Set(['lucide'])
+
+function normalizeStaticPath(value: string | undefined): string | undefined {
+  if (!value) return value
+  if (/^(?:https?:)?\/\//.test(value) || value.startsWith('data:')) return value
+  if (value.startsWith('/')) return value
+  return path.posix.normalize(`/${value}`)
+}
 
 /** Validate an icon value and strip object icons whose library we can't
  *  resolve. Strings (emoji / URL / lucide names) always pass through.
@@ -109,12 +118,12 @@ function normalizeLogo(raw: unknown): HolocronConfig['logo'] {
     return { light: '' }
   }
   if (typeof raw === 'string') {
-    return { light: raw }
+    return { light: normalizeStaticPath(raw) || '' }
   }
   const obj = raw as Record<string, string>
   return {
-    light: obj.light || '',
-    ...(obj.dark && obj.dark !== obj.light ? { dark: obj.dark } : {}),
+    light: normalizeStaticPath(obj.light) || '',
+    ...(obj.dark && obj.dark !== obj.light ? { dark: normalizeStaticPath(obj.dark) } : {}),
     href: obj.href,
   }
 }
@@ -125,12 +134,13 @@ function normalizeFavicon(raw: unknown): HolocronConfig['favicon'] {
     return { light: '', dark: '' }
   }
   if (typeof raw === 'string') {
-    return { light: raw, dark: raw }
+    const normalized = normalizeStaticPath(raw) || ''
+    return { light: normalized, dark: normalized }
   }
   const obj = raw as Record<string, string>
   return {
-    light: obj.light || '',
-    dark: obj.dark || obj.light || '',
+    light: normalizeStaticPath(obj.light) || '',
+    dark: normalizeStaticPath(obj.dark || obj.light) || '',
   }
 }
 
@@ -542,14 +552,14 @@ function normalizeFonts(raw: unknown): HolocronConfig['fonts'] {
     return {
       family: o.family,
       weight: typeof o.weight === 'number' ? o.weight : undefined,
-      source: typeof o.source === 'string' ? o.source : undefined,
+      source: typeof o.source === 'string' ? normalizeStaticPath(o.source) : undefined,
       format: o.format === 'woff' || o.format === 'woff2' ? o.format : undefined,
     }
   }
   return {
     family: typeof obj.family === 'string' ? obj.family : undefined,
     weight: typeof obj.weight === 'number' ? obj.weight : undefined,
-    source: typeof obj.source === 'string' ? obj.source : undefined,
+    source: typeof obj.source === 'string' ? normalizeStaticPath(obj.source) : undefined,
     format: obj.format === 'woff' || obj.format === 'woff2' ? obj.format : undefined,
     heading: normFontObj(obj.heading),
     body: normFontObj(obj.body),

@@ -86,6 +86,12 @@ describe('logo normalization', () => {
     `)
   })
 
+  test('relative logo path becomes root-absolute', () => {
+    const root = setupConfig('docs.json', { logo: './logo/light.png' })
+    const config = readConfig({ root })
+    expect(config.logo.light).toBe('/logo/light.png')
+  })
+
   test('object logo preserves light/dark/href', () => {
     const root = setupConfig('holocron.jsonc', {
       logo: { light: '/light.svg', dark: '/dark.svg', href: '/' },
@@ -132,6 +138,13 @@ describe('favicon normalization', () => {
     const config = readConfig({ root })
     expect(config.favicon.light).toBe('/fav-light.ico')
     expect(config.favicon.dark).toBe('/fav-dark.ico')
+  })
+
+  test('relative favicon path becomes root-absolute', () => {
+    const root = setupConfig('docs.json', { favicon: './logo/favicon.png' })
+    const config = readConfig({ root })
+    expect(config.favicon.light).toBe('/logo/favicon.png')
+    expect(config.favicon.dark).toBe('/logo/favicon.png')
   })
 })
 
