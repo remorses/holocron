@@ -348,7 +348,7 @@ export function Tooltip({ tip, headline, cta, href, children }: { tip: string; h
     : children
   return (
     <span
-      className='relative inline cursor-help underline decoration-dotted decoration-(--text-secondary) underline-offset-2'
+      className='relative inline-flex w-fit cursor-help underline decoration-dotted decoration-(--text-secondary) underline-offset-2'
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
