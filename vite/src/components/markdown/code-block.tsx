@@ -52,7 +52,7 @@ export function CodeBlock({
         <pre
           className='overflow-x-auto'
           style={{
-            borderRadius: 'var(--border-radius-md)',
+            // borderRadius: 'var(--border-radius-md)',
             margin: 0,
             padding: 0,
           }}
@@ -76,8 +76,9 @@ export function CodeBlock({
                 style={{
                   color: 'var(--code-line-nr)',
                   textAlign: 'right',
-                  paddingRight: '20px',
-                  // width: '36px',
+                  paddingRight: 'var(--bleed)',
+                  width: 'var(--bleed)',
+                  overflow: 'hidden',
                   userSelect: 'none',
                 }}
               >
