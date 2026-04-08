@@ -255,8 +255,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
       if (id === RESOLVED_APP) {
         return [
-          `import { createHolocronApp } from '@holocron.so/vite/src/app-factory'`,
-          `export const app = createHolocronApp()`,
+          `import { app } from '@holocron.so/vite/src/app'`,
+          `export { app }`,
           // Auto-start the server in production (when import.meta.hot is not available).
           // In dev mode, spiceflow's SSR middleware handles requests instead.
           `if (!import.meta.hot) { app.listen(Number(process.env.PORT || 3000)) }`,
@@ -341,11 +341,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           data: { file: ctx.file },
         })
 
-        // `rsc:update` refreshes the server-rendered page tree, but client
-        // chrome like `SideNav` imports `data.ts`, which in turn imports the
-        // virtual config module directly. Return those virtual modules from the
-        // client HMR hook as well so Vite updates the client graph instead of
-        // leaving navigation/search/title state stale until a full reload.
+        // `rsc:update` refreshes the server-rendered page tree, but the root
+        // loader still derives its `site` payload from these virtual modules.
+        // Return them from the client HMR hook as well so Vite updates the
+        // client graph instead of leaving navigation/search/title state stale
+        // until a full reload.
         for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_ICONS]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod) {

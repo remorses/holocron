@@ -13,16 +13,16 @@
  *   Explicit GET routes (no catch-all needed — registered per-page):
  *     .get('/<page>.md')   → raw markdown for AI agents
  *     .get('/sitemap.xml') → XML sitemap
- *     .get('/holocron-api/search')  → search API
  *
  *   Middleware (cross-cutting):
  *     .use(serveStatic)     → public files
  *     .use(redirects)       → config-driven redirects
  *     .use(agentRedirect)   → 302 AI agents to .md URLs
  *
- * Static site data (navigation tree, tabs, header links, search entries)
- * lives in `./data.ts` and is bundled into the client chunk ONCE — never
- * re-shipped through the per-request loader payload.
+ * Canonical site data (config, navigation, switchers, icons, base) is passed
+ * in when the app is created. The root loader serializes the visible client
+ * copy so both server and client components can read the same `site` object
+ * through `useHolocronData()`.
  */
 
 import './styles/globals.css'
@@ -45,16 +45,6 @@ import {
   buildHrefToSlugMap,
   type NavHeading,
 } from './navigation.ts'
-import {
-  base,
-  config,
-  navigation,
-  firstPage,
-  collectAncestorGroupKeys,
-  resolveActiveTabHref,
-  resolveActiveVersionHref,
-  resolveActiveDropdownHref,
-} from './data.ts'
 import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
 import { isAgentRequest } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
@@ -64,12 +54,21 @@ import {
   decodeGeneratedLogoText,
   type GeneratedLogoTheme,
 } from './lib/generated-logo.tsx'
-import { SiteHead, THEME_SCRIPT } from './lib/site-head.tsx'
+import { SiteHead } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
+import {
+  buildVisibleSiteData,
+  type HolocronSiteData,
+  collectAncestorGroupKeys,
+  findFirstPage,
+  resolveActiveDropdownHref,
+  resolveActiveTabHref,
+  resolveActiveVersionHref,
+} from './site-data.ts'
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -78,11 +77,12 @@ import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type
  * to both the page handler (via `loaderData`) and every client component
  * (via `useHolocronData()` from `@holocron.so/vite/react`).
  *
- * Intentionally MINIMAL — static data (navigation tree, tabs, header
- * links, search entries) lives in `./data.ts` and is bundled into the
- * client chunk once. Only per-request state flows through this payload.
+ * Includes canonical site data so client components can read the same `site`
+ * object through the typed loader API during SSR and client navigation.
  */
 export type HolocronLoaderData = {
+  /** Canonical site-wide data shared by server + client components. */
+  site: HolocronSiteData
   /** Active page href, or `undefined` on 404. */
   currentPageHref: string | undefined
   /** Active page title, or `undefined` on 404. */
@@ -133,16 +133,17 @@ function stripBaseFromSlug(rawSlug: string, base: string): string {
   return slug
 }
 
-function getBannerJsx(request: Request): React.ReactNode | undefined {
-  if (!config.banner) return undefined
+function getBannerJsx(site: HolocronSiteData, request: Request): React.ReactNode | undefined {
+  if (!site.config.banner) return undefined
   const pageCookies = parseCookies(request.headers.get('cookie') || '')
-  if (pageCookies['holocron-banner-dismissed'] === config.banner.content) return undefined
-  const bannerMdx = config.banner.content
+  if (pageCookies['holocron-banner-dismissed'] === site.config.banner.content) return undefined
+  const bannerMdx = site.config.banner.content
   const bannerMdast = mdxParse(bannerMdx)
   return <RenderNodes markdown={bannerMdx} nodes={bannerMdast.children} />
 }
 
 function renderMdxPage(
+  site: HolocronSiteData,
   slug: string,
   loaderData: HolocronLoaderData,
   bannerJsx: React.ReactNode | undefined,
@@ -194,7 +195,7 @@ function renderMdxPage(
             <Head.Meta name='description' content={loaderData.currentPageDescription} />
           </>
         )}
-        {config.description ? <Head.Meta name='holocron:site-description' content={config.description} /> : null}
+        {site.config.description ? <Head.Meta name='holocron:site-description' content={site.config.description} /> : null}
         {pageOgDescription && <Head.Meta property='og:description' content={pageOgDescription} />}
         {pageTwitterDescription && <Head.Meta name='twitter:description' content={pageTwitterDescription} />}
         {pageKeywords && <Head.Meta name='keywords' content={pageKeywords} />}
@@ -230,21 +231,23 @@ function parseGeneratedLogoTheme(theme: string | undefined): GeneratedLogoTheme 
 
 /* ── App factory ─────────────────────────────────────────────────────── */
 
-export function createHolocronApp() {
+export function createHolocronApp(site: HolocronSiteData) {
   // AnySpiceflow during the imperative route-registration loop (TS can't
   // track type evolution across loop iterations), then cast back to a
   // typed chain at the end so HolocronApp retains loader type info.
   let app: AnySpiceflow = new Spiceflow().use(serveStatic({ root: './public' }))
+  const firstPage = findFirstPage(site)
+  const clientSite = buildVisibleSiteData(site)
   const absoluteUrlBase = (() => {
-    const routeBase = withBaseRoute(base, '/')
+    const routeBase = withBaseRoute(site.base, '/')
     return routeBase === '/' ? '' : routeBase
   })()
 
   // ── Redirects ───────────────────────────────────────────────────
   // All redirects are .get() routes — spiceflow's trie router handles
   // specificity natively (exact beats :param beats *).
-  for (const rule of deduplicateRedirects(config.redirects)) {
-    for (const source of new Set([rule.source, withBaseRoute(base, rule.source)])) {
+  for (const rule of deduplicateRedirects(site.config.redirects)) {
+    for (const source of new Set([rule.source, withBaseRoute(site.base, rule.source)])) {
       app = app.get(source, ({ request, params }: { request: Request; params: Record<string, string> }) => {
         const url = new URL(request.url)
         // Map spiceflow's * capture to :splat for destination interpolation
@@ -270,33 +273,33 @@ export function createHolocronApp() {
     // Don't redirect .md, .xml, or /holocron-api/ requests
     if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/holocron-api/')) return
 
-    const baseRoute = withBaseRoute(base, '/')
+    const baseRoute = withBaseRoute(site.base, '/')
     const normalizedBase = baseRoute === '/' ? '' : baseRoute
     const hasBase = !!normalizedBase && (pathname === normalizedBase || pathname.startsWith(normalizedBase + '/'))
     const stripped = hasBase ? pathname.slice(normalizedBase.length) || '/' : pathname
     if (!hrefToSlug.has(stripped)) return
 
     const mdPath = stripped === '/' ? '/index.md' : `${stripped}.md`
-    return Response.redirect(new URL(withBaseRoute(base, mdPath) + url.search, url.origin).href, 302)
+    return Response.redirect(new URL(withBaseRoute(site.base, mdPath) + url.search, url.origin).href, 302)
   })
 
   // ── Explicit GET routes ────────────────────────────────────────
 
   // /sitemap.xml
-  for (const sitemapRoute of new Set(['/sitemap.xml', withBaseRoute(base, '/sitemap.xml')])) {
+  for (const sitemapRoute of new Set(['/sitemap.xml', withBaseRoute(site.base, '/sitemap.xml')])) {
     app = app.get(sitemapRoute, ({ request }: { request: Request }) => {
       const url = new URL(request.url)
-      const hrefs = collectAllPages(navigation)
+      const hrefs = collectAllPages(site.navigation)
         .filter((page) => isIndexablePage(page.frontmatter))
         .map((page) => page.href)
         .sort()
       const urls = hrefs
-        .map((href: string) => `  <url><loc>${url.origin}${withBaseRoute(base, href)}</loc></url>`)
+        .map((href: string) => `  <url><loc>${url.origin}${withBaseRoute(site.base, href)}</loc></url>`)
         .join('\n')
       const xml = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<!-- To get the raw markdown content of any page, append .md to the URL. -->',
-        `<!-- Example: ${url.origin}${withBaseRoute(base, '/getting-started.md')} -->`,
+        `<!-- Example: ${url.origin}${withBaseRoute(site.base, '/getting-started.md')} -->`,
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
         urls,
         '</urlset>',
@@ -317,7 +320,7 @@ export function createHolocronApp() {
     const mdPath = href === '/' ? '/index.md' : `${href}.md`
     const mdx = mdxContent[slug]!
 
-    for (const route of new Set([mdPath, withBaseRoute(base, mdPath)])) {
+    for (const route of new Set([mdPath, withBaseRoute(site.base, mdPath)])) {
       app = app.get(route, () => {
         return new Response(mdx + POWERED_BY_FOOTER, {
           headers: {
@@ -332,7 +335,7 @@ export function createHolocronApp() {
 
   // /docs.zip — all markdown files in a single zip archive.
   // Agents can fetch this one endpoint to get the entire docs site.
-  for (const docsZipRoute of new Set(['/docs.zip', withBaseRoute(base, '/docs.zip')])) {
+  for (const docsZipRoute of new Set(['/docs.zip', withBaseRoute(site.base, '/docs.zip')])) {
     app = app.get(docsZipRoute, () => {
       const files: Record<string, Uint8Array> = {}
       for (const [slug, mdx] of Object.entries(mdxContent)) {
@@ -352,17 +355,17 @@ export function createHolocronApp() {
     })
   }
 
-  for (const ogRoute of new Set(['/og', withBaseRoute(base, '/og')])) {
+  for (const ogRoute of new Set(['/og', withBaseRoute(site.base, '/og')])) {
     app = app.get(ogRoute, async ({ request }: { request: Request }) => {
       const { createOgImageResponse } = await import('./lib/og.tsx')
       const { resolveOgIconUrl } = await import('./lib/og-utils.ts')
       const requestUrl = new URL(request.url)
-      const iconUrl = resolveOgIconUrl(config, request.url)
+      const iconUrl = resolveOgIconUrl(site.config, request.url)
       const response = createOgImageResponse({
-        title: config.name,
-        description: config.description,
+        title: site.config.name,
+        description: site.config.description,
         iconUrl,
-        siteName: config.name,
+        siteName: site.config.name,
         pageLabel: `${requestUrl.host}/`,
       })
       response.headers.set('cache-control', 's-maxage=3600')
@@ -370,25 +373,25 @@ export function createHolocronApp() {
     })
   }
 
-  for (const ogWildcardRoute of new Set(['/og/*', withBaseRoute(base, '/og/*')])) {
+  for (const ogWildcardRoute of new Set(['/og/*', withBaseRoute(site.base, '/og/*')])) {
     app = app.get(ogWildcardRoute, async ({ request, params }: { request: Request; params: Record<string, string> }) => {
       const { createOgImageResponse } = await import('./lib/og.tsx')
       const { resolveOgIconUrl } = await import('./lib/og-utils.ts')
       const requestUrl = new URL(request.url)
       const rawSlug = params['*'] || ''
-      const slug = stripBaseFromSlug(rawSlug, base).replace(/^\//, '')
-      const page = findPageBySlug(navigation, slug, mdxContent)
+      const slug = stripBaseFromSlug(rawSlug, site.base).replace(/^\//, '')
+      const page = findPageBySlug(site.navigation, slug, mdxContent)
 
       if (!page) {
         return new Response('Not found', { status: 404 })
       }
 
-      const iconUrl = resolveOgIconUrl(config, request.url)
+      const iconUrl = resolveOgIconUrl(site.config, request.url)
       const response = createOgImageResponse({
         title: page.title,
-        description: page.description ?? config.description,
+        description: page.description ?? site.config.description,
         iconUrl,
-        siteName: config.name,
+        siteName: site.config.name,
         pageLabel: `${requestUrl.host}${page.href}`,
       })
       response.headers.set('cache-control', 's-maxage=3600')
@@ -410,45 +413,10 @@ export function createHolocronApp() {
     return response
   })
 
-  // /holocron-api/search
-  for (const searchRoute of new Set(['/holocron-api/search', withBaseRoute(base, '/holocron-api/search')])) {
-    app = app.get(searchRoute, ({ request }: { request: Request }) => {
-      const url = new URL(request.url)
-      const query = url.searchParams.get('q') || ''
-      const allPages = collectAllPages(navigation)
-      const results = allPages
-        .filter((page) => !page.frontmatter.hidden)
-        .flatMap((page) => [
-          {
-            title: page.frontmatter.sidebarTitle ?? page.title,
-            href: page.href,
-            type: 'page' as const,
-            searchText: [page.title, page.frontmatter.sidebarTitle, ...(page.frontmatter.keywords ?? [])].filter(Boolean).join(' '),
-          },
-          ...page.headings.map((h) => ({
-            title: h.text,
-            href: `${page.href}#${h.slug}`,
-            type: 'heading' as const,
-            searchText: h.text,
-          })),
-        ])
-        .filter((item) => item.searchText.toLowerCase().includes(query.toLowerCase()))
-        .slice(0, 20)
-        .map(({ title, href, type }) => ({ title, href, type }))
-
-      return new Response(JSON.stringify(results), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 's-maxage=300, stale-while-revalidate=86400',
-        },
-      })
-    })
-  }
-
   // /holocron-api/chat — AI assistant endpoint.
   // Streams server-rendered JSX parts via federation. The LLM uses
   // bash-tool to search/read docs in a virtual filesystem.
-  for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(base, '/holocron-api/chat')])) {
+  for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
     const { streamText } = await import('ai')
     const { openai } = await import('@ai-sdk/openai')
@@ -469,7 +437,7 @@ export function createHolocronApp() {
     const { tools } = await createBashTool({ files })
 
     // Build system prompt
-    const allPages = collectAllPages(navigation)
+    const allPages = collectAllPages(site.navigation)
     const pageIndex = allPages
       .map((p) => `- /docs/${p.slug}.mdx  "${p.title}"`)
       .join('\n')
@@ -485,7 +453,7 @@ export function createHolocronApp() {
     })()
 
     const systemPrompt = dedent`
-      You are a documentation assistant for ${config.name || 'this site'}.
+      You are a documentation assistant for ${site.config.name || 'this site'}.
 
       The user is currently reading: ${body.currentSlug}
 
@@ -605,47 +573,49 @@ export function createHolocronApp() {
 
   app = app.loader('/*', async ({ params, response }): Promise<HolocronLoaderData> => {
     const rawSlug = params['*'] || ''
-    const strippedSlug = stripBaseFromSlug(rawSlug, base)
+    const strippedSlug = stripBaseFromSlug(rawSlug, site.base)
     const slug = strippedSlug === '' ? 'index' : strippedSlug
 
-    const currentPage = findPageBySlug(navigation, slug, mdxContent)
+    const currentPage = findPageBySlug(site.navigation, slug, mdxContent)
     const hasMdx = mdxContent[slug] !== undefined
 
     // Root path with no index page → redirect to first page in navigation
     if (!currentPage && (slug === 'index' || slug === '') && firstPage) {
-      throw redirect(withBaseRoute(base, firstPage.href))
+      throw redirect(withBaseRoute(site.base, firstPage.href))
     }
 
     // 404 case
     if (!currentPage || !hasMdx) {
       response.status = 404
       return {
+        site: clientSite,
         currentPageHref: undefined,
         currentPageTitle: undefined,
         currentPageDescription: undefined,
         currentHeadings: [],
-        ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(firstPage.href) : [],
-        activeTabHref: resolveActiveTabHref(firstPage?.href),
-        activeVersionHref: resolveActiveVersionHref(firstPage?.href),
-        activeDropdownHref: resolveActiveDropdownHref(firstPage?.href),
+        ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(site, firstPage.href) : [],
+        activeTabHref: resolveActiveTabHref(site, firstPage?.href),
+        activeVersionHref: resolveActiveVersionHref(site, firstPage?.href),
+        activeDropdownHref: resolveActiveDropdownHref(site, firstPage?.href),
         notFoundPath: '/' + strippedSlug,
-        headTitle: `Page not found — ${config.name}`,
+        headTitle: `Page not found — ${site.config.name}`,
         headRobots: 'noindex',
         currentPageFrontmatter: undefined,
       }
     }
 
     return {
+      site: clientSite,
       currentPageHref: currentPage.href,
       currentPageTitle: currentPage.title,
-      currentPageDescription: currentPage.description ?? config.description,
+      currentPageDescription: currentPage.description ?? site.config.description,
       currentHeadings: currentPage.headings,
-      ancestorGroupKeys: collectAncestorGroupKeys(currentPage.href),
-      activeTabHref: resolveActiveTabHref(currentPage.href),
-      activeVersionHref: resolveActiveVersionHref(currentPage.href),
-      activeDropdownHref: resolveActiveDropdownHref(currentPage.href),
+      ancestorGroupKeys: collectAncestorGroupKeys(site, currentPage.href),
+      activeTabHref: resolveActiveTabHref(site, currentPage.href),
+      activeVersionHref: resolveActiveVersionHref(site, currentPage.href),
+      activeDropdownHref: resolveActiveDropdownHref(site, currentPage.href),
       notFoundPath: undefined,
-      headTitle: `${currentPage.title} — ${config.name}`,
+      headTitle: `${currentPage.title} — ${site.config.name}`,
       headRobots: getPageRobots(currentPage.frontmatter),
       currentPageFrontmatter: currentPage.frontmatter,
     }
@@ -654,18 +624,18 @@ export function createHolocronApp() {
   app = app.layout('/*', async ({ children, request, loaderData: rawLoaderData }) => {
     const loaderData = rawLoaderData as HolocronLoaderData
     const cookies = parseCookies(request.headers.get('cookie') || '')
-    const cookieTheme = config.appearance.strict
+    const cookieTheme = site.config.appearance.strict
       ? null
       : (cookies['holocron-theme'] as 'light' | 'dark' | undefined) ?? null
     const isDark =
       cookieTheme === 'dark' ||
-      (!cookieTheme && config.appearance.default === 'dark')
+      (!cookieTheme && site.config.appearance.default === 'dark')
 
     // When no page route matches, spiceflow passes children=null.
     // Render the custom 404 inside the editorial layout so users
     // can still navigate via the sidebar.
     const isNotFound = children === null
-    const bannerJsx = getBannerJsx(request)
+    const bannerJsx = getBannerJsx(site, request)
     const notFoundContent = (
       <EditorialPage bannerContent={bannerJsx}>
         <NotFound
@@ -679,13 +649,13 @@ export function createHolocronApp() {
       <html
         lang='en'
         className={isDark ? 'dark' : undefined}
-        data-default-theme={config.appearance.default}
+        data-default-theme={site.config.appearance.default}
         suppressHydrationWarning
-        {...(config.appearance.strict ? { 'data-strict-theme': '' } : {})}
+        {...(site.config.appearance.strict ? { 'data-strict-theme': '' } : {})}
       >
         <SiteHead
-          config={config}
-          titleOverride={isNotFound ? (loaderData?.headTitle ?? `Page not found — ${config.name}`) : undefined}
+          config={site.config}
+          titleOverride={isNotFound ? (loaderData?.headTitle ?? `Page not found — ${site.config.name}`) : undefined}
         />
         {isNotFound && (
           <Head>
@@ -701,12 +671,12 @@ export function createHolocronApp() {
   for (const slug of Object.keys(mdxContent)) {
     const pageHref = slugToHref(slug)
 
-    for (const route of new Set([pageHref, withBaseRoute(base, pageHref)])) {
+    for (const route of new Set([pageHref, withBaseRoute(site.base, pageHref)])) {
       app = app.page(route, async ({ loaderData: rawLoaderData, request }) => {
         const loaderData = rawLoaderData as HolocronLoaderData
-        const bannerJsx = getBannerJsx(request)
+        const bannerJsx = getBannerJsx(site, request)
         const ogImageUrl = getAbsoluteOgImageUrl(request.url, absoluteUrlBase, loaderData.currentPageHref ?? pageHref)
-        return renderMdxPage(slug, loaderData, bannerJsx, ogImageUrl)
+        return renderMdxPage(site, slug, loaderData, bannerJsx, ogImageUrl)
       })
     }
   }
@@ -718,7 +688,7 @@ export function createHolocronApp() {
 /* ── Public type for the client router ───────────────────────────────── */
 
 /**
- * The fully-typed Spiceflow app instance. Use this with `createRouter<App>()`
+ * The fully-typed Spiceflow app instance. Use this with `getRouter<App>()`
  * in client code to get typed `useLoaderData`, `href`, and `router` bindings.
  * The actual router module (`./router.ts`) already does this — client
  * components should import from `@holocron.so/vite/react` directly.

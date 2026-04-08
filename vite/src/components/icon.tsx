@@ -20,7 +20,8 @@
 
 import React from 'react'
 import type { ConfigIcon } from '../config.ts'
-import { iconAtlas } from 'virtual:holocron-icons'
+import type { IconAtlas } from '../lib/resolve-icons.ts'
+import { useHolocronData } from '../router.ts'
 
 export type IconProps = {
   icon: ConfigIcon | undefined
@@ -68,6 +69,7 @@ function isUrl(str: string): boolean {
 }
 
 function renderLibraryIcon(
+  iconAtlas: IconAtlas,
   key: string,
   size: number,
   className?: string,
@@ -104,6 +106,8 @@ function resolveAtlasKey(icon: string, iconType?: string): string {
 export function Icon({ icon, size = 16, className, iconType, color }: IconProps): React.ReactElement | null {
   if (!icon) return null
 
+  const { site } = useHolocronData()
+  const iconAtlas = site.icons
   const colorStyle = color ? { color } : undefined
 
   if (typeof icon === 'string') {
@@ -140,11 +144,11 @@ export function Icon({ icon, size = 16, className, iconType, color }: IconProps)
       )
     }
     // Resolve atlas key using iconType dispatch
-    return renderLibraryIcon(resolveAtlasKey(icon, iconType), size, className, colorStyle)
+    return renderLibraryIcon(iconAtlas, resolveAtlasKey(icon, iconType), size, className, colorStyle)
   }
 
   // Object form — iconType is ignored (object already specifies library)
   if (!icon.name) return null
   const library = icon.library ?? 'lucide'
-  return renderLibraryIcon(`${library}:${icon.name}`, size, className, colorStyle)
+  return renderLibraryIcon(iconAtlas, `${library}:${icon.name}`, size, className, colorStyle)
 }

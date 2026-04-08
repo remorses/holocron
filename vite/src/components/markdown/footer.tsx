@@ -7,7 +7,8 @@
  */
 
 import React from 'react'
-import { config as siteConfig, resolvedLogo as siteLogo } from '../../data.ts'
+import { useHolocronData } from '../../router.ts'
+import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
 
 /** Map social platform keys to lucide icon names. Aligned with the
@@ -36,6 +37,9 @@ const SOCIAL_ICONS: Record<string, string> = {
 }
 
 export function Footer() {
+  const { site } = useHolocronData()
+  const siteConfig = site.config
+  const siteLogo = getResolvedLogo(site)
   const { socials, links } = siteConfig.footer
   const hasSocials = Object.keys(socials).length > 0
   const hasLinks = links.length > 0

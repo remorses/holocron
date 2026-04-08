@@ -1,27 +1,29 @@
-/**
- * Shared static site data.
- *
- * Imports raw config + navigation tree from `virtual:holocron-config` and
- * derives the values needed across both the server handler and the client
- * chrome components (tabs, header links, search entries, etc.).
- *
- * All exports are COMPUTED ONCE at module load. No per-request work happens
- * here. Client components importing from this module get the derived data
- * bundled into the client chunk once — browsers cache the bundle, so the
- * navigation tree is not re-shipped on every page navigation.
- *
- * This module is client-safe: it does NOT import the server-only
- * `virtual:holocron-mdx` module. Only the app factory imports MDX content.
- */
-
-import { config, navigation, switchers, base } from 'virtual:holocron-config'
-import type { NavPage, NavTab, NavGroup, NavIcon, NavPageEntry } from './navigation.ts'
-import { isNavPage, isNavGroup, isVisibleNavPage } from './navigation.ts'
+import type { HolocronConfig, ConfigIcon } from './config.ts'
+import { resolveLogo, type ResolvedLogo } from './lib/generated-logo.tsx'
+import type { IconAtlas } from './lib/resolve-icons.ts'
 import type { SearchEntry } from './lib/search.ts'
-import type { ConfigIcon } from './config.ts'
-import { resolveLogo } from './lib/generated-logo.tsx'
+import type {
+  Navigation,
+  NavPage,
+  NavPageEntry,
+  NavTab,
+  NavGroup,
+  NavVersionItem,
+  NavDropdownItem,
+  NavIcon,
+} from './navigation.ts'
+import { hasVisibleSidebarEntries, isNavPage, isNavGroup, isVisibleNavPage } from './navigation.ts'
 
-export { config, navigation, base }
+export type HolocronSiteData = {
+  config: HolocronConfig
+  navigation: Navigation
+  switchers: {
+    versions: NavVersionItem[]
+    dropdowns: NavDropdownItem[]
+  }
+  base: string
+  icons: IconAtlas
+}
 
 /** A top-level tab or anchor rendered in the tab bar. */
 export type TabItem = {
@@ -39,15 +41,20 @@ export type HeaderLink = {
   type?: string
 }
 
-/* ── Derived / compiled data ─────────────────────────────────────────── */
+export type VersionSelectItem = {
+  label: string
+  tag?: string
+  href: string
+  pageHrefs: string[]
+}
 
-// `data.ts` only exports things that are ACTUALLY derived (tree walks).
-// Plain config fields — `config.name`, `config.logo.light`,
-// `config.favicon.dark`, `config.description`, `config.redirects`, etc.
-// — are NOT re-exported; consumers read them off `config` directly.
-// See MEMORY.md "data.ts exports — only if DERIVED, never as pure aliases".
-
-/* ── Navigation helpers (also exported for server use) ───────────────── */
+export type DropdownSelectItem = {
+  label: string
+  icon?: ConfigIcon
+  href: string
+  external?: boolean
+  pageHrefs: string[]
+}
 
 /** Find the first NavPage inside a NavTab (DFS across nested groups). */
 export function findFirstPageInTab(tab: NavTab): NavPage | undefined {
@@ -69,12 +76,26 @@ function findFirstPageInGroup(group: NavGroup): NavPage | undefined {
   return undefined
 }
 
+export function findFirstPage(site: HolocronSiteData): NavPage | undefined {
+  if (site.switchers.versions.length > 0) {
+    const defaultVersion =
+      site.switchers.versions.find((v) => v.default) ?? site.switchers.versions[0]
+    if (defaultVersion) {
+      for (const tab of defaultVersion.navigation.tabs) {
+        const page = findFirstPageInTab(tab)
+        if (page) return page
+      }
+    }
+  }
+  return site.navigation[0] ? findFirstPageInTab(site.navigation[0]) : undefined
+}
+
 /** Walk the navigation tree and return the path-based group key for every
  *  ancestor group that contains the given page href. Path segments are joined
  *  by `\0` to guarantee uniqueness even across duplicate group labels. */
-export function collectAncestorGroupKeys(pageHref: string): string[] {
+export function collectAncestorGroupKeys(site: HolocronSiteData, pageHref: string): string[] {
   const out: string[] = []
-  for (const tab of navigation) {
+  for (const tab of site.navigation) {
     walkGroups(tab.groups, pageHref, '', out)
   }
   return out
@@ -131,18 +152,14 @@ function groupContainsPage(group: NavGroup, pageHref: string): boolean {
   return false
 }
 
-/* ── Static derived data ─────────────────────────────────────────────── */
-
-function buildTabItems(): TabItem[] {
-  // When versions or dropdowns with content are the root organizational
-  // pattern, all flattened tabs come from switcher inner navs. The select
-  // dropdowns replace the tab bar's role, so skip content tabs entirely
-  // and only render anchors (global links like GitHub, Changelog).
-  const hasSwitchers = switchers.versions.length > 0 || switchers.dropdowns.some((d) => !!d.navigation)
+export function buildTabItems(site: HolocronSiteData): TabItem[] {
+  const hasSwitchers =
+    site.switchers.versions.length > 0 ||
+    site.switchers.dropdowns.some((d) => !!d.navigation)
 
   const navTabs: TabItem[] = hasSwitchers
     ? []
-    : navigation
+    : site.navigation
         .filter((t) => t.tab !== '' && !t.hidden)
         .map((t) => {
           const firstPage = findFirstPageInTab(t)
@@ -153,23 +170,24 @@ function buildTabItems(): TabItem[] {
             align: t.align,
           }
         })
-  const anchors: TabItem[] = config.navigation.anchors
+  const anchors: TabItem[] = site.config.navigation.anchors
     .filter((a) => !a.hidden)
-    .map((a) => {
-      return { label: a.anchor, href: a.href, icon: a.icon }
-    })
+    .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon }))
   return [...navTabs, ...anchors]
 }
 
-function buildHeaderLinks(): HeaderLink[] {
-  return config.navbar.links.map((link) => {
-    return { href: link.href, label: link.label, icon: link.icon, type: link.type }
-  })
+export function buildHeaderLinks(site: HolocronSiteData): HeaderLink[] {
+  return site.config.navbar.links.map((link) => ({
+    href: link.href,
+    label: link.label,
+    icon: link.icon,
+    type: link.type,
+  }))
 }
 
-function buildSearchEntries(): SearchEntry[] {
+export function buildSearchEntries(site: HolocronSiteData): SearchEntry[] {
   const entries: SearchEntry[] = []
-  for (const tab of navigation) {
+  for (const tab of site.navigation) {
     collectEntriesFromGroups(tab.groups, '', entries)
   }
   return entries
@@ -211,69 +229,6 @@ function collectEntriesFromGroups(
   }
 }
 
-/** Site-wide tabs, derived from navigation tabs + anchors. */
-export const tabs: TabItem[] = buildTabItems()
-
-/** Header navbar links from config.navbar.links. */
-export const headerLinks: HeaderLink[] = buildHeaderLinks()
-
-/** Flat search entry list for Orama. Pages + headings, with ancestor keys. */
-export const searchEntries: SearchEntry[] = buildSearchEntries()
-
-const baseUrl = base || '/'
-
-/** Resolved logo URLs for UI chrome. Falls back to generated images so
- *  header/footer can always render a normal <img> instead of special-casing
- *  a monospace text placeholder. */
-export const resolvedLogo = resolveLogo(config.logo, config.name, baseUrl)
-
-/** First tab's first page — used as the default landing destination
- *  (e.g. for the root `/` redirect and 404 fallback home link).
- *  When versions exist, prefer the default version's first page
- *  so `/` redirects to the version marked `default: true`. */
-export const firstPage: NavPage | undefined = (() => {
-  // When versions exist, use the default version's first page
-  if (switchers.versions.length > 0) {
-    const defaultVersion =
-      switchers.versions.find((v) => v.default) ?? switchers.versions[0]
-    if (defaultVersion) {
-      for (const tab of defaultVersion.navigation.tabs) {
-        const page = findFirstPageInTab(tab)
-        if (page) return page
-      }
-    }
-  }
-  // Fallback: first tab's first page
-  return navigation[0] ? findFirstPageInTab(navigation[0]) : undefined
-})()
-
-/* ── Active-state resolvers (pure, per-href) ─────────────────────────── */
-
-/** Resolve which tab href a page belongs to (by longest prefix match). */
-export function resolveActiveTabHref(pageHref: string | undefined): string | undefined {
-  if (!pageHref) return tabs[0]?.href
-  return (
-    tabs.find((t) => pageHref.startsWith(t.href) && t.href !== '/')?.href ?? tabs[0]?.href
-  )
-}
-
-/* ── Version / dropdown switcher data ────────────────────────────────── */
-
-export type VersionSelectItem = {
-  label: string
-  tag?: string
-  href: string
-  pageHrefs: string[]
-}
-
-export type DropdownSelectItem = {
-  label: string
-  icon?: ConfigIcon
-  href: string
-  external?: boolean
-  pageHrefs: string[]
-}
-
 function collectPageHrefsFromTabs(tabs: NavTab[], includeHidden: boolean): string[] {
   const hrefs: string[] = []
   for (const tab of tabs) {
@@ -294,8 +249,8 @@ function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[], includeHi
   }
 }
 
-function buildVersionSelectItems(): VersionSelectItem[] {
-  return switchers.versions
+export function buildVersionItems(site: HolocronSiteData): VersionSelectItem[] {
+  return site.switchers.versions
     .filter((v) => !v.hidden)
     .map((v) => {
       const pageHrefs = collectPageHrefsFromTabs(v.navigation.tabs, true)
@@ -310,20 +265,18 @@ function buildVersionSelectItems(): VersionSelectItem[] {
     })
 }
 
-/** True if the href looks like an external URL (absolute with protocol). */
 function isExternalHref(href: string): boolean {
   return /^(https?:)?\/\//.test(href)
 }
 
-function buildDropdownSelectItems(): DropdownSelectItem[] {
-  return switchers.dropdowns
+export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[] {
+  return site.switchers.dropdowns
     .filter((d) => !d.hidden)
     .map((d) => {
       if (d.href && !d.navigation) {
-        // Link-only dropdown — external only if the href is a full URL
         return {
           label: d.dropdown,
-          ...(d.icon && { icon: d.icon }),
+          ...(d.icon && { icon: d.icon as ConfigIcon }),
           href: d.href,
           ...(isExternalHref(d.href) && { external: true }),
           pageHrefs: [],
@@ -334,22 +287,25 @@ function buildDropdownSelectItems(): DropdownSelectItem[] {
       const firstHref = visiblePageHrefs[0] || pageHrefs[0] || d.href || '/'
       return {
         label: d.dropdown,
-        ...(d.icon && { icon: d.icon }),
+        ...(d.icon && { icon: d.icon as ConfigIcon }),
         href: firstHref,
         pageHrefs,
       }
     })
 }
 
-export const versionItems: VersionSelectItem[] = buildVersionSelectItems()
-export const dropdownItems: DropdownSelectItem[] = buildDropdownSelectItems()
+export function resolveActiveTabHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
+  const tabs = buildTabItems(site)
+  if (!pageHref) return tabs[0]?.href
+  return tabs.find((t) => pageHref.startsWith(t.href) && t.href !== '/')?.href ?? tabs[0]?.href
+}
 
-export function resolveActiveVersionHref(pageHref: string | undefined): string | undefined {
+export function resolveActiveVersionHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
+  const versionItems = buildVersionItems(site)
   if (!pageHref || versionItems.length === 0) return undefined
   const match = versionItems.find((v) => v.pageHrefs.includes(pageHref))
   if (match) return match.href
-  // Default version fallback
-  const defaultVersion = switchers.versions.find((v) => v.default)
+  const defaultVersion = site.switchers.versions.find((v) => v.default)
   if (defaultVersion) {
     const item = versionItems.find((vi) => vi.label === defaultVersion.version)
     return item?.href
@@ -357,8 +313,85 @@ export function resolveActiveVersionHref(pageHref: string | undefined): string |
   return versionItems[0]?.href
 }
 
-export function resolveActiveDropdownHref(pageHref: string | undefined): string | undefined {
+export function resolveActiveDropdownHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
+  const dropdownItems = buildDropdownItems(site)
   if (!pageHref || dropdownItems.length === 0) return undefined
   const match = dropdownItems.find((d) => !d.external && d.pageHrefs.includes(pageHref))
   return match?.href ?? dropdownItems.find((d) => !d.external)?.href
+}
+
+export function getResolvedLogo(site: HolocronSiteData): ResolvedLogo {
+  return resolveLogo(site.config.logo, site.config.name, site.base || '/')
+}
+
+function filterVisibleGroup(group: NavGroup): NavGroup | null {
+  if (!hasVisibleSidebarEntries(group)) return null
+  const pages: NavPageEntry[] = []
+  for (const entry of group.pages) {
+    if (isNavPage(entry)) {
+      if (isVisibleNavPage(entry)) pages.push(entry)
+      continue
+    }
+    const nextGroup = filterVisibleGroup(entry)
+    if (nextGroup) pages.push(nextGroup)
+  }
+  return {
+    ...group,
+    pages,
+  }
+}
+
+function filterVisibleNavigation(navigation: Navigation): Navigation {
+  return navigation
+    .filter((tab) => !tab.hidden)
+    .map((tab) => ({
+      ...tab,
+      groups: tab.groups.flatMap((group) => {
+        const nextGroup = filterVisibleGroup(group)
+        return nextGroup ? [nextGroup] : []
+      }),
+    }))
+}
+
+function filterVisibleVersion(version: NavVersionItem): NavVersionItem {
+  return {
+    ...version,
+    navigation: {
+      ...version.navigation,
+      tabs: filterVisibleNavigation(version.navigation.tabs),
+      anchors: version.navigation.anchors.filter((anchor) => !anchor.hidden),
+    },
+  }
+}
+
+function filterVisibleDropdown(dropdown: NavDropdownItem): NavDropdownItem {
+  if (!dropdown.navigation) return dropdown
+  return {
+    ...dropdown,
+    navigation: {
+      ...dropdown.navigation,
+      tabs: filterVisibleNavigation(dropdown.navigation.tabs),
+      anchors: dropdown.navigation.anchors.filter((anchor) => !anchor.hidden),
+    },
+  }
+}
+
+export function buildVisibleSiteData(site: HolocronSiteData): HolocronSiteData {
+  return {
+    ...site,
+    config: {
+      ...site.config,
+      navigation: {
+        tabs: [],
+        anchors: site.config.navigation.anchors.filter((anchor) => !anchor.hidden),
+        versions: [],
+        dropdowns: [],
+      },
+    },
+    navigation: filterVisibleNavigation(site.navigation),
+    switchers: {
+      versions: site.switchers.versions.filter((version) => !version.hidden).map(filterVisibleVersion),
+      dropdowns: site.switchers.dropdowns.filter((dropdown) => !dropdown.hidden).map(filterVisibleDropdown),
+    },
+  }
 }

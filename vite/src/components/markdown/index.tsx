@@ -9,7 +9,7 @@
  */
 
 export type { TocNodeType, TocTreeNode } from '../../lib/toc-tree.ts'
-export type { TabItem, HeaderLink } from '../../data.ts'
+export type { TabItem, HeaderLink } from '../../site-data.ts'
 
 export { SideNav } from './side-nav.tsx'
 export { BackButton } from './back-button.tsx'

@@ -11,15 +11,14 @@ const ENABLE_ASSISTANT = true
 
 import React, { Fragment } from 'react'
 import { Link } from 'spiceflow/react'
-import {
-  config as siteConfig,
-  resolvedLogo as siteLogo,
-  tabs as siteTabs,
-  headerLinks as siteHeaderLinks,
-  versionItems as siteVersionItems,
-  dropdownItems as siteDropdownItems,
-} from '../../data.ts'
 import { useHolocronData } from '../../router.ts'
+import {
+  buildDropdownItems,
+  buildHeaderLinks,
+  buildTabItems,
+  buildVersionItems,
+  getResolvedLogo,
+} from '../../site-data.ts'
 import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
 import { NavSelect, type NavSelectItem } from './nav-select.tsx'
@@ -59,9 +58,8 @@ function sectionStartsSharedAsideAtTop(section: EditorialSection, index: number)
 /**
  * Top-level page shell.
  *
- * All static site data (logo, site name, tabs, header links) comes from
- * the shared `data.ts` module. Per-request state (active tab href) comes
- * from the Spiceflow loader via `useHolocronData()`. JSX content
+ * Canonical site data and per-request state both come from the Spiceflow root
+ * loader via `useHolocronData()`. JSX content
  * (sections, hero, children) is still passed as props because it's
  * request-specific pre-rendered server output.
  */
@@ -81,7 +79,13 @@ export function EditorialPage({
   /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
   bannerContent?: React.ReactNode
 }) {
-  const { activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
+  const { site, activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
+  const siteConfig = site.config
+  const siteLogo = getResolvedLogo(site)
+  const siteTabs = buildTabItems(site)
+  const siteHeaderLinks = buildHeaderLinks(site)
+  const siteVersionItems = buildVersionItems(site)
+  const siteDropdownItems = buildDropdownItems(site)
   const logo = siteLogo.light
   const logoLinkHref = siteLogo.href || '/'
   const siteName = siteConfig.name

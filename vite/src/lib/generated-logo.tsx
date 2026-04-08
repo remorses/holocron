@@ -7,9 +7,6 @@
 
 import React from 'react'
 import fontDataUrl from '../assets/neug-asia-script-demo.ttf?url&inline'
-import { ImageResponse } from 'takumi-js/response'
-import { Renderer } from 'takumi-js/node'
-import { fromJsx } from 'takumi-js/helpers/jsx'
 import type { HolocronConfig } from '../config.ts'
 
 export type GeneratedLogoTheme = 'light' | 'dark'
@@ -64,6 +61,8 @@ export type GeneratedLogoOptions = {
   theme: GeneratedLogoTheme
 }
 
+type RendererInstance = InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
+
 const FONT_FAMILY = 'Neug Asia Script Demo'
 const FONT_SIZE = 72
 
@@ -79,14 +78,22 @@ function getFontData(): Promise<ArrayBuffer> {
   return cachedFontData
 }
 
-let cachedRenderer: Renderer | undefined
+let cachedRenderer: RendererInstance | undefined
 
-function getRenderer(): Renderer {
-  cachedRenderer ??= new Renderer()
+async function getRenderer(): Promise<RendererInstance> {
+  if (!cachedRenderer) {
+    const { Renderer } = await import('takumi-js/node')
+    cachedRenderer = new Renderer()
+  }
   return cachedRenderer
 }
 
-const fontConfig: Parameters<Renderer['loadFont']>[0] = {
+const fontConfig: {
+  name: string
+  data: () => Promise<ArrayBuffer>
+  weight: number
+  style: 'normal'
+} = {
   name: FONT_FAMILY,
   data: getFontData,
   weight: 700,
@@ -94,8 +101,9 @@ const fontConfig: Parameters<Renderer['loadFont']>[0] = {
 }
 
 async function measureTextSize(text: string): Promise<{ width: number; height: number }> {
-  const renderer = getRenderer()
+  const renderer = await getRenderer()
   await renderer.loadFont(fontConfig)
+  const { fromJsx } = await import('takumi-js/helpers/jsx')
 
   const { node, stylesheets } = await fromJsx(
     <span style={{ fontFamily: FONT_FAMILY, fontSize: FONT_SIZE, fontWeight: 700, lineHeight: 1, whiteSpace: 'nowrap' }}>
@@ -127,9 +135,10 @@ function GeneratedLogoTemplate({ text, theme }: GeneratedLogoOptions) {
   )
 }
 
-export async function createGeneratedLogoResponse(options: GeneratedLogoOptions): Promise<ImageResponse> {
+export async function createGeneratedLogoResponse(options: GeneratedLogoOptions) {
   const text = normalizeGeneratedLogoText(options.text)
   const { width, height } = await measureTextSize(text)
+  const { ImageResponse } = await import('takumi-js/response')
 
   return new ImageResponse(<GeneratedLogoTemplate {...options} text={text} />, {
     width,

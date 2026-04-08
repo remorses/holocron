@@ -18,12 +18,11 @@ import { Icon } from './icon.tsx'
 import { ThemeToggle } from './theme-toggle.tsx'
 import { useHolocronData } from '../router.ts'
 import {
-  config as siteConfig,
-  headerLinks as siteHeaderLinks,
-  versionItems as siteVersionItems,
-  dropdownItems as siteDropdownItems,
-  tabs as siteTabs,
-} from '../data.ts'
+  buildDropdownItems,
+  buildHeaderLinks,
+  buildTabItems,
+  buildVersionItems,
+} from '../site-data.ts'
 import { TabLink } from './markdown/tab-link.tsx'
 
 export function NavDrawer() {
@@ -40,14 +39,14 @@ export function NavDrawer() {
 
 function NavDrawerInner() {
   const isOpen = chatState((s) => s.navDrawerOpen)
-  const { currentPageHref, activeVersionHref, activeDropdownHref, activeTabHref } =
+  const { site, currentPageHref, activeVersionHref, activeDropdownHref, activeTabHref } =
     useHolocronData()
 
-  const primary = siteConfig.navbar?.primary
-  const versionItems = siteVersionItems
-  const dropdownSelectItems = siteDropdownItems
-  const headerLinks = siteHeaderLinks
-  const tabs = siteTabs
+  const primary = site.config.navbar?.primary
+  const versionItems = buildVersionItems(site)
+  const dropdownSelectItems = buildDropdownItems(site)
+  const headerLinks = buildHeaderLinks(site)
+  const tabs = buildTabItems(site)
 
   const handleClose = useCallback(() => {
     chatState.setState({ navDrawerOpen: false })
@@ -167,7 +166,7 @@ function NavDrawerInner() {
               />
             )}
             <div style={{ marginLeft: 'auto' }}>
-              {!siteConfig.appearance.strict && <ThemeToggle />}
+              {!site.config.appearance.strict && <ThemeToggle />}
             </div>
           </div>
 

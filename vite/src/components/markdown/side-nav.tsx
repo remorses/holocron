@@ -2,7 +2,7 @@
 
 /**
  * SideNav — Agentation-style left sidebar.
- * Reads navigation from `data.ts` (static) and active page state from
+ * Reads navigation from loader data and active page state from
  * `useHolocronData()` (per-request). Hosts the sidebar search input.
  */
 
@@ -12,36 +12,30 @@ import { router } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, emptySearchState, type SearchState } from '../../lib/search.ts'
-import {
-  config as siteConfig,
-  navigation as siteNavigation,
-  searchEntries as siteSearchEntries,
-  collectDefaultExpandedKeys,
-} from '../../data.ts'
 import { useHolocronData } from '../../router.ts'
+import { buildSearchEntries, collectDefaultExpandedKeys } from '../../site-data.ts'
 import { SearchIcon } from './icons.tsx'
 import { NavGroupNode } from './nav-tree.tsx'
 
 /**
- * Zero-prop sidebar — reads navigation from the shared static module
- * (`data.ts`) and per-request state (currentPageHref, ancestorGroupKeys)
+ * Zero-prop sidebar — reads navigation from the root loader `site` object
+ * and per-request state (currentPageHref, ancestorGroupKeys)
  * from the Spiceflow loader via `useHolocronData()`.
- *
- * Static imports like `siteNavigation` and `siteSearchEntries` are
- * bundled into the client chunk ONCE and cached — they never travel
- * through the per-request flight payload.
  */
 export function SideNav() {
   const {
+    site,
     currentPageHref,
     currentHeadings,
     ancestorGroupKeys,
   } = useHolocronData()
+  const siteConfig = site.config
+  const searchEntries = useMemo(() => buildSearchEntries(site), [site])
 
   // Active tab's groups. Derived from static nav + current href.
   const groups = useMemo(
-    () => getActiveGroups(siteNavigation, currentPageHref ?? '/'),
-    [currentPageHref],
+    () => getActiveGroups(site.navigation, currentPageHref ?? '/'),
+    [currentPageHref, site],
   )
 
   const fallbackId = currentHeadings[0]?.slug ?? ''
@@ -95,11 +89,11 @@ export function SideNav() {
   }, [])
 
   // --- Search ---
-  // Use the static flat entry list from data.ts — built once at module load,
-  // not per render. The Orama DB is still memoized per mount.
+  // Build the flat search entry list from the loader-provided navigation object.
+  // The Orama DB is still memoized per mount.
   const db = useMemo(
-    () => createSearchDb({ entries: siteSearchEntries }),
-    [],
+    () => createSearchDb({ entries: searchEntries }),
+    [searchEntries],
   )
 
   const [query, setQuery] = useState('')
@@ -121,11 +115,11 @@ export function SideNav() {
     (value: string) => {
       setQuery(value)
       startTransition(() => {
-        setSearchState(searchSidebar({ db, query: value, entries: siteSearchEntries }))
+        setSearchState(searchSidebar({ db, query: value, entries: searchEntries }))
         setHighlightedIndex(0)
       })
     },
-    [db],
+    [db, searchEntries],
   )
 
   // Global F hotkey to focus search input

@@ -3,9 +3,8 @@
 /**
  * Holocron typed client router.
  *
- * Single `createRouter<HolocronApp>()` binding so every client component gets
- * type-safe access to loader data, the router, and `href()` without repeatedly
- * importing the app type.
+ * Binds the Spiceflow router and loader hooks to the Holocron app type so
+ * components can read typed loader data without repeatedly importing `App`.
  *
  * Usage in a client component:
  *
@@ -17,20 +16,13 @@
  *   }
  */
 
-import { createRouter, router, useRouterState } from 'spiceflow/react'
+import { getRouter, router, useLoaderData, useRouterState } from 'spiceflow/react'
 import type { HolocronApp, HolocronLoaderData } from './app-factory.tsx'
 
-// `router` and `useRouterState` are re-exported directly from `spiceflow/react`
-// (they are the same singleton `createRouter` returns). This avoids a
-// TS2742 declaration-file portability error on the destructured `router`
-// binding, whose inferred type references `import("history").To` via a
-// pnpm-mangled path. Only the App-typed hooks need to come from
-// `createRouter<HolocronApp>()`.
-export { router, useRouterState }
+export { router }
+export const useHolocronRouterState = () => useRouterState<HolocronApp>()
 
-const typed = createRouter<HolocronApp>()
-export const useLoaderData = typed.useLoaderData
-export const getLoaderData = typed.getLoaderData
+const typed = getRouter<HolocronApp>()
 export const href = typed.href
 
 /**
@@ -38,4 +30,5 @@ export const href = typed.href
  * Returns the full per-request loader data produced by `.loader('/*')` in
  * app-factory.tsx.
  */
-export const useHolocronData = () => useLoaderData('/*') as HolocronLoaderData
+export const useHolocronData = () =>
+	useLoaderData<HolocronApp>('/*') as HolocronLoaderData

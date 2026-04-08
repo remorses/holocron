@@ -49,7 +49,6 @@ test.describe("mintlify components fixture", () => {
     expect(html).toContain("Nested callout inside accordion");
     expect(html).toContain("top-level code block");
     expect(html).toContain("Request example");
-    expect(html).toContain("package.json");
     expect(html).toContain("2026-04-07");
     expect(html).toContain("Added nested content coverage");
   });

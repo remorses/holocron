@@ -7,7 +7,7 @@
 
 import React from 'react'
 import { Link } from 'spiceflow/react'
-import type { TabItem } from '../../data.ts'
+import type { TabItem } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
 
 export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {

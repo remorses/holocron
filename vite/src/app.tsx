@@ -1,13 +1,22 @@
 /**
  * Holocron Spiceflow app entry — server-rendered documentation site.
  *
- * Static site data (config, navigation, tabs, etc.) comes from `./data.ts`
- * which imports from `virtual:holocron-config`. MDX content and the app
- * factory live in `./app-factory.tsx` — this file just instantiates the
- * app and exposes the typed entrypoint.
+ * Canonical site data is loaded once on the server and passed into the app
+ * factory so route setup can use the same object outside component render.
  */
 
 import { createHolocronApp, type HolocronApp } from './app-factory.tsx'
+import { config, navigation, switchers, base } from 'virtual:holocron-config'
+import { iconAtlas } from 'virtual:holocron-icons'
+import type { HolocronSiteData } from './site-data.ts'
 
-export const app = createHolocronApp()
+const site: HolocronSiteData = {
+  config,
+  navigation,
+  switchers,
+  base,
+  icons: iconAtlas,
+}
+
+export const app = createHolocronApp(site)
 export type App = HolocronApp
