@@ -24,6 +24,7 @@ import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
 import { collectIconRefs } from './lib/collect-icons.ts'
 import { resolveIconSvgs, type IconAtlas } from './lib/resolve-icons.ts'
+import { collectMdxIconRefs } from './lib/mdx-processor.ts'
 import react from '@vitejs/plugin-react'
 
 export type HolocronPluginOptions = {
@@ -185,11 +186,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         distDir: distDirPath,
       })
 
-      // Walk the config+navigation, extract referenced icons, resolve each
-      // via @iconify-json/lucide, and stash the serialized atlas. Only
-      // the icons actually referenced in this site's config ship to the
-      // client — typically < 20 icons → 2-5 KB gzipped.
-      const iconRefs = collectIconRefs({ config, navigation: syncResult.navigation })
+      // Walk config, navigation, and page MDX so content components like
+      // <Card icon="react"> and <Accordion icon="building-columns"> get
+      // bundled into the shared icon atlas too.
+      const mdxIconRefs = Object.values(syncResult.mdxContent).flatMap((markdown) => {
+        return collectMdxIconRefs(markdown)
+      })
+      const iconRefs = collectIconRefs({
+        config,
+        navigation: syncResult.navigation,
+        mdxIconRefs,
+      })
       iconAtlas = resolveIconSvgs(iconRefs)
 
       console.error(
@@ -332,7 +339,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         })
         // Config changes can add/remove icons — re-resolve the atlas so
         // new icons land in the client bundle on the next request.
-        const iconRefs = collectIconRefs({ config, navigation: syncResult.navigation })
+        const mdxIconRefs = Object.values(syncResult.mdxContent).flatMap((markdown) => {
+          return collectMdxIconRefs(markdown)
+        })
+        const iconRefs = collectIconRefs({
+          config,
+          navigation: syncResult.navigation,
+          mdxIconRefs,
+        })
         iconAtlas = resolveIconSvgs(iconRefs)
 
         ctx.server.environments.client?.hot.send({

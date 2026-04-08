@@ -126,6 +126,26 @@ test.describe("realworld-polar fixture", () => {
     expect(html).toContain("Quick Start Guide");
   });
 
+  test("Polar card icons render for Font Awesome-style names used in MDX", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+    await page.waitForTimeout(1200);
+
+    const createAccountCard = page
+      .getByText("Create Account", { exact: true })
+      .locator("xpath=ancestor::a[1]");
+    await expect(createAccountCard).toBeVisible();
+    await expect(createAccountCard.locator("svg")).toHaveCount(1);
+
+    const communityCard = page
+      .getByText("Join Our Community", { exact: true })
+      .locator("xpath=ancestor::a[1]");
+    await expect(communityCard).toBeVisible();
+    await expect(communityCard.locator("svg")).toHaveCount(1);
+  });
+
   test("real redirects from Polar docs.json resolve correctly", async ({ request }) => {
     const apiRedirect = await request.get("/api", {
       headers: { "sec-fetch-dest": "document" },

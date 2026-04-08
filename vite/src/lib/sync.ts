@@ -66,7 +66,7 @@ const { version: PACKAGE_VERSION } = require('../../package.json') as { version:
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 /** Libraries we can actually resolve at build time. */
-const SUPPORTED_ICON_LIBRARIES = new Set(['lucide'])
+const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome'])
 
 /** Serialize a config icon into the enriched-tree shape. Preserves the
  *  structured form (`{ name, library, style }`) when users pass it so
@@ -80,7 +80,7 @@ function serializeIcon(icon: ConfigNavGroup['icon'], context?: string): NavIcon 
   const library = icon.library ?? 'lucide'
   if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
     console.warn(
-      `[holocron] icon library "${library}" is not supported yet (only lucide). ` +
+      `[holocron] icon library "${library}" is not supported yet (supported: lucide, fontawesome). ` +
       `Icon "${icon.name}"${context ? ` in ${context}` : ''} will be ignored.`,
     )
     return undefined

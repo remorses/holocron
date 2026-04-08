@@ -1699,3 +1699,9 @@ the `/` redirect, not the first flattened tab (which could be from v1).
 `<CardGroup>` is not decorative sugar in Mintlify docs — authors use it as the
 actual card grid wrapper, including inside `<Tabs>`. If it is missing from the
 MDX component map, tab panels look empty because the cards are dropped at render time.
+
+## MDX icons need atlas collection (2026-04-09)
+
+Card and accordion icons from page content do not come from config/navigation,
+so they must be collected from MDX too when building `virtual:holocron-icons`.
+Otherwise the text renders but the icon slot stays empty even if the name is valid.

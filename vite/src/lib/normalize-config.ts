@@ -23,8 +23,11 @@ import type {
 /** Libraries we can actually resolve at build time. Object icons with
  *  unsupported libraries are stripped at normalize time so they fall
  *  through to the label fallback instead of silently rendering nothing. */
-const SUPPORTED_ICON_LIBRARIES = new Set(['lucide'])
+const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome'])
 
+// Real Mintlify docs.json files often use config asset paths like
+// `./logo/light.png`; normalize them once so nested routes do not resolve
+// those relative URLs against the current page path.
 function normalizeStaticPath(value: string | undefined): string | undefined {
   if (!value) return value
   if (/^(?:https?:)?\/\//.test(value) || value.startsWith('data:')) return value
@@ -40,8 +43,8 @@ function sanitizeIcon(icon: ConfigIcon | undefined, context: string): ConfigIcon
   if (typeof icon === 'string') return icon
   const library = icon.library ?? 'lucide'
   if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
-    console.warn(
-      `[holocron] icon library "${library}" is not supported yet (only lucide). ` +
+      console.warn(
+      `[holocron] icon library "${library}" is not supported yet (supported: lucide, fontawesome). ` +
       `Icon "${icon.name}" in ${context} will be ignored.`,
     )
     return undefined

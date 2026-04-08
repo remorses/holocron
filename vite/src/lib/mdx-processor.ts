@@ -16,6 +16,7 @@ import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
+import { stringIconToRefs, type IconRef } from './collect-icons.ts'
 
 export type ProcessedMdx = {
   normalizedContent: string
@@ -30,6 +31,12 @@ export type ProcessedMdx = {
   imageSrcs: string[]
   /** The parsed mdast tree (reused for image rewriting without re-parsing) */
   mdast: Root
+}
+
+type JsxNode = RootContent & {
+  name?: string
+  attributes?: Array<{ type: string; name?: string; value?: unknown }>
+  children?: RootContent[]
 }
 
 /**
@@ -61,6 +68,39 @@ export function processMdx(content: string): ProcessedMdx {
     imageSrcs,
     mdast,
   }
+}
+
+export function collectMdxIconRefs(content: string): IconRef[] {
+  const normalizedContent = normalizeMdx(content)
+  const frontmatter = parsePageFrontmatter(content)
+  const mdast = mdxParse(normalizedContent) as Root
+  return collectIconRefsFromMdast(mdast, frontmatter)
+}
+
+function collectIconRefsFromMdast(mdast: Root, frontmatter: PageFrontmatter): IconRef[] {
+  const refs: IconRef[] = []
+
+  if (typeof frontmatter.icon === 'string' && frontmatter.icon !== '') {
+    refs.push(...stringIconToRefs(frontmatter.icon))
+  }
+
+  function walk(nodes: RootContent[]) {
+    for (const node of nodes) {
+      if (isJsxElement(node)) {
+        const icon = getJsxAttrValue(node, 'icon')
+        const iconType = getJsxAttrValue(node, 'iconType')
+        if (icon) {
+          refs.push(...stringIconToRefs(icon, iconType))
+        }
+      }
+      if ('children' in node && Array.isArray(node.children)) {
+        walk(node.children as RootContent[])
+      }
+    }
+  }
+
+  walk(mdast.children)
+  return refs
 }
 
 function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading | undefined {
@@ -231,13 +271,8 @@ function createPixelatedImageNode({ src, alt, meta }: { src: string; alt: string
 
 /* ── JSX node helpers ────────────────────────────────────────────────── */
 
-type JsxNode = RootContent & {
-  name?: string
-  attributes: Array<{ type: string; name?: string; value?: unknown }>
-}
-
 function isJsxImageElement(node: RootContent): node is JsxNode {
-  if (node.type !== 'mdxJsxFlowElement' || !('name' in node)) {
+  if (!isJsxElement(node)) {
     return false
   }
   const name = (node as JsxNode).name
@@ -245,14 +280,19 @@ function isJsxImageElement(node: RootContent): node is JsxNode {
 }
 
 function isJsxHeadingElement(node: RootContent): node is JsxNode {
-  if (node.type !== 'mdxJsxFlowElement' || !('name' in node)) {
-    return false
-  }
+  if (!isJsxElement(node)) return false
   return /^h[1-6]$/.test((node as JsxNode).name || '')
 }
 
+function isJsxElement(node: RootContent): node is JsxNode {
+  return (
+    (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') &&
+    'name' in node
+  )
+}
+
 function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
-  const attr = node.attributes.find((a) => {
+  const attr = node.attributes?.find((a) => {
     return a.type === 'mdxJsxAttribute' && a.name === attrName
   })
   if (!attr) {
@@ -271,10 +311,11 @@ function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
 }
 
 function hasBooleanJsxAttr(node: JsxNode, attrName: string): boolean {
-  return node.attributes.some((a) => a.type === 'mdxJsxAttribute' && a.name === attrName)
+  return (node.attributes ?? []).some((a) => a.type === 'mdxJsxAttribute' && a.name === attrName)
 }
 
 function setJsxAttr(node: JsxNode, attrName: string, value: string): void {
+  node.attributes ??= []
   const existing = node.attributes.find((a) => {
     return a.type === 'mdxJsxAttribute' && a.name === attrName
   })

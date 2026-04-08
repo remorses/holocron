@@ -2,13 +2,12 @@
  * Walk the normalized config + enriched navigation tree and collect every
  * referenced icon that needs build-time SVG resolution.
  *
- * Only STRUCTURED icons + LIBRARY-NAME string icons are collected. Emoji
- * icons + URL-path icons are rendered inline at runtime without any
- * pre-resolved SVG body, so they don't appear here.
- *
- * Output is a de-duped list of `{ library, name }` pairs keyed by
- * `library:name` — the same keying convention the client `<Icon>`
- * component uses to look them up in the atlas.
+ * Bare string icons are ambiguous in the wild: existing Holocron fixtures use
+ * lucide names in config/navigation, while the Polar MDX content uses many
+ * Font Awesome names. For plain strings we collect both candidates, then let
+ * the runtime <Icon> component prefer lucide and fall back to Font Awesome.
+ * Emoji icons + URL-path icons render inline at runtime, so they do not need
+ * an atlas entry.
  */
 
 import type { ConfigIcon, HolocronConfig } from '../config.ts'
@@ -18,26 +17,41 @@ import { isNavGroup, isNavPage } from '../navigation.ts'
 export type IconRef = {
   library: 'lucide' | 'tabler' | 'fontawesome'
   name: string
+  style?: string
+}
+
+const FA_STYLES = new Set([
+  'regular', 'solid', 'light', 'thin', 'sharp-solid', 'duotone', 'brands',
+])
+
+export function stringIconToRefs(icon: string, iconType?: string): IconRef[] {
+  if (icon === '' || isEmoji(icon) || isUrl(icon)) return []
+  if (iconType) {
+    if (FA_STYLES.has(iconType)) {
+      return [{ library: 'fontawesome', name: icon, style: iconType }]
+    }
+    return [{ library: iconType as IconRef['library'], name: icon }]
+  }
+  return [
+    { library: 'lucide', name: icon },
+    { library: 'fontawesome', name: icon },
+  ]
 }
 
 /** Dispatch rules for a raw icon value from the config:
  *   - undefined / empty string → no ref
  *   - emoji → no ref (rendered inline via <span>)
  *   - URL (http://, https://, /) → no ref (rendered as <img>)
- *   - other string → lucide icon name (library default)
+ *   - other string → try lucide first, then Font Awesome fallback
  *   - object → { name, library? } (library defaults to lucide) */
-function iconToRef(icon: ConfigIcon | undefined): IconRef | null {
-  if (!icon) return null
+export function iconToRefs(icon: ConfigIcon | undefined): IconRef[] {
+  if (!icon) return []
   if (typeof icon === 'string') {
-    if (icon === '') return null
-    if (isEmoji(icon)) return null
-    if (isUrl(icon)) return null
-    return { library: 'lucide', name: icon }
+    return stringIconToRefs(icon)
   }
-  // object form — library defaults to lucide (matches Mintlify's default)
   const library = icon.library ?? 'lucide'
-  if (!icon.name) return null
-  return { library, name: icon.name }
+  if (!icon.name) return []
+  return [{ library, name: icon.name, ...(icon.style ? { style: icon.style } : {}) }]
 }
 
 /**
@@ -67,16 +81,14 @@ function isUrl(str: string): boolean {
 
 function walkGroups(groups: NavGroup[], out: IconRef[]): void {
   for (const group of groups) {
-    const ref = iconToRef(group.icon)
-    if (ref) out.push(ref)
+    out.push(...iconToRefs(group.icon))
     for (const entry of group.pages) {
       if (isNavGroup(entry)) {
         walkGroups([entry], out)
         continue
       }
       if (isNavPage(entry)) {
-        const pageRef = iconToRef(entry.icon)
-        if (pageRef) out.push(pageRef)
+        out.push(...iconToRefs(entry.icon))
       }
     }
   }
@@ -85,45 +97,46 @@ function walkGroups(groups: NavGroup[], out: IconRef[]): void {
 export function collectIconRefs({
   config,
   navigation,
+  mdxIconRefs = [],
 }: {
   config: HolocronConfig
   navigation: Navigation
+  mdxIconRefs?: IconRef[]
 }): IconRef[] {
   const refs: IconRef[] = []
 
   // navbar links
   for (const link of config.navbar.links) {
-    const ref = iconToRef(link.icon)
-    if (ref) refs.push(ref)
+    refs.push(...iconToRefs(link.icon))
   }
   // navbar primary (icon auto-filled from type via normalizeNavbar)
-  const primaryRef = iconToRef(config.navbar.primary?.icon)
-  if (primaryRef) refs.push(primaryRef)
+  refs.push(...iconToRefs(config.navbar.primary?.icon))
 
   // navigation tab icons
   for (const tab of navigation) {
-    const ref = iconToRef(tab.icon)
-    if (ref) refs.push(ref)
+    refs.push(...iconToRefs(tab.icon))
     walkGroups(tab.groups, refs)
   }
 
   // anchor icons
   for (const anchor of config.navigation.anchors) {
-    const ref = iconToRef(anchor.icon)
-    if (ref) refs.push(ref)
+    refs.push(...iconToRefs(anchor.icon))
   }
 
   // dropdown icons (dropdowns may have icons shown in the select)
   for (const dropdown of config.navigation.dropdowns) {
-    const ref = iconToRef(dropdown.icon)
-    if (ref) refs.push(ref)
+    refs.push(...iconToRefs(dropdown.icon))
   }
 
-  // de-dupe by `library:name` key
+  refs.push(...mdxIconRefs)
+
+  // de-dupe by `library:name` key, including style-specific FA refs.
   const seen = new Set<string>()
   const unique: IconRef[] = []
   for (const ref of refs) {
-    const key = `${ref.library}:${ref.name}`
+    const key = ref.style
+      ? `${ref.library}:${ref.style}:${ref.name}`
+      : `${ref.library}:${ref.name}`
     if (seen.has(key)) continue
     seen.add(key)
     unique.push(ref)
