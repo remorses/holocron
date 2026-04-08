@@ -62,7 +62,7 @@ const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 const require = createRequire(import.meta.url)
 const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
-const CACHE_VERSION = `${PACKAGE_VERSION}:mdx-normalize-v1`
+
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 /** Libraries we can actually resolve at build time. */
@@ -421,7 +421,7 @@ function readCache(cachePath: string): Navigation | null {
     // Package-version envelope — reject caches from older versions so new
     // fields (e.g. page `icon`) aren't silently missing from cached NavPage
     // objects. Every publish naturally invalidates stale caches.
-    if (raw && typeof raw === 'object' && raw.version === CACHE_VERSION) {
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
       return raw.navigation as Navigation
     }
     return null
@@ -433,7 +433,7 @@ function readCache(cachePath: string): Navigation | null {
 function writeCache(cachePath: string, nav: Navigation): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  const envelope: NavCacheEnvelope = { version: CACHE_VERSION, navigation: nav }
+  const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, navigation: nav }
   fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 
@@ -443,7 +443,7 @@ function readMdxCache(cachePath: string): Record<string, string> {
   }
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
-    if (raw && typeof raw === 'object' && raw.version === CACHE_VERSION) {
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
       return (raw as MdxCacheEnvelope).content
     }
     return {}
@@ -455,7 +455,7 @@ function readMdxCache(cachePath: string): Record<string, string> {
 function writeMdxCache(cachePath: string, content: Record<string, string>): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  const envelope: MdxCacheEnvelope = { version: CACHE_VERSION, content }
+  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
 
