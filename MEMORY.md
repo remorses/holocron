@@ -1717,3 +1717,9 @@ over the pack default or wide icons render with a clipped `viewBox`.
 `<Step>` is another arbitrary-MDX container, so its body must own vertical rhythm
  with `flex flex-col gap-3 no-bleed`. A plain text wrapper collapses paragraphs,
  lists, and code blocks together because editorial nodes do not carry reliable margins.
+
+## WebP image placeholders (2026-04-09)
+
+Inline image placeholders were costing about 2.3 KB per image occurrence in rewritten MDX,
+ which bloats `.md` exports and the chat assistant's current-page prompt. Switching the build-time
+ placeholder from 64px PNG to 32px WebP cut the fixture benchmark average to about 215 bytes.

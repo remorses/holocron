@@ -24,11 +24,11 @@ export function PixelatedImage({
 }: {
   src: string
   /**
-   * Base64 data URI of the tiny pixelated placeholder image (~2–4KB PNG).
+   * Base64 data URI of the tiny pixelated placeholder image.
    * Injected automatically by the server-side mdast image processor
-   * (website/src/lib/image-cache.ts) — no need to pass manually in MDX.
-   * The processor reads each image from public/, generates a 64px-wide
-   * placeholder with sharp, and caches it as JSON in .cache/images/.
+   * (`vite/src/lib/image-processor.ts`) — no need to pass manually in MDX.
+   * The processor reads each image at build time, generates a compact
+   * placeholder with sharp, and caches it in dist/holocron-images.json.
    */
   placeholder?: string
   alt: string

@@ -1,5 +1,5 @@
 /**
- * Build-time image processor — dimensions + 64px placeholder generation.
+ * Build-time image processor — dimensions + compact placeholder generation.
  *
  * Pure functions, no runtime state. Results are cached in
  * dist/holocron-images.json keyed by git blob SHA so the same image
@@ -13,13 +13,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-const PLACEHOLDER_WIDTH = 64
+const PLACEHOLDER_WIDTH = 32
 const CACHE_FILENAME = 'holocron-images.json'
 
 export type ImageMeta = {
   width: number
   height: number
-  /** data:image/png;base64,... — 64px placeholder for pixelated loading */
+  /** data:image/webp;base64,... — compact placeholder for pixelated loading */
   placeholder: string
 }
 
@@ -85,14 +85,14 @@ export async function processImage({
     imageSizeFromFile(filePath),
     sharp(filePath)
       .resize(PLACEHOLDER_WIDTH)
-      .png({ compressionLevel: 9 })
+      .webp({ quality: 50 })
       .toBuffer(),
   ])
 
   const meta: ImageMeta = {
     width: size.width,
     height: size.height,
-    placeholder: `data:image/png;base64,${placeholderBuf.toString('base64')}`,
+    placeholder: `data:image/webp;base64,${placeholderBuf.toString('base64')}`,
   }
 
   // Store in cache by SHA (same content at different paths → one entry)
