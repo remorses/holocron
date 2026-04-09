@@ -45,6 +45,11 @@ export type EditorialSection = {
   asideRowSpan?: number
 }
 
+type EditorialPageStyle = React.CSSProperties & {
+  '--banner-height'?: string
+  '--shared-row'?: string
+}
+
 function getSharedAsideStartRow(row: number, span: number) {
   return row - span + 1
 }
@@ -97,17 +102,16 @@ export function EditorialPage({
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
-  // Sidebar spans exactly the content rows — no wasted implicit rows.
-  const sidebarRowSpan = sections ? sections.length : 1
   const pageStartsWithSharedAside = sections?.some(sectionStartsSharedAsideAtTop) ?? false
+  const pageStyle: EditorialPageStyle = {
+    WebkitFontSmoothing: 'antialiased',
+    '--banner-height': bannerContent ? '36px' : '0px',
+  }
 
   return (
     <div
       className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-(color:--text-primary) [font-family:var(--font-primary)] antialiased [text-rendering:optimizeLegibility]'
-      style={{
-        WebkitFontSmoothing: 'antialiased',
-        '--banner-height': bannerContent ? '36px' : '0px',
-      } as React.CSSProperties}
+      style={pageStyle}
     >
       {!!bannerContent && (
         <div className='slot-banner flex h-(--banner-height) items-center justify-center gap-2 bg-foreground px-4 text-background text-xs -mb-(--layout-gap)'>
@@ -235,9 +239,10 @@ export function EditorialPage({
         </div>
       )}
 
-      <div className='grid grid-cols-1 gap-y-(--section-gap) w-full max-w-full mx-auto px-(--mobile-padding) lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
-        {/* TOC sidebar: sticky within its grid cell */}
-        <div className='slot-sidebar-left' style={{ gridRow: `1 / span ${sidebarRowSpan}` }}>
+      <div className='grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
+        {/* TOC sidebar: sticky in its own outer grid column so section rows
+            below are sized only by the content/right-rail subgrid. */}
+        <div className='slot-sidebar-left lg:self-stretch'>
           <div
             style={{
               position: 'sticky',
@@ -251,114 +256,118 @@ export function EditorialPage({
           </div>
         </div>
 
-        {sections ? (
-          /* Flattened sections layout: section wrappers are DIRECT children of
-             the page grid. Page grid's `gap-y-(--section-gap)` provides
-             rhythm between sections.
+        <div className='grid grid-cols-1 gap-y-(--section-gap) lg:col-[2/-1] lg:grid-cols-subgrid'>
+          {sections ? (
+            /* Flattened sections layout: section wrappers are direct children
+               of the inner content grid only. The left TOC lives in the outer
+               column layout and no longer participates in section row sizing.
 
-             Per-section wrapper: inner subgrid spanning `lg:col-[2/-1]` of
-             the page grid. Content at col [1], per-section aside at col [2].
-             Sticky scope for per-section asides = this inner wrapper
-             (one section's bounds).
+               Per-section wrapper: inner subgrid spanning both inherited cols
+               of the content grid. Content at col [1], per-section aside at
+               col [2]. Sticky scope for per-section asides = this inner
+               wrapper (one section's bounds).
 
-             Shared <Aside full> (asideRowSpan > 1): a SEPARATE direct
-             page-grid child at `lg:col-[3]` with explicit `grid-row: start /
-             span N`. Sticky containing block = multi-row grid area so
-             sticky pins across the whole range. Rendered once, placed in
-             DOM after the LAST sub-section of its range — on mobile
-             (grid-cols-1), auto-placement by DOM order stacks it at the end. */
-          <Fragment>
-            {sections.map((section, i) => {
-              const row = i + 1
-              if (section.fullWidth) {
-                return (
-                  <div
-                    key={i}
-                    className='flex flex-col gap-(--prose-gap) text-(length:--type-body-size) lg:col-[2/-1]'
-                    style={{ gridRow: row }}
-                  >
-                    {section.content}
-                  </div>
-                )
-              }
-              const span = section.asideRowSpan ?? 1
-              const isShared = span > 1
-              const sharedAsideStartRow = getSharedAsideStartRow(row, span)
-              const hasPerSectionAside = Boolean(section.aside) && !isShared
-              const hasSharedAside = Boolean(section.aside) && isShared
-              const showPerSectionAsideColumn = i === 0 || hasPerSectionAside
-              const renderAssistantInPerSectionAside =
-                i === 0 && ENABLE_ASSISTANT && !pageStartsWithSharedAside
-              const renderAssistantInSharedAside =
-                ENABLE_ASSISTANT && sharedAsideStartRow === 1
-              const asideClass =
-                'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
-              return (
-                <Fragment key={i}>
-                  {/* Inner per-section wrapper: subgrid, content + per-section aside */}
-                  <div
-                    className='flex flex-col gap-y-(--prose-gap) lg:grid lg:grid-cols-subgrid lg:col-[2/-1]'
-                    style={{ gridRow: row }}
-                  >
-                    <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
+               Shared <Aside full> (asideRowSpan > 1): a separate direct child
+               of the content grid at `lg:col-[2]` with explicit `grid-row:
+               start / span N`. Sticky containing block = multi-row grid area
+               so sticky pins across the whole range. Rendered once, placed in
+               DOM after the LAST sub-section of its range — on mobile
+               (grid-cols-1), auto-placement by DOM order stacks it at the end. */
+            <Fragment>
+              {sections.map((section, i) => {
+                const row = i + 1
+                if (section.fullWidth) {
+                  return (
+                    <div
+                      key={i}
+                      className='flex flex-col gap-(--prose-gap) text-(length:--type-body-size) lg:col-[1/-1]'
+                      style={{ gridRow: row }}
+                    >
                       {section.content}
                     </div>
-                    {/* Aside column: assistant input (first row only) + per-section aside */}
-                    {showPerSectionAsideColumn && (
+                  )
+                }
+                const span = section.asideRowSpan ?? 1
+                const isShared = span > 1
+                const sharedAsideStartRow = getSharedAsideStartRow(row, span)
+                const hasPerSectionAside = Boolean(section.aside) && !isShared
+                const hasSharedAside = Boolean(section.aside) && isShared
+                const showPerSectionAsideColumn = i === 0 || hasPerSectionAside
+                const renderAssistantInPerSectionAside =
+                  i === 0 && ENABLE_ASSISTANT && !pageStartsWithSharedAside
+                const renderAssistantInSharedAside =
+                  ENABLE_ASSISTANT && sharedAsideStartRow === 1
+                const asideClass =
+                  'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
+                const sharedAsideStyle: EditorialPageStyle = {
+                  '--shared-row': `${sharedAsideStartRow} / span ${span}`,
+                }
+                return (
+                  <Fragment key={i}>
+                    {/* Inner per-section wrapper: subgrid, content + per-section aside */}
+                    <div
+                      className='flex flex-col gap-y-(--prose-gap) lg:grid lg:grid-cols-subgrid lg:col-[1/-1]'
+                      style={{ gridRow: row }}
+                    >
+                      <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
+                        {section.content}
+                      </div>
+                      {/* Aside column: assistant input (first row only) + per-section aside */}
+                      {showPerSectionAsideColumn && (
+                        <div
+                            className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                        >
+                          {renderAssistantInPerSectionAside && <SidebarAssistant />}
+                          {hasPerSectionAside && (
+                            <div className='slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'>
+                              {section.aside}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {/* Shared aside: single element, direct content-grid child.
+                        Desktop: explicit col 2 + row-span (via CSS var read at lg).
+                        Mobile: grid-row stays `auto` → auto-placed by DOM order,
+                        stacks at end of range without forcing an implicit 2nd
+                        column in grid-cols-1. */}
+                    {hasSharedAside && (
                       <div
-                          className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                        className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
+                        style={sharedAsideStyle}
                       >
-                        {renderAssistantInPerSectionAside && <SidebarAssistant />}
-                        {hasPerSectionAside && (
-                          <div className='slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'>
-                            {section.aside}
-                          </div>
-                        )}
+                        {/* A shared aside that starts on row 1 owns the whole
+                            desktop right rail, so the assistant must render
+                            inside that sticky stack to avoid overlap. */}
+                        {renderAssistantInSharedAside && <SidebarAssistant />}
+                        {section.aside}
                       </div>
                     )}
-                  </div>
-                  {/* Shared aside: single element, direct page-grid child.
-                      Desktop: explicit col 3 + row-span (via CSS var read at lg).
-                      Mobile: grid-row stays `auto` → auto-placed by DOM order,
-                      stacks at end of range without forcing an implicit 2nd
-                      column in grid-cols-1. */}
-                  {hasSharedAside && (
-                    <div
-                      className={`${asideClass} lg:col-[3] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
-                      style={{ '--shared-row': `${sharedAsideStartRow} / span ${span}` } as React.CSSProperties}
-                    >
-                      {/* A shared aside that starts on row 1 owns the whole
-                          desktop right rail, so the assistant must render
-                          inside that sticky stack to avoid overlap. */}
-                      {renderAssistantInSharedAside && <SidebarAssistant />}
-                      {section.aside}
-                    </div>
-                  )}
-                </Fragment>
-              )
-            })}
-          </Fragment>
-        ) : (
-          <>
-            {/* Flat layout: single article column + optional static sidebar */}
-            <div className='slot-main pb-24 lg:col-[2] text-(length:--type-body-size)'>
-              <article className='flex flex-col gap-(--prose-gap)'>{children}</article>
-            </div>
-
-            <div className='slot-sidebar-right'>
-              <div
-                style={{
-                  position: 'sticky',
-                  top: hasTabBar ? 'var(--sticky-top)' : '12px',
-                  paddingTop: '4px',
-                }}
-              >
-                {sidebar}
+                  </Fragment>
+                )
+              })}
+            </Fragment>
+          ) : (
+            <>
+              {/* Flat layout: single article column + optional static sidebar */}
+              <div className='slot-main pb-24 lg:col-[1] text-(length:--type-body-size)'>
+                <article className='flex flex-col gap-(--prose-gap)'>{children}</article>
               </div>
-            </div>
-          </>
-        )}
 
+              <div className='slot-sidebar-right lg:!col-[2] lg:self-stretch'>
+                <div
+                  style={{
+                    position: 'sticky',
+                    top: hasTabBar ? 'var(--sticky-top)' : '12px',
+                    paddingTop: '4px',
+                  }}
+                >
+                  {sidebar}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Site footer + branding — mt-auto pushes to bottom on short pages */}

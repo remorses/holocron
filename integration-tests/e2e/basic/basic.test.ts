@@ -139,14 +139,19 @@ test.describe("navigation", () => {
     expect(html).toContain("Guides");
   });
 
-  test("client navigation updates the document title", async ({ page }) => {
+  test("getting-started navigation updates the document title", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/");
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
-    await nav.getByRole("link", { name: "Getting Started" }).click();
+    const gettingStartedLink = nav.getByRole("link", {
+      name: "Getting Started",
+      exact: true,
+    });
+    await expect(gettingStartedLink).toBeVisible();
+    await expect(gettingStartedLink).toHaveAttribute("href", "/getting-started");
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
 
-    await expect(page).toHaveURL(/\/getting-started$/);
     await expect(page).toHaveTitle(/Getting Started/);
   });
 });

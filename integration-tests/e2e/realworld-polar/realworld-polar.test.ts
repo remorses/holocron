@@ -39,10 +39,10 @@ test.describe("realworld-polar fixture", () => {
     await page.waitForTimeout(1500);
 
     await expect(page).toHaveTitle(/Polar/);
-    await expect(page.getByRole("link", { name: "Docs" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "API Reference" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Guides" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Changelog" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Docs", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "API Reference", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Guides", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Changelog", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Support", exact: true })).toBeVisible();
 
     await expect(page.getByRole("link", { name: "llms-full.txt" })).toBeVisible();
@@ -109,6 +109,55 @@ test.describe("realworld-polar fixture", () => {
     await expect(page.getByText("2026-01-31")).toBeVisible();
     await expect(page.getByText("Team Member Management (B2B)")).toBeVisible();
     await expect(page.getByText("Event & Metering Enhancements")).toBeVisible();
+  });
+
+  test("migrate page section rows do not inherit extra height from the left nav", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/migrate", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Lemon Squeezy" })).toBeVisible({ timeout: 10000 });
+
+    const sectionBoxes = await page.locator(".slot-main").evaluateAll((nodes) =>
+      nodes.flatMap((node) => {
+        if (!(node instanceof HTMLElement)) return [];
+
+        const rect = node.getBoundingClientRect();
+        const children = Array.from(node.children).filter(
+          (child): child is HTMLElement => child instanceof HTMLElement,
+        );
+        const lastChild = children.at(-1);
+        const usedHeight = lastChild ? Math.round(lastChild.getBoundingClientRect().bottom - rect.top) : 0;
+        return [{
+          heading: node.querySelector("h1, h2, h3, h4, h5, h6")?.textContent?.trim() ?? null,
+          deadSpace: Math.round(rect.height) - usedHeight,
+        }];
+      }),
+    );
+
+    expect(sectionBoxes).toEqual([
+      { heading: "Lemon Squeezy", deadSpace: 0 },
+      { heading: "Getting Started", deadSpace: 0 },
+      { heading: "Supported Migrations", deadSpace: 0 },
+      { heading: "Open Source", deadSpace: 0 },
+    ]);
+  });
+
+  test("left toc stays sticky while scrolling long pages", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/api-reference/introduction", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("link", { name: "Authentication", exact: true })).toBeVisible({ timeout: 10000 });
+
+    const sidebar = page.locator(".slot-sidebar-left > div");
+    const before = await sidebar.boundingBox();
+    expect(before).not.toBeNull();
+
+    await page.evaluate(() => window.scrollTo(0, 1000));
+    await page.waitForTimeout(200);
+
+    const after = await sidebar.boundingBox();
+    expect(after).not.toBeNull();
+    expect(Math.round(after!.y)).toBe(Math.round(before!.y));
   });
 
   test("server-rendered html includes representative Polar content", async ({

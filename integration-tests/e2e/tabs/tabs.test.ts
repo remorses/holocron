@@ -64,11 +64,11 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     // The basic fixture's equivalent test passes by race luck (title is
     // still the page title for a brief moment after goto completes); this
     // test is more aggressive because the first assertion is the title.
-    await page.goto("/quickstart");
+    await page.goto("/quickstart", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/Quickstart/);
     await expect(page.getByRole("heading", { name: "Installation" })).toBeVisible();
 
-    await page.goto("/theming");
+    await page.goto("/theming", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/Theming/);
     await expect(page.getByRole("heading", { name: "Colors" })).toBeVisible();
   });
