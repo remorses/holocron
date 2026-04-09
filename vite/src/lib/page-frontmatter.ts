@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import matter from 'gray-matter'
+import { parseFrontmatterObject } from './frontmatter.ts'
 
 const stringOrNumberToStringSchema = z.union([z.string(), z.number()]).transform(String)
 
@@ -54,7 +54,7 @@ export type PageFrontmatter = z.output<typeof pageFrontmatterSchema>
 export type PageSeoMeta = Partial<Record<PageSeoMetaKey, string>>
 
 export function parsePageFrontmatter(content: string): PageFrontmatter {
-  const parsed = matter(content).data
+  const parsed = parseFrontmatterObject(content)
   const result = pageFrontmatterSchema.safeParse(parsed)
   if (!result.success) {
     console.warn('[holocron] invalid frontmatter ignored:', result.error.issues)

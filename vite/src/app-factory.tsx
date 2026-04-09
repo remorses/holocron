@@ -58,8 +58,9 @@ import { SiteHead } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
-import { getAbsoluteOgImageUrl } from './lib/og-utils.ts'
+import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
+import type { ModelMessage } from 'ai'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -225,8 +226,84 @@ function renderMdxPage(
   )
 }
 
-function parseGeneratedLogoTheme(theme: string | undefined): GeneratedLogoTheme | undefined {
-  return theme === 'light' || theme === 'dark' ? theme : undefined
+type ChatRequestPart = {
+  type: string
+  text?: string
+}
+
+type ChatRequestMessage = {
+  id?: string
+  role: 'user' | 'assistant'
+  parts: ChatRequestPart[]
+}
+
+type ChatRequestBody = {
+  messages: ChatRequestMessage[]
+  previousMessages?: ModelMessage[]
+  currentSlug: string
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isChatRole(role: unknown): role is ChatRequestMessage['role'] {
+  return role === 'user' || role === 'assistant'
+}
+
+function isModelMessage(value: unknown): value is ModelMessage {
+  return isRecord(value) && typeof value.role === 'string' && 'content' in value
+}
+
+function parseChatRequestBody(value: unknown): ChatRequestBody {
+  if (!isRecord(value) || !Array.isArray(value.messages) || typeof value.currentSlug !== 'string') {
+    throw new Error('Invalid chat request body')
+  }
+
+  const messages = value.messages.flatMap((message): ChatRequestMessage[] => {
+    if (!isRecord(message) || !isChatRole(message.role) || !Array.isArray(message.parts)) {
+      return []
+    }
+    const parts = message.parts.flatMap((part): ChatRequestPart[] => {
+      if (!isRecord(part) || typeof part.type !== 'string') {
+        return []
+      }
+      return [{ type: part.type, ...(typeof part.text === 'string' ? { text: part.text } : {}) }]
+    })
+    return [{
+      role: message.role,
+      ...(typeof message.id === 'string' ? { id: message.id } : {}),
+      parts,
+    }]
+  })
+
+  const previousMessages = Array.isArray(value.previousMessages)
+    ? value.previousMessages.filter(isModelMessage)
+    : undefined
+
+  return {
+    messages,
+    currentSlug: value.currentSlug,
+    ...(previousMessages ? { previousMessages } : {}),
+  }
+}
+
+function getToolArgs(input: unknown): Record<string, unknown> {
+  return isRecord(input) ? input : {}
+}
+
+function getToolOutput(output: unknown): { stdout?: string; stderr?: string } {
+  if (!isRecord(output)) {
+    return {}
+  }
+  return {
+    ...(typeof output.stdout === 'string' ? { stdout: output.stdout } : {}),
+    ...(typeof output.stderr === 'string' ? { stderr: output.stderr } : {}),
+  }
+}
+
+function isHolocronLoaderData(value: unknown): value is HolocronLoaderData {
+  return isRecord(value) && isRecord(value.site) && typeof value.headTitle === 'string' && Array.isArray(value.currentHeadings)
 }
 
 /* ── App factory ─────────────────────────────────────────────────────── */
@@ -358,7 +435,6 @@ export function createHolocronApp(site: HolocronSiteData) {
   for (const ogRoute of new Set(['/og', withBaseRoute(site.base, '/og')])) {
     app = app.get(ogRoute, async ({ request }: { request: Request }) => {
       const { createOgImageResponse } = await import('./lib/og.tsx')
-      const { resolveOgIconUrl } = await import('./lib/og-utils.ts')
       const requestUrl = new URL(request.url)
       const iconUrl = resolveOgIconUrl(site.config, request.url)
       const response = createOgImageResponse({
@@ -376,7 +452,6 @@ export function createHolocronApp(site: HolocronSiteData) {
   for (const ogWildcardRoute of new Set(['/og/*', withBaseRoute(site.base, '/og/*')])) {
     app = app.get(ogWildcardRoute, async ({ request, params }: { request: Request; params: Record<string, string> }) => {
       const { createOgImageResponse } = await import('./lib/og.tsx')
-      const { resolveOgIconUrl } = await import('./lib/og-utils.ts')
       const requestUrl = new URL(request.url)
       const rawSlug = params['*'] || ''
       const slug = stripBaseFromSlug(rawSlug, site.base).replace(/^\//, '')
@@ -401,13 +476,13 @@ export function createHolocronApp(site: HolocronSiteData) {
 
   // /holocron-api/logo/:theme/<text>.png — generated fallback logo images.
   app = app.get('/holocron-api/logo/:theme/*', async ({ params }: { params: Record<string, string> }) => {
-    const theme = parseGeneratedLogoTheme(params.theme)
+    const theme: GeneratedLogoTheme | undefined = params.theme === 'light' || params.theme === 'dark' ? params.theme : undefined
     if (!theme) {
       return new Response('Not found', { status: 404 })
     }
 
     const text = decodeGeneratedLogoText(params['*'] || '')
-    const { createGeneratedLogoResponse } = await import('./lib/generated-logo.tsx')
+    const { createGeneratedLogoResponse } = await import('./lib/generated-logo-response.tsx')
     const response = await createGeneratedLogoResponse({ text, theme })
     response.headers.set('cache-control', 's-maxage=31536000, immutable')
     return response
@@ -418,152 +493,154 @@ export function createHolocronApp(site: HolocronSiteData) {
   // bash-tool to search/read docs in a virtual filesystem.
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
-    const { streamText } = await import('ai')
-    const { openai } = await import('@ai-sdk/openai')
-    const { createBashTool } = await import('bash-tool')
+      const { streamText } = await import('ai')
+      const { openai } = await import('@ai-sdk/openai')
+      const { createBashTool } = await import('bash-tool')
 
-    const body = (await request.json()) as {
-      messages: Array<{ id?: string; role: string; parts: Array<{ type: string; text?: string }> }>
-      previousMessages?: unknown[]
-      currentSlug: string
-    }
+      const body = parseChatRequestBody(await request.json())
 
-    // Build virtual filesystem with all docs
-    const files: Record<string, string> = {}
-    for (const [slug, mdx] of Object.entries(mdxContent)) {
-      files[`/docs/${slug}.mdx`] = mdx
-    }
-
-    const { tools } = await createBashTool({ files })
-
-    // Build system prompt
-    const allPages = collectAllPages(site.navigation)
-    const pageIndex = allPages
-      .map((p) => `- /docs/${p.slug}.mdx  "${p.title}"`)
-      .join('\n')
-    const currentPageMdx = (() => {
-      // Try to find the mdx content for the current page
+      // Build virtual filesystem with all docs
+      const files: Record<string, string> = {}
       for (const [slug, mdx] of Object.entries(mdxContent)) {
-        const href = slugToHref(slug)
-        if (href === body.currentSlug || slug === body.currentSlug) {
-          return mdx
-        }
+        files[`/docs/${slug}.mdx`] = mdx
       }
-      return ''
-    })()
 
-    const systemPrompt = dedent`
-      You are a documentation assistant for ${site.config.name || 'this site'}.
+      const { tools } = await createBashTool({ files })
 
-      The user is currently reading: ${body.currentSlug}
-
-      Current page content:
-      ---
-      ${currentPageMdx.slice(0, 4000)}
-      ---
-
-      All documentation files (use bash to search/read when you need more context):
-      ${pageIndex}
-
-      Use the bash tool to search and read documentation files.
-      Files are at /docs/<slug>.mdx — use grep -rn "term" /docs/ to search, cat /docs/slug.mdx to read.
-      Answer concisely based on the documentation. Include code examples when relevant.
-    `
-
-    // Convert new user messages from UIMessage parts format
-    const newUserMessages = body.messages.map((msg) => ({
-      role: msg.role as 'user' | 'assistant',
-      content:
-        msg.parts
-          ?.filter((p) => p.type === 'text' && p.text)
-          .map((p) => p.text!)
-          .join('\n') || '',
-    }))
-
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...((body.previousMessages as unknown[]) || []),
-      ...newUserMessages,
-    ]
-
-    const result = streamText({
-      model: openai('gpt-5.4-nano'),
-      tools: { bash: tools.bash },
-      messages: messages as any,
-      stopWhen: (event) => event.steps.length >= 30,
-    })
-
-    // Process UIMessageChunk stream — each chunk type maps 1:1 to a yield.
-    // text-end marks the natural boundary for completed text parts.
-    // Session snapshots are yielded after each completed piece for resumability.
-    const uiStream = result.toUIMessageStream()
-    let textBuffer = ''
-    const toolNames = new Map<string, string>()
-    // Accumulate raw AI SDK messages for session continuity
-    const sessionMessages: unknown[] = [
-      ...((body.previousMessages as unknown[]) || []),
-      ...newUserMessages,
-    ]
-
-    async function* generateParts() {
-      for await (const chunk of uiStream) {
-        if (chunk.type === 'text-delta') {
-          textBuffer += chunk.delta
-          continue
+      // Build system prompt
+      const allPages = collectAllPages(site.navigation)
+      const pageIndex = allPages
+        .map((p) => `- /docs/${p.slug}.mdx  "${p.title}"`)
+        .join('\n')
+      const currentPageMdx = (() => {
+        // Try to find the mdx content for the current page
+        for (const [slug, mdx] of Object.entries(mdxContent)) {
+          const href = slugToHref(slug)
+          if (href === body.currentSlug || slug === body.currentSlug) {
+            return mdx
+          }
         }
+        return ''
+      })()
 
-        if (chunk.type === 'text-end') {
-          if (textBuffer.trim()) {
-            const mdast = mdxParse(textBuffer)
-            const jsx = (
-              <ChatRenderNodes
-                markdown={textBuffer}
-                nodes={mdast.children}
-              />
-            )
-            yield { type: 'text' as const, jsx, text: textBuffer }
-            sessionMessages.push({ role: 'assistant', content: textBuffer })
+      const systemPrompt = dedent`
+        You are a documentation assistant for ${site.config.name || 'this site'}.
+
+        The user is currently reading: ${body.currentSlug}
+
+        Current page content:
+        ---
+        ${currentPageMdx.slice(0, 4000)}
+        ---
+
+        All documentation files (use bash to search/read when you need more context):
+        ${pageIndex}
+
+        Use the bash tool to search and read documentation files.
+        Files are at /docs/<slug>.mdx — use grep -rn "term" /docs/ to search, cat /docs/slug.mdx to read.
+        Answer concisely based on the documentation. Include code examples when relevant.
+      `
+
+      // Convert new user messages from UIMessage parts format
+      const newUserMessages = body.messages.map((msg) => ({
+        role: msg.role,
+        content:
+          msg.parts
+            ?.filter((p) => p.type === 'text' && p.text)
+            .map((p) => p.text!)
+            .join('\n') || '',
+      }))
+
+      const previousMessages = body.previousMessages ?? []
+      const messages: ModelMessage[] = [
+        { role: 'system', content: systemPrompt },
+        ...previousMessages,
+        ...newUserMessages,
+      ]
+
+      const result = streamText({
+        model: openai('gpt-5.4-nano'),
+        tools: { bash: tools.bash },
+        messages,
+        stopWhen: (event) => event.steps.length >= 30,
+      })
+
+      // Process UIMessageChunk stream — each chunk type maps 1:1 to a yield.
+      // text-end marks the natural boundary for completed text parts.
+      // Session snapshots are yielded after each completed piece for resumability.
+      const uiStream = result.toUIMessageStream()
+      let textBuffer = ''
+      const toolNames = new Map<string, string>()
+      // Accumulate raw AI SDK messages for session continuity
+      const sessionMessages: ModelMessage[] = [
+        ...previousMessages,
+        ...newUserMessages,
+      ]
+
+      async function* generateParts() {
+        for await (const chunk of uiStream) {
+          if (chunk.type === 'text-delta') {
+            textBuffer += chunk.delta
+            continue
+          }
+
+          if (chunk.type === 'text-end') {
+            if (textBuffer.trim()) {
+              const mdast = mdxParse(textBuffer)
+              const jsx = (
+                <ChatRenderNodes
+                  markdown={textBuffer}
+                  nodes={mdast.children}
+                />
+              )
+              yield { type: 'text' as const, jsx, text: textBuffer }
+              sessionMessages.push({ role: 'assistant', content: textBuffer })
+              yield { type: 'session' as const, messages: [...sessionMessages] }
+            }
+            textBuffer = ''
+            continue
+          }
+
+          if (chunk.type === 'tool-input-available') {
+            toolNames.set(chunk.toolCallId, chunk.toolName)
+            yield {
+              type: 'tool-call' as const,
+              toolCallId: chunk.toolCallId,
+              toolName: chunk.toolName,
+              args: getToolArgs(chunk.input),
+            }
+            // Push assistant tool-call message (don't snapshot yet — wait for result)
+            sessionMessages.push({
+              role: 'assistant',
+              content: [{ type: 'tool-call', toolCallId: chunk.toolCallId, toolName: chunk.toolName, input: chunk.input }],
+            })
+            continue
+          }
+
+          if (chunk.type === 'tool-output-available') {
+            const rawOutput = getToolOutput(chunk.output)
+            yield {
+              type: 'tool-result' as const,
+              toolCallId: chunk.toolCallId,
+              toolName: toolNames.get(chunk.toolCallId) || 'bash',
+              output: (rawOutput.stdout || '').slice(0, 500),
+              ...(rawOutput.stderr ? { error: rawOutput.stderr } : {}),
+            }
+            // Push tool result message + snapshot (tool round-trip complete)
+            sessionMessages.push({
+              role: 'tool',
+              content: [{
+                type: 'tool-result',
+                toolCallId: chunk.toolCallId,
+                toolName: toolNames.get(chunk.toolCallId) || 'bash',
+                output: { type: 'text', value: JSON.stringify(chunk.output) },
+              }],
+            })
             yield { type: 'session' as const, messages: [...sessionMessages] }
+            continue
           }
-          textBuffer = ''
-          continue
-        }
-
-        if (chunk.type === 'tool-input-available') {
-          toolNames.set(chunk.toolCallId, chunk.toolName)
-          yield {
-            type: 'tool-call' as const,
-            toolCallId: chunk.toolCallId,
-            toolName: chunk.toolName,
-            args: chunk.input as Record<string, unknown>,
-          }
-          // Push assistant tool-call message (don't snapshot yet — wait for result)
-          sessionMessages.push({
-            role: 'assistant',
-            content: [{ type: 'tool-call', toolCallId: chunk.toolCallId, toolName: chunk.toolName, args: chunk.input }],
-          })
-          continue
-        }
-
-        if (chunk.type === 'tool-output-available') {
-          const rawOutput = chunk.output as { stdout?: string; stderr?: string }
-          yield {
-            type: 'tool-result' as const,
-            toolCallId: chunk.toolCallId,
-            toolName: toolNames.get(chunk.toolCallId) || 'bash',
-            output: (rawOutput?.stdout || '').slice(0, 500),
-            ...(rawOutput?.stderr ? { error: rawOutput.stderr } : {}),
-          }
-          // Push tool result message + snapshot (tool round-trip complete)
-          sessionMessages.push({
-            role: 'tool',
-            content: [{ type: 'tool-result', toolCallId: chunk.toolCallId, result: chunk.output }],
-          })
-          yield { type: 'session' as const, messages: [...sessionMessages] }
-          continue
         }
       }
-    }
 
       return await encodeFederationPayload({ stream: generateParts() })
     })
@@ -622,11 +699,14 @@ export function createHolocronApp(site: HolocronSiteData) {
   })
 
   app = app.layout('/*', async ({ children, request, loaderData: rawLoaderData }) => {
-    const loaderData = rawLoaderData as HolocronLoaderData
+    if (!isHolocronLoaderData(rawLoaderData)) {
+      throw new Error('Holocron loader data missing in layout')
+    }
+    const loaderData = rawLoaderData
     const cookies = parseCookies(request.headers.get('cookie') || '')
     const cookieTheme = site.config.appearance.strict
       ? null
-      : (cookies['holocron-theme'] as 'light' | 'dark' | undefined) ?? null
+      : (cookies['holocron-theme'] === 'light' || cookies['holocron-theme'] === 'dark' ? cookies['holocron-theme'] : null)
     const isDark =
       cookieTheme === 'dark' ||
       (!cookieTheme && site.config.appearance.default === 'dark')
@@ -673,7 +753,10 @@ export function createHolocronApp(site: HolocronSiteData) {
 
     for (const route of new Set([pageHref, withBaseRoute(site.base, pageHref)])) {
       app = app.page(route, async ({ loaderData: rawLoaderData, request }) => {
-        const loaderData = rawLoaderData as HolocronLoaderData
+        if (!isHolocronLoaderData(rawLoaderData)) {
+          throw new Error('Holocron loader data missing in page route')
+        }
+        const loaderData = rawLoaderData
         const bannerJsx = getBannerJsx(site, request)
         const ogImageUrl = getAbsoluteOgImageUrl(request.url, absoluteUrlBase, loaderData.currentPageHref ?? pageHref)
         return renderMdxPage(site, slug, loaderData, bannerJsx, ogImageUrl)

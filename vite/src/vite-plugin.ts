@@ -1,5 +1,5 @@
 /**
- * Holocron Vite plugin — wraps spiceflow + tailwind + tsconfig-paths.
+ * Holocron Vite plugin — wraps spiceflow, tailwind, and native tsconfig paths.
  *
  * Usage in vite.config.ts:
  *   import { holocron } from '@holocron.so/vite/vite'
@@ -19,7 +19,6 @@ import path from 'node:path'
 import type { Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
 import { collectIconRefs } from './lib/collect-icons.ts'
@@ -118,10 +117,21 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         : root
 
       // Check if user already added a react plugin — skip ours if so
-      const allPlugins = (viteConfig.plugins || []) as unknown[]
-      hasUserReactPlugin = allPlugins.flat(Infinity).filter(Boolean).some((p) => {
-        const name = (p as { name?: string })?.name || ''
-        return name.startsWith('vite:react')
+      const pendingPlugins = [...(viteConfig.plugins ?? [])]
+      const allPlugins: PluginOption[] = []
+      while (pendingPlugins.length > 0) {
+        const plugin = pendingPlugins.shift()
+        if (!plugin) {
+          continue
+        }
+        if (Array.isArray(plugin)) {
+          pendingPlugins.unshift(...plugin)
+          continue
+        }
+        allPlugins.push(plugin)
+      }
+      hasUserReactPlugin = allPlugins.some((plugin) => {
+        return !!plugin && typeof plugin === 'object' && 'name' in plugin && typeof plugin.name === 'string' && plugin.name.startsWith('vite:react')
       })
 
       // Make spiceflow resolvable from the consumer's project root even when
@@ -137,6 +147,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             { find: /^spiceflow\/react$/, replacement: path.join(spiceflowDir, 'dist/react/index.js') },
           ],
           dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+          tsconfigPaths: true,
         },
       }
       return next
@@ -199,7 +210,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       })
       iconAtlas = resolveIconSvgs(iconRefs)
 
-      console.error(
+      console.log(
         `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached), resolved ${Object.keys(iconAtlas.icons).length} icons`,
       )
     },
@@ -393,11 +404,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (name === 'client') {
         config.optimizeDeps ??= {}
         config.optimizeDeps.exclude = mergeUnique(
-          config.optimizeDeps.exclude as string | string[] | undefined,
+          config.optimizeDeps.exclude,
           ['@holocron.so/vite'],
         )
         config.optimizeDeps.include = mergeUnique(
-          config.optimizeDeps.include as string | string[] | undefined,
+          config.optimizeDeps.include,
           [
             '@holocron.so/vite > prismjs',
             '@holocron.so/vite > prismjs/components/prism-jsx',
@@ -443,7 +454,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     holocronRscPackagePlugin,
     spiceflowPlugin({ entry: VIRTUAL_APP }),
     rewriteSpiceflowNestedIds,
-    tsconfigPaths(),
     tailwindcss(),
     // Include @vitejs/plugin-react by default unless the user already
     // added their own (detected by plugin name starting with "vite:react").
