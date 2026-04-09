@@ -123,4 +123,95 @@ describe('buildSections', () => {
       ]
     `)
   })
+
+  test('injects HolocronAIAssistantWidget as <Aside full> if no aside exists in the first section', () => {
+    const root: Root = {
+      type: 'root',
+      children: [
+        { type: 'paragraph', children: [{ type: 'text', value: 'Intro' }] },
+        { type: 'heading', depth: 2, children: [{ type: 'text', value: 'Section' }] },
+        { type: 'paragraph', children: [{ type: 'text', value: 'Body' }] },
+      ],
+    }
+
+    const sections = buildSections(root)
+    expect(sections.map((section) => ({
+      asideNodes: section.asideNodes.map(node => ({
+        type: node.type,
+        ...(node.type === 'mdxJsxFlowElement' ? { 
+          name: (node as any).name,
+          children: (node as any).children?.map((c: any) => c.name) 
+        } : {}),
+      })),
+      asideRowSpan: section.asideRowSpan
+    }))).toMatchInlineSnapshot(`
+      [
+        {
+          "asideNodes": [],
+          "asideRowSpan": undefined,
+        },
+        {
+          "asideNodes": [
+            {
+              "children": [
+                "HolocronAIAssistantWidget",
+              ],
+              "name": "Aside",
+              "type": "mdxJsxFlowElement",
+            },
+          ],
+          "asideRowSpan": 2,
+        },
+      ]
+    `)
+  })
+
+  test('injects HolocronAIAssistantWidget into existing Aside in the first section', () => {
+    const root: Root = {
+      type: 'root',
+      children: [
+        { type: 'paragraph', children: [{ type: 'text', value: 'Intro' }] },
+        {
+          type: 'mdxJsxFlowElement',
+          name: 'Aside',
+          attributes: [],
+          children: [{ type: 'paragraph', children: [{ type: 'text', value: 'My aside' }] }],
+        } as unknown as Root['children'][number],
+        { type: 'heading', depth: 2, children: [{ type: 'text', value: 'Section' }] },
+        { type: 'paragraph', children: [{ type: 'text', value: 'Body' }] },
+      ],
+    }
+
+    const sections = buildSections(root)
+    expect(sections.map((section) => ({
+      asideNodes: section.asideNodes.map(node => ({
+        type: node.type,
+        ...(node.type === 'mdxJsxFlowElement' ? { 
+          name: (node as any).name,
+          children: (node as any).children?.map((c: any) => c.name || c.type) 
+        } : {}),
+      })),
+      asideRowSpan: section.asideRowSpan
+    }))).toMatchInlineSnapshot(`
+      [
+        {
+          "asideNodes": [
+            {
+              "children": [
+                "HolocronAIAssistantWidget",
+                "paragraph",
+              ],
+              "name": "Aside",
+              "type": "mdxJsxFlowElement",
+            },
+          ],
+          "asideRowSpan": undefined,
+        },
+        {
+          "asideNodes": [],
+          "asideRowSpan": undefined,
+        },
+      ]
+    `)
+  })
 })

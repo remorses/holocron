@@ -26,7 +26,6 @@ import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { Footer, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner.tsx'
-import { SidebarAssistant } from '../sidebar-assistant.tsx'
 import { ChatDrawer } from '../chat-drawer.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
 import { NavDrawer } from '../nav-drawer.tsx'
@@ -52,12 +51,6 @@ type EditorialPageStyle = React.CSSProperties & {
 
 function getSharedAsideStartRow(row: number, span: number) {
   return row - span + 1
-}
-
-function sectionStartsSharedAsideAtTop(section: EditorialSection, index: number) {
-  if (!section.aside) return false
-  const span = section.asideRowSpan ?? 1
-  return span > 1 && getSharedAsideStartRow(index + 1, span) === 1
 }
 
 /**
@@ -102,7 +95,6 @@ export function EditorialPage({
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
-  const pageStartsWithSharedAside = sections?.some(sectionStartsSharedAsideAtTop) ?? false
   const pageStyle: EditorialPageStyle = {
     WebkitFontSmoothing: 'antialiased',
     '--banner-height': bannerContent ? '36px' : '0px',
@@ -292,11 +284,7 @@ export function EditorialPage({
                 const sharedAsideStartRow = getSharedAsideStartRow(row, span)
                 const hasPerSectionAside = Boolean(section.aside) && !isShared
                 const hasSharedAside = Boolean(section.aside) && isShared
-                const showPerSectionAsideColumn = i === 0 || hasPerSectionAside
-                const renderAssistantInPerSectionAside =
-                  i === 0 && ENABLE_ASSISTANT && !pageStartsWithSharedAside
-                const renderAssistantInSharedAside =
-                  ENABLE_ASSISTANT && sharedAsideStartRow === 1
+                
                 const asideClass =
                   'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
                 const sharedAsideStyle: EditorialPageStyle = {
@@ -312,17 +300,12 @@ export function EditorialPage({
                       <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
                         {section.content}
                       </div>
-                      {/* Aside column: assistant input (first row only) + per-section aside */}
-                      {showPerSectionAsideColumn && (
+                      {/* Aside column: per-section aside */}
+                      {hasPerSectionAside && (
                         <div
-                            className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                            className={`slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5] lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
                         >
-                          {renderAssistantInPerSectionAside && <SidebarAssistant />}
-                          {hasPerSectionAside && (
-                            <div className='slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'>
-                              {section.aside}
-                            </div>
-                          )}
+                          {section.aside}
                         </div>
                       )}
                     </div>
@@ -336,10 +319,6 @@ export function EditorialPage({
                         className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
                         style={sharedAsideStyle}
                       >
-                        {/* A shared aside that starts on row 1 owns the whole
-                            desktop right rail, so the assistant must render
-                            inside that sticky stack to avoid overlap. */}
-                        {renderAssistantInSharedAside && <SidebarAssistant />}
                         {section.aside}
                       </div>
                     )}

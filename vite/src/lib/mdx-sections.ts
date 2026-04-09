@@ -108,6 +108,47 @@ export function buildSections(root: Root): MdastSection[] {
   // so they don't get swept into a leading empty section by groupBySections.
   const children = root.children.filter((n) => !isInvisibleNode(n))
 
+  const ENABLE_ASSISTANT = true
+
+  if (ENABLE_ASSISTANT) {
+    const assistantNode: RootContent = {
+      type: 'mdxJsxFlowElement',
+      name: 'HolocronAIAssistantWidget',
+      attributes: [],
+      children: [],
+    } as unknown as RootContent
+
+    let firstSectionEnd = children.length
+    for (let i = 0; i < children.length; i++) {
+      if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
+        firstSectionEnd = i
+        break
+      }
+    }
+
+    let firstAsideIdx = -1
+    for (let i = 0; i < firstSectionEnd; i++) {
+      if (isAsideNode(children[i]!)) {
+        firstAsideIdx = i
+        break
+      }
+    }
+
+    if (firstAsideIdx !== -1) {
+      const asideNode = children[firstAsideIdx] as { children?: RootContent[] }
+      if (!asideNode.children) asideNode.children = []
+      asideNode.children.unshift(assistantNode)
+    } else {
+      const fullAsideNode: RootContent = {
+        type: 'mdxJsxFlowElement',
+        name: 'Aside',
+        attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }] as any,
+        children: [assistantNode],
+      } as unknown as RootContent
+      children.unshift(fullAsideNode)
+    }
+  }
+
   // Find indices of all <Aside full> nodes
   const fullAsideIndices: number[] = []
   for (let i = 0; i < children.length; i++) {

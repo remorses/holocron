@@ -67,6 +67,8 @@ import {
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 
+import { SidebarAssistant } from '../components/sidebar-assistant.tsx'
+
 function PixelatedImageWithProps(props: {
   src: string
   alt: string
@@ -147,6 +149,7 @@ export const mdxComponents = {
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.
   TableOfContentsPanel,
+  HolocronAIAssistantWidget: SidebarAssistant,
 }
 
 export function renderNode(
