@@ -19,7 +19,7 @@ both follow the same schema.
 
 The schema follows the Mintlify docs.json shape (https://mintlify.com/docs.json) for the subset Holocron consumes. Unknown Mintlify fields pass through `.passthrough()` so users can paste a full docs.json without validation errors.
 
-To read mintlify docs fetch https://www.mintlify.com/docs/llms.txt and relevant pages. this is useful to find out specific mintlify behaviour, supported components, etc
+To read mintlify docs curl https://www.mintlify.com/docs/llms-full.txt into a file and grep it. notice this file is very large. this is useful to find out specific mintlify behaviour, supported components, etc
 
 Fetch those docs every time we need to find out some info about Mintlify
 
