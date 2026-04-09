@@ -1720,6 +1720,12 @@ over the pack default or wide icons render with a clipped `viewBox`.
 
 ## WebP image placeholders (2026-04-09)
 
+## Assistant rail simplicity (2026-04-09)
+
+Keep the page-level AI box out of synthetic shared spans. It should render
+either in the first section rail or merge into an authored shared aside that
+already starts at row 1; later asides do not change that placement.
+
 Inline image placeholders were costing about 2.3 KB per image occurrence in rewritten MDX,
  which bloats `.md` exports and the chat assistant's current-page prompt. Switching the build-time
  placeholder from 64px PNG to 32px WebP cut the fixture benchmark average to about 215 bytes.

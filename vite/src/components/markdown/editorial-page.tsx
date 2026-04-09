@@ -21,7 +21,7 @@ import {
 } from '../../site-data.ts'
 import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
-import { NavSelect, type NavSelectItem } from './nav-select.tsx'
+import { NavSelect } from './nav-select.tsx'
 import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { Footer, PoweredBy } from './footer.tsx'
@@ -30,7 +30,6 @@ import { SidebarAssistant } from '../sidebar-assistant.tsx'
 import { ChatDrawer } from '../chat-drawer.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
 import { NavDrawer } from '../nav-drawer.tsx'
-
 
 export type EditorialSection = {
   content: React.ReactNode
@@ -54,10 +53,12 @@ function getSharedAsideStartRow(row: number, span: number) {
   return row - span + 1
 }
 
-function sectionStartsSharedAsideAtTop(section: EditorialSection, index: number) {
-  if (!section.aside) return false
-  const span = section.asideRowSpan ?? 1
-  return span > 1 && getSharedAsideStartRow(index + 1, span) === 1
+function pageStartsWithSharedAside(sections?: EditorialSection[]) {
+  return sections?.some((section, index) => {
+    if (!section.aside) return false
+    const span = section.asideRowSpan ?? 1
+    return span > 1 && getSharedAsideStartRow(index + 1, span) === 1
+  }) ?? false
 }
 
 /**
@@ -102,7 +103,9 @@ export function EditorialPage({
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
-  const pageStartsWithSharedAside = sections?.some(sectionStartsSharedAsideAtTop) ?? false
+  const firstSection = sections?.[0]
+  const renderAssistantInTopSharedAside = ENABLE_ASSISTANT && pageStartsWithSharedAside(sections)
+  const renderAssistantInFirstSectionRail = ENABLE_ASSISTANT && Boolean(firstSection) && !renderAssistantInTopSharedAside && !(firstSection?.fullWidth ?? false)
   const pageStyle: EditorialPageStyle = {
     WebkitFontSmoothing: 'antialiased',
     '--banner-height': bannerContent ? '36px' : '0px',
@@ -292,16 +295,19 @@ export function EditorialPage({
                 const sharedAsideStartRow = getSharedAsideStartRow(row, span)
                 const hasPerSectionAside = Boolean(section.aside) && !isShared
                 const hasSharedAside = Boolean(section.aside) && isShared
-                const showPerSectionAsideColumn = i === 0 || hasPerSectionAside
                 const renderAssistantInPerSectionAside =
-                  i === 0 && ENABLE_ASSISTANT && !pageStartsWithSharedAside
+                  i === 0 && renderAssistantInFirstSectionRail
                 const renderAssistantInSharedAside =
-                  ENABLE_ASSISTANT && sharedAsideStartRow === 1
+                  renderAssistantInTopSharedAside && sharedAsideStartRow === 1
+                const showPerSectionAsideColumn = hasPerSectionAside || renderAssistantInPerSectionAside
                 const asideClass =
                   'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
                 const sharedAsideStyle: EditorialPageStyle = {
                   '--shared-row': `${sharedAsideStartRow} / span ${span}`,
                 }
+                const perSectionRailOwner = renderAssistantInPerSectionAside
+                  ? hasPerSectionAside ? 'assistant-and-aside' : 'assistant'
+                  : hasPerSectionAside ? 'aside' : undefined
                 return (
                   <Fragment key={i}>
                     {/* Inner per-section wrapper: subgrid, content + per-section aside */}
@@ -315,7 +321,9 @@ export function EditorialPage({
                       {/* Aside column: assistant input (first row only) + per-section aside */}
                       {showPerSectionAsideColumn && (
                         <div
-                            className={`flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                          className='flex flex-col gap-4 lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start'
+                          data-right-rail='section'
+                          data-right-rail-owner={perSectionRailOwner}
                         >
                           {renderAssistantInPerSectionAside && <SidebarAssistant />}
                           {hasPerSectionAside && (
@@ -335,6 +343,8 @@ export function EditorialPage({
                       <div
                         className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
                         style={sharedAsideStyle}
+                        data-right-rail='shared'
+                        data-right-rail-owner={renderAssistantInSharedAside ? 'shared-with-assistant' : 'aside'}
                       >
                         {/* A shared aside that starts on row 1 owns the whole
                             desktop right rail, so the assistant must render

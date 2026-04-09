@@ -96,7 +96,7 @@ function groupBySections(root: Root): MdastSection[] {
  * split content at EVERY heading level inside a full-aside range — each
  * sub-section gets its own row in the page grid, separated by `--section-gap`.
  * The shared
- * aside is attached to the first sub-section with `asideRowSpan` set to the
+ * aside is attached to the last sub-section with `asideRowSpan` set to the
  * number of sub-sections, so on desktop it lives in a CSS grid cell spanning
  * all those rows (`grid-row: N / span M`). Inside that tall cell a
  * `position: sticky` aside can scroll alongside the whole range.
@@ -132,7 +132,7 @@ export function buildSections(root: Root): MdastSection[] {
     sections.push(...groupBySections(before))
   }
 
-  // Each full-aside range: split at ## into sub-sections; first sub-section
+  // Each full-aside range: split at ## into sub-sections; the last sub-section
   // owns the shared aside with row-span = number of sub-sections.
   for (let r = 0; r < fullAsideIndices.length; r++) {
     const start = fullAsideIndices[r]!
