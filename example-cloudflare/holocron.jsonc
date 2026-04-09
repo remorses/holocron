@@ -1,0 +1,12 @@
+{
+  "name": "Holocron Cloudflare",
+  "colors": {
+    "primary": "#0969da"
+  },
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["index", "getting-started"]
+    }
+  ]
+}

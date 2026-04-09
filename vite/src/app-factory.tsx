@@ -493,9 +493,22 @@ export function createHolocronApp(site: HolocronSiteData) {
   // bash-tool to search/read docs in a virtual filesystem.
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
-      const { streamText } = await import('ai')
-      const { openai } = await import('@ai-sdk/openai')
-      const { createBashTool } = await import('bash-tool')
+      // Keep the workerd bundle free of Node-only AI assistant dependencies.
+      // Cloudflare can render the docs site, but the local-filesystem assistant
+      // backend currently relies on bash-tool and related Node APIs.
+      if (typeof Reflect.get(globalThis, 'WebSocketPair') === 'function') {
+        return Response.json(
+          { error: 'Holocron AI assistant is not available on Cloudflare deployments yet.' },
+          { status: 501 },
+        )
+      }
+
+      const aiModule = 'ai'
+      const openaiModule = '@ai-sdk/openai'
+      const bashToolModule = 'bash-tool'
+      const { streamText } = await import(/* @vite-ignore */ aiModule)
+      const { openai } = await import(/* @vite-ignore */ openaiModule)
+      const { createBashTool } = await import(/* @vite-ignore */ bashToolModule)
 
       const body = parseChatRequestBody(await request.json())
 

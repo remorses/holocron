@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "holocron-example-cloudflare",
+  "main": "spiceflow/cloudflare-entrypoint",
+  "compatibility_date": "2026-04-09",
+  "compatibility_flags": ["nodejs_compat"]
+}
