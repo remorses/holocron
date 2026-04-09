@@ -82,29 +82,41 @@ test.describe("realworld-polar fixture", () => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/integrate/mcp");
 
-    const realImage = page.locator('.slot-main img:not([aria-hidden])').first();
+    const imageFrame = page.locator('.slot-main img[aria-hidden="true"]').first().locator("xpath=..");
+    const placeholderImage = imageFrame.locator('img[aria-hidden="true"]');
+    const realImage = imageFrame.locator('img:not([aria-hidden])');
+
+    await expect(placeholderImage).toHaveCount(1);
     await expect(realImage).toBeVisible();
-    const handle = await realImage.elementHandle();
-    expect(handle).not.toBeNull();
-    await page.waitForFunction((node) => {
-      if (!(node instanceof HTMLImageElement)) return false;
-      const filter = window.getComputedStyle(node).filter;
-      return filter === "none" || filter === "blur(0px)";
-    }, handle);
 
-    const styles = await realImage.evaluate((node) => {
-      const computed = window.getComputedStyle(node);
-      return {
-        transitionProperty: computed.transitionProperty,
-        transitionDuration: computed.transitionDuration,
-        filter: computed.filter,
-      };
-    });
+    const [placeholderStyles, styles] = await Promise.all([
+      placeholderImage.evaluate((node) => {
+        const computed = window.getComputedStyle(node);
+        return {
+          imageRendering: computed.imageRendering,
+        };
+      }),
+      realImage.evaluate((node) => {
+        const computed = window.getComputedStyle(node);
+        return {
+          transitionProperty: computed.transitionProperty,
+          transitionDuration: computed.transitionDuration,
+          filter: computed.filter,
+          opacity: computed.opacity,
+          complete: node instanceof HTMLImageElement ? node.complete : false,
+          naturalWidth: node instanceof HTMLImageElement ? node.naturalWidth : 0,
+        };
+      }),
+    ]);
 
+    expect(placeholderStyles.imageRendering).toBe("pixelated");
+    expect(styles.complete).toBe(true);
+    expect(styles.naturalWidth).toBeGreaterThan(0);
     expect(styles.transitionProperty).toContain("opacity");
     expect(styles.transitionProperty).toContain("filter");
     expect(styles.transitionDuration).not.toBe("0s");
-    expect(["none", "blur(0px)"]).toContain(styles.filter);
+    expect(["0", "1"]).toContain(styles.opacity);
+    expect(["none", "blur(0px)", "blur(6px)"]).toContain(styles.filter);
   });
 
   test("checkout links page renders frame and param fields", async ({

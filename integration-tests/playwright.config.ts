@@ -39,29 +39,13 @@ function quoteForShell(value: string): string {
   return `'${value.replaceAll(`'`, `'\\''`)}'`;
 }
 
-function getServerLogPath(fixtureName: string): string {
-  const mode = isStart ? "start" : "dev";
-  return path.join(logsDir, `${fixtureName}.${mode}.${runId}.log`);
-}
-
-function resolveBuiltServerEntry(rootDir: string): string {
-  const outDir = getFixtureOutDir(rootDir, runId);
-  const mjsEntry = path.join(outDir, "rsc/index.mjs");
-  if (fs.existsSync(mjsEntry)) return mjsEntry;
-  return path.join(outDir, "rsc/index.js");
-}
-
 // Playwright imports this config file multiple times (once for the main
 // process, again for test workers). We must persist the per-fixture ports
 // across re-imports via env vars — otherwise each re-import gets fresh
 // ports and the test baseURL stops matching the webServer port.
-function envKey(fixtureName: string): string {
-  return `E2E_PORT_${fixtureName.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}`;
-}
-
 const fixturePorts = await Promise.all(
   fixtures.map(async (fixture) => {
-    const key = envKey(fixture.name);
+    const key = `E2E_PORT_${fixture.name.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}`;
     const existing = process.env[key];
     const port = existing ? Number(existing) : await getFreePort();
     process.env[key] = String(port);
@@ -75,12 +59,12 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
   const configFlag = fs.existsSync(fixtureConfig)
     ? `--config ${fixture.rootRel}/vite.config.ts`
     : `--config vite.config.ts`;
-  const builtServerEntry = resolveBuiltServerEntry(fixture.rootDir);
+  const builtServerEntry = path.join(getFixtureOutDir(fixture.rootDir, runId), "rsc/index.js");
   const envPrefix = `E2E_RUN_ID=${quoteForShell(runId)} E2E_FIXTURE_ROOT=${quoteForShell(fixture.rootDir)}`;
   const serverCommand = isStart
     ? `${envPrefix} PORT=${port} node ${quoteForShell(builtServerEntry)}`
     : `${envPrefix} pnpm exec vite ${fixture.rootRel} ${configFlag} --port ${port} --strictPort`;
-  const logPath = getServerLogPath(fixture.name);
+  const logPath = path.join(logsDir, `${fixture.name}.${isStart ? "start" : "dev"}.${runId}.log`);
   fs.writeFileSync(logPath, "");
   const command = `${serverCommand} > ${quoteForShell(logPath)} 2>&1`;
   return {

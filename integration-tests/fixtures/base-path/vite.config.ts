@@ -27,11 +27,6 @@ export default defineConfig({
           outDir: runScopedOutDir,
           emptyOutDir: true,
         },
-        environments: {
-          client: { build: { outDir: path.join(runScopedOutDir, "client") } },
-          rsc: { build: { outDir: path.join(runScopedOutDir, "rsc") } },
-          ssr: { build: { outDir: path.join(runScopedOutDir, "ssr") } },
-        },
       }
     : {}),
   plugins: [holocron()],

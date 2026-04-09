@@ -22,7 +22,8 @@ test.describe("raw markdown under base path", () => {
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
-    expect(body).toContain("# Introduction");
+    expect(body).toContain('<Heading level={1} id="introduction">');
+    expect(body).toContain("Introduction");
     expect(body).toContain("holocron.so");
   });
 
@@ -31,7 +32,8 @@ test.describe("raw markdown under base path", () => {
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
-    expect(body).toContain("# Guide");
+    expect(body).toContain('<Heading level={1} id="guide">');
+    expect(body).toContain("Guide");
   });
 
   test("agent UA redirects to .md under base path", async ({ request }) => {

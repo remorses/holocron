@@ -28,38 +28,6 @@ function cleanFixtureBuildOutput(rootDir: string): void {
   }
 }
 
-function writeMjsCompatibilityAliases(outDir: string): void {
-  for (const relativeEntry of ["rsc/index", "ssr/index"]) {
-    const mjsPath = path.join(outDir, `${relativeEntry}.mjs`);
-    const jsPath = path.join(outDir, `${relativeEntry}.js`);
-    if (fs.existsSync(mjsPath) && !fs.existsSync(jsPath)) {
-      fs.copyFileSync(mjsPath, jsPath);
-    }
-  }
-}
-
-function rewriteMjsEntryImports(outDir: string): void {
-  const rewrites = [
-    {
-      filePath: path.join(outDir, "rsc/index.mjs"),
-      from: '../ssr/index.js',
-      to: '../ssr/index.mjs',
-    },
-    {
-      filePath: path.join(outDir, "ssr/index.mjs"),
-      from: '../rsc/index.js',
-      to: '../rsc/index.mjs',
-    },
-  ] as const;
-
-  for (const rewrite of rewrites) {
-    if (!fs.existsSync(rewrite.filePath)) continue;
-    const content = fs.readFileSync(rewrite.filePath, "utf8");
-    if (!content.includes(rewrite.from)) continue;
-    fs.writeFileSync(rewrite.filePath, content.replaceAll(rewrite.from, rewrite.to));
-  }
-}
-
 function buildFixture(rootRel: string): Promise<void> {
   return new Promise((resolve, reject) => {
     console.log(`\n[build-fixtures] → ${rootRel}`);
@@ -79,12 +47,6 @@ function buildFixture(rootRel: string): Promise<void> {
           ...process.env,
           E2E_RUN_ID: runId,
           E2E_FIXTURE_ROOT: path.join(integrationTestsDir, rootRel),
-          // Integration tests run the built server from the local workspace,
-          // so they do not need Spiceflow's standalone node_modules tracing.
-          // Skipping it also avoids hard-coding the server entry extension
-          // (`index.js` vs `index.mjs`) when fixtures copy real package.json files.
-          E2E_SKIP_PRERENDER: "1",
-          SPICEFLOW_SKIP_STANDALONE_TRACE: "1",
         },
       },
     );
@@ -92,9 +54,6 @@ function buildFixture(rootRel: string): Promise<void> {
       if (code !== 0) {
         reject(new Error(`[build-fixtures] vite build failed for ${rootRel} (exit ${code})`));
       } else {
-        const outDir = getFixtureOutDir(path.join(integrationTestsDir, rootRel), runId);
-        writeMjsCompatibilityAliases(outDir);
-        rewriteMjsEntryImports(outDir);
         resolve();
       }
     });

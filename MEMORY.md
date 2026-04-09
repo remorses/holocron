@@ -1074,17 +1074,12 @@ other's optimized deps.
 gets its own cache. Vite creates `<root>/node_modules/` on demand even
 if the fixture has no real dependencies.
 
-### Exact fixtures can emit `.mjs`
+### Spiceflow emits stable `.js`
 
-If a copied realworld fixture includes its own `package.json` with `"type": "module"`, Vite may emit `dist/rsc/index.mjs` and `dist/ssr/index.mjs` instead of `.js`. The integration harness has to avoid Spiceflow's `index.js` assumptions during local builds and keep the built server on a single extension path in build mode.
-
-**Trade-off flagged by Oracle**: this is a plugin-wide behavior change
-affecting all downstream consumers, not just the integration-test
-harness. An alternative would be to scope the cacheDir override in
-`integration-tests/vite.config.ts` (consumer-level) rather than in the
-plugin itself. Kept in the plugin for now because it's a strictly safer
-default for anyone running multiple holocron sites concurrently (e.g.
-monorepo with parallel docs previews).
+The old `.mjs` aliasing hacks in `integration-tests/` are obsolete after the
+Spiceflow fix: server entries now build as `rsc/index.js` and `ssr/index.js`
+with a local output `package.json` `{ type: "module" }`, so prerender and
+standalone trace no longer need fixture-specific workarounds.
 
 ### Run-scoped cache/dist for e2e
 
