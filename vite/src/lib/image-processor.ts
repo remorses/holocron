@@ -13,7 +13,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-const PLACEHOLDER_WIDTH = 32
+const PLACEHOLDER_WIDTH = 16
 const CACHE_FILENAME = 'holocron-images.json'
 
 export type ImageMeta = {

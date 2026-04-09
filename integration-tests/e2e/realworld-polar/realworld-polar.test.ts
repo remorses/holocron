@@ -76,6 +76,30 @@ test.describe("realworld-polar fixture", () => {
     await expect(page.getByText("Get up and running in 5 minutes")).toBeVisible();
   });
 
+  test("runtime images use blur plus opacity for the sharpen-in transition", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/integrate/mcp");
+
+    const realImage = page.locator('.slot-main img:not([aria-hidden])').first();
+    await expect(realImage).toBeVisible();
+
+    const styles = await realImage.evaluate((node) => {
+      const computed = window.getComputedStyle(node);
+      return {
+        transitionProperty: computed.transitionProperty,
+        transitionDuration: computed.transitionDuration,
+        filter: computed.filter,
+      };
+    });
+
+    expect(styles.transitionProperty).toContain("opacity");
+    expect(styles.transitionProperty).toContain("filter");
+    expect(styles.transitionDuration).not.toBe("0s");
+    expect(["none", "blur(0px)"]).toContain(styles.filter);
+  });
+
   test("checkout links page renders frame and param fields", async ({
     page,
   }) => {

@@ -40,6 +40,6 @@ describe('processImage', () => {
     expect(meta?.width).toBe(1200)
     expect(meta?.height).toBe(800)
     expect(meta?.placeholder.startsWith('data:image/webp;base64,')).toBe(true)
-    expect(Buffer.byteLength(meta!.placeholder)).toBeLessThan(500)
+    expect(Buffer.byteLength(meta!.placeholder)).toBeLessThan(300)
   })
 })

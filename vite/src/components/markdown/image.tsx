@@ -10,8 +10,9 @@ import React, { useCallback, useState } from 'react'
 /**
  * Pixelated placeholder image. Uses a tiny pre-generated image with CSS
  * image-rendering: pixelated (nearest-neighbor sampling) for a crisp mosaic
- * effect. The real image fades in on top once loaded — no flash because
- * the placeholder stays underneath and the real image starts at opacity 0.
+ * effect. The real image fades in on top once loaded with a light blur-to-sharp
+ * transition — no flash because the placeholder stays underneath and the real
+ * image starts soft and transparent.
  */
 export function PixelatedImage({
   src,
@@ -78,7 +79,7 @@ export function PixelatedImage({
           }}
         />
       )}
-      {/* Real image: starts invisible, fades in over the placeholder */}
+      {/* Real image: starts soft and transparent, then sharpens in over the placeholder */}
       <img
         ref={imgRef}
         src={src}
@@ -93,8 +94,9 @@ export function PixelatedImage({
           width: '100%',
           height: '100%',
           objectFit: 'cover',
+          filter: !placeholder || loaded ? 'blur(0px)' : 'blur(6px)',
           opacity: !placeholder || loaded ? 1 : 0,
-          transition: 'opacity 0.4s ease',
+          transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
           zIndex: 1,
         }}
       />
@@ -180,7 +182,7 @@ export function LazyVideo({
           zIndex: 0,
         }}
       />
-      {/* Real poster: fades in over the pixelated placeholder */}
+      {/* Real poster: fades in and sharpens over the pixelated placeholder */}
       <img
         ref={posterRef}
         src={poster}
@@ -197,8 +199,9 @@ export function LazyVideo({
           width: '100%',
           height: '100%',
           objectFit: 'cover',
+          filter: posterLoaded ? 'blur(0px)' : 'blur(6px)',
           opacity: posterLoaded ? 1 : 0,
-          transition: 'opacity 0.4s ease',
+          transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
           zIndex: 1,
         }}
       />
