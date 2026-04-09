@@ -184,6 +184,36 @@ Some content.`)
     expect(result.title).toBe('Untitled')
   })
 
+  test('normalizes JSX native headings into page headings', () => {
+    const result = processMdx('<h2 id="custom-id">My heading</h2>')
+
+    expect(result.headings).toMatchInlineSnapshot(`
+      [
+        {
+          "depth": 2,
+          "slug": "custom-id",
+          "text": "My heading",
+        },
+      ]
+    `)
+    expect(result.title).toBe('My heading')
+  })
+
+  test('extracts Heading components as page headings', () => {
+    const result = processMdx('<Heading level={3} id="custom-id">My heading</Heading>')
+
+    expect(result.headings).toMatchInlineSnapshot(`
+      [
+        {
+          "depth": 3,
+          "slug": "custom-id",
+          "text": "My heading",
+        },
+      ]
+    `)
+    expect(result.title).toBe('My heading')
+  })
+
   test('collects relative image srcs', () => {
     const result = processMdx(`
 ![screenshot](./images/screenshot.png)

@@ -2,13 +2,13 @@ import { describe, expect, test } from 'vitest'
 import { normalizeMdx } from './normalize-mdx.ts'
 
 describe('normalizeMdx', () => {
-  test('rewrites markdown heading ids to explicit heading JSX', async () => {
+  test('rewrites markdown headings to Heading JSX', async () => {
     const result = await normalizeMdx('## My heading {#custom-id}')
 
     expect(result).toMatchInlineSnapshot(`
-      "<h2 id=\"custom-id\">
+      "<Heading level={2} id=\"custom-id\">
         My heading
-      </h2>
+      </Heading>
       "
     `)
   })

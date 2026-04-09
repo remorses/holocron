@@ -11,7 +11,7 @@ import { toMarkdown } from 'mdast-util-to-markdown'
 import { mdxToMarkdown } from 'mdast-util-mdx'
 import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
 import GithubSlugger from 'github-slugger'
-import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
+import type { Root, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
@@ -46,7 +46,7 @@ type JsxNode = RootContent & {
 export function processMdx(content: string): ProcessedMdx {
   const normalizedContent = normalizeMdx(content)
   const frontmatter = parsePageFrontmatter(content)
-  const mdast = mdxParse(normalizedContent) as Root
+  const mdast = mdxParse(normalizedContent)
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
   const slugger = new GithubSlugger()
@@ -73,7 +73,7 @@ export function processMdx(content: string): ProcessedMdx {
 export function collectMdxIconRefs(content: string): IconRef[] {
   const normalizedContent = normalizeMdx(content)
   const frontmatter = parsePageFrontmatter(content)
-  const mdast = mdxParse(normalizedContent) as Root
+  const mdast = mdxParse(normalizedContent)
   return collectIconRefsFromMdast(mdast, frontmatter)
 }
 
@@ -105,10 +105,9 @@ function collectIconRefsFromMdast(mdast: Root, frontmatter: PageFrontmatter): Ic
 
 function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading | undefined {
   if (node.type === 'heading') {
-    const heading = node as Heading
-    const text = extractText(heading.children)
+    const text = extractText(node.children)
     return {
-      depth: heading.depth,
+      depth: node.depth,
       text,
       slug: slugger.slug(text),
     }
@@ -118,13 +117,20 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
     return undefined
   }
 
-  const phrasingChildren = (node as RootContent & { children: PhrasingContent[] }).children
-  const text = extractText(phrasingChildren)
+  const text = extractText((node.children ?? []) as PhrasingContent[])
   const explicitId = getJsxAttrValue(node, 'id')
   return {
-    depth: Number(node.name?.slice(1) ?? 2),
+    depth: getHeadingLevel(node),
     text,
     slug: explicitId || slugger.slug(text),
+  }
+
+  function getHeadingLevel(node: JsxNode): 1 | 2 | 3 | 4 | 5 | 6 {
+    const rawLevel = Number(getJsxAttrValue(node, 'level'))
+    if (!Number.isInteger(rawLevel) || rawLevel < 1 || rawLevel > 6) {
+      return 1
+    }
+    return rawLevel as 1 | 2 | 3 | 4 | 5 | 6
   }
 }
 
@@ -280,8 +286,7 @@ function isJsxImageElement(node: RootContent): node is JsxNode {
 }
 
 function isJsxHeadingElement(node: RootContent): node is JsxNode {
-  if (!isJsxElement(node)) return false
-  return /^h[1-6]$/.test((node as JsxNode).name || '')
+  return isJsxElement(node) && node.name === 'Heading'
 }
 
 function isJsxElement(node: RootContent): node is JsxNode {

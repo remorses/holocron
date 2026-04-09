@@ -3,9 +3,9 @@
  * Maps MDX element names and mdast nodes to editorial components.
  */
 
-import { Children, Fragment, isValidElement, type ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
-import type { Root, Heading, RootContent, Image } from 'mdast'
+import type { Root, RootContent, Image } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
 import {
   Aside,
@@ -16,6 +16,7 @@ import {
   Code,
   Caption,
   CodeBlock,
+  Heading,
   SectionHeading,
   ComparisonTable,
   PixelatedImage,
@@ -88,12 +89,7 @@ function PixelatedImageWithProps(props: {
 
 export const mdxComponents = {
   p: P,
-  h1: createHeadingComponent(1),
-  h2: createHeadingComponent(2),
-  h3: createHeadingComponent(3),
-  h4: createHeadingComponent(4),
-  h5: createHeadingComponent(5),
-  h6: createHeadingComponent(6),
+  Heading,
   a: A,
   code: Code,
   ul: List,
@@ -147,31 +143,6 @@ export const mdxComponents = {
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.
   TableOfContentsPanel,
-}
-
-function extractTextFromReactNode(node: ReactNode): string {
-  if (typeof node === 'string' || typeof node === 'number') {
-    return String(node)
-  }
-  if (Array.isArray(node)) {
-    return node.map((child) => extractTextFromReactNode(child)).join('')
-  }
-  if (isValidElement(node)) {
-    return extractTextFromReactNode((node.props as { children?: ReactNode }).children)
-  }
-  return ''
-}
-
-function createHeadingComponent(level: HeadingLevel) {
-  return function MdxHeading({ id, noAnchor, children }: { id?: string; noAnchor?: boolean; children: ReactNode }) {
-    const text = Children.toArray(children).map((child) => extractTextFromReactNode(child)).join('')
-    const headingId = id || slugify(text)
-    if (noAnchor) {
-      const Tag = `h${level}` as 'h1' | 'h2' | 'h3'
-      return <Tag className={`editorial-heading editorial-h${level}`}>{children}</Tag>
-    }
-    return <SectionHeading id={headingId} level={level}>{children}</SectionHeading>
-  }
 }
 
 export function renderNode(

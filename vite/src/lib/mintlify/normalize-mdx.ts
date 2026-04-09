@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
 import { remark } from 'remark'
 import { remarkCodeGroup } from './remark-code-group.ts'
-import { remarkHeadingIds } from './remark-heading-ids.ts'
+import { remarkHeadings } from './remark-headings.ts'
 import { remarkMermaidCode } from './remark-mermaid.ts'
 import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
 
@@ -17,7 +17,7 @@ export function normalizeMdx(content: string): string {
     .use(remarkMdx)
     .use(remarkFrontmatter, ['yaml'])
     .use(remarkGfm)
-    .use(remarkHeadingIds as never)
+    .use(remarkHeadings as never)
     .use(remarkCodeGroup)
     .use(remarkMermaidCode)
     .use(remarkSingleAccordionItems)

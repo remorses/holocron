@@ -38,8 +38,7 @@ export function isHeroNode(node: RootContent): boolean {
 }
 
 function isHeadingNode(node: RootContent): boolean {
-  if (node.type === 'heading') return true
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && /^h[1-6]$/.test((node as { name?: string }).name ?? '')
+  return node.type === 'heading' || (node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Heading')
 }
 
 /** Filter out mdast node types that render to nothing so they don't create
