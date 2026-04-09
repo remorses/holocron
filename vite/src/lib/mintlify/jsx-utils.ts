@@ -3,7 +3,7 @@ type LiteralAttributeValue = string | null
 type Expression = {
   type: 'ArrayExpression' | 'Literal'
   elements?: Array<{ type: 'Literal'; value: string }>
-  value?: string | boolean
+  value?: string | boolean | number
   raw?: string
 }
 
@@ -59,6 +59,14 @@ export function stringArrayExpression(values: string[]): Expression {
 }
 
 export function booleanExpression(value: boolean): Expression {
+  return {
+    type: 'Literal',
+    value,
+    raw: String(value),
+  }
+}
+
+export function numberExpression(value: number): Expression {
   return {
     type: 'Literal',
     value,

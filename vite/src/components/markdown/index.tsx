@@ -17,6 +17,7 @@ export { ExpandableContainer } from './expandable-container.tsx'
 export { ChevronIcon, SearchIcon } from './icons.tsx'
 
 export {
+  Heading,
   SectionHeading,
   P,
   Caption,

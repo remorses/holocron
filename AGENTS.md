@@ -4,6 +4,8 @@ Drop-in Mintlify replacement as a Vite plugin. Users point their `vite.config.ts
 
 Read the spiceflow skill before editing any code in this package. Run `playwriter skill` or load the spiceflow skill to get the latest API reference.
 
+Read the Emil design-engineering skill before adding or changing animations/transitions in this package: https://raw.githubusercontent.com/emilkowalski/skill/refs/heads/main/skills/emil-design-eng/SKILL.md
+
 ## Config
 
 Supports two config file names (first found wins):
@@ -17,7 +19,7 @@ both follow the same schema.
 
 The schema follows the Mintlify docs.json shape (https://mintlify.com/docs.json) for the subset Holocron consumes. Unknown Mintlify fields pass through `.passthrough()` so users can paste a full docs.json without validation errors.
 
-To read mintlify docs fetch https://www.mintlify.com/docs/llms.txt and relevant pages. this is useful to find out specific mintlify behaviour, supported components, etc
+To read mintlify docs curl https://www.mintlify.com/docs/llms-full.txt into a file and grep it. notice this file is very large. this is useful to find out specific mintlify behaviour, supported components, etc
 
 Fetch those docs every time we need to find out some info about Mintlify
 
@@ -156,6 +158,15 @@ slot-page (flex flex-col gap-(--layout-gap))
 - On mobile: becomes `flex flex-col gap-y-(--prose-gap)` → content + aside stack tightly (20px gap).
 
 **3. Hero mini-grid** (only when `hero` prop is set) — replicates the page grid's 3-col definition explicitly to align hero content with the page grid's content column. Not a subgrid because hero lives OUTSIDE the page grid in DOM (sibling in the flex flow).
+
+### Aside and Section Processing (`mdx-sections.ts`)
+
+The markdown document is parsed into an AST and split into sections (`MdastSection`) at every heading level. This split dictates the CSS grid rows in the main content area.
+
+There are three ways content can exist in the right sidebar:
+1.  **Per-section `<Aside>`**: Sticky only for the bounds of its specific section (the content between two headings). Handled via CSS subgrid row spanning.
+2.  **Shared `<Aside full>`**: Spans multiple sections. It is sticky for the section it is placed in, and all subsequent sections until the next `<Aside full>` or the end of the document. Handled by calculating the grid row span across multiple sub-sections.
+3.  **AI Widget (`<SidebarAssistant>` via `HolocronAIAssistantWidget`)**: Acts exactly like an `<Aside full>` but must never overlap with another aside. To achieve this without complex React rendering logic, the widget is injected during AST processing (`buildSections`). If the first section has an `<Aside>`, the widget is prepended into its children (rendering as a flex column above it). If there are no asides in the first section, it is wrapped in an `<Aside full>` and inserted at the very top of the document.
 
 ### How the grids interact
 

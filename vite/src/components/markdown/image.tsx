@@ -10,8 +10,9 @@ import React, { useCallback, useState } from 'react'
 /**
  * Pixelated placeholder image. Uses a tiny pre-generated image with CSS
  * image-rendering: pixelated (nearest-neighbor sampling) for a crisp mosaic
- * effect. The real image fades in on top once loaded — no flash because
- * the placeholder stays underneath and the real image starts at opacity 0.
+ * effect. The real image fades in on top once loaded with a light blur-to-sharp
+ * transition — no flash because the placeholder stays underneath and the real
+ * image starts soft and transparent.
  */
 export function PixelatedImage({
   src,
@@ -19,6 +20,8 @@ export function PixelatedImage({
   alt,
   width,
   height,
+  intrinsicWidth,
+  intrinsicHeight,
   className = '',
   style,
 }: {
@@ -32,12 +35,19 @@ export function PixelatedImage({
    */
   placeholder?: string
   alt: string
-  width: number
-  height: number
+  width?: number | string
+  height?: number | string
+  intrinsicWidth?: number | string
+  intrinsicHeight?: number | string
   className?: string
   style?: React.CSSProperties
 }) {
   const [loaded, setLoaded] = useState(false)
+  const sourceWidth = readNumericAttr(intrinsicWidth) ?? readNumericAttr(width)
+  const sourceHeight = readNumericAttr(intrinsicHeight) ?? readNumericAttr(height)
+  const hasExplicitDisplaySize = intrinsicWidth !== undefined || intrinsicHeight !== undefined
+  const displayWidth = hasExplicitDisplaySize ? width : undefined
+  const displayHeight = hasExplicitDisplaySize ? height : undefined
 
   // Handles both the normal onLoad event and the case where the image is
   // already cached (img.complete is true before React mounts the handler).
@@ -47,15 +57,26 @@ export function PixelatedImage({
     }
   }, [])
 
+  if (!sourceWidth || !sourceHeight) {
+    return <img src={src} alt={alt} className={className} style={{ maxWidth: '100%', ...style }} />
+  }
+
+  const frameStyle = buildImageFrameStyle({
+    sourceWidth,
+    sourceHeight,
+    displayWidth,
+    displayHeight,
+  })
+  const imgWidth = sourceWidth
+  const imgHeight = sourceHeight
+
   return (
     <div
       className={className}
       style={{
         position: 'relative',
-        width: '100%',
-        maxWidth: `min(${width}px, 100%)`,
-        aspectRatio: `${width} / ${height}`,
         overflow: 'hidden',
+        ...frameStyle,
         ...style,
       }}
     >
@@ -65,11 +86,10 @@ export function PixelatedImage({
           src={placeholder}
           alt=''
           aria-hidden
-          width={width}
-          height={height}
+          width={imgWidth}
+          height={imgHeight}
           style={{
-            position: 'absolute',
-            inset: 0,
+            gridArea: '1 / 1',
             width: '100%',
             height: '100%',
             objectFit: 'cover',
@@ -78,28 +98,91 @@ export function PixelatedImage({
           }}
         />
       )}
-      {/* Real image: starts invisible, fades in over the placeholder */}
+      {/* Real image: starts soft and transparent, then sharpens in over the placeholder */}
       <img
         ref={imgRef}
         src={src}
         alt={alt}
-        width={width}
-        height={height}
+        width={imgWidth}
+        height={imgHeight}
         onLoad={() => {
           setLoaded(true)
         }}
         style={{
-          position: 'relative',
+          gridArea: '1 / 1',
           width: '100%',
           height: '100%',
           objectFit: 'cover',
+          filter: !placeholder || loaded ? 'blur(0px)' : 'blur(6px)',
           opacity: !placeholder || loaded ? 1 : 0,
-          transition: 'opacity 0.4s ease',
+          transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
           zIndex: 1,
         }}
       />
     </div>
   )
+}
+
+function readNumericAttr(value: number | string | undefined): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === 'string' && /^\d+(?:\.\d+)?$/.test(value.trim())) {
+    return Number(value)
+  }
+  return undefined
+}
+
+function toCssLength(value: number | string | undefined): number | string | undefined {
+  if (typeof value === 'number') {
+    return value
+  }
+  if (typeof value !== 'string') {
+    return undefined
+  }
+  const trimmed = value.trim()
+  if (trimmed === '') {
+    return undefined
+  }
+  return /^\d+(?:\.\d+)?$/.test(trimmed) ? Number(trimmed) : trimmed
+}
+
+function buildImageFrameStyle({
+  sourceWidth,
+  sourceHeight,
+  displayWidth,
+  displayHeight,
+}: {
+  sourceWidth: number
+  sourceHeight: number
+  displayWidth: number | string | undefined
+  displayHeight: number | string | undefined
+}): React.CSSProperties {
+  const width = toCssLength(displayWidth)
+  const height = toCssLength(displayHeight)
+  const base: React.CSSProperties = {
+    display: 'grid',
+    aspectRatio: `${sourceWidth} / ${sourceHeight}`,
+  }
+  if (width === undefined && height === undefined) {
+    return {
+      ...base,
+      width: '100%',
+      maxWidth: `min(${sourceWidth}px, 100%)`,
+    }
+  }
+  if (width !== undefined && height !== undefined) {
+    return { ...base, width, height, maxWidth: '100%' }
+  }
+  if (width !== undefined) {
+    return { ...base, width, maxWidth: '100%' }
+  }
+  return {
+    ...base,
+    display: 'inline-grid',
+    height,
+    maxWidth: '100%',
+  }
 }
 
 /**
@@ -180,7 +263,7 @@ export function LazyVideo({
           zIndex: 0,
         }}
       />
-      {/* Real poster: fades in over the pixelated placeholder */}
+      {/* Real poster: fades in and sharpens over the pixelated placeholder */}
       <img
         ref={posterRef}
         src={poster}
@@ -197,8 +280,9 @@ export function LazyVideo({
           width: '100%',
           height: '100%',
           objectFit: 'cover',
+          filter: posterLoaded ? 'blur(0px)' : 'blur(6px)',
           opacity: posterLoaded ? 1 : 0,
-          transition: 'opacity 0.4s ease',
+          transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
           zIndex: 1,
         }}
       />

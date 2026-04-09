@@ -2,8 +2,12 @@ import { defineConfig, devices } from "@playwright/test";
 import { createServer } from "node:net";
 import fs from "node:fs";
 import path from "node:path";
-import { integrationTestsDir } from "./scripts/fixtures.ts";
-import { discoverFixtures } from "./scripts/fixtures.ts";
+import {
+  discoverFixtures,
+  ensureE2ERunId,
+  getFixtureOutDir,
+  integrationTestsDir,
+} from "./scripts/fixtures.ts";
 
 function getFreePort(): Promise<number> {
   return new Promise((resolve) => {
@@ -27,6 +31,7 @@ if (fixtures.length === 0) {
 }
 
 const isStart = Boolean(process.env.E2E_START);
+const runId = ensureE2ERunId();
 const logsDir = path.join(integrationTestsDir, ".playwright-logs");
 fs.mkdirSync(logsDir, { recursive: true });
 
@@ -34,28 +39,13 @@ function quoteForShell(value: string): string {
   return `'${value.replaceAll(`'`, `'\\''`)}'`;
 }
 
-function getServerLogPath(fixtureName: string): string {
-  const mode = isStart ? "start" : "dev";
-  return path.join(logsDir, `${fixtureName}.${mode}.log`);
-}
-
-function resolveBuiltServerEntry(rootDir: string): string {
-  const mjsEntry = path.join(rootDir, "dist/rsc/index.mjs");
-  if (fs.existsSync(mjsEntry)) return mjsEntry;
-  return path.join(rootDir, "dist/rsc/index.js");
-}
-
 // Playwright imports this config file multiple times (once for the main
 // process, again for test workers). We must persist the per-fixture ports
 // across re-imports via env vars — otherwise each re-import gets fresh
 // ports and the test baseURL stops matching the webServer port.
-function envKey(fixtureName: string): string {
-  return `E2E_PORT_${fixtureName.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}`;
-}
-
 const fixturePorts = await Promise.all(
   fixtures.map(async (fixture) => {
-    const key = envKey(fixture.name);
+    const key = `E2E_PORT_${fixture.name.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}`;
     const existing = process.env[key];
     const port = existing ? Number(existing) : await getFreePort();
     process.env[key] = String(port);
@@ -69,11 +59,12 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
   const configFlag = fs.existsSync(fixtureConfig)
     ? `--config ${fixture.rootRel}/vite.config.ts`
     : `--config vite.config.ts`;
-  const builtServerEntry = resolveBuiltServerEntry(fixture.rootDir);
+  const builtServerEntry = path.join(getFixtureOutDir(fixture.rootDir, runId), "rsc/index.js");
+  const envPrefix = `E2E_RUN_ID=${quoteForShell(runId)} E2E_FIXTURE_ROOT=${quoteForShell(fixture.rootDir)}`;
   const serverCommand = isStart
-    ? `PORT=${port} node ${quoteForShell(builtServerEntry)}`
-    : `pnpm exec vite ${fixture.rootRel} ${configFlag} --port ${port} --strictPort`;
-  const logPath = getServerLogPath(fixture.name);
+    ? `${envPrefix} PORT=${port} node ${quoteForShell(builtServerEntry)}`
+    : `${envPrefix} pnpm exec vite ${fixture.rootRel} ${configFlag} --port ${port} --strictPort`;
+  const logPath = path.join(logsDir, `${fixture.name}.${isStart ? "start" : "dev"}.${runId}.log`);
   fs.writeFileSync(logPath, "");
   const command = `${serverCommand} > ${quoteForShell(logPath)} 2>&1`;
   return {
@@ -103,6 +94,7 @@ const projects = fixturePorts.map(({ fixture, port }) => ({
 }));
 
 export default defineConfig({
+  globalTeardown: "./scripts/cleanup-e2e.ts",
   use: {
     actionTimeout: 5000,
     navigationTimeout: 10000,

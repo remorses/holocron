@@ -76,6 +76,49 @@ test.describe("realworld-polar fixture", () => {
     await expect(page.getByText("Get up and running in 5 minutes")).toBeVisible();
   });
 
+  test("runtime images use blur plus opacity for the sharpen-in transition", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/integrate/mcp");
+
+    const imageFrame = page.locator('.slot-main img[aria-hidden="true"]').first().locator("xpath=..");
+    const placeholderImage = imageFrame.locator('img[aria-hidden="true"]');
+    const realImage = imageFrame.locator('img:not([aria-hidden])');
+
+    await expect(placeholderImage).toHaveCount(1);
+    await expect(realImage).toBeVisible();
+
+    const [placeholderStyles, styles] = await Promise.all([
+      placeholderImage.evaluate((node) => {
+        const computed = window.getComputedStyle(node);
+        return {
+          imageRendering: computed.imageRendering,
+        };
+      }),
+      realImage.evaluate((node) => {
+        const computed = window.getComputedStyle(node);
+        return {
+          transitionProperty: computed.transitionProperty,
+          transitionDuration: computed.transitionDuration,
+          filter: computed.filter,
+          opacity: computed.opacity,
+          complete: node instanceof HTMLImageElement ? node.complete : false,
+          naturalWidth: node instanceof HTMLImageElement ? node.naturalWidth : 0,
+        };
+      }),
+    ]);
+
+    expect(placeholderStyles.imageRendering).toBe("pixelated");
+    expect(styles.complete).toBe(true);
+    expect(styles.naturalWidth).toBeGreaterThan(0);
+    expect(styles.transitionProperty).toContain("opacity");
+    expect(styles.transitionProperty).toContain("filter");
+    expect(styles.transitionDuration).not.toBe("0s");
+    expect(["0", "1"]).toContain(styles.opacity);
+    expect(["none", "blur(0px)", "blur(6px)"]).toContain(styles.filter);
+  });
+
   test("checkout links page renders frame and param fields", async ({
     page,
   }) => {
@@ -173,6 +216,18 @@ test.describe("realworld-polar fixture", () => {
     expect(html).toContain("API Reference");
     expect(html).toContain("llms-full.txt");
     expect(html).toContain("Quick Start Guide");
+  });
+
+  test("root-level local img renders through the pixelated image primitive", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+
+    const realImage = page.locator('.slot-main img[src*="welcome.png"]:not([aria-hidden])').first();
+    await expect(realImage).toBeVisible();
+    const wrapper = realImage.locator("xpath=ancestor::div[1]");
+    await expect(wrapper.locator('img[aria-hidden][src^="data:image/webp;base64,"]')).toHaveCount(1);
   });
 
   test("Polar card icons render for Font Awesome-style names used in MDX", async ({

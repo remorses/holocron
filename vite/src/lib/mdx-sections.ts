@@ -38,8 +38,7 @@ export function isHeroNode(node: RootContent): boolean {
 }
 
 function isHeadingNode(node: RootContent): boolean {
-  if (node.type === 'heading') return true
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && /^h[1-6]$/.test((node as { name?: string }).name ?? '')
+  return node.type === 'heading' || (node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Heading')
 }
 
 /** Filter out mdast node types that render to nothing so they don't create
@@ -108,6 +107,47 @@ export function buildSections(root: Root): MdastSection[] {
   // Strip invisible nodes (frontmatter, link definitions) from the top level
   // so they don't get swept into a leading empty section by groupBySections.
   const children = root.children.filter((n) => !isInvisibleNode(n))
+
+  const ENABLE_ASSISTANT = true
+
+  if (ENABLE_ASSISTANT) {
+    const assistantNode: RootContent = {
+      type: 'mdxJsxFlowElement',
+      name: 'HolocronAIAssistantWidget',
+      attributes: [],
+      children: [],
+    } as unknown as RootContent
+
+    let firstSectionEnd = children.length
+    for (let i = 0; i < children.length; i++) {
+      if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
+        firstSectionEnd = i
+        break
+      }
+    }
+
+    let firstAsideIdx = -1
+    for (let i = 0; i < firstSectionEnd; i++) {
+      if (isAsideNode(children[i]!)) {
+        firstAsideIdx = i
+        break
+      }
+    }
+
+    if (firstAsideIdx !== -1) {
+      const asideNode = children[firstAsideIdx] as { children?: RootContent[] }
+      if (!asideNode.children) asideNode.children = []
+      asideNode.children.unshift(assistantNode)
+    } else {
+      const fullAsideNode: RootContent = {
+        type: 'mdxJsxFlowElement',
+        name: 'Aside',
+        attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }] as any,
+        children: [assistantNode],
+      } as unknown as RootContent
+      children.unshift(fullAsideNode)
+    }
+  }
 
   // Find indices of all <Aside full> nodes
   const fullAsideIndices: number[] = []

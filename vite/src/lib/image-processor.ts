@@ -12,8 +12,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { PACKAGE_VERSION } from './package-version.ts'
 
-const PLACEHOLDER_WIDTH = 32
+const PLACEHOLDER_WIDTH = 16
 const CACHE_FILENAME = 'holocron-images.json'
 
 export type ImageMeta = {
@@ -26,6 +27,11 @@ export type ImageMeta = {
 /** Cache file structure: git SHA → processed image data */
 type ImageCache = Record<string, ImageMeta>
 
+type ImageCacheEnvelope = {
+  version: string
+  images: ImageCache
+}
+
 /**
  * Load the image cache from a previous build.
  * Returns a mutable record that callers write to during processing.
@@ -36,7 +42,11 @@ export function loadImageCache({ distDir }: { distDir: string }): ImageCache {
     return {}
   }
   try {
-    return JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as ImageCache
+    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
+      return (raw as ImageCacheEnvelope).images
+    }
+    return {}
   } catch {
     return {}
   }
@@ -46,7 +56,8 @@ export function loadImageCache({ distDir }: { distDir: string }): ImageCache {
 export function saveImageCache({ distDir, cache }: { distDir: string; cache: ImageCache }): void {
   const cachePath = path.join(distDir, CACHE_FILENAME)
   fs.mkdirSync(path.dirname(cachePath), { recursive: true })
-  fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2))
+  const envelope: ImageCacheEnvelope = { version: PACKAGE_VERSION, images: cache }
+  fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 
 /**
@@ -64,7 +75,17 @@ export async function processImage({
     return undefined
   }
 
-  const buf = fs.readFileSync(filePath)
+  return processImageBuffer({ buffer: fs.readFileSync(filePath), cache })
+}
+
+export async function processImageBuffer({
+  buffer,
+  cache,
+}: {
+  buffer: Buffer
+  cache: ImageCache
+}): Promise<ImageMeta | undefined> {
+  const buf = buffer
   const sha = gitBlobSha(buf)
 
   // Cache hit — return existing
@@ -74,20 +95,21 @@ export async function processImage({
   }
 
   // Cache miss — process with sharp + image-size
-  const [{ imageSizeFromFile }, sharp] = await Promise.all([
-    import('image-size/fromFile'),
+  const [{ imageSize }, sharp] = await Promise.all([
+    import('image-size'),
     import('sharp').then((m) => {
       return m.default
     }),
   ])
 
-  const [size, placeholderBuf] = await Promise.all([
-    imageSizeFromFile(filePath),
-    sharp(filePath)
-      .resize(PLACEHOLDER_WIDTH)
-      .webp({ quality: 50 })
-      .toBuffer(),
-  ])
+  const size = imageSize(buf)
+  if (!size.width || !size.height) {
+    return undefined
+  }
+  const placeholderBuf = await sharp(buf)
+    .resize(PLACEHOLDER_WIDTH)
+    .webp({ quality: 50 })
+    .toBuffer()
 
   const meta: ImageMeta = {
     width: size.width,

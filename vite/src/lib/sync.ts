@@ -16,10 +16,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import { createRequire } from 'node:module'
 import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
-import { loadImageCache, saveImageCache, processImage } from './image-processor.ts'
+import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
+import { PACKAGE_VERSION } from './package-version.ts'
 import {
   type HolocronConfig,
   type ConfigNavTab,
@@ -60,8 +60,6 @@ function collectAllPagesFromTab(tab: NavTab): NavPage[] {
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
-const require = createRequire(import.meta.url)
-const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
@@ -205,31 +203,39 @@ export async function syncNavigation({
 
     // Resolve and process each image
     for (const src of processed.imageSrcs) {
-      const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
-      if (!resolved) {
-        continue
-      }
-
       let meta
       try {
+        if (src.startsWith('http://') || src.startsWith('https://')) {
+          const remoteBuffer = await fetchRemoteImageBuffer(src)
+          if (!remoteBuffer) {
+            continue
+          }
+          meta = await processImageBuffer({ buffer: remoteBuffer, cache: imageCache })
+          if (meta) {
+            resolvedImages.set(src, { publicSrc: src, meta })
+          }
+          continue
+        }
+
+        const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
+        if (!resolved) {
+          continue
+        }
+
         meta = await processImage({ filePath: resolved.filePath, cache: imageCache })
+        if (!meta) {
+          continue
+        }
+
+        const publicSrc = resolved.needsCopy
+          ? `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir })}`
+          : src
+
+        resolvedImages.set(src, { publicSrc, meta })
       } catch (e) {
         console.error(`[holocron] warning: failed to process image ${src}`, e)
         continue
       }
-      if (!meta) {
-        continue
-      }
-
-      const publicSrc = (() => {
-        if (resolved.needsCopy) {
-          const destName = copyToPublic({ filePath: resolved.filePath, imageOutputDir })
-          return `/_holocron/images/${destName}`
-        }
-        return src
-      })()
-
-      resolvedImages.set(src, { publicSrc, meta })
     }
 
     // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
@@ -413,6 +419,18 @@ function resolveImagePath({
   }
 
   return undefined
+}
+
+async function fetchRemoteImageBuffer(src: string): Promise<Buffer | undefined> {
+  const response = await fetch(src)
+  if (!response.ok) {
+    return undefined
+  }
+  const contentType = response.headers.get('content-type')
+  if (contentType && !contentType.startsWith('image/')) {
+    return undefined
+  }
+  return Buffer.from(await response.arrayBuffer())
 }
 
 function isImageFile(filePath: string): boolean {

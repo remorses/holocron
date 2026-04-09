@@ -184,6 +184,36 @@ Some content.`)
     expect(result.title).toBe('Untitled')
   })
 
+  test('normalizes JSX native headings into page headings', () => {
+    const result = processMdx('<h2 id="custom-id">My heading</h2>')
+
+    expect(result.headings).toMatchInlineSnapshot(`
+      [
+        {
+          "depth": 2,
+          "slug": "custom-id",
+          "text": "My heading",
+        },
+      ]
+    `)
+    expect(result.title).toBe('My heading')
+  })
+
+  test('extracts Heading components as page headings', () => {
+    const result = processMdx('<Heading level={3} id="custom-id">My heading</Heading>')
+
+    expect(result.headings).toMatchInlineSnapshot(`
+      [
+        {
+          "depth": 3,
+          "slug": "custom-id",
+          "text": "My heading",
+        },
+      ]
+    `)
+    expect(result.title).toBe('My heading')
+  })
+
   test('collects relative image srcs', () => {
     const result = processMdx(`
 ![screenshot](./images/screenshot.png)
@@ -239,6 +269,20 @@ Some text.
       [
         "./screenshot.png",
         "/hero.png",
+      ]
+    `)
+  })
+
+  test('collects JSX img srcs including remote urls', () => {
+    const result = processMdx(`
+<img src="./screenshot.png" alt="local" />
+
+<img src="https://example.com/demo.png" alt="remote" />
+`)
+    expect(result.imageSrcs).toMatchInlineSnapshot(`
+      [
+        "./screenshot.png",
+        "https://example.com/demo.png",
       ]
     `)
   })
@@ -300,6 +344,31 @@ describe('rewriteMdxImages', () => {
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<PixelatedImage src="/_holocron/images/a1b2c3-screenshot.png" alt="test" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "
+    `)
+  })
+
+  test('converts root-level JSX img to PixelatedImage while preserving authored attrs', () => {
+    const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
+    const images = new Map([['./screenshot.png', testMeta]])
+    const result = rewriteMdxImages(mdast, images)
+    expect(result).toMatchInlineSnapshot(`
+      "<PixelatedImage className=\"hero\" height=\"200\" src=\"/_holocron/images/a1b2c3-screenshot.png\" alt=\"\" intrinsicWidth=\"1200\" intrinsicHeight=\"800\" placeholder=\"data:image/png;base64,abc123\" />
+      "
+    `)
+  })
+
+  test('converts nested flow JSX img to PixelatedImage while preserving authored attrs', () => {
+    const { mdast } = processMdx(`
+<Step title="Create account">
+  <img className="hero" height="200" src="./screenshot.png" />
+</Step>`)
+    const images = new Map([['./screenshot.png', testMeta]])
+    const result = rewriteMdxImages(mdast, images)
+    expect(result).toMatchInlineSnapshot(`
+      "<Step title=\"Create account\">
+        <PixelatedImage className=\"hero\" height=\"200\" src=\"/_holocron/images/a1b2c3-screenshot.png\" alt=\"\" intrinsicWidth=\"1200\" intrinsicHeight=\"800\" placeholder=\"data:image/png;base64,abc123\" />
+      </Step>
       "
     `)
   })

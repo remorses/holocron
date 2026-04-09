@@ -2,7 +2,9 @@ import { describe, test, expect, afterEach } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
+import { createServer, type Server } from 'node:http'
 import { syncNavigation } from './sync.ts'
+import { PACKAGE_VERSION } from './package-version.ts'
 import { readConfig } from '../config.ts'
 import { collectAllPages, findPage, buildPageIndex } from '../navigation.ts'
 
@@ -15,7 +17,7 @@ type TmpProject = {
   distDir: string
 }
 
-function createProject(config: Record<string, unknown>, pages: Record<string, string>): TmpProject {
+function createProject(config: object, pages: Record<string, string>): TmpProject {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-sync-test-'))
   const pagesDir = path.join(root, 'pages')
   const publicDir = path.join(root, 'public')
@@ -39,6 +41,7 @@ function createProject(config: Record<string, unknown>, pages: Record<string, st
 }
 
 const projects: TmpProject[] = []
+const servers: Server[] = []
 
 function tracked(project: TmpProject): TmpProject {
   projects.push(project)
@@ -46,6 +49,10 @@ function tracked(project: TmpProject): TmpProject {
 }
 
 afterEach(() => {
+  for (const server of servers) {
+    server.close()
+  }
+  servers.length = 0
   for (const p of projects) {
     if (fs.existsSync(p.root)) {
       fs.rmSync(p.root, { recursive: true, force: true })
@@ -257,11 +264,11 @@ Content here.`,
 
     // mdxContent has the slug as key
     expect(result.mdxContent['page']).toBeDefined()
-    expect(result.mdxContent['page']).toContain('## Section')
+    expect(result.mdxContent['page']).toContain('<Heading level={2} id="section">')
 
     // Navigation page object has NO mdx field
     const page = findPage(result.navigation, 'page')!
-    expect('mdx' in page).toBe(false)
+    expect(Object.hasOwn(page, 'mdx')).toBe(false)
   })
 
   test('cache reuse on second sync with unchanged files', async () => {
@@ -307,6 +314,62 @@ title: Cached Page
     expect(page2.title).toBe(page1.title)
     expect(page2.gitSha).toBe(page1.gitSha)
     expect(page2.headings).toEqual(page1.headings)
+  })
+
+  test('generates placeholders for remote root-level JSX img urls', async () => {
+    const sharp = (await import('sharp')).default
+    const png = await sharp({
+      create: {
+        width: 1,
+        height: 1,
+        channels: 4,
+        background: { r: 255, g: 0, b: 255, alpha: 1 },
+      },
+    })
+      .png()
+      .toBuffer()
+    const server = createServer((request, response) => {
+      if (request.url !== '/demo.png') {
+        response.writeHead(404)
+        response.end('not found')
+        return
+      }
+      response.writeHead(200, { 'content-type': 'image/png' })
+      response.end(png)
+    })
+    await new Promise<void>((resolve) => {
+      server.listen(0, '127.0.0.1', resolve)
+    })
+    servers.push(server)
+    const address = server.address()
+    if (!address || typeof address === 'string') {
+      throw new Error('Expected test server to listen on a TCP port')
+    }
+    const imageUrl = `http://127.0.0.1:${address.port}/demo.png`
+
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Remote image
+---
+
+<img src="${imageUrl}" />`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.mdxContent.page).toContain(`<PixelatedImage src="${imageUrl}" alt="" intrinsicWidth="1" intrinsicHeight="1" placeholder="data:image/webp;base64,`)
   })
 
   test('cache invalidation when MDX file changes', async () => {
@@ -364,6 +427,55 @@ title: Updated Title
         "Another Heading",
       ]
     `)
+  })
+
+  test('cache invalidation when image cache version is stale', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Image Page
+---
+
+<img src="./dot.svg" />`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    fs.writeFileSync(
+      path.join(project.pagesDir, 'dot.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" fill="#38bdf8" /></svg>`,
+    )
+
+    fs.writeFileSync(
+      path.join(project.distDir, 'holocron-images.json'),
+      JSON.stringify({
+        version: '0.0.0-stale',
+        images: {
+          stale: {
+            width: 1,
+            height: 1,
+            placeholder: 'data:image/webp;base64,stale',
+          },
+        },
+      }),
+    )
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.mdxContent.page).toContain('<PixelatedImage')
+    expect(result.mdxContent.page).not.toContain('data:image/webp;base64,stale')
+
+    const imageCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-images.json'), 'utf-8'))
+    expect(imageCache.version).toBe(PACKAGE_VERSION)
+    expect(Object.keys(imageCache.images)).toHaveLength(1)
   })
 
   test('throws when MDX file is missing', async () => {
