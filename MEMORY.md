@@ -1705,3 +1705,9 @@ MDX component map, tab panels look empty because the cards are dropped at render
 Card and accordion icons from page content do not come from config/navigation,
 so they must be collected from MDX too when building `virtual:holocron-icons`.
 Otherwise the text renders but the icon slot stays empty even if the name is valid.
+
+## Font Awesome per-icon width (2026-04-09)
+
+Iconify Font Awesome packs have set-level `width/height`, but some icons override
+the width individually (for example `discord`). The atlas must prefer `icon.width`
+over the pack default or wide icons render with a clipped `viewBox`.

@@ -20,7 +20,7 @@ export function Accordion({
   description?: string
   defaultOpen?: boolean
   icon?: string
-  /** TODO: FA/tabler iconType values render null until atlas includes those packs. */
+  /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   iconType?: string
   children: React.ReactNode
 }) {

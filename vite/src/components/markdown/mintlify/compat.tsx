@@ -39,7 +39,7 @@ export function Badge({
   children: React.ReactNode
   color?: string
   icon?: string
-  /** TODO: FA/tabler iconType values render null until atlas includes those packs. */
+  /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   iconType?: string
   size?: 'xs' | 'sm' | 'md' | 'lg'
   shape?: 'rounded' | 'pill'
@@ -111,7 +111,7 @@ export function Card({
 }: {
   title?: string
   icon?: string
-  /** TODO: FA/tabler iconType values render null until atlas includes those packs. */
+  /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   iconType?: string
   color?: string
   href?: string
@@ -197,7 +197,7 @@ export function Prompt({
 }: {
   description: string
   icon?: string
-  /** TODO: FA/tabler iconType values render null until atlas includes those packs. */
+  /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   iconType?: string
   actions?: string[]
   children: React.ReactNode
@@ -301,7 +301,7 @@ export function Step({
 }: {
   title: string
   icon?: string
-  /** TODO: FA/tabler iconType values render null until atlas includes those packs. */
+  /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   iconType?: string
   children: React.ReactNode
 }) {
@@ -398,7 +398,7 @@ export function Update({
   )
 }
 
-export function View({ title, icon, iconType, children }: { title: string; icon?: string; /** TODO: FA/tabler iconType values render null until atlas includes those packs. */ iconType?: string; children: React.ReactNode }) {
+export function View({ title, icon, iconType, children }: { title: string; icon?: string; /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */ iconType?: string; children: React.ReactNode }) {
   return sectionCard(
     <div className='flex flex-col gap-3'>
       <div className='flex items-center gap-2 text-sm font-semibold text-(color:--text-primary)'>

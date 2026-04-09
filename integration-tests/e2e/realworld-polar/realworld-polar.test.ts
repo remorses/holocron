@@ -133,17 +133,20 @@ test.describe("realworld-polar fixture", () => {
     await page.goto("/");
     await page.waitForTimeout(1200);
 
-    const createAccountCard = page
-      .getByText("Create Account", { exact: true })
-      .locator("xpath=ancestor::a[1]");
-    await expect(createAccountCard).toBeVisible();
-    await expect(createAccountCard.locator("svg")).toHaveCount(1);
-
     const communityCard = page
       .getByText("Join Our Community", { exact: true })
       .locator("xpath=ancestor::a[1]");
     await expect(communityCard).toBeVisible();
     await expect(communityCard.locator("svg")).toHaveCount(1);
+
+    await page.goto("/api-reference/introduction");
+    await page.waitForTimeout(1200);
+
+    const sandboxCard = page
+      .getByText("Sandbox Base URL", { exact: true })
+      .locator("xpath=ancestor::div[1]");
+    await expect(sandboxCard).toBeVisible();
+    await expect(sandboxCard.locator("svg")).toHaveCount(1);
   });
 
   test("real redirects from Polar docs.json resolve correctly", async ({ request }) => {

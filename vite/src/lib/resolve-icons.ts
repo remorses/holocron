@@ -70,8 +70,10 @@ function resolveFontAwesome(name: string, style?: string): IconAtlasEntry | null
     if (!icon) continue
     return {
       body: icon.body,
-      width: set.width ?? FA_DEFAULT_WIDTH,
-      height: set.height ?? FA_DEFAULT_HEIGHT,
+      // Font Awesome icons can override the pack-level box width. Using only
+      // the set defaults clips wide glyphs like `discord` and `user-plus`.
+      width: icon.width ?? set.width ?? FA_DEFAULT_WIDTH,
+      height: icon.height ?? set.height ?? FA_DEFAULT_HEIGHT,
     }
   }
 

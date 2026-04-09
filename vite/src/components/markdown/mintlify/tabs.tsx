@@ -6,7 +6,7 @@ import { Icon } from '../../icon.tsx'
 type TabChildProps = {
   title?: string
   value?: string
-  /** TODO: FA/tabler iconType values render null until atlas includes those packs. */
+  /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   icon?: string
   iconType?: string
   children?: React.ReactNode
