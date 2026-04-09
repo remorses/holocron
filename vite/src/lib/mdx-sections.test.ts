@@ -1,217 +1,250 @@
 import { describe, expect, test } from 'vitest'
 
 import type { Root } from 'mdast'
-
+import { mdxParse } from 'safe-mdx/parse'
 import { buildSections } from './mdx-sections.ts'
+import { formatSectionsToMdx } from './test-mdx-util.ts'
+
+function parseAndBuild(mdx: string) {
+  const root = mdxParse(mdx) as Root
+  return buildSections(root)
+}
 
 describe('buildSections', () => {
   test('splits on markdown headings', () => {
-    const root: Root = {
-      type: 'root',
-      children: [
-        { type: 'paragraph', children: [{ type: 'text', value: 'Intro' }] },
-        { type: 'heading', depth: 2, children: [{ type: 'text', value: 'Section' }] },
-        { type: 'paragraph', children: [{ type: 'text', value: 'Body' }] },
-      ],
-    }
+    const mdx = `Intro
 
-    expect(buildSections(root).map((section) => {
-      return section.contentNodes.map((node) => {
-        if (node.type === 'heading') {
-          return { type: node.type, depth: node.depth }
-        }
-        return { type: node.type }
-      })
-    })).toMatchInlineSnapshot(`
-      [
-        [
-          {
-            "type": "paragraph",
-          },
-        ],
-        [
-          {
-            "depth": 2,
-            "type": "heading",
-          },
-          {
-            "type": "paragraph",
-          },
-        ],
-      ]
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 1 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Section
+
+      Body
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+      </Aside>"
     `)
   })
 
   test('splits on Heading components', () => {
-    const root: Root = {
-      type: 'root',
-      children: [
-        { type: 'paragraph', children: [{ type: 'text', value: 'Intro' }] },
-        {
-          type: 'mdxJsxFlowElement',
-          name: 'Heading',
-          attributes: [{ type: 'mdxJsxAttribute', name: 'level', value: '2' }],
-          children: [{ type: 'text', value: 'Section' }],
-        } as unknown as Root['children'][number],
-        { type: 'paragraph', children: [{ type: 'text', value: 'Body' }] },
-      ],
-    }
+    const mdx = `Intro
 
-    expect(buildSections(root).map((section) => {
-      return section.contentNodes.map((node) => {
-        return {
-          type: node.type,
-          ...(node.type === 'mdxJsxFlowElement' ? { name: node.name } : {}),
-        }
-      })
-    })).toMatchInlineSnapshot(`
-      [
-        [
-          {
-            "type": "paragraph",
-          },
-        ],
-        [
-          {
-            "name": "Heading",
-            "type": "mdxJsxFlowElement",
-          },
-          {
-            "type": "paragraph",
-          },
-        ],
-      ]
+<Heading level="2">Section</Heading>
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 1 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      <Heading level="2">
+        Section
+      </Heading>
+
+      Body
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+      </Aside>"
     `)
   })
 
   test('does not split on JSX native headings', () => {
-    const root: Root = {
-      type: 'root',
-      children: [
-        { type: 'paragraph', children: [{ type: 'text', value: 'Intro' }] },
-        {
-          type: 'mdxJsxFlowElement',
-          name: 'h2',
-          attributes: [],
-          children: [{ type: 'text', value: 'Section' }],
-        } as unknown as Root['children'][number],
-        { type: 'paragraph', children: [{ type: 'text', value: 'Body' }] },
-      ],
-    }
+    const mdx = `Intro
 
-    expect(buildSections(root).map((section) => {
-      return section.contentNodes.map((node) => {
-        return {
-          type: node.type,
-          ...(node.type === 'mdxJsxFlowElement' ? { name: node.name } : {}),
-        }
-      })
-    })).toMatchInlineSnapshot(`
-      [
-        [
-          {
-            "type": "paragraph",
-          },
-          {
-            "name": "h2",
-            "type": "mdxJsxFlowElement",
-          },
-          {
-            "type": "paragraph",
-          },
-        ],
-      ]
+<h2>Section</h2>
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+      asideRowSpan: 1
+
+      [CONTENT]
+      Intro
+
+      <h2>
+        Section
+      </h2>
+
+      Body
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+      </Aside>"
     `)
   })
 
   test('injects HolocronAIAssistantWidget as <Aside full> if no aside exists in the first section', () => {
-    const root: Root = {
-      type: 'root',
-      children: [
-        { type: 'paragraph', children: [{ type: 'text', value: 'Intro' }] },
-        { type: 'heading', depth: 2, children: [{ type: 'text', value: 'Section' }] },
-        { type: 'paragraph', children: [{ type: 'text', value: 'Body' }] },
-      ],
-    }
+    const mdx = `Intro
 
-    const sections = buildSections(root)
-    expect(sections.map((section) => ({
-      asideNodes: section.asideNodes.map(node => ({
-        type: node.type,
-        ...(node.type === 'mdxJsxFlowElement' ? { 
-          name: (node as any).name,
-          children: (node as any).children?.map((c: any) => c.name) 
-        } : {}),
-      })),
-      asideRowSpan: section.asideRowSpan
-    }))).toMatchInlineSnapshot(`
-      [
-        {
-          "asideNodes": [],
-          "asideRowSpan": undefined,
-        },
-        {
-          "asideNodes": [
-            {
-              "children": [
-                "HolocronAIAssistantWidget",
-              ],
-              "name": "Aside",
-              "type": "mdxJsxFlowElement",
-            },
-          ],
-          "asideRowSpan": 2,
-        },
-      ]
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 1 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Section
+
+      Body
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+      </Aside>"
     `)
   })
 
   test('injects HolocronAIAssistantWidget into existing Aside in the first section', () => {
-    const root: Root = {
-      type: 'root',
-      children: [
-        { type: 'paragraph', children: [{ type: 'text', value: 'Intro' }] },
-        {
-          type: 'mdxJsxFlowElement',
-          name: 'Aside',
-          attributes: [],
-          children: [{ type: 'paragraph', children: [{ type: 'text', value: 'My aside' }] }],
-        } as unknown as Root['children'][number],
-        { type: 'heading', depth: 2, children: [{ type: 'text', value: 'Section' }] },
-        { type: 'paragraph', children: [{ type: 'text', value: 'Body' }] },
-      ],
-    }
+    const mdx = `Intro
 
-    const sections = buildSections(root)
-    expect(sections.map((section) => ({
-      asideNodes: section.asideNodes.map(node => ({
-        type: node.type,
-        ...(node.type === 'mdxJsxFlowElement' ? { 
-          name: (node as any).name,
-          children: (node as any).children?.map((c: any) => c.name || c.type) 
-        } : {}),
-      })),
-      asideRowSpan: section.asideRowSpan
-    }))).toMatchInlineSnapshot(`
-      [
-        {
-          "asideNodes": [
-            {
-              "children": [
-                "HolocronAIAssistantWidget",
-                "paragraph",
-              ],
-              "name": "Aside",
-              "type": "mdxJsxFlowElement",
-            },
-          ],
-          "asideRowSpan": undefined,
-        },
-        {
-          "asideNodes": [],
-          "asideRowSpan": undefined,
-        },
-      ]
+<Aside>
+My aside
+</Aside>
+
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        My aside
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Section
+
+      Body"
+    `)
+  })
+
+  test('injects HolocronAIAssistantWidget and handles complex full aside', () => {
+    const mdx = `Intro text.
+
+<Aside full>
+This is a full aside.
+</Aside>
+
+## Part 1
+
+Part 1 content
+
+## Part 2
+
+Part 2 content
+
+<Aside full>
+Second full aside.
+</Aside>
+
+## Part 3
+
+Part 3 content
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro text.
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Part 1
+
+      Part 1 content
+
+      --- SECTION 2 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Part 2
+
+      Part 2 content
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        This is a full aside.
+      </Aside>
+
+      --- SECTION 3 ---
+      asideRowSpan: 1
+
+      [CONTENT]
+      ## Part 3
+
+      Part 3 content
+
+      [ASIDE]
+      <Aside full>
+        Second full aside.
+      </Aside>"
+    `)
+  })
+
+  test('handles FullWidth nodes', () => {
+    const mdx = `<FullWidth>
+This should be full width.
+</FullWidth>
+
+## Following Section
+
+Content
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+      asideRowSpan: 1
+
+      [CONTENT]
+      ## Following Section
+
+      Content
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+      </Aside>"
     `)
   })
 })
