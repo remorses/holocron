@@ -48,12 +48,30 @@ test.describe("mintlify components fixture", () => {
     await expect(page.getByText('{ "expandable": true }')).toBeVisible();
     await expect(page.getByText("Request example")).toBeVisible();
     await expect(page.getByText("Response example")).toBeVisible();
+    await expect(page.getByText("Step paragraph content.")).toBeVisible();
+    await expect(page.getByText("First step list item")).toBeVisible();
+    await expect(page.getByText("pnpm dev")).toBeVisible();
     await expect(page.locator('[data-mermaid-diagram] svg')).toBeVisible();
     await expect(page.getByRole("heading", { name: "Tree" })).toBeVisible();
     await expect(page.getByText("Initial component fixture release.")).toBeVisible();
     await expect(page.getByText("Added nested content coverage")).toBeVisible();
     await expect(page.getByText("JavaScript-specific content.")).toBeVisible();
     await expect(page.getByText("Python-specific content.")).toBeVisible();
+
+    const stepBody = page
+      .getByText("Verify nested spacing", { exact: true })
+      .locator("xpath=ancestor::li[1]/div/div[2]");
+    const blockGaps = await stepBody.evaluate((node) => {
+      if (!(node instanceof HTMLElement)) return [];
+      const children = Array.from(node.children).filter(
+        (child): child is HTMLElement => child instanceof HTMLElement,
+      );
+      return children.slice(1).map((child, index) => {
+        const previous = children[index]!;
+        return Math.round(child.getBoundingClientRect().top - previous.getBoundingClientRect().bottom);
+      });
+    });
+    expect(blockGaps).toEqual([12, 12]);
   });
 
   test("server html includes key Mintlify component content", async ({ request }) => {
@@ -71,6 +89,7 @@ test.describe("mintlify components fixture", () => {
     expect(html).toContain("top-level code block");
     expect(html).toContain("Ship Faster");
     expect(html).toContain("Request example");
+    expect(html).toContain("Step paragraph content.");
     expect(html).toContain("2026-04-07");
     expect(html).toContain("Added nested content coverage");
   });

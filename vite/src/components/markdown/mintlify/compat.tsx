@@ -312,7 +312,7 @@ export function Step({
           {icon && <Icon icon={icon} iconType={iconType} size={16} />}
           {title}
         </div>
-        <div className='text-sm text-(color:--text-secondary)'>{children}</div>
+        <div className='no-bleed flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>
       </div>
     </li>
   )

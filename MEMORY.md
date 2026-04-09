@@ -1711,3 +1711,9 @@ Otherwise the text renders but the icon slot stays empty even if the name is val
 Iconify Font Awesome packs have set-level `width/height`, but some icons override
 the width individually (for example `discord`). The atlas must prefer `icon.width`
 over the pack default or wide icons render with a clipped `viewBox`.
+
+## Steps need body gap (2026-04-09)
+
+`<Step>` is another arbitrary-MDX container, so its body must own vertical rhythm
+ with `flex flex-col gap-3 no-bleed`. A plain text wrapper collapses paragraphs,
+ lists, and code blocks together because editorial nodes do not carry reliable margins.
