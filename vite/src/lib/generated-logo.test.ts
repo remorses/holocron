@@ -3,12 +3,12 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import { describe, expect, test } from 'vitest'
 import {
-  createGeneratedLogoResponse,
   decodeGeneratedLogoText,
   getGeneratedLogoPath,
   normalizeGeneratedLogoText,
   resolveLogo,
 } from './generated-logo.tsx'
+import { createGeneratedLogoResponse } from './generated-logo-response.tsx'
 
 async function getOpaqueBounds(buffer: Buffer) {
   const { data, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true })

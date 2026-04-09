@@ -61,7 +61,9 @@ function fontAwesomeKey(name: string, style?: string): string {
 function resolveFontAwesome(name: string, style?: string): IconAtlasEntry | null {
   const sets = (() => {
     if (!style) return [fa6SolidIcons, fa6BrandsIcons, fa6RegularIcons]
-    const set = FONT_AWESOME_SETS[style as FontAwesomeStyle]
+    const set = Object.hasOwn(FONT_AWESOME_SETS, style)
+      ? FONT_AWESOME_SETS[style as FontAwesomeStyle]
+      : undefined
     return set ? [set] : []
   })()
 
@@ -82,7 +84,47 @@ function resolveFontAwesome(name: string, style?: string): IconAtlasEntry | null
 
 export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
   const atlas: IconAtlas = { icons: {} }
+  const unresolvedAmbiguous = new Set<string>()
+
   for (const ref of refs) {
+    if (ref.style || (ref.library !== 'lucide' && ref.library !== 'fontawesome')) {
+      continue
+    }
+    const hasFallback = refs.some((candidate) => {
+      return candidate !== ref && !candidate.style && candidate.name === ref.name && candidate.library !== ref.library
+    })
+    if (!hasFallback) {
+      continue
+    }
+
+    const lucideEntry = resolveLucide(ref.name)
+    const fontAwesomeEntry = resolveFontAwesome(ref.name)
+
+    if (lucideEntry) {
+      atlas.icons[`lucide:${ref.name}`] = lucideEntry
+    }
+    if (fontAwesomeEntry) {
+      atlas.icons[fontAwesomeKey(ref.name)] = fontAwesomeEntry
+    }
+    if (!lucideEntry && !fontAwesomeEntry) {
+      unresolvedAmbiguous.add(ref.name)
+    }
+  }
+
+  for (const name of unresolvedAmbiguous) {
+    console.warn(`[holocron] icon "${name}" was not found in lucide or fontawesome.`)
+  }
+
+  for (const ref of refs) {
+    if (!ref.style && (ref.library === 'lucide' || ref.library === 'fontawesome')) {
+      const hasFallback = refs.some((candidate) => {
+        return candidate !== ref && !candidate.style && candidate.name === ref.name && candidate.library !== ref.library
+      })
+      if (hasFallback) {
+        continue
+      }
+    }
+
     if (ref.library === 'lucide') {
       const entry = resolveLucide(ref.name)
       if (!entry) {

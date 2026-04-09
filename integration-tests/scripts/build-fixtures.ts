@@ -42,7 +42,7 @@ function buildFixture(rootRel: string): Promise<void> {
       ["exec", "vite", "build", rootRel, "--config", configPath],
       {
         cwd: integrationTestsDir,
-        stdio: "inherit",
+        stdio: ["ignore", "ignore", "inherit"],
         env: {
           ...process.env,
           E2E_RUN_ID: runId,
