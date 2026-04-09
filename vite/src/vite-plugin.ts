@@ -22,6 +22,7 @@ import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
+import { createFilesystemContentSource, type HolocronContentSource } from './lib/content-source.ts'
 import { collectIconRefs } from './lib/collect-icons.ts'
 import { resolveIconSvgs, type IconAtlas } from './lib/resolve-icons.ts'
 import { collectMdxIconRefs } from './lib/mdx-processor.ts'
@@ -56,7 +57,7 @@ function rawImportPlugin(): Plugin {
   return {
     name: 'holocron:raw-import-fix',
     enforce: 'pre',
-    load(id) {
+    async load(id) {
       if (!/[?&]raw(?:=|&|$)/.test(id)) {
         return
       }
@@ -94,6 +95,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let config: HolocronConfig
   let syncResult: SyncResult
   let iconAtlas: IconAtlas
+  let contentSource: HolocronContentSource
   let pagesDir: string
   let publicDirPath: string
   let distDirPath: string
@@ -175,11 +177,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       config = readConfig({ root, configPath: options.configPath })
       configFilePath = resolveConfigPath({ root, configPath: options.configPath })
+      contentSource = createFilesystemContentSource({
+        root,
+        pagesDir,
+        distDir: distDirPath,
+      })
 
       // Sync MDX + process images at build time. The returned navigation
       // tree contains pre-processed MDX (paths rewritten, dimensions injected).
       syncResult = await syncNavigation({
         config,
+        source: contentSource,
         pagesDir,
         publicDir: publicDirPath,
         projectRoot: root,
@@ -229,7 +237,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
     },
 
-    load(id) {
+    async load(id) {
       if (id === RESOLVED_CONFIG) {
         // Register the config file as a dependency so it enters the module
         // graph. When the file changes, Vite associates the change with this
@@ -250,11 +258,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // Register every known MDX file as a dependency so edits to existing
         // pages flow through the module graph (same mechanism as config above).
         // New MDX files that don't exist yet are handled separately in hotUpdate.
-        for (const slug of Object.keys(syncResult.mdxContent)) {
-          for (const ext of ['.mdx', '.md']) {
-            const mdxPath = path.join(pagesDir, slug + ext)
-            if (fs.existsSync(mdxPath)) {
-              this.addWatchFile(mdxPath)
+        if (contentSource.getWatchFiles) {
+          for (const watchFile of await contentSource.getWatchFiles()) {
+            this.addWatchFile(watchFile)
+          }
+        } else {
+          for (const slug of Object.keys(syncResult.mdxContent)) {
+            for (const ext of ['.mdx', '.md']) {
+              const mdxPath = path.join(pagesDir, slug + ext)
+              if (fs.existsSync(mdxPath)) {
+                this.addWatchFile(mdxPath)
+              }
             }
           }
         }
@@ -332,6 +346,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
         syncResult = await syncNavigation({
           config,
+          source: contentSource,
           pagesDir,
           publicDir: publicDirPath,
           projectRoot: root,

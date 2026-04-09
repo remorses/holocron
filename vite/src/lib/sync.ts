@@ -16,7 +16,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import { gitBlobSha } from './git-sha.ts'
+import {
+  cacheKeys,
+  createFilesystemContentSource,
+  type HolocronContentSource,
+} from './content-source.ts'
 import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
@@ -30,7 +34,6 @@ import {
 } from '../config.ts'
 import {
   type Navigation,
-  type NavigationWithSwitchers,
   type NavTab,
   type NavGroup,
   type NavIcon,
@@ -57,9 +60,6 @@ function collectAllPagesFromTab(tab: NavTab): NavPage[] {
   walk(tab.groups)
   return pages
 }
-
-const CACHE_FILENAME = 'holocron-cache.json'
-const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
@@ -143,24 +143,34 @@ export type SyncResult = {
  */
 export async function syncNavigation({
   config,
+  source,
   pagesDir,
   publicDir,
   projectRoot,
   distDir,
 }: {
   config: HolocronConfig
-  pagesDir: string
+  source?: HolocronContentSource
+  pagesDir?: string
   publicDir: string
   projectRoot: string
-  distDir: string
+  distDir?: string
 }): Promise<SyncResult> {
+  const effectivePagesDir = pagesDir ?? projectRoot
+  const effectiveDistDir = distDir ?? path.join(projectRoot, 'dist')
+  const contentSource = source ?? createFilesystemContentSource({
+    root: projectRoot,
+    pagesDir: effectivePagesDir,
+    distDir: effectiveDistDir,
+  })
+
   // 1. Load caches from previous build
-  const cachePath = path.join(distDir, CACHE_FILENAME)
-  const mdxCachePath = path.join(distDir, MDX_CACHE_FILENAME)
-  const oldNav = readCache(cachePath)
+  const sourceFiles = await contentSource.listFiles()
+  const sourceFilesBySlug = new Map(sourceFiles.map((file) => [file.slug, file]))
+  const oldNav = await readNavigationCache(contentSource)
   const oldPages = oldNav ? buildPageIndex(oldNav) : new Map<string, NavPage>()
-  const oldMdxContent = readMdxCache(mdxCachePath)
-  const imageCache = loadImageCache({ distDir })
+  const oldMdxContent = await readMdxCache(contentSource)
+  const imageCache = await loadImageCache({ source: contentSource })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
@@ -175,15 +185,14 @@ export async function syncNavigation({
 
   // 2. Enrich a single page slug
   async function enrichPage(slug: string): Promise<NavPage> {
-    const mdxPath = resolveMdxPath(pagesDir, slug)
-    if (!mdxPath) {
+    const sourceFile = sourceFilesBySlug.get(slug)
+    if (!sourceFile) {
       if (redirectBackedPageSlugs.has(slug)) {
         return createRedirectBackedPage(slug)
       }
-      throw new Error(`MDX file not found for page "${slug}". Looked in ${pagesDir}`)
+      throw new Error(`MDX file not found for page "${slug}". Looked in ${effectivePagesDir}`)
     }
-    const content = fs.readFileSync(mdxPath, 'utf-8')
-    const sha = gitBlobSha(content)
+    const sha = sourceFile.checksum
 
     // Cache hit — MDX unchanged and we have cached MDX content
     const cached = oldPages.get(slug)
@@ -195,10 +204,15 @@ export async function syncNavigation({
     }
 
     // Cache miss — full processing
+    const content = await contentSource.readFile(slug)
+    if (content === undefined) {
+      throw new Error(`MDX file not found for page "${slug}". Looked in ${effectivePagesDir}`)
+    }
     const processed = processMdx(content)
     parsedCount++
 
-    const mdxDir = path.dirname(mdxPath)
+    const mdxPath = resolveMdxPath(effectivePagesDir, slug)
+    const mdxDir = mdxPath ? path.dirname(mdxPath) : effectivePagesDir
     const resolvedImages = new Map<string, ResolvedImage>()
 
     // Resolve and process each image
@@ -362,9 +376,9 @@ export async function syncNavigation({
   }
 
   // 5. Write caches
-  writeCache(cachePath, navigation)
-  writeMdxCache(mdxCachePath, mdxContent)
-  saveImageCache({ distDir, cache: imageCache })
+  await writeNavigationCache(contentSource, navigation)
+  await writeMdxCache(contentSource, mdxContent)
+  await saveImageCache({ source: contentSource, cache: imageCache })
 
   return { navigation, switchers, mdxContent, parsedCount, cachedCount }
 }
@@ -466,12 +480,13 @@ type MdxCacheEnvelope = {
   content: Record<string, string>
 }
 
-function readCache(cachePath: string): Navigation | null {
-  if (!fs.existsSync(cachePath)) {
+async function readNavigationCache(source: Pick<HolocronContentSource, 'getCache'>): Promise<Navigation | null> {
+  const rawCache = await source.getCache(cacheKeys.site)
+  if (!rawCache) {
     return null
   }
   try {
-    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    const raw = JSON.parse(rawCache)
     // Package-version envelope — reject caches from older versions so new
     // fields (e.g. page `icon`) aren't silently missing from cached NavPage
     // objects. Every publish naturally invalidates stale caches.
@@ -484,19 +499,23 @@ function readCache(cachePath: string): Navigation | null {
   }
 }
 
-function writeCache(cachePath: string, nav: Navigation): void {
-  const dir = path.dirname(cachePath)
-  fs.mkdirSync(dir, { recursive: true })
+async function writeNavigationCache(
+  source: Pick<HolocronContentSource, 'setCache'>,
+  nav: Navigation,
+): Promise<void> {
   const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, navigation: nav }
-  fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
+  await source.setCache(cacheKeys.site, JSON.stringify(envelope, null, 2))
 }
 
-function readMdxCache(cachePath: string): Record<string, string> {
-  if (!fs.existsSync(cachePath)) {
+async function readMdxCache(
+  source: Pick<HolocronContentSource, 'getCache'>,
+): Promise<Record<string, string>> {
+  const rawCache = await source.getCache(cacheKeys.processedMdx)
+  if (!rawCache) {
     return {}
   }
   try {
-    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    const raw = JSON.parse(rawCache)
     if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
       return (raw as MdxCacheEnvelope).content
     }
@@ -506,11 +525,12 @@ function readMdxCache(cachePath: string): Record<string, string> {
   }
 }
 
-function writeMdxCache(cachePath: string, content: Record<string, string>): void {
-  const dir = path.dirname(cachePath)
-  fs.mkdirSync(dir, { recursive: true })
+async function writeMdxCache(
+  source: Pick<HolocronContentSource, 'setCache'>,
+  content: Record<string, string>,
+): Promise<void> {
   const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content }
-  fs.writeFileSync(cachePath, JSON.stringify(envelope))
+  await source.setCache(cacheKeys.processedMdx, JSON.stringify(envelope))
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */

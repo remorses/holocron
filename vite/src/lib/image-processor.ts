@@ -10,12 +10,11 @@
  */
 
 import fs from 'node:fs'
-import path from 'node:path'
 import crypto from 'node:crypto'
+import { cacheKeys, type HolocronContentSource } from './content-source.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 
 const PLACEHOLDER_WIDTH = 16
-const CACHE_FILENAME = 'holocron-images.json'
 
 export type ImageMeta = {
   width: number
@@ -25,7 +24,7 @@ export type ImageMeta = {
 }
 
 /** Cache file structure: git SHA → processed image data */
-type ImageCache = Record<string, ImageMeta>
+export type ImageCache = Record<string, ImageMeta>
 
 type ImageCacheEnvelope = {
   version: string
@@ -36,13 +35,13 @@ type ImageCacheEnvelope = {
  * Load the image cache from a previous build.
  * Returns a mutable record that callers write to during processing.
  */
-export function loadImageCache({ distDir }: { distDir: string }): ImageCache {
-  const cachePath = path.join(distDir, CACHE_FILENAME)
-  if (!fs.existsSync(cachePath)) {
+export async function loadImageCache({ source }: { source: Pick<HolocronContentSource, 'getCache'> }): Promise<ImageCache> {
+  const rawCache = await source.getCache(cacheKeys.image)
+  if (!rawCache) {
     return {}
   }
   try {
-    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    const raw = JSON.parse(rawCache)
     if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
       return (raw as ImageCacheEnvelope).images
     }
@@ -52,12 +51,16 @@ export function loadImageCache({ distDir }: { distDir: string }): ImageCache {
   }
 }
 
-/** Write the image cache back to dist/ */
-export function saveImageCache({ distDir, cache }: { distDir: string; cache: ImageCache }): void {
-  const cachePath = path.join(distDir, CACHE_FILENAME)
-  fs.mkdirSync(path.dirname(cachePath), { recursive: true })
+/** Write the image cache back through the content source cache interface. */
+export async function saveImageCache({
+  source,
+  cache,
+}: {
+  source: Pick<HolocronContentSource, 'setCache'>
+  cache: ImageCache
+}): Promise<void> {
   const envelope: ImageCacheEnvelope = { version: PACKAGE_VERSION, images: cache }
-  fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
+  await source.setCache(cacheKeys.image, JSON.stringify(envelope, null, 2))
 }
 
 /**

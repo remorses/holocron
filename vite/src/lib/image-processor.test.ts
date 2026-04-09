@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, test } from 'vitest'
+import { createFilesystemContentSource } from './content-source.ts'
 import { loadImageCache, processImage, saveImageCache } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 
@@ -50,8 +51,11 @@ describe('processImage', () => {
     expect(Buffer.byteLength(meta!.placeholder)).toBeLessThan(300)
   })
 
-  test('saveImageCache writes the current package version envelope', () => {
-    const distDir = createTempDir()
+  test('saveImageCache writes the current package version envelope', async () => {
+    const root = createTempDir()
+    const distDir = path.join(root, 'dist')
+    fs.mkdirSync(distDir, { recursive: true })
+    const source = createFilesystemContentSource({ root, pagesDir: root, distDir })
     const cache = {
       abc123: {
         width: 12,
@@ -60,7 +64,7 @@ describe('processImage', () => {
       },
     }
 
-    saveImageCache({ distDir, cache })
+    await saveImageCache({ source, cache })
 
     const raw = JSON.parse(fs.readFileSync(path.join(distDir, 'holocron-images.json'), 'utf-8'))
     expect(raw).toEqual({
@@ -69,8 +73,10 @@ describe('processImage', () => {
     })
   })
 
-  test('loadImageCache ignores stale package versions', () => {
-    const distDir = createTempDir()
+  test('loadImageCache ignores stale package versions', async () => {
+    const root = createTempDir()
+    const distDir = path.join(root, 'dist')
+    fs.mkdirSync(distDir, { recursive: true })
     fs.writeFileSync(
       path.join(distDir, 'holocron-images.json'),
       JSON.stringify({
@@ -84,7 +90,8 @@ describe('processImage', () => {
         },
       }),
     )
+    const source = createFilesystemContentSource({ root, pagesDir: root, distDir })
 
-    expect(loadImageCache({ distDir })).toEqual({})
+    expect(await loadImageCache({ source })).toEqual({})
   })
 })
