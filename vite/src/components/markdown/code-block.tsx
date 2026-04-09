@@ -6,13 +6,10 @@
  */
 
 import React, { useMemo } from 'react'
+import './prism-languages.ts'
 import * as PrismModule from 'prismjs'
-import 'prismjs/components/prism-jsx'
-import 'prismjs/components/prism-tsx'
-import 'prismjs/components/prism-bash'
-import 'prismjs/components/prism-json'
 
-const Prism = ((PrismModule as { default?: unknown }).default ?? PrismModule) as typeof PrismModule
+const Prism = PrismModule.default ?? PrismModule
 
 /* Custom "diagram" language for ASCII/Unicode box-drawing diagrams.
    Tokenizes box-drawing chars as neutral structure, text as highlighted labels. */
