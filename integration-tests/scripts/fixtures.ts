@@ -34,6 +34,27 @@ export const integrationTestsDir = path.resolve(
 
 export const fixturesDir = path.join(integrationTestsDir, "fixtures");
 
+function sanitizeRunIdForPath(runId: string): string {
+  return runId.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+export function ensureE2ERunId(): string {
+  const existing = process.env["E2E_RUN_ID"]?.trim();
+  if (existing) return existing;
+
+  const runId = `${Date.now().toString(36)}-${process.pid.toString(36)}`;
+  process.env["E2E_RUN_ID"] = runId;
+  return runId;
+}
+
+export function getFixtureCacheDir(rootDir: string, runId = ensureE2ERunId()): string {
+  return path.join(rootDir, "node_modules/.vite", sanitizeRunIdForPath(runId));
+}
+
+export function getFixtureOutDir(rootDir: string, runId = ensureE2ERunId()): string {
+  return path.join(rootDir, ".e2e-dist", sanitizeRunIdForPath(runId));
+}
+
 export function discoverFixtures(): Fixture[] {
   if (!fs.existsSync(fixturesDir)) {
     return [];

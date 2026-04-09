@@ -5,8 +5,7 @@
   "scripts": {
     "update-realworld-polar": "tsx scripts/update-realworld-polar.ts",
     "test-e2e": "playwright test",
-    "pretest-e2e-start": "tsx scripts/build-fixtures.ts",
-    "test-e2e-start": "E2E_START=1 playwright test"
+    "test-e2e-start": "tsx scripts/test-e2e-start.ts"
   },
   "dependencies": {
     "@holocron.so/vite": "workspace:^",

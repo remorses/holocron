@@ -1086,6 +1086,14 @@ plugin itself. Kept in the plugin for now because it's a strictly safer
 default for anyone running multiple holocron sites concurrently (e.g.
 monorepo with parallel docs previews).
 
+### Run-scoped cache/dist for e2e
+
+Per-fixture roots are not enough when two agents run the SAME fixture at
+once. The integration harness now passes an `E2E_RUN_ID` +
+`E2E_FIXTURE_ROOT` into Vite and writes cache/build outputs under
+`node_modules/.vite/<run>` and `.e2e-dist/<run>/` so concurrent runs do
+not corrupt each other's deps or built server entries.
+
 ### Fixture architecture quick-ref for future sessions
 
 ```

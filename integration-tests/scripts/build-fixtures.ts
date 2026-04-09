@@ -8,12 +8,19 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { discoverFixtures, integrationTestsDir } from "./fixtures.ts";
+import {
+  discoverFixtures,
+  ensureE2ERunId,
+  getFixtureOutDir,
+  integrationTestsDir,
+} from "./fixtures.ts";
 
-function cleanFixtureDist(rootDir: string): void {
-  const distDir = path.join(rootDir, "dist");
-  if (fs.existsSync(distDir)) {
-    fs.rmSync(distDir, { recursive: true, force: true });
+const runId = ensureE2ERunId();
+
+function cleanFixtureBuildOutput(rootDir: string): void {
+  const outDir = getFixtureOutDir(rootDir, runId);
+  if (fs.existsSync(outDir)) {
+    fs.rmSync(outDir, { recursive: true, force: true });
   }
   const tsbuildinfo = path.join(rootDir, "tsconfig.tsbuildinfo");
   if (fs.existsSync(tsbuildinfo)) {
@@ -21,25 +28,25 @@ function cleanFixtureDist(rootDir: string): void {
   }
 }
 
-function writeMjsCompatibilityAliases(rootDir: string): void {
-  for (const relativeEntry of ["dist/rsc/index", "dist/ssr/index"]) {
-    const mjsPath = path.join(rootDir, `${relativeEntry}.mjs`);
-    const jsPath = path.join(rootDir, `${relativeEntry}.js`);
+function writeMjsCompatibilityAliases(outDir: string): void {
+  for (const relativeEntry of ["rsc/index", "ssr/index"]) {
+    const mjsPath = path.join(outDir, `${relativeEntry}.mjs`);
+    const jsPath = path.join(outDir, `${relativeEntry}.js`);
     if (fs.existsSync(mjsPath) && !fs.existsSync(jsPath)) {
       fs.copyFileSync(mjsPath, jsPath);
     }
   }
 }
 
-function rewriteMjsEntryImports(rootDir: string): void {
+function rewriteMjsEntryImports(outDir: string): void {
   const rewrites = [
     {
-      filePath: path.join(rootDir, "dist/rsc/index.mjs"),
+      filePath: path.join(outDir, "rsc/index.mjs"),
       from: '../ssr/index.js',
       to: '../ssr/index.mjs',
     },
     {
-      filePath: path.join(rootDir, "dist/ssr/index.mjs"),
+      filePath: path.join(outDir, "ssr/index.mjs"),
       from: '../rsc/index.js',
       to: '../rsc/index.mjs',
     },
@@ -70,6 +77,8 @@ function buildFixture(rootRel: string): Promise<void> {
         stdio: "inherit",
         env: {
           ...process.env,
+          E2E_RUN_ID: runId,
+          E2E_FIXTURE_ROOT: path.join(integrationTestsDir, rootRel),
           // Integration tests run the built server from the local workspace,
           // so they do not need Spiceflow's standalone node_modules tracing.
           // Skipping it also avoids hard-coding the server entry extension
@@ -83,8 +92,9 @@ function buildFixture(rootRel: string): Promise<void> {
       if (code !== 0) {
         reject(new Error(`[build-fixtures] vite build failed for ${rootRel} (exit ${code})`));
       } else {
-        writeMjsCompatibilityAliases(path.join(integrationTestsDir, rootRel));
-        rewriteMjsEntryImports(path.join(integrationTestsDir, rootRel));
+        const outDir = getFixtureOutDir(path.join(integrationTestsDir, rootRel), runId);
+        writeMjsCompatibilityAliases(outDir);
+        rewriteMjsEntryImports(outDir);
         resolve();
       }
     });
@@ -99,16 +109,16 @@ if (fixtures.length === 0) {
 }
 
 console.log(
-  `[build-fixtures] building ${fixtures.length} fixture(s) in parallel: ${fixtures
+  `[build-fixtures] run ${runId}: building ${fixtures.length} fixture(s) in parallel: ${fixtures
     .map((f) => f.name)
     .join(", ")}`,
 );
 
-// Each fixture writes to its own dist/ and has its own scoped Vite cache
-// (via scopedCacheDir() in vite.config.ts), so builds are fully isolated
-// and can run concurrently.
+// Each fixture writes to its own run-scoped outDir and has its own run-scoped
+// Vite cache (via scopedRunDirs() in vite.config.ts), so builds are isolated
+// even when two agents build the same fixture root concurrently.
 for (const fixture of fixtures) {
-  cleanFixtureDist(fixture.rootDir);
+  cleanFixtureBuildOutput(fixture.rootDir);
 }
 await Promise.all(fixtures.map((fixture) => buildFixture(fixture.rootRel)));
 
