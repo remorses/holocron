@@ -1,5 +1,9 @@
 import { spawn } from "node:child_process";
-import { ensureE2ERunId, integrationTestsDir } from "./fixtures.ts";
+import {
+  ensureE2ERunId,
+  integrationTestsDir,
+} from "./fixtures.ts";
+import { cleanupCurrentRunArtifacts } from "./cleanup-e2e.ts";
 
 function runStep(command: string, args: string[], env: NodeJS.ProcessEnv): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -33,5 +37,9 @@ const env = {
   E2E_START: "1",
 };
 
-await runStep("pnpm", ["exec", "tsx", "scripts/build-fixtures.ts"], env);
-await runStep("pnpm", ["exec", "playwright", "test", ...forwardedArgs], env);
+try {
+  await runStep("pnpm", ["exec", "tsx", "scripts/build-fixtures.ts"], env);
+  await runStep("pnpm", ["exec", "playwright", "test", ...forwardedArgs], env);
+} finally {
+  cleanupCurrentRunArtifacts();
+}

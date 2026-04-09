@@ -12,6 +12,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { PACKAGE_VERSION } from './package-version.ts'
 
 const PLACEHOLDER_WIDTH = 16
 const CACHE_FILENAME = 'holocron-images.json'
@@ -26,6 +27,11 @@ export type ImageMeta = {
 /** Cache file structure: git SHA → processed image data */
 type ImageCache = Record<string, ImageMeta>
 
+type ImageCacheEnvelope = {
+  version: string
+  images: ImageCache
+}
+
 /**
  * Load the image cache from a previous build.
  * Returns a mutable record that callers write to during processing.
@@ -36,7 +42,11 @@ export function loadImageCache({ distDir }: { distDir: string }): ImageCache {
     return {}
   }
   try {
-    return JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as ImageCache
+    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
+      return (raw as ImageCacheEnvelope).images
+    }
+    return {}
   } catch {
     return {}
   }
@@ -46,7 +56,8 @@ export function loadImageCache({ distDir }: { distDir: string }): ImageCache {
 export function saveImageCache({ distDir, cache }: { distDir: string; cache: ImageCache }): void {
   const cachePath = path.join(distDir, CACHE_FILENAME)
   fs.mkdirSync(path.dirname(cachePath), { recursive: true })
-  fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2))
+  const envelope: ImageCacheEnvelope = { version: PACKAGE_VERSION, images: cache }
+  fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 
 /**

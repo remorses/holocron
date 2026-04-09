@@ -1,5 +1,5 @@
 /**
- * Fixture discovery for integration tests.
+ * Fixture discovery and run-scoped artifact paths for integration tests.
  *
  * Every subdirectory of `fixtures/` that contains a `holocron.jsonc` or
  * `docs.json` is treated as a fixture: a self-contained mini-site with its
@@ -53,6 +53,38 @@ export function getFixtureCacheDir(rootDir: string, runId = ensureE2ERunId()): s
 
 export function getFixtureOutDir(rootDir: string, runId = ensureE2ERunId()): string {
   return path.join(rootDir, ".e2e-dist", sanitizeRunIdForPath(runId));
+}
+
+function removeDirIfEmpty(dir: string): void {
+  if (!fs.existsSync(dir)) {
+    return;
+  }
+
+  if (fs.readdirSync(dir).length === 0) {
+    fs.rmdirSync(dir);
+  }
+}
+
+export function cleanupFixtureRunArtifacts(rootDir: string, runId = ensureE2ERunId()): void {
+  const runScopedDirs = [
+    getFixtureCacheDir(rootDir, runId),
+    getFixtureOutDir(rootDir, runId),
+  ];
+
+  for (const dir of runScopedDirs) {
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  removeDirIfEmpty(path.join(rootDir, ".e2e-dist"));
+  removeDirIfEmpty(path.join(rootDir, "node_modules", ".vite"));
+}
+
+export function cleanupAllFixtureRunArtifacts(runId = ensureE2ERunId()): void {
+  for (const fixture of discoverFixtures()) {
+    cleanupFixtureRunArtifacts(fixture.rootDir, runId);
+  }
 }
 
 export function discoverFixtures(): Fixture[] {

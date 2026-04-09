@@ -16,10 +16,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import { createRequire } from 'node:module'
 import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
+import { PACKAGE_VERSION } from './package-version.ts'
 import {
   type HolocronConfig,
   type ConfigNavTab,
@@ -60,8 +60,6 @@ function collectAllPagesFromTab(tab: NavTab): NavPage[] {
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
-const require = createRequire(import.meta.url)
-const { version: PACKAGE_VERSION } = require('../../package.json') as { version: string }
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 

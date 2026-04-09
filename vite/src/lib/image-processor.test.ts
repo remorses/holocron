@@ -2,7 +2,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, test } from 'vitest'
-import { processImage } from './image-processor.ts'
+import { loadImageCache, processImage, saveImageCache } from './image-processor.ts'
+import { PACKAGE_VERSION } from './package-version.ts'
 
 const roots: string[] = []
 
@@ -12,6 +13,12 @@ function createTempImage(svg: string): string {
   const filePath = path.join(root, 'image.svg')
   fs.writeFileSync(filePath, svg)
   return filePath
+}
+
+function createTempDir(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-image-processor-test-'))
+  roots.push(root)
+  return root
 }
 
 afterEach(() => {
@@ -41,5 +48,43 @@ describe('processImage', () => {
     expect(meta?.height).toBe(800)
     expect(meta?.placeholder.startsWith('data:image/webp;base64,')).toBe(true)
     expect(Buffer.byteLength(meta!.placeholder)).toBeLessThan(300)
+  })
+
+  test('saveImageCache writes the current package version envelope', () => {
+    const distDir = createTempDir()
+    const cache = {
+      abc123: {
+        width: 12,
+        height: 34,
+        placeholder: 'data:image/webp;base64,abc',
+      },
+    }
+
+    saveImageCache({ distDir, cache })
+
+    const raw = JSON.parse(fs.readFileSync(path.join(distDir, 'holocron-images.json'), 'utf-8'))
+    expect(raw).toEqual({
+      version: PACKAGE_VERSION,
+      images: cache,
+    })
+  })
+
+  test('loadImageCache ignores stale package versions', () => {
+    const distDir = createTempDir()
+    fs.writeFileSync(
+      path.join(distDir, 'holocron-images.json'),
+      JSON.stringify({
+        version: '0.0.0-stale',
+        images: {
+          stale: {
+            width: 1,
+            height: 1,
+            placeholder: 'data:image/webp;base64,stale',
+          },
+        },
+      }),
+    )
+
+    expect(loadImageCache({ distDir })).toEqual({})
   })
 })

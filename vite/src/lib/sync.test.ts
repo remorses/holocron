@@ -4,6 +4,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { createServer, type Server } from 'node:http'
 import { syncNavigation } from './sync.ts'
+import { PACKAGE_VERSION } from './package-version.ts'
 import { readConfig } from '../config.ts'
 import { collectAllPages, findPage, buildPageIndex } from '../navigation.ts'
 
@@ -426,6 +427,55 @@ title: Updated Title
         "Another Heading",
       ]
     `)
+  })
+
+  test('cache invalidation when image cache version is stale', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Image Page
+---
+
+<img src="./dot.svg" />`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    fs.writeFileSync(
+      path.join(project.pagesDir, 'dot.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" fill="#38bdf8" /></svg>`,
+    )
+
+    fs.writeFileSync(
+      path.join(project.distDir, 'holocron-images.json'),
+      JSON.stringify({
+        version: '0.0.0-stale',
+        images: {
+          stale: {
+            width: 1,
+            height: 1,
+            placeholder: 'data:image/webp;base64,stale',
+          },
+        },
+      }),
+    )
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.mdxContent.page).toContain('<PixelatedImage')
+    expect(result.mdxContent.page).not.toContain('data:image/webp;base64,stale')
+
+    const imageCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-images.json'), 'utf-8'))
+    expect(imageCache.version).toBe(PACKAGE_VERSION)
+    expect(Object.keys(imageCache.images)).toHaveLength(1)
   })
 
   test('throws when MDX file is missing', async () => {

@@ -94,6 +94,7 @@ const projects = fixturePorts.map(({ fixture, port }) => ({
 }));
 
 export default defineConfig({
+  globalTeardown: "./scripts/cleanup-e2e.ts",
   use: {
     actionTimeout: 5000,
     navigationTimeout: 10000,
