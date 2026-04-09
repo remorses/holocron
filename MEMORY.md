@@ -1731,3 +1731,8 @@ over the pack default or wide icons render with a clipped `viewBox`.
 Inline image placeholders were costing about 2.3 KB per image occurrence in rewritten MDX,
  which bloats `.md` exports and the chat assistant's current-page prompt. Switching the build-time
  placeholder from 64px PNG to 32px WebP cut the fixture benchmark average to about 215 bytes.
+
+## Remote image tests need local server (2026-04-09)
+
+Live remote image URLs are flaky in e2e because docs sites can block or vary image fetches at build time.
+Cover remote placeholder generation in `sync.test.ts` with a tiny local HTTP image server, not a third-party URL.

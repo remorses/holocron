@@ -27,7 +27,7 @@ export type ProcessedMdx = {
   icon?: string
   frontmatter: PageFrontmatter
   headings: NavHeading[]
-  /** All non-external image srcs found in the MDX (relative + absolute) */
+  /** All image srcs that need build-time processing */
   imageSrcs: string[]
   /** The parsed mdast tree (reused for image rewriting without re-parsing) */
   mdast: Root
@@ -150,7 +150,7 @@ function collectImageSrcs(root: Root): string[] {
       }
       if (isJsxImageElement(node)) {
         const src = getJsxAttrValue(node, 'src')
-        if (src && !isExternal(src)) {
+        if (src) {
           srcs.push(src)
         }
       }
@@ -176,7 +176,8 @@ export type ResolvedImage = {
 /**
  * Mutate the mdast tree in place:
  * - Markdown images (![alt](src)) → converted to mdxJsxFlowElement PixelatedImage
- * - JSX PixelatedImage/img → src updated, width/height/placeholder attrs added
+ * - Root-level JSX img → converted to PixelatedImage while preserving authored attrs
+ * - Existing JSX PixelatedImage → src updated, width/height/placeholder attrs added
  *
  * Then serializes the mutated tree back to MDX string.
  */
@@ -199,7 +200,10 @@ export function rewriteMdxImages(mdast: Root, images: Map<string, ResolvedImage>
  * only an image gets replaced by a JSX element (1:1), but a paragraph
  * with mixed content stays as-is (image inside converted to inline JSX).
  */
-function rewriteNode(node: RootContent, images: Map<string, ResolvedImage>): RootContent[] {
+function rewriteNode(
+  node: RootContent,
+  images: Map<string, ResolvedImage>,
+): RootContent[] {
   // Paragraph containing only a single image → replace with JSX block element
   if (node.type === 'paragraph' && node.children.length === 1) {
     const child = node.children[0]
@@ -230,10 +234,15 @@ function rewriteNode(node: RootContent, images: Map<string, ResolvedImage>): Roo
     const src = getJsxAttrValue(node, 'src')
     if (src && images.has(src)) {
       const resolved = images.get(src)!
+      if (node.type === 'mdxJsxFlowElement' && node.name === 'img') {
+        return [createPixelatedImageNodeFromJsxImage(node, resolved)]
+      }
       setJsxAttr(node, 'src', resolved.publicSrc)
-      setJsxAttr(node, 'width', String(resolved.meta.width))
-      setJsxAttr(node, 'height', String(resolved.meta.height))
-      setJsxAttr(node, 'placeholder', resolved.meta.placeholder)
+      if (node.name === 'PixelatedImage') {
+        setJsxAttr(node, 'width', String(resolved.meta.width))
+        setJsxAttr(node, 'height', String(resolved.meta.height))
+        setJsxAttr(node, 'placeholder', resolved.meta.placeholder)
+      }
     }
     return [node]
   }
@@ -271,6 +280,25 @@ function createPixelatedImageNode({ src, alt, meta }: { src: string; alt: string
       { type: 'mdxJsxAttribute', name: 'height', value: String(meta.height) },
       { type: 'mdxJsxAttribute', name: 'placeholder', value: meta.placeholder },
     ],
+    children: [],
+  } as unknown as RootContent
+}
+
+function createPixelatedImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): RootContent {
+  const attributes = copyJsxAttrsExcept(node, ['src', 'placeholder', 'intrinsicWidth', 'intrinsicHeight'])
+  attributes.push({ type: 'mdxJsxAttribute', name: 'src', value: resolved.publicSrc })
+  if (!attributes.some((attr) => attr.type === 'mdxJsxAttribute' && attr.name === 'alt')) {
+    attributes.push({ type: 'mdxJsxAttribute', name: 'alt', value: '' })
+  }
+  attributes.push(
+    { type: 'mdxJsxAttribute', name: 'intrinsicWidth', value: String(resolved.meta.width) },
+    { type: 'mdxJsxAttribute', name: 'intrinsicHeight', value: String(resolved.meta.height) },
+    { type: 'mdxJsxAttribute', name: 'placeholder', value: resolved.meta.placeholder },
+  )
+  return {
+    type: 'mdxJsxFlowElement',
+    name: 'PixelatedImage',
+    attributes,
     children: [],
   } as unknown as RootContent
 }
@@ -329,6 +357,13 @@ function setJsxAttr(node: JsxNode, attrName: string, value: string): void {
   } else {
     node.attributes.push({ type: 'mdxJsxAttribute', name: attrName, value })
   }
+}
+
+function copyJsxAttrsExcept(node: JsxNode, attrNames: string[]): NonNullable<JsxNode['attributes']> {
+  const attrNameSet = new Set(attrNames)
+  return (node.attributes ?? []).filter((attr) => {
+    return !(attr.type === 'mdxJsxAttribute' && attr.name && attrNameSet.has(attr.name))
+  })
 }
 
 /* ── Heading text extraction ────────────────────────────────────────── */

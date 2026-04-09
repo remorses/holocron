@@ -64,7 +64,17 @@ export async function processImage({
     return undefined
   }
 
-  const buf = fs.readFileSync(filePath)
+  return processImageBuffer({ buffer: fs.readFileSync(filePath), cache })
+}
+
+export async function processImageBuffer({
+  buffer,
+  cache,
+}: {
+  buffer: Buffer
+  cache: ImageCache
+}): Promise<ImageMeta | undefined> {
+  const buf = buffer
   const sha = gitBlobSha(buf)
 
   // Cache hit — return existing
@@ -74,20 +84,21 @@ export async function processImage({
   }
 
   // Cache miss — process with sharp + image-size
-  const [{ imageSizeFromFile }, sharp] = await Promise.all([
-    import('image-size/fromFile'),
+  const [{ imageSize }, sharp] = await Promise.all([
+    import('image-size'),
     import('sharp').then((m) => {
       return m.default
     }),
   ])
 
-  const [size, placeholderBuf] = await Promise.all([
-    imageSizeFromFile(filePath),
-    sharp(filePath)
-      .resize(PLACEHOLDER_WIDTH)
-      .webp({ quality: 50 })
-      .toBuffer(),
-  ])
+  const size = imageSize(buf)
+  if (!size.width || !size.height) {
+    return undefined
+  }
+  const placeholderBuf = await sharp(buf)
+    .resize(PLACEHOLDER_WIDTH)
+    .webp({ quality: 50 })
+    .toBuffer()
 
   const meta: ImageMeta = {
     width: size.width,

@@ -70,8 +70,10 @@ import { slugify, extractText } from './toc-tree.ts'
 function PixelatedImageWithProps(props: {
   src: string
   alt: string
-  width?: number
-  height?: number
+  width?: string | number
+  height?: string | number
+  intrinsicWidth?: string | number
+  intrinsicHeight?: string | number
   placeholder?: string
   className?: string
 }) {
@@ -79,8 +81,10 @@ function PixelatedImageWithProps(props: {
     <PixelatedImage
       src={props.src}
       alt={props.alt}
-      width={props.width || 0}
-      height={props.height || 0}
+      width={props.width}
+      height={props.height}
+      intrinsicWidth={props.intrinsicWidth}
+      intrinsicHeight={props.intrinsicHeight}
       placeholder={props.placeholder}
       className={props.className || ''}
     />

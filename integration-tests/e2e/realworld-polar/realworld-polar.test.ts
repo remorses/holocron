@@ -84,6 +84,13 @@ test.describe("realworld-polar fixture", () => {
 
     const realImage = page.locator('.slot-main img:not([aria-hidden])').first();
     await expect(realImage).toBeVisible();
+    const handle = await realImage.elementHandle();
+    expect(handle).not.toBeNull();
+    await page.waitForFunction((node) => {
+      if (!(node instanceof HTMLImageElement)) return false;
+      const filter = window.getComputedStyle(node).filter;
+      return filter === "none" || filter === "blur(0px)";
+    }, handle);
 
     const styles = await realImage.evaluate((node) => {
       const computed = window.getComputedStyle(node);
@@ -197,6 +204,18 @@ test.describe("realworld-polar fixture", () => {
     expect(html).toContain("API Reference");
     expect(html).toContain("llms-full.txt");
     expect(html).toContain("Quick Start Guide");
+  });
+
+  test("root-level local img renders through the pixelated image primitive", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+
+    const realImage = page.locator('.slot-main img[src*="welcome.png"]:not([aria-hidden])').first();
+    await expect(realImage).toBeVisible();
+    const wrapper = realImage.locator("xpath=ancestor::div[1]");
+    await expect(wrapper.locator('img[aria-hidden][src^="data:image/webp;base64,"]')).toHaveCount(1);
   });
 
   test("Polar card icons render for Font Awesome-style names used in MDX", async ({
