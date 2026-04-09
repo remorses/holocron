@@ -12,4 +12,23 @@ describe('mdxComponents', () => {
       []
     `)
   })
+
+  it('overrides native table tags for editorial styling', () => {
+    const overriddenTableTags = Object.keys(mdxComponents).filter((key) => {
+      return ['table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption'].includes(key)
+    })
+
+    expect(overriddenTableTags).toMatchInlineSnapshot(`
+      [
+        "table",
+        "thead",
+        "tbody",
+        "tfoot",
+        "tr",
+        "th",
+        "td",
+        "caption",
+      ]
+    `)
+  })
 })
