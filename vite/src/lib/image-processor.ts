@@ -5,8 +5,7 @@
  * dist/holocron-images.json keyed by git blob SHA so the same image
  * content (even at different paths) is processed only once.
  *
- * sharp and image-size are build-only dependencies — never imported at
- * request time.
+ * sharp is a build-only dependency — never imported at request time.
  */
 
 import fs from 'node:fs'
@@ -94,16 +93,15 @@ export async function processImageBuffer({
     return cached
   }
 
-  // Cache miss — process with sharp + image-size
-  const [{ imageSize }, sharp] = await Promise.all([
-    import('image-size'),
-    import('sharp').then((m) => {
-      return m.default
-    }),
-  ])
+  // Cache miss — use sharp for both dimensions and placeholder generation so
+  // fixture builds do not depend on a second image parser behaving identically
+  // across local macOS and GitHub's Linux runners.
+  const sharp = await import('sharp').then((m) => {
+    return m.default
+  })
 
-  const size = imageSize(buf)
-  if (!size.width || !size.height) {
+  const metadata = await sharp(buf).metadata()
+  if (!metadata.width || !metadata.height) {
     return undefined
   }
   const placeholderBuf = await sharp(buf)
@@ -112,8 +110,8 @@ export async function processImageBuffer({
     .toBuffer()
 
   const meta: ImageMeta = {
-    width: size.width,
-    height: size.height,
+    width: metadata.width,
+    height: metadata.height,
     placeholder: `data:image/webp;base64,${placeholderBuf.toString('base64')}`,
   }
 
