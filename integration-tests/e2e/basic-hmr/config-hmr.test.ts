@@ -19,18 +19,18 @@ function readNoReload(): boolean | undefined {
 // The fixture root for these tests is fixtures/basic-hmr/ inside integration-tests/.
 // Tests live at e2e/basic-hmr/*.test.ts, so we go up two levels then into fixtures/basic-hmr.
 const fixtureRoot = path.resolve(import.meta.dirname, "../../fixtures/basic-hmr");
-const configPath = path.join(fixtureRoot, "holocron.jsonc");
+const configPath = path.join(fixtureRoot, "docs.json");
 const pagesDir = fixtureRoot;
 
 /**
  * @dev — only runs with the dev server (skipped during build/start tests).
  *
- * Tests that editing holocron.jsonc during dev triggers an RSC-level HMR
+ * Tests that editing docs.json during dev triggers an RSC-level HMR
  * update: the sidebar reflects the new navigation entry without a full
  * page reload.
  */
 // All HMR describes are serial — they mutate shared fixture files
-// (holocron.jsonc, MDX pages) and share a single Vite dev server.
+// (docs.json, MDX pages) and share a single Vite dev server.
 // Running them concurrently would corrupt each other's beforeEach/afterEach state.
 test.describe.serial("MDX content HMR @dev", () => {
   const mdxFile = path.join(pagesDir, "getting-started.mdx");

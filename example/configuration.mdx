@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Configure Holocron with `holocron.jsonc` or Mintlify-compatible `docs.json`.
+description: Configure Holocron with Mintlify-compatible `docs.json`.
 icon: settings
 ---
 
@@ -10,11 +10,22 @@ icon: settings
 
 ## Supported config files
 
-Holocron checks for `holocron.jsonc` first and falls back to `docs.json` for Mintlify compatibility. Place the config file in your project root alongside `vite.config.ts`.
+Holocron examples use `docs.json` by default. `holocron.jsonc` is still supported, and if both files are present Holocron checks `holocron.jsonc` first. Place the config file in your project root alongside `vite.config.ts`.
+
+### docs.json
+
+For teams migrating from Mintlify, Holocron reads `docs.json` directly. No conversion step needed; just drop in the plugin and your existing config works.
+
+```json
+{
+  "name": "My Docs",
+  "colors": { "primary": "#6366f1" }
+}
+```
 
 ### holocron.jsonc
 
-JSONC (JSON with comments) is the native format. It supports `//` and `/* */` comments so you can annotate your config without breaking the parser.
+If you want comments inside the config file, Holocron also supports `holocron.jsonc`. JSONC allows `//` and `/* */` comments without changing the schema.
 
 ```json
 {
@@ -23,10 +34,6 @@ JSONC (JSON with comments) is the native format. It supports `//` and `/* */` co
   "colors": { "primary": "#6366f1" }
 }
 ```
-
-### docs.json
-
-For teams migrating from Mintlify, Holocron reads `docs.json` directly. No conversion step needed — just drop in the plugin and your existing config works.
 
 ## Navigation
 
@@ -184,11 +191,11 @@ Holocron normalizes the schema into a predictable internal shape so the rest of 
 
 ### Schema validation
 
-The full JSON Schema for `holocron.jsonc` lives at `holocron/schema.json`. You can reference it in your editor for autocompletion:
+The full JSON Schema for `docs.json` and `holocron.jsonc` lives at `vite/schema.json`. You can reference that path in your editor for autocompletion:
 
 ```json
 {
-  "$schema": "https://holocron.so/schema.json",
+  "$schema": "vite/schema.json",
   "name": "My Docs"
 }
 ```

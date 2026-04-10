@@ -238,7 +238,7 @@ test.describe("not found", () => {
     // Navbar slot and sidebar slot are both present
     expect(html).toContain("slot-navbar");
     expect(html).toContain("slot-sidebar-left");
-    // Known sidebar page link is rendered (from the test docs holocron.jsonc)
+    // Known sidebar page link is rendered (from the test fixture docs.json)
     expect(html).toMatch(/href="\/getting-started"/);
   });
 

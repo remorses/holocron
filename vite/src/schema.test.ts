@@ -8,8 +8,8 @@ import { parseJsonc } from './lib/jsonc.ts'
 /* ── Validation of existing example configs ──────────────────────────── */
 
 describe('holocronConfigSchema validation', () => {
-  test('accepts example/holocron.jsonc', () => {
-    const file = path.join(import.meta.dirname, '..', '..', 'example', 'holocron.jsonc')
+  test('accepts example/docs.json', () => {
+    const file = path.join(import.meta.dirname, '..', '..', 'example', 'docs.json')
     if (!fs.existsSync(file)) return
     const raw = fs.readFileSync(file, 'utf-8')
     const data = parseJsonc(raw)
@@ -17,8 +17,8 @@ describe('holocronConfigSchema validation', () => {
     expect(result.success).toBe(true)
   })
 
-  test('accepts integration-tests/holocron.jsonc', () => {
-    const file = path.join(import.meta.dirname, '..', '..', 'integration-tests', 'holocron.jsonc')
+  test('accepts integration-tests fixture docs.json', () => {
+    const file = path.join(import.meta.dirname, '..', '..', 'integration-tests', 'fixtures', 'basic', 'docs.json')
     if (!fs.existsSync(file)) return
     const raw = fs.readFileSync(file, 'utf-8')
     const data = parseJsonc(raw)
