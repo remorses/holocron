@@ -92,6 +92,13 @@ export function discoverFixtures(): Fixture[] {
     return [];
   }
 
+  const requestedNames = (() => {
+    const raw = process.env["E2E_FIXTURES"]?.trim();
+    if (!raw) return undefined;
+    const names = raw.split(",").map((name) => name.trim()).filter(Boolean);
+    return names.length > 0 ? new Set(names) : undefined;
+  })();
+
   const entries = fs.readdirSync(fixturesDir, { withFileTypes: true });
   const fixtures: Fixture[] = [];
 
@@ -103,6 +110,7 @@ export function discoverFixtures(): Fixture[] {
       fs.existsSync(path.join(rootDir, name)),
     );
     if (!configFile) continue;
+    if (requestedNames && !requestedNames.has(entry.name)) continue;
 
     fixtures.push({
       name: entry.name,
@@ -114,5 +122,13 @@ export function discoverFixtures(): Fixture[] {
 
   // Stable ordering by name so port assignment is deterministic across runs
   fixtures.sort((a, b) => a.name.localeCompare(b.name));
+
+  if (requestedNames) {
+    const missing = [...requestedNames].filter((name) => !fixtures.some((fixture) => fixture.name === name));
+    if (missing.length > 0) {
+      throw new Error(`Unknown fixture(s) in E2E_FIXTURES: ${missing.join(", ")}`);
+    }
+  }
+
   return fixtures;
 }

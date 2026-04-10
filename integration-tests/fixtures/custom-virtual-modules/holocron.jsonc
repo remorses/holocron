@@ -1,0 +1,16 @@
+{
+  "name": "Custom Virtual Modules",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": ["index", "getting-started"]
+          }
+        ]
+      }
+    ]
+  }
+}
