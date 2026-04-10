@@ -20,6 +20,7 @@ import type {
   iconSchema,
   tabBaseSchema,
   colorsSchema,
+  iconsSchema,
   redirectSchema,
   footerSchema,
   appearanceSchema,
@@ -104,6 +105,7 @@ export type HolocronConfig = {
   logo: { light: string; dark?: string; href?: string }
   favicon: { light: string; dark: string }
   colors: z.output<typeof colorsSchema> & { _hasUserColors: boolean }
+  icons: z.output<typeof iconsSchema> & { library: 'fontawesome' | 'lucide' | 'tabler' }
   appearance: { default: 'system' | 'light' | 'dark'; strict: boolean }
   fonts?: {
     family?: string

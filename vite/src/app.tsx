@@ -8,8 +8,7 @@
 import { createHolocronApp, type HolocronApp } from './app-factory.tsx'
 import { base, getConfig } from 'virtual:holocron-config'
 import { getNavigationData } from 'virtual:holocron-navigation'
-import { getMdxSlugs, getMdxSource } from 'virtual:holocron-mdx'
-import { getIconAtlas } from 'virtual:holocron-icons'
+import { getMdxSlugs, getMdxSource, getPageIconRefs } from 'virtual:holocron-mdx'
 
 export const app = createHolocronApp({
   base,
@@ -17,6 +16,6 @@ export const app = createHolocronApp({
   getNavigationData,
   getMdxSlugs,
   getMdxSource,
-  getIconAtlas,
+  getPageIconRefs,
 })
 export type App = HolocronApp

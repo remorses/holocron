@@ -58,19 +58,13 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
   });
 
   test("pages inside tab groups are routed correctly", async ({ page }) => {
-    // NOTE: title assertions exercise a spiceflow head-merging bug where
-    // document.title reverts to the site name after hydration. Leaving
-    // them in on purpose — see MEMORY.md "Pre-existing title test flake".
-    // The basic fixture's equivalent test passes by race luck (title is
-    // still the page title for a brief moment after goto completes); this
-    // test is more aggressive because the first assertion is the title.
     await page.goto("/quickstart", { waitUntil: "domcontentloaded" });
-    await expect(page).toHaveTitle(/Quickstart/);
     await expect(page.getByRole("heading", { name: "Installation" })).toBeVisible();
+    await expect(page).toHaveTitle(/Quickstart/);
 
     await page.goto("/theming", { waitUntil: "domcontentloaded" });
-    await expect(page).toHaveTitle(/Theming/);
     await expect(page.getByRole("heading", { name: "Colors" })).toBeVisible();
+    await expect(page).toHaveTitle(/Theming/);
   });
 
   test("renders banner with dismiss button", async ({ page }) => {

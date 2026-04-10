@@ -68,8 +68,9 @@ import {
   resolveActiveVersionHref,
 } from './site-data.ts'
 import type { HolocronConfig } from './config.ts'
-import type { IconAtlas } from './lib/resolve-icons.ts'
 import { createChatBashTool } from './lib/chat-bash-tool.ts'
+import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
+import { resolveIconSvgs } from './lib/resolve-icons.ts'
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -121,13 +122,15 @@ type HolocronProviders = {
   getNavigationData(): Promise<HolocronNavigationData>
   getMdxSlugs(): Promise<string[]>
   getMdxSource(slug: string): Promise<string | undefined>
-  getIconAtlas(): Promise<IconAtlas>
+  getPageIconRefs(slug: string): Promise<IconRef[]>
 }
 
 type HolocronRequestRuntime = {
   site: HolocronSiteData
+  sharedIconRefs: IconRef[]
   slugs: string[]
   getMdxSource(slug: string): Promise<string | undefined>
+  getPageIconRefs(slug: string): Promise<IconRef[]>
 }
 
 /* ── Constants ───────────────────────────────────────────────────────── */
@@ -334,11 +337,10 @@ function isHolocronLoaderData(value: unknown): value is HolocronLoaderData {
 }
 
 async function loadHolocronRuntime(providers: HolocronProviders): Promise<HolocronRequestRuntime> {
-  const [config, { navigation, switchers }, slugs, icons] = await Promise.all([
+  const [config, { navigation, switchers }, slugs] = await Promise.all([
     providers.getConfig(),
     providers.getNavigationData(),
     providers.getMdxSlugs(),
-    providers.getIconAtlas(),
   ])
 
   return {
@@ -347,10 +349,12 @@ async function loadHolocronRuntime(providers: HolocronProviders): Promise<Holocr
       navigation,
       switchers,
       base: providers.base,
-      icons,
+      icons: { icons: {} },
     },
+    sharedIconRefs: collectIconRefs({ config, navigation }),
     slugs,
     getMdxSource: providers.getMdxSource,
+    getPageIconRefs: providers.getPageIconRefs,
   }
 }
 
@@ -359,7 +363,11 @@ async function loadHolocronRuntime(providers: HolocronProviders): Promise<Holocr
 export function createHolocronApp(providers: HolocronProviders) {
   return new Spiceflow()
     .use(serveStatic({ root: './public' }))
-    .use(async ({ request, state }) => {
+    .use(async ({ request, state }, next) => {
+      const staticResponse = await next()
+      if (staticResponse && staticResponse.status !== 404) {
+        return staticResponse
+      }
       const runtime = await loadHolocronRuntime(providers)
       const requestApp = createRequestHolocronApp(runtime)
       return requestApp.handle(request, { state })
@@ -374,6 +382,13 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
   let app: AnySpiceflow = new Spiceflow()
   const firstPage = findFirstPage(site)
   const clientSite = buildVisibleSiteData(site)
+  async function buildLoaderSite(slug: string | undefined): Promise<HolocronSiteData> {
+    const pageIconRefs = slug ? await runtime.getPageIconRefs(slug) : []
+    return {
+      ...clientSite,
+      icons: resolveIconSvgs(dedupeIconRefs([...runtime.sharedIconRefs, ...pageIconRefs])),
+    }
+  }
   const absoluteUrlBase = (() => {
     const routeBase = withBaseRoute(site.base, '/')
     return routeBase === '/' ? '' : routeBase
@@ -732,7 +747,7 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
     if (!currentPage || !hasMdx) {
       response.status = 404
       return {
-        site: clientSite,
+        site: await buildLoaderSite(undefined),
         currentPageHref: undefined,
         currentPageTitle: undefined,
         currentPageDescription: undefined,
@@ -749,7 +764,7 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
     }
 
     return {
-      site: clientSite,
+      site: await buildLoaderSite(slug),
       currentPageHref: currentPage.href,
       currentPageTitle: currentPage.title,
       currentPageDescription: currentPage.description ?? site.config.description,

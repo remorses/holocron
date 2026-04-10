@@ -1,34 +1,30 @@
 /**
- * Icon resolver tests for ambiguous string icon fallback behavior.
+ * Icon resolver tests for canonical icon ref strings.
  */
 
 import { describe, expect, test, vi } from 'vitest'
 import { resolveIconSvgs } from './resolve-icons.ts'
 
 describe('resolveIconSvgs', () => {
-  test('does not warn when an ambiguous string icon resolves via fontawesome fallback', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
+  test('resolves canonical lucide and fontawesome refs', () => {
     const atlas = resolveIconSvgs([
-      { library: 'lucide', name: 'discord' },
-      { library: 'fontawesome', name: 'discord' },
+      'lucide:github',
+      'fontawesome:brands:discord',
     ])
 
-    expect(atlas.icons['fontawesome:discord']).toBeDefined()
-    expect(warn).not.toHaveBeenCalled()
-    warn.mockRestore()
+    expect(atlas.icons['lucide:github']).toBeDefined()
+    expect(atlas.icons['fontawesome:brands:discord']).toBeDefined()
   })
 
-  test('warns once when an ambiguous string icon resolves nowhere', () => {
+  test('warns when a canonical ref resolves nowhere', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-    resolveIconSvgs([
-      { library: 'lucide', name: 'definitely-missing-icon' },
-      { library: 'fontawesome', name: 'definitely-missing-icon' },
-    ])
+    resolveIconSvgs(['lucide:definitely-missing-icon'])
 
     expect(warn).toHaveBeenCalledTimes(1)
-    expect(warn).toHaveBeenCalledWith('[holocron] icon "definitely-missing-icon" was not found in lucide or fontawesome.')
+    expect(warn).toHaveBeenCalledWith(
+      '[holocron] lucide icon "definitely-missing-icon" not found. Check the icon name at https://lucide.dev/icons/.',
+    )
     warn.mockRestore()
   })
 })

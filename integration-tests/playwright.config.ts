@@ -62,7 +62,7 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
   const builtServerEntry = path.join(getFixtureOutDir(fixture.rootDir, runId), "rsc/index.js");
   const envPrefix = `E2E_RUN_ID=${quoteForShell(runId)} E2E_FIXTURE_ROOT=${quoteForShell(fixture.rootDir)}`;
   const serverCommand = isStart
-    ? `${envPrefix} PORT=${port} node ${quoteForShell(builtServerEntry)}`
+    ? `cd ${quoteForShell(fixture.rootRel)} && ${envPrefix} PORT=${port} node ${quoteForShell(builtServerEntry)}`
     : `${envPrefix} pnpm exec vite ${fixture.rootRel} ${configFlag} --port ${port} --strictPort`;
   const logPath = path.join(logsDir, `${fixture.name}.${isStart ? "start" : "dev"}.${runId}.log`);
   fs.writeFileSync(logPath, "");
@@ -79,7 +79,7 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
 // Fixtures whose test files mutate shared state (config, MDX pages) on disk
 // must avoid in-project parallelism so multiple mutating files don't race on
 // the same Vite server. Read-only fixtures can still run fully parallel.
-const SERIAL_FIXTURES = new Set(["basic-hmr"]);
+const SERIAL_FIXTURES = new Set(["basic-hmr", "realworld-polar"]);
 
 const projects = fixturePorts.map(({ fixture, port }) => ({
   name: fixture.name,

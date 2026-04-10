@@ -163,6 +163,14 @@ describe('holocronConfigSchema validation', () => {
     })
     expect(result.success).toBe(true)
   })
+
+  test('accepts icons.library', () => {
+    const result = holocronConfigSchema.safeParse({
+      name: 'X',
+      icons: { library: 'lucide' },
+    })
+    expect(result.success).toBe(true)
+  })
 })
 
 /* ── Regen-check: schema.json on disk is in sync with Zod schemas ────── */

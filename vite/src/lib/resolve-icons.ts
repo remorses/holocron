@@ -1,19 +1,13 @@
 /**
- * Build-time SVG resolver. Given a de-duped list of `{library, name}`
- * refs, look each one up in the bundled iconify sets and return an atlas
- * mapping `library:name` → `{body, width, height}` ready to be serialized
- * into the `virtual:holocron-icons` module.
- *
- * Lucide stays the primary path, but many Mintlify docs in the wild also use
- * Font Awesome names in MDX content. We resolve both into one small atlas so
- * the client can render icons without shipping full icon packs.
+ * Server-side SVG resolver for canonical icon refs like `lucide:rocket` and
+ * `fontawesome:brands:discord`.
  */
 
 import { icons as lucideIcons } from '@iconify-json/lucide'
 import { icons as fa6BrandsIcons } from '@iconify-json/fa6-brands'
 import { icons as fa6RegularIcons } from '@iconify-json/fa6-regular'
 import { icons as fa6SolidIcons } from '@iconify-json/fa6-solid'
-import type { IconRef } from './collect-icons.ts'
+import { FA_STYLES, type IconRef, type IconLibrary } from './collect-icons.ts'
 
 export type IconAtlasEntry = {
   /** Inner SVG body (path/g/circle elements), NOT wrapped in <svg>. */
@@ -54,10 +48,6 @@ function resolveLucide(name: string): IconAtlasEntry | null {
   }
 }
 
-function fontAwesomeKey(name: string, style?: string): string {
-  return style ? `fontawesome:${style}:${name}` : `fontawesome:${name}`
-}
-
 function resolveFontAwesome(name: string, style?: string): IconAtlasEntry | null {
   const sets = (() => {
     if (!style) return [fa6SolidIcons, fa6BrandsIcons, fa6RegularIcons]
@@ -82,75 +72,56 @@ function resolveFontAwesome(name: string, style?: string): IconAtlasEntry | null
   return null
 }
 
+function parseIconRef(ref: IconRef): { library: IconLibrary; name: string; style?: string } | null {
+  const parts = ref.split(':')
+  if (parts.length === 2 && (parts[0] === 'lucide' || parts[0] === 'tabler') && parts[1]) {
+    return { library: parts[0], name: parts[1] }
+  }
+  if (parts.length === 2 && parts[0] === 'fontawesome' && parts[1]) {
+    return { library: 'fontawesome', name: parts[1] }
+  }
+  if (parts.length === 3 && parts[0] === 'fontawesome' && parts[1] && parts[2] && FA_STYLES.has(parts[1])) {
+    return { library: 'fontawesome', style: parts[1], name: parts[2] }
+  }
+  return null
+}
+
 export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
   const atlas: IconAtlas = { icons: {} }
-  const unresolvedAmbiguous = new Set<string>()
 
   for (const ref of refs) {
-    if (ref.style || (ref.library !== 'lucide' && ref.library !== 'fontawesome')) {
-      continue
-    }
-    const hasFallback = refs.some((candidate) => {
-      return candidate !== ref && !candidate.style && candidate.name === ref.name && candidate.library !== ref.library
-    })
-    if (!hasFallback) {
+    const parsed = parseIconRef(ref)
+    if (!parsed) {
+      console.warn(`[holocron] icon ref "${ref}" is not a supported canonical icon ref.`)
       continue
     }
 
-    const lucideEntry = resolveLucide(ref.name)
-    const fontAwesomeEntry = resolveFontAwesome(ref.name)
-
-    if (lucideEntry) {
-      atlas.icons[`lucide:${ref.name}`] = lucideEntry
-    }
-    if (fontAwesomeEntry) {
-      atlas.icons[fontAwesomeKey(ref.name)] = fontAwesomeEntry
-    }
-    if (!lucideEntry && !fontAwesomeEntry) {
-      unresolvedAmbiguous.add(ref.name)
-    }
-  }
-
-  for (const name of unresolvedAmbiguous) {
-    console.warn(`[holocron] icon "${name}" was not found in lucide or fontawesome.`)
-  }
-
-  for (const ref of refs) {
-    if (!ref.style && (ref.library === 'lucide' || ref.library === 'fontawesome')) {
-      const hasFallback = refs.some((candidate) => {
-        return candidate !== ref && !candidate.style && candidate.name === ref.name && candidate.library !== ref.library
-      })
-      if (hasFallback) {
-        continue
-      }
-    }
-
-    if (ref.library === 'lucide') {
-      const entry = resolveLucide(ref.name)
+    if (parsed.library === 'lucide') {
+      const entry = resolveLucide(parsed.name)
       if (!entry) {
         console.warn(
-          `[holocron] lucide icon "${ref.name}" not found. Check the icon name at https://lucide.dev/icons/.`,
+          `[holocron] lucide icon "${parsed.name}" not found. Check the icon name at https://lucide.dev/icons/.`,
         )
         continue
       }
-      atlas.icons[`lucide:${ref.name}`] = entry
+      atlas.icons[ref] = entry
       continue
     }
 
-    if (ref.library === 'fontawesome') {
-      const entry = resolveFontAwesome(ref.name, ref.style)
+    if (parsed.library === 'fontawesome') {
+      const entry = resolveFontAwesome(parsed.name, parsed.style)
       if (!entry) {
         console.warn(
-          `[holocron] fontawesome icon "${ref.name}"${ref.style ? ` (${ref.style})` : ''} not found.`,
+          `[holocron] fontawesome icon "${parsed.name}"${parsed.style ? ` (${parsed.style})` : ''} not found.`,
         )
         continue
       }
-      atlas.icons[fontAwesomeKey(ref.name, ref.style)] = entry
+      atlas.icons[ref] = entry
       continue
     }
 
     console.warn(
-      `[holocron] icon library "${ref.library}" is not supported yet. Icon "${ref.name}" will render empty.`,
+      `[holocron] icon library "${parsed.library}" is not supported yet. Icon "${parsed.name}" will render empty.`,
     )
   }
   return atlas

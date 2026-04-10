@@ -276,7 +276,7 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
       if (d.href && !d.navigation) {
         return {
           label: d.dropdown,
-          ...(d.icon && { icon: d.icon as ConfigIcon }),
+          ...(d.icon && { icon: d.icon }),
           href: d.href,
           ...(isExternalHref(d.href) && { external: true }),
           pageHrefs: [],
@@ -287,7 +287,7 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
       const firstHref = visiblePageHrefs[0] || pageHrefs[0] || d.href || '/'
       return {
         label: d.dropdown,
-        ...(d.icon && { icon: d.icon as ConfigIcon }),
+        ...(d.icon && { icon: d.icon }),
         href: firstHref,
         pageHrefs,
       }

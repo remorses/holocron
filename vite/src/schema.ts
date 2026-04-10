@@ -748,6 +748,16 @@ export const fontsSchema = z
   .describe('Custom fonts for your documentation')
   .meta({ id: 'fontsSchema' })
 
+export const iconsSchema = z
+  .object({
+    library: z
+      .enum(['fontawesome', 'lucide', 'tabler'])
+      .optional()
+      .describe('Project-wide icon library used for plain icon strings'),
+  })
+  .describe('Icon library settings')
+  .meta({ id: 'iconsSchema' })
+
 /* ── Footer links ─────────────────────────────────────────────────────── */
 
 const footerLinkItemSchema = z.object({
@@ -781,6 +791,7 @@ export const holocronConfigSchema = z
     colors: colorsSchema.optional(),
     appearance: appearanceSchema.optional(),
     fonts: fontsSchema.optional(),
+    icons: iconsSchema.optional(),
     navigation: navigationSchema.optional(),
     navbar: navbarSchema.optional(),
     banner: bannerSchema.optional(),

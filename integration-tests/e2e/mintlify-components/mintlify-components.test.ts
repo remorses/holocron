@@ -20,7 +20,14 @@ test.describe("mintlify components fixture", () => {
     const npmTab = page.getByRole("tab", { name: "npm", exact: true }).first();
     const pnpmTab = page.getByRole("tab", { name: "pnpm", exact: true }).first();
     await expect(npmTab).toBeVisible();
-    await pnpmTab.click();
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await pnpmTab.click();
+      if ((await pnpmTab.getAttribute("aria-selected")) === "true") {
+        break;
+      }
+      await page.waitForTimeout(250);
+    }
+    await expect(pnpmTab).toHaveAttribute("aria-selected", "true");
     await expect(page.getByText("pnpm add holocron")).toBeVisible();
 
     const individualDevelopersTab = page.getByRole("tab", {

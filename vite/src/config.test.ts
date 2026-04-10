@@ -381,6 +381,23 @@ describe('description normalization', () => {
   })
 })
 
+describe('icons normalization', () => {
+  test('defaults icons.library to fontawesome', () => {
+    const root = setupConfig('holocron.jsonc', { name: 'X' })
+    const config = readConfig({ root })
+    expect(config.icons.library).toBe('fontawesome')
+  })
+
+  test('preserves configured icons.library', () => {
+    const root = setupConfig('holocron.jsonc', {
+      name: 'X',
+      icons: { library: 'lucide' },
+    })
+    const config = readConfig({ root })
+    expect(config.icons.library).toBe('lucide')
+  })
+})
+
 describe('navbar link icon + type preservation', () => {
   test('keeps icon (string path) on links', () => {
     const root = setupConfig('holocron.jsonc', {

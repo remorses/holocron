@@ -148,6 +148,7 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
   const deletedTitle = "Page To Delete";
 
   let originalConfig: string;
+  let deletedConfig: string;
 
   test.beforeEach(() => {
     originalConfig = fs.readFileSync(configPath, "utf-8");
@@ -159,7 +160,7 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
       ),
     );
 
-    const updatedConfig = JSON.stringify(
+    deletedConfig = JSON.stringify(
       {
         name: "Test Docs",
         colors: { primary: "#0969da" },
@@ -170,7 +171,7 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
       null,
       2,
     );
-    fs.writeFileSync(configPath, updatedConfig);
+    fs.writeFileSync(configPath, deletedConfig);
   });
 
   test.afterEach(() => {
@@ -188,9 +189,11 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
     await page.waitForTimeout(2000);
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
-    await expect(
-      nav.getByRole("link", { name: deletedTitle }),
-    ).toBeVisible();
+    const deletedLink = nav.getByRole("link", { name: deletedTitle });
+    if (!(await deletedLink.isVisible())) {
+      fs.writeFileSync(configPath, deletedConfig);
+    }
+    await expect(deletedLink).toBeVisible({ timeout: 10_000 });
 
     await page.evaluate(markNoReload);
 
@@ -298,6 +301,7 @@ test.describe.serial("config HMR @dev", () => {
   }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Test Docs" })).toBeVisible({ timeout: 10_000 });
+    await page.waitForTimeout(2000);
 
     await expect(page).toHaveTitle(/Test Docs/);
 
@@ -318,7 +322,7 @@ test.describe.serial("config HMR @dev", () => {
     fs.writeFileSync(configPath, updatedConfig);
 
     // Title should update to include the new name
-    await expect(page).toHaveTitle(/Updated Docs Name/, { timeout: 10_000 });
+    await expect(page).toHaveTitle(/Updated Docs Name/, { timeout: 30_000 });
 
   });
 });

@@ -17,27 +17,19 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
+import { collectMdxIconRefs, processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
+import { buildEnrichedNavigation } from './enrich-navigation.ts'
+import type { IconRef } from './collect-icons.ts'
 import {
   type HolocronConfig,
-  type ConfigNavTab,
-  type ConfigNavGroup,
-  type ConfigNavPageEntry,
-  type ConfigVersionItem,
-  type ConfigDropdownItem,
 } from '../config.ts'
 import {
   type Navigation,
-  type NavigationWithSwitchers,
   type NavTab,
   type NavGroup,
-  type NavIcon,
   type NavPage,
-  type NavPageEntry,
-  type NavVersionItem,
-  type NavDropdownItem,
   isNavPage,
   isNavGroup,
   buildPageIndex,
@@ -62,39 +54,6 @@ const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
-
-/** Libraries we can actually resolve at build time. */
-const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome'])
-
-/** Serialize a config icon into the enriched-tree shape. Preserves the
- *  structured form (`{ name, library, style }`) when users pass it so
- *  renderers can route to the correct icon library. Undefined fields
- *  are omitted to keep cache files + test snapshots clean.
- *  Object icons with unsupported libraries are stripped so they fall
- *  through to label rendering instead of silently rendering nothing. */
-function serializeIcon(icon: ConfigNavGroup['icon'], context?: string): NavIcon | undefined {
-  if (!icon) return undefined
-  if (typeof icon === 'string') return icon
-  const library = icon.library ?? 'lucide'
-  if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
-    console.warn(
-      `[holocron] icon library "${library}" is not supported yet (supported: lucide, fontawesome). ` +
-      `Icon "${icon.name}"${context ? ` in ${context}` : ''} will be ignored.`,
-    )
-    return undefined
-  }
-  return {
-    name: icon.name,
-    ...(icon.library !== undefined && { library: icon.library }),
-    ...(icon.style !== undefined && { style: icon.style }),
-  }
-}
-
-/** Resolve a group's `root` slug to an href using the same rule as pages. */
-function rootToHref(root: string | undefined): string | undefined {
-  if (!root) return undefined
-  return slugToHref(root)
-}
 
 function redirectSourceToSlug(source: string): string | undefined {
   if (source.includes(':') || source.includes('*')) return undefined
@@ -132,6 +91,8 @@ export type SyncResult = {
    *  navigation tree so only the server bundle includes it — the client
    *  only receives the lightweight nav tree (titles, headings, slugs). */
   mdxContent: Record<string, string>
+  /** Canonical icon refs used by each page body/frontmatter MDX. */
+  pageIconRefs: Record<string, IconRef[]>
   parsedCount: number
   cachedCount: number
 }
@@ -159,7 +120,9 @@ export async function syncNavigation({
   const mdxCachePath = path.join(distDir, MDX_CACHE_FILENAME)
   const oldNav = readCache(cachePath)
   const oldPages = oldNav ? buildPageIndex(oldNav) : new Map<string, NavPage>()
-  const oldMdxContent = readMdxCache(mdxCachePath)
+  const oldMdxCache = readMdxCache(mdxCachePath)
+  const oldMdxContent = oldMdxCache.content
+  const oldPageIconRefs = oldMdxCache.pageIconRefs
   const imageCache = loadImageCache({ distDir })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
@@ -167,6 +130,7 @@ export async function syncNavigation({
   let parsedCount = 0
   let cachedCount = 0
   const mdxContent: Record<string, string> = {}
+  const pageIconRefs: Record<string, IconRef[]> = {}
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
@@ -191,6 +155,7 @@ export async function syncNavigation({
     if (cached && cached.gitSha === sha && cachedMdx) {
       cachedCount++
       mdxContent[slug] = cachedMdx
+      pageIconRefs[slug] = oldPageIconRefs[slug] ?? collectMdxIconRefs(cachedMdx, config.icons.library)
       return cached
     }
 
@@ -245,6 +210,7 @@ export async function syncNavigation({
 
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
+    pageIconRefs[slug] = collectMdxIconRefs(finalMdx, config.icons.library)
 
     return {
       slug,
@@ -259,72 +225,9 @@ export async function syncNavigation({
     }
   }
 
-  // 3. Walk config and enrich
-  async function enrichPageEntry(entry: ConfigNavPageEntry): Promise<NavPageEntry> {
-    if (typeof entry === 'string') {
-      return enrichPage(entry)
-    }
-    return enrichGroup(entry)
-  }
-
-  async function enrichGroup(configGroup: ConfigNavGroup): Promise<NavGroup> {
-    return {
-      group: configGroup.group,
-      icon: serializeIcon(configGroup.icon, `group "${configGroup.group}"`),
-      hidden: configGroup.hidden,
-      root: rootToHref(configGroup.root),
-      tag: configGroup.tag,
-      expanded: configGroup.expanded,
-      pages: await Promise.all(configGroup.pages.map(enrichPageEntry)),
-    }
-  }
-
-  async function enrichTab(configTab: ConfigNavTab): Promise<NavTab> {
-    return {
-      tab: configTab.tab,
-      icon: serializeIcon(configTab.icon, `tab "${configTab.tab}"`),
-      hidden: configTab.hidden,
-      align: configTab.align,
-      groups: await Promise.all(configTab.groups.map(enrichGroup)),
-    }
-  }
-
-  // 4. Build enriched navigation
-  const navigation: Navigation = await Promise.all(config.navigation.tabs.map(enrichTab))
-
-  async function enrichVersionItem(v: ConfigVersionItem): Promise<NavVersionItem> {
-    const innerTabs = await Promise.all(v.navigation.tabs.map(enrichTab))
-    return {
-      version: v.version,
-      ...(v.default !== undefined && { default: v.default }),
-      ...(v.tag !== undefined && { tag: v.tag }),
-      ...(v.hidden !== undefined && { hidden: v.hidden }),
-      navigation: { tabs: innerTabs, anchors: v.navigation.anchors },
-    }
-  }
-
-  async function enrichDropdownItem(d: ConfigDropdownItem): Promise<NavDropdownItem> {
-    if (!d.navigation) {
-      return {
-        dropdown: d.dropdown,
-        ...(d.icon !== undefined && { icon: serializeIcon(d.icon, `dropdown "${d.dropdown}"`) }),
-        ...(d.hidden !== undefined && { hidden: d.hidden }),
-        ...(d.href !== undefined && { href: d.href }),
-      }
-    }
-    const innerTabs = await Promise.all(d.navigation.tabs.map(enrichTab))
-    return {
-      dropdown: d.dropdown,
-      ...(d.icon !== undefined && { icon: serializeIcon(d.icon, `dropdown "${d.dropdown}"`) }),
-      ...(d.hidden !== undefined && { hidden: d.hidden }),
-      ...(d.href !== undefined && { href: d.href }),
-      navigation: { tabs: innerTabs, anchors: d.navigation.anchors },
-    }
-  }
-
-  const versions = await Promise.all(config.navigation.versions.map(enrichVersionItem))
-  const dropdowns = await Promise.all(config.navigation.dropdowns.map(enrichDropdownItem))
-  const switchers = { versions, dropdowns }
+  // 3. Walk config and enrich the shared navigation tree.
+  const { navigation, switchers } = await buildEnrichedNavigation({ config, enrichPage })
+  const { versions, dropdowns } = switchers
 
   // 4c. Validate no duplicate page hrefs across versions/dropdowns
   if (versions.length > 0 || dropdowns.length > 0) {
@@ -363,10 +266,10 @@ export async function syncNavigation({
 
   // 5. Write caches
   writeCache(cachePath, navigation)
-  writeMdxCache(mdxCachePath, mdxContent)
+  writeMdxCache(mdxCachePath, { content: mdxContent, pageIconRefs })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, pageIconRefs, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -464,6 +367,7 @@ type NavCacheEnvelope = {
 type MdxCacheEnvelope = {
   version: string
   content: Record<string, string>
+  pageIconRefs: Record<string, IconRef[]>
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -491,25 +395,32 @@ function writeCache(cachePath: string, nav: Navigation): void {
   fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 
-function readMdxCache(cachePath: string): Record<string, string> {
+function readMdxCache(cachePath: string): { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]> } {
   if (!fs.existsSync(cachePath)) {
-    return {}
+    return { content: {}, pageIconRefs: {} }
   }
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
     if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
-      return (raw as MdxCacheEnvelope).content
+      const envelope = raw as MdxCacheEnvelope
+      return {
+        content: envelope.content,
+        pageIconRefs: envelope.pageIconRefs ?? {},
+      }
     }
-    return {}
+    return { content: {}, pageIconRefs: {} }
   } catch {
-    return {}
+    return { content: {}, pageIconRefs: {} }
   }
 }
 
-function writeMdxCache(cachePath: string, content: Record<string, string>): void {
+function writeMdxCache(
+  cachePath: string,
+  data: { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]> },
+): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content }
+  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content: data.content, pageIconRefs: data.pageIconRefs }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
 

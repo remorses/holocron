@@ -7,34 +7,10 @@
  */
 
 import React from 'react'
+import { getDefaultTypeIcon } from '../../lib/collect-icons.ts'
 import { useHolocronData } from '../../router.ts'
 import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
-
-/** Map social platform keys to lucide icon names. Aligned with the
- *  TYPE_ICONS map in normalize-config.ts and the socialPlatformKeys
- *  list in schema.ts. */
-const SOCIAL_ICONS: Record<string, string> = {
-  github: 'github',
-  x: 'twitter',
-  twitter: 'twitter',
-  'x-twitter': 'twitter',
-  linkedin: 'linkedin',
-  discord: 'message-circle',
-  slack: 'slack',
-  youtube: 'youtube',
-  facebook: 'facebook',
-  instagram: 'instagram',
-  website: 'globe',
-  'earth-americas': 'globe',
-  'hacker-news': 'newspaper',
-  medium: 'book-open',
-  telegram: 'send',
-  bluesky: 'cloud',
-  threads: 'at-sign',
-  reddit: 'message-square',
-  podcast: 'rss',
-}
 
 export function Footer() {
   const { site } = useHolocronData()
@@ -76,7 +52,7 @@ export function Footer() {
                   aria-label={platform}
                   className='no-underline text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
                 >
-                  <Icon icon={SOCIAL_ICONS[platform] || 'link'} size={16} />
+                  <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
                 </a>
               ))}
             </div>

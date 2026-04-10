@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
+import { collectMdxIconRefs, processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
 
 describe('processMdx', () => {
   test('extracts frontmatter', () => {
@@ -418,5 +418,23 @@ description: A description
       \`\`\`
       "
     `)
+  })
+})
+
+describe('collectMdxIconRefs', () => {
+  test('uses the configured project library for frontmatter and JSX icon strings', () => {
+    expect(collectMdxIconRefs(`---
+icon: rocket
+---
+
+<Card icon="github" />
+`, 'lucide')).toEqual(['lucide:rocket', 'lucide:github'])
+  })
+
+  test('supports explicit library prefixes and fontawesome iconType', () => {
+    expect(collectMdxIconRefs(`
+<Card icon="fontawesome:brands:discord" />
+<Card icon="user" iconType="regular" />
+`, 'fontawesome')).toEqual(['fontawesome:brands:discord', 'fontawesome:regular:user'])
   })
 })

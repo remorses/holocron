@@ -711,6 +711,33 @@ title: API Reference
     expect(result.navigation[1]!.align).toBe('end')
   })
 
+  test('collects per-page icon refs using the configured project library', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: rocket
+---
+
+<Card icon="github" />`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.pageIconRefs.page).toEqual(['lucide:rocket', 'lucide:github'])
+  })
+
   test('title falls back to first heading when no frontmatter', async () => {
     const project = tracked(createProject(
       {

@@ -30,6 +30,9 @@
     "fonts": {
       "$ref": "#/definitions/fontsSchema"
     },
+    "icons": {
+      "$ref": "#/definitions/iconsSchema"
+    },
     "navigation": {
       "$ref": "#/definitions/navigationSchema"
     },
@@ -327,6 +330,22 @@
       },
       "additionalProperties": false,
       "description": "Custom fonts for your documentation"
+    },
+    "iconsSchema": {
+      "type": "object",
+      "properties": {
+        "library": {
+          "description": "Project-wide icon library used for plain icon strings",
+          "type": "string",
+          "enum": [
+            "fontawesome",
+            "lucide",
+            "tabler"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "Icon library settings"
     },
     "navigationSchema": {
       "anyOf": [

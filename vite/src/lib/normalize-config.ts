@@ -5,6 +5,7 @@
  */
 
 import path from 'node:path'
+import { getDefaultTypeIcon } from './collect-icons.ts'
 
 import type {
   HolocronConfig,
@@ -23,7 +24,8 @@ import type {
 /** Libraries we can actually resolve at build time. Object icons with
  *  unsupported libraries are stripped at normalize time so they fall
  *  through to the label fallback instead of silently rendering nothing. */
-const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome'])
+const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome', 'tabler'])
+type IconLibrary = HolocronConfig['icons']['library']
 
 // Real Mintlify docs.json files often use config asset paths like
 // `./logo/light.png`; normalize them once so nested routes do not resolve
@@ -38,18 +40,30 @@ function normalizeStaticPath(value: string | undefined): string | undefined {
 /** Validate an icon value and strip object icons whose library we can't
  *  resolve. Strings (emoji / URL / lucide names) always pass through.
  *  Returns the icon or undefined (meaning "no icon"). */
-function sanitizeIcon(icon: ConfigIcon | undefined, context: string): ConfigIcon | undefined {
+function sanitizeIcon({
+  icon,
+  context,
+  defaultLibrary,
+}: {
+  icon: ConfigIcon | undefined
+  context: string
+  defaultLibrary: IconLibrary
+}): ConfigIcon | undefined {
   if (!icon) return undefined
   if (typeof icon === 'string') return icon
-  const library = icon.library ?? 'lucide'
+  const library = icon.library ?? defaultLibrary
   if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
       console.warn(
-      `[holocron] icon library "${library}" is not supported yet (supported: lucide, fontawesome). ` +
+      `[holocron] icon library "${library}" is not supported yet (supported: lucide, fontawesome, tabler). ` +
       `Icon "${icon.name}" in ${context} will be ignored.`,
     )
     return undefined
   }
-  return icon
+  return {
+    name: icon.name,
+    ...(icon.library !== undefined ? { library: icon.library } : {}),
+    ...(icon.style !== undefined ? { style: icon.style } : {}),
+  }
 }
 
 /** Known type → display label mapping for navbar items */
@@ -61,55 +75,33 @@ const TYPE_LABELS: Record<string, string> = {
   link: 'Link',
 }
 
-/** Known `type` → default lucide icon name. Applied when the user writes
- *  `{ type: 'github', href: '...' }` without an explicit `icon`, so the
- *  navbar link is never rendered invisible. Keys are aligned with the
- *  `socialPlatformKeys` list in schema.ts. All values verified to exist
- *  in @iconify-json/lucide. */
-const TYPE_ICONS: Record<string, string> = {
-  github: 'github',
-  slack: 'slack',
-  // lucide has no dedicated 'discord' icon — fall back to message-circle
-  discord: 'message-circle',
-  twitter: 'twitter',
-  'x-twitter': 'twitter',
-  // lucide 'x' is the close-X symbol, not the X/Twitter brand logo. Map
-  // social type 'x' to the twitter glyph so users don't get a cross mark.
-  x: 'twitter',
-  linkedin: 'linkedin',
-  youtube: 'youtube',
-  facebook: 'facebook',
-  instagram: 'instagram',
-  website: 'globe',
-  'earth-americas': 'globe',
-  'hacker-news': 'newspaper',
-  medium: 'book-open',
-  telegram: 'send',
-  bluesky: 'cloud',
-  threads: 'at-sign',
-  reddit: 'message-square',
-  podcast: 'rss',
-  button: 'external-link',
-  link: 'external-link',
-}
-
 export function normalize(raw: Record<string, unknown>): HolocronConfig {
+  const icons = normalizeIcons(raw.icons)
   return {
     name: (raw.name as string) || 'Documentation',
     description: typeof raw.description === 'string' ? raw.description : undefined,
     logo: normalizeLogo(raw.logo),
     favicon: normalizeFavicon(raw.favicon),
     colors: normalizeColors(raw.colors),
+    icons,
     appearance: normalizeAppearance(raw.appearance),
     fonts: normalizeFonts(raw.fonts),
-    navigation: normalizeNavigation(raw.navigation),
-    navbar: normalizeNavbar(raw.navbar),
+    navigation: normalizeNavigation(raw.navigation, icons.library),
+    navbar: normalizeNavbar(raw.navbar, icons.library),
     banner: normalizeBanner(raw.banner),
     redirects: normalizeRedirects(raw.redirects),
     footer: normalizeFooter(raw.footer),
     search: normalizeSearch(raw.search),
     seo: normalizeSeo(raw.seo),
   }
+}
+
+function normalizeIcons(raw: unknown): HolocronConfig['icons'] {
+  const obj = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
+  const library = obj.library === 'lucide' || obj.library === 'tabler' || obj.library === 'fontawesome'
+    ? obj.library
+    : 'fontawesome'
+  return { library }
 }
 
 /** logo: string | { light, dark, href? } → { light, dark?, href? }
@@ -163,11 +155,11 @@ function normalizeColors(raw: unknown): HolocronConfig['colors'] {
 const EMPTY_NAV: HolocronConfig['navigation'] = { tabs: [], anchors: [], versions: [], dropdowns: [] }
 
 /** Normalize inner navigation content (tabs/groups/pages) of a switcher item. */
-function normalizeInnerNavigation(raw: Record<string, unknown>): { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] } {
+function normalizeInnerNavigation(raw: Record<string, unknown>, defaultLibrary: IconLibrary): { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] } {
   const innerAnchors = Array.isArray(raw.anchors) ? raw.anchors as ConfigAnchor[] : []
 
   if (Array.isArray(raw.tabs)) {
-    return normalizeTabsAndAnchors(raw.tabs as Array<Record<string, unknown>>, innerAnchors)
+    return normalizeTabsAndAnchors(raw.tabs as Array<Record<string, unknown>>, innerAnchors, defaultLibrary)
   }
   if (Array.isArray(raw.groups)) {
     return {
@@ -186,11 +178,11 @@ function normalizeInnerNavigation(raw: Record<string, unknown>): { tabs: ConfigN
 
 /** Normalize `navigation.versions` into ConfigVersionItem[].
  *  Versions with no inner content (no tabs/groups/pages) are dropped. */
-function normalizeVersions(rawVersions: unknown[]): ConfigVersionItem[] {
+function normalizeVersions(rawVersions: unknown[], defaultLibrary: IconLibrary): ConfigVersionItem[] {
   return rawVersions.flatMap((v) => {
     const obj = v as Record<string, unknown>
     const version = (obj.version as string) || ''
-    const nav = normalizeInnerNavigation(obj)
+    const nav = normalizeInnerNavigation(obj, defaultLibrary)
     if (nav.tabs.length === 0) {
       console.warn(`[holocron] version "${version}" has no content — skipping.`)
       return []
@@ -207,11 +199,15 @@ function normalizeVersions(rawVersions: unknown[]): ConfigVersionItem[] {
 
 /** Normalize `navigation.dropdowns` into ConfigDropdownItem[].
  *  Dropdowns with no href and no inner content are dropped. */
-function normalizeDropdowns(rawDropdowns: unknown[]): ConfigDropdownItem[] {
+function normalizeDropdowns(rawDropdowns: unknown[], defaultLibrary: IconLibrary): ConfigDropdownItem[] {
   return rawDropdowns.flatMap((d) => {
     const obj = d as Record<string, unknown>
     const name = (obj.dropdown as string) || ''
-    const icon = sanitizeIcon(obj.icon as ConfigIcon | undefined, `dropdown "${name}"`)
+    const icon = sanitizeIcon({
+      icon: obj.icon as ConfigIcon | undefined,
+      context: `dropdown "${name}"`,
+      defaultLibrary,
+    })
     const href = typeof obj.href === 'string' ? obj.href : undefined
 
     // Link-only dropdown (has href, no content)
@@ -225,7 +221,7 @@ function normalizeDropdowns(rawDropdowns: unknown[]): ConfigDropdownItem[] {
       return [item]
     }
 
-    const nav = normalizeInnerNavigation(obj)
+    const nav = normalizeInnerNavigation(obj, defaultLibrary)
     if (nav.tabs.length === 0 && !href) {
       console.warn(`[holocron] dropdown "${name}" has no content and no href — skipping.`)
       return []
@@ -243,7 +239,7 @@ function normalizeDropdowns(rawDropdowns: unknown[]): ConfigDropdownItem[] {
 }
 
 /** Normalize `navigation.products` → ConfigDropdownItem[] (product → dropdown). */
-function normalizeProducts(rawProducts: unknown[]): ConfigDropdownItem[] {
+function normalizeProducts(rawProducts: unknown[], defaultLibrary: IconLibrary): ConfigDropdownItem[] {
   return normalizeDropdowns(
     rawProducts.map((p) => {
       const obj = p as Record<string, unknown>
@@ -252,12 +248,13 @@ function normalizeProducts(rawProducts: unknown[]): ConfigDropdownItem[] {
         dropdown: obj.product as string || '',
       }
     }),
+    defaultLibrary,
   )
 }
 
 /** Normalize all navigation variants to { tabs, anchors, versions, dropdowns }.
  *  Version/dropdown inner tabs are flattened into the main tabs for routing. */
-function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
+function normalizeNavigation(raw: unknown, defaultLibrary: IconLibrary): HolocronConfig['navigation'] {
   if (!raw) {
     return EMPTY_NAV
   }
@@ -270,7 +267,7 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
     const first = raw[0]
     // Array of tabs
     if (first && typeof first === 'object' && 'tab' in first) {
-      const base = normalizeTabsAndAnchors(raw as Array<Record<string, unknown>>, [])
+      const base = normalizeTabsAndAnchors(raw as Array<Record<string, unknown>>, [], defaultLibrary)
       return { ...base, versions: [], dropdowns: [] }
     }
     // Array of groups → wrap in single implicit tab
@@ -293,10 +290,10 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
     const allAnchors = [...globalAnchors, ...rootAnchors]
 
     // Normalize versions/dropdowns/products from the raw navigation
-    const versions = Array.isArray(obj.versions) ? normalizeVersions(obj.versions) : []
+    const versions = Array.isArray(obj.versions) ? normalizeVersions(obj.versions, defaultLibrary) : []
     const dropdowns = [
-      ...(Array.isArray(obj.dropdowns) ? normalizeDropdowns(obj.dropdowns) : []),
-      ...(Array.isArray(obj.products) ? normalizeProducts(obj.products) : []),
+      ...(Array.isArray(obj.dropdowns) ? normalizeDropdowns(obj.dropdowns, defaultLibrary) : []),
+      ...(Array.isArray(obj.products) ? normalizeProducts(obj.products, defaultLibrary) : []),
     ]
 
     // Flatten version/dropdown inner tabs for routing. Inner anchors stay
@@ -315,9 +312,9 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
 
     // Has versions/dropdowns/products as root organizational keys
     if (versions.length > 0 || dropdowns.length > 0) {
-      // Also allow top-level tabs/groups/pages alongside versions/dropdowns
+        // Also allow top-level tabs/groups/pages alongside versions/dropdowns
       if (Array.isArray(obj.tabs)) {
-        const base = normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, [])
+        const base = normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, [], defaultLibrary)
         flatTabs.push(...base.tabs)
         flatAnchors.push(...base.anchors)
       } else if (Array.isArray(obj.groups)) {
@@ -331,7 +328,7 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
 
     // Has explicit tabs (no versions/dropdowns)
     if (Array.isArray(obj.tabs)) {
-      const base = normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, allAnchors)
+      const base = normalizeTabsAndAnchors(obj.tabs as Array<Record<string, unknown>>, allAnchors, defaultLibrary)
       return { ...base, versions: [], dropdowns: [] }
     }
 
@@ -371,13 +368,18 @@ function normalizeNavigation(raw: unknown): HolocronConfig['navigation'] {
 function normalizeTabsAndAnchors(
   rawTabs: Array<Record<string, unknown>>,
   existingAnchors: ConfigAnchor[],
+  defaultLibrary: IconLibrary,
 ): { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] } {
   const tabs: ConfigNavTab[] = []
   const anchors: ConfigAnchor[] = [...existingAnchors]
 
   for (const raw of rawTabs) {
     const name = (raw.tab as string) || ''
-    const icon = sanitizeIcon(raw.icon as ConfigIcon | undefined, `tab "${name}"`)
+    const icon = sanitizeIcon({
+      icon: raw.icon as ConfigIcon | undefined,
+      context: `tab "${name}"`,
+      defaultLibrary,
+    })
 
     const hidden = raw.hidden as boolean | undefined
     const align = raw.align as ('start' | 'end') | undefined
@@ -428,7 +430,7 @@ function normalizeTabsAndAnchors(
  *
  * Always normalize to { label, href }. Derive label from type if missing.
  */
-function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
+function normalizeNavbar(raw: unknown, defaultLibrary: IconLibrary): HolocronConfig['navbar'] {
   if (!raw || typeof raw !== 'object') {
     return { links: [] }
   }
@@ -450,14 +452,17 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
     // with no explicit icon. Without this, the navbar link would render
     // empty (only aria-label set) — the original "invisible github link" bug.
     const rawIcon = sanitizeIcon(
-      link.icon as ConfigIcon | undefined,
-      `navbar.links[${label || href}]`,
+      {
+        icon: link.icon as ConfigIcon | undefined,
+        context: `navbar.links[${label || href}]`,
+        defaultLibrary,
+      },
     )
     const icon: ConfigIcon | undefined =
       rawIcon !== undefined
         ? rawIcon
-        : type && TYPE_ICONS[type]
-          ? TYPE_ICONS[type]
+        : type && getDefaultTypeIcon(type, defaultLibrary)
+          ? getDefaultTypeIcon(type, defaultLibrary)
           : undefined
     return {
       label,
@@ -474,14 +479,17 @@ function normalizeNavbar(raw: unknown): HolocronConfig['navbar'] {
     // Same auto-fill logic for primary CTA — a `type: 'github'` primary
     // button without an explicit icon should render the github glyph.
     const rawIcon = sanitizeIcon(
-      rawPrimary.icon as ConfigIcon | undefined,
-      'navbar.primary',
+      {
+        icon: rawPrimary.icon as ConfigIcon | undefined,
+        context: 'navbar.primary',
+        defaultLibrary,
+      },
     )
     const icon: ConfigIcon | undefined =
       rawIcon !== undefined
         ? rawIcon
-        : type && TYPE_ICONS[type]
-          ? TYPE_ICONS[type]
+        : type && getDefaultTypeIcon(type, defaultLibrary)
+          ? getDefaultTypeIcon(type, defaultLibrary)
           : undefined
     primary = {
       label:

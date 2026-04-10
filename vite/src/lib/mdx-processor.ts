@@ -16,7 +16,7 @@ import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
-import { stringIconToRefs, type IconRef } from './collect-icons.ts'
+import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
 
 export type ProcessedMdx = {
   normalizedContent: string
@@ -70,18 +70,26 @@ export function processMdx(content: string): ProcessedMdx {
   }
 }
 
-export function collectMdxIconRefs(content: string): IconRef[] {
+export function collectMdxIconRefs(content: string, defaultLibrary: IconLibrary): IconRef[] {
   const normalizedContent = normalizeMdx(content)
   const frontmatter = parsePageFrontmatter(content)
   const mdast = mdxParse(normalizedContent)
-  return collectIconRefsFromMdast(mdast, frontmatter)
+  return collectIconRefsFromMdast({ mdast, frontmatter, defaultLibrary })
 }
 
-function collectIconRefsFromMdast(mdast: Root, frontmatter: PageFrontmatter): IconRef[] {
+function collectIconRefsFromMdast({
+  mdast,
+  frontmatter,
+  defaultLibrary,
+}: {
+  mdast: Root
+  frontmatter: PageFrontmatter
+  defaultLibrary: IconLibrary
+}): IconRef[] {
   const refs: IconRef[] = []
 
   if (typeof frontmatter.icon === 'string' && frontmatter.icon !== '') {
-    refs.push(...stringIconToRefs(frontmatter.icon))
+    refs.push(...stringIconToRefs(frontmatter.icon, { defaultLibrary }))
   }
 
   function walk(nodes: RootContent[]) {
@@ -90,7 +98,7 @@ function collectIconRefsFromMdast(mdast: Root, frontmatter: PageFrontmatter): Ic
         const icon = getJsxAttrValue(node, 'icon')
         const iconType = getJsxAttrValue(node, 'iconType')
         if (icon) {
-          refs.push(...stringIconToRefs(icon, iconType))
+          refs.push(...stringIconToRefs(icon, { defaultLibrary, iconType }))
         }
       }
       if ('children' in node && Array.isArray(node.children)) {
@@ -100,7 +108,7 @@ function collectIconRefsFromMdast(mdast: Root, frontmatter: PageFrontmatter): Ic
   }
 
   walk(mdast.children)
-  return refs
+  return Array.from(new Set(refs))
 }
 
 function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading | undefined {

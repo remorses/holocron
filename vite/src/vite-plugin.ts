@@ -21,19 +21,27 @@ import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
-import { collectIconRefs } from './lib/collect-icons.ts'
-import { resolveIconSvgs, type IconAtlas } from './lib/resolve-icons.ts'
-import { collectMdxIconRefs } from './lib/mdx-processor.ts'
 import { prismLanguageIds } from './components/markdown/prism-languages.ts'
 import react from '@vitejs/plugin-react'
 
 const nodeRequire = createRequire(import.meta.url)
+
+export type HolocronVirtualModules = {
+  /** Custom source for `virtual:holocron-config` */
+  config?: string
+  /** Custom source for `virtual:holocron-navigation` */
+  navigation?: string
+  /** Custom source for `virtual:holocron-mdx` */
+  mdx?: string
+}
 
 export type HolocronPluginOptions = {
   /** Path to config file. Defaults to auto-discovery (holocron.jsonc, docs.json) */
   configPath?: string
   /** Path to pages directory. Defaults to '.' (project root, matching Mintlify convention) */
   pagesDir?: string
+  /** Override virtual module source code for runtime-backed experiments. */
+  virtualModules?: HolocronVirtualModules
 }
 
 const VIRTUAL_CONFIG = 'virtual:holocron-config'
@@ -50,9 +58,6 @@ const RESOLVED_MDX_PAGE_PREFIX = '\0' + VIRTUAL_MDX_PAGE_PREFIX
 
 const VIRTUAL_APP = 'virtual:holocron-app'
 const RESOLVED_APP = '\0' + VIRTUAL_APP
-
-const VIRTUAL_ICONS = 'virtual:holocron-icons'
-const RESOLVED_ICONS = '\0' + VIRTUAL_ICONS
 
 function getMdxPathForSlug(pagesDir: string, slug: string): string | undefined {
   for (const ext of ['.mdx', '.md']) {
@@ -110,7 +115,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let root: string
   let config: HolocronConfig
   let syncResult: SyncResult
-  let iconAtlas: IconAtlas
   let pagesDir: string
   let publicDirPath: string
   let distDirPath: string
@@ -214,21 +218,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         distDir: distDirPath,
       })
 
-      // Walk config, navigation, and page MDX so content components like
-      // <Card icon="react"> and <Accordion icon="building-columns"> get
-      // bundled into the shared icon atlas too.
-      const mdxIconRefs = Object.values(syncResult.mdxContent).flatMap((markdown) => {
-        return collectMdxIconRefs(markdown)
-      })
-      const iconRefs = collectIconRefs({
-        config,
-        navigation: syncResult.navigation,
-        mdxIconRefs,
-      })
-      iconAtlas = resolveIconSvgs(iconRefs)
-
       console.log(
-        `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached), resolved ${Object.keys(iconAtlas.icons).length} icons`,
+        `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached)`,
       )
     },
 
@@ -258,13 +249,13 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (id === VIRTUAL_APP || id.endsWith('/' + VIRTUAL_APP)) {
         return RESOLVED_APP
       }
-      if (id === VIRTUAL_ICONS) {
-        return RESOLVED_ICONS
-      }
     },
 
     load(id) {
       if (id === RESOLVED_CONFIG) {
+        if (options.virtualModules?.config) {
+          return options.virtualModules.config
+        }
         // Register the config file as a dependency so it enters the module
         // graph. When the file changes, Vite associates the change with this
         // virtual module — @tailwindcss/vite sees a JS module in ctx.modules
@@ -280,6 +271,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         ].join('\n')
       }
       if (id === RESOLVED_NAVIGATION) {
+        if (options.virtualModules?.navigation) {
+          return options.virtualModules.navigation
+        }
         return [
           `const navigation = ${JSON.stringify(syncResult.navigation)}`,
           `const switchers = ${JSON.stringify(syncResult.switchers)}`,
@@ -287,6 +281,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {
+        if (options.virtualModules?.mdx) {
+          return options.virtualModules.mdx
+        }
         // Register every known MDX file as a dependency so edits to existing
         // pages flow through the module graph (same mechanism as config above).
         // New MDX files that don't exist yet are handled separately in hotUpdate.
@@ -302,12 +299,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         })
         return [
           `const slugs = ${JSON.stringify(slugs)}`,
+          `const pageIconRefs = ${JSON.stringify(syncResult.pageIconRefs)}`,
           `const loaders = { ${loaderEntries.join(', ')} }`,
           `export async function getMdxSlugs() { return slugs }`,
           `export async function getMdxSource(slug) {`,
           `  const load = loaders[slug]`,
           `  return load ? await load() : undefined`,
           `}`,
+          `export async function getPageIconRefs(slug) { return pageIconRefs[slug] ?? [] }`,
         ].join('\n')
       }
       if (id.startsWith(RESOLVED_MDX_PAGE_PREFIX)) {
@@ -326,18 +325,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return [
           `import { app } from '@holocron.so/vite/src/app'`,
           `export { app }`,
-          // Auto-start the server in production (when import.meta.hot is not available).
-          // In dev mode, spiceflow's SSR middleware handles requests instead.
-          `if (!import.meta.hot) { app.listen(Number(process.env.PORT || 3000)) }`,
-        ].join('\n')
-      }
-      if (id === RESOLVED_ICONS) {
-        // Static atlas — one JSON.stringify at build time, no runtime cost.
-        // Walks back to configResolved for the input, so any config edit that
-        // changes icons goes through the hotUpdate path below.
-        return [
-          `const iconAtlas = ${JSON.stringify(iconAtlas)}`,
-          `export async function getIconAtlas() { return iconAtlas }`,
+          // Auto-start the server in production, but defer it to a microtask so
+          // Spiceflow's generated virtual:app-entry module can attach its
+          // built-client static middleware before the listener starts handling
+          // requests.
+          `if (!import.meta.hot) { queueMicrotask(() => { app.listen(Number(process.env.PORT || 3000)) }) }`,
         ].join('\n')
       }
     },
@@ -405,18 +397,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           projectRoot: root,
           distDir: distDirPath,
         })
-        // Config changes can add/remove icons — re-resolve the atlas so
-        // new icons land in the client bundle on the next request.
-        const mdxIconRefs = Object.values(syncResult.mdxContent).flatMap((markdown) => {
-          return collectMdxIconRefs(markdown)
-        })
-        const iconRefs = collectIconRefs({
-          config,
-          navigation: syncResult.navigation,
-          mdxIconRefs,
-        })
-        iconAtlas = resolveIconSvgs(iconRefs)
-
         ctx.server.environments.client?.hot.send({
           type: 'custom',
           event: 'rsc:update',
@@ -427,7 +407,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // loader still derives its `site` payload from these async provider
         // modules. Return them from the client hook too so Vite refreshes the
         // client graph instead of leaving navigation/search/title state stale.
-        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_ICONS]) {
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX, RESOLVED_APP]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod) {
             clientHotModules.push(mod)
@@ -441,7 +421,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const resolvedIds = new Set<string>([
         RESOLVED_CONFIG,
         RESOLVED_NAVIGATION,
-        RESOLVED_ICONS,
+        RESOLVED_MDX,
+        RESOLVED_APP,
       ])
 
       if (isMdx) {

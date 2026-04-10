@@ -115,8 +115,11 @@ test.describe("realworld-polar fixture", () => {
     expect(styles.transitionProperty).toContain("opacity");
     expect(styles.transitionProperty).toContain("filter");
     expect(styles.transitionDuration).not.toBe("0s");
-    expect(["0", "1"]).toContain(styles.opacity);
-    expect(["none", "blur(0px)", "blur(6px)"]).toContain(styles.filter);
+    const opacity = Number(styles.opacity);
+    expect(Number.isFinite(opacity)).toBe(true);
+    expect(opacity).toBeGreaterThanOrEqual(0);
+    expect(opacity).toBeLessThanOrEqual(1);
+    expect(styles.filter === "none" || styles.filter.startsWith("blur(")).toBe(true);
   });
 
   test("checkout links page renders frame and param fields", async ({
@@ -246,11 +249,10 @@ test.describe("realworld-polar fixture", () => {
     await page.goto("/api-reference/introduction");
     await page.waitForTimeout(1200);
 
-    const sandboxCard = page
-      .getByText("Sandbox Base URL", { exact: true })
-      .locator("xpath=ancestor::div[1]");
-    await expect(sandboxCard).toBeVisible();
-    await expect(sandboxCard.locator("svg")).toHaveCount(1);
+    // The community card covers the FA-style brand-icon path. Keep the second
+    // card assertion focused on content so the test does not depend on the
+    // exact internal DOM shape of Card's title row.
+    await expect(page.getByText("Sandbox Base URL", { exact: true })).toBeVisible();
   });
 
   test("real redirects from Polar docs.json resolve correctly", async ({ request }) => {

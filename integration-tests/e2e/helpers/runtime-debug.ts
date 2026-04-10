@@ -105,7 +105,9 @@ export function expectNoClientRuntimeErrors(debug: RuntimeDebug): void {
 
 export function expectNoFontRequestFailures(debug: RuntimeDebug): void {
   const failures = debug.requestFailures.filter(
-    (failure) => failure.includes("/fonts/") || /font/i.test(failure),
+    (failure) =>
+      failure.includes("/fonts/") ||
+      /\.(woff2?|ttf|otf|eot)(\?|$)/i.test(failure),
   );
 
   expect(failures, buildClientLog(debug)).toEqual([]);
