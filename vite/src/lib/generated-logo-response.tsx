@@ -1,14 +1,16 @@
 /**
- * Server-only Takumi renderer for generated fallback logo PNGs.
+ * Takumi-backed renderer for generated fallback logo PNGs.
  */
 
 import React from 'react'
-import fontDataUrl from '../assets/neug-asia-script-demo.ttf?url&inline'
+import fontDataUrl from '../assets/momo-signature-regular.ttf?url&inline'
 import { DARK_LOGO_COLOR, LIGHT_LOGO_COLOR, normalizeGeneratedLogoText, type GeneratedLogoOptions } from './generated-logo.tsx'
 
-type RendererInstance = InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
+type RendererInstance =
+  | InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
+  | InstanceType<Awaited<typeof import('takumi-js/wasm')>['Renderer']>
 
-const FONT_FAMILY = 'Neug Asia Script Demo'
+const FONT_FAMILY = 'Momo Signature'
 const FONT_SIZE = 72
 
 let cachedFontData: Promise<ArrayBuffer> | undefined
@@ -27,8 +29,14 @@ let cachedRenderer: RendererInstance | undefined
 
 async function getRenderer(): Promise<RendererInstance> {
   if (!cachedRenderer) {
-    const { Renderer } = await import('takumi-js/node')
-    cachedRenderer = new Renderer()
+    try {
+      const { Renderer } = await import('takumi-js/node')
+      cachedRenderer = new Renderer()
+    } catch {
+      const { default: wasm, init, Renderer } = await import('takumi-js/wasm')
+      await init({ module_or_path: wasm })
+      cachedRenderer = new Renderer()
+    }
   }
   return cachedRenderer
 }

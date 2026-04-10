@@ -25,7 +25,10 @@ import { createFilesystemContentSource, type HolocronContentSource } from './lib
 import { collectIconRefs } from './lib/collect-icons.ts'
 import { resolveIconSvgs, type IconAtlas } from './lib/resolve-icons.ts'
 import { collectMdxIconRefs } from './lib/mdx-processor.ts'
+import { prismLanguageIds } from './components/markdown/prism-languages.ts'
 import react from '@vitejs/plugin-react'
+
+const nodeRequire = createRequire(import.meta.url)
 
 export type HolocronPluginOptions = {
   /** Path to config file. Defaults to auto-discovery (holocron.jsonc, docs.json) */
@@ -139,8 +142,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // Make spiceflow resolvable from the consumer's project root even when
       // it's only a transitive dependency of @holocron.so/vite. Without this,
       // pnpm strict hoisting prevents Vite from finding bare `spiceflow` imports.
-      const _require = createRequire(import.meta.url)
-      const spiceflowDir = path.dirname(_require.resolve('spiceflow/package.json'))
+      const spiceflowDir = path.dirname(nodeRequire.resolve('spiceflow/package.json'))
       const next: Pick<UserConfig, 'resolve'> = {
         resolve: {
           alias: [
@@ -424,12 +426,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         )
         config.optimizeDeps.include = mergeUnique(
           config.optimizeDeps.include,
-          [
-            '@holocron.so/vite > prismjs',
-            '@holocron.so/vite > prismjs/components/prism-jsx',
-            '@holocron.so/vite > prismjs/components/prism-tsx',
-            '@holocron.so/vite > prismjs/components/prism-bash',
-          ],
+          ['@holocron.so/vite > prismjs', ...prismLanguageIds.map((id) => `@holocron.so/vite > prismjs/components/prism-${id}`)],
         )
       }
 

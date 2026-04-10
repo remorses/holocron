@@ -1731,3 +1731,7 @@ Inline image placeholders were costing about 2.3 KB per image occurrence in rewr
 
 Live remote image URLs are flaky in e2e because docs sites can block or vary image fetches at build time.
 Cover remote placeholder generation in `sync.test.ts` with a tiny local HTTP image server, not a third-party URL.
+
+## Prism import order (2026-04-09)
+
+Loading every Prism component with flat side-effect imports only works in Prism's dependency order; raw `components.json` key order breaks on grammars like `arduino` that extend another language. A few components (`css-extras`, `js-extras`, `js-templates`, `php-extras`, `xml-doc`) are modifier-only and still won't expose `Prism.languages[id]` even when imported correctly.

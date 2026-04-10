@@ -1,0 +1,26 @@
+{
+  "name": "example-cloudflare",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && wrangler deploy"
+  },
+  "dependencies": {
+    "@holocron.so/vite": "workspace:^",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "spiceflow": "link:../../spiceflow-rsc/spiceflow",
+    "vite": "^8.0.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.29.2",
+    "@cloudflare/workers-types": "^4.20260408.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.11.1"
+  }
+}

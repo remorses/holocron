@@ -11,3 +11,4 @@ opencode.json
 tmp
 .tmp-*
 play
+.wrangler

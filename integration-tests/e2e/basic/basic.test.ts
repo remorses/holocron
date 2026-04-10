@@ -23,6 +23,17 @@ test.describe("home page", () => {
     expect(html).toContain("Overview");
     expect(html).toContain("</html>");
   });
+
+  test("renders markdown tables with the editorial wrapper", async ({ page }) => {
+    await page.goto("/");
+
+    const table = page.getByRole("table");
+    await expect(table).toBeVisible();
+    await expect(page.locator('[data-slot="table-container"]')).toBeVisible();
+    await expect(table.getByText("Feature")).toBeVisible();
+    await expect(table.getByText("Native tables")).toBeVisible();
+    await expect(table.getByText("Styled with editorial tokens")).toBeVisible();
+  });
 });
 
 test.describe("getting-started page", () => {

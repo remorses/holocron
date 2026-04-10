@@ -19,6 +19,14 @@ import {
   Heading,
   SectionHeading,
   ComparisonTable,
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
   PixelatedImage,
   Bleed,
   List,
@@ -63,7 +71,6 @@ import {
   ColorRow,
   ColorItem,
   Icon,
-  type HeadingLevel,
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 
@@ -98,6 +105,14 @@ export const mdxComponents = {
   Heading,
   a: A,
   code: Code,
+  table: Table,
+  thead: TableHeader,
+  tbody: TableBody,
+  tfoot: TableFooter,
+  tr: TableRow,
+  th: TableHead,
+  td: TableCell,
+  caption: TableCaption,
   ul: List,
   ol: OL,
   li: Li,
@@ -164,22 +179,21 @@ export function renderNode(
     const heading = node
     const text = extractText(heading.children)
     const id = slugify(text)
-    const level = Math.min(heading.depth - 1, 3) as HeadingLevel
+    const level = Math.min(heading.depth - 1, 3)
     return (
       <SectionHeading key={id} id={id} level={level}>
         {heading.children.map((child, i) => {
-          return <Fragment key={i}>{transform(child as MyRootContent)}</Fragment>
+          return <Fragment key={i}>{transform(child)}</Fragment>
         })}
       </SectionHeading>
     )
   }
   if (node.type === 'code') {
-    const codeNode = node as { lang?: string; value: string }
-    const lang = codeNode.lang || 'bash'
+    const lang = node.lang || 'bash'
     const isDiagram = lang === 'diagram'
     return (
       <CodeBlock lang={lang} lineHeight={isDiagram ? '1.3' : '1.6'} showLineNumbers={!isDiagram}>
-        {codeNode.value}
+        {node.value}
       </CodeBlock>
     )
   }
@@ -194,7 +208,7 @@ export function RenderNodes({ markdown, nodes }: { markdown: string; nodes: Root
   return (
     <SafeMdxRenderer
       markdown={markdown}
-      mdast={syntheticRoot as MyRootContent}
+      mdast={syntheticRoot}
       components={mdxComponents}
       renderNode={renderNode}
     />

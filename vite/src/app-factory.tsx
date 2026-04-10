@@ -28,7 +28,7 @@
 import './styles/globals.css'
 import React from 'react'
 import { Spiceflow, type AnySpiceflow, serveStatic, redirect } from 'spiceflow'
-import { Head } from 'spiceflow/react'
+import { Head, ProgressBar } from 'spiceflow/react'
 import { mdxParse } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
@@ -60,7 +60,9 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
-import type { ModelMessage } from 'ai'
+import { openai } from '@ai-sdk/openai'
+import { streamText, tool, type ModelMessage } from 'ai'
+import { z } from 'zod'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -288,6 +290,37 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
   }
 }
 
+async function createChatBashTool(
+  tool: typeof import('ai').tool,
+  files: Record<string, string>,
+) {
+  const { Bash } = await import('just-bash/browser')
+  const bash = new Bash({ files, cwd: '/docs' })
+
+  return tool({
+    description: [
+      'Execute bash commands in the in-memory documentation filesystem.',
+      'Working directory: /docs',
+      'Use grep -rn "term" /docs to search and cat /docs/slug.mdx to read files.',
+    ].join('\n'),
+    inputSchema: z.object({
+      command: z.string().describe('The bash command to execute'),
+    }),
+    execute: async ({ command }: { command: string }): Promise<{
+      stdout: string
+      stderr: string
+      exitCode: number
+    }> => {
+      const result = await bash.exec(command)
+      return {
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode,
+      }
+    },
+  })
+}
+
 function getToolArgs(input: unknown): Record<string, unknown> {
   return isRecord(input) ? input : {}
 }
@@ -490,13 +523,9 @@ export function createHolocronApp(site: HolocronSiteData) {
 
   // /holocron-api/chat — AI assistant endpoint.
   // Streams server-rendered JSX parts via federation. The LLM uses
-  // bash-tool to search/read docs in a virtual filesystem.
+  // a bash-like tool to search/read docs in a virtual filesystem.
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
-      const { streamText } = await import('ai')
-      const { openai } = await import('@ai-sdk/openai')
-      const { createBashTool } = await import('bash-tool')
-
       const body = parseChatRequestBody(await request.json())
 
       // Build virtual filesystem with all docs
@@ -505,7 +534,7 @@ export function createHolocronApp(site: HolocronSiteData) {
         files[`/docs/${slug}.mdx`] = mdx
       }
 
-      const { tools } = await createBashTool({ files })
+      const bash = await createChatBashTool(tool, files)
 
       // Build system prompt
       const allPages = collectAllPages(site.navigation)
@@ -560,7 +589,7 @@ export function createHolocronApp(site: HolocronSiteData) {
 
       const result = streamText({
         model: openai('gpt-5.4-nano'),
-        tools: { bash: tools.bash },
+        tools: { bash },
         messages,
         stopWhen: (event) => event.steps.length >= 30,
       })
@@ -742,7 +771,10 @@ export function createHolocronApp(site: HolocronSiteData) {
             <Head.Meta name='robots' content='noindex' />
           </Head>
         )}
-        <body>{children ?? notFoundContent}</body>
+        <body>
+          <ProgressBar color='var(--brand-primary)' />
+          {children ?? notFoundContent}
+        </body>
       </html>
     )
   })

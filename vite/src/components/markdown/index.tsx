@@ -37,7 +37,17 @@ export {
 
 export { CodeBlock } from './code-block.tsx'
 export { PixelatedImage, LazyVideo, ChartPlaceholder } from './image.tsx'
-export { ComparisonTable } from './table.tsx'
+export {
+  ComparisonTable,
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from './table.tsx'
 export {
   Badge,
   Card,

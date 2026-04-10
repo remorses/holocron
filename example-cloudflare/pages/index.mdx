@@ -1,0 +1,22 @@
+---
+title: Holocron on Cloudflare
+description: Minimal Holocron example deployed as a Cloudflare Worker.
+---
+
+<Hero className='my-8'>
+
+<h1 className='text-2xl my-3 font-semibold text-center'>Holocron on Cloudflare</h1>
+
+<p className='text-center'>A minimal docs site using `pages/` and Cloudflare Workers.</p>
+
+</Hero>
+
+## Overview
+
+This example keeps the docs source in `pages/` instead of the project root.
+
+It uses the regular `holocron()` plugin plus `@cloudflare/vite-plugin` so the same build can be deployed with `wrangler deploy`.
+
+<Tip>
+Use this folder as the smallest starting point for a Cloudflare-hosted Holocron site.
+</Tip>
