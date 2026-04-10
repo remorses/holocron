@@ -31,6 +31,7 @@ type Hotspot = {
 }
 
 const repoRoot = path.join(import.meta.dirname, '..', '..', '..').replaceAll('\\', '/')
+const repoName = path.basename(repoRoot)
 const profilePath = path.join(import.meta.dirname, '..', '..', 'fixtures', 'cpu-profiles', 'realworld-polar-dev.cpuprofile')
 const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8')) as CpuProfile
 
@@ -41,12 +42,17 @@ function normalizeLocation(url: string): string {
   if (url.startsWith('node:')) return url
 
   const raw = url.startsWith('file://') ? url.slice('file://'.length) : url
-  if (raw.startsWith(`${repoRoot}/node_modules/.pnpm/`)) {
-    return `nm/${raw.slice(`${repoRoot}/node_modules/.pnpm/`.length)}`
+  const pnpmIndex = raw.lastIndexOf('/node_modules/.pnpm/')
+  if (pnpmIndex !== -1) {
+    return `nm/${raw.slice(pnpmIndex + '/node_modules/.pnpm/'.length)}`
   }
-  if (raw.startsWith(`${repoRoot}/`)) {
-    return `<repo>/${raw.slice(`${repoRoot}/`.length)}`
+
+  const repoMarker = `/${repoName}/`
+  const repoIndex = raw.lastIndexOf(repoMarker)
+  if (repoIndex !== -1) {
+    return `<repo>/${raw.slice(repoIndex + repoMarker.length)}`
   }
+
   return raw
 }
 
