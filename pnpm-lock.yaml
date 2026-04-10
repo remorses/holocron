@@ -58,8 +58,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.4(react@19.2.4)
       spiceflow:
-        specifier: link:../../spiceflow-rsc/spiceflow
-        version: link:../../spiceflow-rsc/spiceflow
+        specifier: 1.18.0-rsc.25
+        version: 1.18.0-rsc.25(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       vite:
         specifier: ^8.0.3
         version: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
@@ -110,8 +110,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.4(react@19.2.4)
       spiceflow:
-        specifier: file:/Users/morse/Documents/GitHub/spiceflow-rsc/spiceflow
-        version: file:../spiceflow-rsc/spiceflow(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
+        specifier: 1.18.0-rsc.25
+        version: 1.18.0-rsc.25(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.2
@@ -216,8 +216,8 @@ importers:
         specifier: ^1.3.9
         version: 1.3.9(react@19.2.4)
       spiceflow:
-        specifier: link:../../spiceflow-rsc/spiceflow
-        version: link:../../spiceflow-rsc/spiceflow
+        specifier: 1.18.0-rsc.25
+        version: 1.18.0-rsc.25(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -2530,8 +2530,8 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
-  spiceflow@file:../spiceflow-rsc/spiceflow:
-    resolution: {directory: ../spiceflow-rsc/spiceflow, type: directory}
+  spiceflow@1.18.0-rsc.25:
+    resolution: {integrity: sha512-vKfSnDDDBjS9gVcAzn4BUBNpTwwnP2AVVLsaPfEsNCXFxZuSExrBr4+Bt2Prg71YygF4VUqzJR+GbMVINFRNMA==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '*'
       react: '*'
@@ -5347,7 +5347,7 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
-  spiceflow@file:../spiceflow-rsc/spiceflow(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6):
+  spiceflow@1.18.0-rsc.25(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6):
     dependencies:
       '@vitejs/plugin-rsc': 0.5.21(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
       errore: 0.14.1

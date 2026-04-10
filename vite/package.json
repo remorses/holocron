@@ -77,7 +77,7 @@
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
     "safe-mdx": "^1.3.9",
-    "spiceflow": "link:../../spiceflow-rsc/spiceflow",
+    "spiceflow": "1.18.0-rsc.25",
     "string-dedent": "^3.0.2",
     "takumi-js": "1.0.0-rc.15",
     "unist-util-visit": "^5.1.0",
