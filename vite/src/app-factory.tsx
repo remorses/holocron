@@ -57,8 +57,7 @@ import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
 import { openai } from '@ai-sdk/openai'
-import { streamText, tool, type ModelMessage } from 'ai'
-import { z } from 'zod'
+import { streamText, type ModelMessage } from 'ai'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -70,6 +69,7 @@ import {
 } from './site-data.ts'
 import type { HolocronConfig } from './config.ts'
 import type { IconAtlas } from './lib/resolve-icons.ts'
+import { createChatBashTool } from './lib/chat-bash-tool.ts'
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -313,37 +313,6 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
     currentSlug: value.currentSlug,
     ...(previousMessages ? { previousMessages } : {}),
   }
-}
-
-async function createChatBashTool(
-  tool: typeof import('ai').tool,
-  files: Record<string, string>,
-) {
-  const { Bash } = await import('just-bash/browser')
-  const bash = new Bash({ files, cwd: '/docs' })
-
-  return tool({
-    description: [
-      'Execute bash commands in the in-memory documentation filesystem.',
-      'Working directory: /docs',
-      'Use grep -rn "term" /docs to search and cat /docs/slug.mdx to read files.',
-    ].join('\n'),
-    inputSchema: z.object({
-      command: z.string().describe('The bash command to execute'),
-    }),
-    execute: async ({ command }: { command: string }): Promise<{
-      stdout: string
-      stderr: string
-      exitCode: number
-    }> => {
-      const result = await bash.exec(command)
-      return {
-        stdout: result.stdout,
-        stderr: result.stderr,
-        exitCode: result.exitCode,
-      }
-    },
-  })
 }
 
 function getToolArgs(input: unknown): Record<string, unknown> {
@@ -606,7 +575,7 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
         files[`/docs/${slug}.mdx`] = mdx
       }
 
-      const bash = await createChatBashTool(tool, files)
+      const bash = await createChatBashTool({ files, skillUrls: [] })
 
       // Build system prompt
       const allPages = collectAllPages(site.navigation)
