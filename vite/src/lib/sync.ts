@@ -17,7 +17,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { collectMdxIconRefs, processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
+import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
@@ -157,12 +157,12 @@ export async function syncNavigation({
     if (cached && cached.gitSha === sha && cachedMdx) {
       cachedCount++
       mdxContent[slug] = cachedMdx
-      pageIconRefs[slug] = oldPageIconRefs[slug] ?? collectMdxIconRefs(cachedMdx, config.icons.library)
+      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
       return cached
     }
 
     // Cache miss — full processing
-    const processed = processMdx(content)
+    const processed = processMdx(content, config.icons.library)
     parsedCount++
 
     const mdxDir = path.dirname(mdxPath)
@@ -212,7 +212,7 @@ export async function syncNavigation({
 
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
-    pageIconRefs[slug] = collectMdxIconRefs(finalMdx, config.icons.library)
+    pageIconRefs[slug] = processed.iconRefs
 
     return {
       slug,

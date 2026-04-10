@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 /**
  * Fixture: fixtures/tabs/
@@ -6,9 +6,20 @@ import { expect, test } from "@playwright/test";
  */
 
 test.describe("tabs fixture — navigation.tabs with external link tabs", () => {
-  test("renders the Docs tab with its groups and pages", async ({ page }) => {
+  async function openTabsHome(page: Page, request: APIRequestContext) {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    expect(response.status()).toBe(200);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("navigation", { name: "Navigation" })).toBeVisible({
+      timeout: 10000,
+    });
+  }
+
+  test("renders the Docs tab with its groups and pages", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openTabsHome(page, request);
 
     await expect(page).toHaveTitle(/Tabs Docs/);
 
@@ -24,11 +35,9 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await expect(nav.getByRole("link", { name: "Theming" })).toBeVisible();
   });
 
-  test("renders external link-only tabs (GitHub, Changelog)", async ({
-    page,
-  }) => {
+  test("renders external link-only tabs (GitHub, Changelog)", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openTabsHome(page, request);
 
     // Link-only tabs render as anchors inside the tab bar
     const tabBar = page.locator(".slot-tabbar");
@@ -67,8 +76,9 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await expect(page).toHaveTitle(/Theming/);
   });
 
-  test("renders banner with dismiss button", async ({ page }) => {
-    await page.goto("/");
+  test("renders banner with dismiss button", async ({ page, request }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await openTabsHome(page, request);
     const banner = page.locator(".slot-banner");
     await expect(banner).toBeVisible();
     await expect(banner).toContainText("We just launched v2!");
@@ -79,9 +89,9 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await expect(banner.getByRole("button", { name: "Dismiss banner" })).toBeVisible();
   });
 
-  test("renders footer with socials and link columns", async ({ page }) => {
+  test("renders footer with socials and link columns", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openTabsHome(page, request);
     const footer = page.locator("footer");
     await expect(footer).toBeVisible();
     // Social links
@@ -100,16 +110,16 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await expect(footer.getByRole("link", { name: "Careers" })).toBeVisible();
   });
 
-  test("renders theme toggle button", async ({ page }) => {
+  test("renders theme toggle button", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openTabsHome(page, request);
     const toggle = page.getByRole("button", { name: /Switch to (dark|light) mode/ });
     await expect(toggle).toBeVisible();
   });
 
-  test("renders primary CTA button in navbar", async ({ page }) => {
+  test("renders primary CTA button in navbar", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openTabsHome(page, request);
     const cta = page.getByRole("link", { name: "Get Started" });
     await expect(cta).toBeVisible();
     await expect(cta).toHaveAttribute("href", "https://example.com/signup");
@@ -125,22 +135,24 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     expect(html).toContain("A documentation site with tabs");
   });
 
-  test("injects brand-primary color from config", async ({ page }) => {
-    await page.goto("/");
+  test("injects brand-primary color from config", async ({ page, request }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await openTabsHome(page, request);
     // The banner uses bg-(color:--brand-primary) so if colors work, the
     // banner is visible with the brand color
     const banner = page.locator(".slot-banner");
     await expect(banner).toBeVisible();
   });
 
-  test("search input has custom placeholder", async ({ page }) => {
+  test("search input has custom placeholder", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openTabsHome(page, request);
     const searchInput = page.getByPlaceholder("Search the docs...");
     await expect(searchInput).toBeVisible();
   });
 
-  test("no hydration errors on tabs home page", async ({ page }) => {
+  test("no hydration errors on tabs home page", async ({ page, request }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
     const errors: string[] = [];
     function isIgnorableDevReloadError(message: string): boolean {
       return message.includes("Failed to fetch dynamically imported module:");
@@ -157,7 +169,7 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
       errors.push(err.message);
     });
 
-    await page.goto("/");
+    await openTabsHome(page, request);
     await page.waitForTimeout(2000);
     expect(
       errors,

@@ -26,6 +26,8 @@ export type ProcessedMdx = {
    *  A string value is either a lucide icon name, an emoji, or a URL. */
   icon?: string
   frontmatter: PageFrontmatter
+  /** Canonical icon refs found in frontmatter + JSX icon props. */
+  iconRefs: IconRef[]
   headings: NavHeading[]
   /** All image srcs that need build-time processing */
   imageSrcs: string[]
@@ -40,13 +42,14 @@ type JsxNode = RootContent & {
 }
 
 /**
- * Parse MDX content and extract metadata + image srcs.
+ * Parse MDX content and extract metadata + icon/image refs.
  * Returns the mdast tree for reuse by rewriteMdxImages.
  */
-export function processMdx(content: string): ProcessedMdx {
+export function processMdx(content: string, defaultLibrary: IconLibrary = 'lucide'): ProcessedMdx {
   const normalizedContent = normalizeMdx(content)
   const frontmatter = parsePageFrontmatter(content)
   const mdast = mdxParse(normalizedContent)
+  const iconRefs = collectIconRefsFromMdast({ mdast, frontmatter, defaultLibrary })
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
   const slugger = new GithubSlugger()
@@ -64,17 +67,11 @@ export function processMdx(content: string): ProcessedMdx {
     description: frontmatter.description,
     icon: typeof frontmatter.icon === 'string' && frontmatter.icon !== '' ? frontmatter.icon : undefined,
     frontmatter,
+    iconRefs,
     headings,
     imageSrcs,
     mdast,
   }
-}
-
-export function collectMdxIconRefs(content: string, defaultLibrary: IconLibrary): IconRef[] {
-  const normalizedContent = normalizeMdx(content)
-  const frontmatter = parsePageFrontmatter(content)
-  const mdast = mdxParse(normalizedContent)
-  return collectIconRefsFromMdast({ mdast, frontmatter, defaultLibrary })
 }
 
 function collectIconRefsFromMdast({

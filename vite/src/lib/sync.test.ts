@@ -738,6 +738,41 @@ icon: rocket
     expect(result.pageIconRefs.page).toEqual(['lucide:rocket', 'lucide:github'])
   })
 
+  test('preserves page icon refs when image rewriting mutates the mdast', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: rocket
+---
+
+<Card icon="github" />
+
+<img src="./dot.svg" />`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    fs.writeFileSync(
+      path.join(project.pagesDir, 'dot.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" fill="#38bdf8" /></svg>`,
+    )
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.mdxContent.page).toContain('<PixelatedImage')
+    expect(result.pageIconRefs.page).toEqual(['lucide:rocket', 'lucide:github'])
+  })
+
   test('title falls back to first heading when no frontmatter', async () => {
     const project = tracked(createProject(
       {

@@ -1,7 +1,24 @@
 import { describe, test, expect } from 'vitest'
-import { collectMdxIconRefs, processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
+import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
 
 describe('processMdx', () => {
+  test('collects icon refs from the initial parse using the configured library', () => {
+    const result = processMdx(`---
+title: Icons
+icon: rocket
+---
+
+<Card icon="github" />
+<Card icon="fontawesome:brands:discord" />
+`, 'lucide')
+
+    expect(result.iconRefs).toEqual([
+      'lucide:rocket',
+      'lucide:github',
+      'fontawesome:brands:discord',
+    ])
+  })
+
   test('extracts frontmatter', () => {
     const result = processMdx(`---
 title: Hello World
@@ -421,20 +438,20 @@ description: A description
   })
 })
 
-describe('collectMdxIconRefs', () => {
+describe('processMdx icon refs', () => {
   test('uses the configured project library for frontmatter and JSX icon strings', () => {
-    expect(collectMdxIconRefs(`---
+    expect(processMdx(`---
 icon: rocket
 ---
 
 <Card icon="github" />
-`, 'lucide')).toEqual(['lucide:rocket', 'lucide:github'])
+`, 'lucide').iconRefs).toEqual(['lucide:rocket', 'lucide:github'])
   })
 
   test('supports explicit library prefixes and fontawesome iconType', () => {
-    expect(collectMdxIconRefs(`
+    expect(processMdx(`
 <Card icon="fontawesome:brands:discord" />
 <Card icon="user" iconType="regular" />
-`, 'fontawesome')).toEqual(['fontawesome:brands:discord', 'fontawesome:regular:user'])
+`, 'fontawesome').iconRefs).toEqual(['fontawesome:brands:discord', 'fontawesome:regular:user'])
   })
 })

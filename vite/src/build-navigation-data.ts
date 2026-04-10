@@ -24,7 +24,7 @@ export async function buildNavigationData({
     if (content === undefined) {
       throw new Error(`[holocron] custom navigation builder could not load MDX for page "${slug}"`)
     }
-    const processed = processMdx(content)
+    const processed = processMdx(content, config.icons.library)
     return {
       slug,
       href: slugToHref(slug),

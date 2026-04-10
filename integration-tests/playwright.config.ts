@@ -79,7 +79,7 @@ const webServers = fixturePorts.map(({ fixture, port }) => {
 // Fixtures whose test files mutate shared state (config, MDX pages) on disk
 // must avoid in-project parallelism so multiple mutating files don't race on
 // the same Vite server. Read-only fixtures can still run fully parallel.
-const SERIAL_FIXTURES = new Set(["basic-hmr", "realworld-polar"]);
+const SERIAL_FIXTURES = new Set(["basic-hmr", "realworld-polar", "versions"]);
 
 const projects = fixturePorts.map(({ fixture, port }) => ({
   name: fixture.name,
@@ -95,18 +95,23 @@ const projects = fixturePorts.map(({ fixture, port }) => ({
 
 export default defineConfig({
   globalTeardown: "./scripts/cleanup-e2e.ts",
+  timeout: 20_000,
+  expect: {
+    timeout: 3_000,
+  },
   use: {
-    actionTimeout: 5000,
-    navigationTimeout: 10000,
+    actionTimeout: 4_000,
+    navigationTimeout: 8_000,
     trace: "on-first-retry",
   },
   projects,
   webServer: webServers,
   fullyParallel: true,
-  // Default workers (half CPU count) for local runs; CI stays single-threaded
-  // for stability. Fixtures with HMR tests (basic) are pinned to
-  // fullyParallel: false at the project level — see SERIAL_FIXTURES above.
-  workers: process.env["CI"] ? 1 : undefined,
+  // Dev-mode e2e runs boot one Vite server per fixture and compile routes on
+  // demand. Letting Playwright fan out to the default half-CPU worker count can
+  // starve several fixture servers at once, so cap local dev runs to a smaller
+  // stable pool while keeping build-mode and CI behavior unchanged.
+  workers: process.env["CI"] ? 1 : isStart ? undefined : 4,
   // Config-HMR tests tagged @dev only run against the dev server; build-mode
   // tests skip them (and vice-versa). Non-tagged tests run in both modes.
   grepInvert: isStart ? /@dev/ : /@build/,

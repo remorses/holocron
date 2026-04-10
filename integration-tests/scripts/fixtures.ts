@@ -73,7 +73,10 @@ export function cleanupFixtureRunArtifacts(rootDir: string, runId = ensureE2ERun
 
   for (const dir of runScopedDirs) {
     if (fs.existsSync(dir)) {
-      fs.rmSync(dir, { recursive: true, force: true });
+      // Playwright tears down the fixture web servers just before this cleanup.
+      // Vite can still be finishing cache writes for a moment, so retry ENOTEMPTY
+      // instead of failing an otherwise-passing run during global teardown.
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   }
 

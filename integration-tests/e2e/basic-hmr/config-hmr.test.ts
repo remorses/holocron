@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 declare global {
   interface Window {
@@ -14,6 +14,17 @@ function markNoReload(): void {
 
 function readNoReload(): boolean | undefined {
   return window.__hmr_test_no_reload;
+}
+
+async function openBasicHmrHome(page: Page, request: APIRequestContext) {
+  const response = await request.get("/", {
+    headers: { "sec-fetch-dest": "document" },
+  });
+  expect(response.status()).toBe(200);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Test Docs" })).toBeVisible({
+    timeout: 10000,
+  });
 }
 
 // The fixture root for these tests is fixtures/basic-hmr/ inside integration-tests/.
@@ -92,9 +103,10 @@ test.describe.serial("new MDX file HMR @dev", () => {
 
   test("creating a new MDX file after hydration updates the UI without page refresh", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openBasicHmrHome(page, request);
     await page.waitForTimeout(2000);
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
@@ -183,9 +195,10 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
 
   test("deleting an MDX file removes it from the sidebar without page refresh", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openBasicHmrHome(page, request);
     await page.waitForTimeout(2000);
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
@@ -248,9 +261,10 @@ test.describe.serial("config HMR @dev", () => {
 
   test("adding a navigation group updates the sidebar without page refresh", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await openBasicHmrHome(page, request);
 
     // Wait for hydration so the rsc:update listener is active
     await page.waitForTimeout(2000);

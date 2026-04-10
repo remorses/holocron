@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import {
   captureRuntimeDebug,
   dumpRuntimeDebug,
@@ -31,11 +31,33 @@ test.afterEach(async ({}, testInfo) => {
 });
 
 test.describe("realworld-polar fixture", () => {
+  async function warmAndOpen(
+    { page, request, href, ready }: {
+      page: Page;
+      request: APIRequestContext;
+      href: string;
+      ready: Locator;
+    },
+  ) {
+    const response = await request.get(href, {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    expect(response.status()).toBe(200);
+    await page.goto(href, { waitUntil: "domcontentloaded" });
+    await expect(ready).toBeVisible({ timeout: 10000 });
+  }
+
   test("home page renders real Polar docs navigation and content", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await warmAndOpen({
+      page,
+      request,
+      href: "/",
+      ready: page.getByRole("link", { name: "Docs", exact: true }),
+    });
     await page.waitForTimeout(1500);
 
     await expect(page).toHaveTitle(/Polar/);
@@ -66,12 +88,17 @@ test.describe("realworld-polar fixture", () => {
 
   test("usage-based billing page renders imported snippet content", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/features/usage-based-billing/introduction");
+    await warmAndOpen({
+      page,
+      request,
+      href: "/features/usage-based-billing/introduction",
+      ready: page.getByText("Usage Based Billing is a new feature."),
+    });
     await page.waitForTimeout(1200);
 
-    await expect(page.getByText("Usage Based Billing is a new feature.")).toBeVisible();
     await expect(page.getByText("Polar has a powerful Usage Based Billing infrastructure")).toBeVisible();
     await expect(page.getByText("Get up and running in 5 minutes")).toBeVisible();
   });
@@ -80,14 +107,14 @@ test.describe("realworld-polar fixture", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/integrate/mcp");
+    await page.goto("/integrate/mcp", { waitUntil: "domcontentloaded" });
 
     const imageFrame = page.locator('.slot-main img[aria-hidden="true"]').first().locator("xpath=..");
     const placeholderImage = imageFrame.locator('img[aria-hidden="true"]');
     const realImage = imageFrame.locator('img:not([aria-hidden])');
 
     await expect(placeholderImage).toHaveCount(1);
-    await expect(realImage).toBeVisible();
+    await expect(realImage).toBeVisible({ timeout: 10000 });
 
     const [placeholderStyles, styles] = await Promise.all([
       placeholderImage.evaluate((node) => {
@@ -137,9 +164,15 @@ test.describe("realworld-polar fixture", () => {
 
   test("webhook events page renders columns of event cards", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/integrate/webhooks/events");
+    await warmAndOpen({
+      page,
+      request,
+      href: "/integrate/webhooks/events",
+      ready: page.getByRole("link", { name: "checkout.created" }),
+    });
     await page.waitForTimeout(1200);
 
     await expect(page.getByRole("link", { name: "checkout.created" })).toBeVisible();
@@ -235,9 +268,15 @@ test.describe("realworld-polar fixture", () => {
 
   test("Polar card icons render for Font Awesome-style names used in MDX", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await warmAndOpen({
+      page,
+      request,
+      href: "/",
+      ready: page.getByRole("link", { name: "Docs", exact: true }),
+    });
     await page.waitForTimeout(1200);
 
     const communityCard = page

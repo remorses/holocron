@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * Fixture: fixtures/versions/
@@ -6,9 +6,16 @@ import { expect, test } from "@playwright/test";
  */
 
 test.describe("versions fixture — navigation.versions with version switcher", () => {
+  async function openVersionPage(page: Page, href: string) {
+    await page.goto(href, { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("combobox", { name: "Select version" })).toBeVisible({
+      timeout: 10000,
+    });
+  }
+
   test("renders version selector in header", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/v2/overview");
+    await openVersionPage(page, "/v2/overview");
 
     // Version select should be visible in the header
     const versionSelect = page.getByRole("combobox", {
@@ -19,7 +26,7 @@ test.describe("versions fixture — navigation.versions with version switcher", 
 
   test("version selector shows both versions with tags", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/v2/overview");
+    await openVersionPage(page, "/v2/overview");
 
     const versionSelect = page.getByRole("combobox", {
       name: "Select version",
@@ -35,7 +42,7 @@ test.describe("versions fixture — navigation.versions with version switcher", 
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/v2/overview");
+    await openVersionPage(page, "/v2/overview");
 
     const versionSelect = page.getByRole("combobox", {
       name: "Select version",
@@ -53,7 +60,7 @@ test.describe("versions fixture — navigation.versions with version switcher", 
 
   test("hidden v1 page still resolves the owning version in the selector", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/v1/hidden-page");
+    await openVersionPage(page, "/v1/hidden-page");
 
     const versionSelect = page.getByRole("combobox", {
       name: "Select version",
