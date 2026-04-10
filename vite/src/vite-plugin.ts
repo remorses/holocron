@@ -302,7 +302,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           `const pageIconRefs = ${JSON.stringify(syncResult.pageIconRefs)}`,
           `const loaders = { ${loaderEntries.join(', ')} }`,
           `export function getMdxSlugs() { return slugs }`,
-          `export function getMdxSource(slug) {`,
+          `export async function getMdxSource(slug) {`,
           `  const load = loaders[slug]`,
           `  return load ? await load() : undefined`,
           `}`,
