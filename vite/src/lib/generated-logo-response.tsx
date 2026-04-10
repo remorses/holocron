@@ -3,14 +3,14 @@
  */
 
 import React from 'react'
-import fontDataUrl from '../assets/neug-asia-script-demo.ttf?url&inline'
+import fontDataUrl from '../assets/momo-signature-regular.ttf?url&inline'
 import { DARK_LOGO_COLOR, LIGHT_LOGO_COLOR, normalizeGeneratedLogoText, type GeneratedLogoOptions } from './generated-logo.tsx'
 
-type NodeRendererInstance = InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
-type WasmRendererInstance = InstanceType<Awaited<typeof import('takumi-js/wasm')>['Renderer']>
-type RendererInstance = NodeRendererInstance | WasmRendererInstance
+type RendererInstance =
+  | InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
+  | InstanceType<Awaited<typeof import('takumi-js/wasm')>['Renderer']>
 
-const FONT_FAMILY = 'Neug Asia Script Demo'
+const FONT_FAMILY = 'Momo Signature'
 const FONT_SIZE = 72
 
 let cachedFontData: Promise<ArrayBuffer> | undefined
