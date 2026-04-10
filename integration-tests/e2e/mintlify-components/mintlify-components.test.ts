@@ -4,7 +4,7 @@ test.describe("mintlify components fixture", () => {
   test("loads the page and renders representative components", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/");
-    await page.waitForTimeout(1200);
+    await expect(page.getByRole("heading", { name: "Mintlify Components" })).toBeVisible();
 
     await expect(page).toHaveTitle(/Mintlify Components/);
     await expect(page.getByRole("heading", { name: "Mintlify Components" })).toBeVisible();
@@ -20,14 +20,12 @@ test.describe("mintlify components fixture", () => {
     const npmTab = page.getByRole("tab", { name: "npm", exact: true }).first();
     const pnpmTab = page.getByRole("tab", { name: "pnpm", exact: true }).first();
     await expect(npmTab).toBeVisible();
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      await pnpmTab.click();
-      if ((await pnpmTab.getAttribute("aria-selected")) === "true") {
-        break;
-      }
-      await page.waitForTimeout(250);
-    }
-    await expect(pnpmTab).toHaveAttribute("aria-selected", "true");
+    await expect
+      .poll(async () => {
+        await pnpmTab.click();
+        return await pnpmTab.getAttribute("aria-selected");
+      })
+      .toBe("true");
     await expect(page.getByText("pnpm add holocron")).toBeVisible();
 
     const individualDevelopersTab = page.getByRole("tab", {

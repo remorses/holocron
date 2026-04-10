@@ -170,7 +170,7 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     });
 
     await openTabsHome(page, request);
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
     expect(
       errors,
       `Hydration errors found:\n${errors.join("\n")}`,

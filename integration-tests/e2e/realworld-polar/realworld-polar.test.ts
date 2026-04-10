@@ -58,7 +58,6 @@ test.describe("realworld-polar fixture", () => {
       href: "/",
       ready: page.getByRole("link", { name: "Docs", exact: true }),
     });
-    await page.waitForTimeout(1500);
 
     await expect(page).toHaveTitle(/Polar/);
     await expect(page.getByRole("link", { name: "Docs", exact: true })).toBeVisible();
@@ -77,8 +76,8 @@ test.describe("realworld-polar fixture", () => {
 
   test("api reference page renders overview content", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/api-reference/introduction");
-    await page.waitForTimeout(1200);
+    await page.goto("/api-reference/introduction", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveTitle(/API Overview/);
     await expect(page.getByRole("link", { name: "Base URLs", exact: true })).toBeVisible();
@@ -97,7 +96,6 @@ test.describe("realworld-polar fixture", () => {
       href: "/features/usage-based-billing/introduction",
       ready: page.getByText("Usage Based Billing is a new feature."),
     });
-    await page.waitForTimeout(1200);
 
     await expect(page.getByText("Polar has a powerful Usage Based Billing infrastructure")).toBeVisible();
     await expect(page.getByText("Get up and running in 5 minutes")).toBeVisible();
@@ -153,8 +151,8 @@ test.describe("realworld-polar fixture", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/features/checkout/links");
-    await page.waitForTimeout(1200);
+    await page.goto("/features/checkout/links", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
 
     await expect(page.getByRole("heading", { name: "Checkout Links" })).toBeVisible();
     await expect(page.getByText("customer_email")).toBeVisible();
@@ -173,7 +171,6 @@ test.describe("realworld-polar fixture", () => {
       href: "/integrate/webhooks/events",
       ready: page.getByRole("link", { name: "checkout.created" }),
     });
-    await page.waitForTimeout(1200);
 
     await expect(page.getByRole("link", { name: "checkout.created" })).toBeVisible();
     await expect(page.getByRole("link", { name: "customer.created" })).toBeVisible();
@@ -182,8 +179,8 @@ test.describe("realworld-polar fixture", () => {
 
   test("changelog page renders update entries", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/changelog/recent");
-    await page.waitForTimeout(1200);
+    await page.goto("/changelog/recent", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
 
     await expect(page.getByText("2026-01-31")).toBeVisible();
     await expect(page.getByText("Team Member Management (B2B)")).toBeVisible();
@@ -232,8 +229,12 @@ test.describe("realworld-polar fixture", () => {
     expect(before).not.toBeNull();
 
     await page.evaluate(() => window.scrollTo(0, 1000));
-    await page.waitForTimeout(200);
-
+    await expect
+      .poll(async () => {
+        const box = await sidebar.boundingBox();
+        return box ? Math.round(box.y) : null;
+      })
+      .not.toBeNull();
     const after = await sidebar.boundingBox();
     expect(after).not.toBeNull();
     expect(Math.round(after!.y)).toBe(Math.round(before!.y));
@@ -277,16 +278,16 @@ test.describe("realworld-polar fixture", () => {
       href: "/",
       ready: page.getByRole("link", { name: "Docs", exact: true }),
     });
-    await page.waitForTimeout(1200);
 
     const communityCard = page
       .getByText("Join Our Community", { exact: true })
       .locator("xpath=ancestor::a[1]");
     await expect(communityCard).toBeVisible();
     await expect(communityCard.locator("svg")).toHaveCount(1);
+    await page.waitForLoadState("networkidle");
 
-    await page.goto("/api-reference/introduction");
-    await page.waitForTimeout(1200);
+    await page.goto("/api-reference/introduction", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
 
     // The community card covers the FA-style brand-icon path. Keep the second
     // card assertion focused on content so the test does not depend on the

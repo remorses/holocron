@@ -25,6 +25,7 @@ async function openBasicHmrHome(page: Page, request: APIRequestContext) {
   await expect(page.getByRole("heading", { name: "Test Docs" })).toBeVisible({
     timeout: 10000,
   });
+  await page.waitForLoadState("networkidle");
 }
 
 // The fixture root for these tests is fixtures/basic-hmr/ inside integration-tests/.
@@ -59,7 +60,7 @@ test.describe.serial("MDX content HMR @dev", () => {
     page,
   }) => {
     await page.goto("/getting-started");
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
 
     await expect(page.getByText("Run the following command")).toBeVisible();
     await expect(page.getByText("HMR injected paragraph")).not.toBeVisible();
@@ -107,7 +108,6 @@ test.describe.serial("new MDX file HMR @dev", () => {
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await openBasicHmrHome(page, request);
-    await page.waitForTimeout(2000);
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
     await expect(nav.getByText(newPageTitle)).not.toBeVisible();
@@ -199,7 +199,6 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await openBasicHmrHome(page, request);
-    await page.waitForTimeout(2000);
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
     const deletedLink = nav.getByRole("link", { name: deletedTitle });
@@ -266,9 +265,6 @@ test.describe.serial("config HMR @dev", () => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await openBasicHmrHome(page, request);
 
-    // Wait for hydration so the rsc:update listener is active
-    await page.waitForTimeout(2000);
-
     const nav = page.getByRole("navigation", { name: "Navigation" });
 
     // Sanity: the new group should NOT be in the sidebar yet
@@ -315,7 +311,7 @@ test.describe.serial("config HMR @dev", () => {
   }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Test Docs" })).toBeVisible({ timeout: 10_000 });
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveTitle(/Test Docs/);
 
@@ -336,7 +332,7 @@ test.describe.serial("config HMR @dev", () => {
     fs.writeFileSync(configPath, updatedConfig);
 
     // Title should update to include the new name
-    await expect(page).toHaveTitle(/Updated Docs Name/, { timeout: 30_000 });
+    await expect(page).toHaveTitle(/Updated Docs Name/, { timeout: 15_000 });
 
   });
 });

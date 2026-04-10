@@ -320,6 +320,8 @@ Tests use Playwright's `request` fixture (not raw `fetch()`) so per-project `bas
 - `pnpm test-e2e-start` — builds every fixture, runs every fixture in prod mode
 - `pnpm test-e2e --project=<name>` — runs one specific fixture
 
+**Playwright waits**: avoid fixed sleeps like `page.waitForTimeout(2000)` in integration tests. Prefer condition-based waits such as `expect(...).toBeVisible()`, `page.waitForLoadState('networkidle')`, `expect.poll(...)`, or a concrete DOM/state change tied to the behavior under test.
+
 After changing `vite/src/` you must run `pnpm build` in the `vite/` package before re-running integration tests.
 
 ## takumi

@@ -176,8 +176,7 @@ test.describe("hydration", () => {
     });
 
     await page.goto("/");
-    // Wait for hydration to settle
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
 
@@ -193,7 +192,7 @@ test.describe("hydration", () => {
 
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/getting-started");
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
 
