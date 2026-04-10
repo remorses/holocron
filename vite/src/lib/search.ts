@@ -12,28 +12,24 @@ export type SearchEntry = {
   label: string
   href: string
   searchText: string
-  /** Path-based group key ("\0"-joined ancestor names) for auto-expanding. null for top-level groups. */
+  /** Path-based group key ("\0"-joined ancestor names). null for top-level groups. */
   groupPath: string | null
-  /** Page href this entry belongs to (null for groups and pages themselves). */
+  /** Page href this entry belongs to (null for page entries themselves). */
   pageHref: string | null
 }
 
+/**
+ * Active search result state. `null` when no query is active (show everything).
+ *
+ * All three fields are derived in one pass — no redundant sets.
+ *   matchedHrefs   — page hrefs + heading hrefs that matched the query
+ *   expandGroupKeys — ancestor group paths to force-open (same set used for visibility)
+ *   visiblePages   — pages to render: matched pages ∪ parent pages of matched headings
+ */
 export type SearchState = {
-  /** Set of hrefs that matched the query. null = no active search. */
-  matchedHrefs: Set<string> | null
-  /** Set of group keys to force-expand. null = no override. */
-  expandGroupKeys: Set<string> | null
-  /** Set of hrefs to dim (opacity 0.3). null = no dimming. */
-  dimmedHrefs: Set<string> | null
-  /** Ordered list of hrefs that are focusable via arrow keys. null = all focusable. */
-  focusableHrefs: string[] | null
-}
-
-export const emptySearchState: SearchState = {
-  matchedHrefs: null,
-  expandGroupKeys: null,
-  dimmedHrefs: null,
-  focusableHrefs: null,
+  matchedHrefs: Set<string>
+  expandGroupKeys: Set<string>
+  visiblePages: Set<string>
 }
 
 /* ── Orama DB ────────────────────────────────────────────────────────── */
@@ -46,77 +42,81 @@ const tocSchema = {
 /** Create and populate an Orama DB from search entries. Synchronous. */
 export function createSearchDb({ entries }: { entries: SearchEntry[] }): AnyOrama {
   const db = create({ schema: tocSchema })
-  insertMultiple(db, entries.map((e) => {
-    return { href: e.href, text: e.searchText }
-  })) as string[]
+  const insertResult = insertMultiple(db, entries.map((e) => ({ href: e.href, text: e.searchText })))
+  if (insertResult instanceof Promise) {
+    throw new Error('Expected synchronous search index insert')
+  }
   return db
 }
 
 /* ── Search ──────────────────────────────────────────────────────────── */
 
-/** Search the sidebar DB. Returns null matchedHrefs when query is empty (show all).
- *  Walks up the groupPath chain to expand all ancestor groups of matched items. */
+/**
+ * Search the sidebar DB. Returns `null` when query is empty (show all).
+ * Returns state with empty sets when there are no hits.
+ *
+ * One pass builds all three output sets:
+ *   matchedHrefs   — hrefs that matched (pages + headings)
+ *   expandGroupKeys — every ancestor group prefix (for force-expanding parent groups)
+ *   visiblePages   — pages to show in the sidebar (matched pages + parent pages of heading hits)
+ */
 export function searchSidebar({ db, query, entries }: {
   db: AnyOrama
   query: string
   entries: SearchEntry[]
-}): SearchState {
+}): SearchState | null {
   const trimmed = query.trim()
-  if (!trimmed) {
-    return emptySearchState
-  }
+  if (!trimmed) return null
 
-  const results = search(db, {
+  const searchResult = search(db, {
     term: trimmed,
     properties: ['text'],
     tolerance: 1,
     limit: entries.length,
-  }) as { hits: Array<{ id: string; score: number; document: { href: string; text: string } }> }
-
-  if (results.hits.length === 0) {
-    return {
-      matchedHrefs: new Set(),
-      expandGroupKeys: new Set(),
-      dimmedHrefs: new Set(entries.map((e) => { return e.href })),
-      focusableHrefs: [],
-    }
+  })
+  if (searchResult instanceof Promise) {
+    throw new Error('Expected synchronous sidebar search')
   }
 
-  const matchedSearchHrefs = new Set(results.hits.map((h) => { return h.document.href }))
+  const rawHits = new Set(searchResult.hits.map((h) => h.document.href))
+
   const matchedHrefs = new Set<string>()
   const expandGroupKeys = new Set<string>()
+  const visiblePages = new Set<string>()
 
   for (const entry of entries) {
-    if (matchedSearchHrefs.has(entry.href)) {
-      matchedHrefs.add(entry.href)
+    if (!rawHits.has(entry.href)) continue
 
-      /* Expand the group this entry lives in */
-      if (entry.groupPath) {
-        expandGroupKeys.add(entry.groupPath)
-        /* Walk up the \0-separated path to expand all ancestors */
-        const parts = entry.groupPath.split('\0')
-        for (let i = 1; i < parts.length; i++) {
-          expandGroupKeys.add(parts.slice(0, i).join('\0'))
-        }
-      }
+    matchedHrefs.add(entry.href)
 
-      /* If it's a heading match, also expand its parent page (mark it matched) */
-      if (entry.pageHref) {
-        matchedHrefs.add(entry.pageHref)
+    // Expand ancestor groups so the matched entry is reachable
+    if (entry.groupPath) {
+      const parts = entry.groupPath.split('\0')
+      for (let i = 1; i <= parts.length; i++) {
+        expandGroupKeys.add(parts.slice(0, i).join('\0'))
       }
+    }
+
+    if (entry.pageHref) {
+      // Heading hit — keep the parent page visible too
+      visiblePages.add(entry.pageHref)
+    } else {
+      // Page hit
+      visiblePages.add(entry.href)
     }
   }
 
-  const dimmedHrefs = new Set(
-    entries
-      .filter((e) => { return !matchedHrefs.has(e.href) })
-      .map((e) => { return e.href }),
-  )
+  return { matchedHrefs, expandGroupKeys, visiblePages }
+}
 
-  /* Focusable in document order — only matched items */
-  const focusableHrefs = entries
-    .filter((e) => { return matchedHrefs.has(e.href) })
-    .map((e) => { return e.href })
+/* ── Derived helpers (used by SideNav) ──────────────────────────────── */
 
-  return { matchedHrefs, expandGroupKeys, dimmedHrefs, focusableHrefs }
+/**
+ * Ordered list of hrefs focusable via arrow keys.
+ * Derived from the static entries list so document order is preserved.
+ */
+export function buildFocusableHrefs(state: SearchState, entries: SearchEntry[]): string[] {
+  return entries
+    .filter((e) => state.matchedHrefs.has(e.href))
+    .map((e) => e.href)
 }

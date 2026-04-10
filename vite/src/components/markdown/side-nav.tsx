@@ -11,11 +11,11 @@ import { flushSync } from 'react-dom'
 import { router } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
-import { createSearchDb, searchSidebar, emptySearchState, type SearchState } from '../../lib/search.ts'
+import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
 import { useHolocronData } from '../../router.ts'
 import { buildSearchEntries, collectDefaultExpandedKeys } from '../../site-data.ts'
 import { SearchIcon } from './icons.tsx'
-import { NavGroupNode } from './nav-tree.tsx'
+import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 
 /**
  * Zero-prop sidebar — reads navigation from the root loader `site` object
@@ -45,8 +45,6 @@ export function SideNav() {
   //  - Ancestors of the current page (always — ensures the current page is
   //    visible in the sidebar after deep-linking / SSR).
   //  - Groups that the config marks `expanded: true` by default.
-  // Both sets use the same path-based key (`\0`-joined group names), so
-  // merging them into one Set is safe.
   const defaultExpandedKeys = useMemo(
     () => collectDefaultExpandedKeys(groups),
     [groups],
@@ -56,22 +54,14 @@ export function SideNav() {
   )
 
   // Re-expand ancestor groups when currentPage changes (client-side navigation).
-  // `ancestorGroupKeys` comes from the loader — it updates atomically with the
-  // new flight payload. Instead of syncing in a `useEffect`, we adjust the
-  // state during render: compare the incoming prop against a ref, call
-  // `setExpandedGroups` if it changed, and React will bail out of this render
-  // pass and restart with the merged Set. This is the recommended React
-  // pattern for "adjusting state when a prop changes" (no extra paint, no
-  // effect scheduling). See:
-  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  // Adjust state during render — the recommended React pattern for "adjusting
+  // state when a prop changes". No effect, no extra paint.
   const prevAncestorKeysRef = useRef(ancestorGroupKeys)
   if (prevAncestorKeysRef.current !== ancestorGroupKeys) {
     prevAncestorKeysRef.current = ancestorGroupKeys
     setExpandedGroups((prev) => {
       const next = new Set(prev)
-      for (const key of ancestorGroupKeys) {
-        next.add(key)
-      }
+      for (const key of ancestorGroupKeys) next.add(key)
       return next
     })
   }
@@ -79,37 +69,34 @@ export function SideNav() {
   const toggleGroup = useCallback((groupKey: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev)
-      if (next.has(groupKey)) {
-        next.delete(groupKey)
-      } else {
-        next.add(groupKey)
-      }
+      if (next.has(groupKey)) next.delete(groupKey)
+      else next.add(groupKey)
       return next
     })
   }, [])
 
   // --- Search ---
-  // Build the flat search entry list from the loader-provided navigation object.
-  // The Orama DB is still memoized per mount.
   const db = useMemo(
     () => createSearchDb({ entries: searchEntries }),
     [searchEntries],
   )
 
   const [query, setQuery] = useState('')
-  const [searchState, setSearchState] = useState<SearchState>(emptySearchState)
+  // null = no active search (show everything). Non-null = active filter.
+  const [searchState, setSearchState] = useState<SearchState | null>(null)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const highlightedRef = useRef<HTMLAnchorElement>(null)
   const [isPending, startTransition] = useTransition()
 
-  // Derive the href of the currently highlighted match — passed down through
-  // NavGroupNode/NavPageLink/TocInline so the matching link renders a tint.
-  const highlightedHref: string | null = (
-    searchState.focusableHrefs && searchState.focusableHrefs.length > 0
-      ? searchState.focusableHrefs[highlightedIndex] ?? null
-      : null
+  // Focusable hrefs in document order — derived from the static entries list
+  // so arrow-key cycling matches the rendered order.
+  const focusableHrefs = useMemo(
+    () => (searchState ? buildFocusableHrefs(searchState, searchEntries) : []),
+    [searchState, searchEntries],
   )
+
+  const highlightedHref: string | null = focusableHrefs[highlightedIndex] ?? null
 
   const handleQueryChange = useCallback(
     (value: string) => {
@@ -126,8 +113,10 @@ export function SideNav() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const tag = (e.target as HTMLElement).tagName
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+        const target = e.target
+        if (!(target instanceof HTMLElement)) return
+        const tag = target.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return
         e.preventDefault()
         searchInputRef.current?.focus()
       }
@@ -144,48 +133,49 @@ export function SideNav() {
         searchInputRef.current?.blur()
         return
       }
-      const focusable = searchState.focusableHrefs
-      if (!focusable || focusable.length === 0) return
+      if (!focusableHrefs.length) return
       if (e.key === 'ArrowDown') {
-        // Wrap-around: at last item, jump back to first.
         e.preventDefault()
-        // `flushSync` forces React to commit the state change synchronously so
-        // `highlightedRef` points at the newly highlighted element before we
-        // scroll it into view. Handles the side effect at its event-handler
-        // source instead of reacting to `highlightedIndex` changes in an effect.
         flushSync(() => {
-          setHighlightedIndex((prev) => (prev + 1) % focusable.length)
+          setHighlightedIndex((prev) => (prev + 1) % focusableHrefs.length)
         })
         highlightedRef.current?.scrollIntoView({ block: 'nearest' })
       } else if (e.key === 'ArrowUp') {
-        // Wrap-around: at first item, jump to last.
         e.preventDefault()
         flushSync(() => {
-          setHighlightedIndex((prev) => (prev - 1 + focusable.length) % focusable.length)
+          setHighlightedIndex((prev) => (prev - 1 + focusableHrefs.length) % focusableHrefs.length)
         })
         highlightedRef.current?.scrollIntoView({ block: 'nearest' })
       } else if (e.key === 'Enter') {
         e.preventDefault()
-        const href = focusable[highlightedIndex]
+        const href = focusableHrefs[highlightedIndex]
         if (href) {
           handleQueryChange('')
           searchInputRef.current?.blur()
-          // router.push handles both path + hash hrefs (e.g. "/guides/intro"
-          // or "/guides/intro#setup"). Never set window.location.hash — that
-          // produces broken URLs like "current-url#/guides/intro".
           router.push(href)
         }
       }
     },
-    [searchState.focusableHrefs, highlightedIndex, handleQueryChange],
+    [focusableHrefs, highlightedIndex, handleQueryChange],
   )
+
+  const isSearchActive = searchState !== null
+  const noResults = isSearchActive && focusableHrefs.length === 0
+  const sidebarTreeContext = useMemo(() => {
+    return {
+      currentPageHref,
+      expandedGroups,
+      onToggleGroup: toggleGroup,
+      activeHeadingId: activeId,
+      searchState,
+      highlightedHref,
+      highlightedRef,
+    }
+  }, [activeId, currentPageHref, expandedGroups, highlightedHref, searchState, toggleGroup])
 
   return (
     <aside className='flex flex-col max-w-(--grid-toc-width) min-h-0'>
-      {/* Search input — leading magnifier icon + F hotkey kbd on the right.
-          Input stays a real text field (not a button opening a dialog).
-          `pl-1` mirrors the nav below so the search input aligns
-          horizontally with the nav links. */}
+      {/* Search input — leading magnifier icon + F hotkey kbd on the right. */}
       <div className='pb-3 pl-1 flex items-center relative shrink-0'>
         <span
           aria-hidden='true'
@@ -239,25 +229,27 @@ export function SideNav() {
       </div>
 
       {/* `pl-1` gives the search-highlight box-shadow 4px of horizontal
-          clearance inside nav's overflow-y-auto clip (browsers force both
-          axes to auto when one is). `pr-1` was already there for scrollbar
-          clearance. */}
+          clearance inside nav's overflow-y-auto clip. */}
       <nav aria-label='Navigation' className='overflow-y-auto min-h-0 pl-1 pr-1 flex flex-col gap-2'>
-        {groups.map((group) => (
-          <NavGroupNode
-            key={group.group}
-            group={group}
-            depth={0}
-            parentPath=''
-            currentPageHref={currentPageHref}
-            expandedGroups={expandedGroups}
-            onToggleGroup={toggleGroup}
-            activeHeadingId={activeId}
-            searchState={searchState}
-            highlightedHref={highlightedHref}
-            highlightedRef={highlightedRef}
-          />
-        ))}
+        <SidebarTreeProvider value={sidebarTreeContext}>
+          {noResults ? (
+            <div
+              className='text-xs px-1 py-4 text-center'
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              No results for &ldquo;{query}&rdquo;
+            </div>
+          ) : (
+            groups.map((group) => (
+              <NavGroupNode
+                key={group.group}
+                group={group}
+                depth={0}
+                parentPath=''
+              />
+            ))
+          )}
+        </SidebarTreeProvider>
       </nav>
     </aside>
   )

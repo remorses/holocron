@@ -28,7 +28,7 @@
 import './styles/globals.css'
 import React from 'react'
 import { Spiceflow, type AnySpiceflow, serveStatic, redirect } from 'spiceflow'
-import { Head } from 'spiceflow/react'
+import { Head, ProgressBar } from 'spiceflow/react'
 import { mdxParse } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
@@ -771,7 +771,10 @@ export function createHolocronApp(site: HolocronSiteData) {
             <Head.Meta name='robots' content='noindex' />
           </Head>
         )}
-        <body>{children ?? notFoundContent}</body>
+        <body>
+          <ProgressBar color='var(--brand-primary)' />
+          {children ?? notFoundContent}
+        </body>
       </html>
     )
   })
