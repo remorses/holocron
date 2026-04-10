@@ -30,6 +30,8 @@ import {
   type NavTab,
   type NavGroup,
   type NavPage,
+  type NavVersionItem,
+  type NavDropdownItem,
   isNavPage,
   isNavGroup,
   buildPageIndex,
