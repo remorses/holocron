@@ -267,7 +267,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return [
           `export const base = ${JSON.stringify(viteBase)}`,
           `const config = ${JSON.stringify(config)}`,
-          `export async function getConfig() { return config }`,
+          `export function getConfig() { return config }`,
         ].join('\n')
       }
       if (id === RESOLVED_NAVIGATION) {
@@ -277,7 +277,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return [
           `const navigation = ${JSON.stringify(syncResult.navigation)}`,
           `const switchers = ${JSON.stringify(syncResult.switchers)}`,
-          `export async function getNavigationData() { return { navigation, switchers } }`,
+          `export function getNavigationData() { return { navigation, switchers } }`,
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {
@@ -301,12 +301,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           `const slugs = ${JSON.stringify(slugs)}`,
           `const pageIconRefs = ${JSON.stringify(syncResult.pageIconRefs)}`,
           `const loaders = { ${loaderEntries.join(', ')} }`,
-          `export async function getMdxSlugs() { return slugs }`,
-          `export async function getMdxSource(slug) {`,
+          `export function getMdxSlugs() { return slugs }`,
+          `export function getMdxSource(slug) {`,
           `  const load = loaders[slug]`,
           `  return load ? await load() : undefined`,
           `}`,
-          `export async function getPageIconRefs(slug) { return pageIconRefs[slug] ?? [] }`,
+          `export function getPageIconRefs(slug) { return pageIconRefs[slug] ?? [] }`,
         ].join('\n')
       }
       if (id.startsWith(RESOLVED_MDX_PAGE_PREFIX)) {
