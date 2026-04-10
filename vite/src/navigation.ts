@@ -245,13 +245,13 @@ export function slugToHref(slug: string): string {
 }
 
 /**
- * Build a bidirectional href → slug map from mdxContent keys.
+ * Build a bidirectional href → slug map from the known slug list.
  * Uses `slugToHref()` for normalization so the mapping is consistent
  * everywhere (raw markdown middleware, page pipeline, sitemap).
  */
-export function buildHrefToSlugMap(mdxContent: Record<string, string>): Map<string, string> {
+export function buildHrefToSlugMap(slugs: string[]): Map<string, string> {
   const map = new Map<string, string>()
-  for (const slug of Object.keys(mdxContent)) {
+  for (const slug of slugs) {
     map.set(slugToHref(slug), slug)
   }
   return map
@@ -274,26 +274,30 @@ function extractTitleFromMdx(mdx: string): string {
 }
 
 /**
- * Find a page by slug, checking both the navigation tree AND mdxContent.
+ * Find a page by slug, checking both the navigation tree and async MDX source.
  *
  * 1. First: look up in navigation (enriched NavPage with title, headings, icon)
- * 2. Fallback: if the slug exists in mdxContent but not in navigation,
+ * 2. Fallback: if the slug exists in MDX but not in navigation,
  *    build a minimal NavPage so the page is still serveable.
  *
  * This ensures pages that exist on disk are always serveable even if
  * not listed in the navigation config.
  */
-export function findPageBySlug(
-  nav: Navigation,
-  slug: string,
-  mdxContent: Record<string, string>,
-): NavPage | undefined {
+export async function findPageBySlug({
+  nav,
+  slug,
+  getMdxSource,
+}: {
+  nav: Navigation
+  slug: string
+  getMdxSource: (slug: string) => Promise<string | undefined>
+}): Promise<NavPage | undefined> {
   // Prefer navigation — gives us full metadata (title, headings, icon, etc.)
   const navPage = findPage(nav, slug)
   if (navPage) return navPage
 
   // Fallback: file exists on disk but not in navigation config
-  const mdx = mdxContent[slug]
+  const mdx = await getMdxSource(slug)
   if (!mdx) return undefined
 
   const frontmatter = parsePageFrontmatter(mdx)

@@ -8,8 +8,8 @@
  * The plugin:
  * - Reads holocron.jsonc / docs.json config
  * - Syncs MDX files + processes images at build time (sharp, image-size)
- * - Serializes the full navigation tree (with pre-processed MDX) into
- *   a virtual module — zero I/O needed at request time
+ * - Exposes async virtual-module providers for config, navigation, MDX, and
+ *   icons so the runtime can rebuild request-scoped routes on each request
  * - Wraps spiceflowPlugin with the holocron app as entry
  */
 
@@ -39,14 +39,29 @@ export type HolocronPluginOptions = {
 const VIRTUAL_CONFIG = 'virtual:holocron-config'
 const RESOLVED_CONFIG = '\0' + VIRTUAL_CONFIG
 
+const VIRTUAL_NAVIGATION = 'virtual:holocron-navigation'
+const RESOLVED_NAVIGATION = '\0' + VIRTUAL_NAVIGATION
+
 const VIRTUAL_MDX = 'virtual:holocron-mdx'
 const RESOLVED_MDX = '\0' + VIRTUAL_MDX
+
+const VIRTUAL_MDX_PAGE_PREFIX = 'virtual:holocron-mdx-page/'
+const RESOLVED_MDX_PAGE_PREFIX = '\0' + VIRTUAL_MDX_PAGE_PREFIX
 
 const VIRTUAL_APP = 'virtual:holocron-app'
 const RESOLVED_APP = '\0' + VIRTUAL_APP
 
 const VIRTUAL_ICONS = 'virtual:holocron-icons'
 const RESOLVED_ICONS = '\0' + VIRTUAL_ICONS
+
+function getMdxPathForSlug(pagesDir: string, slug: string): string | undefined {
+  for (const ext of ['.mdx', '.md']) {
+    const mdxPath = path.join(pagesDir, slug + ext)
+    if (fs.existsSync(mdxPath)) {
+      return mdxPath
+    }
+  }
+}
 
 /**
  * Workaround for Vite 7 + @vitejs/plugin-rsc: the built-in vite:asset load
@@ -231,8 +246,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (id === VIRTUAL_CONFIG) {
         return RESOLVED_CONFIG
       }
+      if (id === VIRTUAL_NAVIGATION) {
+        return RESOLVED_NAVIGATION
+      }
       if (id === VIRTUAL_MDX) {
         return RESOLVED_MDX
+      }
+      if (id.startsWith(VIRTUAL_MDX_PAGE_PREFIX)) {
+        return RESOLVED_MDX_PAGE_PREFIX + id.slice(VIRTUAL_MDX_PAGE_PREFIX.length)
       }
       if (id === VIRTUAL_APP || id.endsWith('/' + VIRTUAL_APP)) {
         return RESOLVED_APP
@@ -253,25 +274,53 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           this.addWatchFile(configFilePath)
         }
         return [
-          `export const config = ${JSON.stringify(config)}`,
-          `export const navigation = ${JSON.stringify(syncResult.navigation)}`,
-          `export const switchers = ${JSON.stringify(syncResult.switchers)}`,
           `export const base = ${JSON.stringify(viteBase)}`,
+          `const config = ${JSON.stringify(config)}`,
+          `export async function getConfig() { return config }`,
+        ].join('\n')
+      }
+      if (id === RESOLVED_NAVIGATION) {
+        return [
+          `const navigation = ${JSON.stringify(syncResult.navigation)}`,
+          `const switchers = ${JSON.stringify(syncResult.switchers)}`,
+          `export async function getNavigationData() { return { navigation, switchers } }`,
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {
         // Register every known MDX file as a dependency so edits to existing
         // pages flow through the module graph (same mechanism as config above).
         // New MDX files that don't exist yet are handled separately in hotUpdate.
-        for (const slug of Object.keys(syncResult.mdxContent)) {
-          for (const ext of ['.mdx', '.md']) {
-            const mdxPath = path.join(pagesDir, slug + ext)
-            if (fs.existsSync(mdxPath)) {
-              this.addWatchFile(mdxPath)
-            }
+        const slugs = Object.keys(syncResult.mdxContent).sort()
+        for (const slug of slugs) {
+          const mdxPath = getMdxPathForSlug(pagesDir, slug)
+          if (mdxPath) {
+            this.addWatchFile(mdxPath)
           }
         }
-        return `export default ${JSON.stringify(syncResult.mdxContent)}`
+        const loaderEntries = slugs.map((slug) => {
+          return `${JSON.stringify(slug)}: () => import(${JSON.stringify(VIRTUAL_MDX_PAGE_PREFIX + encodeURIComponent(slug))}).then((m) => m.default)`
+        })
+        return [
+          `const slugs = ${JSON.stringify(slugs)}`,
+          `const loaders = { ${loaderEntries.join(', ')} }`,
+          `export async function getMdxSlugs() { return slugs }`,
+          `export async function getMdxSource(slug) {`,
+          `  const load = loaders[slug]`,
+          `  return load ? await load() : undefined`,
+          `}`,
+        ].join('\n')
+      }
+      if (id.startsWith(RESOLVED_MDX_PAGE_PREFIX)) {
+        const slug = decodeURIComponent(id.slice(RESOLVED_MDX_PAGE_PREFIX.length))
+        const mdxPath = getMdxPathForSlug(pagesDir, slug)
+        if (mdxPath) {
+          this.addWatchFile(mdxPath)
+        }
+        const markdown = syncResult.mdxContent[slug]
+        if (markdown === undefined) {
+          throw new Error(`[holocron] missing virtual MDX page for slug "${slug}"`)
+        }
+        return `export default ${JSON.stringify(markdown)}`
       }
       if (id === RESOLVED_APP) {
         return [
@@ -286,7 +335,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // Static atlas — one JSON.stringify at build time, no runtime cost.
         // Walks back to configResolved for the input, so any config edit that
         // changes icons goes through the hotUpdate path below.
-        return `export const iconAtlas = ${JSON.stringify(iconAtlas)}`
+        return [
+          `const iconAtlas = ${JSON.stringify(iconAtlas)}`,
+          `export async function getIconAtlas() { return iconAtlas }`,
+        ].join('\n')
       }
     },
 
@@ -314,6 +366,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     async hotUpdate(ctx) {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
+      const changedSlug = isMdx && ctx.file.startsWith(pagesDir)
+        ? path.relative(pagesDir, ctx.file).replace(/\.[^.]+$/, '').replace(/\\/g, '/')
+        : undefined
 
       if (!isMdx && !isConfig) {
         return
@@ -325,7 +380,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // adds glob-owning modules on create/delete. This makes downstream
       // plugins (Tailwind) see a JS module and skip their full-reload.
       if (ctx.type !== 'update' && isMdx && ctx.file.startsWith(pagesDir)) {
-        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX]) {
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod && !ctx.modules.includes(mod)) {
             ctx.modules = [...ctx.modules, mod]
@@ -369,11 +424,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         })
 
         // `rsc:update` refreshes the server-rendered page tree, but the root
-        // loader still derives its `site` payload from these virtual modules.
-        // Return them from the client HMR hook as well so Vite updates the
-        // client graph instead of leaving navigation/search/title state stale
-        // until a full reload.
-        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_ICONS]) {
+        // loader still derives its `site` payload from these async provider
+        // modules. Return them from the client hook too so Vite refreshes the
+        // client graph instead of leaving navigation/search/title state stale.
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_ICONS]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod) {
             clientHotModules.push(mod)
@@ -381,10 +435,25 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      // Invalidate the app module too — per-page routes are registered at
-      // module init from mdxContent, so adding/deleting pages requires the
-      // app factory to re-run and rebuild the route table.
-      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_MDX, RESOLVED_ICONS, RESOLVED_APP]) {
+      // The stable outer app rebuilds the request-scoped route table on each
+      // request, so HMR only needs to invalidate the provider modules and the
+      // specific per-page MDX virtual module when one page changes.
+      const resolvedIds = new Set<string>([
+        RESOLVED_CONFIG,
+        RESOLVED_NAVIGATION,
+        RESOLVED_ICONS,
+      ])
+
+      if (isMdx) {
+        if (ctx.type !== 'update') {
+          resolvedIds.add(RESOLVED_MDX)
+        }
+        if (changedSlug) {
+          resolvedIds.add(RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(changedSlug))
+        }
+      }
+
+      for (const resolvedId of resolvedIds) {
         const mod = this.environment.moduleGraph.getModuleById(resolvedId)
         if (mod) {
           this.environment.moduleGraph.invalidateModule(mod)

@@ -2,17 +2,27 @@
 
 declare module 'virtual:holocron-config' {
   import type { HolocronConfig } from './config.ts'
-  import type { Navigation, NavVersionItem, NavDropdownItem } from './navigation.ts'
-  export const config: HolocronConfig
-  export const navigation: Navigation
-  export const switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
   export const base: string
+  export function getConfig(): Promise<HolocronConfig>
+}
+
+declare module 'virtual:holocron-navigation' {
+  import type { Navigation, NavVersionItem, NavDropdownItem } from './navigation.ts'
+  export function getNavigationData(): Promise<{
+    navigation: Navigation
+    switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
+  }>
 }
 
 declare module 'virtual:holocron-mdx' {
-  /** Pre-processed MDX content keyed by page slug. Server-only — never
-   *  sent to the client bundle. */
-  const content: Record<string, string>
+  /** Pre-processed MDX content exposed through async getters so custom
+   *  virtual-module implementations can load content at request time. */
+  export function getMdxSlugs(): Promise<string[]>
+  export function getMdxSource(slug: string): Promise<string | undefined>
+}
+
+declare module 'virtual:holocron-mdx-page/*' {
+  const content: string
   export default content
 }
 
@@ -22,5 +32,5 @@ declare module 'virtual:holocron-icons' {
    *  values are `{ body, width, height }`. Populated at Vite plugin init
    *  by walking the config+navigation and resolving via
    *  @iconify-json/lucide. Only referenced icons are included. */
-  export const iconAtlas: IconAtlas
+  export function getIconAtlas(): Promise<IconAtlas>
 }

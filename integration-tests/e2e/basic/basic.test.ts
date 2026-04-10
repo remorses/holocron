@@ -74,7 +74,7 @@ test.describe("getting-started page", () => {
     expect(headingLinkLeft).toBeGreaterThan(pageLinkLeft);
   });
 
-  test("dims non-matching items when search has no matches", async ({ page }) => {
+  test("shows an explicit no-results state when search has no matches", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/getting-started");
 
@@ -88,33 +88,23 @@ test.describe("getting-started page", () => {
     await expect(searchInput).toBeVisible({ timeout: 10000 });
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
-    const welcomeLink = nav.getByRole("link", { name: "Welcome to Test Docs" });
+    const noResults = nav.getByText("No results for", { exact: false });
 
-    let opacity = 1;
     for (let attempt = 0; attempt < 20; attempt += 1) {
       const activeInput = page.getByPlaceholder("search...");
       await expect(activeInput).toBeVisible({ timeout: 10000 });
       await activeInput.click();
       await activeInput.fill("zzzz-no-match");
-      await expect(welcomeLink).toBeVisible();
 
-      opacity = await welcomeLink.evaluate((node) => {
-        let el: HTMLElement | null = node.parentElement;
-        while (el) {
-          if (el.style.opacity) return Number.parseFloat(el.style.opacity);
-          el = el.parentElement;
-        }
-        return Number.parseFloat(window.getComputedStyle(node).opacity);
-      });
-
-      if (opacity < 1) {
+      if (await noResults.isVisible()) {
         break;
       }
 
       await page.waitForTimeout(500);
     }
 
-    expect(opacity).toBeLessThan(1);
+    await expect(noResults).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Welcome to Test Docs" })).not.toBeVisible();
   });
 
   test("renders code blocks", async ({ page }) => {

@@ -166,9 +166,10 @@ describe('findPage', () => {
 })
 
 describe('findPageBySlug fallback', () => {
-  test('parses YAML frontmatter for pages that are not in navigation', () => {
-    const page = findPageBySlug([], 'orphan-page', {
-      'orphan-page': `---
+  test('parses YAML frontmatter for pages that are not in navigation', async () => {
+    const page = await findPageBySlug({ nav: [], slug: 'orphan-page', getMdxSource: async (slug) => {
+      if (slug !== 'orphan-page') return undefined
+      return `---
 title: Orphan Page
 description: Routed without nav config.
 noindex: true
@@ -178,8 +179,8 @@ keywords:
 "og:image:width": 1400
 ---
 
-# Orphan Page`,
-    })
+# Orphan Page`
+    } })
 
     expect(page).toMatchObject({
       title: 'Orphan Page',

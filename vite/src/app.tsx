@@ -1,22 +1,22 @@
 /**
  * Holocron Spiceflow app entry — server-rendered documentation site.
  *
- * Canonical site data is loaded once on the server and passed into the app
- * factory so route setup can use the same object outside component render.
+ * The outer app is stable at module scope. It loads runtime providers on each
+ * request, builds a request-scoped Holocron app, and delegates handling to it.
  */
 
 import { createHolocronApp, type HolocronApp } from './app-factory.tsx'
-import { config, navigation, switchers, base } from 'virtual:holocron-config'
-import { iconAtlas } from 'virtual:holocron-icons'
-import type { HolocronSiteData } from './site-data.ts'
+import { base, getConfig } from 'virtual:holocron-config'
+import { getNavigationData } from 'virtual:holocron-navigation'
+import { getMdxSlugs, getMdxSource } from 'virtual:holocron-mdx'
+import { getIconAtlas } from 'virtual:holocron-icons'
 
-const site: HolocronSiteData = {
-  config,
-  navigation,
-  switchers,
+export const app = createHolocronApp({
   base,
-  icons: iconAtlas,
-}
-
-export const app = createHolocronApp(site)
+  getConfig,
+  getNavigationData,
+  getMdxSlugs,
+  getMdxSource,
+  getIconAtlas,
+})
 export type App = HolocronApp
