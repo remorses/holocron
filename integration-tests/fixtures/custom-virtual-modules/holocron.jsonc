@@ -1,13 +1,13 @@
 {
-  "name": "Custom Virtual Modules",
+  "name": "Local Disk Config",
   "navigation": {
     "tabs": [
       {
-        "tab": "Docs",
+        "tab": "Local Docs",
         "groups": [
           {
-            "group": "Guides",
-            "pages": ["index", "getting-started"]
+            "group": "Local Guides",
+            "pages": ["index"]
           }
         ]
       }
