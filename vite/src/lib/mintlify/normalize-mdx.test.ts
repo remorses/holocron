@@ -104,4 +104,31 @@ A-->B
       "
     `)
   })
+
+  test('wraps request and response examples in Aside for sidebar extraction', async () => {
+    const result = await normalizeMdx(`
+<RequestExample>
+  Request body
+</RequestExample>
+
+<ResponseExample>
+  Response body
+</ResponseExample>
+`)
+
+    expect(result).toMatchInlineSnapshot(`
+      "<Aside>
+        <RequestExample>
+          Request body
+        </RequestExample>
+      </Aside>
+
+      <Aside>
+        <ResponseExample>
+          Response body
+        </ResponseExample>
+      </Aside>
+      "
+    `)
+  })
 })

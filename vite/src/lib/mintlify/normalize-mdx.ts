@@ -10,6 +10,7 @@ import { remark } from 'remark'
 import { remarkCodeGroup } from './remark-code-group.ts'
 import { remarkHeadings } from './remark-headings.ts'
 import { remarkMermaidCode } from './remark-mermaid.ts'
+import { remarkSidebarComponents } from './remark-sidebar-components.ts'
 import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
 
 export function normalizeMdx(content: string): string {
@@ -21,6 +22,7 @@ export function normalizeMdx(content: string): string {
     .use(remarkCodeGroup)
     .use(remarkMermaidCode)
     .use(remarkSingleAccordionItems)
+    .use(remarkSidebarComponents)
 
   const parsed = processor.parse(content)
   const normalized = processor.runSync(parsed) as Root

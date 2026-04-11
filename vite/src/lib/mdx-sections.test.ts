@@ -223,6 +223,126 @@ Part 3 content
     `)
   })
 
+  test('groups multiple Aside nodes into the same section sidebar', () => {
+    const mdx = `Intro
+
+<Aside>
+Intro aside
+</Aside>
+
+## API Section
+
+Body
+
+<Aside>
+Request body
+</Aside>
+
+<Aside>
+Response body
+</Aside>
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        Intro aside
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## API Section
+
+      Body
+
+      [ASIDE]
+      <Aside>
+        Request body
+      </Aside>
+
+      <Aside>
+        Response body
+      </Aside>"
+    `)
+  })
+
+  test('keeps additional Aside nodes inside a shared full Aside range', () => {
+    const mdx = `Intro
+
+<Aside>
+Intro aside
+</Aside>
+
+<Aside full>
+Shared aside
+</Aside>
+
+## API A
+
+Body A
+
+<Aside>
+Request body
+</Aside>
+
+## API B
+
+Body B
+
+<Aside>
+Response body
+</Aside>
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        Intro aside
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## API A
+
+      Body A
+
+      --- SECTION 2 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## API B
+
+      Body B
+
+      [ASIDE]
+      <Aside full>
+        Shared aside
+      </Aside>
+
+      <Aside>
+        Request body
+      </Aside>
+
+      <Aside>
+        Response body
+      </Aside>"
+    `)
+  })
+
   test('handles FullWidth nodes', () => {
     const mdx = `<FullWidth>
 This should be full width.

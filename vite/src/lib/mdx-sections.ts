@@ -84,9 +84,9 @@ function groupBySections(root: Root): MdastSection[] {
  * `<Aside full>` (or EOF). Unlike the earlier "merged" approach, we STILL
  * split content at EVERY heading level inside a full-aside range — each
  * sub-section gets its own row in the page grid, separated by `--section-gap`.
- * The shared
- * aside is attached to the first sub-section with `asideRowSpan` set to the
- * number of sub-sections, so on desktop it lives in a CSS grid cell spanning
+ * The shared aside payload is attached to the last sub-section with
+ * `asideRowSpan` set to the number of sub-sections, so on desktop it lives in
+ * a CSS grid cell spanning
  * all those rows (`grid-row: N / span M`). Inside that tall cell a
  * `position: sticky` aside can scroll alongside the whole range.
  *
@@ -165,21 +165,23 @@ export function buildSections(root: Root): MdastSection[] {
     sections.push(...groupBySections(before))
   }
 
-  // Each full-aside range: split at ## into sub-sections; first sub-section
-  // owns the shared aside with row-span = number of sub-sections.
+  // Each full-aside range: split at headings and collect every Aside in the
+  // range into one shared sidebar payload.
   for (let r = 0; r < fullAsideIndices.length; r++) {
     const start = fullAsideIndices[r]!
     const end = fullAsideIndices[r + 1] ?? children.length
 
     const rangeNodes = children.slice(start + 1, end)
+    const rangeAsideNodes = rangeNodes.filter(isAsideNode)
     const contentOnly = rangeNodes.filter((n) => !isAsideNode(n) && !isFullWidthNode(n))
-    const asideNode = children[start]!
+    const sharedAsideNode = children[start]!
+    const sharedAsideNodes = [sharedAsideNode, ...rangeAsideNodes]
 
     const contentRoot: Root = { type: 'root', children: contentOnly }
     const subSections = groupBySections(contentRoot)
 
     if (subSections.length === 0) {
-      sections.push({ contentNodes: [], asideNodes: [asideNode], asideRowSpan: 1 })
+      sections.push({ contentNodes: [], asideNodes: sharedAsideNodes, asideRowSpan: 1 })
       continue
     }
 
@@ -187,7 +189,7 @@ export function buildSections(root: Root): MdastSection[] {
     // at the end of its range). Desktop rendering uses asideRowSpan to compute
     // an explicit `grid-row: start / span N` that covers all sub-sections.
     const lastSub = subSections[subSections.length - 1]!
-    lastSub.asideNodes = [asideNode]
+    lastSub.asideNodes = sharedAsideNodes
     lastSub.asideRowSpan = subSections.length
     sections.push(...subSections)
   }
