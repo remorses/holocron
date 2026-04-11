@@ -1,0 +1,62 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Holocron",
+  "colors": {
+    "primary": "#5b7cff"
+  },
+  "banner": {
+    "content": "Holocron is under active development. Compare these examples with [Mintlify components](https://www.mintlify.com/docs/components).",
+    "dismissible": true
+  },
+  "navbar": {
+    "links": [
+      {
+        "type": "github",
+        "href": "https://github.com/remorses/holocron"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Component Docs",
+      "href": "/components"
+    }
+  },
+  "navigation": [
+    {
+      "group": "Overview",
+      "icon": "sparkles",
+      "pages": ["index"]
+    },
+    {
+      "group": "Components",
+      "icon": "blocks",
+      "pages": [
+        "components/index",
+        "components/accordions",
+        "components/badge",
+        "components/banner",
+        "components/callouts",
+        "components/cards",
+        "components/code-groups",
+        "components/color",
+        "components/columns",
+        "components/examples",
+        "components/expandables",
+        "components/fields",
+        "components/frames",
+        "components/icons",
+        "components/mermaid-diagrams",
+        "components/panel",
+        "components/prompt",
+        "components/responses",
+        "components/steps",
+        "components/tabs",
+        "components/tiles",
+        "components/tooltips",
+        "components/tree",
+        "components/update",
+        "components/view"
+      ]
+    }
+  ]
+}

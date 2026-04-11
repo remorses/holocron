@@ -1,0 +1,37 @@
+---
+title: Badge
+description: Use badges for status labels, emphasis, and small metadata tags.
+icon: badge
+---
+
+# Badge
+
+Use `Badge` to label content with compact, colored status chips.
+
+<Columns cols={2}>
+  <Column>
+    <Badge color='blue'>Beta</Badge>
+
+    <Badge color='green'>Stable</Badge>
+
+    <Badge color='orange'>Experimental</Badge>
+
+    <Badge color='red'>Deprecated</Badge>
+  </Column>
+  <Column>
+    <Badge color='purple' icon='sparkles'>AI</Badge>
+
+    <Badge color='gray' size='lg'>Large</Badge>
+
+    <Badge color='white' shape='pill'>Pill</Badge>
+
+    <Badge color='blue' stroke>Stroke</Badge>
+  </Column>
+</Columns>
+
+Inline badges also work inside prose: Holocron is currently <Badge color='green'>shipping</Badge> a practical subset of Mintlify's component surface.
+
+## Holocron differences
+
+- Holocron supports color variants, icons, `size`, `shape`, `stroke`, and `disabled`.
+- This page focuses on render coverage rather than matching Mintlify's exact spacing or palette values.

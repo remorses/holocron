@@ -1,0 +1,29 @@
+---
+title: Frames
+description: Wrap previews, screenshots, and embeds in a framed container.
+icon: square-dashed-bottom-code
+---
+
+# Frames
+
+Use `Frame` to visually isolate an image, preview, or other embedded content from the surrounding prose.
+
+<Frame caption='Holocron preview frame' hint='Use this for screenshots and compact demos'>
+  <div className='rounded-md bg-muted p-6 text-center'>Preview content inside a frame</div>
+</Frame>
+
+<Frame caption='Frames can contain richer markup'>
+  <Columns cols={2}>
+    <Card title='Inside a frame' icon='monitor'>
+      Nested content still works.
+    </Card>
+    <Card title='Useful for comparisons' icon='split-square-vertical'>
+      Especially when documenting design system pieces.
+    </Card>
+  </Columns>
+</Frame>
+
+## Holocron differences
+
+- Holocron supports framed content plus `caption` and `hint` text.
+- Mintlify also documents media-specific polish around videos; Holocron's current frame is primarily a visual wrapper.

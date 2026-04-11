@@ -1,0 +1,34 @@
+---
+title: Columns
+description: Split content into columns for cards, prose blocks, and mixed layouts.
+icon: columns-2
+---
+
+# Columns
+
+`Columns` is the layout primitive for multi-column content, while `Column` is helpful when the child is not already a card-like block.
+
+<Columns cols={2}>
+  <Card title='Card in a column' icon='blocks'>
+    Cards can be direct children of `Columns`.
+  </Card>
+  <Column>
+    **Column wrappers** are useful when the content is mixed prose, lists, or nested components.
+
+    - Markdown lists render correctly
+    - Nested components can sit below prose
+
+    <Tip>Use `Column` when the child is not already a layout component.</Tip>
+  </Column>
+</Columns>
+
+<Columns cols={3}>
+  <Card title='One' icon='1' />
+  <Card title='Two' icon='2' />
+  <Card title='Three' icon='3' />
+</Columns>
+
+## Holocron differences
+
+- Holocron supports the common `cols={1-4}` usage pattern.
+- The responsive details are simpler than Mintlify's marketing docs, but the authoring model is the same.

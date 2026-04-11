@@ -1,0 +1,34 @@
+---
+title: Fields
+description: Document request and response fields for APIs and structured content.
+icon: braces
+---
+
+# Fields
+
+Use `ParamField` and `ResponseField` to document structured interfaces inside prose-heavy docs.
+
+<ParamField path='projectId' type='string' required>
+  The project identifier in the route path.
+</ParamField>
+
+<ParamField query='draft' type='boolean' default='false'>
+  When true, the preview draft is returned instead of published content.
+</ParamField>
+
+<ParamField header='authorization' type='string' required>
+  Standard bearer token header.
+</ParamField>
+
+<ResponseField name='slug' type='string' required>
+  Canonical page slug.
+</ResponseField>
+
+<ResponseField name='headings' type='NavHeading[]'>
+  Flat heading list used by Holocron's table of contents.
+</ResponseField>
+
+## Holocron differences
+
+- Holocron supports the common field metadata: location, type, required, deprecated, and default.
+- Mintlify documents a wider prop surface around response formatting. Holocron currently keeps the rendering intentionally small and readable.

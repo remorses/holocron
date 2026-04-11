@@ -1,0 +1,33 @@
+---
+title: Steps
+description: Use steps for ordered guides and task flows.
+icon: list-ordered
+---
+
+# Steps
+
+Use `Steps` and `Step` for short procedures where the order matters.
+
+<Steps>
+  <Step title='Install the package' icon='download'>
+    Add Holocron and its peer dependencies.
+
+    ```bash
+    pnpm add @holocron.so/vite react react-dom vite
+    ```
+  </Step>
+  <Step title='Create docs.json' icon='file-json'>
+    Define the site name and navigation tree.
+  </Step>
+  <Step title='Write MDX pages' icon='file-text'>
+    Add content pages that use the same Mintlify-style component names documented on this site.
+
+    - Steps can contain nested prose
+    - Lists and code blocks keep their spacing
+  </Step>
+</Steps>
+
+## Holocron differences
+
+- Holocron supports step titles, optional icons, and arbitrary MDX in the step body.
+- Mintlify documents more anchor-oriented behavior around steps. Holocron does not yet expose per-step ids or anchor controls.

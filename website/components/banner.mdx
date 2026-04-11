@@ -1,0 +1,33 @@
+---
+title: Banner
+description: Configure a site-wide banner from docs.json.
+icon: rectangle-ellipsis
+---
+
+# Banner
+
+Unlike most component pages, `Banner` is **config-driven** rather than an MDX tag. The banner visible at the top of this website comes from `website/docs.json`.
+
+```json
+{
+  "banner": {
+    "content": "Holocron is under active development. Compare these examples with [Mintlify components](https://www.mintlify.com/docs/components).",
+    "dismissible": true
+  }
+}
+```
+
+## Supported behavior
+
+- Site-wide content string
+- Basic markdown links in the content
+- Optional `dismissible: true`
+
+<Note>
+Holocron dismisses the banner until the content string changes, which matches the intended UX Mintlify documents.
+</Note>
+
+## Holocron differences
+
+- Mintlify documents language-specific banner overrides. Holocron does not currently expose a language-aware banner system.
+- Content is intentionally simple: short text plus inline links is the safe target.

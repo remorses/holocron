@@ -1,0 +1,41 @@
+---
+title: Panel
+description: Use a panel as a grouped right-hand supporting surface.
+icon: sidebar
+---
+
+# Panel
+
+`Panel` is useful when a page wants a structured side surface instead of the default right-hand flow of ordinary prose.
+
+<Aside full>
+
+<Panel>
+  <RequestExample>
+
+```bash
+pnpm -F website dev
+```
+
+  </RequestExample>
+
+  <ResponseExample>
+
+```json
+{
+  "url": "/components/panel",
+  "status": "rendered"
+}
+```
+
+  </ResponseExample>
+</Panel>
+
+</Aside>
+
+This page uses the panel itself as the example so the layout behavior is visible, not just described.
+
+## Holocron differences
+
+- In Holocron, panel behavior is closely tied to the editorial page grid and `Aside` placement.
+- Mintlify describes panel behavior at a more abstract layout level; Holocron's docs should stay concrete and show the exact rendered result.

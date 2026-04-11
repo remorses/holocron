@@ -1,0 +1,43 @@
+---
+title: Examples
+description: Use request and response examples as a pinned supporting surface.
+icon: panel-right
+---
+
+# Examples
+
+Mintlify uses `RequestExample` and `ResponseExample` to create a right-hand code surface. In Holocron, the clearest way to demonstrate that layout is to place them inside an `Aside full` block.
+
+<Aside full>
+
+<Panel>
+  <RequestExample>
+
+```bash
+curl -X POST https://example.com/docs \
+  -H "content-type: application/json" \
+  -d '{"slug":"components/examples"}'
+```
+
+  </RequestExample>
+
+  <ResponseExample>
+
+```json
+{
+  "ok": true,
+  "page": "components/examples"
+}
+```
+
+  </ResponseExample>
+</Panel>
+
+</Aside>
+
+The main page content stays readable while the examples remain visually grouped in the side rail on larger screens.
+
+## Holocron differences
+
+- Mintlify documents additional dropdown-oriented example flows. Holocron currently focuses on the core request/response pair.
+- Sidebar placement in Holocron is tied to its editorial layout primitives, so `Aside` placement matters more than in Mintlify's hosted renderer.

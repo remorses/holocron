@@ -1,0 +1,31 @@
+---
+title: Icons
+description: Render lucide, Font Awesome, emoji, and URL-based icons in MDX.
+icon: image
+---
+
+# Icons
+
+Holocron routes icon rendering through a build-time atlas and supports several icon input styles.
+
+<Columns cols={2}>
+  <Card title='Default library icon' icon='rocket'>
+    `rocket`
+  </Card>
+  <Card title='Emoji icon' icon='✨'>
+    `✨`
+  </Card>
+  <Card title='Explicit lucide prefix' icon='lucide:globe'>
+    `lucide:globe`
+  </Card>
+  <Card title='Font Awesome brands' icon='fontawesome:brands:github'>
+    `fontawesome:brands:github`
+  </Card>
+</Columns>
+
+Inline icons also work in headings and prose: <Icon icon='sparkles' /> Holocron prefers icons that stay readable in both light and dark themes.
+
+## Holocron differences
+
+- Holocron supports emoji, URL/path icons, default-library names, and explicit prefixed icon references.
+- This page is a better compatibility reference than Mintlify's own docs because it renders through Holocron's actual atlas pipeline.

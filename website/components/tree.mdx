@@ -1,0 +1,29 @@
+---
+title: Tree
+description: Render nested file and folder hierarchies.
+icon: folder-tree
+---
+
+# Tree
+
+Use `Tree` to show file structures, generated outputs, or nested conceptual hierarchies.
+
+<Tree>
+  <Tree.Folder name='website' defaultOpen>
+    <Tree.File name='docs.json' />
+    <Tree.File name='index.mdx' />
+    <Tree.Folder name='components' defaultOpen>
+      <Tree.File name='accordions.mdx' />
+      <Tree.File name='tabs.mdx' />
+      <Tree.File name='view.mdx' />
+    </Tree.Folder>
+  </Tree.Folder>
+  <Tree.Folder name='vite' openable={false}>
+    <Tree.File name='src/' />
+  </Tree.Folder>
+</Tree>
+
+## Holocron differences
+
+- Holocron supports nested folders, `defaultOpen`, and non-openable folders.
+- Mintlify documents keyboard behavior more explicitly; Holocron's current tree is a compact authoring primitive first.

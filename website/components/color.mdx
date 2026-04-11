@@ -1,0 +1,26 @@
+---
+title: Color
+description: Show tokens, palettes, and theme-aware color pairs in docs.
+icon: palette
+---
+
+# Color
+
+Use `Color`, `Color.Row`, and `Color.Item` to document design tokens and palette decisions.
+
+<Color>
+  <Color.Row title='Brand palette'>
+    <Color.Item name='Primary' value='#5b7cff' />
+    <Color.Item name='Accent' value='#7c3aed' />
+    <Color.Item name='Success' value='#16a34a' />
+  </Color.Row>
+  <Color.Row title='Theme-aware tokens'>
+    <Color.Item name='Background' value={{ light: '#ffffff', dark: '#111827' }} />
+    <Color.Item name='Foreground' value={{ light: '#111827', dark: '#f9fafb' }} />
+  </Color.Row>
+</Color>
+
+## Holocron differences
+
+- Holocron's current implementation renders compact token cards instead of Mintlify's fuller palette/table variants.
+- Theme-aware values are still useful here because Holocron can display both light and dark token values in one swatch.

@@ -1,0 +1,38 @@
+---
+title: View
+description: Group alternate views of related content.
+icon: gallery-horizontal
+---
+
+# View
+
+Mintlify uses `View` for switchable content presentations. In Holocron today, `View` renders as a labeled content section rather than a global multi-view controller.
+
+<View title='Vite config' icon='zap'>
+
+```ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+</View>
+
+<View title='docs.json' icon='file-json'>
+
+```json
+{
+  "name": "Holocron",
+  "navigation": [{ "group": "Overview", "pages": ["index"] }]
+}
+```
+
+</View>
+
+## Holocron differences
+
+- Holocron supports `View` as a framed, labeled content block.
+- Mintlify documents a more dynamic multi-view experience with TOC interactions. Holocron does **not** currently implement that behavior.

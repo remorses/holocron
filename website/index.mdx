@@ -1,0 +1,77 @@
+---
+title: Holocron
+description: Mintlify-compatible docs as a Vite plugin, with a live component compatibility showcase.
+icon: sparkles
+---
+
+<Hero className='my-16'>
+
+# Holocron
+
+Mintlify-compatible docs as a **Vite plugin**.
+
+</Hero>
+
+Holocron turns a folder of MDX pages plus a `docs.json` file into a full documentation site. It is designed as a **drop-in Mintlify replacement** for teams that want local builds, normal Git workflows, and control over the rendering layer.
+
+<CardGroup cols={2}>
+  <Card title='Mintlify-compatible input' icon='file-json' href='/components'>
+    Reuse the same `docs.json` shape and the same MDX component vocabulary where Holocron supports it.
+  </Card>
+  <Card title='Vite-native workflow' icon='zap' href='/components/code-groups'>
+    Develop, build, and ship docs with regular Vite tooling instead of a hosted docs runtime.
+  </Card>
+  <Card title='Component compatibility reference' icon='blocks' href='/components'>
+    This site doubles as a public matrix of what Holocron supports today.
+  </Card>
+  <Card title='Real rendering examples' icon='monitor' href='/components/examples'>
+    Each page shows actual Holocron output rather than a static support checklist.
+  </Card>
+</CardGroup>
+
+## What Holocron is
+
+- A **docs site generator** built on Vite and Spiceflow
+- A **Mintlify replacement** for projects that want local ownership of the site
+- A **test bed** for verifying component parity and rendering behavior
+
+## Quick start
+
+```bash
+pnpm add @holocron.so/vite react react-dom vite
+```
+
+```ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+```json
+{
+  "name": "My Docs",
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["index"]
+    }
+  ]
+}
+```
+
+## Why this website exists
+
+Mintlify's component docs are a useful compatibility target, so this package mirrors that IA under `/components`. Each page rewrites Mintlify-centric references to Holocron and adds extra examples where differences are likely to show up.
+
+<Tip>
+Use the component pages as both **end-user documentation** and a quick way to compare Holocron behavior against Mintlify.
+</Tip>
+
+## Next steps
+
+- Start with the [component index](/components)
+- Open the page for the component you want to test
+- Compare the rendered result against Mintlify's own docs when behavior matters

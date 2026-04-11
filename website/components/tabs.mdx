@@ -1,0 +1,47 @@
+---
+title: Tabs
+description: Split related content into tabbed panels.
+icon: folder-kanban
+---
+
+# Tabs
+
+Use `Tabs` and `Tab` when multiple variants of the same content should share one footprint.
+
+<Tabs>
+  <Tab title='npm' icon='package'>
+
+```bash
+npm install @holocron.so/vite react react-dom vite
+```
+
+  </Tab>
+  <Tab title='pnpm' icon='package-check'>
+
+```bash
+pnpm add @holocron.so/vite react react-dom vite
+```
+
+  </Tab>
+</Tabs>
+
+<Tabs defaultTabIndex={1} borderBottom={false}>
+  <Tab title='Overview'>
+    Tabs can hold prose and nested components.
+  </Tab>
+  <Tab title='Examples'>
+    <CardGroup cols={2}>
+      <Card title='Cards inside tabs' icon='square-stack'>
+        Useful for docs landing pages.
+      </Card>
+      <Card title='Mixed content' icon='wrap-text'>
+        Holocron handles nested MDX blocks here too.
+      </Card>
+    </CardGroup>
+  </Tab>
+</Tabs>
+
+## Holocron differences
+
+- Holocron supports `defaultTabIndex`, `borderBottom`, `title`, `icon`, and nested MDX children.
+- Mintlify documents tab synchronization across components. Holocron does **not** currently sync tab groups by title.

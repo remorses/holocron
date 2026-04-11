@@ -1,0 +1,26 @@
+---
+title: Update
+description: Publish compact changelog and release-note style entries.
+icon: history
+---
+
+# Update
+
+Use `Update` for change logs, release notes, and notable docs updates.
+
+<Update label='2026-04-11' description='website package added' tags={['docs', 'release']}>
+  Added a dedicated Holocron docs website package based on the Mintlify component docs IA.
+
+  - New homepage for Holocron itself
+  - New component docs section under `/components`
+  - Extra compatibility notes where Holocron differs from Mintlify
+
+  ```bash
+  pnpm -F website build
+  ```
+</Update>
+
+## Holocron differences
+
+- Holocron supports the core release-note card with label, description, tags, and rich children.
+- Mintlify documents RSS-specific authoring details. Holocron does not currently expose that full workflow.

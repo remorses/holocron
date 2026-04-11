@@ -1,0 +1,31 @@
+---
+title: Responses
+description: Document structured response shapes with response fields and nested details.
+icon: square-function
+---
+
+# Responses
+
+`ResponseField` is the response-side companion to `ParamField`.
+
+<ResponseField name='page' type='object' required>
+  Top-level page payload returned by the docs runtime.
+
+  <Expandable title='Expand object fields'>
+    <ResponseField name='slug' type='string' required>
+      Canonical route slug.
+    </ResponseField>
+    <ResponseField name='title' type='string'>
+      Human-readable page title.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name='headings' type='NavHeading[]'>
+  Heading list used by the client-side table of contents.
+</ResponseField>
+
+## Holocron differences
+
+- Holocron's response-field rendering is intentionally compact and works well with nested `Expandable` blocks.
+- Mintlify documents additional response formatting knobs that Holocron does not currently expose.

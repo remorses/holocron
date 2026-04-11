@@ -1,0 +1,46 @@
+---
+title: Code Groups
+description: Group multiple code blocks into a single tabbed code surface.
+icon: code-xml
+---
+
+# Code Groups
+
+Use `CodeGroup` when a single example needs multiple language or package-manager variants.
+
+<CodeGroup>
+
+```ts app.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+```json docs.json
+{
+  "name": "Holocron Docs",
+  "navigation": [{ "group": "Guides", "pages": ["index"] }]
+}
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```bash pnpm
+pnpm add @holocron.so/vite react react-dom vite
+```
+
+```bash npm
+npm install @holocron.so/vite react react-dom vite
+```
+
+</CodeGroup>
+
+## Holocron differences
+
+- Holocron supports the core `CodeGroup` authoring flow: multiple titled fences become tabs.
+- Mintlify documents synchronized groups and dropdown presentation. Holocron currently focuses on the tabbed rendering path.

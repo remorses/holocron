@@ -1,0 +1,23 @@
+---
+title: Tiles
+description: Create visual preview links with titles and descriptions.
+icon: layout-template
+---
+
+# Tiles
+
+Use `Tile` for page hubs where a visual preview helps the reader understand what they are clicking into.
+
+<Columns cols={2}>
+  <Tile href='/components/accordions' title='Accordions' description='Disclosure patterns and grouped accordions'>
+    <div className='rounded-md bg-muted p-6 text-center'>Accordion preview</div>
+  </Tile>
+  <Tile href='/components/color' title='Color' description='Palette and token documentation'>
+    <div className='rounded-md bg-muted p-6 text-center'>Color preview</div>
+  </Tile>
+</Columns>
+
+## Holocron differences
+
+- Holocron supports the core `Tile` shape: `href`, `title`, `description`, and arbitrary preview children.
+- Mintlify often uses image-heavy previews here. Holocron's docs keep the examples lightweight and local by default.

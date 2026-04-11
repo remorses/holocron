@@ -1,0 +1,30 @@
+---
+title: Mermaid Diagrams
+description: Use mermaid code fences for diagrams in docs.
+icon: workflow
+---
+
+# Mermaid Diagrams
+
+Holocron supports fenced `mermaid` blocks, which makes them easy to write in plain MDX.
+
+```mermaid
+flowchart LR
+  A[MDX source] --> B[Holocron parser]
+  B --> C[Rendered editorial page]
+```
+
+```mermaid
+sequenceDiagram
+  participant Author
+  participant Holocron
+  participant Browser
+  Author->>Holocron: write docs.json + MDX
+  Holocron->>Browser: stream rendered page
+  Browser-->>Author: interactive docs UI
+```
+
+## Holocron differences
+
+- Holocron supports the core authoring flow: fenced mermaid blocks rendered inline on the page.
+- Mintlify documents control placement and larger diagram ergonomics more explicitly. Those remain good parity targets if we extend the renderer later.

@@ -1,0 +1,37 @@
+---
+title: Accordions
+description: Use accordions to collapse and reveal content blocks.
+icon: chevrons-up-down
+---
+
+# Accordions
+
+Holocron supports Mintlify-style `Accordion` and `AccordionGroup` blocks for toggling sections of content.
+
+<Accordion title='Single accordion' description='A standalone disclosure block' defaultOpen icon='circle-help'>
+  Accordions can contain arbitrary MDX.
+
+  - Lists
+  - Callouts
+
+  <Note>Nested callouts render correctly inside the accordion body.</Note>
+
+  ```ts
+  console.log('accordion content')
+  ```
+</Accordion>
+
+<AccordionGroup>
+  <Accordion title='Grouped accordion A' icon='rocket' defaultOpen>
+    First grouped item.
+  </Accordion>
+  <Accordion title='Grouped accordion B' icon='github'>
+    Second grouped item.
+  </Accordion>
+</AccordionGroup>
+
+## Holocron differences
+
+- Holocron currently supports `title`, `description`, `defaultOpen`, `icon`, and `iconType`.
+- Mintlify documents hash-linking and explicit accordion ids. Holocron does **not** currently expose that behavior.
+- A lone `Accordion` is normalized into an `AccordionGroup` internally, so standalone authored accordions still render.
