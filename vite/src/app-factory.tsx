@@ -30,6 +30,7 @@ import {
   EditorialPage,
   type EditorialSection,
 } from './components/markdown/index.tsx'
+import { RenderBannerNodes } from './components/markdown/banner.tsx'
 import { NotFound } from './components/not-found.tsx'
 import {
   findPageBySlug,
@@ -163,7 +164,7 @@ function getBannerJsx(site: HolocronSiteData, request: Request): React.ReactNode
   if (pageCookies['holocron-banner-dismissed'] === site.config.banner.content) return undefined
   const bannerMdx = site.config.banner.content
   const bannerMdast = mdxParse(bannerMdx)
-  return <RenderNodes markdown={bannerMdx} nodes={bannerMdast.children} />
+  return <RenderBannerNodes markdown={bannerMdx} nodes={bannerMdast.children} />
 }
 
 function renderMdxPage({

@@ -89,6 +89,39 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await expect(banner.getByRole("button", { name: "Dismiss banner" })).toBeVisible();
   });
 
+  test("banner content inherits the banner contrast color in light and dark mode", async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+
+    for (const colorScheme of ["light", "dark"] as const) {
+      await page.emulateMedia({ colorScheme });
+      await openTabsHome(page, request);
+
+      const banner = page.locator(".slot-banner");
+      await expect(banner).toBeVisible();
+
+      const snapshot = await banner.evaluate((node) => {
+        const bannerColor = getComputedStyle(node).color;
+        const textColors = Array.from(node.querySelectorAll("*"))
+          .filter((el) => {
+            if (el instanceof HTMLButtonElement) return false;
+            if (el.closest("button")) return false;
+            return (el.textContent ?? "").trim().length > 0;
+          })
+          .map((el) => getComputedStyle(el).color);
+
+        return {
+          bannerColor,
+          uniqueTextColors: [...new Set(textColors)].sort(),
+        };
+      });
+
+      expect(snapshot.uniqueTextColors).toEqual([snapshot.bannerColor]);
+    }
+  });
+
   test("renders footer with socials and link columns", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await openTabsHome(page, request);

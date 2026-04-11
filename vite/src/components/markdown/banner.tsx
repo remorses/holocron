@@ -1,29 +1,42 @@
-'use client'
-
-/** Dismiss button for the banner. Sets a cookie and reloads. */
+/** Banner markdown renderer — compact inline-safe content that inherits shell colors. */
 
 import React from 'react'
-import { serialize } from 'cookie'
+import type { RootContent } from 'mdast'
+import { SafeMdxRenderer } from 'safe-mdx'
 
-export function BannerDismiss({ content }: { content: string }) {
+function BannerP({ children }: { children: React.ReactNode }) {
+  return <span>{children}</span>
+}
+
+function BannerA({ href, children }: { href: string; children: React.ReactNode }) {
+  const external = /^https?:\/\//.test(href) || href.startsWith('//')
   return (
-    <button
-      type='button'
-      onClick={() => {
-        document.cookie = serialize('holocron-banner-dismissed', content, {
-          path: '/',
-          maxAge: 31536000,
-          sameSite: 'lax',
-        })
-        window.location.reload()
-      }}
-      aria-label='Dismiss banner'
-      className='shrink-0 rounded p-0.5 text-white opacity-70 transition-opacity hover:opacity-100'
+    <a
+      href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener noreferrer' : undefined}
+      className='font-medium underline underline-offset-2 transition-opacity hover:opacity-80'
+      style={{ color: 'inherit' }}
     >
-      <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
-        <path d='M18 6 6 18' />
-        <path d='m6 6 12 12' />
-      </svg>
-    </button>
+      {children}
+    </a>
   )
+}
+
+function BannerCode({ children }: { children: React.ReactNode }) {
+  return (
+    <code className='px-1 [font-family:var(--font-code)] text-[11px]' style={{ color: 'inherit' }}>
+      {children}
+    </code>
+  )
+}
+
+const bannerMdxComponents = {
+  p: BannerP,
+  a: BannerA,
+  code: BannerCode,
+}
+
+export function RenderBannerNodes({ markdown, nodes }: { markdown: string; nodes: RootContent[] }) {
+  return <SafeMdxRenderer markdown={markdown} mdast={{ type: 'root', children: nodes }} components={bannerMdxComponents} />
 }

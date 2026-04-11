@@ -25,7 +25,7 @@ import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { Footer, PoweredBy } from './footer.tsx'
-import { BannerDismiss } from './banner.tsx'
+import { BannerDismiss } from './banner-dismiss.tsx'
 import { ChatDrawer } from '../chat-drawer.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
 import { NavDrawer } from '../nav-drawer.tsx'
@@ -107,7 +107,7 @@ export function EditorialPage({
     >
       {!!bannerContent && (
         <div className='slot-banner flex h-(--banner-height) items-center justify-center gap-2 bg-foreground px-4 text-background text-xs -mb-(--layout-gap)'>
-          <div className='flex-1 text-center truncate [&_a]:underline [&_a]:font-medium [&_a]:hover:opacity-80 [&_p]:inline'>
+          <div className='flex-1 min-w-0 truncate text-center'>
             {bannerContent}
           </div>
           {!!banner?.dismissible && <BannerDismiss content={banner.content} />}
