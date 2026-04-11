@@ -351,3 +351,52 @@
     grid-column: 3;
   }
 }
+
+/* react-medium-image-zoom wrapper inside PixelatedImage.
+   rmiz renders <div data-rmiz> → <div data-rmiz-content> → <img>. Neither
+   wrapper accepts a className prop, so we scope by the PixelatedImage root
+   class. The wrappers take grid-area 1/1 to stack over the pixelated
+   placeholder (z-index 0) and fill the frame. Without this, both wrapper
+   divs collapse to intrinsic size and the real image never covers the
+   placeholder layer. */
+.holocron-pixelated-image > [data-rmiz] {
+  grid-area: 1 / 1;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.holocron-pixelated-image > [data-rmiz] > [data-rmiz-content] {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hide the rmiz unzoom button — the dialog already handles Escape and a
+   click anywhere on the modal/image to close. The library renders this
+   button into the portalled <dialog> (outside .holocron-pixelated-image),
+   so the selector is global. */
+[data-rmiz-btn-unzoom] {
+  display: none;
+}
+
+/* Theme the rmiz zoom modal overlay so it follows light/dark mode.
+   rmiz defaults to a hardcoded white overlay (`rgba(255, 255, 255, 1)`).
+   We swap it for `--background`, which resolves to white in light mode
+   and the dark token in dark mode. The hidden state must use the same
+   color with 0 alpha so the fade-in transition stays clean — otherwise
+   browsers interpolate between rgba(255,255,255,0) and oklch(dark) and
+   you see a brief whitish flash before it darkens.
+
+   We need higher specificity than rmiz's `[data-rmiz-modal-overlay="..."]`
+   selector because rmiz's CSS is bundled via the `Zoom` component import
+   and loads AFTER globals.css — so on a (0,1,0) specificity tie its rule
+   would win. Scoping by the `[data-rmiz-modal][open]` ancestor bumps us
+   to (0,2,0). */
+[data-rmiz-modal][open] [data-rmiz-modal-overlay="hidden"] {
+  background-color: --alpha(var(--background) / 0%);
+}
+[data-rmiz-modal][open] [data-rmiz-modal-overlay="visible"] {
+  background-color: var(--background);
+}

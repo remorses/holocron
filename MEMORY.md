@@ -1735,3 +1735,7 @@ Cover remote placeholder generation in `sync.test.ts` with a tiny local HTTP ima
 ## Prism import order (2026-04-09)
 
 Loading every Prism component with flat side-effect imports only works in Prism's dependency order; raw `components.json` key order breaks on grammars like `arduino` that extend another language. A few components (`css-extras`, `js-extras`, `js-templates`, `php-extras`, `xml-doc`) are modifier-only and still won't expose `Prism.languages[id]` even when imported correctly.
+
+## react-medium-image-zoom inside PixelatedImage grid
+
+rmiz renders two wrapper divs (`[data-rmiz]` → `[data-rmiz-content]`) around children and accepts no className for them, so scope fill rules in `globals.css` under `.holocron-pixelated-image > [data-rmiz]` with `grid-area: 1 / 1; width: 100%; height: 100%; z-index: 1` so the real image still stacks over the pixelated placeholder at the same grid cell. rmiz sets `data-rmiz-content="found"` only after `img.decode()` resolves — early Playwright checks see `"not-found"` and `cursor: auto`; wait ~1-2s after load before asserting zoom state.

@@ -3,9 +3,25 @@
 /**
  * Image + video primitives with pixelated placeholders.
  * PixelatedImage, LazyVideo, ChartPlaceholder.
+ *
+ * PixelatedImage wraps its real image with `react-medium-image-zoom` so users
+ * can click to zoom — the Medium-style dialog animates the image to fill the
+ * viewport. The library is SSR-safe: its `hasImage()` check requires a live
+ * `imgEl` ref, which is null on the server, so `document`/`window` are only
+ * touched after client mount. We import the library's CSS at module load; the
+ * package declares `sideEffects: ["**\/*.css"]` so bundlers keep the import.
+ *
+ * The rmiz wrapper (`[data-rmiz]` → `[data-rmiz-content]`) needs to fill the
+ * image's grid cell so the real image still stacks over the pixelated
+ * placeholder. Scoped CSS rules in `globals.css` target
+ * `.holocron-pixelated-image > [data-rmiz]` to set `grid-area: 1 / 1` + full
+ * width/height — we cannot reach the wrapper via inline style because rmiz
+ * doesn't accept a className for the outer wrap element.
  */
 
 import React, { useCallback, useState } from 'react'
+import Zoom from 'react-medium-image-zoom'
+import 'react-medium-image-zoom/dist/styles.css'
 
 /**
  * Pixelated placeholder image. Uses a tiny pre-generated image with CSS
@@ -72,7 +88,7 @@ export function PixelatedImage({
 
   return (
     <div
-      className={className}
+      className={`holocron-pixelated-image ${className}`.trim()}
       style={{
         position: 'relative',
         overflow: 'hidden',
@@ -98,27 +114,32 @@ export function PixelatedImage({
           }}
         />
       )}
-      {/* Real image: starts soft and transparent, then sharpens in over the placeholder */}
-      <img
-        ref={imgRef}
-        src={src}
-        alt={alt}
-        width={imgWidth}
-        height={imgHeight}
-        onLoad={() => {
-          setLoaded(true)
-        }}
-        style={{
-          gridArea: '1 / 1',
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          filter: !placeholder || loaded ? 'blur(0px)' : 'blur(6px)',
-          opacity: !placeholder || loaded ? 1 : 0,
-          transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
-          zIndex: 1,
-        }}
-      />
+      {/* Real image: starts soft and transparent, then sharpens in over the
+          placeholder. Wrapped in <Zoom> so users can click to expand into a
+          Medium-style zoomed dialog. The wrapper divs (data-rmiz,
+          data-rmiz-content) inherit `grid-area: 1 / 1` + full sizing from
+          globals.css so the real image still stacks over the placeholder. */}
+      <Zoom>
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          width={imgWidth}
+          height={imgHeight}
+          onLoad={() => {
+            setLoaded(true)
+          }}
+          style={{
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            filter: !placeholder || loaded ? 'blur(0px)' : 'blur(6px)',
+            opacity: !placeholder || loaded ? 1 : 0,
+            transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
+          }}
+        />
+      </Zoom>
     </div>
   )
 }
