@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "fixtures:list": "tsx scripts/run-fixture.ts list",
+    "fixtures:dev": "tsx scripts/run-fixture.ts dev",
+    "fixtures:build": "tsx scripts/run-fixture.ts build",
+    "fixtures:start": "tsx scripts/run-fixture.ts start",
     "update-realworld-polar": "tsx scripts/update-realworld-polar.ts",
     "test-e2e": "playwright test",
     "test-e2e-start": "tsx scripts/test-e2e-start.ts"
