@@ -50,6 +50,7 @@ function buildFixture(rootRel: string): Promise<void> {
         },
       },
     );
+
     child.on("close", (code) => {
       if (code !== 0) {
         reject(new Error(`[build-fixtures] vite build failed for ${rootRel} (exit ${code})`));
@@ -57,6 +58,7 @@ function buildFixture(rootRel: string): Promise<void> {
         resolve();
       }
     });
+
     child.on("error", reject);
   });
 }

@@ -1,8 +1,10 @@
-import fs from "node:fs";
-import path from "node:path";
 import { defineConfig } from "vite";
 import { holocron } from "@holocron.so/vite/vite";
-import { getFixtureCacheDir, getFixtureOutDir } from "./scripts/fixtures.ts";
+import {
+  cleanupFixtureRunPaths,
+  createE2EViteConfig,
+  resolveFixtureRunPaths,
+} from "./scripts/e2e-vite-config.ts";
 
 /**
  * Scope Vite's dep-optimizer cache and build output to the current fixture
@@ -25,29 +27,8 @@ import { getFixtureCacheDir, getFixtureOutDir } from "./scripts/fixtures.ts";
  * Spiceflow now normalizes its per-environment output dirs from the top-level
  * `build.outDir`, so the shared config only needs to set one run-scoped root.
  */
-const fixtureRoot = process.env.E2E_FIXTURE_ROOT
-  ? path.resolve(process.env.E2E_FIXTURE_ROOT)
-  : undefined;
-const runScopedCacheDir = fixtureRoot ? getFixtureCacheDir(fixtureRoot) : undefined;
-const runScopedOutDir = fixtureRoot ? getFixtureOutDir(fixtureRoot) : undefined;
+cleanupFixtureRunPaths(resolveFixtureRunPaths());
 
-if (runScopedCacheDir && fs.existsSync(runScopedCacheDir)) {
-  fs.rmSync(runScopedCacheDir, { recursive: true, force: true });
-}
-if (runScopedOutDir && fs.existsSync(runScopedOutDir)) {
-  fs.rmSync(runScopedOutDir, { recursive: true, force: true });
-}
-
-export default defineConfig({
-  clearScreen: false,
-  ...(runScopedCacheDir ? { cacheDir: runScopedCacheDir } : {}),
-  ...(runScopedOutDir
-    ? {
-        build: {
-          outDir: runScopedOutDir,
-          emptyOutDir: true,
-        },
-      }
-    : {}),
+export default defineConfig(createE2EViteConfig({
   plugins: [holocron()],
-});
+}));
