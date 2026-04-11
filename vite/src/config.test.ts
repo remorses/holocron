@@ -8,7 +8,7 @@ import { readConfig, resolveConfigPath } from './config.ts'
 
 let tmpDir: string
 
-function setupConfig(filename: string, content: Record<string, unknown>): string {
+function setupConfig(filename: string, content: object): string {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-config-test-'))
   const filePath = path.join(tmpDir, filename)
   fs.writeFileSync(filePath, JSON.stringify(content, null, 2))
@@ -270,6 +270,44 @@ describe('navigation normalization', () => {
     const config = readConfig({ root })
     expect(config.navigation.tabs).toMatchInlineSnapshot(`[]`)
     expect(config.navigation.anchors).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('strips markdown extensions from page entries and group roots', () => {
+    const root = setupConfig('docs.json', {
+      navigation: [
+        {
+          group: 'Docs',
+          root: '/guide/index.md',
+          pages: [
+            '/index.md',
+            'guide/getting-started.mdx',
+            {
+              group: 'Guide',
+              root: 'guide/index.mdx',
+              pages: ['guide/index.md'],
+            },
+          ],
+        },
+      ],
+    })
+    const config = readConfig({ root })
+    expect(config.navigation.tabs[0]!.groups[0]).toMatchInlineSnapshot(`
+      {
+        "group": "Docs",
+        "pages": [
+          "index",
+          "guide/getting-started",
+          {
+            "group": "Guide",
+            "pages": [
+              "guide/index",
+            ],
+            "root": "guide/index",
+          },
+        ],
+        "root": "guide/index",
+      }
+    `)
   })
 })
 

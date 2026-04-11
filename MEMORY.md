@@ -1739,3 +1739,7 @@ Loading every Prism component with flat side-effect imports only works in Prism'
 ## react-medium-image-zoom inside PixelatedImage grid
 
 rmiz renders two wrapper divs (`[data-rmiz]` → `[data-rmiz-content]`) around children and accepts no className for them, so scope fill rules in `globals.css` under `.holocron-pixelated-image > [data-rmiz]` with `grid-area: 1 / 1; width: 100%; height: 100%; z-index: 1` so the real image still stacks over the pixelated placeholder at the same grid cell. rmiz sets `data-rmiz-content="found"` only after `img.decode()` resolves — early Playwright checks see `"not-found"` and `cursor: auto`; wait ~1-2s after load before asserting zoom state.
+
+## Config page extensions (2026-04-11)
+
+`docs.json` page entries and group `root` values can show up as `index.md`, `getting-started.mdx`, or `/guide/index.md`, but routing expects canonical slugs like `index` and `guide/index`. Normalize those strings once in `normalize-config.ts` by stripping a leading slash and a trailing `.md`/`.mdx`, so `/` and raw `.md` routes stay consistent everywhere.

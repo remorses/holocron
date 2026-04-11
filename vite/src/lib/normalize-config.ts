@@ -37,6 +37,33 @@ function normalizeStaticPath(value: string | undefined): string | undefined {
   return path.posix.normalize(`/${value}`)
 }
 
+function normalizePageSlug(value: string | undefined): string | undefined {
+  if (!value) return value
+  return value
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '')
+    .replace(/\.(?:md|mdx)$/i, '')
+}
+
+function normalizePageEntry(entry: ConfigNavPageEntry): ConfigNavPageEntry {
+  if (typeof entry === 'string') {
+    return normalizePageSlug(entry) || entry
+  }
+  return normalizeGroup(entry)
+}
+
+function normalizeGroup(group: ConfigNavGroup): ConfigNavGroup {
+  return {
+    group: group.group,
+    ...(group.icon !== undefined && { icon: group.icon }),
+    ...(group.hidden !== undefined && { hidden: group.hidden }),
+    ...(group.root !== undefined && { root: normalizePageSlug(group.root) }),
+    ...(group.tag !== undefined && { tag: group.tag }),
+    ...(group.expanded !== undefined && { expanded: group.expanded }),
+    pages: group.pages.map(normalizePageEntry),
+  }
+}
+
 /** Validate an icon value and strip object icons whose library we can't
  *  resolve. Strings (emoji / URL / lucide names) always pass through.
  *  Returns the icon or undefined (meaning "no icon"). */
@@ -163,13 +190,13 @@ function normalizeInnerNavigation(raw: Record<string, unknown>, defaultLibrary: 
   }
   if (Array.isArray(raw.groups)) {
     return {
-      tabs: [{ tab: '', groups: raw.groups as ConfigNavGroup[] }],
+      tabs: [{ tab: '', groups: (raw.groups as ConfigNavGroup[]).map(normalizeGroup) }],
       anchors: innerAnchors,
     }
   }
   if (Array.isArray(raw.pages)) {
     return {
-      tabs: [{ tab: '', groups: [{ group: '', pages: raw.pages as ConfigNavPageEntry[] }] }],
+      tabs: [{ tab: '', groups: [{ group: '', pages: (raw.pages as ConfigNavPageEntry[]).map(normalizePageEntry) }] }],
       anchors: innerAnchors,
     }
   }
@@ -272,7 +299,7 @@ function normalizeNavigation(raw: unknown, defaultLibrary: IconLibrary): Holocro
     }
     // Array of groups → wrap in single implicit tab
     return {
-      tabs: [{ tab: '', groups: raw as ConfigNavGroup[] }],
+      tabs: [{ tab: '', groups: (raw as ConfigNavGroup[]).map(normalizeGroup) }],
       anchors: [],
       versions: [],
       dropdowns: [],
@@ -318,9 +345,9 @@ function normalizeNavigation(raw: unknown, defaultLibrary: IconLibrary): Holocro
         flatTabs.push(...base.tabs)
         flatAnchors.push(...base.anchors)
       } else if (Array.isArray(obj.groups)) {
-        flatTabs.push({ tab: '', groups: obj.groups as ConfigNavGroup[] })
+        flatTabs.push({ tab: '', groups: (obj.groups as ConfigNavGroup[]).map(normalizeGroup) })
       } else if (Array.isArray(obj.pages)) {
-        flatTabs.push({ tab: '', groups: [{ group: '', pages: obj.pages as ConfigNavPageEntry[] }] })
+        flatTabs.push({ tab: '', groups: [{ group: '', pages: (obj.pages as ConfigNavPageEntry[]).map(normalizePageEntry) }] })
       }
 
       return { tabs: flatTabs, anchors: flatAnchors, versions, dropdowns }
@@ -335,7 +362,7 @@ function normalizeNavigation(raw: unknown, defaultLibrary: IconLibrary): Holocro
     // Root groups (no tabs wrapper)
     if (Array.isArray(obj.groups)) {
       return {
-        tabs: [{ tab: '', groups: obj.groups as ConfigNavGroup[] }],
+        tabs: [{ tab: '', groups: (obj.groups as ConfigNavGroup[]).map(normalizeGroup) }],
         anchors: allAnchors,
         versions: [],
         dropdowns: [],
@@ -345,7 +372,7 @@ function normalizeNavigation(raw: unknown, defaultLibrary: IconLibrary): Holocro
     // Root pages (no groups wrapper)
     if (Array.isArray(obj.pages)) {
       return {
-        tabs: [{ tab: '', groups: [{ group: '', pages: obj.pages as ConfigNavPageEntry[] }] }],
+        tabs: [{ tab: '', groups: [{ group: '', pages: (obj.pages as ConfigNavPageEntry[]).map(normalizePageEntry) }] }],
         anchors: allAnchors,
         versions: [],
         dropdowns: [],
@@ -404,7 +431,7 @@ function normalizeTabsAndAnchors(
 
     // Tab with groups → standard content tab
     if (raw.groups) {
-      tabs.push({ tab: name, ...tabExtras, groups: raw.groups as ConfigNavGroup[] })
+      tabs.push({ tab: name, ...tabExtras, groups: (raw.groups as ConfigNavGroup[]).map(normalizeGroup) })
       continue
     }
 
@@ -413,7 +440,7 @@ function normalizeTabsAndAnchors(
       tabs.push({
         tab: name,
         ...tabExtras,
-        groups: [{ group: '', pages: raw.pages as ConfigNavPageEntry[] }],
+        groups: [{ group: '', pages: (raw.pages as ConfigNavPageEntry[]).map(normalizePageEntry) }],
       })
       continue
     }

@@ -6,7 +6,7 @@
   "navigation": [
     {
       "group": "Guides",
-      "pages": ["index", "getting-started"]
+      "pages": ["index.md", "getting-started.mdx"]
     }
   ]
 }
