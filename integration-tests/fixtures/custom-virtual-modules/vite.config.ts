@@ -10,7 +10,10 @@ import {
 
 cleanupFixtureRunPaths(resolveFixtureRunPaths());
 
-const mdxVirtualModule = `
+
+
+
+const mdxVirtualModule = ts`
 const pages = {
   index: String.raw\`# Virtual Home\n\nThis came from custom virtual modules.\`,
   "getting-started": String.raw\`# Virtual Getting Started\n\nThis also came from custom virtual modules.\`,
@@ -29,7 +32,7 @@ export async function getPageIconRefs() {
 }
 `;
 
-const navigationVirtualModule = `
+const navigationVirtualModule = ts`
 import { buildNavigationData } from "@holocron.so/vite/src/build-navigation-data.ts"
 import { getConfig } from "virtual:holocron-config"
 import { getMdxSource } from "virtual:holocron-mdx"
@@ -50,3 +53,12 @@ export default defineConfig(createE2EViteConfig({
     }),
   ],
 }));
+
+
+function ts(strings: TemplateStringsArray, ...exprs: any[]) {
+  let result = '';
+  strings.forEach((str, i) => {
+    result += str + (exprs[i] ?? '');
+  });
+  return result;
+}
