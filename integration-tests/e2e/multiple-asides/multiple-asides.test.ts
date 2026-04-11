@@ -93,4 +93,38 @@ test.describe("multiple asides fixture", () => {
     expect(html).toContain("Request example");
     expect(html).toContain("Response example");
   });
+
+  test("page with RequestExample widens --grid-sidebar-width and bumps --grid-max-width", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/");
+
+    // The widened CSS vars are written as inline style on `.slot-page`.
+    // Read the computed values and assert the sidebar was expanded from
+    // the 210px default to the 440px minimum required by RequestExample.
+    const slotPage = page.locator(".slot-page");
+    await expect(slotPage).toBeVisible();
+
+    const sidebarWidthVar = await slotPage.evaluate((el) =>
+      getComputedStyle(el).getPropertyValue("--grid-sidebar-width").trim(),
+    );
+    expect(sidebarWidthVar).toBe("440px");
+
+    // --grid-max-width must be bumped so the grid has room to widen.
+    // Expected: max(1100, 210 + 520 + 440 + 100) = 1270px.
+    const maxWidthVar = await slotPage.evaluate((el) =>
+      getComputedStyle(el).getPropertyValue("--grid-max-width").trim(),
+    );
+    expect(maxWidthVar).toContain("1270px");
+
+    // Sanity-check the rendered Request example is actually wider than
+    // the default 210px sidebar column.
+    const requestExample = page
+      .getByText("Request example", { exact: true })
+      .locator("xpath=ancestor::*[contains(@class,'slot-aside')][1]");
+    const box = await requestExample.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeGreaterThan(300);
+  });
 });

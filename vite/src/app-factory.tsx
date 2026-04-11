@@ -37,6 +37,7 @@ import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts
 import { isAgentRequest } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
+import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
 import {
   decodeGeneratedLogoText,
@@ -181,6 +182,12 @@ function renderMdxPage({
   const contentMdast: Root = { type: 'root', children: contentChildren }
   const mdastSections = buildSections(contentMdast)
 
+  // Compute required right-sidebar width from aside contents. When an
+  // Aside holds components like RequestExample / ResponseExample it needs
+  // more horizontal room than the 210px default.
+  const allAsideNodes = mdastSections.flatMap((s) => s.asideNodes)
+  const sidebarWidth = computeSidebarWidthFromAsideNodes(allAsideNodes)
+
   const sections: EditorialSection[] = mdastSections.map((section) => {
     const aside =
       section.asideNodes.length > 0 ? (
@@ -235,7 +242,7 @@ function renderMdxPage({
               : <Head.Meta key={name} name={name} content={content} />
           ))}
       </Head>
-      <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} />
+      <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} />
     </>
   )
 }

@@ -47,7 +47,17 @@ export type EditorialSection = {
 type EditorialPageStyle = React.CSSProperties & {
   '--banner-height'?: string
   '--shared-row'?: string
+  '--grid-sidebar-width'?: string
+  '--grid-max-width'?: string
 }
+
+/** Must mirror globals.css — used to compute grid-max-width when the
+ *  right sidebar is wider than the default. Keep in sync with the
+ *  `--grid-*` tokens defined in `styles/globals.css`. */
+const GRID_TOC_WIDTH = 210
+const GRID_CONTENT_WIDTH = 520
+const GRID_GAP = 50
+const DEFAULT_GRID_MAX_WIDTH = 1100
 
 function getSharedAsideStartRow(row: number, span: number) {
   return row - span + 1
@@ -67,6 +77,7 @@ export function EditorialPage({
   sections,
   hero,
   bannerContent,
+  sidebarWidth,
 }: {
   sidebar?: React.ReactNode
   children?: React.ReactNode
@@ -76,6 +87,10 @@ export function EditorialPage({
   hero?: React.ReactNode
   /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
   bannerContent?: React.ReactNode
+  /** Right-sidebar width in px. When larger than the default (210), the
+   *  page-level grid-max-width is bumped so the grid can actually widen
+   *  to accommodate it. When undefined, the CSS defaults apply. */
+  sidebarWidth?: number
 }) {
   const { site, activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
   const siteConfig = site.config
@@ -98,6 +113,18 @@ export function EditorialPage({
   const pageStyle: EditorialPageStyle = {
     WebkitFontSmoothing: 'antialiased',
     '--banner-height': bannerContent ? '36px' : '0px',
+  }
+  // When a page needs a wider right sidebar (e.g. RequestExample is
+  // present), override the relevant CSS vars on the page shell. The grid
+  // template columns and navbar max-width already read these vars so no
+  // other layout change is needed. We only override when necessary so
+  // normal pages keep the exact same computed styles as before.
+  if (typeof sidebarWidth === 'number' && sidebarWidth > GRID_TOC_WIDTH) {
+    const requiredGrid =
+      GRID_TOC_WIDTH + GRID_CONTENT_WIDTH + sidebarWidth + 2 * GRID_GAP
+    const nextMax = Math.max(DEFAULT_GRID_MAX_WIDTH, requiredGrid)
+    pageStyle['--grid-sidebar-width'] = `${sidebarWidth}px`
+    pageStyle['--grid-max-width'] = `min(calc(100vw - 60px), ${nextMax}px)`
   }
 
   return (
