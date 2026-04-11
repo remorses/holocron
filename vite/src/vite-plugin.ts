@@ -329,7 +329,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           // Spiceflow's generated virtual:app-entry module can attach its
           // built-client static middleware before the listener starts handling
           // requests.
-          `if (!import.meta.hot) { queueMicrotask(() => { app.listen(Number(process.env.PORT || 3000)) }) }`,
+          `app.listen(Number(process.env.PORT || 3000))`
         ].join('\n')
       }
     },
