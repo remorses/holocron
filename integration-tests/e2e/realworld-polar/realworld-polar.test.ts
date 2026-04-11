@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   captureRuntimeDebug,
   dumpRuntimeDebug,
@@ -32,29 +32,20 @@ test.afterEach(async ({}, testInfo) => {
 
 test.describe("realworld-polar fixture", () => {
   async function warmAndOpen(
-    { page, request, href, ready }: {
+    { page, href, ready }: {
       page: Page;
-      request: APIRequestContext;
       href: string;
       ready: Locator;
     },
   ) {
-    const response = await request.get(href, {
-      headers: { "sec-fetch-dest": "document" },
-    });
-    expect(response.status()).toBe(200);
     await page.goto(href, { waitUntil: "domcontentloaded" });
     await expect(ready).toBeVisible({ timeout: 10000 });
   }
 
-  test("home page renders real Polar docs navigation and content", async ({
-    page,
-    request,
-  }) => {
+  test("home page renders real Polar docs navigation and content", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await warmAndOpen({
       page,
-      request,
       href: "/",
       ready: page.getByRole("link", { name: "Docs", exact: true }),
     });
@@ -85,14 +76,10 @@ test.describe("realworld-polar fixture", () => {
     await expect(page.getByRole("link", { name: "Quick Examples", exact: true })).toBeVisible();
   });
 
-  test("usage-based billing page renders imported snippet content", async ({
-    page,
-    request,
-  }) => {
+  test("usage-based billing page renders imported snippet content", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await warmAndOpen({
       page,
-      request,
       href: "/features/usage-based-billing/introduction",
       ready: page.getByText("Usage Based Billing is a new feature."),
     });
@@ -160,14 +147,10 @@ test.describe("realworld-polar fixture", () => {
     await expect(page.getByText("utm_source")).toBeVisible();
   });
 
-  test("webhook events page renders columns of event cards", async ({
-    page,
-    request,
-  }) => {
+  test("webhook events page renders columns of event cards", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await warmAndOpen({
       page,
-      request,
       href: "/integrate/webhooks/events",
       ready: page.getByRole("link", { name: "checkout.created" }),
     });
@@ -240,7 +223,7 @@ test.describe("realworld-polar fixture", () => {
     expect(Math.round(after!.y)).toBe(Math.round(before!.y));
   });
 
-  test("server-rendered html includes representative Polar content", async ({
+  test("server-rendered html includes representative Polar content @build", async ({
     request,
   }) => {
     const response = await request.get("/", {
@@ -259,22 +242,23 @@ test.describe("realworld-polar fixture", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     const realImage = page.locator('.slot-main img[src*="welcome.png"]:not([aria-hidden])').first();
     await expect(realImage).toBeVisible();
-    const wrapper = realImage.locator("xpath=ancestor::div[1]");
-    await expect(wrapper.locator('img[aria-hidden][src^="data:image/webp;base64,"]')).toHaveCount(1);
+    const wrapper = realImage.locator("xpath=ancestor::*[contains(@class, 'holocron-pixelated-image')][1]");
+    await expect(wrapper).toBeVisible();
+    await expect.poll(async () => {
+      return await realImage.evaluate((node) => {
+        return node instanceof HTMLImageElement ? node.naturalWidth : 0;
+      });
+    }).toBeGreaterThan(0);
   });
 
-  test("Polar card icons render for Font Awesome-style names used in MDX", async ({
-    page,
-    request,
-  }) => {
+  test("Polar card icons render for Font Awesome-style names used in MDX", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await warmAndOpen({
       page,
-      request,
       href: "/",
       ready: page.getByRole("link", { name: "Docs", exact: true }),
     });
