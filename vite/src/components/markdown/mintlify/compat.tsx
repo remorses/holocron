@@ -11,6 +11,7 @@
 import React from 'react'
 import { Icon } from '../../icon.tsx'
 import { Chevron } from './chevron.tsx'
+import { slugify } from '../../../lib/toc-tree.ts'
 
 function sectionCard(children: React.ReactNode, className = '') {
   return (
@@ -379,22 +380,65 @@ export function Update({
   label,
   description,
   tags,
+  rss: _rss,
   children,
 }: {
   label: string
   description?: string
   tags?: string[]
+  /** Accepted for Mintlify compat — Holocron does not render RSS-only metadata. */
+  rss?: { title?: string; description?: string }
   children: React.ReactNode
 }) {
-  return sectionCard(
-    <div className='flex flex-col gap-3'>
-      <div className='flex flex-wrap items-center gap-2'>
-        <div className='text-sm font-semibold text-(color:--text-primary)'>{label}</div>
-        {description && <div className='text-xs text-(color:--text-secondary)'>{description}</div>}
-        {tags?.map((tag) => <Badge key={tag} color='blue'>{tag}</Badge>)}
+  // Mintlify-style two-column changelog row:
+  //   - left rail (sticky on lg+): label pill + description + tags
+  //   - right column: MDX children (headings, frames, code blocks, lists…)
+  //
+  // Holocron content column is ~520px, so the rail is 110px (not 160px like
+  // Mintlify) to leave enough room for code blocks / Frames in children.
+  // `min-w-0` on the content wrapper is required so flexbox can actually
+  // shrink the content below its intrinsic size and avoid horizontal bleed.
+  // `no-bleed` prevents nested code blocks / lists from escaping the column.
+  const id = slugify(label)
+  return (
+    <div
+      id={id}
+      data-component-part='update'
+      className='flex w-full flex-col items-start gap-3 py-6 lg:flex-row lg:gap-5 lg:py-8'
+    >
+      <div className='flex w-full flex-col items-start gap-3 lg:sticky lg:top-(--sticky-top) lg:w-[110px] lg:flex-shrink-0'>
+        <a
+          href={`#${id}`}
+          data-component-part='update-label'
+          className='inline-flex items-center rounded-(--border-radius-md) bg-(--brand-primary)/10 px-2 py-0.5 text-xs font-medium text-(color:--brand-primary) no-underline'
+        >
+          {label}
+        </a>
+        {description && (
+          <div
+            data-component-part='update-description'
+            className='text-xs break-words text-(color:--text-secondary) lg:max-w-[110px]'
+          >
+            {description}
+          </div>
+        )}
+        {tags && tags.length > 0 && (
+          <div className='flex flex-wrap gap-1'>
+            {tags.map((tag) => (
+              <Badge key={tag} color='gray' size='xs'>
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
-      <div className='flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>
-    </div>,
+      <div
+        data-component-part='update-content'
+        className='no-bleed flex min-w-0 flex-1 flex-col gap-(--prose-gap)'
+      >
+        {children}
+      </div>
+    </div>
   )
 }
 

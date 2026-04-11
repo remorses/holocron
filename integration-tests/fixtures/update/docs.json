@@ -1,0 +1,12 @@
+{
+  "name": "Update Fixture",
+  "colors": {
+    "primary": "#0969da"
+  },
+  "navigation": [
+    {
+      "group": "Changelog",
+      "pages": ["index"]
+    }
+  ]
+}

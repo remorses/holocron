@@ -1,0 +1,48 @@
+---
+title: Changelog
+description: Fixture exercising the Update component two-column sticky layout.
+---
+
+# Changelog
+
+Release notes for the fixture project. Used to verify that the `<Update>`
+component renders as a Mintlify-style two-column sticky row.
+
+<Update label="2026-04-11" description="v1.2.0" tags={["release", "api"]}>
+  ## Two-column layout
+
+  The update component now renders a sticky label rail next to the body of
+  each entry. This paragraph must fit inside the narrower content column on
+  desktop viewports without overflowing horizontally.
+
+  ```ts
+  export function greet(name: string): string {
+    return `hello, ${name}`
+  }
+  ```
+
+  - Sticky label rail
+  - Slugified anchor id
+  - Narrow rail to fit 520px content column
+</Update>
+
+<Update label="2026-04-05" description="v1.1.0">
+  ## Description only
+
+  This second entry has a description but no tags, to verify the rail still
+  aligns correctly when tags are omitted.
+
+  > A quoted paragraph that should wrap inside the content column without
+  > spilling outside the Update row.
+</Update>
+
+<Update label="2026-03-28">
+  ## Bare label
+
+  A third entry with only a label (no description, no tags). Used to verify
+  the sticky handoff between consecutive updates when scrolling.
+
+  - First bullet
+  - Second bullet
+  - Third bullet
+</Update>
