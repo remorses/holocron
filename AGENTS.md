@@ -10,8 +10,8 @@ Read the Emil design-engineering skill before adding or changing animations/tran
 
 Supports two config file names (first found wins):
 
-- `holocron.jsonc` — our format (JSONC with comments)
-- `docs.json` — Mintlify new format (direct compatibility)
+- `docs.json` (preferred)
+- `holocron.jsonc`
 
 both follow the same schema.
 
@@ -19,11 +19,12 @@ both follow the same schema.
 
 The schema follows the Mintlify docs.json shape (https://mintlify.com/docs.json) for the subset Holocron consumes. Unknown Mintlify fields pass through `.passthrough()` so users can paste a full docs.json without validation errors.
 
-To read mintlify docs curl https://www.mintlify.com/docs/llms-full.txt into a file and grep it. notice this file is very large. this is useful to find out specific mintlify behaviour, supported components, etc
+## Mintlify
+
+To read mintlify docs curl `https://www.mintlify.com/docs/llms-full.txt` into a file and grep it. notice this file is very large. this is useful to find out specific mintlify behaviour, supported components, etc
 
 Fetch those docs every time we need to find out some info about Mintlify
 
-MVP subset we support: `name`, `logo`, `favicon`, `colors`, `navigation` (with `tabs`, `global.anchors`, `versions`, `dropdowns`, `products`), `navbar` (with `links`, `primary`), `redirects`, `footer.socials`.
 
 ### How config maps to UI
 
