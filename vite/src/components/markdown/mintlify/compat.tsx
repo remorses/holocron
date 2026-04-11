@@ -151,7 +151,7 @@ export function CardGroup({ cols, children }: { cols?: number; children: React.R
 }
 
 export function Column({ children }: { children: React.ReactNode }) {
-  return <div className='min-w-0'>{children}</div>
+  return <div className='flex min-w-0 flex-col gap-3'>{children}</div>
 }
 
 export function Expandable({
