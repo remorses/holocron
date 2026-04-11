@@ -10,12 +10,17 @@ import { remark } from 'remark'
 
 export function runRemarkPlugin(
   content: string,
-  plugin: unknown,
+  plugin: () => (tree: Root) => void,
 ) {
-  const processor = remark().use(remarkMdx).use(plugin as never)
-  const parsed = processor.parse(content) as Root
-  const parsedSnapshot = structuredClone(parsed) as Root
-  const transformed = processor.runSync(parsed) as Root
+  const processor = remark().use(remarkMdx).use(plugin)
+  const parsed: Root = processor.parse(content)
+  const parsedSnapshot: Root = structuredClone(parsed)
+  const transformedNode = processor.runSync(parsed)
+  const transformedChildren = Reflect.get(transformedNode, 'children')
+  if (transformedNode.type !== 'root' || !Array.isArray(transformedChildren)) {
+    throw new Error('Remark plugin must return a root node')
+  }
+  const transformed: Root = { type: 'root', children: transformedChildren }
 
   return {
     parsed: parsedSnapshot,

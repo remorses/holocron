@@ -138,12 +138,20 @@ export type HolocronConfig = {
 /* ── Type guard (for page entries) ───────────────────────────────────── */
 
 export function isConfigNavGroup(entry: ConfigNavPageEntry): entry is ConfigNavGroup {
-  return typeof entry === 'object' && 'group' in entry
+  return typeof entry === 'object' && entry !== null
 }
 
 /* ── Config reader ───────────────────────────────────────────────────── */
 
 const CONFIG_FILE_NAMES = ['holocron.jsonc', 'docs.json'] as const
+
+function parseConfigObject(raw: string): Record<string, unknown> {
+  const parsed = parseJsonc(raw)
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Config file must contain a top-level JSON object')
+  }
+  return Object.fromEntries(Object.entries(parsed))
+}
 
 /**
  * Read and normalize the config file. All docs.json union variants are
@@ -156,7 +164,7 @@ export function readConfig({ root, configPath }: { root: string; configPath?: st
     const resolved = path.resolve(root, configPath)
     if (fs.existsSync(resolved)) {
       const raw = fs.readFileSync(resolved, 'utf-8')
-      return normalize(parseJsonc(raw) as Record<string, unknown>)
+      return normalize(parseConfigObject(raw))
     }
     throw new Error(`Config file not found at: ${resolved}`)
   }
@@ -165,7 +173,7 @@ export function readConfig({ root, configPath }: { root: string; configPath?: st
     const filePath = path.join(root, name)
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      return normalize(parseJsonc(raw) as Record<string, unknown>)
+      return normalize(parseConfigObject(raw))
     }
   }
   throw new Error(

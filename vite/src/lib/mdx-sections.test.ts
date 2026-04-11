@@ -6,7 +6,7 @@ import { buildSections } from './mdx-sections.ts'
 import { formatSectionsToMdx } from './test-mdx-util.ts'
 
 function parseAndBuild(mdx: string) {
-  const root = mdxParse(mdx) as Root
+  const root: Root = mdxParse(mdx)
   return buildSections(root)
 }
 

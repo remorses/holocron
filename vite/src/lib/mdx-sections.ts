@@ -5,6 +5,8 @@
 
 import type { Root, RootContent } from 'mdast'
 
+type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
+
 export type MdastSection = {
   contentNodes: RootContent[]
   asideNodes: RootContent[]
@@ -20,35 +22,24 @@ export type MdastSection = {
   fullWidth?: boolean
 }
 
-export function isAsideNode(node: RootContent): boolean {
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Aside'
+export function isAsideNode(node: RootContent): node is FlowJsxNode {
+  return node.type === 'mdxJsxFlowElement' && node.name === 'Aside'
 }
 
 export function hasFullProp(node: RootContent): boolean {
-  const attrs = (node as { attributes?: Array<{ name: string }> }).attributes
-  return attrs?.some((a) => a.name === 'full') ?? false
+  return node.type === 'mdxJsxFlowElement' && node.attributes.some((a) => a.type === 'mdxJsxAttribute' && a.name === 'full')
 }
 
-export function isFullWidthNode(node: RootContent): boolean {
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'FullWidth'
+export function isFullWidthNode(node: RootContent): node is FlowJsxNode {
+  return node.type === 'mdxJsxFlowElement' && node.name === 'FullWidth'
 }
 
-export function isHeroNode(node: RootContent): boolean {
-  return node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Hero'
+export function isHeroNode(node: RootContent): node is FlowJsxNode {
+  return node.type === 'mdxJsxFlowElement' && node.name === 'Hero'
 }
 
 function isHeadingNode(node: RootContent): boolean {
-  return node.type === 'heading' || (node.type === 'mdxJsxFlowElement' && 'name' in node && (node as { name?: string }).name === 'Heading')
-}
-
-/** Filter out mdast node types that render to nothing so they don't create
- *  empty grid rows. Frontmatter (`yaml`/`toml`) and link reference definitions
- *  are the main culprits — they appear as top-level children but produce no
- *  visible output. Leaving them in would add an extra empty `slot-main` +
- *  `--section-gap` before the first real section. */
-function isInvisibleNode(node: RootContent): boolean {
-  const t = (node as { type: string }).type
-  return t === 'yaml' || t === 'toml' || t === 'definition'
+  return node.type === 'heading' || (node.type === 'mdxJsxFlowElement' && node.name === 'Heading')
 }
 
 function groupBySections(root: Root): MdastSection[] {
@@ -70,8 +61,7 @@ function groupBySections(root: Root): MdastSection[] {
       if (current.contentNodes.length > 0 || current.asideNodes.length > 0) {
         sections.push(current)
       }
-      const children = 'children' in node ? (node as { children: RootContent[] }).children : []
-      sections.push({ contentNodes: children, asideNodes: [], fullWidth: true })
+      sections.push({ contentNodes: node.children, asideNodes: [], fullWidth: true })
       current = { contentNodes: [], asideNodes: [] }
     } else if (isAsideNode(node)) {
       current.asideNodes.push(node)
@@ -106,17 +96,19 @@ function groupBySections(root: Root): MdastSection[] {
 export function buildSections(root: Root): MdastSection[] {
   // Strip invisible nodes (frontmatter, link definitions) from the top level
   // so they don't get swept into a leading empty section by groupBySections.
-  const children = root.children.filter((n) => !isInvisibleNode(n))
+  const children = root.children.filter((node) => {
+    return node.type !== 'yaml' && node.type !== 'definition'
+  })
 
   const ENABLE_ASSISTANT = true
 
   if (ENABLE_ASSISTANT) {
-    const assistantNode: RootContent = {
+    const assistantNode: FlowJsxNode = {
       type: 'mdxJsxFlowElement',
       name: 'HolocronAIAssistantWidget',
       attributes: [],
       children: [],
-    } as unknown as RootContent
+    }
 
     let firstSectionEnd = children.length
     for (let i = 0; i < children.length; i++) {
@@ -135,16 +127,17 @@ export function buildSections(root: Root): MdastSection[] {
     }
 
     if (firstAsideIdx !== -1) {
-      const asideNode = children[firstAsideIdx] as { children?: RootContent[] }
-      if (!asideNode.children) asideNode.children = []
-      asideNode.children.unshift(assistantNode)
+      const asideNode = children[firstAsideIdx]
+      if (asideNode && isAsideNode(asideNode)) {
+        asideNode.children.unshift(assistantNode)
+      }
     } else {
-      const fullAsideNode: RootContent = {
+      const fullAsideNode: FlowJsxNode = {
         type: 'mdxJsxFlowElement',
         name: 'Aside',
-        attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }] as any,
+        attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }],
         children: [assistantNode],
-      } as unknown as RootContent
+      }
       children.unshift(fullAsideNode)
     }
   }
@@ -160,7 +153,7 @@ export function buildSections(root: Root): MdastSection[] {
 
   // No full asides → split normally (existing behavior)
   if (fullAsideIndices.length === 0) {
-    return groupBySections({ type: 'root', children } as Root)
+    return groupBySections({ type: 'root', children })
   }
 
   const sections: MdastSection[] = []

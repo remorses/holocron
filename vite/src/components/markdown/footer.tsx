@@ -46,7 +46,7 @@ export function Footer() {
               {Object.entries(socials).map(([platform, url]) => (
                 <a
                   key={platform}
-                  href={url as string}
+                  href={url}
                   target='_blank'
                   rel='noopener noreferrer'
                   aria-label={platform}

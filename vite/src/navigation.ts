@@ -82,11 +82,11 @@ export type NavigationWithSwitchers = {
 /* ── Type guards ─────────────────────────────────────────────────────── */
 
 export function isNavPage(entry: NavPageEntry): entry is NavPage {
-  return 'slug' in entry && 'href' in entry
+  return Object.hasOwn(entry, 'slug')
 }
 
 export function isNavGroup(entry: NavPageEntry): entry is NavGroup {
-  return 'group' in entry
+  return Object.hasOwn(entry, 'group')
 }
 
 /** Whether a group should appear in the sidebar after `hidden` filtering.
@@ -114,11 +114,6 @@ export function isVisibleNavPage(page: NavPage): boolean {
 
 /* ── Utility functions ──────────────────────────────────────────────── */
 
-/** Check if a tab contains a page with the given href (exact match, recursive). */
-function tabContainsHref(tab: NavTab, href: string): boolean {
-  return groupsContainHref(tab.groups, href)
-}
-
 function groupsContainHref(groups: NavGroup[], href: string): boolean {
   for (const group of groups) {
     for (const entry of group.pages) {
@@ -135,7 +130,7 @@ export function getActiveTab(nav: Navigation, pathname: string): NavTab {
     return nav[0] ?? { tab: '', groups: [] }
   }
 
-  const exact = nav.find((tab) => tabContainsHref(tab, pathname))
+  const exact = nav.find((tab) => groupsContainHref(tab.groups, pathname))
   return exact ?? nav[0] ?? { tab: '', groups: [] }
 }
 
@@ -168,24 +163,6 @@ function findPageInGroups(groups: NavGroup[], slug: string): NavPage | undefined
         }
       } else if (isNavGroup(entry)) {
         const found = findPageInGroups([entry], slug)
-        if (found) {
-          return found
-        }
-      }
-    }
-  }
-  return undefined
-}
-
-/** Find the first NavPage in a list of groups (DFS) */
-function findFirstPage(groups: NavGroup[]): NavPage | undefined {
-  for (const group of groups) {
-    for (const entry of group.pages) {
-      if (isNavPage(entry)) {
-        return entry
-      }
-      if (isNavGroup(entry)) {
-        const found = findFirstPage([entry])
         if (found) {
           return found
         }

@@ -35,11 +35,8 @@ export type ProcessedMdx = {
   mdast: Root
 }
 
-type JsxNode = RootContent & {
-  name?: string
-  attributes?: Array<{ type: string; name?: string; value?: unknown }>
-  children?: RootContent[]
-}
+type JsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
+type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 
 /**
  * Parse MDX content and extract metadata + icon/image refs.
@@ -98,8 +95,9 @@ function collectIconRefsFromMdast({
           refs.push(...stringIconToRefs(icon, { defaultLibrary, iconType }))
         }
       }
-      if ('children' in node && Array.isArray(node.children)) {
-        walk(node.children as RootContent[])
+      const children = Reflect.get(node, 'children')
+      if (Array.isArray(children)) {
+        walk(children)
       }
     }
   }
@@ -118,11 +116,11 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
     }
   }
 
-  if (!isJsxHeadingElement(node) || hasBooleanJsxAttr(node, 'noAnchor')) {
+  if (!isJsxElement(node) || node.name !== 'Heading' || (node.attributes ?? []).some((a) => a.type === 'mdxJsxAttribute' && a.name === 'noAnchor')) {
     return undefined
   }
 
-  const text = extractText((node.children ?? []) as PhrasingContent[])
+  const text = extractText(node.children ?? [])
   const explicitId = getJsxAttrValue(node, 'id')
   return {
     depth: getHeadingLevel(node),
@@ -132,25 +130,28 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
 
   function getHeadingLevel(node: JsxNode): 1 | 2 | 3 | 4 | 5 | 6 {
     const rawLevel = Number(getJsxAttrValue(node, 'level'))
-    if (!Number.isInteger(rawLevel) || rawLevel < 1 || rawLevel > 6) {
-      return 1
+    switch (rawLevel) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+        return rawLevel
+      default:
+        return 1
     }
-    return rawLevel as 1 | 2 | 3 | 4 | 5 | 6
   }
 }
 
 /* ── Image src collection ────────────────────────────────────────────── */
-
-function isExternal(src: string): boolean {
-  return src.startsWith('http://') || src.startsWith('https://')
-}
 
 function collectImageSrcs(root: Root): string[] {
   const srcs: string[] = []
 
   function walk(nodes: RootContent[]) {
     for (const node of nodes) {
-      if (node.type === 'image' && node.url && !isExternal(node.url)) {
+      if (node.type === 'image' && node.url && !node.url.startsWith('http://') && !node.url.startsWith('https://')) {
         srcs.push(node.url)
       }
       if (isJsxImageElement(node)) {
@@ -159,8 +160,9 @@ function collectImageSrcs(root: Root): string[] {
           srcs.push(src)
         }
       }
-      if ('children' in node && Array.isArray(node.children)) {
-        walk(node.children as RootContent[])
+      const children = Reflect.get(node, 'children')
+      if (Array.isArray(children)) {
+        walk(children)
       }
     }
   }
@@ -242,11 +244,11 @@ function rewriteNode(
       if (node.type === 'mdxJsxFlowElement' && node.name === 'img') {
         return [createPixelatedImageNodeFromJsxImage(node, resolved)]
       }
-      setJsxAttr(node, 'src', resolved.publicSrc)
+      setJsxAttr({ node, attrName: 'src', value: resolved.publicSrc })
       if (node.name === 'PixelatedImage') {
-        setJsxAttr(node, 'width', String(resolved.meta.width))
-        setJsxAttr(node, 'height', String(resolved.meta.height))
-        setJsxAttr(node, 'placeholder', resolved.meta.placeholder)
+        setJsxAttr({ node, attrName: 'width', value: String(resolved.meta.width) })
+        setJsxAttr({ node, attrName: 'height', value: String(resolved.meta.height) })
+        setJsxAttr({ node, attrName: 'placeholder', value: resolved.meta.placeholder })
       }
     }
     return [node]
@@ -263,11 +265,11 @@ function rewriteNode(
   }
 
   // Recurse into children (cast needed because node types have different children types)
-  if ('children' in node && Array.isArray(node.children)) {
-    const children = node.children as RootContent[]
-    ;(node as { children: RootContent[] }).children = children.flatMap((child) => {
+  const children = Reflect.get(node, 'children')
+  if (Array.isArray(children)) {
+    Reflect.set(node, 'children', children.flatMap((child) => {
       return rewriteNode(child, images)
-    })
+    }))
   }
 
   return [node]
@@ -275,7 +277,7 @@ function rewriteNode(
 
 /** Create an mdxJsxFlowElement node for PixelatedImage with all attributes */
 function createPixelatedImageNode({ src, alt, meta }: { src: string; alt: string; meta: ImageMeta }): RootContent {
-  return {
+  const node: FlowJsxNode = {
     type: 'mdxJsxFlowElement',
     name: 'PixelatedImage',
     attributes: [
@@ -286,7 +288,8 @@ function createPixelatedImageNode({ src, alt, meta }: { src: string; alt: string
       { type: 'mdxJsxAttribute', name: 'placeholder', value: meta.placeholder },
     ],
     children: [],
-  } as unknown as RootContent
+  }
+  return node
 }
 
 function createPixelatedImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): RootContent {
@@ -300,12 +303,13 @@ function createPixelatedImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedI
     { type: 'mdxJsxAttribute', name: 'intrinsicHeight', value: String(resolved.meta.height) },
     { type: 'mdxJsxAttribute', name: 'placeholder', value: resolved.meta.placeholder },
   )
-  return {
+  const imageNode: FlowJsxNode = {
     type: 'mdxJsxFlowElement',
     name: 'PixelatedImage',
     attributes,
     children: [],
-  } as unknown as RootContent
+  }
+  return imageNode
 }
 
 /* ── JSX node helpers ────────────────────────────────────────────────── */
@@ -314,19 +318,12 @@ function isJsxImageElement(node: RootContent): node is JsxNode {
   if (!isJsxElement(node)) {
     return false
   }
-  const name = (node as JsxNode).name
+  const name = node.name
   return name === 'PixelatedImage' || name === 'img'
 }
 
-function isJsxHeadingElement(node: RootContent): node is JsxNode {
-  return isJsxElement(node) && node.name === 'Heading'
-}
-
 function isJsxElement(node: RootContent): node is JsxNode {
-  return (
-    (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') &&
-    'name' in node
-  )
+  return node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement'
 }
 
 function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
@@ -339,8 +336,8 @@ function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
   if (typeof attr.value === 'string') {
     return attr.value
   }
-  if (attr.value && typeof attr.value === 'object' && 'value' in attr.value) {
-    const v = (attr.value as { value: string }).value
+  if (attr.value && typeof attr.value === 'object') {
+    const v = Reflect.get(attr.value, 'value')
     if (typeof v === 'string') {
       return v.replace(/^['"]|['"]$/g, '')
     }
@@ -348,11 +345,7 @@ function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
   return undefined
 }
 
-function hasBooleanJsxAttr(node: JsxNode, attrName: string): boolean {
-  return (node.attributes ?? []).some((a) => a.type === 'mdxJsxAttribute' && a.name === attrName)
-}
-
-function setJsxAttr(node: JsxNode, attrName: string, value: string): void {
+function setJsxAttr({ node, attrName, value }: { node: JsxNode; attrName: string; value: string }): void {
   node.attributes ??= []
   const existing = node.attributes.find((a) => {
     return a.type === 'mdxJsxAttribute' && a.name === attrName
@@ -373,14 +366,15 @@ function copyJsxAttrsExcept(node: JsxNode, attrNames: string[]): NonNullable<Jsx
 
 /* ── Heading text extraction ────────────────────────────────────────── */
 
-function extractText(children: PhrasingContent[]): string {
+function extractText(children: readonly (PhrasingContent | RootContent)[]): string {
   return children
     .map((child) => {
       if (child.type === 'text') {
         return child.value
       }
-      if ('children' in child) {
-        return extractText(child.children)
+      const nestedChildren = Reflect.get(child, 'children')
+      if (Array.isArray(nestedChildren)) {
+        return extractText(nestedChildren)
       }
       return ''
     })

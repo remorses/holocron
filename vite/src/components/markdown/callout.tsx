@@ -84,12 +84,17 @@ export interface CalloutProps {
   iconType?: 'regular' | 'solid' | 'light' | 'thin' | 'sharp-solid' | 'duotone' | 'brands' | string
 }
 
-function resolveCalloutIcon(
-  icon: React.ReactNode | string | undefined,
-  iconType: string | undefined,
-  fallback: React.ReactNode | undefined,
-  colorStyle: React.CSSProperties | undefined,
-): React.ReactNode | undefined {
+function resolveCalloutIcon({
+  icon,
+  iconType,
+  fallback,
+  colorStyle,
+}: {
+  icon: React.ReactNode | string | undefined
+  iconType: string | undefined
+  fallback: React.ReactNode | undefined
+  colorStyle: React.CSSProperties | undefined
+}): React.ReactNode | undefined {
   if (icon === undefined || icon === null) return fallback
   if (typeof icon !== 'string') return icon
   // String icon → delegate to <Icon> (handles emoji, URL, atlas lookup)
@@ -104,7 +109,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
   const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-(--border-radius-md) border-2'
   const presetIcon = type ? CALLOUT_ICONS[type] : undefined
   const colorStyle = color ? { color } : undefined
-  const resolvedIcon = resolveCalloutIcon(icon, iconType, presetIcon, colorStyle)
+  const resolvedIcon = resolveCalloutIcon({ icon, iconType, fallback: presetIcon, colorStyle })
 
   // Custom hex color → inline style, no variant class
   if (color) {
@@ -116,7 +121,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
           borderColor: hexToRgba(color, 0.15),
         }}
       >
-        {resolvedIcon && (
+        {resolvedIcon !== undefined && resolvedIcon !== null && (
           <span className='flex-shrink-0 mt-0.5 inline-flex items-center justify-center' style={{ color, width: 16, height: 16 }}>
             {resolvedIcon}
           </span>
@@ -130,7 +135,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
   const variantClass = type ? CALLOUT_VARIANTS[type] : 'bg-blue-500/[0.03] border-blue-500/15 text-blue-700 dark:text-blue-400'
   return (
     <div className={`${baseClass} ${variantClass}`}>
-      {resolvedIcon && (
+      {resolvedIcon !== undefined && resolvedIcon !== null && (
         <span className='flex-shrink-0 mt-0.5 inline-flex items-center justify-center w-4 h-4'>
           {resolvedIcon}
         </span>

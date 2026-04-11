@@ -128,7 +128,7 @@ export function Card({
         {icon && <Icon icon={icon} iconType={iconType} size={16} color={color} />}
         {title && <div className='text-sm font-semibold text-(color:--text-primary)'>{title}</div>}
       </div>
-      {children && <div className='flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>}
+      {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>}
       {href && (cta || arrow) && <div className='text-xs text-(color:--brand-primary)'>{cta || (arrow ? '→' : undefined)}</div>}
     </div>
   )
@@ -221,7 +221,7 @@ export function Prompt({
         <button
           type='button'
           className='self-end rounded-md bg-muted px-3 py-1.5 text-xs font-medium text-(color:--text-secondary) hover:text-(color:--text-primary) transition-colors'
-          onClick={() => { navigator.clipboard.writeText(String(children)) }}
+          onClick={() => { void navigator.clipboard.writeText(String(children)) }}
         >
           Copy
         </button>
@@ -284,7 +284,7 @@ export function ResponseField({
         {required && <Badge color='green'>required</Badge>}
         {deprecated && <Badge color='orange'>deprecated</Badge>}
       </div>
-      {children && <div className='flex flex-col gap-3 text-(color:--text-secondary)'>{children}</div>}
+      {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-(color:--text-secondary)'>{children}</div>}
     </div>,
   )
 }
