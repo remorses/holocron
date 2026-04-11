@@ -90,13 +90,13 @@
   --layout-gap: 21px;
   --sticky-top: calc(var(--header-height) + var(--layout-gap));
 
-  /* Grid geometry — change one value and max-width recomputes.
-     Breakpoint (lg=1080px) ≈ grid-max-width + 40px buffer. */
-  --grid-toc-width: 210px;
-  --grid-gap: 50px;
-  --grid-content-width: 520px;
-  --grid-sidebar-width: var(--grid-toc-width);
-  --grid-max-width: min(calc(100vw - 60px), 1100px);
+  /* Grid geometry — the `--grid-*` custom properties (--grid-toc-width,
+     --grid-content-width, --grid-gap, --grid-sidebar-width,
+     --grid-max-width) are intentionally NOT defined here. They are the
+     single-source-of-truth `GRID_TOKENS` object in
+     `vite/src/lib/sidebar-widths.ts`, injected as inline style on
+     `.slot-page` by `components/markdown/editorial-page.tsx`. Edit
+     values there, not here. */
   --mobile-padding: 1.25rem;
 
   /* Markdown vertical rhythm — all content spacing derives from pure flex/grid
