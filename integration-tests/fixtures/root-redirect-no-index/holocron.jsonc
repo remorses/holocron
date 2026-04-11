@@ -1,0 +1,13 @@
+// Fixture for root redirect behavior when no index page exists.
+{
+  "name": "Root Redirect Without Index",
+  "colors": {
+    "primary": "#0969da"
+  },
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["getting-started"]
+    }
+  ]
+}

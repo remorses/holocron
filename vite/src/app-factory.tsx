@@ -369,6 +369,17 @@ export function createHolocronApp(providers: HolocronProviders) {
         return staticResponse
       }
       const runtime = await loadHolocronRuntime(providers)
+      const firstPage = findFirstPage(runtime.site)
+      const rootRoute = withBaseRoute(runtime.site.base, '/')
+      const { pathname } = new URL(request.url)
+
+      if ((request.method === 'GET' || request.method === 'HEAD')
+        && pathname === rootRoute
+        && !runtime.slugs.includes('index')
+        && firstPage) {
+        return Response.redirect(new URL(withBaseRoute(runtime.site.base, firstPage.href), request.url), 307)
+      }
+
       const requestApp = createRequestHolocronApp(runtime)
       return requestApp.handle(request, { state })
     })
@@ -393,6 +404,9 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
     const routeBase = withBaseRoute(site.base, '/')
     return routeBase === '/' ? '' : routeBase
   })()
+  const hrefToMarkdownPath = (href: string) => {
+    return href === '/' ? '/index.md' : `${href}.md`
+  }
 
   // ── Redirects ───────────────────────────────────────────────────
   // All redirects are .get() routes — spiceflow's trie router handles
@@ -430,7 +444,7 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
     const stripped = hasBase ? pathname.slice(normalizedBase.length) || '/' : pathname
     if (!hrefToSlug.has(stripped)) return
 
-    const mdPath = stripped === '/' ? '/index.md' : `${stripped}.md`
+    const mdPath = hrefToMarkdownPath(stripped)
     return Response.redirect(new URL(withBaseRoute(site.base, mdPath) + url.search, url.origin).href, 302)
   })
 
@@ -465,10 +479,19 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
     })
   }
 
+  if (!runtime.slugs.includes('index') && firstPage) {
+    const firstMarkdownPath = hrefToMarkdownPath(firstPage.href)
+    for (const route of new Set(['/index.md', withBaseRoute(site.base, '/index.md')])) {
+      app = app.get(route, ({ request }: { request: Request }) => {
+        return Response.redirect(new URL(withBaseRoute(site.base, firstMarkdownPath), request.url), 307)
+      })
+    }
+  }
+
   // Per-page .md routes
   for (const slug of runtime.slugs) {
     const href = slugToHref(slug)
-    const mdPath = href === '/' ? '/index.md' : `${href}.md`
+    const mdPath = hrefToMarkdownPath(href)
 
     for (const route of new Set([mdPath, withBaseRoute(site.base, mdPath)])) {
       app = app.get(route, async () => {
@@ -737,11 +760,6 @@ function createRequestHolocronApp(runtime: HolocronRequestRuntime) {
 
     const currentPage = await findPageBySlug({ nav: site.navigation, slug, getMdxSource: runtime.getMdxSource })
     const hasMdx = (await runtime.getMdxSource(slug)) !== undefined
-
-    // Root path with no index page → redirect to first page in navigation
-    if (!currentPage && (slug === 'index' || slug === '') && firstPage) {
-      throw redirect(withBaseRoute(site.base, firstPage.href))
-    }
 
     // 404 case
     if (!currentPage || !hasMdx) {
