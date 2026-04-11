@@ -1,13 +1,25 @@
-type LiteralAttributeValue = string | null
+import type { RootContent } from 'mdast'
 
-type Expression = {
-  type: 'ArrayExpression' | 'Literal'
-  elements?: Array<{ type: 'Literal'; value: string }>
-  value?: string | boolean | number
-  raw?: string
-}
+type NativeJsxElementNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
+type NativeJsxAttribute = Extract<NativeJsxElementNode['attributes'][number], { type: 'mdxJsxAttribute' }>
+type Expression = Extract<NativeProgramBody, { type: 'ExpressionStatement' }>['expression'] & { raw?: string }
 
-export function createElement(name: string, attributes: object[], children: unknown[] = []): object {
+export type JsxAttribute = NativeJsxAttribute
+export type JsxElementNode = NativeJsxElementNode
+
+type NativeProgramBody = NonNullable<
+  NonNullable<Exclude<NativeJsxAttribute['value'], string | null | undefined>['data']>['estree']
+>['body'][number]
+
+export function createElement({
+  name,
+  attributes,
+  children = [],
+}: {
+  name: string
+  attributes: JsxAttribute[]
+  children?: JsxElementNode['children']
+}): JsxElementNode {
   return {
     type: 'mdxJsxFlowElement',
     name,
@@ -16,7 +28,7 @@ export function createElement(name: string, attributes: object[], children: unkn
   }
 }
 
-export function literalAttribute(name: string, value: LiteralAttributeValue): object {
+export function literalAttribute(name: string, value: string | null): JsxAttribute {
   return {
     type: 'mdxJsxAttribute',
     name,
@@ -24,7 +36,7 @@ export function literalAttribute(name: string, value: LiteralAttributeValue): ob
   }
 }
 
-export function expressionAttribute(name: string, expression: Expression): object {
+export function expressionAttribute(name: string, expression: Expression): JsxAttribute {
   return {
     type: 'mdxJsxAttribute',
     name,
@@ -49,11 +61,11 @@ export function expressionAttribute(name: string, expression: Expression): objec
 
 export function stringArrayExpression(values: string[]): Expression {
   return {
-    type: 'ArrayExpression',
-    elements: values.map((value) => ({
-      type: 'Literal',
-      value,
-    })),
+      type: 'ArrayExpression',
+      elements: values.map((value) => ({
+        type: 'Literal',
+        value,
+      })),
     raw: `[${values.map((value) => JSON.stringify(value)).join(', ')}]`,
   }
 }

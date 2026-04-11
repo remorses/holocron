@@ -22,7 +22,7 @@ export function remarkSingleAccordionItems() {
         return
       }
 
-      parent.children.splice(index, 1, createElement('AccordionGroup', [], [node]) as never)
+      parent.children.splice(index, 1, createElement({ name: 'AccordionGroup', attributes: [], children: [node] }))
     })
   }
 }

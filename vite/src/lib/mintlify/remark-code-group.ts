@@ -35,19 +35,19 @@ export function remarkCodeGroup() {
         return !(attribute.type === 'mdxJsxAttribute' && attribute.name === 'items')
       })
 
-      parent.children.splice(index, 1, createElement(
-        'Tabs',
-        [...attributes, expressionAttribute('items', stringArrayExpression(tabBlocks.map((block) => block.title)))],
-        tabBlocks.map((block) => {
-          return createElement('Tab', [literalAttribute('title', block.title)], [
+      parent.children.splice(index, 1, createElement({
+        name: 'Tabs',
+        attributes: [...attributes, expressionAttribute('items', stringArrayExpression(tabBlocks.map((block) => block.title)))],
+        children: tabBlocks.map((block) => {
+          return createElement({ name: 'Tab', attributes: [literalAttribute('title', block.title)], children: [
             {
               ...block.code,
               type: 'code',
               meta: '',
             },
-          ])
+          ] })
         }),
-      ) as never)
+      }))
     })
   }
 }

@@ -69,7 +69,7 @@ Body
     `)
   })
 
-  test('does not split on JSX native headings', () => {
+  test('splits on JSX native headings', () => {
     const mdx = `Intro
 
 <h2>Section</h2>
@@ -78,11 +78,14 @@ Body
 `
     expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
       "--- SECTION 0 ---
-      asideRowSpan: 1
 
       [CONTENT]
       Intro
 
+      --- SECTION 1 ---
+      asideRowSpan: 2
+
+      [CONTENT]
       <h2>
         Section
       </h2>

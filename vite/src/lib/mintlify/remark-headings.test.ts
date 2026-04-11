@@ -6,17 +6,17 @@ import { runRemarkPlugin } from './remark-test-utils.ts'
 describe('remarkHeadings', () => {
   test('parses custom heading ids into idString nodes before transform', () => {
     const result = runRemarkPlugin('## My heading {#custom-id}', remarkHeadings)
-    const root = result.parsed as {
-      children: Array<{ type: string; depth?: number; children?: Array<{ type: string; value?: string }> }>
-    }
+    const firstChild = result.parsed.children[0]
 
     expect({
-      type: root.children[0]?.type,
-      depth: root.children[0]?.depth,
-      children: root.children[0]?.children?.map((child) => ({
-        type: child.type,
-        value: child.value,
-      })),
+      type: firstChild?.type,
+      depth: firstChild?.type === 'heading' ? firstChild.depth : undefined,
+      children: firstChild?.type === 'heading'
+        ? firstChild.children.map((child) => ({
+          type: child.type,
+          value: Reflect.get(child, 'value'),
+        }))
+        : undefined,
     }).toMatchInlineSnapshot(`
       {
         "children": [
@@ -46,13 +46,11 @@ describe('remarkHeadings', () => {
     `)
   })
 
-  test('rewrites native JSX headings to Heading components', () => {
-    const result = runRemarkPlugin('<h3 noAnchor>My heading</h3>', remarkHeadings)
+  test('preserves native JSX headings and injects ids when missing', () => {
+    const result = runRemarkPlugin('<h3 noAnchor className="hero">My heading</h3>', remarkHeadings)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Heading level={3} id=\"my-heading\" noAnchor>
-        My heading
-      </Heading>
+      "<h3 noAnchor className=\"hero\" id=\"my-heading\">My heading</h3>
       "
     `)
   })

@@ -39,7 +39,8 @@ export function isHeroNode(node: RootContent): node is FlowJsxNode {
 }
 
 function isHeadingNode(node: RootContent): boolean {
-  return node.type === 'heading' || (node.type === 'mdxJsxFlowElement' && node.name === 'Heading')
+  return node.type === 'heading'
+    || (node.type === 'mdxJsxFlowElement' && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? '')))
 }
 
 function groupBySections(root: Root): MdastSection[] {

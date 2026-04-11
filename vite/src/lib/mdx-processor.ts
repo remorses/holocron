@@ -116,14 +116,32 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
     }
   }
 
-  if (!isJsxElement(node) || node.name !== 'Heading' || (node.attributes ?? []).some((a) => a.type === 'mdxJsxAttribute' && a.name === 'noAnchor')) {
+  if (!isJsxElement(node)) {
+    return undefined
+  }
+
+  if (node.name === 'Heading') {
+    if (hasJsxBooleanAttr(node, 'noAnchor')) {
+      return undefined
+    }
+
+    const text = extractText(node.children ?? [])
+    const explicitId = getJsxAttrValue(node, 'id')
+    return {
+      depth: getHeadingLevel(node),
+      text,
+      slug: explicitId || slugger.slug(text),
+    }
+  }
+
+  if (!/^h[1-6]$/.test(node.name ?? '') || hasJsxBooleanAttr(node, 'noAnchor')) {
     return undefined
   }
 
   const text = extractText(node.children ?? [])
   const explicitId = getJsxAttrValue(node, 'id')
   return {
-    depth: getHeadingLevel(node),
+    depth: getNativeHeadingLevel(node),
     text,
     slug: explicitId || slugger.slug(text),
   }
@@ -142,6 +160,27 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
         return 1
     }
   }
+}
+
+function getNativeHeadingLevel(node: JsxNode): 1 | 2 | 3 | 4 | 5 | 6 {
+  const rawLevel = Number(node.name?.slice(1) ?? '1')
+  switch (rawLevel) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+      return rawLevel
+    default:
+      return 1
+  }
+}
+
+function hasJsxBooleanAttr(node: JsxNode, attrName: string): boolean {
+  return (node.attributes ?? []).some((attribute) => {
+    return attribute.type === 'mdxJsxAttribute' && attribute.name === attrName
+  })
 }
 
 /* ── Image src collection ────────────────────────────────────────────── */

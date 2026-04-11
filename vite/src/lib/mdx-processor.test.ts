@@ -201,8 +201,8 @@ Some content.`)
     expect(result.title).toBe('Untitled')
   })
 
-  test('normalizes JSX native headings into page headings', () => {
-    const result = processMdx('<h2 id="custom-id">My heading</h2>')
+  test('preserves JSX native headings while extracting page headings', () => {
+    const result = processMdx('<h2 id="custom-id" className="hero">My heading</h2>')
 
     expect(result.headings).toMatchInlineSnapshot(`
       [
@@ -212,6 +212,10 @@ Some content.`)
           "text": "My heading",
         },
       ]
+    `)
+    expect(result.normalizedContent).toMatchInlineSnapshot(`
+      "<h2 id=\"custom-id\" className=\"hero\">My heading</h2>
+      "
     `)
     expect(result.title).toBe('My heading')
   })

@@ -1,7 +1,7 @@
 import type { Root } from 'mdast'
 import { visit } from 'unist-util-visit'
 import { parseCodeMeta } from './code-meta.ts'
-import { booleanExpression, createElement, expressionAttribute, literalAttribute } from './jsx-utils.ts'
+import { booleanExpression, createElement, expressionAttribute, literalAttribute, type JsxAttribute } from './jsx-utils.ts'
 
 /**
  * Mermaid fences need to become an explicit component node so the runtime can
@@ -15,7 +15,7 @@ export function remarkMermaidCode() {
       }
 
       const meta = parseCodeMeta(node.meta)
-      const attributes: object[] = [literalAttribute('chart', node.value)]
+      const attributes: JsxAttribute[] = [literalAttribute('chart', node.value)]
       if (typeof meta.attributes.placement === 'string') {
         attributes.push(literalAttribute('placement', meta.attributes.placement))
       }
@@ -23,7 +23,7 @@ export function remarkMermaidCode() {
         attributes.push(expressionAttribute('actions', booleanExpression(meta.attributes.actions)))
       }
 
-      parent.children.splice(index, 1, createElement('Mermaid', attributes) as never)
+      parent.children.splice(index, 1, createElement({ name: 'Mermaid', attributes }))
     })
   }
 }
