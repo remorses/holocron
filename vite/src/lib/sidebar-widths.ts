@@ -17,6 +17,8 @@
 import type { Root, RootContent } from 'mdast'
 import { visit } from 'unist-util-visit'
 
+import type { HolocronCSSProperties } from './css-vars.ts'
+
 /**
  * Grid geometry tokens (px). Keys match the CSS custom-property names
  * that get injected as inline style on `.slot-page`. Keeping this as an
@@ -94,7 +96,7 @@ export function computeSidebarWidthFromAsideNodes(
  */
 export function buildGridTokenStyle(
   sidebarWidth: number,
-): Record<string, string> {
+): HolocronCSSProperties {
   const toc = GRID_TOKENS['--grid-toc-width']
   const content = GRID_TOKENS['--grid-content-width']
   const gap = GRID_TOKENS['--grid-gap']

@@ -33,6 +33,7 @@ import {
   DEFAULT_SIDEBAR_WIDTH,
   buildGridTokenStyle,
 } from '../../lib/sidebar-widths.ts'
+import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
 
 
 export type EditorialSection = {
@@ -46,16 +47,6 @@ export type EditorialSection = {
    *  cell covers every sub-section row. Inside that tall cell,
    *  `position: sticky` keeps the aside pinned alongside all those rows. */
   asideRowSpan?: number
-}
-
-type EditorialPageStyle = React.CSSProperties & {
-  '--banner-height'?: string
-  '--shared-row'?: string
-  '--grid-toc-width'?: string
-  '--grid-content-width'?: string
-  '--grid-gap'?: string
-  '--grid-sidebar-width'?: string
-  '--grid-max-width'?: string
 }
 
 function getSharedAsideStartRow(row: number, span: number) {
@@ -116,7 +107,7 @@ export function EditorialPage({
   // object so there's only one place to edit. `buildGridTokenStyle`
   // also bumps `--grid-max-width` when the right sidebar is wider than
   // the default (e.g. pages with RequestExample / ResponseExample).
-  const pageStyle: EditorialPageStyle = {
+  const pageStyle: HolocronCSSProperties = {
     WebkitFontSmoothing: 'antialiased',
     '--banner-height': bannerContent ? '36px' : '0px',
     ...buildGridTokenStyle(sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH),
@@ -309,7 +300,7 @@ export function EditorialPage({
                 
                 const asideClass =
                   'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
-                const sharedAsideStyle: EditorialPageStyle = {
+                const sharedAsideStyle: HolocronCSSProperties = {
                   '--shared-row': `${sharedAsideStartRow} / span ${span}`,
                 }
                 return (
