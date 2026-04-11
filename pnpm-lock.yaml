@@ -218,9 +218,6 @@ importers:
       safe-mdx:
         specifier: ^1.3.9
         version: 1.3.9(react@19.2.4)
-      spiceflow:
-        specifier: 1.18.0-rsc.25
-        version: 1.18.0-rsc.25(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -261,6 +258,9 @@ importers:
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
+      spiceflow:
+        specifier: 1.18.0-rsc.25
+        version: 1.18.0-rsc.25(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.2

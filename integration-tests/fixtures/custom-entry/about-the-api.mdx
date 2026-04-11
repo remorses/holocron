@@ -1,0 +1,17 @@
+---
+title: About the API
+description: Holocron docs page describing the user-defined API route
+---
+
+# About the API
+
+This is a **holocron docs page** rendered by `holocronApp` as a child of the
+user's root Spiceflow.
+
+The user has also added:
+
+- `GET /api/hello` returns `{ hello: 'world' }`
+- `GET /api/echo/:name` echoes `{ name }`
+- `GET /custom-user-page` is a user-owned React page with its own layout
+
+Those routes are registered in `server.ts` before `.use(holocronApp)`.

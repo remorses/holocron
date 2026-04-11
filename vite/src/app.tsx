@@ -1,8 +1,7 @@
 /**
- * Holocron Spiceflow app entry — server-rendered documentation site.
- *
- * The outer app is stable at module scope. It loads runtime providers on each
- * request, builds a request-scoped Holocron app, and delegates handling to it.
+ * Runtime entry. Top-level await resolves providers once at module load.
+ * Users either run this directly or mount it on their own Spiceflow tree
+ * via `import { app as holocronApp } from '@holocron.so/vite/app'`.
  */
 
 import { createHolocronApp, type HolocronApp } from './app-factory.tsx'
@@ -10,7 +9,7 @@ import { base, getConfig } from 'virtual:holocron-config'
 import { getNavigationData } from 'virtual:holocron-navigation'
 import { getMdxSlugs, getMdxSource, getPageIconRefs } from 'virtual:holocron-mdx'
 
-export const app = createHolocronApp({
+export const app = await createHolocronApp({
   base,
   getConfig,
   getNavigationData,

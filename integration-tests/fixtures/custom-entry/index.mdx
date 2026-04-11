@@ -1,0 +1,19 @@
+---
+title: Custom Entry Home
+description: Landing page for the custom-entry fixture
+---
+
+# Custom Entry Home
+
+This fixture verifies that users can write their own Spiceflow entry file and
+mount `holocronApp` as a child of their root app.
+
+The server is at `server.ts` in this fixture root. It registers:
+
+- `GET /api/hello` — plain JSON route
+- `GET /api/echo/:name` — parametric JSON route
+- `GET /custom-user-page` — user-owned React `.page` with its own `.layout`
+- user-level middleware that stamps every response with `x-user-middleware: ran`
+
+Navigate between this page and **About the API** to verify the layout does
+not remount across client-side navigations.

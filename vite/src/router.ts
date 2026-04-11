@@ -25,10 +25,6 @@ export const useHolocronRouterState = () => useRouterState<HolocronApp>()
 const typed = getRouter<HolocronApp>()
 export const href = typed.href
 
-/**
- * Convenience hook so callers never need to remember the `/*` pattern.
- * Returns the full per-request loader data produced by `.loader('/*')` in
- * app-factory.tsx.
- */
+/** Typed per-request loader data. */
 export const useHolocronData = () =>
-	useLoaderData<HolocronApp>('/*') as HolocronLoaderData
+	useLoaderData<HolocronApp>() as HolocronLoaderData

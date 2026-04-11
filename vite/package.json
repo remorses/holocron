@@ -31,6 +31,10 @@
       "types": "./dist/vite-plugin.d.ts",
       "default": "./dist/vite-plugin.js"
     },
+    "./app": {
+      "types": "./dist/app.d.ts",
+      "default": "./dist/app.js"
+    },
     "./src/*": "./src/*"
   },
   "files": [
@@ -78,13 +82,15 @@
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
     "safe-mdx": "^1.3.9",
-    "spiceflow": "1.18.0-rsc.25",
     "string-dedent": "^3.0.2",
     "takumi-js": "1.0.0-rc.15",
     "unist-util-visit": "^5.1.0",
     "yaml": "^2.8.3",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
+  },
+  "peerDependencies": {
+    "spiceflow": ">=1.18.0-rsc.25"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
@@ -94,6 +100,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "sharp": "^0.34.5",
+    "spiceflow": "1.18.0-rsc.25",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.3",
