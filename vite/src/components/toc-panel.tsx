@@ -16,7 +16,7 @@
  * and active-state changes).
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { useHolocronData } from '../router.ts'
 
@@ -113,19 +113,10 @@ export function TableOfContentsPanel({
 }) {
   const { currentHeadings } = useHolocronData()
   const headings = propHeadings ?? currentHeadings
-  const fallbackId = headings[0]?.slug ?? ''
-  const { activeId: observerActiveId, visibleIds } = useActiveTocState({ fallbackId })
-  const [manualId, setManualId] = useState<string | null>(null)
+  const headingIds = useMemo(() => headings.map((heading) => heading.slug), [headings])
+  const fallbackId = headingIds[0] ?? ''
+  const { activeId } = useActiveTocState({ fallbackId, headingIds })
   const containerRef = useRef<HTMLDivElement>(null)
-
-  // Clear manual selection when the observer catches up
-  useEffect(() => {
-    if (!manualId) return
-    if (visibleIds.includes(manualId)) return
-    setManualId(null)
-  }, [manualId, visibleIds])
-
-  const activeId = manualId ?? observerActiveId
 
   const thumbRef = useThumb({ containerRef, activeId })
 
@@ -171,7 +162,6 @@ export function TableOfContentsPanel({
                 key={heading.slug}
                 href={`#${heading.slug}`}
                 data-active={isActive}
-                onClick={() => setManualId(heading.slug)}
                 className={cn(
                   'py-1.5 leading-snug transition-colors no-underline',
                   'hover:text-foreground',

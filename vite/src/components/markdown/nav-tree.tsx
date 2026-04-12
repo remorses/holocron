@@ -75,7 +75,7 @@ export function TocInline({
       const indicator = indicatorRef.current
       if (!list || !indicator) return
 
-      const activeLink = list.querySelector<HTMLElement>(`a[href="#${activeHeadingId}"]`)
+        const activeLink = list.querySelector<HTMLElement>(`a[data-heading-id="${activeHeadingId}"]`)
       if (!activeLink) {
         indicator.style.opacity = '0'
         return
@@ -143,6 +143,8 @@ export function TocInline({
               <Link
                 ref={isHighlighted ? highlightedRef : undefined}
                 href={headingHref}
+                data-active={isActive}
+                data-heading-id={heading.slug}
                 className={`block leading-4 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
                 tabIndex={isDimmed ? -1 : 0}
                 style={{

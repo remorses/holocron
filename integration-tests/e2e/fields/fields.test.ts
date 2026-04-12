@@ -343,6 +343,76 @@ test.describe("group.expanded default state", () => {
   });
 });
 
+test.describe("client navigation sidebar state", () => {
+  test("client navigation expands the active page node and shows that page headings", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto("/");
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav).toBeVisible({ timeout: 10000 });
+    await page.reload();
+    await expect(nav).toBeVisible({ timeout: 10000 });
+    await expect.poll(() => {
+      return nav.evaluate((node) => {
+        return Object.keys(node).some((key) => key.startsWith("__reactFiber"));
+      });
+    }).toBe(true);
+    await expect(nav.getByRole("link", { name: "Expanded Child" })).toBeVisible();
+
+    await nav.getByRole("link", { name: "Expanded Child" }).click();
+    await expect(page).toHaveURL(/\/expanded-child$/);
+    await expect(nav.getByRole("link", { name: "Visible on first load" })).toBeVisible();
+  });
+
+  test("hash heading becomes active only when no scroll-driven heading is active", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto("/new");
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav).toBeVisible({ timeout: 10000 });
+    await page.reload();
+    await expect(nav).toBeVisible({ timeout: 10000 });
+    const getActiveHeadingId = async () => {
+      return await nav.evaluate(() => {
+        return document.querySelector<HTMLAnchorElement>('a[data-heading-id][data-active="true"]')?.dataset.headingId ?? null;
+      });
+    };
+
+    await expect.poll(getActiveHeadingId).toBe("redirect-target");
+
+    await page.evaluate(() => {
+      location.hash = "#deep-section";
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+
+    await expect.poll(getActiveHeadingId).toBe("deep-section");
+
+    const hashActiveHeadingId = await getActiveHeadingId();
+
+    await page.evaluate(() => {
+      const heading = document.getElementById("redirect-target");
+      if (!heading) {
+        throw new Error("redirect-target heading missing");
+      }
+      window.scrollTo({ top: Math.max(0, heading.offsetTop - 120), behavior: "instant" });
+    });
+
+    await expect(async () => {
+      const activeHeadingId = await getActiveHeadingId();
+      if (activeHeadingId === null || hashActiveHeadingId === null) {
+        throw new Error("expected active heading ids to exist");
+      }
+      if (activeHeadingId === hashActiveHeadingId) {
+        throw new Error("expected scroll-driven heading state to override hash-only state");
+      }
+    }).toPass();
+  });
+});
+
 test.describe("navbar icon resolution", () => {
   // Each helper extracts the content between the opening <a> tag with a
   // given href and its matching </a>. Navbar links are one-level deep

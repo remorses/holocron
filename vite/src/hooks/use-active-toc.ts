@@ -13,6 +13,8 @@ import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react'
 
 export type ActiveTocSnapshot = {
   activeId: string
+  observerActiveId: string
+  hashId: string
   visibleIds: string[]
 }
 
@@ -37,44 +39,78 @@ function sortVisibleHeadingIds(ids: Iterable<string>): string[] {
   })
 }
 
-/** Track both the observer-driven active heading and the headings currently in view.
- * TableOfContents can then derive the effective active item from viewport evidence
- * plus the latest manual click instead of adding more mirrored flags. */
-export function useActiveTocState({
-  fallbackId,
-}: {
-  fallbackId: string
-}) {
-  const snapshotRef = useRef<ActiveTocSnapshot>({ activeId: fallbackId, visibleIds: [] })
+function readHashId(validHeadingIds: Set<string>): string {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  const hash = window.location.hash.replace(/^#/, '')
+  if (!hash) return ''
+  if (validHeadingIds.size > 0 && !validHeadingIds.has(hash)) return ''
+  return hash
+}
+
+function useHashHeadingId(validHeadingIds: Set<string>, headingKey: string): string {
+  const getSnapshot = useCallback(() => {
+    return readHashId(validHeadingIds)
+  }, [validHeadingIds])
+
+  const getServerSnapshot = useCallback(() => '', [])
+
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    const emit = () => onStoreChange()
+    window.addEventListener('hashchange', emit)
+    window.addEventListener('popstate', emit)
+    return () => {
+      window.removeEventListener('hashchange', emit)
+      window.removeEventListener('popstate', emit)
+    }
+  }, [headingKey])
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+}
+
+function useObserverHeadingState(headingKey: string) {
+  const snapshotRef = useRef<{ observerActiveId: string; visibleIds: string[] }>({
+    observerActiveId: '',
+    visibleIds: [],
+  })
+  const prevHeadingKeyRef = useRef(headingKey)
+
+  if (prevHeadingKeyRef.current !== headingKey) {
+    prevHeadingKeyRef.current = headingKey
+    snapshotRef.current = { observerActiveId: '', visibleIds: [] }
+  }
+
+  const getSnapshot = useCallback(() => {
+    return snapshotRef.current
+  }, [])
+
+  const getServerSnapshot = useCallback(() => {
+    return { observerActiveId: '', visibleIds: [] as string[] }
+  }, [])
 
   const subscribe = useCallback((onStoreChange: () => void) => {
     const visibleIds = new Set<string>()
 
-    const emit = (next: ActiveTocSnapshot) => {
+    const emit = () => {
+      const nextVisibleIds = sortVisibleHeadingIds(visibleIds)
+      const nextObserverActiveId = nextVisibleIds.at(-1) ?? ''
       if (
-        snapshotRef.current.activeId === next.activeId &&
-        sameStringArrays(snapshotRef.current.visibleIds, next.visibleIds)
+        snapshotRef.current.observerActiveId === nextObserverActiveId &&
+        sameStringArrays(snapshotRef.current.visibleIds, nextVisibleIds)
       ) {
         return
       }
 
-      snapshotRef.current = next
+      snapshotRef.current = {
+        observerActiveId: nextObserverActiveId,
+        visibleIds: nextVisibleIds,
+      }
       onStoreChange()
     }
 
-    const emitFromVisibleIds = () => {
-      const nextVisibleIds = sortVisibleHeadingIds(visibleIds)
-      const nextActiveId = nextVisibleIds.at(-1) ?? snapshotRef.current.activeId
-      emit({ activeId: nextActiveId, visibleIds: nextVisibleIds })
-    }
-
-    const hash = window.location.hash.replace(/^#/, '')
-    if (hash) {
-      emit({ activeId: hash, visibleIds: snapshotRef.current.visibleIds })
-    }
-
     const headings = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -89,7 +125,7 @@ export function useActiveTocState({
           }
         })
 
-        emitFromVisibleIds()
+        emit()
       },
       {
         /* -80px ≈ header-row-height; accounts for sticky header covering top of viewport */
@@ -102,31 +138,37 @@ export function useActiveTocState({
       observer.observe(heading)
     })
 
-    const onHashChange = () => {
-      const nextHash = window.location.hash.replace(/^#/, '')
-      if (!nextHash) {
-        return
-      }
-
-      emit({ activeId: nextHash, visibleIds: snapshotRef.current.visibleIds })
-    }
-
-    window.addEventListener('hashchange', onHashChange)
+    emit()
 
     return () => {
-      window.removeEventListener('hashchange', onHashChange)
       observer.disconnect()
     }
-  }, [])
-
-  const getSnapshot = useCallback(() => {
-    return snapshotRef.current
-  }, [])
-
-  // getServerSnapshot must return a cached value to avoid an infinite loop.
-  // React calls getServerSnapshot during render and compares by reference.
-  const serverSnapshot = useMemo(() => ({ activeId: fallbackId, visibleIds: [] as string[] }), [fallbackId])
-  const getServerSnapshot = useCallback(() => serverSnapshot, [serverSnapshot])
+  }, [headingKey])
 
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+}
+
+/** Track both the observer-driven active heading and the headings currently in view.
+ * TableOfContents can then derive the effective active item from viewport evidence
+ * plus the current URL hash instead of mirroring extra state in effects. */
+export function useActiveTocState({
+  fallbackId,
+  headingIds,
+}: {
+  fallbackId: string
+  headingIds?: string[]
+}) {
+  const headingKey = useMemo(() => headingIds?.join('\0') ?? '', [headingIds])
+  const validHeadingIds = useMemo(() => new Set(headingIds ?? []), [headingKey])
+  const { observerActiveId, visibleIds } = useObserverHeadingState(headingKey)
+  const hashId = useHashHeadingId(validHeadingIds, headingKey)
+
+  return useMemo(() => {
+    return {
+      activeId: observerActiveId || hashId || fallbackId,
+      observerActiveId,
+      hashId,
+      visibleIds,
+    }
+  }, [fallbackId, hashId, observerActiveId, visibleIds])
 }

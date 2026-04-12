@@ -12,8 +12,8 @@ import { router } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
-import { useHolocronData } from '../../router.ts'
-import { buildSearchEntries, collectDefaultExpandedKeys } from '../../site-data.ts'
+import { useHolocronData, useHolocronRouterState } from '../../router.ts'
+import { buildSearchEntries, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
 import { SearchIcon } from './icons.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 
@@ -29,17 +29,24 @@ export function SideNav() {
     currentHeadings,
     ancestorGroupKeys,
   } = useHolocronData()
+  const { pathname } = useHolocronRouterState()
+  const effectiveCurrentPageHref = pathname || currentPageHref
   const siteConfig = site.config
   const searchEntries = useMemo(() => buildSearchEntries(site), [site])
 
   // Active tab's groups. Derived from static nav + current href.
   const groups = useMemo(
-    () => getActiveGroups(site.navigation, currentPageHref ?? '/'),
-    [currentPageHref, site],
+    () => getActiveGroups(site.navigation, effectiveCurrentPageHref ?? '/'),
+    [effectiveCurrentPageHref, site],
   )
+  const effectiveAncestorGroupKeys = useMemo(() => {
+    if (!effectiveCurrentPageHref) return ancestorGroupKeys
+    return collectAncestorGroupKeys(site, effectiveCurrentPageHref)
+  }, [ancestorGroupKeys, effectiveCurrentPageHref, site])
 
-  const fallbackId = currentHeadings[0]?.slug ?? ''
-  const { activeId } = useActiveTocState({ fallbackId })
+  const headingIds = useMemo(() => currentHeadings.map((heading) => heading.slug), [currentHeadings])
+  const fallbackId = headingIds[0] ?? ''
+  const { activeId } = useActiveTocState({ fallbackId, headingIds })
 
   // Seed expanded-groups with:
   //  - Ancestors of the current page (always — ensures the current page is
@@ -50,21 +57,11 @@ export function SideNav() {
     [groups],
   )
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    () => new Set([...ancestorGroupKeys, ...defaultExpandedKeys]),
+    () => new Set(defaultExpandedKeys),
   )
-
-  // Re-expand ancestor groups when currentPage changes (client-side navigation).
-  // Adjust state during render — the recommended React pattern for "adjusting
-  // state when a prop changes". No effect, no extra paint.
-  const prevAncestorKeysRef = useRef(ancestorGroupKeys)
-  if (prevAncestorKeysRef.current !== ancestorGroupKeys) {
-    prevAncestorKeysRef.current = ancestorGroupKeys
-    setExpandedGroups((prev) => {
-      const next = new Set(prev)
-      for (const key of ancestorGroupKeys) next.add(key)
-      return next
-    })
-  }
+  const effectiveExpandedGroups = useMemo(() => {
+    return new Set([...expandedGroups, ...effectiveAncestorGroupKeys])
+  }, [effectiveAncestorGroupKeys, expandedGroups])
 
   const toggleGroup = useCallback((groupKey: string) => {
     setExpandedGroups((prev) => {
@@ -163,15 +160,15 @@ export function SideNav() {
   const noResults = isSearchActive && focusableHrefs.length === 0
   const sidebarTreeContext = useMemo(() => {
     return {
-      currentPageHref,
-      expandedGroups,
+      currentPageHref: effectiveCurrentPageHref,
+      expandedGroups: effectiveExpandedGroups,
       onToggleGroup: toggleGroup,
       activeHeadingId: activeId,
       searchState,
       highlightedHref,
       highlightedRef,
     }
-  }, [activeId, currentPageHref, expandedGroups, highlightedHref, searchState, toggleGroup])
+  }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, toggleGroup])
 
   return (
     <aside className='flex flex-col max-w-(--grid-toc-width) min-h-0'>
