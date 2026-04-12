@@ -3,14 +3,15 @@
  */
 
 import React from 'react'
-import fontDataUrl from '../assets/momo-signature-regular.ttf?url&inline'
+import fontDataUrl from '../assets/bagnard.otf?url&inline'
 import { DARK_LOGO_COLOR, LIGHT_LOGO_COLOR, normalizeGeneratedLogoText, type GeneratedLogoOptions } from './generated-logo.tsx'
 
 type RendererInstance =
   | InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
   | InstanceType<Awaited<typeof import('takumi-js/wasm')>['Renderer']>
 
-const FONT_FAMILY = 'Momo Signature'
+const FONT_FAMILY = 'Bagnard'
+const FONT_WEIGHT = 400
 const FONT_SIZE = 72
 
 let cachedFontData: Promise<ArrayBuffer> | undefined
@@ -49,7 +50,7 @@ const fontConfig: {
 } = {
   name: FONT_FAMILY,
   data: getFontData,
-  weight: 700,
+  weight: FONT_WEIGHT,
   style: 'normal',
 }
 
@@ -59,7 +60,7 @@ async function measureTextSize(text: string): Promise<{ width: number; height: n
   const { fromJsx } = await import('takumi-js/helpers/jsx')
 
   const { node, stylesheets } = await fromJsx(
-    <span style={{ fontFamily: FONT_FAMILY, fontSize: FONT_SIZE, fontWeight: 700, lineHeight: 1, whiteSpace: 'nowrap' }}>
+    <span style={{ fontFamily: FONT_FAMILY, fontSize: FONT_SIZE, fontWeight: FONT_WEIGHT, lineHeight: 1, whiteSpace: 'nowrap' }}>
       {text}
     </span>,
   )
@@ -78,7 +79,7 @@ function GeneratedLogoTemplate({ text, theme }: GeneratedLogoOptions) {
         color: theme === 'dark' ? DARK_LOGO_COLOR : LIGHT_LOGO_COLOR,
         fontFamily: FONT_FAMILY,
         fontSize: FONT_SIZE,
-        fontWeight: 700,
+        fontWeight: FONT_WEIGHT,
         lineHeight: 1,
         whiteSpace: 'nowrap',
       }}
@@ -102,7 +103,7 @@ export async function createGeneratedLogoResponse(options: GeneratedLogoOptions)
       {
         name: FONT_FAMILY,
         data: getFontData,
-        weight: 700,
+        weight: FONT_WEIGHT,
         style: 'normal',
       },
     ],
