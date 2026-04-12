@@ -73,19 +73,19 @@ export function Badge({
   const destructive = color === 'white-destructive' || color === 'surface-destructive'
   if (destructive) {
     return (
-      <span className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} bg-brand-red/10 text-brand-red border-brand-red/20 ${disabled ? 'opacity-50' : ''} ${className}`}>
-        {icon && <Icon icon={icon} iconType={iconType} size={size === 'xs' ? 10 : size === 'lg' ? 14 : 12} color="var(--brand-red)" />}
+      <span className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} bg-red/10 text-red border-red/20 ${disabled ? 'opacity-50' : ''} ${className}`}>
+        {icon && <Icon icon={icon} iconType={iconType} size={size === 'xs' ? 10 : size === 'lg' ? 14 : 12} color="var(--red)" />}
         {children}
       </span>
     )
   }
   const cls: Record<string, string> = {
-    blue: stroke ? 'text-brand-blue border-brand-blue' : 'bg-brand-blue/10 text-brand-blue border-brand-blue/20',
-    green: stroke ? 'text-brand-green border-brand-green' : 'bg-brand-green/10 text-brand-green border-brand-green/20',
-    yellow: stroke ? 'text-brand-yellow border-brand-yellow' : 'bg-brand-yellow/10 text-brand-yellow border-brand-yellow/20',
-    orange: stroke ? 'text-brand-orange border-brand-orange' : 'bg-brand-orange/10 text-brand-orange border-brand-orange/20',
-    red: stroke ? 'text-brand-red border-brand-red' : 'bg-brand-red/10 text-brand-red border-brand-red/20',
-    purple: stroke ? 'text-brand-purple border-brand-purple' : 'bg-brand-purple/10 text-brand-purple border-brand-purple/20',
+    blue: stroke ? 'text-blue border-blue' : 'bg-blue/10 text-blue border-blue/20',
+    green: stroke ? 'text-green border-green' : 'bg-green/10 text-green border-green/20',
+    yellow: stroke ? 'text-yellow border-yellow' : 'bg-yellow/10 text-yellow border-yellow/20',
+    orange: stroke ? 'text-orange border-orange' : 'bg-orange/10 text-orange border-orange/20',
+    red: stroke ? 'text-red border-red' : 'bg-red/10 text-red border-red/20',
+    purple: stroke ? 'text-purple border-purple' : 'bg-purple/10 text-purple border-purple/20',
   }
   const variantCls = cls[color] ?? cls.blue
   return (

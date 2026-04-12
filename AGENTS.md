@@ -49,7 +49,19 @@ Types are intentionally kept close to docs.json to minimize transformations. Uti
 
 ## Styling
 
-Prefer the existing shadcn-style token names (`--background`, `--foreground`, `--muted`, `--accent`, `--border`, etc.) over introducing parallel Fumadocs-style color variable namespaces. If a ported Fumadocs component needs local helpers or utilities, keep those minimal and map them onto the shared shadcn token layer instead of creating a second design system.
+### CSS variable convention — shadcn superset
+
+Holocron's CSS variables follow the **standard shadcn/ui v2 naming convention**. This means users who already have a shadcn theme can port it directly — just override `--foreground`, `--primary`, `--border`, `--muted-foreground`, etc. in their own CSS and holocron adapts.
+
+The full shadcn token set is defined in `globals.css` `:root` with editorial defaults, and registered in `@theme inline` for Tailwind utility generation (`text-foreground`, `bg-primary`, `border-border`, etc.).
+
+**Three layers of variables:**
+
+1. **shadcn standard** — `--background`, `--foreground`, `--primary`, `--muted-foreground`, `--border`, `--accent`, `--sidebar-foreground`, `--sidebar-primary`, etc. Users override these to theme holocron.
+2. **Holocron extras** — `--text-tertiary`, `--border-subtle`, `--divider`. Things shadcn doesn't cover. No prefix, same naming style.
+3. **Semantic colors** — `--blue`, `--green`, `--yellow`, `--orange`, `--red`, `--purple`. Dark-mode-aware color tokens for callouts/badges. Use as `text-blue`, `bg-red/10`, `border-green/20` in Tailwind. Don't conflict with Tailwind's numbered palette (`text-blue-500`).
+
+**Do NOT introduce prefixed variable namespaces** (no `--hc-*`, no `--fd-*`, no `--editorial-*`). Keep everything in the flat shadcn naming style. If a new variable is needed, pick a descriptive name that could plausibly be a shadcn extension.
 
 ### Container spacing — use flex column gap
 
@@ -63,7 +75,7 @@ A CSS variable is only justified if it is **used in many places** and serves to 
 
 Rules:
 
-- **Many call sites** → define a CSS var (e.g. `--text-primary` used in dozens of components, `--sticky-top` shared by sidebar + aside).
+- **Many call sites** → define a CSS var (e.g. `--foreground` used in dozens of components, `--sticky-top` shared by sidebar + aside).
 - **Single call site** → inline the value. A `--fade-top: 81px` that's only read by one `::before` rule should just be `top: 81px`.
 - **Zero call sites** → delete immediately. Dead variables clutter `globals.css` and mislead future readers into thinking a token layer exists.
 
@@ -85,7 +97,7 @@ or in css with --alpha
 }
 ```
 
-prefer our own CSS variables over CSS theme colors. dark mode values should be changed using CSS variables instead of `dark:`
+prefer our own CSS variables over Tailwind's `dark:` variant. dark mode values should be changed using CSS variables instead of `dark:`
 
 using something like
 
