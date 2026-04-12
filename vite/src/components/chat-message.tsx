@@ -29,7 +29,7 @@ export function ChatUserMessage({ text }: { text: string }) {
           padding: '8px 14px',
           borderRadius: '16px 16px 4px 16px',
           backgroundColor: 'var(--muted)',
-          color: 'var(--text-primary)',
+          color: 'var(--foreground)',
           lineHeight: '1.5',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
@@ -153,14 +153,14 @@ function ToolCallCompleted({
     <ShowMore>
       <ToolPreviewContainer>
         <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-          <div style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>
+          <div style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}>
             ⎿
           </div>
           <div>
             <span
               style={{
                 whiteSpace: 'pre-wrap',
-                color: 'var(--text-secondary)',
+                color: 'var(--muted-foreground)',
                 fontSize: '12px',
               }}
             >
@@ -206,7 +206,7 @@ function ErrorPreview({ error }: { error: string }) {
   return (
     <ToolPreviewContainer>
       <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-        <div style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>
+        <div style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}>
           ⎿
         </div>
         <span>
@@ -308,7 +308,7 @@ function ShowMore({
               alignItems: 'center',
               gap: '4px',
               fontSize: '12px',
-              color: 'var(--text-primary)',
+              color: 'var(--foreground)',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -346,7 +346,7 @@ export function ChatLoadingDots() {
             width: '5px',
             height: '5px',
             borderRadius: '50%',
-            backgroundColor: 'var(--text-tertiary)',
+            backgroundColor: 'var(--muted-foreground)',
             animation: `holocron-chat-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
           }}
         />

@@ -55,7 +55,7 @@ export function NavSelect({ items, activeHref, className, ariaLabel }: NavSelect
 
   return (
     <div
-      className={`relative inline-flex items-center gap-1.5 rounded-md border border-(--border-subtle) px-2 py-1 text-(color:--text-secondary) transition-colors duration-150 hover:border-(--text-secondary) hover:text-(color:--text-primary) ${className ?? ''}`}
+      className={`relative inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2 py-1 text-muted-foreground transition-colors duration-150 hover:border-muted-foreground hover:text-foreground ${className ?? ''}`}
     >
       <select
         aria-label={ariaLabel}

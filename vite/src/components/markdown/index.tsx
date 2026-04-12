@@ -4,8 +4,8 @@
  * Editorial markdown components — public barrel.
  *
  * All components use CSS variables from globals.css (no prefix).
- * Conflicting names with shadcn: --brand-primary, --brand-secondary,
- * --link-accent, --page-border.
+ * Uses shadcn standard token names: --primary, --foreground,
+ * --muted-foreground, --border, --accent.
  */
 
 export type { TocNodeType, TocTreeNode } from '../../lib/toc-tree.ts'

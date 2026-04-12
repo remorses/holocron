@@ -12,23 +12,23 @@ import { Icon } from '../icon.tsx'
 
 export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
   const isExternal = tab.href.startsWith('http')
-  const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 text-(length:--type-toc-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
+  const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 text-(length:--type-small-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
   const tabStyle = {
-    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+    color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
     textShadow: isActive ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : 'none',
   }
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isActive) {
-      e.currentTarget.style.color = 'var(--text-primary)'
+      e.currentTarget.style.color = 'var(--foreground)'
       const indicator = e.currentTarget.querySelector<HTMLElement>('[data-tab-indicator]')
       if (indicator) {
-        indicator.style.backgroundColor = 'var(--text-tertiary)'
+        indicator.style.backgroundColor = 'var(--muted-foreground)'
       }
     }
   }
   const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isActive) {
-      e.currentTarget.style.color = 'var(--text-secondary)'
+      e.currentTarget.style.color = 'var(--muted-foreground)'
       const indicator = e.currentTarget.querySelector<HTMLElement>('[data-tab-indicator]')
       if (indicator) {
         indicator.style.backgroundColor = 'transparent'
@@ -44,7 +44,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
         left: 0,
         width: '100%',
         height: '1.5px',
-        backgroundColor: isActive ? 'var(--text-primary)' : 'transparent',
+        backgroundColor: isActive ? 'var(--foreground)' : 'transparent',
         borderRadius: '1px',
         transition: 'background-color 0.15s ease',
       }}

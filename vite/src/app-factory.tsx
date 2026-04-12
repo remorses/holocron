@@ -461,7 +461,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
           </Head>
         )}
         <body>
-          <ProgressBar color='var(--brand-primary)' />
+          <ProgressBar color='var(--primary)' />
           {children ?? notFoundContent}
         </body>
       </html>

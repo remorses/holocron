@@ -62,14 +62,14 @@ export function Mermaid({ chart }: { chart: string; placement?: string; actions?
     }
 
     return (
-      <div className='no-bleed rounded-(--border-radius-md) border border-(--border-subtle) bg-card px-4 py-3 text-sm text-(color:--text-secondary)'>
+      <div className='no-bleed rounded-lg border border-border-subtle bg-card px-4 py-3 text-sm text-muted-foreground'>
         Rendering diagram...
       </div>
     )
   }
 
   return (
-    <div className='no-bleed rounded-(--border-radius-md) border border-(--border-subtle) bg-card p-3'>
+    <div className='no-bleed rounded-lg border border-border-subtle bg-card p-3'>
       <div
         data-mermaid-diagram
         className='overflow-x-auto [&_svg]:h-auto [&_svg]:max-w-full'

@@ -10,34 +10,62 @@
 
 @plugin "@tailwindcss/typography";
 
+/* =====================================================================
+   shadcn/ui v2 token layer — standard naming convention.
+   Users can override any of these by importing their own CSS after
+   holocron's or via the `customCSS` plugin option. The editorial
+   defaults produce holocron's compact docs aesthetic.
+   ===================================================================== */
+
 :root {
-  /* ===== shadcn/ui tokens ===== */
+  --radius: 0.625rem;
+
+  /* shadcn/ui standard colors */
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
+  --primary: #3e9fff;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
+  --muted-foreground: rgba(0, 0, 0, 0.4);
+  --accent: rgba(0, 0, 0, 0.08);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.637 0.237 25.331);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.871 0.006 286.286);
   --ring: oklch(0.871 0.006 286.286);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  /* ===== Editorial design tokens ===== */
+
+  /* shadcn/ui sidebar tokens */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: rgba(0, 0, 0, 0.55);
+  --sidebar-primary: rgba(0, 0, 0, 0.9);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* ===== Holocron extras (shadcn superset) ===== */
+
+  /* Colors that have no shadcn equivalent */
+  --text-tertiary: rgba(0, 0, 0, 0.25);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --divider: rgba(0, 0, 0, 0.05);
+
+  /* Brand color tokens (light) — for callouts/badges, bg/border derived via opacity */
+  --brand-blue: #1d4ed8;
+  --brand-green: #047857;
+  --brand-yellow: #92400e;
+  --brand-orange: #c2410c;
+  --brand-red: #b91c1c;
+  --brand-purple: #7e22ce;
+
+  /* Font stacks */
   --font-primary:
     'Inter var', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
@@ -45,35 +73,30 @@
     'JetBrainsMono NF Mono', 'JetBrains Mono', 'SF Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', Menlo,
     Courier, monospace;
 
-  /* Editorial typography weights & rhythm */
+  /* Typography weights & rhythm */
   --weight-regular: 400;
   --weight-prose: 475;
   --weight-heading: 560;
   --lh-heading: 1.4;
   --lh-prose: 1.6;
   --ls-prose: -0.09px;
-  --ls-code: 0.01em;
 
-  /* Editorial type scale */
+  /* Type scale */
   --type-body-size: 14px;
   --type-heading-1-size: 15px;
   --type-heading-2-size: 14px;
   --type-heading-3-size: 13px;
-  --type-caption-size: 13px;
-  --type-toc-size: 13px;
+  --type-small-size: 13px;
   --type-code-size: 12px;
   --type-table-size: 11px;
 
   /* Bleed: mobile-first (0), enabled at lg where grid has room.
-     - --bleed       44px: code blocks (.bleed class)
-     - --bleed-image 28px: images (via <Bleed> wrapper)
-     A `.no-bleed` ancestor zeros both (see editorial.css) so card-like
-     containers keep those descendants inside the frame. */
+     Code blocks (.bleed class) and images (<Bleed> wrapper) extend by
+     this amount. A `.no-bleed` ancestor zeros it (see editorial.css)
+     so card-like containers keep descendants inside the frame. */
   --bleed: 0px;
-  --bleed-image: 0px;
   @variant lg {
     --bleed: 32px;
-    --bleed-image: 28px;
   }
 
   /* Header anatomy — all sticky/fade/spacer offsets derive from these.
@@ -85,8 +108,7 @@
   --logo-height: 30px;
   --header-row-height: calc(2 * var(--header-padding-y) + var(--logo-height));
   --tab-bar-height: 36px;
-  --tab-bar-border: 1px;
-  --header-height: calc(var(--header-row-height) + var(--tab-bar-height) + var(--tab-bar-border));
+  --header-height: calc(var(--header-row-height) + var(--tab-bar-height) + 1px);
   --layout-gap: 21px;
   --sticky-top: calc(var(--header-height) + var(--layout-gap));
 
@@ -106,122 +128,53 @@
   --section-gap: 48px;  /* between sections (separates H1/## blocks) */
   --list-gap: 12px;     /* between list items inside ul/ol */
 
-  /* Utility tokens */
-  --border-radius-md: 16px;
-
-  /* Colors — near-black, not pure black */
-  --text-primary: rgb(17, 17, 17);
-  --text-secondary: rgba(0, 0, 0, 0.4);
-  --text-tertiary: rgba(0, 0, 0, 0.25);
-  --text-muted: rgba(0, 0, 0, 0.5);
-  --text-hover: rgba(0, 0, 0, 0.7);
-  --text-tree-label: rgba(0, 0, 0, 0.6);
-  --page-border: #e3e3e3;
-  --divider: rgb(242, 242, 242);
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --code-line-nr: rgba(0, 0, 0, 0.3);
-  --selection-bg: rgba(0, 0, 0, 0.08);
-
-  /* Brand color tokens (light) — only fg, bg/border derived via opacity */
-  --brand-blue: #1d4ed8;
-  --brand-green: #047857;
-  --brand-yellow: #92400e;
-  --brand-orange: #c2410c;
-  --brand-red: #b91c1c;
-  --brand-purple: #7e22ce;
-
-  /* Sidebar navigation (shadcn naming convention) */
-  --sidebar-foreground: rgba(0, 0, 0, 0.55);
-  --sidebar-foreground-hover: rgba(0, 0, 0, 0.75);
-  --sidebar-foreground-active: rgba(0, 0, 0, 0.9);
-  --sidebar-section-foreground: rgba(0, 0, 0, 0.4);
-  --sidebar-toc-foreground: rgba(0, 0, 0, 0.5);
-  --sidebar-toc-foreground-active: rgba(0, 0, 0, 0.9);
-  --sidebar-toc-indicator: rgba(0, 0, 0, 0.9);
-
-  /* Button / back button */
-  --btn-bg: #fff;
-  --btn-shadow:
-    rgba(0, 0, 0, 0.08) 0px 2px 8px, rgba(0, 0, 0, 0.04) 0px 4px 16px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px inset;
-
-  /* Link accent color (renamed from --accent to avoid shadcn conflict) */
-  --link-accent: #0969da;
-
-  /* P3 accent color (renamed from --primary to avoid shadcn conflict) */
-  --brand-primary: #3e9fff;
-
-  /* Dark mode overrides — uses prefers-color-scheme media query
-       via @custom-variant dark above */
+  /* Dark mode overrides */
   @variant dark {
-    /* shadcn/ui dark */
     --background: oklch(0.21 0.006 285.885);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.21 0.006 285.885);
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.21 0.006 285.885);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
+    --primary: #60a5fa;
     --primary-foreground: oklch(0.21 0.006 285.885);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.274 0.006 286.033);
-    --muted-foreground: oklch(0.705 0.015 286.067);
-    --accent: oklch(0.274 0.006 286.033);
+    --muted-foreground: rgba(255, 255, 255, 0.45);
+    --accent: rgba(255, 255, 255, 0.1);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.637 0.237 25.331);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
     --border: oklch(0.274 0.006 286.033);
     --input: oklch(0.274 0.006 286.033);
     --ring: oklch(0.442 0.017 285.786);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    /* Editorial dark */
-    --text-primary: rgba(255, 255, 255, 0.9);
-    --text-secondary: rgba(255, 255, 255, 0.45);
-    --text-tertiary: rgba(255, 255, 255, 0.25);
-    --text-muted: rgba(255, 255, 255, 0.35);
-    --text-hover: rgba(255, 255, 255, 0.7);
-    --text-tree-label: rgba(255, 255, 255, 0.6);
-    --page-border: rgba(255, 255, 255, 0.1);
-    --divider: rgba(255, 255, 255, 0.06);
-    --border-subtle: rgba(255, 255, 255, 0.12);
-    --code-line-nr: rgba(255, 255, 255, 0.3);
-    --selection-bg: rgba(255, 255, 255, 0.1);
 
-    /* Brand color tokens (dark) */
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: rgba(255, 255, 255, 0.55);
+    --sidebar-primary: rgba(255, 255, 255, 0.9);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+
+    --text-tertiary: rgba(255, 255, 255, 0.25);
+    --border-subtle: rgba(255, 255, 255, 0.12);
+    --divider: rgba(255, 255, 255, 0.06);
+
     --brand-blue: #93c5fd;
     --brand-green: #6ee7b7;
     --brand-yellow: #fbbf24;
     --brand-orange: #fb923c;
     --brand-red: #fca5a5;
     --brand-purple: #c4b5fd;
-
-    /* Sidebar navigation dark */
-    --sidebar-foreground: rgba(255, 255, 255, 0.55);
-    --sidebar-foreground-hover: rgba(255, 255, 255, 0.75);
-    --sidebar-foreground-active: rgba(255, 255, 255, 0.9);
-    --sidebar-section-foreground: rgba(255, 255, 255, 0.4);
-    --sidebar-toc-foreground: rgba(255, 255, 255, 0.5);
-    --sidebar-toc-foreground-active: rgba(255, 255, 255, 0.9);
-    --sidebar-toc-indicator: rgba(255, 255, 255, 0.9);
-
-    --btn-bg: rgb(30, 30, 30);
-    --btn-shadow:
-      rgba(255, 255, 255, 0.05) 0px 2px 8px, rgba(255, 255, 255, 0.02) 0px 4px 16px,
-      rgba(255, 255, 255, 0.06) 0px 0px 0px 1px inset;
-
-    --link-accent: #aadcff;
-    --brand-primary: #60a5fa;
   }
 }
 
-/* P3 wide-gamut accent colors */
+/* P3 wide-gamut accent for primary (uses display-p3 when supported) */
 @supports (color: color(display-p3 1 1 1)) {
   :root {
-    --brand-primary: color(display-p3 0.243137 0.623529 1 / 1);
+    --primary: color(display-p3 0.243137 0.623529 1 / 1);
   }
 }
 
@@ -230,33 +183,40 @@
 }
 
 @theme inline {
+  /* shadcn/ui standard — full set */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
 
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
+  /* shadcn/ui sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-
+  /* Holocron extras */
+  --color-text-tertiary: var(--text-tertiary);
+  --color-border-subtle: var(--border-subtle);
+  --color-divider: var(--divider);
   --color-brand-blue: var(--brand-blue);
   --color-brand-green: var(--brand-green);
   --color-brand-yellow: var(--brand-yellow);
@@ -264,7 +224,12 @@
   --color-brand-red: var(--brand-red);
   --color-brand-purple: var(--brand-purple);
 
-  --radius-md: calc(var(--radius) - 2px);
+  /* Radius scale derived from --radius */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
 @layer base {
@@ -313,13 +278,13 @@
 }
 
 .slot-logo {
-  color: var(--text-primary);
+  color: var(--foreground);
   text-decoration: none;
 }
 
 .slot-tabbar {
   background: var(--background);
-  border-bottom: 1px solid var(--page-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .slot-tab {

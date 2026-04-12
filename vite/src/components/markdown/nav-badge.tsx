@@ -14,8 +14,8 @@ export function NavBadge({ label, variant = 'default' }: { label: string; varian
         lineHeight: '18px',
         fontVariationSettings: '"wght" 600',
         letterSpacing: '0.01em',
-        background: isDeprecated ? 'var(--sidebar-foreground-active)' : 'var(--selection-bg)',
-        color: isDeprecated ? 'var(--background)' : 'var(--sidebar-section-foreground)',
+        background: isDeprecated ? 'var(--sidebar-primary)' : 'var(--accent)',
+        color: isDeprecated ? 'var(--background)' : 'var(--muted-foreground)',
       }}
     >
       {label}

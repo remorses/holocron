@@ -116,9 +116,9 @@ export function Caption({ children }: { children: React.ReactNode }) {
     <div
       className='editorial-prose'
       style={{
-        fontSize: 'var(--type-caption-size)',
+        fontSize: 'var(--type-small-size)',
         textAlign: 'center',
-        color: 'var(--text-secondary)',
+        color: 'var(--muted-foreground)',
       }}
     >
       {children}
@@ -133,7 +133,7 @@ export function A({ href, children }: { href: string; children: React.ReactNode 
       target='_blank'
       rel='noopener noreferrer'
       style={{
-        color: 'var(--link-accent, #0969da)',
+        color: 'var(--primary)',
         fontWeight: 'var(--weight-heading)',
         textDecoration: 'none',
       }}

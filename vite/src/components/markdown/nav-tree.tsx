@@ -123,7 +123,7 @@ export function TocInline({
         style={{
           insetInlineStart: 0,
           width: '1.5px',
-          backgroundColor: 'var(--sidebar-toc-indicator)',
+          backgroundColor: 'var(--sidebar-primary)',
           transition: 'transform 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.15s',
           opacity: 0,
         }}
@@ -143,14 +143,14 @@ export function TocInline({
               <Link
                 ref={isHighlighted ? highlightedRef : undefined}
                 href={headingHref}
-                className={`block leading-4 no-underline ${!isDimmed ? 'hover:[background:var(--selection-bg)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--selection-bg)]' : ''}`}
+                className={`block leading-4 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
                 tabIndex={isDimmed ? -1 : 0}
                 style={{
-                  color: (isMatched || isActive) ? 'var(--sidebar-toc-foreground-active)' : 'var(--sidebar-toc-foreground)',
+                  color: (isMatched || isActive) ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                   fontWeight: (isMatched || isActive) ? 500 : 400,
-                  background: isHighlighted ? 'var(--selection-bg)' : undefined,
+                  background: isHighlighted ? 'var(--accent)' : undefined,
                   borderRadius: isHighlighted ? '4px' : undefined,
-                  boxShadow: isHighlighted ? '0 0 0 4px var(--selection-bg)' : undefined,
+                  boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
                 }}
               >
                 {heading.text}
@@ -191,16 +191,16 @@ export function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className={`flex items-center gap-1.5 text-xs no-underline ${!isDimmed ? 'hover:[background:var(--selection-bg)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--selection-bg)]' : ''}`}
+        className={`flex items-center gap-1.5 text-xs no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: (isActive || isMatched) ? '"wght" 550' : '"wght" 450',
-          color: (isActive || isMatched) ? 'var(--sidebar-foreground-active)' : 'var(--sidebar-foreground)',
+          color: (isActive || isMatched) ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
           transition: 'color 0.15s, font-variation-settings 0.25s, opacity 0.15s ease',
-          background: isHighlighted ? 'var(--selection-bg)' : undefined,
+          background: isHighlighted ? 'var(--accent)' : undefined,
           borderRadius: isHighlighted ? '4px' : undefined,
-          boxShadow: isHighlighted ? '0 0 0 4px var(--selection-bg)' : undefined,
+          boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
         }}
       >
         <Icon icon={page.icon} size={12} />
@@ -281,7 +281,7 @@ export function NavGroupNode({
           style={{
             opacity: isDimmed ? 0.45 : 1,
             fontVariationSettings: '"wght" 500',
-            color: 'var(--sidebar-section-foreground)',
+            color: 'var(--muted-foreground)',
             transition: 'opacity 0.15s ease',
           }}
         >
@@ -302,7 +302,7 @@ export function NavGroupNode({
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className={`flex items-center gap-1 text-xs border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--selection-bg)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--selection-bg)]' : ''}`}
+        className={`flex items-center gap-1 text-xs border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: '"wght" 500',
@@ -311,7 +311,7 @@ export function NavGroupNode({
           transition: 'opacity 0.15s ease',
         }}
       >
-        <ChevronIcon expanded={isExpanded} className='text-(color:--sidebar-section-foreground)' />
+        <ChevronIcon expanded={isExpanded} className='text-muted-foreground' />
         <Icon icon={group.icon} size={12} />
         {group.group}
       </button>

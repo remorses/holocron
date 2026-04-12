@@ -180,7 +180,7 @@ export function SideNav() {
         <span
           aria-hidden='true'
           className='absolute left-3.5 pointer-events-none inline-flex items-center justify-center'
-          style={{ color: 'var(--text-secondary)' }}
+          style={{ color: 'var(--muted-foreground)' }}
         >
           <SearchIcon />
         </span>
@@ -196,9 +196,9 @@ export function SideNav() {
             padding: '6px 34px 6px 28px',
             fontFamily: 'var(--font-primary)',
             fontWeight: 'var(--weight-prose)',
-            color: 'var(--text-primary)',
+            color: 'var(--foreground)',
             background: 'transparent',
-            border: '1px solid var(--page-border)',
+            border: '1px solid var(--border)',
             borderRadius: '12px',
             letterSpacing: 'normal',
             lineHeight: 'var(--lh-prose)',
@@ -206,7 +206,7 @@ export function SideNav() {
             opacity: isPending ? 0.5 : 1,
           }}
           onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--text-tertiary)' }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--page-border)' }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
         />
         {!query && (
           <span
@@ -216,7 +216,7 @@ export function SideNav() {
               fontFamily: 'var(--font-code)',
               fontSize: '12px',
               fontWeight: 600,
-              color: 'var(--text-secondary)',
+              color: 'var(--muted-foreground)',
               border: '1px solid var(--text-tertiary)',
               borderRadius: '4px',
               padding: '0px 4px',
@@ -235,7 +235,7 @@ export function SideNav() {
           {noResults ? (
             <div
               className='text-xs px-1 py-4 text-center'
-              style={{ color: 'var(--text-secondary)' }}
+              style={{ color: 'var(--muted-foreground)' }}
             >
               No results for &ldquo;{query}&rdquo;
             </div>

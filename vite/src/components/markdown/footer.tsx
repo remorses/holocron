@@ -25,7 +25,7 @@ export function Footer() {
   const logoLinkHref = logo.href || '/'
 
   return (
-    <footer className='border-t border-(--page-border) bg-background'>
+    <footer className='border-t border-border bg-background'>
       <div className='mx-auto w-full max-w-full px-(--mobile-padding) py-10 lg:max-w-(--grid-max-width) lg:px-0'>
         {/* Top row: logo + social icons */}
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
@@ -50,7 +50,7 @@ export function Footer() {
                   target='_blank'
                   rel='noopener noreferrer'
                   aria-label={platform}
-                  className='no-underline text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
+                  className='no-underline text-muted-foreground transition-colors duration-150 hover:text-foreground'
                 >
                   <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
                 </a>
@@ -65,7 +65,7 @@ export function Footer() {
             {links.map((column, i) => (
               <div key={i} className='flex flex-col gap-2'>
                 {column.header && (
-                  <div className='text-xs font-semibold text-(color:--text-secondary) uppercase tracking-wider mb-1'>
+                  <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1'>
                     {column.header}
                   </div>
                 )}
@@ -75,7 +75,7 @@ export function Footer() {
                     href={item.href}
                     target={item.href.startsWith('http') ? '_blank' : undefined}
                     rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className='no-underline text-sm text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
+                    className='no-underline text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground'
                   >
                     {item.label}
                   </a>

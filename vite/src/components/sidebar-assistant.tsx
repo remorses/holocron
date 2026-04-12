@@ -78,13 +78,13 @@ export function ChatInput({
         disabled={disabled}
         autoFocus={autoFocus}
         rows={1}
-        className={`w-full resize-none border-0 bg-transparent leading-5 text-(color:--text-primary) placeholder:text-(color:--text-tertiary) outline-none [field-sizing:content] min-h-5 max-h-40 ${textClassName || 'text-xs'}`}
+        className={`w-full resize-none border-0 bg-transparent leading-5 text-foreground placeholder:text-muted-foreground/50 outline-none [field-sizing:content] min-h-5 max-h-40 ${textClassName || 'text-xs'}`}
       />
       <div className='flex items-center justify-end' onClick={() => inputRef.current?.focus()}>
         {isGenerating ? (
           <button
             onClick={handleButtonClick}
-            className='flex items-center justify-center w-6 h-6 rounded-md transition-colors bg-foreground/[0.06] text-(color:--text-tertiary) hover:bg-foreground/[0.12]'
+            className='flex items-center justify-center w-6 h-6 rounded-md transition-colors bg-foreground/[0.06] text-muted-foreground/50 hover:bg-foreground/[0.12]'
             aria-label='Stop generating'
           >
             <StopSquareIcon />
@@ -96,7 +96,7 @@ export function ChatInput({
             className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
               value.trim()
                 ? 'bg-foreground text-background'
-                : 'bg-foreground/[0.06] text-(color:--text-tertiary)'
+                : 'bg-foreground/[0.06] text-muted-foreground/50'
             }`}
             aria-label='Send message'
           >
@@ -132,10 +132,10 @@ export function SidebarAssistant() {
   return (
     <div className='w-full rounded-2xl bg-foreground/8 px-0.5 pt-px pb-0.5'>
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
-        <span className='text-(color:--text-secondary) shrink-0'>
+        <span className='text-muted-foreground shrink-0'>
           <InfoCircleIcon />
         </span>
-        <span className='text-[11px] text-(color:--text-secondary)'>
+        <span className='text-[11px] text-muted-foreground'>
           Ask AI about this page
         </span>
       </div>

@@ -131,7 +131,7 @@ function NavDrawerInner() {
               borderRadius: '6px',
               border: 'none',
               background: 'transparent',
-              color: 'var(--text-secondary)',
+              color: 'var(--muted-foreground)',
               cursor: 'pointer',
             }}
             aria-label='Close menu'
@@ -179,7 +179,7 @@ function NavDrawerInner() {
                   href={link.href}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='no-underline flex items-center gap-2 text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
+                  className='no-underline flex items-center gap-2 text-muted-foreground transition-colors duration-150 hover:text-foreground'
                   style={{ fontSize: '13px' }}
                 >
                   <Icon icon={link.icon} size={16} />
@@ -191,7 +191,7 @@ function NavDrawerInner() {
                   href={primary.href}
                   target={primary.href.startsWith('http') ? '_blank' : undefined}
                   rel={primary.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className='no-underline inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-(--border-subtle) text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary) hover:border-(--text-secondary)'
+                  className='no-underline inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-border-subtle text-muted-foreground transition-colors duration-150 hover:text-foreground hover:border-muted-foreground'
                 >
                   <Icon icon={primary.icon} size={14} />
                   <span>{primary.label}</span>

@@ -12,11 +12,11 @@ export function Bleed({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        marginLeft: 'calc(-1 * var(--bleed-image))',
-        marginRight: 'calc(-1 * var(--bleed-image))',
+        marginLeft: 'calc(-1 * var(--bleed))',
+        marginRight: 'calc(-1 * var(--bleed))',
         display: 'flex',
         justifyContent: 'center',
-        maxWidth: 'calc(100% + 2 * var(--bleed-image))',
+        maxWidth: 'calc(100% + 2 * var(--bleed))',
         overflow: 'hidden',
       }}
     >

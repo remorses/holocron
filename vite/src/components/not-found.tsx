@@ -2,8 +2,8 @@
  * 404 page body — rendered inside EditorialPage's `children` slot when a
  * requested path does not match any page in the navigation.
  *
- * Uses inline styles with existing design tokens (`--text-primary`,
- * `--text-secondary`, `--font-code`, etc.) so it stays visually consistent
+ * Uses inline styles with existing design tokens (`--foreground`,
+ * `--muted-foreground`, `--font-code`, etc.) so it stays visually consistent
  * with the rest of the editorial UI without adding new CSS.
  *
  * Never renders `<p>` tags — uses `<div>`s only. See AGENTS.md
@@ -45,7 +45,7 @@ export function NotFound({
           fontSize: '120px',
           lineHeight: 1,
           letterSpacing: '-0.04em',
-          color: 'var(--text-primary)',
+          color: 'var(--foreground)',
           fontWeight: 'var(--weight-regular)',
         }}
       >
@@ -56,7 +56,7 @@ export function NotFound({
           fontSize: 'var(--type-heading-1-size)',
           fontWeight: 'var(--weight-heading)',
           fontFamily: 'var(--font-primary)',
-          color: 'var(--text-primary)',
+          color: 'var(--foreground)',
           letterSpacing: '-0.01em',
         }}
       >
@@ -64,7 +64,7 @@ export function NotFound({
       </div>
       <div
         style={{
-          color: 'var(--text-secondary)',
+          color: 'var(--muted-foreground)',
           fontSize: 'var(--type-body-size)',
           fontFamily: 'var(--font-primary)',
           lineHeight: 'var(--lh-prose)',
@@ -76,8 +76,8 @@ export function NotFound({
           style={{
             fontFamily: 'var(--font-code)',
             fontSize: 'var(--type-code-size)',
-            color: 'var(--text-primary)',
-            background: 'var(--selection-bg)',
+            color: 'var(--foreground)',
+            background: 'var(--accent)',
             padding: '2px 6px',
             borderRadius: '4px',
             wordBreak: 'break-all',
@@ -90,11 +90,11 @@ export function NotFound({
       <Link
         href={homeHref}
         style={{
-          color: 'var(--text-primary)',
+          color: 'var(--foreground)',
           textDecoration: 'none',
           fontSize: 'var(--type-body-size)',
           fontFamily: 'var(--font-primary)',
-          borderBottom: '1px solid var(--text-primary)',
+          borderBottom: '1px solid var(--foreground)',
           paddingBottom: '2px',
           marginTop: '8px',
         }}

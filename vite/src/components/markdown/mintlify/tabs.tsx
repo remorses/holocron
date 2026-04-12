@@ -44,8 +44,8 @@ export function Tabs({
   const activeTab = tabs[activeIndex]
 
   return (
-    <div className='no-bleed overflow-hidden rounded-(--border-radius-md) border border-(--border-subtle) bg-card'>
-      <div className={`${borderBottom ? 'border-b border-(--border-subtle)' : ''} overflow-x-auto bg-muted/40 p-2`}>
+    <div className='no-bleed overflow-hidden rounded-lg border border-border-subtle bg-card'>
+      <div className={`${borderBottom ? 'border-b border-border-subtle' : ''} overflow-x-auto bg-muted/40 p-2`}>
         <div role='tablist' className='flex min-w-max gap-1'>
           {labels.map((label, index) => {
             const active = index === activeIndex
@@ -61,7 +61,7 @@ export function Tabs({
                 className='cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors'
                 style={{
                   backgroundColor: active ? 'var(--background)' : 'transparent',
-                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  color: active ? 'var(--foreground)' : 'var(--muted-foreground)',
                 }}
               >
                 <span className='inline-flex items-center gap-1.5'>

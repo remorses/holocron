@@ -47,8 +47,8 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
   if (config.colors._hasUserColors) {
     const lightBrand = config.colors.dark ?? config.colors.primary
     const darkBrand = config.colors.light ?? config.colors.primary
-    colorStyles.push(`:root { --brand-primary: ${lightBrand}; --link-accent: ${lightBrand}; }`)
-    colorStyles.push(`.dark { --brand-primary: ${darkBrand}; --link-accent: ${darkBrand}; }`)
+    colorStyles.push(`:root { --primary: ${lightBrand}; }`)
+    colorStyles.push(`.dark { --primary: ${darkBrand}; }`)
   }
 
   // Fonts → Google Fonts <link> tags or @font-face rules

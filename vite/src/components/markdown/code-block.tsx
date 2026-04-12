@@ -62,7 +62,7 @@ export function CodeBlock({
               fontWeight: 'var(--weight-regular)',
               lineHeight,
               letterSpacing: 'normal',
-              color: 'var(--text-primary)',
+              color: 'var(--foreground)',
               tabSize: 2,
             }}
           >
@@ -71,7 +71,7 @@ export function CodeBlock({
                 className='select-none shrink-0'
                 aria-hidden='true'
                 style={{
-                  color: 'var(--code-line-nr)',
+                  color: 'var(--muted-foreground)',
                   textAlign: 'right',
                   paddingRight: 'var(--bleed)',
                   width: 'var(--bleed)',

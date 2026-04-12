@@ -10,7 +10,7 @@ import React from 'react'
 import { Icon } from '../icon.tsx'
 
 /** Tailwind class map per preset type. Each entry drives bg tint, border,
- *  and icon color (via text-*). The body text stays default (--text-primary);
+ *  and icon color (via text-*). The body text stays default (--foreground);
  *  only the icon picks up the variant color through currentColor. */
 const CALLOUT_VARIANTS = {
   note:    'bg-blue-500/[0.03] border-blue-500/15 text-blue-700 dark:text-blue-400',
@@ -103,10 +103,10 @@ function resolveCalloutIcon({
 
 export function Callout({ children, type, color, icon, iconType }: CalloutProps) {
   // No font-size/line-height here — Callout inherits from parent (body-size in
-  // main content, --type-toc-size inside an Aside).
+  // main content, --type-small-size inside an Aside).
   // `no-bleed` zeros the bleed tokens for descendants so code blocks and
   // images stay inside the callout frame (see editorial.css).
-  const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-(--border-radius-md) border-2'
+  const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-lg border-2'
   const presetIcon = type ? CALLOUT_ICONS[type] : undefined
   const colorStyle = color ? { color } : undefined
   const resolvedIcon = resolveCalloutIcon({ icon, iconType, fallback: presetIcon, colorStyle })
@@ -126,7 +126,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
             {resolvedIcon}
           </span>
         )}
-        <div className='flex flex-col gap-2 min-w-0 flex-1 text-(color:--text-primary)'>{children}</div>
+        <div className='flex flex-col gap-2 min-w-0 flex-1 text-foreground'>{children}</div>
       </div>
     )
   }
@@ -140,7 +140,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
           {resolvedIcon}
         </span>
       )}
-      <div className='flex flex-col gap-2 min-w-0 flex-1 text-(color:--text-primary)'>{children}</div>
+      <div className='flex flex-col gap-2 min-w-0 flex-1 text-foreground'>{children}</div>
     </div>
   )
 }

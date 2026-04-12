@@ -17,7 +17,7 @@ export function MobileBar() {
         style={{
           fontSize: '13px',
           fontWeight: 500,
-          color: 'var(--text-secondary)',
+          color: 'var(--muted-foreground)',
           background: 'none',
           border: 'none',
           cursor: 'pointer',
@@ -34,7 +34,7 @@ export function MobileBar() {
           gap: '6px',
           fontSize: '13px',
           fontWeight: 500,
-          color: 'var(--text-secondary)',
+          color: 'var(--muted-foreground)',
           background: 'none',
           border: 'none',
           cursor: 'pointer',

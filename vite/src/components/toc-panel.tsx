@@ -136,11 +136,11 @@ export function TableOfContentsPanel({
   return (
     <nav
       aria-label={title}
-      className={cn('relative text-[length:var(--type-toc-size,13px)]', className)}
+      className={cn('relative text-[length:var(--type-small-size,13px)]', className)}
     >
       <p
-        className='mb-2 text-[length:var(--type-toc-size,13px)] font-semibold'
-        style={{ color: 'var(--text-primary)' }}
+        className='mb-2 text-[length:var(--type-small-size,13px)] font-semibold'
+        style={{ color: 'var(--foreground)' }}
       >
         {title}
       </p>
@@ -152,7 +152,7 @@ export function TableOfContentsPanel({
           data-hidden={!activeId}
           className='absolute inset-y-0 start-0 w-px transition-[clip-path] data-[hidden=true]:hidden'
           style={{
-            backgroundColor: 'var(--brand-primary, var(--link-accent))',
+            backgroundColor: 'var(--primary)',
             clipPath:
               'polygon(0 var(--toc-top), 100% var(--toc-top), 100% calc(var(--toc-top) + var(--toc-height)), 0 calc(var(--toc-top) + var(--toc-height)))',
           }}
@@ -174,13 +174,13 @@ export function TableOfContentsPanel({
                 onClick={() => setManualId(heading.slug)}
                 className={cn(
                   'py-1.5 leading-snug transition-colors no-underline',
-                  'hover:text-[color:var(--text-hover,rgba(0,0,0,0.7))]',
+                  'hover:text-foreground',
                 )}
                 style={{
                   paddingInlineStart: getItemPadding(heading.depth),
                   color: isActive
-                    ? 'var(--brand-primary, var(--link-accent))'
-                    : 'var(--text-secondary)',
+                    ? 'var(--primary)'
+                    : 'var(--muted-foreground)',
                 }}
               >
                 {heading.text}

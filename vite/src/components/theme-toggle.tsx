@@ -62,7 +62,7 @@ export function ThemeToggle() {
       type='button'
       onClick={toggle}
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      className='inline-flex items-center justify-center rounded-md p-1.5 text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary) hover:bg-(color:--selection-bg)'
+      className='inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors duration-150 hover:text-foreground hover:bg-accent'
     >
       {theme === 'dark' ? (
         <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>

@@ -248,7 +248,7 @@ function ChatDrawerInner() {
             style={{
               fontWeight: 600,
               fontSize: '14px',
-              color: 'var(--text-primary)',
+              color: 'var(--foreground)',
             }}
           >
             Chat
@@ -265,7 +265,7 @@ function ChatDrawerInner() {
                 borderRadius: '6px',
                 border: 'none',
                 background: 'transparent',
-                color: 'var(--text-secondary)',
+                color: 'var(--muted-foreground)',
                 cursor: 'pointer',
               }}
               aria-label='New chat'
@@ -283,7 +283,7 @@ function ChatDrawerInner() {
                 borderRadius: '6px',
                 border: 'none',
                 background: 'transparent',
-                color: 'var(--text-secondary)',
+                color: 'var(--muted-foreground)',
                 cursor: 'pointer',
               }}
               aria-label='Close'
@@ -333,10 +333,10 @@ function ChatDrawerInner() {
         <div style={{ flexShrink: 0 }}>
           <div className='m-3 rounded-2xl bg-foreground/8 px-0.5 pt-px pb-0.5'>
             <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
-              <span className='text-(color:--text-secondary) shrink-0'>
+              <span className='text-muted-foreground shrink-0'>
                 <InfoCircleIcon />
               </span>
-              <span className='text-[11px] text-(color:--text-secondary)'>
+              <span className='text-[11px] text-muted-foreground'>
                 Ask AI about this page
               </span>
             </div>
@@ -376,7 +376,7 @@ function WelcomeMessage() {
         style={{
           fontSize: '18px',
           fontWeight: 600,
-          color: 'var(--text-secondary)',
+          color: 'var(--muted-foreground)',
           lineHeight: '1.4',
         }}
       >

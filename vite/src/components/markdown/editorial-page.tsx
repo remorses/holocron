@@ -115,7 +115,7 @@ export function EditorialPage({
 
   return (
     <div
-      className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-(color:--text-primary) [font-family:var(--font-primary)] antialiased [text-rendering:optimizeLegibility]'
+      className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-foreground [font-family:var(--font-primary)] antialiased [text-rendering:optimizeLegibility]'
       style={pageStyle}
     >
       {!!bannerContent && (
@@ -188,7 +188,7 @@ export function EditorialPage({
                       target='_blank'
                       rel='noopener noreferrer'
                       aria-label={link.label}
-                      className='no-underline flex items-center gap-1.5 text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary)'
+                      className='no-underline flex items-center gap-1.5 text-muted-foreground transition-colors duration-150 hover:text-foreground'
                     >
                       <Icon icon={link.icon} size={16} />
                       {!link.icon && (
@@ -210,7 +210,7 @@ export function EditorialPage({
                 target={primary.href.startsWith('http') ? '_blank' : undefined}
                 rel={primary.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                 aria-label={primary.label}
-                className='slot-navbar-primary no-underline inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-(--border-subtle) text-(color:--text-secondary) transition-colors duration-150 hover:text-(color:--text-primary) hover:border-(--text-secondary)'
+                className='slot-navbar-primary no-underline inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-border-subtle text-muted-foreground transition-colors duration-150 hover:text-foreground hover:border-muted-foreground'
               >
                 <Icon icon={primary.icon} size={14} />
                 <span>{primary.label}</span>
@@ -299,7 +299,7 @@ export function EditorialPage({
                 const hasSharedAside = Boolean(section.aside) && isShared
                 
                 const asideClass =
-                  'slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5]'
+                  'slot-aside flex flex-col gap-3 text-(length:--type-small-size) leading-[1.5]'
                 const sharedAsideStyle: HolocronCSSProperties = {
                   '--shared-row': `${sharedAsideStartRow} / span ${span}`,
                 }
@@ -316,7 +316,7 @@ export function EditorialPage({
                       {/* Aside column: per-section aside */}
                       {hasPerSectionAside && (
                         <div
-                            className={`slot-aside flex flex-col gap-3 text-(length:--type-toc-size) leading-[1.5] lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                            className={`slot-aside flex flex-col gap-3 text-(length:--type-small-size) leading-[1.5] lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
                         >
                           {section.aside}
                         </div>

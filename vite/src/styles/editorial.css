@@ -14,8 +14,9 @@
  * - Small font sizes (14px body) for editorial/compact aesthetic
  *
  * Design tokens are defined in globals.css :root (no prefix).
- * Conflicting names with shadcn: --brand-primary, --brand-secondary,
- * --link-accent, --page-border.
+ * Uses shadcn/ui standard token names (--foreground, --muted-foreground,
+ * --border, --primary, etc.) plus holocron extras (--text-tertiary,
+ * --border-subtle, --divider).
  */
 
 /* ========================================================================
@@ -30,7 +31,7 @@
 }
 
 .slot-page ::selection {
-  background: var(--selection-bg);
+  background: var(--accent);
 }
 
 /* ========================================================================
@@ -44,7 +45,7 @@
   font-weight: var(--weight-prose);
   line-height: var(--lh-prose);
   letter-spacing: var(--ls-prose);
-  color: var(--text-primary);
+  color: var(--foreground);
   margin: 0;
 }
 
@@ -59,7 +60,7 @@
   font-weight: var(--weight-heading);
   line-height: var(--lh-heading);
   letter-spacing: var(--ls-prose);
-  color: var(--text-primary);
+  color: var(--foreground);
   margin: 0;
   padding: 0;
   scroll-margin-top: var(--header-height);
@@ -83,7 +84,7 @@
 
 .editorial-h3 {
   font-size: var(--type-heading-3-size);
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
 }
 
 /* ========================================================================
@@ -143,12 +144,11 @@
   margin-right: calc(-1 * var(--bleed));
 }
 
-/* Scope-based bleed disable. Any descendant reading --bleed / --bleed-image
-   picks up 0 through the custom-property cascade. Applied to card-like
-   containers so code/images inside stay inside the frame. */
+/* Scope-based bleed disable. Any descendant reading --bleed picks up 0
+   through the custom-property cascade. Applied to card-like containers
+   so code/images inside stay inside the frame. */
 .no-bleed {
   --bleed: 0px;
-  --bleed-image: 0px;
 }
 
 /* ========================================================================

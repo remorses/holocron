@@ -13,17 +13,17 @@ export function BackButton() {
       href='/'
       className='fixed top-5 right-5 z-[100000] flex items-center justify-center w-10 h-10 rounded-full no-underline'
       style={{
-        background: 'var(--btn-bg)',
-        color: 'var(--text-secondary)',
-        boxShadow: 'var(--btn-shadow)',
+        background: 'var(--background)',
+        color: 'var(--muted-foreground)',
+        boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 8px, rgba(0, 0, 0, 0.04) 0px 4px 16px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px inset',
         transition: 'color 0.15s, transform 0.15s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.color = 'var(--text-hover)'
+        e.currentTarget.style.color = 'var(--foreground)'
         e.currentTarget.style.transform = 'scale(1.05)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.color = 'var(--text-secondary)'
+        e.currentTarget.style.color = 'var(--muted-foreground)'
         e.currentTarget.style.transform = 'scale(1)'
       }}
       onMouseDown={(e) => {

@@ -15,7 +15,7 @@ import { slugify } from '../../../lib/toc-tree.ts'
 
 function sectionCard(children: React.ReactNode, className = '') {
   return (
-    <div className={`no-bleed flex flex-col gap-3 rounded-(--border-radius-md) border border-(--border-subtle) bg-card p-4 ${className}`.trim()}>
+    <div className={`no-bleed flex flex-col gap-3 rounded-lg border border-border-subtle bg-card p-4 ${className}`.trim()}>
       {children}
     </div>
   )
@@ -56,7 +56,7 @@ export function Badge({
 
   if (color === 'gray' || color === 'surface') {
     return (
-      <span className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} bg-muted text-(color:--text-primary) border-(--border-subtle) ${disabled ? 'opacity-50' : ''} ${className}`}>
+      <span className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} bg-muted text-foreground border-border-subtle ${disabled ? 'opacity-50' : ''} ${className}`}>
         {icon && <Icon icon={icon} iconType={iconType} size={size === 'xs' ? 10 : size === 'lg' ? 14 : 12} />}
         {children}
       </span>
@@ -123,14 +123,14 @@ export function Card({
   children?: React.ReactNode
 }) {
   const content = (
-    <div className={`flex h-full flex-col gap-2 rounded-(--border-radius-md) border border-(--border-subtle) bg-card p-4 ${horizontal ? 'flex-row items-center' : ''}`.trim()}>
-      {img && <img src={img} alt='' className='w-full rounded-lg border border-(--border-subtle)' />}
+    <div className={`flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4 ${horizontal ? 'flex-row items-center' : ''}`.trim()}>
+      {img && <img src={img} alt='' className='w-full rounded-lg border border-border-subtle' />}
       <div className='flex items-center gap-2'>
         {icon && <Icon icon={icon} iconType={iconType} size={16} color={color} />}
-        {title && <div className='text-sm font-semibold text-(color:--text-primary)'>{title}</div>}
+        {title && <div className='text-sm font-semibold text-foreground'>{title}</div>}
       </div>
-      {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>}
-      {href && (cta || arrow) && <div className='text-xs text-(color:--brand-primary)'>{cta || (arrow ? '→' : undefined)}</div>}
+      {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-sm text-muted-foreground'>{children}</div>}
+      {href && (cta || arrow) && <div className='text-xs text-primary'>{cta || (arrow ? '→' : undefined)}</div>}
     </div>
   )
   if (!href) return content
@@ -165,12 +165,12 @@ export function Expandable({
   children: React.ReactNode
 }) {
   return (
-    <details className='no-bleed group rounded-(--border-radius-md) border border-(--border-subtle) bg-card' open={defaultOpen}>
+    <details className='no-bleed group rounded-lg border border-border-subtle bg-card' open={defaultOpen}>
       <summary className='flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden'>
         <span>{title}</span>
         <Chevron />
       </summary>
-      <div className='no-bleed flex flex-col gap-3 px-4 pb-4 text-sm text-(color:--text-secondary)'>{children}</div>
+      <div className='no-bleed flex flex-col gap-3 px-4 pb-4 text-sm text-muted-foreground'>{children}</div>
     </details>
   )
 }
@@ -178,9 +178,9 @@ export function Expandable({
 export function Frame({ caption, hint, children }: { caption?: string; hint?: string; children: React.ReactNode }) {
   return sectionCard(
     <div className='flex flex-col gap-3'>
-      <div className='overflow-hidden rounded-lg border border-(--border-subtle) bg-muted/30 p-3'>{children}</div>
+      <div className='overflow-hidden rounded-lg border border-border-subtle bg-muted/30 p-3'>{children}</div>
       {(caption || hint) && (
-        <div className='flex flex-wrap items-center gap-2 text-xs text-(color:--text-secondary)'>
+        <div className='flex flex-wrap items-center gap-2 text-xs text-muted-foreground'>
           {caption && <span>{caption}</span>}
           {hint && <span>{hint}</span>}
         </div>
@@ -209,19 +209,19 @@ export function Prompt({
     <div className='flex flex-col gap-3'>
       <div className='flex items-center gap-2'>
         {icon && <Icon icon={icon} iconType={iconType} size={16} />}
-        <div className='text-xs font-semibold uppercase tracking-wide text-(color:--text-secondary)'>{description}</div>
+        <div className='text-xs font-semibold uppercase tracking-wide text-muted-foreground'>{description}</div>
       </div>
       <div
         className={plainText
-          ? 'rounded-lg bg-muted/50 p-3 text-sm text-(color:--text-primary) [font-family:var(--font-code)] whitespace-pre-wrap'
-          : 'flex flex-col gap-3 rounded-lg bg-muted/30 p-3 text-sm text-(color:--text-primary)'}
+          ? 'rounded-lg bg-muted/50 p-3 text-sm text-foreground [font-family:var(--font-code)] whitespace-pre-wrap'
+          : 'flex flex-col gap-3 rounded-lg bg-muted/30 p-3 text-sm text-foreground'}
       >
         {children}
       </div>
       {showCopy && (
         <button
           type='button'
-          className='self-end rounded-md bg-muted px-3 py-1.5 text-xs font-medium text-(color:--text-secondary) hover:text-(color:--text-primary) transition-colors'
+          className='self-end rounded-md bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors'
           onClick={() => { void navigator.clipboard.writeText(String(children)) }}
         >
           Copy
@@ -259,7 +259,7 @@ export function ParamField(props: {
         {props.deprecated && <Badge color='orange'>deprecated</Badge>}
         {props.default && <Badge color='gray'>default: {props.default}</Badge>}
       </div>
-      <div className='flex flex-col gap-3 text-(color:--text-secondary)'>{props.children}</div>
+      <div className='flex flex-col gap-3 text-muted-foreground'>{props.children}</div>
     </div>,
   )
 }
@@ -285,7 +285,7 @@ export function ResponseField({
         {required && <Badge color='green'>required</Badge>}
         {deprecated && <Badge color='orange'>deprecated</Badge>}
       </div>
-      {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-(color:--text-secondary)'>{children}</div>}
+      {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-muted-foreground'>{children}</div>}
     </div>,
   )
 }
@@ -309,11 +309,11 @@ export function Step({
   return (
     <li className='ps-1'>
       <div className='flex flex-col gap-2'>
-        <div className='flex items-center gap-2 text-sm font-semibold text-(color:--text-primary)'>
+        <div className='flex items-center gap-2 text-sm font-semibold text-foreground'>
           {icon && <Icon icon={icon} iconType={iconType} size={16} />}
           {title}
         </div>
-        <div className='no-bleed flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>
+        <div className='no-bleed flex flex-col gap-3 text-sm text-muted-foreground'>{children}</div>
       </div>
     </li>
   )
@@ -332,10 +332,10 @@ export function Tile({
 }) {
   return (
     <a href={href} className='no-underline'>
-      <div className='flex h-full flex-col gap-3 rounded-(--border-radius-md) border border-(--border-subtle) bg-card p-3'>
-        <div className='overflow-hidden rounded-lg border border-(--border-subtle) bg-muted/40 p-2'>{children}</div>
-        {title && <div className='text-sm font-semibold text-(color:--text-primary)'>{title}</div>}
-        {description && <div className='text-xs text-(color:--text-secondary)'>{description}</div>}
+      <div className='flex h-full flex-col gap-3 rounded-lg border border-border-subtle bg-card p-3'>
+        <div className='overflow-hidden rounded-lg border border-border-subtle bg-muted/40 p-2'>{children}</div>
+        {title && <div className='text-sm font-semibold text-foreground'>{title}</div>}
+        {description && <div className='text-xs text-muted-foreground'>{description}</div>}
       </div>
     </a>
   )
@@ -355,20 +355,20 @@ export function Tooltip({ tip, headline, cta, href, children }: { tip: string; h
     : children
   return (
     <span
-      className='relative inline-flex w-fit cursor-help underline decoration-dotted decoration-(--text-secondary) underline-offset-2'
+      className='relative inline-flex w-fit cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2'
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
       {trigger}
       {open && (
         <span
-          className='absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-(--border-radius-md) border border-(--border-subtle) bg-card px-3 py-2 text-sm text-(color:--text-primary) shadow-lg'
+          className='absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-border-subtle bg-card px-3 py-2 text-sm text-foreground shadow-lg'
           role='tooltip'
         >
           {headline && <div className='mb-1 text-xs font-semibold'>{headline}</div>}
           <div>{tip}</div>
           {cta && href && (
-            <a href={href} className='mt-1 inline-block text-xs text-(color:--brand-primary) hover:underline'>{cta}</a>
+            <a href={href} className='mt-1 inline-block text-xs text-primary hover:underline'>{cta}</a>
           )}
         </span>
       )}
@@ -410,14 +410,14 @@ export function Update({
         <a
           href={`#${id}`}
           data-component-part='update-label'
-          className='inline-flex items-center rounded-(--border-radius-md) bg-(--brand-primary)/10 px-2 py-0.5 text-xs font-medium text-(color:--brand-primary) no-underline'
+          className='inline-flex items-center rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary no-underline'
         >
           {label}
         </a>
         {description && (
           <div
             data-component-part='update-description'
-            className='text-xs break-words text-(color:--text-secondary) lg:max-w-[110px]'
+            className='text-xs break-words text-muted-foreground lg:max-w-[110px]'
           >
             {description}
           </div>
@@ -445,19 +445,19 @@ export function Update({
 export function View({ title, icon, iconType, children }: { title: string; icon?: string; /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */ iconType?: string; children: React.ReactNode }) {
   return sectionCard(
     <div className='flex flex-col gap-3'>
-      <div className='flex items-center gap-2 text-sm font-semibold text-(color:--text-primary)'>
+      <div className='flex items-center gap-2 text-sm font-semibold text-foreground'>
         {icon && <Icon icon={icon} iconType={iconType} size={16} />}
         <span>{title}</span>
       </div>
-      <div className='flex flex-col gap-3 text-sm text-(color:--text-secondary)'>{children}</div>
+      <div className='flex flex-col gap-3 text-sm text-muted-foreground'>{children}</div>
     </div>,
   )
 }
 
 export function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <div className='rounded-(--border-radius-md) border border-(--border-subtle) bg-muted/20 p-4'>
-      <div className='no-bleed flex flex-col gap-y-4 text-sm text-(color:--text-secondary)'>
+    <div className='rounded-lg border border-border-subtle bg-muted/20 p-4'>
+      <div className='no-bleed flex flex-col gap-y-4 text-sm text-muted-foreground'>
         {children}
       </div>
     </div>
@@ -466,9 +466,9 @@ export function Panel({ children }: { children: React.ReactNode }) {
 
 export function RequestExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
   return (
-    <div className='rounded-[calc(var(--border-radius-md)-2px)] border border-(--border-subtle) bg-card px-5 py-4'>
+    <div className='rounded-md border border-border-subtle bg-card px-5 py-4'>
       <div className='flex flex-col gap-3'>
-        <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-(color:--text-secondary)'>Request example</div>
+        <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Request example</div>
         <div className='no-bleed'>
           {children}
         </div>
@@ -479,9 +479,9 @@ export function RequestExample({ children, dropdown }: { children: React.ReactNo
 
 export function ResponseExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
   return (
-    <div className='rounded-[calc(var(--border-radius-md)-2px)] border border-(--border-subtle) bg-card px-5 py-4'>
+    <div className='rounded-md border border-border-subtle bg-card px-5 py-4'>
       <div className='flex flex-col gap-3'>
-        <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-(color:--text-secondary)'>Response example</div>
+        <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Response example</div>
         <div className='no-bleed'>
           {children}
         </div>
@@ -508,7 +508,7 @@ export function TreeFolder({
   if (!openable) {
     return (
       <div className='ms-2 flex flex-col gap-1'>
-        <div className='flex items-center gap-2 text-(color:--text-primary)'>
+        <div className='flex items-center gap-2 text-foreground'>
           <span aria-hidden='true'>•</span>
           <span>{name}/</span>
         </div>
@@ -518,7 +518,7 @@ export function TreeFolder({
   }
   return (
     <details className='group ms-2 flex flex-col gap-1' open={defaultOpen}>
-      <summary className='flex cursor-pointer list-none items-center gap-2 text-(color:--text-primary) [&::-webkit-details-marker]:hidden'>
+      <summary className='flex cursor-pointer list-none items-center gap-2 text-foreground [&::-webkit-details-marker]:hidden'>
         <span>{name}/</span>
         <Chevron />
       </summary>
@@ -530,7 +530,7 @@ export function TreeFolder({
 }
 
 export function TreeFile({ name }: { name: string }) {
-  return <div className='ms-2 text-(color:--text-secondary)'>{name}</div>
+  return <div className='ms-2 text-muted-foreground'>{name}</div>
 }
 
 export function Color({ children }: { children: React.ReactNode }) {
@@ -540,7 +540,7 @@ export function Color({ children }: { children: React.ReactNode }) {
 export function ColorRow({ title, children }: { title?: string; children: React.ReactNode }) {
   return sectionCard(
     <div className='flex flex-col gap-3'>
-      {title && <div className='text-sm font-semibold text-(color:--text-primary)'>{title}</div>}
+      {title && <div className='text-sm font-semibold text-foreground'>{title}</div>}
       <div className='flex flex-wrap gap-3'>{children}</div>
     </div>,
   )
@@ -557,8 +557,8 @@ export function ColorItem({
   const dark = typeof value === 'string' ? value : value.dark ?? value.light ?? '#666666'
   return (
     <div className='flex min-w-[120px] flex-col gap-2'>
-      <div className='h-14 rounded-lg border border-(--border-subtle)' style={{ background: `linear-gradient(90deg, ${light} 0%, ${light} 50%, ${dark} 50%, ${dark} 100%)` }} />
-      {name && <div className='text-xs font-medium text-(color:--text-primary)'>{name}</div>}
+      <div className='h-14 rounded-lg border border-border-subtle' style={{ background: `linear-gradient(90deg, ${light} 0%, ${light} 50%, ${dark} 50%, ${dark} 100%)` }} />
+      {name && <div className='text-xs font-medium text-foreground'>{name}</div>}
       <code className='inline-code text-[11px]'>{typeof value === 'string' ? value : `${light} / ${dark}`}</code>
     </div>
   )
