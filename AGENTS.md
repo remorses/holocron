@@ -97,6 +97,23 @@ or in css with --alpha
 }
 ```
 
+derive colors from existing tokens with `color-mix()` instead of hardcoding new shades:
+
+```css
+:root {
+    /* 90% neutral-500 mixed with black → slightly darker muted text */
+    --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
+
+    /* 64% foreground mixed with sidebar bg → sidebar text that adapts to surface */
+    --sidebar-foreground: color-mix(in srgb, var(--foreground) 64%, var(--sidebar));
+
+    /* 98% background mixed with white → slightly lighter card surface */
+    --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
+}
+```
+
+`--alpha()` and `color-mix()` both produce computed colors that auto-adapt in dark mode when their input tokens change. Prefer these over hardcoded hex/oklch values — one definition works for both modes.
+
 prefer our own CSS variables over Tailwind's `dark:` variant. dark mode values should be changed using CSS variables instead of `dark:`
 
 using something like
