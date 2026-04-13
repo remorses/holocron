@@ -1,6 +1,10 @@
+/* Declare holocron layer BEFORE tailwindcss so it has the lowest cascade
+   priority. Layer order: holocron < theme < base < components < utilities.
+   Unlayered user CSS always beats all layers — no !important needed. */
+@layer holocron;
 @import 'tailwindcss';
-@import './editorial.css';
-@import './editorial-prism.css';
+@import './editorial.css' layer(holocron);
+@import './editorial-prism.css' layer(holocron);
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Scan holocron's own components for Tailwind class usage — without this,
@@ -12,9 +16,9 @@
 
 /* =====================================================================
    shadcn/ui v2 token layer — standard naming convention.
-   Users can override any of these by importing their own CSS after
-   holocron's or via the `customCSS` plugin option. The editorial
-   defaults produce holocron's compact docs aesthetic.
+   Users can override any of these by redeclaring :root { --token: ... }
+   in their own CSS. CSS custom properties are NOT affected by cascade
+   layers, so `:root` blocks stay outside `@layer holocron`.
    ===================================================================== */
 
 :root {
@@ -42,7 +46,7 @@
 
   /* shadcn/ui sidebar tokens */
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: rgba(0, 0, 0, 0.55);
+  --sidebar-foreground: rgba(0, 0, 0, 0.45);
   --sidebar-primary: rgba(0, 0, 0, 0.9);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
@@ -152,7 +156,7 @@
     --ring: oklch(0.442 0.017 285.786);
 
     --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: rgba(255, 255, 255, 0.55);
+    --sidebar-foreground: rgba(255, 255, 255, 0.45);
     --sidebar-primary: rgba(255, 255, 255, 0.9);
     --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.269 0 0);
@@ -243,89 +247,100 @@
   }
 }
 
-/* Custom scrollbar styles: shadcn-inspired */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-  background: transparent;
-  border-radius: var(--radius-md);
-}
+/* =====================================================================
+   @layer holocron — all Holocron style rules live here so user CSS
+   (which is unlayered by default) automatically takes precedence.
+   Users never need `!important` to override Holocron styles.
 
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: var(--radius-md);
-  border: none;
-}
+   What stays OUTSIDE this layer:
+   - :root CSS variable declarations (custom properties aren't affected
+     by cascade layers — users override them by redeclaring :root)
+   - @theme / @theme inline blocks (Tailwind config, not style rules)
+   - @layer base block (Tailwind's own layer system)
+   ===================================================================== */
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
+@layer holocron {
+  /* Custom scrollbar styles: shadcn-inspired */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: transparent;
+    border-radius: var(--radius-md);
+  }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-}
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: var(--radius-md);
+    border: none;
+  }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
 
-/* Layout slots — only important page entities use CSS classes.
-   Inner wrappers use Tailwind utilities directly in JSX. */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
 
-.slot-navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--background);
-}
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 
-.slot-logo {
-  color: var(--foreground);
-  text-decoration: none;
-}
+  /* Layout slots — only important page entities use CSS classes.
+     Inner wrappers use Tailwind utilities directly in JSX. */
 
-.slot-tabbar {
-  background: var(--background);
-  border-bottom: 1px solid var(--border);
-}
+  .slot-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--background);
+  }
 
-.slot-tab {
-  position: relative;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-}
+  .slot-logo {
+    color: var(--foreground);
+    text-decoration: none;
+  }
 
-.slot-sidebar-left {
-  display: none;
-  @variant lg {
-    display: block;
-    grid-column: 1;
-    /* grid-row is set dynamically via inline style so the sidebar spans
-       exactly the number of content rows — no wasted implicit rows. */
+  .slot-tabbar {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .slot-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .slot-sidebar-left {
+    display: none;
+    @variant lg {
+      display: block;
+      grid-column: 1;
+      /* grid-row is set dynamically via inline style so the sidebar spans
+         exactly the number of content rows — no wasted implicit rows. */
+    }
+  }
+
+  .slot-main {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .slot-sidebar-right {
+    display: none;
+    @variant lg {
+      display: block;
+      grid-column: 3;
+    }
   }
 }
 
-.slot-main {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.slot-sidebar-right {
-  display: none;
-  @variant lg {
-    display: block;
-    grid-column: 3;
-  }
-}
-
-/* react-medium-image-zoom wrapper inside PixelatedImage.
-   rmiz renders <div data-rmiz> → <div data-rmiz-content> → <img>. Neither
-   wrapper accepts a className prop, so we scope by the PixelatedImage root
-   class. The wrappers take grid-area 1/1 to stack over the pixelated
-   placeholder (z-index 0) and fill the frame. Without this, both wrapper
-   divs collapse to intrinsic size and the real image never covers the
-   placeholder layer. */
+/* react-medium-image-zoom overrides — OUTSIDE @layer holocron because rmiz
+   imports its own CSS via JS (`import 'react-medium-image-zoom/dist/styles.css'`)
+   which is unlayered. Layered rules always lose to unlayered ones, so these
+   overrides must stay unlayered to beat rmiz's defaults. */
 .holocron-pixelated-image > [data-rmiz] {
   grid-area: 1 / 1;
   position: relative;
