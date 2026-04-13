@@ -8,13 +8,15 @@
     "devDependencies": {
         "tsx": "^4.21.0",
         "typescript": "^6.0.2",
-        "vite": "^8.0.3",
-        "vitest": "^4.1.2"
+        "vite": "^8.0.8",
+        "vitest": "^4.1.4"
     },
     "repository": "https://github.com/remorses/",
     "author": "remorses <beats.by.morse@gmail.com>",
     "license": "",
     "pnpm": {
-        "onlyBuiltDependencies": ["sharp"]
+        "onlyBuiltDependencies": [
+            "sharp"
+        ]
     }
 }
