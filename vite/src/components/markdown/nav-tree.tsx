@@ -138,6 +138,7 @@ export function TocInline({
           const isMatched = !isSearchActive || searchState.matchedHrefs.has(headingHref)
           const isDimmed = hasMatchedHeading && !isMatched
           const isHighlighted = highlightedHref === headingHref
+          const isEmphasized = isActive || (isSearchActive && isMatched)
           return (
             <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.15s ease' }}>
               <Link
@@ -148,8 +149,8 @@ export function TocInline({
                 className={`block leading-4 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
                 tabIndex={isDimmed ? -1 : 0}
                 style={{
-                  color: (isMatched || isActive) ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
-                  fontWeight: (isMatched || isActive) ? 500 : 400,
+                  color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
+                  fontWeight: isEmphasized ? 500 : 400,
                   background: isHighlighted ? 'var(--accent)' : undefined,
                   borderRadius: isHighlighted ? '4px' : undefined,
                   boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
@@ -184,6 +185,9 @@ export function NavPageLink({
   const isMatched = !isSearchActive || searchState.matchedHrefs.has(page.href)
   const isDimmed = isSearchActive && !isMatched
   const isHighlighted = highlightedHref === page.href
+  // Emphasize only active page or search-matched pages — without search,
+  // only the current page gets --sidebar-primary; all others use --sidebar-foreground.
+  const isEmphasized = isActive || (isSearchActive && isMatched)
 
   // Show TOC when: search is active (so matched headings are visible), or page is the current page.
   const showToc = page.headings.length > 0 && (isSearchActive || isActive)
@@ -196,8 +200,8 @@ export function NavPageLink({
         className={`flex items-center gap-1.5 text-xs no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
-          fontVariationSettings: (isActive || isMatched) ? '"wght" 550' : '"wght" 450',
-          color: (isActive || isMatched) ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
+          fontVariationSettings: isEmphasized ? '"wght" 550' : '"wght" 450',
+          color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
           transition: 'color 0.15s, font-variation-settings 0.25s, opacity 0.15s ease',
           background: isHighlighted ? 'var(--accent)' : undefined,
