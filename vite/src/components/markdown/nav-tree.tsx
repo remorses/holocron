@@ -108,7 +108,7 @@ export function TocInline({
         aria-hidden
         className='pointer-events-none absolute rounded-full'
         style={{
-          insetBlockStart: 'calc(6px + 6px)',
+          insetBlockStart: 'calc(2px)',// TODO why this? without it the line disappears. why?
           insetBlockEnd: 0,
           insetInlineStart: 0,
           width: '1.5px',
