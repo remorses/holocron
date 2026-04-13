@@ -28,6 +28,4 @@ export const app = new Spiceflow()
   ))
   .use(holocronApp)
 
-if (!import.meta.hot) {
-  app.listen(Number(process.env.PORT || 3000))
-}
+app.listen(Number(process.env.PORT || 3000))
