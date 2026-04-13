@@ -188,7 +188,7 @@ export function SideNav() {
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           placeholder={siteConfig.search.prompt || 'Search...'}
-          className='w-full text-sm outline-none box-border'
+          className='w-full text-xs outline-none box-border'
           style={{
             padding: '6px 34px 6px 28px',
             fontFamily: 'var(--font-primary)',
