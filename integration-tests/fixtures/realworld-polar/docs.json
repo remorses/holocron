@@ -16,6 +16,9 @@
       "dark": "#131316"
     }
   },
+  "icons": {
+    "library": "fontawesome"
+  },
   "favicon": "./logo/favicon.png",
   "integrations": {
     "ga4": {
