@@ -18,20 +18,9 @@ import { syncNavigation, type SyncResult } from './lib/sync.ts'
 import { prismLanguageIds } from './components/markdown/prism-languages.ts'
 import react from '@vitejs/plugin-react'
 
-// Absolute path to our own `src/app.tsx`, computed from this file's URL so
-// it works regardless of package layout / hoisting / symlinks.
-const __thisFilePath = fileURLToPath(import.meta.url)
-const __holocronSrcDir = (() => {
-  let dir = path.dirname(__thisFilePath)
-  while (dir !== path.dirname(dir)) {
-    if (path.basename(dir) === 'src' && fs.existsSync(path.join(dir, 'app.tsx'))) {
-      return dir
-    }
-    dir = path.dirname(dir)
-  }
-  const fallback = path.resolve(path.dirname(__thisFilePath), '..', 'src')
-  return fs.existsSync(fallback) ? fallback : path.dirname(__thisFilePath)
-})()
+// `vite-plugin.ts` lives in `src/`, both in source and emitted `dist/`, so one
+// `..` always gets back to the package root and `src/` from there is stable.
+const __holocronSrcDir = fileURLToPath(new URL('../src', import.meta.url))
 const HOLOCRON_APP_SRC_PATH = path.join(__holocronSrcDir, 'app.tsx')
 
 export type HolocronVirtualModules = {
