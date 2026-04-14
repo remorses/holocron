@@ -72,7 +72,7 @@
   --purple: #7e22ce;
 
   /* Font stacks */
-  --font-primary:
+  --font-sans:
     'Inter var', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
   --font-code:

@@ -41,7 +41,7 @@
    ======================================================================== */
 
 .editorial-prose {
-  font-family: var(--font-body, var(--font-primary));
+  font-family: var(--font-body, var(--font-sans));
   font-weight: var(--weight-prose);
   line-height: var(--lh-prose);
   letter-spacing: var(--ls-prose);
@@ -56,7 +56,7 @@
 }
 
 .editorial-heading {
-  font-family: var(--font-heading, var(--font-body, var(--font-primary)));
+  font-family: var(--font-heading, var(--font-body, var(--font-sans)));
   font-weight: var(--weight-heading);
   line-height: var(--lh-heading);
   letter-spacing: var(--ls-prose);

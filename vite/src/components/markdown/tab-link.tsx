@@ -12,7 +12,7 @@ import { Icon } from '../icon.tsx'
 
 export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
   const isExternal = tab.href.startsWith('http')
-  const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 text-(length:--type-small-size) font-[475] [font-family:var(--font-primary)] lowercase transition-colors duration-150'
+  const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 text-(length:--type-small-size) font-[475] [font-family:var(--font-sans)] lowercase transition-colors duration-150'
   const tabStyle = {
     color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
     textShadow: isActive ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : 'none',

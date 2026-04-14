@@ -191,7 +191,7 @@ export function SideNav() {
           className='w-full text-xs outline-none box-border'
           style={{
             padding: '6px 34px 6px 28px',
-            fontFamily: 'var(--font-primary)',
+            fontFamily: 'var(--font-sans)',
             fontWeight: 'var(--weight-prose)',
             color: 'var(--foreground)',
             background: 'transparent',

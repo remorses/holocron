@@ -64,7 +64,7 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
       } else {
         fontLinks.push(googleFontUrl(f.family, f.weight))
       }
-      fontVarOverrides.push(`--font-primary: '${f.family}', system-ui, sans-serif;`)
+      fontVarOverrides.push(`--font-sans: '${f.family}', system-ui, sans-serif;`)
     }
     // Heading override
     if (f.heading) {

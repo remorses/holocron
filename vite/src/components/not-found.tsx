@@ -55,7 +55,7 @@ export function NotFound({
         style={{
           fontSize: 'var(--type-heading-1-size)',
           fontWeight: 'var(--weight-heading)',
-          fontFamily: 'var(--font-primary)',
+          fontFamily: 'var(--font-sans)',
           color: 'var(--foreground)',
           letterSpacing: '-0.01em',
         }}
@@ -66,7 +66,7 @@ export function NotFound({
         style={{
           color: 'var(--muted-foreground)',
           fontSize: 'var(--type-body-size)',
-          fontFamily: 'var(--font-primary)',
+          fontFamily: 'var(--font-sans)',
           lineHeight: 'var(--lh-prose)',
           maxWidth: '420px',
         }}
@@ -93,7 +93,7 @@ export function NotFound({
           color: 'var(--foreground)',
           textDecoration: 'none',
           fontSize: 'var(--type-body-size)',
-          fontFamily: 'var(--font-primary)',
+          fontFamily: 'var(--font-sans)',
           borderBottom: '1px solid var(--foreground)',
           paddingBottom: '2px',
           marginTop: '8px',

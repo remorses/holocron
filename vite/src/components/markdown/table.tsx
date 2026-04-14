@@ -101,7 +101,7 @@ export function ComparisonTable({
       {title && (
         <div
           style={{
-            fontFamily: 'var(--font-primary)',
+            fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-table-size)',
             fontWeight: 'var(--weight-regular)',
             color: 'var(--muted-foreground)',
@@ -131,7 +131,7 @@ export function ComparisonTable({
                     padding: '4px 12px 4px 0',
                     fontSize: 'var(--type-table-size)',
                     fontWeight: 'var(--weight-regular)',
-                    fontFamily: 'var(--font-primary)',
+                    fontFamily: 'var(--font-sans)',
                     color: 'var(--muted-foreground)',
                     borderBottom: '1px solid var(--border)',
                   }}

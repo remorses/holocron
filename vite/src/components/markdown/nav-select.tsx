@@ -63,7 +63,7 @@ export function NavSelect({ items, activeHref, className, ariaLabel }: NavSelect
         onChange={onChange}
         className='absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md border-none opacity-0 outline-none'
         style={{
-          fontFamily: 'var(--font-primary)',
+          fontFamily: 'var(--font-sans)',
         }}
       >
         {items.map((item) => (
