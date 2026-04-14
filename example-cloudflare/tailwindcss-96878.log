@@ -1,0 +1,73 @@
+2026-04-14T10:17:28.353381Z  INFO tailwindcss_oxide::scanner: Provided sources:
+2026-04-14T10:17:28.354548Z  INFO tailwindcss_oxide::scanner: Source: PublicSourceEntry { base: "/Users/morse/Documents/GitHub/holocron/example-cloudflare", pattern: "**/*", negated: false }
+2026-04-14T10:17:28.354563Z  INFO tailwindcss_oxide::scanner: Source: PublicSourceEntry { base: "/Users/morse/Documents/GitHub/holocron/vite/src/styles", pattern: "../components", negated: false }
+2026-04-14T10:17:28.354566Z  INFO tailwindcss_oxide::scanner: Source: PublicSourceEntry { base: "/Users/morse/Documents/GitHub/holocron/vite/src/styles", pattern: "../app-factory.tsx", negated: false }
+2026-04-14T10:17:28.354666Z  INFO tailwindcss_oxide::scanner: Optimized sources:
+2026-04-14T10:17:28.354670Z  INFO tailwindcss_oxide::scanner: Source: Auto { base: "/Users/morse/Documents/GitHub/holocron/example-cloudflare" }
+2026-04-14T10:17:28.354672Z  INFO tailwindcss_oxide::scanner: Source: Auto { base: "/Users/morse/Documents/GitHub/holocron/vite/src/components" }
+2026-04-14T10:17:28.354674Z  INFO tailwindcss_oxide::scanner: Source: Pattern { base: "/Users/morse/Documents/GitHub/holocron/vite/src", pattern: "/app-factory.tsx" }
+2026-04-14T10:17:28.355125Z  INFO discover_sources: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.355136Z  INFO discover_sources:walk_synchronous: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.356698Z  INFO discover_sources:walk_synchronous: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.357071Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/example-cloudflare/docs.json"
+2026-04-14T10:17:28.357087Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/sidebar-banner.tsx"
+2026-04-14T10:17:28.357131Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/footer.tsx"
+2026-04-14T10:17:28.357165Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/example-cloudflare/pages/getting-started.mdx"
+2026-04-14T10:17:28.357169Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/tab-link.tsx"
+2026-04-14T10:17:28.357181Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/mobile-bar.tsx"
+2026-04-14T10:17:28.357161Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/example-cloudflare/pages/index.mdx"
+2026-04-14T10:17:28.357241Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/prism-languages.test.ts"
+2026-04-14T10:17:28.357251Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/typography.tsx"
+2026-04-14T10:17:28.357211Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/index.tsx"
+2026-04-14T10:17:28.357284Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/nav-tree.tsx"
+2026-04-14T10:17:28.357131Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/banner-dismiss.tsx"
+2026-04-14T10:17:28.357080Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/example-cloudflare/wrangler.json"
+2026-04-14T10:17:28.357309Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/layout.tsx"
+2026-04-14T10:17:28.357161Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/example-cloudflare/package.json"
+2026-04-14T10:17:28.357326Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/image.tsx"
+2026-04-14T10:17:28.357336Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/banner.tsx"
+2026-04-14T10:17:28.357213Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/icon.tsx"
+2026-04-14T10:17:28.357267Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/markers.tsx"
+2026-04-14T10:17:28.357274Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/example-cloudflare/vite.config.ts"
+2026-04-14T10:17:28.357275Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/expandable-container.tsx"
+2026-04-14T10:17:28.357379Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/mintlify/mermaid.tsx"
+2026-04-14T10:17:28.357218Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/app-factory.tsx"
+2026-04-14T10:17:28.357295Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/table.tsx"
+2026-04-14T10:17:28.357401Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/theme-toggle.tsx"
+2026-04-14T10:17:28.357317Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/code-block.tsx"
+2026-04-14T10:17:28.357417Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/back-button.tsx"
+2026-04-14T10:17:28.357317Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/mintlify/tabs.tsx"
+2026-04-14T10:17:28.357249Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/nav-select.tsx"
+2026-04-14T10:17:28.357340Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/icons.tsx"
+2026-04-14T10:17:28.357265Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/prism-languages.ts"
+2026-04-14T10:17:28.357451Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/toc-panel.tsx"
+2026-04-14T10:17:28.357360Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/callout.tsx"
+2026-04-14T10:17:28.357367Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/example-cloudflare/tsconfig.json"
+2026-04-14T10:17:28.357369Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/side-nav.tsx"
+2026-04-14T10:17:28.357279Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/editorial-page.tsx"
+2026-04-14T10:17:28.357388Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/nav-drawer.tsx"
+2026-04-14T10:17:28.357399Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/mintlify/compat.tsx"
+2026-04-14T10:17:28.357305Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/mintlify/accordion.tsx"
+2026-04-14T10:17:28.357405Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/chat-icons.tsx"
+2026-04-14T10:17:28.357426Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/sidebar-assistant.tsx"
+2026-04-14T10:17:28.357265Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/nav-badge.tsx"
+2026-04-14T10:17:28.357430Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/chat-message.tsx"
+2026-04-14T10:17:28.357440Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/not-found.tsx"
+2026-04-14T10:17:28.357448Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/chat-drawer.tsx"
+2026-04-14T10:17:28.357351Z  INFO tailwindcss_oxide::scanner: Reading "/Users/morse/Documents/GitHub/holocron/vite/src/components/markdown/mintlify/chevron.tsx"
+2026-04-14T10:17:28.357693Z  INFO discover_sources: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.357699Z  INFO extract_candidates: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.357702Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.357704Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.359137Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.359145Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.359324Z  INFO extract_candidates: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.359763Z  INFO get_files: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.359766Z  INFO get_files:discover_sources: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.359768Z  INFO get_files:discover_sources: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.359924Z  INFO get_files: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.360349Z  INFO get_globs: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.360353Z  INFO get_globs:discover_sources: tailwindcss_oxide::scanner: enter
+2026-04-14T10:17:28.360355Z  INFO get_globs:discover_sources: tailwindcss_oxide::scanner: exit
+2026-04-14T10:17:28.361510Z ERROR get_globs: tailwindcss_oxide::glob: Failed to resolve glob: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+2026-04-14T10:17:28.361516Z  INFO get_globs: tailwindcss_oxide::scanner: exit

@@ -16,11 +16,11 @@
     "vite": "^8.0.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.29.2",
+    "@cloudflare/vite-plugin": "^1.32.2",
     "@cloudflare/workers-types": "^4.20260408.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "typescript": "^5.9.3",
-    "wrangler": "^4.11.1"
+    "wrangler": "^4.82.2"
   }
 }
