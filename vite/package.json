@@ -1,17 +1,17 @@
 {
   "name": "@holocron.so/vite",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Vite plugin for building documentation websites from MDX files with mintlify-compatible config",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/remorses/playwriter",
+    "url": "https://github.com/remorses/holocron",
     "directory": "vite"
   },
   "homepage": "https://holocron.so",
-  "bugs": "https://github.com/remorses/playwriter/issues",
+  "bugs": "https://github.com/remorses/holocron/issues",
   "keywords": [
     "docs",
     "documentation",
