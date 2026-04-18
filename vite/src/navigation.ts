@@ -17,7 +17,6 @@ import type {
   NavTabBase,
 } from './config.ts'
 import type { PageFrontmatter } from './lib/page-frontmatter.ts'
-import { isHiddenPage, parsePageFrontmatter } from './lib/page-frontmatter.ts'
 
 /* ── Enriched navigation types ──────────────────────────────────────── */
 
@@ -102,14 +101,14 @@ export function hasVisibleSidebarEntries(group: NavGroup): boolean {
   if (group.hidden) return false
   if (group.pages.length === 0) return true
   for (const entry of group.pages) {
-    if (isNavPage(entry) && !isHiddenPage(entry.frontmatter)) return true
+    if (isNavPage(entry) && entry.frontmatter?.hidden !== true) return true
     if (isNavGroup(entry) && hasVisibleSidebarEntries(entry)) return true
   }
   return false
 }
 
 export function isVisibleNavPage(page: NavPage): boolean {
-  return !isHiddenPage(page.frontmatter)
+  return page.frontmatter?.hidden !== true
 }
 
 /* ── Utility functions ──────────────────────────────────────────────── */
@@ -234,59 +233,4 @@ export function buildHrefToSlugMap(slugs: string[]): Map<string, string> {
   return map
 }
 
-/* ── Filesystem-aware page lookup ────────────────────────────────────── */
 
-/**
- * Lightweight title extraction from raw MDX — avoids importing the full
- * mdast parser at runtime. Checks frontmatter `title:` first, then
- * falls back to the first `# heading`.
- */
-function extractTitleFromMdx(mdx: string): string {
-  const frontmatter = parsePageFrontmatter(mdx)
-  if (frontmatter.title) return frontmatter.title
-  // Fall back to first # heading
-  const headingMatch = mdx.match(/^#\s+(.+)/m)
-  if (headingMatch?.[1]) return headingMatch[1].trim()
-  return 'Untitled'
-}
-
-/**
- * Find a page by slug, checking both the navigation tree and async MDX source.
- *
- * 1. First: look up in navigation (enriched NavPage with title, headings, icon)
- * 2. Fallback: if the slug exists in MDX but not in navigation,
- *    build a minimal NavPage so the page is still serveable.
- *
- * This ensures pages that exist on disk are always serveable even if
- * not listed in the navigation config.
- */
-export async function findPageBySlug({
-  nav,
-  slug,
-  getMdxSource,
-}: {
-  nav: Navigation
-  slug: string
-  getMdxSource: (slug: string) => Promise<string | undefined>
-}): Promise<NavPage | undefined> {
-  // Prefer navigation — gives us full metadata (title, headings, icon, etc.)
-  const navPage = findPage(nav, slug)
-  if (navPage) return navPage
-
-  // Fallback: file exists on disk but not in navigation config
-  const mdx = await getMdxSource(slug)
-  if (!mdx) return undefined
-
-  const frontmatter = parsePageFrontmatter(mdx)
-
-  return {
-    slug,
-    href: slugToHref(slug),
-    title: extractTitleFromMdx(mdx),
-    description: frontmatter.description,
-    gitSha: '',
-    headings: [],
-    icon: frontmatter.icon,
-    frontmatter,
-  }
-}

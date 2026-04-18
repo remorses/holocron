@@ -14,9 +14,6 @@
  * the default sidebar width.
  */
 
-import type { Root, RootContent } from 'mdast'
-import { visit } from 'unist-util-visit'
-
 import type { HolocronCSSProperties } from './css-vars.ts'
 
 /**
@@ -54,16 +51,16 @@ export const COMPONENT_SIDEBAR_WIDTHS: Record<string, number> = {
  * max sidebar width needed. Used by `app-factory.tsx` after `buildSections`
  * to derive a page-level sidebar width.
  *
- * Walks every `mdxJsxFlowElement` and `mdxJsxTextElement`, reads the
- * component `name`, and picks the largest entry in
- * `COMPONENT_SIDEBAR_WIDTHS`. Falls back to `DEFAULT_SIDEBAR_WIDTH` when
- * nothing matches.
+ * Takes `visit` as a parameter so `unist-util-visit` is NOT a module-level
+ * import — this prevents it leaking into the client graph when
+ * `editorial-page.tsx` imports `buildGridTokenStyle` from this file.
  */
 export function computeSidebarWidthFromAsideNodes(
-  nodes: RootContent[],
+  nodes: import('mdast').RootContent[],
+  visit: typeof import('unist-util-visit').visit,
 ): number {
   let maxWidth = DEFAULT_SIDEBAR_WIDTH
-  const fakeRoot: Root = { type: 'root', children: nodes }
+  const fakeRoot: import('mdast').Root = { type: 'root', children: nodes }
   visit(fakeRoot, (node) => {
     if (
       node.type !== 'mdxJsxFlowElement' &&
@@ -71,7 +68,7 @@ export function computeSidebarWidthFromAsideNodes(
     ) {
       return
     }
-    const name = node.name
+    const name = (node as any).name
     if (!name) return
     const width = COMPONENT_SIDEBAR_WIDTHS[name]
     if (typeof width === 'number' && width > maxWidth) {

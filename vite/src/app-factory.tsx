@@ -24,20 +24,23 @@ import {
 import { RenderBannerNodes } from './components/markdown/banner.tsx'
 import { NotFound } from './components/not-found.tsx'
 import {
-  findPageBySlug,
+  findPage,
   collectAllPages,
   slugToHref,
   buildHrefToSlugMap,
   type NavHeading,
+  type NavPage,
   type Navigation,
   type NavVersionItem,
   type NavDropdownItem,
 } from './navigation.ts'
+import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
 import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
 import { isAgentRequest } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
+import { visit } from 'unist-util-visit'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
 import {
   decodeGeneratedLogoText,
@@ -64,6 +67,45 @@ import type { HolocronConfig } from './config.ts'
 import { createChatBashTool } from './lib/chat-bash-tool.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
 import { resolveIconSvgs } from './lib/resolve-icons.ts'
+
+/* ── Server-only page lookup (uses parsePageFrontmatter → zod/yaml) ── */
+
+/** Lightweight title extraction from raw MDX. Checks frontmatter `title:`
+ *  first, then falls back to the first `# heading`. */
+function extractTitleFromMdx(mdx: string): string {
+  const frontmatter = parsePageFrontmatter(mdx)
+  if (frontmatter.title) return frontmatter.title
+  const headingMatch = mdx.match(/^#\s+(.+)/m)
+  if (headingMatch?.[1]) return headingMatch[1].trim()
+  return 'Untitled'
+}
+
+/** Find a page by slug, checking both the navigation tree and async MDX source.
+ *  Ensures pages that exist on disk are always serveable even if not listed
+ *  in the navigation config. */
+async function findPageBySlug({
+  nav, slug, getMdxSource,
+}: {
+  nav: Navigation
+  slug: string
+  getMdxSource: (slug: string) => Promise<string | undefined>
+}): Promise<NavPage | undefined> {
+  const navPage = findPage(nav, slug)
+  if (navPage) return navPage
+  const mdx = await getMdxSource(slug)
+  if (!mdx) return undefined
+  const frontmatter = parsePageFrontmatter(mdx)
+  return {
+    slug,
+    href: slugToHref(slug),
+    title: extractTitleFromMdx(mdx),
+    description: frontmatter.description,
+    gitSha: '',
+    headings: [],
+    icon: frontmatter.icon,
+    frontmatter,
+  }
+}
 
 /* ── Loader data type ────────────────────────────────────────────────── */
 
@@ -204,7 +246,7 @@ function renderMdxPage({
   // Aside holds components like RequestExample / ResponseExample it needs
   // more horizontal room than the 210px default.
   const allAsideNodes = mdastSections.flatMap((s) => s.asideNodes)
-  const sidebarWidth = computeSidebarWidthFromAsideNodes(allAsideNodes)
+  const sidebarWidth = computeSidebarWidthFromAsideNodes(allAsideNodes, visit)
 
   // Compute the baseUrl for resolving relative imports in MDX.
   // The slug mirrors the file path inside pagesDir (e.g. 'api/overview'

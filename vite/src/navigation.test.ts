@@ -8,12 +8,13 @@ import {
   collectAllPages,
   buildPageIndex,
   hasVisibleSidebarEntries,
-  findPageBySlug,
+  slugToHref,
   type NavTab,
   type NavGroup,
   type NavPage,
   type Navigation,
 } from './navigation.ts'
+import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
 
 /* ── Test fixtures ───────────────────────────────────────────────────── */
 
@@ -164,6 +165,17 @@ describe('findPage', () => {
     expect(page!.slug).toBe('internals/core')
   })
 })
+
+/** Test-local replica of the server-only findPageBySlug (lives in app-factory.tsx). */
+async function findPageBySlug({ nav, slug, getMdxSource }: { nav: Navigation; slug: string; getMdxSource: (s: string) => Promise<string | undefined> }): Promise<NavPage | undefined> {
+  const navPage = findPage(nav, slug)
+  if (navPage) return navPage
+  const mdx = await getMdxSource(slug)
+  if (!mdx) return undefined
+  const frontmatter = parsePageFrontmatter(mdx)
+  const headingMatch = mdx.match(/^#\s+(.+)/m)
+  return { slug, href: slugToHref(slug), title: frontmatter.title ?? headingMatch?.[1]?.trim() ?? 'Untitled', description: frontmatter.description, gitSha: '', headings: [], icon: frontmatter.icon, frontmatter }
+}
 
 describe('findPageBySlug fallback', () => {
   test('parses YAML frontmatter for pages that are not in navigation', async () => {

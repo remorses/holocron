@@ -7,6 +7,7 @@ import {
   DEFAULT_SIDEBAR_WIDTH,
   computeSidebarWidthFromAsideNodes,
 } from './sidebar-widths.ts'
+import { visit } from 'unist-util-visit'
 import { buildSections } from './mdx-sections.ts'
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
 
@@ -19,7 +20,7 @@ function computeFromMdx(mdx: string): number {
   const root: Root = mdxParse(normalized)
   const sections = buildSections(root)
   const asideNodes = sections.flatMap((s) => s.asideNodes)
-  return computeSidebarWidthFromAsideNodes(asideNodes)
+  return computeSidebarWidthFromAsideNodes(asideNodes, visit)
 }
 
 describe('computeSidebarWidthFromAsideNodes', () => {
