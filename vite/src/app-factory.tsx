@@ -208,6 +208,7 @@ function renderMdxPage({
   ogImageUrl,
   modules,
   pagesDirPrefix,
+  preParsedMdast,
 }: {
   site: HolocronSiteData
   slug: string
@@ -219,6 +220,8 @@ function renderMdxPage({
   modules?: EagerModules
   /** Pages directory prefix for resolving relative imports */
   pagesDirPrefix?: string
+  /** Pre-parsed mdast — avoids re-parsing when the caller already parsed it (e.g. for resolveModules) */
+  preParsedMdast?: Root
 }) {
   const pageSeoMeta = getPageSeoMeta(loaderData.currentPageFrontmatter)
   const pageKeywords = serializeKeywords(loaderData.currentPageFrontmatter?.keywords)
@@ -230,7 +233,7 @@ function renderMdxPage({
   const pageTwitterTitle = pageSeoMeta['twitter:title'] ?? loaderData.headTitle
   const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
 
-  const mdast = mdxParse(pageMdx)
+  const mdast = preParsedMdast ?? mdxParse(pageMdx)
   const heroNodes = mdast.children.filter(isHeroNode)
   const contentChildren = mdast.children.filter((node) => !isHeroNode(node))
   const contentMdast: Root = { type: 'root', children: contentChildren }
@@ -581,15 +584,17 @@ export async function createHolocronApp(providers: HolocronProviders) {
 
       // Resolve MDX import statements against the lazy glob.
       // Only loads modules that the current page actually imports.
+      // Parse the mdast once and share it with renderMdxPage to avoid a duplicate parse.
       let modules: EagerModules | undefined
+      let preParsedMdast: Root | undefined
       if (lazyGlob && Object.keys(lazyGlob).length > 0) {
-        const mdast = mdxParse(pageMdx)
+        preParsedMdast = mdxParse(pageMdx)
         const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
         const baseUrl = (providers.pagesDirPrefix || './') + slugDir
-        modules = await resolveModules({ glob: lazyGlob, mdast, baseUrl })
+        modules = await resolveModules({ glob: lazyGlob, mdast: preParsedMdast, baseUrl })
       }
 
-      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix })
+      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast })
     }
   }
 
