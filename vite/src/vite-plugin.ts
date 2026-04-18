@@ -8,6 +8,7 @@
  */
 
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
@@ -53,6 +54,7 @@ function discoverImportableFiles(root: string, pagesDir: string): string[] {
 // `..` always gets back to the package root and `src/` from there is stable.
 const __holocronSrcDir = fileURLToPath(new URL('../src', import.meta.url))
 const HOLOCRON_APP_SRC_PATH = path.join(__holocronSrcDir, 'app.tsx')
+const nodeRequire = createRequire(import.meta.url)
 
 export type HolocronVirtualModules = {
   /** Custom source for `virtual:holocron-config` */
@@ -207,10 +209,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // runs before normal-phase plugin hooks for bare package ids and
       // would otherwise consume the `./app` export and return `dist/app.js`
       // (which is missing the CSS imports that only exist in src).
+      // Also alias transitive runtime deps that Holocron source imports
+      // directly. The consumer only installs `@holocron.so/vite`, so bare
+      // imports like `safe-mdx/client` must resolve through our package too.
+      const safeMdxDir = path.dirname(nodeRequire.resolve('safe-mdx/package.json'))
       const next: Pick<UserConfig, 'resolve'> = {
         resolve: {
           alias: [
             { find: /^@holocron\.so\/vite\/app$/, replacement: HOLOCRON_APP_SRC_PATH },
+            { find: /^safe-mdx$/, replacement: path.join(safeMdxDir, 'dist/safe-mdx.js') },
+            { find: /^safe-mdx\/parse$/, replacement: path.join(safeMdxDir, 'dist/parse.js') },
+            { find: /^safe-mdx\/client$/, replacement: path.join(safeMdxDir, 'dist/dynamic-esm-component.js') },
           ],
           dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
           tsconfigPaths: true,
