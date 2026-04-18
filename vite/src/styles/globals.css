@@ -1,8 +1,9 @@
-/* Declare holocron layer BEFORE tailwindcss so it has the lowest cascade
-   priority. Layer order: holocron < theme < base < components < utilities.
+/* Declare holocron layer AFTER tailwindcss so it beats Tailwind's built-in
+   layers (preflight reset, utilities, etc.). Layer order:
+   theme < base < components < utilities < holocron.
    Unlayered user CSS always beats all layers — no !important needed. */
-@layer holocron;
 @import 'tailwindcss';
+@layer holocron;
 @import './editorial.css' layer(holocron);
 @import './editorial-prism.css' layer(holocron);
 @custom-variant dark (&:where(.dark, .dark *));
@@ -248,9 +249,12 @@
 }
 
 /* =====================================================================
-   @layer holocron — all Holocron style rules live here so user CSS
-   (which is unlayered by default) automatically takes precedence.
-   Users never need `!important` to override Holocron styles.
+   @layer holocron — all Holocron style rules live here. Declared AFTER
+   tailwindcss so it beats Tailwind's built-in layers (preflight reset,
+   base, utilities). User CSS (unlayered by default) still takes
+   precedence — no !important needed to override Holocron styles.
+
+   Layer order: theme < base < components < utilities < holocron < unlayered
 
    What stays OUTSIDE this layer:
    - :root CSS variable declarations (custom properties aren't affected
@@ -284,6 +288,15 @@
 
   .dark ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Hide scrollbars while keeping scroll functionality */
+  .scrollbar-none {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
   }
 
   /* Layout slots — only important page entities use CSS classes.

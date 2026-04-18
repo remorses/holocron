@@ -47,7 +47,7 @@ export function CodeBlock({
     <figure className='m-0 bleed'>
       <div className='relative'>
         <pre
-          className='overflow-x-auto'
+          className='overflow-x-auto scrollbar-none'
           style={{
             // borderRadius: 'var(--border-radius-md)',
             margin: 0,
@@ -73,8 +73,9 @@ export function CodeBlock({
                 style={{
                   color: 'var(--muted-foreground)',
                   textAlign: 'right',
-                  paddingRight: 'var(--bleed)',
+                  paddingRight: '16px',
                   width: 'var(--bleed)',
+                  boxSizing: 'content-box',
                   overflow: 'hidden',
                   userSelect: 'none',
                 }}
