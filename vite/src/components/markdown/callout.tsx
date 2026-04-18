@@ -9,16 +9,17 @@
 import React from 'react'
 import { Icon } from '../icon.tsx'
 
-/** Tailwind class map per preset type. Each entry drives bg tint, border,
- *  and icon color (via text-*). The body text stays default (--foreground);
- *  only the icon picks up the variant color through currentColor. */
+/** Variant style map for callout icon + surface tint.
+ *  The body text stays default (--foreground); only the icon picks up the
+ *  variant color through currentColor. Background tint is mixed against the
+ *  current surface so it stays visible in both light and dark themes. */
 const CALLOUT_VARIANTS = {
-  note:    'bg-blue-500/[0.03] border-blue-500/15 text-blue-700 dark:text-blue-400',
-  warning: 'bg-amber-500/[0.03] border-amber-500/15 text-amber-700 dark:text-amber-400',
-  info:    'bg-blue-500/[0.03] border-blue-500/15 text-blue-700 dark:text-blue-400',
-  tip:     'bg-emerald-500/[0.03] border-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-  check:   'bg-emerald-500/[0.03] border-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-  danger:  'bg-red-500/[0.03] border-red-500/15 text-red-700 dark:text-red-400',
+  note:    { color: 'var(--blue)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--blue))' },
+  warning: { color: 'var(--yellow)', backgroundColor: 'color-mix(in srgb, var(--background) 93%, var(--yellow))' },
+  info:    { color: 'var(--blue)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--blue))' },
+  tip:     { color: 'var(--green)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--green))' },
+  check:   { color: 'var(--green)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--green))' },
+  danger:  { color: 'var(--red)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--red))' },
 } as const
 
 export type CalloutType = keyof typeof CALLOUT_VARIANTS
@@ -106,7 +107,7 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
   // main content, --type-small-size inside an Aside).
   // `no-bleed` zeros the bleed tokens for descendants so code blocks and
   // images stay inside the callout frame (see editorial.css).
-  const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-lg border-2'
+  const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-lg'
   const presetIcon = type ? CALLOUT_ICONS[type] : undefined
   const colorStyle = color ? { color } : undefined
   const resolvedIcon = resolveCalloutIcon({ icon, iconType, fallback: presetIcon, colorStyle })
@@ -114,13 +115,12 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
   // Custom hex color → inline style, no variant class
   if (color) {
     return (
-      <div
-        className={baseClass}
-        style={{
-          backgroundColor: hexToRgba(color, 0.03),
-          borderColor: hexToRgba(color, 0.15),
-        }}
-      >
+        <div
+          className={baseClass}
+          style={{
+          backgroundColor: hexToRgba(color, 0.05),
+          }}
+        >
         {resolvedIcon !== undefined && resolvedIcon !== null && (
           <span className='flex-shrink-0 mt-0.5 inline-flex items-center justify-center' style={{ color, width: 16, height: 16 }}>
             {resolvedIcon}
@@ -132,9 +132,11 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
   }
 
   // Preset variant (or unstyled fallback)
-  const variantClass = type ? CALLOUT_VARIANTS[type] : 'bg-blue-500/[0.03] border-blue-500/15 text-blue-700 dark:text-blue-400'
+  const variantStyle = type
+    ? CALLOUT_VARIANTS[type]
+    : { color: 'var(--blue)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--blue))' }
   return (
-    <div className={`${baseClass} ${variantClass}`}>
+    <div className={baseClass} style={variantStyle}>
       {resolvedIcon !== undefined && resolvedIcon !== null && (
         <span className='flex-shrink-0 mt-0.5 inline-flex items-center justify-center w-4 h-4'>
           {resolvedIcon}
