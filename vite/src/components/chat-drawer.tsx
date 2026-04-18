@@ -14,10 +14,8 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { decodeFederationPayload } from 'spiceflow/react'
-import {
-  chatState,
-  type ChatPart,
-} from '../lib/chat-state.ts'
+import { chatState } from '../lib/chat-state.ts'
+import type { ChatPart } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import {
   ChatUserMessage,

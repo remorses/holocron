@@ -15,7 +15,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import type { ChatPart } from '../lib/chat-state.ts'
+import type { ChatPart } from '../lib/chat-store.ts'
 import { ChevronDownIcon } from './chat-icons.tsx'
 
 // ── User message ─────────────────────────────────────────────────────
