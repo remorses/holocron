@@ -10,17 +10,14 @@ import { describe, expect, test } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
-import { mdxParse } from 'safe-mdx/parse'
 import { RenderNodes } from './mdx-components-map.tsx'
-import type { Root } from 'mdast'
 
 function renderMdx(raw: string) {
-  const normalized = normalizeMdx(raw)
-  const mdast: Root = mdxParse(normalized)
+  const { content, mdast } = normalizeMdx(raw)
   const html = renderToStaticMarkup(
-    createElement(RenderNodes, { markdown: normalized, nodes: mdast.children }),
+    createElement(RenderNodes, { markdown: content, nodes: mdast.children }),
   )
-  return { normalized, mdast, html }
+  return { normalized: content, mdast, html }
 }
 
 describe('heading rendering pipeline', () => {

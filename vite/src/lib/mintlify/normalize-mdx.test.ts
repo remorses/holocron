@@ -3,7 +3,7 @@ import { normalizeMdx } from './normalize-mdx.ts'
 
 describe('normalizeMdx', () => {
   test('rewrites markdown headings to Heading JSX', async () => {
-    const result = await normalizeMdx('## My heading {#custom-id}')
+    const { content: result } = await normalizeMdx('## My heading {#custom-id}')
 
     expect(result).toMatchInlineSnapshot(`
       "<Heading level={2} id="custom-id">
@@ -14,7 +14,7 @@ describe('normalizeMdx', () => {
   })
 
   test('rewrites CodeGroup into Tabs and Tab components', async () => {
-    const result = await normalizeMdx(`
+    const { content: result } = await normalizeMdx(`
 <CodeGroup>
 
 \`\`\`ts helloWorld.ts
@@ -47,7 +47,7 @@ console.log('js')
   })
 
   test('rewrites mermaid fences to Mermaid JSX', async () => {
-    const result = await normalizeMdx(`
+    const { content: result } = await normalizeMdx(`
 \`\`\`mermaid placement=\"top-left\" actions={false}
 flowchart LR
 A-->B
@@ -58,7 +58,7 @@ A-->B
   })
 
   test('wraps a standalone Accordion in AccordionGroup', async () => {
-    const result = await normalizeMdx(`
+    const { content: result } = await normalizeMdx(`
 <Accordion title=\"Hello\">
   Body
 </Accordion>
@@ -75,7 +75,7 @@ A-->B
   })
 
   test('preserves dotted Mintlify component names', async () => {
-    const result = await normalizeMdx(`
+    const { content: result } = await normalizeMdx(`
 <Tree>
   <Tree.Folder name="src" defaultOpen>
     <Tree.File name="app.tsx" />
@@ -106,7 +106,7 @@ A-->B
   })
 
   test('wraps request and response examples in Aside for sidebar extraction', async () => {
-    const result = await normalizeMdx(`
+    const { content: result } = await normalizeMdx(`
 <RequestExample>
   Request body
 </RequestExample>

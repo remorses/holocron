@@ -376,7 +376,7 @@ describe('rewriteMdxImages', () => {
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<PixelatedImage className=\"hero\" height=\"200\" src=\"/_holocron/images/a1b2c3-screenshot.png\" alt=\"\" intrinsicWidth=\"1200\" intrinsicHeight=\"800\" placeholder=\"data:image/png;base64,abc123\" />
+      "<PixelatedImage className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
@@ -389,8 +389,8 @@ describe('rewriteMdxImages', () => {
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<Step title=\"Create account\">
-        <PixelatedImage className=\"hero\" height=\"200\" src=\"/_holocron/images/a1b2c3-screenshot.png\" alt=\"\" intrinsicWidth=\"1200\" intrinsicHeight=\"800\" placeholder=\"data:image/png;base64,abc123\" />
+      "<Step title="Create account">
+        <PixelatedImage className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       </Step>
       "
     `)

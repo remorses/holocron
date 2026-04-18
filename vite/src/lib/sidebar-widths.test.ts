@@ -1,6 +1,4 @@
 import { describe, expect, test } from 'vitest'
-import { mdxParse } from 'safe-mdx/parse'
-import type { Root } from 'mdast'
 
 import {
   COMPONENT_SIDEBAR_WIDTHS,
@@ -16,9 +14,8 @@ import { normalizeMdx } from './mintlify/normalize-mdx.ts'
 // split into sections. Feed the resulting aside nodes into the width
 // computer so tests exercise exactly the same path as production.
 function computeFromMdx(mdx: string): number {
-  const normalized = normalizeMdx(mdx)
-  const root: Root = mdxParse(normalized)
-  const sections = buildSections(root)
+  const { mdast } = normalizeMdx(mdx)
+  const sections = buildSections(mdast)
   const asideNodes = sections.flatMap((s) => s.asideNodes)
   return computeSidebarWidthFromAsideNodes(asideNodes, visit)
 }

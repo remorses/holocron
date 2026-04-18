@@ -14,7 +14,14 @@ import { remarkMermaidCode } from './remark-mermaid.ts'
 import { remarkSidebarComponents } from './remark-sidebar-components.ts'
 import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
 
-export function normalizeMdx(content: string): string {
+export type NormalizedMdx = {
+  /** Serialized MDX string after all remark transforms */
+  content: string
+  /** The normalized mdast tree — reuse instead of re-parsing content */
+  mdast: Root
+}
+
+export function normalizeMdx(content: string): NormalizedMdx {
   const processor = remark()
     .use(remarkMdx)
     .use(remarkFrontmatter, ['yaml'])
@@ -27,13 +34,15 @@ export function normalizeMdx(content: string): string {
     .use(remarkMarkAndUnravel)
 
   const parsed = processor.parse(content)
-  const normalized = processor.runSync(parsed) as Root
+  const mdast = processor.runSync(parsed) as Root
 
-  return toMarkdown(normalized, {
+  const serialized = toMarkdown(mdast, {
     extensions: [
       gfmToMarkdown(),
       mdxToMarkdown(),
       frontmatterToMarkdown(['yaml']),
     ],
   })
+
+  return { content: serialized, mdast }
 }

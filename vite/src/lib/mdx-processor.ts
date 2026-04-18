@@ -5,7 +5,6 @@
  * then serializes back to MDX string.
  */
 
-import { mdxParse } from 'safe-mdx/parse'
 import { gfmToMarkdown } from 'mdast-util-gfm'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import { mdxToMarkdown } from 'mdast-util-mdx'
@@ -41,11 +40,16 @@ type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 /**
  * Parse MDX content and extract metadata + icon/image refs.
  * Returns the mdast tree for reuse by rewriteMdxImages.
+ *
+ * normalizeMdx already parses the content into an mdast tree (to run
+ * remark plugins), so we reuse that tree directly instead of
+ * serializing → re-parsing — saving one full mdxParse per page.
  */
 export function processMdx(content: string, defaultLibrary: IconLibrary = 'lucide'): ProcessedMdx {
-  const normalizedContent = normalizeMdx(content)
+  const normalized = normalizeMdx(content)
+  const normalizedContent = normalized.content
   const frontmatter = parsePageFrontmatter(content)
-  const mdast = mdxParse(normalizedContent)
+  const mdast = normalized.mdast
   const iconRefs = collectIconRefsFromMdast({ mdast, frontmatter, defaultLibrary })
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
