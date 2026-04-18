@@ -133,7 +133,7 @@ export function SidebarAssistant() {
     // preserving the "reopen existing chat" behavior on the client.
     // Sync current local value to draftText so the drawer shows it.
     if (chatState.getState().parts.length > 0) {
-      chatState.setState({ draftText: inputValue, drawerState: 'open' })
+      chatState.setState({ drawerState: 'open' })
     }
   }
 
