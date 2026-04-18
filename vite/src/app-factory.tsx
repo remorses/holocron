@@ -14,7 +14,7 @@ import './styles/globals.css'
 import React from 'react'
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
 import { Head, ProgressBar } from 'spiceflow/react'
-import { mdxParse } from 'safe-mdx/parse'
+import { mdxParse, resolveModules, type EagerModules } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
 import {
@@ -116,6 +116,12 @@ type HolocronProviders = {
   getMdxSlugs(): Promise<string[]>
   getMdxSource(slug: string): Promise<string | undefined>
   getPageIconRefs(slug: string): Promise<IconRef[]>
+  /** Lazy glob of importable files (snippets, components, colocated pages).
+   *  Used by resolveModules() to resolve MDX import statements at render time. */
+  getModules?(): Record<string, () => Promise<Record<string, any>>>
+  /** Pages directory relative to root with ./ prefix and trailing slash.
+   *  E.g. './pages/' or './' when pagesDir is the project root. */
+  pagesDirPrefix?: string
 }
 
 /* ── Constants ───────────────────────────────────────────────────────── */
@@ -158,6 +164,8 @@ function renderMdxPage({
   loaderData,
   bannerJsx,
   ogImageUrl,
+  modules,
+  pagesDirPrefix,
 }: {
   site: HolocronSiteData
   slug: string
@@ -165,6 +173,10 @@ function renderMdxPage({
   loaderData: HolocronLoaderData
   bannerJsx: React.ReactNode | undefined
   ogImageUrl: string
+  /** Pre-resolved modules for MDX import statements (from resolveModules) */
+  modules?: EagerModules
+  /** Pages directory prefix for resolving relative imports */
+  pagesDirPrefix?: string
 }) {
   const pageSeoMeta = getPageSeoMeta(loaderData.currentPageFrontmatter)
   const pageKeywords = serializeKeywords(loaderData.currentPageFrontmatter?.keywords)
@@ -182,19 +194,39 @@ function renderMdxPage({
   const contentMdast: Root = { type: 'root', children: contentChildren }
   const mdastSections = buildSections(contentMdast)
 
+  // Extract import nodes (mdxjsEsm) from the full mdast so they can be
+  // prepended to each section. Section splitting separates import statements
+  // from the components that use them, so each SafeMdxRenderer instance
+  // needs the imports to resolve components from the `modules` map.
+  const importNodes = modules ? mdast.children.filter((node) => node.type === 'mdxjsEsm') : []
+
   // Compute required right-sidebar width from aside contents. When an
   // Aside holds components like RequestExample / ResponseExample it needs
   // more horizontal room than the 210px default.
   const allAsideNodes = mdastSections.flatMap((s) => s.asideNodes)
   const sidebarWidth = computeSidebarWidthFromAsideNodes(allAsideNodes)
 
+  // Compute the baseUrl for resolving relative imports in MDX.
+  // The slug mirrors the file path inside pagesDir (e.g. 'api/overview'
+  // comes from pages/api/overview.mdx), so its directory is the baseUrl.
+  const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
+  const mdxBaseUrl = (pagesDirPrefix || './') + slugDir
+
   const sections: EditorialSection[] = mdastSections.map((section) => {
+    // Prepend import nodes so SafeMdxRenderer can resolve imported
+    // components in every section, not just the one containing the imports.
+    const contentNodes = importNodes.length > 0
+      ? [...importNodes, ...section.contentNodes]
+      : section.contentNodes
+    const asideNodes = importNodes.length > 0 && section.asideNodes.length > 0
+      ? [...importNodes, ...section.asideNodes]
+      : section.asideNodes
     const aside =
-      section.asideNodes.length > 0 ? (
-        <RenderNodes markdown={pageMdx} nodes={section.asideNodes} />
+      asideNodes.length > 0 ? (
+        <RenderNodes markdown={pageMdx} nodes={asideNodes} modules={modules} baseUrl={mdxBaseUrl} />
       ) : undefined
     return {
-      content: <RenderNodes markdown={pageMdx} nodes={section.contentNodes} />,
+      content: <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} />,
       aside,
       fullWidth: section.fullWidth,
       asideRowSpan: section.asideRowSpan,
@@ -203,7 +235,7 @@ function renderMdxPage({
 
   const hero =
     heroNodes.length > 0 ? (
-      <RenderNodes markdown={pageMdx} nodes={heroNodes} />
+      <RenderNodes markdown={pageMdx} nodes={heroNodes} modules={modules} baseUrl={mdxBaseUrl} />
     ) : undefined
 
   return (
@@ -489,6 +521,9 @@ export async function createHolocronApp(providers: HolocronProviders) {
     return <>{children}</>
   }
 
+  // Lazy glob for resolving MDX import statements at render time.
+  const lazyGlob = providers.getModules?.()
+
   function makePageHandler(slug: string, pageHref: string) {
     return async ({ loaderData: rawLoaderData, request }: { loaderData: unknown; request: Request }) => {
       if (!isHolocronLoaderData(rawLoaderData)) {
@@ -501,7 +536,18 @@ export async function createHolocronApp(providers: HolocronProviders) {
       if (pageMdx === undefined) {
         throw new Error(`MDX content missing for registered page slug "${slug}"`)
       }
-      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl })
+
+      // Resolve MDX import statements against the lazy glob.
+      // Only loads modules that the current page actually imports.
+      let modules: EagerModules | undefined
+      if (lazyGlob && Object.keys(lazyGlob).length > 0) {
+        const mdast = mdxParse(pageMdx)
+        const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
+        const baseUrl = (providers.pagesDirPrefix || './') + slugDir
+        modules = await resolveModules({ glob: lazyGlob, mdast, baseUrl })
+      }
+
+      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix })
     }
   }
 

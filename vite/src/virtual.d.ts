@@ -27,3 +27,13 @@ declare module 'virtual:holocron-mdx-page/*' {
   const content: string
   export default content
 }
+
+declare module 'virtual:holocron-modules' {
+  /** Lazy glob of all importable files (snippets, components, colocated pages).
+   *  Keys are relative paths from the Vite root (e.g. './snippets/card.tsx').
+   *  Values are lazy loaders — call `await loader()` to get the module exports. */
+  export function getModules(): Record<string, () => Promise<Record<string, any>>>
+  /** Pages directory relative to root, with ./ prefix and trailing slash.
+   *  E.g. './pages/' or './' when pagesDir is the project root. */
+  export const pagesDirPrefix: string
+}

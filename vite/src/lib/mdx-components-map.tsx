@@ -7,6 +7,7 @@ import { Fragment, type ReactNode } from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
 import type { Root, RootContent, Image } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
+import type { EagerModules } from 'safe-mdx/parse'
 import {
   Aside,
   FullWidth,
@@ -203,7 +204,14 @@ export function renderNode(
 /** Render an array of mdast nodes through safe-mdx with the editorial
  *  component map and `renderNode` transformer. Used to render content,
  *  aside, and hero nodes server-side. */
-export function RenderNodes({ markdown, nodes }: { markdown: string; nodes: RootContent[] }) {
+export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
+  markdown: string
+  nodes: RootContent[]
+  /** Pre-resolved modules for MDX import statements */
+  modules?: EagerModules
+  /** Directory of the current MDX file for resolving relative imports */
+  baseUrl?: string
+}) {
   const syntheticRoot: Root = { type: 'root', children: nodes }
   return (
     <SafeMdxRenderer
@@ -211,6 +219,8 @@ export function RenderNodes({ markdown, nodes }: { markdown: string; nodes: Root
       mdast={syntheticRoot}
       components={mdxComponents}
       renderNode={renderNode}
+      modules={modules}
+      baseUrl={baseUrl}
     />
   )
 }

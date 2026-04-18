@@ -9,7 +9,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
@@ -17,6 +17,37 @@ import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
 import { prismLanguageIds } from './components/markdown/prism-languages.ts'
 import react from '@vitejs/plugin-react'
+
+import { globSync } from 'tinyglobby'
+
+/** Discover importable JS/TS files in snippets/, components/, and pagesDir.
+ *  Returns paths relative to root. Only .tsx/.ts/.jsx/.js — NOT .mdx/.md
+ *  (MDX snippet imports would be a separate feature).
+ *  Always scans snippets/ and components/ at the project root. When pagesDir
+ *  is a subdirectory (e.g. pages/), also scans snippets/ and components/
+ *  inside it so both `/snippets/card` and `./snippets/card` resolve. */
+function discoverImportableFiles(root: string, pagesDir: string): string[] {
+  const pagesDirRelative = path.relative(root, pagesDir)
+  const ext = '*.{jsx,tsx,ts,js}'
+  const patterns = [
+    // Convention dirs at the project root
+    `snippets/**/${ext}`,
+    `components/**/${ext}`,
+  ]
+
+  if (pagesDirRelative !== '') {
+    // Convention dirs inside pagesDir (e.g. pages/snippets/, pages/components/)
+    patterns.push(`${pagesDirRelative}/snippets/**/${ext}`)
+    patterns.push(`${pagesDirRelative}/components/**/${ext}`)
+    // Any JS/TS file colocated with pages (helpers, utils, etc.)
+    patterns.push(`${pagesDirRelative}/**/${ext}`)
+  }
+
+  return globSync(patterns, {
+    cwd: root,
+    ignore: ['node_modules/**', 'dist/**', '**/*.test.*', '**/*.spec.*', '.e2e-dist/**'],
+  }).sort()
+}
 
 // `vite-plugin.ts` lives in `src/`, both in source and emitted `dist/`, so one
 // `..` always gets back to the package root and `src/` from there is stable.
@@ -58,6 +89,9 @@ const RESOLVED_MDX = '\0' + VIRTUAL_MDX
 
 const VIRTUAL_MDX_PAGE_PREFIX = 'virtual:holocron-mdx-page/'
 const RESOLVED_MDX_PAGE_PREFIX = '\0' + VIRTUAL_MDX_PAGE_PREFIX
+
+const VIRTUAL_MODULES = 'virtual:holocron-modules'
+const RESOLVED_MODULES = '\0' + VIRTUAL_MODULES
 
 const VIRTUAL_APP = 'virtual:holocron-app'
 const RESOLVED_APP = '\0' + VIRTUAL_APP
@@ -133,6 +167,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
   /** Resolved absolute path to the config file (holocron.jsonc or docs.json) */
   let configFilePath: string | undefined
+
+  /** Resolved absolute path to a user CSS file (global.css or style.css at root).
+   *  Injected as an import in the app entry so user styles override holocron defaults. */
+  let userCssPath: string | undefined
 
   const holocronPlugin: Plugin = {
     name: 'holocron',
@@ -215,6 +253,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       config = readConfig({ root, configPath: options.configPath })
       configFilePath = resolveConfigPath({ root, configPath: options.configPath })
 
+      // Detect user CSS file at the project root (Mintlify convention).
+      // First found wins: global.css → style.css.
+      for (const name of ['global.css', 'style.css']) {
+        const candidate = path.resolve(root, name)
+        if (fs.existsSync(candidate)) {
+          userCssPath = candidate
+          break
+        }
+      }
+
       // Sync MDX + process images at build time. The returned navigation
       // tree contains pre-processed MDX (paths rewritten, dimensions injected).
       syncResult = await syncNavigation({
@@ -228,6 +276,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       console.log(
         `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached)`,
       )
+      if (userCssPath) {
+        console.log(`[holocron] using custom CSS: ${path.relative(root, userCssPath)}`)
+      }
     },
 
     async resolveId(id, importer) {
@@ -254,6 +305,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
       if (id.startsWith(VIRTUAL_MDX_PAGE_PREFIX)) {
         return RESOLVED_MDX_PAGE_PREFIX + id.slice(VIRTUAL_MDX_PAGE_PREFIX.length)
+      }
+      if (id === VIRTUAL_MODULES) {
+        return RESOLVED_MODULES
       }
       if (id === VIRTUAL_APP || id.endsWith('/' + VIRTUAL_APP)) {
         return RESOLVED_APP
@@ -330,11 +384,44 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
         return `export default ${JSON.stringify(markdown)}`
       }
+      if (id === RESOLVED_MODULES) {
+        // Discover importable files at build time and emit explicit lazy
+        // import() entries. We can't use import.meta.glob in a virtual
+        // module because Vite requires globs to be relative to a real file.
+        const pagesDirRelative = path.relative(root, pagesDir)
+        const pagesDirPrefix = pagesDirRelative === '' ? './' : `./${pagesDirRelative}/`
+
+        const importableFiles = discoverImportableFiles(root, pagesDir)
+        const entries = importableFiles.map((relPath) => {
+          const absPath = path.join(root, relPath)
+          return `  ${JSON.stringify('./' + relPath)}: () => import(${JSON.stringify(absPath)})`
+        })
+
+        return [
+          `const modules = {`,
+          entries.join(',\n'),
+          `}`,
+          `export function getModules() { return modules }`,
+          `export const pagesDirPrefix = ${JSON.stringify(pagesDirPrefix)}`,
+        ].join('\n')
+      }
       if (id === RESOLVED_APP) {
         // When `options.entry` is set, re-export the user's file (they own
         // `.listen()`). Otherwise import the default holocron app and start
         // it ourselves. We use `./src/app` not `./app` so the id passes
         // through our resolveId hook for stable RSC package-source paths.
+
+        // User CSS import (global.css or style.css at project root).
+        // Uses file:// URL so Windows paths with backslashes work as
+        // ES import specifiers. Imported after holocron's globals.css
+        // (which lives inside app-factory.tsx) so user overrides win.
+        const cssImportLine = userCssPath
+          ? `import ${JSON.stringify(pathToFileURL(userCssPath).href)}`
+          : undefined
+        if (userCssPath) {
+          this.addWatchFile(userCssPath)
+        }
+
         if (options.entry) {
           const userEntryPath = path.isAbsolute(options.entry)
             ? options.entry
@@ -348,15 +435,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           this.addWatchFile(userEntryPath)
           return [
             `import * as __userEntry from ${JSON.stringify(userEntryPath)}`,
+            cssImportLine,
             `export const app = __userEntry.app`,
             `export default __userEntry.default`,
-          ].join('\n')
+          ].filter(Boolean).join('\n')
         }
         return [
           `import { app } from '@holocron.so/vite/src/app'`,
+          cssImportLine,
           `export { app }`,
           `app.listen(Number(process.env.PORT || 3000))`,
-        ].join('\n')
+        ].filter(Boolean).join('\n')
       }
     },
 
@@ -367,6 +456,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // watched by chokidar to trigger change events.
       if (configFilePath) {
         server.watcher.add(configFilePath)
+      }
+      // User CSS is imported via the virtual app module, but the raw file
+      // also needs to be watched by chokidar so edits trigger HMR.
+      if (userCssPath) {
+        server.watcher.add(userCssPath)
       }
     },
 
@@ -387,6 +481,20 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const changedSlug = isMdx && ctx.file.startsWith(pagesDir)
         ? path.relative(pagesDir, ctx.file).replace(/\.[^.]+$/, '').replace(/\\/g, '/')
         : undefined
+
+      // When an importable file (.tsx/.jsx/.ts/.js) is added or removed
+      // in the project, invalidate the modules virtual module so it
+      // re-discovers files on next load.
+      const isImportable = /\.[jt]sx?$/.test(ctx.file)
+        && !ctx.file.includes('node_modules')
+        && !ctx.file.includes('/dist/')
+        && !/\.(test|spec)\./.test(ctx.file)
+      if (isImportable && ctx.type !== 'update') {
+        const mod = this.environment.moduleGraph.getModuleById(RESOLVED_MODULES)
+        if (mod) {
+          this.environment.moduleGraph.invalidateModule(mod)
+        }
+      }
 
       if (!isMdx && !isConfig) {
         return
