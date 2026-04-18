@@ -1,0 +1,9 @@
+{
+  "name": "MDX Imports Test",
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["index"]
+    }
+  ]
+}
