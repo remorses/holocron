@@ -189,6 +189,38 @@ export function renderNode(
       </SectionHeading>
     )
   }
+  // Intercept <Heading> JSX elements (emitted by remark-headings as
+  // mdxJsxTextElement, promoted to flow by remarkMarkAndUnravel). Rendering
+  // them here via SectionHeading avoids safe-mdx's default flow-element
+  // handling which wraps bare text children in <p> → P component.
+  //
+  // The parser wraps bare text inside flow elements in paragraph nodes, so
+  // the heading's children are [paragraph → [text]] not [text]. We unwrap
+  // paragraphs to get the inline content directly.
+  if ((node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Heading') {
+    const attrs = node.attributes ?? []
+    const levelAttr = attrs.find((a: any) => a.type === 'mdxJsxAttribute' && a.name === 'level')
+    const idAttr = attrs.find((a: any) => a.type === 'mdxJsxAttribute' && a.name === 'id')
+    const levelValue = levelAttr?.value
+    const level = Number(typeof levelValue === 'object' && levelValue ? (levelValue as any).data?.estree?.body?.[0]?.expression?.value : 1)
+    // Unwrap paragraph wrappers: flow element text gets wrapped in paragraphs by the parser
+    const inlineChildren: any[] = []
+    for (const child of (node.children ?? []) as any[]) {
+      if (child.type === 'paragraph') {
+        inlineChildren.push(...(child.children ?? []))
+      } else {
+        inlineChildren.push(child)
+      }
+    }
+    const id = typeof idAttr?.value === 'string' ? idAttr.value : slugify(extractText(inlineChildren))
+    return (
+      <SectionHeading key={id} id={id} level={level}>
+        {inlineChildren.map((child: any, i: number) => {
+          return <Fragment key={i}>{transform(child)}</Fragment>
+        })}
+      </SectionHeading>
+    )
+  }
   if (node.type === 'code') {
     const lang = node.lang || 'bash'
     const isDiagram = lang === 'diagram'

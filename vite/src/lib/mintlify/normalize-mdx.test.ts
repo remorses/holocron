@@ -6,7 +6,7 @@ describe('normalizeMdx', () => {
     const result = await normalizeMdx('## My heading {#custom-id}')
 
     expect(result).toMatchInlineSnapshot(`
-      "<Heading level={2} id=\"custom-id\">
+      "<Heading level={2} id="custom-id">
         My heading
       </Heading>
       "

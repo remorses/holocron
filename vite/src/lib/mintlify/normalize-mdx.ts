@@ -7,6 +7,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
 import { remark } from 'remark'
+import { remarkMarkAndUnravel } from 'safe-mdx/parse'
 import { remarkCodeGroup } from './remark-code-group.ts'
 import { remarkHeadings } from './remark-headings.ts'
 import { remarkMermaidCode } from './remark-mermaid.ts'
@@ -23,6 +24,7 @@ export function normalizeMdx(content: string): string {
     .use(remarkMermaidCode)
     .use(remarkSingleAccordionItems)
     .use(remarkSidebarComponents)
+    .use(remarkMarkAndUnravel)
 
   const parsed = processor.parse(content)
   const normalized = processor.runSync(parsed) as Root

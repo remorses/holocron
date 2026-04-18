@@ -264,7 +264,7 @@ Content here.`,
 
     // mdxContent has the slug as key
     expect(result.mdxContent['page']).toBeDefined()
-    expect(result.mdxContent['page']).toContain('<Heading level={2} id="section">')
+    expect(result.mdxContent['page']).toContain('## Section')
 
     // Navigation page object has NO mdx field
     const page = findPage(result.navigation, 'page')!

@@ -29,10 +29,15 @@ export function remarkHeadings(this: { data(): Record<string, unknown> }) {
       }
 
       const explicitId = takeExplicitId(currentNode)
-      const text = extractText(currentNode.children)
-      const headingId = explicitId || slugger.slug(text)
 
-      parent.children.splice(index, 1, createHeadingNode(currentNode, headingId))
+      // Only convert to <Heading> JSX when there's an explicit {#custom-id}.
+      // Native headings without custom IDs stay as native heading nodes —
+      // renderNode in mdx-components-map.tsx handles them directly.
+      if (!explicitId) {
+        return
+      }
+
+      parent.children.splice(index, 1, createHeadingNode(currentNode, explicitId))
     })
 
     visit(tree, 'mdxJsxFlowElement', (currentNode) => {
