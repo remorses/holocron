@@ -12,7 +12,7 @@
     "@holocron.so/vite": "workspace:^",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "spiceflow": "1.18.0-rsc.25",
+    "spiceflow": "1.19.0-rsc.1",
     "vite": "^8.0.8"
   },
   "devDependencies": {
