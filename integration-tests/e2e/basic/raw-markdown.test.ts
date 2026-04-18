@@ -6,8 +6,7 @@ test.describe("raw markdown via .md path suffix", () => {
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
-    expect(body).toContain('<Heading level={2} id="overview">');
-    expect(body).toContain("Overview");
+    expect(body).toContain("## Overview");
     expect(body).toContain("home page content for integration testing");
   });
 
@@ -16,10 +15,8 @@ test.describe("raw markdown via .md path suffix", () => {
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
-    expect(body).toContain('<Heading level={2} id="installation">');
-    expect(body).toContain('<Heading level={2} id="configuration">');
-    expect(body).toContain("Installation");
-    expect(body).toContain("Configuration");
+    expect(body).toContain("## Installation");
+    expect(body).toContain("## Configuration");
   });
 
   test("GET /getting-started.mdx does NOT serve raw markdown (Vite intercepts .mdx)", async ({
@@ -66,7 +63,7 @@ test.describe("agent detection redirects to .md URL", () => {
     expect(res.headers()["content-type"]).toContain("text/markdown");
     expect(res.url()).toContain("/getting-started.md");
     const body = await res.text();
-    expect(body).toContain('<Heading level={2} id="installation">');
+    expect(body).toContain("## Installation");
   });
 
   test("mixed-case Accept: Text/Markdown also redirects", async ({
@@ -90,7 +87,7 @@ test.describe("agent detection redirects to .md URL", () => {
     expect(res.headers()["content-type"]).toContain("text/markdown");
     expect(res.url()).toContain("/index.md");
     const body = await res.text();
-    expect(body).toContain('<Heading level={2} id="overview">');
+    expect(body).toContain("## Overview");
   });
 
   test("ClaudeBot user-agent redirects to .md", async ({ request }) => {
@@ -115,7 +112,7 @@ test.describe("agent detection redirects to .md URL", () => {
     expect(res.url()).toContain("/getting-started.md");
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
-    expect(body).toContain('<Heading level={2} id="installation">');
+    expect(body).toContain("## Installation");
   });
 
   test("ChatGPT-User user-agent redirects to .md", async ({ request }) => {
@@ -223,7 +220,7 @@ test.describe("docs.zip", () => {
     const buffer = await res.body();
     const files = unzipSync(new Uint8Array(buffer));
     const indexMd = strFromU8(files["index.md"]!);
-    expect(indexMd).toContain('<Heading level={2} id="overview">');
+    expect(indexMd).toContain("## Overview");
     expect(indexMd).toContain("holocron.so");
   });
 
