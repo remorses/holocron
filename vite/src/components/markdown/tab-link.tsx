@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * TabLink — single tab rendered in the tab bar. Active tab gets a 1.5px
+ * TabLink — single tab rendered in the tab bar. Active tab gets a 2px
  * bottom indicator + faux bold via text-shadow. Used by EditorialPage.
  */
 
@@ -43,7 +43,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
         bottom: 0,
         left: 0,
         width: '100%',
-        height: '1.5px',
+        height: '2px',
         backgroundColor: isActive ? 'var(--foreground)' : 'transparent',
         borderRadius: '1px',
         transition: 'background-color 0.15s ease',

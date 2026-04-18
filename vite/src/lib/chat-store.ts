@@ -4,7 +4,7 @@
  */
 
 import type { ReactNode } from 'react'
-import { createStore } from 'zustand/vanilla'
+import { createStore } from 'zustand'
 
 export type DrawerState = 'closed' | 'open'
 
