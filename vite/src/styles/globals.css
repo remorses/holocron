@@ -316,7 +316,6 @@
 
   .slot-tabbar {
     background: var(--background);
-    border-bottom: 1px solid var(--border);
   }
 
   .slot-tab {

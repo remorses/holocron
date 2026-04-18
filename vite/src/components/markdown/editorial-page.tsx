@@ -226,7 +226,7 @@ export function EditorialPage({
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar && (
-          <div className='slot-tabbar hidden lg:block'>
+          <div className='slot-tabbar hidden lg:block border-b border-border'>
             <div className='mx-auto flex h-(--tab-bar-height) max-w-full items-stretch gap-6 overflow-x-auto px-(--mobile-padding) lg:max-w-(--grid-max-width) lg:px-0'>
               {tabs.map((tab) => {
                 return <TabLink key={tab.href} tab={tab} isActive={tab.href === (activeTab ?? tabs[0]?.href)} />
