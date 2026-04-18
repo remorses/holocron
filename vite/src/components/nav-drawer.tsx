@@ -203,7 +203,7 @@ function NavDrawerInner() {
 
         {/* Tabs — horizontal row, same as desktop tab bar */}
         {tabs.length > 0 && (
-          <div className='slot-tabbar border-b border-border' style={{ marginBottom: '20px' }}>
+          <div className='slot-tabbar' style={{ marginBottom: '20px' }}>
             <div
               style={{
                 display: 'flex',

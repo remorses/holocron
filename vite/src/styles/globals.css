@@ -1,9 +1,7 @@
-/* Declare holocron layer AFTER tailwindcss so it beats Tailwind's built-in
-   layers (preflight reset, utilities, etc.). Layer order:
-   theme < base < components < utilities < holocron.
+/* Explicit layer order: holocron is last so it beats all Tailwind layers.
    Unlayered user CSS always beats all layers — no !important needed. */
+@layer theme, base, components, utilities, holocron;
 @import 'tailwindcss';
-@layer holocron;
 @import './editorial.css' layer(holocron);
 @import './editorial-prism.css' layer(holocron);
 @custom-variant dark (&:where(.dark, .dark *));
@@ -316,6 +314,7 @@
 
   .slot-tabbar {
     background: var(--background);
+    border-bottom: 1px solid var(--border);
   }
 
   .slot-tab {
