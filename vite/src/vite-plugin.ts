@@ -15,7 +15,7 @@ import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
-import { prismLanguageIds } from './components/markdown/prism-languages.ts'
+
 import react from '@vitejs/plugin-react'
 
 import { globSync } from 'tinyglobby'
@@ -592,7 +592,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         )
         config.optimizeDeps.include = mergeUnique(
           config.optimizeDeps.include,
-          ['@holocron.so/vite > prismjs', ...prismLanguageIds.map((id) => `@holocron.so/vite > prismjs/components/prism-${id}`)],
+          [
+            '@holocron.so/vite > prismjs',
+            '@holocron.so/vite > prismjs/components/index.js',
+            '@holocron.so/vite > @orama/orama',
+            '@holocron.so/vite > cookie',
+            '@holocron.so/vite > mermaid',
+            '@holocron.so/vite > react-medium-image-zoom',
+            '@holocron.so/vite > zustand',
+          ],
         )
       }
 

@@ -1,0 +1,12 @@
+/* User-provided global CSS — overrides holocron defaults.
+ * This file is auto-detected by the holocron Vite plugin when
+ * placed at the project root as global.css or style.css. */
+
+:root {
+  --custom-css-test: #ff00ff;
+}
+
+#custom-css-target {
+  color: var(--custom-css-test);
+  font-weight: 700;
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Custom CSS Test",
+  "colors": {
+    "primary": "#0969da"
+  },
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["index"]
+    }
+  ]
+}
