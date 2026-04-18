@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useRef } from 'react'
 import { chatState } from '../lib/chat-state.ts'
 import {
   InfoCircleIcon,
@@ -111,19 +111,23 @@ export function ChatInput({
 // ── Sidebar assistant (wraps ChatInput with muted header) ────────────
 
 export function SidebarAssistant() {
-  const [inputValue, setInputValue] = useState('')
+  const draftText = chatState((s) => s.draftText)
+
+  const handleChange = (value: string) => {
+    chatState.setState({ draftText: value })
+  }
 
   const handleSubmit = () => {
-    const text = inputValue.trim()
+    const text = draftText.trim()
     if (!text) return
-    chatState.setState({ draftText: text, drawerState: 'open' })
-    setInputValue('')
+    chatState.setState({ pendingSubmit: true, drawerState: 'open' })
   }
 
   const handleFocus = () => {
     // Read the store lazily on focus instead of subscribing during render.
     // This keeps the sidebar input SSR-safe in the RSC page shell while
     // preserving the "reopen existing chat" behavior on the client.
+    // draftText is already synced via the store — drawer will show it.
     if (chatState.getState().parts.length > 0) {
       chatState.setState({ drawerState: 'open' })
     }
@@ -140,8 +144,8 @@ export function SidebarAssistant() {
         </span>
       </div>
       <ChatInput
-        value={inputValue}
-        onChange={setInputValue}
+        value={draftText}
+        onChange={handleChange}
         onSubmit={handleSubmit}
         onFocus={handleFocus}
         placeholder='How can I help?'

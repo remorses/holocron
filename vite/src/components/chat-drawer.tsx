@@ -46,12 +46,9 @@ function ChatDrawerInner() {
   const isGenerating = chatState((s) => s.isGenerating)
   const parts = chatState((s) => s.parts)
   const errorMessage = chatState((s) => s.errorMessage)
+  const draftText = chatState((s) => s.draftText)
   const { currentPageHref } = useHolocronData()
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputValueRef = useRef('')
-  const [inputValue, setInputValue] = useState('')
-
-  inputValueRef.current = inputValue
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -61,7 +58,7 @@ function ChatDrawerInner() {
 
   const handleSubmit = useCallback(
     async (text?: string) => {
-      const submitText = text || inputValueRef.current.trim()
+      const submitText = text || chatState.getState().draftText.trim()
       if (!submitText) return
       if (chatState.getState().isGenerating) return
 
@@ -77,10 +74,10 @@ function ChatDrawerInner() {
         // Keep existing parts, append new user message
         parts: [...s.parts, { type: 'user-message' as const, text: submitText }],
         draftText: '',
+        pendingSubmit: false,
         errorMessage: null,
         abortController: controller,
       }))
-      setInputValue('')
 
       setTimeout(scrollToBottom, 0)
 
@@ -151,6 +148,7 @@ function ChatDrawerInner() {
       abortController: null,
       parts: [],
       draftText: '',
+      pendingSubmit: false,
       errorMessage: null,
     })
   }, [handleStop])
@@ -167,11 +165,9 @@ function ChatDrawerInner() {
 
   useEffect(() => {
     if (drawerState !== 'open') return
-    const { draftText } = chatState.getState()
-    if (draftText.trim()) {
-      const text = draftText.trim()
-      chatState.setState({ draftText: '' })
-      void handleSubmit(text)
+    const { pendingSubmit, draftText } = chatState.getState()
+    if (pendingSubmit && draftText.trim()) {
+      void handleSubmit(draftText.trim())
     }
     // Focus the drawer textarea when opening
     setTimeout(() => drawerInputRef.current?.focus(), 100)
@@ -210,7 +206,7 @@ function ChatDrawerInner() {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgb(0 0 0 / 0.5)',
+          background: 'rgb(0 0 0 / 0.3)',
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
           transition: 'opacity 200ms ease',
@@ -221,16 +217,17 @@ function ChatDrawerInner() {
       <div
         style={{
           position: 'fixed',
-          right: 0,
-          top: 0,
-          bottom: 0,
-          width: 'min(440px, 100vw)',
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          right: 48,
+          top: 32,
+          bottom: 32,
+          width: 'min(440px, calc(100vw - 96px))',
+          transform: isOpen ? 'translateX(0)' : 'translateX(calc(100% + 48px))',
           transition: 'transform 200ms ease',
           background: 'var(--background)',
-          borderLeft: '1px solid var(--border)',
+          borderRadius: 24,
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         {/* Top bar */}
@@ -240,7 +237,6 @@ function ChatDrawerInner() {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '12px 16px',
-            borderBottom: '1px solid var(--border)',
             flexShrink: 0,
           }}
         >
@@ -341,8 +337,8 @@ function ChatDrawerInner() {
               </span>
             </div>
             <ChatInput
-              value={inputValue}
-              onChange={setInputValue}
+              value={draftText}
+              onChange={(v) => chatState.setState({ draftText: v })}
               onSubmit={handleSubmit}
               onStop={handleStop}
               isGenerating={isGenerating}

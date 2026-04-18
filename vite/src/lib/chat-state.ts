@@ -43,7 +43,10 @@ export type ChatState = {
   navDrawerOpen: boolean
   isGenerating: boolean
   parts: ChatPart[]
+  /** Shared textarea value — single source of truth for both sidebar widget and drawer input. */
   draftText: string
+  /** When true, the drawer auto-submits draftText on open (user pressed Enter in sidebar). */
+  pendingSubmit: boolean
   abortController: AbortController | null
   errorMessage: string | null
 }
@@ -54,6 +57,7 @@ export const chatState = create<ChatState>(() => ({
   isGenerating: false,
   parts: [],
   draftText: '',
+  pendingSubmit: false,
   abortController: null,
   errorMessage: null,
 }))
