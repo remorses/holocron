@@ -73,9 +73,8 @@ export function CodeBlock({
                 style={{
                   color: 'var(--muted-foreground)',
                   textAlign: 'right',
-                  paddingRight: '16px',
+                  paddingRight: 'var(--bleed)',
                   width: 'var(--bleed)',
-                  boxSizing: 'content-box',
                   overflow: 'hidden',
                   userSelect: 'none',
                 }}
