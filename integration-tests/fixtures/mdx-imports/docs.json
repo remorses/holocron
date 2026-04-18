@@ -3,7 +3,7 @@
   "navigation": [
     {
       "group": "Guides",
-      "pages": ["index"]
+      "pages": ["index", "guides/relative-imports"]
     }
   ]
 }
