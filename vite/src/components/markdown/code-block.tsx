@@ -6,7 +6,7 @@
  */
 
 import React, { useMemo } from 'react'
-import './prism-languages.ts'
+import '@holocron.so/vite/src/prism'
 import * as PrismModule from 'prismjs'
 
 const Prism = PrismModule.default ?? PrismModule

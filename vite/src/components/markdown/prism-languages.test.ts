@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest'
 import * as PrismModule from 'prismjs'
-import { prismLanguageIds } from './prism-languages.ts'
+import { prismLanguageIds } from '../../prism.ts'
 
 const Prism = PrismModule.default ?? PrismModule
 

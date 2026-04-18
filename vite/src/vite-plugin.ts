@@ -130,9 +130,10 @@ function rawImportPlugin(): Plugin {
   }
 }
 
-type NoExternalValue = string | RegExp | true | (string | RegExp)[] | undefined
-
-function addNoExternal(config: { resolve?: { noExternal?: NoExternalValue } }, pkg: string | RegExp) {
+function addNoExternal(
+  config: { resolve?: { noExternal?: string | RegExp | true | (string | RegExp)[] | undefined } },
+  pkg: string | RegExp,
+) {
   config.resolve ??= {}
   const existing = config.resolve.noExternal
   const arr = Array.isArray(existing)
@@ -150,6 +151,14 @@ function mergeUnique(existing: string | string[] | undefined, items: string[]): 
   return Array.from(new Set([...arr, ...items]))
 }
 
+function getPluginName(plugin: PluginOption): string | undefined {
+  if (!plugin || typeof plugin !== 'object' || Array.isArray(plugin) || plugin instanceof Promise) {
+    return undefined
+  }
+  const maybeName = Reflect.get(plugin, 'name')
+  return typeof maybeName === 'string' ? maybeName : undefined
+}
+
 export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let root: string
   let config: HolocronConfig
@@ -159,7 +168,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let distDirPath: string
   let viteBase = '/'
   let resolveHolocronPackagePath:
-    | ((id: string, importer?: string, ssr?: boolean) => Promise<string | undefined>)
+    | ((args: { id: string; importer?: string; ssr?: boolean }) => Promise<string | undefined>)
     | undefined
 
   let hasUserReactPlugin = false
@@ -196,12 +205,13 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         allPlugins.push(plugin)
       }
       for (const plugin of allPlugins) {
-        if (!plugin || typeof plugin !== 'object' || !('name' in plugin) || typeof plugin.name !== 'string') {
+        const pluginName = getPluginName(plugin)
+        if (typeof pluginName !== 'string') {
           continue
         }
-        if (plugin.name.startsWith('vite:react')) hasUserReactPlugin = true
-        if (plugin.name.startsWith('spiceflow:')) hasUserSpiceflowPlugin = true
-        if (plugin.name.startsWith('@tailwindcss/vite:')) hasUserTailwindPlugin = true
+        if (pluginName.startsWith('vite:react')) hasUserReactPlugin = true
+        if (pluginName.startsWith('spiceflow:')) hasUserSpiceflowPlugin = true
+        if (pluginName.startsWith('@tailwindcss/vite:')) hasUserTailwindPlugin = true
       }
 
       // Alias `@holocron.so/vite/app` → source file. Must be done via
@@ -213,6 +223,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // directly. The consumer only installs `@holocron.so/vite`, so bare
       // imports like `safe-mdx/client` must resolve through our package too.
       const safeMdxDir = path.dirname(nodeRequire.resolve('safe-mdx/package.json'))
+      const zoomEntry = nodeRequire.resolve('react-medium-image-zoom')
+      const zoomDir = path.dirname(zoomEntry)
       const next: Pick<UserConfig, 'resolve'> = {
         resolve: {
           alias: [
@@ -220,6 +232,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             { find: /^safe-mdx$/, replacement: path.join(safeMdxDir, 'dist/safe-mdx.js') },
             { find: /^safe-mdx\/parse$/, replacement: path.join(safeMdxDir, 'dist/parse.js') },
             { find: /^safe-mdx\/client$/, replacement: path.join(safeMdxDir, 'dist/dynamic-esm-component.js') },
+            { find: /^react-medium-image-zoom$/, replacement: zoomEntry },
+            { find: /^react-medium-image-zoom\/dist\/styles\.css$/, replacement: path.join(zoomDir, 'styles.css') },
           ],
           dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
           tsconfigPaths: true,
@@ -234,7 +248,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // resolved id still includes `/node_modules/`. If Vite realpaths
       // symlinks, the path escapes node_modules and client boundaries break.
       const preserveSymlinkResolver = resolved.createResolver({ preserveSymlinks: true })
-      resolveHolocronPackagePath = async (id, importer, ssr) => {
+      resolveHolocronPackagePath = async ({ id, importer, ssr }) => {
         return await preserveSymlinkResolver(id, importer, false, ssr)
       }
 
@@ -295,9 +309,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // The `./src/*` branch stays here for holocron's own internal imports.
       if (id.startsWith('@holocron.so/vite/src/')) {
         const resolved = await resolveHolocronPackagePath?.(
-          id,
-          importer,
-          this.environment.name === 'ssr',
+          { id, importer, ssr: this.environment.name === 'ssr' },
         )
         if (resolved) {
           return resolved
@@ -588,8 +600,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
   // Keep `@holocron.so/vite/*` inside the RSC/SSR transform pipeline so
   // `@vitejs/plugin-rsc` emits stable `client-package-proxy/...` imports.
-  // Prism is pre-bundled via the `@holocron.so/vite > ...` nested id so the
-  // resolver starts from our package (prism ships transitively with it).
+  // The Prism registry now lives behind one Holocron package file, so users
+  // only see a single optimizeDeps entry instead of one line per grammar.
   const holocronRscPackagePlugin: Plugin = {
     name: 'holocron:rsc-package-source',
     configEnvironment(name, config) {
@@ -602,10 +614,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         config.optimizeDeps.include = mergeUnique(
           config.optimizeDeps.include,
           [
-            '@holocron.so/vite > prismjs',
-            '@holocron.so/vite > prismjs/components/index.js',
+            '@holocron.so/vite/src/prism',
             '@holocron.so/vite > @orama/orama',
             '@holocron.so/vite > cookie',
+            '@holocron.so/vite > prismjs',
             '@holocron.so/vite > mermaid',
             '@holocron.so/vite > react-medium-image-zoom',
             '@holocron.so/vite > zustand',
