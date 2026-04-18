@@ -13,8 +13,13 @@
 
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 
-/** Offset for the sticky header — headings above this line are "scrolled past" */
-const HEADER_OFFSET = 80
+/**
+ * A heading counts as "active" when it's in the top half of the viewport.
+ * This is generous enough that the first heading activates as soon as the
+ * page loads (even before any scrolling), and headings near the bottom of
+ * the page activate when clicked without needing to scroll past a fixed line.
+ */
+const ACTIVE_ZONE_RATIO = 0.5
 
 /**
  * Grace period after a hash change during which the hash takes priority over
@@ -24,7 +29,13 @@ const HEADER_OFFSET = 80
  */
 const HASH_GRACE_MS = 1000
 
-/** Timestamp of the last hashchange/popstate event */
+/**
+ * Hash change detection — tracked inside computeActiveId itself because
+ * Spiceflow's <Link> uses pushState for client navigation, which does NOT
+ * fire hashchange or popstate events. We detect the change by comparing
+ * against the last known hash on every call.
+ */
+let lastKnownHash = ''
 let lastHashTime = 0
 
 export type ActiveTocSnapshot = {
@@ -41,28 +52,30 @@ export type ActiveTocSnapshot = {
 function computeActiveId(validIds: Set<string>, fallbackId: string): string {
   const hash = window.location.hash.replace(/^#/, '')
 
+  // Detect hash changes that pushState doesn't fire events for
+  if (hash !== lastKnownHash) {
+    lastKnownHash = hash
+    if (hash) lastHashTime = Date.now()
+  }
+
   // Hash takes priority right after a navigation click
   if (hash && validIds.has(hash) && Date.now() - lastHashTime < HASH_GRACE_MS) {
     return hash
   }
 
+  const threshold = window.innerHeight * ACTIVE_ZONE_RATIO
   const headings = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
   let candidate = ''
 
   for (const heading of headings) {
-    if (heading.getBoundingClientRect().top <= HEADER_OFFSET) {
+    if (heading.getBoundingClientRect().top <= threshold) {
       candidate = heading.id
     } else {
       break
     }
   }
 
-  if (candidate) return candidate
-
-  // No heading scrolled past the header — check URL hash
-  if (hash && validIds.has(hash)) return hash
-
-  return fallbackId
+  return candidate || fallbackId
 }
 
 /**
