@@ -368,3 +368,24 @@ remark plugins are very useful to change the AST of the mdx, for example to conv
 another use case is to add a compat layer to support Mintlify patterns
 
 to test remark plugins use vitest tests with inline snapshots, input is mdx string and output should be mdx string too. see existing tests for examples
+
+## mdxJsxFlowElement vs mdxJsxTextElement (remark plugin pitfall)
+
+MDX has two JSX node types in the mdast tree:
+
+- **`mdxJsxFlowElement`** — block-level. The MDX parser wraps bare text children in `<p>` nodes. Use for containers (AccordionGroup, Tabs, Aside, …).
+- **`mdxJsxTextElement`** — inline/phrasing-level. Text children stay inline with no `<p>` wrapping. Use for leaf wrappers whose children are purely inline (Heading, Badge, …).
+
+**Problem with flow elements for headings:** safe-mdx's P component adds `editorial-prose` class + `opacity: 0.82` to paragraph children. If a heading is a flow element, its text gets wrapped in P, making heading text look like body text.
+
+**Solution — three-part fix:**
+
+1. **Remark plugin** (`remark-headings.ts`): emit `<Heading>` as `mdxJsxTextElement` via `createElement({ type: 'text' })`. This keeps heading text inline in the AST.
+
+2. **Serialization** (`normalize-mdx.ts`): text elements at root level get serialized inline (no newlines), which breaks re-parsing when adjacent to flow siblings. Add `remarkMarkAndUnravel` (from safe-mdx) + `remarkPromoteRootTextElements` to the normalize pipeline. These promote standalone text elements to flow BEFORE serialization, so the output has proper block-level formatting.
+
+3. **Rendering** (`mdx-components-map.tsx`): even after promotion to flow, the MDX parser wraps flow element text in paragraph nodes (`[paragraph → [text]]`). The `renderNode` callback intercepts `<Heading>` flow elements and **unwraps** paragraph children before passing them to `SectionHeading`.
+
+**Key insight:** `remarkMarkAndUnravel` (from `safe-mdx/parse`) promotes `mdxJsxTextElement` nodes to `mdxJsxFlowElement` when they're alone in a paragraph. It does NOT handle text elements at root level — use `remarkPromoteRootTextElements` for that. Both are needed in the `normalizeMdx` pipeline.
+
+**Flow elements always get `<p>` wrappers on their text children.** The MDX parser wraps bare text inside any `mdxJsxFlowElement` in paragraph nodes — this is part of the content model, not a bug. So even after `remarkMarkAndUnravel` promotes a text element to flow, the text inside `<Heading>Getting Started</Heading>` becomes `[paragraph → [text "Getting Started"]]` in the parsed tree. `remarkMarkAndUnravel` only removes paragraphs that **wrap** JSX text elements (paragraph → [mdxJsxTextElement]) — it does NOT touch paragraphs **inside** a flow element's children (those contain plain `text` nodes, not JSX elements). Any `renderNode` handler for a flow element whose children should be inline must unwrap these paragraphs manually.
