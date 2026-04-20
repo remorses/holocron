@@ -2,6 +2,7 @@
   // Fixture: navigation.versions with two versions.
   // Exercises: version switcher dropdown, default version, tags.
   "name": "Versioned Docs",
+  "icons": { "library": "lucide" },
   "navigation": {
     "versions": [
       {

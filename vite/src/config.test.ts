@@ -420,10 +420,10 @@ describe('description normalization', () => {
 })
 
 describe('icons normalization', () => {
-  test('defaults icons.library to lucide', () => {
+  test('defaults icons.library to fontawesome', () => {
     const root = setupConfig('holocron.jsonc', { name: 'X' })
     const config = readConfig({ root })
-    expect(config.icons.library).toBe('lucide')
+    expect(config.icons.library).toBe('fontawesome')
   })
 
   test('preserves configured icons.library', () => {

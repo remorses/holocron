@@ -1,5 +1,6 @@
 {
   "name": "Update Fixture",
+  "icons": { "library": "lucide" },
   "colors": {
     "primary": "#0969da"
   },

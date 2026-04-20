@@ -1,5 +1,6 @@
 {
   "name": "Local Disk Config",
+  "icons": { "library": "lucide" },
   "navigation": {
     "tabs": [
       {

@@ -3,6 +3,7 @@
   // Also exercises: banner, footer (socials + link columns), appearance,
   // search prompt, SEO metatags, and colors (light/dark overrides).
   "name": "Tabs Docs",
+  "icons": { "library": "lucide" },
   "description": "A documentation site with tabs, banner, footer, and appearance settings.",
   "colors": {
     "primary": "#3e9fff",

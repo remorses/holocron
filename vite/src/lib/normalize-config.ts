@@ -127,7 +127,7 @@ function normalizeIcons(raw: unknown): HolocronConfig['icons'] {
   const obj = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
   const library = obj.library === 'lucide' || obj.library === 'tabler' || obj.library === 'fontawesome'
     ? obj.library
-    : 'lucide'
+    : 'fontawesome'
   return { library }
 }
 

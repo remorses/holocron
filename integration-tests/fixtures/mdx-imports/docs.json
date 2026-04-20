@@ -1,5 +1,6 @@
 {
   "name": "MDX Imports Test",
+  "icons": { "library": "lucide" },
   "navigation": [
     {
       "group": "Guides",

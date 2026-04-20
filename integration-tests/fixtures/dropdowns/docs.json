@@ -2,6 +2,7 @@
   // Fixture: navigation.dropdowns with content sections + external link.
   // Also exercises: products normalized into dropdowns.
   "name": "Dropdown Docs",
+  "icons": { "library": "lucide" },
   "navigation": {
     "dropdowns": [
       {

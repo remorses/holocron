@@ -1,5 +1,6 @@
 {
   "name": "Custom Entry Test",
+  "icons": { "library": "lucide" },
   "description": "Verifies that users can write their own spiceflow entry file and mount holocron as a child app alongside custom routes, pages, middleware, and layouts.",
   "colors": {
     "primary": "#0969da"
