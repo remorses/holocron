@@ -363,7 +363,7 @@ export function EditorialPage({
       </div>
 
       {/* Site footer + branding — mt-auto pushes to bottom on short pages */}
-      <div className='mt-auto'>
+      <div className='mt-auto pt-(--section-gap)'>
         <Footer />
         <PoweredBy />
       </div>
