@@ -84,7 +84,6 @@
 
 .editorial-h3 {
   font-size: var(--type-heading-3-size);
-  color: var(--muted-foreground);
 }
 
 /* ========================================================================
@@ -161,9 +160,9 @@
   position: relative;
   display: inline-block;
   font-family: var(--font-code);
-  font-size: 13px;
+  font-size: 0.86em;
   font-weight: 500;
-  line-height: 13px;
+  line-height: 1;
   letter-spacing: 0.01em;
   padding: 2px 4px;
   color: rgba(0, 0, 0, 0.75);
