@@ -11,6 +11,7 @@ import type { EagerModules } from 'safe-mdx/parse'
 import {
   Aside,
   FullWidth,
+  Above,
   Hero,
   P,
   A,
@@ -123,6 +124,7 @@ export const mdxComponents = {
   Bleed,
   Aside,
   FullWidth,
+  Above,
   Hero,
   Callout,
   Note,
@@ -235,7 +237,7 @@ export function renderNode(
 
 /** Render an array of mdast nodes through safe-mdx with the editorial
  *  component map and `renderNode` transformer. Used to render content,
- *  aside, and hero nodes server-side. */
+ *  aside, and above nodes server-side. */
 export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
   markdown: string
   nodes: RootContent[]

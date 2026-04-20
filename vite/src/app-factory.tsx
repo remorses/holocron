@@ -38,7 +38,7 @@ import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
 import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
 import { isAgentRequest } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
-import { buildSections, isHeroNode } from './lib/mdx-sections.ts'
+import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
@@ -234,8 +234,8 @@ function renderMdxPage({
   const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
 
   const mdast = preParsedMdast ?? mdxParse(pageMdx)
-  const heroNodes = mdast.children.filter(isHeroNode)
-  const contentChildren = mdast.children.filter((node) => !isHeroNode(node))
+  const aboveNodes = mdast.children.filter(isAboveNode)
+  const contentChildren = mdast.children.filter((node) => !isAboveNode(node))
   const contentMdast: Root = { type: 'root', children: contentChildren }
   const mdastSections = buildSections(contentMdast)
 
@@ -278,9 +278,9 @@ function renderMdxPage({
     }
   })
 
-  const hero =
-    heroNodes.length > 0 ? (
-      <RenderNodes markdown={pageMdx} nodes={heroNodes} modules={modules} baseUrl={mdxBaseUrl} />
+  const above =
+    aboveNodes.length > 0 ? (
+      <RenderNodes markdown={pageMdx} nodes={aboveNodes} modules={modules} baseUrl={mdxBaseUrl} />
     ) : undefined
 
   return (
@@ -319,7 +319,7 @@ function renderMdxPage({
               : <Head.Meta key={name} name={name} content={content} />
           ))}
       </Head>
-      <EditorialPage sections={sections} hero={hero} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} />
+      <EditorialPage sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} />
     </>
   )
 }

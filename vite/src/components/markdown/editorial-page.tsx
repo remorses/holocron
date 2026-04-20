@@ -58,14 +58,14 @@ function getSharedAsideStartRow(row: number, span: number) {
  *
  * Canonical site data and per-request state both come from the Spiceflow root
  * loader via `useHolocronData()`. JSX content
- * (sections, hero, children) is still passed as props because it's
+ * (sections, above, children) is still passed as props because it's
  * request-specific pre-rendered server output.
  */
 export function EditorialPage({
   sidebar,
   children,
   sections,
-  hero,
+  above,
   bannerContent,
   sidebarWidth,
 }: {
@@ -73,8 +73,8 @@ export function EditorialPage({
   children?: React.ReactNode
   /** When provided, renders section rows with aside support instead of flat children */
   sections?: EditorialSection[]
-  /** Page-level hero content rendered above the 3-column grid, aligned with center column. */
-  hero?: React.ReactNode
+  /** Page-level content rendered above the 3-column grid, aligned with center column. */
+  above?: React.ReactNode
   /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
   bannerContent?: React.ReactNode
   /** Right-sidebar width in px. When larger than the default, the
@@ -236,11 +236,11 @@ export function EditorialPage({
         )}
       </div>
 
-      {/* Hero: rendered above the 3-column grid, using the same column widths
-          so hero content aligns with the center content column (col 2). */}
-      {!!hero && (
+      {/* Above: rendered above the 3-column grid, using the same column widths
+          so above content aligns with the center content column (col 2). */}
+      {!!above && (
         <div className='mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
-          <div className='lg:col-start-2'>{hero}</div>
+          <div className='lg:col-start-2'>{above}</div>
         </div>
       )}
 

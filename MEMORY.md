@@ -1525,7 +1525,7 @@ only file moves + extraction.
 - `components/markdown/image.tsx` — `PixelatedImage`, `LazyVideo`,
   `ChartPlaceholder`
 - `components/markdown/table.tsx` — `ComparisonTable`
-- `components/markdown/markers.tsx` — `Aside`, `FullWidth`, `Hero`
+- `components/markdown/markers.tsx` — `Aside`, `FullWidth`, `Above` (+ `Hero` alias)
   (pass-through marker components read by the section splitter)
 - `components/markdown/callout.tsx` — `Callout` + `Note/Warning/Info/
   Tip/Check/Danger` + preset icons + `hexToRgba`
@@ -1538,7 +1538,7 @@ Non-UI logic moved out of `components/` to `lib/`:
 - `lib/toc-tree.ts` (was `components/toc-tree.ts`) — `slugify`,
   `extractText`, `generateTocTree`
 - `lib/mdx-sections.ts` (NEW, from `app-factory.tsx`) — `buildSections`,
-  `isHeroNode`, `isAsideNode`, etc.
+  `isAboveNode`, `isAsideNode`, etc.
 - `lib/mdx-components-map.tsx` (NEW, from `app-factory.tsx`) —
   `mdxComponents`, `renderNode`, `RenderNodes`
 - `lib/site-head.tsx` (NEW, from `app-factory.tsx`) — `SiteHead`

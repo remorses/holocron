@@ -29,9 +29,13 @@ export function FullWidth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-/** Hero — page-level hero content (logo, heading, etc.). Extracted at parse
- *  time (like <Aside>) and rendered above the 3-column grid, aligned with
- *  the center content column. Accepts arbitrary props from MDX. */
-export function Hero({ children, ...props }: { children: React.ReactNode } & React.ComponentPropsWithoutRef<'div'>) {
+/** Above — page-level content rendered above the docs grid (landing-page style).
+ *  Extracted at parse time (like <Aside>) and rendered above the 3-column grid,
+ *  aligned with the center content column. Scrolls away naturally.
+ *  Accepts arbitrary props from MDX. Also exported as `Hero` for back-compat. */
+export function Above({ children, ...props }: { children: React.ReactNode } & React.ComponentPropsWithoutRef<'div'>) {
   return <div {...props}>{children}</div>
 }
+
+/** @deprecated Use `<Above>` instead. Kept for backwards compatibility. */
+export const Hero = Above

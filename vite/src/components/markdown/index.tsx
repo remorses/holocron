@@ -80,7 +80,7 @@ export { Tabs, Tab } from './mintlify/tabs.tsx'
 export { Accordion, AccordionGroup } from './mintlify/accordion.tsx'
 export { Mermaid } from './mintlify/mermaid.tsx'
 
-export { Aside, FullWidth, Hero } from './markers.tsx'
+export { Aside, FullWidth, Above, Hero } from './markers.tsx'
 
 export {
   Callout,

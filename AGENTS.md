@@ -153,8 +153,8 @@ The editorial page layout is built from a minimal set of CSS Grids. Understand t
 ```
 slot-page (flex flex-col gap-(--layout-gap))
 ├── slot-navbar (logo + tab bar)
-├── Hero mini-grid (3-col, only when hero prop is set)
-│   └── hero content (col 2, aligned with page grid's content col)
+├── Above mini-grid (3-col, only when above prop is set)
+│   └── above content (col 2, aligned with page grid's content col)
 └── Page grid — the ONLY explicit 3-col grid
     grid-template-columns: 210px 520px 210px (toc, content, sidebar)
     gap-x: 50px, gap-y: 48px (--section-gap between rows)
@@ -187,7 +187,7 @@ slot-page (flex flex-col gap-(--layout-gap))
 - **Key responsibility: sticky scoping.** Per-section asides inside this wrapper have a containing block = this wrapper = one section's bounds. Scrolling past the section unsticks its aside before the next section's aside sticks. No overlap between asides.
 - On mobile: becomes `flex flex-col gap-y-(--prose-gap)` → content + aside stack tightly (20px gap).
 
-**3. Hero mini-grid** (only when `hero` prop is set) — replicates the page grid's 3-col definition explicitly to align hero content with the page grid's content column. Not a subgrid because hero lives OUTSIDE the page grid in DOM (sibling in the flex flow).
+**3. Above mini-grid** (only when `above` prop is set) — replicates the page grid's 3-col definition explicitly to align above content with the page grid's content column. Not a subgrid because above lives OUTSIDE the page grid in DOM (sibling in the flex flow).
 
 ### Aside and Section Processing (`mdx-sections.ts`)
 
@@ -249,7 +249,7 @@ Every argument passed to `useSyncExternalStore(subscribe, getSnapshot, getServer
 
 ## HTML element nesting rules
 
-**Never use `<p>` tags in components other than the `P` component itself** (the MDX `p` mapping in `app-factory.tsx`). In the editorial component system, `safe-mdx` wraps text children in paragraph nodes that map to `P`. If any other component (e.g. `Caption`, `Hero`, custom wrappers) also renders a `<p>`, the text inside it will get wrapped in another `P` → `<p>`, creating invalid `<p>` inside `<p>` nesting. This violates the HTML spec and causes React hydration mismatches.
+**Never use `<p>` tags in components other than the `P` component itself** (the MDX `p` mapping in `app-factory.tsx`). In the editorial component system, `safe-mdx` wraps text children in paragraph nodes that map to `P`. If any other component (e.g. `Caption`, `Above`, custom wrappers) also renders a `<p>`, the text inside it will get wrapped in another `P` → `<p>`, creating invalid `<p>` inside `<p>` nesting. This violates the HTML spec and causes React hydration mismatches.
 
 Use `<div>` instead of `<p>` in all editorial components. Style it identically with inline styles — the visual output is the same, and `<div>` can nest any element without spec violations.
 

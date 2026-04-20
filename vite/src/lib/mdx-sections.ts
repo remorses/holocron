@@ -34,8 +34,8 @@ export function isFullWidthNode(node: RootContent): node is FlowJsxNode {
   return node.type === 'mdxJsxFlowElement' && node.name === 'FullWidth'
 }
 
-export function isHeroNode(node: RootContent): node is FlowJsxNode {
-  return node.type === 'mdxJsxFlowElement' && node.name === 'Hero'
+export function isAboveNode(node: RootContent): node is FlowJsxNode {
+  return node.type === 'mdxJsxFlowElement' && (node.name === 'Above' || node.name === 'Hero')
 }
 
 function isHeadingNode(node: RootContent): boolean {
