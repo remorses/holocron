@@ -262,7 +262,10 @@
    ===================================================================== */
 
 @layer holocron {
-  /* Custom scrollbar styles: shadcn-inspired */
+  /* Custom scrollbar styles: shadcn-inspired.
+     scrollbar-width: thin → Firefox uses a narrow track (~6px, matches our webkit width).
+     scrollbar-gutter: stable → reserves scrollbar space even when content doesn't overflow,
+     preventing horizontal layout shift when a scrollbar appears/disappears. */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -286,6 +289,14 @@
 
   .dark ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Stable scrollbar gutter for scrollable panels (sidebar, aside).
+     Prevents content from shifting when scrollbar appears/disappears.
+     scrollbar-width: thin matches our 6px webkit scrollbar. */
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
   }
 
   /* Hide scrollbars while keeping scroll functionality */

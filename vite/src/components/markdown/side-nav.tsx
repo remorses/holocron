@@ -227,7 +227,7 @@ export function SideNav() {
 
       {/* `pl-1` gives the search-highlight box-shadow 4px of horizontal
           clearance inside nav's overflow-y-auto clip. */}
-      <nav aria-label='Navigation' className='overflow-y-auto min-h-0 pl-1 pr-1 flex flex-col gap-2'>
+      <nav aria-label='Navigation' className='overflow-y-auto scrollbar-stable min-h-0 pl-1 pr-1 flex flex-col gap-2'>
         <SidebarTreeProvider value={sidebarTreeContext}>
           {noResults ? (
             <div
