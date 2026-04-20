@@ -1,0 +1,66 @@
+---
+title: File downloads
+---
+
+> Intercept file downloads triggered by clicking DOM elements.
+
+When a click triggers a file download in the browser, Playwright can intercept it before the browser handles it natively. This is especially useful for files like PDFs that the browser would otherwise open in a new tab instead of downloading. `downloadViaClick` captures the file contents as a buffer so your workflow can process the file directly without relying on browser rendering behavior.
+
+### `downloadViaClick()`
+
+Clicks a DOM element and intercepts the resulting download using Playwright's download event. The download listener is registered **before** the click so the event is never missed.
+
+```typescript theme={null}
+async function downloadViaClick(
+  page: Page,
+  selector: string,
+  options?: DownloadViaClickOptions,
+): Promise<DownloadResult>;
+```
+
+#### Parameters
+
+<ParamField path="page" type="Page" required>
+  The Playwright `Page` to operate on.
+</ParamField>
+
+<ParamField path="selector" type="string" required>
+  CSS selector for the element that triggers the download when clicked.
+</ParamField>
+
+<ParamField path="options" type="DownloadViaClickOptions">
+  <Expandable title="properties">
+    <ParamField path="logger" type="MinimalLogger">
+      Optional logger. Logs download filename, size, and duration on completion.
+    </ParamField>
+
+    <ParamField path="timeout" type="number">
+      Milliseconds to wait for the download event. Defaults to `30000`.
+    </ParamField>
+
+  </Expandable>
+</ParamField>
+
+#### `DownloadResult`
+
+<ResponseField name="buffer" type="Buffer">
+  The raw file contents.
+</ResponseField>
+
+<ResponseField name="filename" type="string">
+  The filename suggested by the server via the `Content-Disposition` header or
+  the URL.
+</ResponseField>
+
+#### Example
+
+```typescript theme={null}
+import { downloadViaClick } from "libretto";
+
+const { buffer, filename } = await downloadViaClick(page, "#export-btn", {
+  logger,
+  timeout: 60_000,
+});
+
+console.log(`Downloaded ${filename} (${buffer.length} bytes)`);
+```

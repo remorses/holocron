@@ -1,0 +1,47 @@
+---
+title: How workflow generation works
+---
+
+> What happens under the hood when your agent builds a browser automation.
+
+Whether the agent is generating a workflow from scratch, recording your actions, or debugging a broken script, it follows the same four-phase process. Each phase is designed around a specific constraint of how AI agents interact with browsers.
+
+### 1. Browser session
+
+The agent starts by launching a browser and registering it as a named session. The session becomes the agent's handle to the browser for everything that follows: snapshots, interactions, and validation all target the session by name.
+
+Sessions track all state (network traffic, actions, snapshots) in `.libretto/sessions/<name>/`. This gives the agent a persistent record of what it has seen and done, so it can refer back to earlier observations without re-inspecting the page.
+
+If the site requires authentication, the agent opens the browser in headed mode and asks you to log in. It cannot handle login flows on its own because most login pages include CAPTCHAs or multi-factor prompts that require a human.
+
+### 2. Page snapshot and analysis
+
+Rather than reading the full page DOM, the agent captures a screenshot and a condensed HTML snapshot, then sends both to an AI model for analysis. The model returns a structured summary of selectors, interactive elements, and visible state.
+
+The condensed snapshot strips away irrelevant markup while preserving the information the agent needs to reason about what's on the page and how to interact with it. This keeps the agent's context window small while still giving it a detailed understanding of the page.
+
+The agent snapshots frequently: before its first interaction, after navigation, and any time it needs to understand what changed. Each snapshot includes an objective ("Find the search input") and context ("I just opened the homepage") so the analysis is focused on what the agent is actually trying to do.
+
+### 3. Interaction prototyping
+
+Before writing any code, the agent tests its plan against the live browser. It runs Playwright expressions one at a time through `exec`, validating that each selector actually targets the right element and each action produces the expected result.
+
+The agent iterates between `snapshot` and `exec` during this phase. A typical loop looks like: snapshot the page to find a selector, exec an action using that selector, snapshot again to confirm the result. This cycle repeats until the agent has working selectors for each step of the workflow.
+
+Prototyping against the live page is what separates Libretto from writing a Playwright script from scratch. Instead of guessing at selectors and hoping they work, the agent confirms each one interactively before committing it to the final script.
+
+### 4. Code generation and validation
+
+Once the agent has validated all the interactions, it writes a TypeScript file that exports a `workflow()`. The workflow uses the same Playwright selectors the agent already tested, so the script is grounded in what actually worked on the live page.
+
+The agent then runs the workflow headless to verify it works end-to-end without any manual intervention. If the run fails, the agent re-enters the snapshot-and-prototype loop (phases 2 and 3) to diagnose and fix the issue, then tries the headless run again.
+
+Validation requires a successful headless run with correct output. The agent does not consider a workflow complete until it has passed this check.
+
+### How the workflow guides fit in
+
+Each [workflow guide](/workflow-guides/one-shot-workflow-generation) follows this same four-phase process with different starting points:
+
+- **One-shot generation:** The agent drives the entire process. You provide a prompt, the agent handles all four phases.
+- **Interactive building:** You drive phases 1 and 2 by performing the workflow in the browser while Libretto records your actions. The agent handles phases 3 and 4.
+- **Debugging:** You start at a failed workflow (phase 4) and the agent uses phases 2 and 3 to diagnose and fix it.

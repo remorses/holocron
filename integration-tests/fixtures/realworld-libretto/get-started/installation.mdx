@@ -1,0 +1,126 @@
+---
+title: Installation
+sidebarTitle: Installation
+---
+
+Already have a Node.js package and just want to install Libretto without scaffolding? [Skip to install into an existing package](#install-into-an-existing-package).
+
+## Create a new package
+
+Use this if you want Libretto to scaffold a new package with directory structure, example workflows, and dependencies. This works whether you're starting fresh or adding Libretto as a new package to a monorepo.
+
+<Steps>
+  <Step title="Scaffold the package">
+    ```bash theme={null}
+    npm create libretto@latest
+    ```
+
+    You'll be prompted for a package name (defaults to `my-automations`). You can also pass it directly:
+
+    ```bash theme={null}
+    npm create libretto@latest my-project
+    ```
+
+    This scaffolds a package directory, installs dependencies, downloads Chromium, sets up the `.libretto/` directory, copies agent skill files, and walks you through configuring a snapshot analysis model.
+
+    <Note>
+      Run this yourself in a terminal — not through an agent. It may prompt for
+      input and starts a Chromium download that takes a moment.
+    </Note>
+
+  </Step>
+
+  <Step title="Set your API key">
+    Libretto uses an AI model to analyze page snapshots during workflow generation. Add the API key for your chosen provider to a `.env` file in your project root:
+
+    ```bash theme={null}
+    # .env
+    OPENAI_API_KEY=sk-...
+    ```
+
+    See the [AI Provider Reference](/get-started/configuration#ai-provider-reference) for the full list of supported providers and their environment variables.
+  </Step>
+
+  <Step title="Run a workflow">
+    The scaffolded package includes an example workflow. Run it with:
+
+    ```bash
+    npx libretto run src/workflows/star-repo.ts
+    ```
+
+  </Step>
+</Steps>
+
+## Install into an existing package
+
+If you already have a Node.js package that you plan to use for Libretto automations, you can skip the scaffolding and just install Libretto directly.
+
+<Steps>
+  <Step title="Install Libretto">
+    ```bash
+    npm install libretto
+    ```
+  </Step>
+
+  <Step title="Run setup">
+    ```bash
+    npx libretto setup
+    ```
+
+    This downloads Chromium, creates the `.libretto/` directory, copies agent skill files, and walks you through configuring a snapshot analysis model.
+
+    <Note>
+      Run this yourself in a terminal — not through an agent. It may prompt for
+      input and starts a Chromium download that takes a moment.
+    </Note>
+
+  </Step>
+
+  <Step title="Set your API key">
+    Libretto uses an AI model to analyze page snapshots during workflow generation. Add the API key for your chosen provider to a `.env` file in your project root:
+
+    ```bash theme={null}
+    # .env
+    OPENAI_API_KEY=sk-...
+    ```
+
+    See the [AI Provider Reference](/get-started/configuration#ai-provider-reference) for the full list of supported providers and their environment variables.
+  </Step>
+
+  <Step title="Create a workflow">
+    Create a workflow file — for example, `src/workflows/scrape-page.ts`:
+
+    ```ts src/workflows/scrape-page.ts
+    import { workflow } from "libretto";
+
+    export default workflow("scrape-page", async ({ page }) => {
+      await page.goto("https://example.com");
+      const title = await page.title();
+      console.log(`Page title: ${title}`);
+    });
+    ```
+
+    The `workflow()` function wraps your automation with browser lifecycle management, error handling, and session recording.
+
+  </Step>
+
+  <Step title="Run it">
+    ```bash
+    npx libretto run src/workflows/scrape-page.ts
+    ```
+
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card
+    title="CLI reference"
+    icon="terminal"
+    href="../cli-reference/open-and-connect"
+  >
+    Full reference for every Libretto command and flag.
+  </Card>
+  <Card title="Workflow API" icon="code" href="../library-api/workflow">
+    Write workflow files with the typed `workflow()` API.
+  </Card>
+</CardGroup>

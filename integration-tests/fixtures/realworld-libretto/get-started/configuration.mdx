@@ -1,0 +1,86 @@
+---
+title: Configuration
+---
+
+> Change your AI provider, viewport, or other settings after initial setup.
+
+Both `npm create libretto@latest` and `npx libretto setup` handle initial configuration for you. The commands on this page are for changing settings after the fact.
+
+### Changing your AI provider
+
+<Steps>
+  <Step title="Run the configure command">
+    Pick the provider you want to switch to:
+
+    ```bash theme={null}
+    npx libretto ai configure <openai|anthropic|gemini|vertex>
+    ```
+
+    You can also pin a specific model version:
+
+    ```bash theme={null}
+    npx libretto ai configure openai/gpt-4o
+    ```
+  </Step>
+
+  <Step title="Set your environment variable">
+    Add the environment variable for your provider (see table below) to your shell or a `.env` file at the project root.
+  </Step>
+
+  <Step title="Install the provider's AI SDK">
+    Install the matching SDK package for your provider (see table below):
+
+    ```bash theme={null}
+    npm install @ai-sdk/openai
+    ```
+  </Step>
+</Steps>
+
+#### AI Provider Reference
+
+| Provider    | Default model                   | Environment variable   | SDK package              |
+| ----------- | ------------------------------- | ---------------------- | ------------------------ |
+| `openai`    | `openai/gpt-5.4`               | `OPENAI_API_KEY`       | `@ai-sdk/openai`        |
+| `anthropic` | `anthropic/claude-sonnet-4-6`   | `ANTHROPIC_API_KEY`    | `@ai-sdk/anthropic`     |
+| `gemini`    | `google/gemini-3-flash-preview` | `GEMINI_API_KEY`       | `@ai-sdk/google`        |
+| `vertex`    | `vertex/gemini-2.5-flash`       | `GOOGLE_CLOUD_PROJECT` | `@ai-sdk/google-vertex`  |
+
+To view the current configuration, run `npx libretto ai configure` with no arguments. To clear it, pass `--clear`.
+
+### Config file reference
+
+The config file is at `.libretto/config.json`. You can edit it directly or use the CLI commands above.
+
+```json theme={null}
+{
+  "version": 1,
+  "snapshotModel": "openai/gpt-5.4",
+  "provider": "local",
+  "viewport": { "width": 1280, "height": 800 },
+  "sessionMode": "write-access"
+}
+```
+
+<ParamField path="version" type="number" required>
+  Config schema version.
+</ParamField>
+
+<ParamField path="snapshotModel" type="string">
+  Optional. A `provider/model-id` string (e.g. `openai/gpt-5.4`). The AI model used by `npx libretto snapshot` to analyze page state. Set via `npx libretto ai configure`.
+</ParamField>
+
+<ParamField path="provider" type="string">
+  Optional. The browser provider to use. Must be `"local"`, `"kernel"`, or `"browserbase"`. Defaults to `"local"`. Can be overridden per-command with `--provider` or the `LIBRETTO_PROVIDER` environment variable. Resolution order: `--provider` flag → `LIBRETTO_PROVIDER` env var → this config field → `"local"`.
+</ParamField>
+
+<ParamField path="viewport" type="object">
+  Optional, manually set. Default browser window size (width and height in pixels) used by `open` and `run` when you don't pass `--viewport`. Defaults to `1366x768` if not set.
+</ParamField>
+
+<ParamField path="sessionMode" type="string">
+  Optional, manually set. Default access mode for new sessions created by `open`, `connect`, and `run`. Must be `"read-only"` or `"write-access"`. Defaults to `"write-access"` when omitted. Pass `--read-only` or `--write-access` to `open`, `connect`, or `run` to override when creating a session.
+</ParamField>
+
+<ParamField path="windowPosition" type="object">
+  Optional, manually set. Sets the initial position of the headed browser window on screen. Has no effect in headless mode.
+</ParamField>

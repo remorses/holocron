@@ -1,0 +1,149 @@
+---
+title: Debugging workflows
+---
+
+> Reproduce failures, inspect live page state, and fix broken browser automations.
+
+There are two common debugging scenarios: connecting to a remote browser session that's already open (e.g. a production run that failed), and reproducing a failure locally from error logs.
+
+### Remote debugging (connect to an open session)
+
+When a workflow fails in production or a remote environment, the browser often stays open at the point of failure. You can connect to it directly with Libretto and debug the live page state.
+
+<Steps>
+  <Step title="Connect to the remote browser">
+    Get the CDP (Chrome DevTools Protocol) endpoint URL from your deployment logs. Then connect:
+
+    ```bash  theme={null}
+    npx libretto connect <cdp-endpoint-url> --session remote-debug
+    ```
+
+  </Step>
+
+  <Step title="Prompt your agent to investigate">
+    Tell the agent what went wrong and point it at the open session.
+
+    ```text Example prompt
+    Use the Libretto skill. I have a remote browser session open at --session remote-debug. The eligibility check workflow failed with a broken selector error. Inspect the current page state and figure out what changed.
+    ```
+
+    The agent can snapshot the page, test selectors, and execute code against the live browser without restarting the workflow.
+
+  </Step>
+
+  <Step title="Review the fix">
+    The agent patches the workflow file based on what it found in the live page. Check the diff and verify the fix addresses the root cause.
+
+  </Step>
+</Steps>
+
+### Local debugging (reproduce from error logs)
+
+When you have error output from a failed run (stack traces, log files, GCP logs, etc.), you can have your agent reproduce and fix the issue locally.
+
+<Steps>
+  <Step title="Prompt your agent with the failure">
+    Describe the **script**, what it's **supposed to do**, and what's **going wrong**. Include the error output.
+
+    ```text Example prompt
+    Use the Libretto skill. The workflow at ./integration.ts is supposed to go to Availity and perform an eligibility check for a patient. But I'm getting a broken selector error. Fix it.
+    ```
+
+    Paste the error or stack trace directly into your prompt.
+
+  </Step>
+
+  <Step title="Watch the failure reproduce">
+    The agent runs the script in headed mode so you can see the browser. It stops at the failure point with the browser still open.
+
+    ```bash  theme={null}
+    # What the agent runs
+    npx libretto run ./integration.ts --session debug-flow --headed
+    ```
+
+    If you notice something useful (a popup that wasn't there before, a redesigned page), mention it to save the agent time.
+
+  </Step>
+
+  <Step title="Wait for the agent to diagnose and fix">
+    The agent snapshots the broken page state, identifies what's wrong, and tests new selectors against the live DOM. You'll see it running `npx libretto snapshot` and `npx libretto exec` commands while the browser stays open.
+
+    If you have context that would help, share it:
+
+    > They redesigned the eligibility form last week. The submit button used to be in a sidebar but now it's inline.
+
+  </Step>
+
+  <Step title="Review the fix">
+    The agent patches the workflow file. Check the diff:
+
+    - Is the new selector reasonable? (`data-testid`, ARIA role, or visible text are more stable than class names)
+    - Did it address the **root cause** or just the immediate symptom?
+    - If the site changed its markup, are there other selectors in the file that might have the same problem?
+
+  </Step>
+
+  <Step title="Check the verification run">
+    The agent re-runs the workflow headless to confirm the fix works.
+
+    ```bash  theme={null}
+    npx libretto run ./integration.ts --headless
+    ```
+
+    If it fails again, the browser stays open and the agent repeats the diagnose/fix cycle.
+
+  </Step>
+</Steps>
+
+### Using `pause()` as a breakpoint
+
+If you need the workflow to stop at a specific point (not at failure, but at a known state you want to inspect), ask the agent to add a `pause()` call:
+
+```typescript theme={null}
+import { workflow, pause } from "libretto";
+
+export default workflow(
+  "eligibilityCheck",
+  async (ctx, input) => {
+    const { session, page } = ctx;
+
+    await page.goto("https://availity.com");
+    await page.locator("#memberSearch").fill(input.memberId);
+
+    // Pause here to inspect the page before submitting
+    await pause(session);
+
+    await page.locator("button[type='submit']").click();
+    // ...
+  },
+);
+```
+
+The workflow halts at the `pause()` with the browser open. The agent can also drive this autonomously by adding `pause()` calls where it wants to inspect, running the workflow, and calling `npx libretto resume --session <name>` to continue when it's ready. `pause()` is a no-op when `NODE_ENV === "production"`, so it's safe to leave in during development.
+
+### Common errors
+
+**Broken selectors:** the most common failure. A selector that worked last week no longer matches because the site updated its markup. Tell the agent what changed if you know, or just let it snapshot and figure it out.
+
+**Popups blocking the workflow:** a modal, cookie banner, or session-expiry dialog appears unexpectedly. Tell the agent about the popup and ask it to add recovery logic using `attemptWithRecovery()` so future runs handle it automatically.
+
+**Timeout errors:** a `waitForSelector` or locator action times out because the expected element never appeared. The page might show a loading spinner, an error state, or a redirect. The agent can snapshot to see what actually rendered.
+
+### Tips
+
+<Tip>
+  Paste your error message into the prompt. Agents do a better job debugging
+  when they have the stack trace.
+</Tip>
+
+### Related guides
+
+<CardGroup cols={2}>
+  <Card title="One-shot workflow generation" icon="bolt" href="./one-shot-workflow-generation">
+    Build a new automation from scratch without any prior knowledge of the site.
+  </Card>
+
+  <Card title="Interactive workflow building" icon="hand-pointer" href="./interactive-workflow-building">
+    Show the workflow manually and let your agent turn it into reusable code.
+  </Card>
+</CardGroup>

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "Libretto",
+  "description": "Toolkit for building, debugging, and maintaining browser automations.",
+  "colors": {
+    "primary": "#5a5546",
+    "light": "#908879",
+    "dark": "#1e1d1a"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/favicon.svg",
+    "dark": "/favicon.svg",
+    "href": "https://libretto.sh"
+  },
+  "fonts": {
+    "heading": {
+      "family": "PP Editorial New",
+      "source": "/fonts/PPEditorialNew-Regular.woff2",
+      "format": "woff2",
+      "weight": 400
+    },
+    "body": {
+      "family": "Inter",
+      "weight": 400
+    }
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "background": {
+    "color": {
+      "light": "#f5f2ec",
+      "dark": "#1e1d1a"
+    }
+  },
+  "styling": {
+    "codeblocks": {
+      "theme": {
+        "light": "github-light",
+        "dark": "github-dark"
+      }
+    }
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": [
+          "get-started/introduction",
+          "get-started/installation",
+          "get-started/configuration",
+          "get-started/core-concepts",
+          "get-started/how-workflow-generation-works",
+          "get-started/automation-and-bot-detection"
+        ]
+      },
+      {
+        "group": "Workflow guides",
+        "pages": [
+          "workflow-guides/one-shot-workflow-generation",
+          "workflow-guides/interactive-workflow-building",
+          "workflow-guides/debugging-workflows",
+          "workflow-guides/convert-to-network-requests"
+        ]
+      },
+      {
+        "group": "CLI reference",
+        "pages": [
+          "cli-reference/open-and-connect",
+          "cli-reference/sessions",
+          "cli-reference/profiles",
+          "cli-reference/snapshot",
+          "cli-reference/exec",
+          "cli-reference/run-and-resume",
+          "cli-reference/session-logs",
+          "cli-reference/pages"
+        ]
+      },
+      {
+        "group": "Library API",
+        "pages": [
+          "library-api/workflow",
+          "library-api/ai-extraction",
+          "library-api/network-requests",
+          "library-api/file-downloads"
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/saffron-health/libretto",
+          "icon": "github"
+        },
+        {
+          "anchor": "npm",
+          "href": "https://www.npmjs.com/package/libretto",
+          "icon": "npm"
+        },
+        {
+          "anchor": "Changelog",
+          "href": "https://github.com/saffron-health/libretto/releases",
+          "icon": "clock-rotate-left"
+        },
+        {
+          "anchor": "Discord",
+          "href": "https://discord.gg/NYrG56hVDt",
+          "icon": "discord"
+        }
+      ]
+    }
+  },
+  "navbar": {},
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude"]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/saffron-health/libretto",
+      "discord": "https://discord.gg/NYrG56hVDt",
+      "linkedin": "https://www.linkedin.com/company/saffron-health"
+    }
+  }
+}
