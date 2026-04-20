@@ -441,7 +441,8 @@ export async function createHolocronApp(providers: HolocronProviders) {
   function slugFromRequest(request: Request): string {
     const { pathname } = new URL(request.url)
     const strippedSlug = stripBaseFromSlug(pathname, site.base)
-    return strippedSlug === '' ? 'index' : strippedSlug
+    const href = strippedSlug === '' ? '/' : `/${strippedSlug}`
+    return hrefToSlug.get(href) ?? (strippedSlug === '' ? 'index' : strippedSlug)
   }
 
   // Same function reference is registered for every slug AND the

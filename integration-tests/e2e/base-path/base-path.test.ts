@@ -13,6 +13,12 @@ test.describe("pages under base path", () => {
     expect(res.status()).toBe(200);
     const body = await res.text();
     expect(body).toContain("Guide");
+    expect(body).toContain("<title>Guide — Base Path Test</title>");
+  });
+
+  test("nested index page keeps the right browser title", async ({ page }) => {
+    await page.goto("/docs/guide");
+    await expect(page).toHaveTitle("Guide — Base Path Test");
   });
 });
 
