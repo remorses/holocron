@@ -73,7 +73,7 @@ export function Tabs({
           })}
         </div>
       </div>
-      <div role='tabpanel' className='p-3'>
+      <div role='tabpanel' className='no-bleed flex flex-col gap-(--prose-gap) p-3'>
         {activeTab?.props.children}
       </div>
     </div>

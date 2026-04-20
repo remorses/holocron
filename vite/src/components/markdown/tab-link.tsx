@@ -64,6 +64,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
       >
         <Icon icon={tab.icon} size={14} />
         {tab.label}
+        <span className='opacity-50'>↗</span>
         {indicator}
       </a>
     )
