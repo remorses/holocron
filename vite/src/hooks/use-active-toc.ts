@@ -4,11 +4,19 @@
  * Shared hook for tracking which heading is currently active in the viewport.
  *
  * Uses a scroll listener to find the last heading that scrolled above the
- * sticky header (80px). Falls back to the URL hash, then to the first heading.
+ * active zone (50% of viewport height). Falls back to the URL hash, then to
+ * the first heading.
  *
  * Scroll-based approach is more predictable than IntersectionObserver:
  * no rootMargin magic, no visible-set tracking — just "which heading is
  * closest to the top of the viewport?"
+ *
+ * Hash priority: after a hashchange event (including synthetic ones dispatched
+ * by Spiceflow's router for pushState navigations), the hash is authoritative
+ * until the user scrolls. This handles:
+ * - No-scroll pages: user can't scroll → hash always wins
+ * - Bottom-of-page headings: heading can't reach the threshold line → hash
+ *   stays active until user scrolls away
  */
 
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
@@ -22,44 +30,44 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react'
 const ACTIVE_ZONE_RATIO = 0.5
 
 /**
- * Grace period after a hash change during which the hash takes priority over
- * scroll detection. This handles the case where the user clicks a heading near
- * the bottom of the page — the heading can't physically scroll to the 80px
- * line, so without this grace period the previous heading would stay active.
+ * When true, the URL hash takes priority over scroll-based detection.
+ * Set to true on hashchange, reset to false on user scroll.
+ *
+ * This replaces a time-based grace period with an intent-based one:
+ * the hash wins until the user actively scrolls away from it.
  */
-const HASH_GRACE_MS = 1000
+let hashIsAuthoritative = false
 
 /**
- * Hash change detection — tracked inside computeActiveId itself because
- * Spiceflow's <Link> uses pushState for client navigation, which does NOT
- * fire hashchange or popstate events. We detect the change by comparing
- * against the last known hash on every call.
+ * Timestamp of the last hashchange event. Scroll events within SCROLL_SETTLE_MS
+ * after a hashchange are ignored — they come from scrollIntoView() triggered by
+ * the router, not from the user manually scrolling.
  */
-let lastKnownHash = ''
-let lastHashTime = 0
+let lastHashChangeTime = 0
+const SCROLL_SETTLE_MS = 150
 
 export type ActiveTocSnapshot = {
   activeId: string
 }
 
 /**
- * Find the last heading element that has scrolled above the header offset.
- * Falls back to the URL hash (if it matches a known heading), then to fallbackId.
+ * Find the active heading based on scroll position + hash state.
  *
- * After a hash change (e.g. clicking a sidebar heading), the hash wins for
- * HASH_GRACE_MS so headings near the bottom of the page activate correctly.
+ * When hashIsAuthoritative (user just clicked a heading link), the hash wins.
+ * Otherwise, find the last heading above the active zone threshold.
  */
-function computeActiveId(validIds: Set<string>, fallbackId: string): string {
+export function computeActiveId(validIds: Set<string>, fallbackId: string): string {
   const hash = window.location.hash.replace(/^#/, '')
 
-  // Detect hash changes that pushState doesn't fire events for
-  if (hash !== lastKnownHash) {
-    lastKnownHash = hash
-    if (hash) lastHashTime = Date.now()
+  // Hash is authoritative after a hashchange until the user scrolls
+  if (hashIsAuthoritative && hash && validIds.has(hash)) {
+    return hash
   }
 
-  // Hash takes priority right after a navigation click
-  if (hash && validIds.has(hash) && Date.now() - lastHashTime < HASH_GRACE_MS) {
+  // On non-scrollable pages, scroll-based detection is meaningless — all
+  // headings sit at their initial positions. The hash (from cross-page
+  // navigation or direct URL) is the only useful signal.
+  if (hash && validIds.has(hash) && document.documentElement.scrollHeight <= window.innerHeight + 1) {
     return hash
   }
 
@@ -103,15 +111,22 @@ export function useActiveTocState({
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
-      const onHash = () => {
-        lastHashTime = Date.now()
+      const onScroll = () => {
+        // Ignore scroll events caused by scrollIntoView() after a hash click
+        if (Date.now() - lastHashChangeTime < SCROLL_SETTLE_MS) return
+        hashIsAuthoritative = false
         onStoreChange()
       }
-      window.addEventListener('scroll', onStoreChange, { passive: true })
+      const onHash = () => {
+        hashIsAuthoritative = true
+        lastHashChangeTime = Date.now()
+        onStoreChange()
+      }
+      window.addEventListener('scroll', onScroll, { passive: true })
       window.addEventListener('hashchange', onHash)
       window.addEventListener('popstate', onHash)
       return () => {
-        window.removeEventListener('scroll', onStoreChange)
+        window.removeEventListener('scroll', onScroll)
         window.removeEventListener('hashchange', onHash)
         window.removeEventListener('popstate', onHash)
       }
