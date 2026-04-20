@@ -4,10 +4,7 @@
   "colors": {
     "primary": "#5b7cff"
   },
-  "banner": {
-    "content": "Holocron is under active development. Compare these examples with [Mintlify components](https://www.mintlify.com/docs/components).",
-    "dismissible": true
-  },
+
   "navbar": {
     "links": [
       {

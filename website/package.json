@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node dist/rsc/index.js"
+    "start": "node dist/rsc/index.js",
+    "deploy": "CLOUDFLARE_ENV=preview vite build && wrangler deploy --env preview",
+    "deploy:prod": "vite build && wrangler deploy"
   },
   "dependencies": {
     "@holocron.so/vite": "workspace:^",
@@ -15,8 +17,10 @@
     "vite": "^8.0.8"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.32.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.82.2"
   }
 }
