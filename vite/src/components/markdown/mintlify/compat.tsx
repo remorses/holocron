@@ -291,7 +291,7 @@ export function ResponseField({
 }
 
 export function Steps({ children, titleSize = 'p' }: { children: React.ReactNode; titleSize?: 'p' | 'h2' | 'h3' | 'h4' }) {
-  return <ol className='no-bleed m-0 flex list-decimal flex-col gap-(--prose-gap) ps-5'>{children}</ol>
+  return <ol className='no-bleed m-0 flex list-none flex-col gap-(--prose-gap) ps-0 [counter-reset:step]'>{children}</ol>
 }
 
 export function Step({
@@ -307,9 +307,16 @@ export function Step({
   children: React.ReactNode
 }) {
   return (
-    <li className='ps-1'>
-      <div className='flex flex-col gap-(--prose-gap)'>
-        <div className='flex items-center gap-2 text-sm font-semibold text-foreground'>
+    <li className='relative flex gap-3 [counter-increment:step]'>
+      {/* Left column: circle + vertical line */}
+      <div className='relative flex flex-col items-center'>
+        <div className='flex size-7 shrink-0 items-center justify-center rounded-full bg-muted/50 text-xs font-semibold text-foreground [&::before]:content-[counter(step)]' />
+        {/* Connecting line — hidden on last step via CSS */}
+        <div className='mt-1.5 w-px flex-1 bg-border [li:last-child_&]:hidden' />
+      </div>
+      {/* Right column: title + content */}
+      <div className='flex min-w-0 flex-1 flex-col gap-(--prose-gap) pb-2'>
+        <div className='flex items-center gap-2 pt-1 text-sm font-semibold text-foreground'>
           {icon && <Icon icon={icon} iconType={iconType} size={16} />}
           {title}
         </div>
