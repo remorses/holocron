@@ -1370,8 +1370,11 @@ redirects.
 ## Icon resolver — build-time lucide atlas + virtual:holocron-icons (SHIPPED 2026-04-06)
 
 **Bug fixed:** `navbar.links[].icon` strings used to render as
-`<img src={icon}>` — wrong. Mintlify's convention (and now holocron's)
-is that string icons are **lucide icon names** by default. Also fixed:
+`<img src={icon}>` — wrong. Mintlify defaults to **Font Awesome** icons
+(configurable via `icons.library` in docs.json — options: `fontawesome`,
+`lucide`, `tabler`). Holocron currently only resolves Lucide icons, so
+FA-default icon names like `npm`, `discord`, `clock-rotate-left` show as
+empty. TODO: add FA icon support or at least a FA→Lucide fallback map. Also fixed:
 `{ "type": "github", "href": "..." }` without an explicit icon used
 to render an empty `<a>` tag (only aria-label set) — invisible. Now
 the normalizer auto-fills `link.icon` from `link.type`.

@@ -395,6 +395,24 @@ MDX has two JSX node types in the mdast tree:
 
 3. **Rendering** (`mdx-components-map.tsx`): even after promotion to flow, the MDX parser wraps flow element text in paragraph nodes (`[paragraph → [text]]`). The `renderNode` callback intercepts `<Heading>` flow elements and **unwraps** paragraph children before passing them to `SectionHeading`.
 
-**Key insight:** `remarkMarkAndUnravel` (from `safe-mdx/parse`) promotes `mdxJsxTextElement` nodes to `mdxJsxFlowElement` when they're alone in a paragraph. It does NOT handle text elements at root level — use `remarkPromoteRootTextElements` for that. Both are needed in the `normalizeMdx` pipeline.
+**Key insight:** `remarkMarkAndUnravel` (from `safe-mdx/parse`) promotes `mdxJsxTextElement` nodes to `mdxJsxFlowElement` when they're alone in a paragraph. It only changes the node `type` — it does NOT wrap the phrasing children in a paragraph node. This means single-line `<Note>text</Note>` ends up with bare phrasing children `[text]` while multi-line `<Note>\ntext\n</Note>` gets `[paragraph → [text]]` from the parser. The two forms render differently.
+
+**Important:** in `normalizeMdx`, `remarkMarkAndUnravel` runs AFTER serialization — the serialized string keeps text elements inline (avoiding `mdxToMarkdown`'s blank-line corruption), while the returned mdast tree has promoted flow elements for heading extraction and section splitting.
 
 **Flow elements always get `<p>` wrappers on their text children.** The MDX parser wraps bare text inside any `mdxJsxFlowElement` in paragraph nodes — this is part of the content model, not a bug. So even after `remarkMarkAndUnravel` promotes a text element to flow, the text inside `<Heading>Getting Started</Heading>` becomes `[paragraph → [text "Getting Started"]]` in the parsed tree. `remarkMarkAndUnravel` only removes paragraphs that **wrap** JSX text elements (paragraph → [mdxJsxTextElement]) — it does NOT touch paragraphs **inside** a flow element's children (those contain plain `text` nodes, not JSX elements). Any `renderNode` handler for a flow element whose children should be inline must unwrap these paragraphs manually.
+
+### MDX authoring rule: always use multi-line form for container components
+
+When writing MDX content inside container components (Callout, Note, Warning, Info, Tip, Check, Danger, Aside, Accordion, Steps, Card, Expandable, Panel, Frame, Prompt, etc.), **always put content on its own line** with a newline after the opening tag and before the closing tag:
+
+```mdx
+<!-- ✅ CORRECT — parser creates proper paragraph children -->
+<Note>
+Use `Note` for neutral supporting information.
+</Note>
+
+<!-- ❌ WRONG — phrasing children without paragraph wrapper -->
+<Note>Use `Note` for neutral supporting information.</Note>
+```
+
+Single-line form produces bare phrasing children (no `<P>` wrapper, no `editorial-prose` styling). Multi-line form gets proper paragraph wrapping from the MDX parser. This is a parser-level limitation — the two forms produce different ASTs.
