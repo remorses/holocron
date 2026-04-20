@@ -45,7 +45,7 @@
 
   /* shadcn/ui sidebar tokens */
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: rgba(0, 0, 0, 0.45);
+  --sidebar-foreground: rgba(0, 0, 0, 0.65);
   --sidebar-primary: rgba(0, 0, 0, 0.9);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
@@ -155,7 +155,7 @@
     --ring: oklch(0.442 0.017 285.786);
 
     --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: rgba(255, 255, 255, 0.45);
+    --sidebar-foreground: rgba(255, 255, 255, 0.65);
     --sidebar-primary: rgba(255, 255, 255, 0.9);
     --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.269 0 0);
