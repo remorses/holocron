@@ -1,6 +1,25 @@
 import { describe, expect, test } from 'vitest'
 import { normalizeMdx } from './normalize-mdx.ts'
 
+/** Strip positions from mdast nodes for readable snapshots. */
+function simplifyNode(node: any): any {
+  const { position, data, ...rest } = node
+  const out: any = { type: rest.type }
+  if (rest.name) out.name = rest.name
+  if (rest.value !== undefined) out.value = rest.value
+  if (rest.depth !== undefined) out.depth = rest.depth
+  if (rest.attributes?.length) {
+    out.attributes = rest.attributes.map((a: any) => {
+      const attr: any = { name: a.name }
+      if (typeof a.value === 'string') attr.value = a.value
+      else if (a.value) attr.value = '(expression)'
+      return attr
+    })
+  }
+  if (rest.children?.length) out.children = rest.children.map(simplifyNode)
+  return out
+}
+
 describe('normalizeMdx', () => {
   test('rewrites markdown headings to Heading JSX', async () => {
     const { content: result } = await normalizeMdx('## My heading {#custom-id}')
@@ -140,6 +159,96 @@ works correctly
         works correctly
       </Callout>
       "
+    `)
+  })
+
+  test('mdast: single-line Callout is promoted to flow with phrasing children', async () => {
+    const { mdast } = await normalizeMdx('<Note>Use `Note` for info.</Note>')
+    expect(mdast.children.map(simplifyNode)).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            {
+              "type": "text",
+              "value": "Use ",
+            },
+            {
+              "type": "inlineCode",
+              "value": "Note",
+            },
+            {
+              "type": "text",
+              "value": " for info.",
+            },
+          ],
+          "name": "Note",
+          "type": "mdxJsxFlowElement",
+        },
+      ]
+    `)
+  })
+
+  test('mdast: Heading with custom id is a flow element', async () => {
+    const { mdast } = await normalizeMdx('## Getting Started {#getting-started}')
+    expect(mdast.children.map(simplifyNode)).toMatchInlineSnapshot(`
+      [
+        {
+          "attributes": [
+            {
+              "name": "level",
+              "value": "(expression)",
+            },
+            {
+              "name": "id",
+              "value": "getting-started",
+            },
+          ],
+          "children": [
+            {
+              "type": "text",
+              "value": "Getting Started",
+            },
+          ],
+          "name": "Heading",
+          "type": "mdxJsxFlowElement",
+        },
+      ]
+    `)
+  })
+
+  test('mdast: multi-line Callout children are paragraphs', async () => {
+    const { mdast } = await normalizeMdx(`<Callout>
+first paragraph
+
+second paragraph
+</Callout>`)
+    expect(mdast.children.map(simplifyNode)).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "type": "text",
+                  "value": "first paragraph",
+                },
+              ],
+              "type": "paragraph",
+            },
+            {
+              "children": [
+                {
+                  "type": "text",
+                  "value": "second paragraph",
+                },
+              ],
+              "type": "paragraph",
+            },
+          ],
+          "name": "Callout",
+          "type": "mdxJsxFlowElement",
+        },
+      ]
     `)
   })
 
