@@ -131,7 +131,7 @@
      children automatically get zero spacing at the container edges. */
   --prose-gap: 20px;    /* between elements inside one section (p, h2, list, code) */
   --section-gap: 48px;  /* between sections (separates H1/## blocks) */
-  --list-gap: 12px;     /* between list items inside ul/ol */
+  --list-gap: var(--prose-gap);     /* between list items inside ul/ol — matches page rhythm */
 
   /* Dark mode overrides */
   @variant dark {

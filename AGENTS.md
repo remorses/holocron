@@ -65,7 +65,7 @@ The full shadcn token set is defined in `globals.css` `:root` with editorial def
 
 ### Container spacing — use flex column gap
 
-Any container-like MDX component (`Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, API fields/examples, tiles, tree wrappers, etc.) must own its inner vertical rhythm with `flex flex-col gap-*` on the container body, just like the root page/layout wrappers do. Do not rely on paragraph margins inside containers — many editorial nodes render with margins stripped, so raw MDX children will visually collapse unless the container explicitly provides gap spacing.
+Any container-like MDX component (`Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, `Steps`, `Step`, lists, API fields/examples, tiles, tree wrappers, etc.) must own its inner vertical rhythm with `flex flex-col gap-(--prose-gap)` on the container body, using the `--prose-gap` CSS variable defined in `globals.css`. This keeps all containers aligned with the page's overall vertical rhythm. Do not use hardcoded gap values like `gap-3` or `gap-4` — always use `gap-(--prose-gap)` so spacing stays consistent when the token changes. Do not rely on paragraph margins inside containers — many editorial nodes render with margins stripped, so raw MDX children will visually collapse unless the container explicitly provides gap spacing.
 
 When a container can receive arbitrary MDX children, also add `no-bleed` on that container/body so nested code blocks, lists, and images do not leak outside the card frame.
 

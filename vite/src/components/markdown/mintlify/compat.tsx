@@ -291,7 +291,7 @@ export function ResponseField({
 }
 
 export function Steps({ children, titleSize = 'p' }: { children: React.ReactNode; titleSize?: 'p' | 'h2' | 'h3' | 'h4' }) {
-  return <ol className='m-0 flex list-decimal flex-col gap-4 ps-5'>{children}</ol>
+  return <ol className='no-bleed m-0 flex list-decimal flex-col gap-(--prose-gap) ps-5'>{children}</ol>
 }
 
 export function Step({
@@ -308,12 +308,12 @@ export function Step({
 }) {
   return (
     <li className='ps-1'>
-      <div className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-(--prose-gap)'>
         <div className='flex items-center gap-2 text-sm font-semibold text-foreground'>
           {icon && <Icon icon={icon} iconType={iconType} size={16} />}
           {title}
         </div>
-        <div className='no-bleed flex flex-col gap-3 text-sm text-muted-foreground'>{children}</div>
+        <div className='no-bleed flex flex-col gap-(--prose-gap) text-sm text-muted-foreground'>{children}</div>
       </div>
     </li>
   )

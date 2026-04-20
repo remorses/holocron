@@ -55,15 +55,15 @@ export function Section({
 }
 
 export function OL({ children }: { children: React.ReactNode }) {
-  return <ol className='editorial-prose pl-5 flex flex-col gap-(--list-gap)' style={{ listStyleType: 'decimal' }}>{children}</ol>
+  return <ol className='no-bleed editorial-prose pl-5 flex flex-col gap-(--list-gap)' style={{ listStyleType: 'decimal' }}>{children}</ol>
 }
 
 export function List({ children }: { children: React.ReactNode }) {
-  return <ul className='editorial-prose pl-5 flex flex-col gap-(--list-gap)' style={{ listStyleType: 'disc' }}>{children}</ul>
+  return <ul className='no-bleed editorial-prose pl-5 flex flex-col gap-(--list-gap)' style={{ listStyleType: 'disc' }}>{children}</ul>
 }
 
 // Li has no vertical padding — the parent ul/ol uses `gap-(--list-gap)`
 // for inter-item spacing so first/last items get zero edge space.
 export function Li({ children }: { children: React.ReactNode }) {
-  return <li style={{ paddingLeft: '12px' }}>{children}</li>
+  return <li className='ps-1'>{children}</li>
 }
