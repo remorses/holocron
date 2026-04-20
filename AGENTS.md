@@ -238,6 +238,15 @@ Axis rule: use `gap-y-(--token)` on subgrid wrappers (not `gap-(--token)`) so th
 
 MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on disk until a page is requested. At request time, the MDX is parsed with `safe-mdx`, split into sections, and rendered with the editorial components.
 
+## `useSyncExternalStore` — all callbacks must be stable references
+
+Every argument passed to `useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)` **must be a stable function reference**. If any callback is an inline arrow or a new closure on every render, React re-subscribes on every render — causing performance bugs and potential infinite loops.
+
+**Rules:**
+- Module-level functions are always stable (preferred for global stores like theme, first-paint guard).
+- Inside hooks, wrap callbacks with `useCallback`. If the callback closes over a prop (like a selector), stash it in a `useRef` and read the ref inside a `useCallback(fn, [])` — this keeps the function identity stable while the selector stays fresh.
+- **Never** pass inline arrows like `() => selector(store.getState())` or `() => 'light'` directly to `useSyncExternalStore`.
+
 ## HTML element nesting rules
 
 **Never use `<p>` tags in components other than the `P` component itself** (the MDX `p` mapping in `app-factory.tsx`). In the editorial component system, `safe-mdx` wraps text children in paragraph nodes that map to `P`. If any other component (e.g. `Caption`, `Hero`, custom wrappers) also renders a `<p>`, the text inside it will get wrapped in another `P` → `<p>`, creating invalid `<p>` inside `<p>` nesting. This violates the HTML spec and causes React hydration mismatches.

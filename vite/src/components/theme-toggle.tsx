@@ -19,6 +19,8 @@ function hasExplicitCookie(): boolean {
   return document.cookie.includes('holocron-theme=')
 }
 
+const getServerTheme = () => 'light' as const
+
 function subscribe(cb: () => void) {
   // Watch class changes on <html>
   const observer = new MutationObserver(cb)
@@ -51,7 +53,7 @@ function setTheme(theme: 'light' | 'dark') {
 }
 
 export function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribe, getTheme, () => 'light')
+  const theme = useSyncExternalStore(subscribe, getTheme, getServerTheme)
 
   const toggle = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark')

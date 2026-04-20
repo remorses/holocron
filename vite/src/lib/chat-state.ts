@@ -6,7 +6,7 @@
  * evaluate Zustand's React bindings from a shared module.
  */
 
-import { useSyncExternalStore } from 'react'
+import { useCallback, useRef, useSyncExternalStore } from 'react'
 import { chatStore, type ChatState } from './chat-store.ts'
 
 type ChatSelector<T> = (state: ChatState) => T
@@ -18,13 +18,19 @@ type ChatStateHook = {
   subscribe: typeof chatStore.subscribe
 }
 
+/**
+ * useSyncExternalStore requires stable function references for subscribe,
+ * getSnapshot, and getServerSnapshot — otherwise React re-subscribes on
+ * every render. We use useCallback with a ref to keep the selector fresh
+ * while returning a stable getSnapshot identity.
+ */
 export const chatState: ChatStateHook = Object.assign(
   function useChatState<T>(selector: ChatSelector<T>): T {
-    return useSyncExternalStore(
-      chatStore.subscribe,
-      () => selector(chatStore.getState()),
-      () => selector(chatStore.getState()),
-    )
+    const selectorRef = useRef(selector)
+    selectorRef.current = selector
+    const getSnapshot = useCallback(() => selectorRef.current(chatStore.getState()), [])
+    const getServerSnapshot = useCallback(() => selectorRef.current(chatStore.getState()), [])
+    return useSyncExternalStore(chatStore.subscribe, getSnapshot, getServerSnapshot)
   },
   {
     getState: chatStore.getState,
