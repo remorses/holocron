@@ -31,11 +31,14 @@ export function normalizeMdx(content: string): NormalizedMdx {
     .use(remarkMermaidCode)
     .use(remarkSingleAccordionItems)
     .use(remarkSidebarComponents)
-    .use(remarkMarkAndUnravel)
 
   const parsed = processor.parse(content)
   const mdast = processor.runSync(parsed) as Root
 
+  // Serialize BEFORE unravel — mdxToMarkdown corrupts phrasing children
+  // of flow elements by inserting blank lines between them, which creates
+  // spurious paragraphs on re-parse. Keeping text elements inline in the
+  // serialized output preserves the original paragraph structure.
   const serialized = toMarkdown(mdast, {
     extensions: [
       gfmToMarkdown(),
@@ -43,6 +46,11 @@ export function normalizeMdx(content: string): NormalizedMdx {
       frontmatterToMarkdown(['yaml']),
     ],
   })
+
+  // Apply unravel AFTER serialization — promotes lone text elements in
+  // paragraphs to flow elements so the mdast tree has the correct block
+  // structure for heading extraction, section splitting, etc.
+  remarkMarkAndUnravel()(mdast)
 
   return { content: serialized, mdast }
 }

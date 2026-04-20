@@ -105,6 +105,44 @@ A-->B
     `)
   })
 
+  test('preserves inline content inside single-line JSX flow elements', async () => {
+    const { content: result } = await normalizeMdx(
+      '<Note>Use `Note` for neutral supporting information.</Note>',
+    )
+    // Must stay on one line — if mdxToMarkdown splits phrasing children
+    // with blank lines, safe-mdx re-parses them as separate paragraphs.
+    expect(result).toMatchInlineSnapshot(`
+      "<Note>Use \`Note\` for neutral supporting information.</Note>
+      "
+    `)
+  })
+
+  test('preserves inline content with bold and links in single-line JSX', async () => {
+    const { content: result } = await normalizeMdx(
+      '<Warning>Do **not** run [this command](https://example.com) in production.</Warning>',
+    )
+    expect(result).toMatchInlineSnapshot(`
+      "<Warning>Do **not** run [this command](https://example.com) in production.</Warning>
+      "
+    `)
+  })
+
+  test('multi-line callout content stays as block paragraphs', async () => {
+    const { content: result } = await normalizeMdx(`<Callout>
+some \`code\` content
+
+works correctly
+</Callout>`)
+    expect(result).toMatchInlineSnapshot(`
+      "<Callout>
+        some \`code\` content
+
+        works correctly
+      </Callout>
+      "
+    `)
+  })
+
   test('wraps request and response examples in Aside for sidebar extraction', async () => {
     const { content: result } = await normalizeMdx(`
 <RequestExample>

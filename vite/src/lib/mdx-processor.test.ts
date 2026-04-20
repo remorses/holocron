@@ -214,9 +214,7 @@ Some content.`)
       ]
     `)
     expect(result.normalizedContent).toMatchInlineSnapshot(`
-      "<h2 id="custom-id" className="hero">
-        My heading
-      </h2>
+      "<h2 id="custom-id" className="hero">My heading</h2>
       "
     `)
     expect(result.title).toBe('My heading')
