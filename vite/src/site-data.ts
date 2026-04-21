@@ -177,7 +177,7 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
   // When anchors exist but there are no explicit content tabs, add an implicit
   // "Docs" tab so the user can navigate back to the docs content. Without this,
   // the tab bar would only show external links with no way to reach the docs.
-  if (anchors.length > 0 && navTabs.length === 0 && !hasSwitchers) {
+  if (anchors.length > 0 && navTabs.length === 0) {
     const implicitTab = site.navigation.find((t) => t.tab === '')
     if (implicitTab) {
       const firstPage = findFirstPageInTab(implicitTab)
