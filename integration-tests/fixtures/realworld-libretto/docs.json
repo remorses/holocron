@@ -13,8 +13,10 @@
   "logo": {
     "light": "/favicon.svg",
     "dark": "/favicon.svg",
+
     "href": "https://libretto.sh"
   },
+
   "fonts": {
     "heading": {
       "family": "PP Editorial New",
