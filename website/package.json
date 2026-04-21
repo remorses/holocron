@@ -6,18 +6,22 @@
     "dev": "vite dev",
     "build": "vite build",
     "start": "node dist/rsc/index.js",
+    "types": "wrangler types",
     "deploy": "CLOUDFLARE_ENV=preview vite build && wrangler deploy --env preview",
     "deploy:prod": "vite build && wrangler deploy"
   },
   "dependencies": {
     "@holocron.so/vite": "workspace:^",
+    "ai": "^6.0.149",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "spiceflow": "1.19.0-rsc.1",
-    "vite": "^8.0.8"
+    "vite": "^8.0.8",
+    "workers-ai-provider": "^3.1.11"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.32.2",
+    "@types/node": "^25.5.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "typescript": "^5.9.3",

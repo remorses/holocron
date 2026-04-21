@@ -3,5 +3,34 @@
   "name": "holocron-website",
   "main": "spiceflow/cloudflare-entrypoint",
   "compatibility_date": "2026-04-20",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ── Production (top-level) ──────────────────────────────────────────
+  "ai": {
+    "binding": "AI"
+  },
+
+  // TODO: Add KV namespace for API keys, usage tracking, subscriptions
+  // "kv_namespaces": [
+  //   { "binding": "HOLOCRON_KV", "id": "..." }
+  // ],
+
+  // TODO: Add Stripe secrets when billing is ready
+  // "secrets": { "required": ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] },
+
+  // ── Preview ─────────────────────────────────────────────────────────
+  // Bindings are NOT inherited — must duplicate everything here
+  "env": {
+    "preview": {
+      "name": "holocron-website-preview",
+      "ai": {
+        "binding": "AI"
+      }
+      // TODO: Duplicate KV + secrets here when added above
+      // "kv_namespaces": [
+      //   { "binding": "HOLOCRON_KV", "id": "..." }
+      // ],
+      // "secrets": { "required": ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] }
+    }
+  }
 }
