@@ -71,7 +71,7 @@ export function CodeBlock({
                 className='select-none shrink-0'
                 aria-hidden='true'
                 style={{
-                  color: 'var(--muted-foreground)',
+                  color: 'var(--text-tertiary)',
                   textAlign: 'right',
                   paddingRight: 'var(--bleed)',
                   width: 'var(--bleed)',
