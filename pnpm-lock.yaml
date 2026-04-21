@@ -132,9 +132,9 @@ importers:
 
   vite:
     dependencies:
-      '@ai-sdk/openai':
-        specifier: ^3.0.51
-        version: 3.0.51(zod@4.3.6)
+      '@ai-sdk/openai-compatible':
+        specifier: ^2.0.38
+        version: 2.0.41(zod@4.3.6)
       '@iconify-json/fa6-brands':
         specifier: ^1.2.6
         version: 1.2.6
@@ -289,6 +289,9 @@ importers:
       '@holocron.so/vite':
         specifier: workspace:^
         version: link:../vite
+      ai:
+        specifier: ^6.0.149
+        version: 6.0.149(zod@4.3.6)
       react:
         specifier: ^19.2.5
         version: 19.2.5
@@ -301,7 +304,16 @@ importers:
       vite:
         specifier: ^8.0.8
         version: 8.0.8(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
+      workers-ai-provider:
+        specifier: ^3.1.11
+        version: 3.1.11(@ai-sdk/provider@3.0.8)(ai@6.0.149(zod@4.3.6))
     devDependencies:
+      '@cloudflare/vite-plugin':
+        specifier: ^1.32.2
+        version: 1.32.2(vite@8.0.8(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(workerd@1.20260410.1)(wrangler@4.82.2(@cloudflare/workers-types@4.20260409.1))
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.14
@@ -311,6 +323,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      wrangler:
+        specifier: ^4.82.2
+        version: 4.82.2(@cloudflare/workers-types@4.20260409.1)
 
 packages:
 
@@ -320,8 +335,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@3.0.51':
-    resolution: {integrity: sha512-qBgDOC+vlXwLFbZ3UoKx3T8VFyul3K39JNyW6E4XnOnzLT4Mlhb0GeDC06RvYqwGWOQFBQNLe/vegOMVtNpl5g==}
+  '@ai-sdk/openai-compatible@2.0.41':
+    resolution: {integrity: sha512-kNAGINk71AlOXx10Dq/PXw4t/9XjdK8uxfpVElRwtSFMdeSiLVt58p9TPx4/FJD+hxZuVhvxYj9r42osxWq79g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -2709,6 +2724,12 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
+  workers-ai-provider@3.1.11:
+    resolution: {integrity: sha512-+J2dfbSs3r/DUEzo2buhBuomTrz/kHd063vqz3qsZjZFmnprlE82TLqWfB1jb+AGBCiygQ1J4EimCLy9ZU7QMQ==}
+    peerDependencies:
+      '@ai-sdk/provider': ^3.0.0
+      ai: ^6.0.0
+
   wrangler@4.82.2:
     resolution: {integrity: sha512-SKfW21sTJUkM/Qd8zc9oc8TBkAWHRsXuTxE6XdToC55Ct84pR+IfRdaTjCTuC0dL+KYvauSvSn2rtqS2Ae+Dcw==}
     engines: {node: '>=20.3.0'}
@@ -2778,7 +2799,7 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
-  '@ai-sdk/openai@3.0.51(zod@4.3.6)':
+  '@ai-sdk/openai-compatible@2.0.41(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
@@ -5308,6 +5329,11 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20260410.1
       '@cloudflare/workerd-linux-arm64': 1.20260410.1
       '@cloudflare/workerd-windows-64': 1.20260410.1
+
+  workers-ai-provider@3.1.11(@ai-sdk/provider@3.0.8)(ai@6.0.149(zod@4.3.6)):
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      ai: 6.0.149(zod@4.3.6)
 
   wrangler@4.82.2(@cloudflare/workers-types@4.20260409.1):
     dependencies:

@@ -51,7 +51,7 @@
     "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.51",
+    "@ai-sdk/openai-compatible": "^2.0.38",
     "@iconify-json/fa6-brands": "^1.2.6",
     "@iconify-json/fa6-regular": "^1.2.4",
     "@iconify-json/fa6-solid": "^1.2.4",

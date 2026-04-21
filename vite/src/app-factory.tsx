@@ -52,7 +52,7 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
-import { openai } from '@ai-sdk/openai'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { streamText, type ModelMessage } from 'ai'
 import {
   buildVisibleSiteData,
@@ -857,8 +857,17 @@ export async function createHolocronApp(providers: HolocronProviders) {
         ...newUserMessages,
       ]
 
+      // Points to holocron.so AI gateway which proxies to CF Workers AI
+      const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || 'https://holocron.so/api/ai/v1'
+      const gateway = createOpenAICompatible({
+        name: 'holocron-gateway',
+        baseURL: GATEWAY_URL,
+        // TODO: Pass holo_xxx API key from config when auth is enabled
+        // apiKey: site.config.ai?.apiKey,
+      })
+
       const result = streamText({
-        model: openai('gpt-5.4-nano'),
+        model: gateway.chatModel('glm-4.7-flash'),
         tools: { bash },
         messages,
         stopWhen: (event) => event.steps.length >= 30,
