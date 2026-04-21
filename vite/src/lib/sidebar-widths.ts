@@ -30,9 +30,9 @@ export const GRID_TOKENS: {
   '--grid-max-width': number
 } = {
   '--grid-toc-width': 210,
-  '--grid-content-width': 520,
+  '--grid-content-width': 620,
   '--grid-gap': 50,
-  '--grid-max-width': 1100,
+  '--grid-max-width': 1200,
 }
 
 /** Default right-sidebar width (px). Matches `--grid-toc-width`. */
@@ -104,7 +104,7 @@ export function buildGridTokenStyle(
 
   return {
     '--grid-toc-width': `${toc}px`,
-    '--grid-content-width': `${content}px`,
+    '--grid-content-width': `minmax(0, ${content}px)`,
     '--grid-gap': `${gap}px`,
     '--grid-sidebar-width': `${sidebarWidth}px`,
     '--grid-max-width': `min(calc(100vw - 60px), ${maxPx}px)`,

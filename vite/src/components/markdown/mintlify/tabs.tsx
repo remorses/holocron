@@ -44,7 +44,7 @@ export function Tabs({
   const activeTab = tabs[activeIndex]
 
   return (
-    <div className='no-bleed overflow-hidden rounded-lg border border-border-subtle bg-card'>
+    <div className='bleed overflow-hidden rounded-lg border border-border-subtle bg-card'>
       <div className={`${borderBottom ? 'border-b border-border-subtle' : ''} overflow-x-auto bg-muted/40 p-2`}>
         <div role='tablist' className='flex min-w-max gap-1'>
           {labels.map((label, index) => {
