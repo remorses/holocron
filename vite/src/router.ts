@@ -16,15 +16,14 @@
  *   }
  */
 
-import { getRouter, router, useLoaderData, useRouterState } from 'spiceflow/react'
-import type { HolocronApp, HolocronLoaderData } from './app-factory.tsx'
+import { router, useLoaderData, useRouterState } from 'spiceflow/react'
+import type { HolocronLoaderData } from './app-factory.tsx'
 
 export { router }
-export const useHolocronRouterState = () => useRouterState<HolocronApp>()
+export const useHolocronRouterState = () => useRouterState()
 
-const typed = getRouter<HolocronApp>()
-export const href = typed.href
+export const href = router.href
 
 /** Typed per-request loader data. */
 export const useHolocronData = () =>
-	useLoaderData<HolocronApp>() as HolocronLoaderData
+	useLoaderData() as HolocronLoaderData
