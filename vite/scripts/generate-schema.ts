@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { holocronConfigSchema } from '../src/schema.ts'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-const schemaPath = path.join(here, '..', 'schema.json')
+const schemaPath = path.join(here, '..', 'src', 'schema.json')
 
 // Register the root schema in the global registry so `metadata` extracts
 // all schemas with `.meta({ id })` into top-level definitions.

@@ -133,6 +133,7 @@ export type HolocronConfig = {
   }
   search: { prompt?: string }
   seo: { indexing?: 'navigable' | 'all'; metatags?: Record<string, string> }
+  assistant: { enabled: boolean }
 }
 
 /* ── Type guard (for page entries) ───────────────────────────────────── */

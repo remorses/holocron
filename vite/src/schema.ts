@@ -645,6 +645,24 @@ export const searchSchema = z
   .describe('Search bar display settings')
   .meta({ id: 'searchSchema' })
 
+/* ── Assistant ────────────────────────────────────────────────────────── */
+
+export const assistantSchema = z
+  .object({
+    enabled: z
+      .boolean()
+      .optional()
+      .describe(
+        dedent`
+          Whether to show the AI chat assistant. When \`false\`, the sidebar
+          widget, chat drawer, mobile "Ask AI" button, and the chat API
+          endpoint are all disabled. Defaults to \`true\`
+        `,
+      ),
+  })
+  .describe('AI chat assistant settings')
+  .meta({ id: 'assistantSchema' })
+
 /* ── SEO ──────────────────────────────────────────────────────────────── */
 
 export const seoSchema = z
@@ -810,6 +828,7 @@ export const holocronConfigSchema = z
       .describe('URL redirect rules applied before routing'),
     search: searchSchema.optional(),
     seo: seoSchema.optional(),
+    assistant: assistantSchema.optional(),
   })
   .passthrough()
   .describe(

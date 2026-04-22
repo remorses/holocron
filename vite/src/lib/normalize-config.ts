@@ -120,6 +120,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     footer: normalizeFooter(raw.footer),
     search: normalizeSearch(raw.search),
     seo: normalizeSeo(raw.seo),
+    assistant: normalizeAssistant(raw.assistant),
   }
 }
 
@@ -631,4 +632,10 @@ function normalizeSeo(raw: unknown): HolocronConfig['seo'] {
       ? (obj.metatags as Record<string, string>)
       : undefined
   return { indexing, metatags }
+}
+
+function normalizeAssistant(raw: unknown): HolocronConfig['assistant'] {
+  if (!raw || typeof raw !== 'object') return { enabled: true }
+  const obj = raw as Record<string, unknown>
+  return { enabled: obj.enabled !== false }
 }

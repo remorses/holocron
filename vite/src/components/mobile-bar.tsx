@@ -9,23 +9,25 @@
 import { chatState } from '../lib/chat-state.ts'
 import { MenuIcon } from './chat-icons.tsx'
 
-export function MobileBar() {
+export function MobileBar({ enableAssistant = true }: { enableAssistant?: boolean }) {
   return (
     <div className='flex items-center justify-between lg:hidden px-(--mobile-padding) py-2'>
-      <button
-        onClick={() => chatState.setState({ drawerState: 'open' })}
-        style={{
-          fontSize: '13px',
-          fontWeight: 500,
-          color: 'var(--muted-foreground)',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: '4px 0',
-        }}
-      >
-        Ask AI
-      </button>
+      {enableAssistant ? (
+        <button
+          onClick={() => chatState.setState({ drawerState: 'open' })}
+          style={{
+            fontSize: '13px',
+            fontWeight: 500,
+            color: 'var(--muted-foreground)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px 0',
+          }}
+        >
+          Ask AI
+        </button>
+      ) : <div />}
       <button
         onClick={() => chatState.setState({ navDrawerOpen: true })}
         style={{

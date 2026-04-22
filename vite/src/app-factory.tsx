@@ -237,7 +237,7 @@ function renderMdxPage({
   const aboveNodes = mdast.children.filter(isAboveNode)
   const contentChildren = mdast.children.filter((node) => !isAboveNode(node))
   const contentMdast: Root = { type: 'root', children: contentChildren }
-  const mdastSections = buildSections(contentMdast)
+  const mdastSections = buildSections(contentMdast, { enableAssistant: site.config.assistant.enabled })
 
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
   // prepended to each section. Section splitting separates import statements
@@ -790,8 +790,12 @@ export async function createHolocronApp(providers: HolocronProviders) {
     return response
   })
 
-  // /holocron-api/chat
+  // /holocron-api/chat — only registered when assistant is enabled
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
+    if (!site.config.assistant.enabled) {
+      app = app.post(chatRoute, async () => new Response('Assistant is disabled', { status: 404 }))
+      continue
+    }
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
       const body = parseChatRequestBody(await request.json())
 

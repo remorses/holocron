@@ -132,6 +132,9 @@
     },
     "seo": {
       "$ref": "#/definitions/seoSchema"
+    },
+    "assistant": {
+      "$ref": "#/definitions/assistantSchema"
     }
   },
   "required": [
@@ -1164,6 +1167,17 @@
       },
       "additionalProperties": false,
       "description": "Search engine optimization settings"
+    },
+    "assistantSchema": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Whether to show the AI chat assistant. When `false`, the sidebar\nwidget, chat drawer, mobile \"Ask AI\" button, and the chat API\nendpoint are all disabled. Defaults to `true`",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "AI chat assistant settings"
     }
   }
 }

@@ -94,16 +94,14 @@ function groupBySections(root: Root): MdastSection[] {
  * Sections BEFORE the first full aside still use normal per-section asides
  * (asideRowSpan = 1).
  */
-export function buildSections(root: Root): MdastSection[] {
+export function buildSections(root: Root, { enableAssistant = true }: { enableAssistant?: boolean } = {}): MdastSection[] {
   // Strip invisible nodes (frontmatter, link definitions) from the top level
   // so they don't get swept into a leading empty section by groupBySections.
   const children = root.children.filter((node) => {
     return node.type !== 'yaml' && node.type !== 'definition'
   })
 
-  const ENABLE_ASSISTANT = true
-
-  if (ENABLE_ASSISTANT) {
+  if (enableAssistant) {
     const assistantNode: FlowJsxNode = {
       type: 'mdxJsxFlowElement',
       name: 'HolocronAIAssistantWidget',

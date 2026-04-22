@@ -177,7 +177,7 @@ describe('holocronConfigSchema validation', () => {
 
 describe('schema.json regen-check', () => {
   test('generated schema.json matches what generate-schema.ts would emit', () => {
-    const schemaPath = path.join(import.meta.dirname, '..', 'schema.json')
+    const schemaPath = path.join(import.meta.dirname, 'schema.json')
     const onDisk = fs.readFileSync(schemaPath, 'utf-8')
 
     const generated = z.toJSONSchema(holocronConfigSchema, {

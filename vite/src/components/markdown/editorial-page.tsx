@@ -7,7 +7,7 @@
  * for per-section and shared `<Aside full>` asides.
  */
 
-const ENABLE_ASSISTANT = true
+
 
 import React, { Fragment } from 'react'
 import { Link } from 'spiceflow/react'
@@ -85,6 +85,7 @@ export function EditorialPage({
 }) {
   const { site, activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
   const siteConfig = site.config
+  const enableAssistant = siteConfig.assistant.enabled
   const siteLogo = getResolvedLogo(site)
   const siteTabs = buildTabItems(site)
   const siteHeaderLinks = buildHeaderLinks(site)
@@ -222,7 +223,7 @@ export function EditorialPage({
         </div>
 
         {/* Mobile bar: Ask AI + Menu — shown under logo bar on mobile */}
-        <MobileBar />
+        <MobileBar enableAssistant={enableAssistant} />
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar && (
@@ -369,7 +370,7 @@ export function EditorialPage({
       </div>
 
       {/* AI assistant drawer — slides in from right when activated */}
-      {ENABLE_ASSISTANT && <ChatDrawer />}
+      {enableAssistant && <ChatDrawer />}
 
       {/* Mobile navigation drawer (lg:hidden) */}
       <NavDrawer />
