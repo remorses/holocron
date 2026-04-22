@@ -16,7 +16,7 @@
   // ],
 
   // TODO: Add Stripe secrets when billing is ready
-  "secrets": { "required": ["CF_API_TOKEN"] },
+  "secrets": { "required": ["CF_API_TOKEN", "AIG_GATEWAY_TOKEN"] },
 
   // ── Preview ─────────────────────────────────────────────────────────
   // Bindings are NOT inherited — must duplicate everything here
@@ -29,7 +29,7 @@
       "ai": {
         "binding": "AI"
       },
-      "secrets": { "required": ["CF_API_TOKEN"] }
+      "secrets": { "required": ["CF_API_TOKEN", "AIG_GATEWAY_TOKEN"] }
       // TODO: Duplicate KV + secrets here when added above
       // "kv_namespaces": [
       //   { "binding": "HOLOCRON_KV", "id": "..." }

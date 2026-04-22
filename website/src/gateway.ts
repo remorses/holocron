@@ -61,6 +61,7 @@ export const gatewayApp = new Spiceflow()
 
     const upstreamHeaders = new Headers(request.headers)
     upstreamHeaders.set('authorization', `Bearer ${env.CF_API_TOKEN}`)
+    upstreamHeaders.set('cf-aig-authorization', `Bearer ${env.AIG_GATEWAY_TOKEN}`)
     upstreamHeaders.set('content-type', request.headers.get('content-type') || 'application/json')
     upstreamHeaders.delete('content-length')
     upstreamHeaders.delete('host')
