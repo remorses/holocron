@@ -1,6 +1,6 @@
 // Custom entry: mounts holocron as a child of a user Spiceflow app.
 // Gateway routes (AI proxy) are mounted before holocron so they take priority.
-// The /schema.json route serves the Holocron JSON Schema for docs.json IDE autocomplete.
+// The /docs.json route serves the Holocron JSON Schema for docs.json IDE autocomplete.
 // Cloudflare Workers fetch handler is provided by spiceflow/cloudflare-entrypoint.
 
 import { Spiceflow } from 'spiceflow'
@@ -9,7 +9,7 @@ import { gatewayApp } from './src/gateway'
 import schema from '@holocron.so/vite/src/schema.json'
 
 const schemaApp = new Spiceflow()
-  .get('/schema.json', () => {
+  .get('/docs.json', () => {
     return Response.json(schema, {
       headers: { 'access-control-allow-origin': '*' },
     })
