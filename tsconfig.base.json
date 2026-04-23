@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    // Module system — Node ESM
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "ESNext",
+    "lib": ["ESNext"],
+
+    // Source → Output
+    "rootDir": "${configDir}/src",
+    "outDir": "${configDir}/dist",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+
+    // Declarations
+    "declaration": true,
+    "declarationMap": true,
+
+    // Strict
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": false,
+    "skipLibCheck": true,
+
+    // Style
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "moduleDetection": "force"
+  },
+  "exclude": ["**/node_modules", "**/.*/"]
+}

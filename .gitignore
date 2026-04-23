@@ -12,3 +12,7 @@ tmp
 .tmp-*
 play
 .wrangler
+.dev.vars
+.env.preview
+.env.prod
+worker-configuration.d.ts
