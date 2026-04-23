@@ -83,16 +83,6 @@ const schemaApp = new Spiceflow()
 
 const authApp = new Spiceflow()
 
-  // BetterAuth middleware — forward /api/auth/* to better-auth
-  .use(async ({ request }, next) => {
-    if (request.parsedUrl.pathname.startsWith('/api/auth')) {
-      const auth = getAuth()
-      const res = await auth.handler(request)
-      if (res.ok || res.status !== 404) return res
-    }
-    return next()
-  })
-
   // Login page
   .page({
     path: '/login',
@@ -246,7 +236,22 @@ const authApp = new Spiceflow()
     },
   })
 
-export const app = new Spiceflow().use(authApp).use(schemaApp).use(gatewayApp).use(holocronApp)
+// BetterAuth middleware — must be on the root app so it intercepts /api/auth/*
+// before holocron can render a 404 page. Child app middleware only runs for
+// routes that child app owns.
+export const app = new Spiceflow()
+  .use(async ({ request }, next) => {
+    if (request.parsedUrl.pathname.startsWith('/api/auth')) {
+      const auth = getAuth()
+      const res = await auth.handler(request)
+      if (res.status !== 404) return res
+    }
+    return next()
+  })
+  .use(authApp)
+  .use(schemaApp)
+  .use(gatewayApp)
+  .use(holocronApp)
 
 export default {
   async fetch(request: Request): Promise<Response> {

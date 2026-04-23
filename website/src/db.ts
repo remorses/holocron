@@ -46,8 +46,10 @@ export function getAuth() {
 }
 
 function getBaseUrl(): string {
-  // In production the URL comes from the custom domain route.
-  // In dev, BETTER_AUTH_URL can be set as a var in wrangler.jsonc [vars] or via .dev.vars.
+  // BETTER_AUTH_URL comes from wrangler.jsonc [vars] per environment.
+  // Production: https://holocron.so, Preview: https://preview.holocron.so.
+  // In local dev, wrangler injects the var from the top-level config; the code
+  // below falls back to https://holocron.so if nothing is set.
   const workerEnv: Cloudflare.Env = env
   const override = workerEnv.BETTER_AUTH_URL
   if (typeof override === 'string' && override) return override

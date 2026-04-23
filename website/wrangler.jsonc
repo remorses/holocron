@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "holocron-website",
   "main": "spiceflow/cloudflare-entrypoint",
-  "compatibility_date": "2026-04-20",
+  "compatibility_date": "2026-04-14",
   "compatibility_flags": ["nodejs_compat"],
 
   // ── Production (top-level) ──────────────────────────────────────────
@@ -17,12 +17,10 @@
       "migrations_dir": "../db/drizzle"
     }
   ],
-  "vars": {
-    "BETTER_AUTH_URL": "https://holocron.so"
-  },
   "secrets": {
     "required": [
       "BETTER_AUTH_SECRET",
+      "BETTER_AUTH_URL",
       "GOOGLE_CLIENT_ID",
       "GOOGLE_CLIENT_SECRET",
       "CF_API_TOKEN",
@@ -49,12 +47,10 @@
           "migrations_dir": "../db/drizzle"
         }
       ],
-      "vars": {
-        "BETTER_AUTH_URL": "https://preview.holocron.so"
-      },
       "secrets": {
         "required": [
           "BETTER_AUTH_SECRET",
+          "BETTER_AUTH_URL",
           "GOOGLE_CLIENT_ID",
           "GOOGLE_CLIENT_SECRET",
           "CF_API_TOKEN",

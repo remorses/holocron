@@ -3,4 +3,3 @@ packages:
 
 overrides:
   safe-mdx: link:../safe-mdx
-  spiceflow: link:../spiceflow-rsc/spiceflow

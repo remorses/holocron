@@ -305,6 +305,10 @@ When a page renders but client behavior is dead (tree rows do not collapse, sear
         - React markers on TOC DOM
         - startup browser errors / unhandled rejections
 
+## Secrets management — always use sigillo
+
+All secrets must be managed through **sigillo**. Never hardcode secrets, never read `.env` files directly. Load the `sigillo` skill before any secrets-related work. Run apps with `sigillo run -- pnpm dev` to inject secrets as env vars. Never read secret values into agent context.
+
 ## spiceflow
 
 holocron docs website generator uses spiceflow deeply. I am also the author of spiceflow so if there is any issues there and we need to change code there clearly say so and create a plan and present it to me. the spiceflow source code can be downloaded with chamber to be read, then you can use the kimaki cli to find the source code to modify after plan is approved
