@@ -12,12 +12,10 @@
   },
   "dependencies": {
     "@holocron.so/vite": "workspace:^",
-    "ai": "^6.0.149",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "spiceflow": "1.19.0-rsc.1",
-    "vite": "^8.0.8",
-    "workers-ai-provider": "^3.1.11"
+    "vite": "^8.0.8"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.32.2",
