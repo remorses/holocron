@@ -21,5 +21,5 @@
     "rewriteRelativeImportExtensions": true,
     "types": ["node"]
   },
-  "include": ["src", "server.tsx", "worker-configuration.d.ts"]
+  "include": ["src", "worker-configuration.d.ts"]
 }

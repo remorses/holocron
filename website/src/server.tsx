@@ -8,12 +8,12 @@ import { getActionRequest, json, parseFormData, Spiceflow, redirect } from 'spic
 import { Head, router } from 'spiceflow/react'
 import { z } from 'zod'
 import { app as holocronApp } from '@holocron.so/vite/app'
-import { gatewayApp } from './src/gateway'
-import { getAuth, getSession, requireSession } from './src/db'
-import { Button } from './src/components/ui/button.tsx'
-import { DeviceActionButtons } from './src/components/device-action-buttons.tsx'
+import { gatewayApp } from './gateway'
+import { getAuth, getSession, requireSession } from './db'
+import { Button } from './components/ui/button.tsx'
+import { DeviceActionButtons } from './components/device-action-buttons.tsx'
 import schema from '@holocron.so/vite/src/schema.json'
-import './src/globals.css'
+import './globals.css'
 
 const loginQuerySchema = z.object({ callbackURL: z.string().optional() })
 
