@@ -4,7 +4,7 @@
  */
 
 import { Fragment, type ReactNode } from 'react'
-import { SafeMdxRenderer } from 'safe-mdx'
+import { SafeMdxRenderer, type SafeMdxError } from 'safe-mdx'
 import type { Root, RootContent, Image } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
 import type { EagerModules } from 'safe-mdx/parse'
@@ -235,6 +235,19 @@ export function renderNode(
   return undefined
 }
 
+/** Log safe-mdx errors to stderr so missing components and expression
+ *  failures surface in the Vite dev server terminal instead of being
+ *  silently swallowed. */
+export function logMdxError(error: SafeMdxError): void {
+  const loc = error.line ? `:${error.line}` : ''
+  const tag = error.type === 'missing-component' ? 'MISSING COMPONENT'
+    : error.type === 'validation' ? 'VALIDATION'
+    : error.type === 'expression' ? 'EXPRESSION'
+    : error.type === 'esm-import' ? 'ESM IMPORT'
+    : error.type
+  console.warn(`[holocron] MDX ${tag}${loc}: ${error.message}`)
+}
+
 /** Render an array of mdast nodes through safe-mdx with the editorial
  *  component map and `renderNode` transformer. Used to render content,
  *  aside, and above nodes server-side. */
@@ -255,6 +268,7 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
       renderNode={renderNode}
       modules={modules}
       baseUrl={baseUrl}
+      onError={logMdxError}
     />
   )
 }

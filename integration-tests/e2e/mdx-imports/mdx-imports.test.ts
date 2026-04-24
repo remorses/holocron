@@ -1,6 +1,17 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('MDX imports', () => {
+  test('renders imported component inside <Above>', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    // The Greeting component imported via /snippets/greeting should resolve
+    // inside <Above> because import nodes are prepended to above nodes.
+    // SSR inserts React comment nodes between text fragments, so match parts.
+    expect(html).toContain('Above')
+    expect(html).toMatch(/Hello,.*Above.*!/)
+  })
+
   test('renders named import from /snippets/', async ({ request }) => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)
@@ -41,8 +52,11 @@ test.describe('MDX imports', () => {
   test('index page renders all imports in browser', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Import Test Page' })).toBeVisible()
-    await expect(page.getByTestId('greeting')).toBeVisible()
-    await expect(page.getByTestId('greeting')).toContainText('Hello, World!')
+    // There are now 2 greeting elements: one in <Above> and one in content.
+    // Check for the content one by matching text.
+    const greetings = page.getByTestId('greeting')
+    await expect(greetings.filter({ hasText: 'Hello, World!' })).toBeVisible()
+    await expect(greetings.filter({ hasText: 'Hello, Above!' })).toBeVisible()
     await expect(page.getByTestId('custom-badge')).toContainText('imported')
     await expect(page.getByTestId('alert')).toContainText('default-import-works')
   })

@@ -278,9 +278,14 @@ function renderMdxPage({
     }
   })
 
+  // Prepend import nodes to above nodes too, so imported components
+  // (like <HeroSection />) used inside <Above> are resolvable.
+  const aboveWithImports = importNodes.length > 0 && aboveNodes.length > 0
+    ? [...importNodes, ...aboveNodes]
+    : aboveNodes
   const above =
-    aboveNodes.length > 0 ? (
-      <RenderNodes markdown={pageMdx} nodes={aboveNodes} modules={modules} baseUrl={mdxBaseUrl} />
+    aboveWithImports.length > 0 ? (
+      <RenderNodes markdown={pageMdx} nodes={aboveWithImports} modules={modules} baseUrl={mdxBaseUrl} />
     ) : undefined
 
   return (

@@ -3,6 +3,7 @@
 import React from 'react'
 import type { RootContent } from 'mdast'
 import { SafeMdxRenderer } from 'safe-mdx'
+import { logMdxError } from '../../lib/mdx-components-map.tsx'
 
 function BannerP({ children }: { children: React.ReactNode }) {
   return <span>{children}</span>
@@ -38,5 +39,5 @@ const bannerMdxComponents = {
 }
 
 export function RenderBannerNodes({ markdown, nodes }: { markdown: string; nodes: RootContent[] }) {
-  return <SafeMdxRenderer markdown={markdown} mdast={{ type: 'root', children: nodes }} components={bannerMdxComponents} />
+  return <SafeMdxRenderer markdown={markdown} mdast={{ type: 'root', children: nodes }} components={bannerMdxComponents} onError={logMdxError} />
 }
