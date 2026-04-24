@@ -28,7 +28,7 @@ export function DeviceActionButtons({
 }) {
   return (
     <ErrorBoundary fallback={<DeviceActionError />}>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex w-full flex-col gap-3 sm:flex-row">
         <form action={approveAction} className="flex-1">
           <input name="userCode" type="hidden" value={userCode} />
           <Button className="w-full" loadingText="Approving..." type="submit">

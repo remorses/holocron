@@ -4,13 +4,15 @@ description: Mintlify-compatible docs as a Vite plugin, with a live component co
 icon: sparkles
 ---
 
-<Above className='my-16'>
+import { HeroSection } from './components/hero-section.tsx'
 
-# Holocron
+<Above className='mt-12'>
 
-Mintlify-compatible docs as a **Vite plugin**.
+<HeroSection />
 
 </Above>
+
+# Holocron
 
 Holocron turns a folder of MDX pages plus a `docs.json` file into a full documentation site. It is designed as a **drop-in Mintlify replacement** for teams that want local builds, normal Git workflows, and control over the rendering layer.
 

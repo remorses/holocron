@@ -3,14 +3,14 @@
 // then holocron docs. The /docs.json route serves the Holocron JSON Schema.
 // Cloudflare Workers fetch handler is provided by spiceflow/cloudflare-entrypoint.
 
-import type { ReactNode } from 'react'
 import { getActionRequest, json, parseFormData, Spiceflow, redirect } from 'spiceflow'
-import { Head, router } from 'spiceflow/react'
+import { router } from 'spiceflow/react'
 import { z } from 'zod'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { gatewayApp } from './gateway.ts'
 import { apiApp } from './api.ts'
 import { getAuth, getSession, requireSession } from './db.ts'
+import { AuthPage } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
 import { DeviceActionButtons } from './components/device-action-buttons.tsx'
 import schema from '@holocron.so/vite/src/schema.json' with { type: 'json' }
@@ -51,28 +51,6 @@ async function createGoogleSignInRedirect(request: Pick<Request, 'headers'>, cal
   return redirectResponse
 }
 
-function AuthPage({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description: string
-  children: ReactNode
-}) {
-  return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-16">
-      <Head>
-        <Head.Title>{`${title} | Holocron`}</Head.Title>
-        <Head.Meta name="description" content={description} />
-      </Head>
-      <section className="flex w-full max-w-md flex-col gap-6 rounded-xl border bg-card p-8 text-card-foreground shadow-sm">
-        {children}
-      </section>
-    </main>
-  )
-}
-
 const schemaApp = new Spiceflow()
   .get('/docs.json', () => {
     return Response.json(schema, {
@@ -94,19 +72,15 @@ const authApp = new Spiceflow()
       const callbackURL = safeRedirectPath(query.callbackURL)
       return (
         <AuthPage
-          description="Sign in to manage your Holocron account and subscriptions."
-          title="Sign in"
-        >
-          <div className="flex flex-col gap-2 text-center">
-            <h1 className="text-3xl font-semibold tracking-tight">Holocron</h1>
-            <p className="text-sm text-muted-foreground">
-              Sign in to manage your account.
-            </p>
-          </div>
-          <Button asChild className="w-full" size="lg">
-            <a href={router.href('/login/google', { callbackURL })}>Sign in with Google</a>
-          </Button>
-        </AuthPage>
+          title="Holocron"
+          headTitle="Sign in"
+          description="Sign in to manage your account."
+          footer={
+            <Button asChild className="w-full" size="lg">
+              <a href={router.href('/login/google', { callbackURL })}>Sign in with Google</a>
+            </Button>
+          }
+        />
       )
     },
   })
@@ -132,16 +106,9 @@ const authApp = new Spiceflow()
       if (!userCode) {
         return (
           <AuthPage
+            title="CLI Login"
             description="Open this page from the CLI login flow with a valid device code."
-            title="CLI login"
-          >
-            <div className="flex flex-col gap-2 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">Holocron CLI Login</h1>
-              <p className="text-sm text-muted-foreground">
-                Open this page from the CLI login flow with a valid device code.
-              </p>
-            </div>
-          </AuthPage>
+          />
         )
       }
 
@@ -150,16 +117,27 @@ const authApp = new Spiceflow()
       if (!device) {
         return (
           <AuthPage
-            description="That CLI device code is invalid or expired."
-            title="Invalid device code"
-          >
-            <div className="flex flex-col gap-2 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">Invalid device code</h1>
-              <p className="text-sm text-muted-foreground">
-                That device code is invalid or expired.
-              </p>
-            </div>
-          </AuthPage>
+            title="Invalid Device Code"
+            description="That device code is invalid or expired. Start the CLI login flow again."
+          />
+        )
+      }
+
+      if (status === 'approved') {
+        return (
+          <AuthPage
+            title="CLI Approved"
+            description="You can close this page and return to the terminal."
+          />
+        )
+      }
+
+      if (status === 'denied') {
+        return (
+          <AuthPage
+            title="CLI Denied"
+            description="You can close this page and start the login flow again."
+          />
         )
       }
 
@@ -194,48 +172,99 @@ const authApp = new Spiceflow()
 
       return (
         <AuthPage
-          description="Approve or deny the current Holocron CLI login request."
-          title="CLI login"
+          title="CLI Login"
+          description="A CLI is requesting access to your account."
+          footer={
+            <DeviceActionButtons approveAction={approveDevice} denyAction={denyDevice} userCode={userCode} />
+          }
         >
-          <div className="flex flex-col gap-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Holocron CLI Login</h1>
-            {status === 'approved'
-              ? (
-                  <>
-                    <p className="text-sm text-foreground">The CLI was approved successfully.</p>
-                    <p className="text-sm text-muted-foreground">
-                      You can close this page and return to the terminal.
-                    </p>
-                  </>
-                )
-              : status === 'denied'
-                ? (
-                    <>
-                      <p className="text-sm text-foreground">The CLI login was denied.</p>
-                      <p className="text-sm text-muted-foreground">
-                        You can close this page and start the login flow again.
-                      </p>
-                    </>
-                  )
-                : (
-                    <>
-                      <p className="text-sm text-foreground">
-                        A CLI is requesting access to your account.
-                      </p>
-                      <p className="rounded-lg border bg-muted px-3 py-2 font-mono text-lg tracking-[0.24em] uppercase">
-                        {userCode}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Current status: {device.status}. Approve to let the CLI finish logging in.
-                      </p>
-                    </>
-                  )}
+          <div className="flex justify-center">
+            <div className="rounded-lg border bg-muted px-4 py-2.5 font-mono text-lg tracking-widest">
+              {userCode}
+            </div>
           </div>
-          {status == null && <DeviceActionButtons approveAction={approveDevice} denyAction={denyDevice} userCode={userCode} />}
         </AuthPage>
       )
     },
   })
+
+// ── Preview routes (dev only) — renders each auth page state ────────
+
+const previewApp = new Spiceflow()
+
+  .page('/preview', () => (
+    <main className="flex min-h-screen flex-col items-center gap-4 px-6 py-16">
+      <h1 className="text-2xl font-semibold">Page Previews</h1>
+      <nav className="flex flex-col gap-2 text-sm">
+        <a href="/preview/login" className="text-primary underline underline-offset-4">Login</a>
+        <a href="/preview/device-empty" className="text-primary underline underline-offset-4">Device — no code</a>
+        <a href="/preview/device-invalid" className="text-primary underline underline-offset-4">Device — invalid code</a>
+        <a href="/preview/device-pending" className="text-primary underline underline-offset-4">Device — pending approval</a>
+        <a href="/preview/device-approved" className="text-primary underline underline-offset-4">Device — approved</a>
+        <a href="/preview/device-denied" className="text-primary underline underline-offset-4">Device — denied</a>
+      </nav>
+    </main>
+  ))
+
+  .page('/preview/login', () => (
+    <AuthPage
+      title="Holocron"
+      headTitle="Sign in"
+      description="Sign in to manage your account."
+      footer={
+        <Button asChild className="w-full" size="lg">
+          <a href="#">Sign in with Google</a>
+        </Button>
+      }
+    />
+  ))
+
+  .page('/preview/device-empty', () => (
+    <AuthPage
+      title="CLI Login"
+      description="Open this page from the CLI login flow with a valid device code."
+    />
+  ))
+
+  .page('/preview/device-invalid', () => (
+    <AuthPage
+      title="Invalid Device Code"
+      description="That device code is invalid or expired. Start the CLI login flow again."
+    />
+  ))
+
+  .page('/preview/device-pending', () => (
+    <AuthPage
+      title="CLI Login"
+      description="A CLI is requesting access to your account."
+      footer={
+        <div className="flex w-full flex-col gap-3 sm:flex-row">
+          <Button className="flex-1" type="button">Approve CLI</Button>
+          <Button className="flex-1" type="button" variant="outline">Deny</Button>
+        </div>
+      }
+    >
+      <div className="flex justify-center">
+        <div className="rounded-lg border bg-muted px-4 py-2.5 font-mono text-lg tracking-widest">
+          ABCD-1234
+        </div>
+      </div>
+    </AuthPage>
+  ))
+
+  .page('/preview/device-approved', () => (
+    <AuthPage
+      title="CLI Approved"
+      description="You can close this page and return to the terminal."
+    />
+  ))
+
+  .page('/preview/device-denied', () => (
+    <AuthPage
+      title="CLI Denied"
+      description="You can close this page and start the login flow again."
+    />
+  ))
 
 // BetterAuth middleware — must be on the root app so it intercepts /api/auth/*
 // before holocron can render a 404 page. Child app middleware only runs for
@@ -249,6 +278,7 @@ export const app = new Spiceflow()
     }
     return next()
   })
+  .use(previewApp)
   .use(authApp)
   .use(apiApp)
   .use(schemaApp)
