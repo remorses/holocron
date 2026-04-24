@@ -4,10 +4,15 @@
   "colors": {
     "primary": "#0969da"
   },
-  "navigation": [
-    {
-      "group": "Guides",
-      "pages": ["index.md", "getting-started.mdx"]
-    }
-  ]
+  "navigation": {
+    "groups": [
+      {
+        "group": "Guides",
+        "pages": [
+          "index.md",
+          "getting-started.mdx"
+        ]
+      }
+    ]
+  }
 }

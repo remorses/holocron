@@ -4,10 +4,14 @@
   "colors": {
     "primary": "#0969da"
   },
-  "navigation": [
-    {
-      "group": "Changelog",
-      "pages": ["index"]
-    }
-  ]
+  "navigation": {
+    "groups": [
+      {
+        "group": "Changelog",
+        "pages": [
+          "index"
+        ]
+      }
+    ]
+  }
 }

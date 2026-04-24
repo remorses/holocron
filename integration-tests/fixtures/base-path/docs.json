@@ -1,10 +1,15 @@
 {
   "name": "Base Path Test",
   "icons": { "library": "lucide" },
-  "navigation": [
-    {
-      "group": "Docs",
-      "pages": ["intro", "guide/index"]
-    }
-  ]
+  "navigation": {
+    "groups": [
+      {
+        "group": "Docs",
+        "pages": [
+          "intro",
+          "guide/index"
+        ]
+      }
+    ]
+  }
 }

@@ -5,10 +5,15 @@
   "colors": {
     "primary": "#0969da"
   },
-  "navigation": [
-    {
-      "group": "Docs",
-      "pages": ["index", "about-the-api"]
-    }
-  ]
+  "navigation": {
+    "groups": [
+      {
+        "group": "Docs",
+        "pages": [
+          "index",
+          "about-the-api"
+        ]
+      }
+    ]
+  }
 }
