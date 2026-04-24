@@ -11,7 +11,9 @@
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrate:prod": "wrangler d1 migrations apply DB --remote",
     "db:migrate:preview": "wrangler d1 migrations apply DB --remote --env preview",
-    "secrets": "sigillo run --env preview --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview && sigillo run --env prod --mount .env.prod --mount-format env -- wrangler secret bulk --env=\"\" .env.prod",
+    "secrets": "pnpm run secrets:preview && pnpm run secrets:prod",
+    "secrets:preview": "sigillo run -c preview --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview",
+    "secrets:prod": "sigillo run -c prod --mount .env.prod --mount-format env -- wrangler secret bulk .env.prod",
     "deploy": "CLOUDFLARE_ENV=preview vite build && wrangler deploy --env preview",
     "deploy:prod": "vite build && wrangler deploy"
   },

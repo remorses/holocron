@@ -27,7 +27,7 @@
       "BETTER_AUTH_URL",
       "GOOGLE_CLIENT_ID",
       "GOOGLE_CLIENT_SECRET",
-      "CF_API_TOKEN",
+      "CLOUDFLARE_AI_API_TOKEN",
       "AIG_GATEWAY_TOKEN"
     ]
   },
@@ -61,7 +61,7 @@
           "BETTER_AUTH_URL",
           "GOOGLE_CLIENT_ID",
           "GOOGLE_CLIENT_SECRET",
-          "CF_API_TOKEN",
+          "CLOUDFLARE_AI_API_TOKEN",
           "AIG_GATEWAY_TOKEN"
         ]
       }
