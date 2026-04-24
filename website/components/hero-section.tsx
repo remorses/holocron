@@ -44,13 +44,13 @@ export function HeroSection() {
 
       {/* Top gradient */}
       <div
-        className='absolute top-0 inset-x-0 h-[100%] z-1 pointer-events-none'
+        className='absolute top-0 inset-x-0 h-[70%] z-1 pointer-events-none'
         style={{ background: TOP_GRADIENT }}
       />
 
       {/* Bottom gradient */}
       <div
-        className='absolute bottom-0 inset-x-0 h-[60%] z-1 pointer-events-none'
+        className='absolute bottom-0 inset-x-0 h-[40%] z-1 pointer-events-none'
         style={{ background: BOTTOM_GRADIENT }}
       />
 
