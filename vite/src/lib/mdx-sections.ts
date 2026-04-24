@@ -95,10 +95,12 @@ function groupBySections(root: Root): MdastSection[] {
  * (asideRowSpan = 1).
  */
 export function buildSections(root: Root, { enableAssistant = true }: { enableAssistant?: boolean } = {}): MdastSection[] {
-  // Strip invisible nodes (frontmatter, link definitions) from the top level
-  // so they don't get swept into a leading empty section by groupBySections.
+  // Strip invisible nodes (frontmatter, link definitions, ESM imports) from
+  // the top level so they don't get swept into a leading empty section by
+  // groupBySections. Import nodes are handled separately by app-factory.tsx
+  // which prepends them to every section for component resolution.
   const children = root.children.filter((node) => {
-    return node.type !== 'yaml' && node.type !== 'definition'
+    return node.type !== 'yaml' && node.type !== 'definition' && node.type !== 'mdxjsEsm'
   })
 
   if (enableAssistant) {
@@ -152,7 +154,7 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
 
   // No full asides → split normally (existing behavior)
   if (fullAsideIndices.length === 0) {
-    return groupBySections({ type: 'root', children })
+    return groupBySections({ type: 'root', children }).filter(sectionHasContent)
   }
 
   const sections: MdastSection[] = []
@@ -193,5 +195,13 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
     sections.push(...subSections)
   }
 
-  return sections
+  return sections.filter(sectionHasContent)
+}
+
+/** A section is empty when it has no visible content and no aside nodes.
+ *  Empty sections create phantom grid rows with --section-gap spacing.
+ *  Import nodes (mdxjsEsm) are invisible and don't count as content. */
+function sectionHasContent(s: MdastSection): boolean {
+  if (s.asideNodes.length > 0) return true
+  return s.contentNodes.some((n) => n.type !== 'mdxjsEsm')
 }
