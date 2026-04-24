@@ -23,7 +23,7 @@
             {
                 "group": "Overview",
                 "icon": "sparkles",
-                "pages": ["index"]
+                "pages": ["index", "custom-entry"]
             },
             {
                 "group": "Components",

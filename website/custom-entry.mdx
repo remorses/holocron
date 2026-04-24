@@ -1,0 +1,108 @@
+---
+title: Custom Entry
+description: Mount Holocron docs alongside your own API routes, pages, and middleware in a single Spiceflow app.
+icon: puzzle
+---
+
+# Custom Entry
+
+Holocron can be mounted as a **child app** inside your existing Spiceflow project. This lets you ship docs, API routes, auth, webhooks, and custom pages all from a single server.
+
+## When to use this
+
+- You already have a Spiceflow app and want to add a `/docs` section
+- You need middleware (auth, logging, headers) to wrap both your routes and the docs
+- You want API routes like `/api/chat` living next to your documentation
+
+## Setup
+
+Pass `entry` to the holocron plugin pointing to your Spiceflow server file:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({ entry: './src/server.tsx' }),
+  ],
+})
+```
+
+Then in your server file, import the holocron app and mount it with `.use()`:
+
+```tsx
+// src/server.tsx
+import { Spiceflow } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  // your middleware runs on every request, including docs pages
+  .use(async ({ request }, next) => {
+    const res = await next()
+    if (res) res.headers.set('x-custom-header', 'yes')
+    return res
+  })
+  // your own API routes
+  .get('/api/hello', () => ({ hello: 'world' }))
+  .get('/api/echo/:name', ({ params }) => ({ name: params.name }))
+  // your own pages with your own layouts
+  .layout('/dashboard', ({ children }) => (
+    <html lang='en'>
+      <head><title>Dashboard</title></head>
+      <body>{children}</body>
+    </html>
+  ))
+  .page('/dashboard', () => <h1>My Dashboard</h1>)
+  // mount holocron last — it handles all docs pages
+  .use(holocronApp)
+```
+
+Holocron registers routes for every page in your `docs.json` navigation. Your own routes take priority because they're registered first.
+
+## Middleware
+
+Middleware registered with `.use()` before `.use(holocronApp)` runs on **every request**, including doc pages. This is useful for auth checks, analytics headers, or request logging.
+
+```tsx
+export const app = new Spiceflow()
+  .use(async ({ request }, next) => {
+    console.log(request.method, request.url)
+    return next()
+  })
+  .use(holocronApp)
+```
+
+## Custom CSS and Tailwind
+
+Holocron includes Tailwind CSS automatically. **Do not add `@import 'tailwindcss'` in your own CSS files.** A second import creates duplicate style layers that break layout, spacing, and cascade order.
+
+Use **`@reference`** instead. It gives your CSS access to Tailwind's theme variables, `@apply`, and `@variant` without emitting duplicate styles:
+
+```css
+/* src/globals.css */
+@reference "tailwindcss";
+
+:root {
+  --primary: #e11d48;
+  --background: #fafafa;
+
+  @variant dark {
+    --background: #0a0a0a;
+    --primary: #fb7185;
+  }
+}
+```
+
+Import your CSS file normally in your server entry:
+
+```tsx
+import './globals.css'
+```
+
+Your custom properties override Holocron's defaults because CSS custom properties are not affected by cascade layers.
+
+## Real-world example
+
+The [holocron.so website](https://github.com/remorses/holocron/tree/main/website) uses this pattern. It mounts holocron docs alongside auth routes (better-auth with Google login), an AI gateway proxy, and a device authorization flow.
