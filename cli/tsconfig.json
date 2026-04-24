@@ -1,9 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true,
-    "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["src", "src/cloudflare.d.ts"]
+  "include": ["src"]
 }

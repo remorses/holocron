@@ -1,12 +1,16 @@
 // Thin AI Gateway proxy — forwards OpenAI-compatible chat requests to
 // Cloudflare AI Gateway's Workers AI endpoint with minimal mutation.
 //
+// Validates holo_xxx API keys from the Authorization header against D1.
+// Tracks per-org monthly usage in KV (key: usage:<orgId>:<YYYY-MM>).
+//
 // The only request change is normalizing short model aliases to full `@cf/`
 // IDs. Request/response bodies and streaming are otherwise passed through
 // untouched so tools, message parts, and SSE framing stay Cloudflare-owned.
 
 import { Spiceflow } from 'spiceflow'
 import { env } from 'cloudflare:workers'
+import { getDb, hashApiKey } from './db.ts'
 
 const AI_GATEWAY_ID = 'holocron'
 
@@ -18,6 +22,9 @@ const ALLOWED_MODELS: Record<string, string> = {
 }
 
 const DEFAULT_MODEL = 'glm-4.7-flash'
+
+// Monthly request limit per org (free tier). Will be configurable per plan later.
+const MONTHLY_REQUEST_LIMIT = 1000
 
 function resolveModel(requested?: string): string {
   if (!requested) return ALLOWED_MODELS[DEFAULT_MODEL]!
@@ -35,6 +42,32 @@ function buildCorsHeaders() {
   }
 }
 
+function corsJson(body: Record<string, unknown>, status: number) {
+  return Response.json(body, { status, headers: buildCorsHeaders() })
+}
+
+function getUsageKey(orgId: string): string {
+  const now = new Date()
+  const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
+  return `usage:${orgId}:${month}`
+}
+
+async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string } | null> {
+  if (!authHeader) return null
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
+  if (!token.startsWith('holo_')) return null
+
+  const hash = await hashApiKey(token)
+  const db = getDb()
+  const found = await db.query.apiKey.findFirst({
+    where: { hash },
+    columns: { id: true, orgId: true },
+  })
+  if (!found) return null
+
+  return { orgId: found.orgId, keyId: found.id }
+}
+
 async function getWorkersAiCompatUrl() {
   const providerUrl = await env.AI.gateway(AI_GATEWAY_ID).getUrl('workers-ai')
   return `${providerUrl.replace(/\/$/, '')}/v1/chat/completions`
@@ -42,16 +75,22 @@ async function getWorkersAiCompatUrl() {
 
 export const gatewayApp = new Spiceflow()
   .post('/api/ai/v1/chat/completions', async ({ request }) => {
-    // TODO: Extract and validate holo_xxx API key from Authorization header.
-    // Keep that separate from the upstream CF token — this proxy overwrites
-    // Authorization when forwarding to AI Gateway.
+    // Validate the holo_xxx API key
+    const authResult = await validateApiKey(request.headers.get('authorization'))
+    if (!authResult) {
+      return corsJson({ error: 'Missing or invalid API key. Use a holo_xxx key in the Authorization header.' }, 401)
+    }
 
-    const body = await request.json().catch(() => null)
+    // Check monthly usage in KV
+    const usageKey = getUsageKey(authResult.orgId)
+    const currentUsage = parseInt(await env.USAGE_KV.get(usageKey) || '0', 10)
+    if (currentUsage >= MONTHLY_REQUEST_LIMIT) {
+      return corsJson({ error: 'Monthly request limit exceeded. Upgrade your plan for higher limits.' }, 429)
+    }
+
+    const body = await request.json().catch(() => null) as Record<string, unknown> | null
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      return Response.json({ error: 'Invalid JSON body' }, {
-        status: 400,
-        headers: buildCorsHeaders(),
-      })
+      return corsJson({ error: 'Invalid JSON body' }, 400)
     }
 
     const normalizedBody = {
@@ -71,6 +110,10 @@ export const gatewayApp = new Spiceflow()
       headers: upstreamHeaders,
       body: JSON.stringify(normalizedBody),
     })
+
+    // Increment usage counter (non-blocking, 30-day TTL so old months auto-expire)
+    env.USAGE_KV.put(usageKey, String(currentUsage + 1), { expirationTtl: 60 * 60 * 24 * 35 })
+      .catch(() => {})
 
     const headers = new Headers(upstream.headers)
     for (const [key, value] of Object.entries(buildCorsHeaders())) {
@@ -105,6 +148,3 @@ export const gatewayApp = new Spiceflow()
       headers: { 'access-control-allow-origin': '*' },
     })
   })
-
-// TODO: Stripe checkout, webhook, usage, status, cancel, plans endpoints.
-// TODO: KV storage for API keys, usage tracking, subscriptions.

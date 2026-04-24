@@ -91,6 +91,19 @@ export const orgMember = sqliteCore.sqliteTable('org_member', {
   sqliteCore.uniqueIndex('org_member_org_id_user_id_unique').on(table.orgId, table.userId),
 ])
 
+// ── API keys (tied to orgs, used to authenticate deployed docs sites) ──
+
+export const apiKey = sqliteCore.sqliteTable('api_key', {
+  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  orgId: sqliteCore.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
+  name: sqliteCore.text('name').notNull(),
+  prefix: sqliteCore.text('prefix').notNull(),
+  hash: sqliteCore.text('hash').notNull().unique(),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  sqliteCore.index('api_key_org_id_idx').on(table.orgId),
+])
+
 // ── Device flow (BetterAuth device authorization plugin) ────────────
 
 export const deviceCode = sqliteCore.sqliteTable('device_code', {
@@ -111,7 +124,7 @@ export const deviceCode = sqliteCore.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, deviceCode },
+  { user, session, account, verification, org, orgMember, apiKey, deviceCode },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -130,6 +143,7 @@ export const relations = defineRelations(
     verification: {},
     org: {
       members: r.many.orgMember(),
+      keys: r.many.apiKey(),
       users: r.many.user({
         from: r.org.id.through(r.orgMember.orgId),
         to: r.user.id.through(r.orgMember.userId),
@@ -138,6 +152,9 @@ export const relations = defineRelations(
     orgMember: {
       org: r.one.org({ from: r.orgMember.orgId, to: r.org.id }),
       user: r.one.user({ from: r.orgMember.userId, to: r.user.id }),
+    },
+    apiKey: {
+      org: r.one.org({ from: r.apiKey.orgId, to: r.org.id }),
     },
     deviceCode: {
       user: r.one.user({ from: r.deviceCode.userId, to: r.user.id }),

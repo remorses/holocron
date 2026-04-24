@@ -1,0 +1,54 @@
+{
+  "name": "@holocron.so/cli",
+  "version": "0.1.0",
+  "description": "CLI for Holocron: manage API keys and authenticate with holocron.so",
+  "keywords": ["cli", "holocron", "docs", "documentation", "api-keys"],
+  "homepage": "https://github.com/remorses/holocron",
+  "bugs": "https://github.com/remorses/holocron/issues",
+  "license": "MIT",
+  "author": "remorses <beats.by.morse@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remorses/holocron",
+    "directory": "cli"
+  },
+  "bin": "dist/bin.js",
+  "files": ["src", "dist"],
+  "type": "module",
+  "main": "./dist/cli.js",
+  "types": "./dist/cli.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
+    },
+    "./src": {
+      "types": "./src/cli.ts",
+      "default": "./src/cli.ts"
+    },
+    "./src/*": {
+      "types": "./src/*.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/bin.js",
+    "prepublishOnly": "rimraf dist \"*.tsbuildinfo\" && pnpm build",
+    "cli": "tsx src/bin",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.0.0",
+    "goke": "^6.9.0",
+    "spiceflow": "1.19.0-rsc.6",
+    "string-dedent": "^3.0.2",
+    "yaml": "^2.8.0",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "rimraf": "^6.0.1",
+    "website": "workspace:^"
+  }
+}

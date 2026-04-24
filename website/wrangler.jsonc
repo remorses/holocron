@@ -7,7 +7,8 @@
 
   // ── Production (top-level) ──────────────────────────────────────────
   "ai": {
-    "binding": "AI"
+    "binding": "AI",
+    "remote": true
   },
   "d1_databases": [
     {
@@ -16,6 +17,9 @@
       "database_id": "1b6a43e2-2e03-408c-9199-291faa305fa4",
       "migrations_dir": "../db/drizzle"
     }
+  ],
+  "kv_namespaces": [
+    { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" }
   ],
   "secrets": {
     "required": [
@@ -37,7 +41,8 @@
         { "pattern": "preview.holocron.so", "custom_domain": true }
       ],
       "ai": {
-        "binding": "AI"
+        "binding": "AI",
+        "remote": true
       },
       "d1_databases": [
         {
@@ -46,6 +51,9 @@
           "database_id": "8c7b5000-0d42-4c55-9a0a-ecad450f1e3d",
           "migrations_dir": "../db/drizzle"
         }
+      ],
+      "kv_namespaces": [
+        { "binding": "USAGE_KV", "id": "36b3209caddf42c79019b4c93d12b536" }
       ],
       "secrets": {
         "required": [

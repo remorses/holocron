@@ -866,13 +866,14 @@ export async function createHolocronApp(providers: HolocronProviders) {
         ...newUserMessages,
       ]
 
-      // Points to holocron.so AI gateway which proxies to CF Workers AI
+      // Points to holocron.so AI gateway which proxies to CF Workers AI.
+      // HOLOCRON_API_KEY (holo_xxx) authenticates the deployed site with the gateway.
       const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || 'https://holocron.so/api/ai/v1'
+      const apiKey = process.env.HOLOCRON_API_KEY || ''
       const gateway = createOpenAICompatible({
         name: 'holocron-gateway',
         baseURL: GATEWAY_URL,
-        // TODO: Pass holo_xxx API key from config when auth is enabled
-        // apiKey: site.config.ai?.apiKey,
+        apiKey,
       })
 
       const result = streamText({

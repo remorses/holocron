@@ -56,6 +56,21 @@ function getBaseUrl(): string {
   return 'https://holocron.so'
 }
 
+// ── API key helpers ─────────────────────────────────────────────────
+
+export async function hashApiKey(key: string): Promise<string> {
+  const data = new TextEncoder().encode(key)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+export function generateApiKey(): { fullKey: string; prefix: string } {
+  const raw = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
+  const fullKey = `holo_${raw}`
+  const prefix = raw.slice(0, 12)
+  return { fullKey, prefix }
+}
+
 // ── Session helpers ─────────────────────────────────────────────────
 
 type Session = { userId: string; user: { id: string; name: string; email: string } }
