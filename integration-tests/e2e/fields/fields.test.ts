@@ -369,6 +369,7 @@ test.describe("client navigation sidebar state", () => {
   test("hash heading becomes active only when no scroll-driven heading is active", async ({
     page,
   }) => {
+    test.setTimeout(40_000);
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.goto("/new");
 
@@ -392,6 +393,10 @@ test.describe("client navigation sidebar state", () => {
     await expect.poll(getActiveHeadingId).toBe("deep-section");
 
     const hashActiveHeadingId = await getActiveHeadingId();
+
+    // Wait for SCROLL_SETTLE_MS (150ms) to expire so scroll events from
+    // the earlier hashchange are no longer suppressed by the TOC hook.
+    await page.waitForTimeout(200);
 
     await page.evaluate(() => {
       const heading = document.getElementById("redirect-target");

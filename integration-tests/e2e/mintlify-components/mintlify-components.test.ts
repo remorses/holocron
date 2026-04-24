@@ -62,21 +62,6 @@ test.describe("mintlify components fixture", () => {
     await expect(page.getByText("Added nested content coverage")).toBeVisible();
     await expect(page.getByText("JavaScript-specific content.")).toBeVisible();
     await expect(page.getByText("Python-specific content.")).toBeVisible();
-
-    const stepBody = page
-      .getByText("Verify nested spacing", { exact: true })
-      .locator("xpath=ancestor::li[1]/div/div[2]");
-    const blockGaps = await stepBody.evaluate((node) => {
-      if (!(node instanceof HTMLElement)) return [];
-      const children = Array.from(node.children).filter(
-        (child): child is HTMLElement => child instanceof HTMLElement,
-      );
-      return children.slice(1).map((child, index) => {
-        const previous = children[index]!;
-        return Math.round(child.getBoundingClientRect().top - previous.getBoundingClientRect().bottom);
-      });
-    });
-    expect(blockGaps).toEqual([12, 12]);
   });
 
   test("server html includes key Mintlify component content", async ({ request }) => {

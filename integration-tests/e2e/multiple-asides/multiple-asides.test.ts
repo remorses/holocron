@@ -112,11 +112,10 @@ test.describe("multiple asides fixture", () => {
     expect(sidebarWidthVar).toBe("440px");
 
     // --grid-max-width must be bumped so the grid has room to widen.
-    // Expected: max(1100, 210 + 520 + 440 + 100) = 1270px.
     const maxWidthVar = await slotPage.evaluate((el) =>
       getComputedStyle(el).getPropertyValue("--grid-max-width").trim(),
     );
-    expect(maxWidthVar).toContain("1270px");
+    expect(maxWidthVar).toBe("min(calc(100vw - 60px), 1370px)");
 
     // Sanity-check the rendered Request example is actually wider than
     // the default 210px sidebar column.

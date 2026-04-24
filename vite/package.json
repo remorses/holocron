@@ -96,7 +96,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^25.0.3",
+    "@types/node": "^25.6.0",
     "@types/prismjs": "^1.26.6",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
