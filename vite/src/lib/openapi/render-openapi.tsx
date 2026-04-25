@@ -119,7 +119,7 @@ function Property({ name, schema, required, depth = 0 }: {
   const tags = collectTags(schema)
 
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex flex-col gap-3 py-3 first:pt-0 last:pb-0'>
       <div className='flex flex-wrap items-center gap-2'>
         <span className='font-medium font-mono text-primary'>
           {name}{required ? <span className='text-red'>*</span> : <span className='text-muted-foreground'>?</span>}
@@ -173,7 +173,9 @@ function Section({ title, children }: { title: React.ReactNode; children: React.
   return (
     <div className='flex flex-col gap-3'>
       <div className='font-semibold text-foreground'>{title}</div>
-      {children}
+      <div className='flex flex-col divide-y divide-border-subtle'>
+        {children}
+      </div>
     </div>
   )
 }
