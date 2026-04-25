@@ -7,7 +7,7 @@ export default defineConfig({
   server: { port: 7664, strictPort: true },
   clearScreen: false,
   plugins: [
-    holocron({ entry: './src/server.tsx' }),
+    holocron({ entry: './src/server.tsx', pagesDir: 'src/pages' }),
     tailwindcss(),
     cloudflare({
       viteEnvironment: {
