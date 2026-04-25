@@ -305,6 +305,24 @@ When a page renders but client behavior is dead (tree rows do not collapse, sear
         - React markers on TOC DOM
         - startup browser errors / unhandled rejections
 
+## Deployments
+
+**Always deploy preview first, then production.** Never go straight to production.
+
+```bash
+# 1. Deploy preview (runs migration + build + deploy)
+pnpm --dir website deploy
+
+# 2. Verify preview works (load the page, check logs)
+
+# 3. Deploy production (runs migration + build + deploy)
+pnpm --dir website deploy:prod
+```
+
+If the preview migration or deploy fails, **stop**. Do not continue to production.
+
+The `deploy` and `deploy:prod` scripts run the D1 migration before building and deploying. If migration fails, the `&&` chain stops and the deploy never happens.
+
 ## Secrets management — always use sigillo
 
 All secrets must be managed through **sigillo**. Never hardcode secrets, never read `.env` files directly. Load the `sigillo` skill before any secrets-related work. Run apps with `sigillo run -- pnpm dev` to inject secrets as env vars. Never read secret values into agent context.
