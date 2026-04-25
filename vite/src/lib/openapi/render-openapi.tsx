@@ -122,7 +122,7 @@ function Property({ name, schema, required, depth = 0 }: {
     <div className='flex flex-col gap-3 py-3 first:pt-0 last:pb-0'>
       <div className='flex flex-wrap items-center gap-2'>
         <span className='font-medium font-mono text-primary'>
-          {name}{required ? <span className='text-red'>*</span> : <span className='text-muted-foreground'>?</span>}
+          {name}{required ? <span className='text-red'> *</span> : <span className='text-muted-foreground'>?</span>}
         </span>
         <span className='font-mono text-muted-foreground'>{typeString(schema)}</span>
         {schema.deprecated && <NavBadge label='deprecated' color='yellow' />}
