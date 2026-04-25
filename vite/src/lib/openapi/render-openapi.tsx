@@ -228,23 +228,26 @@ function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['
 function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
   if (responses.length === 0) return null
   return (
-    <Section title='Response'>
-      {responses.map((r) => {
-        const hasSchema = r.schema && (
-          (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
-          r.schema.type === 'array' || r.schema.type
-        )
-        if (!hasSchema && !r.description) {
-          return <div key={r.status} className='font-mono text-muted-foreground'>{r.status}</div>
-        }
-        return (
-          <Expandable key={r.status} title={`${r.status}${r.description ? ` · ${r.description}` : ''}`}>
-            {hasSchema && r.schema && <FieldList schema={r.schema} />}
-            {!hasSchema && r.description && <div className='text-muted-foreground'>{r.description}</div>}
-          </Expandable>
-        )
-      })}
-    </Section>
+    <div className='flex flex-col gap-3'>
+      <div className='font-semibold text-foreground'>Response</div>
+      <div className='flex flex-col gap-3'>
+        {responses.map((r) => {
+          const hasSchema = r.schema && (
+            (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
+            r.schema.type === 'array' || r.schema.type
+          )
+          if (!hasSchema && !r.description) {
+            return <div key={r.status} className='font-mono text-muted-foreground'>{r.status}</div>
+          }
+          return (
+            <Expandable key={r.status} title={`${r.status}${r.description ? ` · ${r.description}` : ''}`}>
+              {hasSchema && r.schema && <FieldList schema={r.schema} />}
+              {!hasSchema && r.description && <div className='text-muted-foreground'>{r.description}</div>}
+            </Expandable>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
