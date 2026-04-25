@@ -149,7 +149,7 @@ function SchemaProperty({
   )
 
   if (!isExpandable || depth > 3) {
-    return <div className='border-t border-border-subtle py-3 first:border-t-0'>{content}</div>
+    return <div className='py-3 first:pt-0 last:pb-0'>{content}</div>
   }
 
   const nestedSchema = hasArrayItems ? schema.items! : schema
@@ -157,7 +157,7 @@ function SchemaProperty({
   const nestedRequired = new Set(nestedSchema.required ?? [])
 
   return (
-    <div className='border-t border-border-subtle py-3 first:border-t-0'>
+    <div className='py-3 first:pt-0 last:pb-0'>
       {content}
       <Expandable title={`Show ${hasArrayItems ? 'item ' : ''}properties`} defaultOpen={depth === 0}>
         {Object.entries(nestedProps).map(([key, propSchema]) => (
@@ -248,7 +248,7 @@ function AuthSection({ security }: { security: SecurityInfo[] }) {
       <div className='text-sm font-semibold text-foreground mb-2'>Authorization</div>
       <div className='rounded-lg border border-border-subtle bg-card px-4'>
         {security.map((s) => (
-          <div key={s.name} className='flex flex-col gap-1.5 border-t border-border-subtle py-3 first:border-t-0'>
+          <div key={s.name} className='flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0'>
             <div className='flex flex-wrap items-center gap-2'>
               <code className='text-sm font-semibold text-foreground'>{s.name}</code>
               <span className='text-xs font-mono text-muted-foreground'>
