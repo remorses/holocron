@@ -19,36 +19,7 @@ import { syncNavigation, type SyncResult } from './lib/sync.ts'
 
 import react from '@vitejs/plugin-react'
 
-import { globSync } from 'tinyglobby'
 
-/** Discover importable JS/TS files in snippets/, components/, and pagesDir.
- *  Returns paths relative to root. Only .tsx/.ts/.jsx/.js — NOT .mdx/.md
- *  (MDX snippet imports would be a separate feature).
- *  Always scans snippets/ and components/ at the project root. When pagesDir
- *  is a subdirectory (e.g. pages/), also scans snippets/ and components/
- *  inside it so both `/snippets/card` and `./snippets/card` resolve. */
-function discoverImportableFiles(root: string, pagesDir: string): string[] {
-  const pagesDirRelative = path.relative(root, pagesDir)
-  const ext = '*.{jsx,tsx,ts,js}'
-  const patterns = [
-    // Convention dirs at the project root
-    `snippets/**/${ext}`,
-    `components/**/${ext}`,
-  ]
-
-  if (pagesDirRelative !== '') {
-    // Convention dirs inside pagesDir (e.g. pages/snippets/, pages/components/)
-    patterns.push(`${pagesDirRelative}/snippets/**/${ext}`)
-    patterns.push(`${pagesDirRelative}/components/**/${ext}`)
-    // Any JS/TS file colocated with pages (helpers, utils, etc.)
-    patterns.push(`${pagesDirRelative}/**/${ext}`)
-  }
-
-  return globSync(patterns, {
-    cwd: root,
-    ignore: ['node_modules/**', 'dist/**', '**/*.test.*', '**/*.spec.*', '.e2e-dist/**'],
-  }).sort()
-}
 
 // `vite-plugin.ts` lives in `src/`, both in source and emitted `dist/`, so one
 // `..` always gets back to the package root and `src/` from there is stable.
@@ -406,16 +377,24 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return `export default ${JSON.stringify(markdown)}`
       }
       if (id === RESOLVED_MODULES) {
-        // Discover importable files at build time and emit explicit lazy
-        // import() entries. We can't use import.meta.glob in a virtual
-        // module because Vite requires globs to be relative to a real file.
+        // Build the lazy import map from import paths collected during MDX
+        // sync. Only files actually imported by MDX pages are included,
+        // rather than globbing entire convention folders like snippets/ or
+        // components/. This is more precise and faster.
         const pagesDirRelative = path.relative(root, pagesDir)
         const pagesDirPrefix = pagesDirRelative === '' ? './' : `./${pagesDirRelative}/`
 
-        const importableFiles = discoverImportableFiles(root, pagesDir)
-        const entries = importableFiles.map((relPath) => {
-          const absPath = path.join(root, relPath)
-          return `  ${JSON.stringify('./' + relPath)}: () => import(${JSON.stringify(absPath)})`
+        // Flatten all per-page import paths into a unique set
+        const allImportPaths = new Set<string>()
+        for (const paths of Object.values(syncResult.pageImportPaths)) {
+          for (const p of paths) {
+            allImportPaths.add(p)
+          }
+        }
+
+        const entries = [...allImportPaths].sort().map((relPath) => {
+          const absPath = path.join(root, relPath.replace(/^\.\//, ''))
+          return `  ${JSON.stringify(relPath)}: () => import(${JSON.stringify(absPath)})`
         })
 
         return [
@@ -504,20 +483,22 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         : undefined
 
       // When an importable file (.tsx/.jsx/.ts/.js) is added or removed
-      // in the project, invalidate the modules virtual module so it
-      // re-discovers files on next load.
+      // in the project, re-sync navigation so pageImportPaths are refreshed
+      // (a previously-unresolvable import may now resolve), then invalidate
+      // the modules virtual module so it picks up the new import map.
       const isImportable = /\.[jt]sx?$/.test(ctx.file)
         && !ctx.file.includes('node_modules')
         && !ctx.file.includes('/dist/')
         && !/\.(test|spec)\./.test(ctx.file)
-      if (isImportable && ctx.type !== 'update') {
+      const isImportableAddOrRemove = isImportable && ctx.type !== 'update'
+      if (isImportableAddOrRemove) {
         const mod = this.environment.moduleGraph.getModuleById(RESOLVED_MODULES)
         if (mod) {
           this.environment.moduleGraph.invalidateModule(mod)
         }
       }
 
-      if (!isMdx && !isConfig) {
+      if (!isMdx && !isConfig && !isImportableAddOrRemove) {
         return
       }
 
@@ -562,7 +543,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // loader still derives its `site` payload from these async provider
         // modules. Return them from the client hook too so Vite refreshes the
         // client graph instead of leaving navigation/search/title state stale.
-        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX, RESOLVED_APP]) {
+        for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX, RESOLVED_APP, RESOLVED_MODULES]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod) {
             clientHotModules.push(mod)
@@ -571,11 +552,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       // HMR: invalidate provider modules + the per-page MDX virtual module.
+      // Also invalidate RESOLVED_MODULES because syncNavigation may have
+      // updated pageImportPaths (new imports in edited MDX, or newly-
+      // resolvable paths when importable files are added/removed).
       const resolvedIds = new Set<string>([
         RESOLVED_CONFIG,
         RESOLVED_NAVIGATION,
         RESOLVED_MDX,
         RESOLVED_APP,
+        RESOLVED_MODULES,
       ])
 
       if (isMdx) {

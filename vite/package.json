@@ -84,7 +84,6 @@
     "safe-mdx": "^1.3.9",
     "string-dedent": "^3.0.2",
     "takumi-js": "1.0.0-rc.15",
-    "tinyglobby": "^0.2.16",
     "unist-util-visit": "^5.1.0",
     "yaml": "^2.8.3",
     "zod": "^4.3.6",

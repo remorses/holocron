@@ -16,6 +16,7 @@ import type { ImageMeta } from './image-processor.ts'
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
 import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
+import { extractImports } from 'safe-mdx/parse'
 
 export type ProcessedMdx = {
   normalizedContent: string
@@ -30,6 +31,10 @@ export type ProcessedMdx = {
   headings: NavHeading[]
   /** All image srcs that need build-time processing */
   imageSrcs: string[]
+  /** Raw import source strings from MDX import declarations (e.g. '/snippets/greeting',
+   *  '../components/badge'). Bare specifiers (npm packages) are excluded. Used by
+   *  sync.ts to resolve actual file paths at build time. */
+  importSources: string[]
   /** The parsed mdast tree (reused for image rewriting without re-parsing) */
   mdast: Root
 }
@@ -62,6 +67,13 @@ export function processMdx(content: string, defaultLibrary: IconLibrary = 'fonta
 
   const imageSrcs = collectImageSrcs(mdast)
 
+  // Extract local import sources (relative/absolute paths) from MDX import
+  // declarations. Bare specifiers (npm packages) are excluded — they start
+  // with neither '/' nor './' nor '../'.
+  const importSources = extractImports(mdast)
+    .map((imp) => imp.source)
+    .filter((src) => src.startsWith('/') || src.startsWith('./') || src.startsWith('../'))
+
   return {
     normalizedContent,
     title: frontmatter.title || headings[0]?.text || 'Untitled',
@@ -71,6 +83,7 @@ export function processMdx(content: string, defaultLibrary: IconLibrary = 'fonta
     iconRefs,
     headings,
     imageSrcs,
+    importSources,
     mdast,
   }
 }

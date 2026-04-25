@@ -442,6 +442,56 @@ description: A description
   })
 })
 
+describe('processMdx importSources', () => {
+  test('extracts local import sources from MDX import declarations', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+import { Greeting } from '/snippets/greeting'
+import { Badge } from '../components/badge'
+import Alert from './alert'
+
+# Hello
+`)
+    expect(result.importSources).toMatchInlineSnapshot(`
+      [
+        "/snippets/greeting",
+        "../components/badge",
+        "./alert",
+      ]
+    `)
+  })
+
+  test('excludes bare specifiers (npm packages)', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+import React from 'react'
+import { useState } from 'react'
+import { Card } from '/components/card'
+
+# Hello
+`)
+    expect(result.importSources).toMatchInlineSnapshot(`
+      [
+        "/components/card",
+      ]
+    `)
+  })
+
+  test('returns empty array when no local imports exist', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+# No imports here
+`)
+    expect(result.importSources).toEqual([])
+  })
+})
+
 describe('processMdx icon refs', () => {
   test('uses the configured project library for frontmatter and JSX icon strings', () => {
     expect(processMdx(`---

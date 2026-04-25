@@ -95,6 +95,11 @@ export type SyncResult = {
   mdxContent: Record<string, string>
   /** Canonical icon refs used by each page body/frontmatter MDX. */
   pageIconRefs: Record<string, IconRef[]>
+  /** Resolved import file paths per page slug (relative to project root,
+   *  with ./ prefix, e.g. './snippets/greeting.tsx'). Collected from MDX
+   *  import declarations during sync. Used to build the virtual:holocron-modules
+   *  lazy import map with only the files that are actually imported. */
+  pageImportPaths: Record<string, string[]>
   parsedCount: number
   cachedCount: number
 }
@@ -125,6 +130,7 @@ export async function syncNavigation({
   const oldMdxCache = readMdxCache(mdxCachePath)
   const oldMdxContent = oldMdxCache.content
   const oldPageIconRefs = oldMdxCache.pageIconRefs
+  const oldPageImportPaths = oldMdxCache.pageImportPaths
   const imageCache = loadImageCache({ distDir })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
@@ -133,6 +139,7 @@ export async function syncNavigation({
   let cachedCount = 0
   const mdxContent: Record<string, string> = {}
   const pageIconRefs: Record<string, IconRef[]> = {}
+  const pageImportPaths: Record<string, string[]> = {}
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
@@ -158,6 +165,7 @@ export async function syncNavigation({
       cachedCount++
       mdxContent[slug] = cachedMdx
       pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
+      pageImportPaths[slug] = oldPageImportPaths[slug] ?? []
       return cached
     }
 
@@ -213,6 +221,14 @@ export async function syncNavigation({
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
     pageIconRefs[slug] = processed.iconRefs
+    // Resolve import sources to file paths relative to project root (./prefix).
+    // These feed the virtual:holocron-modules lazy import map.
+    pageImportPaths[slug] = resolveImportSources({
+      importSources: processed.importSources,
+      slug,
+      pagesDir,
+      projectRoot,
+    })
 
     return {
       slug,
@@ -268,10 +284,10 @@ export async function syncNavigation({
 
   // 5. Write caches
   writeCache(cachePath, navigation)
-  writeMdxCache(mdxCachePath, { content: mdxContent, pageIconRefs })
+  writeMdxCache(mdxCachePath, { content: mdxContent, pageIconRefs, pageImportPaths })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, pageIconRefs, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, pageIconRefs, pageImportPaths, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -370,6 +386,7 @@ type MdxCacheEnvelope = {
   version: string
   content: Record<string, string>
   pageIconRefs: Record<string, IconRef[]>
+  pageImportPaths: Record<string, string[]>
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -397,9 +414,9 @@ function writeCache(cachePath: string, nav: Navigation): void {
   fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 
-function readMdxCache(cachePath: string): { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]> } {
+function readMdxCache(cachePath: string): { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]>; pageImportPaths: Record<string, string[]> } {
   if (!fs.existsSync(cachePath)) {
-    return { content: {}, pageIconRefs: {} }
+    return { content: {}, pageIconRefs: {}, pageImportPaths: {} }
   }
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
@@ -408,21 +425,22 @@ function readMdxCache(cachePath: string): { content: Record<string, string>; pag
       return {
         content: envelope.content,
         pageIconRefs: envelope.pageIconRefs ?? {},
+        pageImportPaths: envelope.pageImportPaths ?? {},
       }
     }
-    return { content: {}, pageIconRefs: {} }
+    return { content: {}, pageIconRefs: {}, pageImportPaths: {} }
   } catch {
-    return { content: {}, pageIconRefs: {} }
+    return { content: {}, pageIconRefs: {}, pageImportPaths: {} }
   }
 }
 
 function writeMdxCache(
   cachePath: string,
-  data: { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]> },
+  data: { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]>; pageImportPaths: Record<string, string[]> },
 ): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content: data.content, pageIconRefs: data.pageIconRefs }
+  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content: data.content, pageIconRefs: data.pageIconRefs, pageImportPaths: data.pageImportPaths }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
 
@@ -444,4 +462,79 @@ function slugToHref(slug: string): string {
   }
   const cleaned = slug.replace(/\/index$/, '')
   return `/${cleaned}`
+}
+
+const IMPORT_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js']
+
+/**
+ * Resolve raw MDX import source strings to file paths relative to project root.
+ * Returns paths with ./ prefix matching the Vite glob key format (e.g. './snippets/greeting.tsx').
+ *
+ * Resolution rules (same as safe-mdx's resolveModulePath):
+ * - Absolute `/snippets/card` → resolve from pagesDir, then projectRoot
+ * - Relative `./card`, `../components/card` → resolve from the MDX file's directory
+ */
+function resolveImportSources({
+  importSources,
+  slug,
+  pagesDir,
+  projectRoot,
+}: {
+  importSources: string[]
+  slug: string
+  pagesDir: string
+  projectRoot: string
+}): string[] {
+  const result: string[] = []
+  // Directory containing the MDX file for this slug
+  const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
+  const mdxDir = path.join(pagesDir, slugDir)
+
+  for (const source of importSources) {
+    let baseDir: string
+    let sourcePath: string
+
+    if (source.startsWith('/')) {
+      // Absolute import: try pagesDir first, then projectRoot
+      sourcePath = source.slice(1) // strip leading /
+      const resolved = tryResolveImport(path.join(pagesDir, sourcePath))
+        ?? tryResolveImport(path.join(projectRoot, sourcePath))
+      if (resolved) {
+        result.push('./' + path.relative(projectRoot, resolved))
+      }
+      continue
+    }
+
+    // Relative import: resolve from the MDX file's directory
+    const resolved = tryResolveImport(path.resolve(mdxDir, source))
+    if (resolved) {
+      result.push('./' + path.relative(projectRoot, resolved))
+    }
+  }
+
+  return [...new Set(result)]
+}
+
+/** Try to resolve a file path with extension probing. Returns the first
+ *  existing path, or undefined if none match. */
+function tryResolveImport(basePath: string): string | undefined {
+  // Try exact path first (if user wrote the extension)
+  if (fs.existsSync(basePath) && fs.statSync(basePath).isFile()) {
+    return basePath
+  }
+  // Try each extension
+  for (const ext of IMPORT_EXTENSIONS) {
+    const candidate = basePath + ext
+    if (fs.existsSync(candidate)) {
+      return candidate
+    }
+  }
+  // Try index files (e.g. ./components/ → ./components/index.tsx)
+  for (const ext of IMPORT_EXTENSIONS) {
+    const candidate = path.join(basePath, 'index' + ext)
+    if (fs.existsSync(candidate)) {
+      return candidate
+    }
+  }
+  return undefined
 }

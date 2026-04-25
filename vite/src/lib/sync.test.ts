@@ -185,6 +185,121 @@ title: Setup
     `)
   })
 
+  test('collects pageImportPaths from MDX import declarations', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index', 'guide/nested'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Greeting } from '/snippets/greeting'
+import { Badge } from '../components/badge'
+
+# Home
+
+<Greeting />
+<Badge />
+`,
+        'guide/nested': `---
+title: Nested
+---
+
+import Alert from '../snippets/alert'
+
+# Nested
+
+<Alert />
+`,
+      },
+    ))
+
+    // Create the component files that the imports reference
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    const componentsDir = path.join(project.root, 'components')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.mkdirSync(componentsDir, { recursive: true })
+    fs.writeFileSync(path.join(snippetsDir, 'greeting.tsx'), 'export const Greeting = () => <div>hi</div>')
+    fs.writeFileSync(path.join(snippetsDir, 'alert.tsx'), 'export default () => <div>alert</div>')
+    fs.writeFileSync(path.join(componentsDir, 'badge.tsx'), 'export const Badge = () => <span>badge</span>')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    // index.mdx imports /snippets/greeting (resolved under pagesDir) and
+    // ../components/badge (resolved relative to pages/ → root/components/)
+    expect(result.pageImportPaths['index']?.sort()).toMatchInlineSnapshot(`
+      [
+        "./components/badge.tsx",
+        "./pages/snippets/greeting.tsx",
+      ]
+    `)
+
+    // guide/nested.mdx imports ../snippets/alert (resolved relative to pages/guide/ → pages/snippets/)
+    expect(result.pageImportPaths['guide/nested']).toMatchInlineSnapshot(`
+      [
+        "./pages/snippets/alert.tsx",
+      ]
+    `)
+  })
+
+  test('caches pageImportPaths across syncs', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Greeting } from '/snippets/greeting'
+
+# Home
+`,
+      },
+    ))
+
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.writeFileSync(path.join(snippetsDir, 'greeting.tsx'), 'export const Greeting = () => <div>hi</div>')
+
+    const config = readConfig({ root: project.root })
+    const first = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(first.parsedCount).toBe(1)
+    expect(first.pageImportPaths['index']).toEqual(['./pages/snippets/greeting.tsx'])
+
+    // Second sync — cached
+    const second = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(second.parsedCount).toBe(0)
+    expect(second.cachedCount).toBe(1)
+    expect(second.pageImportPaths['index']).toEqual(['./pages/snippets/greeting.tsx'])
+  })
+
   test('preserves typed page frontmatter metadata on NavPage', async () => {
     const project = tracked(createProject(
       {
