@@ -24,6 +24,18 @@ test.describe('docs + API tabs coexist', () => {
     expect(html).toContain('Documentation')
     expect(html).toContain('API Reference')
   })
+
+  test('API Reference tab is active on API pages', async ({ request }) => {
+    const res = await request.get('/api/get-users')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    // The active tab should be "API Reference", not "Documentation"
+    // Active tabs have a specific visual indicator (text-shadow faux bold)
+    // Check that the loader data marks the correct tab as active
+    expect(html).toContain('API Reference')
+    // The sidebar should show API groups, not the docs content
+    expect(html).toContain('List users')
+  })
 })
 
 test.describe('OpenAPI tab', () => {

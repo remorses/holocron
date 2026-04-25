@@ -31,6 +31,8 @@ export type TabItem = {
   href: string
   icon?: NavIcon
   align?: 'start' | 'end'
+  /** All page hrefs belonging to this tab (for active tab matching). */
+  pageHrefs?: string[]
 }
 
 /** A link in the top navbar (icon-only typically). */
@@ -152,6 +154,19 @@ function groupContainsPage(group: NavGroup, pageHref: string): boolean {
   return false
 }
 
+/** Collect all page hrefs belonging to a tab (for active tab matching). */
+function collectTabPageHrefs(tab: NavTab): string[] {
+  const hrefs: string[] = []
+  function walkGroup(group: NavGroup) {
+    for (const entry of group.pages) {
+      if (isNavPage(entry)) hrefs.push(entry.href)
+      else if (isNavGroup(entry)) walkGroup(entry)
+    }
+  }
+  for (const group of tab.groups) walkGroup(group)
+  return hrefs
+}
+
 export function buildTabItems(site: HolocronSiteData): TabItem[] {
   const hasSwitchers =
     site.switchers.versions.length > 0 ||
@@ -163,11 +178,13 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
         .filter((t) => t.tab !== '' && !t.hidden)
         .map((t) => {
           const firstPage = findFirstPageInTab(t)
+          const pageHrefs = collectTabPageHrefs(t)
           return {
             label: t.tab,
             href: firstPage?.href || '/',
             icon: t.icon,
             align: t.align,
+            pageHrefs,
           }
         })
   const anchors: TabItem[] = site.config.navigation.anchors
@@ -313,6 +330,9 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
 export function resolveActiveTabHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
   const tabs = buildTabItems(site)
   if (!pageHref) return tabs[0]?.href
+  // Match by page membership first (exact), then fall back to href prefix matching
+  const memberMatch = tabs.find((t) => t.pageHrefs?.includes(pageHref))
+  if (memberMatch) return memberMatch.href
   return tabs.find((t) => pageHref.startsWith(t.href) && t.href !== '/')?.href ?? tabs[0]?.href
 }
 
