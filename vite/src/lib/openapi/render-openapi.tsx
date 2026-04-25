@@ -1,23 +1,22 @@
 /**
- * OpenAPI endpoint renderer — server component.
+ * OpenAPI endpoint renderer — client component.
  *
- * Renders a single API endpoint page using existing editorial components:
- * Badge, Expandable, CodeBlock, RequestExample, ResponseExample.
+ * Renders a single API endpoint page. Follows fumadocs' Property pattern:
+ * root-level fields use border-t dividers (no container boxes), nested
+ * fields inside expandables get card-like bg-card borders.
  *
- * The component receives a serialized operation (extracted at build time
- * by sync.ts) and renders the full endpoint documentation including
- * method badge, parameters, request body, responses, and cURL example.
+ * cURL + response examples are rendered via <Aside full> in the virtual
+ * MDX (sync.ts), not here.
  */
 
 'use client'
 
 import React from 'react'
-import { Badge, Expandable } from '../../components/markdown/mintlify/compat.tsx'
-import { MethodBadge } from '../../components/markdown/nav-badge.tsx'
+import { Expandable } from '../../components/markdown/mintlify/compat.tsx'
+import { MethodBadge, NavBadge } from '../../components/markdown/nav-badge.tsx'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
-/** Serialized schema for rendering. Fully dereferenced, no $refs. */
 export interface SchemaInfo {
   type?: string
   format?: string
@@ -55,7 +54,6 @@ export interface ResponseInfo {
   status: string
   description?: string
   schema?: SchemaInfo
-  /** Explicit example from the spec (only shown if present). */
   example?: unknown
 }
 
@@ -99,23 +97,33 @@ function schemaTypeString(schema: SchemaInfo | undefined): string {
   return base
 }
 
-/* ── Schema property renderer (recursive) ─────────────────────────────── */
+/* ── Property — fumadocs style ────────────────────────────────────────── */
 
-function SchemaProperty({
+/**
+ * Single schema property row. Follows fumadocs' Property pattern:
+ * - Root level: `border-t py-4 first:border-t-0` (divider, no box)
+ * - Nested (inside expandables): `p-3 border-x bg-card` (card-like)
+ * - Name in mono+primary with * (required) or ? (optional)
+ * - Type in mono muted
+ * - Description below
+ */
+function Property({
   name,
   schema,
   required = false,
+  nested = false,
   depth = 0,
 }: {
   name: string
   schema: SchemaInfo
   required?: boolean
+  nested?: boolean
   depth?: number
 }) {
   const typeStr = schemaTypeString(schema)
   const hasNestedProps = schema.type === 'object' && schema.properties && Object.keys(schema.properties).length > 0
   const hasArrayItems = schema.type === 'array' && schema.items?.type === 'object' && schema.items?.properties
-  const isExpandable = hasNestedProps || hasArrayItems
+  const canExpand = (hasNestedProps || hasArrayItems) && depth <= 3
 
   const infoTags: { label: string; value: string }[] = []
   if (schema.default !== undefined) infoTags.push({ label: 'Default', value: JSON.stringify(schema.default) })
@@ -125,51 +133,52 @@ function SchemaProperty({
   if (schema.minLength !== undefined) infoTags.push({ label: 'Min length', value: String(schema.minLength) })
   if (schema.maxLength !== undefined) infoTags.push({ label: 'Max length', value: String(schema.maxLength) })
 
-  const content = (
-    <div className='flex flex-col gap-1.5'>
-      <div className='flex flex-wrap items-center gap-2'>
-        <code className='text-sm font-semibold text-foreground'>{name}</code>
-        {required && <span className='text-red text-sm'>*</span>}
-        <span className='text-xs font-mono text-muted-foreground'>{typeStr}</span>
-        {schema.deprecated && <Badge color='orange' size='xs'>deprecated</Badge>}
-      </div>
-      {schema.description && (
-        <div className='text-sm text-muted-foreground'>{schema.description}</div>
-      )}
-      {infoTags.length > 0 && (
-        <div className='flex flex-wrap gap-1.5'>
-          {infoTags.map((tag) => (
-            <span key={tag.label} className='inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground'>
-              <span className='font-medium'>{tag.label}:</span> <code>{tag.value}</code>
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-
-  if (!isExpandable || depth > 3) {
-    return <div className='py-3'>{content}</div>
-  }
-
-  const nestedSchema = hasArrayItems ? schema.items! : schema
-  const nestedProps = nestedSchema.properties ?? {}
-  const nestedRequired = new Set(nestedSchema.required ?? [])
-
   return (
-    <div className='flex flex-col gap-3 py-3'>
-      {content}
-      <Expandable title={`Show ${hasArrayItems ? 'item ' : ''}properties`} defaultOpen={depth === 0}>
-        {Object.entries(nestedProps).map(([key, propSchema]) => (
-          <SchemaProperty
-            key={key}
-            name={key}
-            schema={propSchema as SchemaInfo}
-            required={nestedRequired.has(key)}
-            depth={depth + 1}
-          />
-        ))}
-      </Expandable>
+    <div className={nested
+      ? 'text-sm p-3 border-x border-border bg-card last:rounded-b-xl first:rounded-tr-xl last:border-b'
+      : 'text-sm border-t border-border py-4 first:border-t-0'
+    }>
+      <div className='flex flex-wrap items-center gap-2'>
+        <span className='font-medium font-mono text-primary'>
+          {name}
+          {required
+            ? <span className='text-red'>*</span>
+            : <span className='text-muted-foreground'>?</span>
+          }
+        </span>
+        <span className='font-mono text-muted-foreground'>{typeStr}</span>
+        {schema.deprecated && <NavBadge label='deprecated' color='yellow' />}
+      </div>
+      <div className='pt-1.5 empty:hidden'>
+        {schema.description && (
+          <div className='text-muted-foreground'>{schema.description}</div>
+        )}
+        {infoTags.length > 0 && (
+          <div className='flex flex-wrap gap-1.5 mt-1.5'>
+            {infoTags.map((tag) => (
+              <span key={tag.label} className='inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground'>
+                <span className='font-medium'>{tag.label}:</span> <code>{tag.value}</code>
+              </span>
+            ))}
+          </div>
+        )}
+        {canExpand && (
+          <div className='mt-2'>
+            <Expandable title={`Show ${hasArrayItems ? 'item ' : ''}properties`}>
+              {Object.entries((hasArrayItems ? schema.items! : schema).properties!).map(([key, propSchema]) => (
+                <Property
+                  key={key}
+                  name={key}
+                  schema={propSchema as SchemaInfo}
+                  required={((hasArrayItems ? schema.items! : schema).required ?? []).includes(key)}
+                  nested
+                  depth={depth + 1}
+                />
+              ))}
+            </Expandable>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -179,55 +188,47 @@ function SchemaProperty({
 function ParameterGroup({ title, params }: { title: string; params: ParameterInfo[] }) {
   if (params.length === 0) return null
   return (
-    <div className='flex flex-col gap-0'>
-      <div className='text-sm font-semibold text-foreground mb-2'>{title}</div>
-      <div className='rounded-lg border border-border-subtle bg-card'>
-        <div className='flex flex-col divide-y divide-border-subtle px-4'>
-          {params.map((p) => (
-            <SchemaProperty
-              key={p.name}
-              name={p.name}
-              schema={{ ...(p.schema ?? {}), description: p.description ?? p.schema?.description }}
-              required={p.required}
-            />
-          ))}
-        </div>
+    <div>
+      <div className='text-sm font-semibold text-foreground mb-1'>{title}</div>
+      <div className='flex flex-col'>
+        {params.map((p) => (
+          <Property
+            key={p.name}
+            name={p.name}
+            schema={{ ...(p.schema ?? {}), description: p.description ?? p.schema?.description }}
+            required={p.required}
+          />
+        ))}
       </div>
     </div>
   )
 }
 
-/* ── Response accordion ───────────────────────────────────────────────── */
+/* ── Response section ─────────────────────────────────────────────────── */
 
 function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
   if (responses.length === 0) return null
   return (
-    <div className='flex flex-col gap-0'>
-      <div className='text-sm font-semibold text-foreground mb-2'>Responses</div>
+    <div>
+      <div className='text-sm font-semibold text-foreground mb-1'>Response</div>
       <div className='flex flex-col gap-2'>
         {responses.map((r) => {
           const hasSchema = r.schema && (
             (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
-            r.schema.type === 'array' ||
-            r.schema.type
+            r.schema.type === 'array' || r.schema.type
           )
-          const statusColor = r.status.startsWith('2') ? 'green'
-            : r.status.startsWith('4') ? 'orange'
-            : r.status.startsWith('5') ? 'red'
-            : 'gray'
 
           if (!hasSchema && !r.description) {
             return (
-              <div key={r.status} className='flex items-center gap-2 rounded-lg border border-border-subtle bg-card px-4 py-3'>
-                <Badge color={statusColor} size='sm'>{r.status}</Badge>
-                <span className='text-sm text-muted-foreground'>No content</span>
+              <div key={r.status} className='border-t border-border py-4 first:border-t-0'>
+                <span className='font-mono text-muted-foreground'>{r.status}</span>
               </div>
             )
           }
 
           return (
-            <Expandable key={r.status} title={`${r.status} ${r.description ?? ''}`}>
-              {hasSchema && r.schema && <SchemaFields schema={r.schema} />}
+            <Expandable key={r.status} title={`${r.status}${r.description ? ` · ${r.description}` : ''}`}>
+              {hasSchema && r.schema && <ResponseSchema schema={r.schema} />}
               {!hasSchema && r.description && (
                 <div className='text-sm text-muted-foreground'>{r.description}</div>
               )}
@@ -239,28 +240,59 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
   )
 }
 
+/** Render response schema fields (no outer container). */
+function ResponseSchema({ schema }: { schema: SchemaInfo }) {
+  if (schema.properties && Object.keys(schema.properties).length > 0) {
+    return (
+      <div className='flex flex-col'>
+        {Object.entries(schema.properties).map(([key, propSchema]) => (
+          <Property
+            key={key}
+            name={key}
+            schema={propSchema as SchemaInfo}
+            required={(schema.required ?? []).includes(key)}
+          />
+        ))}
+      </div>
+    )
+  }
+  if (schema.type === 'array' && schema.items) {
+    return <Property name='items' schema={schema.items} />
+  }
+  if (schema.type) {
+    return (
+      <div className='text-sm text-muted-foreground'>
+        Type: <code>{schemaTypeString(schema)}</code>
+      </div>
+    )
+  }
+  return null
+}
+
 /* ── Auth section ─────────────────────────────────────────────────────── */
 
 function AuthSection({ security }: { security: SecurityInfo[] }) {
   if (security.length === 0) return null
   return (
-    <div className='flex flex-col gap-0'>
-      <div className='text-sm font-semibold text-foreground mb-2'>Authorization</div>
-      <div className='rounded-lg border border-border-subtle bg-card px-4 divide-y divide-border-subtle'>
+    <div>
+      <div className='text-sm font-semibold text-foreground mb-1'>Authorization</div>
+      <div className='flex flex-col'>
         {security.map((s) => (
-          <div key={s.name} className='flex flex-col gap-1.5 py-3'>
+          <div key={s.name} className='text-sm border-t border-border py-4 first:border-t-0'>
             <div className='flex flex-wrap items-center gap-2'>
-              <code className='text-sm font-semibold text-foreground'>{s.name}</code>
-              <span className='text-xs font-mono text-muted-foreground'>
+              <span className='font-medium font-mono text-primary'>{s.name}</span>
+              <span className='font-mono text-muted-foreground'>
                 {s.type === 'http' && s.scheme === 'bearer' ? 'Bearer <token>' : s.type === 'apiKey' ? '<token>' : s.type}
               </span>
             </div>
-            {s.description && <div className='text-sm text-muted-foreground'>{s.description}</div>}
-            {s.in && (
-              <div className='text-xs text-muted-foreground'>
-                Token in: <code className='text-xs'>{s.in === 'header' ? 'header' : s.in}</code>
-              </div>
-            )}
+            <div className='pt-1.5 empty:hidden'>
+              {s.description && <div className='text-muted-foreground'>{s.description}</div>}
+              {s.in && (
+                <div className='text-muted-foreground'>
+                  Token in: <code>{s.in}</code>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -270,58 +302,18 @@ function AuthSection({ security }: { security: SecurityInfo[] }) {
 
 /* ── Request body section ─────────────────────────────────────────────── */
 
-/** Render schema fields for any root shape: objects show properties,
- *  arrays show item schema, primitives show a single type line. */
-function SchemaFields({ schema }: { schema: SchemaInfo }) {
-  // Object with properties → render each property
-  if (schema.properties && Object.keys(schema.properties).length > 0) {
-    return (
-      <div className='rounded-lg border border-border-subtle bg-card px-4'>
-        <div className='flex flex-col divide-y divide-border-subtle'>
-          {Object.entries(schema.properties).map(([key, propSchema]) => (
-            <SchemaProperty
-              key={key}
-              name={key}
-              schema={propSchema as SchemaInfo}
-              required={(schema.required ?? []).includes(key)}
-            />
-          ))}
-        </div>
-      </div>
-    )
-  }
-  // Array → show the item type
-  if (schema.type === 'array' && schema.items) {
-    return (
-      <div className='rounded-lg border border-border-subtle bg-card px-4'>
-        <SchemaProperty name='items' schema={schema.items} />
-      </div>
-    )
-  }
-  // Primitive or other → show type info
-  if (schema.type) {
-    return (
-      <div className='text-sm text-muted-foreground'>
-        Type: <code className='text-xs'>{schemaTypeString(schema)}</code>
-        {schema.description && <span> — {schema.description}</span>}
-      </div>
-    )
-  }
-  return null
-}
-
 function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['requestBody']> }) {
   return (
-    <div className='flex flex-col gap-0'>
-      <div className='flex items-center gap-2 mb-2'>
+    <div>
+      <div className='flex items-center gap-2 mb-1'>
         <span className='text-sm font-semibold text-foreground'>Request Body</span>
         <code className='text-xs text-muted-foreground'>{body.contentType}</code>
-        {body.required && <Badge color='green' size='xs'>required</Badge>}
+        {body.required && <NavBadge label='required' color='green' />}
       </div>
       {body.description && (
         <div className='text-sm text-muted-foreground mb-2'>{body.description}</div>
       )}
-      {body.schema && <SchemaFields schema={body.schema} />}
+      {body.schema && <ResponseSchema schema={body.schema} />}
     </div>
   )
 }
@@ -336,36 +328,24 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
 
   return (
     <div className='flex flex-col gap-(--prose-gap)'>
-      {/* Header */}
-      <div className='flex flex-col gap-2'>
-        <div className='flex items-center gap-2.5'>
-          <MethodBadge method={props.method} />
-          <code className='text-sm text-muted-foreground font-mono'>{props.path}</code>
-          {props.deprecated && <Badge color='orange' size='xs'>deprecated</Badge>}
-        </div>
-        {props.description && (
-          <div className='text-sm text-muted-foreground'>{props.description}</div>
-        )}
+      {/* Header: method badge + path */}
+      <div className='flex items-center gap-2.5'>
+        <MethodBadge method={props.method} />
+        <code className='text-sm text-muted-foreground font-mono'>{props.path}</code>
+        {props.deprecated && <NavBadge label='deprecated' color='orange' />}
       </div>
 
-      {/* Auth */}
-      <AuthSection security={props.security} />
+      {props.description && (
+        <div className='text-sm text-muted-foreground'>{props.description}</div>
+      )}
 
-      {/* Parameters by location */}
+      <AuthSection security={props.security} />
       <ParameterGroup title='Path Parameters' params={pathParams} />
       <ParameterGroup title='Query Parameters' params={queryParams} />
       <ParameterGroup title='Header Parameters' params={headerParams} />
       <ParameterGroup title='Cookie Parameters' params={cookieParams} />
-
-      {/* Request body */}
       {props.requestBody && <RequestBodySection body={props.requestBody} />}
-
-      {/* Responses */}
       <ResponseSection responses={props.responses} />
-
-      {/* cURL + response examples are rendered via <Aside full> in the virtual
-          MDX (sync.ts), not here. The editorial section splitter places them in
-          the right sidebar with proper syntax highlighting via CodeBlock. */}
     </div>
   )
 }

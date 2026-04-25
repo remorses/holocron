@@ -248,7 +248,7 @@ export function EditorialPage({
       <div className='grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-toc-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
         {/* TOC sidebar: sticky in its own outer grid column so section rows
             below are sized only by the content/right-rail subgrid. */}
-        <div className='slot-sidebar-left lg:self-stretch'>
+        <div className='slot-sidebar-left shrink-0 lg:self-stretch'>
           <div
             style={{
               position: 'sticky',
