@@ -234,6 +234,46 @@ Axis rule: use `gap-y-(--token)` on subgrid wrappers (not `gap-(--token)`) so th
 4. **Inline `gridRow` style applies at ALL breakpoints** — if you only want it at lg, use a CSS custom property + `lg:[grid-row:var(--x)]` class.
 5. **Axis ownership**: page grid owns horizontal (via `--grid-*`); section rhythm owns vertical (via `--section-gap`, `--prose-gap`).
 
+## MDX component imports
+
+Users can import `.tsx/.ts/.jsx/.js` components in MDX files:
+
+```mdx
+import { Greeting } from '/snippets/greeting'
+import { Badge } from '../components/badge'
+```
+
+Import detection is **MDX-driven**, not folder-based. There are no magic `snippets/` or `components/` directories. Any local file can be imported from any location; the system discovers imports by parsing the MDX AST.
+
+### How it works (two-step resolution)
+
+**Build time** (`sync.ts`): during `syncNavigation`, `processMdx` extracts raw import source strings from each MDX file using `safe-mdx`'s `extractImports()`. The raw sources (e.g. `/snippets/greeting`, `../components/badge`) are cached in `holocron-mdx.json` as `pageImportSources`. On every sync, even cache hits, these sources are re-resolved against the filesystem to produce `{ moduleKey, absPath }` tuples. This means newly-created files are picked up without re-parsing MDX.
+
+**Render time** (`app-factory.tsx`): `safe-mdx`'s `resolveModules()` parses the same MDX, extracts imports, normalizes them to module keys, and looks them up in the `virtual:holocron-modules` lazy glob map. The keys in that map must exactly match what safe-mdx produces.
+
+### What `/` means in imports
+
+`/` always means project root from safe-mdx's perspective. It normalizes `/x` to `./x`. On the filesystem, we probe `pagesDir` first, then `projectRoot`:
+
+- `pagesDir = root` (default): `/snippets/greeting` finds `./snippets/greeting.tsx`
+- `pagesDir = ./pages/`: `/snippets/greeting` finds `./pages/snippets/greeting.tsx` first, falls back to `./snippets/greeting.tsx`
+
+The module key is always `./snippets/greeting.tsx` regardless of `pagesDir`.
+
+### Key constraint: module keys must match
+
+The build-time resolver and safe-mdx's render-time resolver must produce identical keys. Absolute imports are normalized as `'.' + source + ext`. Relative imports are resolved from `pagesDirPrefix + slugDir`. If the keys diverge, the import silently fails at render time. See `resolveImportSources()` in `sync.ts` for the exact logic.
+
+### HMR behavior
+
+- MDX file edited (new import added): `syncNavigation` re-runs, discovers new import sources, `virtual:holocron-modules` is invalidated and rebuilt with the new entry.
+- Importable file added/removed: HMR triggers re-sync so previously-unresolvable imports can now resolve (or vice versa).
+- Importable file edited (content change): normal Vite HMR, the `import()` in the lazy map already points to it.
+
+### Caching
+
+Raw import source strings are cached in `holocron-mdx.json` alongside `pageIconRefs`. Resolution to actual file paths happens fresh on every sync (just `fs.existsSync` probing, very cheap). This avoids stale cache when files are created or deleted between builds.
+
 ## MDX content loading
 
 MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on disk until a page is requested. At request time, the MDX is parsed with `safe-mdx`, split into sections, and rendered with the editorial components.
