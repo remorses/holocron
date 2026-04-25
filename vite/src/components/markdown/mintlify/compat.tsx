@@ -472,11 +472,31 @@ export function Panel({ children }: { children: React.ReactNode }) {
 }
 
 export function RequestExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+  const [copied, setCopied] = React.useState(false)
+
+  const handleCopy = () => {
+    const text = contentRef.current?.textContent ?? ''
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
   return (
     <div className='rounded-md border border-border-subtle bg-card px-5 py-4'>
       <div className='flex flex-col gap-3'>
-        <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Request example</div>
-        <div className='no-bleed overflow-x-auto'>
+        <div className='flex items-center justify-between'>
+          <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Request example</div>
+          <button
+            type='button'
+            onClick={handleCopy}
+            className='text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer'
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+        <div ref={contentRef} className='no-bleed overflow-x-auto'>
           {children}
         </div>
       </div>
