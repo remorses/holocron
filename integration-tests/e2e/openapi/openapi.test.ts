@@ -120,7 +120,8 @@ test.describe('OpenAPI tab', () => {
     const res = await request.get('/api/post-orders')
     expect(res.ok()).toBe(true)
     const html = await res.text()
-    // The response example JSON is rendered in the aside as a code block
+    // The response example is wrapped in ResponseExample inside the Aside
+    expect(html).toContain('Response example')
     expect(html).toContain('order-001')
   })
 
