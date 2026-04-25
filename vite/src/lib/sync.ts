@@ -545,9 +545,42 @@ async function processOpenAPITabs({
           responses,
           security,
           servers,
-          curl,
           deprecated: op.operation.deprecated,
         })
+
+        // Find response example if the spec provides one
+        const responseWithExample = responses.find((r) => r.example !== undefined)
+        const responseExampleJson = responseWithExample?.example !== undefined
+          ? (typeof responseWithExample.example === 'string'
+            ? responseWithExample.example
+            : JSON.stringify(responseWithExample.example, null, 2))
+          : undefined
+
+        // Build the aside block with cURL + optional response example
+        const asideLines = [
+          '<Aside full>',
+          '',
+          '<RequestExample>',
+          '',
+          '```bash',
+          curl,
+          '```',
+          '',
+          '</RequestExample>',
+        ]
+        if (responseExampleJson) {
+          asideLines.push(
+            '',
+            '<ResponseExample>',
+            '',
+            '```json',
+            responseExampleJson,
+            '```',
+            '',
+            '</ResponseExample>',
+          )
+        }
+        asideLines.push('', '</Aside>')
 
         const virtualMdx = [
           '---',
@@ -558,6 +591,8 @@ async function processOpenAPITabs({
           '---',
           '',
           `<OpenAPIEndpoint {...${propsJson}} />`,
+          '',
+          ...asideLines,
         ].join('\n')
 
         mdxContent[slug] = virtualMdx

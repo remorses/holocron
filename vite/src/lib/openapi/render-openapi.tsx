@@ -12,7 +12,7 @@
 'use client'
 
 import React from 'react'
-import { Badge, Expandable, RequestExample, ResponseExample } from '../../components/markdown/mintlify/compat.tsx'
+import { Badge, Expandable } from '../../components/markdown/mintlify/compat.tsx'
 import { MethodBadge } from '../../components/markdown/nav-badge.tsx'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -82,7 +82,6 @@ export interface OpenAPIEndpointProps {
   responses: ResponseInfo[]
   security: SecurityInfo[]
   servers: { url: string; description?: string }[]
-  curl: string
   deprecated?: boolean
 }
 
@@ -335,9 +334,6 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
   const headerParams = props.parameters.filter((p) => p.in === 'header')
   const cookieParams = props.parameters.filter((p) => p.in === 'cookie')
 
-  // Check if any response has an explicit example
-  const responseWithExample = props.responses.find((r) => r.example !== undefined)
-
   return (
     <div className='flex flex-col gap-(--prose-gap)'>
       {/* Header */}
@@ -367,21 +363,9 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
       {/* Responses */}
       <ResponseSection responses={props.responses} />
 
-      {/* cURL example in aside-like card */}
-      <RequestExample>
-        <pre className='overflow-x-auto text-xs leading-relaxed'><code>{props.curl}</code></pre>
-      </RequestExample>
-
-      {/* Response example — only if spec provides one */}
-      {responseWithExample && (
-        <ResponseExample>
-          <pre className='overflow-x-auto text-xs leading-relaxed'>
-            <code>{typeof responseWithExample.example === 'string'
-              ? responseWithExample.example
-              : JSON.stringify(responseWithExample.example, null, 2)}</code>
-          </pre>
-        </ResponseExample>
-      )}
+      {/* cURL + response examples are rendered via <Aside full> in the virtual
+          MDX (sync.ts), not here. The editorial section splitter places them in
+          the right sidebar with proper syntax highlighting via CodeBlock. */}
     </div>
   )
 }
