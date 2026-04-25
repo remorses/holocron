@@ -136,7 +136,7 @@ function Property({
   return (
     <div className={nested
       ? 'text-sm p-3 border-x border-border bg-card last:rounded-b-xl first:rounded-tr-xl last:border-b'
-      : 'text-sm border-t border-border py-4 first:border-t-0'
+      : 'text-sm py-2'
     }>
       <div className='flex flex-wrap items-center gap-2'>
         <span className='font-medium font-mono text-primary'>
@@ -220,7 +220,7 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
 
           if (!hasSchema && !r.description) {
             return (
-              <div key={r.status} className='border-t border-border py-4 first:border-t-0'>
+              <div key={r.status} className='py-2'>
                 <span className='font-mono text-muted-foreground'>{r.status}</span>
               </div>
             )
@@ -278,7 +278,7 @@ function AuthSection({ security }: { security: SecurityInfo[] }) {
       <div className='text-sm font-semibold text-foreground mb-1'>Authorization</div>
       <div className='flex flex-col'>
         {security.map((s) => (
-          <div key={s.name} className='text-sm border-t border-border py-4 first:border-t-0'>
+          <div key={s.name} className='text-sm py-2'>
             <div className='flex flex-wrap items-center gap-2'>
               <span className='font-medium font-mono text-primary'>{s.name}</span>
               <span className='font-mono text-muted-foreground'>

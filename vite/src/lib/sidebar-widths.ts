@@ -29,7 +29,7 @@ export const GRID_TOKENS: {
   '--grid-gap': number
   '--grid-max-width': number
 } = {
-  '--grid-toc-width': 240,
+  '--grid-toc-width': 230,
   '--grid-content-width': 620,
   '--grid-gap': 50,
   '--grid-max-width': 1200,
