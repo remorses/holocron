@@ -1,5 +1,62 @@
 # @holocron.so/vite
 
+## 0.2.0
+
+1. **MDX import support** — import components from anywhere in your project using standard MDX import syntax:
+
+   ```mdx
+   import { Greeting } from '/snippets/greeting'
+   import { Badge } from '../components/badge'
+   ```
+
+   Imports are discovered at build time and resolved at render time. No magic directories — any local file can be imported from any location.
+
+2. **Auto-detect user global CSS** — Holocron automatically discovers and loads user global CSS files, making Mintlify migration smoother.
+
+3. **AI Assistant control** — new `assistant.enabled` config field to disable the AI chat widget entirely.
+
+4. **Default icon library switched from Lucide to FontAwesome** — all plain icon strings now resolve to FontAwesome by default. Use explicit `lucide:icon-name` syntax to keep using Lucide icons.
+
+5. **Wider content column with flexible grid** — better use of horizontal space. Tables and tabs now bleed properly. Table cells get a minimum width of 150px with horizontal scroll on overflow.
+
+6. **H3 headings** now use the same foreground color as h1/h2 (no longer muted).
+
+7. **Unified vertical spacing** — Steps, lists, and all container components now use the `--prose-gap` token for consistent vertical rhythm. This replaces ad-hoc margins and gaps across the component library.
+
+8. **Code block line numbers** now use `--text-tertiary` for a more subtle appearance.
+
+9. **Component rename: `<Hero>` → `<Above>`** — update your MDX files if you use the Hero component directly.
+
+10. **Tab panels** now have proper padding and no-bleed scope. External link indicators shown on anchor tabs.
+
+11. **Fixed phantom 48px gap** from empty first section in the editorial page grid.
+
+12. **Fixed imported components inside `<Above>`** — components in this section now render correctly. MDX errors surface in the dev terminal.
+
+13. **Fixed sticky sidebar** — sidebar now sticks below the navbar even when no tab bar is present.
+
+14. **Fixed active TOC tracking** — uses 50% viewport scroll threshold with hash-change detection for pushState navigation. More reliable heading highlighting.
+
+15. **Fixed heading text rendering** — heading text is no longer wrapped in a prose-styled `<p>` element (was causing incorrect visual weight on headings).
+
+16. **Fixed callout content** — no longer split incorrectly during MDX serialization.
+
+17. **Fixed spiceflow dual-instance crash** — deduplicated `@types/node` in dependency graph to prevent duplicate React instance errors.
+
+18. **Chat/AI fixes** — fixed stale text propagation in drawer, textarea preservation after submit/close, and split vanilla store from React hook boundary for hydration safety.
+
+19. **Scrollbar gutter prevention** — `scrollbar-gutter: stable` prevents layout shift in scrollable panels.
+
+20. **Performance** — pre-parsed mdast tree is shared between module resolution and page rendering, reducing redundant parsing.
+
+21. **Improved sidebar link contrast** — page link opacity increased from 0.45 to 0.65 for better readability.
+
+22. **Fixed implicit "Docs" tab visibility** — when versions + anchors are both configured, the implicit Docs tab now shows correctly.
+
+23. **Fixed nested index slugs** — loader titles resolve correctly for pages with nested directory structures.
+
+24. **Fixed tab indicator** — height set to 2px for consistency. Zustand import path fixed.
+
 ## 0.1.0
 
 Initial release — drop-in Mintlify replacement as a Vite plugin. Point your `vite.config.ts` at holocron and get a full documentation site from MDX files + a `docs.json` config file.
