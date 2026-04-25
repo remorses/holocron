@@ -556,6 +556,10 @@ async function processOpenAPITabs({
             : JSON.stringify(responseWithExample.example, null, 2))
           : undefined
 
+        // Aside full MUST come right after the heading, before the main
+        // content. The section splitter pairs the aside with the heading's
+        // section. If the aside comes after the component, it ends up in a
+        // trailing section at the bottom of the page.
         const virtualMdx = [
           '---',
           `title: "${title.replace(/"/g, '\\"')}"`,
@@ -564,10 +568,7 @@ async function processOpenAPITabs({
           ...(op.operation.deprecated ? ['deprecated: true'] : []),
           '---',
           '',
-          // Heading creates a section boundary so the aside appears in the sidebar
           `## ${title}`,
-          '',
-          `<OpenAPIEndpoint {...${propsJson}} />`,
           '',
           '<Aside full>',
           '',
@@ -590,6 +591,8 @@ async function processOpenAPITabs({
             '',
           ] : []),
           '</Aside>',
+          '',
+          `<OpenAPIEndpoint {...${propsJson}} />`,
         ].join('\n')
 
         mdxContent[slug] = virtualMdx

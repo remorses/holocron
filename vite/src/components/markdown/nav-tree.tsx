@@ -190,7 +190,8 @@ export function NavPageLink({
   const isEmphasized = isActive || (isSearchActive && isMatched)
 
   // Show TOC when: search is active (so matched headings are visible), or page is the current page.
-  const showToc = page.headings.length > 0 && (isSearchActive || isActive)
+  // A single heading is not useful as a TOC — treat it like a page without sections.
+  const showToc = page.headings.length > 1 && (isSearchActive || isActive)
 
   return (
     <div className='flex flex-col'>
@@ -218,7 +219,7 @@ export function NavPageLink({
         </span>
       </Link>
       <ExpandableContainer open={showToc}>
-        {page.headings.length > 0 && (
+        {page.headings.length > 1 && (
           <TocInline
             headings={page.headings}
             pageHref={page.href}

@@ -157,7 +157,7 @@ function SchemaProperty({
   const nestedRequired = new Set(nestedSchema.required ?? [])
 
   return (
-    <div className='py-3'>
+    <div className='flex flex-col gap-3 py-3'>
       {content}
       <Expandable title={`Show ${hasArrayItems ? 'item ' : ''}properties`} defaultOpen={depth === 0}>
         {Object.entries(nestedProps).map(([key, propSchema]) => (
