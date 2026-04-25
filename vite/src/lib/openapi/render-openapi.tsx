@@ -1,12 +1,9 @@
 /**
  * OpenAPI endpoint renderer — client component.
  *
- * Renders a single API endpoint page. Follows fumadocs' Property pattern:
- * root-level fields use border-t dividers (no container boxes), nested
- * fields inside expandables get card-like bg-card borders.
- *
- * cURL + response examples are rendered via <Aside full> in the virtual
- * MDX (sync.ts), not here.
+ * Follows fumadocs Property pattern. All vertical spacing uses flex gap,
+ * never padding. Root fields are plain rows, nested fields inside
+ * expandables get bg-card treatment.
  */
 
 'use client'
@@ -83,267 +80,201 @@ export interface OpenAPIEndpointProps {
   deprecated?: boolean
 }
 
-/* ── Schema type string ───────────────────────────────────────────────── */
+/* ── Helpers ──────────────────────────────────────────────────────────── */
 
-function schemaTypeString(schema: SchemaInfo | undefined): string {
-  if (!schema) return 'unknown'
-  if (schema.enum) return schema.enum.map((v) => JSON.stringify(v)).join(' | ')
-  if (schema.oneOf) return schema.oneOf.map(schemaTypeString).join(' | ')
-  if (schema.anyOf) return schema.anyOf.map(schemaTypeString).join(' | ')
-  if (schema.type === 'array' && schema.items) return `${schemaTypeString(schema.items)}[]`
-  let base = schema.type ?? 'object'
-  if (schema.format) base += ` (${schema.format})`
-  if (schema.nullable) base += ' | null'
-  return base
+function typeString(s: SchemaInfo | undefined): string {
+  if (!s) return 'unknown'
+  if (s.enum) return s.enum.map((v) => JSON.stringify(v)).join(' | ')
+  if (s.oneOf) return s.oneOf.map(typeString).join(' | ')
+  if (s.anyOf) return s.anyOf.map(typeString).join(' | ')
+  if (s.type === 'array' && s.items) return `${typeString(s.items)}[]`
+  let t = s.type ?? 'object'
+  if (s.format) t += ` (${s.format})`
+  if (s.nullable) t += ' | null'
+  return t
 }
 
-/* ── Property — fumadocs style ────────────────────────────────────────── */
+function infoTags(s: SchemaInfo) {
+  const tags: { k: string; v: string }[] = []
+  if (s.default !== undefined) tags.push({ k: 'Default', v: JSON.stringify(s.default) })
+  if (s.pattern) tags.push({ k: 'Pattern', v: s.pattern })
+  if (s.minimum !== undefined) tags.push({ k: 'Min', v: String(s.minimum) })
+  if (s.maximum !== undefined) tags.push({ k: 'Max', v: String(s.maximum) })
+  if (s.minLength !== undefined) tags.push({ k: 'Min length', v: String(s.minLength) })
+  if (s.maxLength !== undefined) tags.push({ k: 'Max length', v: String(s.maxLength) })
+  return tags
+}
 
-/**
- * Single schema property row. Follows fumadocs' Property pattern:
- * - Root level: `border-t py-4 first:border-t-0` (divider, no box)
- * - Nested (inside expandables): `p-3 border-x bg-card` (card-like)
- * - Name in mono+primary with * (required) or ? (optional)
- * - Type in mono muted
- * - Description below
- */
-function Property({
-  name,
-  schema,
-  required = false,
-  nested = false,
-  depth = 0,
-}: {
+/* ── Property ─────────────────────────────────────────────────────────── */
+
+function Property({ name, schema, required, depth = 0 }: {
   name: string
   schema: SchemaInfo
   required?: boolean
-  nested?: boolean
   depth?: number
 }) {
-  const typeStr = schemaTypeString(schema)
-  const hasNestedProps = schema.type === 'object' && schema.properties && Object.keys(schema.properties).length > 0
-  const hasArrayItems = schema.type === 'array' && schema.items?.type === 'object' && schema.items?.properties
-  const canExpand = (hasNestedProps || hasArrayItems) && depth <= 3
-
-  const infoTags: { label: string; value: string }[] = []
-  if (schema.default !== undefined) infoTags.push({ label: 'Default', value: JSON.stringify(schema.default) })
-  if (schema.pattern) infoTags.push({ label: 'Pattern', value: schema.pattern })
-  if (schema.minimum !== undefined) infoTags.push({ label: 'Min', value: String(schema.minimum) })
-  if (schema.maximum !== undefined) infoTags.push({ label: 'Max', value: String(schema.maximum) })
-  if (schema.minLength !== undefined) infoTags.push({ label: 'Min length', value: String(schema.minLength) })
-  if (schema.maxLength !== undefined) infoTags.push({ label: 'Max length', value: String(schema.maxLength) })
+  const nested = schema.type === 'object' && schema.properties && Object.keys(schema.properties).length > 0
+  const arrayNested = schema.type === 'array' && schema.items?.type === 'object' && schema.items?.properties
+  const canExpand = (nested || arrayNested) && depth <= 3
+  const childSchema = arrayNested ? schema.items! : schema
+  const tags = infoTags(schema)
 
   return (
-    <div className={nested
-      ? 'text-sm p-3 border-x border-border bg-card last:rounded-b-xl first:rounded-tr-xl last:border-b'
-      : 'text-sm py-2'
-    }>
+    <div className='flex flex-col gap-1 text-sm'>
       <div className='flex flex-wrap items-center gap-2'>
         <span className='font-medium font-mono text-primary'>
-          {name}
-          {required
-            ? <span className='text-red'>*</span>
-            : <span className='text-muted-foreground'>?</span>
-          }
+          {name}{required ? <span className='text-red'>*</span> : <span className='text-muted-foreground'>?</span>}
         </span>
-        <span className='font-mono text-muted-foreground'>{typeStr}</span>
+        <span className='font-mono text-muted-foreground'>{typeString(schema)}</span>
         {schema.deprecated && <NavBadge label='deprecated' color='yellow' />}
       </div>
-      <div className='pt-1.5 empty:hidden'>
-        {schema.description && (
-          <div className='text-muted-foreground'>{schema.description}</div>
-        )}
-        {infoTags.length > 0 && (
-          <div className='flex flex-wrap gap-1.5 mt-1.5'>
-            {infoTags.map((tag) => (
-              <span key={tag.label} className='inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground'>
-                <span className='font-medium'>{tag.label}:</span> <code>{tag.value}</code>
-              </span>
-            ))}
-          </div>
-        )}
-        {canExpand && (
-          <div className='mt-2'>
-            <Expandable title={`Show ${hasArrayItems ? 'item ' : ''}properties`}>
-              {Object.entries((hasArrayItems ? schema.items! : schema).properties!).map(([key, propSchema]) => (
-                <Property
-                  key={key}
-                  name={key}
-                  schema={propSchema as SchemaInfo}
-                  required={((hasArrayItems ? schema.items! : schema).required ?? []).includes(key)}
-                  nested
-                  depth={depth + 1}
-                />
-              ))}
-            </Expandable>
-          </div>
-        )}
-      </div>
+      {schema.description && <div className='text-muted-foreground'>{schema.description}</div>}
+      {tags.length > 0 && (
+        <div className='flex flex-wrap gap-1.5'>
+          {tags.map((t) => (
+            <span key={t.k} className='inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground'>
+              <span className='font-medium'>{t.k}:</span> <code>{t.v}</code>
+            </span>
+          ))}
+        </div>
+      )}
+      {canExpand && (
+        <Expandable title={`Show ${arrayNested ? 'item ' : ''}properties`}>
+          <FieldList schema={childSchema} depth={depth + 1} />
+        </Expandable>
+      )}
     </div>
   )
 }
 
-/* ── Parameter group ──────────────────────────────────────────────────── */
+/* ── Field list (reused for params, body, response) ───────────────────── */
 
-function ParameterGroup({ title, params }: { title: string; params: ParameterInfo[] }) {
-  if (params.length === 0) return null
-  return (
-    <div>
-      <div className='text-sm font-semibold text-foreground mb-1'>{title}</div>
-      <div className='flex flex-col'>
-        {params.map((p) => (
-          <Property
-            key={p.name}
-            name={p.name}
-            schema={{ ...(p.schema ?? {}), description: p.description ?? p.schema?.description }}
-            required={p.required}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ── Response section ─────────────────────────────────────────────────── */
-
-function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
-  if (responses.length === 0) return null
-  return (
-    <div>
-      <div className='text-sm font-semibold text-foreground mb-1'>Response</div>
-      <div className='flex flex-col gap-2'>
-        {responses.map((r) => {
-          const hasSchema = r.schema && (
-            (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
-            r.schema.type === 'array' || r.schema.type
-          )
-
-          if (!hasSchema && !r.description) {
-            return (
-              <div key={r.status} className='py-2'>
-                <span className='font-mono text-muted-foreground'>{r.status}</span>
-              </div>
-            )
-          }
-
-          return (
-            <Expandable key={r.status} title={`${r.status}${r.description ? ` · ${r.description}` : ''}`}>
-              {hasSchema && r.schema && <ResponseSchema schema={r.schema} />}
-              {!hasSchema && r.description && (
-                <div className='text-sm text-muted-foreground'>{r.description}</div>
-              )}
-            </Expandable>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/** Render response schema fields (no outer container). */
-function ResponseSchema({ schema }: { schema: SchemaInfo }) {
+function FieldList({ schema, depth = 0 }: { schema: SchemaInfo; depth?: number }) {
   if (schema.properties && Object.keys(schema.properties).length > 0) {
     return (
-      <div className='flex flex-col'>
-        {Object.entries(schema.properties).map(([key, propSchema]) => (
-          <Property
-            key={key}
-            name={key}
-            schema={propSchema as SchemaInfo}
-            required={(schema.required ?? []).includes(key)}
-          />
+      <div className='flex flex-col gap-3'>
+        {Object.entries(schema.properties).map(([k, v]) => (
+          <Property key={k} name={k} schema={v as SchemaInfo} required={(schema.required ?? []).includes(k)} depth={depth} />
         ))}
       </div>
     )
   }
   if (schema.type === 'array' && schema.items) {
-    return <Property name='items' schema={schema.items} />
+    return <Property name='items' schema={schema.items} depth={depth} />
   }
   if (schema.type) {
-    return (
-      <div className='text-sm text-muted-foreground'>
-        Type: <code>{schemaTypeString(schema)}</code>
-      </div>
-    )
+    return <div className='text-sm text-muted-foreground'>Type: <code>{typeString(schema)}</code></div>
   }
   return null
 }
 
-/* ── Auth section ─────────────────────────────────────────────────────── */
+/* ── Sections ─────────────────────────────────────────────────────────── */
+
+function Section({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className='flex flex-col gap-3'>
+      <div className='text-sm font-semibold text-foreground'>{title}</div>
+      {children}
+    </div>
+  )
+}
 
 function AuthSection({ security }: { security: SecurityInfo[] }) {
   if (security.length === 0) return null
   return (
-    <div>
-      <div className='text-sm font-semibold text-foreground mb-1'>Authorization</div>
-      <div className='flex flex-col'>
+    <Section title='Authorization'>
+      <div className='flex flex-col gap-3'>
         {security.map((s) => (
-          <div key={s.name} className='text-sm py-2'>
+          <div key={s.name} className='flex flex-col gap-1 text-sm'>
             <div className='flex flex-wrap items-center gap-2'>
               <span className='font-medium font-mono text-primary'>{s.name}</span>
               <span className='font-mono text-muted-foreground'>
                 {s.type === 'http' && s.scheme === 'bearer' ? 'Bearer <token>' : s.type === 'apiKey' ? '<token>' : s.type}
               </span>
             </div>
-            <div className='pt-1.5 empty:hidden'>
-              {s.description && <div className='text-muted-foreground'>{s.description}</div>}
-              {s.in && (
-                <div className='text-muted-foreground'>
-                  Token in: <code>{s.in}</code>
-                </div>
-              )}
-            </div>
+            {s.description && <div className='text-muted-foreground'>{s.description}</div>}
+            {s.in && <div className='text-muted-foreground'>Token in: <code>{s.in}</code></div>}
           </div>
         ))}
       </div>
-    </div>
+    </Section>
   )
 }
 
-/* ── Request body section ─────────────────────────────────────────────── */
+function ParameterGroup({ title, params }: { title: string; params: ParameterInfo[] }) {
+  if (params.length === 0) return null
+  return (
+    <Section title={title}>
+      <div className='flex flex-col gap-3'>
+        {params.map((p) => (
+          <Property key={p.name} name={p.name} schema={{ ...(p.schema ?? {}), description: p.description ?? p.schema?.description }} required={p.required} />
+        ))}
+      </div>
+    </Section>
+  )
+}
 
 function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['requestBody']> }) {
   return (
-    <div>
-      <div className='flex items-center gap-2 mb-1'>
-        <span className='text-sm font-semibold text-foreground'>Request Body</span>
-        <code className='text-xs text-muted-foreground'>{body.contentType}</code>
+    <Section title={
+      <div className='flex items-center gap-2'>
+        <span>Request Body</span>
+        <code className='text-xs font-normal text-muted-foreground'>{body.contentType}</code>
         {body.required && <NavBadge label='required' color='green' />}
       </div>
-      {body.description && (
-        <div className='text-sm text-muted-foreground mb-2'>{body.description}</div>
-      )}
-      {body.schema && <ResponseSchema schema={body.schema} />}
-    </div>
+    }>
+      {body.description && <div className='text-sm text-muted-foreground'>{body.description}</div>}
+      {body.schema && <FieldList schema={body.schema} />}
+    </Section>
   )
 }
 
-/* ── Main endpoint component ──────────────────────────────────────────── */
+function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
+  if (responses.length === 0) return null
+  return (
+    <Section title='Response'>
+      <div className='flex flex-col gap-2'>
+        {responses.map((r) => {
+          const hasSchema = r.schema && (
+            (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
+            r.schema.type === 'array' || r.schema.type
+          )
+          if (!hasSchema && !r.description) {
+            return <div key={r.status} className='text-sm font-mono text-muted-foreground'>{r.status}</div>
+          }
+          return (
+            <Expandable key={r.status} title={`${r.status}${r.description ? ` · ${r.description}` : ''}`}>
+              {hasSchema && r.schema && <FieldList schema={r.schema} />}
+              {!hasSchema && r.description && <div className='text-sm text-muted-foreground'>{r.description}</div>}
+            </Expandable>
+          )
+        })}
+      </div>
+    </Section>
+  )
+}
+
+/* ── Main ─────────────────────────────────────────────────────────────── */
 
 export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
-  const pathParams = props.parameters.filter((p) => p.in === 'path')
-  const queryParams = props.parameters.filter((p) => p.in === 'query')
-  const headerParams = props.parameters.filter((p) => p.in === 'header')
-  const cookieParams = props.parameters.filter((p) => p.in === 'cookie')
+  const path = props.parameters.filter((p) => p.in === 'path')
+  const query = props.parameters.filter((p) => p.in === 'query')
+  const header = props.parameters.filter((p) => p.in === 'header')
+  const cookie = props.parameters.filter((p) => p.in === 'cookie')
 
   return (
     <div className='flex flex-col gap-(--prose-gap)'>
-      {/* Header: method badge + path */}
       <div className='flex items-center gap-2.5'>
         <MethodBadge method={props.method} />
         <code className='text-sm text-muted-foreground font-mono'>{props.path}</code>
         {props.deprecated && <NavBadge label='deprecated' color='orange' />}
       </div>
-
-      {props.description && (
-        <div className='text-sm text-muted-foreground'>{props.description}</div>
-      )}
-
+      {props.description && <div className='text-sm text-muted-foreground'>{props.description}</div>}
       <AuthSection security={props.security} />
-      <ParameterGroup title='Path Parameters' params={pathParams} />
-      <ParameterGroup title='Query Parameters' params={queryParams} />
-      <ParameterGroup title='Header Parameters' params={headerParams} />
-      <ParameterGroup title='Cookie Parameters' params={cookieParams} />
+      <ParameterGroup title='Path Parameters' params={path} />
+      <ParameterGroup title='Query Parameters' params={query} />
+      <ParameterGroup title='Header Parameters' params={header} />
+      <ParameterGroup title='Cookie Parameters' params={cookie} />
       {props.requestBody && <RequestBodySection body={props.requestBody} />}
       <ResponseSection responses={props.responses} />
     </div>
