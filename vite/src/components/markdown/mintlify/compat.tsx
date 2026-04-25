@@ -476,7 +476,7 @@ export function RequestExample({ children, dropdown }: { children: React.ReactNo
     <div className='rounded-md border border-border-subtle bg-card px-5 py-4'>
       <div className='flex flex-col gap-3'>
         <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Request example</div>
-        <div className='no-bleed'>
+        <div className='no-bleed overflow-x-auto'>
           {children}
         </div>
       </div>
@@ -489,7 +489,7 @@ export function ResponseExample({ children, dropdown }: { children: React.ReactN
     <div className='rounded-md border border-border-subtle bg-card px-5 py-4'>
       <div className='flex flex-col gap-3'>
         <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Response example</div>
-        <div className='no-bleed'>
+        <div className='no-bleed overflow-x-auto'>
           {children}
         </div>
       </div>
