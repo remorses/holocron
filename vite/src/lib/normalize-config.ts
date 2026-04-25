@@ -421,12 +421,20 @@ function normalizeTabsAndAnchors(
     }
 
     // Link-only tab → convert to anchor
-    if (raw.href && !raw.groups && !raw.pages) {
+    if (raw.href && !raw.groups && !raw.pages && !raw.openapi) {
       anchors.push({
         anchor: name,
         href: raw.href as string,
         ...extras,
       })
+      continue
+    }
+
+    // OpenAPI tab → groups are auto-generated at sync time; store the
+    // openapi field on the tab so sync.ts can pick it up.
+    if (raw.openapi) {
+      const openapi = raw.openapi as string | string[]
+      tabs.push({ tab: name, ...tabExtras, groups: [], openapi })
       continue
     }
 

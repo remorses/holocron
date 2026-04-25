@@ -273,12 +273,26 @@ const tabWithHrefSchema = tabBaseSchema.extend({
     ),
 })
 
+const tabWithOpenAPISchema = tabBaseSchema.extend({
+  openapi: z
+    .union([z.string(), z.array(z.string())])
+    .describe(
+      dedent`
+        Path to an OpenAPI specification file (JSON or YAML), or an array
+        of paths. Endpoints from the spec are auto-generated as pages
+        grouped by tag. Example: \`"openapi.json"\` or
+        \`["openapi/v1.json", "openapi/v2.json"]\`
+      `,
+    ),
+})
+
 export const tabSchema = z
-  .union([tabWithGroupsSchema, tabWithPagesSchema, tabWithHrefSchema])
+  .union([tabWithGroupsSchema, tabWithPagesSchema, tabWithHrefSchema, tabWithOpenAPISchema])
   .describe(
     dedent`
       A top-level tab in the navigation. Either contains sidebar groups, a
-      flat list of pages, or is a link-only tab pointing at an external URL
+      flat list of pages, a link-only tab, or an OpenAPI spec for
+      auto-generated API reference pages
     `,
   )
   .meta({ id: 'tabSchema' })

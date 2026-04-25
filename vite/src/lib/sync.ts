@@ -24,6 +24,7 @@ import { buildEnrichedNavigation } from './enrich-navigation.ts'
 import type { IconRef } from './collect-icons.ts'
 import {
   type HolocronConfig,
+  type ConfigNavGroup,
 } from '../config.ts'
 import {
   type Navigation,
@@ -151,6 +152,22 @@ export async function syncNavigation({
 
   // 2. Enrich a single page slug
   async function enrichPage(slug: string): Promise<NavPage> {
+    // Virtual pages (e.g. from OpenAPI) already have content in mdxContent
+    const virtualMdx = mdxContent[slug]
+    if (virtualMdx) {
+      const processed = processMdx(virtualMdx, config.icons.library)
+      pageIconRefs[slug] = processed.iconRefs
+      return {
+        slug,
+        href: slugToHref(slug),
+        title: processed.title,
+        description: processed.description,
+        gitSha: `virtual:${slug}`,
+        headings: processed.headings,
+        frontmatter: processed.frontmatter,
+      }
+    }
+
     const mdxPath = resolveMdxPath(pagesDir, slug)
     if (!mdxPath) {
       if (redirectBackedPageSlugs.has(slug)) {
@@ -245,6 +262,14 @@ export async function syncNavigation({
       frontmatter: processed.frontmatter,
     }
   }
+
+  // 2b. Process OpenAPI tabs — populate their groups + inject virtual MDX pages
+  await processOpenAPITabs({
+    config,
+    projectRoot,
+    mdxContent,
+    pageIconRefs,
+  })
 
   // 3. Walk config and enrich the shared navigation tree.
   const { navigation, switchers } = await buildEnrichedNavigation({ config, enrichPage })
@@ -376,6 +401,200 @@ function copyToPublic({ filePath, imageOutputDir }: { filePath: string; imageOut
   }
 
   return destName
+}
+
+/* ── OpenAPI tab processing ───────────────────────────────────────────── */
+
+async function processOpenAPITabs({
+  config,
+  projectRoot,
+  mdxContent,
+  pageIconRefs: _pageIconRefs,
+}: {
+  config: HolocronConfig
+  projectRoot: string
+  mdxContent: Record<string, string>
+  pageIconRefs: Record<string, IconRef[]>
+}) {
+  for (const tab of config.navigation.tabs) {
+    if (!tab.openapi) continue
+
+    const specPaths = Array.isArray(tab.openapi) ? tab.openapi : [tab.openapi]
+    const allOperations: import('./openapi/process.ts').ExtractedOperation[] = []
+    let doc: import('./openapi/process.ts').DereferencedDocument | null = null
+
+    for (const specPath of specPaths) {
+      const resolvedPath = path.resolve(projectRoot, specPath)
+      if (!fs.existsSync(resolvedPath)) {
+        console.warn(`[holocron] OpenAPI spec not found: ${resolvedPath}`)
+        continue
+      }
+
+      const { processOpenAPISpec, extractOperations } = await import('./openapi/process.ts')
+      const processed = await processOpenAPISpec(resolvedPath)
+      doc = processed
+      allOperations.push(...extractOperations(processed))
+    }
+
+    if (allOperations.length === 0 || !doc) continue
+
+    const { groupOperationsByTag, operationSlug, operationTitle, tagDisplayName } = await import('./openapi/process.ts')
+    const { generateCurl } = await import('./openapi/curl-generator.ts')
+
+    // Build groups from tags
+    const tagGroups = groupOperationsByTag(allOperations)
+    const groups: ConfigNavGroup[] = []
+
+    for (const [tag, ops] of tagGroups) {
+      const pages: string[] = []
+
+      for (const op of ops) {
+        const slug = `api/${operationSlug(op)}`
+        const title = operationTitle(op)
+        const curl = generateCurl(op)
+
+        // Build serialized props for the OpenAPIEndpoint component
+        const params = op.parameters.map((p) => ({
+          name: p.name,
+          in: p.in,
+          required: p.required,
+          deprecated: p.deprecated,
+          description: p.description,
+          schema: p.schema ? simplifySchema(p.schema as Record<string, unknown>) : undefined,
+        }))
+
+        const requestBody = (() => {
+          const body = op.operation.requestBody as import('openapi-types').OpenAPIV3.RequestBodyObject | undefined
+          if (!body?.content) return undefined
+          const [contentType, media] = Object.entries(body.content)[0] ?? []
+          if (!contentType || !media) return undefined
+          return {
+            required: body.required,
+            description: body.description,
+            contentType,
+            schema: media.schema ? simplifySchema(media.schema as Record<string, unknown>) : undefined,
+          }
+        })()
+
+        const responses = Object.entries(op.operation.responses ?? {}).map(([status, resp]) => {
+          const r = resp as import('openapi-types').OpenAPIV3.ResponseObject
+          const jsonContent = r.content?.['application/json']
+          const example = jsonContent?.example ?? pickFirstExample(jsonContent?.examples)
+          return {
+            status,
+            description: r.description,
+            schema: jsonContent?.schema ? simplifySchema(jsonContent.schema as Record<string, unknown>) : undefined,
+            example,
+          }
+        })
+
+        const security = extractSecurityInfo(op, doc)
+
+        const servers = op.servers.map((s) => ({
+          url: s.url,
+          description: s.description,
+        }))
+
+        // Generate virtual MDX that renders OpenAPIEndpoint
+        const propsJson = JSON.stringify({
+          method: op.method,
+          path: op.path,
+          summary: op.operation.summary,
+          description: op.operation.description,
+          parameters: params,
+          requestBody,
+          responses,
+          security,
+          servers,
+          curl,
+          deprecated: op.operation.deprecated,
+        })
+
+        const virtualMdx = [
+          '---',
+          `title: "${title.replace(/"/g, '\\"')}"`,
+          `description: "${(op.operation.description ?? op.operation.summary ?? '').replace(/"/g, '\\"').replace(/\n/g, ' ').slice(0, 200)}"`,
+          `api: "${op.method.toUpperCase()} ${op.path}"`,
+          ...(op.operation.deprecated ? ['deprecated: true'] : []),
+          '---',
+          '',
+          `<OpenAPIEndpoint {...${propsJson}} />`,
+        ].join('\n')
+
+        mdxContent[slug] = virtualMdx
+        pages.push(slug)
+      }
+
+      groups.push({
+        group: tagDisplayName(tag, doc),
+        pages,
+      })
+    }
+
+    // Replace the empty groups with the auto-generated ones
+    tab.groups = groups
+  }
+}
+
+/** Simplify a schema object for serialization (strip non-essential fields). */
+function simplifySchema(schema: Record<string, unknown>): Record<string, unknown> {
+  if (!schema || typeof schema !== 'object') return schema
+  const result: Record<string, unknown> = {}
+  const keepKeys = ['type', 'format', 'description', 'required', 'properties', 'items',
+    'enum', 'default', 'example', 'oneOf', 'anyOf', 'allOf', 'additionalProperties',
+    'nullable', 'deprecated', 'minimum', 'maximum', 'minLength', 'maxLength', 'pattern', 'title']
+  for (const key of keepKeys) {
+    if (key in schema) {
+      const value = schema[key]
+      if (key === 'properties' && value && typeof value === 'object') {
+        const props: Record<string, unknown> = {}
+        for (const [k, v] of Object.entries(value)) {
+          props[k] = simplifySchema(v as Record<string, unknown>)
+        }
+        result[key] = props
+      } else if (key === 'items' && value && typeof value === 'object') {
+        result[key] = simplifySchema(value as Record<string, unknown>)
+      } else if ((key === 'oneOf' || key === 'anyOf' || key === 'allOf') && Array.isArray(value)) {
+        result[key] = value.map((v: unknown) => simplifySchema(v as Record<string, unknown>))
+      } else {
+        result[key] = value
+      }
+    }
+  }
+  return result
+}
+
+function pickFirstExample(examples: Record<string, unknown> | undefined): unknown | undefined {
+  if (!examples) return undefined
+  const first = Object.values(examples)[0]
+  if (first && typeof first === 'object' && 'value' in (first as Record<string, unknown>)) {
+    return (first as Record<string, unknown>).value
+  }
+  return first
+}
+
+function extractSecurityInfo(
+  op: import('./openapi/process.ts').ExtractedOperation,
+  doc: import('./openapi/process.ts').DereferencedDocument,
+): { name: string; type: string; scheme?: string; in?: string; description?: string }[] {
+  const schemes = (doc.dereferenced.components as Record<string, unknown> | undefined)?.securitySchemes as Record<string, Record<string, unknown>> | undefined
+  if (!schemes || op.security.length === 0) return []
+
+  const result: { name: string; type: string; scheme?: string; in?: string; description?: string }[] = []
+  for (const req of op.security) {
+    for (const schemeName of Object.keys(req)) {
+      const scheme = schemes[schemeName]
+      if (!scheme) continue
+      result.push({
+        name: schemeName,
+        type: scheme.type as string,
+        scheme: scheme.scheme as string | undefined,
+        in: scheme.type === 'apiKey' ? (scheme.in as string) : scheme.type === 'http' ? 'header' : undefined,
+        description: scheme.description as string | undefined,
+      })
+    }
+  }
+  return result
 }
 
 /* ── Cache I/O ──────────────────────────────────────────────────────── */

@@ -1,0 +1,680 @@
+openapi: "3.0.3"
+info:
+  title: Acme API
+  description: A comprehensive test API covering many OpenAPI features
+  version: "1.0.0"
+servers:
+  - url: https://api.acme.com/v1
+    description: Production
+  - url: https://staging-api.acme.com/v1
+    description: Staging
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT token from /auth/login
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key from the dashboard
+  schemas:
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+          example: "123 Main St"
+        city:
+          type: string
+          example: "Springfield"
+        state:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: "IL"
+        zip:
+          type: string
+          pattern: "^\\d{5}$"
+          example: "62704"
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          description: User's email address
+        name:
+          type: string
+          description: Display name
+          minLength: 1
+          maxLength: 100
+        role:
+          type: string
+          enum: [admin, editor, viewer]
+          default: viewer
+          description: User role in the organization
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to the user's avatar image
+        address:
+          $ref: "#/components/schemas/Address"
+        createdAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Arbitrary key-value metadata
+    Order:
+      type: object
+      required:
+        - id
+        - userId
+        - items
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - productId
+              - quantity
+            properties:
+              productId:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+              price:
+                type: number
+                format: double
+                description: Unit price in cents
+        status:
+          type: string
+          enum: [pending, confirmed, shipped, delivered, cancelled]
+        total:
+          type: number
+          format: double
+          description: Total amount in cents
+        notes:
+          type: string
+          description: Optional order notes
+        shippingAddress:
+          $ref: "#/components/schemas/Address"
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          enum: [USD, EUR, GBP]
+          default: USD
+        tags:
+          type: array
+          items:
+            type: string
+        inStock:
+          type: boolean
+          default: true
+security:
+  - bearerAuth: []
+tags:
+  - name: users
+    description: User management endpoints
+  - name: orders
+    description: Order processing
+  - name: products
+    description: Product catalog
+  - name: auth
+    description: Authentication
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login
+      description: Authenticate with email and password to receive a JWT token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+            example:
+              email: user@example.com
+              password: "s3cret!!"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+              example:
+                token: "eyJhbGciOiJIUzI1NiIs..."
+                expiresAt: "2024-01-16T09:30:00Z"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /users:
+    get:
+      tags: [users]
+      summary: List users
+      description: Retrieve a paginated list of users. Supports filtering by role and searching by name or email.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Items per page
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, editor, viewer]
+          description: Filter by user role
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name or email
+        - name: X-Request-ID
+          in: header
+          schema:
+            type: string
+            format: uuid
+          description: Optional request correlation ID
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+              example:
+                data:
+                  - id: "550e8400-e29b-41d4-a716-446655440000"
+                    email: "alice@example.com"
+                    name: "Alice"
+                    role: "admin"
+                total: 42
+                page: 1
+                limit: 20
+    post:
+      tags: [users]
+      summary: Create user
+      description: Create a new user account. Requires admin role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                  minLength: 1
+                role:
+                  type: string
+                  enum: [admin, editor, viewer]
+                  default: viewer
+                address:
+                  $ref: "#/components/schemas/Address"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Email already exists
+  /users/{userId}:
+    get:
+      tags: [users]
+      summary: Get user
+      description: Retrieve a single user by their unique ID.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The user's unique identifier
+      responses:
+        "200":
+          description: The user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+    put:
+      tags: [users]
+      summary: Update user
+      description: Replace all fields on an existing user.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, editor, viewer]
+                address:
+                  $ref: "#/components/schemas/Address"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+    patch:
+      tags: [users]
+      summary: Partial update user
+      description: Update specific fields on a user without replacing the entire resource.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, editor, viewer]
+                avatar:
+                  type: string
+                  format: uri
+                  nullable: true
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+    delete:
+      tags: [users]
+      summary: Delete user
+      description: Permanently delete a user account. This action cannot be undone.
+      deprecated: true
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: User deleted (no content)
+        "404":
+          description: User not found
+  /users/{userId}/avatar:
+    put:
+      tags: [users]
+      summary: Upload avatar
+      description: Upload a user's profile picture. Accepts JPEG and PNG files up to 5MB.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (JPEG or PNG, max 5MB)
+      responses:
+        "200":
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+        "413":
+          description: File too large
+  /orders:
+    get:
+      tags: [orders]
+      summary: List orders
+      description: Retrieve orders for the authenticated user, or all orders for admins.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, shipped, delivered, cancelled]
+          description: Filter by order status
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Only return orders created after this date
+      responses:
+        "200":
+          description: A list of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      tags: [orders]
+      summary: Create order
+      description: Place a new order with one or more items.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - productId
+                      - quantity
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: integer
+                        minimum: 1
+                notes:
+                  type: string
+                shippingAddress:
+                  $ref: "#/components/schemas/Address"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+              example:
+                id: "order-001"
+                userId: "user-001"
+                items:
+                  - productId: "prod-001"
+                    quantity: 2
+                    price: 2999
+                status: "pending"
+                total: 5998
+        "400":
+          description: Invalid order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /orders/{orderId}:
+    get:
+      tags: [orders]
+      summary: Get order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Order not found
+  /orders/{orderId}/cancel:
+    post:
+      tags: [orders]
+      summary: Cancel order
+      description: Cancel a pending or confirmed order. Shipped orders cannot be cancelled.
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Cancellation reason
+      responses:
+        "200":
+          description: Order cancelled
+        "409":
+          description: Order cannot be cancelled (already shipped)
+  /products:
+    get:
+      tags: [products]
+      summary: List products
+      description: Browse the product catalog with optional filters.
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: inStock
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+  /products/{productId}:
+    get:
+      tags: [products]
+      summary: Get product
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+  /health:
+    get:
+      summary: Health check
+      description: Returns service health status. No authentication required.
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded]
+                  version:
+                    type: string
+              example:
+                status: healthy
+                version: "1.0.0"

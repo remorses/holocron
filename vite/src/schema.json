@@ -709,9 +709,53 @@
             "href"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tab": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The name of the tab"
+            },
+            "icon": {
+              "$ref": "#/definitions/iconSchema"
+            },
+            "hidden": {
+              "description": "Whether the tab is hidden by default",
+              "type": "boolean"
+            },
+            "align": {
+              "description": "Tab alignment in the navigation",
+              "type": "string",
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
+            "openapi": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Path to an OpenAPI specification file (JSON or YAML), or an array\nof paths. Endpoints from the spec are auto-generated as pages\ngrouped by tag. Example: `\"openapi.json\"` or\n`[\"openapi/v1.json\", \"openapi/v2.json\"]`"
+            }
+          },
+          "required": [
+            "tab",
+            "openapi"
+          ],
+          "additionalProperties": false
         }
       ],
-      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, or is a link-only tab pointing at an external URL"
+      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, or an OpenAPI spec for\nauto-generated API reference pages"
     },
     "iconSchema": {
       "anyOf": [

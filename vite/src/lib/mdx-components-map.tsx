@@ -77,6 +77,7 @@ import {
 import { slugify, extractText } from './toc-tree.ts'
 
 import { SidebarAssistant } from '../components/sidebar-assistant.tsx'
+import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
 
 function PixelatedImageWithProps(props: {
   src: string
@@ -168,6 +169,7 @@ export const mdxComponents = {
   // No more per-page closure binding.
   TableOfContentsPanel,
   HolocronAIAssistantWidget: SidebarAssistant,
+  OpenAPIEndpoint,
 }
 
 export function renderNode(

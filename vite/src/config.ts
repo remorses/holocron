@@ -54,9 +54,13 @@ export type NavTabBase = z.output<typeof tabBaseSchema>
 /* ── Normalized wrapper types (union-collapsed by normalize()) ───────── */
 
 /** A top-level tab in the navigation (contains sidebar groups).
- *  Link-only tabs are converted to anchors during normalization. */
+ *  Link-only tabs are converted to anchors during normalization.
+ *  Tabs with `openapi` have auto-generated groups from the spec. */
 export type ConfigNavTab = NavTabBase & {
   groups: ConfigNavGroup[]
+  /** OpenAPI spec path(s) — when present, groups are auto-generated from
+   *  the spec at build time. Set by normalize when the raw tab has `openapi`. */
+  openapi?: string | string[]
 }
 
 /** A navbar icon link (top-right of header). The normalized form has

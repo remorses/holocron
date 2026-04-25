@@ -12,7 +12,7 @@ import type { SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from './icons.tsx'
 import { ExpandableContainer } from './expandable-container.tsx'
 import { Icon } from '../icon.tsx'
-import { NavBadge } from './nav-badge.tsx'
+import { NavBadge, MethodBadge } from './nav-badge.tsx'
 
 type SidebarTreeContextValue = {
   currentPageHref?: string
@@ -212,8 +212,9 @@ export function NavPageLink({
         <Icon icon={page.icon} size={12} />
         <span>{frontmatter.sidebarTitle ?? page.title}</span>
         <span className='ml-auto inline-flex items-center gap-1'>
+          {typeof frontmatter.api === 'string' && <MethodBadge method={frontmatter.api.split(' ')[0]!} />}
           {frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}
-          {frontmatter.tag && <NavBadge label={frontmatter.tag} />}
+          {frontmatter.tag && typeof frontmatter.api !== 'string' && <NavBadge label={frontmatter.tag} />}
         </span>
       </Link>
       <ExpandableContainer open={showToc}>
