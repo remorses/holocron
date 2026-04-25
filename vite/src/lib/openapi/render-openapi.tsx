@@ -207,7 +207,11 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
       <div className='text-sm font-semibold text-foreground mb-2'>Responses</div>
       <div className='flex flex-col gap-2'>
         {responses.map((r) => {
-          const hasSchema = r.schema && r.schema.properties && Object.keys(r.schema.properties).length > 0
+          const hasSchema = r.schema && (
+            (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
+            r.schema.type === 'array' ||
+            r.schema.type
+          )
           const statusColor = r.status.startsWith('2') ? 'green'
             : r.status.startsWith('4') ? 'orange'
             : r.status.startsWith('5') ? 'red'
@@ -224,18 +228,7 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
 
           return (
             <Expandable key={r.status} title={`${r.status} ${r.description ?? ''}`}>
-              {hasSchema && (
-                <div className='flex flex-col px-0'>
-                  {Object.entries(r.schema!.properties!).map(([key, propSchema]) => (
-                    <SchemaProperty
-                      key={key}
-                      name={key}
-                      schema={propSchema as SchemaInfo}
-                      required={(r.schema!.required ?? []).includes(key)}
-                    />
-                  ))}
-                </div>
-              )}
+              {hasSchema && r.schema && <SchemaFields schema={r.schema} />}
               {!hasSchema && r.description && (
                 <div className='text-sm text-muted-foreground'>{r.description}</div>
               )}
@@ -278,8 +271,47 @@ function AuthSection({ security }: { security: SecurityInfo[] }) {
 
 /* ── Request body section ─────────────────────────────────────────────── */
 
+/** Render schema fields for any root shape: objects show properties,
+ *  arrays show item schema, primitives show a single type line. */
+function SchemaFields({ schema }: { schema: SchemaInfo }) {
+  // Object with properties → render each property
+  if (schema.properties && Object.keys(schema.properties).length > 0) {
+    return (
+      <div className='rounded-lg border border-border-subtle bg-card px-4'>
+        <div className='flex flex-col'>
+          {Object.entries(schema.properties).map(([key, propSchema]) => (
+            <SchemaProperty
+              key={key}
+              name={key}
+              schema={propSchema as SchemaInfo}
+              required={(schema.required ?? []).includes(key)}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+  // Array → show the item type
+  if (schema.type === 'array' && schema.items) {
+    return (
+      <div className='rounded-lg border border-border-subtle bg-card px-4'>
+        <SchemaProperty name='items' schema={schema.items} />
+      </div>
+    )
+  }
+  // Primitive or other → show type info
+  if (schema.type) {
+    return (
+      <div className='text-sm text-muted-foreground'>
+        Type: <code className='text-xs'>{schemaTypeString(schema)}</code>
+        {schema.description && <span> — {schema.description}</span>}
+      </div>
+    )
+  }
+  return null
+}
+
 function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['requestBody']> }) {
-  const hasProps = body.schema?.properties && Object.keys(body.schema.properties).length > 0
   return (
     <div className='flex flex-col gap-0'>
       <div className='flex items-center gap-2 mb-2'>
@@ -290,20 +322,7 @@ function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['
       {body.description && (
         <div className='text-sm text-muted-foreground mb-2'>{body.description}</div>
       )}
-      {hasProps && (
-        <div className='rounded-lg border border-border-subtle bg-card px-4'>
-          <div className='flex flex-col'>
-            {Object.entries(body.schema!.properties!).map(([key, propSchema]) => (
-              <SchemaProperty
-                key={key}
-                name={key}
-                schema={propSchema as SchemaInfo}
-                required={(body.schema!.required ?? []).includes(key)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {body.schema && <SchemaFields schema={body.schema} />}
     </div>
   )
 }

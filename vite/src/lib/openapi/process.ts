@@ -189,7 +189,7 @@ export function extractOperations(doc: DereferencedDocument): ExtractedOperation
         operation: op,
         parameters: Array.from(paramMap.values()),
         security: (op.security ?? globalSecurity) as OpenAPIV3.SecurityRequirementObject[],
-        servers: (op.servers ?? pathServers.length > 0 ? pathServers : globalServers) as OpenAPIV3.ServerObject[],
+        servers: (op.servers ?? (pathServers.length > 0 ? pathServers : globalServers)) as OpenAPIV3.ServerObject[],
         tags: op.tags ?? ['default'],
       })
     }

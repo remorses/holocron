@@ -53,7 +53,7 @@ export function NavBadge({
 
   // Variant fallback when no explicit color
   const variantCls = variant === 'deprecated'
-    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+    ? 'bg-foreground/8 text-muted-foreground'
     : 'bg-accent text-muted-foreground'
 
   return (

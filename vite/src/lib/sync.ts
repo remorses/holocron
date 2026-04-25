@@ -416,44 +416,74 @@ async function processOpenAPITabs({
   mdxContent: Record<string, string>
   pageIconRefs: Record<string, IconRef[]>
 }) {
+  // Track all generated slugs across tabs to detect collisions
+  const generatedSlugs = new Map<string, string>()
+
   for (const tab of config.navigation.tabs) {
     if (!tab.openapi) continue
 
     const specPaths = Array.isArray(tab.openapi) ? tab.openapi : [tab.openapi]
-    const allOperations: import('./openapi/process.ts').ExtractedOperation[] = []
-    let doc: import('./openapi/process.ts').DereferencedDocument | null = null
+
+    // Carry doc with each operation so multi-spec lookups (security, tags) use the right doc
+    type OpWithDoc = { op: import('./openapi/process.ts').ExtractedOperation; doc: import('./openapi/process.ts').DereferencedDocument }
+    const allOps: OpWithDoc[] = []
 
     for (const specPath of specPaths) {
       const resolvedPath = path.resolve(projectRoot, specPath)
       if (!fs.existsSync(resolvedPath)) {
-        console.warn(`[holocron] OpenAPI spec not found: ${resolvedPath}`)
-        continue
+        throw new Error(`[holocron] OpenAPI spec not found: ${resolvedPath}`)
       }
 
       const { processOpenAPISpec, extractOperations } = await import('./openapi/process.ts')
       const processed = await processOpenAPISpec(resolvedPath)
-      doc = processed
-      allOperations.push(...extractOperations(processed))
+      for (const op of extractOperations(processed)) {
+        allOps.push({ op, doc: processed })
+      }
     }
 
-    if (allOperations.length === 0 || !doc) continue
+    if (allOps.length === 0) continue
 
     const { groupOperationsByTag, operationSlug, operationTitle, tagDisplayName } = await import('./openapi/process.ts')
     const { generateCurl } = await import('./openapi/curl-generator.ts')
 
-    // Build groups from tags
-    const tagGroups = groupOperationsByTag(allOperations)
+    // Group operations by tag (using the first tag of each operation)
+    const tagGroups = new Map<string, OpWithDoc[]>()
+    for (const item of allOps) {
+      const tag = item.op.tags[0] ?? 'default'
+      const list = tagGroups.get(tag) ?? []
+      list.push(item)
+      tagGroups.set(tag, list)
+    }
+
     const groups: ConfigNavGroup[] = []
 
     for (const [tag, ops] of tagGroups) {
       const pages: string[] = []
 
-      for (const op of ops) {
+      for (const { op, doc } of ops) {
         const slug = `api/${operationSlug(op)}`
+
+        // Validate slug uniqueness
+        const existingOwner = generatedSlugs.get(slug)
+        if (existingOwner) {
+          throw new Error(
+            `[holocron] duplicate OpenAPI slug "${slug}" generated from ${op.method.toUpperCase()} ${op.path}. ` +
+            `Conflicts with ${existingOwner}. Use unique operationIds to avoid collisions.`,
+          )
+        }
+        generatedSlugs.set(slug, `${op.method.toUpperCase()} ${op.path}`)
+
+        // Also check the slug doesn't shadow a real MDX page on disk
+        if (resolveMdxPath(projectRoot, slug)) {
+          console.warn(
+            `[holocron] OpenAPI page "${slug}" shadows an MDX file on disk. ` +
+            `The virtual OpenAPI page will be used instead.`,
+          )
+        }
+
         const title = operationTitle(op)
         const curl = generateCurl(op)
 
-        // Build serialized props for the OpenAPIEndpoint component
         const params = op.parameters.map((p) => ({
           name: p.name,
           in: p.in,
@@ -466,19 +496,28 @@ async function processOpenAPITabs({
         const requestBody = (() => {
           const body = op.operation.requestBody as import('openapi-types').OpenAPIV3.RequestBodyObject | undefined
           if (!body?.content) return undefined
-          const [contentType, media] = Object.entries(body.content)[0] ?? []
-          if (!contentType || !media) return undefined
+          // Prefer application/json, fall back to any JSON-like type, then first available
+          const jsonKey = Object.keys(body.content).find((k) => k === 'application/json')
+            ?? Object.keys(body.content).find((k) => k.includes('json'))
+            ?? Object.keys(body.content)[0]
+          if (!jsonKey) return undefined
+          const media = body.content[jsonKey]!
           return {
             required: body.required,
             description: body.description,
-            contentType,
+            contentType: jsonKey,
             schema: media.schema ? simplifySchema(media.schema as Record<string, unknown>) : undefined,
           }
         })()
 
         const responses = Object.entries(op.operation.responses ?? {}).map(([status, resp]) => {
           const r = resp as import('openapi-types').OpenAPIV3.ResponseObject
-          const jsonContent = r.content?.['application/json']
+          // Prefer application/json, fall back to any JSON-like type
+          const jsonKey = r.content
+            ? (Object.keys(r.content).find((k) => k === 'application/json')
+              ?? Object.keys(r.content).find((k) => k.includes('json')))
+            : undefined
+          const jsonContent = jsonKey && r.content ? r.content[jsonKey] : undefined
           const example = jsonContent?.example ?? pickFirstExample(jsonContent?.examples)
           return {
             status,
@@ -488,6 +527,7 @@ async function processOpenAPITabs({
           }
         })
 
+        // Use the operation's own doc for security lookups (correct for multi-spec)
         const security = extractSecurityInfo(op, doc)
 
         const servers = op.servers.map((s) => ({
@@ -495,7 +535,6 @@ async function processOpenAPITabs({
           description: s.description,
         }))
 
-        // Generate virtual MDX that renders OpenAPIEndpoint
         const propsJson = JSON.stringify({
           method: op.method,
           path: op.path,
@@ -525,8 +564,10 @@ async function processOpenAPITabs({
         pages.push(slug)
       }
 
+      // Use the first doc's tag metadata for display name
+      const firstDoc = ops[0]!.doc
       groups.push({
-        group: tagDisplayName(tag, doc),
+        group: tagDisplayName(tag, firstDoc),
         pages,
       })
     }
