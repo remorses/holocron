@@ -95,11 +95,11 @@ export type SyncResult = {
   mdxContent: Record<string, string>
   /** Canonical icon refs used by each page body/frontmatter MDX. */
   pageIconRefs: Record<string, IconRef[]>
-  /** Resolved import file paths per page slug (relative to project root,
-   *  with ./ prefix, e.g. './snippets/greeting.tsx'). Collected from MDX
-   *  import declarations during sync. Used to build the virtual:holocron-modules
-   *  lazy import map with only the files that are actually imported. */
-  pageImportPaths: Record<string, string[]>
+  /** Resolved import entries per page slug. Each entry has a `moduleKey`
+   *  (matching safe-mdx's glob key format, e.g. './snippets/greeting.tsx')
+   *  and an `absPath` (absolute filesystem path for the import() call).
+   *  Built fresh on every sync from cached importSources + filesystem probing. */
+  pageImports: Record<string, ResolvedImport[]>
   parsedCount: number
   cachedCount: number
 }
@@ -130,7 +130,7 @@ export async function syncNavigation({
   const oldMdxCache = readMdxCache(mdxCachePath)
   const oldMdxContent = oldMdxCache.content
   const oldPageIconRefs = oldMdxCache.pageIconRefs
-  const oldPageImportPaths = oldMdxCache.pageImportPaths
+  const oldPageImportSources = oldMdxCache.pageImportSources
   const imageCache = loadImageCache({ distDir })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
@@ -139,7 +139,10 @@ export async function syncNavigation({
   let cachedCount = 0
   const mdxContent: Record<string, string> = {}
   const pageIconRefs: Record<string, IconRef[]> = {}
-  const pageImportPaths: Record<string, string[]> = {}
+  /** Raw import sources per page (cached in holocron-mdx.json) */
+  const pageImportSources: Record<string, string[]> = {}
+  /** Resolved imports per page (computed fresh every sync from pageImportSources + filesystem) */
+  const pageImports: Record<string, ResolvedImport[]> = {}
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
@@ -165,7 +168,12 @@ export async function syncNavigation({
       cachedCount++
       mdxContent[slug] = cachedMdx
       pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
-      pageImportPaths[slug] = oldPageImportPaths[slug] ?? []
+      // Restore cached raw import sources, then resolve fresh against the
+      // current filesystem. This ensures newly-created files are picked up
+      // without re-parsing the MDX.
+      const cachedSources = oldPageImportSources[slug] ?? []
+      pageImportSources[slug] = cachedSources
+      pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
       return cached
     }
 
@@ -221,14 +229,9 @@ export async function syncNavigation({
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
     pageIconRefs[slug] = processed.iconRefs
-    // Resolve import sources to file paths relative to project root (./prefix).
-    // These feed the virtual:holocron-modules lazy import map.
-    pageImportPaths[slug] = resolveImportSources({
-      importSources: processed.importSources,
-      slug,
-      pagesDir,
-      projectRoot,
-    })
+    // Cache raw import sources (for future cache hits) and resolve fresh
+    pageImportSources[slug] = processed.importSources
+    pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
 
     return {
       slug,
@@ -284,10 +287,10 @@ export async function syncNavigation({
 
   // 5. Write caches
   writeCache(cachePath, navigation)
-  writeMdxCache(mdxCachePath, { content: mdxContent, pageIconRefs, pageImportPaths })
+  writeMdxCache(mdxCachePath, { content: mdxContent, pageIconRefs, pageImportSources })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, pageIconRefs, pageImportPaths, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, pageIconRefs, pageImports, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -386,7 +389,9 @@ type MdxCacheEnvelope = {
   version: string
   content: Record<string, string>
   pageIconRefs: Record<string, IconRef[]>
-  pageImportPaths: Record<string, string[]>
+  /** Raw import source strings from MDX (e.g. '/snippets/greeting', '../components/badge').
+   *  Cached so we can re-resolve them on every sync without re-parsing MDX. */
+  pageImportSources: Record<string, string[]>
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -414,9 +419,9 @@ function writeCache(cachePath: string, nav: Navigation): void {
   fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
 }
 
-function readMdxCache(cachePath: string): { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]>; pageImportPaths: Record<string, string[]> } {
+function readMdxCache(cachePath: string): { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]>; pageImportSources: Record<string, string[]> } {
   if (!fs.existsSync(cachePath)) {
-    return { content: {}, pageIconRefs: {}, pageImportPaths: {} }
+    return { content: {}, pageIconRefs: {}, pageImportSources: {} }
   }
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
@@ -425,22 +430,22 @@ function readMdxCache(cachePath: string): { content: Record<string, string>; pag
       return {
         content: envelope.content,
         pageIconRefs: envelope.pageIconRefs ?? {},
-        pageImportPaths: envelope.pageImportPaths ?? {},
+        pageImportSources: envelope.pageImportSources ?? {},
       }
     }
-    return { content: {}, pageIconRefs: {}, pageImportPaths: {} }
+    return { content: {}, pageIconRefs: {}, pageImportSources: {} }
   } catch {
-    return { content: {}, pageIconRefs: {}, pageImportPaths: {} }
+    return { content: {}, pageIconRefs: {}, pageImportSources: {} }
   }
 }
 
 function writeMdxCache(
   cachePath: string,
-  data: { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]>; pageImportPaths: Record<string, string[]> },
+  data: { content: Record<string, string>; pageIconRefs: Record<string, IconRef[]>; pageImportSources: Record<string, string[]> },
 ): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
-  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content: data.content, pageIconRefs: data.pageIconRefs, pageImportPaths: data.pageImportPaths }
+  const envelope: MdxCacheEnvelope = { version: PACKAGE_VERSION, content: data.content, pageIconRefs: data.pageIconRefs, pageImportSources: data.pageImportSources }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
 
@@ -466,13 +471,26 @@ function slugToHref(slug: string): string {
 
 const IMPORT_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js']
 
+/** A resolved import with both the module key (for safe-mdx matching) and
+ *  the absolute filesystem path (for the lazy import() call). */
+export type ResolvedImport = {
+  /** Key matching safe-mdx's glob key format. For absolute imports `/snippets/greeting`,
+   *  this is `./snippets/greeting.tsx`. For relative imports `../components/badge`,
+   *  this is the normalized path from the pagesDirPrefix base. */
+  moduleKey: string
+  /** Absolute filesystem path for the import() call. */
+  absPath: string
+}
+
 /**
- * Resolve raw MDX import source strings to file paths relative to project root.
- * Returns paths with ./ prefix matching the Vite glob key format (e.g. './snippets/greeting.tsx').
+ * Resolve raw MDX import source strings to { moduleKey, absPath } tuples.
  *
- * Resolution rules (same as safe-mdx's resolveModulePath):
- * - Absolute `/snippets/card` → resolve from pagesDir, then projectRoot
- * - Relative `./card`, `../components/card` → resolve from the MDX file's directory
+ * The moduleKey must match what safe-mdx's resolveModulePath() produces:
+ * - Absolute `/x` → normalized to `./x` then extension-probed against glob keys
+ * - Relative `./x`, `../x` → resolved from `baseUrl` (pagesDirPrefix + slugDir)
+ *
+ * We replicate that normalization here so the virtual:holocron-modules glob
+ * keys exactly match what safe-mdx will look up at render time.
  */
 function resolveImportSources({
   importSources,
@@ -484,35 +502,58 @@ function resolveImportSources({
   slug: string
   pagesDir: string
   projectRoot: string
-}): string[] {
-  const result: string[] = []
+}): ResolvedImport[] {
+  const result: ResolvedImport[] = []
+  const seen = new Set<string>()
   // Directory containing the MDX file for this slug
   const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
   const mdxDir = path.join(pagesDir, slugDir)
+  // pagesDirPrefix as computed by vite-plugin.ts (e.g. './pages/' or './')
+  const pagesDirRelative = path.relative(projectRoot, pagesDir)
+  const pagesDirPrefix = pagesDirRelative === '' ? './' : `./${pagesDirRelative}/`
 
   for (const source of importSources) {
-    let baseDir: string
-    let sourcePath: string
-
     if (source.startsWith('/')) {
-      // Absolute import: try pagesDir first, then projectRoot
-      sourcePath = source.slice(1) // strip leading /
-      const resolved = tryResolveImport(path.join(pagesDir, sourcePath))
-        ?? tryResolveImport(path.join(projectRoot, sourcePath))
+      // Absolute import: safe-mdx normalizes as '.' + source → './snippets/greeting'
+      // The moduleKey is that normalized path + resolved extension
+      const normalized = '.' + source // e.g. './snippets/greeting'
+      // Try to find the file on disk: pagesDir first, then projectRoot
+      const resolved = tryResolveImport(path.join(pagesDir, source.slice(1)))
+        ?? tryResolveImport(path.join(projectRoot, source.slice(1)))
       if (resolved) {
-        result.push('./' + path.relative(projectRoot, resolved))
+        const ext = path.extname(resolved)
+        const moduleKey = normalized + ext
+        if (!seen.has(moduleKey)) {
+          seen.add(moduleKey)
+          result.push({ moduleKey, absPath: resolved })
+        }
       }
       continue
     }
 
-    // Relative import: resolve from the MDX file's directory
+    // Relative import: safe-mdx resolves from baseUrl (pagesDirPrefix + slugDir)
+    // e.g. baseUrl='./pages/', source='../components/badge'
+    // → joinPaths('./pages/', '../components/badge') → './components/badge'
     const resolved = tryResolveImport(path.resolve(mdxDir, source))
     if (resolved) {
-      result.push('./' + path.relative(projectRoot, resolved))
+      const ext = path.extname(resolved)
+      // Compute the moduleKey the same way safe-mdx's joinPaths would:
+      // relative from projectRoot, with ./ prefix
+      const relFromRoot = './' + path.relative(projectRoot, resolved).replace(/\\/g, '/')
+      // But safe-mdx computes from baseUrl, so we need the key it would produce.
+      // safe-mdx: joinPaths(baseUrl, source) + ext probing
+      // We can derive this: the resolved file's path relative to root IS the moduleKey
+      // because safe-mdx's joinPaths(pagesDirPrefix + slugDir, relativeSource) produces
+      // the same normalized path as resolving on disk then making root-relative.
+      const moduleKey = relFromRoot
+      if (!seen.has(moduleKey)) {
+        seen.add(moduleKey)
+        result.push({ moduleKey, absPath: resolved })
+      }
     }
   }
 
-  return [...new Set(result)]
+  return result
 }
 
 /** Try to resolve a file path with extension probing. Returns the first

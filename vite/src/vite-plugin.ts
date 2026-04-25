@@ -384,18 +384,23 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         const pagesDirRelative = path.relative(root, pagesDir)
         const pagesDirPrefix = pagesDirRelative === '' ? './' : `./${pagesDirRelative}/`
 
-        // Flatten all per-page import paths into a unique set
-        const allImportPaths = new Set<string>()
-        for (const paths of Object.values(syncResult.pageImportPaths)) {
-          for (const p of paths) {
-            allImportPaths.add(p)
+        // Flatten all per-page resolved imports into a unique map keyed by moduleKey.
+        // moduleKey is what safe-mdx's resolveModulePath() will look up;
+        // absPath is the real filesystem path for the import() call.
+        const allImports = new Map<string, string>()
+        for (const imports of Object.values(syncResult.pageImports)) {
+          for (const { moduleKey, absPath } of imports) {
+            if (!allImports.has(moduleKey)) {
+              allImports.set(moduleKey, absPath)
+            }
           }
         }
 
-        const entries = [...allImportPaths].sort().map((relPath) => {
-          const absPath = path.join(root, relPath.replace(/^\.\//, ''))
-          return `  ${JSON.stringify(relPath)}: () => import(${JSON.stringify(absPath)})`
-        })
+        const entries = [...allImports.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([moduleKey, absPath]) => {
+            return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath)})`
+          })
 
         return [
           `const modules = {`,

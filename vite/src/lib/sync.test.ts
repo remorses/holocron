@@ -236,24 +236,26 @@ import Alert from '../snippets/alert'
       distDir: project.distDir,
     })
 
-    // index.mdx imports /snippets/greeting (resolved under pagesDir) and
-    // ../components/badge (resolved relative to pages/ → root/components/)
-    expect(result.pageImportPaths['index']?.sort()).toMatchInlineSnapshot(`
+    // index.mdx imports /snippets/greeting (absolute → moduleKey ./snippets/greeting.tsx)
+    // and ../components/badge (relative → moduleKey ./components/badge.tsx)
+    const indexImports = result.pageImports['index']?.map((i) => i.moduleKey).sort()
+    expect(indexImports).toMatchInlineSnapshot(`
       [
         "./components/badge.tsx",
-        "./pages/snippets/greeting.tsx",
+        "./snippets/greeting.tsx",
       ]
     `)
 
-    // guide/nested.mdx imports ../snippets/alert (resolved relative to pages/guide/ → pages/snippets/)
-    expect(result.pageImportPaths['guide/nested']).toMatchInlineSnapshot(`
+    // guide/nested.mdx imports ../snippets/alert (relative from pages/guide/ → pages/snippets/)
+    const nestedImports = result.pageImports['guide/nested']?.map((i) => i.moduleKey)
+    expect(nestedImports).toMatchInlineSnapshot(`
       [
         "./pages/snippets/alert.tsx",
       ]
     `)
   })
 
-  test('caches pageImportPaths across syncs', async () => {
+  test('caches importSources and re-resolves fresh on each sync', async () => {
     const project = tracked(createProject(
       {
         navigation: [
@@ -285,9 +287,9 @@ import { Greeting } from '/snippets/greeting'
       distDir: project.distDir,
     })
     expect(first.parsedCount).toBe(1)
-    expect(first.pageImportPaths['index']).toEqual(['./pages/snippets/greeting.tsx'])
+    expect(first.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./snippets/greeting.tsx'])
 
-    // Second sync — cached
+    // Second sync — cached MDX, but imports still re-resolved
     const second = await syncNavigation({
       config,
       pagesDir: project.pagesDir,
@@ -297,7 +299,57 @@ import { Greeting } from '/snippets/greeting'
     })
     expect(second.parsedCount).toBe(0)
     expect(second.cachedCount).toBe(1)
-    expect(second.pageImportPaths['index']).toEqual(['./pages/snippets/greeting.tsx'])
+    expect(second.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./snippets/greeting.tsx'])
+  })
+
+  test('picks up newly-created import targets without MDX change', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Widget } from '/components/widget'
+
+# Home
+`,
+      },
+    ))
+
+    const config = readConfig({ root: project.root })
+
+    // First sync — widget.tsx does not exist yet
+    const first = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(first.parsedCount).toBe(1)
+    expect(first.pageImports['index']).toEqual([])
+
+    // Create the file — MDX stays the same (same gitSha → cache hit)
+    const componentsDir = path.join(project.pagesDir, 'components')
+    fs.mkdirSync(componentsDir, { recursive: true })
+    fs.writeFileSync(path.join(componentsDir, 'widget.tsx'), 'export const Widget = () => <div>w</div>')
+
+    // Second sync — cached MDX but re-resolved imports pick up new file
+    const second = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(second.parsedCount).toBe(0)
+    expect(second.cachedCount).toBe(1)
+    expect(second.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./components/widget.tsx'])
   })
 
   test('preserves typed page frontmatter metadata on NavPage', async () => {
