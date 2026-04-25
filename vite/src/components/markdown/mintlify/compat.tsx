@@ -166,7 +166,7 @@ export function Expandable({
 }) {
   return (
     <details className='no-bleed group rounded-lg border border-border-subtle bg-card' open={defaultOpen}>
-      <summary className='flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden'>
+      <summary className='flex cursor-pointer select-none list-none items-center gap-3 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden'>
         <span>{title}</span>
         <Chevron />
       </summary>
@@ -525,7 +525,7 @@ export function TreeFolder({
   }
   return (
     <details className='group ms-2 flex flex-col gap-1' open={defaultOpen}>
-      <summary className='flex cursor-pointer list-none items-center gap-2 text-foreground [&::-webkit-details-marker]:hidden'>
+      <summary className='flex cursor-pointer select-none list-none items-center gap-2 text-foreground [&::-webkit-details-marker]:hidden'>
         <span>{name}/</span>
         <Chevron />
       </summary>
