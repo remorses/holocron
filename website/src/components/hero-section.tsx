@@ -3,6 +3,9 @@
 // Video is color-corrected so its black matches --background; inverted in light mode.
 'use client'
 
+import { Link } from 'spiceflow/react'
+import { Button } from './ui/button.tsx'
+
 const TOP_GRADIENT = [
   'linear-gradient(to bottom,',
   'var(--background) 0%,',
@@ -37,7 +40,7 @@ export function HeroSection() {
         muted
         loop
         playsInline
-        className='absolute z-0 invert hue-rotate-180 dark:invert-0 dark:hue-rotate-0 w-full max-w-[1400px] left-1/2 -translate-x-1/2 top-0'
+        className='absolute z-0 invert hue-rotate-290 dark:invert-0 dark:hue-rotate-0 w-full max-w-[1400px] left-1/2 -translate-x-1/2 top-0'
       >
         <source src='/hero-bg.mp4' type='video/mp4' />
       </video>
@@ -66,20 +69,14 @@ export function HeroSection() {
 
         {/* CTAs */}
         <div className='flex gap-3 mt-2 flex-wrap justify-center'>
-          <a
-            href='/components'
-            className='inline-flex items-center justify-center px-6 py-2.5 lg:px-7 lg:py-3 rounded-lg text-[0.95rem] font-medium bg-foreground text-background no-underline transition-transform duration-160 ease-out active:scale-[0.97]'
-          >
-            Get Started
-          </a>
-          <a
-            href='https://github.com/remorses/holocron'
-            target='_blank'
-            rel='noopener noreferrer'
-            className='inline-flex items-center justify-center px-6 py-2.5 lg:px-7 lg:py-3 rounded-lg text-[0.95rem] font-medium bg-foreground/10 text-foreground border border-foreground/20 no-underline transition-transform duration-160 ease-out active:scale-[0.97]'
-          >
-            GitHub
-          </a>
+          <Button asChild size='lg' className='no-underline'>
+            <Link href='/components'>Get Started</Link>
+          </Button>
+          <Button asChild variant='outline' size='lg' className='no-underline'>
+            <Link href='https://github.com/remorses/holocron' target='_blank' rel='noopener noreferrer'>
+              GitHub
+            </Link>
+          </Button>
         </div>
       </div>
     </div>
