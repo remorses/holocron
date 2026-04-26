@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm db:migrate:local && vite dev",
-    "build": "vite build",
+    "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
+    "build": "pnpm generate-openapi && vite build",
     "start": "node dist/rsc/index.js",
     "types": "wrangler types",
     "typecheck": "tsc --noEmit",
