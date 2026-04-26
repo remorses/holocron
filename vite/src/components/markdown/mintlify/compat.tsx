@@ -488,7 +488,23 @@ function CheckIcon() {
   )
 }
 
-export function RequestExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
+/**
+ * CodeCard — Mintlify-style rounded code container with optional title and
+ * copy button. Used by RequestExample, ResponseExample, and available as a
+ * standalone MDX component. Follows the same bg-foreground/8 + rounded-2xl
+ * pattern as the AI chat widget for visual consistency.
+ *
+ * Structure: outer tinted shell (p-0.5) → header bar → inner card-bg body.
+ */
+export function CodeCard({
+  title,
+  children,
+  copyable = true,
+}: {
+  title?: string
+  children: React.ReactNode
+  copyable?: boolean
+}) {
   const contentRef = React.useRef<HTMLDivElement>(null)
   const [copied, setCopied] = React.useState(false)
 
@@ -501,37 +517,42 @@ export function RequestExample({ children, dropdown }: { children: React.ReactNo
   }
 
   return (
-    <div className='rounded-md border border-border-subtle bg-card px-5 py-4'>
-      <div className='flex flex-col gap-3'>
-        <div className='flex items-center justify-between'>
-          <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Request example</div>
-          <button
-            type='button'
-            onClick={handleCopy}
-            className='text-muted-foreground hover:text-foreground transition-colors cursor-pointer'
-          >
-            {copied ? <CheckIcon /> : <CopyIcon />}
-          </button>
+    <div className='rounded-2xl bg-foreground/8 px-0.5 pb-0.5 pt-px'>
+      {/* Header bar: title left, copy button right — sits in the tinted shell */}
+      {(title || copyable) && (
+        <div className='flex items-center justify-between gap-2 px-3 py-1.5'>
+          {title
+            ? <span className='truncate text-xs font-medium text-muted-foreground'>{title}</span>
+            : <span />}
+          {copyable && (
+            <button
+              type='button'
+              onClick={handleCopy}
+              aria-label='Copy code'
+              className='flex size-[26px] shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground'
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+            </button>
+          )}
         </div>
-        <div ref={contentRef} className='no-bleed overflow-x-auto'>
-          {children}
-        </div>
+      )}
+      {/* Inner card body — bg-background gives the white/dark code surface */}
+      <div
+        ref={contentRef}
+        className='no-bleed overflow-x-auto rounded-[15px] bg-background px-4 py-3.5'
+      >
+        {children}
       </div>
     </div>
   )
 }
 
+export function RequestExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
+  return <CodeCard title='Request example'>{children}</CodeCard>
+}
+
 export function ResponseExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
-  return (
-    <div className='rounded-md border border-border-subtle bg-card px-5 py-4'>
-      <div className='flex flex-col gap-3'>
-        <div className='text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>Response example</div>
-        <div className='no-bleed overflow-x-auto'>
-          {children}
-        </div>
-      </div>
-    </div>
-  )
+  return <CodeCard title='Response example'>{children}</CodeCard>
 }
 
 export function Tree({ children }: { children: React.ReactNode }) {

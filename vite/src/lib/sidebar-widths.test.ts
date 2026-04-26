@@ -44,10 +44,10 @@ curl https://api.example.com
 \`\`\`
 </RequestExample>
 `
-    expect(computeFromMdx(mdx)).toBe(440)
+    expect(computeFromMdx(mdx)).toBe(396)
   })
 
-  test('ResponseExample also bumps width to 440', () => {
+  test('ResponseExample also bumps width to 396', () => {
     const mdx = `# Endpoint
 
 <ResponseExample>
@@ -56,7 +56,7 @@ curl https://api.example.com
 \`\`\`
 </ResponseExample>
 `
-    expect(computeFromMdx(mdx)).toBe(440)
+    expect(computeFromMdx(mdx)).toBe(396)
   })
 
   test('unknown component in aside keeps default width', () => {
@@ -82,7 +82,7 @@ curl
 \`\`\`
 </RequestExample>
 `
-    expect(computeFromMdx(mdx)).toBe(440)
+    expect(computeFromMdx(mdx)).toBe(396)
   })
 
   test('deeply nested RequestExample is still detected', () => {
@@ -98,14 +98,14 @@ curl
   </div>
 </Aside>
 `
-    expect(computeFromMdx(mdx)).toBe(440)
+    expect(computeFromMdx(mdx)).toBe(396)
   })
 
   test('exports a static widths map for the sidebar components', () => {
     expect(COMPONENT_SIDEBAR_WIDTHS).toMatchInlineSnapshot(`
       {
-        "RequestExample": 440,
-        "ResponseExample": 440,
+        "RequestExample": 396,
+        "ResponseExample": 396,
       }
     `)
   })

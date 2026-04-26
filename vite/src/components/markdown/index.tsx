@@ -66,6 +66,7 @@ export {
   Update,
   View,
   Panel,
+  CodeCard,
   RequestExample,
   ResponseExample,
   Tree,
