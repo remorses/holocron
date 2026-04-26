@@ -22,6 +22,8 @@ import {
   type EditorialSection,
 } from './components/markdown/index.tsx'
 import { RenderBannerNodes } from './components/markdown/banner.tsx'
+import { SectionHeading } from './components/markdown/typography.tsx'
+import { slugify } from './lib/toc-tree.ts'
 import { NotFound } from './components/not-found.tsx'
 import {
   findPage,
@@ -239,6 +241,25 @@ function renderMdxPage({
   const contentMdast: Root = { type: 'root', children: contentChildren }
   const mdastSections = buildSections(contentMdast, { enableAssistant: site.config.assistant.enabled })
 
+  // Check if the page content already starts with an H1. If not, we'll
+  // prepend a rendered <SectionHeading> component at the top of the first
+  // section so every page always shows a visible title.
+  const firstContentNode = contentChildren.find(
+    (n) => n.type !== 'mdxjsEsm' && n.type !== 'yaml',
+  )
+  const startsWithH1 = (() => {
+    if (!firstContentNode) return false
+    if (firstContentNode.type === 'heading' && firstContentNode.depth === 1) return true
+    const nodeType = firstContentNode.type as string
+    if (nodeType === 'mdxJsxFlowElement') {
+      const jsx = firstContentNode as unknown as { name: string | null; attributes: Array<{ type: string; name: string; value: unknown }> }
+      return jsx.name === 'h1' || (jsx.name === 'Heading' &&
+        jsx.attributes.some((a) => a.type === 'mdxJsxAttribute' && a.name === 'level' && a.value === '1'))
+    }
+    return false
+  })()
+  const shouldInjectH1 = !startsWithH1 && !!loaderData.currentPageTitle
+
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
   // prepended to each section. Section splitting separates import statements
   // from the components that use them, so each SafeMdxRenderer instance
@@ -257,7 +278,7 @@ function renderMdxPage({
   const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
   const mdxBaseUrl = (pagesDirPrefix || './') + slugDir
 
-  const sections: EditorialSection[] = mdastSections.map((section) => {
+  const sections: EditorialSection[] = mdastSections.map((section, i) => {
     // Prepend import nodes so SafeMdxRenderer can resolve imported
     // components in every section, not just the one containing the imports.
     const contentNodes = importNodes.length > 0
@@ -270,8 +291,19 @@ function renderMdxPage({
       asideNodes.length > 0 ? (
         <RenderNodes markdown={pageMdx} nodes={asideNodes} modules={modules} baseUrl={mdxBaseUrl} />
       ) : undefined
+    const renderedContent = <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} />
+    // Prepend a rendered H1 from frontmatter title when the MDX doesn't
+    // start with one. Only the first section gets the heading.
+    const content = (shouldInjectH1 && i === 0) ? (
+      <>
+        <SectionHeading id={slugify(loaderData.currentPageTitle!)} level={1}>
+          {loaderData.currentPageTitle}
+        </SectionHeading>
+        {renderedContent}
+      </>
+    ) : renderedContent
     return {
-      content: <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} />,
+      content,
       aside,
       fullWidth: section.fullWidth,
       asideRowSpan: section.asideRowSpan,

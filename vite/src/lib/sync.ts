@@ -556,10 +556,6 @@ async function processOpenAPITabs({
             : JSON.stringify(responseWithExample.example, null, 2))
           : undefined
 
-        // No heading needed — the page title comes from frontmatter and is
-        // rendered by the editorial page header. Without a heading, the AI
-        // widget gets prepended into our <Aside full> (first aside in the
-        // first section) and everything stays in a single section row.
         const virtualMdx = [
           '---',
           `title: "${title.replace(/"/g, '\\"')}"`,
