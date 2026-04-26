@@ -130,7 +130,7 @@ export function TocInline({
       />
       <ul
         ref={listRef}
-        className='relative list-none m-0 p-0 flex flex-col gap-1.5 pt-1.5 pl-3 text-xs leading-[1.33] box-content'
+        className='relative list-none m-0 p-0 flex flex-col gap-1.5 pt-1.5 pl-3 leading-[1.33] box-content'
       >
         {visibleHeadings.map((heading) => {
           const isActive = heading.slug === activeHeadingId
@@ -198,7 +198,7 @@ export function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className={`flex items-center gap-1.5 text-xs no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: isEmphasized ? '"wght" 550' : '"wght" 450',
@@ -285,7 +285,7 @@ export function NavGroupNode({
     return (
       <div className='flex flex-col gap-2'>
         <div
-          className='text-xs cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
+          className='cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
           style={{
             opacity: isDimmed ? 0.45 : 1,
             fontVariationSettings: '"wght" 500',
@@ -310,7 +310,7 @@ export function NavGroupNode({
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className={`flex items-center gap-1 text-xs border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: '"wght" 500',

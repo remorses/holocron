@@ -171,7 +171,7 @@ export function SideNav() {
   }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, toggleGroup])
 
   return (
-    <aside className='flex flex-col max-w-(--grid-toc-width) min-h-0'>
+    <aside className='flex flex-col max-w-(--grid-toc-width) min-h-0 text-sm'>
       {/* Search input — leading magnifier icon + F hotkey kbd on the right. */}
       <div className='pb-3 pl-1 flex items-center relative shrink-0'>
         <span
@@ -188,7 +188,7 @@ export function SideNav() {
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           placeholder={siteConfig.search.prompt || 'Search...'}
-          className='w-full text-xs outline-none box-border'
+            className='w-full outline-none box-border'
           style={{
             padding: '6px 34px 6px 28px',
             fontFamily: 'var(--font-sans)',
@@ -233,7 +233,7 @@ export function SideNav() {
         <SidebarTreeProvider value={sidebarTreeContext}>
           {noResults ? (
             <div
-              className='text-xs px-1 py-4 text-center'
+              className='px-1 py-4 text-center'
               style={{ color: 'var(--muted-foreground)' }}
             >
               No results for &ldquo;{query}&rdquo;
