@@ -314,6 +314,31 @@ Every argument passed to `useSyncExternalStore(subscribe, getSnapshot, getServer
 - Inside hooks, wrap callbacks with `useCallback`. If the callback closes over a prop (like a selector), stash it in a `useRef` and read the ref inside a `useCallback(fn, [])` — this keeps the function identity stable while the selector stays fresh.
 - **Never** pass inline arrows like `() => selector(store.getState())` or `() => 'light'` directly to `useSyncExternalStore`.
 
+### Dark mode detection — hydration-safe pattern
+
+Never use `useState` + `useEffect` + `MutationObserver` to track `<html class="dark">`. That pattern causes hydration mismatches because `useState(() => document.documentElement.classList.contains('dark'))` runs during SSR where `document` doesn't exist, and the initial client value may differ from the server.
+
+Instead, use `useSyncExternalStore` with module-level stable callbacks:
+
+```tsx
+// Module-level — stable references, no re-subscription
+function getIsDark(): boolean {
+  return document.documentElement.classList.contains('dark')
+}
+const getServerIsDark = () => false
+
+function subscribeTheme(cb: () => void) {
+  const observer = new MutationObserver(cb)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  return () => observer.disconnect()
+}
+
+// Inside component
+const isDark = useSyncExternalStore(subscribeTheme, getIsDark, getServerIsDark)
+```
+
+Server always returns `false` (light). React handles the mismatch gracefully during hydration. The MutationObserver fires `cb` on class changes, triggering a synchronous re-render.
+
 ## HTML element nesting rules
 
 **Never use `<p>` tags in components other than the `P` component itself** (the MDX `p` mapping in `app-factory.tsx`). In the editorial component system, `safe-mdx` wraps text children in paragraph nodes that map to `P`. If any other component (e.g. `Caption`, `Above`, custom wrappers) also renders a `<p>`, the text inside it will get wrapped in another `P` → `<p>`, creating invalid `<p>` inside `<p>` nesting. This violates the HTML spec and causes React hydration mismatches.
