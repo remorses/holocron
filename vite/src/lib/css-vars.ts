@@ -26,7 +26,7 @@ export interface HolocronCSSProperties extends CSSProperties {
    * `buildGridTokenStyle` helper). `styles/globals.css` intentionally *
    * does NOT declare defaults for these vars.                         *
    * ---------------------------------------------------------------- */
-  '--grid-toc-width'?: string
+  '--grid-nav-width'?: string
   '--grid-content-width'?: string
   '--grid-gap'?: string
   '--grid-sidebar-width'?: string

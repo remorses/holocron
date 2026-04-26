@@ -123,7 +123,7 @@
   --layout-gap: 21px;
   --sticky-top: calc(var(--header-height) + var(--layout-gap));
 
-  /* Grid geometry — the `--grid-*` custom properties (--grid-toc-width,
+  /* Grid geometry — the `--grid-*` custom properties (--grid-nav-width,
      --grid-content-width, --grid-gap, --grid-sidebar-width,
      --grid-max-width) are intentionally NOT defined here. They are the
      single-source-of-truth `GRID_TOKENS` object in
