@@ -151,6 +151,16 @@
 }
 
 /* ========================================================================
+   Code-sized text — applies --code-font-size to any monospaced element
+   sitting alongside sans text. Used by OpenAPI renderer and anywhere
+   font-mono needs optical size matching without the inline-code pill.
+   ======================================================================== */
+
+.code-font-size {
+  font-size: var(--code-font-size, 0.875em);
+}
+
+/* ========================================================================
    Inline code — subtle background pill via ::before pseudo-element.
    Position relative, ::before with absolute inset creates a pill that
    extends slightly above/below the text.
@@ -160,7 +170,7 @@
   position: relative;
   display: inline-block;
   font-family: var(--font-code);
-  font-size: 0.86em;
+  font-size: var(--code-font-size, 0.875em);
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.01em;
