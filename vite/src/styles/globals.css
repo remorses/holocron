@@ -31,7 +31,7 @@
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: #3e9fff;
+  --primary: var(--color-sky-600);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
@@ -147,7 +147,7 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.21 0.006 285.885);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: #60a5fa;
+    --primary: var(--color-sky-200);
     --primary-foreground: oklch(0.21 0.006 285.885);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
@@ -182,12 +182,7 @@
   }
 }
 
-/* P3 wide-gamut accent for primary (uses display-p3 when supported) */
-@supports (color: color(display-p3 1 1 1)) {
-  :root {
-    --primary: color(display-p3 0.243137 0.623529 1 / 1);
-  }
-}
+
 
 @theme {
   --breakpoint-lg: 1080px;
