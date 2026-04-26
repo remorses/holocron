@@ -19,42 +19,51 @@
         }
     },
     "navigation": {
-        "groups": [
+        "tabs": [
             {
-                "group": "Overview",
-                "icon": "sparkles",
-                "pages": ["index", "custom-entry"]
+                "tab": "Documentation",
+                "groups": [
+                    {
+                        "group": "Overview",
+                        "icon": "sparkles",
+                        "pages": ["index", "custom-entry"]
+                    },
+                    {
+                        "group": "Components",
+                        "icon": "blocks",
+                        "pages": [
+                            "components/index",
+                            "components/accordions",
+                            "components/badge",
+                            "components/banner",
+                            "components/callouts",
+                            "components/cards",
+                            "components/code-groups",
+                            "components/color",
+                            "components/columns",
+                            "components/examples",
+                            "components/expandables",
+                            "components/fields",
+                            "components/frames",
+                            "components/icons",
+                            "components/mermaid-diagrams",
+                            "components/panel",
+                            "components/prompt",
+                            "components/responses",
+                            "components/steps",
+                            "components/tabs",
+                            "components/tiles",
+                            "components/tooltips",
+                            "components/tree",
+                            "components/update",
+                            "components/view"
+                        ]
+                    }
+                ]
             },
             {
-                "group": "Components",
-                "icon": "blocks",
-                "pages": [
-                    "components/index",
-                    "components/accordions",
-                    "components/badge",
-                    "components/banner",
-                    "components/callouts",
-                    "components/cards",
-                    "components/code-groups",
-                    "components/color",
-                    "components/columns",
-                    "components/examples",
-                    "components/expandables",
-                    "components/fields",
-                    "components/frames",
-                    "components/icons",
-                    "components/mermaid-diagrams",
-                    "components/panel",
-                    "components/prompt",
-                    "components/responses",
-                    "components/steps",
-                    "components/tabs",
-                    "components/tiles",
-                    "components/tooltips",
-                    "components/tree",
-                    "components/update",
-                    "components/view"
-                ]
+                "tab": "API Reference",
+                "openapi": "openapi.json"
             }
         ]
     }
