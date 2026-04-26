@@ -30,9 +30,9 @@ export const GRID_TOKENS: {
   '--grid-max-width': number
 } = {
   '--grid-toc-width': 230,
-  '--grid-content-width': 620,
+  '--grid-content-width': 540,
   '--grid-gap': 50,
-  '--grid-max-width': 1200,
+  '--grid-max-width': 1100,
 }
 
 /** Default right-sidebar width (px). Matches `--grid-toc-width`. */
