@@ -60,17 +60,13 @@ export function TocInline({
   const indicatorRef = useRef<HTMLDivElement>(null)
   const isSearchActive = searchState !== null
 
-  // Filter out H1 — the page title already appears as the NavPageLink above
-  // this TOC, so showing it again as a heading entry is redundant.
-  const nonH1Headings = headings.filter((h) => h.depth !== 1)
-
-  const hasMatchedHeading = isSearchActive && nonH1Headings.some((heading) => {
+  const hasMatchedHeading = isSearchActive && headings.some((heading) => {
     return searchState.matchedHrefs.has(`${pageHref}#${heading.slug}`)
   })
 
   // If this page has matched headings, keep sibling headings visible as context.
   // If the page only matched by title, keep the TOC hidden.
-  const visibleHeadings = hasMatchedHeading ? nonH1Headings : isSearchActive ? [] : nonH1Headings
+  const visibleHeadings = hasMatchedHeading ? headings : isSearchActive ? [] : headings
 
   // Single effect: position the active-heading indicator bar.
   useEffect(() => {
