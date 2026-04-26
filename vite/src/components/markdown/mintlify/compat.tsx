@@ -502,7 +502,7 @@ function CheckIcon() {
  *
  * Structure: outer tinted shell → optional header content → inner card surface.
  *
- *   ┌─ outer shell: bg-foreground/8, rounded-2xl ─────────────┐
+ *   ┌─ outer shell: bg-accent, rounded-2xl ─────────────┐
  *   │  px-0.5  pb-0.5  pt-px  (1-2px padding on all sides)    │
  *   │                                                          │
  *   │  ┌─ header area (sits in the tinted shell) ────────────┐ │
@@ -515,7 +515,7 @@ function CheckIcon() {
  *   │  └─────────────────────────────────────────────────────┘ │
  *   └─────────────────────────────────────────────────────────┘
  *
- * Why it works: bg-foreground/8 uses the foreground color at 8% opacity,
+ * Why it works: bg-accent uses the foreground color at 8% opacity,
  * so it auto-adapts to both light mode (light gray tint on white) and dark
  * mode (faint white tint on dark). The inner bg-background card sits inset
  * with rounded corners, creating a layered feel. The 0.5 (2px) padding
@@ -546,7 +546,7 @@ export function CodeCard({
   }
 
   return (
-    <div className='rounded-2xl bg-foreground/8 px-0.5 pb-0.5 pt-px'>
+    <div className='rounded-2xl bg-accent px-0.5 pb-0.5 pt-px'>
       {/* Header bar: title left, copy button right — sits in the tinted shell */}
       {(title || copyable) && (
         <div className='flex items-center justify-between gap-2 px-3 py-1.5'>

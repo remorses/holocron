@@ -325,7 +325,7 @@ function ChatDrawerInner() {
 
         {/* Footer — same muted frame as sidebar assistant */}
         <div style={{ flexShrink: 0 }}>
-          <div className='m-3 rounded-2xl bg-foreground/8 px-0.5 pt-px pb-0.5'>
+          <div className='m-3 rounded-2xl bg-accent px-0.5 pt-px pb-0.5'>
             <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
               <span className='text-muted-foreground shrink-0'>
                 <InfoCircleIcon />

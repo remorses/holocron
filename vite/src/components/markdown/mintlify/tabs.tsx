@@ -44,9 +44,9 @@ export function Tabs({
   const activeTab = tabs[activeIndex]
 
   return (
-    <div className='bleed overflow-hidden rounded-lg border border-border-subtle bg-card'>
-      <div className={`${borderBottom ? 'border-b border-border-subtle' : ''} overflow-x-auto bg-muted/40 p-2`}>
-        <div role='tablist' className='flex min-w-max gap-1'>
+    <div className='rounded-2xl bg-accent px-0.5 pb-0.5 pt-px'>
+      <div className='overflow-x-auto px-2.5 py-1'>
+        <div role='tablist' className='flex min-w-max gap-3'>
           {labels.map((label, index) => {
             const active = index === activeIndex
             const tabIcon = tabs[index]?.props.icon
@@ -58,10 +58,9 @@ export function Tabs({
                 role='tab'
                 aria-selected={active}
                 onClick={() => setActiveIndex(index)}
-                className='cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors'
+                className='cursor-pointer py-1 text-xs font-medium transition-colors'
                 style={{
-                  backgroundColor: active ? 'var(--background)' : 'transparent',
-                  color: active ? 'var(--foreground)' : 'var(--muted-foreground)',
+                  color: active ? 'var(--primary)' : 'var(--muted-foreground)',
                 }}
               >
                 <span className='inline-flex items-center gap-1.5'>
@@ -73,7 +72,7 @@ export function Tabs({
           })}
         </div>
       </div>
-      <div role='tabpanel' className='no-bleed flex flex-col gap-(--prose-gap) p-3'>
+      <div role='tabpanel' className='no-bleed flex flex-col gap-(--prose-gap) rounded-[15px] bg-background p-4'>
         {activeTab?.props.children}
       </div>
     </div>
