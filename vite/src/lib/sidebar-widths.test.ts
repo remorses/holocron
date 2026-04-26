@@ -22,9 +22,7 @@ function computeFromMdx(mdx: string): number {
 
 describe('computeSidebarWidthFromAsideNodes', () => {
   test('defaults to DEFAULT_SIDEBAR_WIDTH when no asides exist', () => {
-    expect(computeFromMdx('# Hello\n\nJust some body text.')).toBe(
-      DEFAULT_SIDEBAR_WIDTH,
-    )
+    expect(computeFromMdx('# Hello\n\nJust some body text.')).toMatchInlineSnapshot(`230`)
   })
 
   test('plain Aside with only text stays at default width', () => {
@@ -32,10 +30,10 @@ describe('computeSidebarWidthFromAsideNodes', () => {
 
 <Aside>Some helper text</Aside>
 `
-    expect(computeFromMdx(mdx)).toBe(DEFAULT_SIDEBAR_WIDTH)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`230`)
   })
 
-  test('Aside containing RequestExample bumps width to 440', () => {
+  test('Aside containing RequestExample bumps width', () => {
     const mdx = `# Endpoint
 
 <RequestExample>
@@ -44,10 +42,10 @@ curl https://api.example.com
 \`\`\`
 </RequestExample>
 `
-    expect(computeFromMdx(mdx)).toBe(396)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
   })
 
-  test('ResponseExample also bumps width to 396', () => {
+  test('ResponseExample also bumps width', () => {
     const mdx = `# Endpoint
 
 <ResponseExample>
@@ -56,7 +54,7 @@ curl https://api.example.com
 \`\`\`
 </ResponseExample>
 `
-    expect(computeFromMdx(mdx)).toBe(396)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
   })
 
   test('unknown component in aside keeps default width', () => {
@@ -66,7 +64,7 @@ curl https://api.example.com
   <SomeCustomThing />
 </Aside>
 `
-    expect(computeFromMdx(mdx)).toBe(DEFAULT_SIDEBAR_WIDTH)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`230`)
   })
 
   test('multiple asides take the max', () => {
@@ -82,7 +80,7 @@ curl
 \`\`\`
 </RequestExample>
 `
-    expect(computeFromMdx(mdx)).toBe(396)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
   })
 
   test('deeply nested RequestExample is still detected', () => {
@@ -98,7 +96,7 @@ curl
   </div>
 </Aside>
 `
-    expect(computeFromMdx(mdx)).toBe(396)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
   })
 
   test('exports a static widths map for the sidebar components', () => {

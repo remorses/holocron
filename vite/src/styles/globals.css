@@ -10,6 +10,7 @@
    Tailwind v4 skips node_modules and no utility classes get generated. */
 @source "../components";
 @source "../app-factory.tsx";
+@source "../lib/openapi";
 
 @plugin "@tailwindcss/typography";
 
@@ -85,6 +86,11 @@
   --lh-heading: 1.4;
   --lh-prose: 1.6;
   --ls-prose: -0.09px;
+
+  /* Mono text appears visually larger than sans at the same font-size.
+     Use this em-based scale factor on any font-mono / <code> element
+     sitting alongside sans text so it feels optically matched. */
+  --code-font-size: 0.9em;
 
   /* Type scale */
   --type-body-size: 14px;

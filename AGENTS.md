@@ -63,7 +63,15 @@ The full shadcn token set is defined in `globals.css` `:root` with editorial def
 
 **Do NOT introduce prefixed variable namespaces** (no `--hc-*`, no `--fd-*`, no `--editorial-*`). Keep everything in the flat shadcn naming style. If a new variable is needed, pick a descriptive name that could plausibly be a shadcn extension.
 
-### Container spacing — use flex column gap
+### Monospaced text sizing — always slightly smaller than surrounding sans
+
+Monospaced fonts (code, `font-mono`) appear visually larger than sans-serif at the same `font-size` because their characters are wider. When monospaced text sits alongside sans text (property names, type annotations, inline code in UI chrome), always set it to `~0.875em` so it feels optically matched. The CSS variable `--code-font-size` in `globals.css` is the single source of truth for this value. The `.inline-code` class in `editorial.css` uses it. For Tailwind contexts use `text-(length:--code-font-size)` on the `font-mono` element. Never leave `font-mono` at the same size as the surrounding sans text.
+
+Note: Tailwind arbitrary value classes like `text-[length:var(--code-font-size)]` won't work in components compiled to `dist/` because Tailwind's JIT scanner doesn't see the source. For package components (OpenAPI renderer, etc.), use the plain CSS class `.code-font-size` defined in `editorial.css` instead.
+
+### Spacing — prefer gap over margin/padding
+
+Always use flexbox/grid `gap` classes for spacing between sibling elements. Never use `margin-top`, `margin-bottom`, `padding-top`, or `padding-bottom` to create space between items in a list or stack. Gap is simpler (no first/last-child overrides), composes better, and avoids margin collapse bugs. Use `py-*` only for internal padding within a single element (e.g. padding inside a card), not for spacing between siblings.
 
 Any container-like MDX component (`Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, `Steps`, `Step`, lists, API fields/examples, tiles, tree wrappers, etc.) must own its inner vertical rhythm with `flex flex-col gap-(--prose-gap)` on the container body, using the `--prose-gap` CSS variable defined in `globals.css`. This keeps all containers aligned with the page's overall vertical rhythm. Do not use hardcoded gap values like `gap-3` or `gap-4` — always use `gap-(--prose-gap)` so spacing stays consistent when the token changes. Do not rely on paragraph margins inside containers — many editorial nodes render with margins stripped, so raw MDX children will visually collapse unless the container explicitly provides gap spacing.
 

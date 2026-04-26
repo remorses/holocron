@@ -119,12 +119,12 @@ function Property({ name, schema, required, depth = 0 }: {
   const tags = collectTags(schema)
 
   return (
-    <div className='flex flex-col gap-3 py-3 first:pt-0 last:pb-0'>
+    <div className='flex flex-col gap-3 border-b border-border-subtle py-4 first:pt-0 last:border-b-0 last:pb-0'>
       <div className='flex flex-wrap items-center gap-2'>
-        <span className='font-medium font-mono text-primary'>
+        <span className='font-medium font-mono code-font-size text-primary'>
           {name}{required ? <span className='text-red'> *</span> : <span className='text-muted-foreground'>?</span>}
         </span>
-        <span className='font-mono text-muted-foreground'>{typeString(schema)}</span>
+        <span className='font-mono code-font-size text-muted-foreground'>{typeString(schema)}</span>
         {schema.deprecated && <NavBadge label='deprecated' color='yellow' />}
       </div>
       {schema.description && <div className='text-muted-foreground'>{schema.description}</div>}
@@ -151,7 +151,7 @@ function Property({ name, schema, required, depth = 0 }: {
 function FieldList({ schema, depth = 0 }: { schema: SchemaInfo; depth?: number }) {
   if (schema.properties && Object.keys(schema.properties).length > 0) {
     return (
-      <div className='flex flex-col gap-3'>
+      <div className='flex flex-col'>
         {Object.entries(schema.properties).map(([k, v]) => (
           <Property key={k} name={k} schema={v as SchemaInfo} required={(schema.required ?? []).includes(k)} depth={depth} />
         ))}
@@ -162,7 +162,7 @@ function FieldList({ schema, depth = 0 }: { schema: SchemaInfo; depth?: number }
     return <Property name='items' schema={schema.items} depth={depth} />
   }
   if (schema.type) {
-    return <div className='text-muted-foreground'>Type: <code>{typeString(schema)}</code></div>
+    return <div className='text-muted-foreground'>Type: <code className='font-mono code-font-size'>{typeString(schema)}</code></div>
   }
   return null
 }
@@ -171,9 +171,9 @@ function FieldList({ schema, depth = 0 }: { schema: SchemaInfo; depth?: number }
 
 function Section({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex flex-col gap-4'>
       <div className='font-semibold text-foreground'>{title}</div>
-      <div className='flex flex-col divide-y divide-border-subtle'>
+      <div className='flex flex-col'>
         {children}
       </div>
     </div>
@@ -228,16 +228,16 @@ function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['
 function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
   if (responses.length === 0) return null
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex flex-col gap-4'>
       <div className='font-semibold text-foreground'>Response</div>
-      <div className='flex flex-col gap-3'>
+      <div className='flex flex-col gap-4'>
         {responses.map((r) => {
           const hasSchema = r.schema && (
             (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
             r.schema.type === 'array' || r.schema.type
           )
           if (!hasSchema && !r.description) {
-            return <div key={r.status} className='font-mono text-muted-foreground'>{r.status}</div>
+            return <div key={r.status} className='font-mono code-font-size text-muted-foreground'>{r.status}</div>
           }
           return (
             <Expandable key={r.status} title={`${r.status}${r.description ? ` · ${r.description}` : ''}`}>
@@ -261,12 +261,14 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
 
   return (
     <div className='flex flex-col gap-(--prose-gap) text-sm'>
-      <div className='flex items-center gap-3'>
-        <MethodBadge method={props.method} />
-        <code className='text-muted-foreground font-mono'>{props.path}</code>
-        {props.deprecated && <NavBadge label='deprecated' color='orange' />}
+      <div className='flex flex-col gap-2'>
+        <div className='flex items-center gap-3'>
+          <MethodBadge method={props.method} />
+          <code className='code-font-size text-muted-foreground font-mono'>{props.path}</code>
+          {props.deprecated && <NavBadge label='deprecated' color='orange' />}
+        </div>
+        {props.description && <div className='text-muted-foreground'>{props.description}</div>}
       </div>
-      {props.description && <div className='text-muted-foreground'>{props.description}</div>}
       <AuthSection security={props.security} />
       <ParameterGroup title='Path Parameters' params={path} />
       <ParameterGroup title='Query Parameters' params={query} />
