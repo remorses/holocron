@@ -152,6 +152,25 @@ SVG icons rendered **inline** (as `<svg>` elements in the DOM) inherit `currentC
 - **Sync engine** (`lib/sync.ts`) — walks the config navigation, computes git blob SHAs, diffs against cache, parses only changed files.
 - **Components** (`components/`) — editorial UI copied from `website/src/components/`. Same styles, same design tokens.
 
+## Important CSS variables — grid geometry
+
+Source of truth: `vite/src/lib/sidebar-widths.ts` (`GRID_TOKENS` + `buildGridTokenStyle()`).
+
+These 4 independent tokens control the 3-column page grid. They're injected as inline styles on `.slot-page` by `editorial-page.tsx`:
+
+- **`--grid-max-width`** (1100px) — overall page cap, clamped to `100vw - 60px`
+- **`--grid-nav-width`** (230px) — left TOC sidebar column
+- **`--grid-sidebar-width`** (230px, 396px for OpenAPI) — right aside column
+- **`--grid-gap`** (50px) — gap between the three columns
+
+**Content width is derived, not configured.** It's emitted as a CSS `calc()`:
+
+```
+--grid-content-width = --grid-max-width - --grid-nav-width - --grid-sidebar-width - 2 * --grid-gap
+```
+
+This means bumping `--grid-max-width` automatically grows the content column, and widening `--grid-sidebar-width` (e.g. for OpenAPI pages with `RequestExample`/`ResponseExample`) shrinks content by the same amount. The page never jumps width when navigating between docs and API reference.
+
 ## Page layout — grid hierarchy
 
 The editorial page layout is built from a minimal set of CSS Grids. Understand these before touching `EditorialPage` in `components/markdown.tsx`.
@@ -184,7 +203,7 @@ slot-page (flex flex-col gap-(--layout-gap))
 
 **1. Page grid** (`markdown.tsx` EditorialPage) — the only explicit 3-col grid. Defines column widths and is the single source of truth. Every other grid inherits from it.
 
-- Column widths live only here: `--grid-toc-width` (210), `--grid-content-width` (520), `--grid-sidebar-width` (210), `--grid-gap` (50).
+- Column widths live only here: `--grid-nav-width` (210), `--grid-content-width` (520), `--grid-sidebar-width` (210), `--grid-gap` (50).
 - `justify-between` distributes extra width up to `--grid-max-width` (1100px), so actual column gaps are `50px + distributed`.
 - `gap-y-(--section-gap)` (48px) gives uniform rhythm between section rows.
 - On mobile: collapses to `grid-cols-1`, sidebars go `display: none`, everything stacks.

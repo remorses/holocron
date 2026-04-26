@@ -6,6 +6,13 @@
  * `--grid-*` custom properties — `editorial-page.tsx` injects them via
  * inline style on `.slot-page` by calling `buildGridTokenStyle()`.
  *
+ * Content width is DERIVED, not configured:
+ *   content = max-width - nav - sidebar - 2*gap
+ *
+ * This means changing `--grid-max-width` automatically grows the content
+ * column, and widening the sidebar (e.g. for OpenAPI pages) automatically
+ * shrinks it — the overall page width never jumps.
+ *
  * It also computes the required right-sidebar width for a page by
  * scanning aside mdast nodes for known components that need extra
  * horizontal space (e.g. RequestExample / ResponseExample). At render
@@ -17,26 +24,21 @@
 import type { HolocronCSSProperties } from './css-vars.ts'
 
 /**
- * Grid geometry tokens (px). Keys match the CSS custom-property names
- * that get injected as inline style on `.slot-page`. Keeping this as an
- * object (rather than individual constants) keeps the CSS var → JS
- * value mapping obvious and prevents the "constants drifted from
- * globals.css" problem: there is no globals.css copy to drift from.
+ * Grid geometry tokens (px). Only the 4 independent values — content
+ * width is derived from these via calc() in `buildGridTokenStyle()`.
+ *
+ * Keys match the CSS custom-property names that get injected as inline
+ * style on `.slot-page`.
  */
-export const GRID_TOKENS: {
-  '--grid-toc-width': number
-  '--grid-content-width': number
-  '--grid-gap': number
-  '--grid-max-width': number
-} = {
-  '--grid-toc-width': 230,
-  '--grid-content-width': 540,
+export const GRID_TOKENS = {
+  '--grid-nav-width': 230,
+  '--grid-sidebar-width': 230,
   '--grid-gap': 50,
-  '--grid-max-width': 1100,
-}
+  '--grid-max-width': 1200,
+} as const
 
-/** Default right-sidebar width (px). Matches `--grid-toc-width`. */
-export const DEFAULT_SIDEBAR_WIDTH = GRID_TOKENS['--grid-toc-width']
+/** Default right-sidebar width (px). Matches `--grid-nav-width`. */
+export const DEFAULT_SIDEBAR_WIDTH: number = GRID_TOKENS['--grid-sidebar-width']
 
 /** Minimum right-sidebar width (px) required when an Aside contains the
  *  given MDX component name. Components not listed fall through to the
@@ -81,32 +83,26 @@ export function computeSidebarWidthFromAsideNodes(
 /**
  * Build the inline-style CSS custom properties for the page grid.
  *
- * Always emits EVERY `--grid-*` token so `globals.css` does not need to
- * declare defaults for them. Takes the page's computed right-sidebar
- * width and bumps `--grid-max-width` so the grid actually has room to
- * accommodate a widened sidebar:
+ * Emits all `--grid-*` tokens so `globals.css` does not need defaults.
+ * Content width is a CSS calc() derived from the other four tokens:
  *
- *   max-width = max(baseMax, toc + content + sidebar + 2*gap)
+ *   content = max-width - nav - sidebar - 2*gap
  *
- * The `min(calc(100vw - 60px), Xpx)` wrapper preserves the original CSS
- * behaviour that capped the grid to the viewport minus safe padding.
+ * This keeps the page max-width constant regardless of sidebar width.
+ * Bump `--grid-max-width` and the content column grows automatically.
  */
 export function buildGridTokenStyle(
   sidebarWidth: number,
 ): HolocronCSSProperties {
-  const toc = GRID_TOKENS['--grid-toc-width']
-  const content = GRID_TOKENS['--grid-content-width']
+  const nav = GRID_TOKENS['--grid-nav-width']
   const gap = GRID_TOKENS['--grid-gap']
-  const baseMax = GRID_TOKENS['--grid-max-width']
-
-  const requiredGrid = toc + content + sidebarWidth + 2 * gap
-  const maxPx = Math.max(baseMax, requiredGrid)
+  const maxW = GRID_TOKENS['--grid-max-width']
 
   return {
-    '--grid-toc-width': `${toc}px`,
-    '--grid-content-width': `minmax(0, ${content}px)`,
+    '--grid-nav-width': `${nav}px`,
     '--grid-gap': `${gap}px`,
     '--grid-sidebar-width': `${sidebarWidth}px`,
-    '--grid-max-width': `min(calc(100vw - 60px), ${maxPx}px)`,
+    '--grid-max-width': `min(calc(100vw - 60px), ${maxW}px)`,
+    '--grid-content-width': `minmax(0, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap)))`,
   }
 }
