@@ -127,7 +127,7 @@ function Property({ name, schema, required, depth = 0 }: {
         <span className='font-mono code-font-size text-muted-foreground'>{typeString(schema)}</span>
         {schema.deprecated && <NavBadge label='deprecated' color='yellow' />}
       </div>
-      {schema.description && <div className='text-muted-foreground'>{schema.description}</div>}
+      {schema.description && <div className='text-foreground'>{schema.description}</div>}
       {tags.length > 0 && (
         <div className='flex flex-wrap gap-2'>
           {tags.map((t) => (
@@ -236,13 +236,16 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
             (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
             r.schema.type === 'array' || r.schema.type
           )
+          // OpenAPI "default" response with no schema/description is noise — skip it
           if (!hasSchema && !r.description) {
+            if (r.status === 'default') return null
             return <div key={r.status} className='font-mono code-font-size text-muted-foreground'>{r.status}</div>
           }
+          const statusLabel = r.status === 'default' ? 'Default' : r.status
           return (
-            <Expandable key={r.status} title={`${r.status}${r.description ? ` · ${r.description}` : ''}`}>
+            <Expandable key={r.status} title={`${statusLabel}${r.description ? ` · ${r.description}` : ''}`}>
               {hasSchema && r.schema && <FieldList schema={r.schema} />}
-              {!hasSchema && r.description && <div className='text-muted-foreground'>{r.description}</div>}
+              {!hasSchema && r.description && <div className='text-foreground'>{r.description}</div>}
             </Expandable>
           )
         })}
@@ -267,7 +270,7 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
           <code className='code-font-size text-muted-foreground font-mono'>{props.path}</code>
           {props.deprecated && <NavBadge label='deprecated' color='orange' />}
         </div>
-        {props.description && <div className='text-muted-foreground'>{props.description}</div>}
+        {props.description && <div className='text-foreground'>{props.description}</div>}
       </div>
       <AuthSection security={props.security} />
       <ParameterGroup title='Path Parameters' params={path} />
