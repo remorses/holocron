@@ -40,6 +40,7 @@ export function HeroSection() {
         muted
         loop
         playsInline
+        poster='/hero-bg-poster.jpg'
         className='absolute z-0 invert hue-rotate-290 dark:invert-0 dark:hue-rotate-0 w-full max-w-[1400px] left-1/2 -translate-x-1/2 top-0'
       >
         <source src='/hero-bg.mp4' type='video/mp4' />
