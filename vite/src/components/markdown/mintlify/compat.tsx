@@ -491,10 +491,39 @@ function CheckIcon() {
 /**
  * CodeCard — Mintlify-style rounded code container with optional title and
  * copy button. Used by RequestExample, ResponseExample, and available as a
- * standalone MDX component. Follows the same bg-foreground/8 + rounded-2xl
- * pattern as the AI chat widget for visual consistency.
+ * standalone MDX component.
  *
- * Structure: outer tinted shell (p-0.5) → header bar → inner card-bg body.
+ * ## Tinted shell container pattern (flagship design pattern)
+ *
+ * The primary visual pattern for interactive and code-related components
+ * is a tinted outer shell wrapping a card-colored inner body. This creates
+ * a subtle two-tier depth effect that works in both light and dark mode
+ * without hardcoded colors.
+ *
+ * Structure: outer tinted shell → optional header content → inner card surface.
+ *
+ *   ┌─ outer shell: bg-foreground/8, rounded-2xl ─────────────┐
+ *   │  px-0.5  pb-0.5  pt-px  (1-2px padding on all sides)    │
+ *   │                                                          │
+ *   │  ┌─ header area (sits in the tinted shell) ────────────┐ │
+ *   │  │  px-3 py-1.5                                        │ │
+ *   │  │  Title text          [copy button]                  │ │
+ *   │  └─────────────────────────────────────────────────────┘ │
+ *   │  ┌─ inner body: bg-background, rounded-[15px] ─────────┐ │
+ *   │  │  px-4 py-3.5                                        │ │
+ *   │  │  Content (code, form, chat input, etc.)             │ │
+ *   │  └─────────────────────────────────────────────────────┘ │
+ *   └─────────────────────────────────────────────────────────┘
+ *
+ * Why it works: bg-foreground/8 uses the foreground color at 8% opacity,
+ * so it auto-adapts to both light mode (light gray tint on white) and dark
+ * mode (faint white tint on dark). The inner bg-background card sits inset
+ * with rounded corners, creating a layered feel. The 0.5 (2px) padding
+ * between shell and body makes the tint visible as a thin border-like frame.
+ *
+ * Also used by: SidebarAssistant (AI chat widget), ChatDrawer footer,
+ * Tabs (similar two-tier with bg-muted/40 header). Use this pattern for
+ * any new component that wraps interactive or code content.
  */
 export function CodeCard({
   title,
