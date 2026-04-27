@@ -746,6 +746,10 @@
                 }
               ],
               "description": "Path to an OpenAPI specification file (JSON or YAML), or an array\nof paths. Endpoints from the spec are auto-generated as pages\ngrouped by tag. Example: `\"openapi.json\"` or\n`[\"openapi/v1.json\", \"openapi/v2.json\"]`"
+            },
+            "openapiBase": {
+              "description": "Slug prefix for generated OpenAPI pages. Defaults to `\"api\"`.\nSet to `\"\"` for no prefix. Example: with `\"reference\"`,\nendpoints are generated at `/reference/get-users` instead of\n`/api/get-users`",
+              "type": "string"
             }
           },
           "required": [

@@ -434,7 +434,8 @@ function normalizeTabsAndAnchors(
     // openapi field on the tab so sync.ts can pick it up.
     if (raw.openapi) {
       const openapi = raw.openapi as string | string[]
-      tabs.push({ tab: name, ...tabExtras, groups: [], openapi })
+      const openapiBase = raw.openapiBase as string | undefined
+      tabs.push({ tab: name, ...tabExtras, groups: [], openapi, ...(openapiBase !== undefined && { openapiBase }) })
       continue
     }
 

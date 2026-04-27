@@ -61,6 +61,9 @@ export type ConfigNavTab = NavTabBase & {
   /** OpenAPI spec path(s) — when present, groups are auto-generated from
    *  the spec at build time. Set by normalize when the raw tab has `openapi`. */
   openapi?: string | string[]
+  /** Slug prefix for generated OpenAPI pages. Defaults to `"api"`.
+   *  Set to `""` for no prefix. */
+  openapiBase?: string
 }
 
 /** A navbar icon link (top-right of header). The normalized form has

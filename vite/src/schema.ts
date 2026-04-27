@@ -284,6 +284,17 @@ const tabWithOpenAPISchema = tabBaseSchema.extend({
         \`["openapi/v1.json", "openapi/v2.json"]\`
       `,
     ),
+  openapiBase: z
+    .string()
+    .optional()
+    .describe(
+      dedent`
+        Slug prefix for generated OpenAPI pages. Defaults to \`"api"\`.
+        Set to \`""\` for no prefix. Example: with \`"reference"\`,
+        endpoints are generated at \`/reference/get-users\` instead of
+        \`/api/get-users\`
+      `,
+    ),
 })
 
 export const tabSchema = z

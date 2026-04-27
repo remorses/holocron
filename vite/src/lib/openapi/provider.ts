@@ -22,6 +22,7 @@ export const openapiProvider: VirtualTabProvider = {
 
   async generate({ tab, projectRoot }): Promise<VirtualTabResult> {
     const specPaths = Array.isArray(tab.openapi) ? tab.openapi! : [tab.openapi!]
+    const slugPrefix = tab.openapiBase ?? 'api'
     const mdxContent: Record<string, string> = {}
 
     const allOps: OpWithDoc[] = []
@@ -59,7 +60,7 @@ export const openapiProvider: VirtualTabProvider = {
       const pages: string[] = []
 
       for (const { op, doc } of ops) {
-        const slug = `api/${operationSlug(op)}`
+        const slug = slugPrefix ? `${slugPrefix}/${operationSlug(op)}` : operationSlug(op)
 
         // Warn if the slug shadows a real MDX page on disk
         for (const ext of ['.mdx', '.md']) {
