@@ -1,5 +1,52 @@
 # @holocron.so/vite
 
+## 0.3.0
+
+1. **OpenAPI auto-generated API reference pages** — add `"openapi": "spec.yaml"` to any navigation tab and Holocron processes the spec at build time, extracts all operations grouped by tag, and generates virtual pages with full endpoint documentation:
+
+   ```json
+   {
+     "navigation": {
+       "tabs": [
+         { "tab": "Docs", "pages": ["index"] },
+         { "tab": "API Reference", "openapi": "openapi.yaml" }
+       ]
+     }
+   }
+   ```
+
+   Each endpoint page includes parameter tables, request/response bodies with JSON Schema types, cURL examples, and response code expandables. Code examples render in a sticky right sidebar.
+
+2. **Configurable `openapiBase` slug prefix** — control the URL prefix for generated OpenAPI pages (defaults to `"api"`). Set to `""` for no prefix:
+
+   ```json
+   { "tab": "API", "openapi": "spec.yaml", "openapiBase": "reference" }
+   ```
+
+3. **VirtualTabProvider plugin interface** — internal architecture for pluggable virtual page sources. Adding a future virtual content source (GitHub releases, MCP definitions, etc.) means implementing one interface and adding it to the providers array.
+
+4. **Mermaid dark mode** — Mermaid diagrams now detect `<html class="dark">` and re-render with the correct theme when the user toggles dark/light mode. Uses a hydration-safe `useSyncExternalStore` pattern with MutationObserver.
+
+5. **Auto-inject H1 from frontmatter title** — when an MDX page has a frontmatter `title` but no H1 in the body, a heading is automatically injected. Pages that already have their own H1 are left untouched.
+
+6. **Uniform 16px heading sizes and code-font-size utility** — editorial typography uses consistent heading sizes. Monospaced text inside headings and UI chrome uses the `--code-font-size` variable for optical matching.
+
+7. **Narrower, more focused content column** — max page width and content column reduced for better reading experience. Content width is now derived from grid tokens via CSS `calc()`.
+
+8. **Sidebar typography improvements** — sidebar and tab bar use parent-level `text-sm` instead of `text-xs` for better readability. H1 headings restored to sidebar TOC.
+
+9. **Tabs component restyled** — replaced `bg-foreground/8` with `bg-accent` for a cleaner tab panel appearance.
+
+10. **OpenAPI field styling** — divider lines between fields, proper spacing, copy button on request examples, Mintlify-style rounded `CodeCard` containers.
+
+11. **Fixed `@tailwindcss/vite` and `tailwindcss` moved to dependencies** — these were incorrectly in devDependencies, causing missing styles in production.
+
+12. **Fixed OpenAPI active tab matching** — navigating between OpenAPI pages now correctly highlights the active tab.
+
+13. **Fixed H1 headings filtered from TOC** — page title no longer duplicates in the table of contents.
+
+14. **Fixed OpenAPI description color and default response label** — muted description text and "Default" label for unspecified response codes.
+
 ## 0.2.0
 
 1. **MDX import support** — import components from anywhere in your project using standard MDX import syntax:
