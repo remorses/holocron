@@ -649,7 +649,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
     if (pathname !== '/' && pathname.endsWith('/')) {
       pathname = pathname.slice(0, -1)
     }
-    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/holocron-api/')) return
+    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/holocron-api/') || pathname.includes('/.well-known/')) return
 
     const baseRoute = withBaseRoute(site.base, '/')
     const normalizedBase = baseRoute === '/' ? '' : baseRoute
@@ -698,6 +698,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<!-- To get the raw markdown content of any page, append .md to the URL. -->',
         `<!-- Example: ${url.origin}${withBaseRoute(site.base, '/getting-started.md')} -->`,
+        `<!-- To download all docs as a zip of .md files: ${url.origin}${withBaseRoute(site.base, '/docs.zip')} -->`,
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
         urls,
         '</urlset>',
@@ -764,6 +765,150 @@ export async function createHolocronApp(providers: HolocronProviders) {
           'content-type': 'application/zip',
           'content-disposition': 'attachment; filename="docs.zip"',
           'cache-control': 's-maxage=300, stale-while-revalidate=86400',
+          'x-content-type-options': 'nosniff',
+        },
+      })
+    })
+  }
+
+  // /.well-known/agent-skills/ and /.well-known/skills/ — agent skill discovery
+  // Follows the agent-skills 0.2.0 discovery spec (RFC 8615 extension by Cloudflare)
+  // and the legacy /.well-known/skills/ format for backward compatibility.
+  // Slugify to kebab-case, 1-64 chars, lowercase alphanumeric + hyphens.
+  // Falls back to 'docs' for non-Latin names that produce empty slugs.
+  const skillName = (() => {
+    const slug = site.config.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 64)
+      .replace(/-+$/g, '')
+    return slug || 'docs'
+  })()
+  const skillDescription = site.config.description
+    ? site.config.description.slice(0, 1024)
+    : `Documentation and usage guide for ${site.config.name}. Use when working with ${site.config.name} APIs, SDKs, or integrations.`
+
+  const exampleMdPath = firstPage
+    ? hrefToMarkdownPath(firstPage.href)
+    : '/index.md'
+
+  function generateSkillMd(origin: string, base: string): string {
+    const baseUrl = base === '/' ? origin : `${origin}${base.replace(/\/+$/, '')}`
+    return dedent`
+      ---
+      name: ${skillName}
+      description: >
+        ${skillDescription}
+      ---
+
+      # ${site.config.name}
+      ${site.config.description ? '\n' + site.config.description + '\n' : ''}
+      ## Browsing docs
+
+      Fetch the sitemap to discover all available pages:
+
+      ${'```'}bash
+      curl ${baseUrl}/sitemap.xml
+      ${'```'}
+
+      Append \`.md\` to any page URL to get the raw markdown:
+
+      ${'```'}bash
+      curl ${baseUrl}${exampleMdPath}
+      ${'```'}
+
+      ## Downloading all docs locally
+
+      Download all documentation as a zip of markdown files for local search and grep:
+
+      ${'```'}bash
+      curl -o docs.zip ${baseUrl}/docs.zip
+      unzip docs.zip -d docs
+      grep -r "search term" docs/
+      ${'```'}
+
+      This is the fastest way to search across all pages locally.
+    `
+  }
+
+  // Compute sha256 digest for the v0.2.0 spec (lazy, cached per origin)
+  let cachedSkillDigest: { origin: string; digest: string } | undefined
+  async function getSkillDigest(origin: string, base: string): Promise<string> {
+    if (cachedSkillDigest?.origin === origin) return cachedSkillDigest.digest
+    const content = generateSkillMd(origin, base)
+    const encoded = new TextEncoder().encode(content)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoded)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const digest = 'sha256:' + hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+    cachedSkillDigest = { origin, digest }
+    return digest
+  }
+
+  // v0.2.0 agent-skills index
+  for (const route of new Set(['/.well-known/agent-skills/index.json', withBaseRoute(site.base, '/.well-known/agent-skills/index.json')])) {
+    app = app.get(route, async ({ request }: { request: Request }) => {
+      const url = new URL(request.url)
+      const digest = await getSkillDigest(url.origin, site.base)
+      const index = {
+        $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
+        skills: [
+          {
+            name: skillName,
+            type: 'skill-md',
+            description: skillDescription,
+            url: `${skillName}/SKILL.md`,
+            digest,
+          },
+        ],
+      }
+      return new Response(JSON.stringify(index), {
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': 's-maxage=3600, stale-while-revalidate=86400',
+          'x-content-type-options': 'nosniff',
+        },
+      })
+    })
+  }
+
+  // Legacy skills index
+  for (const route of new Set(['/.well-known/skills/index.json', withBaseRoute(site.base, '/.well-known/skills/index.json')])) {
+    app = app.get(route, () => {
+      const index = {
+        skills: [
+          {
+            name: skillName,
+            description: skillDescription,
+            files: ['SKILL.md'],
+          },
+        ],
+      }
+      return new Response(JSON.stringify(index), {
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': 's-maxage=3600, stale-while-revalidate=86400',
+          'x-content-type-options': 'nosniff',
+        },
+      })
+    })
+  }
+
+  // Serve SKILL.md at both well-known paths
+  for (const route of new Set([
+    `/.well-known/agent-skills/${skillName}/SKILL.md`,
+    withBaseRoute(site.base, `/.well-known/agent-skills/${skillName}/SKILL.md`),
+    `/.well-known/skills/${skillName}/SKILL.md`,
+    withBaseRoute(site.base, `/.well-known/skills/${skillName}/SKILL.md`),
+  ])) {
+    app = app.get(route, ({ request }: { request: Request }) => {
+      const url = new URL(request.url)
+      const content = generateSkillMd(url.origin, site.base)
+      return new Response(content, {
+        headers: {
+          'content-type': 'text/markdown; charset=utf-8',
+          'cache-control': 's-maxage=3600, stale-while-revalidate=86400',
           'x-content-type-options': 'nosniff',
         },
       })

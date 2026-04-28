@@ -196,6 +196,83 @@ test.describe("raw markdown does not interfere with normal requests", () => {
   });
 });
 
+test.describe("well-known agent-skills discovery", () => {
+  test("GET /.well-known/agent-skills/index.json returns v0.2.0 index", async ({
+    request,
+  }) => {
+    const res = await request.get("/.well-known/agent-skills/index.json");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("application/json");
+    const body = await res.json();
+    expect(body.$schema).toBe(
+      "https://schemas.agentskills.io/discovery/0.2.0/schema.json"
+    );
+    expect(body.skills).toHaveLength(1);
+    expect(body.skills[0].name).toBe("test-docs");
+    expect(body.skills[0].type).toBe("skill-md");
+    expect(body.skills[0].url).toBe("test-docs/SKILL.md");
+    expect(body.skills[0].digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+  });
+
+  test("GET /.well-known/skills/index.json returns legacy index", async ({
+    request,
+  }) => {
+    const res = await request.get("/.well-known/skills/index.json");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("application/json");
+    const body = await res.json();
+    expect(body.skills).toHaveLength(1);
+    expect(body.skills[0].name).toBe("test-docs");
+    expect(body.skills[0].files).toEqual(["SKILL.md"]);
+    // Legacy format should NOT have $schema
+    expect(body.$schema).toBeUndefined();
+  });
+
+  test("GET /.well-known/agent-skills/test-docs/SKILL.md returns skill markdown", async ({
+    request,
+  }) => {
+    const res = await request.get(
+      "/.well-known/agent-skills/test-docs/SKILL.md"
+    );
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/markdown");
+    const body = await res.text();
+    expect(body).toContain("name: test-docs");
+    expect(body).toContain("# Test Docs");
+    expect(body).toContain("sitemap.xml");
+    expect(body).toContain("docs.zip");
+    expect(body).toContain(".md");
+  });
+
+  test("GET /.well-known/skills/test-docs/SKILL.md returns same skill", async ({
+    request,
+  }) => {
+    const res = await request.get("/.well-known/skills/test-docs/SKILL.md");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/markdown");
+    const body = await res.text();
+    expect(body).toContain("name: test-docs");
+    expect(body).toContain("sitemap.xml");
+  });
+
+  test("well-known endpoints have cache-control headers", async ({
+    request,
+  }) => {
+    const res = await request.get("/.well-known/agent-skills/index.json");
+    expect(res.headers()["cache-control"]).toContain("s-maxage=3600");
+  });
+
+  test("agent redirect does not intercept well-known paths", async ({
+    request,
+  }) => {
+    const res = await request.get("/.well-known/agent-skills/index.json", {
+      headers: { "user-agent": "claude-code/1.0" },
+    });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("application/json");
+  });
+});
+
 test.describe("docs.zip", () => {
   test("GET /docs.zip returns a zip file", async ({ request }) => {
     const res = await request.get("/docs.zip");
