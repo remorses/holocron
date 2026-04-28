@@ -148,6 +148,39 @@ test.describe("navigation", () => {
   });
 });
 
+test.describe("agent-facing docs", () => {
+  test("serves llms.txt with docs.zip first and markdown page links", async ({ request }) => {
+    const response = await request.get("/llms.txt");
+
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("text/markdown");
+
+    const text = await response.text();
+    expect(text).toContain("# Test Docs");
+    expect(text).toContain("> Documentation and usage guide for Test Docs.");
+    expect(text.indexOf("## Best way to inspect these docs")).toBeLessThan(text.indexOf("## Page index"));
+    expect(text).toContain("curl -L http://localhost:");
+    expect(text).toContain("/docs.zip -o docs.zip");
+    expect(text).toContain('grep -R "search term" docs/');
+    expect(text).toContain("[Welcome to Test Docs](http://localhost:");
+    expect(text).toContain("/index.md)");
+    expect(text).toContain("[Getting Started](http://localhost:");
+    expect(text).toContain("/getting-started.md)");
+  });
+
+  test("points HTML and markdown pages back to llms.txt", async ({ request }) => {
+    const htmlResponse = await request.get("/getting-started", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await htmlResponse.text();
+    expect(html).toContain("Agent-readable docs index: /llms.txt");
+
+    const mdResponse = await request.get("/getting-started.md");
+    const md = await mdResponse.text();
+    expect(md.startsWith("> Agent-readable docs index: /llms.txt.")).toBe(true);
+  });
+});
+
 test.describe("hydration", () => {
   function isIgnorableDevReloadError(message: string): boolean {
     return message.includes("Failed to fetch dynamically imported module:");

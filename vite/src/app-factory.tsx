@@ -181,6 +181,10 @@ function withBaseRoute(base: string, route: string): string {
   return `${normalizedBase}${route}`
 }
 
+function escapeMarkdownText(value: string): string {
+  return value.replaceAll('\n', ' ').trim()
+}
+
 function stripBaseFromSlug(rawSlug: string, base: string): string {
   const slug = rawSlug.replace(/^\/+/, '')
   const normalizedBase = base === '/' ? '' : base.replace(/^\/+|\/+$/g, '')
@@ -467,6 +471,49 @@ export async function createHolocronApp(providers: HolocronProviders) {
     return href === '/' ? '/index.md' : `${href}.md`
   }
 
+  function buildAgentDocsDirective(base: string): string {
+    const basePath = base === '/' ? '' : base.replace(/\/$/, '')
+    return `Agent-readable docs index: ${basePath}/llms.txt. Download ${basePath}/docs.zip to grep all markdown files locally.`
+  }
+
+  function buildMarkdownSource(mdx: string): string {
+    return `> ${buildAgentDocsDirective(site.base)}\n\n${mdx}${POWERED_BY_FOOTER}`
+  }
+
+  function buildLlmsTxt(origin: string): string {
+    const basePath = withBaseRoute(site.base, '/') === '/' ? '' : withBaseRoute(site.base, '/').replace(/\/$/, '')
+    const baseUrl = `${origin}${basePath}`
+    const description = escapeMarkdownText(site.config.description || `Documentation and usage guide for ${site.config.name}.`)
+    const pageLinks = collectAllPages(site.navigation)
+      .filter((page) => isIndexablePage(page.frontmatter))
+      .map((page) => `- [${escapeMarkdownText(page.title)}](${baseUrl}${hrefToMarkdownPath(page.href)})`)
+      .join('\n')
+
+    return dedent`
+      # ${escapeMarkdownText(site.config.name)}
+
+      > ${description}
+
+      ## Best way to inspect these docs
+
+      Download all docs as markdown files and grep them locally:
+
+      ${'```'}bash
+      curl -L ${baseUrl}/docs.zip -o docs.zip
+      unzip docs.zip -d docs
+      grep -R "search term" docs/
+      ${'```'}
+
+      Use this when you need to search across the whole documentation set. The zip contains every page as a .md file.
+
+      ## Page index
+
+      You can also fetch individual markdown pages directly:
+
+      ${pageLinks}
+    `
+  }
+
   async function buildLoaderSite(slug: string | undefined): Promise<HolocronSiteData> {
     const pageIconRefs = slug ? await providers.getPageIconRefs(slug) : []
     return {
@@ -576,6 +623,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
           </Head>
         )}
         <body>
+          <div className='sr-only'>{buildAgentDocsDirective(site.base)}</div>
           <ProgressBar color='var(--primary)' />
           {children ?? notFoundContent}
         </body>
@@ -713,6 +761,21 @@ export async function createHolocronApp(providers: HolocronProviders) {
     })
   }
 
+  // /llms.txt — primary agent index. Keep docs.zip first because agents can
+  // grep the whole markdown corpus locally before reading specific pages.
+  for (const llmsTxtRoute of new Set(['/llms.txt', withBaseRoute(site.base, '/llms.txt')])) {
+    app = app.get(llmsTxtRoute, ({ request }: { request: Request }) => {
+      const url = new URL(request.url)
+      return new Response(buildLlmsTxt(url.origin), {
+        headers: {
+          'content-type': 'text/markdown; charset=utf-8',
+          'cache-control': 's-maxage=300, stale-while-revalidate=86400',
+          'x-content-type-options': 'nosniff',
+        },
+      })
+    })
+  }
+
   if (!slugs.includes('index') && firstPage) {
     const firstMarkdownPath = hrefToMarkdownPath(firstPage.href)
     for (const route of new Set(['/index.md', withBaseRoute(site.base, '/index.md')])) {
@@ -733,7 +796,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
         if (mdx === undefined) {
           return new Response('Not found', { status: 404 })
         }
-        return new Response(mdx + POWERED_BY_FOOTER, {
+        return new Response(buildMarkdownSource(mdx), {
           headers: {
             'content-type': 'text/markdown; charset=utf-8',
             'cache-control': 's-maxage=300, stale-while-revalidate=86400',
@@ -755,7 +818,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
       for (const page of pages) {
         if (!page) continue
         const [slug, mdx] = page
-        files[slug + '.md'] = strToU8(mdx + POWERED_BY_FOOTER)
+        files[slug + '.md'] = strToU8(buildMarkdownSource(mdx))
       }
       const zipped = zipSync(files)
       const zipBody = new Uint8Array(zipped.byteLength)
