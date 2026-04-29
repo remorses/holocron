@@ -258,7 +258,7 @@ export function EditorialPage({
             style={{
               position: 'sticky',
               top: hasTabBar ? 'var(--sticky-top)' : 'calc(var(--header-row-height) + var(--layout-gap))',
-              maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap))',
+              maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top) - var(--layout-gap))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap) - var(--layout-gap))',
               display: 'flex',
               flexDirection: 'column',
             }}
