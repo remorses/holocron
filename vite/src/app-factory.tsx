@@ -20,8 +20,8 @@ import type { Root } from 'mdast'
 import {
   EditorialPage,
   type EditorialSection,
-} from './components/markdown/index.tsx'
-import { RenderBannerNodes } from './components/markdown/banner.tsx'
+} from './components/layout/editorial-page.tsx'
+import { RenderBannerNodes } from './components/layout/banner.tsx'
 import { SectionHeading } from './components/markdown/typography.tsx'
 import { slugify } from './lib/toc-tree.ts'
 import { NotFound } from './components/not-found.tsx'

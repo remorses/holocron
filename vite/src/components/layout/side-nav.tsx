@@ -14,7 +14,7 @@ import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
 import { useHolocronData, useHolocronRouterState } from '../../router.ts'
 import { buildSearchEntries, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
-import { SearchIcon } from './icons.tsx'
+import { SearchIcon } from '../markdown/icons.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 
 /**

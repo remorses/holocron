@@ -12,8 +12,8 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { chatState } from '../lib/chat-state.ts'
 import { CloseIcon } from './chat-icons.tsx'
-import { SideNav } from './markdown/side-nav.tsx'
-import { NavSelect, type NavSelectItem } from './markdown/nav-select.tsx'
+import { SideNav } from './layout/side-nav.tsx'
+import { NavSelect } from './layout/nav-select.tsx'
 import { Icon } from './icon.tsx'
 import { ThemeToggle } from './theme-toggle.tsx'
 import { useHolocronData } from '../router.ts'
@@ -23,7 +23,7 @@ import {
   buildTabItems,
   buildVersionItems,
 } from '../site-data.ts'
-import { TabLink } from './markdown/tab-link.tsx'
+import { TabLink } from './layout/tab-link.tsx'
 
 export function NavDrawer() {
   const [isMounted, setIsMounted] = useState(false)

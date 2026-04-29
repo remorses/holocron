@@ -11,8 +11,6 @@
 export type { TocNodeType, TocTreeNode } from '../../lib/toc-tree.ts'
 export type { TabItem, HeaderLink } from '../../site-data.ts'
 
-export { SideNav } from './side-nav.tsx'
-export { BackButton } from './back-button.tsx'
 export { ExpandableContainer } from './expandable-container.tsx'
 export { ChevronIcon, SearchIcon } from './icons.tsx'
 
@@ -94,14 +92,6 @@ export {
   type CalloutType,
   type CalloutProps,
 } from './callout.tsx'
-
-export { SidebarBanner } from './sidebar-banner.tsx'
-export { TabLink } from './tab-link.tsx'
-
-export {
-  EditorialPage,
-  type EditorialSection,
-} from './editorial-page.tsx'
 
 // `TableOfContentsPanel` lives in a sibling component file but is
 // re-exported here for convenience so the MDX component map can import

@@ -49,10 +49,6 @@ export type EditorialSection = {
   asideRowSpan?: number
 }
 
-function getSharedAsideStartRow(row: number, span: number) {
-  return row - span + 1
-}
-
 /**
  * Top-level page shell.
  *
@@ -295,7 +291,7 @@ export function EditorialPage({
                 }
                 const span = section.asideRowSpan ?? 1
                 const isShared = span > 1
-                const sharedAsideStartRow = getSharedAsideStartRow(row, span)
+                const sharedAsideStartRow = row - span + 1
                 const hasPerSectionAside = Boolean(section.aside) && !isShared
                 const hasSharedAside = Boolean(section.aside) && isShared
                 

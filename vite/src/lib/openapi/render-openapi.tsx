@@ -9,7 +9,7 @@
 
 import React from 'react'
 import { Expandable } from '../../components/markdown/mintlify/compat.tsx'
-import { MethodBadge, NavBadge } from '../../components/markdown/nav-badge.tsx'
+import { MethodBadge, NavBadge } from '../../components/layout/nav-badge.tsx'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
