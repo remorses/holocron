@@ -49,6 +49,15 @@ export type EditorialSection = {
   asideRowSpan?: number
 }
 
+function ContentFooter() {
+  return (
+    <div className='bleed'>
+      <Footer />
+      <PoweredBy />
+    </div>
+  )
+}
+
 /**
  * Top-level page shell.
  *
@@ -335,12 +344,21 @@ export function EditorialPage({
                   </Fragment>
                 )
               })}
+              <div
+                className='slot-main lg:col-[1]'
+                style={{ gridRow: sections.length + 1 }}
+              >
+                <ContentFooter />
+              </div>
             </Fragment>
           ) : (
             <>
               {/* Flat layout: single article column + optional static sidebar */}
-              <div className='slot-main pb-24 lg:col-[1] text-(length:--type-body-size)'>
-                <article className='flex flex-col gap-(--prose-gap)'>{children}</article>
+              <div className='slot-main flex flex-col gap-(--section-gap) lg:col-[1] text-(length:--type-body-size)'>
+                <article className='flex flex-col gap-(--prose-gap)'>
+                  {children}
+                </article>
+                <ContentFooter />
               </div>
 
               <div className='slot-sidebar-right lg:!col-[2] lg:self-stretch'>
@@ -357,12 +375,6 @@ export function EditorialPage({
             </>
           )}
         </div>
-      </div>
-
-      {/* Site footer + branding — mt-auto pushes to bottom on short pages */}
-      <div className='mt-auto pt-(--section-gap)'>
-        <Footer />
-        <PoweredBy />
       </div>
 
       {/* AI assistant drawer — slides in from right when activated */}
