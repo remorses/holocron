@@ -89,6 +89,7 @@ function ChatDrawerInner() {
             ],
             previousMessages: sessionPart?.messages,
             currentSlug: currentPageHref || '/',
+            hasSeenNotice: currentParts.some((p) => p.type === 'notice'),
           }),
           signal: controller.signal,
         })

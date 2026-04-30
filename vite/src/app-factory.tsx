@@ -38,7 +38,7 @@ import {
 } from './navigation.ts'
 import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
 import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
-import { isAgentRequest } from './lib/raw-markdown.ts'
+import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
@@ -381,6 +381,7 @@ type ChatRequestBody = {
   messages: ChatRequestMessage[]
   previousMessages?: ModelMessage[]
   currentSlug: string
+  hasSeenNotice: boolean
 }
 
 const TEMPORARY_AI_NOTICE_CODE = 'HOLOCRON_TEMPORARY_AI_MODEL'
@@ -433,6 +434,7 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
     messages,
     currentSlug: value.currentSlug,
     ...(previousMessages ? { previousMessages } : {}),
+    hasSeenNotice: value.hasSeenNotice === true,
   }
 }
 
@@ -486,7 +488,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
   }
 
   function buildMarkdownSource(mdx: string): string {
-    return `> ${buildAgentDocsDirective(site.base)}\n\n${mdx}${POWERED_BY_FOOTER}`
+    return `> ${buildAgentDocsDirective(site.base)}\n\n${stripVisibilityForAgents(mdx)}${POWERED_BY_FOOTER}`
   }
 
   function buildLlmsTxt(origin: string): string {
@@ -1121,9 +1123,6 @@ export async function createHolocronApp(providers: HolocronProviders) {
       const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || defaultGatewayUrl
       const apiKey = process.env.HOLOCRON_API_KEY || ''
       const usesTemporaryModel = !apiKey
-      const hasTemporaryNotice = body.messages.some((message) => (
-        message.parts.some((part) => part.type === 'notice' && (!part.code || part.code === TEMPORARY_AI_NOTICE_CODE))
-      ))
       let textBuffer = ''
       const toolNames = new Map<string, string>()
       const sessionMessages: ModelMessage[] = [
@@ -1133,7 +1132,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
 
       async function* generateParts() {
         if (usesTemporaryModel) {
-          if (!hasTemporaryNotice) {
+          if (!body.hasSeenNotice) {
             yield {
               type: 'notice' as const,
               code: TEMPORARY_AI_NOTICE_CODE,

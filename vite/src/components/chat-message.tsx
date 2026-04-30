@@ -82,10 +82,8 @@ function ChatPartRenderer({
 
   if (part.type === 'text') {
     return (
-      <div style={{ fontSize: '13px' }}>
-        <div className='editorial-prose'>
-          {part.jsx}
-        </div>
+      <div className='flex flex-col gap-(--prose-gap) text-[13px]'>
+        {part.jsx}
       </div>
     )
   }
