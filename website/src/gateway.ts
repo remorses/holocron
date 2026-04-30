@@ -15,6 +15,7 @@ import { getDb, hashApiKey } from './db.ts'
 const AI_GATEWAY_ID = 'holocron'
 
 const ALLOWED_MODELS: Record<string, string> = {
+  'gemma-4-26b': '@cf/google/gemma-4-26b-a4b-it',
   'glm-4.7-flash': '@cf/zai-org/glm-4.7-flash',
   'qwen3-30b': '@cf/qwen/qwen3-30b-a3b-fp8',
   'llama-3.1-8b': '@cf/meta/llama-3.1-8b-instruct-fast',
@@ -22,6 +23,7 @@ const ALLOWED_MODELS: Record<string, string> = {
 }
 
 const DEFAULT_MODEL = 'glm-4.7-flash'
+const TEMPORARY_MODEL = 'gemma-4-26b'
 
 // Monthly request limit per org (free tier). Will be configurable per plan later.
 const MONTHLY_REQUEST_LIMIT = 1000
@@ -42,7 +44,7 @@ function buildCorsHeaders() {
   }
 }
 
-function corsJson(body: Record<string, unknown>, status: number) {
+function corsJson(body: Record<string, string>, status: number) {
   return Response.json(body, { status, headers: buildCorsHeaders() })
 }
 
@@ -50,6 +52,11 @@ function getUsageKey(orgId: string): string {
   const now = new Date()
   const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
   return `usage:${orgId}:${month}`
+}
+
+function cleanToken(value: string | undefined): string | undefined {
+  const token = value?.replace(/\s+/g, '')
+  return token && token !== 'undefined' ? token : undefined
 }
 
 async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string } | null> {
@@ -75,35 +82,38 @@ async function getWorkersAiCompatUrl() {
 
 export const gatewayApp = new Spiceflow()
   .post('/api/ai/v1/chat/completions', async ({ request }) => {
-    // Validate the holo_xxx API key
-    const authResult = await validateApiKey(request.headers.get('authorization'))
-    if (!authResult) {
+    // Validate the holo_xxx API key. Missing keys get a temporary cheap model
+    // so docs previews stay usable, but invalid provided keys still fail.
+    const authHeader = request.headers.get('authorization')
+    const authResult = await validateApiKey(authHeader)
+    if (authHeader && !authResult) {
       return corsJson({ error: 'Missing or invalid API key. Use a holo_xxx key in the Authorization header.' }, 401)
     }
 
     // Check monthly usage in KV
-    const usageKey = getUsageKey(authResult.orgId)
-    const currentUsage = parseInt(await env.USAGE_KV.get(usageKey) || '0', 10)
-    if (currentUsage >= MONTHLY_REQUEST_LIMIT) {
-      return corsJson({ error: 'Monthly request limit exceeded. Upgrade your plan for higher limits.' }, 429)
-    }
+    const usageKey = authResult ? getUsageKey(authResult.orgId) : undefined
+    const currentUsage = usageKey ? parseInt(await env.USAGE_KV.get(usageKey) || '0', 10) : 0
+    if (usageKey && currentUsage >= MONTHLY_REQUEST_LIMIT) return corsJson({ error: 'Monthly request limit exceeded. Upgrade your plan for higher limits.' }, 429)
 
-    const body = await request.json().catch(() => null) as Record<string, unknown> | null
+    const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return corsJson({ error: 'Invalid JSON body' }, 400)
     }
+    const requestedModel = Reflect.get(body, 'model')
 
     const normalizedBody = {
       ...body,
-      model: resolveModel(typeof body.model === 'string' ? body.model : undefined),
+      model: authResult
+        ? resolveModel(typeof requestedModel === 'string' ? requestedModel : undefined)
+        : resolveModel(TEMPORARY_MODEL),
     }
 
-    const upstreamHeaders = new Headers(request.headers)
-    upstreamHeaders.set('authorization', `Bearer ${env.CLOUDFLARE_AI_API_TOKEN}`)
-    upstreamHeaders.set('cf-aig-authorization', `Bearer ${env.AIG_GATEWAY_TOKEN}`)
-    upstreamHeaders.set('content-type', request.headers.get('content-type') || 'application/json')
-    upstreamHeaders.delete('content-length')
-    upstreamHeaders.delete('host')
+    const upstreamHeaders = new Headers()
+    const cloudflareToken = cleanToken(env.CLOUDFLARE_AI_API_TOKEN)
+    const gatewayToken = cleanToken(env.AIG_GATEWAY_TOKEN)
+    if (cloudflareToken) upstreamHeaders.set('authorization', `Bearer ${cloudflareToken}`)
+    if (gatewayToken) upstreamHeaders.set('cf-aig-authorization', `Bearer ${gatewayToken}`)
+    upstreamHeaders.set('content-type', 'application/json')
 
     const upstream = await fetch(await getWorkersAiCompatUrl(), {
       method: 'POST',
@@ -112,8 +122,10 @@ export const gatewayApp = new Spiceflow()
     })
 
     // Increment usage counter (non-blocking, 30-day TTL so old months auto-expire)
-    env.USAGE_KV.put(usageKey, String(currentUsage + 1), { expirationTtl: 60 * 60 * 24 * 35 })
-      .catch(() => {})
+    if (usageKey) {
+      env.USAGE_KV.put(usageKey, String(currentUsage + 1), { expirationTtl: 60 * 60 * 24 * 35 })
+        .catch(() => {})
+    }
 
     const headers = new Headers(upstream.headers)
     for (const [key, value] of Object.entries(buildCorsHeaders())) {

@@ -22,7 +22,7 @@ import {
   type EditorialSection,
 } from './components/layout/editorial-page.tsx'
 import { RenderBannerNodes } from './components/layout/banner.tsx'
-import { SectionHeading } from './components/markdown/typography.tsx'
+import { P, SectionHeading } from './components/markdown/typography.tsx'
 import { slugify } from './lib/toc-tree.ts'
 import { NotFound } from './components/not-found.tsx'
 import {
@@ -368,6 +368,7 @@ function renderMdxPage({
 type ChatRequestPart = {
   type: string
   text?: string
+  code?: string
 }
 
 type ChatRequestMessage = {
@@ -381,6 +382,10 @@ type ChatRequestBody = {
   previousMessages?: ModelMessage[]
   currentSlug: string
 }
+
+const TEMPORARY_AI_NOTICE_CODE = 'HOLOCRON_TEMPORARY_AI_MODEL'
+const DEFAULT_CHAT_MODEL = 'glm-4.7-flash'
+const TEMPORARY_CHAT_MODEL = 'gemma-4-26b'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -407,7 +412,11 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
       if (!isRecord(part) || typeof part.type !== 'string') {
         return []
       }
-      return [{ type: part.type, ...(typeof part.text === 'string' ? { text: part.text } : {}) }]
+      return [{
+        type: part.type,
+        ...(typeof part.text === 'string' ? { text: part.text } : {}),
+        ...(typeof part.code === 'string' ? { code: part.code } : {}),
+      }]
     })
     return [{
       role: message.role,
@@ -1108,22 +1117,16 @@ export async function createHolocronApp(providers: HolocronProviders) {
 
       // Points to holocron.so AI gateway which proxies to CF Workers AI.
       // HOLOCRON_API_KEY (holo_xxx) authenticates the deployed site with the gateway.
-      const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || 'https://holocron.so/api/ai/v1'
+      const requestOrigin = new URL(request.url).origin
+      const defaultGatewayUrl = requestOrigin.endsWith('holocron.so')
+        ? new URL('/api/ai/v1', requestOrigin).toString()
+        : 'https://holocron.so/api/ai/v1'
+      const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || defaultGatewayUrl
       const apiKey = process.env.HOLOCRON_API_KEY || ''
-      const gateway = createOpenAICompatible({
-        name: 'holocron-gateway',
-        baseURL: GATEWAY_URL,
-        apiKey,
-      })
-
-      const result = streamText({
-        model: gateway.chatModel('glm-4.7-flash'),
-        tools: { bash },
-        messages,
-        stopWhen: (event) => event.steps.length >= 30,
-      })
-
-      const uiStream = result.toUIMessageStream()
+      const usesTemporaryModel = !apiKey
+      const hasTemporaryNotice = body.messages.some((message) => (
+        message.parts.some((part) => part.type === 'notice' && (!part.code || part.code === TEMPORARY_AI_NOTICE_CODE))
+      ))
       let textBuffer = ''
       const toolNames = new Map<string, string>()
       const sessionMessages: ModelMessage[] = [
@@ -1132,6 +1135,62 @@ export async function createHolocronApp(providers: HolocronProviders) {
       ]
 
       async function* generateParts() {
+        if (usesTemporaryModel && !hasTemporaryNotice) {
+          yield {
+            type: 'notice' as const,
+            code: TEMPORARY_AI_NOTICE_CODE,
+            title: 'Using a temporary AI model',
+            message: 'This docs site is using Holocron\'s temporary low-cost model. Add a Holocron API key before deploying if you want AI chat to keep working reliably.',
+            command: 'npx @holocron.so/cli keys create --name production',
+          }
+
+          const response = await fetch(`${GATEWAY_URL.replace(/\/$/, '')}/chat/completions`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ model: TEMPORARY_CHAT_MODEL, messages }),
+          })
+          let payload: unknown
+          try {
+            payload = await response.json()
+          } catch {
+            payload = undefined
+          }
+          const choices = isRecord(payload) && Array.isArray(payload.choices) ? payload.choices : []
+          const firstChoice = choices.find(isRecord)
+          const message = isRecord(firstChoice?.message) ? firstChoice.message : undefined
+          const text = typeof message?.content === 'string' ? message.content : ''
+
+          if (!response.ok || !text.trim()) {
+            yield { type: 'tool-result' as const, toolCallId: 'temporary-ai', toolName: 'temporary-ai', output: '', error: 'Temporary AI model is unavailable. Add HOLOCRON_API_KEY to keep AI chat working reliably.' }
+            return
+          }
+
+          let jsx: React.ReactNode
+          try {
+            const mdast = mdxParse(text)
+            jsx = <ChatRenderNodes markdown={text} nodes={mdast.children} />
+          } catch {
+            jsx = <P className='whitespace-pre-wrap'>{text}</P>
+          }
+          yield { type: 'text' as const, jsx, text }
+          sessionMessages.push({ role: 'assistant', content: text })
+          yield { type: 'session' as const, messages: [...sessionMessages] }
+          return
+        }
+
+        const gateway = createOpenAICompatible({
+          name: 'holocron-gateway',
+          baseURL: GATEWAY_URL,
+          apiKey,
+        })
+        const result = streamText({
+          model: gateway.chatModel(DEFAULT_CHAT_MODEL),
+          tools: { bash },
+          messages,
+          stopWhen: (event) => event.steps.length >= 30,
+        })
+        const uiStream = result.toUIMessageStream()
+
         for await (const chunk of uiStream) {
           if (chunk.type === 'text-delta') {
             textBuffer += chunk.delta
@@ -1140,13 +1199,18 @@ export async function createHolocronApp(providers: HolocronProviders) {
 
           if (chunk.type === 'text-end') {
             if (textBuffer.trim()) {
-              const mdast = mdxParse(textBuffer)
-              const jsx = (
-                <ChatRenderNodes
-                  markdown={textBuffer}
-                  nodes={mdast.children}
-                />
-              )
+              let jsx: React.ReactNode
+              try {
+                const mdast = mdxParse(textBuffer)
+                jsx = (
+                  <ChatRenderNodes
+                    markdown={textBuffer}
+                    nodes={mdast.children}
+                  />
+                )
+              } catch {
+                jsx = <P className='whitespace-pre-wrap'>{textBuffer}</P>
+              }
               yield { type: 'text' as const, jsx, text: textBuffer }
               sessionMessages.push({ role: 'assistant', content: textBuffer })
               yield { type: 'session' as const, messages: [...sessionMessages] }

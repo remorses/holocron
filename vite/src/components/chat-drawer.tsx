@@ -94,9 +94,13 @@ function ChatDrawerInner() {
         })
 
         if (!response.ok) {
-          throw new Error(
-            `Chat request failed: ${response.status} ${response.statusText}`,
-          )
+          const errorBody = await response.json().catch(() => undefined)
+          chatState.setState({
+            errorMessage: typeof errorBody?.error === 'string'
+              ? errorBody.error
+              : `Chat request failed: ${response.status} ${response.statusText}`,
+          })
+          return
         }
 
         const decoded = await decodeFederationPayload<{
@@ -309,15 +313,7 @@ function ChatDrawerInner() {
           })() && <ChatLoadingDots />}
 
           {errorMessage && (
-            <div
-              style={{
-                color: 'var(--destructive)',
-                fontSize: '12px',
-                padding: '8px 0',
-              }}
-            >
-              Error: {errorMessage}
-            </div>
+            <ChatErrorMessage message={errorMessage} />
           )}
 
           <div ref={messagesEndRef} />
@@ -349,6 +345,20 @@ function ChatDrawerInner() {
       </div>
     </div>,
     portalTarget,
+  )
+}
+
+function ChatErrorMessage({ message }: { message: string }) {
+  return (
+    <div
+      style={{
+        color: 'var(--destructive)',
+        fontSize: '12px',
+        padding: '8px 0',
+      }}
+    >
+      Error: {message}
+    </div>
   )
 }
 

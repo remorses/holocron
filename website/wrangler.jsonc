@@ -21,6 +21,9 @@
   "kv_namespaces": [
     { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" }
   ],
+  "routes": [
+    { "pattern": "holocron.so/*", "zone_name": "holocron.so" }
+  ],
   "secrets": {
     "required": [
       "BETTER_AUTH_SECRET",

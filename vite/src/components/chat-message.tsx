@@ -76,6 +76,10 @@ function ChatPartRenderer({
     return <ChatUserMessage text={part.text} />
   }
 
+  if (part.type === 'notice') {
+    return <ChatNotice part={part} />
+  }
+
   if (part.type === 'text') {
     return (
       <div style={{ margin: '0 24px', fontSize: '13px' }}>
@@ -95,6 +99,53 @@ function ChatPartRenderer({
   }
 
   return null
+}
+
+function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        border: '1px solid color-mix(in srgb, var(--yellow) 30%, transparent)',
+        borderRadius: '18px',
+        background: 'color-mix(in srgb, var(--yellow) 8%, var(--background))',
+        padding: '14px',
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 650, color: 'var(--foreground)' }}>
+          {part.title}
+        </div>
+        <div style={{ fontSize: '12px', lineHeight: 1.55, color: 'var(--muted-foreground)' }}>
+          {part.message}
+        </div>
+      </div>
+
+      {part.command && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--foreground)' }}>
+            Get your API key
+          </div>
+          <code className='code-font-size' style={{
+            display: 'block',
+            borderRadius: '10px',
+            background: 'color-mix(in srgb, var(--foreground) 6%, transparent)',
+            color: 'var(--foreground)',
+            fontFamily: 'var(--font-code)',
+            padding: '10px 12px',
+            whiteSpace: 'pre-wrap',
+          }}>
+            {part.command}
+          </code>
+          <div style={{ fontSize: '12px', lineHeight: 1.5, color: 'var(--muted-foreground)' }}>
+            Deploy with the generated key as <code className='code-font-size'>HOLOCRON_API_KEY</code>.
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Tool call started — animated PieLoader or static ◆ ──────────────
