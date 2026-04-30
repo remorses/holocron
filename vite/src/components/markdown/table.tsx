@@ -1,8 +1,7 @@
 'use client'
 
 /**
- * Editorial table primitives for native markdown tables, plus the bespoke
- * ComparisonTable used by some docs pages.
+ * Editorial table primitives for native markdown tables.
  */
 
 import type { ComponentProps } from 'react'
@@ -84,111 +83,5 @@ export function TableCaption({ className, ...props }: ComponentProps<'caption'>)
       className={classNames('px-3 py-3 text-sm text-muted-foreground', className)}
       {...props}
     />
-  )
-}
-
-export function ComparisonTable({
-  title,
-  headers,
-  rows,
-}: {
-  title?: string
-  headers: [string, string, string]
-  rows: Array<[string, string, string]>
-}) {
-  return (
-    <div className='w-full max-w-full overflow-x-auto'>
-      {title && (
-        <div
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'var(--type-table-size)',
-            fontWeight: 'var(--weight-regular)',
-            color: 'var(--muted-foreground)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.01em',
-            padding: '0 0 6px',
-          }}
-        >
-          {title}
-        </div>
-      )}
-      <table
-        className='w-full'
-        style={{
-          borderSpacing: 0,
-          borderCollapse: 'collapse',
-        }}
-      >
-        <thead>
-          <tr>
-            {headers.map((header) => {
-              return (
-                <th
-                  key={header}
-                  className='text-left'
-                  style={{
-                    padding: '4px 12px 4px 0',
-                    fontSize: 'var(--type-table-size)',
-                    fontWeight: 'var(--weight-regular)',
-                    fontFamily: 'var(--font-sans)',
-                    color: 'var(--muted-foreground)',
-                    borderBottom: '1px solid var(--border)',
-                  }}
-                >
-                  {header}
-                </th>
-              )
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(([feature, them, us]) => {
-            return (
-              <tr key={feature}>
-                <td
-                  style={{
-                    padding: '4px 12px 4px 0',
-                    fontSize: 'var(--type-table-size)',
-                    fontWeight: 'var(--weight-prose)',
-                    fontFamily: 'var(--font-code)',
-                    color: 'var(--foreground)',
-                    borderBottom: '1px solid var(--border)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {feature}
-                </td>
-                <td
-                  style={{
-                    padding: '4px 12px 4px 0',
-                    fontSize: 'var(--type-table-size)',
-                    fontWeight: 'var(--weight-prose)',
-                    fontFamily: 'var(--font-code)',
-                    color: 'var(--foreground)',
-                    borderBottom: '1px solid var(--border)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {them}
-                </td>
-                <td
-                  style={{
-                    padding: '4px 12px 4px 0',
-                    fontSize: 'var(--type-table-size)',
-                    fontWeight: 'var(--weight-prose)',
-                    fontFamily: 'var(--font-code)',
-                    color: 'var(--foreground)',
-                    borderBottom: '1px solid var(--border)',
-                  }}
-                >
-                  {us}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
   )
 }

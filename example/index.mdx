@@ -33,7 +33,7 @@ logins, extensions, and cookies already there. No headless instance, no bot dete
   />
 </Bleed>
 
-<Caption>Your existing Chrome session. Extensions, logins, cookies — all there.</Caption>
+*Your existing Chrome session. Extensions, logins, cookies — all there.*
 
 Other browser MCPs either **spawn a fresh Chrome** or give agents a fixed set of tools. New Chrome
 means no logins, no extensions, instant bot detection, and double the memory. Fixed tools mean the agent
@@ -89,7 +89,7 @@ playwriter -e "snapshot({ page })"
 playwriter -e "page.locator('aria-ref=e5').click()"
 ```
 
-<Caption>Extension icon green = connected. Gray = not attached to this tab.</Caption>
+*Extension icon green = connected. Gray = not attached to this tab.*
 
 ## How it works
 
@@ -189,7 +189,7 @@ Labels are **color-coded by element type**: yellow for links, orange for buttons
 inputs, pink for checkboxes, peach for sliders, salmon for menus, amber for tabs. The ref system is shared
 with `snapshot()`, so you can switch between text and visual modes freely.
 
-<Caption>Vimium-style labels. Screenshot + snapshot in one call.</Caption>
+*Vimium-style labels. Screenshot + snapshot in one call.*
 
 ## Sessions
 
@@ -244,7 +244,7 @@ Edits are **in-memory** and persist until the page reloads. Useful for toggling 
 patching broken code, or testing quick fixes without touching source files. The editor also supports
 `grep` across all loaded scripts.
 
-<Caption>Breakpoints, stepping, variable inspection — from the CLI.</Caption>
+*Breakpoints, stepping, variable inspection — from the CLI.*
 
 ## Network interception
 
@@ -290,76 +290,66 @@ Unlike `getDisplayMedia`, this approach
 the page. You can also check recording status with `isRecording` or cancel without saving with
 `cancelRecording`.
 
-<Caption>Native tab capture. 30–60fps. Survives navigation.</Caption>
+*Native tab capture. 30–60fps. Survives navigation.*
 
 ## Comparison
 
 Why use this over the alternatives.
 
-<ComparisonTable
-  title='vs Playwright MCP'
-  headers={['', 'Playwright MCP', 'Playwriter']}
-  rows={[
-    ['Browser', 'Spawns new Chrome', 'Uses your Chrome'],
-    ['Extensions', 'None', 'Your existing ones'],
-    ['Login state', 'Fresh', 'Already logged in'],
-    ['Bot detection', 'Always detected', 'Can bypass'],
-    ['Collaboration', 'Separate window', 'Same browser as user'],
-  ]}
-/>
+### vs Playwright MCP
 
-<ComparisonTable
-  title='vs Playwright CLI'
-  headers={['', 'Playwright CLI', 'Playwriter']}
-  rows={[
-    ['Browser', 'Spawns new browser', 'Uses your Chrome'],
-    ['Login state', 'Fresh', 'Already logged in'],
-    ['Extensions', 'None', 'Your existing ones'],
-    ['Captchas', 'Always blocked', 'Bypass (disconnect extension)'],
-    ['Collaboration', 'Separate window', 'Same browser as user'],
-    ['Capabilities', 'Limited command set', 'Anything Playwright can do'],
-    ['Raw CDP access', 'No', 'Yes'],
-    ['Video recording', 'File-based tracing', 'Native tab capture (30–60fps)'],
-  ]}
-/>
+| Feature | Playwright MCP | Playwriter |
+| --- | --- | --- |
+| Browser | Spawns new Chrome | Uses your Chrome |
+| Extensions | None | Your existing ones |
+| Login state | Fresh | Already logged in |
+| Bot detection | Always detected | Can bypass |
+| Collaboration | Separate window | Same browser as user |
 
-<ComparisonTable
-  title='vs BrowserMCP'
-  headers={['', 'BrowserMCP', 'Playwriter']}
-  rows={[
-    ['Tools', '12+ dedicated tools', '1 execute tool'],
-    ['API', 'Limited actions', 'Full Playwright'],
-    ['Context usage', 'High (tool schemas)', 'Low'],
-    ['LLM knowledge', 'Must learn tools', 'Already knows Playwright'],
-  ]}
-/>
+### vs Playwright CLI
 
-<ComparisonTable
-  title='vs Claude Browser Extension'
-  headers={['', 'Claude Extension', 'Playwriter']}
-  rows={[
-    ['Agent support', 'Claude only', 'Any MCP client'],
-    ['Windows WSL', 'No', 'Yes'],
-    ['Context method', 'Screenshots (100KB+)', 'A11y snapshots (5–20KB)'],
-    ['Playwright API', 'No', 'Full'],
-    ['Debugger', 'No', 'Yes'],
-    ['Live code editing', 'No', 'Yes'],
-    ['Network interception', 'Limited', 'Full'],
-    ['Raw CDP access', 'No', 'Yes'],
-  ]}
-/>
+| Feature | Playwright CLI | Playwriter |
+| --- | --- | --- |
+| Browser | Spawns new browser | Uses your Chrome |
+| Login state | Fresh | Already logged in |
+| Extensions | None | Your existing ones |
+| Captchas | Always blocked | Bypass (disconnect extension) |
+| Collaboration | Separate window | Same browser as user |
+| Capabilities | Limited command set | Anything Playwright can do |
+| Raw CDP access | No | Yes |
+| Video recording | File-based tracing | Native tab capture (30–60fps) |
 
-<ComparisonTable
-  title='vs Built-in Chrome CDP (--remote-debugging-port)'
-  headers={['', 'Built-in CDP', 'Playwriter']}
-  rows={[
-    ['Setup', 'Restart Chrome with special flags', 'Click extension icon'],
-    ['Confirmation dialog', 'Automation infobar agents can\'t dismiss', 'No blocking dialog'],
-    ['Autonomous agents', 'Interrupted by debug banners', 'Fully autonomous'],
-    ['User disruption', 'Banners appear mid-workflow', 'Silent — no interruption'],
-    ['Existing session', 'Must relaunch Chrome (lose state)', 'Uses your running browser'],
-  ]}
-/>
+### vs BrowserMCP
+
+| Feature | BrowserMCP | Playwriter |
+| --- | --- | --- |
+| Tools | 12+ dedicated tools | 1 execute tool |
+| API | Limited actions | Full Playwright |
+| Context usage | High (tool schemas) | Low |
+| LLM knowledge | Must learn tools | Already knows Playwright |
+
+### vs Claude Browser Extension
+
+| Feature | Claude Extension | Playwriter |
+| --- | --- | --- |
+| Agent support | Claude only | Any MCP client |
+| Windows WSL | No | Yes |
+| Context method | Screenshots (100KB+) | A11y snapshots (5–20KB) |
+| Playwright API | No | Full |
+| Debugger | No | Yes |
+| Live code editing | No | Yes |
+| Network interception | Limited | Full |
+| Raw CDP access | No | Yes |
+
+### vs Built-in Chrome CDP (`--remote-debugging-port`)
+
+| Feature | Built-in CDP | Playwriter |
+| --- | --- | --- |
+| Setup | Restart Chrome with special flags | Click extension icon |
+| Confirmation dialog | Automation infobar agents can't dismiss | No blocking dialog |
+| Autonomous agents | Interrupted by debug banners | Fully autonomous |
+| User disruption | Banners appear mid-workflow | Silent — no interruption |
+| Existing session | Must relaunch Chrome (lose state) | Uses your running browser |
 
 ## Remote access
 

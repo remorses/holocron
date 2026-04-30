@@ -111,21 +111,6 @@ export function P({ children, className = '' }: { children: React.ReactNode; cla
   )
 }
 
-export function Caption({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className='editorial-prose'
-      style={{
-        fontSize: 'var(--type-small-size)',
-        textAlign: 'center',
-        color: 'var(--muted-foreground)',
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
 export function A({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a

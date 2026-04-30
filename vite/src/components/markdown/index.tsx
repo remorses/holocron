@@ -18,7 +18,6 @@ export {
   Heading,
   SectionHeading,
   P,
-  Caption,
   A,
   Code,
   type HeadingLevel,
@@ -36,7 +35,6 @@ export {
 export { CodeBlock } from './code-block.tsx'
 export { Image, LazyVideo, ChartPlaceholder } from './image.tsx'
 export {
-  ComparisonTable,
   Table,
   TableHeader,
   TableBody,
