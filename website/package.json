@@ -8,6 +8,7 @@
     "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
     "build": "pnpm generate-openapi && vite build",
     "start": "node dist/rsc/index.js",
+    "test:preview-ai-chat": "tsx scripts/test-preview-ai-chat.ts",
     "types": "wrangler types",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",

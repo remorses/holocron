@@ -385,7 +385,7 @@ type ChatRequestBody = {
 
 const TEMPORARY_AI_NOTICE_CODE = 'HOLOCRON_TEMPORARY_AI_MODEL'
 const DEFAULT_CHAT_MODEL = 'glm-4.7-flash'
-const TEMPORARY_CHAT_MODEL = 'gemma-4-26b'
+const TEMPORARY_CHAT_MODEL = 'llama-3.1-8b'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -1117,10 +1117,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
 
       // Points to holocron.so AI gateway which proxies to CF Workers AI.
       // HOLOCRON_API_KEY (holo_xxx) authenticates the deployed site with the gateway.
-      const requestOrigin = new URL(request.url).origin
-      const defaultGatewayUrl = requestOrigin.endsWith('holocron.so')
-        ? new URL('/api/ai/v1', requestOrigin).toString()
-        : 'https://holocron.so/api/ai/v1'
+      const defaultGatewayUrl = 'https://preview.holocron.so/api/ai/v1'
       const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || defaultGatewayUrl
       const apiKey = process.env.HOLOCRON_API_KEY || ''
       const usesTemporaryModel = !apiKey
@@ -1135,19 +1132,21 @@ export async function createHolocronApp(providers: HolocronProviders) {
       ]
 
       async function* generateParts() {
-        if (usesTemporaryModel && !hasTemporaryNotice) {
-          yield {
-            type: 'notice' as const,
-            code: TEMPORARY_AI_NOTICE_CODE,
-            title: 'Temporary AI model',
-            message: 'Add HOLOCRON_API_KEY before deploying for reliable AI chat.',
-            command: 'npx @holocron.so/cli keys create --name production',
+        if (usesTemporaryModel) {
+          if (!hasTemporaryNotice) {
+            yield {
+              type: 'notice' as const,
+              code: TEMPORARY_AI_NOTICE_CODE,
+              title: 'Temporary AI model',
+              message: 'Add HOLOCRON_API_KEY before deploying for reliable AI chat.',
+              command: 'npx @holocron.so/cli keys create --name production',
+            }
           }
 
           const response = await fetch(`${GATEWAY_URL.replace(/\/$/, '')}/chat/completions`, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ model: TEMPORARY_CHAT_MODEL, messages }),
+            body: JSON.stringify({ model: TEMPORARY_CHAT_MODEL, messages, max_tokens: 700 }),
           })
           let payload: unknown
           try {
@@ -1161,7 +1160,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
           const text = typeof message?.content === 'string' ? message.content : ''
 
           if (!response.ok || !text.trim()) {
-            yield { type: 'tool-result' as const, toolCallId: 'temporary-ai', toolName: 'temporary-ai', output: '', error: 'Temporary AI model is unavailable. Add HOLOCRON_API_KEY to keep AI chat working reliably.' }
+            yield { type: 'tool-result' as const, toolCallId: 'temporary-ai', toolName: 'temporary-ai', output: '', error: `Temporary AI model is unavailable (${response.status}). Add HOLOCRON_API_KEY to keep AI chat working reliably.` }
             return
           }
 

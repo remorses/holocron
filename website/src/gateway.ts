@@ -1,5 +1,5 @@
-// Thin AI Gateway proxy — forwards OpenAI-compatible chat requests to
-// Cloudflare AI Gateway's Workers AI endpoint with minimal mutation.
+// Thin AI chat proxy — forwards OpenAI-compatible chat requests to
+// Cloudflare Workers AI's OpenAI-compatible endpoint with minimal mutation.
 //
 // Validates holo_xxx API keys from the Authorization header against D1.
 // Tracks per-org monthly usage in KV (key: usage:<orgId>:<YYYY-MM>).
@@ -12,8 +12,6 @@ import { Spiceflow } from 'spiceflow'
 import { env } from 'cloudflare:workers'
 import { getDb, hashApiKey } from './db.ts'
 
-const AI_GATEWAY_ID = 'holocron'
-
 const ALLOWED_MODELS: Record<string, string> = {
   'gemma-4-26b': '@cf/google/gemma-4-26b-a4b-it',
   'glm-4.7-flash': '@cf/zai-org/glm-4.7-flash',
@@ -23,17 +21,18 @@ const ALLOWED_MODELS: Record<string, string> = {
 }
 
 const DEFAULT_MODEL = 'glm-4.7-flash'
-const TEMPORARY_MODEL = 'gemma-4-26b'
+const TEMPORARY_MODEL = 'llama-3.1-8b'
 
 // Monthly request limit per org (free tier). Will be configurable per plan later.
 const MONTHLY_REQUEST_LIMIT = 1000
 
 function resolveModel(requested?: string): string {
-  if (!requested) return ALLOWED_MODELS[DEFAULT_MODEL]!
-  if (ALLOWED_MODELS[requested]) return ALLOWED_MODELS[requested]!
-  const fullId = Object.values(ALLOWED_MODELS).find((id) => id === requested)
-  if (fullId) return fullId
-  return ALLOWED_MODELS[DEFAULT_MODEL]!
+  const model = !requested
+    ? ALLOWED_MODELS[DEFAULT_MODEL]!
+    : ALLOWED_MODELS[requested]
+      ?? Object.values(ALLOWED_MODELS).find((id) => id === requested)
+      ?? ALLOWED_MODELS[DEFAULT_MODEL]!
+  return model
 }
 
 function buildCorsHeaders() {
@@ -54,11 +53,6 @@ function getUsageKey(orgId: string): string {
   return `usage:${orgId}:${month}`
 }
 
-function cleanToken(value: string | undefined): string | undefined {
-  const token = value?.replace(/\s+/g, '')
-  return token && token !== 'undefined' ? token : undefined
-}
-
 async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string } | null> {
   if (!authHeader) return null
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
@@ -73,11 +67,6 @@ async function validateApiKey(authHeader: string | null): Promise<{ orgId: strin
   if (!found) return null
 
   return { orgId: found.orgId, keyId: found.id }
-}
-
-async function getWorkersAiCompatUrl() {
-  const providerUrl = await env.AI.gateway(AI_GATEWAY_ID).getUrl('workers-ai')
-  return `${providerUrl.replace(/\/$/, '')}/v1/chat/completions`
 }
 
 export const gatewayApp = new Spiceflow()
@@ -108,48 +97,11 @@ export const gatewayApp = new Spiceflow()
         : resolveModel(TEMPORARY_MODEL),
     }
 
-    if (!authResult) {
-      const messages = Reflect.get(body, 'messages')
-      const chatMessages = Array.isArray(messages) ? messages : []
-      const prompt = chatMessages
-        .filter((message) => message && typeof message === 'object' && Reflect.get(message, 'role') !== 'system')
-        .slice(-4)
-        .map((message) => {
-          const role = Reflect.get(message, 'role')
-          const content = Reflect.get(message, 'content')
-          return `${typeof role === 'string' ? role : 'user'}: ${typeof content === 'string' ? content : ''}`
-        })
-        .filter(Boolean)
-        .join('\n')
-      const temporaryModel = resolveModel(TEMPORARY_MODEL) as keyof AiModels
-      const result = await env.AI.run(temporaryModel, { prompt })
-      const responseText = typeof result === 'object' && result ? Reflect.get(result, 'response') : result
-      const choices = typeof result === 'object' && result ? Reflect.get(result, 'choices') : undefined
-      const firstChoice = Array.isArray(choices) ? choices[0] : undefined
-      const choiceText = firstChoice && typeof firstChoice === 'object' ? Reflect.get(firstChoice, 'text') : undefined
-      const content = typeof responseText === 'string'
-        ? responseText
-        : typeof choiceText === 'string'
-          ? choiceText
-          : ''
-
-      return Response.json({
-        id: `chatcmpl_${crypto.randomUUID()}`,
-        object: 'chat.completion',
-        created: Math.floor(Date.now() / 1000),
-        model: normalizedBody.model,
-        choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }],
-      }, { headers: buildCorsHeaders() })
-    }
-
     const upstreamHeaders = new Headers()
-    const cloudflareToken = cleanToken(env.CLOUDFLARE_AI_API_TOKEN)
-    const gatewayToken = cleanToken(env.AIG_GATEWAY_TOKEN)
-    if (cloudflareToken) upstreamHeaders.set('authorization', `Bearer ${cloudflareToken}`)
-    if (gatewayToken) upstreamHeaders.set('cf-aig-authorization', `Bearer ${gatewayToken}`)
+    upstreamHeaders.set('authorization', `Bearer ${env.CLOUDFLARE_AI_API_TOKEN}`)
     upstreamHeaders.set('content-type', 'application/json')
 
-    const upstream = await fetch(await getWorkersAiCompatUrl(), {
+    const upstream = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1/chat/completions`, {
       method: 'POST',
       headers: upstreamHeaders,
       body: JSON.stringify(normalizedBody),

@@ -37,3 +37,7 @@ declare module 'virtual:holocron-modules' {
    *  E.g. './pages/' or './' when pagesDir is the project root. */
   export const pagesDirPrefix: string
 }
+
+declare module 'cloudflare:workers' {
+  export const env: any
+}

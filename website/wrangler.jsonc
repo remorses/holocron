@@ -2,14 +2,11 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "holocron-website",
   "main": "spiceflow/cloudflare-entrypoint",
+  "workers_dev": true,
   "compatibility_date": "2026-04-14",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 
   // ── Production (top-level) ──────────────────────────────────────────
-  "ai": {
-    "binding": "AI",
-    "remote": true
-  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -21,6 +18,10 @@
   "kv_namespaces": [
     { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" }
   ],
+  "vars": {
+    "CLOUDFLARE_ACCOUNT_ID": "103e73569e2f6d4aea0fb679ceb8709b",
+    "HOLOCRON_AI_GATEWAY_URL": "https://holocron.so/api/ai/v1"
+  },
   "routes": [
     { "pattern": "holocron.so/*", "zone_name": "holocron.so" }
   ],
@@ -30,6 +31,7 @@
       "BETTER_AUTH_URL",
       "GOOGLE_CLIENT_ID",
       "GOOGLE_CLIENT_SECRET",
+      "CF_API_TOKEN",
       "CLOUDFLARE_AI_API_TOKEN",
       "AIG_GATEWAY_TOKEN"
     ]
@@ -40,13 +42,10 @@
   "env": {
     "preview": {
       "name": "holocron-website-preview",
+      "workers_dev": true,
       "routes": [
         { "pattern": "preview.holocron.so", "custom_domain": true }
       ],
-      "ai": {
-        "binding": "AI",
-        "remote": true
-      },
       "d1_databases": [
         {
           "binding": "DB",
@@ -58,12 +57,17 @@
       "kv_namespaces": [
         { "binding": "USAGE_KV", "id": "36b3209caddf42c79019b4c93d12b536" }
       ],
+      "vars": {
+        "CLOUDFLARE_ACCOUNT_ID": "103e73569e2f6d4aea0fb679ceb8709b",
+        "HOLOCRON_AI_GATEWAY_URL": "https://preview.holocron.so/api/ai/v1"
+      },
       "secrets": {
         "required": [
           "BETTER_AUTH_SECRET",
           "BETTER_AUTH_URL",
           "GOOGLE_CLIENT_ID",
           "GOOGLE_CLIENT_SECRET",
+          // "CF_API_TOKEN", // CF_API_TOKEN MUST NOT BE SET. it will conflict with wrangler and not let you deploy
           "CLOUDFLARE_AI_API_TOKEN",
           "AIG_GATEWAY_TOKEN"
         ]
