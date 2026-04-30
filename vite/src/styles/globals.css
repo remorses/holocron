@@ -241,11 +241,11 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--foreground) 20%, transparent) transparent;
   }
   html {
     scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--foreground) 20%, transparent) transparent;
   }
   body {
     @apply bg-background text-foreground;
@@ -269,9 +269,9 @@
 
 @layer holocron {
   /* Thin scrollbars with transparent tracks.
-      scrollbar-width: thin → Firefox uses a narrow track (~6px, matches our webkit width).
-      scrollbar-gutter: stable → reserves scrollbar space even when content doesn't overflow,
-      preventing horizontal layout shift when a scrollbar appears/disappears. */
+      Firefox gets `scrollbar-width: thin` from the base `*` rule above;
+      webkit browsers use the 6px width here. Root `html` keeps a stable
+      gutter to prevent page-wide horizontal layout shift. */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -294,13 +294,10 @@
     background: color-mix(in srgb, var(--foreground) 32%, transparent);
   }
 
-  /* Stable scrollbar gutter for scrollable panels (sidebar, aside).
-     Prevents content from shifting when scrollbar appears/disappears.
-     scrollbar-width: thin matches our 6px webkit scrollbar. */
+  /* Stable scrollbar gutter only for scroll containers whose content should not
+     shift when overflow appears, like the left navigation tree. */
   .scrollbar-stable {
     scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--foreground) 20%, transparent) transparent;
   }
 
   /* Hide scrollbars while keeping scroll functionality */

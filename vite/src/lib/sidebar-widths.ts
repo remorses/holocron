@@ -33,7 +33,7 @@ import type { HolocronCSSProperties } from './css-vars.ts'
 export const GRID_TOKENS = {
   '--grid-nav-width': 230,
   '--grid-sidebar-width': 230,
-  '--grid-gap': 50,
+  '--grid-gap': 60,
   '--grid-max-width': 1200,
 } as const
 
@@ -70,7 +70,7 @@ export function computeSidebarWidthFromAsideNodes(
     ) {
       return
     }
-    const name = (node as any).name
+    const name = node.name
     if (!name) return
     const width = COMPONENT_SIDEBAR_WIDTHS[name]
     if (typeof width === 'number' && width > maxWidth) {

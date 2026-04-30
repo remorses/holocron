@@ -335,7 +335,7 @@ export function EditorialPage({
                         column in grid-cols-1. */}
                     {hasSharedAside && (
                       <div
-                        className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto scrollbar-stable`}
+                        className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
                         style={sharedAsideStyle}
                       >
                         {section.aside}

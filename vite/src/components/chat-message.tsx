@@ -50,7 +50,7 @@ export function ChatAssistantMessage({
 }) {
   if (parts.length === 0) return null
   return (
-    <div className='text-[13px]' style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className='text-[13px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {parts.map((part, i) => {
         // Add extra space before user messages (conversation turn boundary)
         const isUserTurn = part.type === 'user-message'
@@ -82,7 +82,7 @@ function ChatPartRenderer({
 
   if (part.type === 'text') {
     return (
-      <div style={{ margin: '0 24px', fontSize: '13px' }}>
+      <div style={{ fontSize: '13px' }}>
         <div className='editorial-prose'>
           {part.jsx}
         </div>
@@ -103,7 +103,7 @@ function ChatPartRenderer({
 
 function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
   return (
-    <div className='mx-6'>
+    <div>
       <div
         className='no-bleed flex items-start gap-2.5 rounded-[10px] bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))] p-2 text-foreground'
       >
