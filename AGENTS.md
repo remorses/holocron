@@ -4,6 +4,8 @@ Drop-in Mintlify replacement as a Vite plugin. Users point their `vite.config.ts
 
 Read the spiceflow skill before editing any code in this package. Run `playwriter skill` or load the spiceflow skill to get the latest API reference.
 
+Read the tailwind skill before adding JSX or updating JSX. Use Tailwind utilities for JSX styling by default instead of inline styles, unless the value must be dynamic at runtime.
+
 Read the Emil design-engineering skill before adding or changing animations/transitions in this package: https://raw.githubusercontent.com/emilkowalski/skill/refs/heads/main/skills/emil-design-eng/SKILL.md
 
 ## Config

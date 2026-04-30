@@ -4,7 +4,7 @@ The marketing site and AI gateway for holocron. Runs as a Cloudflare Worker with
 
 ## AI Gateway
 
-The `/api/ai/v1/chat/completions` route proxies AI requests through Cloudflare Workers AI via the native `env.AI` binding, routed through CF AI Gateway (`holocron`) for logging, analytics, and token tracking.
+The `/api/ai/v1/chat/completions` route proxies AI requests through Cloudflare Workers AI's OpenAI-compatible REST endpoint. The Worker authenticates with `CLOUDFLARE_AI_API_TOKEN` and uses `CLOUDFLARE_ACCOUNT_ID` to build the upstream URL.
 
 Full CF AI Gateway docs: `curl https://developers.cloudflare.com/ai-gateway/llms-full.txt`
 Full CF Workers AI docs: `curl https://developers.cloudflare.com/workers-ai/llms-full.txt`
