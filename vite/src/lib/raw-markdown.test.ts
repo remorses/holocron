@@ -118,4 +118,55 @@ curl -X POST https://api.example.com/v1/accounts
       "
     `)
   })
+
+  test('preserves YAML frontmatter when transforming Visibility blocks', () => {
+    const input = `---
+title: API Reference
+description: How to use the API
+---
+
+# API Reference
+
+<Visibility for="humans">
+Click the button to get started.
+</Visibility>
+
+<Visibility for="agents">
+Call \`POST /v1/start\` to begin.
+</Visibility>`
+
+    const result = stripVisibilityForAgents(input)
+    expect(result).toContain('---\ntitle: API Reference')
+    expect(result).toContain('description: How to use the API\n---')
+    expect(result).not.toContain('Click the button')
+    expect(result).toContain('Call `POST /v1/start` to begin.')
+  })
+
+  test('handles expression syntax for={"agents"}', () => {
+    const input = `<Visibility for={"agents"}>
+Agent-only content here.
+</Visibility>`
+
+    expect(stripVisibilityForAgents(input)).toMatchInlineSnapshot(`
+      "Agent-only content here.
+      "
+    `)
+  })
+
+  test('handles expression syntax for={"humans"}', () => {
+    const input = `# Page
+
+<Visibility for={"humans"}>
+Human-only content.
+</Visibility>
+
+Rest of page.`
+
+    expect(stripVisibilityForAgents(input)).toMatchInlineSnapshot(`
+      "# Page
+
+      Rest of page.
+      "
+    `)
+  })
 })
