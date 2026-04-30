@@ -103,46 +103,25 @@ function ChatPartRenderer({
 
 function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
   return (
-    <div
-      style={{
-        margin: '0 24px',
-      }}
-    >
+    <div className='mx-6'>
       <div
-        className='no-bleed'
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '10px',
-          borderRadius: '10px',
-          background: 'color-mix(in srgb, var(--background) 93%, var(--yellow))',
-          color: 'var(--foreground)',
-          padding: '8px',
-        }}
+        className='no-bleed flex items-start gap-2.5 rounded-[10px] bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))] p-2 text-foreground'
       >
-        <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' style={{ flexShrink: 0, marginTop: 2, color: 'var(--yellow)' }}>
+        <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' className='mt-0.5 size-4 shrink-0 text-yellow'>
           <path d='M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575L6.457 1.047ZM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5Zm1 7a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z' />
         </svg>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, flex: 1 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 650, color: 'var(--foreground)' }}>
+        <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+          <div className='flex flex-col gap-0.5'>
+            <div className='text-xs font-semibold text-foreground'>
               {part.title}
             </div>
-            <div style={{ fontSize: '12px', lineHeight: 1.45, color: 'var(--muted-foreground)' }}>
+            <div className='text-xs leading-[1.45] text-muted-foreground'>
               {part.message}
             </div>
           </div>
 
           {part.command && (
-            <code className='code-font-size' style={{
-              display: 'block',
-              borderRadius: '7px',
-              background: 'color-mix(in srgb, var(--foreground) 6%, transparent)',
-              color: 'var(--foreground)',
-              fontFamily: 'var(--font-code)',
-              padding: '6px 8px',
-              whiteSpace: 'pre-wrap',
-            }}>
+            <code className='code-font-size block whitespace-pre-wrap rounded-[7px] bg-foreground/6 px-2 py-1.5 font-mono text-foreground'>
               {part.command}
             </code>
           )}
