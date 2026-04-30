@@ -188,7 +188,7 @@ export function EditorialPage({
               <div className='flex items-center gap-3'>
                 {headerLinks.map((link) => {
                   return (
-                    <a
+                    <Link
                       key={link.href}
                       href={link.href}
                       target='_blank'
@@ -200,7 +200,7 @@ export function EditorialPage({
                       {!link.icon && (
                         <span className='text-xs'>{link.label}</span>
                       )}
-                    </a>
+                    </Link>
                   )
                 })}
               </div>
@@ -211,7 +211,7 @@ export function EditorialPage({
                 of the navbar so users who configure `navbar.primary` see it
                 without extra setup. */}
             {!!primary?.href && (
-              <a
+              <Link
                 href={primary.href}
                 target={primary.href.startsWith('http') ? '_blank' : undefined}
                 rel={primary.href.startsWith('http') ? 'noopener noreferrer' : undefined}
@@ -220,7 +220,7 @@ export function EditorialPage({
               >
                 <Icon icon={primary.icon} size={14} />
                 <span>{primary.label}</span>
-              </a>
+              </Link>
             )}
             {/* Theme toggle — hidden when appearance.strict is true */}
             {!siteConfig.appearance.strict && <ThemeToggle />}

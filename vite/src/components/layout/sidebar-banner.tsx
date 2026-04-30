@@ -58,9 +58,9 @@ export function SidebarBanner({
 
         if (isExternal) {
           return (
-            <a href={buttonHref} target='_blank' rel='noopener noreferrer' className='no-underline' style={bannerStyle} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+            <Link href={buttonHref} target='_blank' rel='noopener noreferrer' className='no-underline' style={bannerStyle} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
               {buttonLabel}
-            </a>
+            </Link>
           )
         }
         return (

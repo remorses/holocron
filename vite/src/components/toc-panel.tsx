@@ -17,6 +17,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { Link } from 'spiceflow/react'
 import { useActiveTocState } from '../hooks/use-active-toc.ts'
 import { useHolocronData } from '../router.ts'
 
@@ -158,7 +159,7 @@ export function TableOfContentsPanel({
           {headings.map((heading) => {
             const isActive = heading.slug === activeId
             return (
-              <a
+              <Link
                 key={heading.slug}
                 href={`#${heading.slug}`}
                 data-active={isActive}
@@ -174,7 +175,7 @@ export function TableOfContentsPanel({
                 }}
               >
                 {heading.text}
-              </a>
+              </Link>
             )
           })}
         </div>

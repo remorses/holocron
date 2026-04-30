@@ -9,6 +9,7 @@
  */
 
 import React from 'react'
+import { Link } from 'spiceflow/react'
 import { Icon } from '../../icon.tsx'
 import { Chevron } from './chevron.tsx'
 import { slugify } from '../../../lib/toc-tree.ts'
@@ -134,7 +135,7 @@ export function Card({
     </div>
   )
   if (!href) return content
-  return <a href={href} className='no-underline'>{content}</a>
+  return <Link href={href} className='no-underline'>{content}</Link>
 }
 
 export function Columns({ cols, children }: { cols?: number; children: React.ReactNode }) {
@@ -338,13 +339,13 @@ export function Tile({
   children: React.ReactNode
 }) {
   return (
-    <a href={href} className='no-underline'>
+    <Link href={href} className='no-underline'>
       <div className='flex h-full flex-col gap-3 rounded-lg border border-border-subtle bg-card p-3'>
         <div className='overflow-hidden rounded-lg border border-border-subtle bg-muted/40 p-2'>{children}</div>
         {title && <div className='text-sm font-semibold text-foreground'>{title}</div>}
         {description && <div className='text-xs text-muted-foreground'>{description}</div>}
       </div>
-    </a>
+    </Link>
   )
 }
 
@@ -375,7 +376,7 @@ export function Tooltip({ tip, headline, cta, href, children }: { tip: string; h
           {headline && <div className='mb-1 text-xs font-semibold'>{headline}</div>}
           <div>{tip}</div>
           {cta && href && (
-            <a href={href} className='mt-1 inline-block text-xs text-primary hover:underline'>{cta}</a>
+            <Link href={href} className='mt-1 inline-block text-xs text-primary hover:underline'>{cta}</Link>
           )}
         </span>
       )}
@@ -414,13 +415,13 @@ export function Update({
       className='flex w-full flex-col items-start gap-3 py-6 lg:flex-row lg:gap-5 lg:py-8'
     >
       <div className='flex w-full flex-col items-start gap-3 lg:sticky lg:top-(--sticky-top) lg:w-[110px] lg:flex-shrink-0'>
-        <a
+        <Link
           href={`#${id}`}
           data-component-part='update-label'
           className='inline-flex items-center rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary no-underline'
         >
           {label}
-        </a>
+        </Link>
         {description && (
           <div
             data-component-part='update-description'

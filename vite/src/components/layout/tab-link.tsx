@@ -53,7 +53,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
 
   if (isExternal) {
     return (
-      <a
+      <Link
         href={tab.href}
         target='_blank'
         rel='noopener noreferrer'
@@ -66,7 +66,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
         {tab.label}
         <span className='opacity-50'>↗</span>
         {indicator}
-      </a>
+      </Link>
     )
   }
 

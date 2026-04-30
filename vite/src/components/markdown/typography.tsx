@@ -1,11 +1,12 @@
 'use client'
 
 /**
- * Editorial typography primitives: headings, prose paragraph, caption,
- * inline link, inline code.
+ * Editorial typography primitives: headings, prose paragraph, inline link,
+ * inline code.
  */
 
 import React, { Children, isValidElement } from 'react'
+import { Link } from 'spiceflow/react'
 
 import { slugify } from '../../lib/toc-tree.ts'
 
@@ -113,7 +114,7 @@ export function P({ children, className = '' }: { children: React.ReactNode; cla
 
 export function A({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a
+    <Link
       href={href}
       target='_blank'
       rel='noopener noreferrer'
@@ -130,7 +131,7 @@ export function A({ href, children }: { href: string; children: React.ReactNode 
       }}
     >
       {children}
-    </a>
+    </Link>
   )
 }
 

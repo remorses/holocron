@@ -3,6 +3,7 @@
 import React from 'react'
 import type { RootContent } from 'mdast'
 import { SafeMdxRenderer } from 'safe-mdx'
+import { Link } from 'spiceflow/react'
 import { logMdxError } from '../../lib/mdx-components-map.tsx'
 
 function BannerP({ children }: { children: React.ReactNode }) {
@@ -12,7 +13,7 @@ function BannerP({ children }: { children: React.ReactNode }) {
 function BannerA({ href, children }: { href: string; children: React.ReactNode }) {
   const external = /^https?:\/\//.test(href) || href.startsWith('//')
   return (
-    <a
+    <Link
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener noreferrer' : undefined}
@@ -20,7 +21,7 @@ function BannerA({ href, children }: { href: string; children: React.ReactNode }
       style={{ color: 'inherit' }}
     >
       {children}
-    </a>
+    </Link>
   )
 }
 

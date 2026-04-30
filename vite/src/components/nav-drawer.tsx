@@ -10,6 +10,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
 import { CloseIcon } from './chat-icons.tsx'
 import { SideNav } from './layout/side-nav.tsx'
@@ -174,7 +175,7 @@ function NavDrawerInner() {
           {((headerLinks.length > 0) || Boolean(primary?.href)) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
               {headerLinks?.map((link) => (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   target='_blank'
@@ -184,10 +185,10 @@ function NavDrawerInner() {
                 >
                   <Icon icon={link.icon} size={16} />
                   <span>{link.label}</span>
-                </a>
+                </Link>
               ))}
               {!!primary?.href && (
-                <a
+                <Link
                   href={primary.href}
                   target={primary.href.startsWith('http') ? '_blank' : undefined}
                   rel={primary.href.startsWith('http') ? 'noopener noreferrer' : undefined}
@@ -195,7 +196,7 @@ function NavDrawerInner() {
                 >
                   <Icon icon={primary.icon} size={14} />
                   <span>{primary.label}</span>
-                </a>
+                </Link>
               )}
             </div>
           )}

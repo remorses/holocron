@@ -7,6 +7,7 @@
  */
 
 import React from 'react'
+import { Link } from 'spiceflow/react'
 import { getDefaultTypeIcon } from '../../lib/collect-icons.ts'
 import { useHolocronData } from '../../router.ts'
 import { getResolvedLogo } from '../../site-data.ts'
@@ -29,7 +30,7 @@ export function Footer() {
       <div className='mx-auto w-full max-w-full px-(--mobile-padding) py-10 lg:max-w-(--grid-max-width) lg:px-0'>
         {/* Top row: logo + social icons */}
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-          <a href={logoLinkHref} className='no-underline flex items-center'>
+          <Link href={logoLinkHref} className='no-underline flex items-center'>
             <>
               {logo.dark ? (
                 <>
@@ -40,11 +41,11 @@ export function Footer() {
                 <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:invert' />
               )}
             </>
-          </a>
+          </Link>
           {hasSocials && (
             <div className='flex items-center gap-3'>
               {Object.entries(socials).map(([platform, url]) => (
-                <a
+                <Link
                   key={platform}
                   href={url}
                   target='_blank'
@@ -53,7 +54,7 @@ export function Footer() {
                   className='no-underline text-muted-foreground transition-colors duration-150 hover:text-foreground'
                 >
                   <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
-                </a>
+                </Link>
               ))}
             </div>
           )}
@@ -70,7 +71,7 @@ export function Footer() {
                   </div>
                 )}
                 {column.items.map((item) => (
-                  <a
+                  <Link
                     key={item.href}
                     href={item.href}
                     target={item.href.startsWith('http') ? '_blank' : undefined}
@@ -78,7 +79,7 @@ export function Footer() {
                     className='no-underline text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground'
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 ))}
               </div>
             ))}
@@ -92,7 +93,7 @@ export function Footer() {
 export function PoweredBy() {
   return (
     <div className='flex items-center justify-center py-6'>
-      <a
+      <Link
         href='https://holocron.so?utm_source=powered-by'
         target='_blank'
         rel='noopener noreferrer'
@@ -100,7 +101,7 @@ export function PoweredBy() {
       >
         <span>Powered by</span>
         <span className='font-bold'>Holocron</span>
-      </a>
+      </Link>
     </div>
   )
 }
