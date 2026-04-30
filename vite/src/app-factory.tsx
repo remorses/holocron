@@ -54,8 +54,8 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-import { streamText, type ModelMessage } from 'ai'
+import { Agent, type AgentEvent, type AgentMessage } from '@mariozechner/pi-agent-core'
+import type { Model } from '@mariozechner/pi-ai'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -66,7 +66,7 @@ import {
   resolveActiveVersionHref,
 } from './site-data.ts'
 import type { HolocronConfig } from './config.ts'
-import { createChatBashTool } from './lib/chat-bash-tool.ts'
+import { createChatPiTools } from './lib/chat-bash-tool.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
 import { resolveIconSvgs } from './lib/resolve-icons.ts'
 
@@ -378,7 +378,7 @@ type ChatRequestMessage = {
 
 type ChatRequestBody = {
   messages: ChatRequestMessage[]
-  previousMessages?: ModelMessage[]
+  previousMessages?: AgentMessage[]
   currentSlug: string
 }
 
@@ -390,7 +390,7 @@ function isChatRole(role: unknown): role is ChatRequestMessage['role'] {
   return role === 'user' || role === 'assistant'
 }
 
-function isModelMessage(value: unknown): value is ModelMessage {
+function isAgentMessage(value: unknown): value is AgentMessage {
   return isRecord(value) && typeof value.role === 'string' && 'content' in value
 }
 
@@ -417,7 +417,7 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
   })
 
   const previousMessages = Array.isArray(value.previousMessages)
-    ? value.previousMessages.filter(isModelMessage)
+    ? value.previousMessages.filter(isAgentMessage)
     : undefined
 
   return {
@@ -438,6 +438,49 @@ function getToolOutput(output: unknown): { stdout?: string; stderr?: string } {
   return {
     ...(typeof output.stdout === 'string' ? { stdout: output.stdout } : {}),
     ...(typeof output.stderr === 'string' ? { stderr: output.stderr } : {}),
+  }
+}
+
+function getPiToolOutput(event: Extract<AgentEvent, { type: 'tool_execution_end' }>) {
+  const text = Array.isArray(event.result?.content)
+    ? event.result.content
+        .filter((part: { type?: string; text?: string }) => part.type === 'text' && typeof part.text === 'string')
+        .map((part: { text: string }) => part.text)
+        .join('\n')
+    : ''
+  return event.isError ? { stderr: text } : { stdout: text }
+}
+
+function createAsyncQueue<T>() {
+  const values: T[] = []
+  const waiters: Array<(value: IteratorResult<T>) => void> = []
+  let closed = false
+
+  return {
+    push(value: T) {
+      const waiter = waiters.shift()
+      if (waiter) waiter({ value, done: false })
+      else values.push(value)
+    },
+    close() {
+      closed = true
+      for (const waiter of waiters.splice(0)) {
+        waiter({ value: undefined, done: true })
+      }
+    },
+    async *[Symbol.asyncIterator]() {
+      for (;;) {
+        const value = values.shift()
+        if (value) {
+          yield value
+          continue
+        }
+        if (closed) return
+        const next = await new Promise<IteratorResult<T>>((resolve) => waiters.push(resolve))
+        if (next.done) return
+        yield next.value
+      }
+    },
   }
 }
 
@@ -1056,7 +1099,7 @@ export async function createHolocronApp(providers: HolocronProviders) {
         files[`/docs/${slug}.mdx`] = mdx
       }
 
-      const bash = await createChatBashTool({ files, skillUrls: [] })
+      const tools = await createChatPiTools({ files, skillUrls: [] })
 
       // Build system prompt
       const allPages = collectAllPages(site.navigation)
@@ -1090,107 +1133,120 @@ export async function createHolocronApp(providers: HolocronProviders) {
       `
 
       // Convert new user messages from UIMessage parts format
-      const newUserMessages = body.messages.map((msg) => ({
-        role: msg.role,
-        content:
-          msg.parts
+      const newUserMessages: AgentMessage[] = body.messages.map((msg) => ({
+        role: 'user' as const,
+        content: [{
+          type: 'text' as const,
+          text: msg.parts
             ?.filter((p) => p.type === 'text' && p.text)
             .map((p) => p.text!)
             .join('\n') || '',
+        }],
+        timestamp: Date.now(),
       }))
 
       const previousMessages = body.previousMessages ?? []
-      const messages: ModelMessage[] = [
-        { role: 'system', content: systemPrompt },
-        ...previousMessages,
-        ...newUserMessages,
-      ]
 
       // Points to holocron.so AI gateway which proxies to CF Workers AI.
       // HOLOCRON_API_KEY (holo_xxx) authenticates the deployed site with the gateway.
       const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || 'https://holocron.so/api/ai/v1'
       const apiKey = process.env.HOLOCRON_API_KEY || ''
-      const gateway = createOpenAICompatible({
-        name: 'holocron-gateway',
-        baseURL: GATEWAY_URL,
-        apiKey,
+      const model: Model<'openai-completions'> = {
+        provider: 'openai',
+        id: 'glm-4.7-flash',
+        name: 'Holocron Gateway',
+        api: 'openai-completions',
+        baseUrl: GATEWAY_URL,
+        reasoning: false,
+        input: ['text'],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128000,
+        maxTokens: 8192,
+        compat: {
+          supportsDeveloperRole: false,
+          maxTokensField: 'max_tokens',
+        },
+      }
+
+      const agent = new Agent({
+        initialState: {
+          systemPrompt,
+          model,
+          thinkingLevel: 'off',
+          tools,
+          messages: previousMessages,
+        },
+        getApiKey: async () => apiKey,
       })
 
-      const result = streamText({
-        model: gateway.chatModel('glm-4.7-flash'),
-        tools: { bash },
-        messages,
-        stopWhen: (event) => event.steps.length >= 30,
-      })
+      request.signal.addEventListener('abort', () => agent.abort(), { once: true })
 
-      const uiStream = result.toUIMessageStream()
       let textBuffer = ''
-      const toolNames = new Map<string, string>()
-      const sessionMessages: ModelMessage[] = [
-        ...previousMessages,
-        ...newUserMessages,
-      ]
+      const parts = createAsyncQueue<
+        | { type: 'text'; jsx: React.ReactNode; text: string }
+        | { type: 'tool-call'; toolCallId: string; toolName: string; args: Record<string, unknown> }
+        | { type: 'tool-result'; toolCallId: string; toolName: string; output: string; error?: string }
+        | { type: 'session'; messages: AgentMessage[] }
+      >()
 
-      async function* generateParts() {
-        for await (const chunk of uiStream) {
-          if (chunk.type === 'text-delta') {
-            textBuffer += chunk.delta
-            continue
+      agent.subscribe((event) => {
+        if (event.type === 'message_update') {
+          const update = event.assistantMessageEvent
+          if (update.type === 'text_delta') {
+            textBuffer += update.delta
           }
-
-          if (chunk.type === 'text-end') {
-            if (textBuffer.trim()) {
-              const mdast = mdxParse(textBuffer)
+          if (update.type === 'text_end') {
+            const text = update.content || textBuffer
+            if (text.trim()) {
+              const mdast = mdxParse(text)
               const jsx = (
                 <ChatRenderNodes
-                  markdown={textBuffer}
+                  markdown={text}
                   nodes={mdast.children}
                 />
               )
-              yield { type: 'text' as const, jsx, text: textBuffer }
-              sessionMessages.push({ role: 'assistant', content: textBuffer })
-              yield { type: 'session' as const, messages: [...sessionMessages] }
+              parts.push({ type: 'text', jsx, text })
             }
             textBuffer = ''
-            continue
           }
+          return
+        }
 
-          if (chunk.type === 'tool-input-available') {
-            toolNames.set(chunk.toolCallId, chunk.toolName)
-            yield {
-              type: 'tool-call' as const,
-              toolCallId: chunk.toolCallId,
-              toolName: chunk.toolName,
-              args: getToolArgs(chunk.input),
-            }
-            sessionMessages.push({
-              role: 'assistant',
-              content: [{ type: 'tool-call', toolCallId: chunk.toolCallId, toolName: chunk.toolName, input: chunk.input }],
-            })
-            continue
-          }
+        if (event.type === 'tool_execution_start') {
+          parts.push({
+            type: 'tool-call',
+            toolCallId: event.toolCallId,
+            toolName: event.toolName,
+            args: getToolArgs(event.args),
+          })
+          return
+        }
 
-          if (chunk.type === 'tool-output-available') {
-            const rawOutput = getToolOutput(chunk.output)
-            yield {
-              type: 'tool-result' as const,
-              toolCallId: chunk.toolCallId,
-              toolName: toolNames.get(chunk.toolCallId) || 'bash',
-              output: (rawOutput.stdout || '').slice(0, 500),
-              ...(rawOutput.stderr ? { error: rawOutput.stderr } : {}),
-            }
-            sessionMessages.push({
-              role: 'tool',
-              content: [{
-                type: 'tool-result',
-                toolCallId: chunk.toolCallId,
-                toolName: toolNames.get(chunk.toolCallId) || 'bash',
-                output: { type: 'text', value: JSON.stringify(chunk.output) },
-              }],
-            })
-            yield { type: 'session' as const, messages: [...sessionMessages] }
-            continue
-          }
+        if (event.type === 'tool_execution_end') {
+          const output = getPiToolOutput(event)
+          parts.push({
+            type: 'tool-result',
+            toolCallId: event.toolCallId,
+            toolName: event.toolName,
+            output: (output.stdout || '').slice(0, 500),
+            ...(output.stderr ? { error: output.stderr } : {}),
+          })
+          return
+        }
+
+        if (event.type === 'agent_end') {
+          parts.push({ type: 'session', messages: event.messages })
+          parts.close()
+        }
+      })
+
+      async function* generateParts() {
+        void agent.prompt(newUserMessages).catch((error) => {
+          console.error('Pi chat error:', error)
+          parts.close()
+        })
+        for await (const part of parts) {
+          yield part
         }
       }
 

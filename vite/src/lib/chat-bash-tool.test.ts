@@ -1,18 +1,25 @@
 /**
- * Tests for Holocron's chat bash tool and remote SKILL.md loading.
+ * Tests for Holocron's Pi tools and remote SKILL.md loading.
  */
 
 import http from 'node:http'
+import type { AgentTool } from '@mariozechner/pi-agent-core'
 import { afterEach, describe, expect, test } from 'vitest'
-import { createChatBashTool, normalizeSkillUrl } from './chat-bash-tool.ts'
+import { createChatPiTools, normalizeSkillUrl } from './chat-bash-tool.ts'
 
-type BashTool = {
-  description: string
-  execute: (input: { command: string }) => Promise<{
-    stdout: string
-    stderr: string
-    exitCode: number
-  }>
+type TestTool = AgentTool<any>
+
+function getTool(tools: TestTool[], name: string) {
+  const found = tools.find((tool) => tool.name === name)
+  if (!found) throw new Error(`Missing tool: ${name}`)
+  return found
+}
+
+function text(result: Awaited<ReturnType<TestTool['execute']>>) {
+  return result.content
+    .filter((part) => part.type === 'text')
+    .map((part) => part.text)
+    .join('\n')
 }
 
 const servers = new Set<http.Server>()
@@ -74,19 +81,54 @@ describe('createChatBashTool', () => {
       },
     })
 
-    const bash = await createChatBashTool({
+    const tools = await createChatPiTools({
       files: { '/docs/index.mdx': '# Hello' },
       skillUrls: [`${baseUrl}/skill.md`],
-    }) as unknown as BashTool
+    })
 
+    const bash = getTool(tools, 'bash')
     expect(bash.description).toContain('<available_skills>')
     expect(bash.description).toContain('/docs/skills/test-skill/SKILL.md')
 
-    expect(await bash.execute({ command: 'cat /docs/skills/test-skill/SKILL.md' })).toEqual({
-      stdout: '---\nname: test-skill\ndescription: Helps with testing.\n---\n\n# Test Skill',
-      stderr: '',
-      exitCode: 0,
+    expect(text(await bash.execute('1', { command: 'cat /docs/skills/test-skill/SKILL.md' }))).toMatchInlineSnapshot(`
+      "---
+      name: test-skill
+      description: Helps with testing.
+      ---
+
+      # Test Skill"
+    `)
+  })
+
+  test('exposes Pi read write edit ls and bash tools over just-bash', async () => {
+    const tools = await createChatPiTools({
+      files: { '/docs/index.mdx': '# Hello\n\nOld text' },
     })
+
+    const read = getTool(tools, 'read')
+    const write = getTool(tools, 'write')
+    const edit = getTool(tools, 'edit')
+    const ls = getTool(tools, 'ls')
+    const bash = getTool(tools, 'bash')
+
+    expect(text(await read.execute('1', { path: 'index.mdx' }))).toMatchInlineSnapshot(`
+      "# Hello
+
+      Old text"
+    `)
+
+    expect(text(await write.execute('2', { path: 'guide.mdx', content: '# Guide' }))).toMatchInlineSnapshot(
+      '"Successfully wrote 7 bytes to guide.mdx"',
+    )
+    expect(text(await edit.execute('3', { path: 'index.mdx', oldText: 'Old text', newText: 'New text' }))).toContain('Successfully replaced text')
+    expect(text(await ls.execute('4', { path: '.' }))).toMatchInlineSnapshot(`
+      "guide.mdx
+      index.mdx"
+    `)
+    expect(text(await bash.execute('5', { command: 'grep -rn "New text" /docs' }))).toMatchInlineSnapshot(`
+      "/docs/index.mdx:3:New text
+      "
+    `)
   })
 
   test('throws on non-ok responses', async () => {
@@ -97,7 +139,7 @@ describe('createChatBashTool', () => {
       },
     })
 
-    await expect(createChatBashTool({
+    await expect(createChatPiTools({
       files: {},
       skillUrls: [`${baseUrl}/missing.md`],
     })).rejects.toThrow(`Failed to fetch skill from ${baseUrl}/missing.md: 404 Not Found`)
@@ -116,7 +158,7 @@ describe('createChatBashTool', () => {
       },
     })
 
-    await expect(createChatBashTool({
+    await expect(createChatPiTools({
       files: {},
       skillUrls: [`${baseUrl}/bad.md`],
     })).rejects.toThrow(`Invalid skill frontmatter from ${baseUrl}/bad.md: expected string name and description`)
@@ -135,8 +177,8 @@ describe('createChatBashTool', () => {
     })
 
     const url = `${baseUrl}/cached.md`
-    await createChatBashTool({ files: {}, skillUrls: [url] })
-    await createChatBashTool({ files: {}, skillUrls: [url] })
+    await createChatPiTools({ files: {}, skillUrls: [url] })
+    await createChatPiTools({ files: {}, skillUrls: [url] })
 
     expect(hits.get('/cached.md')).toBe(1)
   })
