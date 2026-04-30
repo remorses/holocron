@@ -1,0 +1,40 @@
+---
+title: llms.txt
+description: An agent-readable index of all documentation pages.
+icon: list
+---
+
+# llms.txt
+
+Holocron generates a `/llms.txt` file that serves as an index of all documentation pages. This is the primary discovery endpoint for AI agents.
+
+## What it contains
+
+The file lists:
+- The site name and description
+- A link to `/docs.zip` for bulk download
+- Every page with its title and `.md` URL
+
+Agents can read this file to understand the site structure and then fetch individual pages as Markdown.
+
+## Example output
+
+```
+# My Docs
+
+> Download all docs: https://example.com/docs.zip
+
+## Pages
+
+- [Getting Started](https://example.com/getting-started.md)
+- [Authentication](https://example.com/guides/auth.md)
+- [Deployment](https://example.com/deploy.md)
+```
+
+## Usage
+
+```bash
+curl https://your-docs-site.com/llms.txt
+```
+
+The route is available at both `/llms.txt` and under your base path if configured.

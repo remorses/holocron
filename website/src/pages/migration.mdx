@@ -1,0 +1,69 @@
+---
+title: Migration from Mintlify
+description: Move an existing Mintlify docs project to Holocron.
+icon: arrow-right-left
+---
+
+# Migration from Mintlify
+
+If you already have a Mintlify docs project, migrating to Holocron takes a few minutes. Holocron reads the same `docs.json` schema and supports the same MDX component vocabulary.
+
+## Step 1: Install dependencies
+
+In your existing docs directory:
+
+```bash
+pnpm add @holocron.so/vite react react-dom vite
+```
+
+## Step 2: Create vite.config.ts
+
+```ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+## Step 3: Keep your docs.json
+
+Your existing `docs.json` works as-is. Holocron uses `.passthrough()` validation, so Mintlify-only fields (like `integrations`, `analytics`, `api`) are accepted and silently ignored.
+
+## Step 4: Run it
+
+```bash
+npx vite
+```
+
+Your site should render at `http://localhost:5173`.
+
+## What transfers directly
+
+- **Navigation structure**: tabs, groups, pages, anchors, versions, dropdowns, products
+- **MDX components**: Accordions, Cards, Callouts, Steps, Tabs, Code Groups, Expandables, and more
+- **Frontmatter fields**: `title`, `description`, `icon`, `sidebarTitle`, `tag`, `hidden`, `deprecated`
+- **Config fields**: `colors`, `logo`, `favicon`, `navbar`, `footer`, `redirects`, `appearance`, `fonts`, `banner`
+- **OpenAPI tabs**: `{ "tab": "API Reference", "openapi": "openapi.json" }` generates pages from your spec
+
+## What is different
+
+| Area | Mintlify | Holocron |
+|------|----------|----------|
+| Hosting | Mintlify cloud | Self-hosted (Node.js or Cloudflare Workers) |
+| Build | Cloud build on push | Local `vite build` |
+| API playground | Interactive playground | Read-only API reference |
+| Analytics | Built-in dashboard | Bring your own |
+| Custom domains | Dashboard setting | Your hosting provider |
+| Search | Algolia/built-in | Orama (local, built-in) |
+
+## Component compatibility
+
+See the [MDX Components](/components) tab for a full list of supported components and any behavioral differences. Most components render identically. A few Mintlify-specific components (like the API playground) are not supported.
+
+## Tips
+
+- If your pages live in a subdirectory, use `holocron({ pagesDir: './pages' })` in `vite.config.ts`.
+- Holocron supports both `docs.json` and `holocron.jsonc` (with comments). First found wins.
+- The `$schema` field in your config is ignored at runtime but useful for editor autocomplete.

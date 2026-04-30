@@ -1,0 +1,39 @@
+---
+title: AI Assistant
+description: Built-in chat assistant for your docs site.
+icon: message-circle
+---
+
+# AI Assistant
+
+Holocron includes a built-in AI chat assistant that appears as a sidebar widget. Users can ask questions about your documentation and get answers based on the docs content.
+
+## Enabling and disabling
+
+The assistant is enabled by default. To disable it:
+
+```json
+{
+  "assistant": {
+    "enabled": false
+  }
+}
+```
+
+When disabled, the sidebar widget, chat drawer, mobile "Ask AI" button, and the chat API endpoint are all hidden.
+
+## How it works
+
+The assistant uses the Holocron AI gateway to process questions. When deployed, it reads your docs content and generates answers grounded in your documentation pages.
+
+## What gets disabled
+
+Setting `enabled: false` removes:
+- The sidebar chat widget
+- The chat drawer overlay
+- The mobile "Ask AI" floating button
+- The `/holocron-api/chat` endpoint
+
+## Skill loading
+
+The assistant can load remote `SKILL.md` files and make them available as context. Skills are fetched, cached, and presented to the AI model as available knowledge sources.

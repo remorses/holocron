@@ -1,0 +1,67 @@
+---
+title: Logo and Favicon
+description: Set your brand logo and favicon.
+icon: image
+---
+
+# Logo and Favicon
+
+## Logo
+
+The logo appears in the top-left corner of the navbar. You can set a single logo or separate ones for light and dark mode:
+
+### Single logo
+
+```json
+{
+  "logo": "/logo.svg"
+}
+```
+
+### Separate light and dark logos
+
+```json
+{
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg"
+  }
+}
+```
+
+The `light` logo is shown when the site is in **dark mode** (so it should be light-colored), and vice versa.
+
+### Logo link
+
+By default, clicking the logo navigates to `/`. Set a custom target:
+
+```json
+{
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg",
+    "href": "https://example.com"
+  }
+}
+```
+
+## Favicon
+
+```json
+{
+  "favicon": "/favicon.svg"
+}
+```
+
+Like logo, you can set separate favicons for light and dark mode:
+
+```json
+{
+  "favicon": {
+    "light": "/favicon-light.svg",
+    "dark": "/favicon-dark.svg"
+  }
+}
+```
+
+Place logo and favicon files in the `public/` directory.

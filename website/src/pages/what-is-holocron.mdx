@@ -1,0 +1,54 @@
+---
+title: What is Holocron
+description: A Mintlify-compatible docs site generator that runs as a Vite plugin.
+icon: info
+---
+
+# What is Holocron
+
+Holocron is a **documentation site generator** built as a Vite plugin. You write MDX files, define your navigation in a `docs.json` config, and Holocron produces a full docs site with search, dark mode, OpenAPI reference, and AI-readable exports.
+
+It is designed as a **drop-in replacement for Mintlify**. If you already have a Mintlify project, you can point Holocron at the same `docs.json` and MDX files and get a self-hosted site with the same component vocabulary.
+
+## Why Holocron
+
+- **Local builds.** Run `vite build` and deploy the output anywhere. No hosted service required.
+- **Normal Git workflows.** Your docs live in your repo. PRs, branches, diffs all work the way you expect.
+- **Vite-native.** HMR, fast rebuilds, Tailwind, React Server Components, all powered by Spiceflow under the hood.
+- **Mintlify compatibility.** Same `docs.json` schema, same MDX components (`Tabs`, `Cards`, `Callouts`, `Steps`, etc.), same frontmatter fields.
+- **AI-first.** Every page gets a `.md` route, plus `/llms.txt`, `/docs.zip`, and `.well-known/agent-skills/` for agent discovery.
+
+## How it works
+
+```
+docs.json + MDX files
+        │
+        ▼
+  ┌──────────────┐
+  │ Vite Plugin   │  reads config, syncs navigation tree, processes MDX
+  │ (holocron())  │
+  └──────┬───────┘
+         │
+         ▼
+  ┌──────────────┐
+  │  Spiceflow    │  React Server Components framework
+  │  + Tailwind   │  auto-added by the plugin
+  └──────┬───────┘
+         │
+         ▼
+  Full docs site with search, OpenAPI, dark mode, AI exports
+```
+
+The plugin reads your config file, walks the navigation tree to discover MDX pages, and generates virtual modules that the Spiceflow app consumes at render time. Images are processed at build time (dimensions, placeholders, copying to `public/`). Only changed files get re-parsed on subsequent builds thanks to a git-SHA-based cache.
+
+## What you get
+
+| Feature | Details |
+|---------|---------|
+| Navigation | Tabs, groups, nested groups, anchors, versions, dropdowns, products |
+| Components | Accordions, Cards, Callouts, Steps, Tabs, Code Groups, and more |
+| OpenAPI | Point at a spec file, get auto-generated API reference pages |
+| Search | Built-in Orama search across navigation and headings |
+| Theming | shadcn-compatible CSS variables, custom fonts, logo, favicon |
+| AI exports | `/llms.txt`, `/docs.zip`, `.md` per page, skill discovery |
+| Deployment | Node.js or Cloudflare Workers |

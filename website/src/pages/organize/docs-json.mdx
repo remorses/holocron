@@ -1,0 +1,112 @@
+---
+title: docs.json
+description: The config file that defines your Holocron site.
+icon: file-json
+---
+
+# docs.json
+
+Every Holocron site needs a config file at the project root. Holocron supports two filenames (first found wins):
+
+1. **`docs.json`** (preferred)
+2. **`holocron.jsonc`** (supports `//` comments)
+
+Both follow the same schema, which is compatible with Mintlify's `docs.json`.
+
+## Minimal config
+
+```json
+{
+  "name": "My Docs",
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["index", "quickstart"]
+    }
+  ]
+}
+```
+
+## Full config reference
+
+```json
+{
+  "$schema": "https://unpkg.com/@holocron.so/vite/schema.json",
+  "name": "My Docs",
+  "description": "Documentation for my project",
+  "colors": { "primary": "#6366f1" },
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "appearance": { "default": "system" },
+  "fonts": { "family": "Inter" },
+  "icons": { "library": "lucide" },
+  "navbar": {
+    "links": [
+      { "type": "github", "href": "https://github.com/example/docs" }
+    ]
+  },
+  "banner": {
+    "content": "New: [v2.0 is out](/changelog)",
+    "dismissible": true
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          { "group": "Getting Started", "pages": ["index", "quickstart"] }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.json"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/example",
+      "x": "https://x.com/example",
+      "discord": "https://discord.gg/example"
+    }
+  },
+  "redirects": [
+    { "source": "/old", "destination": "/new" }
+  ],
+  "search": { "prompt": "Search docs..." },
+  "seo": {
+    "indexing": "navigable",
+    "metatags": { "author": "My Company" }
+  },
+  "assistant": { "enabled": true }
+}
+```
+
+## Schema autocomplete
+
+Point your editor at the JSON Schema for autocomplete and validation:
+
+```json
+{
+  "$schema": "https://unpkg.com/@holocron.so/vite/schema.json"
+}
+```
+
+The schema is generated from the Zod definitions in `vite/src/schema.ts`.
+
+## Passthrough behavior
+
+Holocron uses `.passthrough()` validation. Any fields from Mintlify that Holocron does not consume (like `integrations`, `analytics`, `api.playground`) are accepted without errors. This means you can use a Mintlify `docs.json` without stripping unknown fields.
+
+## Config normalization
+
+Holocron normalizes shorthand forms into a consistent internal shape:
+
+- **`logo`**: `"/logo.svg"` becomes `{ light: "/logo.svg", dark: "/logo.svg" }`
+- **`favicon`**: `"/favicon.svg"` becomes `{ light: "/favicon.svg", dark: "/favicon.svg" }`
+- **`navigation`**: a flat array of groups is wrapped in a default tab
+- **`colors`**: missing `light`/`dark` variants are derived from `primary`
+- **`products`**: normalized into `dropdowns` at config time

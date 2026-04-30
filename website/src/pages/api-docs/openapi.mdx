@@ -1,0 +1,71 @@
+---
+title: OpenAPI Setup
+description: Generate API reference pages from an OpenAPI spec.
+icon: plug
+---
+
+# OpenAPI Setup
+
+Holocron can generate API reference pages from an OpenAPI specification file. Point a tab at your spec and Holocron creates a page per endpoint, grouped by tag.
+
+## Basic setup
+
+Add an OpenAPI tab to your `docs.json` navigation:
+
+```json
+{
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          { "group": "Getting Started", "pages": ["index"] }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.json"
+      }
+    ]
+  }
+}
+```
+
+Place your `openapi.json` (or `openapi.yaml`) file at the project root.
+
+## Multiple specs
+
+Pass an array to combine multiple spec files:
+
+```json
+{
+  "tab": "API Reference",
+  "openapi": ["openapi/v1.json", "openapi/v2.json"]
+}
+```
+
+## Custom base path
+
+By default, generated pages appear under `/api/` (e.g. `/api/get-users`). Change the prefix with `openapiBase`:
+
+```json
+{
+  "tab": "API Reference",
+  "openapi": "openapi.json",
+  "openapiBase": "reference"
+}
+```
+
+Now endpoints render at `/reference/get-users` instead.
+
+Set `openapiBase` to `""` for no prefix.
+
+## How pages are generated
+
+Holocron reads the spec and creates one page per operation (path + method). Pages are grouped by the `tags` field on each operation. The sidebar shows tag groups with individual endpoint pages.
+
+Each generated page shows:
+- HTTP method and path
+- Description from the spec
+- Request parameters, headers, and body schema
+- Response schemas with status codes

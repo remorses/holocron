@@ -1,0 +1,49 @@
+---
+title: Generated Pages
+description: How OpenAPI operations become sidebar pages.
+icon: file-stack
+---
+
+# Generated Pages
+
+When you set `"openapi": "openapi.json"` on a tab, Holocron generates one page per operation in the spec.
+
+## Slug format
+
+Each operation gets a slug derived from the `operationId` or the method + path:
+
+| Operation | Generated slug |
+|-----------|---------------|
+| `GET /users` with `operationId: listUsers` | `api/list-users` |
+| `POST /users` without operationId | `api/post-users` |
+
+The `openapiBase` prefix (default `"api"`) is prepended to all slugs.
+
+## Grouping by tags
+
+Operations are grouped by their `tags` field in the spec. Each tag becomes a sidebar group:
+
+```yaml
+paths:
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+    post:
+      tags: [Users]
+      operationId: createUser
+  /teams:
+    get:
+      tags: [Teams]
+      operationId: listTeams
+```
+
+This produces:
+- **Users** group: `list-users`, `create-user`
+- **Teams** group: `list-teams`
+
+## Page layout
+
+Generated API pages use a two-column layout:
+- **Left column**: description, parameters, request body schema
+- **Right column**: request and response examples (displayed in the aside)

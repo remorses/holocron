@@ -1,0 +1,49 @@
+---
+title: Request and Response Examples
+description: How request and response schemas are displayed on API pages.
+icon: arrow-left-right
+---
+
+# Request and Response Examples
+
+Generated OpenAPI pages render request and response information based on your spec's schemas.
+
+## Request parameters
+
+Query parameters, path parameters, and headers are listed with their type, description, and required/optional status.
+
+## Request body
+
+If an operation has a `requestBody`, Holocron renders the schema as a structured field list. JSON Schema properties become rows with name, type, and description.
+
+## Response schemas
+
+Each response status code (200, 201, 400, etc.) is rendered with its schema. Multiple response codes are shown in separate sections.
+
+## Examples in the spec
+
+If your spec includes `example` or `examples` fields on schemas, parameters, or responses, Holocron renders them as code blocks in the right-side aside.
+
+```yaml
+paths:
+  /users:
+    get:
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+              example:
+                - id: 1
+                  name: Alice
+                - id: 2
+                  name: Bob
+```
+
+## Two-column layout
+
+On desktop, the request/response examples appear in the right aside column next to the parameter descriptions. On mobile, they stack below the parameters.

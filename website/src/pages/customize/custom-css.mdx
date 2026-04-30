@@ -1,0 +1,79 @@
+---
+title: Custom CSS
+description: Override styles without breaking Holocron's Tailwind setup.
+icon: paintbrush
+---
+
+# Custom CSS
+
+Holocron includes Tailwind CSS automatically. You can add your own styles on top, but there is one important rule.
+
+## Do not import Tailwind again
+
+Holocron already adds `@import 'tailwindcss'` internally. If your CSS also imports it, you get duplicate style layers that break layout and cascade order.
+
+Instead, use **`@reference`**:
+
+```css
+/* src/globals.css */
+@reference "tailwindcss";
+
+:root {
+  --primary: #e11d48;
+  --background: #fafafa;
+
+  @variant dark {
+    --background: #0a0a0a;
+    --primary: #fb7185;
+  }
+}
+```
+
+`@reference` gives you access to Tailwind's theme variables, `@apply`, and `@variant` without emitting duplicate styles.
+
+## How to load your CSS
+
+### With custom entry
+
+If you use a [custom entry](/custom-entry), import your CSS in your server file:
+
+```tsx
+// src/server.tsx
+import './globals.css'
+```
+
+### Without custom entry
+
+Place a CSS file in your project and import it from a layout or page component via local imports.
+
+## Dark mode overrides
+
+Use `@variant dark` inside your CSS instead of Tailwind's `dark:` utility classes:
+
+```css
+:root {
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+
+  @variant dark {
+    --card: #1a1a1a;
+    --card-foreground: #fafafa;
+  }
+}
+```
+
+This keeps dark mode values colocated with their light mode counterparts in CSS variables.
+
+## Responsive overrides
+
+You can also change variables by breakpoint:
+
+```css
+:root {
+  --bleed: 16px;
+
+  @variant lg {
+    --bleed: 32px;
+  }
+}
+```

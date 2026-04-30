@@ -1,0 +1,84 @@
+---
+title: Theme
+description: Colors, appearance mode, and CSS variable tokens.
+icon: swatch-book
+---
+
+# Theme
+
+Holocron uses shadcn-compatible CSS variables. If you already have a shadcn theme, you can port it directly.
+
+## Primary color
+
+Set a brand color in `docs.json`:
+
+```json
+{
+  "colors": {
+    "primary": "#6366f1"
+  }
+}
+```
+
+You can also specify separate light and dark mode accent variants:
+
+```json
+{
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5"
+  }
+}
+```
+
+## Appearance mode
+
+Control the default color mode and whether users can toggle:
+
+```json
+{
+  "appearance": {
+    "default": "system",
+    "strict": false
+  }
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `"system"` | Follow the user's OS setting (default) |
+| `"light"` | Force light mode |
+| `"dark"` | Force dark mode |
+| `strict: true` | Hide the mode toggle |
+
+## CSS variable overrides
+
+Holocron's tokens follow the shadcn naming convention. Override them in your own CSS file:
+
+```css
+:root {
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --primary: #6366f1;
+  --muted-foreground: #737373;
+  --border: #e5e5e5;
+
+  @variant dark {
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+    --primary: #818cf8;
+    --border: #262626;
+  }
+}
+```
+
+Use `@variant dark` instead of Tailwind's `dark:` for dark mode overrides. This keeps all theme values in CSS variables that adapt automatically.
+
+## Available tokens
+
+The full token set includes: `--background`, `--foreground`, `--primary`, `--muted`, `--muted-foreground`, `--border`, `--accent`, `--card`, `--sidebar-foreground`, `--sidebar-primary`, and more. See the source `globals.css` for the complete list.
+
+## Semantic colors
+
+Holocron also defines semantic colors for callouts and badges: `--blue`, `--green`, `--yellow`, `--orange`, `--red`, `--purple`. These adapt to dark mode automatically.

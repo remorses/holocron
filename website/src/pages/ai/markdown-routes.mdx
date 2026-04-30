@@ -1,0 +1,28 @@
+---
+title: Markdown Routes
+description: Every page has a .md route for AI agents and scrapers.
+icon: file-text
+---
+
+# Markdown Routes
+
+Every docs page in Holocron is also available as plain Markdown by appending `.md` to the URL.
+
+## How it works
+
+| URL | Returns |
+|-----|---------|
+| `/quickstart` | HTML page |
+| `/quickstart.md` | Plain Markdown |
+
+This makes your docs machine-readable out of the box. AI agents, documentation scrapers, and CLI tools can fetch any page as Markdown without parsing HTML.
+
+## AI agent redirect
+
+Holocron detects AI agents by their User-Agent string and automatically redirects them from the HTML page to the `.md` version with a 302. This means agents requesting `/quickstart` get the Markdown content directly.
+
+The redirect only applies to recognized agent User-Agent strings. Normal browsers always get the HTML page.
+
+## Sitemap comments
+
+The generated sitemap includes comments pointing to `/llms.txt` and `/docs.zip` so agents that parse sitemaps can discover the bulk download options.

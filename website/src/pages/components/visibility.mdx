@@ -1,0 +1,24 @@
+---
+title: Visibility
+description: Mintlify's Visibility component is not currently supported in Holocron.
+icon: eye
+tag: Unsupported
+---
+
+# Visibility
+
+<Warning>
+The `Visibility` component from Mintlify is **not currently supported** in Holocron. This page exists as a compatibility reference.
+</Warning>
+
+## What it does in Mintlify
+
+In Mintlify, `<Visibility>` conditionally shows or hides content based on audience segments or feature flags. It is tied to Mintlify's cloud platform and dashboard settings.
+
+## Workaround
+
+Since Holocron is self-hosted, conditional content visibility can be handled with:
+
+- **MDX imports**: import different components based on environment variables at build time
+- **Hidden pages**: use `hidden: true` in frontmatter for pages that should not appear in navigation
+- **Custom entry**: use Spiceflow middleware to gate access to specific routes

@@ -1,0 +1,32 @@
+---
+title: Build Output
+description: What vite build produces and how to serve it.
+icon: folder-output
+---
+
+# Build Output
+
+Running `npx vite build` produces a `dist/` directory with everything needed to serve your docs site.
+
+## Directory structure
+
+```
+dist/
+├── rsc/
+│   ├── index.js          # Node.js server entry
+│   ├── assets/           # Static assets (CSS, JS, images)
+│   └── ...
+└── holocron-cache.json   # Navigation cache for fast rebuilds
+```
+
+## Cache for fast rebuilds
+
+`dist/holocron-cache.json` contains the enriched navigation tree with git SHA hashes for each page. On subsequent builds, pages with unchanged SHAs are reused without re-parsing. Caching `dist/` between CI runs gives near-instant rebuilds.
+
+## Static assets
+
+Fonts, processed images, and bundled JavaScript are placed in `dist/rsc/assets/`. These are fingerprinted with content hashes for long-term caching.
+
+## Self-contained output
+
+The production output is fully self-contained. All MDX processing and image work happens at build time. The runtime server only handles routing, rendering, and serving static assets.

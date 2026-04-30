@@ -1,0 +1,67 @@
+---
+title: Icons
+description: Configure the icon library for your docs site.
+icon: shapes
+---
+
+# Icons
+
+Icons appear in the sidebar (next to pages and groups), in components like Cards, and in the navbar.
+
+## Setting the icon library
+
+```json
+{
+  "icons": { "library": "lucide" }
+}
+```
+
+Supported libraries:
+
+| Library | Description |
+|---------|-------------|
+| `lucide` | Clean, consistent icons (default) |
+| `fontawesome` | Font Awesome (free set) |
+| `tabler` | Tabler Icons |
+
+## Using icons in frontmatter
+
+Set an icon on any page via frontmatter:
+
+```mdx
+---
+title: Authentication
+icon: lock
+---
+```
+
+The icon name is resolved against the configured library.
+
+## Using icons in navigation
+
+Groups and anchors accept an `icon` field:
+
+```json
+{
+  "group": "Security",
+  "icon": "shield",
+  "pages": ["security/overview"]
+}
+```
+
+## Icon object form
+
+For more control, use the object form to specify a library or style per-icon:
+
+```json
+{
+  "icon": {
+    "name": "github",
+    "library": "lucide"
+  }
+}
+```
+
+## Build-time atlas
+
+Holocron collects all referenced icon names at build time and generates an atlas. Only the icons you actually use are included in the client bundle.

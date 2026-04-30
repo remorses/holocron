@@ -1,0 +1,45 @@
+---
+title: Cloudflare Workers
+description: Deploy Holocron to Cloudflare Workers.
+icon: cloud
+---
+
+# Cloudflare Workers
+
+Holocron can be deployed to Cloudflare Workers for edge-rendered docs with global distribution.
+
+## Setup
+
+Install wrangler and configure your project:
+
+```bash
+pnpm add -D wrangler
+```
+
+Create a `wrangler.jsonc`:
+
+```jsonc
+{
+  "name": "my-docs",
+  "main": "dist/rsc/index.js",
+  "compatibility_date": "2024-12-01",
+  "assets": {
+    "directory": "dist/rsc/assets"
+  }
+}
+```
+
+## Build and deploy
+
+```bash
+npx vite build
+npx wrangler deploy
+```
+
+## Custom entry with Workers
+
+If you use a [custom entry](/custom-entry), your Spiceflow app runs as the Worker entry point. You can add Cloudflare-specific bindings (KV, D1, AI) alongside your docs.
+
+## Example project
+
+See the `example-cloudflare/` directory in the Holocron repo for a working Cloudflare Workers deployment.

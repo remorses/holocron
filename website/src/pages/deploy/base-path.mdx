@@ -1,0 +1,42 @@
+---
+title: Base Path
+description: Serve docs under a subpath like /docs.
+icon: slash
+---
+
+# Base Path
+
+If you want to serve your docs under a subpath (e.g. `https://example.com/docs/`), configure Vite's `base` option:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  base: '/docs/',
+  plugins: [holocron()],
+})
+```
+
+## What it affects
+
+- All page routes are prefixed (e.g. `/docs/quickstart` instead of `/quickstart`)
+- Static assets load from `/docs/assets/...`
+- AI routes adjust: `/docs/llms.txt`, `/docs/docs.zip`
+- Internal links and navigation are base-aware
+- The sitemap uses the base path in URLs
+
+## Reverse proxy setup
+
+When using a base path, your reverse proxy must forward requests under `/docs/` to the Holocron server:
+
+```nginx
+location /docs/ {
+    proxy_pass http://localhost:3000/docs/;
+}
+```
+
+## Custom entry with base path
+
+If using a [custom entry](/custom-entry), the base path applies to both your custom routes and the Holocron docs routes.

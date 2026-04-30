@@ -1,0 +1,69 @@
+---
+title: Node.js
+description: Build and deploy Holocron on Node.js.
+icon: server
+---
+
+# Node.js Deployment
+
+Holocron builds a server-rendered application that runs on Node.js.
+
+## Build
+
+```bash
+npx vite build
+```
+
+This outputs a production bundle to `dist/`.
+
+## Start the server
+
+```bash
+node dist/rsc/index.js
+```
+
+The server listens on port 3000 by default.
+
+## Production setup
+
+For a production deployment, you need:
+
+1. **Build** the site (`vite build`)
+2. **Start** the Node.js server
+3. **Reverse proxy** (nginx, Caddy, etc.) for TLS and domain routing
+
+### Example with Docker
+
+```dockerfile
+FROM node:22-slim
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm build
+EXPOSE 3000
+CMD ["node", "dist/rsc/index.js"]
+```
+
+### Example with systemd
+
+```ini
+[Unit]
+Description=Docs site
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/docs
+ExecStart=/usr/bin/node dist/rsc/index.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+## Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | 3000 | Server listen port |

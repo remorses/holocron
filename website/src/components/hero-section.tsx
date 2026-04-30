@@ -34,14 +34,14 @@ const BOTTOM_GRADIENT = [
 export function HeroSection() {
   return (
     <div className='relative mt-12 lg:mt-[100px] mb-6 lg:mb-12 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden bg-background'>
-      {/* Background video — width-based sizing, capped at 1400px, centered */}
+      {/* Background video — width-based sizing, capped to the site grid, centered */}
       <video
         autoPlay
         muted
         loop
         playsInline
         poster='/hero-bg-poster.jpg'
-        className='absolute z-0 invert hue-rotate-290 dark:invert-0 dark:hue-rotate-0 w-full max-w-[1400px] left-1/2 -translate-x-1/2 top-0'
+        className='absolute z-0 invert hue-rotate-290 dark:invert-0 dark:hue-rotate-0 w-full max-w-(--grid-max-width) left-1/2 -translate-x-1/2 top-0'
       >
         <source src='/hero-bg.mp4' type='video/mp4' />
       </video>

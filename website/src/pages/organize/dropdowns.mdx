@@ -1,0 +1,87 @@
+---
+title: Dropdowns
+description: Product or section switcher dropdowns in the header.
+icon: chevrons-up-down
+---
+
+# Dropdowns
+
+Dropdowns add a `<select>` in the header (next to the version selector if present). Use them for multi-product documentation or section switching.
+
+## Basic setup
+
+```json
+{
+  "navigation": {
+    "dropdowns": [
+      {
+        "dropdown": "Platform",
+        "tabs": [
+          {
+            "tab": "Docs",
+            "groups": [
+              { "group": "Overview", "pages": ["platform/index"] }
+            ]
+          }
+        ]
+      },
+      {
+        "dropdown": "CLI",
+        "tabs": [
+          {
+            "tab": "Docs",
+            "groups": [
+              { "group": "Overview", "pages": ["cli/index"] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Link-only dropdowns
+
+A dropdown entry can be a link instead of a content switcher:
+
+```json
+{
+  "dropdown": "Changelog",
+  "href": "https://example.com/changelog"
+}
+```
+
+Selecting it opens the URL instead of switching sidebar content.
+
+## Products
+
+The `products` field is an alias for `dropdowns`. It is normalized into dropdowns at config time:
+
+```json
+{
+  "navigation": {
+    "products": [
+      {
+        "product": "Platform",
+        "description": "Main product docs",
+        "icon": "layers",
+        "groups": [...]
+      }
+    ]
+  }
+}
+```
+
+## Dropdown fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `dropdown` | string | Display name in the selector |
+| `icon` | string | Icon next to the name |
+| `hidden` | boolean | Hide from the selector |
+| `href` | string | Link-only mode, navigates to URL |
+| `tabs` | array | Tabs within this dropdown |
+| `groups` | array | Groups within this dropdown |
+| `pages` | array | Flat pages within this dropdown |
+| `anchors` | array | Anchors within this dropdown |

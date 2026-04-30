@@ -1,0 +1,94 @@
+---
+title: Navbar, Footer, and Banner
+description: Configure top navigation links, footer socials, and site-wide banners.
+icon: layout
+---
+
+# Navbar, Footer, and Banner
+
+## Navbar
+
+The navbar sits at the top of every page. Configure links and a primary CTA button:
+
+```json
+{
+  "navbar": {
+    "links": [
+      { "type": "github", "href": "https://github.com/example/docs" },
+      { "label": "Blog", "href": "https://example.com/blog" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/quickstart"
+    }
+  }
+}
+```
+
+### Link types
+
+Known `type` values: `github`, `discord`, `slack`, `button`, `link`. The type controls the default icon and label. You can always override with explicit `label` and `icon` fields.
+
+## Footer
+
+### Social links
+
+Add social links to the footer with recognized platform names:
+
+```json
+{
+  "footer": {
+    "socials": {
+      "github": "https://github.com/example",
+      "x": "https://x.com/example",
+      "discord": "https://discord.gg/example",
+      "linkedin": "https://linkedin.com/company/example"
+    }
+  }
+}
+```
+
+Supported platforms: `x`, `twitter`, `github`, `discord`, `slack`, `linkedin`, `youtube`, `instagram`, `facebook`, `medium`, `telegram`, `bluesky`, `threads`, `reddit`, `hacker-news`, `podcast`, `website`.
+
+### Footer link columns
+
+Add organized link columns (up to 4):
+
+```json
+{
+  "footer": {
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          { "label": "Pricing", "href": "/pricing" },
+          { "label": "Changelog", "href": "/changelog" }
+        ]
+      },
+      {
+        "header": "Resources",
+        "items": [
+          { "label": "Blog", "href": "/blog" },
+          { "label": "Community", "href": "https://discord.gg/example" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Banner
+
+Display a site-wide banner at the top of every page:
+
+```json
+{
+  "banner": {
+    "content": "New: [v2.0 is here](/changelog). Check out the new features!",
+    "dismissible": true
+  }
+}
+```
+
+The `content` field supports basic Markdown links (`[text](url)`). Set `dismissible: true` to show a close button.

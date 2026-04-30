@@ -1,0 +1,28 @@
+---
+title: docs.zip
+description: Download the entire docs site as a zip of Markdown files.
+icon: archive
+---
+
+# docs.zip
+
+Holocron serves a `/docs.zip` endpoint that bundles every page as a Markdown file in a single zip archive.
+
+## Usage
+
+```bash
+curl -L https://your-docs-site.com/docs.zip -o docs.zip
+unzip docs.zip -d docs
+```
+
+This gives agents and developers a local copy of all documentation for offline search, grep, or RAG pipelines.
+
+## When to use this
+
+- **AI agents** that need to ingest the full docs corpus at once
+- **Local grep** for finding patterns across all pages
+- **Offline reading** or archival
+
+## How it works
+
+The zip is generated on-the-fly from the rendered Markdown of all navigable pages. Each file in the archive corresponds to a page slug (e.g. `quickstart.md`, `guides/auth.md`).

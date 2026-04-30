@@ -1,0 +1,56 @@
+---
+title: Hidden Pages
+description: Pages and groups that exist but are not visible in navigation.
+icon: eye-off
+---
+
+# Hidden Pages
+
+Sometimes you need a page to be accessible by URL but invisible in the sidebar. Holocron supports hiding at both the page and group level.
+
+## Hidden pages via frontmatter
+
+Set `hidden: true` in the page's frontmatter:
+
+```mdx
+---
+title: Internal API Reference
+hidden: true
+---
+```
+
+The page is still rendered and accessible at its URL, but it does not appear in the sidebar navigation.
+
+## Hidden groups
+
+Set `hidden: true` on a group in `docs.json`:
+
+```json
+{
+  "group": "Internal",
+  "hidden": true,
+  "pages": ["internal/debug", "internal/metrics"]
+}
+```
+
+All pages in the group are accessible by URL but the group is hidden from the sidebar.
+
+## Hidden tabs
+
+Tabs also support `hidden: true`:
+
+```json
+{
+  "tab": "Beta",
+  "hidden": true,
+  "groups": [
+    { "group": "Beta Features", "pages": ["beta/feature-x"] }
+  ]
+}
+```
+
+## Use cases
+
+- **Internal pages** that are linked from external tools but should not clutter the sidebar
+- **Beta documentation** shared via direct link before it is publicly visible
+- **Legacy pages** kept alive for old bookmarks without promoting them in navigation

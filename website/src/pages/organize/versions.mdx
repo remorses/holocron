@@ -1,0 +1,63 @@
+---
+title: Versions
+description: Version switcher for multi-version documentation.
+icon: git-branch
+---
+
+# Versions
+
+If your project maintains multiple API or SDK versions, you can add a version switcher dropdown to the header. Each version has its own navigation tree.
+
+## Basic setup
+
+```json
+{
+  "navigation": {
+    "versions": [
+      {
+        "version": "v2",
+        "default": true,
+        "tabs": [
+          {
+            "tab": "Docs",
+            "groups": [
+              { "group": "Getting Started", "pages": ["v2/index", "v2/quickstart"] }
+            ]
+          }
+        ]
+      },
+      {
+        "version": "v1",
+        "tabs": [
+          {
+            "tab": "Docs",
+            "groups": [
+              { "group": "Getting Started", "pages": ["v1/index", "v1/quickstart"] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## How it works
+
+- A native `<select>` dropdown appears in the header (right of the logo).
+- Selecting a version navigates to its first page and updates the sidebar.
+- The version marked `default: true` determines where `/` redirects to.
+- Inner tabs from all versions are flattened into routes, so every page gets a URL.
+
+## Version fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `version` | string | Display name in the dropdown |
+| `default` | boolean | Whether this is the default version |
+| `tag` | string | Badge next to the version name (e.g. "Latest", "Beta") |
+| `hidden` | boolean | Hide from the dropdown |
+| `tabs` | array | Tabs within this version |
+| `groups` | array | Groups within this version (alternative to tabs) |
+| `pages` | array | Pages within this version (flat, no groups) |
+| `anchors` | array | Anchors within this version |

@@ -1,0 +1,83 @@
+---
+title: MDX
+description: Write documentation with MDX, a superset of Markdown with JSX support.
+icon: text
+---
+
+# MDX
+
+Holocron pages are written in **MDX**, a format that combines Markdown with JSX components. You get the simplicity of Markdown for prose and the power of React components for interactive elements.
+
+## Basic Markdown
+
+Standard Markdown works as expected:
+
+```mdx
+# Heading 1
+## Heading 2
+### Heading 3
+
+Regular paragraph text with **bold**, *italic*, and `inline code`.
+
+- Bullet list
+- Another item
+
+1. Numbered list
+2. Second item
+
+> Blockquote text
+
+[Link text](https://example.com)
+```
+
+## Using components
+
+Holocron ships with built-in components that you can use directly in MDX without importing them:
+
+```mdx
+<Note>
+This is a note callout. No import needed.
+</Note>
+
+<Steps>
+  <Step title="First step">
+    Do this first.
+  </Step>
+  <Step title="Second step">
+    Then do this.
+  </Step>
+</Steps>
+```
+
+See the [MDX Components](/components) tab for the full list of available components.
+
+## Tables
+
+Markdown tables render with Holocron's editorial styling:
+
+```mdx
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /users | List users |
+| POST | /users | Create user |
+```
+
+## Headings and table of contents
+
+Every heading (`##`, `###`, etc.) automatically appears in the right-side table of contents. The `#` heading is used as the page title.
+
+## Content inside components
+
+When putting MDX content inside container components, always use multi-line form:
+
+```mdx
+<!-- ✅ Correct -->
+<Note>
+Use `Note` for neutral information.
+</Note>
+
+<!-- ❌ Wrong — text won't get proper paragraph styling -->
+<Note>Use `Note` for neutral information.</Note>
+```
+
+This is an MDX parser limitation. Multi-line form gets proper paragraph wrapping; single-line form produces bare inline text.

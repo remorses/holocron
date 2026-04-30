@@ -1,0 +1,71 @@
+---
+title: Pages
+description: How MDX pages work in Holocron.
+icon: file-text
+---
+
+# Pages
+
+Every page in a Holocron site is an **MDX file** (.mdx or .md). Pages are discovered through the navigation config in `docs.json`, not by convention.
+
+## Page slugs
+
+The slug of a page is its file path relative to the pages directory, without the extension:
+
+| File path | Slug |
+|-----------|------|
+| `index.mdx` | `index` |
+| `getting-started.mdx` | `getting-started` |
+| `guides/auth.mdx` | `guides/auth` |
+| `api/users.mdx` | `api/users` |
+
+Reference these slugs in your `docs.json` navigation:
+
+```json
+{
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["getting-started", "guides/auth"]
+    }
+  ]
+}
+```
+
+## Frontmatter
+
+Every page can have YAML frontmatter at the top:
+
+```mdx
+---
+title: Authentication
+description: How to set up auth in your app.
+icon: lock
+sidebarTitle: Auth
+tag: New
+---
+```
+
+### Supported fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Page title, used in sidebar and `<title>` tag |
+| `description` | string | SEO description and subtitle |
+| `icon` | string | Icon name displayed in the sidebar |
+| `sidebarTitle` | string | Override the title shown in the sidebar |
+| `tag` | string | Badge label next to the page title in sidebar |
+| `deprecated` | boolean | Marks the page as deprecated |
+| `hidden` | boolean | Hides the page from navigation |
+| `noindex` | boolean | Prevents search engines from indexing |
+| `keywords` | string[] | Additional keywords for search |
+| `robots` | string | Custom robots meta value |
+| `og:title` | string | Open Graph title override |
+| `og:description` | string | Open Graph description |
+| `og:image` | string | Open Graph image URL |
+| `twitter:title` | string | Twitter card title |
+| `twitter:image` | string | Twitter card image |
+
+## The index page
+
+The page with slug `index` renders at `/`. Every other slug maps directly to a URL path (e.g. `guides/auth` renders at `/guides/auth`).

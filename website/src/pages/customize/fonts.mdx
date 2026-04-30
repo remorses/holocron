@@ -1,0 +1,57 @@
+---
+title: Fonts
+description: Custom fonts for headings and body text.
+icon: type
+---
+
+# Fonts
+
+Holocron supports custom fonts via the `fonts` field in `docs.json`. Google Fonts family names load automatically.
+
+## Google Fonts
+
+```json
+{
+  "fonts": {
+    "family": "Inter"
+  }
+}
+```
+
+This loads Inter from Google Fonts and applies it to all text.
+
+## Separate heading and body fonts
+
+```json
+{
+  "fonts": {
+    "body": { "family": "Inter", "weight": 400 },
+    "heading": { "family": "Cal Sans", "weight": 700 }
+  }
+}
+```
+
+## Self-hosted fonts
+
+For self-hosted fonts, place the file in `public/` and reference it:
+
+```json
+{
+  "fonts": {
+    "family": "My Custom Font",
+    "source": "/fonts/custom-font.woff2",
+    "format": "woff2"
+  }
+}
+```
+
+## Font fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `family` | string | Font family name |
+| `weight` | number | Font weight (e.g. 400, 700) |
+| `source` | string | URL or path to font file |
+| `format` | `"woff"` \| `"woff2"` | Font file format (required for local files) |
+| `heading` | object | Override font for headings |
+| `body` | object | Override font for body text |

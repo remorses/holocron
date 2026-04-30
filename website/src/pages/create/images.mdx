@@ -1,0 +1,57 @@
+---
+title: Images
+description: Local and remote images with automatic sizing and placeholders.
+icon: image
+---
+
+# Images
+
+Holocron processes images at build time to prevent layout shifts and generate placeholders.
+
+## Markdown images
+
+Use standard Markdown image syntax:
+
+```mdx
+![Alt text](/images/screenshot.png)
+```
+
+Place image files in your `public/` directory and reference them with absolute paths.
+
+## HTML img tags
+
+You can also use `<img>` tags:
+
+```mdx
+<img src="/images/diagram.png" alt="Architecture diagram" />
+```
+
+Holocron's remark plugin automatically converts `<img>` tags to its internal image component with proper dimensions.
+
+## Build-time processing
+
+For local images, Holocron:
+
+1. **Reads dimensions** from the file so the rendered `<img>` has explicit `width` and `height`, preventing layout shift.
+2. **Generates placeholders** for a smooth loading experience.
+3. **Copies images** to `public/_holocron/images/` during build for consistent serving.
+
+## Remote images
+
+Remote image URLs (`https://...`) are supported. Holocron attempts to fetch metadata (dimensions) at build time. If the fetch fails, the image still renders but without layout-shift prevention.
+
+```mdx
+![Remote image](https://example.com/photo.jpg)
+```
+
+## Frames
+
+Wrap images in a `<Frame>` component for a styled border and optional caption:
+
+```mdx
+<Frame caption="Dashboard overview">
+  ![Dashboard](/images/dashboard.png)
+</Frame>
+```
+
+See [Frames](/components/frames) for more options.

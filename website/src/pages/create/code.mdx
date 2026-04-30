@@ -1,0 +1,74 @@
+---
+title: Code Blocks
+description: Syntax highlighting, titles, line highlights, and code groups.
+icon: code
+---
+
+# Code Blocks
+
+Holocron uses Prism for syntax highlighting. Fenced code blocks are rendered with full language support.
+
+## Basic code block
+
+````mdx
+```ts
+const greeting = 'Hello, world!'
+console.log(greeting)
+```
+````
+
+## Code block with title
+
+Add a title after the language identifier:
+
+````mdx
+```ts vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+````
+
+## Line highlighting
+
+Highlight specific lines using curly braces:
+
+````mdx
+```ts {2,4}
+const a = 1
+const b = 2  // highlighted
+const c = 3
+const d = 4  // highlighted
+```
+````
+
+## Code groups
+
+Group related code blocks into tabs with the `CodeGroup` component. Wrap multiple fenced code blocks inside `<CodeGroup>` and `</CodeGroup>` tags:
+
+````mdx
+<CodeGroup>
+
+```bash npm
+npm install @holocron.so/vite
+```
+
+```bash pnpm
+pnpm add @holocron.so/vite
+```
+
+```bash yarn
+yarn add @holocron.so/vite
+```
+
+</CodeGroup>
+````
+
+See [Code Groups](/components/code-groups) for more options.
+
+## Inline code
+
+Use backticks for inline code: `` `variable` `` renders as `variable`.

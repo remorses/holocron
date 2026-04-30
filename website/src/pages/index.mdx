@@ -1,7 +1,7 @@
 ---
 title: Holocron
-description: Mintlify-compatible docs as a Vite plugin, with a live component compatibility showcase.
-icon: sparkles
+description: Mintlify-compatible docs as a Vite plugin.
+icon: home
 ---
 
 import { HeroSection } from '../components/hero-section.tsx'
@@ -14,36 +14,17 @@ import { HeroSection } from '../components/hero-section.tsx'
 
 # Holocron
 
-Holocron turns a folder of MDX pages plus a `docs.json` file into a full documentation site. It is designed as a **drop-in Mintlify replacement** for teams that want local builds, normal Git workflows, and control over the rendering layer.
+Holocron turns MDX pages and a `docs.json` config into a full documentation site. It runs as a **Vite plugin**, builds locally, and deploys anywhere.
 
-<CardGroup cols={2}>
-  <Card title='Mintlify-compatible input' icon='file-json' href='/components'>
-    Reuse the same `docs.json` shape and the same MDX component vocabulary where Holocron supports it.
-  </Card>
-  <Card title='Vite-native workflow' icon='zap' href='/components/code-groups'>
-    Develop, build, and ship docs with regular Vite tooling instead of a hosted docs runtime.
-  </Card>
-  <Card title='Component compatibility reference' icon='blocks' href='/components'>
-    This site doubles as a public matrix of what Holocron supports today.
-  </Card>
-  <Card title='Real rendering examples' icon='monitor' href='/components/examples'>
-    Each page shows actual Holocron output rather than a static support checklist.
-  </Card>
-</CardGroup>
+Designed as a **drop-in Mintlify replacement**: same config schema, same MDX components, same frontmatter fields.
 
-## What Holocron is
-
-- A **docs site generator** built on Vite and Spiceflow
-- A **Mintlify replacement** for projects that want local ownership of the site
-- A **test bed** for verifying component parity and rendering behavior
-
-## Quick start
+## Install
 
 ```bash
 pnpm add @holocron.so/vite react react-dom vite
 ```
 
-```ts
+```ts vite.config.ts
 import { defineConfig } from 'vite'
 import { holocron } from '@holocron.so/vite'
 
@@ -52,28 +33,43 @@ export default defineConfig({
 })
 ```
 
-```json
-{
-  "name": "My Docs",
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": ["index"]
-    }
-  ]
-}
-```
+The plugin auto-adds Spiceflow, Tailwind CSS, and React. No extra setup needed.
 
-## Why this website exists
+## Explore
 
-Mintlify's component docs are a useful compatibility target, so this package mirrors that IA under `/components`. Each page rewrites Mintlify-centric references to Holocron and adds extra examples where differences are likely to show up.
+<CardGroup cols={2}>
+  <Card title='Quickstart' icon='zap' href='/quickstart'>
+    Get a docs site running in under a minute.
+  </Card>
+  <Card title='Migration from Mintlify' icon='arrow-right-left' href='/migration'>
+    Move an existing Mintlify project to Holocron.
+  </Card>
+  <Card title='Navigation' icon='panel-left' href='/organize/navigation'>
+    Tabs, groups, pages, anchors, versions, and dropdowns.
+  </Card>
+  <Card title='Theme and Colors' icon='palette' href='/customize/theme'>
+    shadcn-compatible CSS variables and color tokens.
+  </Card>
+  <Card title='OpenAPI Reference' icon='braces' href='/api-docs/openapi'>
+    Generate API docs from an OpenAPI spec.
+  </Card>
+  <Card title='AI-Readable Docs' icon='bot' href='/ai/llms-txt'>
+    /llms.txt, /docs.zip, .md routes, and skill discovery.
+  </Card>
+  <Card title='MDX Components' icon='blocks' href='/components'>
+    Accordions, Cards, Callouts, Steps, Tabs, and more.
+  </Card>
+  <Card title='Deploy' icon='cloud-upload' href='/deploy/node'>
+    Node.js, Cloudflare Workers, and build output.
+  </Card>
+</CardGroup>
 
-<Tip>
-Use the component pages as both **end-user documentation** and a quick way to compare Holocron behavior against Mintlify.
-</Tip>
+## What you get
 
-## Next steps
-
-- Start with the [component index](/components)
-- Open the page for the component you want to test
-- Compare the rendered result against Mintlify's own docs when behavior matters
+- **Local builds** with `vite build`, deploy the output anywhere
+- **Same docs.json** schema and MDX components as Mintlify
+- **OpenAPI** reference pages generated from your spec
+- **Search** powered by Orama, built into the sidebar
+- **Dark mode** with system detection and manual toggle
+- **AI exports** for agents: `.md` per page, `/llms.txt`, `/docs.zip`, skill discovery
+- **Custom entry** to mount docs alongside your own Spiceflow routes

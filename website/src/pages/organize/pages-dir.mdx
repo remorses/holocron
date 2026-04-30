@@ -1,0 +1,63 @@
+---
+title: Pages Directory
+description: Configure where Holocron looks for MDX files.
+icon: folder
+---
+
+# Pages Directory
+
+By default, Holocron looks for MDX files relative to the **project root** (the directory containing `vite.config.ts`). This matches the Mintlify convention where pages sit alongside `docs.json`.
+
+## Changing the pages directory
+
+If you prefer a subdirectory, pass `pagesDir` to the plugin:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({ pagesDir: './pages' }),
+  ],
+})
+```
+
+Now page slugs in `docs.json` resolve relative to `./pages/`:
+
+| Slug in docs.json | Resolved file |
+|-------------------|---------------|
+| `index` | `./pages/index.mdx` |
+| `guides/auth` | `./pages/guides/auth.mdx` |
+
+## Typical project layouts
+
+### Default (root)
+
+```
+my-docs/
+├── index.mdx
+├── quickstart.mdx
+├── guides/
+│   └── auth.mdx
+├── docs.json
+└── vite.config.ts
+```
+
+### With pagesDir
+
+```
+my-docs/
+├── pages/
+│   ├── index.mdx
+│   ├── quickstart.mdx
+│   └── guides/
+│       └── auth.mdx
+├── docs.json
+└── vite.config.ts
+```
+
+## Impact on imports
+
+When using local imports in MDX, absolute paths (starting with `/`) probe `pagesDir` first, then project root. See [Local Imports](/create/local-imports) for details.

@@ -1,0 +1,93 @@
+---
+title: Quickstart
+description: Get a Holocron docs site running in under a minute.
+icon: zap
+---
+
+# Quickstart
+
+## Install
+
+```bash
+pnpm add @holocron.so/vite react react-dom vite
+```
+
+## Create vite.config.ts
+
+```ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+The plugin auto-adds Spiceflow, Tailwind CSS, and React. You do not need to install or configure them separately.
+
+## Create docs.json
+
+Create a `docs.json` file at the project root:
+
+```json
+{
+  "name": "My Docs",
+  "colors": { "primary": "#6366f1" },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["index"]
+    }
+  ]
+}
+```
+
+## Write your first page
+
+Create `index.mdx`:
+
+```mdx
+---
+title: Welcome
+description: My documentation site.
+---
+
+# Welcome
+
+This is my first Holocron page.
+```
+
+## Run the dev server
+
+```bash
+npx vite
+```
+
+Open `http://localhost:5173` and you should see your docs site.
+
+## Build for production
+
+```bash
+npx vite build
+```
+
+Start the production server:
+
+```bash
+node dist/rsc/index.js
+```
+
+## Project structure
+
+A minimal Holocron project looks like this:
+
+```
+my-docs/
+├── index.mdx
+├── docs.json
+├── vite.config.ts
+├── package.json
+└── public/           # static assets (logos, images)
+```
+
+By default, Holocron looks for MDX files relative to the project root. You can change this with the `pagesDir` option. See [Pages directory](/organize/pages-dir) for details.

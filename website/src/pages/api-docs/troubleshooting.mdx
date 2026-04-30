@@ -1,0 +1,42 @@
+---
+title: OpenAPI Troubleshooting
+description: Common issues with OpenAPI spec rendering.
+icon: circle-help
+---
+
+# OpenAPI Troubleshooting
+
+## Spec not found
+
+If Holocron logs a warning about not finding your spec file, check:
+
+- The path in `docs.json` is relative to the project root
+- The file extension matches (`.json` or `.yaml`)
+- The file exists and is valid JSON/YAML
+
+## No pages generated
+
+If the API Reference tab is empty:
+
+- Make sure your spec has `paths` with at least one operation
+- Check that operations have at least one tag (untagged operations may not generate sidebar groups)
+
+## Schema rendering issues
+
+- **Circular references**: Holocron handles `$ref` cycles, but deeply nested circular schemas may render with truncated depth
+- **`allOf`/`oneOf`/`anyOf`**: These are resolved and rendered as combined or union schemas
+- **Missing descriptions**: Operations without a `summary` or `description` show the operationId as the title
+
+## Wrong URL prefix
+
+If pages appear at `/api/...` but you want a different prefix, set `openapiBase` on the tab:
+
+```json
+{
+  "tab": "API Reference",
+  "openapi": "openapi.json",
+  "openapiBase": "reference"
+}
+```
+
+Set to `""` for no prefix at all.

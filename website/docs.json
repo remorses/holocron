@@ -1,6 +1,7 @@
 {
     "$schema": "https://mintlify.com/docs.json",
     "name": "Holocron",
+    "description": "Mintlify-compatible docs site generator as a Vite plugin.",
     "colors": {
         "primary": "#5b7cff"
     },
@@ -14,7 +15,7 @@
         ],
         "primary": {
             "type": "button",
-            "label": "Component Docs",
+            "label": "Components",
             "href": "/components"
         }
     },
@@ -24,10 +25,89 @@
                 "tab": "Documentation",
                 "groups": [
                     {
-                        "group": "Overview",
+                        "group": "Start",
                         "icon": "sparkles",
-                        "pages": ["index", "custom-entry"]
+                        "pages": [
+                            "index",
+                            "what-is-holocron",
+                            "quickstart",
+                            "migration"
+                        ]
                     },
+                    {
+                        "group": "Create",
+                        "icon": "pencil",
+                        "pages": [
+                            "create/pages",
+                            "create/mdx",
+                            "create/code",
+                            "create/images",
+                            "create/local-imports",
+                            "create/redirects"
+                        ]
+                    },
+                    {
+                        "group": "Organize",
+                        "icon": "folder-tree",
+                        "pages": [
+                            "organize/docs-json",
+                            "organize/navigation",
+                            "organize/versions",
+                            "organize/dropdowns",
+                            "organize/hidden-pages",
+                            "organize/pages-dir"
+                        ]
+                    },
+                    {
+                        "group": "Customize",
+                        "icon": "palette",
+                        "pages": [
+                            "customize/theme",
+                            "customize/fonts",
+                            "customize/icons",
+                            "customize/logo-and-favicon",
+                            "customize/navbar-footer-banner",
+                            "customize/custom-css",
+                            "custom-entry"
+                        ]
+                    },
+                    {
+                        "group": "API Docs",
+                        "icon": "braces",
+                        "pages": [
+                            "api-docs/openapi",
+                            "api-docs/generated-pages",
+                            "api-docs/request-response-examples",
+                            "api-docs/troubleshooting"
+                        ]
+                    },
+                    {
+                        "group": "AI-Readable Docs",
+                        "icon": "bot",
+                        "pages": [
+                            "ai/markdown-routes",
+                            "ai/llms-txt",
+                            "ai/docs-zip",
+                            "ai/skill-discovery",
+                            "ai/assistant"
+                        ]
+                    },
+                    {
+                        "group": "Deploy",
+                        "icon": "cloud-upload",
+                        "pages": [
+                            "deploy/node",
+                            "deploy/cloudflare",
+                            "deploy/build-output",
+                            "deploy/base-path"
+                        ]
+                    }
+                ]
+            },
+            {
+                "tab": "MDX Components",
+                "icon": "blocks",
+                "groups": [
                     {
                         "group": "Components",
                         "icon": "blocks",
@@ -56,7 +136,8 @@
                             "components/tooltips",
                             "components/tree",
                             "components/update",
-                            "components/view"
+                            "components/view",
+                            "components/visibility"
                         ]
                     }
                 ]

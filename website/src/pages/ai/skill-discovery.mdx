@@ -1,0 +1,47 @@
+---
+title: Skill Discovery
+description: Agent-skills spec and .well-known discovery for AI agents.
+icon: radar
+---
+
+# Skill Discovery
+
+Holocron implements the **agent-skills 0.2.0 discovery spec** (RFC 8615 extension) and a legacy format for backward compatibility. This lets AI agents discover your docs as a "skill" they can load.
+
+## Discovery endpoints
+
+| Endpoint | Format |
+|----------|--------|
+| `/.well-known/agent-skills/index.json` | v0.2.0 JSON index |
+| `/.well-known/agent-skills/<name>/SKILL.md` | Skill markdown file |
+| `/.well-known/skills/index.json` | Legacy JSON index |
+| `/.well-known/skills/<name>/SKILL.md` | Legacy skill file |
+
+The `<name>` is derived from your site's `name` field in `docs.json` (lowercased, kebab-cased).
+
+## SKILL.md content
+
+The generated `SKILL.md` includes:
+- Frontmatter with `name` and `description` (from your config)
+- Instructions for using `curl` to fetch `/docs.zip` or `/llms.txt`
+- Links to individual page `.md` routes
+
+## How agents use this
+
+1. Agent fetches `/.well-known/agent-skills/index.json`
+2. Discovers available skills with names and descriptions
+3. Fetches the `SKILL.md` for a relevant skill
+4. Follows instructions inside (usually downloading `/docs.zip`)
+
+## Customizing the description
+
+The skill description comes from the `description` field in your `docs.json`:
+
+```json
+{
+  "name": "My SDK",
+  "description": "SDK for building widgets with the Acme API"
+}
+```
+
+If no description is set, Holocron generates a default from the site name.

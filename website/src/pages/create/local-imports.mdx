@@ -1,0 +1,90 @@
+---
+title: Local Imports
+description: Import custom React components into MDX pages.
+icon: package
+---
+
+# Local Imports
+
+You can import `.tsx`, `.ts`, `.jsx`, or `.js` files directly in your MDX pages. This lets you use custom React components alongside the built-in MDX components.
+
+## Basic usage
+
+```mdx
+import { PricingTable } from '/components/pricing-table'
+
+# Pricing
+
+<PricingTable />
+```
+
+## Import resolution
+
+Holocron resolves imports using two rules:
+
+### Absolute imports (starting with `/`)
+
+`/` means the project root. Holocron probes the pages directory first, then the project root:
+
+```mdx
+import { Chart } from '/components/chart'
+```
+
+If your `pagesDir` is `./pages`, this looks for:
+1. `./pages/components/chart.tsx` (pages dir first)
+2. `./components/chart.tsx` (project root fallback)
+
+### Relative imports
+
+Relative paths resolve from the MDX file's directory:
+
+```mdx
+import { Badge } from '../components/badge'
+```
+
+## How it works
+
+Import detection is **MDX-driven**, not folder-based. There are no magic `snippets/` or `components/` directories. Any local file can be imported from any location.
+
+At build time, Holocron:
+1. Parses each MDX file to extract import statements
+2. Resolves the imports against the filesystem
+3. Generates a virtual module map so the imports work at render time
+
+At dev time, adding or removing importable files triggers HMR automatically.
+
+## Supported extensions
+
+The following extensions are tried in order: `.tsx`, `.ts`, `.jsx`, `.js`. You do not need to include the extension in the import path.
+
+## Example: shared snippets
+
+A common pattern is a `snippets/` directory for reusable content:
+
+```
+my-docs/
+├── snippets/
+│   └── install-command.tsx
+├── getting-started.mdx
+└── docs.json
+```
+
+```tsx
+// snippets/install-command.tsx
+export function InstallCommand() {
+  return (
+    <CodeGroup>
+      <div data-title="npm">npm install @holocron.so/vite</div>
+      <div data-title="pnpm">pnpm add @holocron.so/vite</div>
+    </CodeGroup>
+  )
+}
+```
+
+```mdx
+import { InstallCommand } from '/snippets/install-command'
+
+# Getting Started
+
+<InstallCommand />
+```

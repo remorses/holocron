@@ -1,0 +1,58 @@
+---
+title: Redirects
+description: Redirect old URLs to new pages without breaking links.
+icon: arrow-right
+---
+
+# Redirects
+
+When you restructure your docs, redirects keep old links working. Define them in your `docs.json`:
+
+```json
+{
+  "redirects": [
+    { "source": "/old-page", "destination": "/new-page" },
+    { "source": "/guides/:slug", "destination": "/docs/:slug" }
+  ]
+}
+```
+
+## Redirect types
+
+### Exact path
+
+```json
+{ "source": "/changelog", "destination": "/updates" }
+```
+
+### Named parameters
+
+Capture path segments with `:param` and reuse them in the destination:
+
+```json
+{ "source": "/api/:version/users", "destination": "/reference/:version/users" }
+```
+
+### Trailing wildcard
+
+Match any path under a prefix:
+
+```json
+{ "source": "/old-docs/:path*", "destination": "/docs/:path*" }
+```
+
+## Permanent vs temporary
+
+By default, redirects use a **302** (temporary) status code. Set `permanent: true` for a **301**:
+
+```json
+{
+  "source": "/legacy",
+  "destination": "/modern",
+  "permanent": true
+}
+```
+
+## Query string preservation
+
+Query parameters from the original request are passed through to the destination URL.
