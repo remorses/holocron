@@ -19,17 +19,31 @@ Agents can read this file to understand the site structure and then fetch indivi
 
 ## Example output
 
-```
+````
 # My Docs
 
-> Download all docs: https://example.com/docs.zip
+> Documentation and usage guide for My Docs.
 
-## Pages
+## Best way to inspect these docs
+
+Download all docs as markdown files and grep them locally:
+
+```bash
+curl -L https://example.com/docs.zip -o docs.zip
+unzip docs.zip -d docs
+grep -R "search term" docs/
+```
+
+Use this when you need to search across the whole documentation set. The zip contains every page as a .md file.
+
+## Page index
+
+You can also fetch individual markdown pages directly:
 
 - [Getting Started](https://example.com/getting-started.md)
 - [Authentication](https://example.com/guides/auth.md)
 - [Deployment](https://example.com/deploy.md)
-```
+````
 
 ## Usage
 

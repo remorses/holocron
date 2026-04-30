@@ -10,10 +10,30 @@ Holocron can be deployed to Cloudflare Workers for edge-rendered docs with globa
 
 ## Setup
 
-Install wrangler and configure your project:
+Install wrangler and the Cloudflare Vite plugin:
 
 ```bash
-pnpm add -D wrangler
+pnpm add -D wrangler @cloudflare/vite-plugin
+```
+
+Add the Cloudflare plugin after Holocron in `vite.config.ts`:
+
+```ts
+import { cloudflare } from '@cloudflare/vite-plugin'
+import { holocron } from '@holocron.so/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    holocron(),
+    cloudflare({
+      viteEnvironment: {
+        name: 'rsc',
+        childEnvironments: ['ssr'],
+      },
+    }),
+  ],
+})
 ```
 
 Create a `wrangler.jsonc`:
@@ -21,11 +41,9 @@ Create a `wrangler.jsonc`:
 ```jsonc
 {
   "name": "my-docs",
-  "main": "dist/rsc/index.js",
-  "compatibility_date": "2024-12-01",
-  "assets": {
-    "directory": "dist/rsc/assets"
-  }
+  "main": "spiceflow/cloudflare-entrypoint",
+  "compatibility_date": "2026-04-14",
+  "compatibility_flags": ["nodejs_compat"]
 }
 ```
 

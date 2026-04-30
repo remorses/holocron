@@ -21,3 +21,7 @@ Key references:
 ## Supported models
 
 Allowed models are defined in `src/gateway.ts` (`ALLOWED_MODELS`). GLM 4.7 Flash is the default fallback. To add a new model, add its `@cf/` ID to the map.
+
+## Documentation command examples
+
+Use `npx` for one-off command examples in MDX docs, like `npx vite` and `npx vite build`. It is more common and works regardless of whether the user installed dependencies with npm, pnpm, yarn, or bun.

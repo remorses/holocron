@@ -25,7 +25,7 @@ pnpm add @holocron.so/vite react react-dom vite
   </Tab>
 </Tabs>
 
-<Tabs defaultTabIndex={1} borderBottom={false}>
+<Tabs defaultTabIndex={1}>
   <Tab title='Overview'>
     Tabs can hold prose and nested components.
   </Tab>
@@ -41,7 +41,11 @@ pnpm add @holocron.so/vite react react-dom vite
   </Tab>
 </Tabs>
 
+## Supported props
+
+- `Tabs` supports `defaultTabIndex` and nested `Tab` children.
+- `Tab` supports `title`, `value`, and `icon`.
+
 ## Holocron differences
 
-- Holocron supports `defaultTabIndex`, `borderBottom`, `title`, `icon`, and nested MDX children.
 - Mintlify documents tab synchronization across components. Holocron does **not** currently sync tab groups by title.
