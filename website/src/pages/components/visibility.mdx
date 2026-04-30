@@ -1,24 +1,42 @@
 ---
 title: Visibility
-description: Mintlify's Visibility component is not currently supported in Holocron.
+description: Show different content to humans on the web and AI agents in markdown output.
 icon: eye
-tag: Unsupported
 ---
 
 # Visibility
 
-<Warning>
-The `Visibility` component from Mintlify is **not currently supported** in Holocron. This page exists as a compatibility reference.
-</Warning>
+Show different content to humans reading your docs site versus AI agents processing the markdown output (`.md` URLs, `llms.txt`, `docs.zip`).
 
-## What it does in Mintlify
+Content marked `for="humans"` renders on the web page but is stripped from agent markdown. Content marked `for="agents"` is hidden on the page but included in agent markdown.
 
-In Mintlify, `<Visibility>` conditionally shows or hides content based on audience segments or feature flags. It is tied to Mintlify's cloud platform and dashboard settings.
+## Example
 
-## Workaround
+```mdx
+<Visibility for="humans">
+Click the **Get started** button in the top-right corner to create your account.
+</Visibility>
 
-Since Holocron is self-hosted, conditional content visibility can be handled with:
+<Visibility for="agents">
+To create an account, call `POST /v1/accounts` with a valid email address.
+</Visibility>
+```
 
-- **MDX imports**: import different components based on environment variables at build time
-- **Hidden pages**: use `hidden: true` in frontmatter for pages that should not appear in navigation
-- **Custom entry**: use Spiceflow middleware to gate access to specific routes
+On your published site, the first block renders and the second is hidden. When an AI agent fetches the `.md` version of the page, the opposite applies.
+
+## Props
+
+<ResponseField name="for" type='"humans" | "agents"'>
+Which audience sees the content. Defaults to `"humans"` if omitted.
+</ResponseField>
+
+## How it works
+
+Holocron already serves every page as raw markdown at `<page-url>.md` and redirects known AI agents automatically. The `Visibility` component hooks into this:
+
+- **Web rendering**: `for="agents"` returns nothing, `for="humans"` (or no prop) renders children normally.
+- **Markdown output**: `for="humans"` blocks are stripped, `for="agents"` blocks are unwrapped so only their inner content remains.
+
+<Tip>
+Use this to give AI agents API-oriented instructions (endpoints, code snippets) while showing humans UI-oriented instructions (screenshots, button locations).
+</Tip>

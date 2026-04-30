@@ -658,3 +658,15 @@ export function ColorItem({
     </div>
   )
 }
+
+/**
+ * Conditional content visibility for humans vs AI agents.
+ *
+ * On the web page: `for="humans"` (or no `for`) renders children normally,
+ * `for="agents"` renders nothing. The `.md` route does the inverse via
+ * `stripVisibilityForAgents()` in raw-markdown.ts.
+ */
+export function Visibility({ for: audience, children }: { for?: 'humans' | 'agents'; children?: React.ReactNode }) {
+  if (audience === 'agents') return null
+  return <>{children}</>
+}

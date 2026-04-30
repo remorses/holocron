@@ -1,9 +1,19 @@
 /**
- * AI agent detection for raw markdown serving.
+ * AI agent detection and markdown transforms for raw markdown serving.
  *
  * Used by the agent redirect middleware in app-factory.tsx to
- * 302-redirect AI agents to `.md` URLs.
+ * 302-redirect AI agents to `.md` URLs, and to transform MDX source
+ * for agent consumption (e.g. stripping `<Visibility for="humans">` blocks).
  */
+
+import type { Root, RootContent } from 'mdast'
+import { visit, SKIP } from 'unist-util-visit'
+import remarkMdx from 'remark-mdx'
+import { remark } from 'remark'
+import { gfmToMarkdown } from 'mdast-util-gfm'
+import { mdxToMarkdown } from 'mdast-util-mdx'
+import { toMarkdown } from 'mdast-util-to-markdown'
+import remarkGfm from 'remark-gfm'
 
 /** UA substrings that identify known AI agents (case-insensitive). */
 const AGENT_UA_PATTERNS = [
@@ -34,4 +44,58 @@ export function isAgentRequest(request: Request): boolean {
   // User-Agent matches known AI agent patterns
   const ua = request.headers.get('user-agent') || ''
   return AGENT_UA_PATTERNS.some((pattern) => pattern.test(ua))
+}
+
+type JsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
+
+/** Read the `for` attribute value from a Visibility JSX node. */
+function getVisibilityAudience(node: JsxNode): string | undefined {
+  for (const attr of node.attributes) {
+    if (attr.type === 'mdxJsxAttribute' && attr.name === 'for' && typeof attr.value === 'string') {
+      return attr.value
+    }
+  }
+  return undefined
+}
+
+/**
+ * Transform MDX source for agent markdown output using mdast traversal.
+ *
+ * - Strips `<Visibility for="humans">` blocks entirely
+ * - Unwraps `<Visibility for="agents">` keeping inner content
+ * - Strips `<Visibility>` with no `for` prop (defaults to humans)
+ */
+export function stripVisibilityForAgents(mdx: string): string {
+  const processor = remark().use(remarkMdx).use(remarkGfm)
+  const tree: Root = processor.parse(mdx)
+  processor.runSync(tree)
+
+  let changed = false
+
+  visit(tree, (node, index, parent) => {
+    if (node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') return
+    const jsxNode = node as JsxNode
+    if (jsxNode.name !== 'Visibility') return
+    if (typeof index !== 'number' || !parent?.children) return
+
+    const audience = getVisibilityAudience(jsxNode)
+
+    if (audience === 'agents') {
+      // Unwrap: replace <Visibility for="agents"> with its children
+      parent.children.splice(index, 1, ...(jsxNode.children as RootContent[]))
+      changed = true
+      return [SKIP, index] // revisit at same index (new children spliced in)
+    }
+
+    // audience === 'humans' or no `for` prop → remove entirely
+    parent.children.splice(index, 1)
+    changed = true
+    return [SKIP, index]
+  })
+
+  if (!changed) return mdx
+
+  return toMarkdown(tree, {
+    extensions: [gfmToMarkdown(), mdxToMarkdown()],
+  })
 }

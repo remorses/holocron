@@ -71,6 +71,7 @@ export {
   Color,
   ColorRow,
   ColorItem,
+  Visibility,
 } from './mintlify/compat.tsx'
 export { Icon } from '../icon.tsx'
 export { Tabs, Tab } from './mintlify/tabs.tsx'
