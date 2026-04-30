@@ -130,7 +130,7 @@ export function TocInline({
       />
       <ul
         ref={listRef}
-        className='relative list-none m-0 p-0 flex flex-col gap-1.5 pt-1.5 pl-3 leading-[1.33] box-content'
+        className='relative list-none m-0 p-0 flex flex-col gap-2.5 pt-1.5 pl-3 leading-[1.33] box-content'
       >
         {visibleHeadings.map((heading) => {
           const isActive = heading.slug === activeHeadingId
@@ -283,7 +283,7 @@ export function NavGroupNode({
   // Top-level groups (depth 0) render as a flat section label — always expanded.
   if (depth === 0) {
     return (
-      <div className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-2.5'>
         <div
           className='cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
           style={{
@@ -324,7 +324,7 @@ export function NavGroupNode({
         {group.group}
       </button>
       <ExpandableContainer open={isExpanded}>
-        <div className='flex flex-col gap-2 pt-2'>
+        <div className='flex flex-col gap-2.5 pt-2'>
           {renderChildren(false)}
         </div>
       </ExpandableContainer>

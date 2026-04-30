@@ -244,6 +244,8 @@
   }
   html {
     scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
   }
   body {
     @apply bg-background text-foreground;
@@ -266,10 +268,10 @@
    ===================================================================== */
 
 @layer holocron {
-  /* Custom scrollbar styles: shadcn-inspired.
-     scrollbar-width: thin → Firefox uses a narrow track (~6px, matches our webkit width).
-     scrollbar-gutter: stable → reserves scrollbar space even when content doesn't overflow,
-     preventing horizontal layout shift when a scrollbar appears/disappears. */
+  /* Transparent thin scrollbars.
+      scrollbar-width: thin → Firefox uses a narrow track (~6px, matches our webkit width).
+      scrollbar-gutter: stable → reserves scrollbar space even when content doesn't overflow,
+      preventing horizontal layout shift when a scrollbar appears/disappears. */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -277,22 +279,19 @@
     border-radius: var(--radius-md);
   }
 
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
+    background: transparent;
     border-radius: var(--radius-md);
     border: none;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
-  }
-
-  .dark ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  .dark ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: transparent;
   }
 
   /* Stable scrollbar gutter for scrollable panels (sidebar, aside).
@@ -301,6 +300,7 @@
   .scrollbar-stable {
     scrollbar-gutter: stable;
     scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
   }
 
   /* Hide scrollbars while keeping scroll functionality */
