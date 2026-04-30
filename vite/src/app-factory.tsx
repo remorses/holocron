@@ -1139,8 +1139,8 @@ export async function createHolocronApp(providers: HolocronProviders) {
           yield {
             type: 'notice' as const,
             code: TEMPORARY_AI_NOTICE_CODE,
-            title: 'Using a temporary AI model',
-            message: 'This docs site is using Holocron\'s temporary low-cost model. Add a Holocron API key before deploying if you want AI chat to keep working reliably.',
+            title: 'Temporary AI model',
+            message: 'Add HOLOCRON_API_KEY before deploying for reliable AI chat.',
             command: 'npx @holocron.so/cli keys create --name production',
           }
 
