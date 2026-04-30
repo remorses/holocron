@@ -108,6 +108,40 @@ export const gatewayApp = new Spiceflow()
         : resolveModel(TEMPORARY_MODEL),
     }
 
+    if (!authResult) {
+      const messages = Reflect.get(body, 'messages')
+      const chatMessages = Array.isArray(messages) ? messages : []
+      const prompt = chatMessages
+        .filter((message) => message && typeof message === 'object' && Reflect.get(message, 'role') !== 'system')
+        .slice(-4)
+        .map((message) => {
+          const role = Reflect.get(message, 'role')
+          const content = Reflect.get(message, 'content')
+          return `${typeof role === 'string' ? role : 'user'}: ${typeof content === 'string' ? content : ''}`
+        })
+        .filter(Boolean)
+        .join('\n')
+      const temporaryModel = resolveModel(TEMPORARY_MODEL) as keyof AiModels
+      const result = await env.AI.run(temporaryModel, { prompt })
+      const responseText = typeof result === 'object' && result ? Reflect.get(result, 'response') : result
+      const choices = typeof result === 'object' && result ? Reflect.get(result, 'choices') : undefined
+      const firstChoice = Array.isArray(choices) ? choices[0] : undefined
+      const choiceText = firstChoice && typeof firstChoice === 'object' ? Reflect.get(firstChoice, 'text') : undefined
+      const content = typeof responseText === 'string'
+        ? responseText
+        : typeof choiceText === 'string'
+          ? choiceText
+          : ''
+
+      return Response.json({
+        id: `chatcmpl_${crypto.randomUUID()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: normalizedBody.model,
+        choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }],
+      }, { headers: buildCorsHeaders() })
+    }
+
     const upstreamHeaders = new Headers()
     const cloudflareToken = cleanToken(env.CLOUDFLARE_AI_API_TOKEN)
     const gatewayToken = cleanToken(env.AIG_GATEWAY_TOKEN)
