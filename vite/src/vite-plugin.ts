@@ -396,19 +396,33 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
         }
 
-        const entries = [...allImports.entries()]
+        const sortedImports = [...allImports.entries()]
           .sort(([a], [b]) => a.localeCompare(b))
-          .map(([moduleKey, absPath]) => {
-            return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath)})`
-          })
+        const hasMdxImports = sortedImports.some(([, absPath]) => /\.mdx?$/.test(absPath))
+        const entries = sortedImports.map(([moduleKey, absPath]) => {
+          if (/\.mdx?$/.test(absPath)) {
+            const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
+            return [
+              `  ${JSON.stringify(moduleKey)}: async () => {`,
+              `    const markdown = (await import(${JSON.stringify(absPath + '?raw')})).default`,
+              `    return { default: function ImportedMdx(props) {`,
+              `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)} })`,
+              `    } }`,
+              `  }`,
+            ].join('\n')
+          }
+          return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath)})`
+        })
 
         return [
+          hasMdxImports ? `import React from 'react'` : undefined,
+          hasMdxImports ? `import { RenderImportedMdx } from '@holocron.so/vite/src/lib/mdx-components-map'` : undefined,
           `const modules = {`,
           entries.join(',\n'),
           `}`,
           `export function getModules() { return modules }`,
           `export const pagesDirPrefix = ${JSON.stringify(pagesDirPrefix)}`,
-        ].join('\n')
+        ].filter(Boolean).join('\n')
       }
       if (id === RESOLVED_APP) {
         // When `options.entry` is set, re-export the user's file (they own

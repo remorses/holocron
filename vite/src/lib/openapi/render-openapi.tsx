@@ -153,7 +153,7 @@ function FieldList({ schema, depth = 0 }: { schema: SchemaInfo; depth?: number }
     return (
       <div className='flex flex-col'>
         {Object.entries(schema.properties).map(([k, v]) => (
-          <Property key={k} name={k} schema={v as SchemaInfo} required={(schema.required ?? []).includes(k)} depth={depth} />
+          <Property key={k} name={k} schema={v} required={(schema.required ?? []).includes(k)} depth={depth} />
         ))}
       </div>
     )

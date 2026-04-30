@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm db:migrate:local && vite dev",
     "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
-    "build": "pnpm generate-openapi && vite build",
+    "build": "pnpm generate-openapi && vite build && tsc",
     "start": "node dist/rsc/index.js",
     "test:preview-ai-chat": "tsx scripts/test-preview-ai-chat.ts",
     "types": "wrangler types",

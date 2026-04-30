@@ -76,6 +76,7 @@ export function computeActiveId(validIds: Set<string>, fallbackId: string): stri
   let candidate = ''
 
   for (const heading of headings) {
+    if (!validIds.has(heading.id)) continue
     if (heading.getBoundingClientRect().top <= threshold) {
       candidate = heading.id
     } else {

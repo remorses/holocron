@@ -56,9 +56,9 @@ function sampleString(schema: SchemaDoc): string {
 }
 
 function sampleNumber(schema: SchemaDoc): number {
-  if (typeof schema.minimum === 'number') return schema.minimum as number
-  if (typeof schema.exclusiveMinimum === 'number') return (schema.exclusiveMinimum as number) + 1
-  if (typeof schema.maximum === 'number') return schema.maximum as number
+  if (typeof schema.minimum === 'number') return schema.minimum
+  if (typeof schema.exclusiveMinimum === 'number') return schema.exclusiveMinimum + 1
+  if (typeof schema.maximum === 'number') return schema.maximum
   if (schema.type === 'number' && (schema.format === 'float' || schema.format === 'double')) return 0.1
   return 0
 }

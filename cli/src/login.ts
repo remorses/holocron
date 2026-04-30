@@ -9,6 +9,10 @@ export const loginCli = goke()
 
 const CLI_CLIENT_ID = 'holocron-cli'
 
+async function readJson<T>(response: Response): Promise<T> {
+  return await response.json() as T
+}
+
 loginCli
   .command('login', 'Authenticate with Holocron via browser login')
   .option('-u, --url [url]', 'Holocron website URL (default: https://holocron.so)')
@@ -29,14 +33,14 @@ loginCli
       return proc.exit(1)
     }
 
-    const deviceData = await deviceRes.json() as {
+    const deviceData: {
       device_code: string
       user_code: string
       verification_uri: string
       verification_uri_complete: string
       expires_in: number
       interval: number
-    }
+    } = await readJson(deviceRes)
 
     const verificationUrl = deviceData.verification_uri_complete ||
       `${baseUrl}${deviceData.verification_uri}?user_code=${deviceData.user_code}`
@@ -65,7 +69,7 @@ loginCli
       })
 
       if (pollRes.ok) {
-        const result = await pollRes.json() as { access_token?: string }
+        const result = await readJson<{ access_token?: string }>(pollRes)
         const token = result.access_token
         if (token) {
           spinner.stop('Approved!')
@@ -76,7 +80,7 @@ loginCli
         }
       }
 
-      const pollBody = await pollRes.json().catch(() => ({})) as { error?: string }
+      const pollBody = await readJson<{ error?: string }>(pollRes).catch((): { error?: string } => ({}))
       if (pollBody.error === 'expired_token') {
         spinner.stop('Code expired')
         clack.log.error('Device code expired. Run `holocron login` again.')
@@ -118,7 +122,7 @@ loginCli
       output.log('Session expired or invalid. Run `holocron login` again.')
       return proc.exit(1)
     }
-    const session = await res.json() as { user?: { name?: string; email?: string } }
+    const session = await readJson<{ user?: { name?: string; email?: string } }>(res)
     output.log(`Logged in as ${session.user?.name || 'unknown'} (${session.user?.email || 'unknown'})`)
     output.log(`Server: ${baseUrl}`)
   })

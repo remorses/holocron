@@ -93,11 +93,11 @@ function dereferenceSync(
       }
     } else if (isPlainObject(current)) {
       if (typeof current.$ref === 'string') {
-        const ref = current.$ref as string
+        const ref = current.$ref
         delete current.$ref
         const resolved = resolve(resolveRefSync(ref, cloned))
         if (resolved && typeof resolved === 'object') {
-          setOriginalRef(resolved as object, ref)
+          setOriginalRef(resolved, ref)
           setOriginalRef(current as object, ref)
         }
         if (typeof resolved === 'boolean') throw new Error('invalid schema')
@@ -162,8 +162,8 @@ export async function processOpenAPISpec(input: string | object): Promise<Derefe
 /** Extract all operations from a dereferenced OpenAPI document. */
 export function extractOperations(doc: DereferencedDocument): ExtractedOperation[] {
   const { dereferenced } = doc
-  const globalSecurity = (dereferenced.security ?? []) as OpenAPIV3.SecurityRequirementObject[]
-  const globalServers = (dereferenced.servers ?? []) as OpenAPIV3.ServerObject[]
+  const globalSecurity = dereferenced.security ?? []
+  const globalServers = dereferenced.servers ?? []
   const operations: ExtractedOperation[] = []
 
   const paths = dereferenced.paths ?? {}
@@ -171,10 +171,10 @@ export function extractOperations(doc: DereferencedDocument): ExtractedOperation
     if (!pathItem || typeof pathItem !== 'object') continue
     const pi = pathItem as OpenAPIV3.PathItemObject
     const pathParams = (pi.parameters ?? []) as OpenAPIV3.ParameterObject[]
-    const pathServers = (pi.servers ?? []) as OpenAPIV3.ServerObject[]
+    const pathServers = pi.servers ?? []
 
     for (const method of HTTP_METHODS) {
-      const op = pi[method] as OpenAPIV3.OperationObject | undefined
+      const op = pi[method]
       if (!op) continue
 
       const opParams = (op.parameters ?? []) as OpenAPIV3.ParameterObject[]
@@ -188,8 +188,8 @@ export function extractOperations(doc: DereferencedDocument): ExtractedOperation
         method,
         operation: op,
         parameters: Array.from(paramMap.values()),
-        security: (op.security ?? globalSecurity) as OpenAPIV3.SecurityRequirementObject[],
-        servers: (op.servers ?? (pathServers.length > 0 ? pathServers : globalServers)) as OpenAPIV3.ServerObject[],
+        security: op.security ?? globalSecurity,
+        servers: op.servers ?? (pathServers.length > 0 ? pathServers : globalServers),
         tags: op.tags ?? ['default'],
       })
     }

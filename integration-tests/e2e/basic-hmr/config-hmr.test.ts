@@ -22,7 +22,7 @@ async function openBasicHmrHome(page: Page, request: APIRequestContext) {
   });
   expect(response.status()).toBe(200);
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "Test Docs" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Test Docs", exact: true })).toBeVisible({
     timeout: 10000,
   });
   await page.waitForLoadState("networkidle");
@@ -310,7 +310,7 @@ test.describe.serial("config HMR @dev", () => {
     page,
   }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Test Docs" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "Test Docs", exact: true })).toBeVisible({ timeout: 10_000 });
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveTitle(/Test Docs/);

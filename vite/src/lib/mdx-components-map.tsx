@@ -5,9 +5,9 @@
 
 import { Fragment, type ReactNode } from 'react'
 import { SafeMdxRenderer, type SafeMdxError } from 'safe-mdx'
-import type { Root, RootContent } from 'mdast'
+import type { PhrasingContent, Root, RootContent } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
-import type { EagerModules } from 'safe-mdx/parse'
+import { mdxParse, type EagerModules } from 'safe-mdx/parse'
 import {
   Aside,
   FullWidth,
@@ -101,6 +101,31 @@ function ImageWithProps(props: {
       className={props.className || ''}
     />
   )
+}
+
+function getAttributeString(node: Extract<MyRootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>, name: string): string | undefined {
+  const attr = node.attributes.find((a) => a.type === 'mdxJsxAttribute' && a.name === name)
+  if (!attr) return undefined
+  if (typeof attr.value === 'string') return attr.value
+  if (attr.value && typeof attr.value === 'object') return attr.value.value
+  return undefined
+}
+
+function isPhrasingContent(node: MyRootContent): node is PhrasingContent {
+  return node.type === 'break'
+    || node.type === 'delete'
+    || node.type === 'emphasis'
+    || node.type === 'footnoteReference'
+    || node.type === 'html'
+    || node.type === 'image'
+    || node.type === 'imageReference'
+    || node.type === 'inlineCode'
+    || node.type === 'link'
+    || node.type === 'linkReference'
+    || node.type === 'mdxJsxTextElement'
+    || node.type === 'mdxTextExpression'
+    || node.type === 'strong'
+    || node.type === 'text'
 }
 
 export const mdxComponents = {
@@ -203,24 +228,20 @@ export function renderNode(
   // the heading's children are [paragraph → [text]] not [text]. We unwrap
   // paragraphs to get the inline content directly.
   if ((node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Heading') {
-    const attrs = node.attributes ?? []
-    const levelAttr = attrs.find((a: any) => a.type === 'mdxJsxAttribute' && a.name === 'level')
-    const idAttr = attrs.find((a: any) => a.type === 'mdxJsxAttribute' && a.name === 'id')
-    const levelValue = levelAttr?.value
-    const level = Number(typeof levelValue === 'object' && levelValue ? (levelValue as any).data?.estree?.body?.[0]?.expression?.value : 1)
+    const level = Number(getAttributeString(node, 'level') ?? 1)
     // Unwrap paragraph wrappers: flow element text gets wrapped in paragraphs by the parser
-    const inlineChildren: any[] = []
-    for (const child of (node.children ?? []) as any[]) {
+    const inlineChildren: PhrasingContent[] = []
+    for (const child of node.children ?? []) {
       if (child.type === 'paragraph') {
         inlineChildren.push(...(child.children ?? []))
-      } else {
+      } else if (isPhrasingContent(child)) {
         inlineChildren.push(child)
       }
     }
-    const id = typeof idAttr?.value === 'string' ? idAttr.value : slugify(extractText(inlineChildren))
+    const id = getAttributeString(node, 'id') ?? slugify(extractText(inlineChildren))
     return (
       <SectionHeading key={id} id={id} level={level}>
-        {inlineChildren.map((child: any, i: number) => {
+        {inlineChildren.map((child, i) => {
           return <Fragment key={i}>{transform(child)}</Fragment>
         })}
       </SectionHeading>
@@ -270,6 +291,27 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
       components={mdxComponents}
       renderNode={renderNode}
       modules={modules}
+      baseUrl={baseUrl}
+      onError={logMdxError}
+    />
+  )
+}
+
+/** Render MDX imported from another MDX file, e.g.
+ *  `import Snippet from '/snippets/example.mdx'` followed by `<Snippet />`.
+ *  Vite doesn't compile user MDX snippets as JSX, so the virtual modules map
+ *  exposes raw markdown and this component renders it through the same safe-mdx
+ *  component map used by pages. */
+export function RenderImportedMdx({ markdown, baseUrl }: {
+  markdown: string
+  baseUrl?: string
+}) {
+  return (
+    <SafeMdxRenderer
+      markdown={markdown}
+      mdast={mdxParse(markdown)}
+      components={mdxComponents}
+      renderNode={renderNode}
       baseUrl={baseUrl}
       onError={logMdxError}
     />

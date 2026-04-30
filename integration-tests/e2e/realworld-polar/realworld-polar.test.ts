@@ -141,7 +141,7 @@ test.describe("realworld-polar fixture", () => {
     await page.goto("/features/checkout/links", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("heading", { name: "Checkout Links" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Checkout Links", exact: true })).toBeVisible();
     await expect(page.getByText("customer_email")).toBeVisible();
     await expect(page.getByText("custom_field_data.{slug}")).toBeVisible();
     await expect(page.getByText("utm_source")).toBeVisible();
@@ -191,11 +191,11 @@ test.describe("realworld-polar fixture", () => {
           heading: node.querySelector("h1, h2, h3, h4, h5, h6")?.textContent?.trim() ?? null,
           deadSpace: Math.round(rect.height) - usedHeight,
         }];
-      }),
+      }).filter((item) => item.heading !== null),
     );
 
     expect(sectionBoxes).toEqual([
-      { heading: "Lemon Squeezy", deadSpace: 0 },
+      { heading: "Migrate to Polar", deadSpace: 0 },
       { heading: "Getting Started", deadSpace: 0 },
       { heading: "Supported Migrations", deadSpace: 0 },
       { heading: "Open Source", deadSpace: 0 },

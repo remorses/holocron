@@ -344,7 +344,7 @@ test.describe("group.expanded default state", () => {
 });
 
 test.describe("client navigation sidebar state", () => {
-  test("client navigation expands the active page node and shows that page headings", async ({
+  test("client navigation expands the active page node and renders the destination page", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 900 });
@@ -363,7 +363,7 @@ test.describe("client navigation sidebar state", () => {
 
     await nav.getByRole("link", { name: "Expanded Child" }).click();
     await expect(page).toHaveURL(/\/expanded-child$/);
-    await expect(nav.getByRole("link", { name: "Visible on first load" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Visible on first load" })).toBeVisible();
   });
 
   test("hash heading becomes active only when no scroll-driven heading is active", async ({

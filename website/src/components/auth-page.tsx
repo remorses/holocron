@@ -29,8 +29,8 @@ export function AuthPage({
           <CardTitle className="text-2xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
-        {children && <CardContent className="flex flex-col gap-4">{children}</CardContent>}
-        {footer && <CardFooter className="flex-col gap-3">{footer}</CardFooter>}
+        {children ? <CardContent className="flex flex-col gap-4">{children}</CardContent> : null}
+        {footer ? <CardFooter className="flex-col gap-3">{footer}</CardFooter> : null}
       </Card>
     </main>
   )

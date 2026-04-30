@@ -457,7 +457,7 @@ function isHolocronLoaderData(value: unknown): value is HolocronLoaderData {
 }
 
 /** Build the docs Spiceflow app. Await once at module load. */
-export async function createHolocronApp(providers: HolocronProviders) {
+export async function createHolocronApp(providers: HolocronProviders): Promise<AnySpiceflow> {
   const [config, { navigation, switchers }, slugs] = await Promise.all([
     providers.getConfig(),
     providers.getNavigationData(),
@@ -1282,4 +1282,4 @@ export async function createHolocronApp(providers: HolocronProviders) {
   return app
 }
 
-export type HolocronApp = Awaited<ReturnType<typeof createHolocronApp>>
+export type HolocronApp = AnySpiceflow

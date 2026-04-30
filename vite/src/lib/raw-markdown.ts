@@ -61,8 +61,8 @@ function getVisibilityAudience(node: JsxNode): string | undefined {
     if (typeof attr.value === 'string') return attr.value
 
     // Expression: for={"agents"} — value is an mdxJsxAttributeValueExpression
-    if (attr.value && typeof attr.value === 'object' && 'value' in attr.value) {
-      const raw = (attr.value.value as string).trim()
+    if (attr.value && typeof attr.value === 'object') {
+      const raw = attr.value.value.trim()
       // Strip surrounding quotes: "agents" or 'agents' or `agents`
       const match = raw.match(/^["'`](\w+)["'`]$/)
       if (match) return match[1]

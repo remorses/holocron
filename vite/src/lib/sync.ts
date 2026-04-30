@@ -148,7 +148,7 @@ export async function syncNavigation({
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
-      .filter((slug): slug is string => slug !== undefined),
+      .filter(Boolean),
   )
 
   // 2. Enrich a single page slug
@@ -497,7 +497,7 @@ function slugToHref(slug: string): string {
   return `/${cleaned}`
 }
 
-const IMPORT_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js']
+const IMPORT_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js', '.mdx', '.md']
 
 /** A resolved import with both the module key (for safe-mdx matching) and
  *  the absolute filesystem path (for the lazy import() call). */
@@ -550,7 +550,7 @@ function resolveImportSources({
         ?? tryResolveImport(path.join(projectRoot, source.slice(1)))
       if (resolved) {
         const ext = path.extname(resolved)
-        const moduleKey = normalized + ext
+        const moduleKey = path.extname(source) ? normalized : normalized + ext
         if (!seen.has(moduleKey)) {
           seen.add(moduleKey)
           result.push({ moduleKey, absPath: resolved })
