@@ -9,7 +9,7 @@ test.describe("raw markdown image placeholders", () => {
 
     const markdown = await response.text();
     expect(markdown).toContain("Supercharge your AI agents with Polar as a Model Context Protocol (MCP) server.");
-    expect(markdown).toMatch(/<(?:img|PixelatedImage)\s/);
+    expect(markdown).toMatch(/<(?:img|Image)\s/);
     expect(markdown).not.toContain('placeholder="data:image/png;base64,');
   });
 });

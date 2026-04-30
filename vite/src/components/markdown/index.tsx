@@ -34,7 +34,7 @@ export {
 } from './layout.tsx'
 
 export { CodeBlock } from './code-block.tsx'
-export { PixelatedImage, LazyVideo, ChartPlaceholder } from './image.tsx'
+export { Image, LazyVideo, ChartPlaceholder } from './image.tsx'
 export {
   ComparisonTable,
   Table,

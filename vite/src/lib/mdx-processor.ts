@@ -238,9 +238,9 @@ export type ResolvedImage = {
 
 /**
  * Mutate the mdast tree in place:
- * - Markdown images (![alt](src)) → converted to mdxJsxFlowElement PixelatedImage
- * - Root-level JSX img → converted to PixelatedImage while preserving authored attrs
- * - Existing JSX PixelatedImage → src updated, width/height/placeholder attrs added
+ * - Markdown images (![alt](src)) → converted to mdxJsxFlowElement Image
+ * - Root-level JSX img → converted to Image while preserving authored attrs
+ * - Existing JSX Image → src updated, width/height/placeholder attrs added
  *
  * Then serializes the mutated tree back to MDX string.
  */
@@ -272,7 +272,7 @@ function rewriteNode(
     const child = node.children[0]
     if (child && child.type === 'image' && images.has(child.url)) {
       const resolved = images.get(child.url)!
-      return [createPixelatedImageNode({
+      return [createImageNode({
         src: resolved.publicSrc,
         alt: child.alt || '',
         meta: resolved.meta,
@@ -292,16 +292,16 @@ function rewriteNode(
     return [node]
   }
 
-  // JSX element: PixelatedImage or img
+  // JSX element: Image or img
   if (isJsxImageElement(node)) {
     const src = getJsxAttrValue(node, 'src')
     if (src && images.has(src)) {
       const resolved = images.get(src)!
       if (node.type === 'mdxJsxFlowElement' && node.name === 'img') {
-        return [createPixelatedImageNodeFromJsxImage(node, resolved)]
+        return [createImageNodeFromJsxImage(node, resolved)]
       }
       setJsxAttr({ node, attrName: 'src', value: resolved.publicSrc })
-      if (node.name === 'PixelatedImage') {
+      if (node.name === 'Image') {
         setJsxAttr({ node, attrName: 'width', value: String(resolved.meta.width) })
         setJsxAttr({ node, attrName: 'height', value: String(resolved.meta.height) })
         setJsxAttr({ node, attrName: 'placeholder', value: resolved.meta.placeholder })
@@ -313,7 +313,7 @@ function rewriteNode(
   // Standalone image (not in paragraph — shouldn't happen but handle it)
   if (node.type === 'image' && images.has(node.url)) {
     const resolved = images.get(node.url)!
-    return [createPixelatedImageNode({
+    return [createImageNode({
       src: resolved.publicSrc,
       alt: node.alt || '',
       meta: resolved.meta,
@@ -331,11 +331,11 @@ function rewriteNode(
   return [node]
 }
 
-/** Create an mdxJsxFlowElement node for PixelatedImage with all attributes */
-function createPixelatedImageNode({ src, alt, meta }: { src: string; alt: string; meta: ImageMeta }): RootContent {
+/** Create an mdxJsxFlowElement node for Image with all attributes */
+function createImageNode({ src, alt, meta }: { src: string; alt: string; meta: ImageMeta }): RootContent {
   const node: FlowJsxNode = {
     type: 'mdxJsxFlowElement',
-    name: 'PixelatedImage',
+    name: 'Image',
     attributes: [
       { type: 'mdxJsxAttribute', name: 'src', value: src },
       { type: 'mdxJsxAttribute', name: 'alt', value: alt },
@@ -348,7 +348,7 @@ function createPixelatedImageNode({ src, alt, meta }: { src: string; alt: string
   return node
 }
 
-function createPixelatedImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): RootContent {
+function createImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): RootContent {
   const attributes = copyJsxAttrsExcept(node, ['src', 'placeholder', 'intrinsicWidth', 'intrinsicHeight'])
   attributes.push({ type: 'mdxJsxAttribute', name: 'src', value: resolved.publicSrc })
   if (!attributes.some((attr) => attr.type === 'mdxJsxAttribute' && attr.name === 'alt')) {
@@ -361,7 +361,7 @@ function createPixelatedImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedI
   )
   const imageNode: FlowJsxNode = {
     type: 'mdxJsxFlowElement',
-    name: 'PixelatedImage',
+    name: 'Image',
     attributes,
     children: [],
   }
@@ -375,7 +375,7 @@ function isJsxImageElement(node: RootContent): node is JsxNode {
     return false
   }
   const name = node.name
-  return name === 'PixelatedImage' || name === 'img'
+  return name === 'Image' || name === 'img'
 }
 
 function isJsxElement(node: RootContent): node is JsxNode {

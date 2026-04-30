@@ -536,7 +536,7 @@ title: Remote image
       distDir: project.distDir,
     })
 
-    expect(result.mdxContent.page).toContain(`<PixelatedImage src="${imageUrl}" alt="" intrinsicWidth="1" intrinsicHeight="1" placeholder="data:image/webp;base64,`)
+    expect(result.mdxContent.page).toContain(`<Image src="${imageUrl}" alt="" intrinsicWidth="1" intrinsicHeight="1" placeholder="data:image/webp;base64,`)
   })
 
   test('cache invalidation when MDX file changes', async () => {
@@ -637,7 +637,7 @@ title: Image Page
       distDir: project.distDir,
     })
 
-    expect(result.mdxContent.page).toContain('<PixelatedImage')
+    expect(result.mdxContent.page).toContain('<Image')
     expect(result.mdxContent.page).not.toContain('data:image/webp;base64,stale')
 
     const imageCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-images.json'), 'utf-8'))
@@ -936,7 +936,7 @@ icon: rocket
       distDir: project.distDir,
     })
 
-    expect(result.mdxContent.page).toContain('<PixelatedImage')
+    expect(result.mdxContent.page).toContain('<Image')
     expect(result.pageIconRefs.page).toEqual(['lucide:rocket', 'lucide:github'])
   })
 

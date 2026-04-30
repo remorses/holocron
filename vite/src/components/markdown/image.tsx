@@ -2,9 +2,9 @@
 
 /**
  * Image + video primitives with pixelated placeholders.
- * PixelatedImage, LazyVideo, ChartPlaceholder.
+ * Image, LazyVideo, ChartPlaceholder.
  *
- * PixelatedImage wraps its real image with `react-medium-image-zoom` so users
+ * Image wraps its real image with `react-medium-image-zoom` so users
  * can click to zoom — the Medium-style dialog animates the image to fill the
  * viewport. The library is SSR-safe: its `hasImage()` check requires a live
  * `imgEl` ref, which is null on the server, so `document`/`window` are only
@@ -24,13 +24,13 @@ import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
 
 /**
- * Pixelated placeholder image. Uses a tiny pre-generated image with CSS
+ * Mintlify-compatible image with a pixelated placeholder. Uses a tiny pre-generated image with CSS
  * image-rendering: pixelated (nearest-neighbor sampling) for a crisp mosaic
  * effect. The real image fades in on top once loaded with a light blur-to-sharp
  * transition — no flash because the placeholder stays underneath and the real
  * image starts soft and transparent.
  */
-export function PixelatedImage({
+export function Image({
   src,
   placeholder,
   alt,
@@ -208,7 +208,7 @@ function buildImageFrameStyle({
 
 /**
  * Lazy video with pixelated poster placeholder. Same visual pattern as
- * PixelatedImage but for <video>. Poster layers (pixelated → real) show
+ * Image but for <video>. Poster layers (pixelated → real) show
  * through the transparent video element. Uses native loading="lazy" +
  * preload="none" so zero bytes are downloaded until the element is near
  * the viewport and the user clicks play.
@@ -247,8 +247,23 @@ export function LazyVideo({
   style?: React.CSSProperties
 }) {
   const [posterLoaded, setPosterLoaded] = useState(false)
+  const videoAttrs: React.VideoHTMLAttributes<HTMLVideoElement> & { loading?: 'lazy' } = {
+    controls: true,
+    preload: 'none',
+    loading: 'lazy',
+    width,
+    height,
+    style: {
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      zIndex: 2,
+      background: 'transparent',
+    },
+  }
 
-  // Handles cached poster images (same pattern as PixelatedImage)
+  // Handles cached poster images (same pattern as Image)
   const posterRef = useCallback((img: HTMLImageElement | null) => {
     if (img?.complete && img.naturalWidth > 0) {
       setPosterLoaded(true)
@@ -310,22 +325,8 @@ export function LazyVideo({
       {/* Video: transparent until playing, native lazy + no preload.
           Controls float on top of poster layers. No poster attr needed
           because the img layers handle the visual placeholder.
-          loading="lazy" is a newer HTML attr not yet in React's TS types. */}
-      <video
-        controls
-        preload='none'
-        {...({ loading: 'lazy' } as React.VideoHTMLAttributes<HTMLVideoElement>)}
-        width={width}
-        height={height}
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          zIndex: 2,
-          background: 'transparent',
-        }}
-      >
+          loading="lazy" is passed through for browsers that support it. */}
+      <video {...videoAttrs}>
         <source src={src} type={type} />
       </video>
     </div>

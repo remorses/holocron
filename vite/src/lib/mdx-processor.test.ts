@@ -280,11 +280,11 @@ Some text.
     `)
   })
 
-  test('collects JSX PixelatedImage srcs', () => {
+  test('collects JSX Image srcs', () => {
     const result = processMdx(`
-<PixelatedImage src="./screenshot.png" alt="screenshot" />
+<Image src="./screenshot.png" alt="screenshot" />
 
-<PixelatedImage src="/hero.png" alt="hero" />
+<Image src="/hero.png" alt="hero" />
 `)
     expect(result.imageSrcs).toMatchInlineSnapshot(`
       [
@@ -339,12 +339,12 @@ describe('rewriteMdxImages', () => {
     },
   }
 
-  test('converts standalone markdown image to PixelatedImage JSX', () => {
+  test('converts standalone markdown image to Image JSX', () => {
     const { mdast } = processMdx(`![screenshot](./images/screenshot.png)`)
     const images = new Map([['./images/screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<PixelatedImage src="/_holocron/images/a1b2c3-screenshot.png" alt="screenshot" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="screenshot" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
@@ -359,27 +359,27 @@ describe('rewriteMdxImages', () => {
     `)
   })
 
-  test('adds width/height/placeholder to existing JSX PixelatedImage', () => {
-    const { mdast } = processMdx(`<PixelatedImage src="./screenshot.png" alt="test" />`)
+  test('adds width/height/placeholder to existing JSX Image', () => {
+    const { mdast } = processMdx(`<Image src="./screenshot.png" alt="test" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<PixelatedImage src="/_holocron/images/a1b2c3-screenshot.png" alt="test" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="test" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
 
-  test('converts root-level JSX img to PixelatedImage while preserving authored attrs', () => {
+  test('converts root-level JSX img to Image while preserving authored attrs', () => {
     const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<PixelatedImage className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
+      "<Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
 
-  test('converts nested flow JSX img to PixelatedImage while preserving authored attrs', () => {
+  test('converts nested flow JSX img to Image while preserving authored attrs', () => {
     const { mdast } = processMdx(`
 <Step title="Create account">
   <img className="hero" height="200" src="./screenshot.png" />
@@ -388,7 +388,7 @@ describe('rewriteMdxImages', () => {
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Step title="Create account">
-        <PixelatedImage className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
+        <Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       </Step>
       "
     `)
@@ -419,7 +419,7 @@ description: A description
       description: A description
       ---
 
-      <PixelatedImage src="/_holocron/images/a1b2c3-screenshot.png" alt="shot" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      <Image src="/_holocron/images/a1b2c3-screenshot.png" alt="shot" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })

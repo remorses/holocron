@@ -5,7 +5,7 @@
 
 import { Fragment, type ReactNode } from 'react'
 import { SafeMdxRenderer, type SafeMdxError } from 'safe-mdx'
-import type { Root, RootContent, Image } from 'mdast'
+import type { Root, RootContent } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
 import type { EagerModules } from 'safe-mdx/parse'
 import {
@@ -29,7 +29,7 @@ import {
   TableRow,
   TableCell,
   TableCaption,
-  PixelatedImage,
+  Image,
   Bleed,
   List,
   OL,
@@ -80,7 +80,7 @@ import { slugify, extractText } from './toc-tree.ts'
 import { SidebarAssistant } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
 
-function PixelatedImageWithProps(props: {
+function ImageWithProps(props: {
   src: string
   alt: string
   width?: string | number
@@ -91,7 +91,7 @@ function PixelatedImageWithProps(props: {
   className?: string
 }) {
   return (
-    <PixelatedImage
+    <Image
       src={props.src}
       alt={props.alt}
       width={props.width}
@@ -122,7 +122,8 @@ export const mdxComponents = {
   li: Li,
   Caption,
   ComparisonTable,
-  PixelatedImage: PixelatedImageWithProps,
+  Image: ImageWithProps,
+  img: ImageWithProps,
   Bleed,
   Aside,
   FullWidth,
@@ -180,7 +181,7 @@ export function renderNode(
 ): ReactNode | undefined {
   if (node.type === 'image') {
     const imgNode = node
-    return <PixelatedImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
+    return <ImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
   }
   if (node.type === 'heading') {
     const heading = node
