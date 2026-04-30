@@ -16,11 +16,10 @@
  *   }
  */
 
-import { router, useLoaderData, useRouterState } from 'spiceflow/react'
+import { router, useLoaderData } from 'spiceflow/react'
 import type { HolocronLoaderData } from './app-factory.tsx'
 
 export { router }
-export const useHolocronRouterState = () => useRouterState()
 
 export const href = router.href
 

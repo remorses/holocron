@@ -3,16 +3,16 @@
 /**
  * SideNav — Agentation-style left sidebar.
  * Reads navigation from loader data and active page state from
- * `useHolocronData()` (per-request). Hosts the sidebar search input.
+ * `useHolocronData()` (per-request) and `useRouterState()`. Hosts the sidebar search input.
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { flushSync } from 'react-dom'
-import { router } from 'spiceflow/react'
+import { router, useRouterState } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
-import { useHolocronData, useHolocronRouterState } from '../../router.ts'
+import { useHolocronData } from '../../router.ts'
 import { buildSearchEntries, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
@@ -35,7 +35,7 @@ export function SideNav() {
     currentHeadings,
     ancestorGroupKeys,
   } = useHolocronData()
-  const { pathname } = useHolocronRouterState()
+  const { pathname } = useRouterState()
   const effectiveCurrentPageHref = pathname || currentPageHref
   const siteConfig = site.config
   const searchEntries = useMemo(() => buildSearchEntries(site), [site])
