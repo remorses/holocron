@@ -209,4 +209,27 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
       `Hydration errors found:\n${errors.join("\n")}`,
     ).toHaveLength(0);
   });
+
+  test("no hydration errors on non-default tab page", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    const errors: string[] = [];
+    page.on("console", (msg) => {
+      const text = msg.text().toLowerCase();
+      const type = msg.type();
+      if (type === "error" && text.includes("hydrat")) errors.push(msg.text());
+      if (text.includes("cannot be a descendant")) errors.push(msg.text());
+      if (text.includes("did not match")) errors.push(msg.text());
+    });
+    page.on("pageerror", (err) => {
+      if (err.message.includes("Failed to fetch dynamically imported module:")) return;
+      errors.push(err.message);
+    });
+
+    await page.goto("/theming");
+    await page.waitForLoadState("networkidle");
+    expect(
+      errors,
+      `Hydration errors found:\n${errors.join("\n")}`,
+    ).toHaveLength(0);
+  });
 });

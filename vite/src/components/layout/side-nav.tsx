@@ -12,7 +12,7 @@ import { router } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
-import { useHolocronData, useHolocronRouterState } from '../../router.ts'
+import { useHolocronData } from '../../router.ts'
 import { buildSearchEntries, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
@@ -29,20 +29,18 @@ export function SideNav() {
     currentHeadings,
     ancestorGroupKeys,
   } = useHolocronData()
-  const { pathname } = useHolocronRouterState()
-  const effectiveCurrentPageHref = pathname || currentPageHref
   const siteConfig = site.config
   const searchEntries = useMemo(() => buildSearchEntries(site), [site])
 
   // Active tab's groups. Derived from static nav + current href.
   const groups = useMemo(
-    () => getActiveGroups(site.navigation, effectiveCurrentPageHref ?? '/'),
-    [effectiveCurrentPageHref, site],
+    () => getActiveGroups(site.navigation, currentPageHref ?? '/'),
+    [currentPageHref, site],
   )
   const effectiveAncestorGroupKeys = useMemo(() => {
-    if (!effectiveCurrentPageHref) return ancestorGroupKeys
-    return collectAncestorGroupKeys(site, effectiveCurrentPageHref)
-  }, [ancestorGroupKeys, effectiveCurrentPageHref, site])
+    if (!currentPageHref) return ancestorGroupKeys
+    return collectAncestorGroupKeys(site, currentPageHref)
+  }, [ancestorGroupKeys, currentPageHref, site])
 
   const headingIds = useMemo(() => currentHeadings.map((heading) => heading.slug), [currentHeadings])
   const fallbackId = headingIds[0] ?? ''
@@ -160,7 +158,7 @@ export function SideNav() {
   const noResults = isSearchActive && focusableHrefs.length === 0
   const sidebarTreeContext = useMemo(() => {
     return {
-      currentPageHref: effectiveCurrentPageHref,
+      currentPageHref,
       expandedGroups: effectiveExpandedGroups,
       onToggleGroup: toggleGroup,
       activeHeadingId: activeId,
@@ -168,7 +166,7 @@ export function SideNav() {
       highlightedHref,
       highlightedRef,
     }
-  }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, toggleGroup])
+  }, [activeId, currentPageHref, effectiveExpandedGroups, highlightedHref, searchState, toggleGroup])
 
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
