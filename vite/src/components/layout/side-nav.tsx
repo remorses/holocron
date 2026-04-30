@@ -6,16 +6,21 @@
  * `useHolocronData()` (per-request). Hosts the sidebar search input.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { flushSync } from 'react-dom'
 import { router } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
-import { useHolocronData } from '../../router.ts'
+import { useHolocronData, useHolocronRouterState } from '../../router.ts'
 import { buildSearchEntries, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
+
+// Platform detection — stable refs for useSyncExternalStore (no re-subscription)
+const noopSubscribe = () => () => {}
+const getIsMac = () => /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
+const getServerIsMac = () => true // default to ⌘K on SSR
 
 /**
  * Zero-prop sidebar — reads navigation from the root loader `site` object
@@ -23,24 +28,27 @@ import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
  * from the Spiceflow loader via `useHolocronData()`.
  */
 export function SideNav() {
+  const isMac = useSyncExternalStore(noopSubscribe, getIsMac, getServerIsMac)
   const {
     site,
     currentPageHref,
     currentHeadings,
     ancestorGroupKeys,
   } = useHolocronData()
+  const { pathname } = useHolocronRouterState()
+  const effectiveCurrentPageHref = pathname || currentPageHref
   const siteConfig = site.config
   const searchEntries = useMemo(() => buildSearchEntries(site), [site])
 
   // Active tab's groups. Derived from static nav + current href.
   const groups = useMemo(
-    () => getActiveGroups(site.navigation, currentPageHref ?? '/'),
-    [currentPageHref, site],
+    () => getActiveGroups(site.navigation, effectiveCurrentPageHref ?? '/'),
+    [effectiveCurrentPageHref, site],
   )
   const effectiveAncestorGroupKeys = useMemo(() => {
-    if (!currentPageHref) return ancestorGroupKeys
-    return collectAncestorGroupKeys(site, currentPageHref)
-  }, [ancestorGroupKeys, currentPageHref, site])
+    if (!effectiveCurrentPageHref) return ancestorGroupKeys
+    return collectAncestorGroupKeys(site, effectiveCurrentPageHref)
+  }, [ancestorGroupKeys, effectiveCurrentPageHref, site])
 
   const headingIds = useMemo(() => currentHeadings.map((heading) => heading.slug), [currentHeadings])
   const fallbackId = headingIds[0] ?? ''
@@ -104,14 +112,10 @@ export function SideNav() {
     [db, searchEntries],
   )
 
-  // Global F hotkey to focus search input
+  // Global ⌘K / Ctrl+K hotkey to focus search input
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const target = e.target
-        if (!(target instanceof HTMLElement)) return
-        const tag = target.tagName
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         searchInputRef.current?.focus()
       }
@@ -158,7 +162,7 @@ export function SideNav() {
   const noResults = isSearchActive && focusableHrefs.length === 0
   const sidebarTreeContext = useMemo(() => {
     return {
-      currentPageHref,
+      currentPageHref: effectiveCurrentPageHref,
       expandedGroups: effectiveExpandedGroups,
       onToggleGroup: toggleGroup,
       activeHeadingId: activeId,
@@ -166,7 +170,7 @@ export function SideNav() {
       highlightedHref,
       highlightedRef,
     }
-  }, [activeId, currentPageHref, effectiveExpandedGroups, highlightedHref, searchState, toggleGroup])
+  }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, toggleGroup])
 
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
@@ -206,19 +210,25 @@ export function SideNav() {
         {!query && (
           <span
             aria-hidden='true'
-            className='absolute right-2.5 pointer-events-none uppercase'
-            style={{
-              fontFamily: 'var(--font-code)',
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--muted-foreground)',
-              border: '1px solid var(--text-tertiary)',
-              borderRadius: '4px',
-              padding: '0px 4px',
-              lineHeight: '16px',
-            }}
+            className='absolute right-2.5 pointer-events-none flex items-center gap-1'
+            style={{ color: 'var(--muted-foreground)' }}
           >
-            F
+            {(isMac ? ['⌘', 'K'] : ['Ctrl', 'K']).map((key) => (
+              <kbd
+                key={key}
+                style={{
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  lineHeight: '18px',
+                  padding: '0 5px',
+                  border: '1px solid var(--text-tertiary)',
+                  borderRadius: '5px',
+                }}
+              >
+                {key}
+              </kbd>
+            ))}
           </span>
         )}
       </div>
