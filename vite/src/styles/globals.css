@@ -245,7 +245,7 @@
   html {
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
+    scrollbar-color: color-mix(in srgb, var(--foreground) 20%, transparent) transparent;
   }
   body {
     @apply bg-background text-foreground;
@@ -268,7 +268,7 @@
    ===================================================================== */
 
 @layer holocron {
-  /* Transparent thin scrollbars.
+  /* Thin scrollbars with transparent tracks.
       scrollbar-width: thin → Firefox uses a narrow track (~6px, matches our webkit width).
       scrollbar-gutter: stable → reserves scrollbar space even when content doesn't overflow,
       preventing horizontal layout shift when a scrollbar appears/disappears. */
@@ -285,13 +285,13 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: transparent;
+    background: color-mix(in srgb, var(--foreground) 20%, transparent);
     border-radius: var(--radius-md);
     border: none;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: transparent;
+    background: color-mix(in srgb, var(--foreground) 32%, transparent);
   }
 
   /* Stable scrollbar gutter for scrollable panels (sidebar, aside).
@@ -300,7 +300,7 @@
   .scrollbar-stable {
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
+    scrollbar-color: color-mix(in srgb, var(--foreground) 20%, transparent) transparent;
   }
 
   /* Hide scrollbars while keeping scroll functionality */
