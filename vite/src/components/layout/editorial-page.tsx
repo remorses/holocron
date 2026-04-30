@@ -250,7 +250,7 @@ export function EditorialPage({
         </div>
       )}
 
-      <div className='grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
+      <div className='grow grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
         {/* TOC sidebar: sticky in its own outer grid column so section rows
             below are sized only by the content/right-rail subgrid. */}
         <div className='slot-sidebar-left shrink-0 lg:self-stretch'>
@@ -267,7 +267,13 @@ export function EditorialPage({
           </div>
         </div>
 
-        <div className='grid grid-cols-1 gap-y-(--section-gap) lg:col-[2/-1] lg:grid-cols-subgrid'>
+        <div
+          className='grid grid-cols-1 gap-y-(--section-gap) lg:col-[2/-1] lg:grid-cols-subgrid lg:self-stretch'
+          style={sections ? {
+            /* N auto rows for sections + 1fr spacer + auto footer → pushes footer to bottom */
+            gridTemplateRows: `repeat(${sections.length}, auto) 1fr auto`,
+          } : undefined}
+        >
           {sections ? (
             /* Flattened sections layout: section wrappers are direct children
                of the inner content grid only. The left TOC lives in the outer
@@ -344,9 +350,11 @@ export function EditorialPage({
                   </Fragment>
                 )
               })}
+              {/* Spacer row: 1fr track pushes footer to bottom when grid stretches */}
+              <div style={{ gridRow: sections.length + 1 }} className='lg:col-[1]' />
               <div
                 className='slot-main lg:col-[1]'
-                style={{ gridRow: sections.length + 1 }}
+                style={{ gridRow: sections.length + 2 }}
               >
                 <ContentFooter />
               </div>
@@ -354,10 +362,11 @@ export function EditorialPage({
           ) : (
             <>
               {/* Flat layout: single article column + optional static sidebar */}
-              <div className='slot-main flex flex-col gap-(--section-gap) lg:col-[1] text-(length:--type-body-size)'>
+              <div className='slot-main flex flex-col gap-(--section-gap) lg:col-[1] text-(length:--type-body-size) grow'>
                 <article className='flex flex-col gap-(--prose-gap)'>
                   {children}
                 </article>
+                <div className='grow' />
                 <ContentFooter />
               </div>
 
