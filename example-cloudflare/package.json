@@ -6,7 +6,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "vite build && wrangler deploy"
+    "deployment": "vite build && wrangler deploy"
   },
   "dependencies": {
     "@holocron.so/vite": "workspace:^",

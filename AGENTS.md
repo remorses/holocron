@@ -413,17 +413,17 @@ When a page renders but client behavior is dead (tree rows do not collapse, sear
 
 ```bash
 # 1. Deploy preview (runs migration + build + deploy)
-pnpm --dir website deploy
+pnpm --dir website deployment
 
 # 2. Verify preview works (load the page, check logs)
 
 # 3. Deploy production (runs migration + build + deploy)
-pnpm --dir website deploy:prod
+pnpm --dir website deployment:prod
 ```
 
 If the preview migration or deploy fails, **stop**. Do not continue to production.
 
-The `deploy` and `deploy:prod` scripts run the D1 migration before building and deploying. If migration fails, the `&&` chain stops and the deploy never happens.
+The `deployment` and `deployment:prod` scripts run the D1 migration before building and deploying. If migration fails, the `&&` chain stops and the deploy never happens.
 
 ## Secrets management — always use sigillo
 
