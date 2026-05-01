@@ -32,6 +32,7 @@ export type HolocronChatNoticeChunk = {
 }
 
 export type HolocronChatChunk = UIMessageChunk | HolocronChatNoticeChunk
+  | { type: 'model-messages'; messages: ModelMessage[] }
 
 const chatRequestSchema = z.object({
   messages: z.array(z.any()),
@@ -195,5 +196,6 @@ export const gatewayApp = new Spiceflow()
         yield { type: 'finish-step' }
       }
       yield { type: 'finish', finishReason: result.finishReason }
+      yield { type: 'model-messages', messages: result.response.messages }
     },
   })

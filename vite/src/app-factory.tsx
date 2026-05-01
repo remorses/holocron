@@ -368,59 +368,24 @@ function renderMdxPage({
   )
 }
 
-type ChatRequestPart = {
-  type: string
-  text?: string
-}
-
-type ChatRequestMessage = {
-  id?: string
-  role: 'user' | 'assistant'
-  parts: ChatRequestPart[]
-}
-
-type ChatRequestBody = {
-  messages: ChatRequestMessage[]
+function parseChatRequestBody(value: unknown): {
+  modelMessages: Record<string, unknown>[]
+  message: string
   currentSlug: string
+} {
+  if (!isRecord(value) || !Array.isArray(value.modelMessages) || typeof value.message !== 'string' || typeof value.currentSlug !== 'string') {
+    throw new Error('Invalid chat request body')
+  }
+
+  return {
+    modelMessages: value.modelMessages.filter(isRecord),
+    message: value.message,
+    currentSlug: value.currentSlug,
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
-}
-
-function isChatRole(role: unknown): role is ChatRequestMessage['role'] {
-  return role === 'user' || role === 'assistant'
-}
-
-function parseChatRequestBody(value: unknown): ChatRequestBody {
-  if (!isRecord(value) || !Array.isArray(value.messages) || typeof value.currentSlug !== 'string') {
-    throw new Error('Invalid chat request body')
-  }
-
-  const messages = value.messages.flatMap((message): ChatRequestMessage[] => {
-    if (!isRecord(message) || !isChatRole(message.role) || !Array.isArray(message.parts)) {
-      return []
-    }
-    const parts = message.parts.flatMap((part): ChatRequestPart[] => {
-      if (!isRecord(part) || typeof part.type !== 'string') {
-        return []
-      }
-      return [{
-        type: part.type,
-        ...(typeof part.text === 'string' ? { text: part.text } : {}),
-      }]
-    })
-    return [{
-      role: message.role,
-      ...(typeof message.id === 'string' ? { id: message.id } : {}),
-      parts,
-    }]
-  })
-
-  return {
-    messages,
-    currentSlug: value.currentSlug,
-  }
 }
 
 function getToolArgs(input: unknown): Record<string, unknown> {
@@ -1072,19 +1037,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         Answer concisely based on the documentation. Include code examples when relevant.
       `
 
-      // Convert new user messages from UIMessage parts format
-      const newUserMessages = body.messages.map((msg) => ({
-        role: msg.role === 'assistant' ? 'assistant' as const : 'user' as const,
-        content:
-          msg.parts
-            ?.filter((p) => p.type === 'text' && p.text)
-            .map((p) => p.text!)
-            .join('\n') || '',
-      }))
-
       const messages = [
         { role: 'system' as const, content: systemPrompt },
-        ...newUserMessages,
+        ...body.modelMessages,
+        { role: 'user' as const, content: body.message },
       ]
 
       // Points to the hosted Holocron chat route. It owns model selection,
@@ -1173,6 +1129,18 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               toolName: toolNames.get(chunk.toolCallId) || 'bash',
               output: (rawOutput.stdout || '').slice(0, 500),
               ...(rawOutput.stderr ? { error: rawOutput.stderr } : {}),
+            }
+            continue
+          }
+
+          if (chunk.type === 'model-messages') {
+            yield {
+              type: 'model-messages' as const,
+              messages: [
+                ...body.modelMessages,
+                { role: 'user', content: body.message },
+                ...chunk.messages,
+              ],
             }
             continue
           }

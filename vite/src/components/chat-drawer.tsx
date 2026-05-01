@@ -15,7 +15,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { decodeFederationPayload } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
-import type { ChatMessage, ChatPart } from '../lib/chat-store.ts'
+import type { ChatMessage, ChatModelMessage, ChatPart } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import {
   ChatMessages,
@@ -70,16 +70,8 @@ function ChatDrawerInner() {
       if (!submitText) return
       if (chatState.getState().isGenerating) return
 
-      const currentMessages = chatState.getState().messages
+      const modelMessages = chatState.getState().modelMessages
       const nextUserMessage: ChatMessage = { role: 'user', parts: [{ type: 'text', text: submitText }] }
-      const requestMessages = [...currentMessages, nextUserMessage]
-        .map((message) => ({
-          role: message.role,
-          parts: message.parts
-            .filter((part) => part.type === 'text')
-            .map((part) => ({ type: 'text' as const, text: part.text })),
-        }))
-        .filter((message) => message.parts.length > 0)
 
       const controller = new AbortController()
       chatState.setState((s) => ({
@@ -99,7 +91,8 @@ function ChatDrawerInner() {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
-            messages: requestMessages,
+            modelMessages,
+            message: submitText,
             currentSlug: currentPageHref || '/',
           }),
           signal: controller.signal,
@@ -116,10 +109,14 @@ function ChatDrawerInner() {
         }
 
         const decoded = await decodeFederationPayload<{
-          stream: AsyncIterable<ChatPart>
+          stream: AsyncIterable<ChatPart | { type: 'model-messages'; messages: ChatModelMessage[] }>
         }>(response)
 
         for await (const part of decoded.stream) {
+          if (part.type === 'model-messages') {
+            chatState.setState({ modelMessages: part.messages })
+            continue
+          }
           chatState.setState((s) => ({
             messages: appendAssistantPart(s.messages, part),
           }))
@@ -161,6 +158,7 @@ function ChatDrawerInner() {
       isGenerating: false,
       abortController: null,
       messages: [],
+      modelMessages: [],
       draftText: '',
       pendingSubmit: false,
       errorMessage: null,
