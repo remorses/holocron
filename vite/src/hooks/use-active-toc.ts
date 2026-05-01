@@ -4,8 +4,7 @@
  * Shared hook for tracking which heading is currently active in the viewport.
  *
  * Uses a scroll listener to find the last heading that scrolled above the
- * active zone (50% of viewport height). Falls back to the URL hash, then to
- * the first heading.
+ * top navbar offset. Falls back to the URL hash, then to the first heading.
  *
  * Scroll-based approach is more predictable than IntersectionObserver:
  * no rootMargin magic, no visible-set tracking — just "which heading is
@@ -22,12 +21,11 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 
 /**
- * A heading counts as "active" when it's in the top half of the viewport.
- * This is generous enough that the first heading activates as soon as the
- * page loads (even before any scrolling), and headings near the bottom of
- * the page activate when clicked without needing to scroll past a fixed line.
+ * A heading counts as "active" when its top edge reaches the fixed-header
+ * offset. This tracks the section currently at the top of the page instead
+ * of switching early when a heading gets near the viewport center.
  */
-const ACTIVE_ZONE_RATIO = 0.5
+const ACTIVE_HEADING_OFFSET = 50
 
 /**
  * When true, the URL hash takes priority over scroll-based detection.
@@ -54,7 +52,7 @@ export type ActiveTocSnapshot = {
  * Find the active heading based on scroll position + hash state.
  *
  * When hashIsAuthoritative (user just clicked a heading link), the hash wins.
- * Otherwise, find the last heading above the active zone threshold.
+ * Otherwise, find the last heading above the fixed-header offset.
  */
 export function computeActiveId(validIds: Set<string>, fallbackId: string): string {
   const hash = window.location.hash.replace(/^#/, '')
@@ -71,13 +69,12 @@ export function computeActiveId(validIds: Set<string>, fallbackId: string): stri
     return hash
   }
 
-  const threshold = window.innerHeight * ACTIVE_ZONE_RATIO
   const headings = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
   let candidate = ''
 
   for (const heading of headings) {
     if (!validIds.has(heading.id)) continue
-    if (heading.getBoundingClientRect().top <= threshold) {
+    if (heading.getBoundingClientRect().top <= ACTIVE_HEADING_OFFSET) {
       candidate = heading.id
     } else {
       break
