@@ -6,6 +6,11 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   server: { port: 7664, strictPort: true },
   clearScreen: false,
+  environments: {
+    rsc: {
+      optimizeDeps: { include: ['@holocron.so/vite > safe-mdx > linkedom'] },
+    },
+  },
   plugins: [
     holocron({ entry: './src/server.tsx', pagesDir: 'src/pages' }),
     tailwindcss(),
