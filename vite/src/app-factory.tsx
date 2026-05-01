@@ -54,8 +54,7 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-import { streamText, type ModelMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -66,9 +65,7 @@ import {
   resolveActiveVersionHref,
 } from './site-data.ts'
 import type { HolocronConfig } from './config.ts'
-import { createChatBashTool } from './lib/chat-bash-tool.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
-import { resolveIconSvgs } from './lib/resolve-icons.ts'
 
 /* ── Server-only page lookup (uses parsePageFrontmatter → zod/yaml) ── */
 
@@ -527,6 +524,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   async function buildLoaderSite(slug: string | undefined): Promise<HolocronSiteData> {
     const pageIconRefs = slug ? await providers.getPageIconRefs(slug) : []
+    const { resolveIconSvgs } = await import('./lib/resolve-icons.ts')
     return {
       ...clientSite,
       icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])),
@@ -1067,6 +1065,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         files[`/docs/${slug}.mdx`] = mdx
       }
 
+      const { createChatBashTool } = await import('./lib/chat-bash-tool.ts')
       const bash = await createChatBashTool({ files, skillUrls: [] })
 
       // Build system prompt
@@ -1176,6 +1175,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           return
         }
 
+        const [{ createOpenAICompatible }, { streamText }] = await Promise.all([
+          import('@ai-sdk/openai-compatible'),
+          import('ai'),
+        ])
         const gateway = createOpenAICompatible({
           name: 'holocron-gateway',
           baseURL: GATEWAY_URL,

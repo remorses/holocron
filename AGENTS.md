@@ -77,6 +77,8 @@ Note: Tailwind arbitrary value classes like `text-[length:var(--code-font-size)]
 
 Always use flexbox/grid `gap` classes for spacing between sibling elements. Never use `margin-top`, `margin-bottom`, `padding-top`, or `padding-bottom` to create space between items in a list or stack. Gap is simpler (no first/last-child overrides), composes better, and avoids margin collapse bugs. Use `py-*` only for internal padding within a single element (e.g. padding inside a card), not for spacing between siblings.
 
+Never use Tailwind Typography's `prose` classes to style Holocron MDX content or embedded Mintlify-compatible components. `prose` pollutes descendants with broad selectors, margins, font sizes, and element-specific overrides that make nested components unpredictable. Instead, each safe-mdx-rendered element owns its own styles directly (`P`, `List`, `Li`, headings, tables, code, etc.), and containers use flexbox/grid plus `gap-(--prose-gap)` for rhythm. This keeps arbitrary embedded components stable because they do not have to fight inherited prose styles.
+
 Any container-like MDX component (`Callout`, `Accordion`, `Expandable`, `Panel`, `Card`, `Frame`, `Prompt`, `Steps`, `Step`, lists, API fields/examples, tiles, tree wrappers, etc.) must own its inner vertical rhythm with `flex flex-col gap-(--prose-gap)` on the container body, using the `--prose-gap` CSS variable defined in `globals.css`. This keeps all containers aligned with the page's overall vertical rhythm. Do not use hardcoded gap values like `gap-3` or `gap-4` — always use `gap-(--prose-gap)` so spacing stays consistent when the token changes. Do not rely on paragraph margins inside containers — many editorial nodes render with margins stripped, so raw MDX children will visually collapse unless the container explicitly provides gap spacing.
 
 When a container can receive arbitrary MDX children, also add `no-bleed` on that container/body so nested code blocks, lists, and images do not leak outside the card frame.
@@ -480,6 +482,25 @@ Tests use Playwright's `request` fixture (not raw `fetch()`) so per-project `bas
 - `pnpm test-e2e` — runs every fixture in dev mode (one Vite server per fixture)
 - `pnpm test-e2e-start` — builds every fixture, runs every fixture in prod mode
 - `pnpm test-e2e --project=<name>` — runs one specific fixture
+
+**Checking bundle sizes**:
+
+Run a fixture build with visualizer enabled, then sum JS files in each build output:
+
+```bash
+pnpm --dir vite build
+ANALYZE_BUNDLE=1 pnpm --dir integration-tests fixtures:build realworld-polar
+RUN=integration-tests/fixtures/realworld-polar/.e2e-dist/<latest-run>
+node --input-type=module -e "import fs from 'node:fs';import path from 'node:path';function walk(d,a=[]){for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);e.isDirectory()?walk(p,a):a.push(p)}return a}for(const env of ['rsc','ssr','client']){const files=walk(path.join(process.env.RUN,env)).filter(p=>/\.(mjs|js)$/.test(p));const size=files.reduce((n,p)=>n+fs.statSync(p).size,0);console.log(env,(size/1024/1024).toFixed(2),'MiB',files.length,'js files')}"
+```
+
+Example output:
+
+```txt
+rsc 7.56 MiB 301 js files
+ssr 2.17 MiB 9 js files
+client 3.82 MiB 18 js files
+```
 
 **Playwright waits**: avoid fixed sleeps like `page.waitForTimeout(2000)` in integration tests. Prefer condition-based waits such as `expect(...).toBeVisible()`, `page.waitForLoadState('networkidle')`, `expect.poll(...)`, or a concrete DOM/state change tied to the behavior under test.
 

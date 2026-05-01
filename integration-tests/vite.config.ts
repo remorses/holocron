@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { holocron } from "@holocron.so/vite/vite";
+import { visualizer } from "rollup-plugin-visualizer";
 import {
   cleanupFixtureRunPaths,
   createE2EViteConfig,
@@ -29,6 +30,21 @@ import {
  */
 cleanupFixtureRunPaths(resolveFixtureRunPaths());
 
+const analyzeBundle = process.env.ANALYZE_BUNDLE === "1";
+
 export default defineConfig(createE2EViteConfig({
-  plugins: [holocron()],
+  build: analyzeBundle ? { sourcemap: true } : undefined,
+  plugins: [
+    holocron(),
+    analyzeBundle
+      ? visualizer({
+          emitFile: true,
+          filename: "stats.html",
+          template: "treemap",
+          gzipSize: true,
+          brotliSize: true,
+          sourcemap: true,
+        })
+      : undefined,
+  ],
 }));

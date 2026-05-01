@@ -42,7 +42,7 @@ export function Mermaid({ chart }: { chart: string; placement?: string; actions?
 
     async function renderDiagram() {
       try {
-        const { default: mermaid } = await import('mermaid')
+        const { default: mermaid } = await import('#mermaid')
         // Re-initialize every time because theme is baked into the SVG output
         mermaid.initialize({
           startOnLoad: false,
