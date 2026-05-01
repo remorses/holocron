@@ -7,7 +7,6 @@ import { getActionRequest, json, parseFormData, Spiceflow, redirect } from 'spic
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
 import { app as holocronApp } from '@holocron.so/vite/app'
-import { gatewayApp } from './gateway.ts'
 import { apiApp } from './api.ts'
 import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage } from './components/auth-page.tsx'
@@ -282,7 +281,6 @@ export const app = new Spiceflow()
   .use(authApp)
   .use(apiApp)
   .use(schemaApp)
-  .use(gatewayApp)
   .use(holocronApp)
 
 export type App = typeof app

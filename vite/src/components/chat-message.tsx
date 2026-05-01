@@ -76,10 +76,6 @@ function ChatPartRenderer({
     return <ChatUserMessage text={part.text} />
   }
 
-  if (part.type === 'notice') {
-    return <ChatNotice part={part} />
-  }
-
   if (part.type === 'text') {
     return (
       <div className='flex flex-col gap-(--prose-gap) text-[13px]'>
@@ -97,36 +93,6 @@ function ChatPartRenderer({
   }
 
   return null
-}
-
-function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
-  return (
-    <div>
-      <div
-        className='no-bleed flex items-start gap-2.5 rounded-[10px] bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))] p-2 text-foreground'
-      >
-        <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' className='mt-0.5 size-4 shrink-0 text-yellow'>
-          <path d='M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575L6.457 1.047ZM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5Zm1 7a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z' />
-        </svg>
-        <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-          <div className='flex flex-col gap-0.5'>
-            <div className='text-xs font-semibold text-foreground'>
-              {part.title}
-            </div>
-            <div className='text-xs leading-[1.45] text-muted-foreground'>
-              {part.message}
-            </div>
-          </div>
-
-          {part.command && (
-            <code className='code-font-size block whitespace-pre-wrap rounded-[7px] bg-foreground/6 px-2 py-1.5 font-mono text-foreground'>
-              {part.command}
-            </code>
-          )}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 // ── Tool call started — animated PieLoader or static ◆ ──────────────

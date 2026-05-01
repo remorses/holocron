@@ -50,8 +50,7 @@ function getBaseUrl(): string {
   // Production: https://holocron.so, Preview: https://preview.holocron.so.
   // In local dev, wrangler injects the var from the top-level config; the code
   // below falls back to https://holocron.so if nothing is set.
-  const workerEnv: Cloudflare.Env = env
-  const override = workerEnv.BETTER_AUTH_URL
+  const override = env.BETTER_AUTH_URL
   if (typeof override === 'string' && override) return override
   return 'https://holocron.so'
 }

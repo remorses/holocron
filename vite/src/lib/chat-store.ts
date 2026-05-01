@@ -13,7 +13,6 @@ export type DrawerState = 'closed' | 'open'
  *  the client renders them with animated indicators. */
 export type ChatPart =
   | { type: 'user-message'; text: string }
-  | { type: 'notice'; code: string; title: string; message: string; command?: string }
   | { type: 'text'; jsx: ReactNode; text: string }
   | {
       type: 'tool-call'

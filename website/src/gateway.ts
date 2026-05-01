@@ -1,16 +1,14 @@
-// Thin AI chat proxy — forwards OpenAI-compatible chat requests to
-// Cloudflare Workers AI's OpenAI-compatible endpoint with minimal mutation.
-//
-// Validates holo_xxx API keys from the Authorization header against D1.
-// Tracks per-org monthly usage in KV (key: usage:<orgId>:<YYYY-MM>).
-//
-// The only request change is normalizing short model aliases to full `@cf/`
-// IDs. Request/response bodies and streaming are otherwise passed through
-// untouched so tools, message parts, and SSE framing stay Cloudflare-owned.
+// Hosted Holocron AI chat route. Validates holo_xxx API keys, fetches the
+// caller's docs.zip, creates the docs bash tool, and streams AI SDK UI chunks
+// through Spiceflow's typed SSE generator support.
 
-import { Spiceflow } from 'spiceflow'
+import type { ModelMessage, UIMessageChunk } from 'ai'
 import { env } from 'cloudflare:workers'
+import { unzipSync, strFromU8 } from 'fflate'
+import { Spiceflow } from 'spiceflow'
+import { z } from 'zod'
 import { getDb, hashApiKey } from './db.ts'
+import { createChatBashTool } from './chat-bash-tool.ts'
 
 const ALLOWED_MODELS: Record<string, string> = {
   'gemma-4-26b': '@cf/google/gemma-4-26b-a4b-it',
@@ -22,30 +20,18 @@ const ALLOWED_MODELS: Record<string, string> = {
 
 const DEFAULT_MODEL = 'glm-4.7-flash'
 const TEMPORARY_MODEL = 'llama-3.1-8b'
-
-// Monthly request limit per org (free tier). Will be configurable per plan later.
 const MONTHLY_REQUEST_LIMIT = 1000
+const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
 
-function resolveModel(requested?: string): string {
-  const model = !requested
-    ? ALLOWED_MODELS[DEFAULT_MODEL]!
-    : ALLOWED_MODELS[requested]
-      ?? Object.values(ALLOWED_MODELS).find((id) => id === requested)
-      ?? ALLOWED_MODELS[DEFAULT_MODEL]!
-  return model
-}
+export type HolocronChatChunk = UIMessageChunk
 
-function buildCorsHeaders() {
-  return {
-    'access-control-allow-origin': '*',
-    'access-control-allow-methods': 'POST, OPTIONS',
-    'access-control-allow-headers': 'authorization, content-type',
-  }
-}
+const chatRequestSchema = z.object({
+  messages: z.array(z.custom<ModelMessage>()),
+  docsZipUrl: z.string().url(),
+  skillUrls: z.array(z.string().url()).optional(),
+})
 
-function corsJson(body: Record<string, string>, status: number) {
-  return Response.json(body, { status, headers: buildCorsHeaders() })
-}
+const docsZipCache = new Map<string, { expiresAt: number; promise: Promise<Record<string, string>> }>()
 
 function getUsageKey(orgId: string): string {
   const now = new Date()
@@ -69,80 +55,89 @@ async function validateApiKey(authHeader: string | null): Promise<{ orgId: strin
   return { orgId: found.orgId, keyId: found.id }
 }
 
+async function fetchDocsZip(url: string): Promise<Record<string, string>> {
+  const parsed = new URL(url)
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new Error('docsZipUrl must use http or https')
+  }
+
+  const response = await fetch(parsed, {
+    headers: { accept: 'application/zip' },
+  })
+  if (!response.ok) {
+    throw new Error(`Failed to fetch docs.zip: ${response.status} ${response.statusText}`)
+  }
+
+  const zip = unzipSync(new Uint8Array(await response.arrayBuffer()))
+  return Object.fromEntries(
+    Object.entries(zip).map(([name, bytes]) => {
+      const slug = name.replace(/\.md$/, '')
+      return [`/docs/${slug}.mdx`, strFromU8(bytes)]
+    }),
+  )
+}
+
+function getDocsZipFiles(url: string): Promise<Record<string, string>> {
+  const now = Date.now()
+  const cached = docsZipCache.get(url)
+  if (cached && cached.expiresAt > now) return cached.promise
+
+  const promise = fetchDocsZip(url)
+  docsZipCache.set(url, { expiresAt: now + DOCS_ZIP_CACHE_MS, promise })
+  promise.catch(() => docsZipCache.delete(url))
+  return promise
+}
+
 export const gatewayApp = new Spiceflow()
-  .post('/api/ai/v1/chat/completions', async ({ request }) => {
-    // Validate the holo_xxx API key. Missing keys get a temporary cheap model
-    // so docs previews stay usable, but invalid provided keys still fail.
-    const authHeader = request.headers.get('authorization')
-    const authResult = await validateApiKey(authHeader)
-    if (authHeader && !authResult) {
-      return corsJson({ error: 'Missing or invalid API key. Use a holo_xxx key in the Authorization header.' }, 401)
-    }
-
-    // Check monthly usage in KV
-    const usageKey = authResult ? getUsageKey(authResult.orgId) : undefined
-    const currentUsage = usageKey ? parseInt(await env.USAGE_KV.get(usageKey) || '0', 10) : 0
-    if (usageKey && currentUsage >= MONTHLY_REQUEST_LIMIT) return corsJson({ error: 'Monthly request limit exceeded. Upgrade your plan for higher limits.' }, 429)
-
-    const body = await request.json().catch(() => null)
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      return corsJson({ error: 'Invalid JSON body' }, 400)
-    }
-    const requestedModel = Reflect.get(body, 'model')
-
-    const normalizedBody = {
-      ...body,
-      model: authResult
-        ? resolveModel(typeof requestedModel === 'string' ? requestedModel : undefined)
-        : resolveModel(TEMPORARY_MODEL),
-    }
-
-    const upstreamHeaders = new Headers()
-    upstreamHeaders.set('authorization', `Bearer ${env.CLOUDFLARE_AI_API_TOKEN}`)
-    upstreamHeaders.set('content-type', 'application/json')
-
-    const upstream = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1/chat/completions`, {
-      method: 'POST',
-      headers: upstreamHeaders,
-      body: JSON.stringify(normalizedBody),
-    })
-
-    // Increment usage counter (non-blocking, 30-day TTL so old months auto-expire)
-    if (usageKey) {
-      env.USAGE_KV.put(usageKey, String(currentUsage + 1), { expirationTtl: 60 * 60 * 24 * 35 })
-        .catch(() => {})
-    }
-
-    const headers = new Headers(upstream.headers)
-    for (const [key, value] of Object.entries(buildCorsHeaders())) {
-      headers.set(key, value)
-    }
-
-    return new Response(upstream.body, {
-      status: upstream.status,
-      statusText: upstream.statusText,
-      headers,
-    })
-  })
   .route({
-    method: 'OPTIONS',
-    path: '/api/ai/v1/chat/completions',
-    handler() {
-      return new Response(null, {
-        status: 204,
-        headers: buildCorsHeaders(),
+    method: 'POST',
+    path: '/api/holocron/chat',
+    request: chatRequestSchema,
+    async *handler({ request }): AsyncGenerator<HolocronChatChunk> {
+      const authHeader = request.headers.get('authorization')
+      const authResult = await validateApiKey(authHeader)
+      if (authHeader && !authResult) {
+        throw new Response('Missing or invalid API key. Use a holo_xxx key in the Authorization header.', { status: 401 })
+      }
+
+      const usageKey = authResult ? getUsageKey(authResult.orgId) : undefined
+      const currentUsage = usageKey ? parseInt(await env.USAGE_KV.get(usageKey) || '0', 10) : 0
+      if (usageKey && currentUsage >= MONTHLY_REQUEST_LIMIT) {
+        throw new Response('Monthly request limit exceeded. Upgrade your plan for higher limits.', { status: 429 })
+      }
+
+      const body = chatRequestSchema.parse(await request.json())
+      const [files, { createOpenAICompatible }, { streamText }] = await Promise.all([
+        getDocsZipFiles(body.docsZipUrl),
+        import('@ai-sdk/openai-compatible'),
+        import('ai'),
+      ])
+      const bash = await createChatBashTool({
+        files,
+        skillUrls: body.skillUrls ?? [],
       })
+
+      if (usageKey) {
+        env.USAGE_KV.put(usageKey, String(currentUsage + 1), { expirationTtl: 60 * 60 * 24 * 35 })
+          .catch(() => {})
+      }
+
+      const gateway = createOpenAICompatible({
+        name: 'holocron-workers-ai',
+        baseURL: `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1`,
+        apiKey: env.CLOUDFLARE_AI_API_TOKEN,
+      })
+      const modelName = authResult ? DEFAULT_MODEL : TEMPORARY_MODEL
+      const result = streamText({
+        model: gateway.chatModel(ALLOWED_MODELS[modelName] ?? ALLOWED_MODELS[DEFAULT_MODEL]!),
+        tools: { bash },
+        messages: body.messages,
+        stopWhen: (event) => event.steps.length >= 30,
+        abortSignal: request.signal,
+      })
+
+      for await (const chunk of result.toUIMessageStream()) {
+        yield chunk
+      }
     },
-  })
-  .get('/api/ai/v1/models', () => {
-    const models = Object.entries(ALLOWED_MODELS).map(([name, id]) => ({
-      id: name,
-      object: 'model' as const,
-      created: 0,
-      owned_by: 'cloudflare',
-      _cf_model_id: id,
-    }))
-    return Response.json({ object: 'list', data: models }, {
-      headers: { 'access-control-allow-origin': '*' },
-    })
   })

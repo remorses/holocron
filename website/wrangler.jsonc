@@ -19,8 +19,7 @@
     { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" }
   ],
   "vars": {
-    "CLOUDFLARE_ACCOUNT_ID": "103e73569e2f6d4aea0fb679ceb8709b",
-    "HOLOCRON_AI_GATEWAY_URL": "https://holocron.so/api/ai/v1"
+    "CLOUDFLARE_ACCOUNT_ID": "103e73569e2f6d4aea0fb679ceb8709b"
   },
   "routes": [
     { "pattern": "holocron.so/*", "zone_name": "holocron.so" }
@@ -58,8 +57,7 @@
         { "binding": "USAGE_KV", "id": "36b3209caddf42c79019b4c93d12b536" }
       ],
       "vars": {
-        "CLOUDFLARE_ACCOUNT_ID": "103e73569e2f6d4aea0fb679ceb8709b",
-        "HOLOCRON_AI_GATEWAY_URL": "https://preview.holocron.so/api/ai/v1"
+        "CLOUDFLARE_ACCOUNT_ID": "103e73569e2f6d4aea0fb679ceb8709b"
       },
       "secrets": {
         "required": [

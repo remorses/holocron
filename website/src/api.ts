@@ -21,6 +21,7 @@ import {
   generateApiKey,
   hashApiKey,
 } from './db.ts'
+import { gatewayApp } from './gateway.ts'
 
 // ── Shared schemas ──────────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ const ApiKeyCreatedResponse = z.object({
 // ── App ─────────────────────────────────────────────────────────────────
 
 export const apiApp = new Spiceflow()
+  .use(gatewayApp)
   .use(
     openapi({
       path: '/openapi.json',
@@ -239,3 +241,5 @@ export const apiApp = new Spiceflow()
       return { keyId: found.id, orgId: found.orgId }
     },
   })
+
+export type ApiApp = typeof apiApp

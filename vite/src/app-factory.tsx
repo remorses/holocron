@@ -12,7 +12,9 @@
 
 import './styles/globals.css'
 import React from 'react'
+import type { ApiApp as WebsiteApiApp } from 'website/src/api.ts'
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
+import { createSpiceflowFetch } from 'spiceflow/client'
 import { Head, ProgressBar } from 'spiceflow/react'
 import { mdxParse, resolveModules, type EagerModules } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
@@ -54,7 +56,6 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
-import type { ModelMessage } from 'ai'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -365,7 +366,6 @@ function renderMdxPage({
 type ChatRequestPart = {
   type: string
   text?: string
-  code?: string
 }
 
 type ChatRequestMessage = {
@@ -376,14 +376,9 @@ type ChatRequestMessage = {
 
 type ChatRequestBody = {
   messages: ChatRequestMessage[]
-  previousMessages?: ModelMessage[]
+  previousMessages?: Array<{ role: 'system' | 'user' | 'assistant' | 'tool'; content: any }>
   currentSlug: string
-  hasSeenNotice: boolean
 }
-
-const TEMPORARY_AI_NOTICE_CODE = 'HOLOCRON_TEMPORARY_AI_MODEL'
-const DEFAULT_CHAT_MODEL = 'glm-4.7-flash'
-const TEMPORARY_CHAT_MODEL = 'llama-3.1-8b'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -393,8 +388,12 @@ function isChatRole(role: unknown): role is ChatRequestMessage['role'] {
   return role === 'user' || role === 'assistant'
 }
 
-function isModelMessage(value: unknown): value is ModelMessage {
-  return isRecord(value) && typeof value.role === 'string' && 'content' in value
+function isModelMessage(value: unknown): value is NonNullable<ChatRequestBody['previousMessages']>[number] {
+  if (!isRecord(value)) return false
+  if (value.role === 'system' || value.role === 'user') return typeof value.content === 'string'
+  if (value.role === 'assistant') return typeof value.content === 'string' || Array.isArray(value.content)
+  if (value.role === 'tool') return Array.isArray(value.content)
+  return false
 }
 
 function parseChatRequestBody(value: unknown): ChatRequestBody {
@@ -413,7 +412,6 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
       return [{
         type: part.type,
         ...(typeof part.text === 'string' ? { text: part.text } : {}),
-        ...(typeof part.code === 'string' ? { code: part.code } : {}),
       }]
     })
     return [{
@@ -431,7 +429,6 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
     messages,
     currentSlug: value.currentSlug,
     ...(previousMessages ? { previousMessages } : {}),
-    hasSeenNotice: value.hasSeenNotice === true,
   }
 }
 
@@ -1053,21 +1050,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
       const body = parseChatRequestBody(await request.json())
 
-      // Build virtual filesystem with all docs
-      const files: Record<string, string> = {}
-      const pages = await Promise.all(slugs.map(async (slug) => {
-        const mdx = await providers.getMdxSource(slug)
-        return mdx === undefined ? undefined : [slug, mdx] as const
-      }))
-      for (const page of pages) {
-        if (!page) continue
-        const [slug, mdx] = page
-        files[`/docs/${slug}.mdx`] = mdx
-      }
-
-      const { createChatBashTool } = await import('./lib/chat-bash-tool.ts')
-      const bash = await createChatBashTool({ files, skillUrls: [] })
-
       // Build system prompt
       const allPages = collectAllPages(site.navigation)
       const pageIndex = allPages
@@ -1101,7 +1083,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       // Convert new user messages from UIMessage parts format
       const newUserMessages = body.messages.map((msg) => ({
-        role: msg.role,
+        role: msg.role === 'assistant' ? 'assistant' as const : 'user' as const,
         content:
           msg.parts
             ?.filter((p) => p.type === 'text' && p.text)
@@ -1110,87 +1092,40 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       }))
 
       const previousMessages = body.previousMessages ?? []
-      const messages: ModelMessage[] = [
-        { role: 'system', content: systemPrompt },
+      const messages = [
+        { role: 'system' as const, content: systemPrompt },
         ...previousMessages,
         ...newUserMessages,
       ]
 
-      // Points to holocron.so AI gateway which proxies to CF Workers AI.
-      // HOLOCRON_API_KEY (holo_xxx) authenticates the deployed site with the gateway.
-      const defaultGatewayUrl = 'https://preview.holocron.so/api/ai/v1'
-      const GATEWAY_URL = process.env.HOLOCRON_AI_GATEWAY_URL || defaultGatewayUrl
+      // Points to the hosted Holocron chat route. It owns model selection,
+      // quota checks, docs.zip fetching, and AI SDK streaming.
+      const chatUrl = new URL('https://preview.holocron.so/api/holocron/chat')
       const apiKey = process.env.HOLOCRON_API_KEY || ''
-      const usesTemporaryModel = !apiKey
       let textBuffer = ''
       const toolNames = new Map<string, string>()
-      const sessionMessages: ModelMessage[] = [
+      const sessionMessages: NonNullable<ChatRequestBody['previousMessages']> = [
         ...previousMessages,
         ...newUserMessages,
       ]
 
       async function* generateParts() {
-        if (usesTemporaryModel) {
-          if (!body.hasSeenNotice) {
-            yield {
-              type: 'notice' as const,
-              code: TEMPORARY_AI_NOTICE_CODE,
-              title: 'Temporary AI model',
-              message: 'Add HOLOCRON_API_KEY before deploying for reliable AI chat.',
-              command: 'npx @holocron.so/cli keys create --name production',
-            }
-          }
+        const chatFetch = createSpiceflowFetch<WebsiteApiApp>(chatUrl.origin, {
+          headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
+        })
+        const uiStream = await chatFetch('/api/holocron/chat', {
+          method: 'POST',
+          body: {
+            messages,
+            docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString(),
+            skillUrls: [],
+          },
+        })
 
-          const response = await fetch(`${GATEWAY_URL.replace(/\/$/, '')}/chat/completions`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ model: TEMPORARY_CHAT_MODEL, messages, max_tokens: 700 }),
-          })
-          let payload: unknown
-          try {
-            payload = await response.json()
-          } catch {
-            payload = undefined
-          }
-          const choices = isRecord(payload) && Array.isArray(payload.choices) ? payload.choices : []
-          const firstChoice = choices.find(isRecord)
-          const message = isRecord(firstChoice?.message) ? firstChoice.message : undefined
-          const text = typeof message?.content === 'string' ? message.content : ''
-
-          if (!response.ok || !text.trim()) {
-            yield { type: 'tool-result' as const, toolCallId: 'temporary-ai', toolName: 'temporary-ai', output: '', error: `Temporary AI model is unavailable (${response.status}). Add HOLOCRON_API_KEY to keep AI chat working reliably.` }
-            return
-          }
-
-          let jsx: React.ReactNode
-          try {
-            const mdast = mdxParse(text)
-            jsx = <ChatRenderNodes markdown={text} nodes={mdast.children} />
-          } catch {
-            jsx = <P className='whitespace-pre-wrap'>{text}</P>
-          }
-          yield { type: 'text' as const, jsx, text }
-          sessionMessages.push({ role: 'assistant', content: text })
-          yield { type: 'session' as const, messages: [...sessionMessages] }
+        if (uiStream instanceof Error) {
+          yield { type: 'tool-result' as const, toolCallId: 'holocron-chat', toolName: 'holocron-chat', output: '', error: uiStream.message }
           return
         }
-
-        const [{ createOpenAICompatible }, { streamText }] = await Promise.all([
-          import('@ai-sdk/openai-compatible'),
-          import('ai'),
-        ])
-        const gateway = createOpenAICompatible({
-          name: 'holocron-gateway',
-          baseURL: GATEWAY_URL,
-          apiKey,
-        })
-        const result = streamText({
-          model: gateway.chatModel(DEFAULT_CHAT_MODEL),
-          tools: { bash },
-          messages,
-          stopWhen: (event) => event.steps.length >= 30,
-        })
-        const uiStream = result.toUIMessageStream()
 
         for await (const chunk of uiStream) {
           if (chunk.type === 'text-delta') {

@@ -1,5 +1,5 @@
 /**
- * Chat bash tool for Holocron's AI endpoint.
+ * Chat bash tool for the hosted Holocron AI route.
  *
  * Builds the in-memory docs filesystem for just-bash and optionally injects
  * remote `SKILL.md` files plus a compact available-skills XML catalog.
@@ -8,7 +8,6 @@
 import { tool } from 'ai'
 import { Bash } from 'just-bash/browser'
 import { z } from 'zod'
-import { parseFrontmatterObject } from './frontmatter.ts'
 
 export type ChatBashToolOptions = {
   files: Record<string, string>
@@ -23,6 +22,23 @@ type ResolvedSkill = {
 }
 
 const skillCache = new Map<string, Promise<ResolvedSkill>>()
+
+function parseSkillFrontmatter(markdown: string): { name?: string; description?: string } {
+  const match = /^---\n([\s\S]*?)\n---/.exec(markdown)
+  if (!match) return {}
+
+  const frontmatter: { name?: string; description?: string } = {}
+  for (const line of match[1]!.split('\n')) {
+    const separator = line.indexOf(':')
+    if (separator === -1) continue
+
+    const key = line.slice(0, separator).trim()
+    const value = line.slice(separator + 1).trim().replace(/^['"]|['"]$/g, '')
+    if (key === 'name') frontmatter.name = value
+    if (key === 'description') frontmatter.description = value
+  }
+  return frontmatter
+}
 
 export function normalizeSkillUrl(input: string): string {
   const url = new URL(input)
@@ -59,7 +75,7 @@ async function getCachedSkill(inputUrl: string): Promise<ResolvedSkill> {
     }
 
     const markdown = await response.text()
-    const frontmatter = parseFrontmatterObject(markdown)
+    const frontmatter = parseSkillFrontmatter(markdown)
     const name = typeof frontmatter.name === 'string' ? frontmatter.name.trim() : ''
     const description = typeof frontmatter.description === 'string' ? frontmatter.description.trim() : ''
 
