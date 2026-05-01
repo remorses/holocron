@@ -36,11 +36,12 @@ export function CodeBlock({
      server and client (no DOM dependency), avoiding hydration mismatch issues
      that occur with useEffect + highlightElement. */
   const highlightedHtml = useMemo(() => {
-    const grammar = lang ? Prism.languages[lang] : undefined
+    const prismLang = lang === 'mdx' ? 'markdown' : lang
+    const grammar = prismLang ? Prism.languages[prismLang] : undefined
     if (!grammar) {
       return undefined
     }
-    return Prism.highlight(children, grammar, lang)
+    return Prism.highlight(children, grammar, prismLang)
   }, [children, lang])
 
   return (
