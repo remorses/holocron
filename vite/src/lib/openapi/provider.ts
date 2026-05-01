@@ -13,7 +13,7 @@ import type { OpenAPIV3 } from 'openapi-types'
 import type { ConfigNavGroup } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
 import type { ExtractedOperation, DereferencedDocument } from './process.ts'
-import { formatHolocronWarning, holocronLogger } from '../logger.ts'
+import { formatHolocronWarning, logger } from '../logger.ts'
 
 type OpWithDoc = { op: ExtractedOperation; doc: DereferencedDocument }
 
@@ -66,7 +66,7 @@ export const openapiProvider: VirtualTabProvider = {
         // Warn if the slug shadows a real MDX page on disk
         for (const ext of ['.mdx', '.md']) {
           if (fs.existsSync(path.join(projectRoot, slug + ext))) {
-            holocronLogger.warn(formatHolocronWarning(
+            logger.warn(formatHolocronWarning(
               `OpenAPI page "${slug}" shadows an MDX file on disk. ` +
               `The virtual OpenAPI page will be used instead.`,
             ))

@@ -27,7 +27,7 @@ import {
 } from '../config.ts'
 import { processVirtualTabs } from './virtual-tab-provider.ts'
 import { openapiProvider } from './openapi/provider.ts'
-import { formatHolocronWarning, holocronLogger } from './logger.ts'
+import { formatHolocronWarning, logger } from './logger.ts'
 import {
   type Navigation,
   type NavTab,
@@ -235,7 +235,7 @@ export async function syncNavigation({
 
         resolvedImages.set(src, { publicSrc, meta })
       } catch (e) {
-        holocronLogger.warn(formatHolocronWarning(
+        logger.warn(formatHolocronWarning(
           `failed to process image ${src}: ${e instanceof Error ? e.message : String(e)}`,
         ))
         continue

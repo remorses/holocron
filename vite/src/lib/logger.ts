@@ -20,7 +20,7 @@ export const colors = {
   yellow: formatter('\x1b[33m', '\x1b[39m'),
 }
 
-export const holocronLogger = console
+export const logger = console
 
 export function formatHolocronStep({
   icon = colors.cyan('⏹'),

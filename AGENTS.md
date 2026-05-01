@@ -158,7 +158,7 @@ SVG icons rendered **inline** (as `<svg>` elements in the DOM) inherit `currentC
 
 ### Vite plugin logs
 
-Use `holocronLogger` and the formatting helpers from `vite/src/lib/logger.ts` for Holocron build/plugin logs. Do not call `console.log`, `console.warn`, or `console.error` directly in the Vite plugin or its build-time helpers.
+Use `logger` and the formatting helpers from `vite/src/lib/logger.ts` for Holocron build/plugin logs. Do not call `console.log`, `console.warn`, or `console.error` directly in the Vite plugin or its build-time helpers.
 
 ## Important CSS variables — grid geometry
 

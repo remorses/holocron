@@ -24,7 +24,7 @@ import {
   type NavIcon,
   slugToHref,
 } from '../navigation.ts'
-import { formatHolocronWarning, holocronLogger } from './logger.ts'
+import { formatHolocronWarning, logger } from './logger.ts'
 
 const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome', 'tabler'])
 
@@ -46,7 +46,7 @@ function serializeIcon({
   if (typeof icon === 'string') return icon
   const library = icon.library ?? defaultLibrary
   if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
-    holocronLogger.warn(formatHolocronWarning(
+    logger.warn(formatHolocronWarning(
       `icon library "${library}" is not supported yet (supported: lucide, fontawesome, tabler). ` +
       `Icon "${icon.name}"${context ? ` in ${context}` : ''} will be ignored.`,
     ))

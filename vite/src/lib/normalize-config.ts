@@ -6,7 +6,7 @@
 
 import path from 'node:path'
 import { getDefaultTypeIcon } from './collect-icons.ts'
-import { formatHolocronWarning, holocronLogger } from './logger.ts'
+import { formatHolocronWarning, logger } from './logger.ts'
 
 import type {
   HolocronConfig,
@@ -81,7 +81,7 @@ function sanitizeIcon({
   if (typeof icon === 'string') return icon
   const library = icon.library ?? defaultLibrary
   if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
-    holocronLogger.warn(formatHolocronWarning(
+    logger.warn(formatHolocronWarning(
       `icon library "${library}" is not supported yet (supported: lucide, fontawesome, tabler). ` +
       `Icon "${icon.name}" in ${context} will be ignored.`,
     ))
@@ -213,7 +213,7 @@ function normalizeVersions(rawVersions: unknown[], defaultLibrary: IconLibrary):
     const version = (obj.version as string) || ''
     const nav = normalizeInnerNavigation(obj, defaultLibrary)
     if (nav.tabs.length === 0) {
-      holocronLogger.warn(formatHolocronWarning(`version "${version}" has no content — skipping.`))
+      logger.warn(formatHolocronWarning(`version "${version}" has no content — skipping.`))
       return []
     }
     return [{
@@ -252,7 +252,7 @@ function normalizeDropdowns(rawDropdowns: unknown[], defaultLibrary: IconLibrary
 
     const nav = normalizeInnerNavigation(obj, defaultLibrary)
     if (nav.tabs.length === 0 && !href) {
-      holocronLogger.warn(formatHolocronWarning(`dropdown "${name}" has no content and no href — skipping.`))
+      logger.warn(formatHolocronWarning(`dropdown "${name}" has no content and no href — skipping.`))
       return []
     }
 

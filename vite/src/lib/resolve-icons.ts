@@ -8,7 +8,7 @@ import { icons as fa6BrandsIcons } from '@iconify-json/fa6-brands'
 import { icons as fa6RegularIcons } from '@iconify-json/fa6-regular'
 import { icons as fa6SolidIcons } from '@iconify-json/fa6-solid'
 import { FA_STYLES, type IconRef, type IconLibrary } from './collect-icons.ts'
-import { formatHolocronWarning, holocronLogger } from './logger.ts'
+import { formatHolocronWarning, logger } from './logger.ts'
 
 export type IconAtlasEntry = {
   /** Inner SVG body (path/g/circle elements), NOT wrapped in <svg>. */
@@ -93,14 +93,14 @@ export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
   for (const ref of refs) {
     const parsed = parseIconRef(ref)
     if (!parsed) {
-      holocronLogger.warn(formatHolocronWarning(`icon ref "${ref}" is not a supported canonical icon ref.`))
+      logger.warn(formatHolocronWarning(`icon ref "${ref}" is not a supported canonical icon ref.`))
       continue
     }
 
     if (parsed.library === 'lucide') {
       const entry = resolveLucide(parsed.name)
       if (!entry) {
-        holocronLogger.warn(formatHolocronWarning(`lucide icon "${parsed.name}" not found. Check the icon name at https://lucide.dev/icons/.`))
+        logger.warn(formatHolocronWarning(`lucide icon "${parsed.name}" not found. Check the icon name at https://lucide.dev/icons/.`))
         continue
       }
       atlas.icons[ref] = entry
@@ -110,14 +110,14 @@ export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
     if (parsed.library === 'fontawesome') {
       const entry = resolveFontAwesome(parsed.name, parsed.style)
       if (!entry) {
-        holocronLogger.warn(formatHolocronWarning(`fontawesome icon "${parsed.name}"${parsed.style ? ` (${parsed.style})` : ''} not found.`))
+        logger.warn(formatHolocronWarning(`fontawesome icon "${parsed.name}"${parsed.style ? ` (${parsed.style})` : ''} not found.`))
         continue
       }
       atlas.icons[ref] = entry
       continue
     }
 
-    holocronLogger.warn(formatHolocronWarning(`icon library "${parsed.library}" is not supported yet. Icon "${parsed.name}" will render empty.`))
+    logger.warn(formatHolocronWarning(`icon library "${parsed.library}" is not supported yet. Icon "${parsed.name}" will render empty.`))
   }
   return atlas
 }
