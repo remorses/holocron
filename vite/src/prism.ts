@@ -6,6 +6,7 @@
 
 import prismComponents from 'prismjs/components.json' with { type: 'json' }
 import 'prismjs'
+import * as PrismModule from 'prismjs'
 import 'prismjs/components/prism-markup.js'
 import 'prismjs/components/prism-css.js'
 import 'prismjs/components/prism-clike.js'
@@ -303,6 +304,14 @@ import 'prismjs/components/prism-xojo.js'
 import 'prismjs/components/prism-xquery.js'
 import 'prismjs/components/prism-yang.js'
 import 'prismjs/components/prism-zig.js'
+
+const Prism = PrismModule.default ?? PrismModule
+
+const markdownGrammar = Prism.languages.md ?? Prism.languages.markdown
+
+if (markdownGrammar) {
+  Prism.languages.mdx = markdownGrammar
+}
 
 export const prismLanguageIds = Object.keys(prismComponents.languages).filter((id) => id !== 'meta')
 

@@ -22,4 +22,8 @@ describe('prism-languages', () => {
       ]
     `)
   })
+
+  test('aliases mdx to markdown highlighting', () => {
+    expect(Prism.languages.mdx).toBe(Prism.languages.md)
+  })
 })
