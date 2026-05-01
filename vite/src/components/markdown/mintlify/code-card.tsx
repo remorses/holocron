@@ -71,7 +71,7 @@ export function CodeCard({
       )}
       <div
         ref={contentRef}
-        className='no-bleed overflow-x-auto rounded-[15px] bg-background px-4 py-3.5'
+        className='no-bleed overflow-x-auto rounded-[15px] bg-background px-3 py-2.5'
       >
         {children}
       </div>
