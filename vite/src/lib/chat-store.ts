@@ -8,12 +8,12 @@ import { createStore } from 'zustand'
 
 export type DrawerState = 'closed' | 'open'
 
-/** Part received from the federation stream.
- *  Text parts carry server-rendered JSX. Tool parts carry plain data —
- *  the client renders them with animated indicators. */
+/** Superset of AI SDK message parts used by the drawer.
+ *  Text parts can carry server-rendered JSX for display, while the plain
+ *  `text` field remains serializable and is sent back in future requests. */
 export type ChatPart =
-  | { type: 'user-message'; text: string }
-  | { type: 'text'; jsx: ReactNode; text: string }
+  | { type: 'text'; text: string; jsx?: ReactNode }
+  | { type: 'notice'; code: string; title: string; message: string; command?: string }
   | {
       type: 'tool-call'
       toolCallId: string
@@ -27,19 +27,17 @@ export type ChatPart =
       output: string
       error?: string
     }
-  | {
-      /** Opaque session snapshot — raw AI SDK messages for conversation
-       *  continuity. Yielded after each completed piece (text, tool result).
-       *  Client stores the latest and sends it back on next submit. */
-      type: 'session'
-      messages: unknown[]
-    }
+
+export type ChatMessage = {
+  role: 'user' | 'assistant'
+  parts: ChatPart[]
+}
 
 export type ChatState = {
   drawerState: DrawerState
   navDrawerOpen: boolean
   isGenerating: boolean
-  parts: ChatPart[]
+  messages: ChatMessage[]
   /** Shared textarea value — single source of truth for both sidebar widget and drawer input. */
   draftText: string
   /** When true, the drawer auto-submits draftText on open (user pressed Enter in sidebar). */
@@ -52,7 +50,7 @@ export const chatStore = createStore<ChatState>(() => ({
   drawerState: 'closed',
   navDrawerOpen: false,
   isGenerating: false,
-  parts: [],
+  messages: [],
   draftText: '',
   pendingSubmit: false,
   abortController: null,

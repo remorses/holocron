@@ -132,7 +132,7 @@ export function SidebarAssistant() {
     // This keeps the sidebar input SSR-safe in the RSC page shell while
     // preserving the "reopen existing chat" behavior on the client.
     // Sync current local value to draftText so the drawer shows it.
-    if (chatState.getState().parts.length > 0) {
+    if (chatState.getState().messages.length > 0) {
       chatState.setState({ drawerState: 'open' })
     }
   }

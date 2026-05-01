@@ -179,6 +179,11 @@ function withBaseRoute(base: string, route: string): string {
   return `${normalizedBase}${route}`
 }
 
+function isLocalhostUrl(requestUrl: string): boolean {
+  const url = new URL(requestUrl)
+  return url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]'
+}
+
 function escapeMarkdownText(value: string): string {
   return value.replaceAll('\n', ' ').trim()
 }
@@ -376,7 +381,6 @@ type ChatRequestMessage = {
 
 type ChatRequestBody = {
   messages: ChatRequestMessage[]
-  previousMessages?: Array<{ role: 'system' | 'user' | 'assistant' | 'tool'; content: any }>
   currentSlug: string
 }
 
@@ -386,14 +390,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isChatRole(role: unknown): role is ChatRequestMessage['role'] {
   return role === 'user' || role === 'assistant'
-}
-
-function isModelMessage(value: unknown): value is NonNullable<ChatRequestBody['previousMessages']>[number] {
-  if (!isRecord(value)) return false
-  if (value.role === 'system' || value.role === 'user') return typeof value.content === 'string'
-  if (value.role === 'assistant') return typeof value.content === 'string' || Array.isArray(value.content)
-  if (value.role === 'tool') return Array.isArray(value.content)
-  return false
 }
 
 function parseChatRequestBody(value: unknown): ChatRequestBody {
@@ -421,14 +417,9 @@ function parseChatRequestBody(value: unknown): ChatRequestBody {
     }]
   })
 
-  const previousMessages = Array.isArray(value.previousMessages)
-    ? value.previousMessages.filter(isModelMessage)
-    : undefined
-
   return {
     messages,
     currentSlug: value.currentSlug,
-    ...(previousMessages ? { previousMessages } : {}),
   }
 }
 
@@ -1091,33 +1082,38 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
             .join('\n') || '',
       }))
 
-      const previousMessages = body.previousMessages ?? []
       const messages = [
         { role: 'system' as const, content: systemPrompt },
-        ...previousMessages,
         ...newUserMessages,
       ]
 
       // Points to the hosted Holocron chat route. It owns model selection,
       // quota checks, docs.zip fetching, and AI SDK streaming.
       const chatUrl = new URL('https://preview.holocron.so/api/holocron/chat')
+      const useInlineDocs = isLocalhostUrl(request.url)
       const apiKey = process.env.HOLOCRON_API_KEY || ''
       let textBuffer = ''
       const toolNames = new Map<string, string>()
-      const sessionMessages: NonNullable<ChatRequestBody['previousMessages']> = [
-        ...previousMessages,
-        ...newUserMessages,
-      ]
 
       async function* generateParts() {
         const chatFetch = createSpiceflowFetch<WebsiteApiApp>(chatUrl.origin, {
           headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
         })
+        const docsPayload = useInlineDocs
+          ? {
+              docsPages: Object.fromEntries(
+                (await Promise.all(slugs.map(async (slug) => {
+                  const mdx = await providers.getMdxSource(slug)
+                  return mdx === undefined ? undefined : [`/docs/${slug}.mdx`, buildMarkdownSource(mdx)] as const
+                }))).filter((page) => page !== undefined),
+              ),
+            }
+          : { docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString() }
         const uiStream = await chatFetch('/api/holocron/chat', {
           method: 'POST',
           body: {
             messages,
-            docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString(),
+            ...docsPayload,
             skillUrls: [],
           },
         })
@@ -1128,6 +1124,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         }
 
         for await (const chunk of uiStream) {
+          if (chunk.type === 'notice') {
+            yield chunk
+            continue
+          }
+
           if (chunk.type === 'text-delta') {
             textBuffer += chunk.delta
             continue
@@ -1148,8 +1149,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
                 jsx = <P className='whitespace-pre-wrap'>{textBuffer}</P>
               }
               yield { type: 'text' as const, jsx, text: textBuffer }
-              sessionMessages.push({ role: 'assistant', content: textBuffer })
-              yield { type: 'session' as const, messages: [...sessionMessages] }
             }
             textBuffer = ''
             continue
@@ -1163,10 +1162,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               toolName: chunk.toolName,
               args: getToolArgs(chunk.input),
             }
-            sessionMessages.push({
-              role: 'assistant',
-              content: [{ type: 'tool-call', toolCallId: chunk.toolCallId, toolName: chunk.toolName, input: chunk.input }],
-            })
             continue
           }
 
@@ -1179,16 +1174,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               output: (rawOutput.stdout || '').slice(0, 500),
               ...(rawOutput.stderr ? { error: rawOutput.stderr } : {}),
             }
-            sessionMessages.push({
-              role: 'tool',
-              content: [{
-                type: 'tool-result',
-                toolCallId: chunk.toolCallId,
-                toolName: toolNames.get(chunk.toolCallId) || 'bash',
-                output: { type: 'text', value: JSON.stringify(chunk.output) },
-              }],
-            })
-            yield { type: 'session' as const, messages: [...sessionMessages] }
             continue
           }
         }

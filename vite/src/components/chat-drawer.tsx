@@ -15,17 +15,27 @@ import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { decodeFederationPayload } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
-import type { ChatPart } from '../lib/chat-store.ts'
+import type { ChatMessage, ChatPart } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import {
-  ChatUserMessage,
-  ChatAssistantMessage,
+  ChatMessages,
   ChatLoadingDots,
 } from './chat-message.tsx'
 import { ChatInput } from './sidebar-assistant.tsx'
 import { TrashIcon, CloseIcon, InfoCircleIcon } from './chat-icons.tsx'
 
 // ── ChatDrawer ───────────────────────────────────────────────────────
+
+function appendAssistantPart(messages: ChatMessage[], part: ChatPart): ChatMessage[] {
+  const lastMessage = messages.at(-1)
+  if (lastMessage?.role === 'assistant') {
+    return [
+      ...messages.slice(0, -1),
+      { role: 'assistant', parts: [...lastMessage.parts, part] },
+    ]
+  }
+  return [...messages, { role: 'assistant', parts: [part] }]
+}
 
 export function ChatDrawer() {
   const [isMounted, setIsMounted] = useState(false)
@@ -42,7 +52,7 @@ export function ChatDrawer() {
 function ChatDrawerInner() {
   const drawerState = chatState((s) => s.drawerState)
   const isGenerating = chatState((s) => s.isGenerating)
-  const parts = chatState((s) => s.parts)
+  const messages = chatState((s) => s.messages)
   const errorMessage = chatState((s) => s.errorMessage)
   const draftText = chatState((s) => s.draftText)
   const { currentPageHref } = useHolocronData()
@@ -60,17 +70,22 @@ function ChatDrawerInner() {
       if (!submitText) return
       if (chatState.getState().isGenerating) return
 
-      // Extract latest session snapshot from existing parts (if any)
-      const currentParts = chatState.getState().parts
-      const sessionPart = [...currentParts]
-        .reverse()
-        .find((p) => p.type === 'session')
+      const currentMessages = chatState.getState().messages
+      const nextUserMessage: ChatMessage = { role: 'user', parts: [{ type: 'text', text: submitText }] }
+      const requestMessages = [...currentMessages, nextUserMessage]
+        .map((message) => ({
+          role: message.role,
+          parts: message.parts
+            .filter((part) => part.type === 'text')
+            .map((part) => ({ type: 'text' as const, text: part.text })),
+        }))
+        .filter((message) => message.parts.length > 0)
 
       const controller = new AbortController()
       chatState.setState((s) => ({
         isGenerating: true,
-        // Keep existing parts, append new user message
-        parts: [...s.parts, { type: 'user-message' as const, text: submitText }],
+        // Keep the existing conversation, append the new user message.
+        messages: [...s.messages, nextUserMessage],
         draftText: '',
         pendingSubmit: false,
         errorMessage: null,
@@ -84,10 +99,7 @@ function ChatDrawerInner() {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
-            messages: [
-              { role: 'user', parts: [{ type: 'text', text: submitText }] },
-            ],
-            previousMessages: sessionPart?.messages,
+            messages: requestMessages,
             currentSlug: currentPageHref || '/',
           }),
           signal: controller.signal,
@@ -109,7 +121,7 @@ function ChatDrawerInner() {
 
         for await (const part of decoded.stream) {
           chatState.setState((s) => ({
-            parts: [...s.parts, part],
+            messages: appendAssistantPart(s.messages, part),
           }))
           scrollToBottom()
         }
@@ -148,7 +160,7 @@ function ChatDrawerInner() {
     chatState.setState({
       isGenerating: false,
       abortController: null,
-      parts: [],
+      messages: [],
       draftText: '',
       pendingSubmit: false,
       errorMessage: null,
@@ -302,13 +314,15 @@ function ChatDrawerInner() {
             gap: '24px',
           }}
         >
-          {!isGenerating && parts.length === 0 && <WelcomeMessage />}
+          {!isGenerating && messages.length === 0 && <WelcomeMessage />}
 
-          {parts.length > 0 && <ChatAssistantMessage parts={parts} />}
+          {messages.length > 0 && <ChatMessages messages={messages} />}
           {isGenerating && (() => {
             // Show loading dots if the last user message has no text response after it yet
-            const lastUserIdx = parts.findLastIndex((p) => p.type === 'user-message')
-            const hasTextAfterLastUser = parts.slice(lastUserIdx + 1).some((p) => p.type === 'text')
+            const lastUserIdx = messages.findLastIndex((message) => message.role === 'user')
+            const hasTextAfterLastUser = messages.slice(lastUserIdx + 1).some((message) => (
+              message.role === 'assistant' && message.parts.some((part) => part.type === 'text')
+            ))
             return !hasTextAfterLastUser
           })() && <ChatLoadingDots />}
 

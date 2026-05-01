@@ -1,6 +1,6 @@
-// Hosted Holocron AI chat route. Validates holo_xxx API keys, fetches the
-// caller's docs.zip, creates the docs bash tool, and streams AI SDK UI chunks
-// through Spiceflow's typed SSE generator support.
+// Hosted Holocron AI chat route. Validates holo_xxx API keys, reads docs from
+// either the caller's docs.zip or inline localhost pages, creates the docs bash
+// tool, and streams AI SDK UI chunks through Spiceflow's typed SSE generator support.
 
 import type { ModelMessage, UIMessageChunk } from 'ai'
 import { env } from 'cloudflare:workers'
@@ -19,15 +19,24 @@ const ALLOWED_MODELS: Record<string, string> = {
 }
 
 const DEFAULT_MODEL = 'glm-4.7-flash'
-const TEMPORARY_MODEL = 'llama-3.1-8b'
+const TEMPORARY_MODEL = 'glm-4.7-flash'
 const MONTHLY_REQUEST_LIMIT = 1000
 const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
 
-export type HolocronChatChunk = UIMessageChunk
+export type HolocronChatNoticeChunk = {
+  type: 'notice'
+  code: 'HOLOCRON_TEMPORARY_AI_MODEL'
+  title: string
+  message: string
+  command: string
+}
+
+export type HolocronChatChunk = UIMessageChunk | HolocronChatNoticeChunk
 
 const chatRequestSchema = z.object({
-  messages: z.array(z.custom<ModelMessage>()),
-  docsZipUrl: z.string().url(),
+  messages: z.array(z.any()),
+  docsZipUrl: z.string().url().optional(),
+  docsPages: z.record(z.string(), z.string()).optional(),
   skillUrls: z.array(z.string().url()).optional(),
 })
 
@@ -107,8 +116,14 @@ export const gatewayApp = new Spiceflow()
       }
 
       const body = chatRequestSchema.parse(await request.json())
-      const [files, { createOpenAICompatible }, { streamText }] = await Promise.all([
-        getDocsZipFiles(body.docsZipUrl),
+      const messages: ModelMessage[] = body.messages
+      const filesPromise = (() => {
+        if (body.docsPages) return Promise.resolve(body.docsPages)
+        if (body.docsZipUrl) return getDocsZipFiles(body.docsZipUrl)
+        throw new Response('Missing docsZipUrl or docsPages.', { status: 400 })
+      })()
+      const [files, { createOpenAICompatible }, { generateText }] = await Promise.all([
+        filesPromise,
         import('@ai-sdk/openai-compatible'),
         import('ai'),
       ])
@@ -127,17 +142,58 @@ export const gatewayApp = new Spiceflow()
         baseURL: `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1`,
         apiKey: env.CLOUDFLARE_AI_API_TOKEN,
       })
-      const modelName = authResult ? DEFAULT_MODEL : TEMPORARY_MODEL
-      const result = streamText({
+      const usesTemporaryModel = !authResult
+      const modelName = usesTemporaryModel ? TEMPORARY_MODEL : DEFAULT_MODEL
+
+      if (usesTemporaryModel) {
+        yield {
+          type: 'notice',
+          code: 'HOLOCRON_TEMPORARY_AI_MODEL',
+          title: 'Temporary AI model',
+          message: 'Add HOLOCRON_API_KEY before deploying for reliable AI chat.',
+          command: 'npx @holocron.so/cli keys create --name production',
+        }
+      }
+
+      const result = await generateText({
         model: gateway.chatModel(ALLOWED_MODELS[modelName] ?? ALLOWED_MODELS[DEFAULT_MODEL]!),
         tools: { bash },
-        messages: body.messages,
-        stopWhen: (event) => event.steps.length >= 30,
+        messages,
+        providerOptions: {
+          holocronWorkersAi: {
+            thinking: { type: 'disabled' },
+          },
+        },
+        stopWhen: (event) => event.steps.length >= 100,
         abortSignal: request.signal,
       })
 
-      for await (const chunk of result.toUIMessageStream()) {
-        yield chunk
+      yield { type: 'start' }
+      for (const step of result.steps) {
+        yield { type: 'start-step' }
+        for (const toolCall of step.toolCalls) {
+          yield {
+            type: 'tool-input-available',
+            toolCallId: toolCall.toolCallId,
+            toolName: toolCall.toolName,
+            input: toolCall.input,
+          }
+        }
+        for (const toolResult of step.toolResults) {
+          yield {
+            type: 'tool-output-available',
+            toolCallId: toolResult.toolCallId,
+            output: toolResult.output,
+          }
+        }
+        if (step.text) {
+          const id = `txt-${step.stepNumber}`
+          yield { type: 'text-start', id }
+          yield { type: 'text-delta', id, delta: step.text }
+          yield { type: 'text-end', id }
+        }
+        yield { type: 'finish-step' }
       }
+      yield { type: 'finish', finishReason: result.finishReason }
     },
   })
