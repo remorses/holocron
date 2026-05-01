@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // Integration tests for the Mintlify-style <Update> component. The component
 // must render as a two-column row: a sticky label rail on the left and MDX
 // children on the right. On mobile viewports the rail stacks above the
-// content. See vite/src/components/markdown/mintlify/compat.tsx.
+// content. See vite/src/components/markdown/mintlify/update.tsx.
 //
 // Gotcha: the slugified ids here (e.g. "2026-04-11") start with a digit, so
 // raw CSS id selectors like `#2026-04-11` are invalid in querySelector. We
@@ -37,7 +37,7 @@ test.describe("Update component", () => {
 
     const bg = await page
       .locator(`${FIRST} [data-component-part='update-label']`)
-      .evaluate((el) => getComputedStyle(el as HTMLElement).backgroundColor);
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
 
     // Should not be fully transparent.
     expect(bg).not.toBe("rgba(0, 0, 0, 0)");
@@ -104,12 +104,11 @@ test.describe("Update component", () => {
     await expect(content).toBeVisible();
 
     const metrics = await content.evaluate((el) => {
-      const host = el as HTMLElement;
-      const pre = host.querySelector("pre");
+      const pre = el.querySelector("pre");
       return {
-        scrollWidth: host.scrollWidth,
-        clientWidth: host.clientWidth,
-        preWidth: pre ? (pre as HTMLElement).scrollWidth : 0,
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+        preWidth: pre ? pre.scrollWidth : 0,
       };
     });
 
@@ -133,7 +132,7 @@ test.describe("Update component", () => {
     const secondLabelVisible = await page
       .locator(`${SECOND} [data-component-part='update-label']`)
       .evaluate((el) => {
-        const r = (el as HTMLElement).getBoundingClientRect();
+        const r = el.getBoundingClientRect();
         return (
           r.bottom > 0 &&
           r.top < (window.innerHeight || document.documentElement.clientHeight)

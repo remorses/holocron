@@ -6,7 +6,7 @@ This document lists every MDX component Mintlify supports, with their props and 
 
 ## Implementation Status
 
-Components already implemented in Holocron (`vite/src/components/markdown/mintlify/compat.tsx` and `index.tsx`) are marked with **[IMPLEMENTED]**.
+Components already implemented in Holocron (`vite/src/components/markdown/mintlify/` and `index.tsx`) are marked with **[IMPLEMENTED]**.
 
 ---
 

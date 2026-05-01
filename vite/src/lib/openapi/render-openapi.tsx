@@ -8,7 +8,7 @@
 'use client'
 
 import React from 'react'
-import { Expandable } from '../../components/markdown/mintlify/compat.tsx'
+import { Expandable } from '../../components/markdown/mintlify/expandable.tsx'
 import { MethodBadge, NavBadge } from '../../components/layout/nav-badge.tsx'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -184,17 +184,20 @@ function AuthSection({ security }: { security: SecurityInfo[] }) {
   if (security.length === 0) return null
   return (
     <Section title='Authorization'>
-      {security.map((s) => (
-        <Property
-          key={s.name}
-          name={s.name}
-          schema={{
+      {security.map((s) => {
+        const schema: SchemaInfo = {
             type: s.type === 'http' && s.scheme === 'bearer' ? 'Bearer <token>' : s.type === 'apiKey' ? '<token>' : s.type,
             description: [s.description, s.in ? `Token in: ${s.in}` : ''].filter(Boolean).join('. ') || undefined,
-          } as SchemaInfo}
-          required
-        />
-      ))}
+        }
+        return (
+          <Property
+            key={s.name}
+            name={s.name}
+            schema={schema}
+            required
+          />
+        )
+      })}
     </Section>
   )
 }

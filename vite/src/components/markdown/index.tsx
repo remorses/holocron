@@ -44,35 +44,22 @@ export {
   TableCell,
   TableCaption,
 } from './table.tsx'
-export {
-  Badge,
-  Card,
-  CardGroup,
-  Columns,
-  Column,
-  Expandable,
-  Frame,
-  Prompt,
-  ParamField,
-  ResponseField,
-  Steps,
-  Step,
-  Tile,
-  Tooltip,
-  Update,
-  View,
-  Panel,
-  CodeCard,
-  RequestExample,
-  ResponseExample,
-  Tree,
-  TreeFolder,
-  TreeFile,
-  Color,
-  ColorRow,
-  ColorItem,
-  Visibility,
-} from './mintlify/compat.tsx'
+export { Badge } from './mintlify/badge.tsx'
+export { Card, CardGroup, Columns, Column } from './mintlify/card.tsx'
+export { Expandable } from './mintlify/expandable.tsx'
+export { Frame } from './mintlify/frame.tsx'
+export { Prompt } from './mintlify/prompt.tsx'
+export { ParamField, ResponseField } from './mintlify/fields.tsx'
+export { Steps, Step } from './mintlify/steps.tsx'
+export { Tile } from './mintlify/tile.tsx'
+export { Tooltip } from './mintlify/tooltip.tsx'
+export { Update } from './mintlify/update.tsx'
+export { View } from './mintlify/view.tsx'
+export { Panel } from './mintlify/panel.tsx'
+export { CodeCard, RequestExample, ResponseExample } from './mintlify/code-card.tsx'
+export { Tree, TreeFolder, TreeFile } from './mintlify/tree.tsx'
+export { Color, ColorRow, ColorItem } from './mintlify/color.tsx'
+export { Visibility } from './mintlify/visibility.tsx'
 export { Icon } from '../icon.tsx'
 export { Tabs, Tab } from './mintlify/tabs.tsx'
 export { Accordion, AccordionGroup } from './mintlify/accordion.tsx'

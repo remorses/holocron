@@ -27,6 +27,8 @@ To read mintlify docs curl `https://www.mintlify.com/docs/llms-full.txt` into a 
 
 Fetch those docs every time we need to find out some info about Mintlify
 
+The open-source Mintlify component implementations live at https://github.com/mintlify/components. Use that repo as the canonical reference for component props and behavior when adding or adjusting Mintlify-compatible MDX components.
+
 
 ### How config maps to UI
 
