@@ -122,6 +122,35 @@ function mergeUnique(existing: string | string[] | undefined, items: string[]): 
   return Array.from(new Set([...arr, ...items]))
 }
 
+function groupMermaidChunks(config: UserConfig) {
+  config.build ??= {}
+  config.build.rolldownOptions ??= {}
+  const output = config.build.rolldownOptions.output ??= {}
+  if (Array.isArray(output)) return
+  const existing = Reflect.get(output, 'codeSplitting')
+
+  if (existing === false) return
+
+  const mermaidGroup = {
+    name: 'holocron-mermaid',
+    test: /node_modules[\/](?:\.pnpm[\/])?(?:mermaid|@mermaid-js|cytoscape|cytoscape-cose-bilkent|dagre|dagre-d3-es|graphlib|katex|khroma|roughjs|stylis|d3(?:-|[\/])|lodash-es)/,
+    priority: 30,
+  }
+
+  if (existing && typeof existing === 'object') {
+    const existingGroups = Reflect.get(existing, 'groups')
+    Reflect.set(output, 'codeSplitting', {
+      ...existing,
+      groups: [mermaidGroup, ...(Array.isArray(existingGroups) ? existingGroups : [])],
+    })
+    return
+  }
+
+  Reflect.set(output, 'codeSplitting', {
+    groups: [mermaidGroup],
+  })
+}
+
 function getPluginName(plugin: PluginOption): string | undefined {
   if (!plugin || typeof plugin !== 'object' || Array.isArray(plugin) || plugin instanceof Promise) {
     return undefined
@@ -627,6 +656,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             '@holocron.so/vite > zustand',
           ],
         )
+      }
+
+      if (name === 'client' || name === 'ssr') {
+        groupMermaidChunks(config)
       }
 
       if (name === 'rsc' || name === 'ssr') {
