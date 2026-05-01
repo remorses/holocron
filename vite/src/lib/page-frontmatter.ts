@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { parseFrontmatterObject } from './frontmatter.ts'
+import { formatHolocronWarning, holocronLogger } from './logger.ts'
 
 const stringOrNumberToStringSchema = z.union([z.string(), z.number()]).transform(String)
 
@@ -57,7 +58,7 @@ export function parsePageFrontmatter(content: string): PageFrontmatter {
   const parsed = parseFrontmatterObject(content)
   const result = pageFrontmatterSchema.safeParse(parsed)
   if (!result.success) {
-    console.warn('[holocron] invalid frontmatter ignored:', result.error.issues)
+    holocronLogger.warn(formatHolocronWarning(`invalid frontmatter ignored: ${result.error.message}`))
     return {}
   }
   return result.data

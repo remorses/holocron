@@ -50,7 +50,10 @@ type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
  * remark plugins), so we reuse that tree directly instead of
  * serializing → re-parsing — saving one full mdxParse per page.
  */
-export function processMdx(content: string, defaultLibrary: IconLibrary = 'fontawesome'): ProcessedMdx {
+export function processMdx(
+  content: string,
+  defaultLibrary: IconLibrary = 'fontawesome',
+): ProcessedMdx {
   const normalized = normalizeMdx(content)
   const normalizedContent = normalized.content
   const frontmatter = parsePageFrontmatter(content)

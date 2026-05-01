@@ -156,6 +156,10 @@ SVG icons rendered **inline** (as `<svg>` elements in the DOM) inherit `currentC
 - **Sync engine** (`lib/sync.ts`) — walks the config navigation, computes git blob SHAs, diffs against cache, parses only changed files.
 - **Components** (`components/`) — editorial UI copied from `website/src/components/`. Same styles, same design tokens.
 
+### Vite plugin logs
+
+Use `holocronLogger` and the formatting helpers from `vite/src/lib/logger.ts` for Holocron build/plugin logs. Do not call `console.log`, `console.warn`, or `console.error` directly in the Vite plugin or its build-time helpers.
+
 ## Important CSS variables — grid geometry
 
 Source of truth: `vite/src/lib/sidebar-widths.ts` (`GRID_TOKENS` + `buildGridTokenStyle()`).

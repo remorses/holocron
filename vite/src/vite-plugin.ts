@@ -16,6 +16,7 @@ import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
+import { formatHolocronStep, formatHolocronSuccess, holocronLogger } from './lib/logger.ts'
 
 import react from '@vitejs/plugin-react'
 
@@ -296,11 +297,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         distDir: distDirPath,
       })
 
-      console.log(
-        `[holocron] synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached)`,
+      holocronLogger.info(
+        formatHolocronSuccess(
+          `synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached)`,
+        ),
       )
       if (userCssPath) {
-        console.log(`[holocron] using custom CSS: ${path.relative(root, userCssPath)}`)
+        holocronLogger.info(
+          formatHolocronStep({
+            message: `using custom CSS: ${path.relative(root, userCssPath)}`,
+          }),
+        )
       }
     },
 

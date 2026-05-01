@@ -166,7 +166,13 @@ function parseConfigObject(raw: string): Record<string, unknown> {
  * collapsed into a single canonical shape so consumers never deal with
  * type discrimination.
  */
-export function readConfig({ root, configPath }: { root: string; configPath?: string }): HolocronConfig {
+export function readConfig({
+  root,
+  configPath,
+}: {
+  root: string
+  configPath?: string
+}): HolocronConfig {
   // Explicit config path takes priority
   if (configPath) {
     const resolved = path.resolve(root, configPath)
