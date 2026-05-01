@@ -14,6 +14,26 @@ import { Icon } from '../../icon.tsx'
 import { Chevron } from './chevron.tsx'
 import { slugify } from '../../../lib/toc-tree.ts'
 
+function isExternalHref(href: string | undefined) {
+  return href?.startsWith('http://') || href?.startsWith('https://')
+}
+
+function renderCompatIcon({
+  icon,
+  iconType,
+  size = 16,
+  color,
+}: {
+  icon: React.ReactNode | string | undefined
+  iconType?: string
+  size?: number
+  color?: string
+}) {
+  if (!icon) return null
+  if (typeof icon === 'string') return <Icon icon={icon} iconType={iconType} size={size} color={color} />
+  return icon
+}
+
 function sectionCard(children: React.ReactNode, className = '') {
   return (
     <div className={`no-bleed flex flex-col gap-3 rounded-lg border border-border-subtle bg-card p-4 ${className}`.trim()}>
@@ -31,22 +51,34 @@ export function Badge({
   children,
   color = 'gray',
   icon,
+  leadIcon,
+  tailIcon,
   iconType,
+  iconLibrary: _iconLibrary,
   size,
   shape = 'rounded',
   stroke,
+  variant,
   disabled,
+  href,
+  onClick,
   className = '',
 }: {
   children: React.ReactNode
   color?: string
-  icon?: string
+  icon?: React.ReactNode | string
+  leadIcon?: React.ReactNode | string
+  tailIcon?: React.ReactNode | string
   /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   iconType?: string
+  iconLibrary?: string
   size?: 'xs' | 'sm' | 'md' | 'lg'
   shape?: 'rounded' | 'pill'
+  variant?: 'solid' | 'outline'
   stroke?: boolean
   disabled?: boolean
+  href?: string
+  onClick?: () => void
   className?: string
 }) {
   const sizeClass = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]'
@@ -54,87 +86,97 @@ export function Badge({
     : size === 'lg' ? 'px-3 py-1 text-[13px]'
     : 'px-2 py-0.5 text-[11px]'
   const shapeClass = shape === 'pill' ? 'rounded-full' : 'rounded-md'
+  const outline = variant === 'outline' || stroke
+  const iconSize = size === 'xs' ? 10 : size === 'lg' ? 14 : 12
+  const leading = renderCompatIcon({ icon: leadIcon, iconType, size: iconSize })
+  const trailing = renderCompatIcon({ icon: tailIcon ?? icon, iconType, size: iconSize })
+
+  const renderBadge = (variantClass: string, iconColor?: string) => {
+    const badgeClass = `inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} ${variantClass} ${disabled ? 'opacity-50' : ''} ${(href || onClick) && !disabled ? 'cursor-pointer transition-opacity hover:opacity-80' : ''} ${className}`.trim()
+    const content = <>{leading}{children}{trailing || (iconColor && icon ? <Icon icon={String(icon)} iconType={iconType} size={iconSize} color={iconColor} /> : null)}</>
+    if (href && !disabled) {
+      const external = isExternalHref(href)
+      return <a className={badgeClass} href={href} onClick={onClick} target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined}>{content}</a>
+    }
+    if (onClick && !disabled) {
+      return <button type='button' className={badgeClass} onClick={onClick}>{content}</button>
+    }
+    return <span className={badgeClass}>{content}</span>
+  }
 
   if (color === 'gray' || color === 'surface') {
-    return (
-      <span className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} bg-muted text-foreground border-border-subtle ${disabled ? 'opacity-50' : ''} ${className}`}>
-        {icon && <Icon icon={icon} iconType={iconType} size={size === 'xs' ? 10 : size === 'lg' ? 14 : 12} />}
-        {children}
-      </span>
-    )
+    return renderBadge('bg-muted text-foreground border-border-subtle')
   }
   if (color === 'white') {
-    return (
-      <span className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} bg-white/85 text-neutral-900 dark:text-neutral-100 border-black/8 ${disabled ? 'opacity-50' : ''} ${className}`}>
-        {icon && <Icon icon={icon} iconType={iconType} size={size === 'xs' ? 10 : size === 'lg' ? 14 : 12} />}
-        {children}
-      </span>
-    )
+    return renderBadge('bg-white/85 text-neutral-900 dark:text-neutral-100 border-black/8')
   }
   const destructive = color === 'white-destructive' || color === 'surface-destructive'
   if (destructive) {
-    return (
-      <span className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} bg-red/10 text-red border-red/20 ${disabled ? 'opacity-50' : ''} ${className}`}>
-        {icon && <Icon icon={icon} iconType={iconType} size={size === 'xs' ? 10 : size === 'lg' ? 14 : 12} color="var(--red)" />}
-        {children}
-      </span>
-    )
+    return renderBadge('bg-red/10 text-red border-red/20', 'var(--red)')
   }
   const cls: Record<string, string> = {
-    blue: stroke ? 'text-blue border-blue' : 'bg-blue/10 text-blue border-blue/20',
-    green: stroke ? 'text-green border-green' : 'bg-green/10 text-green border-green/20',
-    yellow: stroke ? 'text-yellow border-yellow' : 'bg-yellow/10 text-yellow border-yellow/20',
-    orange: stroke ? 'text-orange border-orange' : 'bg-orange/10 text-orange border-orange/20',
-    red: stroke ? 'text-red border-red' : 'bg-red/10 text-red border-red/20',
-    purple: stroke ? 'text-purple border-purple' : 'bg-purple/10 text-purple border-purple/20',
+    blue: outline ? 'text-blue border-blue' : 'bg-blue/10 text-blue border-blue/20',
+    green: outline ? 'text-green border-green' : 'bg-green/10 text-green border-green/20',
+    yellow: outline ? 'text-yellow border-yellow' : 'bg-yellow/10 text-yellow border-yellow/20',
+    orange: outline ? 'text-orange border-orange' : 'bg-orange/10 text-orange border-orange/20',
+    red: outline ? 'text-red border-red' : 'bg-red/10 text-red border-red/20',
+    purple: outline ? 'text-purple border-purple' : 'bg-purple/10 text-purple border-purple/20',
   }
-  const variantCls = cls[color] ?? cls.blue
-  return (
-    <span
-      className={`inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} ${variantCls} ${disabled ? 'opacity-50' : ''} ${className}`}
-    >
-      {icon && <Icon icon={icon} iconType={iconType} size={size === 'xs' ? 10 : size === 'lg' ? 14 : 12} />}
-      {children}
-    </span>
-  )
+  const variantCls = cls[color] ?? cls.blue!
+  return renderBadge(variantCls)
 }
 
 export function Card({
   title,
   icon,
   iconType,
+  iconLibrary: _iconLibrary,
   color,
   href,
   horizontal,
   img,
   cta,
   arrow,
+  disabled,
+  as,
+  className = '',
   children,
 }: {
-  title?: string
-  icon?: string
+  title?: React.ReactNode
+  icon?: React.ReactNode | string
   /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */
   iconType?: string
+  iconLibrary?: string
   color?: string
   href?: string
   horizontal?: boolean
   img?: string
   cta?: string
   arrow?: boolean
+  disabled?: boolean
+  as?: React.ElementType
+  className?: string
   children?: React.ReactNode
 }) {
+  const external = isExternalHref(href)
+  const showArrow = arrow ?? external
   const content = (
-    <div className={`flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4 ${horizontal ? 'flex-row items-center' : ''}`.trim()}>
+    <div className={`group/card relative flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4 ${horizontal ? 'flex-row items-center' : ''} ${disabled ? 'opacity-50' : ''} ${className}`.trim()}>
       {img && <img src={img} alt='' className='w-full rounded-lg border border-border-subtle' />}
       <div className='flex items-center gap-2'>
-        {icon && <Icon icon={icon} iconType={iconType} size={16} color={color} />}
-        {title && <div className='text-sm font-semibold text-foreground'>{title}</div>}
+        {renderCompatIcon({ icon, iconType, size: 16, color })}
+        {title ? <div className='text-sm font-semibold text-foreground'>{title}</div> : null}
       </div>
       {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-sm text-muted-foreground'>{children}</div>}
-      {href && (cta || arrow) && <div className='text-xs text-primary'>{cta || (arrow ? '→' : undefined)}</div>}
+      {(cta || showArrow) && <div className='flex items-center gap-1 text-xs text-primary'>{cta}{showArrow && <span aria-hidden='true'>↗</span>}</div>}
     </div>
   )
-  if (!href) return content
+  if (disabled || !href) {
+    if (!as) return content
+    const Component = as
+    return <Component>{content}</Component>
+  }
+  if (external) return <a href={href} target='_blank' rel='noreferrer' className='no-underline'>{content}</a>
   return <Link href={href} className='no-underline'>{content}</Link>
 }
 
@@ -158,17 +200,32 @@ export function Column({ children }: { children: React.ReactNode }) {
 
 export function Expandable({
   title = 'Expandable',
+  description,
+  icon,
+  iconType,
+  iconLibrary: _iconLibrary,
   defaultOpen = false,
+  className = '',
   children,
 }: {
-  title?: string
-  defaultOpen?: boolean
+  title?: React.ReactNode
+  description?: string
+  icon?: React.ReactNode | string
+  iconType?: string
+  iconLibrary?: string
+  defaultOpen?: boolean | string
+  className?: string
   children: React.ReactNode
 }) {
+  const open = defaultOpen === true || defaultOpen === 'true'
   return (
-    <details className='no-bleed group rounded-lg border border-border-subtle bg-card' open={defaultOpen}>
-      <summary className='flex cursor-pointer select-none list-none items-center gap-3 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden'>
-        <span>{title}</span>
+    <details className={`no-bleed group rounded-lg border border-border-subtle bg-card ${className}`.trim()} open={open}>
+      <summary className='flex cursor-pointer select-none list-none items-center gap-3 px-4 py-3 text-sm [&::-webkit-details-marker]:hidden'>
+        {renderCompatIcon({ icon, iconType, size: 16 })}
+        <span className='flex min-w-0 flex-col gap-1'>
+          <span className='font-semibold text-foreground'>{title}</span>
+          {description && <span className='text-xs font-normal text-muted-foreground'>{description}</span>}
+        </span>
         <Chevron />
       </summary>
       <div className='no-bleed flex flex-col gap-3 px-4 pb-4 text-sm text-muted-foreground'>{children}</div>
@@ -176,17 +233,79 @@ export function Expandable({
   )
 }
 
-export function Frame({ caption, hint, children }: { caption?: string; hint?: string; children: React.ReactNode }) {
-  return sectionCard(
-    <div className='flex flex-col gap-3'>
-      <div className='overflow-hidden rounded-lg border border-border-subtle bg-muted/30 p-3'>{children}</div>
-      {(caption || hint) && (
-        <div className='flex flex-wrap items-center gap-2 text-xs text-muted-foreground'>
-          {caption && <span>{caption}</span>}
-          {hint && <span>{hint}</span>}
+export function Frame({
+  as: Component = 'div',
+  title,
+  description,
+  caption,
+  hint,
+  style,
+  className = '',
+  children,
+}: {
+  as?: React.ElementType
+  title?: string
+  description?: string
+  caption?: string
+  hint?: string
+  style?: React.CSSProperties
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className={className} data-component-part='frame-container'>
+      {title && (
+        <div className='not-prose flex items-center gap-2 pb-4'>
+          <svg
+            aria-hidden='true'
+            className='size-4 flex-none fill-current text-muted-foreground'
+            viewBox='0 0 512 512'
+            xmlns='http://www.w3.org/2000/svg'
+          >
+            <path d='M224 320c0 17.69 14.33 32 32 32h64c17.67 0 32-14.31 32-32s-14.33-32-32-32h-64C238.3 288 224 302.3 224 320zM267.6 256H352c17.67 0 32-14.31 32-32s-14.33-32-32-32h-80v40C272 240.5 270.3 248.5 267.6 256zM272 160H480c17.67 0 32-14.31 32-32s-14.33-32-32-32h-208.8C271.5 98.66 272 101.3 272 104V160zM320 416c0-17.69-14.33-32-32-32H224c-17.67 0-32 14.31-32 32s14.33 32 32 32h64C305.7 448 320 433.7 320 416zM202.1 355.8C196 345.6 192 333.3 192 320c0-5.766 1.08-11.24 2.51-16.55C157.4 300.6 128 269.9 128 232V159.1C128 151.2 135.2 144 143.1 144S160 151.2 159.1 159.1l0 69.72C159.1 245.2 171.3 271.1 200 271.1C222.1 271.1 240 254.1 240 232v-128C240 81.91 222.1 64 200 64H136.6C103.5 64 72.03 80 52.47 106.8L26.02 143.2C9.107 166.5 0 194.5 0 223.3V312C0 387.1 60.89 448 136 448h32.88C163.4 438.6 160 427.7 160 416C160 388.1 178 364.6 202.1 355.8z' />
+          </svg>
+          <div className='font-medium text-sm text-foreground'>{title}</div>
         </div>
       )}
-    </div>,
+      <Component
+        className='not-prose relative overflow-hidden rounded-2xl bg-muted/30 p-2'
+        data-component-part='frame'
+        data-name='frame'
+        style={style}
+      >
+        <div
+          aria-hidden='true'
+          className='absolute inset-0 opacity-50'
+          data-component-part='frame-background-pattern'
+          style={{
+            backgroundImage: 'linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+            backgroundPosition: '10px 10px',
+          }}
+        />
+        <div
+          className='relative flex w-full justify-center overflow-hidden rounded-xl bg-background'
+          data-component-part='frame-content'
+        >
+          {children}
+        </div>
+
+        {(description || caption || hint) && (
+          <div
+            className='relative flex w-full justify-center rounded-2xl bg-background px-8 pb-2 pt-3 text-sm text-muted-foreground'
+            contentEditable={false}
+            data-component-part='frame-description'
+          >
+            {description ?? caption ?? hint}
+          </div>
+        )}
+        <div
+          aria-hidden='true'
+          className='pointer-events-none absolute inset-0 rounded-2xl border border-border-subtle'
+          data-component-part='frame-border'
+        />
+      </Component>
+    </div>
   )
 }
 
@@ -349,8 +468,32 @@ export function Tile({
   )
 }
 
-export function Tooltip({ tip, headline, cta, href, children }: { tip: string; headline?: string; cta?: string; href?: string; children: React.ReactNode }) {
+export function Tooltip({
+  tip,
+  description,
+  headline,
+  title,
+  cta,
+  href,
+  side: _side,
+  align: _align,
+  className = '',
+  children,
+}: {
+  tip?: string
+  description?: string
+  headline?: string
+  title?: string
+  cta?: string
+  href?: string
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  align?: 'start' | 'center' | 'end'
+  className?: string
+  children: React.ReactNode
+}) {
   const [open, setOpen] = React.useState(false)
+  const resolvedTitle = title ?? headline
+  const resolvedDescription = description ?? tip
   // safe-mdx wraps text children in P (a block div), so we extract
   // the text content and render it inline to avoid invalid div-inside-span.
   const inlineText = typeof children === 'string'
@@ -363,7 +506,7 @@ export function Tooltip({ tip, headline, cta, href, children }: { tip: string; h
     : children
   return (
     <span
-      className='relative inline-flex w-fit cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2'
+      className={`relative inline-flex w-fit cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2 ${className}`.trim()}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
@@ -373,10 +516,10 @@ export function Tooltip({ tip, headline, cta, href, children }: { tip: string; h
           className='absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-border-subtle bg-card px-3 py-2 text-sm text-foreground shadow-lg'
           role='tooltip'
         >
-          {headline && <div className='mb-1 text-xs font-semibold'>{headline}</div>}
-          <div>{tip}</div>
+          {resolvedTitle && <div className='text-xs font-semibold'>{resolvedTitle}</div>}
+          {resolvedDescription && <div>{resolvedDescription}</div>}
           {cta && href && (
-            <Link href={href} className='mt-1 inline-block text-xs text-primary hover:underline'>{cta}</Link>
+            <Link href={href} className='inline-block text-xs text-primary hover:underline'>{cta}</Link>
           )}
         </span>
       )}
@@ -585,26 +728,33 @@ export function ResponseExample({ children, dropdown }: { children: React.ReactN
   return <CodeCard title='Response example'>{children}</CodeCard>
 }
 
-export function Tree({ children }: { children: React.ReactNode }) {
-  return sectionCard(<div className='no-bleed flex flex-col gap-1 font-[var(--font-code)] text-sm'>{children}</div>)
+export function Tree({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return sectionCard(<div className={`no-bleed flex flex-col gap-1 font-[var(--font-code)] text-sm ${className}`.trim()}>{children}</div>)
 }
 
 export function TreeFolder({
   name,
+  icon,
+  iconType,
   defaultOpen = false,
   openable = true,
+  className = '',
   children,
 }: {
   name: string
-  defaultOpen?: boolean
+  icon?: React.ReactNode | string
+  iconType?: string
+  defaultOpen?: boolean | string
   openable?: boolean
+  className?: string
   children: React.ReactNode
 }) {
+  const open = defaultOpen === true || defaultOpen === 'true'
   if (!openable) {
     return (
-      <div className='ms-2 flex flex-col gap-1'>
+      <div className={`ms-2 flex flex-col gap-1 ${className}`.trim()}>
         <div className='flex items-center gap-2 text-foreground'>
-          <span aria-hidden='true'>•</span>
+          {renderCompatIcon({ icon, iconType, size: 14 }) ?? <span aria-hidden='true'>•</span>}
           <span>{name}/</span>
         </div>
         <div className='ms-4 flex flex-col gap-1'>{children}</div>
@@ -612,8 +762,9 @@ export function TreeFolder({
     )
   }
   return (
-    <details className='group ms-2 flex flex-col gap-1' open={defaultOpen}>
+    <details className={`group ms-2 flex flex-col gap-1 ${className}`.trim()} open={open}>
       <summary className='flex cursor-pointer select-none list-none items-center gap-2 text-foreground [&::-webkit-details-marker]:hidden'>
+        {renderCompatIcon({ icon, iconType, size: 14 })}
         <span>{name}/</span>
         <Chevron />
       </summary>
@@ -624,8 +775,8 @@ export function TreeFolder({
   )
 }
 
-export function TreeFile({ name }: { name: string }) {
-  return <div className='ms-2 text-muted-foreground'>{name}</div>
+export function TreeFile({ name, icon, iconType, className = '' }: { name: string; icon?: React.ReactNode | string; iconType?: string; className?: string }) {
+  return <div className={`ms-2 flex items-center gap-2 text-muted-foreground ${className}`.trim()}>{renderCompatIcon({ icon, iconType, size: 14 })}<span>{name}</span></div>
 }
 
 export function Color({ children }: { children: React.ReactNode }) {

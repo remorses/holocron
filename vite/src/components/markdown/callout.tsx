@@ -76,6 +76,9 @@ export interface CalloutProps {
   children: React.ReactNode
   /** Preset variant. Drives bg tint, border, and icon color via Tailwind classes. */
   type?: CalloutType
+  /** Mintlify prop name for preset callout style. */
+  variant?: CalloutType | 'custom'
+  title?: React.ReactNode
   /** Custom hex color (e.g. `#FFC107`). Overrides `type` styling and renders
    *  via inline style (Tailwind can't support arbitrary hex statically). */
   color?: string
@@ -83,6 +86,10 @@ export interface CalloutProps {
   icon?: React.ReactNode | string
   /** FontAwesome icon style. Passed through to <Icon> as iconType for atlas key dispatch. */
   iconType?: 'regular' | 'solid' | 'light' | 'thin' | 'sharp-solid' | 'duotone' | 'brands' | string
+  /** Accepted for Mintlify compatibility. Holocron's Icon resolver infers library from icon/iconType. */
+  iconLibrary?: string
+  ariaLabel?: string
+  className?: string
 }
 
 function resolveCalloutIcon({
@@ -102,21 +109,29 @@ function resolveCalloutIcon({
   return <Icon icon={icon} iconType={iconType} size={16} color={colorStyle?.color} />
 }
 
-export function Callout({ children, type, color, icon, iconType }: CalloutProps) {
+export function Callout({ children, type, variant, title, color, icon, iconType, ariaLabel, className }: CalloutProps) {
   // No font-size/line-height here — Callout inherits from parent (body-size in
   // main content, --type-small-size inside an Aside).
   // `no-bleed` zeros the bleed tokens for descendants so code blocks and
   // images stay inside the callout frame (see editorial.css).
-  const baseClass = 'no-bleed flex gap-3 items-start p-3 rounded-lg'
-  const presetIcon = type ? CALLOUT_ICONS[type] : undefined
+  const resolvedType = type ?? (variant === 'custom' ? undefined : variant)
+  const baseClass = `no-bleed flex gap-3 items-start p-3 rounded-lg ${className ?? ''}`.trim()
+  const presetIcon = resolvedType ? CALLOUT_ICONS[resolvedType] : undefined
   const colorStyle = color ? { color } : undefined
   const resolvedIcon = resolveCalloutIcon({ icon, iconType, fallback: presetIcon, colorStyle })
+  const content = (
+    <div className='flex flex-col gap-2 min-w-0 flex-1 text-foreground'>
+      {title ? <div className='font-semibold'>{title}</div> : null}
+      {children}
+    </div>
+  )
 
   // Custom hex color → inline style, no variant class
   if (color) {
     return (
         <div
           className={baseClass}
+          aria-label={ariaLabel}
           style={{
           backgroundColor: hexToRgba(color, 0.05),
           }}
@@ -126,44 +141,44 @@ export function Callout({ children, type, color, icon, iconType }: CalloutProps)
             {resolvedIcon}
           </span>
         )}
-        <div className='flex flex-col gap-2 min-w-0 flex-1 text-foreground'>{children}</div>
+        {content}
       </div>
     )
   }
 
   // Preset variant (or unstyled fallback)
-  const variantStyle = type
-    ? CALLOUT_VARIANTS[type]
+  const variantStyle = resolvedType
+    ? CALLOUT_VARIANTS[resolvedType]
     : { color: 'var(--blue)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--blue))' }
   return (
-    <div className={baseClass} style={variantStyle}>
+    <div className={baseClass} aria-label={ariaLabel} style={variantStyle}>
       {resolvedIcon !== undefined && resolvedIcon !== null && (
         <span className='flex-shrink-0 mt-0.5 inline-flex items-center justify-center w-4 h-4'>
           {resolvedIcon}
         </span>
       )}
-      <div className='flex flex-col gap-2 min-w-0 flex-1 text-foreground'>{children}</div>
+      {content}
     </div>
   )
 }
 
 /* Typed callout aliases — Mintlify parity. Each is a thin <Callout type="…">
    wrapper with preset icon + color. */
-export function Note({ children }: { children: React.ReactNode }) {
-  return <Callout type='note'>{children}</Callout>
+export function Note(props: Omit<CalloutProps, 'type' | 'variant'>) {
+  return <Callout {...props} type='note' />
 }
-export function Warning({ children }: { children: React.ReactNode }) {
-  return <Callout type='warning'>{children}</Callout>
+export function Warning(props: Omit<CalloutProps, 'type' | 'variant'>) {
+  return <Callout {...props} type='warning' />
 }
-export function Info({ children }: { children: React.ReactNode }) {
-  return <Callout type='info'>{children}</Callout>
+export function Info(props: Omit<CalloutProps, 'type' | 'variant'>) {
+  return <Callout {...props} type='info' />
 }
-export function Tip({ children }: { children: React.ReactNode }) {
-  return <Callout type='tip'>{children}</Callout>
+export function Tip(props: Omit<CalloutProps, 'type' | 'variant'>) {
+  return <Callout {...props} type='tip' />
 }
-export function Check({ children }: { children: React.ReactNode }) {
-  return <Callout type='check'>{children}</Callout>
+export function Check(props: Omit<CalloutProps, 'type' | 'variant'>) {
+  return <Callout {...props} type='check' />
 }
-export function Danger({ children }: { children: React.ReactNode }) {
-  return <Callout type='danger'>{children}</Callout>
+export function Danger(props: Omit<CalloutProps, 'type' | 'variant'>) {
+  return <Callout {...props} type='danger' />
 }
