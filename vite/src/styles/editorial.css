@@ -160,6 +160,14 @@
   font-size: var(--code-font-size, 0.875em);
 }
 
+/* Markdown parsers can emit header cells as <td> inside <thead>, so scope
+   the muted header treatment to the rendered table section instead of the tag. */
+[data-slot='table-header'] [data-slot='table-head'],
+[data-slot='table-header'] [data-slot='table-cell'] {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
 /* ========================================================================
    Inline code — subtle background pill via ::before pseudo-element.
    Position relative, ::before with absolute inset creates a pill that

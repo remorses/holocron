@@ -2,7 +2,7 @@
 // either the caller's docs.zip or inline localhost pages, creates the docs bash
 // tool, and streams AI SDK UI chunks through Spiceflow's typed SSE generator support.
 
-import type { ModelMessage, UIMessageChunk } from 'ai'
+import { streamText, type ModelMessage, type UIMessageChunk } from 'ai'
 import { env } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
@@ -129,10 +129,7 @@ export const gatewayApp = new Spiceflow()
         if (body.docsZipUrl) return getDocsZipFiles(body.docsZipUrl)
         throw new Response('Missing docsZipUrl or docsPages.', { status: 400 })
       })()
-      const [files, { streamText }] = await Promise.all([
-        filesPromise,
-        import('ai'),
-      ])
+      const files = await filesPromise
       const bash = await createChatBashTool({
         files,
         skillUrls: body.skillUrls ?? [],

@@ -186,26 +186,28 @@ function ToolCallCompleted({
     part.output.length > 500 ? part.output.slice(0, 500) + '…' : part.output
 
   return (
-    <ShowMore>
-      <ToolPreviewContainer>
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-          <div style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}>
-            ⎿
+    <div className='-mt-3'>
+      <ShowMore>
+        <ToolPreviewContainer>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+            <div style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}>
+              ⎿
+            </div>
+            <div>
+              <span
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  color: 'var(--muted-foreground)',
+                  fontSize: '12px',
+                }}
+              >
+                {truncated}
+              </span>
+            </div>
           </div>
-          <div>
-            <span
-              style={{
-                whiteSpace: 'pre-wrap',
-                color: 'var(--muted-foreground)',
-                fontSize: '12px',
-              }}
-            >
-              {truncated}
-            </span>
-          </div>
-        </div>
-      </ToolPreviewContainer>
-    </ShowMore>
+        </ToolPreviewContainer>
+      </ShowMore>
+    </div>
   )
 }
 
@@ -283,7 +285,7 @@ function PieLoader() {
 
 function ShowMore({
   children,
-  height = 160,
+  height = 80,
 }: {
   children: React.ReactNode
   height?: number
@@ -299,7 +301,7 @@ function ShowMore({
   }, [height, children])
 
   return (
-    <div>
+    <div className='flex flex-col gap-1'>
       <div
         ref={contentRef}
         style={{
@@ -330,13 +332,7 @@ function ShowMore({
         )}
       </div>
       {needsExpansion && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginTop: '12px',
-          }}
-        >
+        <div className='flex justify-center'>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             style={{

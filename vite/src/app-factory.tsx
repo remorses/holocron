@@ -1011,12 +1011,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // Build system prompt
       const allPages = collectAllPages(site.navigation)
       const pageIndex = allPages
-        .map((p) => `- /docs/${p.slug}.mdx  "${p.title}"`)
+        .map((p) => `<page path="/docs/${p.slug}.mdx" title="${p.title}" />`)
         .join('\n')
       const currentPageSlug = slugs.find((slug) => {
         const href = slugToHref(slug)
         return href === body.currentSlug || slug === body.currentSlug
       })
+      const currentPage = currentPageSlug
+        ? allPages.find((p) => p.slug === currentPageSlug)
+        : undefined
       const currentPageMdx = currentPageSlug
         ? ((await providers.getMdxSource(currentPageSlug)) ?? '')
         : ''
@@ -1024,18 +1027,31 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const systemPrompt = dedent`
         You are a documentation assistant for ${site.config.name || 'this site'}.
 
-        The user is currently reading: ${body.currentSlug}
-
-        Current page content:
-        ---
+        <current_page>
+        <path>${body.currentSlug}</path>
+        <title>${currentPage?.title || ''}</title>
+        <description>${currentPage?.description || ''}</description>
+        <content>
         ${currentPageMdx.slice(0, 4000)}
-        ---
+        </content>
+        </current_page>
 
-        All documentation files (use bash to search/read when you need more context):
+        <pages>
         ${pageIndex}
+        </pages>
 
-        Use the bash tool to search and read documentation files.
-        Files are at /docs/<slug>.mdx — use grep -rn "term" /docs/ to search, cat /docs/slug.mdx to read.
+        Use the bash tool to search and read documentation files before answering.
+        First grep for likely terms from the user's question to find relevant sections, then cat the best matching files.
+        Files are at /docs/<slug>.mdx. Use grep -rn "term" /docs/ to search, cat /docs/slug.mdx to read.
+
+        When linking to another docs page, render a normal markdown link.
+        Convert file paths to page paths by removing the /docs/ prefix and removing the .mdx extension.
+        Also remove a trailing /index segment. Do not include the docs base path or origin; relative root paths are rewritten by the docs app.
+        Examples:
+        - /docs/index.mdx with title "Home" -> [Home](/)
+        - /docs/quickstart.mdx with title "Quickstart" -> [Quickstart](/quickstart)
+        - /docs/guide/index.mdx with title "Guide" -> [Guide](/guide)
+
         Answer concisely based on the documentation. Include code examples when relevant.
       `
 
