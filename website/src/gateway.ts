@@ -129,7 +129,7 @@ export const gatewayApp = new Spiceflow()
         if (body.docsZipUrl) return getDocsZipFiles(body.docsZipUrl)
         throw new Response('Missing docsZipUrl or docsPages.', { status: 400 })
       })()
-      const [files, { generateText }] = await Promise.all([
+      const [files, { streamText }] = await Promise.all([
         filesPromise,
         import('ai'),
       ])
@@ -158,7 +158,7 @@ export const gatewayApp = new Spiceflow()
         }
       }
 
-      const result = await generateText({
+      const result = streamText({
         model: workersai(modelId, THINKING_DISABLED),
         tools: { bash },
         messages,
@@ -169,33 +169,9 @@ export const gatewayApp = new Spiceflow()
         abortSignal: request.signal,
       })
 
-      yield { type: 'start' }
-      for (const step of result.steps) {
-        yield { type: 'start-step' }
-        for (const toolCall of step.toolCalls) {
-          yield {
-            type: 'tool-input-available',
-            toolCallId: toolCall.toolCallId,
-            toolName: toolCall.toolName,
-            input: toolCall.input,
-          }
-        }
-        for (const toolResult of step.toolResults) {
-          yield {
-            type: 'tool-output-available',
-            toolCallId: toolResult.toolCallId,
-            output: toolResult.output,
-          }
-        }
-        if (step.text) {
-          const id = `txt-${step.stepNumber}`
-          yield { type: 'text-start', id }
-          yield { type: 'text-delta', id, delta: step.text }
-          yield { type: 'text-end', id }
-        }
-        yield { type: 'finish-step' }
+      for await (const chunk of result.toUIMessageStream()) {
+        yield chunk
       }
-      yield { type: 'finish', finishReason: result.finishReason }
-      yield { type: 'model-messages', messages: result.response.messages }
+      yield { type: 'model-messages', messages: (await result.response).messages }
     },
   })
