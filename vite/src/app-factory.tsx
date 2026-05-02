@@ -13,6 +13,7 @@
 import './styles/globals.css'
 import React from 'react'
 import type { ApiApp as WebsiteApiApp } from 'website/src/api.ts'
+
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
 import { createSpiceflowFetch } from 'spiceflow/client'
 import { Head, ProgressBar } from 'spiceflow/react'
@@ -994,6 +995,8 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   }
 
   // /holocron-api/logo/:theme/<text>.png
+  // Tries the hosted AI logo generator first (proxied through holocron.so to
+  // avoid CORS), falling back to the local Takumi text renderer on failure.
   app = app.get('/holocron-api/logo/:theme/*', async ({ params }: { params: Record<string, string> }) => {
     const theme: GeneratedLogoTheme | undefined = params.theme === 'light' || params.theme === 'dark' ? params.theme : undefined
     if (!theme) {
@@ -1001,6 +1004,22 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
 
     const text = decodeGeneratedLogoText(params['*'] || '')
+
+    // Try AI-generated logo from holocron.so (server-side fetch, no CORS)
+    try {
+      const aiRes = await fetch(`https://preview.holocron.so/api/ai-logo/${encodeURIComponent(text)}.jpeg`)
+      if (aiRes.ok) {
+        return new Response(aiRes.body, {
+          headers: {
+            'content-type': aiRes.headers.get('content-type') || 'image/jpeg',
+            'cache-control': 's-maxage=31536000, immutable',
+          },
+        })
+      }
+    } catch {
+      // AI logo unavailable — fall through to Takumi
+    }
+
     const { createGeneratedLogoResponse } = await import('./lib/generated-logo-response.tsx')
     const response = await createGeneratedLogoResponse({ text, theme })
     response.headers.set('cache-control', 's-maxage=31536000, immutable')
