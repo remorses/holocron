@@ -99,6 +99,15 @@ export const aiLogoApp = new Spiceflow().get(
       return new Response('Missing logo text', { status: 400 })
     }
 
+    // Normalize the cache key URL so different extensions hit the same entry
+    const cacheUrl = new URL(`/api/ai-logo/${encodeURIComponent(name.toLowerCase())}.jpeg`, request.url)
+    const cacheKey = new Request(cacheUrl.toString())
+    const cache = caches.default
+
+    // Check CF edge cache first
+    const cached = await cache.match(cacheKey)
+    if (cached) return cached
+
     const prompt = buildPrompt(name)
 
     // Load template image
@@ -160,12 +169,20 @@ export const aiLogoApp = new Spiceflow().get(
       JPEG_QUALITY,
     )
 
-    return new Response(encoded.data, {
+    const response = new Response(encoded.data, {
       headers: {
         'content-type': 'image/jpeg',
         'cache-control': 's-maxage=31536000, immutable',
       },
     })
+
+    // Store in CF edge cache — waitUntil not available in spiceflow,
+    // but cache.put() returns a promise we can await without blocking
+    // the response since we clone it first.
+    const responseToCache = response.clone()
+    await cache.put(cacheKey, responseToCache)
+
+    return response
   },
 )
 
