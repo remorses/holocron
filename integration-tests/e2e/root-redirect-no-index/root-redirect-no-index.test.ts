@@ -17,7 +17,7 @@ test.describe("root redirect without index", () => {
   });
 
   test("browser navigation lands on the first page", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page).toHaveURL(/\/getting-started$/);
     await expect(page.getByRole("heading", { name: "Redirect Target" })).toBeVisible();

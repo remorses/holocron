@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("mintlify components fixture", () => {
   test("loads the page and renders representative components", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Mintlify Components" })).toBeVisible();
 
     await expect(page).toHaveTitle(/Mintlify Components/);

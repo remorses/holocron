@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 test.describe("dropdowns fixture — navigation.dropdowns with content + external link", () => {
   test("renders dropdown selector in header", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/docs/intro");
+    await page.goto("/docs/intro", { waitUntil: "domcontentloaded" });
 
     // Dropdown select should be visible in the header
     const dropdownSelect = page.getByRole("combobox", {
@@ -21,7 +21,7 @@ test.describe("dropdowns fixture — navigation.dropdowns with content + externa
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/docs/intro");
+    await page.goto("/docs/intro", { waitUntil: "domcontentloaded" });
 
     const dropdownSelect = page.getByRole("combobox", {
       name: "Select section",
@@ -37,7 +37,7 @@ test.describe("dropdowns fixture — navigation.dropdowns with content + externa
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/docs/intro");
+    await page.goto("/docs/intro", { waitUntil: "domcontentloaded" });
 
     const dropdownSelect = page.getByRole("combobox", {
       name: "Select section",

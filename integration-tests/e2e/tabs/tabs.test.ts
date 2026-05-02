@@ -225,7 +225,7 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
       errors.push(err.message);
     });
 
-    await page.goto("/theming");
+    await page.goto("/theming", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     expect(
       errors,

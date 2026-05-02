@@ -2,20 +2,19 @@ import { expect, test } from '@playwright/test'
 
 test.describe('custom CSS injection', () => {
   test('user global.css is loaded and applies styles', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'commit' })
     const target = page.locator('#custom-css-target')
     await expect(target).toBeVisible()
 
     // The user's global.css sets font-weight: 700 on #custom-css-target.
     // Verify the computed style to confirm the CSS was injected.
-    const fontWeight = await target.evaluate(
-      (el) => getComputedStyle(el).fontWeight,
-    )
-    expect(fontWeight).toBe('700')
+    await expect
+      .poll(async () => await target.evaluate((el) => getComputedStyle(el).fontWeight))
+      .toBe('700')
   })
 
   test('user CSS variable is available', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'commit' })
 
     // The user's global.css defines --custom-css-test on :root.
     // Verify the variable is accessible via getComputedStyle.

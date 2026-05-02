@@ -348,11 +348,11 @@ test.describe("client navigation sidebar state", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 900 });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
     await expect(nav).toBeVisible({ timeout: 10000 });
-    await page.reload();
+    await page.reload({ waitUntil: "commit" });
     await expect(nav).toBeVisible({ timeout: 10000 });
     await expect.poll(() => {
       return nav.evaluate((node) => {
@@ -371,7 +371,7 @@ test.describe("client navigation sidebar state", () => {
   }) => {
     test.setTimeout(40_000);
     await page.setViewportSize({ width: 1600, height: 900 });
-    await page.goto("/new");
+    await page.goto("/new", { waitUntil: "domcontentloaded" });
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
     await expect(nav).toBeVisible({ timeout: 10000 });

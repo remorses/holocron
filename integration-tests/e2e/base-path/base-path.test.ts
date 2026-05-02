@@ -17,7 +17,7 @@ test.describe("pages under base path", () => {
   });
 
   test("nested index page keeps the right browser title", async ({ page }) => {
-    await page.goto("/docs/guide");
+    await page.goto("/docs/guide", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle("Guide — Base Path Test");
   });
 });

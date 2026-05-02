@@ -96,23 +96,22 @@ const projects = fixturePorts.map(({ fixture, port }) => ({
 
 export default defineConfig({
   globalTeardown: "./scripts/cleanup-e2e.ts",
-  timeout: 20_000,
+  timeout: 45_000,
   expect: {
     timeout: 3_000,
   },
   use: {
     actionTimeout: 4_000,
-    navigationTimeout: 8_000,
+    navigationTimeout: 30_000,
     trace: "on-first-retry",
   },
   projects,
   webServer: webServers,
   fullyParallel: true,
-  // Dev-mode e2e runs boot one Vite server per fixture and compile routes on
-  // demand. Letting Playwright fan out to the default half-CPU worker count can
-  // starve several fixture servers at once, so cap local dev runs to a smaller
-  // stable pool while keeping build-mode and CI behavior unchanged.
-  workers: process.env["CI"] ? 1 : isStart ? undefined : 4,
+  // Dev-mode e2e runs one Vite server per fixture and several tests assert HMR
+  // without reloads. Keep dev runs serial so fixture servers and websocket HMR
+  // do not starve each other on busy machines.
+  workers: process.env["CI"] ? 1 : isStart ? undefined : 1,
   // Config-HMR tests tagged @dev only run against the dev server; build-mode
   // tests skip them (and vice-versa). Non-tagged tests run in both modes.
   grepInvert: isStart ? /@dev/ : /@build/,

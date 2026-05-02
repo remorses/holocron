@@ -29,7 +29,7 @@ test.describe("user .page with user .layout", () => {
   });
 
   test("renders the user-owned page with the user's layout", async ({ page }) => {
-    await page.goto("/custom-user-page");
+    await page.goto("/custom-user-page", { waitUntil: "domcontentloaded" });
     await expect(page.locator("html")).toHaveAttribute("data-user-layout", "yes");
     await expect(page.locator("[data-user-header='yes']")).toBeVisible();
     await expect(
@@ -40,7 +40,7 @@ test.describe("user .page with user .layout", () => {
   test("user page is NOT wrapped by holocron's layout", async ({ page }) => {
     // `data-default-theme` is holocron-specific; its absence here means
     // holocron's per-slug layout didn't match the user-owned path.
-    await page.goto("/custom-user-page");
+    await page.goto("/custom-user-page", { waitUntil: "domcontentloaded" });
     const themeAttr = await page.locator("html").getAttribute("data-default-theme");
     expect(themeAttr).toBeNull();
   });
@@ -48,7 +48,7 @@ test.describe("user .page with user .layout", () => {
 
 test.describe("holocron pages rendered by mounted holocronApp", () => {
   test("GET / renders the holocron docs landing page", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/Custom Entry Test/);
     await expect(
       page.getByRole("heading", { name: "Custom Entry Home" }),
@@ -56,7 +56,7 @@ test.describe("holocron pages rendered by mounted holocronApp", () => {
   });
 
   test("GET /about-the-api renders the holocron docs page", async ({ page }) => {
-    await page.goto("/about-the-api");
+    await page.goto("/about-the-api", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/About the API/);
     await expect(
       page.getByRole("heading", { name: "About the API" }),
@@ -64,7 +64,7 @@ test.describe("holocron pages rendered by mounted holocronApp", () => {
   });
 
   test("holocron layout wraps docs pages with <html data-default-theme>", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("html")).toHaveAttribute(
       "data-default-theme",
       /.+/,

@@ -19,7 +19,7 @@ test.describe("multiple asides fixture", () => {
     request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "commit" });
 
     await expect(page.getByRole("heading", { name: "Combined Aside Section" })).toBeVisible();
 
@@ -59,7 +59,7 @@ test.describe("multiple asides fixture", () => {
     request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("heading", { name: "API Examples Section" })).toBeVisible();
 
@@ -98,7 +98,7 @@ test.describe("multiple asides fixture", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // The widened CSS vars are written as inline style on `.slot-page`.
     // Read the computed values and assert the sidebar was expanded from
