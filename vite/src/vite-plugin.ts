@@ -431,32 +431,41 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             }
           }
         }
+        for (const imports of Object.values(syncResult.importedMdxImports)) {
+          for (const { moduleKey, absPath } of imports) {
+            if (!allImports.has(moduleKey)) {
+              allImports.set(moduleKey, absPath)
+            }
+          }
+        }
 
         const sortedImports = [...allImports.entries()]
           .sort(([a], [b]) => a.localeCompare(b))
-        const hasMdxImports = sortedImports.some(([, absPath]) => /\.mdx?$/.test(absPath))
-        const entries = sortedImports.map(([moduleKey, absPath]) => {
-          if (/\.mdx?$/.test(absPath)) {
-            const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
-            return [
-              `  ${JSON.stringify(moduleKey)}: async () => {`,
-              `    const markdown = (await import(${JSON.stringify(absPath + '?raw')})).default`,
-              `    return { default: function ImportedMdx(props) {`,
-              `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)} })`,
-              `    } }`,
-              `  }`,
-            ].join('\n')
-          }
+        for (const absPath of allImports.values()) {
+          this.addWatchFile(absPath)
+        }
+        const importedMdxFiles = Object.fromEntries(
+          Object.entries(syncResult.importedMdxContent).map(([moduleKey, markdown]) => {
+            const absPath = allImports.get(moduleKey)
+            const baseUrl = absPath
+              ? './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
+              : './'
+            return [moduleKey, { markdown, baseUrl }]
+          }),
+        )
+        const entries = sortedImports
+          .filter(([, absPath]) => !/\.mdx?$/.test(absPath))
+          .map(([moduleKey, absPath]) => {
           return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath)})`
         })
 
         return [
-          hasMdxImports ? `import React from 'react'` : undefined,
-          hasMdxImports ? `import { RenderImportedMdx } from '@holocron.so/vite/src/lib/mdx-components-map'` : undefined,
+          `const importedMdxFiles = ${JSON.stringify(importedMdxFiles)}`,
           `const modules = {`,
           entries.join(',\n'),
           `}`,
           `export function getModules() { return modules }`,
+          `export function getImportedMdxFiles() { return importedMdxFiles }`,
           `export const pagesDirPrefix = ${JSON.stringify(pagesDirPrefix)}`,
         ].filter(Boolean).join('\n')
       }

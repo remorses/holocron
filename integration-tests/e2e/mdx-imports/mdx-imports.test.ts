@@ -43,6 +43,14 @@ test.describe('MDX imports', () => {
     expect(html).toContain('Delightful docs. Mintlify drop in replacement as a Vite plugin')
   })
 
+  test('renders nested imports inside imported .md snippets', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain('Outer imported markdown body.')
+    expect(html).toContain('Nested imported markdown works in the browser.')
+  })
+
   test('renders named import from /components/', async ({ request }) => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)

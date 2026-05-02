@@ -314,19 +314,22 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
 
 /** Render MDX imported from another MDX file, e.g.
  *  `import Snippet from '/snippets/example.mdx'` followed by `<Snippet />`.
- *  Vite doesn't compile user MDX snippets as JSX, so the virtual modules map
- *  exposes raw markdown and this component renders it through the same safe-mdx
- *  component map used by pages. */
-export function RenderImportedMdx({ markdown, baseUrl }: {
+ *  Vite doesn't compile user MDX snippets as JSX, so Holocron preprocesses
+ *  them into markdown strings and this component renders them through the same
+ *  safe-mdx component map used by pages. */
+export function RenderImportedMdx({ markdown, baseUrl, mdast, modules }: {
   markdown: string
   baseUrl?: string
+  mdast?: Root
+  modules?: EagerModules
 }) {
   return (
     <SafeMdxRenderer
       markdown={markdown}
-      mdast={mdxParse(markdown)}
+      mdast={mdast ?? mdxParse(markdown)}
       components={mdxComponents}
       renderNode={renderNode}
+      modules={modules}
       baseUrl={baseUrl}
       onError={logMdxError}
     />

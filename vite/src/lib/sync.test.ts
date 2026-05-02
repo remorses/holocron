@@ -352,6 +352,60 @@ import { Widget } from '/components/widget'
     expect(second.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./components/widget.tsx'])
   })
 
+  test('preprocesses imported markdown snippets and resolves nested imports', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import Outer from '/snippets/outer.md'
+
+# Home
+
+<Outer />
+`,
+      },
+    ))
+
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.writeFileSync(path.join(snippetsDir, 'outer.md'), `import Inner from './inner.md'
+
+<details>
+<summary>Outer summary</summary>
+
+Outer body.
+</details>
+
+<Inner />
+`)
+    fs.writeFileSync(path.join(snippetsDir, 'inner.md'), 'Nested imported markdown works.')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(Object.keys(result.importedMdxContent).sort()).toMatchInlineSnapshot(`
+      [
+        "./pages/snippets/inner.md",
+        "./snippets/outer.md",
+      ]
+    `)
+    expect(result.importedMdxContent['./snippets/outer.md']).toContain('<Expandable')
+    expect(result.importedMdxImports['./snippets/outer.md']?.map((i) => i.moduleKey)).toEqual(['./pages/snippets/inner.md'])
+  })
+
   test('preserves typed page frontmatter metadata on NavPage', async () => {
     const project = tracked(createProject(
       {
