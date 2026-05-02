@@ -7,6 +7,7 @@ import { CustomBadge } from '/components/custom-badge'
 import Alert from '/snippets/alert'
 import MarkdownSnippet from '/snippets/plain-markdown.md'
 import RootReadme from '../../../README.md'
+import pyCode from '/snippets/example-code.py?raw'
 
 <Above>
 
@@ -27,3 +28,5 @@ This page tests MDX import resolution.
 <MarkdownSnippet />
 
 <RootReadme />
+
+<pre data-testid="raw-import">{pyCode}</pre>

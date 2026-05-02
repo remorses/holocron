@@ -544,16 +544,22 @@ function resolveImportSources({
   const pagesDirPrefix = pagesDirRelative === '' ? './' : `./${pagesDirRelative}/`
 
   for (const source of importSources) {
-    if (source.startsWith('/')) {
+    // Strip Vite query strings (?raw, ?url, etc.) before filesystem probing,
+    // then re-attach them to the moduleKey so safe-mdx can match exactly.
+    const queryIdx = source.indexOf('?')
+    const querySuffix = queryIdx >= 0 ? source.slice(queryIdx) : ''
+    const cleanSource = queryIdx >= 0 ? source.slice(0, queryIdx) : source
+
+    if (cleanSource.startsWith('/')) {
       // Absolute import: safe-mdx normalizes as '.' + source → './snippets/greeting'
       // The moduleKey is that normalized path + resolved extension
-      const normalized = '.' + source // e.g. './snippets/greeting'
+      const normalized = '.' + cleanSource // e.g. './snippets/greeting'
       // Try to find the file on disk: pagesDir first, then projectRoot
-      const resolved = tryResolveImport(path.join(pagesDir, source.slice(1)))
-        ?? tryResolveImport(path.join(projectRoot, source.slice(1)))
+      const resolved = tryResolveImport(path.join(pagesDir, cleanSource.slice(1)))
+        ?? tryResolveImport(path.join(projectRoot, cleanSource.slice(1)))
       if (resolved) {
         const ext = path.extname(resolved)
-        const moduleKey = path.extname(source) ? normalized : normalized + ext
+        const moduleKey = (path.extname(cleanSource) ? normalized : normalized + ext) + querySuffix
         if (!seen.has(moduleKey)) {
           seen.add(moduleKey)
           result.push({ moduleKey, absPath: resolved })
@@ -566,12 +572,12 @@ function resolveImportSources({
     // e.g. baseUrl='./pages/', source='../components/badge'
     // → joinPaths('./pages/', '../components/badge') → './components/badge'
     // Imports outside projectRoot keep leading ../ segments as module keys.
-    const resolved = tryResolveImport(path.resolve(mdxDir, source))
+    const resolved = tryResolveImport(path.resolve(mdxDir, cleanSource))
     if (resolved) {
       const relativeToRoot = path.relative(projectRoot, resolved).replace(/\\/g, '/')
-      const moduleKey = relativeToRoot.startsWith('../') || path.isAbsolute(relativeToRoot)
+      const moduleKey = (relativeToRoot.startsWith('../') || path.isAbsolute(relativeToRoot)
         ? relativeToRoot
-        : './' + relativeToRoot
+        : './' + relativeToRoot) + querySuffix
       if (!seen.has(moduleKey)) {
         seen.add(moduleKey)
         result.push({ moduleKey, absPath: resolved })

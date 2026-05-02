@@ -436,6 +436,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           .sort(([a], [b]) => a.localeCompare(b))
         const hasMdxImports = sortedImports.some(([, absPath]) => /\.mdx?$/.test(absPath))
         const entries = sortedImports.map(([moduleKey, absPath]) => {
+          // ?raw imports: emit a plain Vite ?raw import that resolves to { default: string }
+          if (moduleKey.endsWith('?raw')) {
+            return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath + '?raw')})`
+          }
           if (/\.mdx?$/.test(absPath)) {
             const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
             return [

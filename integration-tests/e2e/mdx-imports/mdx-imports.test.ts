@@ -63,6 +63,14 @@ test.describe('MDX imports', () => {
     expect(html).toContain('relative-badge')
   })
 
+  test('renders ?raw import as raw string content', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain('data-testid="raw-import"')
+    expect(html).toContain('hello from python')
+  })
+
   test('index page renders all imports in browser', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Import Test Page' })).toBeVisible()

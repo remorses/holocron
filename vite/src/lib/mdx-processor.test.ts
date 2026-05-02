@@ -490,6 +490,29 @@ title: Test
 `)
     expect(result.importSources).toEqual([])
   })
+
+  test('preserves ?raw query string in import sources', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+import code from './example.ts?raw'
+import schema from '/snippets/schema.json?raw'
+import readme from '../docs/readme.md?raw'
+
+# Hello
+`)
+    // ?raw is preserved as-is — resolveImportSources in sync.ts handles
+    // stripping the query for filesystem probing and re-attaching it to
+    // the moduleKey so safe-mdx can match exactly.
+    expect(result.importSources).toMatchInlineSnapshot(`
+      [
+        "./example.ts?raw",
+        "/snippets/schema.json?raw",
+        "../docs/readme.md?raw",
+      ]
+    `)
+  })
 })
 
 describe('processMdx icon refs', () => {
