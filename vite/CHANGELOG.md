@@ -1,5 +1,82 @@
 # @holocron.so/vite
 
+## 0.4.0
+
+1. **Agent discovery endpoints for every docs site** — Holocron now serves the well-known agent-skills discovery files automatically so coding agents can discover and install a docs-specific skill:
+
+   ```txt
+   /.well-known/agent-skills/index.json
+   /.well-known/agent-skills/{name}/SKILL.md
+   /.well-known/skills/index.json
+   /.well-known/skills/{name}/SKILL.md
+   ```
+
+   The generated skill points agents at `/sitemap.xml`, raw `.md` page URLs, and `/docs.zip`. Base-path deployments use relative URLs, and AI-user-agent redirects skip the well-known routes so JSON discovery stays machine-readable.
+
+2. **Added `/llms.txt`** — every docs site now exposes a standard agent entry point that links to `/docs.zip` first, then individual raw markdown pages:
+
+   ```txt
+   https://docs.example.com/llms.txt
+   ```
+
+   Rendered pages and raw markdown responses also include hidden discovery hints that point back to `/llms.txt` and `/docs.zip`.
+
+3. **Imported MDX and Markdown snippets** — MDX pages can import local `.mdx` and `.md` snippets, including files outside the docs root, and Holocron resolves them through the same safe-mdx rendering pipeline as normal pages:
+
+   ```mdx
+   import Intro from './snippets/intro.mdx'
+   import Readme from '../../README.md'
+
+   <Intro />
+   <Readme />
+   ```
+
+4. **Added Mintlify-compatible `<Visibility>`** — docs can render content only for humans or only for agent-facing markdown output:
+
+   ```mdx
+   <Visibility for="humans">
+   This appears on the website.
+   </Visibility>
+
+   <Visibility for="agents">
+   This appears in `.md` routes and docs.zip.
+   </Visibility>
+   ```
+
+   Frontmatter is preserved in raw markdown output, and expression props like `for={"agents"}` are supported.
+
+5. **More Mintlify-compatible MDX components** — callouts, badges, cards, expandables, frames, tooltips, trees, accordions, and tabs accept more Mintlify props without requiring docs rewrites. Tabs now include proper IDs, ARIA wiring, tab panel linkage, and keyboard navigation.
+
+6. **HTML `<details>` support** — copied docs that use native HTML details/summary blocks are normalized into Holocron's existing `Expandable` component. Markdown inside the summary and body keeps Holocron styling.
+
+7. **GitHub-style callout quotes** — Markdown alerts like `> [!NOTE]`, `> [!TIP]`, and `> [!WARNING]` now render as Holocron callouts.
+
+8. **Search shortcut changed to Cmd/Ctrl+K** — docs search now uses the standard docs-site shortcut. The sidebar renders separate key pills for `⌘ K` on Mac and `Ctrl K` on Windows/Linux.
+
+9. **Page-level grid gap overrides** — pages can override the editorial grid gap through frontmatter, and generated OpenAPI pages use tighter spacing automatically.
+
+10. **Client-side routing is used consistently** — navigation links, configured links, footer links, MDX links, and TOC hash links now go through Spiceflow `Link` where appropriate while preserving external-link behavior.
+
+11. **Docs chat uses the hosted typed API** — the vite package no longer bundles the local AI SDK/bash implementation. Chat requests go through the hosted Holocron API, with preserved model history for tool calls and local-development support for inline docs content.
+
+12. **Temporary AI fallback for previews** — preview docs can use a low-cost temporary model when no Holocron API key is configured. The chat shows a one-time setup notice instead of repeating it on every message.
+
+13. **New docs pages hot-reload in dev** — adding Markdown or MDX files now invalidates the relevant virtual modules and refreshes navigation without needing a server restart.
+
+14. **Better code highlighting for MDX snippets** — `mdx` fences now reuse Prism's Markdown grammar so nested fenced code blocks inside MDX examples get syntax highlighting.
+
+15. **Smaller server bundles for Mermaid sites** — Mermaid is resolved through an SSR stub and loaded only in the browser, reducing the SSR bundle for the real-world Polar fixture from about 7.55 MiB to 2.17 MiB. Mermaid browser chunks are still lazy-loaded when diagrams render.
+
+16. **Cleaner build output for Mermaid** — Mermaid's dynamic diagram dependencies are grouped into one lazy chunk instead of dozens of tiny files.
+
+17. **Table and layout polish** — Markdown tables use lighter row dividers, stay inside the content column, and preserve visible borders. Footers now sit inside the documentation content column and stay near the bottom on short pages.
+
+18. **Sidebar and scrollbar polish** — navigation spacing, scrollbar thumbs, page breathing room, and border contrast were tuned for better readability in light and dark mode.
+
+19. **Fixed sidebar hydration state** — sidebars now use loader-provided route state for the first render, preventing hydration mismatches on non-default tabs.
+
+20. **Fixed active TOC tracking** — the active heading now updates when a section reaches the top reading position instead of using the viewport center.
+
 ## 0.3.0
 
 1. **OpenAPI auto-generated API reference pages** — add `"openapi": "spec.yaml"` to any navigation tab and Holocron processes the spec at build time, extracts all operations grouped by tag, and generates virtual pages with full endpoint documentation:
