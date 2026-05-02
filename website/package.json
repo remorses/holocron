@@ -31,6 +31,7 @@
     "db": "workspace:^",
     "drizzle-orm": "1.0.0-beta.21",
     "fflate": "^0.8.2",
+    "jpeg-js": "^0.4.4",
     "just-bash": "^2.14.0",
     "radix-ui": "latest",
     "react": "^19.2.5",

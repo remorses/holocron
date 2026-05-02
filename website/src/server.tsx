@@ -8,6 +8,7 @@ import { router } from 'spiceflow/react'
 import { z } from 'zod'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
+import { aiLogoApp } from './ai-logo.ts'
 import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
@@ -280,6 +281,7 @@ export const app = new Spiceflow()
   .use(previewApp)
   .use(authApp)
   .use(apiApp)
+  .use(aiLogoApp)
   .use(schemaApp)
   .use(holocronApp)
 
