@@ -240,7 +240,7 @@
   * {
     @apply border-border outline-ring/50;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--foreground) 20%, transparent) transparent;
+    scrollbar-color: var(--text-tertiary) transparent;
   }
   html {
     scrollbar-gutter: stable;
@@ -271,8 +271,8 @@
       webkit browsers use the 6px width here. Root `html` keeps a stable
       gutter to prevent page-wide horizontal layout shift. */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     background: transparent;
     border-radius: var(--radius-md);
   }
@@ -283,13 +283,13 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--foreground) 20%, transparent);
+    background: var(--text-tertiary);
     border-radius: var(--radius-md);
     border: none;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--foreground) 32%, transparent);
+    background: color-mix(in srgb, var(--text-tertiary) 80%, var(--foreground));
   }
 
   /* Stable scrollbar gutter only for scroll containers whose content should not
@@ -305,6 +305,17 @@
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
+  }
+
+  /* Search input border + focus ring */
+  .search-input {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.1s ease;
+  }
+  .search-input:focus {
+    border-color: var(--text-tertiary);
+    box-shadow: 0 0 0 1px var(--text-tertiary);
   }
 
   /* Layout slots — only important page entities use CSS classes.

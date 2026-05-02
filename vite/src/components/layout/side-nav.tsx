@@ -175,7 +175,7 @@ export function SideNav() {
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
       {/* Search input — leading magnifier icon + F hotkey kbd on the right. */}
-      <div className='pb-3 pl-1 flex items-center relative shrink-0'>
+      <div className='pb-3 pl-1 pr-1 flex items-center relative shrink-0'>
         <span
           aria-hidden='true'
           className='absolute left-3.5 pointer-events-none inline-flex items-center justify-center'
@@ -190,22 +190,18 @@ export function SideNav() {
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           placeholder={siteConfig.search.prompt || 'Search...'}
-            className='w-full outline-none box-border'
+            className='w-full outline-none box-border search-input'
           style={{
             padding: '6px 34px 6px 28px',
             fontFamily: 'var(--font-sans)',
             fontWeight: 'var(--weight-prose)',
             color: 'var(--foreground)',
             background: 'transparent',
-            border: '1px solid var(--border)',
-            borderRadius: '12px',
             letterSpacing: 'normal',
             lineHeight: 'var(--lh-prose)',
-            transition: 'border-color 0.15s ease, opacity 0.1s ease',
             opacity: isPending ? 0.5 : 1,
           }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--text-tertiary)' }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
+
         />
         {!query && (
           <span
