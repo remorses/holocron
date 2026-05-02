@@ -34,6 +34,7 @@ import {
   buildGridTokenStyle,
 } from '../../lib/sidebar-widths.ts'
 import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
+import { GridLinesFrame, TabBarDots, NavbarLines } from './grid-lines.tsx'
 
 
 export type EditorialSection = {
@@ -110,6 +111,7 @@ export function EditorialPage({
   const activeTab = activeTabHref
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
+  const decorativeLines = siteConfig.decorativeLines
   // Grid geometry CSS vars are injected here from the single source of
   // truth in `lib/sidebar-widths.ts`. `globals.css` intentionally does
   // NOT declare `--grid-*` defaults — everything flows from this one
@@ -137,7 +139,8 @@ export function EditorialPage({
       )}
 
       {/* Header + Tab bar: full-width, sticky below banner */}
-      <div className='slot-navbar'>
+      <div className='slot-navbar relative'>
+        <NavbarLines mode={decorativeLines} />
         {/* Top row: logo + right links */}
         <div className='mx-auto flex items-center justify-between px-(--mobile-padding) py-(--header-padding-y) lg:max-w-(--grid-max-width) lg:px-0'>
           {/* Left side: logo + version/dropdown selects */}
@@ -235,25 +238,39 @@ export function EditorialPage({
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar && (
-          <div className='slot-tabbar hidden lg:block'>
+          <div className='slot-tabbar relative hidden lg:block'>
             <div className='mx-auto flex h-(--tab-bar-height) max-w-full items-stretch gap-6 overflow-x-auto px-(--mobile-padding) text-sm lg:max-w-(--grid-max-width) lg:px-0'>
               {tabs.map((tab) => {
                 return <TabLink key={tab.href} tab={tab} isActive={tab.href === (activeTab ?? tabs[0]?.href)} />
               })}
             </div>
+            {/* Dots on tab-bar border, aligned with outer vertical lines.
+                Positioned on the full-width slot-tabbar so overflow-x on
+                the inner scrollable container doesn't clip them. */}
+            <TabBarDots mode={decorativeLines} />
           </div>
         )}
       </div>
 
-      {/* Above: rendered above the 3-column grid, using the same column widths
-          so above content aligns with the center content column (col 2). */}
-      {!!above && (
-        <div className='mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
-          <div className='lg:col-start-2'>{above}</div>
-        </div>
-      )}
+      {/* Outer decorative frame wrapper — relative so GridLinesFrame lines
+           position against the max-width boundary. Vertical lines are offset
+           outside by --grid-line-offset. Wraps both "above" and the 3-column
+           grid so the vertical lines span the full content height.
+           Negative top margin closes the flex gap so the vertical lines
+           connect seamlessly to the tab-bar border; inner pt restores the
+           visual spacing for content. */}
+      <div className='relative grow w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) lg:pt-(--layout-gap)'>
+        <GridLinesFrame mode={decorativeLines} />
 
-      <div className='grow grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:max-w-(--grid-max-width) lg:px-0'>
+        {/* Above: rendered above the 3-column grid, using the same column widths
+            so above content aligns with the center content column (col 2). */}
+        {!!above && (
+          <div className='mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'>
+            <div className='lg:col-start-2'>{above}</div>
+          </div>
+        )}
+
+        <div className='grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'>
         {/* TOC sidebar: sticky in its own outer grid column so section rows
             below are sized only by the content/right-rail subgrid. */}
         <div className='slot-sidebar-left shrink-0 lg:self-stretch'>
@@ -387,6 +404,7 @@ export function EditorialPage({
             </>
           )}
         </div>
+      </div>
       </div>
 
       {/* AI assistant drawer — slides in from right when activated */}

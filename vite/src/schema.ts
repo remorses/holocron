@@ -813,6 +813,22 @@ const footerLinkColumnSchema = z.object({
   items: z.array(footerLinkItemSchema).describe('Links in the column'),
 })
 
+/* ── Decorative lines ─────────────────────────────────────────────────── */
+
+export const decorativeLinesSchema = z
+  .enum(['none', 'lines', 'dashed', 'lines-with-dots'])
+  .describe(
+    dedent`
+      Decorative border lines framing the page layout at grid boundaries.
+      \`none\` disables all decorative lines.
+      \`lines\` renders solid 1px lines at the page edges and content column boundaries.
+      \`dashed\` renders segmented (dashed) lines.
+      \`lines-with-dots\` renders solid lines with dot ornaments at vertices.
+      Defaults to \`lines-with-dots\`
+    `,
+  )
+  .meta({ id: 'decorativeLinesSchema' })
+
 /* ── Root config ──────────────────────────────────────────────────────── */
 
 export const holocronConfigSchema = z
@@ -854,6 +870,7 @@ export const holocronConfigSchema = z
     search: searchSchema.optional(),
     seo: seoSchema.optional(),
     assistant: assistantSchema.optional(),
+    decorativeLines: decorativeLinesSchema.optional(),
   })
   .passthrough()
   .describe(

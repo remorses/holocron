@@ -141,6 +141,7 @@ export type HolocronConfig = {
   search: { prompt?: string }
   seo: { indexing?: 'navigable' | 'all'; metatags?: Record<string, string> }
   assistant: { enabled: boolean }
+  decorativeLines: 'none' | 'lines' | 'dashed' | 'lines-with-dots'
 }
 
 /* ── Type guard (for page entries) ───────────────────────────────────── */

@@ -122,6 +122,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     search: normalizeSearch(raw.search),
     seo: normalizeSeo(raw.seo),
     assistant: normalizeAssistant(raw.assistant),
+    decorativeLines: normalizeDecorativeLines(raw.decorativeLines),
   }
 }
 
@@ -648,4 +649,13 @@ function normalizeAssistant(raw: unknown): HolocronConfig['assistant'] {
   if (!raw || typeof raw !== 'object') return { enabled: true }
   const obj = raw as Record<string, unknown>
   return { enabled: obj.enabled !== false }
+}
+
+const VALID_DECORATIVE_LINES = new Set(['none', 'lines', 'dashed', 'lines-with-dots'])
+
+function normalizeDecorativeLines(raw: unknown): HolocronConfig['decorativeLines'] {
+  if (typeof raw === 'string' && VALID_DECORATIVE_LINES.has(raw)) {
+    return raw as HolocronConfig['decorativeLines']
+  }
+  return 'lines-with-dots'
 }

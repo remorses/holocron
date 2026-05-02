@@ -135,6 +135,9 @@
     },
     "assistant": {
       "$ref": "#/definitions/assistantSchema"
+    },
+    "decorativeLines": {
+      "$ref": "#/definitions/decorativeLinesSchema"
     }
   },
   "required": [
@@ -1226,6 +1229,16 @@
       },
       "additionalProperties": false,
       "description": "AI chat assistant settings"
+    },
+    "decorativeLinesSchema": {
+      "type": "string",
+      "enum": [
+        "none",
+        "lines",
+        "dashed",
+        "lines-with-dots"
+      ],
+      "description": "Decorative border lines framing the page layout at grid boundaries.\n`none` disables all decorative lines.\n`lines` renders solid 1px lines at the page edges and content column boundaries.\n`dashed` renders segmented (dashed) lines.\n`lines-with-dots` renders solid lines with dot ornaments at vertices.\nDefaults to `lines-with-dots`"
     }
   }
 }
