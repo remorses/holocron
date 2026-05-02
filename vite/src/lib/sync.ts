@@ -247,12 +247,12 @@ export async function syncNavigation({
       ? rewriteMdxImages(processed.mdast, resolvedImages)
       : processed.normalizedContent
 
-    // Store MDX content separately from the nav tree
-    mdxContent[slug] = finalMdx
     pageIconRefs[slug] = processed.iconRefs
     // Cache raw import sources (for future cache hits) and resolve fresh
     pageImportSources[slug] = processed.importSources
     pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
+    // Store MDX content separately from the nav tree
+    mdxContent[slug] = finalMdx
 
     return {
       slug,
@@ -565,18 +565,13 @@ function resolveImportSources({
     // Relative import: safe-mdx resolves from baseUrl (pagesDirPrefix + slugDir)
     // e.g. baseUrl='./pages/', source='../components/badge'
     // → joinPaths('./pages/', '../components/badge') → './components/badge'
+    // Imports outside projectRoot keep leading ../ segments as module keys.
     const resolved = tryResolveImport(path.resolve(mdxDir, source))
     if (resolved) {
-      const ext = path.extname(resolved)
-      // Compute the moduleKey the same way safe-mdx's joinPaths would:
-      // relative from projectRoot, with ./ prefix
-      const relFromRoot = './' + path.relative(projectRoot, resolved).replace(/\\/g, '/')
-      // But safe-mdx computes from baseUrl, so we need the key it would produce.
-      // safe-mdx: joinPaths(baseUrl, source) + ext probing
-      // We can derive this: the resolved file's path relative to root IS the moduleKey
-      // because safe-mdx's joinPaths(pagesDirPrefix + slugDir, relativeSource) produces
-      // the same normalized path as resolving on disk then making root-relative.
-      const moduleKey = relFromRoot
+      const relativeToRoot = path.relative(projectRoot, resolved).replace(/\\/g, '/')
+      const moduleKey = relativeToRoot.startsWith('../') || path.isAbsolute(relativeToRoot)
+        ? relativeToRoot
+        : './' + relativeToRoot
       if (!seen.has(moduleKey)) {
         seen.add(moduleKey)
         result.push({ moduleKey, absPath: resolved })

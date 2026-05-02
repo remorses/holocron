@@ -29,6 +29,20 @@ test.describe('MDX imports', () => {
     expect(html).toContain('default-import-works')
   })
 
+  test('renders default import from .md snippets', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain('Plain markdown snippet imported from a `.md` file.')
+  })
+
+  test('renders imported .md file outside the Vite app root', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain('Delightful docs. Mintlify drop in replacement as a Vite plugin')
+  })
+
   test('renders named import from /components/', async ({ request }) => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)
