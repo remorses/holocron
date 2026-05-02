@@ -10,6 +10,7 @@ import { remark } from 'remark'
 import { remarkMarkAndUnravel } from 'safe-mdx/parse'
 import { remarkCodeGroup } from './remark-code-group.ts'
 import { remarkDetailsToggle } from './remark-details-toggle.ts'
+import { remarkGithubCallouts } from './remark-github-callouts.ts'
 import { remarkHeadings } from './remark-headings.ts'
 import { remarkMermaidCode } from './remark-mermaid.ts'
 import { remarkSidebarComponents } from './remark-sidebar-components.ts'
@@ -30,6 +31,7 @@ export function normalizeMdx(content: string): NormalizedMdx {
     .use(remarkHeadings as never)
     .use(remarkCodeGroup)
     .use(remarkDetailsToggle)
+    .use(remarkGithubCallouts)
     .use(remarkMermaidCode)
     .use(remarkSingleAccordionItems)
     .use(remarkSidebarComponents)

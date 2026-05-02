@@ -110,6 +110,20 @@ Hidden **content**.
     `)
   })
 
+  test('rewrites GitHub callout quotes to Callout JSX', async () => {
+    const { content: result } = await normalizeMdx(`
+> [!IMPORTANT]
+> Use **Holocron** callouts.
+`)
+
+    expect(result).toMatchInlineSnapshot(`
+      "<Info title=\"Important\">
+        Use **Holocron** callouts.
+      </Info>
+      "
+    `)
+  })
+
   test('preserves dotted Mintlify component names', async () => {
     const { content: result } = await normalizeMdx(`
 <Tree>
