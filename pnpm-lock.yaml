@@ -277,8 +277,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       safe-mdx:
-        specifier: file:../../safe-mdx
-        version: file:../safe-mdx(react@19.2.5)
+        specifier: github:remorses/safe-mdx#recursive-mdx-modules
+        version: https://codeload.github.com/remorses/safe-mdx/tar.gz/6626a58fe17a89154adbc67960449dd3197cbc85(react@19.2.5)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -4405,8 +4405,9 @@ packages:
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
-  safe-mdx@file:../safe-mdx:
-    resolution: {directory: ../safe-mdx, type: directory}
+  safe-mdx@https://codeload.github.com/remorses/safe-mdx/tar.gz/6626a58fe17a89154adbc67960449dd3197cbc85:
+    resolution: {tarball: https://codeload.github.com/remorses/safe-mdx/tar.gz/6626a58fe17a89154adbc67960449dd3197cbc85}
+    version: 1.9.0
     peerDependencies:
       react: '*'
 
@@ -8969,7 +8970,7 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-mdx@file:../safe-mdx(react@19.2.5):
+  safe-mdx@https://codeload.github.com/remorses/safe-mdx/tar.gz/6626a58fe17a89154adbc67960449dd3197cbc85(react@19.2.5):
     dependencies:
       '@babel/parser': 7.29.3
       '@babel/types': 7.29.0
