@@ -3,8 +3,8 @@
  * widget, and mobile nav without depending on React hooks.
  */
 
-import type { ReactNode } from 'react'
 import { createStore } from 'zustand'
+import type { ReactNode } from 'react'
 
 export type DrawerState = 'closed' | 'open'
 

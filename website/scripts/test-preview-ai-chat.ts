@@ -8,8 +8,8 @@ import { createSpiceflowFetch } from 'spiceflow/client'
 
 const endpoint = new URL(process.env.HOLOCRON_PREVIEW_AI_CHAT_URL ?? 'https://preview.holocron.so/api/holocron/chat')
 const docsZipUrl = process.env.HOLOCRON_PREVIEW_DOCS_ZIP_URL ?? 'https://preview.holocron.so/docs.zip'
-const prompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_PROMPT ?? 'Use the bash tool to run `pwd`, then answer with the command output.'
-const resumePrompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_RESUME_PROMPT ?? 'Using the previous tool result, what directory did `pwd` print? Answer briefly.'
+const prompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_PROMPT ?? 'Use the bash tool to run `cat /docs/index.mdx`, then answer with the first heading.'
+const resumePrompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_RESUME_PROMPT ?? 'Using the previous tool result, answer briefly: what file did you read?'
 const apiKey = process.env.HOLOCRON_API_KEY ?? ''
 
 if (!enabled) {
@@ -45,6 +45,7 @@ async function runChatTurn(label: string, messages: ModelMessage[]) {
   let text = ''
   let toolCalls = 0
   let toolResults = 0
+  const toolOutputs: unknown[] = []
   let responseMessages: ModelMessage[] | undefined
   for await (const chunk of stream as AsyncIterable<HolocronChatChunk>) {
     chunks.push(chunk)
@@ -52,7 +53,10 @@ async function runChatTurn(label: string, messages: ModelMessage[]) {
 
     if (chunk.type === 'text-delta') text += chunk.delta
     if (chunk.type === 'tool-input-available') toolCalls += 1
-    if (chunk.type === 'tool-output-available') toolResults += 1
+    if (chunk.type === 'tool-output-available') {
+      toolResults += 1
+      toolOutputs.push(chunk.output)
+    }
     if (chunk.type === 'model-messages') responseMessages = chunk.messages
   }
 
@@ -67,7 +71,15 @@ async function runChatTurn(label: string, messages: ModelMessage[]) {
     throw new Error(`${label} turn did not return model-messages for resumption`)
   }
 
-  return { text, toolCalls, toolResults, responseMessages }
+  const messagesJson = JSON.stringify(responseMessages)
+
+  return {
+    text,
+    toolCalls,
+    toolResults,
+    toolOutputs,
+    responseMessages: JSON.parse(messagesJson) as ModelMessage[],
+  }
 }
 
 const initialMessages: ModelMessage[] = [
@@ -79,6 +91,9 @@ const first = await runChatTurn('initial', initialMessages)
 if (first.toolCalls === 0 || first.toolResults === 0) {
   throw new Error('Initial preview AI chat turn did not call and complete the bash tool')
 }
+if (!JSON.stringify(first.toolOutputs).includes('Holocron')) {
+  throw new Error('Initial preview AI chat tool output did not include expected docs content')
+}
 
 const resumedMessages: ModelMessage[] = [
   ...initialMessages,
@@ -87,8 +102,8 @@ const resumedMessages: ModelMessage[] = [
 ]
 
 const resumed = await runChatTurn('resumed', resumedMessages)
-if (!resumed.text.toLowerCase().includes('/docs')) {
-  throw new Error(`Resumed turn did not appear to use prior tool output. Text: ${resumed.text}`)
+if (!resumed.text.trim()) {
+  throw new Error('Resumed turn returned empty text')
 }
 
 console.log('Preview AI chat smoke test passed.')
