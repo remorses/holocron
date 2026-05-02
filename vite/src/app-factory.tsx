@@ -595,9 +595,13 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     )
   }
 
-  const layoutFn = async ({ children, request, loaderData: rawLoaderData }: { children?: React.ReactNode; request: Request; loaderData: unknown }) => {
+  const layoutFn = async ({ children, request, response, loaderData: rawLoaderData }: { children?: React.ReactNode; request: Request; response: { headers: Headers }; loaderData: unknown }) => {
     if (!isHolocronLoaderData(rawLoaderData)) {
       throw new Error('Holocron loader data missing in layout')
+    }
+    const cacheControl = rawLoaderData.currentPageFrontmatter?.['cache-control']
+    if (cacheControl) {
+      response.headers.set('cache-control', cacheControl)
     }
     return renderFullShell({ children: children ?? null, request, loaderData: rawLoaderData })
   }
@@ -605,13 +609,17 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   // Wildcard fallback. `children === null` means no `.page()` matched
   // → real 404. Otherwise a more specific layout is nested; return a
   // Fragment so exactly one <html> stays at the root.
-  const wildcardLayoutFn = async ({ children, request, response, loaderData: rawLoaderData }: { children?: React.ReactNode; request: Request; response: { status?: number }; loaderData: unknown }) => {
+  const wildcardLayoutFn = async ({ children, request, response, loaderData: rawLoaderData }: { children?: React.ReactNode; request: Request; response: { status?: number; headers: Headers }; loaderData: unknown }) => {
     if (!isHolocronLoaderData(rawLoaderData)) {
       throw new Error('Holocron loader data missing in wildcard layout')
     }
     if (children === null || children === undefined) {
       response.status = 404
       return renderFullShell({ children: null, request, loaderData: rawLoaderData })
+    }
+    const cacheControl = rawLoaderData.currentPageFrontmatter?.['cache-control']
+    if (cacheControl) {
+      response.headers.set('cache-control', cacheControl)
     }
     return <>{children}</>
   }
@@ -760,10 +768,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         if (mdx === undefined) {
           return new Response('Not found', { status: 404 })
         }
+        const frontmatter = parsePageFrontmatter(mdx)
         return new Response(buildMarkdownSource(mdx), {
           headers: {
             'content-type': 'text/markdown; charset=utf-8',
-            'cache-control': 's-maxage=300, stale-while-revalidate=86400',
+            'cache-control': frontmatter['cache-control'] ?? 's-maxage=300, stale-while-revalidate=86400',
             'x-content-type-options': 'nosniff',
           },
         })

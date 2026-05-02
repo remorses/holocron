@@ -50,6 +50,8 @@ export const pageFrontmatterSchema = z.object({
   'twitter:site': z.string().optional(),
   'twitter:image:width': stringOrNumberToStringSchema.optional(),
   'twitter:image:height': stringOrNumberToStringSchema.optional(),
+  /** Raw Cache-Control header value applied to the page response (e.g. "s-maxage=0, no-store"). */
+  'cache-control': z.string().optional(),
 }).passthrough()
 
 export type PageFrontmatter = z.output<typeof pageFrontmatterSchema>
