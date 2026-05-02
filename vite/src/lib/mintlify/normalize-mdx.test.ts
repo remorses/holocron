@@ -93,6 +93,23 @@ A-->B
     `)
   })
 
+  test('rewrites html details to Expandable', async () => {
+    const { content: result } = await normalizeMdx(`
+<details open>
+<summary>Advanced</summary>
+
+Hidden **content**.
+</details>
+`)
+
+    expect(result).toMatchInlineSnapshot(`
+      "<Expandable title={<Markdown children=\"Advanced\" />} defaultOpen>
+        Hidden **content**.
+      </Expandable>
+      "
+    `)
+  })
+
   test('preserves dotted Mintlify component names', async () => {
     const { content: result } = await normalizeMdx(`
 <Tree>

@@ -3,7 +3,7 @@
  * Maps MDX element names and mdast nodes to editorial components.
  */
 
-import { Fragment, type ReactNode } from 'react'
+import { Children, Fragment, type ReactNode } from 'react'
 import { SafeMdxRenderer, type SafeMdxError } from 'safe-mdx'
 import type { PhrasingContent, Root, RootContent } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
@@ -103,6 +103,20 @@ function ImageWithProps(props: {
   )
 }
 
+const Markdown = ({ children }: { children: ReactNode }) => {
+  const markdown = Children.toArray(children).join('')
+
+  return (
+    <SafeMdxRenderer
+      markdown={markdown}
+      mdast={mdxParse(markdown)}
+      components={{ ...mdxComponents, p: Fragment }}
+      renderNode={renderNode}
+      onError={logMdxError}
+    />
+  )
+}
+
 function getAttributeString(node: Extract<MyRootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>, name: string): string | undefined {
   const attr = node.attributes.find((a) => a.type === 'mdxJsxAttribute' && a.name === name)
   if (!attr) return undefined
@@ -190,6 +204,7 @@ export const mdxComponents = {
   'Color.Row': ColorRow,
   'Color.Item': ColorItem,
   Icon: Icon,
+  Markdown,
   Visibility,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.

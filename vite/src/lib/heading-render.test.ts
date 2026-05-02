@@ -31,13 +31,14 @@ describe('heading rendering pipeline', () => {
 
   test('mdast node type and children after parsing', () => {
     const { mdast } = renderMdx('## Getting Started')
-    const node = mdast.children[0]! as any
+    const node = mdast.children[0]
+    if (!node || node.type !== 'heading') throw new Error('Expected first node to be a heading')
     expect({
       type: node.type,
-      name: node.name,
-      children: node.children?.map((c: any) => ({
+      name: undefined,
+      children: node.children?.map((c) => ({
         type: c.type,
-        children: c.children?.map((cc: any) => ({ type: cc.type, value: cc.value })),
+        children: undefined,
       })),
     }).toMatchInlineSnapshot(`
       {
@@ -75,5 +76,41 @@ describe('heading rendering pipeline', () => {
   test('multiple headings with body text', () => {
     const { html } = renderMdx('## H2 Title\n\n### H3 Title\n\nSome body text.')
     expect(html).toMatchInlineSnapshot(`"<h1 id="h2-title" class="editorial-heading editorial-h1" data-toc-heading="true" data-toc-level="1"><span style="white-space:nowrap">H2 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h1><h2 id="h3-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span style="white-space:normal">H3 Title</span></h2><div class="editorial-prose " style="opacity:0.82">Some body text.</div>"`)
+  })
+
+  test('details summary markdown renders through mdx components', () => {
+    const { html } = renderMdx(`
+<details>
+<summary>Use **rich** [links](https://example.com)</summary>
+
+Content.
+</details>
+`)
+
+    expect(html).toContain('<strong>rich</strong>')
+    expect(html).toContain('href="https://example.com"')
+    expect(html).not.toContain('Expandable</span>')
+  })
+
+  test('details body renders code blocks and tables', () => {
+    const { html } = renderMdx(`
+<details>
+<summary>Examples</summary>
+
+| Name | Value |
+| ---- | ----- |
+| foo  | bar   |
+
+\`\`\`ts
+const value = 'ok'
+\`\`\`
+</details>
+`)
+
+    expect(html).toContain('<table')
+    expect(html).toContain('>foo</td>')
+    expect(html).toContain('language-ts')
+    expect(html).toContain('token keyword')
+    expect(html).toContain('value')
   })
 })
