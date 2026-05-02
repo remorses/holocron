@@ -154,6 +154,7 @@ export const openapiProvider: VirtualTabProvider = {
           `title: "${title.replace(/"/g, '\\"')}"`,
           `description: "${(op.operation.description ?? op.operation.summary ?? '').replace(/"/g, '\\"').replace(/\n/g, ' ').slice(0, 200)}"`,
           `api: "${op.method.toUpperCase()} ${op.path}"`,
+          'gridGap: 30',
           ...(op.operation.deprecated ? ['deprecated: true'] : []),
           '---',
           '',

@@ -2,9 +2,9 @@
  * Grid geometry tokens + sidebar-width helpers.
  *
  * This file is the SINGLE source of truth for the page grid geometry.
- * `styles/globals.css` intentionally does NOT declare defaults for the
- * `--grid-*` custom properties — `editorial-page.tsx` injects them via
- * inline style on `.slot-page` by calling `buildGridTokenStyle()`.
+ * `editorial-page.tsx` injects page-specific values as inline style on
+ * `.slot-page` by calling `buildGridTokenStyle()`. `globals.css` owns the
+ * default responsive `--grid-gap`; page frontmatter can override it inline.
  *
  * Content width is DERIVED, not configured:
  *   content = max-width - nav - sidebar - 2*gap
@@ -93,14 +93,14 @@ export function computeSidebarWidthFromAsideNodes(
  */
 export function buildGridTokenStyle(
   sidebarWidth: number,
+  gridGap?: number,
 ): HolocronCSSProperties {
   const nav = GRID_TOKENS['--grid-nav-width']
-  const gap = GRID_TOKENS['--grid-gap']
   const maxW = GRID_TOKENS['--grid-max-width']
 
   return {
     '--grid-nav-width': `${nav}px`,
-    '--grid-gap': `${gap}px`,
+    ...(gridGap !== undefined && { '--grid-gap': `${gridGap}px` }),
     '--grid-sidebar-width': `${sidebarWidth}px`,
     '--grid-max-width': `min(calc(100vw - 60px), ${maxW}px)`,
     '--grid-content-width': `minmax(0, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap)))`,

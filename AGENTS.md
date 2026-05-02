@@ -468,6 +468,8 @@ integration-tests/
 
 Tests use Playwright's `request` fixture (not raw `fetch()`) so per-project `baseURL` is picked up automatically.
 
+Do not add brittle tests that hardcode visual constants like pixel gaps, widths, heights, or exact layout token values. They test implementation details, add maintenance noise, and make harmless design tweaks harder. Prefer tests that validate user-visible behavior or real regressions.
+
 **When you hit a config bug — add a fixture**: if a user reports that some combination of `navigation`, `navbar`, `anchors`, `redirects`, `footer.socials`, `logo`, or any other config fields misbehaves, add a new fixture under `fixtures/<descriptive-name>/` with the minimal reproduction config + MDX pages, add a matching `e2e/<name>/<name>.test.ts`, reproduce the bug as a failing test, then fix the bug in `vite/src/`.
 
 **Adding a fixture, step by step**:

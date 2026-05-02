@@ -327,6 +327,8 @@ function renderMdxPage({
       <RenderNodes markdown={pageMdx} nodes={aboveWithImports} modules={modules} baseUrl={mdxBaseUrl} />
     ) : undefined
 
+  const gridGap = loaderData.currentPageFrontmatter?.gridGap
+
   return (
     <>
       <Head>
@@ -363,7 +365,7 @@ function renderMdxPage({
               : <Head.Meta key={name} name={name} content={content} />
           ))}
       </Head>
-      <EditorialPage sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} />
+      <EditorialPage sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} />
     </>
   )
 }

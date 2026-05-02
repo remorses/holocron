@@ -73,6 +73,7 @@ export function EditorialPage({
   above,
   bannerContent,
   sidebarWidth,
+  gridGap,
 }: {
   sidebar?: React.ReactNode
   children?: React.ReactNode
@@ -87,6 +88,8 @@ export function EditorialPage({
    *  to accommodate it. When undefined, the default sidebar width is
    *  used (same as the TOC column width). */
   sidebarWidth?: number
+  /** Optional page-level grid gap from frontmatter. */
+  gridGap?: number
 }) {
   const { site, activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
   const siteConfig = site.config
@@ -116,7 +119,7 @@ export function EditorialPage({
   const pageStyle: HolocronCSSProperties = {
     WebkitFontSmoothing: 'antialiased',
     '--banner-height': bannerContent ? '36px' : '0px',
-    ...buildGridTokenStyle(sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH),
+    ...buildGridTokenStyle(sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH, gridGap),
   }
 
   return (

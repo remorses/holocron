@@ -31,6 +31,7 @@ export const pageFrontmatterSchema = z.object({
   sidebarTitle: z.string().optional(),
   tag: z.string().optional(),
   deprecated: z.boolean().optional(),
+  gridGap: z.number().optional(),
   hidden: z.boolean().optional(),
   noindex: z.boolean().optional(),
   keywords: z.array(z.string()).optional(),
