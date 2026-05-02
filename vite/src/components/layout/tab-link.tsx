@@ -2,7 +2,7 @@
 
 /**
  * TabLink — single tab rendered in the tab bar. Active tab gets a 2px
- * bottom indicator + faux bold via text-shadow. Used by EditorialPage.
+ * bottom indicator (2px) + faux bold via text-shadow. Used by EditorialPage.
  */
 
 import React from 'react'
@@ -12,7 +12,7 @@ import { Icon } from '../icon.tsx'
 
 export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
   const isExternal = tab.href.startsWith('http')
-  const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 font-[475] [font-family:var(--font-sans)] lowercase transition-colors duration-150'
+  const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 font-[475] [font-family:var(--font-sans)] transition-colors duration-150'
   const tabStyle = {
     color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
     textShadow: isActive ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : 'none',
@@ -43,7 +43,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
         bottom: 0,
         left: 0,
         width: '100%',
-        height: '3px',
+        height: '2px',
         backgroundColor: isActive ? 'var(--foreground)' : 'transparent',
         borderRadius: '1px',
         transition: 'background-color 0.15s ease',
