@@ -121,6 +121,7 @@ export function EditorialPage({
   const pageStyle: HolocronCSSProperties = {
     WebkitFontSmoothing: 'antialiased',
     '--banner-height': bannerContent ? '36px' : '0px',
+    '--grid-line-style': decorativeLines === 'none' ? 'none' : decorativeLines === 'dashed' ? 'dashed' : 'solid',
     ...buildGridTokenStyle(sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH, gridGap),
   }
 
@@ -249,13 +250,13 @@ export function EditorialPage({
                 the inner scrollable container doesn't clip them. */}
             <TabBarDots mode={decorativeLines} />
           </div>
-        ) : (
+        ) : decorativeLines !== 'none' ? (
           /* No tabs — render a simple horizontal separator line with dots
              so the decorative frame still has a top boundary. */
           <div className='slot-tabbar relative hidden lg:block' style={{ borderTop: 'none' }}>
             <TabBarDots mode={decorativeLines} />
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Outer decorative frame wrapper — relative so GridLinesFrame lines

@@ -38,6 +38,8 @@ export interface HolocronCSSProperties extends CSSProperties {
    * ---------------------------------------------------------------- */
   /** Height of the top banner (0px when there's no banner). */
   '--banner-height'?: string
+  /** Border style for decorative grid lines — `solid` or `dashed`. */
+  '--grid-line-style'?: string
   /** `grid-row: <start> / span <N>` for a shared `<Aside full>` cell. */
   '--shared-row'?: string
 }

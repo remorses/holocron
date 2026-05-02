@@ -347,8 +347,8 @@
 
   .slot-tabbar {
     background: var(--background);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    border-top: 1px var(--grid-line-style, solid) var(--border);
+    border-bottom: 1px var(--grid-line-style, solid) var(--border);
     overflow: visible;  /* allow grid-dot ornaments to render outside the borders */
   }
 

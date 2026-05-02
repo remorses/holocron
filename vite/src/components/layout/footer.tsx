@@ -26,7 +26,7 @@ export function Footer() {
   const logoLinkHref = logo.href || '/'
 
   return (
-    <footer className='border-t border-border bg-background'>
+    <footer className='border-border bg-background' style={{ borderTop: '1px var(--grid-line-style, solid) var(--border)' }}>
       <div className='mx-auto w-full max-w-full px-(--mobile-padding) py-10 lg:max-w-(--grid-max-width) lg:px-0'>
         {/* Top row: logo + social icons */}
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
