@@ -147,5 +147,6 @@
                 "openapi": "openapi.json"
             }
         ]
-    }
+    },
+    // "decorativeLines": "none"
 }
