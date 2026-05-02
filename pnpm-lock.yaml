@@ -277,8 +277,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       safe-mdx:
-        specifier: ^1.6.0
-        version: 1.6.0(react@19.2.5)
+        specifier: ^1.8.0
+        version: 1.8.0(react@19.2.5)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -4278,8 +4278,8 @@ packages:
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
-  safe-mdx@1.6.0:
-    resolution: {integrity: sha512-Q6mSBqYhGfupzA+jjXtMQ0eQLMS9lwcjz8ukdE7q2j7bvOUL79CGapsOCl3W2jbzipE7+PFZoQ7nivb4RC+WLQ==}
+  safe-mdx@1.8.0:
+    resolution: {integrity: sha512-LreURjpkNuLYVZT59ygJQaxER82VQLG/iBOPJ1y+/r9dNlYQizXZxMu0H0bdB6DOf12KGFhOiaHXRILyYEKbpw==}
     peerDependencies:
       react: '*'
 
@@ -8684,7 +8684,7 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-mdx@1.6.0(react@19.2.5):
+  safe-mdx@1.8.0(react@19.2.5):
     dependencies:
       '@babel/parser': 7.29.2
       '@babel/types': 7.29.0
