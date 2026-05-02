@@ -434,11 +434,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
         const sortedImports = [...allImports.entries()]
           .sort(([a], [b]) => a.localeCompare(b))
-        const hasMdxImports = sortedImports.some(([, absPath]) => /\.mdx?$/.test(absPath))
+        // Only count non-queried .md/.mdx imports for the RenderImportedMdx wrapper.
+        // Queried imports like README.md?raw are plain Vite imports, not MDX renders.
+        const hasMdxImports = sortedImports.some(([moduleKey, absPath]) =>
+          !moduleKey.includes('?') && /\.mdx?$/.test(absPath))
         const entries = sortedImports.map(([moduleKey, absPath]) => {
-          // ?raw imports: emit a plain Vite ?raw import that resolves to { default: string }
-          if (moduleKey.endsWith('?raw')) {
-            return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath + '?raw')})`
+          // Vite query imports (?raw, ?url, ?inline, ?worker, etc.): forward the
+          // query suffix to the import() call so Vite applies the right transform.
+          const qIdx = moduleKey.indexOf('?')
+          if (qIdx >= 0) {
+            const querySuffix = moduleKey.slice(qIdx)
+            return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath + querySuffix)})`
           }
           if (/\.mdx?$/.test(absPath)) {
             const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
