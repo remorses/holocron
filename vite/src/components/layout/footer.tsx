@@ -32,7 +32,12 @@ export function Footer() {
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <Link href={logoLinkHref} className='no-underline flex items-center'>
             <>
-              {logo.dark ? (
+              {logo.generated ? (
+                <>
+                  <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:hidden' style={{ mixBlendMode: 'multiply' }} />
+                  <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto hidden dark:block' style={{ mixBlendMode: 'screen', filter: 'invert(1)' }} />
+                </>
+              ) : logo.dark ? (
                 <>
                   <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:hidden' />
                   <img src={logo.dark} alt={siteConfig.name || 'Logo'} className='h-6 w-auto hidden dark:block' />

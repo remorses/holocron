@@ -5,7 +5,12 @@
 import type { HolocronConfig } from '../config.ts'
 
 export type GeneratedLogoTheme = 'light' | 'dark'
-export type ResolvedLogo = HolocronConfig['logo']
+export type ResolvedLogo = HolocronConfig['logo'] & {
+  /** True when the logo was auto-generated (AI or Takumi), not user-provided.
+   *  Generated logos have opaque white backgrounds and need CSS blend-mode
+   *  to appear transparent. */
+  generated?: boolean
+}
 
 const DEFAULT_LOGO_TEXT = 'documentation'
 const GENERATED_LOGO_ROUTE = '/holocron-api/logo'
@@ -42,6 +47,7 @@ export function resolveLogo(logo: ResolvedLogo, siteName: string, baseUrl: strin
     light: withBasePath(getGeneratedLogoPath(siteName, 'light'), baseUrl),
     dark: withBasePath(getGeneratedLogoPath(siteName, 'dark'), baseUrl),
     href: logo.href,
+    generated: true,
   }
 }
 

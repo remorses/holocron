@@ -151,14 +151,14 @@ export function EditorialPage({
                 <img
                   src={logo}
                   alt={siteName || 'Logo'}
-                  style={{ height: 'var(--logo-height)', width: 'auto' }}
-                  className={siteLogo.dark ? 'dark:hidden' : 'dark:invert'}
+                  style={{ height: 'var(--logo-height)', width: 'auto', ...(siteLogo.generated ? { mixBlendMode: 'multiply' } : {}) }}
+                  className={siteLogo.generated ? 'dark:hidden' : siteLogo.dark ? 'dark:hidden' : 'dark:invert'}
                 />
-                {siteLogo.dark && (
+                {(siteLogo.dark || siteLogo.generated) && (
                   <img
-                    src={siteLogo.dark}
+                    src={siteLogo.generated ? logo : siteLogo.dark}
                     alt={siteName || 'Logo'}
-                    style={{ height: 'var(--logo-height)', width: 'auto' }}
+                    style={{ height: 'var(--logo-height)', width: 'auto', ...(siteLogo.generated ? { mixBlendMode: 'screen', filter: 'invert(1)' } : {}) }}
                     className='hidden dark:block'
                   />
                 )}
