@@ -237,7 +237,7 @@ export function EditorialPage({
         <MobileBar enableAssistant={enableAssistant} />
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
-        {hasTabBar && (
+        {hasTabBar ? (
           <div className='slot-tabbar relative hidden lg:block'>
             <div className='mx-auto flex h-(--tab-bar-height) max-w-full items-stretch gap-6 overflow-x-auto px-(--mobile-padding) text-sm lg:max-w-(--grid-max-width) lg:px-0'>
               {tabs.map((tab) => {
@@ -247,6 +247,12 @@ export function EditorialPage({
             {/* Dots on tab-bar border, aligned with outer vertical lines.
                 Positioned on the full-width slot-tabbar so overflow-x on
                 the inner scrollable container doesn't clip them. */}
+            <TabBarDots mode={decorativeLines} />
+          </div>
+        ) : (
+          /* No tabs — render a simple horizontal separator line with dots
+             so the decorative frame still has a top boundary. */
+          <div className='slot-tabbar relative hidden lg:block' style={{ borderTop: 'none' }}>
             <TabBarDots mode={decorativeLines} />
           </div>
         )}
