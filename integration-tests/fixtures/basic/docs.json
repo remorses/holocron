@@ -10,7 +10,8 @@
         "group": "Guides",
         "pages": [
           "index.md",
-          "getting-started.mdx"
+          "getting-started.mdx",
+          "markdown-page.md"
         ]
       }
     ]

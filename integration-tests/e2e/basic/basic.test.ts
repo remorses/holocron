@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("home page", () => {
   test("renders page title and MDX content", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     // Title from frontmatter should be in the document title
     await expect(page).toHaveTitle(/Test Docs/);
     // MDX heading should be rendered
@@ -25,7 +25,7 @@ test.describe("home page", () => {
   });
 
   test("renders markdown tables with the editorial wrapper", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     const table = page.getByRole("table");
     await expect(table).toBeVisible();
@@ -38,7 +38,7 @@ test.describe("home page", () => {
 
 test.describe("getting-started page", () => {
   test("renders page title and headings", async ({ page }) => {
-    await page.goto("/getting-started");
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/Getting Started/);
     await expect(page.getByRole("heading", { name: "Installation" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
@@ -48,7 +48,7 @@ test.describe("getting-started page", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/getting-started");
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
 
@@ -61,7 +61,7 @@ test.describe("getting-started page", () => {
 
   test("TOC headings are indented relative to the page link", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/getting-started");
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
     const pageLink = nav.getByRole("link", { name: "Getting Started" });
@@ -76,7 +76,7 @@ test.describe("getting-started page", () => {
 
   test("shows an explicit no-results state when search has no matches", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/getting-started");
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
 
     const searchInput = page.getByPlaceholder("search...");
     await expect(searchInput).toBeVisible({ timeout: 10000 });
@@ -108,7 +108,7 @@ test.describe("getting-started page", () => {
   });
 
   test("renders code blocks", async ({ page }) => {
-    await page.goto("/getting-started");
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
     // The code block with the install command should be visible
     await expect(
       page.getByText("npm install @holocron.so/vite"),
@@ -128,14 +128,15 @@ test.describe("getting-started page", () => {
 });
 
 test.describe("navigation", () => {
-  test("sidebar contains links to both pages", async ({ request }) => {
+  test("sidebar contains links to all pages", async ({ request }) => {
     const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
-    // Sidebar should contain nav items for both pages
+    // Sidebar should contain nav items for MDX and plain markdown pages
     expect(html).toContain("Welcome to Test Docs");
     expect(html).toContain("Getting Started");
+    expect(html).toContain("Markdown Page");
     // Should have the nav group name
     expect(html).toContain("Guides");
   });
@@ -145,6 +146,43 @@ test.describe("navigation", () => {
     await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
 
     await expect(page).toHaveTitle(/Getting Started/);
+  });
+});
+
+test.describe("plain markdown page", () => {
+  test("renders .md pages from the navigation", async ({ page }) => {
+    await page.goto("/markdown-page", { waitUntil: "domcontentloaded" });
+
+    await expect(page).toHaveTitle(/Markdown Page/);
+    await expect(page.getByRole("heading", { name: "Markdown HTML Block" })).toBeVisible();
+    await expect(page.getByText("Simple HTML in plain Markdown should render.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Plain Markdown" })).toBeVisible();
+    await expect(page.getByText("same pipeline as MDX pages")).toBeVisible();
+    await expect(page.getByText("const extension = '.md'")).toBeVisible();
+  });
+
+  test("appears in sidebar navigation", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/markdown-page", { waitUntil: "domcontentloaded" });
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav.getByRole("link", { name: "Markdown Page" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Plain Markdown" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Markdown Features" })).toBeVisible();
+  });
+
+  test("HTML response contains rendered .md content", async ({ request }) => {
+    const response = await request.get("/markdown-page", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("Markdown Page");
+    expect(html).toContain("Markdown HTML Block");
+    expect(html).toContain("Simple HTML in plain Markdown should render.");
+    expect(html).toContain("Plain Markdown");
+    expect(html).toContain("same pipeline as MDX pages");
   });
 });
 
@@ -166,6 +204,7 @@ test.describe("agent-facing docs", () => {
     expect(text).toContain("/index.md)");
     expect(text).toContain("[Getting Started](http://localhost:");
     expect(text).toContain("/getting-started.md)");
+    expect(text).toContain("/markdown-page.md)");
   });
 
   test("points HTML and markdown pages back to llms.txt", async ({ request }) => {
@@ -208,7 +247,7 @@ test.describe("hydration", () => {
       errors.push(err.message);
     });
 
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
@@ -224,7 +263,7 @@ test.describe("hydration", () => {
     });
 
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/getting-started");
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
