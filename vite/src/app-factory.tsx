@@ -16,7 +16,7 @@ import type { ApiApp as WebsiteApiApp } from 'website/src/api.ts'
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
 import { createSpiceflowFetch } from 'spiceflow/client'
 import { Head, ProgressBar } from 'spiceflow/react'
-import { mdxParse, resolveModules, type EagerModules } from 'safe-mdx/parse'
+import { mdxParse, resolveModules, type EagerModules, type MdxModuleFile } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
 import {
@@ -45,7 +45,7 @@ import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
-import { RenderNodes } from './lib/mdx-components-map.tsx'
+import { RenderImportedMdx, RenderNodes } from './lib/mdx-components-map.tsx'
 import {
   decodeGeneratedLogoText,
   type GeneratedLogoTheme,
@@ -161,6 +161,7 @@ type HolocronProviders = {
   /** Lazy glob of importable files (snippets, components, colocated pages).
    *  Used by resolveModules() to resolve MDX import statements at render time. */
   getModules?(): Record<string, () => Promise<Record<string, any>>>
+  getImportedMdxFiles?(): Record<string, MdxModuleFile>
   /** Pages directory relative to root with ./ prefix and trailing slash.
    *  E.g. './pages/' or './' when pagesDir is the project root. */
   pagesDirPrefix?: string
@@ -641,7 +642,19 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         preParsedMdast = mdxParse(pageMdx)
         const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
         const baseUrl = (providers.pagesDirPrefix || './') + slugDir
-        modules = await resolveModules({ glob: lazyGlob, mdast: preParsedMdast, baseUrl })
+        modules = await resolveModules({
+          glob: lazyGlob,
+          mdast: preParsedMdast,
+          baseUrl,
+          mdxFiles: providers.getImportedMdxFiles?.(),
+          createMdxModule({ markdown, mdast, baseUrl, modules }) {
+            return {
+              default: function ImportedMdx(props: Record<string, any>) {
+                return <RenderImportedMdx {...props} markdown={markdown} mdast={mdast} modules={modules} baseUrl={baseUrl} />
+              },
+            }
+          },
+        })
       }
 
       return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast })

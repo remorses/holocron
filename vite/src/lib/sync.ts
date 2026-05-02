@@ -103,6 +103,10 @@ export type SyncResult = {
    *  and an `absPath` (absolute filesystem path for the import() call).
    *  Built fresh on every sync from cached importSources + filesystem probing. */
   pageImports: Record<string, ResolvedImport[]>
+  /** Pre-processed imported `.md`/`.mdx` snippets keyed by safe-mdx module key. */
+  importedMdxContent: Record<string, string>
+  /** Imports discovered inside imported `.md`/`.mdx` snippets, keyed by module key. */
+  importedMdxImports: Record<string, ResolvedImport[]>
   parsedCount: number
   cachedCount: number
 }
@@ -146,61 +150,16 @@ export async function syncNavigation({
   const pageImportSources: Record<string, string[]> = {}
   /** Resolved imports per page (computed fresh every sync from pageImportSources + filesystem) */
   const pageImports: Record<string, ResolvedImport[]> = {}
+  const importedMdxContent: Record<string, string> = {}
+  const importedMdxImports: Record<string, ResolvedImport[]> = {}
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
       .filter(Boolean),
   )
 
-  // 2. Enrich a single page slug
-  async function enrichPage(slug: string): Promise<NavPage> {
-    // Virtual pages (e.g. from OpenAPI) already have content in mdxContent
-    const virtualMdx = mdxContent[slug]
-    if (virtualMdx) {
-      const processed = processMdx(virtualMdx, config.icons.library)
-      pageIconRefs[slug] = processed.iconRefs
-      return {
-        slug,
-        href: slugToHref(slug),
-        title: processed.title,
-        description: processed.description,
-        gitSha: `virtual:${slug}`,
-        headings: processed.headings,
-        frontmatter: processed.frontmatter,
-      }
-    }
-
-    const mdxPath = resolveMdxPath(pagesDir, slug)
-    if (!mdxPath) {
-      if (redirectBackedPageSlugs.has(slug)) {
-        return createRedirectBackedPage(slug)
-      }
-      throw new Error(`MDX file not found for page "${slug}". Looked in ${pagesDir}`)
-    }
-    const content = fs.readFileSync(mdxPath, 'utf-8')
-    const sha = gitBlobSha(content)
-
-    // Cache hit — MDX unchanged and we have cached MDX content
-    const cached = oldPages.get(slug)
-    const cachedMdx = oldMdxContent[slug]
-    if (cached && cached.gitSha === sha && cachedMdx) {
-      cachedCount++
-      mdxContent[slug] = cachedMdx
-      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
-      // Restore cached raw import sources, then resolve fresh against the
-      // current filesystem. This ensures newly-created files are picked up
-      // without re-parsing the MDX.
-      const cachedSources = oldPageImportSources[slug] ?? []
-      pageImportSources[slug] = cachedSources
-      pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
-      return cached
-    }
-
-    // Cache miss — full processing
+  async function preprocessMdxContent({ content, mdxDir }: { content: string; mdxDir: string }) {
     const processed = processMdx(content, config.icons.library)
-    parsedCount++
-
-    const mdxDir = path.dirname(mdxPath)
     const resolvedImages = new Map<string, ResolvedImage>()
 
     // Resolve and process each image
@@ -242,15 +201,66 @@ export async function syncNavigation({
       }
     }
 
-    // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
-    const finalMdx = resolvedImages.size > 0
-      ? rewriteMdxImages(processed.mdast, resolvedImages)
-      : processed.normalizedContent
+    return {
+      processed,
+      content: resolvedImages.size > 0
+        ? rewriteMdxImages(processed.mdast, resolvedImages)
+        : processed.normalizedContent,
+    }
+  }
+
+  // 2. Enrich a single page slug
+  async function enrichPage(slug: string): Promise<NavPage> {
+    // Virtual pages (e.g. from OpenAPI) already have content in mdxContent
+    const virtualMdx = mdxContent[slug]
+    if (virtualMdx) {
+      const processed = processMdx(virtualMdx, config.icons.library)
+      pageIconRefs[slug] = processed.iconRefs
+      return {
+        slug,
+        href: slugToHref(slug),
+        title: processed.title,
+        description: processed.description,
+        gitSha: `virtual:${slug}`,
+        headings: processed.headings,
+        frontmatter: processed.frontmatter,
+      }
+    }
+
+    const mdxPath = resolveMdxPath(pagesDir, slug)
+    if (!mdxPath) {
+      if (redirectBackedPageSlugs.has(slug)) {
+        return createRedirectBackedPage(slug)
+      }
+      throw new Error(`MDX file not found for page "${slug}". Looked in ${pagesDir}`)
+    }
+    const content = fs.readFileSync(mdxPath, 'utf-8')
+    const sha = gitBlobSha(content)
+
+    // Cache hit — MDX unchanged and we have cached MDX content
+    const cached = oldPages.get(slug)
+    const cachedMdx = oldMdxContent[slug]
+    if (cached && cached.gitSha === sha && cachedMdx) {
+      cachedCount++
+      mdxContent[slug] = cachedMdx
+      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
+      // Restore cached raw import sources, then resolve fresh against the
+      // current filesystem. This ensures newly-created files are picked up
+      // without re-parsing the MDX.
+      const cachedSources = oldPageImportSources[slug] ?? []
+      pageImportSources[slug] = cachedSources
+      pageImports[slug] = resolveImportSourcesFromFile({ importSources: cachedSources, importerPath: mdxPath, pagesDir, projectRoot })
+      return cached
+    }
+
+    // Cache miss — full processing
+    const { processed, content: finalMdx } = await preprocessMdxContent({ content, mdxDir: path.dirname(mdxPath) })
+    parsedCount++
 
     pageIconRefs[slug] = processed.iconRefs
     // Cache raw import sources (for future cache hits) and resolve fresh
     pageImportSources[slug] = processed.importSources
-    pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
+    pageImports[slug] = resolveImportSourcesFromFile({ importSources: processed.importSources, importerPath: mdxPath, pagesDir, projectRoot })
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
 
@@ -267,6 +277,35 @@ export async function syncNavigation({
     }
   }
 
+  async function processImportedMdxFiles() {
+    const queue = Object.values(pageImports).flat()
+    const seenMdx = new Set<string>()
+
+    for (let i = 0; i < queue.length; i++) {
+      const entry = queue[i]!
+      if (!/\.mdx?$/.test(entry.absPath) || seenMdx.has(entry.moduleKey)) {
+        continue
+      }
+      seenMdx.add(entry.moduleKey)
+
+      const content = fs.readFileSync(entry.absPath, 'utf-8')
+      const { processed, content: finalMdx } = await preprocessMdxContent({
+        content,
+        mdxDir: path.dirname(entry.absPath),
+      })
+
+      importedMdxContent[entry.moduleKey] = finalMdx
+      const imports = resolveImportSourcesFromFile({
+        importSources: processed.importSources,
+        importerPath: entry.absPath,
+        pagesDir,
+        projectRoot,
+      })
+      importedMdxImports[entry.moduleKey] = imports
+      queue.push(...imports)
+    }
+  }
+
   // 2b. Process virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages
   await processVirtualTabs({
     config,
@@ -278,6 +317,8 @@ export async function syncNavigation({
   // 3. Walk config and enrich the shared navigation tree.
   const { navigation, switchers } = await buildEnrichedNavigation({ config, enrichPage })
   const { versions, dropdowns } = switchers
+
+  await processImportedMdxFiles()
 
   // 4c. Validate no duplicate page hrefs across versions/dropdowns
   if (versions.length > 0 || dropdowns.length > 0) {
@@ -319,7 +360,7 @@ export async function syncNavigation({
   writeMdxCache(mdxCachePath, { content: mdxContent, pageIconRefs, pageImportSources })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, pageIconRefs, pageImports, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, pageIconRefs, pageImports, importedMdxContent, importedMdxImports, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -523,25 +564,20 @@ export type ResolvedImport = {
  * We replicate that normalization here so the virtual:holocron-modules glob
  * keys exactly match what safe-mdx will look up at render time.
  */
-function resolveImportSources({
+function resolveImportSourcesFromFile({
   importSources,
-  slug,
+  importerPath,
   pagesDir,
   projectRoot,
 }: {
   importSources: string[]
-  slug: string
+  importerPath: string
   pagesDir: string
   projectRoot: string
 }): ResolvedImport[] {
   const result: ResolvedImport[] = []
   const seen = new Set<string>()
-  // Directory containing the MDX file for this slug
-  const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
-  const mdxDir = path.join(pagesDir, slugDir)
-  // pagesDirPrefix as computed by vite-plugin.ts (e.g. './pages/' or './')
-  const pagesDirRelative = path.relative(projectRoot, pagesDir)
-  const pagesDirPrefix = pagesDirRelative === '' ? './' : `./${pagesDirRelative}/`
+  const mdxDir = path.dirname(importerPath)
 
   for (const source of importSources) {
     if (source.startsWith('/')) {
