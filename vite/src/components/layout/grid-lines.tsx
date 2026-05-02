@@ -100,6 +100,25 @@ export function GridLinesFrame({ mode }: { mode: DecorativeMode }) {
 }
 
 /**
+ * Dots at the bottom edge of the Above/hero section — marks where the
+ * vertical lines cross the Above boundary. Must be inside a relative
+ * container within the max-width frame wrapper.
+ */
+export function AboveBottomDots({ mode }: { mode: DecorativeMode }) {
+  if (mode !== 'lines-with-dots') return null
+  /* Pull dots up from the bottom edge so they sit inside the Above content
+     rather than at the very bottom boundary. */
+  const bl = { ...dot.bl, bottom: 'var(--layout-gap)' }
+  const br = { ...dot.br, bottom: 'var(--layout-gap)' }
+  return (
+    <>
+      <GridDot style={bl} />
+      <GridDot style={br} />
+    </>
+  )
+}
+
+/**
  * Dots on the tab-bar border — aligned with the vertical line positions.
  * Placed inside the full-width slot-tabbar (position: relative).
  * Uses `calc(50% - max-width/2 - offset)` to position dots at the
@@ -114,6 +133,10 @@ export function TabBarDots({ mode }: { mode: DecorativeMode }) {
   if (mode !== 'lines-with-dots') return null
   return (
     <>
+      {/* Top border dots */}
+      <GridDot style={{ top: 0, left: fullWidthLeftX, transform: 'translate(-50%, -50%)' }} />
+      <GridDot style={{ top: 0, right: fullWidthRightX, transform: 'translate(50%, -50%)' }} />
+      {/* Bottom border dots */}
       <GridDot style={{ bottom: 0, left: fullWidthLeftX, transform: 'translate(-50%, 50%)' }} />
       <GridDot style={{ bottom: 0, right: fullWidthRightX, transform: 'translate(50%, 50%)' }} />
     </>

@@ -43,7 +43,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
         bottom: 0,
         left: 0,
         width: '100%',
-        height: '2px',
+        height: '3px',
         backgroundColor: isActive ? 'var(--foreground)' : 'transparent',
         borderRadius: '1px',
         transition: 'background-color 0.15s ease',

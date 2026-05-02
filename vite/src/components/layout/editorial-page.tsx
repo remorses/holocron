@@ -34,7 +34,7 @@ import {
   buildGridTokenStyle,
 } from '../../lib/sidebar-widths.ts'
 import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
-import { GridLinesFrame, TabBarDots, NavbarLines } from './grid-lines.tsx'
+import { GridLinesFrame, TabBarDots, NavbarLines, AboveBottomDots } from './grid-lines.tsx'
 
 
 export type EditorialSection = {
@@ -265,8 +265,9 @@ export function EditorialPage({
         {/* Above: rendered above the 3-column grid, using the same column widths
             so above content aligns with the center content column (col 2). */}
         {!!above && (
-          <div className='mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'>
+          <div className='relative mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'>
             <div className='lg:col-start-2'>{above}</div>
+            <AboveBottomDots mode={decorativeLines} />
           </div>
         )}
 

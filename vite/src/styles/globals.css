@@ -116,8 +116,8 @@
   --header-padding-y: 16px;
   --logo-height: 30px;
   --header-row-height: calc(2 * var(--header-padding-y) + var(--logo-height));
-  --tab-bar-height: 36px;
-  --header-height: calc(var(--header-row-height) + var(--tab-bar-height) + 1px);
+  --tab-bar-height: 44px;
+  --header-height: calc(var(--header-row-height) + var(--tab-bar-height) + 2px);
   --layout-gap: 21px;
   --sticky-top: calc(var(--header-height) + var(--layout-gap));
 
@@ -336,8 +336,9 @@
 
   .slot-tabbar {
     background: var(--background);
+    border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    overflow: visible;  /* allow grid-dot ornaments to render below the border */
+    overflow: visible;  /* allow grid-dot ornaments to render outside the borders */
   }
 
   .slot-tab {
