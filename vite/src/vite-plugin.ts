@@ -517,6 +517,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (userCssPath) {
         server.watcher.add(userCssPath)
       }
+      server.watcher.add(pagesDir)
     },
 
     // hotUpdate — per-environment HMR hook.
@@ -588,12 +589,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           projectRoot: root,
           distDir: distDirPath,
         })
-        ctx.server.environments.client?.hot.send({
-          type: 'custom',
-          event: 'rsc:update',
-          data: { file: ctx.file },
-        })
-
         // `rsc:update` refreshes the server-rendered page tree, but the root
         // loader still derives its `site` payload from these async provider
         // modules. Return them from the client hook too so Vite refreshes the
@@ -632,6 +627,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (mod) {
           this.environment.moduleGraph.invalidateModule(mod)
         }
+      }
+
+      if (this.environment.name === 'client') {
+        ctx.server.environments.client?.hot.send({
+          type: 'custom',
+          event: 'rsc:update',
+          data: { file: ctx.file },
+        })
       }
 
       return this.environment.name === 'client' ? clientHotModules : []
