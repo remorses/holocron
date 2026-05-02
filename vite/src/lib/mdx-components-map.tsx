@@ -103,14 +103,14 @@ function ImageWithProps(props: {
   )
 }
 
-const Markdown = ({ children }: { children: ReactNode }) => {
+const Markdown = ({ children, inline = false }: { children: ReactNode, inline?: boolean }) => {
   const markdown = Children.toArray(children).join('')
 
   return (
     <SafeMdxRenderer
       markdown={markdown}
       mdast={mdxParse(markdown)}
-      components={{ ...mdxComponents, p: Fragment }}
+      components={inline ? { ...mdxComponents, p: Fragment } : mdxComponents}
       renderNode={renderNode}
       onError={logMdxError}
     />

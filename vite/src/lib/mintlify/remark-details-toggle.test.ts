@@ -15,7 +15,7 @@ Holocron renders **MDX** docs.
 `, remarkDetailsToggle)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Expandable title={<Markdown children=\"What is Holocron?\" />}>
+      "<Expandable title={<Markdown inline children=\"What is Holocron?\" />}>
         Holocron renders **MDX** docs.
       </Expandable>
       "
@@ -32,7 +32,7 @@ Content.
 `, remarkDetailsToggle)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Expandable title={<Markdown children=\"Advanced\" />} defaultOpen>
+      "<Expandable title={<Markdown inline children=\"Advanced\" />} defaultOpen>
         Content.
       </Expandable>
       "
@@ -51,7 +51,7 @@ Content.
 `, remarkDetailsToggle)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Expandable title={<Markdown children=\"Use **rich** labels\" />}>
+      "<Expandable title={<Markdown inline children=\"Use **rich** labels\" />}>
         Content.
       </Expandable>
       "
@@ -74,7 +74,7 @@ const value = 'ok'
 `, remarkDetailsToggle)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Expandable title={<Markdown children=\"Examples\" />}>
+      "<Expandable title={<Markdown inline children=\"Examples\" />}>
         \\| Name | Value |
         \\| ---- | ----- |
         \\| foo  | bar   |

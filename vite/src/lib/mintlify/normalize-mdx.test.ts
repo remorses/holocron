@@ -103,7 +103,7 @@ Hidden **content**.
 `)
 
     expect(result).toMatchInlineSnapshot(`
-      "<Expandable title={<Markdown children=\"Advanced\" />} defaultOpen>
+      "<Expandable title={<Markdown inline children=\"Advanced\" />} defaultOpen>
         Hidden **content**.
       </Expandable>
       "

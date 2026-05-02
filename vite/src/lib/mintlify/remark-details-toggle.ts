@@ -30,7 +30,7 @@ function summaryMarkdown(summary: JsxElement): string {
 
 function titleFromSummary(summary: JsxElement): FlowElement['attributes'][number] {
   const markdown = summaryMarkdown(summary)
-  const parsed = remark().use(remarkMdx).parse(`<Expandable title={<Markdown children=${JSON.stringify(markdown)} />} />`)
+  const parsed = remark().use(remarkMdx).parse(`<Expandable title={<Markdown inline children=${JSON.stringify(markdown)} />} />`)
   const expandable = parsed.children[0]
 
   if (expandable?.type === 'mdxJsxFlowElement') {
