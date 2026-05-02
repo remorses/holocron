@@ -293,7 +293,6 @@ export function NavGroupNode({
             transition: 'opacity 0.15s ease',
           }}
         >
-          <Icon icon={group.icon} size={13} />
           {group.group}
         </div>
         {renderChildren(true)}
@@ -320,7 +319,6 @@ export function NavGroupNode({
         }}
       >
         <ChevronIcon expanded={isExpanded} className='text-muted-foreground' />
-        <Icon icon={group.icon} size={12} />
         {group.group}
       </button>
       <ExpandableContainer open={isExpanded}>
