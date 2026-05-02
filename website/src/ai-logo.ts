@@ -7,7 +7,7 @@ import { env } from 'cloudflare:workers'
 import { Spiceflow } from 'spiceflow'
 import * as jpeg from 'jpeg-js'
 
-const MODEL = '@cf/black-forest-labs/flux-2-dev' as const
+const MODEL = '@cf/black-forest-labs/flux-2-klein-9b' as const
 
 // Threshold: pixels with all channels above this are considered "white"
 const WHITE_THRESHOLD = 245
@@ -124,7 +124,7 @@ export const aiLogoApp = new Spiceflow().get(
     const form = new FormData()
     form.append('prompt', prompt)
     form.append('input_image_0', cachedTemplateBlob, 'template.jpeg')
-    form.append('steps', '25')
+    // klein-9b uses fixed 4-step inference, no steps param needed
     form.append('width', '512')
     form.append('height', '256')
 
