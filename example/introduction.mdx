@@ -43,6 +43,29 @@ export default defineConfig({
 
 <Callout color="#FFC107">This is a custom callout with its own color.</Callout>
 
+## Native details
+
+Holocron also supports copied HTML `<details>` blocks and renders them with the same expandable UI.
+
+<details open>
+<summary>Show a **rich** summary with a [link](https://holocron.so)</summary>
+
+Details can contain normal markdown content, including tables and code blocks.
+
+| Component | Support |
+| --------- | ------- |
+| Tables    | Yes     |
+| Code      | Yes     |
+
+```ts
+import { holocron } from '@holocron.so/vite'
+
+export default {
+  plugins: [holocron()],
+}
+```
+</details>
+
 <Aside>
 
 <Callout type="note">Callouts work inside Asides too — no nested frames.</Callout>
