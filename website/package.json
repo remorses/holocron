@@ -21,7 +21,6 @@
     "deployment:prod": "sigillo run -c prod -- pnpm db:migrate:prod && sigillo run -c prod --command 'vite build && wrangler deploy'"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^2.0.38",
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/better-auth/better-auth/@better-auth/drizzle-adapter@6913",
     "@holocron.so/vite": "workspace:^",
     "@tailwindcss/vite": "^4.2.2",
@@ -42,6 +41,7 @@
     "tailwindcss": "^4.2.2",
     "ulid": "latest",
     "vite": "^8.0.8",
+    "workers-ai-provider": "^3.1.13",
     "zod": "latest"
   },
   "devDependencies": {

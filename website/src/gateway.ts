@@ -7,6 +7,8 @@ import { env } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
+import { createWorkersAI } from 'workers-ai-provider'
+import type { WorkersAI } from 'workers-ai-provider'
 import { getDb, hashApiKey } from './db.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
 
@@ -22,6 +24,10 @@ const DEFAULT_MODEL = 'glm-4.7-flash'
 const TEMPORARY_MODEL = 'glm-4.7-flash'
 const MONTHLY_REQUEST_LIMIT = 1000
 const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
+const THINKING_DISABLED = {
+  reasoning_effort: null,
+  chat_template_kwargs: { enable_thinking: false },
+} satisfies NonNullable<Parameters<WorkersAI['chat']>[1]>
 
 export type HolocronChatNoticeChunk = {
   type: 'notice'
@@ -123,9 +129,8 @@ export const gatewayApp = new Spiceflow()
         if (body.docsZipUrl) return getDocsZipFiles(body.docsZipUrl)
         throw new Response('Missing docsZipUrl or docsPages.', { status: 400 })
       })()
-      const [files, { createOpenAICompatible }, { generateText }] = await Promise.all([
+      const [files, { generateText }] = await Promise.all([
         filesPromise,
-        import('@ai-sdk/openai-compatible'),
         import('ai'),
       ])
       const bash = await createChatBashTool({
@@ -138,13 +143,10 @@ export const gatewayApp = new Spiceflow()
           .catch(() => {})
       }
 
-      const gateway = createOpenAICompatible({
-        name: 'holocron-workers-ai',
-        baseURL: `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1`,
-        apiKey: env.CLOUDFLARE_AI_API_TOKEN,
-      })
+      const workersai = createWorkersAI({ binding: env.AI })
       const usesTemporaryModel = !authResult
       const modelName = usesTemporaryModel ? TEMPORARY_MODEL : DEFAULT_MODEL
+      const modelId = ALLOWED_MODELS[modelName] ?? ALLOWED_MODELS[DEFAULT_MODEL]!
 
       if (usesTemporaryModel) {
         yield {
@@ -157,13 +159,11 @@ export const gatewayApp = new Spiceflow()
       }
 
       const result = await generateText({
-        model: gateway.chatModel(ALLOWED_MODELS[modelName] ?? ALLOWED_MODELS[DEFAULT_MODEL]!),
+        model: workersai(modelId, THINKING_DISABLED),
         tools: { bash },
         messages,
         providerOptions: {
-          holocronWorkersAi: {
-            thinking: { type: 'disabled' },
-          },
+          'workers-ai': THINKING_DISABLED,
         },
         stopWhen: (event) => event.steps.length >= 100,
         abortSignal: request.signal,
