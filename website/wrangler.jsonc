@@ -16,7 +16,8 @@
     }
   ],
   "kv_namespaces": [
-    { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" }
+    { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" },
+    { "binding": "AI_LOGO_KV", "id": "10c43383c2f341f79155740ee8a74eb6" }
   ],
   "ai": {
     "binding": "AI"
@@ -53,7 +54,8 @@
         }
       ],
       "kv_namespaces": [
-        { "binding": "USAGE_KV", "id": "36b3209caddf42c79019b4c93d12b536" }
+        { "binding": "USAGE_KV", "id": "36b3209caddf42c79019b4c93d12b536" },
+        { "binding": "AI_LOGO_KV", "id": "ad90e76eaa4a4af58b7ed22e4904fd51" }
       ],
       "ai": {
         "binding": "AI"

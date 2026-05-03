@@ -1,7 +1,8 @@
-// AI-generated logo route using Cloudflare Workers AI (Flux 2 Dev).
+// AI-generated logo route using Cloudflare Workers AI (Flux 2 Klein 9B).
 // Generates a logo image for a given name via img2img using a cursive
-// template, then crops white edges and serves as JPEG. Only works on
-// Cloudflare Workers where the AI binding is available.
+// template, then crops white edges and serves as JPEG. Generated images
+// are cached in a dedicated KV namespace for global persistence.
+// Only works on Cloudflare Workers where the AI binding is available.
 
 import { env } from 'cloudflare:workers'
 import { Spiceflow } from 'spiceflow'
@@ -15,6 +16,10 @@ const WHITE_THRESHOLD = 245
 const CROP_PADDING = 4
 // JPEG output quality (0-100)
 const JPEG_QUALITY = 90
+// KV cache TTL — 1 year in seconds
+const CACHE_TTL = 60 * 60 * 24 * 365
+// KV key prefix
+const KV_PREFIX = 'ai-logo:'
 
 function buildPrompt(name: string): string {
   return `Replace the text in the image with the word "${name.toLowerCase()}". Keep the exact same black cursive handwritten script font style. Black text on pure white background. Centered.`
@@ -99,14 +104,17 @@ export const aiLogoApp = new Spiceflow().get(
       return new Response('Missing logo text', { status: 400 })
     }
 
-    // Normalize the cache key URL so different extensions hit the same entry
-    const cacheUrl = new URL(`/api/ai-logo/${encodeURIComponent(name.toLowerCase())}.jpeg`, request.url)
-    const cacheKey = new Request(cacheUrl.toString())
-    const cache = caches.default
-
-    // Check CF edge cache first
-    const cached = await cache.match(cacheKey)
-    if (cached) return cached
+    // Check KV cache first (globally replicated, survives deploys)
+    const kvKey = `${KV_PREFIX}${name.toLowerCase()}`
+    const cached = await env.AI_LOGO_KV.get(kvKey, 'arrayBuffer')
+    if (cached) {
+      return new Response(cached, {
+        headers: {
+          'content-type': 'image/jpeg',
+          'cache-control': 's-maxage=31536000, immutable',
+        },
+      })
+    }
 
     const prompt = buildPrompt(name)
 
@@ -169,20 +177,15 @@ export const aiLogoApp = new Spiceflow().get(
       JPEG_QUALITY,
     )
 
-    const response = new Response(encoded.data, {
+    // Store in KV (globally replicated, persists across deploys)
+    await env.AI_LOGO_KV.put(kvKey, encoded.data.buffer, { expirationTtl: CACHE_TTL })
+
+    return new Response(encoded.data, {
       headers: {
         'content-type': 'image/jpeg',
         'cache-control': 's-maxage=31536000, immutable',
       },
     })
-
-    // Store in CF edge cache — waitUntil not available in spiceflow,
-    // but cache.put() returns a promise we can await without blocking
-    // the response since we clone it first.
-    const responseToCache = response.clone()
-    await cache.put(cacheKey, responseToCache)
-
-    return response
   },
 )
 
