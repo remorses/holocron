@@ -2,8 +2,8 @@ import stableString from 'fast-json-stable-stringify'
 import { createStorage, type Storage } from 'unstorage'
 import fsDriverImport from 'unstorage/drivers/fs'
 const fsDriver = fsDriverImport as unknown as (opts: { base?: string }) => any
-import { simulateReadableStream } from 'ai'
-import { type LanguageModelV2, type LanguageModelV2Middleware, type LanguageModelV2StreamPart } from '@ai-sdk/provider'
+import { simulateReadableStream, type LanguageModelMiddleware } from 'ai'
+import { type LanguageModelV3, type LanguageModelV3StreamPart } from '@ai-sdk/provider'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 import * as yaml from 'js-yaml'
@@ -30,7 +30,8 @@ export function createAiCacheMiddleware({ cacheDir = '.aicache', onParams = (x) 
     }
     return cache
   }
-  const cacheMiddleware: LanguageModelV2Middleware = {
+  const cacheMiddleware: LanguageModelMiddleware = {
+    specificationVersion: 'v3',
     wrapGenerate: async ({ doGenerate, params, model }) => {
       const storage = getModelCache(model.modelId)
 
@@ -41,7 +42,7 @@ export function createAiCacheMiddleware({ cacheDir = '.aicache', onParams = (x) 
       const cached = cachedYaml
         ? (yaml.load(cachedYaml) as {
             params: any
-            result: Awaited<ReturnType<LanguageModelV2['doGenerate']>>
+            result: Awaited<ReturnType<LanguageModelV3['doGenerate']>>
           })
         : null
 
@@ -85,7 +86,7 @@ export function createAiCacheMiddleware({ cacheDir = '.aicache', onParams = (x) 
       const cached = cachedYaml
         ? (yaml.load(cachedYaml) as {
             params: any
-            chunks: LanguageModelV2StreamPart[]
+            chunks: LanguageModelV3StreamPart[]
           })
         : null
 
@@ -112,9 +113,9 @@ export function createAiCacheMiddleware({ cacheDir = '.aicache', onParams = (x) 
       // If not cached, proceed with streaming
       const { stream, ...rest } = await doStream()
 
-      const fullResponse: LanguageModelV2StreamPart[] = []
+      const fullResponse: LanguageModelV3StreamPart[] = []
 
-      const transformStream = new TransformStream<LanguageModelV2StreamPart, LanguageModelV2StreamPart>({
+      const transformStream = new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
         transform(chunk, controller) {
           fullResponse.push(chunk)
           controller.enqueue(chunk)

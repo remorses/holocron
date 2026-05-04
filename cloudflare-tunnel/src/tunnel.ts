@@ -1,16 +1,11 @@
-import type {
-  Request as CFRequest,
-  ExecutionContext,
-  DurableObjectNamespace,
-  DurableObjectState,
-  DurableObjectStub,
-} from '@cloudflare/workers-types'
+// Uses ambient types from @cloudflare/workers-types (provided by wrangler or consumer's tsconfig).
+// No explicit import to avoid version conflicts between library and consumer.
 
-type Env = {
+export type TunnelEnv = {
   TUNNEL_DO: DurableObjectNamespace
 }
 
-type Attachment = {
+export type Attachment = {
   role: 'up' | 'down'
   ids: string[]
   multiplexed?: boolean
@@ -53,39 +48,56 @@ export type MultiplexedMessage =
   | MultiplexedConnectedMessage
   | MultiplexedDiscoveredMessage
 
+/**
+ * Route /_tunnel/* requests to the Tunnel Durable Object.
+ * Use this in your worker's fetch handler to add tunnel support.
+ *
+ * The doNamespace parameter lets you pass any DurableObjectNamespace binding,
+ * so consumers are not forced to use a specific env shape.
+ */
+export function handleTunnelFetch({
+  req,
+  doNamespace,
+}: {
+  req: Request
+  doNamespace: DurableObjectNamespace
+}): Promise<Response> | null {
+  const url = new URL(req.url)
+
+  if (!url.pathname.startsWith('/_tunnel/')) {
+    return null
+  }
+
+  url.pathname = url.pathname.replace('/_tunnel', '')
+  const ids = url.searchParams.getAll('id')
+  const namespace = url.searchParams.get('namespace')
+
+  if (ids.length > 1 && !namespace) {
+    return Promise.resolve(addCors(new Response('namespace required for multiple ids', { status: 400 })))
+  }
+
+  const doName = namespace ?? ids[0] ?? 'default'
+  const doId = doNamespace.idFromName(doName)
+  return doNamespace.get(doId).fetch(new Request(url.toString(), req as any)).then(addCors)
+}
+
 export default {
-  async fetch(req: CFRequest, env: Env, ctx?: ExecutionContext): Promise<Response> {
-    // Answer CORS pre-flights (OPTIONS) immediately
+  async fetch(req: Request, env: TunnelEnv, ctx?: ExecutionContext): Promise<Response> {
     if (req.method === 'OPTIONS') return addCors(new Response(null, { status: 204 }))
 
-    const url = new URL(req.url)
-
-    // Intercept only the tunnel path
-    if (url.pathname.startsWith('/_tunnel/')) {
-      url.pathname = url.pathname.replace('/_tunnel', '')
-      const ids = url.searchParams.getAll('id')
-      const namespace = url.searchParams.get('namespace')
-
-      if (ids.length > 1 && !namespace) {
-        return addCors(new Response('namespace required for multiple ids', { status: 400 }))
-      }
-
-      const doName = namespace ?? ids[0] ?? 'default'
-      const doId = env.TUNNEL_DO.idFromName(doName)
-      const res = await env.TUNNEL_DO.get(doId).fetch(new Request(url.toString(), req))
-      return addCors(res)
-    }
+    const result = handleTunnelFetch({ req, doNamespace: env.TUNNEL_DO })
+    if (result) return result
 
     return await fetch(req)
   },
 }
 
 /* ------------ Durable Object ------------ */
-export class Tunnel {
+export class Tunnel<E = TunnelEnv> {
   ctx: DurableObjectState
-  env: Env
+  env: E
 
-  constructor(state: DurableObjectState, env: Env) {
+  constructor(state: DurableObjectState, env: E) {
     this.ctx = state
     this.env = env
 
@@ -329,7 +341,7 @@ export class Tunnel {
     }
   }
 
-  private closeUpstreamsForId(id: string, { code, reason }: { code: number; reason: string }) {
+  protected closeUpstreamsForId(id: string, { code, reason }: { code: number; reason: string }) {
     const ups = this.ctx.getWebSockets(`up:${id}`)
     for (const up of ups) {
       try {
@@ -338,7 +350,7 @@ export class Tunnel {
     }
   }
 
-  private getAllUpstreamIds(): string[] {
+  protected getAllUpstreamIds(): string[] {
     const allSockets = this.ctx.getWebSockets()
     const upstreamIds: string[] = []
     for (const ws of allSockets) {
@@ -350,7 +362,7 @@ export class Tunnel {
     return upstreamIds
   }
 
-  private notifyWildcardSubscribers(
+  protected notifyWildcardSubscribers(
     upstreamId: string,
     event: 'upstream_connected' | 'upstream_closed' | 'upstream_error',
     errorInfo?: { message?: string; name?: string }
@@ -376,7 +388,7 @@ export class Tunnel {
   }
 }
 
-const addCors = (r: Response) => {
+export const addCors = (r: Response) => {
   // Clone the response, merging headers so we don't try to mutate immutable headers
   const newHeaders = new Headers(r.headers)
   newHeaders.set('Access-Control-Allow-Origin', '*')

@@ -34,28 +34,39 @@ describe('process-chat', () => {
     }
 
     expect(finalMessages).toMatchInlineSnapshot(`
-          [
+      [
+        {
+          "id": "id-1",
+          "parts": [
             {
-              "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "itemId": "msg_689f64c0ce348194bc0ad7d9456a78280cc51a2a46b731da",
-                    },
-                  },
-                  "state": "done",
-                  "text": "Hello!",
-                  "type": "text",
-                },
-              ],
-              "role": "assistant",
+              "type": "step-start",
             },
-          ]
-        `)
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "rs_08ade79fe6922f810069cc252eedcc8196b7c66fd1cb817f3f",
+                  "reasoningEncryptedContent": null,
+                },
+              },
+              "state": "done",
+              "text": "",
+              "type": "reasoning",
+            },
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "msg_08ade79fe6922f810069cc252ff4b4819689c83b5320217415",
+                },
+              },
+              "state": "done",
+              "text": "Hello",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ]
+    `)
   }, 10000)
 
   test('should handle text streaming with parts', async () => {
@@ -98,28 +109,41 @@ describe('process-chat', () => {
     expect(textParts[0]).toHaveProperty('text')
 
     expect(finalMessages).toMatchInlineSnapshot(`
-          [
+      [
+        {
+          "id": "id-1",
+          "parts": [
             {
-              "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "itemId": "msg_689f64c1bb5c81959ee37f1ddf6231e10581cc665f78b4d1",
-                    },
-                  },
-                  "state": "done",
-                  "text": "1, 2, 3.",
-                  "type": "text",
-                },
-              ],
-              "role": "assistant",
+              "type": "step-start",
             },
-          ]
-        `)
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "rs_04527c25717563e30069cc25309db881968886076dad0389a4",
+                  "reasoningEncryptedContent": null,
+                },
+              },
+              "state": "done",
+              "text": "",
+              "type": "reasoning",
+            },
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "msg_04527c25717563e30069cc2531ff0c81969f84012e66c97216",
+                },
+              },
+              "state": "done",
+              "text": "1
+      2
+      3",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ]
+    `)
   }, 10000)
 
   test('should handle actual streamText with cache', async () => {
@@ -229,30 +253,39 @@ describe('process-chat', () => {
     expect(textParts[0].text.length).toBeGreaterThan(0)
 
     expect(finalMessages).toMatchInlineSnapshot(`
-          [
+      [
+        {
+          "id": "id-1",
+          "parts": [
             {
-              "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "itemId": "msg_689f64c49b5c8195b530f30705f9ea2404033889365a13a6",
-                    },
-                  },
-                  "state": "done",
-                  "text": "\`\`\`json
-          {"message": "hello"}
-          \`\`\`",
-                  "type": "text",
-                },
-              ],
-              "role": "assistant",
+              "type": "step-start",
             },
-          ]
-        `)
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "rs_09dd96f22e3d0d950069cc253520e48195852395db082a8c06",
+                  "reasoningEncryptedContent": null,
+                },
+              },
+              "state": "done",
+              "text": "",
+              "type": "reasoning",
+            },
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "msg_09dd96f22e3d0d950069cc2536b55c819587c905fe48238877",
+                },
+              },
+              "state": "done",
+              "text": "{"message": "hello"}",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ]
+    `)
   }, 10000)
 
   test('should handle step boundaries', async () => {
@@ -306,28 +339,39 @@ describe('process-chat', () => {
     }
 
     expect(finalMessages).toMatchInlineSnapshot(`
-          [
+      [
+        {
+          "id": "id-1",
+          "parts": [
             {
-              "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "itemId": "msg_689f64c5bd588193ad0d7fe3e363b09304f867a09319fd6e",
-                    },
-                  },
-                  "state": "done",
-                  "text": "test",
-                  "type": "text",
-                },
-              ],
-              "role": "assistant",
+              "type": "step-start",
             },
-          ]
-        `)
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "rs_0a1cf140155cc3430069cc253825a48190ab89e02503a3783e",
+                  "reasoningEncryptedContent": null,
+                },
+              },
+              "state": "done",
+              "text": "",
+              "type": "reasoning",
+            },
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "msg_0a1cf140155cc3430069cc2539724c81908cd1fc83e14f5e54",
+                },
+              },
+              "state": "done",
+              "text": "test",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ]
+    `)
   }, 10000)
 
   test('should handle mock tool stream parts', async () => {
@@ -393,31 +437,32 @@ describe('process-chat', () => {
     expect(toolParts[0].type).toMatch(/^tool-/)
 
     expect(finalMessages).toMatchInlineSnapshot(`
-          [
+      [
+        {
+          "id": "id-1",
+          "parts": [
             {
-              "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "errorText": undefined,
-                  "input": {
-                    "timezone": "UTC",
-                  },
-                  "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
-                  "preliminary": undefined,
-                  "providerExecuted": true,
-                  "rawInput": undefined,
-                  "state": "output-available",
-                  "toolCallId": "call-1",
-                  "type": "tool-getCurrentTime",
-                },
-              ],
-              "role": "assistant",
+              "type": "step-start",
             },
-          ]
-        `)
+            {
+              "errorText": undefined,
+              "input": {
+                "timezone": "UTC",
+              },
+              "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+              "preliminary": undefined,
+              "providerExecuted": true,
+              "rawInput": undefined,
+              "state": "output-available",
+              "title": undefined,
+              "toolCallId": "call-1",
+              "type": "tool-getCurrentTime",
+            },
+          ],
+          "role": "assistant",
+        },
+      ]
+    `)
   }, 10000)
 
   test('should handle actual tool calls with getCurrentTime', async () => {
@@ -475,36 +520,42 @@ describe('process-chat', () => {
     expect(toolParts[0].type).toMatch(/^tool-/)
 
     expect(finalMessages).toMatchInlineSnapshot(`
-          [
+      [
+        {
+          "id": "id-1",
+          "parts": [
             {
-              "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "callProviderMetadata": {
-                    "openai": {
-                      "itemId": "fc_689f64c7821c8193b134d4f534f2510306c1dda6f6bbb7dd",
-                    },
-                  },
-                  "errorText": undefined,
-                  "input": {
-                    "timezone": "UTC",
-                  },
-                  "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
-                  "preliminary": undefined,
-                  "providerExecuted": undefined,
-                  "rawInput": undefined,
-                  "state": "output-available",
-                  "toolCallId": "call_dETZQwXedzjbUaeIdd2x11nI",
-                  "type": "tool-getCurrentTime",
-                },
-              ],
-              "role": "assistant",
+              "type": "step-start",
             },
-          ]
-        `)
+            {
+              "callProviderMetadata": {
+                "openai": {
+                  "itemId": "fc_689f64c7821c8193b134d4f534f2510306c1dda6f6bbb7dd",
+                },
+              },
+              "errorText": undefined,
+              "input": {
+                "timezone": "UTC",
+              },
+              "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+              "preliminary": undefined,
+              "providerExecuted": undefined,
+              "rawInput": undefined,
+              "resultProviderMetadata": {
+                "openai": {
+                  "itemId": "fc_689f64c7821c8193b134d4f534f2510306c1dda6f6bbb7dd",
+                },
+              },
+              "state": "output-available",
+              "title": undefined,
+              "toolCallId": "call_dETZQwXedzjbUaeIdd2x11nI",
+              "type": "tool-getCurrentTime",
+            },
+          ],
+          "role": "assistant",
+        },
+      ]
+    `)
   }, 30000)
 
   test('should handle reasoning with o4-mini model', async () => {
@@ -679,47 +730,53 @@ describe('process-chat', () => {
     expect(finalMessages.length).toBeGreaterThan(0)
 
     expect(finalMessages).toMatchInlineSnapshot(`
-          [
+      [
+        {
+          "id": "id-1",
+          "parts": [
             {
-              "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "itemId": "rs_689f64cbc9a48196b9e56ebc4bec502b006bb401c328ac80",
-                      "reasoningEncryptedContent": null,
-                    },
-                  },
-                  "state": "done",
-                  "text": "",
-                  "type": "reasoning",
-                },
-                {
-                  "callProviderMetadata": {
-                    "openai": {
-                      "itemId": "fc_689f64d6591c8196b8163dd6b6c1041e006bb401c328ac80",
-                    },
-                  },
-                  "errorText": undefined,
-                  "input": {
-                    "timezone": "UTC",
-                  },
-                  "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
-                  "preliminary": undefined,
-                  "providerExecuted": undefined,
-                  "rawInput": undefined,
-                  "state": "output-available",
-                  "toolCallId": "call_xIOmGfEG9QxQPU0WQNGtPmU2",
-                  "type": "tool-getCurrentTime",
-                },
-              ],
-              "role": "assistant",
+              "type": "step-start",
             },
-          ]
-        `)
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "rs_689f64cbc9a48196b9e56ebc4bec502b006bb401c328ac80",
+                  "reasoningEncryptedContent": null,
+                },
+              },
+              "state": "done",
+              "text": "",
+              "type": "reasoning",
+            },
+            {
+              "callProviderMetadata": {
+                "openai": {
+                  "itemId": "fc_689f64d6591c8196b8163dd6b6c1041e006bb401c328ac80",
+                },
+              },
+              "errorText": undefined,
+              "input": {
+                "timezone": "UTC",
+              },
+              "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+              "preliminary": undefined,
+              "providerExecuted": undefined,
+              "rawInput": undefined,
+              "resultProviderMetadata": {
+                "openai": {
+                  "itemId": "fc_689f64d6591c8196b8163dd6b6c1041e006bb401c328ac80",
+                },
+              },
+              "state": "output-available",
+              "title": undefined,
+              "toolCallId": "call_xIOmGfEG9QxQPU0WQNGtPmU2",
+              "type": "tool-getCurrentTime",
+            },
+          ],
+          "role": "assistant",
+        },
+      ]
+    `)
   }, 30000)
 
   test('should handle generator errors gracefully', async () => {

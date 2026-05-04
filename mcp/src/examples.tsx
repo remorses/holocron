@@ -9,7 +9,7 @@ import { MCPPage, MCPTool, createSampleMCPTool, createSampleChatExample, sampleT
 import { getContext } from 'fumadocs-openapi/render/api-page'
 import { processDocument } from 'fumadocs-openapi/utils/process-document'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 
 /**
  * Example 1: Complete MCP Tool Page
@@ -41,7 +41,7 @@ export async function IndividualMCPToolExample() {
   const document = await processDocument(dummyDocument)
   const ctx = await getContext(document)
 
-  const chatExample: CoreMessage[] = [
+  const chatExample: ModelMessage[] = [
     {
       role: 'user',
       content: 'Can you read the contents of config.json?',
@@ -72,9 +72,12 @@ export async function IndividualMCPToolExample() {
           toolCallId: 'call_1',
           toolName: 'read_file',
           output: {
-            content: '{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}',
-            size: 75,
-          } as any,
+            type: 'json',
+            value: {
+              content: '{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}',
+              size: 75,
+            },
+          },
         },
       ],
     },
@@ -197,7 +200,7 @@ export async function CustomMCPToolExample() {
     },
   }
 
-  const customChatExample: CoreMessage[] = [
+  const customChatExample: ModelMessage[] = [
     {
       role: 'user',
       content: 'Send an email to john@example.com about the project update',
@@ -230,10 +233,13 @@ export async function CustomMCPToolExample() {
           toolCallId: 'call_1',
           toolName: 'send_email',
           output: {
-            message_id: 'msg_abc123',
-            status: 'sent',
-            timestamp: '2024-01-15T10:30:00Z',
-          } as any,
+            type: 'json',
+            value: {
+              message_id: 'msg_abc123',
+              status: 'sent',
+              timestamp: '2024-01-15T10:30:00Z',
+            },
+          },
         },
       ],
     },
@@ -304,7 +310,7 @@ export async function MCPServerResponseExample() {
     },
   }
 
-  const serverChatExample: CoreMessage[] = [
+  const serverChatExample: ModelMessage[] = [
     {
       role: 'user',
       content: 'Create a README.md file with some basic content',
@@ -336,10 +342,13 @@ export async function MCPServerResponseExample() {
           toolCallId: 'call_1',
           toolName: 'create_file',
           output: {
-            path: '/Users/example/project/README.md',
-            size: 75,
-            created_at: '2024-01-15T10:30:00Z',
-          } as any,
+            type: 'json',
+            value: {
+              path: '/Users/example/project/README.md',
+              size: 75,
+              created_at: '2024-01-15T10:30:00Z',
+            },
+          },
         },
       ],
     },

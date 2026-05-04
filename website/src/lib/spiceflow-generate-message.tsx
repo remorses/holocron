@@ -31,11 +31,12 @@ import {
   convertToModelMessages,
   NoSuchToolError,
   LanguageModel,
+  LanguageModelMiddleware,
   readUIMessageStream,
   ToolSet,
 } from 'ai'
+import { LanguageModelV3 } from '@ai-sdk/provider'
 import { gateway } from '@ai-sdk/gateway'
-import { LanguageModelV2, type LanguageModelV2Middleware } from '@ai-sdk/provider'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
@@ -279,7 +280,7 @@ export type WebsiteTools = {
 }
 
 // Create fallback model with Gemini 3 as primary
-let model: LanguageModelV2 = createFallback({
+let model: LanguageModelV3 = createFallback({
   models: [
     google('gemini-3-flash-preview'),
     google('gemini-2.5-flash'),
@@ -332,7 +333,7 @@ export async function* generateMessageStream({
     model: { modelId: string; provider: string }
   }) => Promise<void>
   onTodosChange?: (newTodos: TodoInfo[]) => Promise<void>
-  middlewares?: LanguageModelV2Middleware[]
+  middlewares?: LanguageModelMiddleware[]
 }) {
   const isOnboardingChat = [...files.map((x) => x.path)].filter((x) => !isDocsJson(x)).length === 0
   const source = getFumadocsSource({
@@ -785,7 +786,7 @@ export async function* generateMessageStream({
         githubFolder,
       }),
     },
-    ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
+    ...(await convertToModelMessages(messages.filter((x) => x.role !== 'system'))),
   ]
 
   debugMessages(allMessages)

@@ -1,13 +1,14 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
 import { fireworks } from '@ai-sdk/fireworks';
-import { LanguageModelV2, type LanguageModelV2Middleware } from '@ai-sdk/provider'
+
 import { google, } from '@ai-sdk/google'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import { groq } from '@ai-sdk/groq'
 import { createFallback } from 'ai-fallback'
-import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages, smoothStream, LanguageModel, ToolSet } from 'ai'
+import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages, smoothStream, ToolSet } from 'ai'
+import { LanguageModelV3 } from '@ai-sdk/provider'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
 import { Spiceflow } from 'spiceflow'
@@ -57,7 +58,7 @@ const baseten = createOpenAICompatible({
 })
 
 // Create fallback model with Gemini 3 as primary
-let model: LanguageModelV2 = createFallback({
+let model: LanguageModelV3 = createFallback({
   models: [
     google('gemini-3-flash-preview'),
     google('gemini-2.5-flash'),
@@ -451,7 +452,7 @@ export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
             role: 'system',
             content: agentPromptTemplate({ linksText }),
           },
-          ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
+          ...(await convertToModelMessages(messages.filter((x) => x.role !== 'system'))),
         ],
         async experimental_repairToolCall(input) {
           return repairToolCall(input as any)
