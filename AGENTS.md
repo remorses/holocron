@@ -1,3 +1,5 @@
+<!-- This AGENTS.md file is generated. Look for an agents.md package.json script to see what files to update instead. -->
+
 
 To research fumadocs you can fetch https://fumadocs.dev/llms-full.txt
 
@@ -11,6 +13,8 @@ instead if you want to reuse fumadocs code for complex integrations, copy paste 
 
 when testing docs-website and need to curl a website do not simply use localhost:777. instead first find a host actually used. see docs-dev/holocron.jsonc for domains that can be used like
 http://holocron-ysx261dl.localhost:7777
+
+IMPORTANT! http://localhost:777 will show no content but 404! instead use the holocron.jsonc domain!
 
 ## updating fumadocs with upstream
 
@@ -52,16 +56,17 @@ when summarizing changes at the end of the message, be super short, a few words 
 
 please ask questions and confirm assumptions before generating complex architecture code.
 
-NEVER run commands with & at the end to run them in the background. this is leaky and harmful! instead ask me to run commands in the background if needed.
+NEVER run commands with & at the end to run them in the background. this is leaky and harmful! instead ask me to run commands in the background using tmux if needed.
 
 NEVER commit yourself unless asked to do so. I will commit the code myself.
 
-NEVER add comments unless I tell you
+NEVER use git to revert files to previous state if you did not create those files yourself! there can be user changes in files you touched, if you revert those changes the user will be very upset!
 
 ## files
 
 always use kebab case for new filenames. never use uppercase letters in filenames
 
+never write temporary files to /tmp. instead write them to a local ./tmp folder instead. make sure it is in .gitignore too
 
 ## see files in the repo
 
@@ -71,9 +76,16 @@ use `git ls-files | tree --fromfile` to see files in the repo. this command will
 
 if you find code that was not there since the last time you read the file it means the user or another agent edited the file. do not revert the changes that were added. instead keep them and integrate them with your new changes
 
+IMPORTANT: NEVER commit your changes unless clearly and specifically asked to!
+
+## opening me files in zed to show me a specific portion of code
+
+you can open files when i ask me "open in zed the line where ..." using the command `zed path/to/file:line`
+
 # typescript
 
 - ALWAYS use normal imports instead of dynamic imports, unless there is an issue with es module only packages and you are in a commonjs package (this is rare).
+- when throwing errors always use clause instead of error inside message: `new Error("wrapping error", { cause: e })` instead of `new Error(\`wrapping error ${e}\`)`
 
 - use a single object argument instead of multiple positional args: use object arguments for new typescript functions if the function would accept more than one argument, so it is more readable, ({a,b,c}) instead of (a,b,c). this way you can use the object as a sort of named argument feature, where order of arguments does not matter and it's easier to discover parameters.
 
@@ -97,8 +109,6 @@ if you find code that was not there since the last time you read the file it mea
 
 - NEVER do `(x as any).field` or `'field' in x` before checking if the code compiles first without it. the code probably doesn't need any or the in check. even if it does not compile, use think tool first! before adding (x as any).something, ALWAYS read the .d.ts to understand the types
 
-- after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
-
 - do not declare uninitialized variables that are defined later in the flow. instead use an IIFE with returns. this way there is less state. also define the type of the variable before the iife. here is an example:
 
 - use || over in: avoid 'x' in obj checks. prefer doing `obj?.x || ''` over doing `'x' in obj ? obj.x : ''`. only use the in operator if that field causes problems in typescript checks because typescript thinks the field is missing, as a last resort.
@@ -113,6 +123,7 @@ if you find code that was not there since the last time you read the file it mea
 
 - if you encounter typescript lint errors for an npm package, read the node_modules/package/\*.d.ts files to understand the typescript types of the package. if you cannot understand them, ask me to help you with it.
 
+- NEVER silently suppress errors in catch {} blocks if they contain more than one function call
 ```ts
 // BAD. DO NOT DO THIS
 let favicon: string | undefined;
@@ -172,6 +183,8 @@ remember to always add the explicit type to avoid unexpected type inference.
 
 DO `import fs from 'fs'; fs.writeFileSync(...)`
 DO NOT `import { writeFileSync } from 'fs';`
+
+- NEVER pass a string to abortController.abort(). instead if you want to pass a reason always pass an Error instance. like `controller.abort(new Error('reason'))`. This way catch blocks receive an Error instance and not something else.
 
 # package manager: pnpm with workspace
 
@@ -308,7 +321,7 @@ if after doing this we still have duplicate packages, you will have to ask the u
 
 - too many `useState` calls are bad. if some piece of state is dependent on other state just compute it as an expression in render. do not add new state unless strictly necessary. before adding a new useState to a component, use @think tool to think hard if you can instead: use expression with already existing local state, use expression with some global state, use expression with loader data, use expression with some other existing variable instead. for example if you need to show a popover when there is an error you should use the error as open state for the popover instead of adding new useState hook
 
-- `useCallback` is bad. it should be always avoided.
+- `useCallback` is bad. it should be always avoided unless for ref props. ref props ALWAYS need to be passed memoized functions or the component could remount on ever render!
 
 - NEVER pass functions to useEffect or useMemo dependencies. when you start passing functions to hook dependencies you need to add useCallback everywhere in the code, useCallback is a virus that infects the codebase and should be ALWAYS avoided.
 
@@ -338,13 +351,21 @@ if after doing this we still have duplicate packages, you will have to ask the u
 
 zustand is the preferred way to created global React state. put it in files like state.ts or x-state.ts where x is something that describe a portion of app state in case of multiple global states or multiple apps
 
-- minimize number of props. do not use props if you can use zustand state instead. the app has global zustand state that lets you get a piece of state down from the component tree by using something like `useStore(x => x.something)` or `useLoaderData<typeof loader>()` or even useRouteLoaderData if you are deep in the react component tree
-
-- do not consider local state truthful when interacting with server. when interacting with the server with rpc or api calls never use state from the render function as input for the api call. this state can easily become stale or not get updated in the closure context. instead prefer using zustand `useStore.getState().stateValue`. notice that useLoaderData or useParams should be fine in this case.
-
 - NEVER add zustand state setter methods. instead use useStore.setState to set state. For example never add a method `setVariable` in the state type. Instead call `setState` directly
 
 - zustand already merges new partial state with the previous state. NEVER DO `useStore.setState({ ...useStore.getInitialState(), ... })` unless for resetting state
+
+## non controlled input components
+
+some components do not have a value prop to set the value via React state. these are called uncontrolled components. Instead they usually let you get the current input value via ref. something like ref.current.value. They usually also have an onChange prop that let you know when the value changes
+
+these usually have a initialValue or defaultValue to programmatically set the initial value of the input
+
+when using these components you SHOULD not track their state via React: instead you should programmatically set their value and read their value via refs in event handlers
+
+tracking uncontrolled inputs via React state means that you will need to add useEffect to programmatically change their value when our state changes. this is an anti pattern. instead you MUST keep in mind the uncontrolled input manages its own state and we interface with it via refs and initialValue prop. 
+
+using React state in these cases is only necessary if you have to show the input value during render. if that is not the case you can just use `inputRef.current.value` instead and set the value via `inputRef.current.value = something`
 
 # sentry
 
@@ -414,26 +435,30 @@ AppError messages will be forwarded to the user as is. normal Error instances in
 
 # testing
 
-do not write new test files unless asked. do not write tests if there is not already a test or describe block for that function or module.
+.toMatchInlineSnapshot is the preferred way to write tests. leave them empty the first time, update them with -u. check git diff for the test file every time you update them with -u
+
+never use timeouts longer than 5 seconds for expects and other statements timeouts. increase timeouts for tests if required, up to 1 minute
+
+do not create dumb tests that test nothing. do not write tests if there is not already a test file or describe block for that function or module.
 
 if the inputs for the tests is an array of repetitive fields and long content, generate this input data programmatically instead of hardcoding everything. only hardcode the important parts and generate other repetitive fields in a .map or .reduce
 
 tests should validate complex and non-obvious logic. if a test looks like a placeholder, do not add it.
 
-use vitest to run tests. tests should be run from the current package directory and not root. try using the test script instead of vitest directly. additional vitest flags can be added at the end, like --run to disable watch mode or -u to update snapshots.
+use vitest or bun test to run tests. tests should be run from the current package directory and not root. try using the test script instead of vitest directly. additional vitest flags can be added at the end, like --run to disable watch mode or -u to update snapshots.
 
 to understand how the code you are writing works, you should add inline snapshots in the test files with expect().toMatchInlineSnapshot(), then run the test with `pnpm test -u --run` or `pnpm vitest -u --run` to update the snapshot in the file, then read the file again to inspect the result. if the result is not expected, update the code and repeat until the snapshot matches your expectations. never write the inline snapshots in test files yourself. just leave them empty and run `pnpm test -u --run` to update them.
 
 > always call `pnpm vitest` or `pnpm test` with `--run` or they will hang forever waiting for changes!
 > ALWAYS read back the test if you use the `-u` option to make sure the inline snapshots are as you expect.
 
-- NEVER writes the snapshots content yourself in `toMatchInlineSnapshot`. instead leave it empty and call `pnpm test -u` to fill in snapshots content.
+- NEVER write the snapshots content yourself in `toMatchInlineSnapshot`. instead leave it as is and call `pnpm test -u` to fill in snapshots content. the first time you call `toMatchInlineSnapshot()` you can leave it empty
 
 - when updating implementation and `toMatchInlineSnapshot` should change, DO NOT remove the inline snapshots yourself, just run `pnpm test -u` instead! This will replace contents of the snapshots without wasting time doing it yourself.
 
 - for very long snapshots you should use `toMatchFileSnapshot(filename)` instead of `toMatchInlineSnapshot()`. put the snapshot files in a snapshots/ directory and use the appropriate extension for the file based on the content
 
-never test client react components. only server code that runs on the server.
+never test client react components. only React and browser independent code. 
 
 most tests should be simple calls to functions with some expect calls, no mocks. test files should be called the same as the file where the tested function is being exported from.
 
@@ -449,7 +474,58 @@ sometimes tests work directly on database data, using prisma. to run these tests
 
 never write tests yourself that call prisma or interact with database or emails. for these, ask the user to write them for you.
 
-changelogs.md
+# changesets
+
+After completing a fix or feature for a **public package** (has `version` in package.json, not `private: true`), add a changeset file in `.changeset/` at the repo root. Never edit CHANGELOG.md directly; it is generated automatically at publish time when changesets are consumed.
+
+Never run the `changeset` CLI command interactively. Always create the file manually.
+
+Create a `.md` file with a random kebab-case name (e.g. `cool-lions-dance.md`):
+
+```md
+---
+'package-name': patch
+---
+
+Description of what changed, with code examples if applicable.
+```
+
+Multiple packages can be listed in one changeset:
+
+```md
+---
+'spiceflow': minor
+'create-spiceflow': patch
+---
+
+Add federation support for remote RSC components.
+```
+
+## rules
+
+- **Never use `major`.** Use `patch` for fixes and `minor` for new features.
+- **Never edit CHANGELOG.md directly.** It is generated from changesets at publish time.
+- **Never bump `package.json` version manually.** Versions are bumped automatically.
+- **Never run the changeset CLI.** Write the `.md` file yourself.
+- **Only public packages.** Skip changesets for packages marked `private: true` or without a `version` field.
+- **Present tense.** Write "add support for X", "fix bug with Y".
+- **One changeset per logical change.** Two unrelated changes get two files.
+
+## rich content
+
+Changeset descriptions become the public changelog. Write them as rich content aimed at end users:
+
+- Code examples showing new APIs or changed behavior
+- Migration steps if the user needs to update their code
+- Diagrams explaining architecture changes
+- Before/after comparisons
+
+## private packages
+
+For **private packages** (`private: true`, no version), skip changesets entirely. These do not get published.
+
+Load the `changesets` skill for full workflow details.
+
 # writing docs
 
 when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you had to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
@@ -458,11 +534,9 @@ when generating a .md or .mdx file to document things, always add a frontmatter 
 this project uses doppler to manage secrets, with a single project with 3 envs: dev, preview and production. dev is the env already selected and implicit in doppler calls.
 
 in typescript never use process.env directly. instead find the closest `env.ts` file that exports an env object (this file should already exist). so the env can be used type-safely and i can clearly see which secrets are available and need to be added.
-# cac for cli development
-
-the cli uses cac npm package.
-
+goke.md
 # github
+
 
 you can use the `gh` cli to do operations on github for the current repository. For example: open issues, open PRs, check actions status, read workflow logs, etc.
 
@@ -498,19 +572,48 @@ Error: Request timeout at /api/auth/login
 ```bash
 gh run list # lists latest actions runs
 gh run watch <id> --exit-status # if workflow is in progress, wait for the run to complete. the actions run is finished when this command exits. Set a tiemout of at least 10 minutes when running this command
+gh pr checks --watch --fail-fast # watch for current branch pr ci checks to finish
 gh run view <id> --log-failed | tail -n 300 # read the logs for failed steps in the actions run
 gh run view <id> --log | tail -n 300 # read all logs for a github actions run
 ```
 
-## reading github repositories
+## responding to PR reviews and comments (gh-pr-review extension)
 
-you can use gitchamber.com to read repo files. run `curl https://gitchamber.com` to see how the API works. always use curl to fetch the responses of gitchamber.com
+```bash
+# view reviews and get thread IDs
+gh pr-review review view 42 -R owner/repo --unresolved
 
-for example when working with the vercel ai sdk, you can fetch the latest docs using:
+# reply to a review comment
+gh pr-review comments reply 42 -R owner/repo \
+  --thread-id PRRT_kwDOAAABbcdEFG12 \
+  --body "Fixed in latest commit"
 
-https://gitchamber.com/repos/repos/vercel/ai/main/files
+# resolve a thread
+gh pr-review threads resolve 42 -R owner/repo --thread-id PRRT_kwDOAAABbcdEFG12
+```
 
-use gitchamber to read the .md files using curl
+## reading github repos source code
+
+```sh
+opensrc zod # npm package name
+
+# Using github: prefix
+opensrc github:owner/repo
+
+# Using owner/repo shorthand
+opensrc facebook/react
+
+# Using full GitHub URL
+opensrc https://github.com/colinhacks/zod
+
+# Fetch a specific branch or tag
+opensrc owner/repo@v1.0.0
+opensrc owner/repo#main
+
+# Mix packages and repos
+```
+
+This will download the source code in ./opensrc. which should be put in .gitignore
 
 # prisma
 
@@ -819,40 +922,6 @@ so that internal navigation is done client side and is faster. notice that navig
 ## Link or a components are preferred over `navigate`
 
 ALWAYS use link components instead of the navigate function if possible. for example, in a dropdown component you should wrap the dropdown item in a link instead of adding an onClick handler.
-
-# Creating New React Router Routes and Handling Types
-
-When creating a new React Router route, follow these steps:
-
-## 1. Create the route file
-Create a file in `src/routes/` using flat routes naming convention (dots for separators, $ for params, kebab-case).
-
-## 2. Generate types
-**IMPORTANT**: Types are NOT automatically generated. After creating a route, run:
-```bash
-pnpm exec react-router typegen
-```
-
-## 3. Import Route types
-```typescript
-import type { Route } from './+types/your-route-name'
-```
-Note: The `+types` directory doesn't physically exist - it's virtual/generated.
-
-## 4. Verify with typecheck
-```bash
-pnpm typecheck  # This runs typegen first, then tsc
-```
-
-## Troubleshooting Missing Types
-- Types missing? Run `pnpm exec react-router typegen`
-- Import failing? Check filename matches import path exactly
-- The `+types` directory is virtual - don't look for it in the filesystem
-
-## Best Practices
-- Always run `pnpm typecheck` after creating/modifying routes
-- Export `Route` type from layout routes for child routes to import
-- Use `href()` for all internal paths, even in redirects
 
 ## debugging build failures
 
