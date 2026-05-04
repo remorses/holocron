@@ -178,9 +178,9 @@ export const aiLogoApp = new Spiceflow().get(
     )
 
     // Store in KV (globally replicated, persists across deploys)
-    await env.AI_LOGO_KV.put(kvKey, encoded.data.buffer, { expirationTtl: CACHE_TTL })
+    await env.AI_LOGO_KV.put(kvKey, encoded.data.buffer as ArrayBuffer, { expirationTtl: CACHE_TTL })
 
-    return new Response(encoded.data, {
+    return new Response(encoded.data.buffer as ArrayBuffer, {
       headers: {
         'content-type': 'image/jpeg',
         'cache-control': 's-maxage=31536000, immutable',

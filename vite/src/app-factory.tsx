@@ -12,8 +12,7 @@
 
 import './styles/globals.css'
 import React from 'react'
-import type { ApiApp as WebsiteApiApp } from 'website/src/api.ts'
-
+import type { ApiApp as WebsiteApiApp } from '../../website/dist/src/api.ts'
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
 import { createSpiceflowFetch } from 'spiceflow/client'
 import { Head, ProgressBar } from 'spiceflow/react'
