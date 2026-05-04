@@ -41,7 +41,7 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "ulid": "latest",
-    "vite": "^8.0.8",
+    "vite": "^8.0.10",
     "workers-ai-provider": "^3.1.13",
     "zod": "latest"
   },

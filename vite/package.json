@@ -97,7 +97,7 @@
     "takumi-js": "1.0.0-rc.15",
     "unist-util-visit": "^5.1.0",
     "yaml": "^2.8.3",
-    "zod": "^4.4.1",
+    "zod": "^4.4.2",
     "zustand": "^5.0.12"
   },
   "peerDependencies": {
