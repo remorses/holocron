@@ -1,0 +1,122 @@
+{
+  "name": "Deep Nesting Docs",
+  "icons": { "library": "lucide" },
+  "colors": { "primary": "#7c3aed" },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "expanded": true,
+            "pages": [
+              "index",
+              "getting-started",
+              "installation",
+              "quick-start"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts",
+              "architecture"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/authentication",
+              "guides/authorization",
+              "guides/deployment",
+              "guides/monitoring",
+              "guides/performance"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api/overview",
+              {
+                "group": "REST API",
+                "pages": [
+                  "api/rest/endpoints",
+                  "api/rest/errors",
+                  "api/rest/pagination"
+                ]
+              },
+              {
+                "group": "GraphQL",
+                "expanded": true,
+                "pages": [
+                  "api/graphql/schema",
+                  "api/graphql/queries",
+                  "api/graphql/mutations",
+                  "api/graphql/subscriptions"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/plugins",
+              {
+                "group": "Hooks",
+                "pages": [
+                  "advanced/hooks/overview",
+                  {
+                    "group": "Lifecycle Hooks",
+                    "pages": [
+                      "advanced/hooks/lifecycle/on-init",
+                      "advanced/hooks/lifecycle/on-ready",
+                      "advanced/hooks/lifecycle/on-destroy"
+                    ]
+                  },
+                  {
+                    "group": "Request Hooks",
+                    "pages": [
+                      "advanced/hooks/request/before-request",
+                      "advanced/hooks/request/after-request"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Internals",
+                "pages": [
+                  "advanced/internals/architecture",
+                  {
+                    "group": "Deep Dive",
+                    "pages": [
+                      "advanced/internals/deep/level-4",
+                      {
+                        "group": "Even Deeper",
+                        "pages": [
+                          "advanced/internals/deep/deeper/level-5"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/config"
+            ]
+          },
+          {
+            "group": "Misc",
+            "pages": [
+              "changelog"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
