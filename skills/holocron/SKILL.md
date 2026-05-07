@@ -11,16 +11,28 @@ if you use icons in cards components use it for all items, not only some. otherw
 
 ## MDX authoring: multi-line container components
 
-Always use multi-line form for container components (Callout, Note, Warning, Info, Tip, Check, Danger, Aside, Accordion, Steps, Card, Expandable, Panel, Frame, Prompt, etc.). Put content on its own line with a newline after the opening tag:
+Always use multi-line form for container components (Callout, Note, Warning, Info, Tip, Check, Danger, Aside, Accordion, Steps, Card, Expandable, Panel, Frame, Prompt, etc.). Put content on its own line with a newline after the opening tag. Single-line form produces bare phrasing children without paragraph wrapping.
 
 ```mdx
-<!-- ✅ CORRECT -->
 <Note>
 Use `Note` for neutral supporting information.
 </Note>
-
-<!-- ❌ WRONG — text won't get paragraph wrapping -->
-<Note>Use `Note` for neutral supporting information.</Note>
 ```
 
-Single-line form produces bare phrasing children without `<P>` wrapper or `editorial-prose` styling. Multi-line form gets proper paragraph wrapping from the MDX parser.
+## Aside must always contain a component
+
+`<Aside>` is positioning-only with no visual frame. Always wrap content in `<Note>`, `<Tip>`, `<Info>`, `<Warning>`, `<Callout>`, or another framed component. Exception: `<Aside full>` with `<TableOfContentsPanel />`.
+
+```mdx
+<Aside>
+
+<Note>
+This appears in the sidebar with a proper callout frame.
+</Note>
+
+</Aside>
+```
+
+## New MDX pages must be added to docs.json navigation
+
+After creating a new `.mdx` file, add its slug to `docs.json` navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.

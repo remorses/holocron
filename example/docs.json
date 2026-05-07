@@ -42,7 +42,7 @@
           {
             "group": "Reference",
             "icon": "book",
-            "pages": ["configuration", "deployment"]
+            "pages": ["configuration", "deployment", "custom-virtual-modules"]
           }
         ]
       },

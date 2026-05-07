@@ -4,7 +4,32 @@
  */
 
 export { holocron, type HolocronPluginOptions, type HolocronVirtualModules } from './vite-plugin.ts'
-export type { HolocronConfig, ConfigAnchor, ConfigNavTab, ConfigNavGroup, ConfigNavPageEntry } from './config.ts'
+
+/* ── Config types (normalized output shape) ──────────────────────────── */
+
+export type {
+  HolocronConfig,
+  ConfigAnchor,
+  ConfigNavTab,
+  ConfigNavGroup,
+  ConfigNavPageEntry,
+  ConfigIcon,
+  ConfigNavbarLink,
+  ConfigNavbarPrimary,
+  ConfigVersionItem,
+  ConfigDropdownItem,
+  FooterLinkColumn,
+  FooterLinkItem,
+} from './config.ts'
+
+/* ── Config schema + raw input type (for validation & multi-tenant) ── */
+
+export { holocronConfigSchema } from './schema.ts'
+export type { HolocronConfigRaw } from './schema.ts'
+export { normalize as normalizeConfig } from './lib/normalize-config.ts'
+
+/* ── Enriched navigation types ───────────────────────────────────────── */
+
 export type {
   Navigation,
   NavTab,

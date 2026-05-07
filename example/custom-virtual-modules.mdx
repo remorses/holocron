@@ -1,0 +1,372 @@
+---
+title: Custom Virtual Modules
+description: Replace disk-based MDX and config with your own data sources for database-backed, multi-tenant, or API-driven docs.
+icon: puzzle
+---
+
+## Overview
+
+By default, Holocron reads your `docs.json` config and MDX pages from the filesystem. **Custom virtual modules** let you replace those data sources entirely with your own code. This is the escape hatch for docs backed by a database, CMS, or any external API.
+
+Pass `virtualModules` to the plugin and Holocron renders your content the same way it renders local files. No filesystem needed.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({
+      virtualModules: {
+        config: '...', // replaces virtual:holocron-config
+        mdx: '...',    // replaces virtual:holocron-mdx
+        navigation: '...', // replaces virtual:holocron-navigation
+      },
+    }),
+  ],
+})
+```
+
+<Aside>
+
+<Note>
+Each field is a **string of JavaScript source code** that Vite loads as a virtual module. You write the module inline in your config, and Holocron imports it at runtime.
+</Note>
+
+</Aside>
+
+## The three virtual modules
+
+Holocron's rendering pipeline depends on three virtual modules. You can override any combination of them.
+
+### `config`
+
+Replaces `virtual:holocron-config`. Must export:
+
+- **`getConfig()`** — returns a normalized `HolocronConfig` object (site name, navigation tree, colors, icons, etc.)
+- **`base`** — the base path string (usually `"/"`)
+
+```ts
+const configModule = `
+import { normalize } from "@holocron.so/vite/src/lib/normalize-config.ts"
+
+const config = normalize({
+  name: "My Docs",
+  navigation: {
+    groups: [
+      { group: "Guides", pages: ["overview", "quickstart"] },
+    ],
+  },
+})
+
+export const base = "/"
+export function getConfig() { return config }
+`
+```
+
+<Note>
+
+Always call `normalize()` on your raw config object. It collapses union variants (logo shapes, navigation shorthands) into the canonical form that Holocron's renderer expects.
+
+</Note>
+
+### `mdx`
+
+Replaces `virtual:holocron-mdx`. Must export:
+
+- **`getMdxSlugs()`** — returns an array of all page slug strings
+- **`getMdxSource(slug)`** — returns the raw MDX string for a given slug
+- **`getPageIconRefs()`** — returns icon references per page (can return `[]`)
+
+```ts
+const mdxModule = `
+const pages = {
+  "overview": "# Overview\\n\\nWelcome to the docs.",
+  "quickstart": "# Quickstart\\n\\nGet started in 5 minutes.",
+}
+
+export async function getMdxSlugs() {
+  return Object.keys(pages)
+}
+
+export async function getMdxSource(slug) {
+  return pages[slug]
+}
+
+export async function getPageIconRefs() {
+  return []
+}
+`
+```
+
+### `navigation`
+
+Replaces `virtual:holocron-navigation`. Must export:
+
+- **`getNavigationData()`** — returns the enriched navigation tree with parsed titles, headings, and metadata for every page
+
+Holocron provides a helper that builds this from the other two modules:
+
+```ts
+const navigationModule = `
+import { buildNavigationData } from "@holocron.so/vite/src/build-navigation-data.ts"
+import { getConfig } from "virtual:holocron-config"
+import { getMdxSource } from "virtual:holocron-mdx"
+
+export async function getNavigationData() {
+  const config = await getConfig()
+  return await buildNavigationData({ config, getMdxSource })
+}
+`
+```
+
+`buildNavigationData` walks the config navigation tree, calls `getMdxSource` for each page, parses titles and headings, and returns the enriched structure. You almost always want to use this helper instead of building the tree by hand.
+
+## Full example
+
+A working fixture lives at [integration-tests/fixtures/custom-virtual-modules/](https://github.com/remorses/holocron/tree/main/integration-tests/fixtures/custom-virtual-modules). Here is a simplified version:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+const configModule = `
+import { normalize } from "@holocron.so/vite/src/lib/normalize-config.ts"
+
+const config = normalize({
+  name: "My API Docs",
+  navigation: {
+    tabs: [
+      {
+        tab: "Guides",
+        groups: [
+          { group: "Getting Started", pages: ["overview", "quickstart"] },
+        ],
+      },
+      {
+        tab: "API Reference",
+        groups: [
+          { group: "Endpoints", pages: ["api/users", "api/billing"] },
+        ],
+      },
+    ],
+  },
+})
+
+export const base = "/"
+export function getConfig() { return config }
+`
+
+const mdxModule = `
+const pages = {
+  "overview": "# Overview\\n\\nWelcome to the docs.",
+  "quickstart": "# Quickstart\\n\\nGet up and running fast.",
+  "api/users": "# Users API\\n\\nManage user accounts.",
+  "api/billing": "# Billing API\\n\\nHandle subscriptions and invoices.",
+}
+
+export async function getMdxSlugs() {
+  return Object.keys(pages)
+}
+
+export async function getMdxSource(slug) {
+  return pages[slug]
+}
+
+export async function getPageIconRefs() {
+  return []
+}
+`
+
+const navigationModule = `
+import { buildNavigationData } from "@holocron.so/vite/src/build-navigation-data.ts"
+import { getConfig } from "virtual:holocron-config"
+import { getMdxSource } from "virtual:holocron-mdx"
+
+export async function getNavigationData() {
+  const config = await getConfig()
+  return await buildNavigationData({ config, getMdxSource })
+}
+`
+
+export default defineConfig({
+  plugins: [
+    holocron({
+      virtualModules: {
+        config: configModule,
+        mdx: mdxModule,
+        navigation: navigationModule,
+      },
+    }),
+  ],
+})
+```
+
+You still need a `holocron.jsonc` or `docs.json` file in the project root (it can be minimal). The virtual modules fully override the config and page content at runtime, but Holocron's plugin expects the file to exist for initialization.
+
+## Multi-tenant docs with Cloudflare KV
+
+A common use case is serving different docs content per tenant from a single deployment. Store MDX pages and config in Cloudflare KV, keyed by tenant, and load them at request time.
+
+### KV data layout
+
+Organize keys by tenant prefix:
+
+```
+tenant:{slug}:config     → JSON string (raw docs.json shape)
+tenant:{slug}:page:{id}  → raw MDX string
+tenant:{slug}:slugs      → JSON array of page slug strings
+```
+
+### Vite config
+
+The virtual modules import `env` from `cloudflare:workers` to access your KV binding. The tenant slug is extracted from the request hostname.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+const configModule = `
+import { env } from "cloudflare:workers"
+import { normalize } from "@holocron.so/vite/src/lib/normalize-config.ts"
+
+export const base = "/"
+
+export async function getConfig(request) {
+  const tenant = new URL(request.url).hostname.split(".")[0]
+  const raw = await env.DOCS_KV.get("tenant:" + tenant + ":config", "json")
+  if (!raw) throw new Error("No config for tenant: " + tenant)
+  return normalize(raw)
+}
+`
+
+const mdxModule = `
+import { env } from "cloudflare:workers"
+
+export async function getMdxSlugs(request) {
+  const tenant = new URL(request.url).hostname.split(".")[0]
+  const slugs = await env.DOCS_KV.get("tenant:" + tenant + ":slugs", "json")
+  return slugs ?? []
+}
+
+export async function getMdxSource(slug, request) {
+  const tenant = new URL(request.url).hostname.split(".")[0]
+  return await env.DOCS_KV.get("tenant:" + tenant + ":page:" + slug)
+}
+
+export async function getPageIconRefs() {
+  return []
+}
+`
+
+const navigationModule = `
+import { buildNavigationData } from "@holocron.so/vite/src/build-navigation-data.ts"
+import { getConfig } from "virtual:holocron-config"
+import { getMdxSource } from "virtual:holocron-mdx"
+
+export async function getNavigationData(request) {
+  const config = await getConfig(request)
+  return await buildNavigationData({
+    config,
+    getMdxSource: (slug) => getMdxSource(slug, request),
+  })
+}
+`
+
+export default defineConfig({
+  plugins: [
+    holocron({
+      virtualModules: {
+        config: configModule,
+        mdx: mdxModule,
+        navigation: navigationModule,
+      },
+    }),
+  ],
+})
+```
+
+### Wrangler config
+
+Bind the KV namespace in your `wrangler.jsonc`:
+
+```jsonc
+{
+  "kv_namespaces": [
+    { "binding": "DOCS_KV", "id": "your-kv-namespace-id" }
+  ]
+}
+```
+
+### Seeding KV
+
+Use a script or the Wrangler CLI to populate tenant data:
+
+```bash
+# Upload config for a tenant
+wrangler kv key put --binding DOCS_KV \
+  "tenant:acme:config" \
+  '{"name":"Acme Docs","navigation":{"groups":[{"group":"Guides","pages":["intro","setup"]}]}}'
+
+# Upload page content
+wrangler kv key put --binding DOCS_KV \
+  "tenant:acme:page:intro" \
+  "# Introduction\n\nWelcome to Acme."
+
+wrangler kv key put --binding DOCS_KV \
+  "tenant:acme:page:setup" \
+  "# Setup\n\nInstall the SDK and configure your project."
+
+# Upload slug list
+wrangler kv key put --binding DOCS_KV \
+  "tenant:acme:slugs" \
+  '["intro","setup"]'
+```
+
+Each tenant gets their own branded docs site, all served from the same Worker deployment. Tenants are isolated by KV key prefix; adding a new tenant is just writing new keys.
+
+<Warning>
+
+KV reads are eventually consistent. After updating a tenant's docs, there may be a brief delay before the changes are visible. For instant updates, consider using Durable Objects or D1 instead of KV.
+
+</Warning>
+
+## Validating tenant configs at runtime
+
+When tenants provide their own config (via an admin panel, API, or database), validate it before passing to `normalize()`. Holocron exports the Zod schema and the raw input type for this:
+
+```ts
+import {
+  holocronConfigSchema,
+  normalizeConfig,
+  type HolocronConfigRaw,
+  type HolocronConfig,
+} from '@holocron.so/vite'
+
+// Validate raw JSON from a database or API
+function loadTenantConfig(raw: unknown): HolocronConfig {
+  const parsed = holocronConfigSchema.parse(raw)
+  return normalizeConfig(parsed as Record<string, unknown>)
+}
+```
+
+**`holocronConfigSchema`** is the Zod schema matching the `docs.json` / `holocron.jsonc` shape. It accepts all Mintlify fields via `.passthrough()`, so tenant configs pasted from existing Mintlify setups validate without stripping unknown keys.
+
+**`normalizeConfig`** collapses all union variants (logo string vs object, navigation shorthand vs full form) into the canonical `HolocronConfig` type. Always call it after validation.
+
+**`HolocronConfigRaw`** is the TypeScript input type (before normalization). Use it to type admin forms or API request bodies.
+
+**`HolocronConfig`** is the normalized output type. This is what `getConfig()` in your virtual module should return.
+
+## When to use virtual modules
+
+- **Database-backed docs** where pages are stored in D1, Postgres, or any other database
+- **Multi-tenant SaaS** where each customer gets their own docs portal
+- **CMS integration** where content comes from a headless CMS API
+- **Dynamic docs** where page content is generated or fetched at request time
+- **White-label products** where the same deployment serves different branded docs
+
+For static docs from local MDX files, the default filesystem mode is simpler and faster (git-SHA caching, HMR, image optimization). Use virtual modules only when you need runtime data sources.

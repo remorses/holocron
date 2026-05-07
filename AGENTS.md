@@ -561,3 +561,11 @@ Use `Note` for neutral supporting information.
 ```
 
 Single-line form produces bare phrasing children (no `<P>` wrapper, no `editorial-prose` styling). Multi-line form gets proper paragraph wrapping from the MDX parser. This is a parser-level limitation — the two forms produce different ASTs.
+
+### Aside must always contain a component
+
+`<Aside>` is positioning-only with no visual frame. Always wrap content in `<Note>`, `<Tip>`, `<Info>`, `<Warning>`, `<Callout>`, or another framed component. Bare text in an Aside looks like random floating text. Exception: `<Aside full>` with `<TableOfContentsPanel />`.
+
+### New MDX pages must be added to docs.json navigation
+
+After creating a new `.mdx` file, add its slug to `docs.json` (or `holocron.jsonc`) navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.
