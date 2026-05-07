@@ -14,9 +14,10 @@
  * - font-mono ToolPreviewContainer wrapper
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import type { ChatMessage, ChatPart } from '../lib/chat-store.ts'
 import { ChevronDownIcon } from './chat-icons.tsx'
+import { ShowMore } from './show-more.tsx'
 
 // ── User message ─────────────────────────────────────────────────────
 
@@ -278,84 +279,6 @@ function PieLoader() {
     <span className='inline-block text-orange-500 dark:text-orange-300'>
       {pies[index]}{' '}
     </span>
-  )
-}
-
-// ── ShowMore — collapsible wrapper with gradient fade ────────────────
-
-function ShowMore({
-  children,
-  height = 80,
-}: {
-  children: React.ReactNode
-  height?: number
-}) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [needsExpansion, setNeedsExpansion] = useState(false)
-
-  useEffect(() => {
-    if (contentRef.current) {
-      setNeedsExpansion(contentRef.current.scrollHeight > height)
-    }
-  }, [height, children])
-
-  return (
-    <div className='flex flex-col gap-1'>
-      <div
-        ref={contentRef}
-        style={{
-          overflow: 'hidden',
-          transition: 'max-height 300ms ease',
-          maxHeight:
-            isExpanded || !needsExpansion ? 'none' : `${height}px`,
-          position: 'relative',
-          cursor: !isExpanded && needsExpansion ? 'pointer' : undefined,
-        }}
-        onClick={() => {
-          if (!isExpanded && needsExpansion) setIsExpanded(true)
-        }}
-      >
-        {children}
-        {!isExpanded && needsExpansion && (
-          <div
-            style={{
-              position: 'absolute',
-              insetInline: 0,
-              bottom: 0,
-              height: '64px',
-              background:
-                'linear-gradient(to top, var(--background), transparent)',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-      </div>
-      {needsExpansion && (
-        <div className='flex justify-center'>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '12px',
-              color: 'var(--foreground)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '4px 8px',
-            }}
-          >
-            <span>{isExpanded ? 'Show less' : 'Show more'}</span>
-            <ChevronDownIcon
-              size={14}
-              className={isExpanded ? 'rotate-180' : ''}
-            />
-          </button>
-        </div>
-      )}
-    </div>
   )
 }
 
