@@ -56,8 +56,12 @@ function useFirstPaintDone(): boolean {
  * `useFirstPaintDone()` additionally disables the transition on the very
  * first render so the opacity fade doesn't run during hydration.
  */
-export function ExpandableContainer({ open, children }: { open: boolean; children: React.ReactNode }) {
-  const canAnimate = useFirstPaintDone()
+export function ExpandableContainer({ open, children, animate }: { open: boolean; children: React.ReactNode; animate?: boolean }) {
+  const firstPaintDone = useFirstPaintDone()
+  // When `animate` is explicitly false, never transition (used by the sidebar
+  // nav tree to disable animations by default). When undefined, fall back to
+  // the first-paint guard (existing behaviour for Mintlify Expandable etc.).
+  const canAnimate = animate === false ? false : firstPaintDone && (animate ?? true)
   return (
     <div
       aria-hidden={!open}

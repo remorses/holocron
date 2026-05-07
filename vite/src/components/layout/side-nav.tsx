@@ -22,6 +22,17 @@ const noopSubscribe = () => () => {}
 const getIsMac = () => /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
 const getServerIsMac = () => true // default to ⌘K on SSR
 
+// Sidebar animation gate — animations are disabled by default, enabled only
+// when `<html class="sidebar-animate">` is present. Uses a MutationObserver
+// so toggling the class at runtime works (same pattern as dark mode detection).
+const getSidebarAnimate = () => document.documentElement.classList.contains('sidebar-animate')
+const getServerSidebarAnimate = () => false
+function subscribeSidebarAnimate(cb: () => void) {
+  const observer = new MutationObserver(cb)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  return () => observer.disconnect()
+}
+
 /**
  * Zero-prop sidebar — reads navigation from the root loader `site` object
  * and per-request state (currentPageHref, ancestorGroupKeys)
@@ -29,6 +40,7 @@ const getServerIsMac = () => true // default to ⌘K on SSR
  */
 export function SideNav() {
   const isMac = useSyncExternalStore(noopSubscribe, getIsMac, getServerIsMac)
+  const sidebarAnimate = useSyncExternalStore(subscribeSidebarAnimate, getSidebarAnimate, getServerSidebarAnimate)
   const {
     site,
     currentPageHref,
@@ -169,8 +181,9 @@ export function SideNav() {
       searchState,
       highlightedHref,
       highlightedRef,
+      animate: sidebarAnimate,
     }
-  }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, toggleGroup])
+  }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, sidebarAnimate, toggleGroup])
 
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>

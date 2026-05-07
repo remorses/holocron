@@ -22,6 +22,9 @@ type SidebarTreeContextValue = {
   searchState: SearchState | null
   highlightedHref: string | null
   highlightedRef: React.RefObject<HTMLAnchorElement | null>
+  /** When true, sidebar expand/collapse and hover transitions are enabled.
+   *  Controlled by the presence of `sidebar-animate` class on `<html>`. */
+  animate: boolean
 }
 
 const sidebarTreeContext = createContext<SidebarTreeContextValue | null>(null)
@@ -55,7 +58,7 @@ export function TocInline({
   headings: NavHeading[]
   pageHref: string
 }) {
-  const { activeHeadingId, searchState, highlightedHref, highlightedRef } = useSidebarTreeContext()
+  const { activeHeadingId, searchState, highlightedHref, highlightedRef, animate } = useSidebarTreeContext()
   const listRef = useRef<HTMLUListElement>(null)
   const indicatorRef = useRef<HTMLDivElement>(null)
   const isSearchActive = searchState !== null
@@ -124,7 +127,7 @@ export function TocInline({
           insetInlineStart: 0,
           width: '1.5px',
           backgroundColor: 'var(--sidebar-primary)',
-          transition: 'transform 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.15s',
+          transition: animate ? 'transform 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.15s' : 'none',
           opacity: 0,
         }}
       />
@@ -140,7 +143,7 @@ export function TocInline({
           const isHighlighted = highlightedHref === headingHref
           const isEmphasized = isActive || (isSearchActive && isMatched)
           return (
-            <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.15s ease' }}>
+            <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: animate ? 'opacity 0.15s ease' : 'none' }}>
               <Link
                 ref={isHighlighted ? highlightedRef : undefined}
                 href={headingHref}
@@ -173,7 +176,7 @@ export function NavPageLink({
   page: NavPage
   depth: number
 }) {
-  const { currentPageHref, searchState, highlightedHref, highlightedRef } = useSidebarTreeContext()
+  const { currentPageHref, searchState, highlightedHref, highlightedRef, animate } = useSidebarTreeContext()
   const frontmatter = page.frontmatter ?? {}
   if (frontmatter.hidden) return null
 
@@ -204,7 +207,7 @@ export function NavPageLink({
           fontVariationSettings: isEmphasized ? '"wght" 550' : '"wght" 450',
           color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
-          transition: 'color 0.15s, font-variation-settings 0.25s, opacity 0.15s ease',
+          transition: animate ? 'color 0.15s, font-variation-settings 0.25s, opacity 0.15s ease' : 'none',
           background: isHighlighted ? 'var(--accent)' : undefined,
           borderRadius: isHighlighted ? '4px' : undefined,
           boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
@@ -218,7 +221,7 @@ export function NavPageLink({
           {frontmatter.tag && typeof frontmatter.api !== 'string' && <NavBadge label={frontmatter.tag} />}
         </span>
       </Link>
-      <ExpandableContainer open={showToc}>
+      <ExpandableContainer open={showToc} animate={animate}>
         {page.headings.length > 1 && (
           <TocInline
             headings={page.headings}
@@ -244,6 +247,7 @@ export function NavGroupNode({
     expandedGroups,
     onToggleGroup,
     searchState,
+    animate,
   } = useSidebarTreeContext()
   // Prune groups with no visible entries (hidden: true, or all descendants hidden).
   if (!hasVisibleSidebarEntries(group)) return null
@@ -288,9 +292,9 @@ export function NavGroupNode({
           className='cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
           style={{
             opacity: isDimmed ? 0.45 : 1,
-            fontVariationSettings: '"wght" 500',
-            color: 'var(--muted-foreground)',
-            transition: 'opacity 0.15s ease',
+          fontVariationSettings: '"wght" 500',
+          color: 'var(--muted-foreground)',
+          transition: animate ? 'opacity 0.15s ease' : 'none',
           }}
         >
           {group.group}
@@ -315,13 +319,13 @@ export function NavGroupNode({
           fontVariationSettings: '"wght" 500',
           color: 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${(depth - 1) * 12}px` : undefined,
-          transition: 'opacity 0.15s ease',
+          transition: animate ? 'opacity 0.15s ease' : 'none',
         }}
       >
-        <ChevronIcon expanded={isExpanded} className='text-muted-foreground' />
+        <ChevronIcon expanded={isExpanded} className='text-muted-foreground' animate={animate} />
         {group.group}
       </button>
-      <ExpandableContainer open={isExpanded}>
+      <ExpandableContainer open={isExpanded} animate={animate}>
         <div className='flex flex-col gap-2.5 pt-2'>
           {renderChildren(false)}
         </div>

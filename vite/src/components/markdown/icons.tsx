@@ -4,7 +4,7 @@
  * Inline SVG icons used by the sidebar (chevron + search magnifier).
  */
 
-export function ChevronIcon({ expanded, className }: { expanded: boolean; className?: string }) {
+export function ChevronIcon({ expanded, className, animate }: { expanded: boolean; className?: string; animate?: boolean }) {
   return (
     <span className={`shrink-0 self-center inline-flex items-center justify-center p-1 -m-1 cursor-pointer ${className ?? ''}`}>
       <svg
@@ -12,7 +12,7 @@ export function ChevronIcon({ expanded, className }: { expanded: boolean; classN
         viewBox='0 0 16 16'
         width='12'
         height='12'
-        className='transition-transform duration-150'
+        className={animate !== false ? 'transition-transform duration-150' : ''}
         style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
       >
         <path d='M6 4l4 4-4 4' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
