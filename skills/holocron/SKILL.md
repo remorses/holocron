@@ -5,9 +5,11 @@ description: Mintlify drop-in open source replacement as a Vite plugin. Use it t
 
 ## icons
 
-if you add an icon to a page group don't use the same icon to the first page. this will look like there are 2 duplicate icons in the navigation tree.
+The default icon library is **Font Awesome** (`fontawesome`). To use Lucide icons instead, set `"icons": { "library": "lucide" }` in `docs.json`. Icon names like `home`, `zap`, `file-text`, `panel-left` are Lucide names and won't resolve with the default Font Awesome library.
 
-if you use icons in cards components use it for all items, not only some. otherwise it will look bad.
+If you add an icon to a page group don't use the same icon to the first page. This will look like there are 2 duplicate icons in the navigation tree.
+
+If you use icons in cards components use it for all items, not only some. Otherwise it will look bad.
 
 ## MDX authoring: multi-line container components
 

@@ -1,0 +1,105 @@
+---
+title: Quickstart
+description: Get your docs site running in under a minute.
+icon: zap
+---
+
+# Quickstart
+
+<Aside>
+
+<Info>
+**Requirements:** Node.js 18+ and a package manager (pnpm, npm, yarn, or bun).
+</Info>
+
+</Aside>
+
+<Steps>
+  <Step title='Install dependencies' icon='download'>
+    Add the Holocron Vite plugin and its peer dependencies:
+
+    ```bash
+    pnpm add @holocron.so/vite react react-dom vite
+    ```
+  </Step>
+
+  <Step title='Create vite.config.ts' icon='settings'>
+    The plugin auto-adds Spiceflow, Tailwind CSS, and React. No extra setup needed.
+
+    ```ts
+    import { defineConfig } from 'vite'
+    import { holocron } from '@holocron.so/vite'
+
+    export default defineConfig({
+      plugins: [holocron()],
+    })
+    ```
+  </Step>
+
+  <Step title='Create docs.json' icon='file-json'>
+    Define your site name and navigation structure:
+
+    ```json
+    {
+      "name": "My Docs",
+      "colors": { "primary": "#6366f1" },
+      "navigation": [
+        {
+          "group": "Getting Started",
+          "pages": ["index"]
+        }
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title='Write your first page' icon='pencil'>
+    Create an `index.mdx` file at the project root:
+
+    ```mdx
+    ---
+    title: Welcome
+    description: My documentation site.
+    ---
+
+    # Welcome
+
+    This is my first Holocron page.
+    ```
+  </Step>
+
+  <Step title='Start the dev server' icon='play'>
+    ```bash
+    npx vite
+    ```
+
+    Open `http://localhost:5173` and you should see your docs site with hot reload.
+  </Step>
+</Steps>
+
+## Build for production
+
+```bash
+npx vite build
+```
+
+Start the production server:
+
+```bash
+node dist/rsc/index.js
+```
+
+## Project structure
+
+A minimal Holocron project looks like this:
+
+```
+my-docs/
+├── index.mdx          # your pages
+├── docs.json          # site config and navigation
+├── vite.config.ts     # just the holocron() plugin
+├── package.json
+└── public/            # static assets (logos, images)
+```
+
+By default, Holocron looks for MDX files relative to the project root. You can change this with the `pagesDir` option in the plugin config.

@@ -17,3 +17,6 @@ play
 .env.prod
 worker-configuration.d.ts
 website/openapi.json
+template/node_modules
+template/dist
+template/pnpm-lock.yaml

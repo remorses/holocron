@@ -1,0 +1,155 @@
+openapi: "3.0.3"
+info:
+  title: Tasks API
+  description: A simple task management API for demonstration purposes.
+  version: "1.0.0"
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT token from /auth/login
+  schemas:
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - completed
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique task identifier
+        title:
+          type: string
+          description: Short description of the task
+          minLength: 1
+          maxLength: 200
+        completed:
+          type: boolean
+          default: false
+          description: Whether the task is done
+        createdAt:
+          type: string
+          format: date-time
+          description: When the task was created
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+security:
+  - bearerAuth: []
+tags:
+  - name: tasks
+    description: Task management
+paths:
+  /tasks:
+    get:
+      tags: [tasks]
+      summary: List tasks
+      description: Retrieve all tasks for the authenticated user. Supports filtering by completion status.
+      parameters:
+        - name: completed
+          in: query
+          schema:
+            type: boolean
+          description: Filter by completion status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of tasks to return
+      responses:
+        "200":
+          description: A list of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+              example:
+                - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  title: "Set up Holocron docs"
+                  completed: false
+                  createdAt: "2026-01-15T09:00:00Z"
+    post:
+      tags: [tasks]
+      summary: Create task
+      description: Create a new task.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+            example:
+              title: "Write API documentation"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /tasks/{taskId}:
+    get:
+      tags: [tasks]
+      summary: Get task
+      description: Retrieve a single task by ID.
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The task's unique identifier
+      responses:
+        "200":
+          description: The task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+    delete:
+      tags: [tasks]
+      summary: Delete task
+      description: Permanently delete a task. This action cannot be undone.
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Task deleted
+        "404":
+          description: Task not found
