@@ -3,13 +3,13 @@
 // and the org/member hierarchy for future Stripe subscription billing.
 
 import { defineRelations } from 'drizzle-orm'
-import * as sqliteCore from 'drizzle-orm/sqlite-core'
+import * as s from 'drizzle-orm/sqlite-core'
 import { ulid } from 'ulid'
 
 // Integer column that stores epoch milliseconds as a plain number.
 // Accepts Date objects in toDriver so BetterAuth's internal Date params
 // don't crash D1's .bind() which only accepts string | number | null | ArrayBuffer.
-export const epochMs = sqliteCore.customType<{ data: number; driverParam: number }>({
+export const epochMs = s.customType<{ data: number; driverParam: number }>({
   dataType() { return 'integer' },
   toDriver(value: unknown): number {
     if (value instanceof Date) return value.getTime()
@@ -20,51 +20,51 @@ export const epochMs = sqliteCore.customType<{ data: number; driverParam: number
 
 // ── BetterAuth core tables ──────────────────────────────────────────
 
-export const user = sqliteCore.sqliteTable('user', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  name: sqliteCore.text('name').notNull(),
-  email: sqliteCore.text('email').notNull().unique(),
-  emailVerified: sqliteCore.integer('email_verified', { mode: 'boolean' }).notNull().default(false),
-  image: sqliteCore.text('image'),
+export const user = s.sqliteTable('user', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  name: s.text('name').notNull(),
+  email: s.text('email').notNull().unique(),
+  emailVerified: s.integer('email_verified', { mode: 'boolean' }).notNull().default(false),
+  image: s.text('image'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
 })
 
-export const session = sqliteCore.sqliteTable('session', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  userId: sqliteCore.text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-  token: sqliteCore.text('token').notNull().unique(),
+export const session = s.sqliteTable('session', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  userId: s.text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  token: s.text('token').notNull().unique(),
   expiresAt: epochMs('expires_at').notNull(),
-  ipAddress: sqliteCore.text('ip_address'),
-  userAgent: sqliteCore.text('user_agent'),
+  ipAddress: s.text('ip_address'),
+  userAgent: s.text('user_agent'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
-  sqliteCore.index('session_user_id_idx').on(table.userId),
+  s.index('session_user_id_idx').on(table.userId),
 ])
 
-export const account = sqliteCore.sqliteTable('account', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  userId: sqliteCore.text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-  accountId: sqliteCore.text('account_id').notNull(),
-  providerId: sqliteCore.text('provider_id').notNull(),
-  accessToken: sqliteCore.text('access_token'),
-  refreshToken: sqliteCore.text('refresh_token'),
+export const account = s.sqliteTable('account', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  userId: s.text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  accountId: s.text('account_id').notNull(),
+  providerId: s.text('provider_id').notNull(),
+  accessToken: s.text('access_token'),
+  refreshToken: s.text('refresh_token'),
   accessTokenExpiresAt: epochMs('access_token_expires_at'),
   refreshTokenExpiresAt: epochMs('refresh_token_expires_at'),
-  scope: sqliteCore.text('scope'),
-  idToken: sqliteCore.text('id_token'),
-  password: sqliteCore.text('password'),
+  scope: s.text('scope'),
+  idToken: s.text('id_token'),
+  password: s.text('password'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
-  sqliteCore.index('account_user_id_idx').on(table.userId),
+  s.index('account_user_id_idx').on(table.userId),
 ])
 
-export const verification = sqliteCore.sqliteTable('verification', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  identifier: sqliteCore.text('identifier').notNull(),
-  value: sqliteCore.text('value').notNull(),
+export const verification = s.sqliteTable('verification', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  identifier: s.text('identifier').notNull(),
+  value: s.text('value').notNull(),
   expiresAt: epochMs('expires_at').notNull(),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
@@ -72,53 +72,53 @@ export const verification = sqliteCore.sqliteTable('verification', {
 
 // ── Org tables ──────────────────────────────────────────────────────
 
-export const org = sqliteCore.sqliteTable('org', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  name: sqliteCore.text('name').notNull(),
+export const org = s.sqliteTable('org', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  name: s.text('name').notNull(),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
 })
 
-export const orgMember = sqliteCore.sqliteTable('org_member', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  orgId: sqliteCore.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
-  userId: sqliteCore.text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-  role: sqliteCore.text('role', { enum: ['admin', 'member'] }).notNull().default('member'),
+export const orgMember = s.sqliteTable('org_member', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
+  userId: s.text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  role: s.text('role', { enum: ['admin', 'member'] }).notNull().default('member'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
-  sqliteCore.index('org_member_org_id_idx').on(table.orgId),
-  sqliteCore.index('org_member_user_id_idx').on(table.userId),
-  sqliteCore.uniqueIndex('org_member_org_id_user_id_unique').on(table.orgId, table.userId),
+  s.index('org_member_org_id_idx').on(table.orgId),
+  s.index('org_member_user_id_idx').on(table.userId),
+  s.uniqueIndex('org_member_org_id_user_id_unique').on(table.orgId, table.userId),
 ])
 
 // ── API keys (tied to orgs, used to authenticate deployed docs sites) ──
 
-export const apiKey = sqliteCore.sqliteTable('api_key', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  orgId: sqliteCore.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
-  name: sqliteCore.text('name').notNull(),
-  prefix: sqliteCore.text('prefix').notNull(),
-  hash: sqliteCore.text('hash').notNull().unique(),
+export const apiKey = s.sqliteTable('api_key', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
+  name: s.text('name').notNull(),
+  prefix: s.text('prefix').notNull(),
+  hash: s.text('hash').notNull().unique(),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
-  sqliteCore.index('api_key_org_id_idx').on(table.orgId),
+  s.index('api_key_org_id_idx').on(table.orgId),
 ])
 
 // ── Device flow (BetterAuth device authorization plugin) ────────────
 
-export const deviceCode = sqliteCore.sqliteTable('device_code', {
-  id: sqliteCore.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
-  deviceCode: sqliteCore.text('device_code').notNull().unique(),
-  userCode: sqliteCore.text('user_code').notNull().unique(),
-  userId: sqliteCore.text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+export const deviceCode = s.sqliteTable('device_code', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  deviceCode: s.text('device_code').notNull().unique(),
+  userCode: s.text('user_code').notNull().unique(),
+  userId: s.text('user_id').references(() => user.id, { onDelete: 'cascade' }),
   expiresAt: epochMs('expires_at').notNull(),
-  status: sqliteCore.text('status', { enum: ['pending', 'approved', 'denied', 'expired'] }).notNull().default('pending'),
+  status: s.text('status', { enum: ['pending', 'approved', 'denied', 'expired'] }).notNull().default('pending'),
   lastPolledAt: epochMs('last_polled_at'),
-  pollingInterval: sqliteCore.integer('polling_interval', { mode: 'number' }),
-  clientId: sqliteCore.text('client_id'),
-  scope: sqliteCore.text('scope'),
+  pollingInterval: s.integer('polling_interval', { mode: 'number' }),
+  clientId: s.text('client_id'),
+  scope: s.text('scope'),
 }, (table) => [
-  sqliteCore.index('device_code_user_id_idx').on(table.userId),
+  s.index('device_code_user_id_idx').on(table.userId),
 ])
 
 // ── Relations (v2 API) ──────────────────────────────────────────────
