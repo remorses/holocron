@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'spiceflow/react'
-import { useActiveTocState } from '../hooks/use-active-toc.ts'
+import { useActiveTocState, notifyHeadingClick } from '../hooks/use-active-toc.ts'
 import { useHolocronData } from '../router.ts'
 
 /** Simple className joiner — filters falsy values and joins. */
@@ -163,6 +163,7 @@ export function TableOfContentsPanel({
                 key={heading.slug}
                 href={`#${heading.slug}`}
                 data-active={isActive}
+                onClick={notifyHeadingClick}
                 className={cn(
                   'py-1.5 leading-snug transition-colors no-underline',
                   'hover:text-foreground',

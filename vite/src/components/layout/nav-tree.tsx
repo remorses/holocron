@@ -8,6 +8,7 @@
 import React, { createContext, useContext, useEffect, useRef } from 'react'
 import { Link } from 'spiceflow/react'
 import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, hasVisibleSidebarEntries } from '../../navigation.ts'
+import { notifyHeadingClick } from '../../hooks/use-active-toc.ts'
 import type { SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from '../markdown/icons.tsx'
 import { ExpandableContainer } from '../markdown/expandable-container.tsx'
@@ -149,6 +150,7 @@ export function TocInline({
                 href={headingHref}
                 data-active={isActive}
                 data-heading-id={heading.slug}
+                onClick={notifyHeadingClick}
                 className={`block leading-4 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
                 tabIndex={isDimmed ? -1 : 0}
                 style={{

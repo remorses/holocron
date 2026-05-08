@@ -11,11 +11,17 @@
  * closest to the top of the viewport?"
  *
  * Hash priority: after a hashchange event (including synthetic ones dispatched
- * by Spiceflow's router for pushState navigations), the hash is authoritative
- * until the user scrolls. This handles:
+ * by Spiceflow's router for pushState navigations) OR a direct heading click,
+ * the hash is authoritative until the user manually scrolls. This handles:
  * - No-scroll pages: user can't scroll → hash always wins
  * - Bottom-of-page headings: heading can't reach the threshold line → hash
  *   stays active until user scrolls away
+ *
+ * User-intent detection: instead of a fragile time-based grace period
+ * (SCROLL_SETTLE_MS), we detect genuine user scroll via `wheel`, `touchstart`,
+ * and scroll-key `keydown` events. These never fire from programmatic
+ * scrollIntoView() calls, so hash priority survives the scroll-to-hash
+ * animation regardless of its duration.
  */
 
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
@@ -29,20 +35,22 @@ const ACTIVE_HEADING_OFFSET = 50
 
 /**
  * When true, the URL hash takes priority over scroll-based detection.
- * Set to true on hashchange, reset to false on user scroll.
- *
- * This replaces a time-based grace period with an intent-based one:
- * the hash wins until the user actively scrolls away from it.
+ * Set to true on hashchange or heading click, reset to false only by
+ * genuine user scroll input (wheel, touch, keyboard scroll keys).
  */
 let hashIsAuthoritative = false
 
+/** Keys that cause the browser to scroll the page. */
+const SCROLL_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'])
+
 /**
- * Timestamp of the last hashchange event. Scroll events within SCROLL_SETTLE_MS
- * after a hashchange are ignored — they come from scrollIntoView() triggered by
- * the router, not from the user manually scrolling.
+ * Call this from heading link onClick handlers as a safety net.
+ * Ensures hashIsAuthoritative is set even if the synthetic hashchange
+ * from Spiceflow's router is delayed or missing.
  */
-let lastHashChangeTime = 0
-const SCROLL_SETTLE_MS = 150
+export function notifyHeadingClick() {
+  hashIsAuthoritative = true
+}
 
 export type ActiveTocSnapshot = {
   activeId: string
@@ -109,24 +117,44 @@ export function useActiveTocState({
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
+      // Scroll events trigger a re-render so the active heading updates,
+      // but do NOT reset hashIsAuthoritative. Programmatic scrolls (from
+      // scrollIntoView after a hash click) also fire scroll events, and
+      // we can't distinguish them from user scrolls by timing alone.
       const onScroll = () => {
-        // Ignore scroll events caused by scrollIntoView() after a hash click
-        if (Date.now() - lastHashChangeTime < SCROLL_SETTLE_MS) return
-        hashIsAuthoritative = false
         onStoreChange()
       }
       const onHash = () => {
         hashIsAuthoritative = true
-        lastHashChangeTime = Date.now()
         onStoreChange()
+      }
+      // User-intent signals: these events only fire from physical input,
+      // never from programmatic scrollIntoView() or scrollTo().
+      const onUserScroll = () => {
+        hashIsAuthoritative = false
+        // No need to call onStoreChange here — the scroll event that
+        // follows will trigger re-render with the updated flag.
+      }
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (!SCROLL_KEYS.has(e.key)) return
+        // Ignore scroll keys when focus is inside an input/textarea/select
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        hashIsAuthoritative = false
       }
       window.addEventListener('scroll', onScroll, { passive: true })
       window.addEventListener('hashchange', onHash)
       window.addEventListener('popstate', onHash)
+      window.addEventListener('wheel', onUserScroll, { passive: true })
+      window.addEventListener('touchstart', onUserScroll, { passive: true })
+      window.addEventListener('keydown', onKeyDown, { passive: true })
       return () => {
         window.removeEventListener('scroll', onScroll)
         window.removeEventListener('hashchange', onHash)
         window.removeEventListener('popstate', onHash)
+        window.removeEventListener('wheel', onUserScroll)
+        window.removeEventListener('touchstart', onUserScroll)
+        window.removeEventListener('keydown', onKeyDown)
       }
     },
     [headingKey],

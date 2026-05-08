@@ -394,9 +394,12 @@ test.describe("client navigation sidebar state", () => {
 
     const hashActiveHeadingId = await getActiveHeadingId();
 
-    // Wait for SCROLL_SETTLE_MS (150ms) to expire so scroll events from
-    // the earlier hashchange are no longer suppressed by the TOC hook.
-    await page.waitForTimeout(200);
+    // Dispatch a wheel event to signal user-initiated scroll intent.
+    // The TOC hook uses wheel/touchstart (not time-based settle) to
+    // distinguish user scroll from programmatic scrollIntoView().
+    await page.evaluate(() => {
+      window.dispatchEvent(new WheelEvent("wheel", { bubbles: true }));
+    });
 
     await page.evaluate(() => {
       const heading = document.getElementById("redirect-target");
@@ -415,6 +418,48 @@ test.describe("client navigation sidebar state", () => {
         throw new Error("expected scroll-driven heading state to override hash-only state");
       }
     }).toPass();
+  });
+
+  test("clicking a sidebar heading highlights it even after prior scrolling", async ({
+    page,
+  }) => {
+    test.setTimeout(40_000);
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto("/new", { waitUntil: "domcontentloaded" });
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav).toBeVisible({ timeout: 10000 });
+    await page.reload();
+    await expect(nav).toBeVisible({ timeout: 10000 });
+
+    const getActiveHeadingId = async () => {
+      return await nav.evaluate(() => {
+        return document.querySelector<HTMLAnchorElement>('a[data-heading-id][data-active="true"]')?.dataset.headingId ?? null;
+      });
+    };
+
+    // Wait for hydration — initial active heading is "redirect-target" (fallback)
+    await expect.poll(getActiveHeadingId).toBe("redirect-target");
+
+    // Scroll down with user-intent (wheel event) so scroll detection is active.
+    // The page is too short for "deep-section" to reach the 50px scroll threshold,
+    // so scroll-based detection always picks "redirect-target" at max scroll.
+    await page.evaluate(() => {
+      window.dispatchEvent(new WheelEvent("wheel", { bubbles: true }));
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+    });
+    // Active heading stays "redirect-target" via scroll detection (deep-section
+    // can't reach the threshold from scroll alone).
+    await expect.poll(getActiveHeadingId).toBe("redirect-target");
+
+    // Click "Deep section" heading in the sidebar. The onClick handler +
+    // hashchange set hashIsAuthoritative, so the clicked heading is highlighted
+    // even though scroll-based detection can't reach it.
+    const deepLink = nav.locator('a[data-heading-id="deep-section"]');
+    await expect(deepLink).toBeVisible();
+    await deepLink.click();
+
+    await expect.poll(getActiveHeadingId, { timeout: 5000 }).toBe("deep-section");
   });
 });
 
