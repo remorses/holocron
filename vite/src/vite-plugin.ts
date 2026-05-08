@@ -310,18 +310,18 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         )
       }
 
-      if (config.assistant?.enabled !== false && !process.env.HOLOCRON_API_KEY) {
+      if (config.assistant?.enabled !== false && !process.env.HOLOCRON_KEY) {
         logger.warn('')
         logger.warn(
           formatHolocronWarning(
-            `no HOLOCRON_API_KEY found — AI chat will use a temporary model with lower limits.`,
+            `no HOLOCRON_KEY found — AI chat will use a temporary model with lower limits.`,
           ),
         )
         logger.warn(
           `  Create a key: ${colors.cyan('npx @holocron.so/cli keys create --name production')}`,
         )
         logger.warn(
-          `  Then add ${colors.cyan('HOLOCRON_API_KEY=holo_xxx')} to your environment.`,
+          `  Then add ${colors.cyan('HOLOCRON_KEY=holo_xxx')} to your environment.`,
         )
         logger.warn('')
       }

@@ -57,7 +57,7 @@ keysCli
     clack.log.warn('Save this key now. It will not be shown again.')
     output.log('')
     output.log('Set it as an environment variable when deploying your docs site:')
-    output.log(`  HOLOCRON_API_KEY=${res.key}`)
+    output.log(`  HOLOCRON_KEY=${res.key}`)
   })
 
 keysCli

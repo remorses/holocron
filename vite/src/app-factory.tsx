@@ -1091,7 +1091,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // quota checks, docs.zip fetching, and AI SDK streaming.
       const chatUrl = new URL('https://preview.holocron.so/api/holocron/chat')
       const useInlineDocs = isLocalhostUrl(request.url)
-      const apiKey = process.env.HOLOCRON_API_KEY || ''
+      const apiKey = process.env.HOLOCRON_KEY || ''
       let textBuffer = ''
       const toolNames = new Map<string, string>()
 

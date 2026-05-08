@@ -10,7 +10,7 @@ const endpoint = new URL(process.env.HOLOCRON_PREVIEW_AI_CHAT_URL ?? 'https://pr
 const docsZipUrl = process.env.HOLOCRON_PREVIEW_DOCS_ZIP_URL ?? 'https://preview.holocron.so/docs.zip'
 const prompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_PROMPT ?? 'Use the bash tool to run `cat /docs/index.mdx`, then answer with the first heading.'
 const resumePrompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_RESUME_PROMPT ?? 'Using the previous tool result, answer briefly: what file did you read?'
-const apiKey = process.env.HOLOCRON_API_KEY ?? ''
+const apiKey = process.env.HOLOCRON_KEY ?? ''
 
 if (!enabled) {
   console.log('Skipping preview AI chat smoke test. Set HOLOCRON_TEST_PREVIEW_AI_CHAT=1 to run it.')
@@ -20,7 +20,7 @@ if (!enabled) {
 console.log(`Testing preview AI chat endpoint: ${endpoint.toString()}`)
 console.log(`Prompt: ${prompt}`)
 console.log(`Resume prompt: ${resumePrompt}`)
-console.log(`Auth: ${apiKey ? 'HOLOCRON_API_KEY set' : 'no HOLOCRON_API_KEY, using temporary model'}`)
+console.log(`Auth: ${apiKey ? 'HOLOCRON_KEY set' : 'no HOLOCRON_KEY, using temporary model'}`)
 
 const safeFetch = createSpiceflowFetch(endpoint.origin, {
   headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
