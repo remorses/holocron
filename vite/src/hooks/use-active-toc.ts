@@ -22,6 +22,15 @@
  * and scroll-key `keydown` events. These never fire from programmatic
  * scrollIntoView() calls, so hash priority survives the scroll-to-hash
  * animation regardless of its duration.
+ *
+ * Scrollbar drag: `wheel`/`touchstart` don't fire when dragging the browser
+ * scrollbar. To handle this, `scrollend` marks the programmatic scroll-to-hash
+ * as complete; any `scroll` event AFTER that must be user-initiated (scrollbar
+ * drag, browser extension, etc.) and resets hashIsAuthoritative.
+ *
+ * Same-hash re-click: when the URL already has the target hash, Spiceflow
+ * skips the synthetic hashchange (hash didn't change). The onClick handler
+ * dispatches a custom event so useSyncExternalStore gets a re-render signal.
  */
 
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
@@ -36,20 +45,42 @@ const ACTIVE_HEADING_OFFSET = 50
 /**
  * When true, the URL hash takes priority over scroll-based detection.
  * Set to true on hashchange or heading click, reset to false only by
- * genuine user scroll input (wheel, touch, keyboard scroll keys).
+ * genuine user scroll input (wheel, touch, keyboard scroll keys, or
+ * scrollbar drag detected via scrollend + subsequent scroll).
  */
 let hashIsAuthoritative = false
+
+/**
+ * Set to true by `scrollend` after a hash-triggered programmatic scroll
+ * finishes. The next `scroll` event after this flag is set must be from
+ * user input (scrollbar drag, browser extension, etc.) and resets
+ * hashIsAuthoritative. Cleared on any hash/click event.
+ */
+let programmaticScrollDone = false
 
 /** Keys that cause the browser to scroll the page. */
 const SCROLL_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'])
 
+/** Custom event dispatched by notifyHeadingClick to trigger re-render. */
+const HEADING_CLICK_EVENT = 'holocron:heading-click'
+
 /**
  * Call this from heading link onClick handlers as a safety net.
  * Ensures hashIsAuthoritative is set even if the synthetic hashchange
- * from Spiceflow's router is delayed or missing.
+ * from Spiceflow's router is delayed or missing (e.g. same-hash clicks
+ * where Spiceflow skips the hashchange because the hash didn't change).
+ *
+ * Skips modifier-key clicks (Cmd/Ctrl/Shift/Alt) which open in new tabs.
  */
-export function notifyHeadingClick() {
+export function notifyHeadingClick(e?: React.MouseEvent) {
+  if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) return
   hashIsAuthoritative = true
+  programmaticScrollDone = false
+  // Dispatch in rAF so the URL hash has been updated by the router
+  // before useSyncExternalStore calls getSnapshot → computeActiveId.
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event(HEADING_CLICK_EVENT))
+  })
 }
 
 export type ActiveTocSnapshot = {
@@ -117,21 +148,26 @@ export function useActiveTocState({
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
-      // Scroll events trigger a re-render so the active heading updates,
-      // but do NOT reset hashIsAuthoritative. Programmatic scrolls (from
-      // scrollIntoView after a hash click) also fire scroll events, and
-      // we can't distinguish them from user scrolls by timing alone.
       const onScroll = () => {
+        // After the programmatic scroll-to-hash finishes (scrollend fired),
+        // any new scroll event must be user-initiated (scrollbar drag,
+        // browser extension, etc.) — reset hash authority.
+        if (programmaticScrollDone) {
+          hashIsAuthoritative = false
+          programmaticScrollDone = false
+        }
         onStoreChange()
       }
       const onHash = () => {
         hashIsAuthoritative = true
+        programmaticScrollDone = false
         onStoreChange()
       }
       // User-intent signals: these events only fire from physical input,
       // never from programmatic scrollIntoView() or scrollTo().
       const onUserScroll = () => {
         hashIsAuthoritative = false
+        programmaticScrollDone = false
         // No need to call onStoreChange here — the scroll event that
         // follows will trigger re-render with the updated flag.
       }
@@ -141,17 +177,30 @@ export function useActiveTocState({
         const tag = (e.target as HTMLElement)?.tagName
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
         hashIsAuthoritative = false
+        programmaticScrollDone = false
+      }
+      // scrollend fires once after any scroll sequence (programmatic or manual)
+      // completes. When hash is authoritative, this marks the scroll-to-hash
+      // animation as finished so the next scroll event can reset the flag.
+      const onScrollEnd = () => {
+        if (hashIsAuthoritative) {
+          programmaticScrollDone = true
+        }
       }
       window.addEventListener('scroll', onScroll, { passive: true })
+      window.addEventListener('scrollend', onScrollEnd, { passive: true })
       window.addEventListener('hashchange', onHash)
       window.addEventListener('popstate', onHash)
+      window.addEventListener(HEADING_CLICK_EVENT, onHash)
       window.addEventListener('wheel', onUserScroll, { passive: true })
       window.addEventListener('touchstart', onUserScroll, { passive: true })
       window.addEventListener('keydown', onKeyDown, { passive: true })
       return () => {
         window.removeEventListener('scroll', onScroll)
+        window.removeEventListener('scrollend', onScrollEnd)
         window.removeEventListener('hashchange', onHash)
         window.removeEventListener('popstate', onHash)
+        window.removeEventListener(HEADING_CLICK_EVENT, onHash)
         window.removeEventListener('wheel', onUserScroll)
         window.removeEventListener('touchstart', onUserScroll)
         window.removeEventListener('keydown', onKeyDown)

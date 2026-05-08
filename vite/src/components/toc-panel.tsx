@@ -163,7 +163,7 @@ export function TableOfContentsPanel({
                 key={heading.slug}
                 href={`#${heading.slug}`}
                 data-active={isActive}
-                onClick={notifyHeadingClick}
+                onClick={(e) => notifyHeadingClick(e)}
                 className={cn(
                   'py-1.5 leading-snug transition-colors no-underline',
                   'hover:text-foreground',
