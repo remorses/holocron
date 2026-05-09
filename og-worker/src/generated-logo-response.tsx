@@ -1,30 +1,37 @@
 /**
  * Takumi-backed renderer for generated fallback logo PNGs.
+ *
+ * Runs inside the og-worker Cloudflare Worker, separate from the main
+ * holocron website worker. Uses WASM renderer since Node.js is not
+ * available in Cloudflare Workers.
  */
 
 import React from 'react'
-import fontDataUrl from '../assets/bagnard.otf?url&inline'
-import { DARK_LOGO_COLOR, LIGHT_LOGO_COLOR, normalizeGeneratedLogoText, type GeneratedLogoOptions } from './generated-logo.tsx'
+import fontDataBuffer from './assets/bagnard.otf'
 
-type RendererInstance =
-  | InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
-  | InstanceType<Awaited<typeof import('takumi-js/wasm')>['Renderer']>
+export type GeneratedLogoTheme = 'light' | 'dark'
+
+export type GeneratedLogoOptions = {
+  text: string
+  theme: GeneratedLogoTheme
+}
+
+const LIGHT_LOGO_COLOR = '#111111'
+const DARK_LOGO_COLOR = '#ffffff'
 
 const FONT_FAMILY = 'Bagnard'
 const FONT_WEIGHT = 400
 const FONT_SIZE = 72
+const fontData = Promise.resolve(fontDataBuffer)
 
-let cachedFontData: Promise<ArrayBuffer> | undefined
-
-function getFontData(): Promise<ArrayBuffer> {
-  cachedFontData ??= fetch(fontDataUrl).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Failed to load generated logo font: ${response.status} ${response.statusText}`)
-    }
-    return response.arrayBuffer()
-  })
-  return cachedFontData
+function normalizeGeneratedLogoText(text: string): string {
+  const normalized = text.trim().replace(/\s+/g, ' ').toLowerCase()
+  return normalized || 'documentation'
 }
+
+type RendererInstance =
+  | InstanceType<Awaited<typeof import('takumi-js/node')>['Renderer']>
+  | InstanceType<Awaited<typeof import('takumi-js/wasm')>['Renderer']>
 
 let cachedRenderer: RendererInstance | undefined
 
@@ -49,7 +56,7 @@ const fontConfig: {
   style: 'normal'
 } = {
   name: FONT_FAMILY,
-  data: getFontData,
+  data: () => fontData,
   weight: FONT_WEIGHT,
   style: 'normal',
 }
@@ -102,7 +109,7 @@ export async function createGeneratedLogoResponse(options: GeneratedLogoOptions)
     fonts: [
       {
         name: FONT_FAMILY,
-        data: getFontData,
+        data: () => fontData,
         weight: FONT_WEIGHT,
         style: 'normal',
       },

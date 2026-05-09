@@ -1,10 +1,13 @@
 /**
  * OG image renderer backed by Takumi's ImageResponse.
+ *
+ * Runs inside the og-worker Cloudflare Worker, separate from the main
+ * holocron website worker to keep the takumi WASM (~5 MiB) out of the
+ * main worker's 10 MiB bundle limit.
  */
 
 import React from 'react'
 import { ImageResponse } from 'takumi-js/response'
-export { getAbsoluteOgImageUrl, getOgPath, resolveOgIconUrl } from './og-utils.ts'
 
 export type OgImageOptions = {
   title: string

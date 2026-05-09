@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "holocron-og",
+  "main": "src/index.tsx",
+  "compatibility_date": "2026-04-14",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "rules": [
+    { "type": "Data", "globs": ["**/*.otf"], "fallthrough": true }
+  ],
+
+  "env": {
+    "preview": {
+      "name": "holocron-og-preview"
+    }
+  }
+}

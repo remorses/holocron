@@ -1,0 +1,25 @@
+{
+  "name": "og-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run",
+    "types": "wrangler types",
+    "typecheck": "tsc --noEmit",
+    "deployment": "wrangler deploy --env preview",
+    "deployment:prod": "wrangler deploy"
+  },
+  "dependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "takumi-js": "1.0.0-rc.15"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "@types/react": "^19.2.7",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.85.0"
+  }
+}
