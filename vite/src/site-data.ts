@@ -357,7 +357,7 @@ export function resolveActiveDropdownHref(site: HolocronSiteData, pageHref: stri
 }
 
 export function getResolvedLogo(site: HolocronSiteData): ResolvedLogo {
-  return resolveLogo(site.config.logo, site.config.name, site.base || '/')
+  return resolveLogo(site.config.logo, site.config.name)
 }
 
 function filterVisibleGroup(group: NavGroup): NavGroup | null {

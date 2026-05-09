@@ -46,15 +46,11 @@ import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
-import {
-  decodeGeneratedLogoText,
-  type GeneratedLogoTheme,
-} from './lib/generated-logo.tsx'
 import { SiteHead } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
-import { getAbsoluteOgImageUrl, resolveOgIconUrl } from './lib/og-utils.ts'
+import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
 import {
   buildVisibleSiteData,
@@ -633,7 +629,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       }
       const loaderData = rawLoaderData
       const bannerJsx = getBannerJsx(site, request)
-      const ogImageUrl = getAbsoluteOgImageUrl(request.url, absoluteUrlBase, loaderData.currentPageHref ?? pageHref)
+      const requestUrl = new URL(request.url)
+      const faviconUrl = site.config.favicon.light || site.config.favicon.dark
+      const ogImageUrl = buildOgImageUrl({
+        title: loaderData.currentPageTitle ?? site.config.name,
+        description: loaderData.currentPageDescription ?? site.config.description,
+        iconUrl: faviconUrl ? new URL(faviconUrl, request.url).toString() : undefined,
+        siteName: site.config.name,
+        pageLabel: `${requestUrl.host}${loaderData.currentPageHref ?? pageHref}`,
+      })
       const pageMdx = await providers.getMdxSource(slug)
       if (pageMdx === undefined) {
         throw new Error(`MDX content missing for registered page slug "${slug}"`)
@@ -950,80 +954,8 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     })
   }
 
-  // /og and /og/*
-  for (const ogRoute of new Set(['/og', withBaseRoute(site.base, '/og')])) {
-    app = app.get(ogRoute, async ({ request }: { request: Request }) => {
-      const { createOgImageResponse } = await import('./lib/og.tsx')
-      const requestUrl = new URL(request.url)
-      const iconUrl = resolveOgIconUrl(site.config, request.url)
-      const response = createOgImageResponse({
-        title: site.config.name,
-        description: site.config.description,
-        iconUrl,
-        siteName: site.config.name,
-        pageLabel: `${requestUrl.host}/`,
-      })
-      response.headers.set('cache-control', 's-maxage=3600')
-      return response
-    })
-  }
-
-  for (const ogWildcardRoute of new Set(['/og/*', withBaseRoute(site.base, '/og/*')])) {
-    app = app.get(ogWildcardRoute, async ({ request, params }: { request: Request; params: Record<string, string> }) => {
-      const { createOgImageResponse } = await import('./lib/og.tsx')
-      const requestUrl = new URL(request.url)
-      const rawSlug = params['*'] || ''
-      const slug = stripBaseFromSlug(rawSlug, site.base).replace(/^\//, '')
-      const page = await findPageBySlug({ nav: site.navigation, slug, getMdxSource: providers.getMdxSource })
-
-      if (!page) {
-        return new Response('Not found', { status: 404 })
-      }
-
-      const iconUrl = resolveOgIconUrl(site.config, request.url)
-      const response = createOgImageResponse({
-        title: page.title,
-        description: page.description ?? site.config.description,
-        iconUrl,
-        siteName: site.config.name,
-        pageLabel: `${requestUrl.host}${page.href}`,
-      })
-      response.headers.set('cache-control', 's-maxage=3600')
-      return response
-    })
-  }
-
-  // /holocron-api/logo/:theme/<text>.png
-  // Tries the hosted AI logo generator first (proxied through holocron.so to
-  // avoid CORS), falling back to the local Takumi text renderer on failure.
-  app = app.get('/holocron-api/logo/:theme/*', async ({ params }: { params: Record<string, string> }) => {
-    const theme: GeneratedLogoTheme | undefined = params.theme === 'light' || params.theme === 'dark' ? params.theme : undefined
-    if (!theme) {
-      return new Response('Not found', { status: 404 })
-    }
-
-    const text = decodeGeneratedLogoText(params['*'] || '')
-
-    // Try AI-generated logo from holocron.so (server-side fetch, no CORS)
-    try {
-      const aiRes = await fetch(`https://preview.holocron.so/api/ai-logo/${encodeURIComponent(text)}.jpeg`)
-      if (aiRes.ok) {
-        return new Response(aiRes.body, {
-          headers: {
-            'content-type': aiRes.headers.get('content-type') || 'image/jpeg',
-            'cache-control': 's-maxage=31536000, immutable',
-          },
-        })
-      }
-    } catch {
-      // AI logo unavailable — fall through to Takumi
-    }
-
-    const { createGeneratedLogoResponse } = await import('./lib/generated-logo-response.tsx')
-    const response = await createGeneratedLogoResponse({ text, theme })
-    response.headers.set('cache-control', 's-maxage=31536000, immutable')
-    return response
-  })
+  // OG image routes are handled by the og-worker at holocron.so. Generated
+  // fallback logo URLs point to website /api/ai-logo, not to takumi.
 
   // /holocron-api/chat — only registered when assistant is enabled
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
