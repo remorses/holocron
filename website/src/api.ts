@@ -33,6 +33,7 @@ const ApiKeyResponse = createSelectSchema(schema.apiKey).pick({
   id: true,
   name: true,
   prefix: true,
+  projectId: true,
   createdAt: true,
 })
 
@@ -69,12 +70,12 @@ export const apiApp = new Spiceflow()
     path: '/api/v0/keys',
     request: z.object({
       name: z.string().min(1),
-      projectId: z.string().optional().describe('Optional project ULID to scope the key to.'),
+      projectId: z.string().min(1).describe('Project ULID the key is scoped to.'),
     }),
     detail: {
       summary: 'Create API key',
       description:
-        'Creates a new `holo_xxx` API key for the caller\'s org (auto-created if needed). Optionally scoped to a project. The full key is returned only in this response; it is never stored in plain text.',
+        'Creates a new `holo_xxx` API key scoped to a project. The full key is returned only in this response; it is never stored in plain text.',
       tags: ['API Keys'],
     },
     response: {
@@ -86,27 +87,24 @@ export const apiApp = new Spiceflow()
 
       const body = await request.json()
 
-      // Validate project belongs to this org if scoped
-      if (body.projectId) {
-        const db = getDb()
-        const proj = await db.query.project.findFirst({
-          where: { projectId: body.projectId, orgId: org.id },
-          columns: { projectId: true },
-        })
-        if (!proj) {
-          throw json({ error: 'project not found in this org' }, { status: 404 })
-        }
+      // Validate project belongs to this org
+      const db = getDb()
+      const proj = await db.query.project.findFirst({
+        where: { projectId: body.projectId, orgId: org.id },
+        columns: { projectId: true },
+      })
+      if (!proj) {
+        throw json({ error: 'project not found in this org' }, { status: 404 })
       }
 
       const { fullKey, prefix } = generateApiKey()
       const hash = await hashApiKey(fullKey)
       const id = ulid()
 
-      const db = getDb()
       await db.insert(schema.apiKey).values({
         id,
         orgId: org.id,
-        projectId: body.projectId ?? null,
+        projectId: body.projectId,
         name: body.name,
         prefix,
         hash,
@@ -140,6 +138,7 @@ export const apiApp = new Spiceflow()
           id: schema.apiKey.id,
           name: schema.apiKey.name,
           prefix: schema.apiKey.prefix,
+          projectId: schema.apiKey.projectId,
           createdAt: schema.apiKey.createdAt,
         })
         .from(schema.apiKey)
@@ -200,7 +199,7 @@ export const apiApp = new Spiceflow()
       tags: ['API Keys'],
     },
     response: {
-      200: z.object({ keyId: z.string(), orgId: z.string() }),
+      200: z.object({ keyId: z.string(), orgId: z.string(), projectId: z.string() }),
       401: ErrorResponse,
     },
     async handler({ request }) {
@@ -210,18 +209,43 @@ export const apiApp = new Spiceflow()
 
       const found = await db.query.apiKey.findFirst({
         where: { hash },
-        columns: { id: true, orgId: true },
+        columns: { id: true, orgId: true, projectId: true },
       })
 
       if (!found) {
         return json({ error: 'invalid key' }, { status: 401 })
       }
 
-      return { keyId: found.id, orgId: found.orgId }
+      return { keyId: found.id, orgId: found.orgId, projectId: found.projectId }
     },
   })
 
   // ── Projects (session auth, under org) ───────────────────────────────
+
+  // List all projects for the caller's org.
+  .route({
+    method: 'GET',
+    path: '/api/v0/projects',
+    detail: {
+      summary: 'List projects',
+      description: 'Lists all projects for the caller\'s org.',
+      tags: ['Projects'],
+    },
+    response: { 200: z.object({ projects: z.array(ProjectResponse) }) },
+    async handler({ request }) {
+      const session = await requireSession(request)
+      const org = await ensureOrg(session.userId, session.user.name)
+
+      const db = getDb()
+      const projects = await db
+        .select()
+        .from(schema.project)
+        .where(orm.eq(schema.project.orgId, org.id))
+        .orderBy(orm.desc(schema.project.createdAt))
+
+      return { projects }
+    },
+  })
 
   // Called by: @holocron.so/cli create after device flow login,
   // and the /deploy server action (via actions.tsx).
@@ -266,13 +290,13 @@ export const apiApp = new Spiceflow()
   // ── Deployment registration (API key auth, called at build time) ─────
 
   // Called by the holocron vite plugin during `vite build` when HOLOCRON_KEY
-  // and HOLOCRON_PROJECT env vars are set. Registers GitHub metadata on the
-  // project record so the dashboard knows which repo this project deploys from.
+  // is set. The project is resolved from the key itself — no separate
+  // HOLOCRON_PROJECT env var needed. Registers GitHub metadata on the project
+  // record so the dashboard knows which repo this project deploys from.
   // Idempotent — safe to call on every build.
   .route({
     method: 'POST',
-    path: '/api/v0/projects/:projectId/register-deployment',
-    params: z.object({ projectId: z.string() }),
+    path: '/api/v0/register-deployment',
     request: z.object({
       githubOwner: z.string().optional(),
       githubRepo: z.string().optional(),
@@ -280,33 +304,17 @@ export const apiApp = new Spiceflow()
     detail: {
       summary: 'Register deployment',
       description:
-        'Updates a project with GitHub metadata. Authenticated via API key (Bearer holo_xxx), not session. Called automatically by the Holocron Vite plugin at build time.',
+        'Updates the key\'s project with GitHub metadata. Authenticated via API key (Bearer holo_xxx). The project is resolved from the key. Called automatically by the Holocron Vite plugin at build time.',
       tags: ['Projects'],
     },
     response: {
       200: z.object({ ok: z.boolean() }),
       401: ErrorResponse,
-      403: ErrorResponse,
     },
-    async handler({ request, params }) {
+    async handler({ request }) {
       const auth = await validateApiKey(request.headers.get('authorization'))
       if (!auth) {
         return json({ error: 'invalid or missing API key' }, { status: 401 })
-      }
-
-      // Enforce scoped keys: if the key is scoped to a specific project,
-      // it can only register deployment metadata for that project.
-      if (auth.projectId && auth.projectId !== params.projectId) {
-        return json({ error: 'key not allowed for this project' }, { status: 403 })
-      }
-
-      const db = getDb()
-      const proj = await db.query.project.findFirst({
-        where: { projectId: params.projectId, orgId: auth.orgId },
-        columns: { projectId: true },
-      })
-      if (!proj) {
-        return json({ error: 'project not found in this org' }, { status: 403 })
       }
 
       const body = await request.json()
@@ -314,9 +322,10 @@ export const apiApp = new Spiceflow()
       if (body.githubOwner) updates.githubOwner = body.githubOwner
       if (body.githubRepo) updates.githubRepo = body.githubRepo
 
+      const db = getDb()
       await db.update(schema.project)
         .set(updates)
-        .where(orm.eq(schema.project.projectId, params.projectId))
+        .where(orm.eq(schema.project.projectId, auth.projectId))
 
       return { ok: true }
     },

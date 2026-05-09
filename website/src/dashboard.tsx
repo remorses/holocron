@@ -192,8 +192,7 @@ export const dashboardApp = new Spiceflow()
     return { project }
   })
 
-  // Single project page: shows HOLOCRON_PROJECT config value, detected
-  // domains, and API keys scoped to this project.
+  // Single project page: shows detected domains and API keys for this project.
   .page('/dashboard/projects/:projectId', async ({ loaderData }) => {
     const { project } = loaderData
 
@@ -215,15 +214,6 @@ export const dashboardApp = new Spiceflow()
             </a>
           )}
         </div>
-
-        {/* Project ID for env var */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">Configuration</h2>
-          <div className="rounded-lg border border-border bg-muted/50 px-4 py-3">
-            <div className="text-xs text-muted-foreground">HOLOCRON_PROJECT</div>
-            <div className="mt-1 font-mono text-sm">{project.projectId}</div>
-          </div>
-        </section>
 
         {/* Domains */}
         <section className="flex flex-col gap-3">
@@ -372,10 +362,9 @@ export const dashboardApp = new Spiceflow()
       // Build Vercel deploy URL with prefilled env vars
       const deployUrl = new URL('https://vercel.com/new/clone')
       deployUrl.searchParams.set('repository-url', TEMPLATE_REPO_URL)
-      deployUrl.searchParams.set('env', 'HOLOCRON_KEY,HOLOCRON_PROJECT')
+      deployUrl.searchParams.set('env', 'HOLOCRON_KEY')
       deployUrl.searchParams.set('envDefaults', JSON.stringify({
         HOLOCRON_KEY: fullKey,
-        HOLOCRON_PROJECT: projectId,
       }))
       deployUrl.searchParams.set('envDescription', 'Your Holocron credentials (pre-filled, do not change)')
       deployUrl.searchParams.set('envLink', 'https://holocron.so/dashboard')
@@ -408,11 +397,11 @@ export const dashboardApp = new Spiceflow()
               <div className="text-sm text-muted-foreground">Or deploy locally:</div>
               <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
                 <CopyButton
-                  text={`HOLOCRON_KEY=${fullKey}\nHOLOCRON_PROJECT=${projectId}\n\nnpx @holocron.so/cli create`}
+                  text={`HOLOCRON_KEY=${fullKey}\n\nnpx @holocron.so/cli create`}
                   className="absolute right-2 top-2"
                 />
                 <div className="overflow-x-auto px-5 pt-12 pb-5">
-                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">{`HOLOCRON_KEY=${fullKey}\nHOLOCRON_PROJECT=${projectId}\n\nnpx @holocron.so/cli create`}</pre>
+                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">{`HOLOCRON_KEY=${fullKey}\n\nnpx @holocron.so/cli create`}</pre>
                 </div>
               </div>
             </div>

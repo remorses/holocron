@@ -123,12 +123,12 @@ export const projectDomain = s.sqliteTable('project_domain', {
   s.uniqueIndex('project_domain_host_base_path_unique').on(table.host, table.basePath),
 ])
 
-// ── API keys (tied to orgs, optionally scoped to a project) ─────────
+// ── API keys (one key per project, key alone identifies the project) ─
 
 export const apiKey = s.sqliteTable('api_key', {
   id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
   orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
-  projectId: s.text('project_id').references(() => project.projectId, { onDelete: 'set null' }),
+  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
   name: s.text('name').notNull(),
   prefix: s.text('prefix').notNull(),
   hash: s.text('hash').notNull().unique(),

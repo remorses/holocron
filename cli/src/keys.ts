@@ -1,8 +1,9 @@
 // API key management commands: create, list, delete.
 // Each command calls getApiClient() internally for typed API access.
+// Keys are always scoped to a project — the key alone identifies the project.
 
 import * as clack from '@clack/prompts'
-import { goke } from 'goke'
+import { goke, isAgent } from 'goke'
 import { stringify } from 'yaml'
 import { getApiClient } from './api-client.ts'
 
@@ -10,12 +11,18 @@ export const keysCli = goke()
 
 keysCli
   .command('keys create', 'Create a new API key')
-  .option('--name <name>', 'Name for the key (e.g. "production", "staging")')
+  .option('--name [name]', 'Name for the key (e.g. "production", "staging")')
+  .option('--project [projectId]', 'Project ID to scope the key to')
   .action(async (options, { console: output, process: proc }) => {
     const { safeFetch } = getApiClient()
+    const nonInteractive = isAgent || !process.stdin.isTTY
 
     let name = options.name
     if (!name) {
+      if (nonInteractive) {
+        console.error('Missing --name. Usage: holocron keys create --name production --project <projectId>')
+        return proc.exit(1)
+      }
       const prompted = await clack.text({
         message: 'Key name (e.g. "production", "staging"):',
         validate: (v) => !v || v.length === 0 ? 'Name is required' : undefined,
@@ -24,9 +31,40 @@ keysCli
       name = prompted
     }
 
+    let projectId = options.project
+    if (!projectId) {
+      if (nonInteractive) {
+        console.error('Missing --project. Usage: holocron keys create --name production --project <projectId>')
+        return proc.exit(1)
+      }
+
+      // Fetch projects and let user pick
+      const projectsRes = await safeFetch('/api/v0/projects')
+      if (projectsRes instanceof Error) {
+        clack.log.error(`Failed to list projects: ${projectsRes.message}`)
+        return proc.exit(1)
+      }
+
+      if (projectsRes.projects.length === 0) {
+        clack.log.error('No projects found. Create one first with `holocron projects create --name "My Docs"`.')
+        return proc.exit(1)
+      }
+
+      const selected = await clack.select({
+        message: 'Select a project:',
+        options: projectsRes.projects.map((p: { projectId: string; name: string }) => ({
+          value: p.projectId,
+          label: p.name,
+          hint: p.projectId,
+        })),
+      })
+      if (clack.isCancel(selected)) return proc.exit(1)
+      projectId = selected as string
+    }
+
     const res = await safeFetch('/api/v0/keys', {
       method: 'POST',
-      body: { name },
+      body: { name, projectId },
     })
     if (res instanceof Error) {
       clack.log.error(`Failed to create key: ${res.message}`)
@@ -35,9 +73,10 @@ keysCli
 
     clack.log.success('API key created successfully!')
     output.log('')
-    output.log(`  Name:   ${res.name}`)
-    output.log(`  Prefix: ${res.prefix}...`)
-    output.log(`  Key:    ${res.key}`)
+    output.log(`  Name:    ${res.name}`)
+    output.log(`  Project: ${projectId}`)
+    output.log(`  Prefix:  ${res.prefix}...`)
+    output.log(`  Key:     ${res.key}`)
     output.log('')
     clack.log.warn('Save this key now. It will not be shown again.')
     output.log('')
@@ -61,8 +100,9 @@ keysCli
       return
     }
 
-    const formatted = res.keys.map((k: { name: string; prefix: string; createdAt: number | null }) => ({
+    const formatted = res.keys.map((k: { name: string; prefix: string; projectId: string; createdAt: number | null }) => ({
       name: k.name,
+      project: k.projectId,
       prefix: `holo_${k.prefix}...`,
       created: k.createdAt ? new Date(k.createdAt).toISOString().slice(0, 10) : 'unknown',
     }))

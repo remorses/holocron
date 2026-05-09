@@ -77,7 +77,6 @@ interface ScaffoldOptions {
 
 interface CloudSetupResult {
   holocronKey: string
-  holocronProject: string
   baseUrl: string
 }
 
@@ -112,7 +111,7 @@ async function setupCloud(options: {
     exit(1)
   }
 
-  return { holocronKey: key.key, holocronProject: project.projectId, baseUrl }
+  return { holocronKey: key.key, baseUrl }
 }
 
 function detectPackageManager(): string {
@@ -152,7 +151,7 @@ async function scaffold(options: ScaffoldOptions) {
   let cloud: CloudSetupResult | null = null
   if (!skipAuth) {
     if (nonInteractive) {
-      clack.log.info('Non-interactive mode: skipping cloud setup. Set HOLOCRON_KEY and HOLOCRON_PROJECT manually.')
+      clack.log.info('Non-interactive mode: skipping cloud setup. Set HOLOCRON_KEY manually.')
     } else {
       const shouldAuth = await clack.confirm({
         message: 'Connect to holocron.so for AI chat and analytics?',
@@ -221,14 +220,13 @@ async function scaffold(options: ScaffoldOptions) {
   if (cloud) {
     const envLines = [
       `HOLOCRON_KEY=${cloud.holocronKey}`,
-      `HOLOCRON_PROJECT=${cloud.holocronProject}`,
     ]
     if (cloud.baseUrl !== 'https://holocron.so') {
       envLines.push(`HOLOCRON_API_URL=${cloud.baseUrl}`)
     }
     envLines.push('')
     fs.writeFileSync(path.join(targetDir, '.env'), envLines.join('\n'))
-    clack.log.success('Wrote .env with API key and project ID')
+    clack.log.success('Wrote .env with API key')
   }
 
   // 6. Write .gitignore

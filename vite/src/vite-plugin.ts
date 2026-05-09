@@ -316,7 +316,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           ),
         )
         logger.warn(
-          `  Create a key: ${colors.cyan('npx @holocron.so/cli keys create --name production')}`,
+          `  Create a key: ${colors.cyan('npx @holocron.so/cli keys create --name production --project <projectId>')}`,
         )
         logger.warn(
           `  Then add ${colors.cyan('HOLOCRON_KEY=holo_xxx')} to your environment.`,
@@ -677,15 +677,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     // Register deployment metadata with holocron.so at build time.
-    // Runs once per build when HOLOCRON_KEY + HOLOCRON_PROJECT are set.
+    // Runs once per build when HOLOCRON_KEY is set. The project is resolved
+    // from the key on the server side — no separate HOLOCRON_PROJECT needed.
     // Detects GitHub owner/repo from Vercel or GitHub Actions env vars.
     // Non-fatal — logs a warning on failure, never breaks the build.
     async buildEnd(error) {
       if (error) return
 
       const apiKey = process.env.HOLOCRON_KEY
-      const projectId = process.env.HOLOCRON_PROJECT
-      if (!apiKey || !projectId) return
+      if (!apiKey) return
 
       // Only run once (client env runs first in multi-env builds)
       if (this.environment?.name && this.environment.name !== 'client') return
@@ -717,7 +717,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
-      const url = `${apiUrl}/api/v0/projects/${encodeURIComponent(projectId)}/register-deployment`
+      const url = `${apiUrl}/api/v0/register-deployment`
 
       try {
         const res = await fetch(url, {
