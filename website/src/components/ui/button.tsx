@@ -92,7 +92,7 @@ export function CopyButton({ text, className }: { text: string; className?: stri
         className,
       )}
       onClick={() => {
-        navigator.clipboard.writeText(text)
+        void navigator.clipboard.writeText(text)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       }}

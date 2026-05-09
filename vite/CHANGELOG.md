@@ -208,7 +208,7 @@ Initial release — drop-in Mintlify replacement as a Vite plugin. Point your `v
 
 9. **OG image generation** — auto-generates Open Graph PNG images per page using Takumi. Emits `og:image` and `twitter:image` meta tags.
 
-10. **Generated fallback logo** — when no logo is configured, generates a text-based logo PNG using the Bagnard font via Takumi, with light and dark variants.
+10. **Generated fallback logo** — when no logo is configured, uses the hosted Holocron AI logo generator so fallback logos share the same Flux-based style as the dashboard.
 
 11. **Sidebar search** — Orama full-text index over all pages with keyboard navigation, wrap-around, and visual highlight. Custom placeholder text via `search.prompt` config.
 
