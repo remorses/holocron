@@ -20,3 +20,4 @@ website/openapi.json
 template/node_modules
 template/dist
 template/pnpm-lock.yaml
+.next
