@@ -3,7 +3,7 @@ title: Holocron
 description: Mintlify drop-in open source replacement as a Vite plugin. Use it to create documentation websites.
 ---
 
-## icons
+## Icons
 
 The default icon library is **Font Awesome** (`fontawesome`). To use Lucide icons instead, set `"icons": { "library": "lucide" }` in `docs.json`. Icon names like `home`, `zap`, `file-text`, `panel-left` are Lucide names and won't resolve with the default Font Awesome library.
 
