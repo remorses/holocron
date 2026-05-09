@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
 import { aiLogoApp } from './ai-logo.ts'
+import { ogProxyApp } from './og-proxy.ts'
 import { dashboardApp } from './dashboard.tsx'
 import { approveDevice, denyDevice } from './actions.tsx'
 import { getAuth, getSession, requireSession } from './db.ts'
@@ -263,6 +264,7 @@ export const app = new Spiceflow()
   .use(dashboardApp)
   .use(apiApp)
   .use(aiLogoApp)
+  .use(ogProxyApp)
   .use(schemaApp)
   .use(holocronApp)
 
