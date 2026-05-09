@@ -92,17 +92,9 @@ async function setupCloud(options: {
   const { accessToken } = await loginWithDeviceFlow({ baseUrl, exit })
   const { safeFetch } = createApiClient(baseUrl, accessToken)
 
-  // 2. Ensure org
-  const org = await safeFetch('/api/v0/orgs/ensure-default', { method: 'POST' })
-  if (org instanceof Error) {
-    clack.log.error(`Failed to create org: ${org.message}`)
-    exit(1)
-  }
-
-  // 3. Create project (no git metadata — cwd may be a parent repo)
-  const project = await safeFetch('/api/v0/orgs/:orgId/projects', {
+  // 2. Create project (org auto-created server-side if needed)
+  const project = await safeFetch('/api/v0/projects', {
     method: 'POST',
-    params: { orgId: org.id },
     body: { name: projectName },
   })
   if (project instanceof Error) {
@@ -110,10 +102,9 @@ async function setupCloud(options: {
     exit(1)
   }
 
-  // 4. Create API key scoped to this project
-  const key = await safeFetch('/api/v0/orgs/:orgId/keys', {
+  // 3. Create API key scoped to this project
+  const key = await safeFetch('/api/v0/keys', {
     method: 'POST',
-    params: { orgId: org.id },
     body: { name: 'default', projectId: project.projectId },
   })
   if (key instanceof Error) {

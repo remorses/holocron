@@ -134,7 +134,7 @@ export async function ensureOrg(userId: string, userName: string): Promise<{ id:
 
 // ── API key validation ──────────────────────────────────────────────
 
-export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string } | null> {
+export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string | null } | null> {
   if (!authHeader) return null
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
   if (!token.startsWith('holo_')) return null
@@ -143,11 +143,11 @@ export async function validateApiKey(authHeader: string | null): Promise<{ orgId
   const db = getDb()
   const found = await db.query.apiKey.findFirst({
     where: { hash },
-    columns: { id: true, orgId: true },
+    columns: { id: true, orgId: true, projectId: true },
   })
   if (!found) return null
 
-  return { orgId: found.orgId, keyId: found.id }
+  return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
 }
 
 

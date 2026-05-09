@@ -340,6 +340,7 @@ export const dashboardApp = new Spiceflow()
       // Auto-create project + API key if not already in URL
       if (!projectId || !fullKey) {
         const org = await ensureOrg(session.userId, session.user.name)
+        const db = getDb()
 
         projectId = ulid()
         const generated = generateApiKey()

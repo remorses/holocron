@@ -5,27 +5,13 @@ import * as clack from '@clack/prompts'
 import { goke } from 'goke'
 import { stringify } from 'yaml'
 import { getApiClient } from './api-client.ts'
-import { loadConfig, updateConfig } from './config.ts'
 
 export const keysCli = goke()
-
-/** Ensure the user has an org, caching the orgId in config. */
-async function ensureOrg(): Promise<string> {
-  const config = loadConfig()
-  if (config.orgId) return config.orgId
-
-  const { safeFetch } = getApiClient()
-  const res = await safeFetch('/api/v0/orgs/ensure-default', { method: 'POST' })
-  if (res instanceof Error) throw res
-  updateConfig({ orgId: res.id })
-  return res.id
-}
 
 keysCli
   .command('keys create', 'Create a new API key')
   .option('--name <name>', 'Name for the key (e.g. "production", "staging")')
   .action(async (options, { console: output, process: proc }) => {
-    const orgId = await ensureOrg()
     const { safeFetch } = getApiClient()
 
     let name = options.name
@@ -38,9 +24,8 @@ keysCli
       name = prompted
     }
 
-    const res = await safeFetch('/api/v0/orgs/:orgId/keys', {
+    const res = await safeFetch('/api/v0/keys', {
       method: 'POST',
-      params: { orgId },
       body: { name },
     })
     if (res instanceof Error) {
@@ -63,12 +48,9 @@ keysCli
 keysCli
   .command('keys list', 'List all API keys')
   .action(async (_options, { console: output, process: proc }) => {
-    const orgId = await ensureOrg()
     const { safeFetch } = getApiClient()
 
-    const res = await safeFetch('/api/v0/orgs/:orgId/keys', {
-      params: { orgId },
-    })
+    const res = await safeFetch('/api/v0/keys')
     if (res instanceof Error) {
       clack.log.error(`Failed to list keys: ${res.message}`)
       return proc.exit(1)
@@ -91,7 +73,6 @@ keysCli
 keysCli
   .command('keys delete <keyId>', 'Delete an API key by ID')
   .action(async (keyId, _options, { console: output, process: proc }) => {
-    const orgId = await ensureOrg()
     const { safeFetch } = getApiClient()
 
     const confirmed = await clack.confirm({
@@ -102,9 +83,9 @@ keysCli
       return
     }
 
-    const res = await safeFetch('/api/v0/orgs/:orgId/keys/:id', {
+    const res = await safeFetch('/api/v0/keys/:id', {
       method: 'DELETE',
-      params: { orgId, id: keyId },
+      params: { id: keyId },
     })
     if (res instanceof Error) {
       clack.log.error(`Failed to delete key: ${res.message}`)

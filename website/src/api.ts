@@ -294,6 +294,12 @@ export const apiApp = new Spiceflow()
         return json({ error: 'invalid or missing API key' }, { status: 401 })
       }
 
+      // Enforce scoped keys: if the key is scoped to a specific project,
+      // it can only register deployment metadata for that project.
+      if (auth.projectId && auth.projectId !== params.projectId) {
+        return json({ error: 'key not allowed for this project' }, { status: 403 })
+      }
+
       const db = getDb()
       const proj = await db.query.project.findFirst({
         where: { projectId: params.projectId, orgId: auth.orgId },

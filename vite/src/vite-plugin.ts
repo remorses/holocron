@@ -680,7 +680,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     // Runs once per build when HOLOCRON_KEY + HOLOCRON_PROJECT are set.
     // Detects GitHub owner/repo from Vercel or GitHub Actions env vars.
     // Non-fatal — logs a warning on failure, never breaks the build.
-    async buildEnd() {
+    async buildEnd(error) {
+      if (error) return
+
       const apiKey = process.env.HOLOCRON_KEY
       const projectId = process.env.HOLOCRON_PROJECT
       if (!apiKey || !projectId) return
