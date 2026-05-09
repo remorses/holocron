@@ -1,8 +1,14 @@
 {
   "name": "@holocron.so/cli",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "description": "CLI for Holocron: manage API keys and authenticate with holocron.so",
-  "keywords": ["cli", "holocron", "docs", "documentation", "api-keys"],
+  "keywords": [
+    "cli",
+    "holocron",
+    "docs",
+    "documentation",
+    "api-keys"
+  ],
   "homepage": "https://github.com/remorses/holocron",
   "bugs": "https://github.com/remorses/holocron/issues",
   "license": "MIT",
@@ -12,8 +18,13 @@
     "url": "https://github.com/remorses/holocron",
     "directory": "cli"
   },
-  "bin": "dist/bin.js",
-  "files": ["src", "dist"],
+  "bin": {
+    "holocron": "dist/bin.js"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/cli.js",
   "types": "./dist/cli.d.ts",
@@ -33,15 +44,15 @@
     }
   },
   "scripts": {
-    "build": "tsc && chmod +x dist/bin.js",
+    "build": "tsc && chmod +x dist/bin.js && tsx scripts/copy-template.ts",
     "prepublishOnly": "rimraf dist \"*.tsbuildinfo\" && pnpm build",
     "cli": "tsx src/bin",
     "typecheck": "tsc -b"
   },
   "dependencies": {
     "@clack/prompts": "^1.0.0",
-    "goke": "^6.9.0",
-    "spiceflow": "1.20.0-rsc.1",
+    "goke": "^6.10.0",
+    "spiceflow": "1.24.0-rsc.0",
     "string-dedent": "^3.0.2",
     "yaml": "^2.8.0",
     "zod": "latest"
@@ -49,6 +60,7 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "rimraf": "^6.0.1",
+    "tsx": "^4.21.0",
     "website": "workspace:^"
   }
 }
