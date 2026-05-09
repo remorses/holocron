@@ -18,13 +18,13 @@ Only pages listed in `docs.json` navigation appear in the sidebar. Creating an M
 
 ## Page slugs
 
-The slug is the file path relative to the project root, without the extension:
+The slug is the file path relative to `pagesDir` (e.g. `src/`), without the extension:
 
 | File path | Slug | URL |
 |-----------|------|-----|
-| `index.mdx` | `index` | `/` |
-| `quickstart.mdx` | `quickstart` | `/quickstart` |
-| `guides/auth.mdx` | `guides/auth` | `/guides/auth` |
+| `src/index.mdx` | `index` | `/` |
+| `src/quickstart.mdx` | `quickstart` | `/quickstart` |
+| `src/guides/auth.mdx` | `guides/auth` | `/guides/auth` |
 
 Reference these slugs in your `docs.json`:
 

@@ -31,7 +31,7 @@ icon: zap
     import { holocron } from '@holocron.so/vite'
 
     export default defineConfig({
-      plugins: [holocron()],
+      plugins: [holocron({ pagesDir: './src' })],
     })
     ```
   </Step>
@@ -54,7 +54,7 @@ icon: zap
   </Step>
 
   <Step title='Write your first page' icon='pencil'>
-    Create an `index.mdx` file at the project root:
+    Create an `index.mdx` file in the `src/` directory:
 
     ```mdx
     ---
@@ -95,11 +95,13 @@ A minimal Holocron project looks like this:
 
 ```
 my-docs/
-├── index.mdx          # your pages
+├── src/
+│   ├── index.mdx      # your pages
+│   └── quickstart.mdx
 ├── docs.json          # site config and navigation
-├── vite.config.ts     # just the holocron() plugin
+├── vite.config.ts     # holocron({ pagesDir: './src' })
 ├── package.json
 └── public/            # static assets (logos, images)
 ```
 
-By default, Holocron looks for MDX files relative to the project root. You can change this with the `pagesDir` option in the plugin config.
+Set `pagesDir` in the plugin config to tell Holocron where your MDX files live. `'./src'` keeps content separate from config and build artifacts.

@@ -3,5 +3,5 @@ import { holocron } from '@holocron.so/vite'
 
 export default defineConfig({
   clearScreen: false,
-  plugins: [holocron()],
+  plugins: [holocron({ pagesDir: './src' })],
 })
