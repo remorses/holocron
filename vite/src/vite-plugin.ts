@@ -675,6 +675,73 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       return this.environment.name === 'client' ? clientHotModules : []
     },
+
+    // Register deployment metadata with holocron.so at build time.
+    // Runs once per build when HOLOCRON_KEY + HOLOCRON_PROJECT are set.
+    // Detects GitHub owner/repo from Vercel or GitHub Actions env vars.
+    // Non-fatal — logs a warning on failure, never breaks the build.
+    async buildEnd() {
+      const apiKey = process.env.HOLOCRON_KEY
+      const projectId = process.env.HOLOCRON_PROJECT
+      if (!apiKey || !projectId) return
+
+      // Only run once (client env runs first in multi-env builds)
+      if (this.environment?.name && this.environment.name !== 'client') return
+
+      let githubOwner: string | undefined
+      let githubRepo: string | undefined
+
+      // Vercel: https://vercel.com/docs/projects/environment-variables/system-environment-variables
+      if (process.env.VERCEL_GIT_REPO_OWNER && process.env.VERCEL_GIT_REPO_SLUG) {
+        githubOwner = process.env.VERCEL_GIT_REPO_OWNER
+        githubRepo = process.env.VERCEL_GIT_REPO_SLUG
+      }
+      // GitHub Actions: GITHUB_REPOSITORY is "owner/repo"
+      else if (process.env.GITHUB_REPOSITORY) {
+        const parts = process.env.GITHUB_REPOSITORY.split('/')
+        if (parts.length === 2) {
+          githubOwner = parts[0]
+          githubRepo = parts[1]
+        }
+      }
+
+      if (!githubOwner || !githubRepo) {
+        logger.info(
+          formatHolocronStep({
+            message: 'skipping deployment registration (no GitHub env vars detected)',
+          }),
+        )
+        return
+      }
+
+      const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
+      const url = `${apiUrl}/api/v0/projects/${encodeURIComponent(projectId)}/register-deployment`
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({ githubOwner, githubRepo }),
+        })
+        if (res.ok) {
+          logger.info(
+            formatHolocronSuccess(`registered deployment: ${githubOwner}/${githubRepo}`),
+          )
+        } else {
+          const text = await res.text().catch(() => '')
+          logger.warn(
+            formatHolocronWarning(`deployment registration failed (${res.status}): ${text}`),
+          )
+        }
+      } catch (err) {
+        logger.warn(
+          formatHolocronWarning(`deployment registration request failed: ${err}`),
+        )
+      }
+    },
   }
 
   // Keep `@holocron.so/vite/*` inside the RSC/SSR transform pipeline so

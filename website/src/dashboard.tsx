@@ -12,9 +12,9 @@
 import { Spiceflow, redirect, json } from 'spiceflow'
 import { Link } from 'spiceflow/react'
 import { z } from 'zod'
-import { getDb, getSession, requireSession, requireOrgMember, generateApiKey, hashApiKey } from './db.ts'
+import { getDb, getSession, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
 import * as schema from 'db/schema'
-import * as orm from 'drizzle-orm'
+
 import { ulid } from 'ulid'
 import { Button, CopyButton } from './components/ui/button.tsx'
 
@@ -339,23 +339,7 @@ export const dashboardApp = new Spiceflow()
 
       // Auto-create project + API key if not already in URL
       if (!projectId || !fullKey) {
-        const db = getDb()
-        let membership = await db.query.orgMember.findFirst({
-          where: { userId: session.userId },
-          with: { org: true },
-        })
-        if (!membership?.org) {
-          const orgId = ulid()
-          await db.batch([
-            db.insert(schema.org).values({ id: orgId, name: session.user.name }),
-            db.insert(schema.orgMember).values({ orgId, userId: session.userId, role: 'admin' }),
-          ])
-          membership = await db.query.orgMember.findFirst({
-            where: { userId: session.userId },
-            with: { org: true },
-          })
-        }
-        const org = membership!.org!
+        const org = await ensureOrg(session.userId, session.user.name)
 
         projectId = ulid()
         const generated = generateApiKey()
@@ -382,9 +366,6 @@ export const dashboardApp = new Spiceflow()
       }
 
       // Build Vercel deploy URL with prefilled env vars
-      const callbackUrl = new URL(DEPLOY_REDIRECT_URL)
-      callbackUrl.searchParams.set('holocronProjectId', projectId)
-
       const deployUrl = new URL('https://vercel.com/new/clone')
       deployUrl.searchParams.set('repository-url', TEMPLATE_REPO_URL)
       deployUrl.searchParams.set('env', 'HOLOCRON_KEY,HOLOCRON_PROJECT')
@@ -394,7 +375,7 @@ export const dashboardApp = new Spiceflow()
       }))
       deployUrl.searchParams.set('envDescription', 'Your Holocron credentials (pre-filled, do not change)')
       deployUrl.searchParams.set('envLink', 'https://holocron.so/dashboard')
-      deployUrl.searchParams.set('redirect-url', callbackUrl.toString())
+      deployUrl.searchParams.set('redirect-url', DEPLOY_REDIRECT_URL)
       deployUrl.searchParams.set('project-name', 'my-docs')
 
       return (
@@ -437,50 +418,20 @@ export const dashboardApp = new Spiceflow()
     },
   })
 
-  // Called when: Vercel redirects back after a successful deploy.
-  // Vercel appends query params: deployment-url, repository-url, project-name.
-  // We also pass holocronProjectId through the redirect-url so we can
-  // associate the github repo with the correct project (not "most recent").
+  // Vercel redirects here after a successful deploy.
+  // GitHub metadata is now registered at build time by the Vite plugin
+  // (POST /api/v0/projects/:projectId/register-deployment), so this page
+  // just shows a success message with links.
   .page({
     path: '/dashboard/deploy/callback',
     query: z.object({
-      holocronProjectId: z.string().optional(),
       'project-name': z.string().optional(),
       'deployment-url': z.string().optional(),
-      'repository-url': z.string().optional(),
     }),
     handler: async ({ request, query }) => {
-      const session = await requireSession(request)
+      await requireSession(request)
 
       const deploymentUrl = query['deployment-url']
-      const repoUrl = query['repository-url']
-      const projectId = query.holocronProjectId
-
-      // Associate github repo with the specific project (not "most recent")
-      if (repoUrl && projectId) {
-        const db = getDb()
-        const membership = await db.query.orgMember.findFirst({
-          where: { userId: session.userId },
-        })
-        if (membership) {
-          const match = repoUrl.match(/github\.com\/([^/]+)\/([^/?#]+)/)
-          if (match) {
-            const githubRepo = match[2]!.replace(/\.git$/, '')
-            await db.update(schema.project)
-              .set({
-                githubOwner: match[1],
-                githubRepo,
-                updatedAt: Date.now(),
-              })
-              .where(
-                orm.and(
-                  orm.eq(schema.project.projectId, projectId),
-                  orm.eq(schema.project.orgId, membership.orgId),
-                ),
-              )
-          }
-        }
-      }
 
       return (
         <div className="flex flex-col items-center gap-6 py-16">

@@ -110,4 +110,44 @@ export async function requireOrgMember(userId: string, orgId: string) {
   return member
 }
 
+// ── Org helpers ─────────────────────────────────────────────────────
+
+/** Get or create the user's org. Idempotent. */
+export async function ensureOrg(userId: string, userName: string): Promise<{ id: string; name: string }> {
+  const db = getDb()
+  const existing = await db.query.orgMember.findFirst({
+    where: { userId },
+    with: { org: true },
+  })
+  if (existing?.org) {
+    return { id: existing.org.id, name: existing.org.name }
+  }
+
+  const { ulid } = await import('ulid')
+  const orgId = ulid()
+  await db.batch([
+    db.insert(schema.org).values({ id: orgId, name: userName }),
+    db.insert(schema.orgMember).values({ orgId, userId, role: 'admin' }),
+  ])
+  return { id: orgId, name: userName }
+}
+
+// ── API key validation ──────────────────────────────────────────────
+
+export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string } | null> {
+  if (!authHeader) return null
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
+  if (!token.startsWith('holo_')) return null
+
+  const hash = await hashApiKey(token)
+  const db = getDb()
+  const found = await db.query.apiKey.findFirst({
+    where: { hash },
+    columns: { id: true, orgId: true },
+  })
+  if (!found) return null
+
+  return { orgId: found.orgId, keyId: found.id }
+}
+
 
