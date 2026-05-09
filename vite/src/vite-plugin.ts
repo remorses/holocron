@@ -520,11 +520,22 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             `export default __userEntry.default`,
           ].filter(Boolean).join('\n')
         }
+        // Guard listen() with import.meta.main so the built output can be
+        // imported by another framework (e.g. Next.js catch-all route) without
+        // starting a second server. The process.argv[1] fallback covers
+        // Node < 22.18 where import.meta.main doesn't exist yet.
         return [
           `import { app } from '@holocron.so/vite/src/app'`,
+          `import { fileURLToPath } from 'node:url'`,
+          `import { realpathSync } from 'node:fs'`,
           cssImportLine,
           `export { app }`,
-          `app.listen(Number(process.env.PORT || 3000))`,
+          `const __isMain = typeof import.meta.main === 'boolean'`,
+          `  ? import.meta.main`,
+          `  : typeof process !== 'undefined' && process.argv[1]`,
+          `    ? fileURLToPath(import.meta.url) === realpathSync(process.argv[1])`,
+          `    : true`,
+          `if (__isMain) app.listen(Number(process.env.PORT || 3000))`,
         ].filter(Boolean).join('\n')
       }
     },
