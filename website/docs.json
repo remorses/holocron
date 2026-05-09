@@ -15,8 +15,8 @@
         ],
         "primary": {
             "type": "button",
-            "label": "Components",
-            "href": "/components"
+            "label": "Get Started",
+            "href": "/dashboard"
         }
     },
     "navigation": {

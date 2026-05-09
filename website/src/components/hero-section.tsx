@@ -71,7 +71,7 @@ export function HeroSection() {
         {/* CTAs */}
         <div className='flex gap-3 mt-2 flex-wrap justify-center'>
           <Button asChild size='lg' className='no-underline'>
-            <Link href='/components'>Get Started</Link>
+            <Link href='/dashboard'>Get Started</Link>
           </Button>
           <Button asChild variant='outline' size='lg' className='no-underline'>
             <Link href='https://github.com/remorses/holocron' target='_blank' rel='noopener noreferrer'>
