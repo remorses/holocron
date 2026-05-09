@@ -145,7 +145,6 @@ export async function validateApiKey(authHeader: string | null): Promise<{ orgId
   const db = getDb()
   const found = await db.query.apiKey.findFirst({
     where: { hash },
-    columns: { id: true, orgId: true, projectId: true },
   })
   if (!found) return null
 

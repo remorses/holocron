@@ -91,7 +91,6 @@ export const apiApp = new Spiceflow()
       const db = getDb()
       const proj = await db.query.project.findFirst({
         where: { projectId: body.projectId, orgId: org.id },
-        columns: { projectId: true },
       })
       if (!proj) {
         throw json({ error: 'project not found in this org' }, { status: 404 })
@@ -135,7 +134,6 @@ export const apiApp = new Spiceflow()
       const db = getDb()
       const keys = await db.query.apiKey.findMany({
         where: { orgId: org.id },
-        columns: { id: true, name: true, prefix: true, projectId: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       })
 
@@ -203,7 +201,6 @@ export const apiApp = new Spiceflow()
 
       const found = await db.query.apiKey.findFirst({
         where: { hash },
-        columns: { id: true, orgId: true, projectId: true },
       })
 
       if (!found) {
