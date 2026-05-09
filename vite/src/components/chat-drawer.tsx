@@ -55,8 +55,10 @@ function ChatDrawerInner() {
   const messages = chatState((s) => s.messages)
   const errorMessage = chatState((s) => s.errorMessage)
   const draftText = chatState((s) => s.draftText)
-  const { currentPageHref } = useHolocronData()
+  const { currentPageHref, site } = useHolocronData()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  // Prefix API calls with the Vite base path so they work when mounted at e.g. /docs
+  const basePath = site.base === '/' ? '' : `/${site.base.replace(/^\/+|\/+$/g, '')}`
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -87,7 +89,7 @@ function ChatDrawerInner() {
       setTimeout(scrollToBottom, 0)
 
       try {
-        const response = await fetch('/holocron-api/chat', {
+        const response = await fetch(`${basePath}/holocron-api/chat`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
@@ -141,7 +143,7 @@ function ChatDrawerInner() {
         })
       }
     },
-    [currentPageHref, scrollToBottom],
+    [currentPageHref, basePath, scrollToBottom],
   )
 
   // ── Stop ────────────────────────────────────────────────────────
