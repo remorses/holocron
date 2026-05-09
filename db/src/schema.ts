@@ -1,6 +1,7 @@
 // Schema for the Holocron D1 database.
-// Contains BetterAuth core tables for auth (Google social login, device flow)
-// and the org/member hierarchy for future Stripe subscription billing.
+// Contains BetterAuth core tables for auth (Google social login, device flow),
+// the org/member hierarchy, project tracking for deployed docs sites, and
+// API keys for authenticating vite plugin ↔ holocron.so gateway calls.
 
 import { defineRelations } from 'drizzle-orm'
 import * as s from 'drizzle-orm/sqlite-core'
@@ -91,17 +92,50 @@ export const orgMember = s.sqliteTable('org_member', {
   s.uniqueIndex('org_member_org_id_user_id_unique').on(table.orgId, table.userId),
 ])
 
-// ── API keys (tied to orgs, used to authenticate deployed docs sites) ──
+// ── Projects (one docs site = one project, tied to an org) ──────────
+
+export const project = s.sqliteTable('project', {
+  projectId: s.text('project_id').primaryKey().notNull().$defaultFn(() => ulid()),
+  orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
+  name: s.text('name').notNull(),
+  githubOwner: s.text('github_owner'),
+  githubRepo: s.text('github_repo'),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+  updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  s.index('project_org_id_idx').on(table.orgId),
+])
+
+export const projectDomain = s.sqliteTable('project_domain', {
+  projectDomainId: s.text('project_domain_id').primaryKey().notNull().$defaultFn(() => ulid()),
+  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
+  host: s.text('host').notNull(),
+  basePath: s.text('base_path').notNull().default('/'),
+  platform: s.text('platform', { enum: ['vercel', 'cloudflare', 'detected'] }).notNull().default('detected'),
+  environment: s.text('environment', { enum: ['preview', 'production'] }).notNull().default('production'),
+  githubBranch: s.text('github_branch'),
+  firstSeenAt: epochMs('first_seen_at').$defaultFn(() => Date.now()),
+  lastSeenAt: epochMs('last_seen_at').$defaultFn(() => Date.now()),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+  updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  s.index('project_domain_project_id_idx').on(table.projectId),
+  s.uniqueIndex('project_domain_host_base_path_unique').on(table.host, table.basePath),
+])
+
+// ── API keys (tied to orgs, optionally scoped to a project) ─────────
 
 export const apiKey = s.sqliteTable('api_key', {
   id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
   orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
+  projectId: s.text('project_id').references(() => project.projectId, { onDelete: 'set null' }),
   name: s.text('name').notNull(),
   prefix: s.text('prefix').notNull(),
   hash: s.text('hash').notNull().unique(),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
   s.index('api_key_org_id_idx').on(table.orgId),
+  s.index('api_key_project_id_idx').on(table.projectId),
 ])
 
 // ── Device flow (BetterAuth device authorization plugin) ────────────
@@ -124,7 +158,7 @@ export const deviceCode = s.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, apiKey, deviceCode },
+  { user, session, account, verification, org, orgMember, apiKey, deviceCode, project, projectDomain },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -144,6 +178,7 @@ export const relations = defineRelations(
     org: {
       members: r.many.orgMember(),
       keys: r.many.apiKey(),
+      projects: r.many.project(),
       users: r.many.user({
         from: r.org.id.through(r.orgMember.orgId),
         to: r.user.id.through(r.orgMember.userId),
@@ -155,9 +190,18 @@ export const relations = defineRelations(
     },
     apiKey: {
       org: r.one.org({ from: r.apiKey.orgId, to: r.org.id }),
+      project: r.one.project({ from: r.apiKey.projectId, to: r.project.projectId }),
     },
     deviceCode: {
       user: r.one.user({ from: r.deviceCode.userId, to: r.user.id }),
+    },
+    project: {
+      org: r.one.org({ from: r.project.orgId, to: r.org.id }),
+      domains: r.many.projectDomain(),
+      keys: r.many.apiKey(),
+    },
+    projectDomain: {
+      project: r.one.project({ from: r.projectDomain.projectId, to: r.project.projectId }),
     },
   }),
 )
