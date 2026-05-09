@@ -30,7 +30,10 @@ export const dashboardApp = new Spiceflow()
   // session cookie. Loads the user's org for the layout header.
   .loader('/dashboard/*', async ({ request }) => {
     const session = await getSession(request)
-    if (!session) throw redirect('/login?callbackURL=/dashboard')
+    if (!session) {
+      const returnTo = request.parsedUrl.pathname + (request.parsedUrl.search || '')
+      throw redirect(`/login?callbackURL=${encodeURIComponent(returnTo)}`)
+    }
 
     const db = getDb()
     const membership = await db.query.orgMember.findFirst({

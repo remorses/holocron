@@ -12,8 +12,6 @@ export interface CliConfig {
   sessionToken?: string
   /** Website base URL */
   baseUrl?: string
-  /** Cached default org id */
-  orgId?: string
 }
 
 export function loadConfig(): CliConfig {

@@ -99,20 +99,11 @@ export async function requireSession(request: RequestHeaders): Promise<Session> 
   return session
 }
 
-export async function requireOrgMember(userId: string, orgId: string) {
-  const db = getDb()
-  const member = await db.query.orgMember.findFirst({
-    where: { orgId, userId },
-  })
-  if (!member) {
-    throw json({ error: 'forbidden' }, { status: 403 })
-  }
-  return member
-}
-
 // ── Org helpers ─────────────────────────────────────────────────────
 
-/** Get or create the user's org. Idempotent. */
+/** Get or create the user's org. Idempotent and race-safe:
+ *  if two concurrent requests both try to create, the loser catches
+ *  the unique constraint error and re-reads the winner's row. */
 export async function ensureOrg(userId: string, userName: string): Promise<{ id: string; name: string }> {
   const db = getDb()
   const existing = await db.query.orgMember.findFirst({
@@ -125,16 +116,27 @@ export async function ensureOrg(userId: string, userName: string): Promise<{ id:
 
   const { ulid } = await import('ulid')
   const orgId = ulid()
-  await db.batch([
-    db.insert(schema.org).values({ id: orgId, name: userName }),
-    db.insert(schema.orgMember).values({ orgId, userId, role: 'admin' }),
-  ])
-  return { id: orgId, name: userName }
+  try {
+    await db.batch([
+      db.insert(schema.org).values({ id: orgId, name: userName }),
+      db.insert(schema.orgMember).values({ orgId, userId, role: 'admin' }),
+    ])
+    return { id: orgId, name: userName }
+  } catch (err) {
+    // Race: another request already created the org for this user.
+    // Re-read the winning row.
+    const winner = await db.query.orgMember.findFirst({
+      where: { userId },
+      with: { org: true },
+    })
+    if (winner?.org) return { id: winner.org.id, name: winner.org.name }
+    throw err
+  }
 }
 
 // ── API key validation ──────────────────────────────────────────────
 
-export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string | null } | null> {
+export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string } | null> {
   if (!authHeader) return null
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
   if (!token.startsWith('holo_')) return null
