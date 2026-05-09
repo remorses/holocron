@@ -62,8 +62,8 @@
     "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
   },
   "dependencies": {
-    "@holocron.so/cli": "workspace:^",
     "@fastify/deepmerge": "^3.2.1",
+    "@holocron.so/cli": "workspace:^",
     "@iconify-json/fa6-brands": "^1.2.6",
     "@iconify-json/fa6-regular": "^1.2.4",
     "@iconify-json/fa6-solid": "^1.2.4",
@@ -114,7 +114,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "sharp": "^0.34.5",
-    "spiceflow": "1.24.0-rsc.0",
+    "spiceflow": "1.24.2-rsc.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.10",
     "vitest": "^4.1.4"

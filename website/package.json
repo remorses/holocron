@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm db:migrate:local && vite dev",
+    "dev": "pnpm db:migrate:local && sigillo run -- vite dev",
     "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
     "build": "pnpm generate-openapi && vite build && tsc",
     "start": "node dist/rsc/index.js",
@@ -36,7 +36,7 @@
     "radix-ui": "latest",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "spiceflow": "1.24.0-rsc.0",
+    "spiceflow": "1.24.2-rsc.0",
     "string-dedent": "^3.0.2",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
@@ -53,6 +53,6 @@
     "@vitejs/plugin-react": "latest",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "wrangler": "^4.82.2"
+    "wrangler": "^4.90.0"
   }
 }
