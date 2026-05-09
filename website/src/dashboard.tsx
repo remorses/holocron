@@ -57,13 +57,13 @@ export const dashboardApp = new Spiceflow()
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
             <Link href="/dashboard" className="no-underline flex items-center shrink-0">
               <img
-                src="/holocron-api/logo/light/holocron.png"
+                src="/api/ai-logo/holocron.jpeg"
                 alt="Holocron"
                 className="dark:hidden"
                 style={{ height: 30, width: 'auto', mixBlendMode: 'multiply' }}
               />
               <img
-                src="/holocron-api/logo/light/holocron.png"
+                src="/api/ai-logo/holocron.jpeg"
                 alt="Holocron"
                 className="hidden dark:block"
                 style={{ height: 30, width: 'auto', mixBlendMode: 'screen', filter: 'invert(1)' }}
