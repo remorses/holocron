@@ -252,7 +252,7 @@ export const dashboardApp = new Spiceflow()
           <h2 className="text-lg font-medium">API Keys</h2>
           {project.keys.length === 0 ? (
             <div className="text-sm text-muted-foreground">
-              No API keys scoped to this project. Use org-level keys or create one via the CLI.
+              No API keys for this project. Create one with the CLI: <code className="font-mono text-xs">holocron keys create --project {project.projectId}</code>
             </div>
           ) : (
             <div className="rounded-lg border border-border">

@@ -11,8 +11,9 @@ CREATE TABLE `__new_api_key` (
 	CONSTRAINT `fk_api_key_project_id_project_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project`(`project_id`) ON DELETE CASCADE
 );
 --> statement-breakpoint
+UPDATE `api_key` SET `project_id` = (SELECT p.`project_id` FROM `project` p WHERE p.`org_id` = `api_key`.`org_id` ORDER BY p.`created_at` ASC LIMIT 1) WHERE `project_id` IS NULL AND (SELECT COUNT(*) FROM `project` p WHERE p.`org_id` = `api_key`.`org_id`) = 1;--> statement-breakpoint
 DELETE FROM `api_key` WHERE `project_id` IS NULL;--> statement-breakpoint
-INSERT INTO `__new_api_key`(`id`, `org_id`, `project_id`, `name`, `prefix`, `hash`, `created_at`) SELECT `id`, `org_id`, `project_id`, `name`, `prefix`, `hash`, `created_at` FROM `api_key`;--> statement-breakpoint
+INSERT INTO `__new_api_key`(`id`, `org_id`, `project_id`, `name`, `prefix`, `hash`, `created_at`) SELECT `id`, `org_id`, `project_id`, `name`, `prefix`, `hash`, `created_at` FROM `api_key` WHERE `project_id` IS NOT NULL AND EXISTS (SELECT 1 FROM `project` WHERE `project`.`project_id` = `api_key`.`project_id`);--> statement-breakpoint
 DROP TABLE `api_key`;--> statement-breakpoint
 ALTER TABLE `__new_api_key` RENAME TO `api_key`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint
