@@ -14,6 +14,7 @@ import { Link } from 'spiceflow/react'
 import { z } from 'zod'
 import { getDb, getSession, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
 import * as schema from 'db/schema'
+import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 
 import { ulid } from 'ulid'
 import { Button, CopyButton } from './components/ui/button.tsx'
@@ -31,7 +32,7 @@ export const dashboardApp = new Spiceflow()
   .loader('/dashboard/*', async ({ request }) => {
     const session = await getSession(request)
     if (!session) {
-      const returnTo = request.parsedUrl.pathname + (request.parsedUrl.search || '')
+      const returnTo = normalizeAuthRedirectPath(request.parsedUrl.pathname + (request.parsedUrl.search || ''))
       throw redirect(`/login?callbackURL=${encodeURIComponent(returnTo)}`)
     }
 
@@ -236,7 +237,7 @@ export const dashboardApp = new Spiceflow()
                       <span className="rounded bg-muted px-1.5 py-0.5">{domain.environment}</span>
                     </div>
                   </div>
-                  {domain.lastSeenAt && (
+                  {!!domain.lastSeenAt && (
                     <div className="text-xs text-muted-foreground">
                       Last seen {new Date(domain.lastSeenAt).toLocaleDateString()}
                     </div>
