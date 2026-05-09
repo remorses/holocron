@@ -11,6 +11,7 @@
 import { json, Spiceflow } from 'spiceflow'
 import { openapi } from 'spiceflow/openapi'
 import { z } from 'zod'
+import { createSelectSchema } from 'drizzle-orm/zod'
 import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
 import { ulid } from 'ulid'
@@ -23,28 +24,28 @@ import {
 } from './db.ts'
 import { gatewayApp } from './gateway.ts'
 
-// ── Shared schemas ──────────────────────────────────────────────────────
+// ── Shared schemas (derived from Drizzle tables) ────────────────────────
 
 const ErrorResponse = z.object({ error: z.string() })
 
-const OrgResponse = z.object({
-  id: z.string().describe('ULID'),
-  name: z.string(),
+const OrgResponse = createSelectSchema(schema.org).pick({ id: true, name: true })
+
+const ApiKeyResponse = createSelectSchema(schema.apiKey).pick({
+  id: true,
+  name: true,
+  prefix: true,
+  createdAt: true,
 })
 
-const ApiKeyResponse = z.object({
-  id: z.string().describe('ULID'),
-  name: z.string(),
-  prefix: z.string().describe('First 8 chars of the key for display.'),
-  createdAt: z.number().describe('Unix epoch ms'),
-})
+const ApiKeyCreatedResponse = createSelectSchema(schema.apiKey)
+  .pick({ id: true, name: true, prefix: true })
+  .extend({
+    key: z.string().describe('Full `holo_xxx` key. Shown only once at creation.'),
+  })
 
-const ApiKeyCreatedResponse = z.object({
-  id: z.string(),
-  name: z.string(),
-  prefix: z.string(),
-  key: z.string().describe('Full `holo_xxx` key. Shown only once at creation.'),
-})
+const ProjectResponse = createSelectSchema(schema.project)
+
+
 
 // ── App ─────────────────────────────────────────────────────────────────
 
@@ -103,11 +104,14 @@ export const apiApp = new Spiceflow()
     method: 'POST',
     path: '/api/v0/orgs/:orgId/keys',
     params: z.object({ orgId: z.string().describe('Org ULID.') }),
-    request: z.object({ name: z.string().min(1) }),
+    request: z.object({
+      name: z.string().min(1),
+      projectId: z.string().optional().describe('Optional project ULID to scope the key to.'),
+    }),
     detail: {
       summary: 'Create API key',
       description:
-        'Creates a new `holo_xxx` API key for the org. The full key is returned only in this response; it is never stored in plain text.',
+        'Creates a new `holo_xxx` API key for the org. Optionally scoped to a project. The full key is returned only in this response; it is never stored in plain text.',
       tags: ['API Keys'],
     },
     response: {
@@ -118,6 +122,19 @@ export const apiApp = new Spiceflow()
       await requireOrgMember(session.userId, params.orgId)
 
       const body = await request.json()
+
+      // Validate project belongs to this org if scoped
+      if (body.projectId) {
+        const db = getDb()
+        const proj = await db.query.project.findFirst({
+          where: { projectId: body.projectId, orgId: params.orgId },
+          columns: { projectId: true },
+        })
+        if (!proj) {
+          throw json({ error: 'project not found in this org' }, { status: 404 })
+        }
+      }
+
       const { fullKey, prefix } = generateApiKey()
       const hash = await hashApiKey(fullKey)
       const id = ulid()
@@ -126,6 +143,7 @@ export const apiApp = new Spiceflow()
       await db.insert(schema.apiKey).values({
         id,
         orgId: params.orgId,
+        projectId: body.projectId ?? null,
         name: body.name,
         prefix,
         hash,
@@ -239,6 +257,49 @@ export const apiApp = new Spiceflow()
       }
 
       return { keyId: found.id, orgId: found.orgId }
+    },
+  })
+
+  // ── Projects (session auth, under org) ───────────────────────────────
+
+  // Called by: dashboard "New Project" button, @holocron.so/cli create after
+  // device flow login, and the /deploy server action (via actions.tsx).
+  // Creates a docs site project record tied to the user's org.
+  .route({
+    method: 'POST',
+    path: '/api/v0/orgs/:orgId/projects',
+    params: z.object({ orgId: z.string() }),
+    request: z.object({
+      name: z.string().min(1),
+      githubOwner: z.string().optional(),
+      githubRepo: z.string().optional(),
+    }),
+    detail: {
+      summary: 'Create project',
+      description: 'Creates a new project in the org.',
+      tags: ['Projects'],
+    },
+    response: { 200: ProjectResponse },
+    async handler({ request, params }) {
+      const session = await requireSession(request)
+      await requireOrgMember(session.userId, params.orgId)
+
+      const body = await request.json()
+      const db = getDb()
+      const projectId = ulid()
+
+      await db.insert(schema.project).values({
+        projectId,
+        orgId: params.orgId,
+        name: body.name,
+        githubOwner: body.githubOwner ?? null,
+        githubRepo: body.githubRepo ?? null,
+      })
+
+      const created = await db.query.project.findFirst({
+        where: { projectId },
+      })
+      return created!
     },
   })
 

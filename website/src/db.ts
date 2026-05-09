@@ -39,7 +39,7 @@ export function getAuth() {
       },
     },
     plugins: [
-      deviceAuthorization({ verificationUri: '/device' }),
+      deviceAuthorization({ verificationUri: '/device', schema: {} }),
       bearer(),
     ],
   })
@@ -109,3 +109,5 @@ export async function requireOrgMember(userId: string, orgId: string) {
   }
   return member
 }
+
+

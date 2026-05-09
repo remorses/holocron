@@ -3,12 +3,14 @@
 // then holocron docs. The /docs.json route serves the Holocron JSON Schema.
 // Cloudflare Workers fetch handler is provided by spiceflow/cloudflare-entrypoint.
 
-import { getActionRequest, json, parseFormData, Spiceflow, redirect } from 'spiceflow'
+import { json, Spiceflow, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
 import { aiLogoApp } from './ai-logo.ts'
+import { dashboardApp } from './dashboard.tsx'
+import { approveDevice, denyDevice } from './actions.tsx'
 import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
@@ -22,8 +24,6 @@ const devicePageQuerySchema = z.object({
   user_code: z.string().optional(),
   status: z.enum(['approved', 'denied']).optional(),
 })
-
-const deviceUserCodeSchema = z.object({ userCode: z.string().min(1) })
 
 function safeRedirectPath(value: string | undefined) {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return '/'
@@ -150,26 +150,6 @@ const authApp = new Spiceflow()
         )
       }
 
-      async function approveDevice(formData: FormData) {
-        'use server'
-        const actionRequest = getActionRequest()
-        await requireSession(actionRequest)
-        const { userCode: parsedUserCode } = parseFormData(deviceUserCodeSchema, formData)
-        const actionAuth = getAuth()
-        await actionAuth.api.deviceApprove({ body: { userCode: parsedUserCode }, headers: actionRequest.headers })
-        throw redirect(router.href('/device', { user_code: parsedUserCode, status: 'approved' }))
-      }
-
-      async function denyDevice(formData: FormData) {
-        'use server'
-        const actionRequest = getActionRequest()
-        await requireSession(actionRequest)
-        const { userCode: parsedUserCode } = parseFormData(deviceUserCodeSchema, formData)
-        const actionAuth = getAuth()
-        await actionAuth.api.deviceDeny({ body: { userCode: parsedUserCode }, headers: actionRequest.headers })
-        throw redirect(router.href('/device', { user_code: parsedUserCode, status: 'denied' }))
-      }
-
       return (
         <AuthPage
           title="CLI Login"
@@ -280,6 +260,7 @@ export const app = new Spiceflow()
   })
   .use(previewApp)
   .use(authApp)
+  .use(dashboardApp)
   .use(apiApp)
   .use(aiLogoApp)
   .use(schemaApp)
