@@ -1,0 +1,12 @@
+---
+title: Welcome
+description: Holocron docs served under a base path.
+---
+
+# Welcome
+
+This is a minimal Holocron docs site served at `/docs`. It demonstrates the **base path** feature, where the entire site is mounted under a URL prefix.
+
+## How it works
+
+Set `base: '/docs'` in your `vite.config.ts` and Holocron handles all routing under that prefix. The built output can be mounted inside another framework (like Next.js) via `app.handle(request)`.
