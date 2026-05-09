@@ -52,8 +52,19 @@ export const dashboardApp = new Spiceflow()
       <div className="min-h-screen bg-background text-foreground">
         <header className="border-b border-border">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-            <Link href="/dashboard" className="text-lg font-semibold">
-              Holocron
+            <Link href="/dashboard" className="no-underline flex items-center shrink-0">
+              <img
+                src="/holocron-api/logo/light/holocron.png"
+                alt="Holocron"
+                className="dark:hidden"
+                style={{ height: 30, width: 'auto', mixBlendMode: 'multiply' }}
+              />
+              <img
+                src="/holocron-api/logo/light/holocron.png"
+                alt="Holocron"
+                className="hidden dark:block"
+                style={{ height: 30, width: 'auto', mixBlendMode: 'screen', filter: 'invert(1)' }}
+              />
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>{loaderData.user.email}</span>
