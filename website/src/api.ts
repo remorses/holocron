@@ -133,17 +133,11 @@ export const apiApp = new Spiceflow()
       const org = await ensureOrg(session.userId, session.user.name)
 
       const db = getDb()
-      const keys = await db
-        .select({
-          id: schema.apiKey.id,
-          name: schema.apiKey.name,
-          prefix: schema.apiKey.prefix,
-          projectId: schema.apiKey.projectId,
-          createdAt: schema.apiKey.createdAt,
-        })
-        .from(schema.apiKey)
-        .where(orm.eq(schema.apiKey.orgId, org.id))
-        .orderBy(orm.desc(schema.apiKey.createdAt))
+      const keys = await db.query.apiKey.findMany({
+        where: { orgId: org.id },
+        columns: { id: true, name: true, prefix: true, projectId: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      })
 
       return { keys }
     },
@@ -237,11 +231,10 @@ export const apiApp = new Spiceflow()
       const org = await ensureOrg(session.userId, session.user.name)
 
       const db = getDb()
-      const projects = await db
-        .select()
-        .from(schema.project)
-        .where(orm.eq(schema.project.orgId, org.id))
-        .orderBy(orm.desc(schema.project.createdAt))
+      const projects = await db.query.project.findMany({
+        where: { orgId: org.id },
+        orderBy: { createdAt: 'desc' },
+      })
 
       return { projects }
     },

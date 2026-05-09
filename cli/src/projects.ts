@@ -36,14 +36,14 @@ projectsCli
 
 projectsCli
   .command('projects create', 'Create a new project')
-  .option('--name <name>', 'Project name')
+  .option('--name [name]', 'Project name')
   .action(async (options, { console: output, process: proc }) => {
     const { safeFetch } = getApiClient()
 
     let name = options.name
     if (!name) {
       if (isAgent || !process.stdin.isTTY) {
-        clack.log.error('Missing --name. Usage: holocron projects create --name "My Docs"')
+        output.error('Missing --name. Usage: holocron projects create --name "My Docs"')
         return proc.exit(1)
       }
       const prompted = await clack.text({

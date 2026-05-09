@@ -20,7 +20,7 @@ keysCli
     let name = options.name
     if (!name) {
       if (nonInteractive) {
-        console.error('Missing --name. Usage: holocron keys create --name production --project <projectId>')
+        output.error('Missing --name. Usage: holocron keys create --name production --project <projectId>')
         return proc.exit(1)
       }
       const prompted = await clack.text({
@@ -34,7 +34,7 @@ keysCli
     let projectId = options.project
     if (!projectId) {
       if (nonInteractive) {
-        console.error('Missing --project. Usage: holocron keys create --name production --project <projectId>')
+        output.error('Missing --project. Usage: holocron keys create --name production --project <projectId>')
         return proc.exit(1)
       }
 
