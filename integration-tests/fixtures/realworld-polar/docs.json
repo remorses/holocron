@@ -1,5 +1,5 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
   "theme": "maple",
   "appearance": {
     "default": "system"

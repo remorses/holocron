@@ -1,8 +1,8 @@
 /**
  * Fixture discovery and run-scoped artifact paths for integration tests.
  *
- * Every subdirectory of `fixtures/` that contains a `holocron.jsonc` or
- * `docs.json` is treated as a fixture: a self-contained mini-site with its
+ * Every subdirectory of `fixtures/` that contains a `docs.json`, `docs.jsonc`,
+ * or `holocron.jsonc` is treated as a fixture: a self-contained mini-site with its
  * own config + pages/. Each fixture maps to one Playwright project, one
  * Vite server, and one `e2e/<name>/` test directory.
  *
@@ -20,11 +20,11 @@ export type Fixture = {
   rootDir: string;
   /** Relative path from integration-tests/ to the fixture root (for CLI commands) */
   rootRel: string;
-  /** Config file name found in the fixture ('holocron.jsonc' or 'docs.json') */
+  /** Config file name found in the fixture ('docs.json', 'docs.jsonc', or 'holocron.jsonc') */
   configFile: string;
 };
 
-const CONFIG_FILENAMES = ["holocron.jsonc", "docs.json"] as const;
+const CONFIG_FILENAMES = ["docs.json", "docs.jsonc", "holocron.jsonc"] as const;
 
 /** Absolute path to the integration-tests/ directory (parent of scripts/) */
 export const integrationTestsDir = path.resolve(

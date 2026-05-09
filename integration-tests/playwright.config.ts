@@ -26,7 +26,7 @@ function getFreePort(): Promise<number> {
 const fixtures = discoverFixtures();
 if (fixtures.length === 0) {
   throw new Error(
-    "No fixtures found under fixtures/. Add at least one fixture folder with a docs.json or holocron.jsonc.",
+    "No fixtures found under fixtures/. Add at least one fixture folder with a docs.json, docs.jsonc, or holocron.jsonc.",
   );
 }
 

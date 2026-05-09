@@ -1,5 +1,5 @@
 /**
- * Holocron Vite plugin. Reads holocron.jsonc/docs.json, syncs MDX, exposes
+ * Holocron Vite plugin. Reads docs.json/docs.jsonc/holocron.jsonc, syncs MDX, exposes
  * virtual modules for config/navigation/MDX, and auto-adds spiceflow +
  * tailwind + react plugins unless the user already installed them.
  *
@@ -36,7 +36,7 @@ export type HolocronVirtualModules = {
 }
 
 export type HolocronPluginOptions = {
-  /** Path to config file. Defaults to auto-discovery (holocron.jsonc, docs.json) */
+  /** Path to config file. Defaults to auto-discovery (docs.json, docs.jsonc, holocron.jsonc) */
   configPath?: string
   /** Path to pages directory. Defaults to '.' (project root, matching Mintlify convention) */
   pagesDir?: string
@@ -175,7 +175,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let hasUserTailwindPlugin = false
   const holocronPackagePattern = /^@holocron\.so\/vite(?:\/.*)?$/
 
-  /** Resolved absolute path to the config file (holocron.jsonc or docs.json) */
+  /** Resolved absolute path to the config file (docs.json, docs.jsonc, or holocron.jsonc) */
   let configFilePath: string | undefined
 
   /** Resolved absolute path to a user CSS file (global.css or style.css at root).

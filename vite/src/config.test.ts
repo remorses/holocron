@@ -36,9 +36,23 @@ describe('readConfig file discovery', () => {
     expect(config.name).toBe('Docs Fallback')
   })
 
-  test('holocron.jsonc takes priority over docs.json', () => {
-    const root = setupConfig('holocron.jsonc', { name: 'Primary' })
-    fs.writeFileSync(path.join(root, 'docs.json'), JSON.stringify({ name: 'Secondary' }))
+  test('reads docs.jsonc as fallback', () => {
+    const root = setupConfig('docs.jsonc', { name: 'Docs JSONC Fallback' })
+    const config = readConfig({ root })
+    expect(config.name).toBe('Docs JSONC Fallback')
+  })
+
+  test('docs.json takes priority over docs.jsonc and holocron.jsonc', () => {
+    const root = setupConfig('docs.json', { name: 'Primary' })
+    fs.writeFileSync(path.join(root, 'docs.jsonc'), JSON.stringify({ name: 'Secondary' }))
+    fs.writeFileSync(path.join(root, 'holocron.jsonc'), JSON.stringify({ name: 'Tertiary' }))
+    const config = readConfig({ root })
+    expect(config.name).toBe('Primary')
+  })
+
+  test('docs.jsonc takes priority over holocron.jsonc', () => {
+    const root = setupConfig('docs.jsonc', { name: 'Primary' })
+    fs.writeFileSync(path.join(root, 'holocron.jsonc'), JSON.stringify({ name: 'Secondary' }))
     const config = readConfig({ root })
     expect(config.name).toBe('Primary')
   })

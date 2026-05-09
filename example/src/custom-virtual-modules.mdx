@@ -204,7 +204,7 @@ export default defineConfig({
 })
 ```
 
-You still need a `holocron.jsonc` or `docs.json` file in the project root (it can be minimal). The virtual modules fully override the config and page content at runtime, but Holocron's plugin expects the file to exist for initialization.
+You still need a `docs.json`, `docs.jsonc`, or `holocron.jsonc` file in the project root (it can be minimal). The virtual modules fully override the config and page content at runtime, but Holocron's plugin expects the file to exist for initialization.
 
 ## Multi-tenant docs with Cloudflare KV
 
@@ -353,7 +353,7 @@ function loadTenantConfig(raw: unknown): HolocronConfig {
 }
 ```
 
-**`holocronConfigSchema`** is the Zod schema matching the `docs.json` / `holocron.jsonc` shape. It accepts all Mintlify fields via `.passthrough()`, so tenant configs pasted from existing Mintlify setups validate without stripping unknown keys.
+**`holocronConfigSchema`** is the Zod schema matching the `docs.json` / `docs.jsonc` / `holocron.jsonc` shape. It accepts all Mintlify fields via `.passthrough()`, so tenant configs pasted from existing Mintlify setups validate without stripping unknown keys.
 
 **`normalizeConfig`** collapses all union variants (logo string vs object, navigation shorthand vs full form) into the canonical `HolocronConfig` type. Always call it after validation.
 

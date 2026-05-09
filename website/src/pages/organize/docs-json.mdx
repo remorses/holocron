@@ -6,10 +6,11 @@ icon: file-json
 
 # docs.json
 
-Every Holocron site needs a config file at the project root. Holocron supports two filenames (first found wins):
+Every Holocron site needs a config file at the project root. Holocron supports three filenames (first found wins):
 
 1. **`docs.json`** (preferred)
-2. **`holocron.jsonc`** (supports `//` comments)
+2. **`docs.jsonc`** (supports `//` comments)
+3. **`holocron.jsonc`** (legacy Holocron name, also supports comments)
 
 Both follow the same schema, which is compatible with Mintlify's `docs.json`.
 
@@ -31,7 +32,7 @@ Both follow the same schema, which is compatible with Mintlify's `docs.json`.
 
 ```json
 {
-  "$schema": "https://unpkg.com/@holocron.so/vite/schema.json",
+  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
   "name": "My Docs",
   "description": "Documentation for my project",
   "colors": { "primary": "#6366f1" },
@@ -91,7 +92,7 @@ Point your editor at the JSON Schema for autocomplete and validation:
 
 ```json
 {
-  "$schema": "https://unpkg.com/@holocron.so/vite/schema.json"
+  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json"
 }
 ```
 

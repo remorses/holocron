@@ -36,7 +36,7 @@ createCli
   .option('--skip-install', 'Skip dependency installation')
   .option('-u, --url [url]', 'Holocron API base URL')
   .action(async (dir, options, { process: proc }) => {
-    let name = options.name as string | undefined
+    let name = options.name
     if (!name) {
       if (isAgent || !process.stdin.isTTY) {
         console.error('Missing --name. Usage: holocron create --name "My Docs" [dir]')
@@ -61,7 +61,7 @@ createCli
       name,
       skipAuth: !!options.skipAuth,
       skipInstall: !!options.skipInstall,
-      baseUrl: (options.url as string) || getBaseUrl(),
+      baseUrl: options.url || getBaseUrl(),
     })
   })
 
@@ -175,7 +175,7 @@ async function scaffold(options: ScaffoldOptions) {
         cloud = await setupCloud({
           baseUrl,
           projectName: name,
-          exit: (code) => process.exit(code) as never,
+          exit: (code) => process.exit(code),
         })
       }
     }
@@ -194,7 +194,7 @@ async function scaffold(options: ScaffoldOptions) {
   if (fs.existsSync(docsJsonPath)) {
     const docsJson = JSON.parse(fs.readFileSync(docsJsonPath, 'utf-8'))
     docsJson.name = name
-    docsJson.$schema = 'https://holocron.so/docs.json'
+    docsJson.$schema = 'https://unpkg.com/@holocron.so/vite/src/schema.json'
     fs.writeFileSync(docsJsonPath, JSON.stringify(docsJson, null, 2) + '\n')
   }
 

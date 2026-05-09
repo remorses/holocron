@@ -1,5 +1,5 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
   "name": "Playwriter",
   "logo": "/playwriter-logo.svg",
   "favicon": "/favicon-32.png",

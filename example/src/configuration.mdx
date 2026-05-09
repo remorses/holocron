@@ -10,7 +10,7 @@ icon: settings
 
 ## Supported config files
 
-Holocron examples use `docs.json` by default. `holocron.jsonc` is still supported, and if both files are present Holocron checks `holocron.jsonc` first. Place the config file in your project root alongside `vite.config.ts`.
+Holocron examples use `docs.json` by default. `docs.jsonc` and `holocron.jsonc` are also supported when you want comments or trailing commas. Place the config file in your project root alongside `vite.config.ts`.
 
 ### docs.json
 
@@ -23,9 +23,9 @@ For teams migrating from Mintlify, Holocron reads `docs.json` directly. No conve
 }
 ```
 
-### holocron.jsonc
+### docs.jsonc
 
-If you want comments inside the config file, Holocron also supports `holocron.jsonc`. JSONC allows `//` and `/* */` comments without changing the schema.
+If you want comments inside the config file, Holocron also supports `docs.jsonc`. JSONC allows `//` and `/* */` comments without changing the schema.
 
 ```json
 {
@@ -191,11 +191,11 @@ Holocron normalizes the schema into a predictable internal shape so the rest of 
 
 ### Schema validation
 
-The full JSON Schema for `docs.json` and `holocron.jsonc` lives at `vite/schema.json`. You can reference that path in your editor for autocompletion:
+The published JSON Schema for `docs.json`, `docs.jsonc`, and `holocron.jsonc` is available on unpkg. You can reference that URL in your editor for autocompletion:
 
 ```json
 {
-  "$schema": "vite/schema.json",
+  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
   "name": "My Docs"
 }
 ```

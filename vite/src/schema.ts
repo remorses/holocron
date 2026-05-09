@@ -1,8 +1,8 @@
 /**
  * Holocron config Zod schema — single source of truth.
  *
- * This file defines the raw INPUT shape users write in `holocron.jsonc`
- * (or `docs.json`). It mirrors the Mintlify docs.json shape for the subset
+ * This file defines the raw INPUT shape users write in `docs.json`,
+ * `docs.jsonc`, or `holocron.jsonc`. It mirrors the Mintlify docs.json shape for the subset
  * of fields that Holocron actually consumes.
  *
  * The generated `schema.json` (written by `scripts/generate-schema.ts`)

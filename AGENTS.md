@@ -1,6 +1,6 @@
 # Holocron
 
-Drop-in Mintlify replacement as a Vite plugin. Users point their `vite.config.ts` at this plugin and get a full documentation site from MDX files + a `holocron.jsonc` (or `docs.json`) config file.
+Drop-in Mintlify replacement as a Vite plugin. Users point their `vite.config.ts` at this plugin and get a full documentation site from MDX files + a `docs.json` (or `docs.jsonc` / `holocron.jsonc`) config file.
 
 Read the spiceflow skill before editing any code in this package. Run `playwriter skill` or load the spiceflow skill to get the latest API reference.
 
@@ -10,9 +10,10 @@ Read the Emil design-engineering skill before adding or changing animations/tran
 
 ## Config
 
-Supports two config file names (first found wins):
+Supports three config file names (first found wins):
 
 - `docs.json` (preferred)
+- `docs.jsonc`
 - `holocron.jsonc`
 
 both follow the same schema.
@@ -439,7 +440,7 @@ after you make changes to holocron vite you will have to run `pnpm build` again 
 
 ### integration-tests fixture architecture
 
-The `integration-tests/` package is organized as a set of **fixtures**, one per configuration shape. Each fixture is a self-contained mini-site with its own `holocron.jsonc` (or `docs.json`) + `pages/`, and its own matching test directory. Each fixture exercises a different permutation of Holocron config fields so we can cover every config shape a user might actually write.
+The `integration-tests/` package is organized as a set of **fixtures**, one per configuration shape. Each fixture is a self-contained mini-site with its own `docs.json`, `docs.jsonc`, or `holocron.jsonc` + `pages/`, and its own matching test directory. Each fixture exercises a different permutation of Holocron config fields so we can cover every config shape a user might actually write.
 
 ```
 integration-tests/
@@ -464,7 +465,7 @@ integration-tests/
 └── playwright.config.ts      # one webServer + one project per fixture
 ```
 
-**How it works**: `scripts/fixtures.ts` walks `fixtures/` and returns every subdirectory containing a `holocron.jsonc` or `docs.json`. `playwright.config.ts` allocates one free port per fixture (persisted via `E2E_PORT_<NAME>` env vars so re-imports get stable ports), then spawns one webServer per fixture (via `vite <fixtureRoot> --config vite.config.ts --port <N>` in dev, or `node <fixtureRoot>/dist/rsc/index.js` in build mode) and one Playwright project per fixture with `testDir: e2e/<name>` and `use.baseURL: http://localhost:<N>`.
+**How it works**: `scripts/fixtures.ts` walks `fixtures/` and returns every subdirectory containing `docs.json`, `docs.jsonc`, or `holocron.jsonc`. `playwright.config.ts` allocates one free port per fixture (persisted via `E2E_PORT_<NAME>` env vars so re-imports get stable ports), then spawns one webServer per fixture (via `vite <fixtureRoot> --config vite.config.ts --port <N>` in dev, or `node <fixtureRoot>/dist/rsc/index.js` in build mode) and one Playwright project per fixture with `testDir: e2e/<name>` and `use.baseURL: http://localhost:<N>`.
 
 Tests use Playwright's `request` fixture (not raw `fetch()`) so per-project `baseURL` is picked up automatically.
 
@@ -474,7 +475,7 @@ Do not add brittle tests that hardcode visual constants like pixel gaps, widths,
 
 **Adding a fixture, step by step**:
 
-1. Create `fixtures/<name>/holocron.jsonc` (or `docs.json`)
+1. Create `fixtures/<name>/docs.json` (or `docs.jsonc` / `holocron.jsonc`)
 2. Create `fixtures/<name>/pages/*.mdx` with whatever pages the config references
 3. Create `e2e/<name>/<name>.test.ts` with assertions on the rendered output
 4. Done — `playwright.config.ts` discovers the fixture automatically. No other changes needed.
@@ -568,4 +569,4 @@ Single-line form produces bare phrasing children (no `<P>` wrapper, no `editoria
 
 ### New MDX pages must be added to docs.json navigation
 
-After creating a new `.mdx` file, add its slug to `docs.json` (or `holocron.jsonc`) navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.
+After creating a new `.mdx` file, add its slug to `docs.json` (or `docs.jsonc` / `holocron.jsonc`) navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.

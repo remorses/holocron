@@ -6,9 +6,10 @@
  * Only normalized wrapper shapes (logo, favicon, navigation, navbar)
  * are defined here. Normalization logic lives in `lib/normalize-config.ts`.
  *
- * Supports two file names (first found wins):
- *   1. holocron.jsonc — our format (JSONC with comments)
- *   2. docs.json — mintlify format (drop-in compatible)
+ * Supports three file names (first found wins):
+ *   1. docs.json — Mintlify format (drop-in compatible)
+ *   2. docs.jsonc — Mintlify format with comments/trailing commas
+ *   3. holocron.jsonc — legacy Holocron format with comments/trailing commas
  */
 
 import fs from 'node:fs'
@@ -152,7 +153,7 @@ export function isConfigNavGroup(entry: ConfigNavPageEntry): entry is ConfigNavG
 
 /* ── Config reader ───────────────────────────────────────────────────── */
 
-const CONFIG_FILE_NAMES = ['holocron.jsonc', 'docs.json'] as const
+const CONFIG_FILE_NAMES = ['docs.json', 'docs.jsonc', 'holocron.jsonc'] as const
 
 function parseConfigObject(raw: string): Record<string, unknown> {
   const parsed = parseJsonc(raw)
