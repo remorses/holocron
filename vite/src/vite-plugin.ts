@@ -20,8 +20,6 @@ import { colors, formatHolocronStep, formatHolocronSuccess, formatHolocronWarnin
 
 import react from '@vitejs/plugin-react'
 
-
-
 // `vite-plugin.ts` lives in `src/`, both in source and emitted `dist/`, so one
 // `..` always gets back to the package root and `src/` from there is stable.
 const __holocronSrcDir = fileURLToPath(new URL('../src', import.meta.url))
@@ -325,6 +323,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         )
         logger.warn('')
       }
+
     },
 
     async resolveId(id, importer) {

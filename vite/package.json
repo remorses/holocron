@@ -21,6 +21,9 @@
     "mintlify",
     "react-server-components"
   ],
+  "bin": {
+    "holocron": "dist/bin.js"
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -53,12 +56,13 @@
   ],
   "scripts": {
     "generate-schema": "tsx scripts/generate-schema.ts",
-    "build": "pnpm generate-schema && tsc",
+    "build": "pnpm generate-schema && tsc && chmod +x dist/bin.js",
     "typecheck": "tsc",
     "test": "vitest --run",
     "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
   },
   "dependencies": {
+    "@holocron.so/cli": "workspace:^",
     "@fastify/deepmerge": "^3.2.1",
     "@iconify-json/fa6-brands": "^1.2.6",
     "@iconify-json/fa6-regular": "^1.2.4",
