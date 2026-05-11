@@ -155,10 +155,8 @@ const authApp = new Spiceflow()
             <DeviceActionButtons approveAction={approveDevice} denyAction={denyDevice} userCode={userCode} />
           }
         >
-          <div className="flex justify-center">
-            <div className="rounded-lg border bg-muted px-4 py-2.5 font-mono text-lg tracking-widest">
-              {userCode}
-            </div>
+          <div className="font-mono text-2xl tracking-widest text-foreground">
+            {userCode}
           </div>
         </AuthPage>
       )
@@ -221,10 +219,8 @@ const previewApp = new Spiceflow()
         </div>
       }
     >
-      <div className="flex justify-center">
-        <div className="rounded-lg border bg-muted px-4 py-2.5 font-mono text-lg tracking-widest">
-          ABCD-1234
-        </div>
+      <div className="font-mono text-2xl tracking-widest text-foreground">
+        ABCD-1234
       </div>
     </AuthPage>
   ))
