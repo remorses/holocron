@@ -50,7 +50,7 @@ async function resolveSite(
   subdomain: string,
 ): Promise<SiteInfo | null> {
   // Primary: KV lookup (globally replicated, ~1-5ms)
-  const kvData = await env.SITES_KV.get(`site-info:${subdomain}`, { type: 'text', cacheTtl: 30 })
+  const kvData = await env.SITES_KV.get(`site-info:${subdomain}`, { type: 'text', cacheTtl: 5 })
   if (kvData) {
     try {
       const parsed = JSON.parse(kvData) as { projectId: string; version: string; files: string[] }
