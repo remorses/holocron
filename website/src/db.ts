@@ -1,7 +1,7 @@
 // Worker-level database client, auth, and session helpers.
 //
 // getDb() creates a drizzle-orm/d1 client bound to env.DB.
-// getAuth() creates a BetterAuth instance with Google social login + device flow.
+// getAuth() creates a BetterAuth instance with GitHub social login + device flow.
 
 import { env } from 'cloudflare:workers'
 import { drizzle } from 'drizzle-orm/d1'
@@ -32,10 +32,11 @@ export function getAuth() {
       },
     },
     socialProviders: {
-      google: {
-        clientId: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET,
-        prompt: 'select_account',
+      github: {
+        clientId: env.GITHUB_CLIENT_ID,
+        clientSecret: env.GITHUB_CLIENT_SECRET,
+        // scope: ['read:org'],
+        prompt: 'consent',
       },
     },
     plugins: [

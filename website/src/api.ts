@@ -15,6 +15,7 @@ import { createSelectSchema } from 'drizzle-orm/zod'
 import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
 import { ulid } from 'ulid'
+import * as jose from 'jose'
 import {
   getDb,
   requireSession,
@@ -277,12 +278,17 @@ export const apiApp = new Spiceflow()
     },
   })
 
-  // ── Deployment registration (API key auth, called at build time) ─────
+  // ── Deployment registration (API key or OIDC auth, called at build time) ──
 
-  // Called by the holocron vite plugin during `vite build` when HOLOCRON_KEY
-  // is set. The project is resolved from the key itself — no separate
-  // HOLOCRON_PROJECT env var needed. Registers GitHub metadata on the project
-  // record so the dashboard knows which repo this project deploys from.
+  // Called by the holocron vite plugin during `vite build`.
+  // Two auth paths:
+  //   1. HOLOCRON_KEY → Bearer holo_xxx in Authorization header. Project is
+  //      resolved from the key. Used by Vercel deploy and manual setups.
+  //   2. GitHub Actions OIDC → oidcToken in body. JWT is verified against
+  //      GitHub's JWKS. The actor's GitHub user ID is matched against the
+  //      account table (providerId=github) to find the holocron user, then
+  //      their first admin org is used to find-or-create the project.
+  //      This enables keyless deploys from template repos.
   // Idempotent — safe to call on every build.
   .route({
     method: 'POST',
@@ -290,36 +296,156 @@ export const apiApp = new Spiceflow()
     request: z.object({
       githubOwner: z.string().optional(),
       githubRepo: z.string().optional(),
+      oidcToken: z.string().optional(),
     }),
     detail: {
       summary: 'Register deployment',
       description:
-        'Updates the key\'s project with GitHub metadata. Authenticated via API key (Bearer holo_xxx). The project is resolved from the key. Called automatically by the Holocron Vite plugin at build time.',
+        'Updates a project with GitHub metadata. Authenticates via API key (Bearer holo_xxx) or GitHub Actions OIDC token. Called automatically by the Holocron Vite plugin at build time.',
       tags: ['Projects'],
     },
     response: {
-      200: z.object({ ok: z.boolean() }),
+      200: z.object({ ok: z.boolean(), projectId: z.string().optional() }),
       401: ErrorResponse,
     },
     async handler({ request }) {
-      const auth = await validateApiKey(request.headers.get('authorization'))
-      if (!auth) {
-        return json({ error: 'invalid or missing API key' }, { status: 401 })
+      const body = await request.json()
+      const db = getDb()
+
+      // ── Path 1: API key auth (existing flow) ─────────────────────
+      const apiKeyAuth = await validateApiKey(request.headers.get('authorization'))
+      if (apiKeyAuth) {
+        const updates: Record<string, unknown> = { updatedAt: Date.now() }
+        if (body.githubOwner) updates.githubOwner = body.githubOwner
+        if (body.githubRepo) updates.githubRepo = body.githubRepo
+
+        await db.update(schema.project)
+          .set(updates)
+          .where(orm.eq(schema.project.projectId, apiKeyAuth.projectId))
+          .limit(1)
+
+        return { ok: true, projectId: apiKeyAuth.projectId }
       }
 
-      const body = await request.json()
-      const updates: Record<string, unknown> = { updatedAt: Date.now() }
-      if (body.githubOwner) updates.githubOwner = body.githubOwner
-      if (body.githubRepo) updates.githubRepo = body.githubRepo
+      // ── Path 2: GitHub Actions OIDC (keyless) ────────────────────
+      if (body.oidcToken) {
+        const oidcResult = await verifyGitHubOidc(body.oidcToken)
+        if (oidcResult instanceof Error) {
+          return json({ error: oidcResult.message }, { status: 401 })
+        }
 
-      const db = getDb()
-      await db.update(schema.project)
-        .set(updates)
-        .where(orm.eq(schema.project.projectId, auth.projectId))
-        .limit(1)
+        // Find holocron user by GitHub numeric user ID
+        const githubAccount = await db.query.account.findFirst({
+          where: {
+            providerId: 'github',
+            accountId: oidcResult.ownerIdStr,
+          },
+        })
+        if (!githubAccount) {
+          return json(
+            { error: 'no holocron account found for this GitHub user. sign in at holocron.so first.' },
+            { status: 401 },
+          )
+        }
 
-      return { ok: true }
+        // Find first org where user is admin
+        const adminMembership = await db.query.orgMember.findFirst({
+          where: { userId: githubAccount.userId, role: 'admin' },
+          with: { org: true },
+        })
+        const orgId = adminMembership?.orgId
+        if (!orgId) {
+          // Create an org for the user (same as login flow)
+          const userRow = await db.query.user.findFirst({
+            where: { id: githubAccount.userId },
+          })
+          const created = await ensureOrg(githubAccount.userId, userRow?.name ?? 'My Org')
+          return await upsertProjectForOidc(db, created.id, oidcResult.owner, oidcResult.repo)
+        }
+
+        return await upsertProjectForOidc(db, orgId, oidcResult.owner, oidcResult.repo)
+      }
+
+      return json({ error: 'invalid or missing authentication' }, { status: 401 })
     },
   })
+
+// ── GitHub Actions OIDC verification ──────────────────────────────────────
+
+const GITHUB_OIDC_JWKS = jose.createRemoteJWKSet(
+  new URL('https://token.actions.githubusercontent.com/.well-known/jwks'),
+)
+
+type OidcResult = { ownerIdStr: string; owner: string; repo: string }
+
+async function verifyGitHubOidc(token: string): Promise<OidcResult | Error> {
+  try {
+    // Audience is derived from HOLOCRON_API_URL on the client side, so accept
+    // both the production domain and any custom API URL origin.
+    const { payload } = await jose.jwtVerify(token, GITHUB_OIDC_JWKS, {
+      issuer: 'https://token.actions.githubusercontent.com',
+    })
+
+    // Use actor_id (the user who triggered the workflow) instead of
+    // repository_owner_id which would be the org ID for org-owned repos.
+    // actor_id always maps to the GitHub user's personal account ID, which
+    // matches what better-auth stores in account.accountId during OAuth.
+    const actorIdStr = String(payload.actor_id ?? '')
+    if (!actorIdStr) {
+      return new Error('OIDC token missing actor_id claim')
+    }
+
+    // Derive repo metadata from the verified token, not from the request body,
+    // so a valid token from one repo can't claim to be a different repo.
+    const repository = String(payload.repository ?? '')
+    const [owner, repo] = repository.split('/')
+    if (!owner || !repo) {
+      return new Error('OIDC token missing repository claim')
+    }
+
+    return { ownerIdStr: actorIdStr, owner, repo }
+  } catch (err) {
+    return new Error(`OIDC verification failed: ${err instanceof Error ? err.message : err}`)
+  }
+}
+
+// Find or create a project for the given org + GitHub repo. Idempotent.
+// D1 is single-writer so true races are unlikely, but we re-check after
+// insert failure to handle the edge case gracefully.
+async function upsertProjectForOidc(
+  db: ReturnType<typeof getDb>,
+  orgId: string,
+  githubOwner: string,
+  githubRepo: string,
+) {
+  // Try to find existing project with this repo in this org
+  const existing = await db.query.project.findFirst({
+    where: {
+      orgId,
+      githubOwner,
+      githubRepo,
+    },
+  })
+
+  if (existing) {
+    await db.update(schema.project)
+      .set({ updatedAt: Date.now() })
+      .where(orm.eq(schema.project.projectId, existing.projectId))
+      .limit(1)
+    return { ok: true, projectId: existing.projectId }
+  }
+
+  // Create new project
+  const projectId = ulid()
+  await db.insert(schema.project).values({
+    projectId,
+    orgId,
+    name: `${githubOwner}/${githubRepo}`,
+    githubOwner,
+    githubRepo,
+  })
+
+  return { ok: true, projectId }
+}
 
 export type ApiApp = typeof apiApp

@@ -158,6 +158,34 @@ function getPluginName(plugin: PluginOption): string | undefined {
   return typeof maybeName === 'string' ? maybeName : undefined
 }
 
+// Mint a GitHub Actions OIDC JWT for keyless deployment registration.
+// Requires ACTIONS_ID_TOKEN_REQUEST_URL and ACTIONS_ID_TOKEN_REQUEST_TOKEN
+// (injected by GitHub Actions when `permissions: id-token: write` is set).
+// The audience is derived from the API URL so preview/self-hosted deployments
+// get a correctly scoped token.
+// Returns the JWT string on success, undefined on failure (with logged warning).
+async function mintGitHubOidcToken(apiUrl: string): Promise<string | undefined> {
+  const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL
+  const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+  if (!requestUrl || !requestToken) return undefined
+
+  try {
+    const audience = new URL(apiUrl).origin
+    const tokenUrl = `${requestUrl}&audience=${encodeURIComponent(audience)}`
+    const res = await fetch(tokenUrl, {
+      headers: { authorization: `bearer ${requestToken}` },
+    })
+    if (res.ok) {
+      const data = await res.json() as { value: string }
+      return data.value
+    }
+    logger.warn(formatHolocronWarning(`failed to mint GitHub OIDC token (${res.status})`))
+  } catch (err) {
+    logger.warn(formatHolocronWarning(`GitHub OIDC token request failed: ${err}`))
+  }
+  return undefined
+}
+
 export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let root: string
   let config: HolocronConfig
@@ -677,15 +705,22 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     // Register deployment metadata with holocron.so at build time.
-    // Runs once per build when HOLOCRON_KEY is set. The project is resolved
-    // from the key on the server side — no separate HOLOCRON_PROJECT needed.
+    // Two auth paths:
+    //   1. HOLOCRON_KEY set → API key auth (existing flow, e.g. Vercel deploy)
+    //   2. No key but inside GitHub Actions with id-token permission → mint a
+    //      GitHub OIDC JWT and send it for keyless auth. The server verifies the
+    //      JWT, matches the GitHub user ID to a holocron account, and links the
+    //      project to the user's org automatically.
     // Detects GitHub owner/repo from Vercel or GitHub Actions env vars.
     // Non-fatal — logs a warning on failure, never breaks the build.
     async buildEnd(error) {
       if (error) return
 
       const apiKey = process.env.HOLOCRON_KEY
-      if (!apiKey) return
+      const hasOidc = !!(process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN)
+
+      // Nothing to authenticate with — skip silently (local dev)
+      if (!apiKey && !hasOidc) return
 
       // Only run once (client env runs first in multi-env builds)
       if (this.environment?.name && this.environment.name !== 'client') return
@@ -717,16 +752,26 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
+
+      // Mint OIDC token when no API key is available
+      let oidcToken: string | undefined
+      if (!apiKey && hasOidc) {
+        oidcToken = await mintGitHubOidcToken(apiUrl)
+        if (!oidcToken) return
+      }
+
       const url = `${apiUrl}/api/v0/register-deployment`
 
       try {
+        const headers: Record<string, string> = { 'content-type': 'application/json' }
+        if (apiKey) {
+          headers.authorization = `Bearer ${apiKey}`
+        }
+
         const res = await fetch(url, {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({ githubOwner, githubRepo }),
+          headers,
+          body: JSON.stringify({ githubOwner, githubRepo, oidcToken }),
         })
         if (res.ok) {
           logger.info(

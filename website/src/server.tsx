@@ -27,15 +27,15 @@ const devicePageQuerySchema = z.object({
   status: z.enum(['approved', 'denied']).optional(),
 })
 
-async function createGoogleSignInRedirect(request: Pick<Request, 'headers'>, callbackURL: string) {
+async function createGitHubSignInRedirect(request: Pick<Request, 'headers'>, callbackURL: string) {
   const auth = getAuth()
   const { response, headers } = await auth.api.signInSocial({
-    body: { provider: 'google', callbackURL },
+    body: { provider: 'github', callbackURL },
     headers: request.headers,
     returnHeaders: true,
   })
   if (!response?.url) {
-    throw json({ error: 'failed to start google sign-in' }, { status: 500 })
+    throw json({ error: 'failed to start github sign-in' }, { status: 500 })
   }
 
   const redirectResponse = new Response(null, {
@@ -74,7 +74,7 @@ const authApp = new Spiceflow()
           description="Sign in to manage your account."
           footer={
             <Button asChild className="w-full" size="lg">
-              <a href={router.href('/login/google', { callbackURL })}>Sign in with Google</a>
+              <a href={router.href('/login/github', { callbackURL })}>Sign in with GitHub</a>
             </Button>
           }
         />
@@ -82,13 +82,13 @@ const authApp = new Spiceflow()
     },
   })
 
-  // Google sign-in redirect (creates OAuth redirect with cookies forwarded)
+  // GitHub sign-in redirect (creates OAuth redirect with cookies forwarded)
   .route({
     method: 'GET',
-    path: '/login/google',
+    path: '/login/github',
     query: loginQuerySchema,
     async handler({ request, query }) {
-      return createGoogleSignInRedirect(request, normalizeAuthRedirectPath(query.callbackURL))
+      return createGitHubSignInRedirect(request, normalizeAuthRedirectPath(query.callbackURL))
     },
   })
 
@@ -190,7 +190,7 @@ const previewApp = new Spiceflow()
       description="Sign in to manage your account."
       footer={
         <Button asChild className="w-full" size="lg">
-          <a href="#">Sign in with Google</a>
+          <a href="#">Sign in with GitHub</a>
         </Button>
       }
     />

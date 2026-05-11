@@ -1,5 +1,5 @@
 // Schema for the Holocron D1 database.
-// Contains BetterAuth core tables for auth (Google social login, device flow),
+// Contains BetterAuth core tables for auth (GitHub social login, device flow),
 // the org/member hierarchy, project tracking for deployed docs sites, and
 // API keys for authenticating vite plugin ↔ holocron.so gateway calls.
 
