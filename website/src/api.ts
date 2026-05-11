@@ -316,6 +316,7 @@ export const apiApp = new Spiceflow()
       await db.update(schema.project)
         .set(updates)
         .where(orm.eq(schema.project.projectId, auth.projectId))
+        .limit(1)
 
       return { ok: true }
     },
