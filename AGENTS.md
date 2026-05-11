@@ -8,6 +8,12 @@ Read the tailwind skill before adding JSX or updating JSX. Use Tailwind utilitie
 
 Read the Emil design-engineering skill before adding or changing animations/transitions in this package: https://raw.githubusercontent.com/emilkowalski/skill/refs/heads/main/skills/emil-design-eng/SKILL.md
 
+## Template submodule
+
+The `template/` folder is a **git submodule** pointing to [remorses/holocron-template](https://github.com/remorses/holocron-template). It's a separate repo so GitHub's "Use this template" button works (GitHub templates must be standalone repos, not subfolders). The holocron monorepo references it as a submodule so the CLI `create` command and the copy-template build script can still read the template files locally.
+
+When editing template files, make changes inside the `template/` submodule, commit and push there first, then commit the updated submodule pointer in the monorepo.
+
 ## Config
 
 Supports three config file names (first found wins):

@@ -1,5 +1,0 @@
-.env
-node_modules
-dist
-.vite
-*.tsbuildinfo
