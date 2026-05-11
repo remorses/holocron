@@ -1,5 +1,5 @@
 // Dashboard pages for managing Holocron projects, API keys, and billing.
-// Also hosts the /deploy flow (Vercel deploy button with prefilled credentials).
+// Also hosts the /deploy flow (GitHub template button + local CLI setup).
 // Mounted on the root app via .use(dashboardApp) in server.tsx.
 //
 // All routes require session auth (redirect to /login if not logged in).
@@ -19,9 +19,7 @@ import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import { ulid } from 'ulid'
 import { Button, CopyButton } from './components/ui/button.tsx'
 
-// Vercel deploy button config
-const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron/tree/main/template'
-const DEPLOY_REDIRECT_URL = 'https://holocron.so/dashboard/deploy/callback'
+const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 
 // ── Dashboard layout with auth guard ────────────────────────────────
 
@@ -317,8 +315,10 @@ export const dashboardApp = new Spiceflow()
   // ── Deploy flow ─────────────────────────────────────────────────────
 
   // Single-page deploy: auto-creates project + API key on first visit
-  // (via server-side redirect), then shows the Vercel deploy button with
-  // prefilled credentials and a code block alternative for local setup.
+  // (via server-side redirect), then shows the GitHub template button
+  // and a local setup alternative. If the user created their repo from
+  // the template with the same GitHub account they signed in with,
+  // the OIDC flow auto-links the project on the first `vite build`.
   .page({
     path: '/dashboard/deploy',
     query: z.object({
@@ -354,48 +354,40 @@ export const dashboardApp = new Spiceflow()
             name: 'deploy',
             prefix: generated.prefix,
             hash: keyHash,
+            key: fullKey,
           }),
         ])
 
         throw redirect(`/dashboard/deploy?projectId=${projectId}&key=${encodeURIComponent(fullKey)}`)
       }
 
-      // Build Vercel deploy URL with prefilled env vars
-      const deployUrl = new URL('https://vercel.com/new/clone')
-      deployUrl.searchParams.set('repository-url', TEMPLATE_REPO_URL)
-      deployUrl.searchParams.set('env', 'HOLOCRON_KEY')
-      deployUrl.searchParams.set('envDefaults', JSON.stringify({
-        HOLOCRON_KEY: fullKey,
-      }))
-      deployUrl.searchParams.set('envDescription', 'Your Holocron credentials (pre-filled, do not change)')
-      deployUrl.searchParams.set('envLink', 'https://holocron.so/dashboard')
-      deployUrl.searchParams.set('redirect-url', DEPLOY_REDIRECT_URL)
-      deployUrl.searchParams.set('project-name', 'my-docs')
+      const templateUrl = `${TEMPLATE_REPO_URL}/generate`
 
       return (
         <div className="flex flex-col items-center gap-10 py-16">
           <div className="flex max-w-lg flex-col items-center gap-8 text-center">
             <div className="flex flex-col gap-2">
-              <h1 className="text-2xl font-semibold">Deploy Holocron template</h1>
+              <h1 className="text-2xl font-semibold">Create your docs site</h1>
               <div className="text-sm text-muted-foreground">
-                Your project and API key are ready. Deploy with one click.
+                Create a new repo from the Holocron template. Your site will be
+                automatically linked to this project via GitHub Actions.
               </div>
             </div>
 
             <a
-              href={deployUrl.toString()}
+              href={templateUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2.5 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-black/90 hover:shadow-md dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
-              <svg height="14" viewBox="0 0 76 65" fill="currentColor">
-                <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
+              <svg height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
               </svg>
-              Deploy on Vercel
+              Create example GitHub repo
             </a>
 
             <div className="flex w-full flex-col gap-3">
-              <div className="text-sm text-muted-foreground">Or deploy locally:</div>
+              <div className="text-sm text-muted-foreground">Or create locally with the CLI:</div>
               <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
                 <CopyButton
                   text={`HOLOCRON_KEY=${fullKey}\n\nnpx @holocron.so/cli create`}
@@ -406,44 +398,16 @@ export const dashboardApp = new Spiceflow()
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )
-    },
-  })
 
-  // Vercel redirects here after a successful deploy.
-  // GitHub metadata is now registered at build time by the Vite plugin
-  // (POST /api/v0/projects/:projectId/register-deployment), so this page
-  // just shows a success message with links.
-  .page({
-    path: '/dashboard/deploy/callback',
-    query: z.object({
-      'project-name': z.string().optional(),
-      'deployment-url': z.string().optional(),
-    }),
-    handler: async ({ request, query }) => {
-      await requireSession(request)
-
-      const deploymentUrl = query['deployment-url']
-
-      return (
-        <div className="flex flex-col items-center gap-6 py-16">
-          <div className="flex max-w-md flex-col items-center gap-4 text-center">
-            <h1 className="text-2xl font-semibold">Deployed!</h1>
-            <div className="text-sm text-muted-foreground">
-              Your docs site is live{deploymentUrl ? ` at ${deploymentUrl}` : ''}.
-            </div>
-
-            <div className="flex gap-3">
-              {deploymentUrl && (
-                <a href={`https://${deploymentUrl}`} target="_blank" rel="noopener noreferrer">
-                  <Button>View Site</Button>
-                </a>
-              )}
-              <Link href="/dashboard">
-                <Button variant="outline">Go to Dashboard</Button>
-              </Link>
+            <div className="w-full rounded-lg border border-border bg-muted/30 px-5 py-4 text-left">
+              <div className="text-xs font-medium text-muted-foreground mb-2">Your API key (for non-GitHub deploys)</div>
+              <div className="relative">
+                <CopyButton text={fullKey} className="absolute right-0 top-0" />
+                <code className="font-mono text-sm break-all">{fullKey}</code>
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                Set as <code className="font-mono">HOLOCRON_KEY</code> env var when deploying to Vercel, Cloudflare, etc.
+              </div>
             </div>
           </div>
         </div>
