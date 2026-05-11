@@ -98,7 +98,7 @@ async function setupCloud(options: {
   })
   if (project instanceof Error) {
     clack.log.error(`Failed to create project: ${project.message}`)
-    exit(1)
+    return exit(1)
   }
 
   // 3. Create API key scoped to this project
@@ -108,7 +108,7 @@ async function setupCloud(options: {
   })
   if (key instanceof Error) {
     clack.log.error(`Failed to create API key: ${key.message}`)
-    exit(1)
+    return exit(1)
   }
 
   return { holocronKey: key.key, baseUrl }

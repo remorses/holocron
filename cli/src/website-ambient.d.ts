@@ -12,3 +12,15 @@ declare module '*.css' {}
 
 // Cloudflare Workers global
 type ExportedHandler = any
+
+// @holocron.so/vite subpaths used by website/src/server.tsx.
+// The actual types come from vite's dist/ but cli doesn't need them.
+declare module '@holocron.so/vite/app' {
+  const app: any
+  export { app }
+}
+
+declare module '@holocron.so/vite/src/schema.json' {
+  const schema: any
+  export default schema
+}

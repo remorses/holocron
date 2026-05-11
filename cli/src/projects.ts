@@ -24,7 +24,7 @@ projectsCli
       return
     }
 
-    const formatted = res.projects.map((p: { projectId: string; name: string; githubOwner: string | null; githubRepo: string | null; createdAt: number }) => ({
+    const formatted = res.projects.map((p: any) => ({
       id: p.projectId,
       name: p.name,
       ...(p.githubOwner && p.githubRepo ? { github: `${p.githubOwner}/${p.githubRepo}` } : {}),
