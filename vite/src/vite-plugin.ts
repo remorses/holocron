@@ -194,18 +194,10 @@ async function registerViaOidc(): Promise<string | undefined> {
   const hasOidc = !!(process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN)
   if (!hasOidc) return undefined
 
-  let githubOwner: string | undefined
-  let githubRepo: string | undefined
-
-  if (process.env.GITHUB_REPOSITORY) {
-    const parts = process.env.GITHUB_REPOSITORY.split('/')
-    if (parts.length === 2) {
-      githubOwner = parts[0]
-      githubRepo = parts[1]
-    }
-  }
-
-  if (!githubOwner || !githubRepo) return undefined
+  // GITHUB_REPOSITORY is only used as a guard: skip OIDC if we can't confirm
+  // we're inside a GitHub Actions run. The actual owner/repo values are derived
+  // server-side from the verified JWT's `repository` claim, not from env vars.
+  if (!process.env.GITHUB_REPOSITORY) return undefined
 
   const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
   const oidcToken = await mintGitHubOidcToken(apiUrl)
@@ -217,13 +209,13 @@ async function registerViaOidc(): Promise<string | undefined> {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ githubOwner, githubRepo, oidcToken }),
+      body: JSON.stringify({ oidcToken }),
     })
     if (res.ok) {
       const data = await res.json() as { ok: boolean; projectId?: string; apiKey?: string }
       if (data.apiKey) {
         logger.info(
-          formatHolocronSuccess(`registered deployment via OIDC: ${githubOwner}/${githubRepo}`),
+          formatHolocronSuccess(`registered deployment via OIDC: ${process.env.GITHUB_REPOSITORY}`),
         )
         return data.apiKey
       }
@@ -792,75 +784,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       return this.environment.name === 'client' ? clientHotModules : []
     },
 
-    // Register deployment metadata with holocron.so at build time.
-    // Requires HOLOCRON_KEY (set by user, or injected by OIDC in configResolved).
-    // OIDC keyless registration already ran in configResolved and set the key,
-    // so this only handles the API key auth path.
-    // Detects GitHub owner/repo from Vercel or GitHub Actions env vars.
-    // Non-fatal — logs a warning on failure, never breaks the build.
-    async buildEnd(error) {
-      if (error) return
-
-      const apiKey = process.env.HOLOCRON_KEY
-      if (!apiKey) return
-
-      // Only run once (client env runs first in multi-env builds)
-      if (this.environment?.name && this.environment.name !== 'client') return
-
-      let githubOwner: string | undefined
-      let githubRepo: string | undefined
-
-      // Vercel: https://vercel.com/docs/projects/environment-variables/system-environment-variables
-      if (process.env.VERCEL_GIT_REPO_OWNER && process.env.VERCEL_GIT_REPO_SLUG) {
-        githubOwner = process.env.VERCEL_GIT_REPO_OWNER
-        githubRepo = process.env.VERCEL_GIT_REPO_SLUG
-      }
-      // GitHub Actions: GITHUB_REPOSITORY is "owner/repo"
-      else if (process.env.GITHUB_REPOSITORY) {
-        const parts = process.env.GITHUB_REPOSITORY.split('/')
-        if (parts.length === 2) {
-          githubOwner = parts[0]
-          githubRepo = parts[1]
-        }
-      }
-
-      if (!githubOwner || !githubRepo) {
-        logger.info(
-          formatHolocronStep({
-            message: 'skipping deployment registration (no GitHub env vars detected)',
-          }),
-        )
-        return
-      }
-
-      const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
-      const url = `${apiUrl}/api/v0/register-deployment`
-
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({ githubOwner, githubRepo }),
-        })
-        if (res.ok) {
-          logger.info(
-            formatHolocronSuccess(`registered deployment: ${githubOwner}/${githubRepo}`),
-          )
-        } else {
-          const text = await res.text().catch(() => '')
-          logger.warn(
-            formatHolocronWarning(`deployment registration failed (${res.status}): ${text}`),
-          )
-        }
-      } catch (err) {
-        logger.warn(
-          formatHolocronWarning(`deployment registration request failed: ${err}`),
-        )
-      }
-    },
+    // OIDC keyless registration runs in configResolved (above) and sets
+    // HOLOCRON_KEY + github metadata from verified JWT claims. No buildEnd
+    // registration needed: the API key path only bumped updatedAt which is
+    // not useful. Actual deployment happens via `holocron deploy` CLI.
   }
 
   // Keep `@holocron.so/vite/*` inside the RSC/SSR transform pipeline so

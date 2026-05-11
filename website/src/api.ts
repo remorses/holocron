@@ -22,7 +22,6 @@ import {
   ensureOrg,
   generateApiKey,
   hashApiKey,
-  validateApiKey,
 } from './db.ts'
 import { gatewayApp } from './gateway.ts'
 
@@ -277,17 +276,14 @@ export const apiApp = new Spiceflow()
     },
   })
 
-  // ── Deployment registration (API key or OIDC auth, called at build time) ──
+  // ── Deployment registration (OIDC only, called at build time) ──
 
-  // Called by the holocron vite plugin during `vite build`.
-  // Two auth paths:
-  //   1. HOLOCRON_KEY → Bearer holo_xxx in Authorization header. Project is
-  //      resolved from the key. Used by Vercel deploy and manual setups.
-  //   2. GitHub Actions OIDC → oidcToken in body. JWT is verified against
-  //      GitHub's JWKS. The actor's GitHub user ID is matched against the
-  //      account table (providerId=github) to find the holocron user, then
-  //      their first admin org is used to find-or-create the project.
-  //      This enables keyless deploys from template repos.
+  // Called by the holocron vite plugin during `vite build` in GitHub Actions.
+  // Auth: GitHub Actions OIDC → oidcToken in body. JWT is verified against
+  // GitHub's JWKS. The actor's GitHub user ID is matched against the account
+  // table (providerId=github) to find the holocron user, then their first
+  // admin org is used to find-or-create the project.
+  // GitHub owner/repo are derived from the verified JWT, never from the body.
   // Idempotent — safe to call on every build.
   .route({
     method: 'POST',
@@ -298,7 +294,7 @@ export const apiApp = new Spiceflow()
     detail: {
       summary: 'Register deployment',
       description:
-        'Updates a project with GitHub metadata. Authenticates via API key (Bearer holo_xxx) or GitHub Actions OIDC token. Called automatically by the Holocron Vite plugin at build time.',
+        'Registers a project via GitHub Actions OIDC. JWT is verified against GitHub JWKS; owner/repo are derived from the token claims. Called automatically by the Holocron Vite plugin at build time.',
       tags: ['Projects'],
     },
     response: {
@@ -313,22 +309,10 @@ export const apiApp = new Spiceflow()
       const body = await request.json()
       const db = getDb()
 
-      // ── Path 1: API key auth (existing flow) ─────────────────────
-      // githubOwner/githubRepo are NOT set here. Only the OIDC path (below)
-      // writes github metadata because the values come from a cryptographically
-      // verified JWT claim. Accepting unverified body values here would let
-      // anyone with an API key impersonate any GitHub repo.
-      const apiKeyAuth = await validateApiKey(request.headers.get('authorization'))
-      if (apiKeyAuth) {
-        await db.update(schema.project)
-          .set({ updatedAt: Date.now() })
-          .where(orm.eq(schema.project.projectId, apiKeyAuth.projectId))
-          .limit(1)
-
-        return { ok: true, projectId: apiKeyAuth.projectId }
-      }
-
-      // ── Path 2: GitHub Actions OIDC (keyless) ────────────────────
+      // Only OIDC auth is supported. GitHub owner/repo are derived from the
+      // verified JWT's `repository` claim, never from unverified body values.
+      // API key auth was removed because it could only bump updatedAt (no
+      // github metadata) and nothing in the vite plugin calls it anymore.
       if (body.oidcToken) {
         const audience = new URL(request.url).origin
         const oidcResult = await verifyGitHubOidc(body.oidcToken, audience)
@@ -380,6 +364,14 @@ const GITHUB_OIDC_JWKS = jose.createRemoteJWKSet(
 
 type OidcResult = { ownerIdStr: string; owner: string; repo: string }
 
+// PR safety: we intentionally do NOT reject tokens from pull_request workflows.
+// The actor_id claim maps to the PR author's GitHub user ID, so the project is
+// created/found under the PR author's own holocron org, not the repo owner's.
+// A PR from an external contributor without a holocron account gets a 401.
+// A PR from a maintainer who IS the project owner deploys to the real project,
+// but that's expected: maintainers already have push access to the repo.
+// Fork PRs can't get OIDC tokens unless the base repo workflow explicitly
+// grants id-token:write, which is the repo owner's responsibility.
 async function verifyGitHubOidc(token: string, audience: string): Promise<OidcResult | Error> {
   try {
     const { payload } = await jose.jwtVerify(token, GITHUB_OIDC_JWKS, {
