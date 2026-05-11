@@ -21,7 +21,7 @@
     "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && vite build && wrangler deploy && pnpm --dir ../og-worker deployment:prod'"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "https://pkg.pr.new/better-auth/better-auth/@better-auth/drizzle-adapter@6913",
+    "@better-auth/drizzle-adapter": "latest",
     "@holocron.so/vite": "workspace:^",
     "@tailwindcss/vite": "^4.2.2",
     "ai": "^6.0.149",

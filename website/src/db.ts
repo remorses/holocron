@@ -8,7 +8,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import * as schema from 'db/schema'
 import { betterAuth } from 'better-auth'
 import { deviceAuthorization, bearer } from 'better-auth/plugins'
-import { drizzleAdapter } from '@better-auth/drizzle-adapter/relations-v2'
+import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import { json } from 'spiceflow'
 
 // ── Drizzle client via D1 ───────────────────────────────────────────
