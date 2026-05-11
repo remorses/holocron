@@ -348,22 +348,16 @@ export const apiApp = new Spiceflow()
           )
         }
 
-        // Find first org where user is admin
-        let orgId: string
+        // Find or create org for the user
         const adminMembership = await db.query.orgMember.findFirst({
           where: { userId: githubAccount.userId, role: 'admin' },
           with: { org: true },
         })
-        if (adminMembership?.orgId) {
-          orgId = adminMembership.orgId
-        } else {
-          // Create an org for the user (same as login flow)
-          const userRow = await db.query.user.findFirst({
-            where: { id: githubAccount.userId },
-          })
+        const orgId = adminMembership?.orgId ?? await (async () => {
+          const userRow = await db.query.user.findFirst({ where: { id: githubAccount.userId } })
           const created = await ensureOrg(githubAccount.userId, userRow?.name ?? 'My Org')
-          orgId = created.id
-        }
+          return created.id
+        })()
 
         const result = await upsertProjectForOidc(db, orgId, oidcResult.owner, oidcResult.repo, {
           ref: oidcResult.ref,

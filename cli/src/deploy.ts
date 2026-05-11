@@ -27,143 +27,43 @@ deployCli
     const cwd = proc.cwd
     const nonInteractive = isAgent || !process.stdin.isTTY
 
-    // ── Branch detection ─────────────────────────────────────────
-    // Priority: explicit flag > HOLOCRON_BRANCH (from vite plugin OIDC) > GitHub CI env > git
-    let branch = options.branch
-    if (!branch) branch = process.env.HOLOCRON_BRANCH || undefined
-    if (!branch && process.env.GITHUB_HEAD_REF) {
-      // PR event: GITHUB_HEAD_REF is the source branch
-      branch = process.env.GITHUB_HEAD_REF
-    }
-    if (!branch && process.env.GITHUB_REF) {
-      const ref = process.env.GITHUB_REF
-      if (ref.startsWith('refs/heads/')) {
-        branch = ref.slice('refs/heads/'.length)
-      }
-      // Ignore refs/tags/ and other ref types
-    }
-    if (!branch) {
-      try {
-        const { execSync } = await import('node:child_process')
-        branch = execSync('git rev-parse --abbrev-ref HEAD', {
-          cwd,
-          encoding: 'utf-8',
-          stdio: ['pipe', 'pipe', 'pipe'],
-        }).trim()
-      } catch { /* not a git repo or git not installed */ }
-    }
-    branch = branch || 'main'
-
-    // Detect if this is a PR deploy — PRs are always preview to prevent
-    // a PR branch named "main" from overwriting production.
+    const branch = detectBranch(cwd, options.branch)
     const isPullRequest = !!(process.env.GITHUB_HEAD_REF || process.env.HOLOCRON_PREVIEW)
-    if (isPullRequest) {
-      output.log(`Branch: ${branch} (preview, PR detected)`)
-    } else {
-      output.log(`Branch: ${branch}`)
-    }
+    output.log(isPullRequest ? `Branch: ${branch} (preview, PR detected)` : `Branch: ${branch}`)
 
     // ── Build (runs BEFORE auth so OIDC can write HOLOCRON_KEY to .env) ───
     if (!options.skipBuild) {
-      output.log('Building for Cloudflare Workers...')
-      const { execSync } = await import('node:child_process')
-      const buildCmd = detectBuildCommand(cwd)
-      try {
-        execSync(buildCmd, {
-          cwd,
-          stdio: 'inherit',
-          env: { ...process.env, HOLOCRON_DEPLOY: '1' },
-        })
-      } catch {
+      const buildErr = await runBuild(cwd)
+      if (buildErr instanceof Error) {
         output.error('Build failed.')
         return proc.exit(1)
-      }
-
-      // Reload .env after the build — the vite plugin's OIDC flow may have
-      // written HOLOCRON_KEY and HOLOCRON_BRANCH during the build step.
-      try {
-        const { config } = await import('dotenv')
-        config({ path: path.resolve(cwd, '.env'), override: true })
-      } catch { /* dotenv not available or .env missing — non-fatal */ }
-
-      // Re-detect branch from env if the build set HOLOCRON_BRANCH
-      if (!options.branch && process.env.HOLOCRON_BRANCH) {
-        branch = process.env.HOLOCRON_BRANCH
       }
     }
 
     // ── Auth (after build, so OIDC-written HOLOCRON_KEY is available) ─────
-    let auth: DeployAuth
-    try {
-      auth = resolveDeployAuth()
-    } catch (err) {
-      output.error((err as Error).message)
+    const auth = (() => {
+      try { return resolveDeployAuth() }
+      catch (err) { return err as Error }
+    })()
+    if (auth instanceof Error) {
+      output.error(auth.message)
       return proc.exit(1)
     }
 
     const { safeFetch } = getDeployClient()
+    const authToken = auth.type === 'apikey' ? auth.key : auth.token
 
     // ── Resolve project (only needed for session auth) ────────────
-    let projectId = options.project
-    if (auth.type === 'session' && !projectId) {
-      const res = await safeFetch('/api/v0/projects')
-      if (res instanceof Error) {
-        output.error(`Failed to list projects: ${res.message}`)
-        return proc.exit(1)
-      }
-      const projects = res.projects as Array<{ projectId: string; name: string }>
-      if (projects.length === 0) {
-        output.error('No projects found. Create one first: holocron projects create --name "My Docs"')
-        return proc.exit(1)
-      }
-      if (projects.length === 1) {
-        projectId = projects[0]!.projectId
-      } else if (nonInteractive) {
-        output.error('Multiple projects found. Pass --project <id> to select one.')
-        return proc.exit(1)
-      } else {
-        const selected = await clack.select({
-          message: 'Select a project to deploy to:',
-          options: projects.map((p) => ({
-            value: p.projectId,
-            label: p.name,
-            hint: p.projectId,
-          })),
-        })
-        if (clack.isCancel(selected)) return proc.exit(1)
-        projectId = selected
-      }
-    }
+    const projectId = auth.type === 'session' && !options.project
+      ? await resolveProjectId({ safeFetch, nonInteractive, output, proc })
+      : options.project
+
+    if (projectId instanceof Error) return proc.exit(1) // error already logged
 
     // ── Collect build artifacts ───────────────────────────────────
-    const distDir = path.resolve(cwd, 'dist')
-    if (!fs.existsSync(distDir)) {
-      output.error(`No dist/ directory found. Run the build first or remove --skip-build.`)
-      return proc.exit(1)
-    }
-
-    const files: Array<{ relativePath: string; absPath: string; size: number }> = []
-
-    // Worker modules: dist/rsc/** (both SSR and RSC environments)
-    // The SSR entry (dist/rsc/ssr/index.js) imports the RSC entry (dist/rsc/index.js)
-    // via relative path "../index.js", so both need to be uploaded preserving the
-    // directory structure: worker/ssr/* and worker/* (RSC root).
-    const rscDir = path.join(distDir, 'rsc')
-    if (fs.existsSync(rscDir)) {
-      collectFiles(rscDir, 'worker', files, (relPath) => {
-        // Skip the generated wrangler.json (platform config, not code)
-        return !relPath.endsWith('wrangler.json')
-      })
-    }
-
-    // Client assets: dist/client/**
-    const clientDir = path.join(distDir, 'client')
-    if (fs.existsSync(clientDir)) {
-      collectFiles(clientDir, 'assets', files)
-    }
-
-    if (files.length === 0) {
-      output.error('No build artifacts found in dist/. Is the build configured correctly?')
+    const files = collectBuildArtifacts(cwd)
+    if (files instanceof Error) {
+      output.error(files.message)
       return proc.exit(1)
     }
 
@@ -172,14 +72,14 @@ deployCli
 
     // ── Step 1: Create deployment ─────────────────────────────────
     output.log('Creating deployment...')
-    const filePaths = files.map((f) => f.relativePath)
-    const createBody: { files: string[]; projectId?: string; branch?: string; preview?: boolean } = { files: filePaths, branch }
-    if (isPullRequest) createBody.preview = true
-    if (projectId) createBody.projectId = projectId
-
     const createRes = await safeFetch('/api/v0/deployments', {
       method: 'POST',
-      body: createBody,
+      body: {
+        files: files.map((f) => f.relativePath),
+        branch,
+        ...(isPullRequest && { preview: true }),
+        ...(projectId && { projectId }),
+      },
     })
     if (createRes instanceof Error) {
       output.error(`Failed to create deployment: ${createRes.message}`)
@@ -190,41 +90,9 @@ deployCli
 
     // ── Step 2: Upload files in parallel (max 6) ──────────────────
     output.log('Uploading files...')
-    let completed = 0
-    const MAX_CONCURRENT = 6
-    const authToken = auth.type === 'apikey' ? auth.key : auth.token
-
-    async function uploadOne(file: { relativePath: string; absPath: string }) {
-      const content = fs.readFileSync(file.absPath)
-      const encodedPath = file.relativePath.split('/').map(encodeURIComponent).join('/')
-      const uploadUrl = new URL(
-        `/api/v0/deployments/${deploymentId}/files/${encodedPath}`,
-        auth.baseUrl,
-      )
-      const res = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/octet-stream',
-        },
-        body: content,
-      })
-      if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        throw new Error(`Upload failed for ${file.relativePath}: ${res.status} ${text}`)
-      }
-      completed++
-      output.log(`  [${completed}/${files.length}] ${file.relativePath}`)
-    }
-
-    // Upload in batches of MAX_CONCURRENT
-    try {
-      for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
-        const batch = files.slice(i, i + MAX_CONCURRENT)
-        await Promise.all(batch.map(uploadOne))
-      }
-    } catch (err) {
-      output.error(err instanceof Error ? err.message : String(err))
+    const uploadErr = await uploadFiles({ files, deploymentId, authToken, baseUrl: auth.baseUrl, output })
+    if (uploadErr instanceof Error) {
+      output.error(uploadErr.message)
       output.error('Deploy aborted. The deployment remains in "uploading" state and can be retried.')
       return proc.exit(1)
     }
@@ -243,6 +111,127 @@ deployCli
     output.log('')
     output.log(`Deployed! ${finalized.url}`)
   })
+
+// ── Extracted functions ──────────────────────────────────────────────
+
+/** Detect branch from explicit flag, env vars, or git. Pure function, no side effects. */
+function detectBranch(cwd: string, explicit?: string): string {
+  if (explicit) return explicit
+  if (process.env.HOLOCRON_BRANCH) return process.env.HOLOCRON_BRANCH
+  if (process.env.GITHUB_HEAD_REF) return process.env.GITHUB_HEAD_REF
+  const ref = process.env.GITHUB_REF
+  if (ref?.startsWith('refs/heads/')) return ref.slice('refs/heads/'.length)
+  try {
+    const { execSync } = require('node:child_process')
+    return execSync('git rev-parse --abbrev-ref HEAD', {
+      cwd,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim()
+  } catch { return 'main' }
+}
+
+/** Run vite build and reload .env afterward. Returns Error on failure. */
+async function runBuild(cwd: string): Promise<Error | void> {
+  const { execSync } = await import('node:child_process')
+  const buildCmd = detectBuildCommand(cwd)
+  try {
+    execSync(buildCmd, { cwd, stdio: 'inherit', env: { ...process.env, HOLOCRON_DEPLOY: '1' } })
+  } catch {
+    return new Error('Build failed')
+  }
+  // Reload .env — the vite plugin OIDC flow may have written HOLOCRON_KEY + HOLOCRON_BRANCH
+  try {
+    const { config } = await import('dotenv')
+    config({ path: path.resolve(cwd, '.env'), override: true })
+  } catch { /* dotenv not available or .env missing */ }
+}
+
+/** Collect dist/rsc/** and dist/client/** into upload-ready file list. */
+function collectBuildArtifacts(cwd: string): Error | Array<{ relativePath: string; absPath: string; size: number }> {
+  const distDir = path.resolve(cwd, 'dist')
+  if (!fs.existsSync(distDir)) return new Error('No dist/ directory found. Run the build first or remove --skip-build.')
+
+  const files: Array<{ relativePath: string; absPath: string; size: number }> = []
+
+  const rscDir = path.join(distDir, 'rsc')
+  if (fs.existsSync(rscDir)) {
+    collectFiles(rscDir, 'worker', files, (relPath) => !relPath.endsWith('wrangler.json'))
+  }
+
+  const clientDir = path.join(distDir, 'client')
+  if (fs.existsSync(clientDir)) {
+    collectFiles(clientDir, 'assets', files)
+  }
+
+  if (files.length === 0) return new Error('No build artifacts found in dist/. Is the build configured correctly?')
+  return files
+}
+
+/** Interactively resolve projectId for session auth. Logs errors internally, returns Error on failure. */
+async function resolveProjectId(ctx: {
+  safeFetch: ReturnType<typeof getDeployClient>['safeFetch']
+  nonInteractive: boolean
+  output: { log: (msg: string) => void; error: (msg: string) => void }
+  proc: { exit: (code: number) => void }
+}): Promise<string | Error> {
+  const res = await ctx.safeFetch('/api/v0/projects')
+  if (res instanceof Error) {
+    ctx.output.error(`Failed to list projects: ${res.message}`)
+    return res
+  }
+  const projects = res.projects as Array<{ projectId: string; name: string }>
+  if (projects.length === 0) {
+    ctx.output.error('No projects found. Create one first: holocron projects create --name "My Docs"')
+    return new Error('No projects')
+  }
+  if (projects.length === 1) return projects[0]!.projectId
+  if (ctx.nonInteractive) {
+    ctx.output.error('Multiple projects found. Pass --project <id> to select one.')
+    return new Error('Multiple projects')
+  }
+  const selected = await clack.select({
+    message: 'Select a project to deploy to:',
+    options: projects.map((p) => ({ value: p.projectId, label: p.name, hint: p.projectId })),
+  })
+  if (clack.isCancel(selected)) return new Error('Cancelled')
+  return selected
+}
+
+/** Upload files in parallel batches. Returns Error on first failure. */
+async function uploadFiles(ctx: {
+  files: Array<{ relativePath: string; absPath: string }>
+  deploymentId: string
+  authToken: string
+  baseUrl: string
+  output: { log: (msg: string) => void }
+}): Promise<Error | void> {
+  const MAX_CONCURRENT = 6
+  let completed = 0
+
+  for (let i = 0; i < ctx.files.length; i += MAX_CONCURRENT) {
+    const batch = ctx.files.slice(i, i + MAX_CONCURRENT)
+    const results = await Promise.all(batch.map(async (file) => {
+      const content = fs.readFileSync(file.absPath)
+      const encodedPath = file.relativePath.split('/').map(encodeURIComponent).join('/')
+      const uploadUrl = new URL(`/api/v0/deployments/${ctx.deploymentId}/files/${encodedPath}`, ctx.baseUrl)
+      const res = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${ctx.authToken}`, 'Content-Type': 'application/octet-stream' },
+        body: content,
+      }).catch((e: unknown) => e instanceof Error ? e : new Error(String(e)))
+      if (res instanceof Error) return new Error(`Upload failed for ${file.relativePath}: ${res.message}`)
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        return new Error(`Upload failed for ${file.relativePath}: ${res.status} ${text}`)
+      }
+      completed++
+      ctx.output.log(`  [${completed}/${ctx.files.length}] ${file.relativePath}`)
+    }))
+    const firstErr = results.find((r): r is Error => r instanceof Error)
+    if (firstErr) return firstErr
+  }
+}
 
 /** Recursively collect files from a directory into the files array. */
 function collectFiles(

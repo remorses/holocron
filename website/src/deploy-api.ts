@@ -324,32 +324,31 @@ export const deployApp = new Spiceflow()
       }
       await env.SITES_KV.put(`${prefix}manifest`, JSON.stringify(manifest))
 
-      // Compute subdomains
+      // Compute subdomains and build the D1 batch statements.
+      // Both paths share the same supersede + activate pattern; production
+      // additionally updates the project pointer.
       const projectSubdomain = buildProjectSubdomain(proj)
+      const deploySubdomain = isProduction
+        ? projectSubdomain
+        : buildPreviewSubdomain(branch, projectSubdomain)
 
-      // Derive the hosting domain from the request origin (preview vs production)
-      const requestHost = new URL(request.url).hostname
-      const isPreviewEnv = requestHost.startsWith('preview.')
-      const siteSuffix = isPreviewEnv ? '-site-preview.holocron.so' : '-site.holocron.so'
-
-      if (isProduction) {
-        // Production deploy: supersede ALL active deployments for this project,
-        // activate this one, and update the project pointer.
-        // deployment.subdomain is set to the project subdomain so the hosting
-        // worker can resolve both production and preview via a single query.
-        await db.batch([
-          db.update(schema.deployment)
-            .set({ status: 'superseded' })
-            .where(
-              orm.and(
-                orm.eq(schema.deployment.projectId, deploy.projectId),
-                orm.eq(schema.deployment.status, 'active'),
-                orm.eq(schema.deployment.branch, branch),
-              ),
+      const batchStatements = [
+        // Supersede active deployments for this branch
+        db.update(schema.deployment)
+          .set({ status: 'superseded' })
+          .where(
+            orm.and(
+              orm.eq(schema.deployment.projectId, deploy.projectId),
+              orm.eq(schema.deployment.status, 'active'),
+              orm.eq(schema.deployment.branch, branch),
             ),
-          db.update(schema.deployment)
-            .set({ status: 'active', subdomain: projectSubdomain })
-            .where(orm.eq(schema.deployment.id, deploy.id)),
+          ),
+        // Activate this deployment with the computed subdomain
+        db.update(schema.deployment)
+          .set({ status: 'active', subdomain: deploySubdomain })
+          .where(orm.eq(schema.deployment.id, deploy.id)),
+        // Production only: update the project pointer
+        ...(isProduction ? [
           db.update(schema.project)
             .set({
               subdomain: projectSubdomain,
@@ -357,64 +356,33 @@ export const deployApp = new Spiceflow()
               updatedAt: Date.now(),
             })
             .where(orm.eq(schema.project.projectId, deploy.projectId)),
-        ])
+        ] : []),
+      ]
+      await db.batch(batchStatements as [typeof batchStatements[0], ...typeof batchStatements])
 
-        // Verify this deployment won the race before writing KV. A concurrent
-        // finalize for the same branch could have superseded us between the
-        // D1 batch and this KV write.
-        const stillActive = await db.query.deployment.findFirst({
-          where: { id: deploy.id, status: 'active' },
+      // Verify this deployment won the race before writing KV. A concurrent
+      // finalize could have superseded us between the D1 batch and this write.
+      const stillActive = await db.query.deployment.findFirst({
+        where: { id: deploy.id, status: 'active' },
+      })
+      if (stillActive) {
+        await writeSiteInfoToKv(deploySubdomain, {
+          projectId: deploy.projectId,
+          version: deploy.version,
+          files: declaredFiles,
         })
-        if (stillActive) {
-          await writeSiteInfoToKv(projectSubdomain, {
-            projectId: deploy.projectId,
-            version: deploy.version,
-            files: declaredFiles,
-          })
-        }
-
-        const url = `https://${projectSubdomain}${siteSuffix}`
-        return { url, deploymentId: deploy.id, branch }
-      } else {
-        // Preview deploy: only supersede active deployments for the SAME branch.
-        // Do NOT touch project.currentDeploymentId — production stays live.
-        const previewSubdomain = buildPreviewSubdomain(branch, projectSubdomain)
-
-        await db.batch([
-          db.update(schema.deployment)
-            .set({ status: 'superseded' })
-            .where(
-              orm.and(
-                orm.eq(schema.deployment.projectId, deploy.projectId),
-                orm.eq(schema.deployment.branch, branch),
-                orm.eq(schema.deployment.status, 'active'),
-              ),
-            ),
-          db.update(schema.deployment)
-            .set({ status: 'active', subdomain: previewSubdomain })
-            .where(orm.eq(schema.deployment.id, deploy.id)),
-        ])
-
-        const stillActive = await db.query.deployment.findFirst({
-          where: { id: deploy.id, status: 'active' },
-        })
-        if (stillActive) {
-          await writeSiteInfoToKv(previewSubdomain, {
-            projectId: deploy.projectId,
-            version: deploy.version,
-            files: declaredFiles,
-          })
-        }
-
-        const url = `https://${previewSubdomain}${siteSuffix}`
-        return { url, deploymentId: deploy.id, branch }
       }
+
+      const requestHost = new URL(request.url).hostname
+      const isPreviewEnv = requestHost.startsWith('preview.')
+      const siteSuffix = isPreviewEnv ? '-site-preview.holocron.so' : '-site.holocron.so'
+      const url = `https://${deploySubdomain}${siteSuffix}`
+      return { url, deploymentId: deploy.id, branch }
     },
   })
 
 /** Write site resolution data to KV for the hosting worker.
- *  Key: "site-info:{subdomain}" — matches what the hosting worker reads.
- *  The hosting worker falls back to D1 if this key doesn't exist (legacy deploys). */
+ *  Key: "site-info:{subdomain}" — matches what the hosting worker reads. */
 async function writeSiteInfoToKv(
   subdomain: string,
   data: { projectId: string; version: string; files: string[] },
