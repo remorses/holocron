@@ -98,6 +98,8 @@ export const project = s.sqliteTable('project', {
   projectId: s.text('project_id').primaryKey().notNull().$defaultFn(() => ulid()),
   orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
   name: s.text('name').notNull(),
+  subdomain: s.text('subdomain').unique(),
+  currentDeploymentId: s.text('current_deployment_id'),
   githubOwner: s.text('github_owner'),
   githubRepo: s.text('github_repo'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
@@ -111,7 +113,7 @@ export const projectDomain = s.sqliteTable('project_domain', {
   projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
   host: s.text('host').notNull(),
   basePath: s.text('base_path').notNull().default('/'),
-  platform: s.text('platform', { enum: ['vercel', 'cloudflare', 'detected'] }).notNull().default('detected'),
+  platform: s.text('platform', { enum: ['vercel', 'cloudflare', 'holocron', 'detected'] }).notNull().default('detected'),
   environment: s.text('environment', { enum: ['preview', 'production'] }).notNull().default('production'),
   githubBranch: s.text('github_branch'),
   firstSeenAt: epochMs('first_seen_at').$defaultFn(() => Date.now()),
@@ -121,6 +123,20 @@ export const projectDomain = s.sqliteTable('project_domain', {
 }, (table) => [
   s.index('project_domain_project_id_idx').on(table.projectId),
   s.uniqueIndex('project_domain_host_base_path_unique').on(table.host, table.basePath),
+])
+
+// ── Deployments (version history per project, stored in KV) ─────────
+
+export const deployment = s.sqliteTable('deployment', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
+  version: s.text('version').notNull(),
+  status: s.text('status', { enum: ['uploading', 'active', 'superseded'] }).notNull().default('uploading'),
+  /** JSON array of declared file paths; validated during finalize to ensure all were uploaded. */
+  files: s.text('files'),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  s.index('deployment_project_id_idx').on(table.projectId),
 ])
 
 // ── API keys (one key per project, key alone identifies the project) ─
@@ -159,7 +175,7 @@ export const deviceCode = s.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, apiKey, deviceCode, project, projectDomain },
+  { user, session, account, verification, org, orgMember, apiKey, deviceCode, project, projectDomain, deployment },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -200,9 +216,13 @@ export const relations = defineRelations(
       org: r.one.org({ from: r.project.orgId, to: r.org.id }),
       domains: r.many.projectDomain(),
       keys: r.many.apiKey(),
+      deployments: r.many.deployment(),
     },
     projectDomain: {
       project: r.one.project({ from: r.projectDomain.projectId, to: r.project.projectId }),
+    },
+    deployment: {
+      project: r.one.project({ from: r.deployment.projectId, to: r.project.projectId }),
     },
   }),
 )
