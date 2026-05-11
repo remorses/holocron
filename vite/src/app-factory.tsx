@@ -1027,8 +1027,8 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const toolNames = new Map<string, string>()
 
       async function* generateParts() {
-        // Uses `any` to avoid a circular build dependency (vite ↔ website).
-        // The chat endpoint shape is validated at runtime by the server.
+        // Uses `any` — vite is the framework package and must not depend on the
+        // website. The chat endpoint shape is validated at runtime by the server.
         const chatFetch = createSpiceflowFetch<any>(chatUrl.origin, {
           headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
         })

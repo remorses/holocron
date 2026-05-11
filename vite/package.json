@@ -105,7 +105,11 @@
     "zustand": "^5.0.12"
   },
   "peerDependencies": {
-    "spiceflow": ">=1.20.0-rsc.1"
+    "spiceflow": ">=1.20.0-rsc.1",
+    "@cloudflare/vite-plugin": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@cloudflare/vite-plugin": { "optional": true }
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",

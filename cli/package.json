@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.0.0",
+    "dotenv": "^17.4.2",
     "goke": "^6.10.0",
     "spiceflow": "1.24.4-rsc.0",
     "string-dedent": "^3.0.2",
@@ -60,6 +61,7 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "rimraf": "^6.0.1",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "website": "workspace:^"
   }
 }
