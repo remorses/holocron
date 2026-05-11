@@ -108,6 +108,7 @@ export const apiApp = new Spiceflow()
         name: body.name,
         prefix,
         hash,
+        key: fullKey,
       })
 
       return { id, name: body.name, prefix, key: fullKey }
@@ -305,7 +306,11 @@ export const apiApp = new Spiceflow()
       tags: ['Projects'],
     },
     response: {
-      200: z.object({ ok: z.boolean(), projectId: z.string().optional() }),
+      200: z.object({
+        ok: z.boolean(),
+        projectId: z.string().optional(),
+        apiKey: z.string().optional().describe('Returned only for OIDC auth. Full holo_xxx key for the project.'),
+      }),
       401: ErrorResponse,
     },
     async handler({ request }) {
@@ -329,7 +334,8 @@ export const apiApp = new Spiceflow()
 
       // ── Path 2: GitHub Actions OIDC (keyless) ────────────────────
       if (body.oidcToken) {
-        const oidcResult = await verifyGitHubOidc(body.oidcToken)
+        const audience = new URL(request.url).origin
+        const oidcResult = await verifyGitHubOidc(body.oidcToken, audience)
         if (oidcResult instanceof Error) {
           return json({ error: oidcResult.message }, { status: 401 })
         }
@@ -378,12 +384,11 @@ const GITHUB_OIDC_JWKS = jose.createRemoteJWKSet(
 
 type OidcResult = { ownerIdStr: string; owner: string; repo: string }
 
-async function verifyGitHubOidc(token: string): Promise<OidcResult | Error> {
+async function verifyGitHubOidc(token: string, audience: string): Promise<OidcResult | Error> {
   try {
-    // Audience is derived from HOLOCRON_API_URL on the client side, so accept
-    // both the production domain and any custom API URL origin.
     const { payload } = await jose.jwtVerify(token, GITHUB_OIDC_JWKS, {
       issuer: 'https://token.actions.githubusercontent.com',
+      audience,
     })
 
     // Use actor_id (the user who triggered the workflow) instead of
@@ -409,9 +414,10 @@ async function verifyGitHubOidc(token: string): Promise<OidcResult | Error> {
   }
 }
 
-// Find or create a project for the given org + GitHub repo. Idempotent.
-// D1 is single-writer so true races are unlikely, but we re-check after
-// insert failure to handle the edge case gracefully.
+// Find or create a project for the given org + GitHub repo, then find or
+// create an API key for it. Returns the full holo_xxx key so the vite plugin
+// can set HOLOCRON_KEY for the rest of the build.
+// D1 is single-writer so true races are unlikely.
 async function upsertProjectForOidc(
   db: ReturnType<typeof getDb>,
   orgId: string,
@@ -419,6 +425,7 @@ async function upsertProjectForOidc(
   githubRepo: string,
 ) {
   // Try to find existing project with this repo in this org
+  let projectId: string
   const existing = await db.query.project.findFirst({
     where: {
       orgId,
@@ -428,24 +435,46 @@ async function upsertProjectForOidc(
   })
 
   if (existing) {
+    projectId = existing.projectId
     await db.update(schema.project)
       .set({ updatedAt: Date.now() })
-      .where(orm.eq(schema.project.projectId, existing.projectId))
+      .where(orm.eq(schema.project.projectId, projectId))
       .limit(1)
-    return { ok: true, projectId: existing.projectId }
+  } else {
+    // Create new project
+    projectId = ulid()
+    await db.insert(schema.project).values({
+      projectId,
+      orgId,
+      name: `${githubOwner}/${githubRepo}`,
+      githubOwner,
+      githubRepo,
+    })
   }
 
-  // Create new project
-  const projectId = ulid()
-  await db.insert(schema.project).values({
-    projectId,
-    orgId,
-    name: `${githubOwner}/${githubRepo}`,
-    githubOwner,
-    githubRepo,
+  // Find existing API key for this project, or create one
+  const existingKey = await db.query.apiKey.findFirst({
+    where: { projectId },
   })
 
-  return { ok: true, projectId }
+  if (existingKey?.key) {
+    return { ok: true, projectId, apiKey: existingKey.key }
+  }
+
+  // Create a new API key for this project
+  const { fullKey, prefix } = generateApiKey()
+  const keyHash = await hashApiKey(fullKey)
+  await db.insert(schema.apiKey).values({
+    id: ulid(),
+    orgId,
+    projectId,
+    name: 'oidc-deploy',
+    prefix,
+    hash: keyHash,
+    key: fullKey,
+  })
+
+  return { ok: true, projectId, apiKey: fullKey }
 }
 
 export type ApiApp = typeof apiApp

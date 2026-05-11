@@ -186,6 +186,56 @@ async function mintGitHubOidcToken(apiUrl: string): Promise<string | undefined> 
   return undefined
 }
 
+// Run the full OIDC registration flow: detect GitHub env, mint token, call
+// the register-deployment endpoint. Returns the API key on success so the
+// caller can set process.env.HOLOCRON_KEY before the build continues.
+// Returns undefined if OIDC is not available or registration fails.
+async function registerViaOidc(): Promise<string | undefined> {
+  const hasOidc = !!(process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN)
+  if (!hasOidc) return undefined
+
+  let githubOwner: string | undefined
+  let githubRepo: string | undefined
+
+  if (process.env.GITHUB_REPOSITORY) {
+    const parts = process.env.GITHUB_REPOSITORY.split('/')
+    if (parts.length === 2) {
+      githubOwner = parts[0]
+      githubRepo = parts[1]
+    }
+  }
+
+  if (!githubOwner || !githubRepo) return undefined
+
+  const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
+  const oidcToken = await mintGitHubOidcToken(apiUrl)
+  if (!oidcToken) return undefined
+
+  const url = `${apiUrl}/api/v0/register-deployment`
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ githubOwner, githubRepo, oidcToken }),
+    })
+    if (res.ok) {
+      const data = await res.json() as { ok: boolean; projectId?: string; apiKey?: string }
+      if (data.apiKey) {
+        logger.info(
+          formatHolocronSuccess(`registered deployment via OIDC: ${githubOwner}/${githubRepo}`),
+        )
+        return data.apiKey
+      }
+    }
+    const text = await res.text().catch(() => '')
+    logger.warn(formatHolocronWarning(`OIDC deployment registration failed (${res.status}): ${text}`))
+  } catch (err) {
+    logger.warn(formatHolocronWarning(`OIDC deployment registration request failed: ${err}`))
+  }
+  return undefined
+}
+
 export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let root: string
   let config: HolocronConfig
@@ -334,6 +384,42 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             message: `using custom CSS: ${path.relative(root, userCssPath)}`,
           }),
         )
+      }
+
+      // In build mode, if no HOLOCRON_KEY is set but GitHub Actions OIDC is
+      // available, register the deployment early and set HOLOCRON_KEY from the
+      // returned API key. This makes the key available for the rest of the build
+      // (e.g. AI chat gateway auth at runtime) without any user-configured secrets.
+      // Also writes the key to .env so subsequent commands (e.g. `start`) can
+      // read it without re-running the OIDC flow.
+      if (resolved.command === 'build' && !process.env.HOLOCRON_KEY) {
+        const oidcKey = await registerViaOidc()
+        if (oidcKey) {
+          process.env.HOLOCRON_KEY = oidcKey
+          // Persist to .env so the key survives across commands (build → start).
+          // Matches lines like `HOLOCRON_KEY=...` or `export HOLOCRON_KEY=...`,
+          // but not commented-out lines like `# HOLOCRON_KEY=...`.
+          const envPath = path.resolve(root, '.env')
+          const envLine = `HOLOCRON_KEY=${oidcKey}`
+          const keyLineRe = /^(?:export\s+)?HOLOCRON_KEY=.*$/m
+          try {
+            if (fs.existsSync(envPath)) {
+              const content = fs.readFileSync(envPath, 'utf-8')
+              if (keyLineRe.test(content)) {
+                fs.writeFileSync(envPath, content.replace(keyLineRe, envLine))
+              } else {
+                // Append, preserving trailing newline style
+                const sep = content.endsWith('\n') ? '' : '\n'
+                fs.writeFileSync(envPath, `${content}${sep}${envLine}\n`)
+              }
+            } else {
+              fs.writeFileSync(envPath, `${envLine}\n`)
+            }
+            logger.info(formatHolocronStep({ message: 'saved HOLOCRON_KEY to .env' }))
+          } catch {
+            // Non-fatal — the key is still in process.env for this build
+          }
+        }
       }
 
       if (config.assistant?.enabled !== false && !process.env.HOLOCRON_KEY) {
@@ -705,22 +791,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     // Register deployment metadata with holocron.so at build time.
-    // Two auth paths:
-    //   1. HOLOCRON_KEY set → API key auth (existing flow, e.g. Vercel deploy)
-    //   2. No key but inside GitHub Actions with id-token permission → mint a
-    //      GitHub OIDC JWT and send it for keyless auth. The server verifies the
-    //      JWT, matches the GitHub user ID to a holocron account, and links the
-    //      project to the user's org automatically.
+    // Requires HOLOCRON_KEY (set by user, or injected by OIDC in configResolved).
+    // OIDC keyless registration already ran in configResolved and set the key,
+    // so this only handles the API key auth path.
     // Detects GitHub owner/repo from Vercel or GitHub Actions env vars.
     // Non-fatal — logs a warning on failure, never breaks the build.
     async buildEnd(error) {
       if (error) return
 
       const apiKey = process.env.HOLOCRON_KEY
-      const hasOidc = !!(process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN)
-
-      // Nothing to authenticate with — skip silently (local dev)
-      if (!apiKey && !hasOidc) return
+      if (!apiKey) return
 
       // Only run once (client env runs first in multi-env builds)
       if (this.environment?.name && this.environment.name !== 'client') return
@@ -752,26 +832,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
-
-      // Mint OIDC token when no API key is available
-      let oidcToken: string | undefined
-      if (!apiKey && hasOidc) {
-        oidcToken = await mintGitHubOidcToken(apiUrl)
-        if (!oidcToken) return
-      }
-
       const url = `${apiUrl}/api/v0/register-deployment`
 
       try {
-        const headers: Record<string, string> = { 'content-type': 'application/json' }
-        if (apiKey) {
-          headers.authorization = `Bearer ${apiKey}`
-        }
-
         const res = await fetch(url, {
           method: 'POST',
-          headers,
-          body: JSON.stringify({ githubOwner, githubRepo, oidcToken }),
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({ githubOwner, githubRepo }),
         })
         if (res.ok) {
           logger.info(
