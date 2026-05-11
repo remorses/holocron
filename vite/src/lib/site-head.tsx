@@ -25,10 +25,78 @@ function googleFontUrl(family: string, weight?: number): string {
 }
 
 /** Build `@font-face` CSS for a self-hosted font. */
-function fontFaceRule(family: string, source: string, format?: string, weight?: number): string {
+function fontFaceRule({
+  family,
+  source,
+  format,
+  weight,
+}: {
+  family: string
+  source: string
+  format?: string
+  weight?: number
+}): string {
   const fmt = format ? ` format('${format}')` : ''
   const w = weight ? `\n  font-weight: ${weight};` : ''
   return `@font-face {\n  font-family: '${family}';\n  src: url('${source}')${fmt};${w}\n  font-display: swap;\n}`
+}
+
+export type FontHeadState = {
+  stylesheetLinks: string[]
+  fontFaces: string[]
+  fontVarOverrides: string[]
+  preconnectGoogle: boolean
+}
+
+export function buildFontHeadState(config: HolocronConfig): FontHeadState {
+  const stylesheetLinks = new Set<string>()
+  const fontFaces: string[] = []
+  const fontVarOverrides: string[] = []
+
+  const addFont = ({
+    family,
+    weight,
+    source,
+    format,
+    variable,
+  }: {
+    family: string
+    weight?: number
+    source?: string
+    format?: 'woff' | 'woff2'
+    variable: '--font-sans' | '--font-heading' | '--font-body'
+  }) => {
+    if (source) {
+      fontFaces.push(fontFaceRule({ family, source, format, weight }))
+    } else {
+      stylesheetLinks.add(googleFontUrl(family, weight))
+    }
+    fontVarOverrides.push(`${variable}: '${family}', system-ui, sans-serif;`)
+  }
+
+  const f = config.fonts
+  if (f?.family) {
+    addFont({
+      family: f.family,
+      weight: f.weight,
+      source: f.source,
+      format: f.format,
+      variable: '--font-sans',
+    })
+  }
+  if (f?.heading) {
+    addFont({ ...f.heading, variable: '--font-heading' })
+  }
+  if (f?.body) {
+    addFont({ ...f.body, variable: '--font-body' })
+  }
+
+  return {
+    stylesheetLinks: [...stylesheetLinks],
+    fontFaces,
+    fontVarOverrides,
+    preconnectGoogle: stylesheetLinks.size > 0,
+  }
 }
 
 export function SiteHead({ config, titleOverride }: { config: HolocronConfig; titleOverride?: string }) {
@@ -51,45 +119,12 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
     colorStyles.push(`.dark { --primary: ${darkBrand}; }`)
   }
 
-  // Fonts → Google Fonts <link> tags or @font-face rules
-  const fontLinks: string[] = []
-  const fontFaces: string[] = []
-  const fontVarOverrides: string[] = []
-  if (config.fonts) {
-    const f = config.fonts
-    // Main font family
-    if (f.family) {
-      if (f.source) {
-        fontFaces.push(fontFaceRule(f.family, f.source, f.format, f.weight))
-      } else {
-        fontLinks.push(googleFontUrl(f.family, f.weight))
-      }
-      fontVarOverrides.push(`--font-sans: '${f.family}', system-ui, sans-serif;`)
-    }
-    // Heading override
-    if (f.heading) {
-      if (f.heading.source) {
-        fontFaces.push(fontFaceRule(f.heading.family, f.heading.source, f.heading.format, f.heading.weight))
-      } else {
-        fontLinks.push(googleFontUrl(f.heading.family, f.heading.weight))
-      }
-      fontVarOverrides.push(`--font-heading: '${f.heading.family}', system-ui, sans-serif;`)
-    }
-    // Body override
-    if (f.body) {
-      if (f.body.source) {
-        fontFaces.push(fontFaceRule(f.body.family, f.body.source, f.body.format, f.body.weight))
-      } else {
-        fontLinks.push(googleFontUrl(f.body.family, f.body.weight))
-      }
-      fontVarOverrides.push(`--font-body: '${f.body.family}', system-ui, sans-serif;`)
-    }
-  }
+  const fontHead = buildFontHeadState(config)
 
   const injectedStyles = [
     ...colorStyles,
-    ...fontFaces,
-    fontVarOverrides.length > 0 ? `:root { ${fontVarOverrides.join(' ')} }` : '',
+    ...fontHead.fontFaces,
+    fontHead.fontVarOverrides.length > 0 ? `:root { ${fontHead.fontVarOverrides.join(' ')} }` : '',
   ].filter(Boolean).join('\n')
 
   return (
@@ -97,21 +132,14 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
       {/* Theme styles and fonts are hoisted into <head> via spiceflow Head. */}
       <Head.Meta charSet='utf-8' />
       <Head.Meta name='viewport' content='width=device-width, initial-scale=1' />
-      <link rel='preconnect' href='https://fonts.googleapis.com' />
-      <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='' />
-      {/* Default fonts (Inter + Newsreader) — only if no custom font overrides */}
-      {!config.fonts?.family && (
-        <link href='https://rsms.me/inter/inter.css' rel='stylesheet' precedence='default' />
-      )}
-      {!config.fonts?.family && (
-        <link
-          href='https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap'
-          rel='stylesheet'
-          precedence='default'
-        />
+      {fontHead.preconnectGoogle && (
+        <>
+          <link rel='preconnect' href='https://fonts.googleapis.com' />
+          <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='' />
+        </>
       )}
       {/* Custom Google Font links */}
-      {fontLinks.map((url) => (
+      {fontHead.stylesheetLinks.map((url) => (
         <link key={url} href={url} rel='stylesheet' precedence='default' />
       ))}
       {/* Injected styles: colors + font-face + font var overrides */}

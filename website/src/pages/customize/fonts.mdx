@@ -6,9 +6,11 @@ icon: type
 
 # Fonts
 
-Holocron supports custom fonts via the `fonts` field in `docs.json`. Google Fonts family names load automatically.
+Holocron uses Inter by default. The default Inter files are bundled with the site and served from the same origin, so a fresh site does not make third-party font requests.
 
-## Google Fonts
+Use the `fonts` field in `docs.json` when you want a different typeface. Family names without `source` load from Google Fonts. Add `source` when you want to self-host a custom font from `public/`.
+
+## Google Fonts family names
 
 ```json
 {
@@ -18,7 +20,7 @@ Holocron supports custom fonts via the `fonts` field in `docs.json`. Google Font
 }
 ```
 
-This loads Inter from Google Fonts and applies it to all text.
+This loads Inter from Google Fonts and applies it to all text. Omit `fonts` entirely if you want Holocron's built-in same-origin Inter instead.
 
 ## Separate heading and body fonts
 

@@ -2,6 +2,8 @@
    Unlayered user CSS always beats all layers — no !important needed. */
 @layer theme, base, components, utilities, holocron;
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/inter/wght-italic.css';
 @import './editorial.css' layer(holocron);
 @import './editorial-prism.css' layer(holocron);
 @custom-variant dark (&:where(.dark, .dark *));
@@ -71,8 +73,8 @@
 
   /* Font stacks */
   --font-sans:
-    'Inter var', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+    'Inter Variable', 'Inter var', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
   --font-code:
     'JetBrainsMono NF Mono', 'JetBrains Mono', 'SF Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', Menlo,
     Courier, monospace;
