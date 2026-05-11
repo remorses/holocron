@@ -9,15 +9,13 @@ import { Button } from './ui/button.tsx'
 const TOP_GRADIENT = [
   'linear-gradient(to bottom,',
   'var(--background) 0%,',
-  'color-mix(in srgb, var(--background) 97%, transparent) 10%,',
-  'color-mix(in srgb, var(--background) 92%, transparent) 20%,',
-  'color-mix(in srgb, var(--background) 82%, transparent) 30%,',
-  'color-mix(in srgb, var(--background) 82%, transparent) 42%,',
-  'color-mix(in srgb, var(--background) 45%, transparent) 55%,',
-  'color-mix(in srgb, var(--background) 25%, transparent) 67%,',
-  'color-mix(in srgb, var(--background) 12%, transparent) 78%,',
-  'color-mix(in srgb, var(--background) 4%, transparent) 88%,',
-  'transparent 100%)',
+  'color-mix(in srgb, var(--background) 92%, transparent) 8%,',
+  'color-mix(in srgb, var(--background) 78%, transparent) 16%,',
+  'color-mix(in srgb, var(--background) 60%, transparent) 26%,',
+  'color-mix(in srgb, var(--background) 40%, transparent) 38%,',
+  'color-mix(in srgb, var(--background) 20%, transparent) 52%,',
+  'color-mix(in srgb, var(--background) 8%, transparent) 68%,',
+  'transparent 85%)',
 ].join(' ')
 
 const BOTTOM_GRADIENT = [
@@ -33,7 +31,7 @@ const BOTTOM_GRADIENT = [
 
 export function HeroSection() {
   return (
-    <div className='relative mt-12 lg:mt-[100px] mb-6 lg:mb-12 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden bg-background'>
+    <div className='relative mt-4 lg:mt-8 mb-6 lg:mb-10 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden bg-background'>
       {/* Background video — width-based sizing, capped to the site grid, centered */}
       <video
         autoPlay
@@ -59,12 +57,12 @@ export function HeroSection() {
       />
 
       {/* Foreground content */}
-      <div className='relative z-2 flex flex-col items-center text-center max-w-[720px] w-full px-5 pb-32 lg:pb-[300px] gap-5 lg:gap-6'>
+      <div className='relative z-2 flex flex-col items-center text-center max-w-[720px] w-full px-5 pb-20 lg:pb-[180px] gap-5 lg:gap-6'>
         <h1 className='text-[clamp(2.2rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-[-0.03em] text-foreground'>
           Delightful Docs.
         </h1>
 
-        <div className='text-[clamp(0.95rem,2vw,1.25rem)] leading-relaxed text-muted-foreground max-w-[520px]'>
+        <div className='text-[clamp(0.95rem,2vw,1.25rem)] leading-relaxed text-foreground/70 max-w-[520px]'>
           Mintlify drop-in replacement as a Vite plugin. Own your docs, ship with Git, build locally.
         </div>
 
