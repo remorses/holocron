@@ -3,9 +3,17 @@
 //
 // Request flow:
 //   1. Extract subdomain from hostname
-//   2. Look up project + deployment version + file list in D1
+//   2. Look up project + deployment version + file list in D1 (memoized via Cache API)
 //   3. Try serving static assets from KV (CSS, JS, images)
 //   4. Forward non-asset requests to a Dynamic Worker loaded from KV
+//
+// Performance: site resolution uses KV (globally replicated, ~1-5ms reads from
+// any datacenter) instead of cross-region D1 queries (50-200ms). KV entries are
+// written at deploy finalize time. D1 is used as a fallback for legacy deploys
+// that don't have a KV entry yet.
+// Worker module KV reads use cacheTtl since modules are immutable per version.
+
+import { env } from 'cloudflare:workers'
 
 const SITE_SUFFIX = '-site.holocron.so'
 const PREVIEW_SITE_SUFFIX = '-site-preview.holocron.so'
@@ -31,23 +39,64 @@ function extractSubdomain(hostname: string): string | undefined {
   return undefined
 }
 
-/** Query D1 for the project, its active deployment, and the declared file list.
+/** Resolve site info from KV (fast, globally replicated) with D1 fallback.
+ *
+ *  Primary path: read "site-info:{subdomain}" from KV. Written at deploy
+ *  finalize time by the website worker. KV reads are ~1-5ms globally.
+ *
+ *  Fallback: query D1 for legacy deployments that predate the KV write.
  *  Uses raw SQL to keep the hosting worker lean (no drizzle-orm dependency). */
 async function resolveSite(
-  db: D1Database,
   subdomain: string,
 ): Promise<SiteInfo | null> {
-  const row = await db
-    .prepare(
-      `SELECT p.project_id, d.version, d.files
-       FROM project p
-       JOIN deployment d ON d.id = p.current_deployment_id
-       WHERE p.subdomain = ?
-         AND d.status = 'active'
-       LIMIT 1`,
-    )
-    .bind(subdomain)
-    .first<{ project_id: string; version: string; files: string | null }>()
+  // Primary: KV lookup (globally replicated, ~1-5ms)
+  const kvData = await env.SITES_KV.get(`site-info:${subdomain}`, { type: 'text', cacheTtl: 30 })
+  if (kvData) {
+    try {
+      const parsed = JSON.parse(kvData) as { projectId: string; version: string; files: string[] }
+      return { projectId: parsed.projectId, version: parsed.version, subdomain, files: parsed.files }
+    } catch { /* corrupted KV entry, fall through to D1 */ }
+  }
+
+  // Fallback: D1 for legacy deploys without KV site-info entry
+  return resolveSiteFromD1(subdomain)
+}
+
+/** D1 fallback for deployments created before site-info KV writes were added. */
+async function resolveSiteFromD1(
+  subdomain: string,
+): Promise<SiteInfo | null> {
+  const db = env.DB
+  let row: { project_id: string; version: string; files: string | null } | null = null
+
+  try {
+    row = await db
+      .prepare(
+        `SELECT d.project_id, d.version, d.files
+         FROM deployment d
+         WHERE d.subdomain = ?
+           AND d.status = 'active'
+         LIMIT 1`,
+      )
+      .bind(subdomain)
+      .first()
+  } catch {
+    // Column may not exist yet (migration pending). Fall through to legacy path.
+  }
+
+  if (!row) {
+    row = await db
+      .prepare(
+        `SELECT p.project_id, d.version, d.files
+         FROM project p
+         JOIN deployment d ON d.id = p.current_deployment_id
+         WHERE p.subdomain = ?
+           AND d.status = 'active'
+         LIMIT 1`,
+      )
+      .bind(subdomain)
+      .first()
+  }
 
   if (!row) return null
 
@@ -119,11 +168,15 @@ async function loadWorkerModules(
   const modules: Record<string, string> = {}
   await Promise.all(
     workerFiles.map(async (filePath) => {
-      const content = await kv.get(kvPrefix + filePath, { type: 'text' })
+      // Worker modules are immutable per version (keyed by projectId + version).
+      // Cache aggressively — 24h TTL at the KV edge layer.
+      const content = await kv.get(kvPrefix + filePath, { type: 'text', cacheTtl: 86400 })
       // Strip the worker/ prefix. The directory structure is preserved so
       // ssr/index.js can import ../index.js (the RSC entry).
       const moduleName = filePath.slice('worker/'.length)
-      if (content && moduleName) modules[moduleName] = content
+      if (content && moduleName) {
+        modules[moduleName] = content
+      }
     }),
   )
 
@@ -140,8 +193,8 @@ export default {
         return new Response('Not found', { status: 404 })
       }
 
-      // 1. Resolve site from D1
-      const site = await resolveSite(env.DB, subdomain)
+      // 1. Resolve site from KV (fast, D1 fallback for legacy)
+      const site = await resolveSite(subdomain)
       if (!site) {
         return new Response(
           `Site "${subdomain}" not found. Deploy with \`holocron deploy\`.`,
@@ -155,11 +208,10 @@ export default {
 
       // 3. Forward to Dynamic Worker
       //
-      // The Cloudflare Vite plugin builds don't include a `export default { fetch }`
-      // in index.js. The platform normally wraps the worker with a static asset
-      // handler that delegates to the named `fetchHandler` export. For Dynamic
-      // Workers we inject a thin wrapper module as the main entry that imports
-      // fetchHandler from the real index.js and wires it up.
+      // Use the SSR entrypoint for hosted docs. The RSC root module is still
+      // uploaded because SSR imports it while rendering, but making SSR the
+      // main Dynamic Worker module avoids running Node-only app.listen guards
+      // from the RSC entry during worker startup.
       const workerId = `${site.projectId}:v${site.version}`
 
       const worker = env.LOADER.get(workerId, async () => {
@@ -169,8 +221,6 @@ export default {
           throw new Error(`No ssr/index.js found for site ${site.subdomain} v${site.version}`)
         }
 
-        // Wrapper module that bridges the named fetchHandler export to the
-        // default export shape that Dynamic Workers expect.
         const wrapperJs = [
           `import { fetchHandler } from "./ssr/index.js";`,
           `export default {`,

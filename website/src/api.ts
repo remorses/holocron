@@ -24,6 +24,7 @@ import {
   hashApiKey,
 } from './db.ts'
 import { gatewayApp } from './gateway.ts'
+import { buildProjectSubdomain } from './deploy-api.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
 
@@ -302,6 +303,7 @@ export const apiApp = new Spiceflow()
         ok: z.boolean(),
         projectId: z.string().optional(),
         apiKey: z.string().optional().describe('Returned only for OIDC auth. Full holo_xxx key for the project.'),
+        branch: z.string().optional().describe('Derived branch name from the OIDC JWT (head_ref for PRs, ref for pushes).'),
       }),
       401: ErrorResponse,
     },
@@ -320,6 +322,16 @@ export const apiApp = new Spiceflow()
           return json({ error: oidcResult.message }, { status: 401 })
         }
 
+        // Derive branch from OIDC context:
+        //   PR events: headRef is the source branch (e.g. "fix-typo")
+        //   Push events: ref is "refs/heads/main" → strip prefix
+        //   Tags/other: fall back to "main"
+        const branch = oidcResult.headRef
+          || (oidcResult.ref?.startsWith('refs/heads/')
+            ? oidcResult.ref.slice('refs/heads/'.length)
+            : undefined)
+          || 'main'
+
         // Find holocron user by GitHub numeric user ID
         const githubAccount = await db.query.account.findFirst({
           where: {
@@ -335,21 +347,28 @@ export const apiApp = new Spiceflow()
         }
 
         // Find first org where user is admin
+        let orgId: string
         const adminMembership = await db.query.orgMember.findFirst({
           where: { userId: githubAccount.userId, role: 'admin' },
           with: { org: true },
         })
-        const orgId = adminMembership?.orgId
-        if (!orgId) {
+        if (adminMembership?.orgId) {
+          orgId = adminMembership.orgId
+        } else {
           // Create an org for the user (same as login flow)
           const userRow = await db.query.user.findFirst({
             where: { id: githubAccount.userId },
           })
           const created = await ensureOrg(githubAccount.userId, userRow?.name ?? 'My Org')
-          return await upsertProjectForOidc(db, created.id, oidcResult.owner, oidcResult.repo)
+          orgId = created.id
         }
 
-        return await upsertProjectForOidc(db, orgId, oidcResult.owner, oidcResult.repo)
+        const result = await upsertProjectForOidc(db, orgId, oidcResult.owner, oidcResult.repo, {
+          ref: oidcResult.ref,
+          headRef: oidcResult.headRef,
+          baseRef: oidcResult.baseRef,
+        })
+        return { ...result, branch }
       }
 
       return json({ error: 'invalid or missing authentication' }, { status: 401 })
@@ -362,7 +381,17 @@ const GITHUB_OIDC_JWKS = jose.createRemoteJWKSet(
   new URL('https://token.actions.githubusercontent.com/.well-known/jwks'),
 )
 
-type OidcResult = { ownerIdStr: string; owner: string; repo: string }
+type OidcResult = {
+  ownerIdStr: string
+  owner: string
+  repo: string
+  /** Full git ref, e.g. "refs/heads/main" or "refs/pull/123/merge" */
+  ref?: string
+  /** PR source branch, e.g. "fix-typo" (only set for pull_request events) */
+  headRef?: string
+  /** PR target branch, e.g. "main" (only set for pull_request events) */
+  baseRef?: string
+}
 
 // PR safety: we intentionally do NOT reject tokens from pull_request workflows.
 // The actor_id claim maps to the PR author's GitHub user ID, so the project is
@@ -396,7 +425,14 @@ async function verifyGitHubOidc(token: string, audience: string): Promise<OidcRe
       return new Error('OIDC token missing repository claim')
     }
 
-    return { ownerIdStr: actorIdStr, owner, repo }
+    // Branch context from OIDC claims:
+    //   push events:  ref="refs/heads/main", head_ref="", base_ref=""
+    //   PR events:    ref="refs/pull/123/merge", head_ref="fix-typo", base_ref="main"
+    const ref = String(payload.ref ?? '') || undefined
+    const headRef = String(payload.head_ref ?? '') || undefined
+    const baseRef = String(payload.base_ref ?? '') || undefined
+
+    return { ownerIdStr: actorIdStr, owner, repo, ref, headRef, baseRef }
   } catch (err) {
     return new Error(`OIDC verification failed: ${err instanceof Error ? err.message : err}`)
   }
@@ -411,6 +447,7 @@ async function upsertProjectForOidc(
   orgId: string,
   githubOwner: string,
   githubRepo: string,
+  oidcBranch?: { ref?: string; headRef?: string; baseRef?: string },
 ) {
   // Try to find existing project with this repo in this org
   let projectId: string
@@ -429,14 +466,29 @@ async function upsertProjectForOidc(
       .where(orm.eq(schema.project.projectId, projectId))
       .limit(1)
   } else {
-    // Create new project
+    // Derive default branch from OIDC context:
+    //   PR events: baseRef is the target (default) branch
+    //   Push events: ref is the branch being pushed to (likely the default on first CI setup)
+    let defaultBranch = 'main'
+    if (oidcBranch?.baseRef) {
+      defaultBranch = oidcBranch.baseRef
+    } else if (oidcBranch?.ref?.startsWith('refs/heads/')) {
+      defaultBranch = oidcBranch.ref.slice('refs/heads/'.length)
+    }
+
+    // Set subdomain eagerly so the URL is ready before the first deploy finalizes.
+    // buildProjectSubdomain returns "{repo}-{owner}" for OIDC projects.
     projectId = ulid()
+    const subdomain = buildProjectSubdomain({ githubOwner, githubRepo, projectId })
+
     await db.insert(schema.project).values({
       projectId,
       orgId,
       name: `${githubOwner}/${githubRepo}`,
       githubOwner,
       githubRepo,
+      defaultBranch,
+      subdomain,
     })
   }
 

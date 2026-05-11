@@ -9,9 +9,11 @@
     "fixtures:start": "tsx scripts/run-fixture.ts start",
     "update-realworld-polar": "tsx scripts/update-realworld-polar.ts",
     "test-e2e": "playwright test",
-    "test-e2e-start": "tsx scripts/test-e2e-start.ts"
+    "test-e2e-start": "tsx scripts/test-e2e-start.ts",
+    "test-deploy-preview": "pnpm --dir ../vite build && playwright test -c playwright.deploy-preview.config.ts"
   },
   "dependencies": {
+    "@cloudflare/vite-plugin": "^1.32.2",
     "@holocron.so/vite": "workspace:^",
     "@playwright/test": "^1.50.1",
     "@tailwindcss/vite": "^4.2.2",

@@ -100,6 +100,9 @@ export const project = s.sqliteTable('project', {
   name: s.text('name').notNull(),
   subdomain: s.text('subdomain').unique(),
   currentDeploymentId: s.text('current_deployment_id'),
+  /** Default branch for production deploys (e.g. "main", "master"). Deploys to this
+   *  branch update project.currentDeploymentId; other branches create preview deployments. */
+  defaultBranch: s.text('default_branch').default('main'),
   githubOwner: s.text('github_owner'),
   githubRepo: s.text('github_repo'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
@@ -132,11 +135,18 @@ export const deployment = s.sqliteTable('deployment', {
   projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
   version: s.text('version').notNull(),
   status: s.text('status', { enum: ['uploading', 'active', 'superseded'] }).notNull().default('uploading'),
+  /** Branch name this deployment was built from (e.g. "main", "fix-typo"). */
+  branch: s.text('branch').default('main'),
+  /** Full DNS subdomain label for this deployment (e.g. "my-docs-remorses" for production,
+   *  "fix-typo-my-docs-remorses" for preview). Set during finalize. Used by the hosting
+   *  worker to resolve both production and preview sites in a single query. */
+  subdomain: s.text('subdomain'),
   /** JSON array of declared file paths; validated during finalize to ensure all were uploaded. */
   files: s.text('files'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
   s.index('deployment_project_id_idx').on(table.projectId),
+  s.index('deployment_subdomain_idx').on(table.subdomain),
 ])
 
 // ── API keys (one key per project, key alone identifies the project) ─

@@ -14,20 +14,21 @@ import fs from 'node:fs'
 import path from 'node:path'
 import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
-import { resolveDeployAuth, getDeployClient } from './api-client.ts'
+import { resolveDeployAuth, getDeployClient, type DeployAuth } from './api-client.ts'
 
 export const deployCli = goke()
 
 deployCli
   .command('deploy', 'Build and deploy your docs site to holocron.so')
   .option('--project [projectId]', 'Project ID (only needed with session auth, not with HOLOCRON_KEY)')
+  .option('--branch [name]', 'Branch name for preview deployments (auto-detected from git/CI env)')
   .option('--skip-build', 'Skip the vite build step (use existing dist/)')
   .action(async (options, { console: output, process: proc }) => {
     const cwd = proc.cwd
     const nonInteractive = isAgent || !process.stdin.isTTY
 
     // ── Auth ──────────────────────────────────────────────────────
-    let auth: ReturnType<typeof resolveDeployAuth>
+    let auth: DeployAuth
     try {
       auth = resolveDeployAuth()
     } catch (err) {
@@ -37,8 +38,36 @@ deployCli
 
     const { safeFetch } = getDeployClient()
 
+    // ── Branch detection ─────────────────────────────────────────
+    // Priority: explicit flag > HOLOCRON_BRANCH (from vite plugin OIDC) > GitHub CI env > git
+    let branch = options.branch
+    if (!branch) branch = process.env.HOLOCRON_BRANCH || undefined
+    if (!branch && process.env.GITHUB_HEAD_REF) {
+      // PR event: GITHUB_HEAD_REF is the source branch
+      branch = process.env.GITHUB_HEAD_REF
+    }
+    if (!branch && process.env.GITHUB_REF) {
+      const ref = process.env.GITHUB_REF
+      if (ref.startsWith('refs/heads/')) {
+        branch = ref.slice('refs/heads/'.length)
+      }
+      // Ignore refs/tags/ and other ref types
+    }
+    if (!branch) {
+      try {
+        const { execSync } = await import('node:child_process')
+        branch = execSync('git rev-parse --abbrev-ref HEAD', {
+          cwd,
+          encoding: 'utf-8',
+          stdio: ['pipe', 'pipe', 'pipe'],
+        }).trim()
+      } catch { /* not a git repo or git not installed */ }
+    }
+    branch = branch || 'main'
+    output.log(`Branch: ${branch}`)
+
     // ── Resolve project (only needed for session auth) ────────────
-    let projectId = options.project as string | undefined
+    let projectId = options.project
     if (auth.type === 'session' && !projectId) {
       const res = await safeFetch('/api/v0/projects')
       if (res instanceof Error) {
@@ -65,7 +94,7 @@ deployCli
           })),
         })
         if (clack.isCancel(selected)) return proc.exit(1)
-        projectId = selected as string
+        projectId = selected
       }
     }
 
@@ -125,7 +154,7 @@ deployCli
     // ── Step 1: Create deployment ─────────────────────────────────
     output.log('Creating deployment...')
     const filePaths = files.map((f) => f.relativePath)
-    const createBody: { files: string[]; projectId?: string } = { files: filePaths }
+    const createBody: { files: string[]; projectId?: string; branch?: string } = { files: filePaths, branch }
     if (projectId) createBody.projectId = projectId
 
     const createRes = await safeFetch('/api/v0/deployments', {
@@ -190,9 +219,9 @@ deployCli
       output.error(`Failed to finalize deployment: ${finalizeRes.message}`)
       return proc.exit(1)
     }
-    const { url } = finalizeRes as { url: string; deploymentId: string }
+    const finalized = finalizeRes as { url: string; deploymentId: string; branch: string }
     output.log('')
-    output.log(`Deployed! ${url}`)
+    output.log(`Deployed! ${finalized.url}`)
   })
 
 /** Recursively collect files from a directory into the files array. */

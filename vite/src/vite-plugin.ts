@@ -25,6 +25,7 @@ import react from '@vitejs/plugin-react'
 const __holocronSrcDir = fileURLToPath(new URL('../src', import.meta.url))
 const HOLOCRON_APP_SRC_PATH = path.join(__holocronSrcDir, 'app.tsx')
 const nodeRequire = createRequire(import.meta.url)
+const yamlBrowserEntry = path.join(path.dirname(nodeRequire.resolve('yaml/package.json')), 'browser/index.js')
 
 export type HolocronVirtualModules = {
   /** Custom source for `virtual:holocron-config` */
@@ -176,7 +177,7 @@ async function mintGitHubOidcToken(apiUrl: string): Promise<string | undefined> 
       headers: { authorization: `bearer ${requestToken}` },
     })
     if (res.ok) {
-      const data = await res.json() as { value: string }
+      const data = await res.json()
       return data.value
     }
     logger.warn(formatHolocronWarning(`failed to mint GitHub OIDC token (${res.status})`))
@@ -212,10 +213,15 @@ async function registerViaOidc(): Promise<string | undefined> {
       body: JSON.stringify({ oidcToken }),
     })
     if (res.ok) {
-      const data = await res.json() as { ok: boolean; projectId?: string; apiKey?: string }
+      const data = await res.json()
       if (data.apiKey) {
+        // Pass the OIDC-derived branch to the deploy CLI via env var.
+        // The CLI reads HOLOCRON_BRANCH as one of its branch detection sources.
+        if (data.branch) {
+          process.env.HOLOCRON_BRANCH = data.branch
+        }
         logger.info(
-          formatHolocronSuccess(`registered deployment via OIDC: ${process.env.GITHUB_REPOSITORY}`),
+          formatHolocronSuccess(`registered deployment via OIDC: ${process.env.GITHUB_REPOSITORY}${data.branch ? ` (branch: ${data.branch})` : ''}`),
         )
         return data.apiKey
       }
@@ -305,6 +311,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             { find: /^safe-mdx\/client$/, replacement: path.join(safeMdxDir, 'dist/dynamic-esm-component.js') },
             { find: /^react-medium-image-zoom$/, replacement: zoomEntry },
             { find: /^react-medium-image-zoom\/dist\/styles\.css$/, replacement: path.join(zoomDir, 'styles.css') },
+            { find: /^yaml$/, replacement: yamlBrowserEntry },
           ],
           dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
           tsconfigPaths: true,
@@ -394,21 +401,28 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           // Matches lines like `HOLOCRON_KEY=...` or `export HOLOCRON_KEY=...`,
           // but not commented-out lines like `# HOLOCRON_KEY=...`.
           const envPath = path.resolve(root, '.env')
-          const envLine = `HOLOCRON_KEY=${oidcKey}`
-          const keyLineRe = /^(?:export\s+)?HOLOCRON_KEY=.*$/m
+
+          // Build the env lines to persist: HOLOCRON_KEY (always) + HOLOCRON_BRANCH (if available)
+          const envPairs: Array<{ key: string; value: string }> = [
+            { key: 'HOLOCRON_KEY', value: oidcKey },
+          ]
+          if (process.env.HOLOCRON_BRANCH) {
+            envPairs.push({ key: 'HOLOCRON_BRANCH', value: process.env.HOLOCRON_BRANCH })
+          }
+
           try {
-            if (fs.existsSync(envPath)) {
-              const content = fs.readFileSync(envPath, 'utf-8')
-              if (keyLineRe.test(content)) {
-                fs.writeFileSync(envPath, content.replace(keyLineRe, envLine))
+            let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : ''
+            for (const { key, value } of envPairs) {
+              const lineRe = new RegExp(`^(?:export\\s+)?${key}=.*$`, 'm')
+              const envLine = `${key}=${value}`
+              if (lineRe.test(content)) {
+                content = content.replace(lineRe, envLine)
               } else {
-                // Append, preserving trailing newline style
-                const sep = content.endsWith('\n') ? '' : '\n'
-                fs.writeFileSync(envPath, `${content}${sep}${envLine}\n`)
+                const sep = content.length > 0 && !content.endsWith('\n') ? '\n' : ''
+                content = `${content}${sep}${envLine}\n`
               }
-            } else {
-              fs.writeFileSync(envPath, `${envLine}\n`)
             }
+            fs.writeFileSync(envPath, content)
             logger.info(formatHolocronStep({ message: 'saved HOLOCRON_KEY to .env' }))
           } catch {
             // Non-fatal — the key is still in process.env for this build
@@ -640,9 +654,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           `export { app }`,
           `const __isMain = typeof import.meta.main === 'boolean'`,
           `  ? import.meta.main`,
-          `  : typeof process !== 'undefined' && process.argv[1]`,
+          `  : typeof process !== 'undefined' && process.argv[1] && typeof import.meta.url === 'string'`,
           `    ? fileURLToPath(import.meta.url) === realpathSync(process.argv[1])`,
-          `    : true`,
+          `    : false`,
           `if (__isMain) app.listen(Number(process.env.PORT || 3000))`,
         ].filter(Boolean).join('\n')
       }
@@ -823,7 +837,27 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       if (name === 'rsc' || name === 'ssr') {
         addNoExternal(config, holocronPackagePattern)
+        addNoExternal(config, 'fflate')
       }
+    },
+  }
+
+  const dynamicWorkerModulePlugin: Plugin = {
+    name: 'holocron:dynamic-worker-modules',
+    renderChunk(code) {
+      if (process.env.HOLOCRON_DEPLOY !== '1') return
+      if (this.environment.name === 'client') return
+      if (!code.includes('createRequire(import.meta.url)')) return
+
+      // Dynamic Workers currently expose `import.meta.url` as undefined. Rolldown
+      // may emit an unused CommonJS helper that eagerly calls createRequire with
+      // import.meta.url, which crashes module evaluation before the real app runs.
+      // Replacing only the helper factory keeps genuinely unsupported runtime
+      // require() calls failing clearly while allowing unused helpers to exist.
+      return code.replaceAll(
+        'createRequire(import.meta.url)',
+        '(() => { throw new Error("require is unavailable in Dynamic Workers") })',
+      )
     },
   }
 
@@ -831,6 +865,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     rawImportPlugin(),
     holocronPlugin,
     holocronRscPackagePlugin,
+    dynamicWorkerModulePlugin,
   ]
 
   // Auto-add spiceflow/tailwind/react unless the user already installed each.

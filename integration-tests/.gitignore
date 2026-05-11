@@ -6,3 +6,4 @@ fixtures/*/node_modules/
 test-results/
 playwright-report/
 .playwright-logs/
+.deploy-preview-runs/

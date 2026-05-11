@@ -23,6 +23,55 @@ import {
   validateApiKey,
 } from './db.ts'
 
+// ── Subdomain helpers ───────────────────────────────────────────────
+
+/** Sanitize a string for use in DNS hostnames. Only [a-z0-9-], max 63 chars. */
+export function sanitizeForDns(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+/** Build the project's base subdomain from github info or projectId.
+ *  Format: `{repo}-{owner}` for OIDC projects, `{projectId}` for manual ones. */
+export function buildProjectSubdomain(project: {
+  githubOwner?: string | null
+  githubRepo?: string | null
+  projectId: string
+}): string {
+  if (project.githubOwner && project.githubRepo) {
+    const raw = `${project.githubRepo}-${project.githubOwner}`
+    const sanitized = sanitizeForDns(raw)
+    if (sanitized.length <= 63) return sanitized
+    // Truncate with deterministic hash suffix for uniqueness
+    const hashNum = [...raw].reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0)
+    const suffix = Math.abs(hashNum).toString(36).slice(0, 6)
+    return `${sanitized.slice(0, 63 - suffix.length - 1).replace(/-$/, '')}-${suffix}`
+  }
+  return project.projectId.toLowerCase()
+}
+
+/** Build a preview subdomain for a branch deployment.
+ *  Format: `{sanitized-branch}-{project-subdomain}`. Truncated to 63 chars with
+ *  hash suffix if needed. */
+export function buildPreviewSubdomain(branchName: string, projectSubdomain: string): string {
+  const sanitizedBranch = sanitizeForDns(branchName)
+  const full = `${sanitizedBranch}-${projectSubdomain}`
+  if (full.length <= 63) return full
+  // Truncate branch part, keep a deterministic hash suffix
+  const hashNum = [...branchName].reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0)
+  const suffix = Math.abs(hashNum).toString(36).slice(0, 6)
+  const maxBranchLen = 63 - projectSubdomain.length - 1 - suffix.length - 1
+  if (maxBranchLen < 1) {
+    // Project subdomain itself is near the limit; use hash only
+    return `${sanitizedBranch.slice(0, 50)}-${suffix}`.slice(0, 63)
+  }
+  const truncated = sanitizedBranch.slice(0, maxBranchLen).replace(/-$/, '')
+  return `${truncated}-${suffix}-${projectSubdomain}`
+}
+
 // ── Auth helpers ────────────────────────────────────────────────────
 
 type DeployAuth = { orgId: string; projectId: string }
@@ -95,6 +144,7 @@ export const deployApp = new Spiceflow()
         .max(2000)
         .describe('File paths to upload'),
       projectId: z.string().optional().describe('Required for session auth; ignored for API key auth'),
+      branch: z.string().max(200).optional().describe('Branch name for preview deployments. Defaults to "main".'),
     }),
     detail: {
       summary: 'Create deployment',
@@ -116,6 +166,7 @@ export const deployApp = new Spiceflow()
         projectId: auth.projectId,
         version,
         status: 'uploading',
+        branch: body.branch || 'main',
         files: JSON.stringify(body.files),
       })
 
@@ -191,7 +242,7 @@ export const deployApp = new Spiceflow()
       tags: ['Deploy'],
     },
     response: {
-      200: z.object({ url: z.string(), deploymentId: z.string() }),
+      200: z.object({ url: z.string(), deploymentId: z.string(), branch: z.string() }),
     },
     async handler({ request, params }) {
       const db = getDb()
@@ -207,6 +258,17 @@ export const deployApp = new Spiceflow()
       }
 
       await requireDeployAccess(request, deploy.projectId)
+
+      // Get project info for subdomain computation and branch comparison
+      const proj = await db.query.project.findFirst({
+        where: { projectId: deploy.projectId },
+      })
+      if (!proj) {
+        throw json({ error: 'project not found' }, { status: 404 })
+      }
+
+      const branch = deploy.branch || 'main'
+      const isDefaultBranch = branch === (proj.defaultBranch || 'main')
 
       const declaredFiles: string[] = JSON.parse(deploy.files || '[]')
       const prefix = `site:${deploy.projectId}/v:${deploy.version}/`
@@ -235,8 +297,7 @@ export const deployApp = new Spiceflow()
         )
       }
 
-      // Build asset manifest from uploaded client assets
-      // Build manifest: map browser paths (e.g. /assets/style.css) to content types.
+      // Build asset manifest from uploaded client assets.
       // CLI uploads dist/client/ files under the "assets/" prefix, so a file like
       // dist/client/assets/style.css becomes "assets/assets/style.css" in KV.
       // The browser requests /assets/style.css, so we strip the "assets" prefix.
@@ -244,53 +305,101 @@ export const deployApp = new Spiceflow()
       const manifest: Record<string, { contentType: string }> = {}
       for (const assetPath of assetFiles) {
         const ext = assetPath.split('.').pop() || ''
-        // "assets/assets/style.css" → "/assets/style.css"
         const browserPath = '/' + assetPath.slice('assets/'.length)
-        manifest[browserPath] = {
-          contentType: guessMimeType(ext),
-        }
+        manifest[browserPath] = { contentType: guessMimeType(ext) }
       }
-      await env.SITES_KV.put(
-        `${prefix}manifest`,
-        JSON.stringify(manifest),
-      )
+      await env.SITES_KV.put(`${prefix}manifest`, JSON.stringify(manifest))
 
-      // Subdomain is the lowercased projectId (ULID). Guaranteed unique,
-      // no collision risk, and auth is already enforced via API key → projectId.
-      const subdomain = deploy.projectId.toLowerCase()
-
-      // Atomic batch: supersede all active deployments, activate this one,
-      // and update the project pointer. D1 batch runs all statements in a
-      // single transaction so concurrent finalizes can't interleave.
-      await db.batch([
-        db.update(schema.deployment)
-          .set({ status: 'superseded' })
-          .where(
-            orm.and(
-              orm.eq(schema.deployment.projectId, deploy.projectId),
-              orm.eq(schema.deployment.status, 'active'),
-            ),
-          ),
-        db.update(schema.deployment)
-          .set({ status: 'active' })
-          .where(orm.eq(schema.deployment.id, deploy.id)),
-        db.update(schema.project)
-          .set({
-            subdomain,
-            currentDeploymentId: deploy.id,
-            updatedAt: Date.now(),
-          })
-          .where(orm.eq(schema.project.projectId, deploy.projectId)),
-      ])
+      // Compute subdomains
+      const projectSubdomain = buildProjectSubdomain(proj)
 
       // Derive the hosting domain from the request origin (preview vs production)
       const requestHost = new URL(request.url).hostname
-      const isPreview = requestHost.startsWith('preview.')
-      const siteSuffix = isPreview ? '-site-preview.holocron.so' : '-site.holocron.so'
-      const url = `https://${subdomain}${siteSuffix}`
-      return { url, deploymentId: deploy.id }
+      const isPreviewEnv = requestHost.startsWith('preview.')
+      const siteSuffix = isPreviewEnv ? '-site-preview.holocron.so' : '-site.holocron.so'
+
+      if (isDefaultBranch) {
+        // Production deploy: supersede ALL active deployments for this project,
+        // activate this one, and update the project pointer.
+        // deployment.subdomain is set to the project subdomain so the hosting
+        // worker can resolve both production and preview via a single query.
+        await db.batch([
+          db.update(schema.deployment)
+            .set({ status: 'superseded' })
+            .where(
+              orm.and(
+                orm.eq(schema.deployment.projectId, deploy.projectId),
+                orm.eq(schema.deployment.status, 'active'),
+                orm.eq(schema.deployment.branch, branch),
+              ),
+            ),
+          db.update(schema.deployment)
+            .set({ status: 'active', subdomain: projectSubdomain })
+            .where(orm.eq(schema.deployment.id, deploy.id)),
+          db.update(schema.project)
+            .set({
+              subdomain: projectSubdomain,
+              currentDeploymentId: deploy.id,
+              updatedAt: Date.now(),
+            })
+            .where(orm.eq(schema.project.projectId, deploy.projectId)),
+        ])
+
+        // Write site resolution data to KV so the hosting worker can resolve
+        // subdomain → project without a cross-region D1 query. KV is globally
+        // replicated (~1-5ms reads from any datacenter).
+        await writeSiteInfoToKv(projectSubdomain, {
+          projectId: deploy.projectId,
+          version: deploy.version,
+          files: declaredFiles,
+        })
+
+        const url = `https://${projectSubdomain}${siteSuffix}`
+        return { url, deploymentId: deploy.id, branch }
+      } else {
+        // Preview deploy: only supersede active deployments for the SAME branch.
+        // Do NOT touch project.currentDeploymentId — production stays live.
+        const previewSubdomain = buildPreviewSubdomain(branch, projectSubdomain)
+
+        await db.batch([
+          db.update(schema.deployment)
+            .set({ status: 'superseded' })
+            .where(
+              orm.and(
+                orm.eq(schema.deployment.projectId, deploy.projectId),
+                orm.eq(schema.deployment.branch, branch),
+                orm.eq(schema.deployment.status, 'active'),
+              ),
+            ),
+          db.update(schema.deployment)
+            .set({ status: 'active', subdomain: previewSubdomain })
+            .where(orm.eq(schema.deployment.id, deploy.id)),
+        ])
+
+        await writeSiteInfoToKv(previewSubdomain, {
+          projectId: deploy.projectId,
+          version: deploy.version,
+          files: declaredFiles,
+        })
+
+        const url = `https://${previewSubdomain}${siteSuffix}`
+        return { url, deploymentId: deploy.id, branch }
+      }
     },
   })
+
+/** Write site resolution data to KV for the hosting worker.
+ *  Key: "site-info:{subdomain}" — matches what the hosting worker reads.
+ *  The hosting worker falls back to D1 if this key doesn't exist (legacy deploys). */
+async function writeSiteInfoToKv(
+  subdomain: string,
+  data: { projectId: string; version: string; files: string[] },
+): Promise<void> {
+  await env.SITES_KV.put(
+    `site-info:${subdomain}`,
+    JSON.stringify(data),
+  )
+}
 
 function guessMimeType(ext: string): string {
   const types: Record<string, string> = {

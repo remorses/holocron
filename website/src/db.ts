@@ -2,6 +2,11 @@
 //
 // getDb() creates a drizzle-orm/d1 client bound to env.DB.
 // getAuth() creates a BetterAuth instance with GitHub social login + device flow.
+//
+// Performance: validateApiKey and org lookups are memoized via Cache API
+// (5-10 min fresh, SWR) so repeated cross-region D1 queries are ~1-5ms
+// instead of 50-200ms. null results are never cached so deleted keys
+// and new users are immediately visible.
 
 import { env } from 'cloudflare:workers'
 import { drizzle } from 'drizzle-orm/d1'
@@ -10,6 +15,7 @@ import { betterAuth } from 'better-auth'
 import { deviceAuthorization, bearer } from 'better-auth/plugins'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter/relations-v2'
 import { json } from 'spiceflow'
+import { memoize } from './lib/memoize.ts'
 
 // ── Drizzle client via D1 ───────────────────────────────────────────
 
@@ -102,19 +108,34 @@ export async function requireSession(request: RequestHeaders): Promise<Session> 
 
 // ── Org helpers ─────────────────────────────────────────────────────
 
+/** D1 lookup for user's org membership — memoized via Cache API (10 min
+ *  fresh, 20 min SWR). Returns null if user has no org yet, which is
+ *  never cached so the create path in ensureOrg is always fresh. */
+const findOrgForUser = memoize({
+  namespace: 'user-org',
+  fn: async (userId: string): Promise<{ id: string; name: string } | null> => {
+    const db = getDb()
+    const existing = await db.query.orgMember.findFirst({
+      where: { userId },
+      with: { org: true },
+    })
+    if (!existing?.org) return null
+    return { id: existing.org.id, name: existing.org.name }
+  },
+  ttl: 600,
+  swr: 1200,
+})
+
 /** Get or create the user's org. Idempotent and race-safe:
  *  if two concurrent requests both try to create, the loser catches
- *  the unique constraint error and re-reads the winner's row. */
+ *  the unique constraint error and re-reads the winner's row.
+ *  The lookup is memoized; the create path always hits D1. */
 export async function ensureOrg(userId: string, userName: string): Promise<{ id: string; name: string }> {
-  const db = getDb()
-  const existing = await db.query.orgMember.findFirst({
-    where: { userId },
-    with: { org: true },
-  })
-  if (existing?.org) {
-    return { id: existing.org.id, name: existing.org.name }
-  }
+  const cached = await findOrgForUser(userId)
+  if (cached) return cached
 
+  // No org found (null is never cached) — create one
+  const db = getDb()
   const { ulid } = await import('ulid')
   const orgId = ulid()
   try {
@@ -137,19 +158,32 @@ export async function ensureOrg(userId: string, userName: string): Promise<{ id:
 
 // ── API key validation ──────────────────────────────────────────────
 
+/** D1 lookup by key hash — the expensive cross-region query. Memoized via
+ *  Cache API (5 min fresh, 10 min SWR). null results (invalid keys) are
+ *  never cached. Note: deleted keys may remain valid for up to 5 minutes
+ *  per datacenter until the cache entry expires. */
+const findApiKeyByHash = memoize({
+  namespace: 'api-key-by-hash',
+  fn: async (hash: string): Promise<{ orgId: string; keyId: string; projectId: string } | null> => {
+    const db = getDb()
+    const found = await db.query.apiKey.findFirst({
+      where: { hash },
+    })
+    if (!found) return null
+    return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
+  },
+  ttl: 300,
+  swr: 600,
+})
+
 export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string } | null> {
   if (!authHeader) return null
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
   if (!token.startsWith('holo_')) return null
 
+  // Hash is CPU-only (fast), D1 lookup is memoized
   const hash = await hashApiKey(token)
-  const db = getDb()
-  const found = await db.query.apiKey.findFirst({
-    where: { hash },
-  })
-  if (!found) return null
-
-  return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
+  return findApiKeyByHash(hash)
 }
 
 

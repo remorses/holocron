@@ -2,8 +2,6 @@
  * Holocron package version used to invalidate on-disk build caches across releases.
  */
 
-import { createRequire } from 'node:module'
+import packageJson from '../../package.json' with { type: 'json' }
 
-const require = createRequire(import.meta.url)
-
-export const PACKAGE_VERSION = (require('../../package.json') as { version: string }).version
+export const PACKAGE_VERSION = packageJson.version

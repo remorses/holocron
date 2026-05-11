@@ -432,6 +432,12 @@ If the preview migration or deploy fails, **stop**. Do not continue to productio
 
 The `deployment` and `deployment:prod` scripts run the D1 migration before building and deploying. If migration fails, the `&&` chain stops and the deploy never happens.
 
+## Deploy security — githubOwner/githubRepo are OIDC-only
+
+The `project.githubOwner` and `project.githubRepo` columns **must only be set from verified GitHub Actions OIDC JWT claims** (the `repository` claim in `verifyGitHubOidc`). These fields derive the hosting subdomain (`{repo}-{owner}-site.holocron.so`), so accepting them from unverified sources (request body, query params, user input) would let anyone hijack another project's URL.
+
+Never add API endpoints, CLI flags, or project-update routes that accept `githubOwner`/`githubRepo` from the caller. The only write path is `upsertProjectForOidc` in `api.ts`, which gets owner/repo from the verified JWT's `repository` claim. If a future feature needs to change these fields (e.g. repo transfer), it must re-verify ownership via a fresh OIDC token or equivalent proof.
+
 ## Secrets management — always use sigillo
 
 All secrets must be managed through **sigillo**. Never hardcode secrets, never read `.env` files directly. Load the `sigillo` skill before any secrets-related work. Run apps with `sigillo run -- pnpm dev` to inject secrets as env vars. Never read secret values into agent context.
@@ -491,6 +497,7 @@ Do not add brittle tests that hardcode visual constants like pixel gaps, widths,
 - `pnpm test-e2e` — runs every fixture in dev mode (one Vite server per fixture)
 - `pnpm test-e2e-start` — builds every fixture, runs every fixture in prod mode
 - `pnpm test-e2e --project=<name>` — runs one specific fixture
+- `HOLOCRON_DEPLOY_E2E=1 HOLOCRON_PREVIEW_KEY=holo_xxx pnpm test-deploy-preview` from `integration-tests/` — deploys the basic fixture to `preview.holocron.so` and verifies the real preview hosting worker. This is a live external-service test, so it is skipped unless the env vars are set. It must cover page load, successful CSS network requests, and client-side navigation on the deployed `*-site-preview.holocron.so` URL.
 
 **Checking bundle sizes**:
 
