@@ -99,15 +99,56 @@ export async function requireSession(request: RequestHeaders): Promise<Session> 
   return session
 }
 
-export async function requireOrgMember(userId: string, orgId: string) {
+// ── Org helpers ─────────────────────────────────────────────────────
+
+/** Get or create the user's org. Idempotent and race-safe:
+ *  if two concurrent requests both try to create, the loser catches
+ *  the unique constraint error and re-reads the winner's row. */
+export async function ensureOrg(userId: string, userName: string): Promise<{ id: string; name: string }> {
   const db = getDb()
-  const member = await db.query.orgMember.findFirst({
-    where: { orgId, userId },
+  const existing = await db.query.orgMember.findFirst({
+    where: { userId },
+    with: { org: true },
   })
-  if (!member) {
-    throw json({ error: 'forbidden' }, { status: 403 })
+  if (existing?.org) {
+    return { id: existing.org.id, name: existing.org.name }
   }
-  return member
+
+  const { ulid } = await import('ulid')
+  const orgId = ulid()
+  try {
+    await db.batch([
+      db.insert(schema.org).values({ id: orgId, name: userName }),
+      db.insert(schema.orgMember).values({ orgId, userId, role: 'admin' }),
+    ])
+    return { id: orgId, name: userName }
+  } catch (err) {
+    // Race: another request already created the org for this user.
+    // Re-read the winning row.
+    const winner = await db.query.orgMember.findFirst({
+      where: { userId },
+      with: { org: true },
+    })
+    if (winner?.org) return { id: winner.org.id, name: winner.org.name }
+    throw err
+  }
+}
+
+// ── API key validation ──────────────────────────────────────────────
+
+export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string } | null> {
+  if (!authHeader) return null
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
+  if (!token.startsWith('holo_')) return null
+
+  const hash = await hashApiKey(token)
+  const db = getDb()
+  const found = await db.query.apiKey.findFirst({
+    where: { hash },
+  })
+  if (!found) return null
+
+  return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
 }
 
 

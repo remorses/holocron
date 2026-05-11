@@ -9,7 +9,7 @@ import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import { createWorkersAI } from 'workers-ai-provider'
 import type { WorkersAI } from 'workers-ai-provider'
-import { getDb, hashApiKey } from './db.ts'
+import { getDb, hashApiKey, validateApiKey } from './db.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
 
 const ALLOWED_MODELS: Record<string, string> = {
@@ -53,22 +53,6 @@ function getUsageKey(orgId: string): string {
   const now = new Date()
   const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
   return `usage:${orgId}:${month}`
-}
-
-async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string } | null> {
-  if (!authHeader) return null
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
-  if (!token.startsWith('holo_')) return null
-
-  const hash = await hashApiKey(token)
-  const db = getDb()
-  const found = await db.query.apiKey.findFirst({
-    where: { hash },
-    columns: { id: true, orgId: true },
-  })
-  if (!found) return null
-
-  return { orgId: found.orgId, keyId: found.id }
 }
 
 async function fetchDocsZip(url: string): Promise<Record<string, string>> {
@@ -151,7 +135,7 @@ export const gatewayApp = new Spiceflow()
           code: 'HOLOCRON_TEMPORARY_AI_MODEL',
           title: 'Temporary AI model',
           message: 'Add HOLOCRON_KEY before deploying for reliable AI chat.',
-          command: 'npx @holocron.so/cli keys create --name production',
+          command: 'npx @holocron.so/cli keys create --name production --project <projectId>',
         }
       }
 

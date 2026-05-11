@@ -5,6 +5,9 @@
     "colors": {
         "primary": "#5b7cff"
     },
+    "appearance": {
+        "default": "dark"
+    },
     "icons": { "library": "lucide" },
     "navbar": {
         "links": [
@@ -15,8 +18,8 @@
         ],
         "primary": {
             "type": "button",
-            "label": "Components",
-            "href": "/components"
+            "label": "Get Started",
+            "href": "/dashboard"
         }
     },
     "navigation": {

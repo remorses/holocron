@@ -1,61 +1,13 @@
 /**
- * OG image tests covering route URL helpers and Takumi PNG generation.
+ * OG image tests covering Takumi PNG rendering inside the og-worker.
+ * Ported from vite/src/lib/og.test.ts which was removed when the OG
+ * rendering was extracted into this dedicated worker.
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { createOgImageResponse } from './og.tsx'
-import { getOgPath, resolveOgIconUrl } from './og-utils.ts'
-
-describe('getOgPath', () => {
-  test('maps root page to /og', () => {
-    expect(getOgPath('/')).toBe('/og')
-  })
-
-  test('maps nested page to /og/<path>', () => {
-    expect(getOgPath('/getting-started')).toBe('/og/getting-started')
-    expect(getOgPath('/guides/advanced')).toBe('/og/guides/advanced')
-  })
-})
-
-describe('resolveOgIconUrl', () => {
-  test('prefers favicon over logo and resolves absolute URL', () => {
-    const iconUrl = resolveOgIconUrl(
-      {
-        favicon: { light: '/favicon.png', dark: '/favicon-dark.png' },
-        logo: { light: '/logo.svg' },
-      },
-      'https://docs.example.com/getting-started',
-    )
-
-    expect(iconUrl).toBe('https://docs.example.com/favicon.png')
-  })
-
-  test('returns undefined when favicon is missing so the built-in icon can render', () => {
-    const iconUrl = resolveOgIconUrl(
-      {
-        favicon: { light: '', dark: '' },
-        logo: { light: '/logo.svg' },
-      },
-      'https://docs.example.com/',
-    )
-
-    expect(iconUrl).toBeUndefined()
-  })
-
-  test('returns undefined when neither favicon nor logo exist', () => {
-    const iconUrl = resolveOgIconUrl(
-      {
-        favicon: { light: '', dark: '' },
-        logo: { light: '' },
-      },
-      'https://docs.example.com/',
-    )
-
-    expect(iconUrl).toBeUndefined()
-  })
-})
 
 describe('createOgImageResponse', () => {
   test('renders a PNG response', { timeout: 30000 }, async () => {

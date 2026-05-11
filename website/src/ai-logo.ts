@@ -128,7 +128,9 @@ export const aiLogoApp = new Spiceflow().get(
       cachedTemplateBlob = await res.blob()
     }
 
-    // Build multipart FormData for flux-2-dev
+    // Build multipart FormData for Flux img2img. AI SDK's Workers AI image
+    // provider currently ignores image files/masks, so this route must call
+    // the binding directly until multipart img2img is supported there.
     const form = new FormData()
     form.append('prompt', prompt)
     form.append('input_image_0', cachedTemplateBlob, 'template.jpeg')
@@ -140,7 +142,7 @@ export const aiLogoApp = new Spiceflow().get(
     const formStream = formResponse.body!
     const formContentType = formResponse.headers.get('content-type')!
 
-    // Call Flux 2 Dev via Workers AI binding
+    // Call Flux via Workers AI binding
     let result: { image?: string }
     try {
       result = (await env.AI.run(MODEL, {

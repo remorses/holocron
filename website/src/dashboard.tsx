@@ -12,9 +12,10 @@
 import { Spiceflow, redirect, json } from 'spiceflow'
 import { Link } from 'spiceflow/react'
 import { z } from 'zod'
-import { getDb, getSession, requireSession, requireOrgMember, generateApiKey, hashApiKey } from './db.ts'
+import { getDb, getSession, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
 import * as schema from 'db/schema'
-import * as orm from 'drizzle-orm'
+import { normalizeAuthRedirectPath } from './auth-redirect.ts'
+
 import { ulid } from 'ulid'
 import { Button, CopyButton } from './components/ui/button.tsx'
 
@@ -30,7 +31,10 @@ export const dashboardApp = new Spiceflow()
   // session cookie. Loads the user's org for the layout header.
   .loader('/dashboard/*', async ({ request }) => {
     const session = await getSession(request)
-    if (!session) throw redirect('/login?callbackURL=/dashboard')
+    if (!session) {
+      const returnTo = normalizeAuthRedirectPath(request.parsedUrl.pathname + (request.parsedUrl.search || ''))
+      throw redirect(`/login?callbackURL=${encodeURIComponent(returnTo)}`)
+    }
 
     const db = getDb()
     const membership = await db.query.orgMember.findFirst({
@@ -52,8 +56,19 @@ export const dashboardApp = new Spiceflow()
       <div className="min-h-screen bg-background text-foreground">
         <header className="border-b border-border">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-            <Link href="/dashboard" className="text-lg font-semibold">
-              Holocron
+            <Link href="/dashboard" className="no-underline flex items-center shrink-0">
+              <img
+                src="/api/ai-logo/holocron.jpeg"
+                alt="Holocron"
+                className="dark:hidden"
+                style={{ height: 30, width: 'auto', mixBlendMode: 'multiply' }}
+              />
+              <img
+                src="/api/ai-logo/holocron.jpeg"
+                alt="Holocron"
+                className="hidden dark:block"
+                style={{ height: 30, width: 'auto', mixBlendMode: 'screen', filter: 'invert(1)' }}
+              />
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>{loaderData.user.email}</span>
@@ -178,8 +193,7 @@ export const dashboardApp = new Spiceflow()
     return { project }
   })
 
-  // Single project page: shows HOLOCRON_PROJECT config value, detected
-  // domains, and API keys scoped to this project.
+  // Single project page: shows detected domains and API keys for this project.
   .page('/dashboard/projects/:projectId', async ({ loaderData }) => {
     const { project } = loaderData
 
@@ -202,15 +216,6 @@ export const dashboardApp = new Spiceflow()
           )}
         </div>
 
-        {/* Project ID for env var */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">Configuration</h2>
-          <div className="rounded-lg border border-border bg-muted/50 px-4 py-3">
-            <div className="text-xs text-muted-foreground">HOLOCRON_PROJECT</div>
-            <div className="mt-1 font-mono text-sm">{project.projectId}</div>
-          </div>
-        </section>
-
         {/* Domains */}
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-medium">Domains</h2>
@@ -232,7 +237,7 @@ export const dashboardApp = new Spiceflow()
                       <span className="rounded bg-muted px-1.5 py-0.5">{domain.environment}</span>
                     </div>
                   </div>
-                  {domain.lastSeenAt && (
+                  {!!domain.lastSeenAt && (
                     <div className="text-xs text-muted-foreground">
                       Last seen {new Date(domain.lastSeenAt).toLocaleDateString()}
                     </div>
@@ -248,7 +253,7 @@ export const dashboardApp = new Spiceflow()
           <h2 className="text-lg font-medium">API Keys</h2>
           {project.keys.length === 0 ? (
             <div className="text-sm text-muted-foreground">
-              No API keys scoped to this project. Use org-level keys or create one via the CLI.
+              No API keys for this project. Create one with the CLI: <code className="font-mono text-xs">holocron keys create --project {project.projectId}</code>
             </div>
           ) : (
             <div className="rounded-lg border border-border">
@@ -328,23 +333,8 @@ export const dashboardApp = new Spiceflow()
 
       // Auto-create project + API key if not already in URL
       if (!projectId || !fullKey) {
+        const org = await ensureOrg(session.userId, session.user.name)
         const db = getDb()
-        let membership = await db.query.orgMember.findFirst({
-          where: { userId: session.userId },
-          with: { org: true },
-        })
-        if (!membership?.org) {
-          const orgId = ulid()
-          await db.batch([
-            db.insert(schema.org).values({ id: orgId, name: session.user.name }),
-            db.insert(schema.orgMember).values({ orgId, userId: session.userId, role: 'admin' }),
-          ])
-          membership = await db.query.orgMember.findFirst({
-            where: { userId: session.userId },
-            with: { org: true },
-          })
-        }
-        const org = membership!.org!
 
         projectId = ulid()
         const generated = generateApiKey()
@@ -371,19 +361,15 @@ export const dashboardApp = new Spiceflow()
       }
 
       // Build Vercel deploy URL with prefilled env vars
-      const callbackUrl = new URL(DEPLOY_REDIRECT_URL)
-      callbackUrl.searchParams.set('holocronProjectId', projectId)
-
       const deployUrl = new URL('https://vercel.com/new/clone')
       deployUrl.searchParams.set('repository-url', TEMPLATE_REPO_URL)
-      deployUrl.searchParams.set('env', 'HOLOCRON_KEY,HOLOCRON_PROJECT')
+      deployUrl.searchParams.set('env', 'HOLOCRON_KEY')
       deployUrl.searchParams.set('envDefaults', JSON.stringify({
         HOLOCRON_KEY: fullKey,
-        HOLOCRON_PROJECT: projectId,
       }))
       deployUrl.searchParams.set('envDescription', 'Your Holocron credentials (pre-filled, do not change)')
       deployUrl.searchParams.set('envLink', 'https://holocron.so/dashboard')
-      deployUrl.searchParams.set('redirect-url', callbackUrl.toString())
+      deployUrl.searchParams.set('redirect-url', DEPLOY_REDIRECT_URL)
       deployUrl.searchParams.set('project-name', 'my-docs')
 
       return (
@@ -412,11 +398,11 @@ export const dashboardApp = new Spiceflow()
               <div className="text-sm text-muted-foreground">Or deploy locally:</div>
               <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
                 <CopyButton
-                  text={`HOLOCRON_KEY=${fullKey}\nHOLOCRON_PROJECT=${projectId}\n\nnpx @holocron.so/cli create`}
+                  text={`HOLOCRON_KEY=${fullKey}\n\nnpx @holocron.so/cli create`}
                   className="absolute right-2 top-2"
                 />
                 <div className="overflow-x-auto px-5 pt-12 pb-5">
-                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">{`HOLOCRON_KEY=${fullKey}\nHOLOCRON_PROJECT=${projectId}\n\nnpx @holocron.so/cli create`}</pre>
+                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">{`HOLOCRON_KEY=${fullKey}\n\nnpx @holocron.so/cli create`}</pre>
                 </div>
               </div>
             </div>
@@ -426,50 +412,20 @@ export const dashboardApp = new Spiceflow()
     },
   })
 
-  // Called when: Vercel redirects back after a successful deploy.
-  // Vercel appends query params: deployment-url, repository-url, project-name.
-  // We also pass holocronProjectId through the redirect-url so we can
-  // associate the github repo with the correct project (not "most recent").
+  // Vercel redirects here after a successful deploy.
+  // GitHub metadata is now registered at build time by the Vite plugin
+  // (POST /api/v0/projects/:projectId/register-deployment), so this page
+  // just shows a success message with links.
   .page({
     path: '/dashboard/deploy/callback',
     query: z.object({
-      holocronProjectId: z.string().optional(),
       'project-name': z.string().optional(),
       'deployment-url': z.string().optional(),
-      'repository-url': z.string().optional(),
     }),
     handler: async ({ request, query }) => {
-      const session = await requireSession(request)
+      await requireSession(request)
 
       const deploymentUrl = query['deployment-url']
-      const repoUrl = query['repository-url']
-      const projectId = query.holocronProjectId
-
-      // Associate github repo with the specific project (not "most recent")
-      if (repoUrl && projectId) {
-        const db = getDb()
-        const membership = await db.query.orgMember.findFirst({
-          where: { userId: session.userId },
-        })
-        if (membership) {
-          const match = repoUrl.match(/github\.com\/([^/]+)\/([^/?#]+)/)
-          if (match) {
-            const githubRepo = match[2]!.replace(/\.git$/, '')
-            await db.update(schema.project)
-              .set({
-                githubOwner: match[1],
-                githubRepo,
-                updatedAt: Date.now(),
-              })
-              .where(
-                orm.and(
-                  orm.eq(schema.project.projectId, projectId),
-                  orm.eq(schema.project.orgId, membership.orgId),
-                ),
-              )
-          }
-        }
-      }
 
       return (
         <div className="flex flex-col items-center gap-6 py-16">

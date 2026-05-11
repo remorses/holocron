@@ -12,13 +12,13 @@
     "types": "wrangler types",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
-    "db:migrate:prod": "echo \"D1 pre-migration timestamp: $(date +%s)\" && wrangler d1 migrations apply DB --remote",
-    "db:migrate:preview": "echo \"D1 pre-migration timestamp: $(date +%s)\" && wrangler d1 migrations apply DB --remote --env preview",
+    "db:migrate:prod": "echo \"D1 pre-migration timestamp: $(date +%s)\" && CI=1 wrangler d1 migrations apply DB --remote",
+    "db:migrate:preview": "echo \"D1 pre-migration timestamp: $(date +%s)\" && CI=1 wrangler d1 migrations apply DB --remote --env preview",
     "secrets": "pnpm run secrets:preview && pnpm run secrets:prod",
     "secrets:preview": "sigillo run -c preview --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview",
     "secrets:prod": "sigillo run -c prod --mount .env.prod --mount-format env -- wrangler secret bulk .env.prod",
-    "deployment": "sigillo run -c preview -- pnpm db:migrate:preview && CLOUDFLARE_ENV=preview sigillo run -c preview --command 'vite build && wrangler deploy --env preview'",
-    "deployment:prod": "sigillo run -c prod -- pnpm db:migrate:prod && sigillo run -c prod --command 'vite build && wrangler deploy'"
+    "deployment": "CLOUDFLARE_ENV=preview sigillo run -c preview --command 'pnpm db:migrate:preview && vite build && wrangler deploy --env preview && pnpm --dir ../og-worker deployment'",
+    "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && vite build && wrangler deploy && pnpm --dir ../og-worker deployment:prod'"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/better-auth/better-auth/@better-auth/drizzle-adapter@6913",
@@ -36,7 +36,7 @@
     "radix-ui": "latest",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "spiceflow": "1.24.2-rsc.0",
+    "spiceflow": "1.24.4-rsc.0",
     "string-dedent": "^3.0.2",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",

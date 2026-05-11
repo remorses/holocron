@@ -16,6 +16,7 @@ play
 .env.preview
 .env.prod
 worker-configuration.d.ts
+!website/worker-configuration.d.ts
 website/openapi.json
 template/node_modules
 template/dist

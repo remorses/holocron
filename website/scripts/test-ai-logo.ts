@@ -77,4 +77,4 @@ async function main() {
   console.log(`\n${process.exitCode ? '✗ Some tests failed' : '✓ All tests passed'}`)
 }
 
-main()
+void main()

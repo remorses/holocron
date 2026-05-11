@@ -1,25 +1,24 @@
 /**
- * OG image URL helpers shared by the page metadata path and OG routes.
+ * OG image URL helpers. Builds absolute URLs pointing to the holocron.so
+ * OG worker, which renders OG images server-side via takumi.
  */
 
-import type { HolocronConfig } from '../config.ts'
+const OG_BASE_URL = 'https://holocron.so'
 
-type OgConfigImageFields = Pick<HolocronConfig, 'favicon' | 'logo'>
-
-function toAbsoluteUrl(pathOrUrl: string | undefined, requestUrl: string): string | undefined {
-  if (!pathOrUrl) return undefined
-  return new URL(pathOrUrl, requestUrl).toString()
+export type OgImageUrlOptions = {
+  title: string
+  description?: string | null
+  iconUrl?: string
+  siteName?: string
+  pageLabel?: string
 }
 
-export function getOgPath(pageHref: string): string {
-  if (pageHref === '/' || pageHref === '') return '/og'
-  return `/og${pageHref}`
-}
-
-export function getAbsoluteOgImageUrl(requestUrl: string, base: string, pageHref: string): string {
-  return new URL(`${base}${getOgPath(pageHref)}`, requestUrl).toString()
-}
-
-export function resolveOgIconUrl(config: OgConfigImageFields, requestUrl: string): string | undefined {
-  return toAbsoluteUrl(config.favicon.light || config.favicon.dark, requestUrl)
+export function buildOgImageUrl(options: OgImageUrlOptions): string {
+  const params = new URLSearchParams()
+  params.set('title', options.title)
+  if (options.description) params.set('description', options.description)
+  if (options.iconUrl) params.set('icon', options.iconUrl)
+  if (options.siteName) params.set('siteName', options.siteName)
+  if (options.pageLabel) params.set('pageLabel', options.pageLabel)
+  return `${OG_BASE_URL}/api/og?${params}`
 }

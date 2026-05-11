@@ -6,6 +6,7 @@
 import { json, Spiceflow, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
+import { env } from 'cloudflare:workers'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
 import { aiLogoApp } from './ai-logo.ts'
@@ -15,6 +16,7 @@ import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
 import { DeviceActionButtons } from './components/device-action-buttons.tsx'
+import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import schema from '@holocron.so/vite/src/schema.json' with { type: 'json' }
 import './globals.css'
 
@@ -24,11 +26,6 @@ const devicePageQuerySchema = z.object({
   user_code: z.string().optional(),
   status: z.enum(['approved', 'denied']).optional(),
 })
-
-function safeRedirectPath(value: string | undefined) {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/'
-  return value
-}
 
 async function createGoogleSignInRedirect(request: Pick<Request, 'headers'>, callbackURL: string) {
   const auth = getAuth()
@@ -69,7 +66,7 @@ const authApp = new Spiceflow()
     handler: async ({ request, query }) => {
       const session = await getSession(request)
       if (session) throw redirect('/')
-      const callbackURL = safeRedirectPath(query.callbackURL)
+      const callbackURL = normalizeAuthRedirectPath(query.callbackURL)
       return (
         <AuthPage
           title="Holocron"
@@ -91,7 +88,7 @@ const authApp = new Spiceflow()
     path: '/login/google',
     query: loginQuerySchema,
     async handler({ request, query }) {
-      return createGoogleSignInRedirect(request, safeRedirectPath(query.callbackURL))
+      return createGoogleSignInRedirect(request, normalizeAuthRedirectPath(query.callbackURL))
     },
   })
 
@@ -145,7 +142,7 @@ const authApp = new Spiceflow()
       if (!session) {
         throw redirect(
           router.href('/login', {
-            callbackURL: `${request.parsedUrl.pathname}${request.parsedUrl.search}`,
+            callbackURL: normalizeAuthRedirectPath(`${request.parsedUrl.pathname}${request.parsedUrl.search}`),
           }),
         )
       }
@@ -263,6 +260,7 @@ export const app = new Spiceflow()
   .use(dashboardApp)
   .use(apiApp)
   .use(aiLogoApp)
+  .get('/api/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
   .use(schemaApp)
   .use(holocronApp)
 
