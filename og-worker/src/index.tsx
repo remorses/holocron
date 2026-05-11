@@ -9,33 +9,37 @@
  *   GET /api/og?title=...&description=...&icon=...&siteName=...&pageLabel=...
  */
 
-import type { OgImageOptions } from './og.tsx'
+import { Spiceflow } from 'spiceflow'
+import { z } from 'zod'
+
+const ogQuerySchema = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  siteName: z.string().optional(),
+  pageLabel: z.string().optional(),
+})
+
+export const app = new Spiceflow().route({
+  method: 'GET',
+  path: '/api/og',
+  query: ogQuerySchema,
+  async handler({ query }) {
+    const { createOgImageResponse } = await import('./og.tsx')
+    const response = createOgImageResponse({
+      title: query.title,
+      description: query.description,
+      iconUrl: query.icon,
+      siteName: query.siteName,
+      pageLabel: query.pageLabel,
+    })
+    response.headers.set('cache-control', 's-maxage=3600')
+    return response
+  },
+})
 
 export default {
-  async fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url)
-
-    // OG image: GET /api/og?title=...
-    if (url.pathname === '/api/og' && request.method === 'GET') {
-      const title = url.searchParams.get('title')
-      if (!title) {
-        return new Response('Missing title parameter', { status: 400 })
-      }
-
-      const options: OgImageOptions = {
-        title,
-        description: url.searchParams.get('description'),
-        iconUrl: url.searchParams.get('icon') || undefined,
-        siteName: url.searchParams.get('siteName') || undefined,
-        pageLabel: url.searchParams.get('pageLabel') || undefined,
-      }
-
-      const { createOgImageResponse } = await import('./og.tsx')
-      const response = createOgImageResponse(options)
-      response.headers.set('cache-control', 's-maxage=3600')
-      return response
-    }
-
-    return new Response('Not found', { status: 404 })
+  fetch(request: Request) {
+    return app.handle(request)
   },
 } satisfies ExportedHandler<Env>

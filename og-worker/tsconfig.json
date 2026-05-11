@@ -14,7 +14,7 @@
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": []
+    "types": ["node"]
   },
   "include": ["src", "worker-configuration.d.ts"]
 }

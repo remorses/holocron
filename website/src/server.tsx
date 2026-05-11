@@ -6,10 +6,10 @@
 import { json, Spiceflow, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
+import { env } from 'cloudflare:workers'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
 import { aiLogoApp } from './ai-logo.ts'
-import { ogProxyApp } from './og-proxy.ts'
 import { dashboardApp } from './dashboard.tsx'
 import { approveDevice, denyDevice } from './actions.tsx'
 import { getAuth, getSession, requireSession } from './db.ts'
@@ -260,7 +260,7 @@ export const app = new Spiceflow()
   .use(dashboardApp)
   .use(apiApp)
   .use(aiLogoApp)
-  .use(ogProxyApp)
+  .get('/api/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
   .use(schemaApp)
   .use(holocronApp)
 
