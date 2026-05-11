@@ -253,8 +253,12 @@ export const deployApp = new Spiceflow()
       if (!deploy) {
         throw json({ error: 'deployment not found' }, { status: 404 })
       }
-      if (deploy.status !== 'uploading') {
-        throw json({ error: 'deployment is not in uploading state' }, { status: 400 })
+
+      // Allow re-finalize of already-active deployments so the KV site-info
+      // write can be retried if it failed on the first attempt. D1 updates
+      // are idempotent (same status + subdomain), and the KV write overwrites.
+      if (deploy.status !== 'uploading' && deploy.status !== 'active') {
+        throw json({ error: 'deployment is not in uploading or active state' }, { status: 400 })
       }
 
       await requireDeployAccess(request, deploy.projectId)

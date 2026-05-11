@@ -159,9 +159,9 @@ export async function ensureOrg(userId: string, userName: string): Promise<{ id:
 // ── API key validation ──────────────────────────────────────────────
 
 /** D1 lookup by key hash — the expensive cross-region query. Memoized via
- *  Cache API (5 min fresh, 10 min SWR). null results (invalid keys) are
- *  never cached. Note: deleted keys may remain valid for up to 5 minutes
- *  per datacenter until the cache entry expires. */
+ *  Cache API (5 min fresh, no SWR). SWR is disabled so deleted keys stop
+ *  working within 5 minutes — with SWR they could stay valid for up to
+ *  ttl + swr (15 min). null results (invalid keys) are never cached. */
 const findApiKeyByHash = memoize({
   namespace: 'api-key-by-hash',
   fn: async (hash: string): Promise<{ orgId: string; keyId: string; projectId: string } | null> => {
@@ -173,7 +173,7 @@ const findApiKeyByHash = memoize({
     return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
   },
   ttl: 300,
-  swr: 600,
+  swr: 0,
 })
 
 export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string } | null> {

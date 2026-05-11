@@ -50,7 +50,8 @@ async function resolveSite(
   subdomain: string,
 ): Promise<SiteInfo | null> {
   // Primary: KV lookup (globally replicated, ~1-5ms)
-  const kvData = await env.SITES_KV.get(`site-info:${subdomain}`, { type: 'text', cacheTtl: 5 })
+  // KV cacheTtl minimum is 30 seconds (Cloudflare enforced).
+  const kvData = await env.SITES_KV.get(`site-info:${subdomain}`, { type: 'text', cacheTtl: 30 })
   if (kvData) {
     try {
       const parsed = JSON.parse(kvData) as { projectId: string; version: string; files: string[] }
@@ -76,6 +77,7 @@ async function resolveSiteFromD1(
          FROM deployment d
          WHERE d.subdomain = ?
            AND d.status = 'active'
+         ORDER BY d.created_at DESC
          LIMIT 1`,
       )
       .bind(subdomain)
