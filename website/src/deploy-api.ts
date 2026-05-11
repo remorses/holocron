@@ -208,10 +208,19 @@ export const deployApp = new Spiceflow()
 
       await requireDeployAccess(request, deploy.projectId)
 
-      // Verify all files exist in KV by reading each key (not list, which is
-      // eventually consistent). Each check is a fast HEAD-like KV.get metadata call.
       const declaredFiles: string[] = JSON.parse(deploy.files || '[]')
       const prefix = `site:${deploy.projectId}/v:${deploy.version}/`
+
+      // The worker entry must exist or the hosting worker can't load the site
+      if (!declaredFiles.includes('worker/ssr/index.js')) {
+        throw json(
+          { error: 'deployment must include worker/ssr/index.js (the SSR entry)' },
+          { status: 400 },
+        )
+      }
+
+      // Verify all files exist in KV by reading each key (not list, which is
+      // eventually consistent). Each check is a fast HEAD-like KV.get metadata call.
       const missing: string[] = []
       await Promise.all(
         declaredFiles.map(async (filePath) => {
@@ -248,33 +257,31 @@ export const deployApp = new Spiceflow()
 
       // Subdomain is the lowercased projectId (ULID). Guaranteed unique,
       // no collision risk, and auth is already enforced via API key → projectId.
-      const proj = await db.query.project.findFirst({
-        where: { projectId: deploy.projectId },
-      })
       const subdomain = deploy.projectId.toLowerCase()
-      if (proj?.subdomain !== subdomain) {
-        await db.update(schema.project)
-          .set({ subdomain })
-          .where(orm.eq(schema.project.projectId, deploy.projectId))
-      }
 
-      // Supersede ALL active deployments for this project (handles concurrent finalizes)
-      await db.update(schema.deployment)
-        .set({ status: 'superseded' })
-        .where(
-          orm.and(
-            orm.eq(schema.deployment.projectId, deploy.projectId),
-            orm.eq(schema.deployment.status, 'active'),
+      // Atomic batch: supersede all active deployments, activate this one,
+      // and update the project pointer. D1 batch runs all statements in a
+      // single transaction so concurrent finalizes can't interleave.
+      await db.batch([
+        db.update(schema.deployment)
+          .set({ status: 'superseded' })
+          .where(
+            orm.and(
+              orm.eq(schema.deployment.projectId, deploy.projectId),
+              orm.eq(schema.deployment.status, 'active'),
+            ),
           ),
-        )
-
-      await db.update(schema.deployment)
-        .set({ status: 'active' })
-        .where(orm.eq(schema.deployment.id, deploy.id))
-
-      await db.update(schema.project)
-        .set({ currentDeploymentId: deploy.id, updatedAt: Date.now() })
-        .where(orm.eq(schema.project.projectId, deploy.projectId))
+        db.update(schema.deployment)
+          .set({ status: 'active' })
+          .where(orm.eq(schema.deployment.id, deploy.id)),
+        db.update(schema.project)
+          .set({
+            subdomain,
+            currentDeploymentId: deploy.id,
+            updatedAt: Date.now(),
+          })
+          .where(orm.eq(schema.project.projectId, deploy.projectId)),
+      ])
 
       // Derive the hosting domain from the request origin (preview vs production)
       const requestHost = new URL(request.url).hostname

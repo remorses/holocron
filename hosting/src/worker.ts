@@ -88,10 +88,17 @@ async function serveAsset(
   const content = await kv.get(assetKey, { type: 'arrayBuffer', cacheTtl: 86400 })
   if (!content) return null
 
+  // Content-hashed filenames (e.g. style-abc123.css) are immutable.
+  // Stable paths (favicon.ico, robots.txt, logo.svg) get short TTLs
+  // so redeployments are picked up without a year-long browser cache.
+  const isHashed = /\.[a-f0-9]{6,}\./i.test(pathname)
+
   return new Response(content, {
     headers: {
       'Content-Type': entry.contentType,
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': isHashed
+        ? 'public, max-age=31536000, immutable'
+        : 'public, max-age=60, s-maxage=300',
     },
   })
 }

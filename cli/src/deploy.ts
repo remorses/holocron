@@ -73,8 +73,10 @@ deployCli
     if (!options.skipBuild) {
       output.log('Building for Cloudflare Workers...')
       const { execSync } = await import('node:child_process')
+      // Detect the project's package manager to run the correct vite binary
+      const buildCmd = detectBuildCommand(cwd)
       try {
-        execSync('npx vite build', {
+        execSync(buildCmd, {
           cwd,
           stdio: 'inherit',
           env: { ...process.env, HOLOCRON_DEPLOY: '1' },
@@ -167,9 +169,15 @@ deployCli
     }
 
     // Upload in batches of MAX_CONCURRENT
-    for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
-      const batch = files.slice(i, i + MAX_CONCURRENT)
-      await Promise.all(batch.map(uploadOne))
+    try {
+      for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
+        const batch = files.slice(i, i + MAX_CONCURRENT)
+        await Promise.all(batch.map(uploadOne))
+      }
+    } catch (err) {
+      output.error(err instanceof Error ? err.message : String(err))
+      output.error('Deploy aborted. The deployment remains in "uploading" state and can be retried.')
+      return proc.exit(1)
     }
 
     // ── Step 3: Finalize deployment ───────────────────────────────
@@ -208,6 +216,20 @@ function collectFiles(
       })
     }
   }
+}
+
+/** Detect the project's package manager and return the vite build command. */
+function detectBuildCommand(cwd: string): string {
+  if (fs.existsSync(path.join(cwd, 'bun.lock')) || fs.existsSync(path.join(cwd, 'bun.lockb'))) {
+    return 'bunx vite build'
+  }
+  if (fs.existsSync(path.join(cwd, 'pnpm-lock.yaml'))) {
+    return 'pnpm exec vite build'
+  }
+  if (fs.existsSync(path.join(cwd, 'yarn.lock'))) {
+    return 'yarn exec vite build'
+  }
+  return 'npx vite build'
 }
 
 function formatBytes(bytes: number): string {
