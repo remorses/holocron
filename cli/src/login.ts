@@ -11,15 +11,14 @@ export const loginCli = goke()
 
 loginCli
   .command('login', 'Authenticate with Holocron via browser login')
-  .option('--api-url [url]', 'Holocron API URL (default: https://holocron.so)')
-  .action(async (options, { console: output, process: proc }) => {
+  .action(async (_options, { console: output, process: proc }) => {
     if (isAgent || !process.stdin.isTTY) {
       output.error('Login requires an interactive terminal (device flow opens a browser).')
       output.error('Run `holocron login` in a TTY terminal, e.g. via tmux.')
       return proc.exit(1)
     }
 
-    const baseUrl = options.apiUrl || getBaseUrl()
+    const baseUrl = getBaseUrl()
     clack.intro('Holocron — Login')
 
     const result = await loginWithDeviceFlow({
@@ -34,18 +33,16 @@ loginCli
 
 loginCli
   .command('logout', 'Remove stored authentication')
-  .option('--api-url [url]', 'Holocron API URL (default: current base URL)')
-  .action((options, { console: output }) => {
-    const baseUrl = options.apiUrl || getBaseUrl()
+  .action((_options, { console: output }) => {
+    const baseUrl = getBaseUrl()
     clearServerAuth(baseUrl)
     output.log(`Logged out from ${normalizeUrl(baseUrl)}`)
   })
 
 loginCli
   .command('whoami', 'Show current authenticated user')
-  .option('--api-url [url]', 'Holocron API URL (default: current base URL)')
-  .action(async (options, { console: output, process: proc }) => {
-    const baseUrl = normalizeUrl(options.apiUrl || getBaseUrl())
+  .action(async (_options, { console: output, process: proc }) => {
+    const baseUrl = normalizeUrl(getBaseUrl())
     const sessionToken = getSessionToken(baseUrl)
     if (!sessionToken) {
       output.log(`Not logged in to ${baseUrl}. Run \`holocron login --api-url ${baseUrl}\` first.`)
