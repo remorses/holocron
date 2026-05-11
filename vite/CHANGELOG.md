@@ -1,5 +1,56 @@
 # @holocron.so/vite
 
+## 0.5.0
+
+1. **Decorative grid lines** — configurable vertical lines with dot ornaments at intersections. Set `decorativeLines` in your config to `"none"`, `"lines"`, `"dashed"`, or `"lines-with-dots"` (default):
+
+   ```json
+   { "decorativeLines": "dashed" }
+   ```
+
+   Lines respect the tab bar and footer borders, adapting their style automatically.
+
+2. **Per-page CDN caching via frontmatter** — set `cache-control` in page frontmatter to control HTTP caching headers per page:
+
+   ```yaml
+   ---
+   title: My Page
+   cache-control: public, max-age=3600
+   ---
+   ```
+
+3. **`?raw` imports in MDX modules** — MDX files can now import raw text content from other files using Vite's `?raw` query suffix.
+
+4. **`docs.jsonc` config discovery** — Holocron discovers config files in Mintlify-first order: `docs.json`, `docs.jsonc`, then `holocron.jsonc`. JSONC comments and trailing commas work without renaming your Mintlify config.
+
+5. **`holocron` CLI bundled with vite package** — installing `@holocron.so/vite` now also provides the `holocron` CLI command. No separate `@holocron.so/cli` install needed.
+
+6. **Deploy with just `HOLOCRON_KEY`** — deployment registration now only needs `HOLOCRON_KEY` (removed `HOLOCRON_PROJECT`). The project is resolved from the key server-side.
+
+7. **Generated entry guards `listen()` with `import.meta.main`** — the built `dist/rsc/index.js` can now be imported by another framework (e.g. Next.js catch-all route) without starting a second server.
+
+8. **OG images and logos served from holocron.so** — OG image rendering and logo generation moved to a dedicated Cloudflare Worker. This drops ~5 MiB from the vite plugin bundle.
+
+9. **Sidebar nav animations disabled by default** — sidebar expand/collapse transitions are off by default, gated behind a `.sidebar-animate` CSS class for users who want them.
+
+10. **Config types and schema exported from index** — `@holocron.so/vite` now exports config types and the JSON schema, useful for programmatic config validation.
+
+11. **Darker dark mode** — dark mode background darkened from `0.21` to `0.16` oklch lightness for better contrast.
+
+12. **Tab link style refinements** — removed lowercase transform, fixed indicator height to 2px, polished hover states.
+
+13. **Scrollbar and search input polish** — thinner 4px scrollbar thumbs with subtler opacity, focus ring on search input.
+
+14. **Fixed TOC heading highlight** — same-hash re-click and scrollbar drag edge cases now correctly update the active heading.
+
+15. **Fixed sidebar heading click** — clicking a heading in the sidebar now highlights correctly after scroll.
+
+16. **Fixed page overflow** — decorative grid dots no longer extend below the content container.
+
+17. **Fixed title injection** — pages that already start with any heading level are left untouched (was only checking H1 before).
+
+18. **Softer light mode borders** — border contrast reduced for a cleaner appearance.
+
 ## 0.4.0
 
 1. **Agent discovery endpoints for every docs site** — Holocron now serves the well-known agent-skills discovery files automatically so coding agents can discover and install a docs-specific skill:
