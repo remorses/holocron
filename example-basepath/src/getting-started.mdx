@@ -1,0 +1,41 @@
+---
+title: Getting Started
+description: Set up a base path holocron site.
+---
+
+# Getting Started
+
+## Configuration
+
+Add `base: '/docs'` to your Vite config:
+
+```ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  base: '/docs',
+  plugins: [holocron({ pagesDir: './src' })],
+})
+```
+
+## Export for embedding
+
+Add an export in `package.json` so other apps can import the built app:
+
+```json
+{
+  "exports": {
+    "./dist/rsc": "./dist/rsc/index.js"
+  }
+}
+```
+
+## Build and run
+
+```bash
+vite build
+node dist/rsc/index.js
+```
+
+The docs site will be available at `http://localhost:3000/docs`.

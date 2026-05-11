@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
+  "name": "Base Path Example",
+  "colors": {
+    "primary": "#6366f1"
+  },
+  "icons": { "library": "lucide" },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["index", "getting-started"]
+    }
+  ]
+}
