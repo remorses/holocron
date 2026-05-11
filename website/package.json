@@ -17,8 +17,8 @@
     "secrets": "pnpm run secrets:preview && pnpm run secrets:prod",
     "secrets:preview": "sigillo run -c preview --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview",
     "secrets:prod": "sigillo run -c prod --mount .env.prod --mount-format env -- wrangler secret bulk .env.prod",
-    "deployment": "sigillo run -c preview -- pnpm db:migrate:preview && CLOUDFLARE_ENV=preview sigillo run -c preview --command 'vite build && wrangler deploy --env preview' && pnpm --dir ../og-worker deployment",
-    "deployment:prod": "sigillo run -c prod -- pnpm db:migrate:prod && sigillo run -c prod --command 'vite build && wrangler deploy' && pnpm --dir ../og-worker deployment:prod"
+    "deployment": "CLOUDFLARE_ENV=preview sigillo run -c preview --command 'pnpm db:migrate:preview && vite build && wrangler deploy --env preview && pnpm --dir ../og-worker deployment'",
+    "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && vite build && wrangler deploy && pnpm --dir ../og-worker deployment:prod'"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/better-auth/better-auth/@better-auth/drizzle-adapter@6913",

@@ -38,3 +38,22 @@ This appears in the sidebar with a proper callout frame.
 ## New MDX pages must be added to docs.json navigation
 
 After creating a new `.mdx` file, add its slug to `docs.json` navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.
+
+## Deployment
+
+Use **Sigillo** for deployment secrets. Deployment scripts for D1-backed Cloudflare Workers must run the remote D1 migration before building or deploying the worker, and the migration script must print a Unix timestamp first so D1 time travel has a known restore point if something goes wrong.
+
+```json
+{
+  "scripts": {
+    "db:migrate:prod": "echo \"D1 pre-migration timestamp: $(date +%s)\" && CI=1 wrangler d1 migrations apply DB --remote",
+    "db:migrate:preview": "echo \"D1 pre-migration timestamp: $(date +%s)\" && CI=1 wrangler d1 migrations apply DB --remote --env preview",
+    "deployment": "CLOUDFLARE_ENV=preview sigillo run -c preview --command 'pnpm db:migrate:preview && vite build && wrangler deploy --env preview'",
+    "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && vite build && wrangler deploy'"
+  }
+}
+```
+
+Always deploy **preview before production**. If preview migration or deploy fails, stop and do not continue to production.
+
+`CI=1` is intentional for remote D1 migrations. Wrangler skips the interactive confirmation prompt in non-interactive/CI mode while still creating the pre-migration backup.
