@@ -4,6 +4,7 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
+    "rootDir": "src",
     "outDir": "dist",
     "module": "nodenext",
     "moduleResolution": "nodenext",
@@ -21,5 +22,5 @@
     "rewriteRelativeImportExtensions": true,
     "types": ["node"]
   },
-  "include": ["src", "worker-configuration.d.ts"]
+  "include": ["src"]
 }

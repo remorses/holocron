@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
-    "noEmit": true
+    "rootDir": ".",
+    "outDir": "dist"
   },
   "include": ["e2e", "scripts", "*.ts"]
 }

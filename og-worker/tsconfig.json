@@ -13,7 +13,9 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": ".",
+    "outDir": "dist",
     "types": ["node"]
   },
   "include": ["src", "worker-configuration.d.ts"]
