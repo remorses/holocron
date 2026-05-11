@@ -18,7 +18,7 @@ import { execSync } from 'node:child_process'
 import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
 import { loginWithDeviceFlow } from './device-flow.ts'
-import { createApiClient } from './api-client.ts'
+import { createSessionClient } from './api-client.ts'
 import { getBaseUrl } from './config.ts'
 
 // Template lives in dist/template/ after build. When running from src/ via tsx,
@@ -89,7 +89,7 @@ async function setupCloud(options: {
 
   // 1. Device flow login
   const { accessToken } = await loginWithDeviceFlow({ baseUrl, exit })
-  const { safeFetch } = createApiClient(baseUrl, accessToken)
+  const { safeFetch } = createSessionClient(baseUrl, accessToken)
 
   // 2. Create project (org auto-created server-side if needed)
   const project = await safeFetch('/api/v0/projects', {
