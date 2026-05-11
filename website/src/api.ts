@@ -247,8 +247,6 @@ export const apiApp = new Spiceflow()
     path: '/api/v0/projects',
     request: z.object({
       name: z.string().min(1),
-      githubOwner: z.string().optional(),
-      githubRepo: z.string().optional(),
     }),
     detail: {
       summary: 'Create project',
@@ -264,12 +262,12 @@ export const apiApp = new Spiceflow()
       const db = getDb()
       const projectId = ulid()
 
+      // githubOwner/githubRepo are only set via OIDC (verified JWT claims).
+      // Project creation never accepts unverified github metadata.
       await db.insert(schema.project).values({
         projectId,
         orgId: org.id,
         name: body.name,
-        githubOwner: body.githubOwner ?? null,
-        githubRepo: body.githubRepo ?? null,
       })
 
       const created = await db.query.project.findFirst({
@@ -295,8 +293,6 @@ export const apiApp = new Spiceflow()
     method: 'POST',
     path: '/api/v0/register-deployment',
     request: z.object({
-      githubOwner: z.string().optional(),
-      githubRepo: z.string().optional(),
       oidcToken: z.string().optional(),
     }),
     detail: {
@@ -318,14 +314,14 @@ export const apiApp = new Spiceflow()
       const db = getDb()
 
       // ── Path 1: API key auth (existing flow) ─────────────────────
+      // githubOwner/githubRepo are NOT set here. Only the OIDC path (below)
+      // writes github metadata because the values come from a cryptographically
+      // verified JWT claim. Accepting unverified body values here would let
+      // anyone with an API key impersonate any GitHub repo.
       const apiKeyAuth = await validateApiKey(request.headers.get('authorization'))
       if (apiKeyAuth) {
-        const updates: Record<string, unknown> = { updatedAt: Date.now() }
-        if (body.githubOwner) updates.githubOwner = body.githubOwner
-        if (body.githubRepo) updates.githubRepo = body.githubRepo
-
         await db.update(schema.project)
-          .set(updates)
+          .set({ updatedAt: Date.now() })
           .where(orm.eq(schema.project.projectId, apiKeyAuth.projectId))
           .limit(1)
 

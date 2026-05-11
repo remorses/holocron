@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { env } from 'cloudflare:workers'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
+import { deployApp } from './deploy-api.ts'
 import { aiLogoApp } from './ai-logo.ts'
 import { dashboardApp } from './dashboard.tsx'
 import { approveDevice, denyDevice } from './actions.tsx'
@@ -16,6 +17,7 @@ import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
 import { DeviceActionButtons } from './components/device-action-buttons.tsx'
+// Auth pages use AuthPage — a minimal centered layout with no cards or shadows.
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import schema from '@holocron.so/vite/src/schema.json' with { type: 'json' }
 import './globals.css'
@@ -255,6 +257,7 @@ export const app = new Spiceflow()
   .use(authApp)
   .use(dashboardApp)
   .use(apiApp)
+  .use(deployApp)
   .use(aiLogoApp)
   .get('/api/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
   .use(schemaApp)
