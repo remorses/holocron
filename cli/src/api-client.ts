@@ -1,18 +1,18 @@
-// Typed API client for the Holocron website. Uses spiceflow's typed fetch client
-// with the built website declaration type for compile-time route validation.
+// API client for the Holocron website. Uses spiceflow's typed fetch client.
 //
 // Prefer getApiClient() which reads auth from config automatically.
 // Use createApiClient() only when you have explicit credentials.
 //
-// The safeFetch client accepts `body` as a plain object (auto-serialized to JSON)
-// and is fully type-safe on path params, query, body, and response.
+// The safeFetch client accepts `body` as a plain object (auto-serialized to JSON).
+// Type safety on routes is intentionally omitted to avoid a circular workspace
+// dependency (vite → cli → website → vite). Response shapes are typed inline
+// at each call site instead.
 
 import { createSpiceflowFetch } from 'spiceflow/client'
-import type { App } from 'website/dist/src/server.d.ts'
 import { requireAuth } from './config.ts'
 
 export function createApiClient(baseUrl: string, sessionToken: string) {
-  const safeFetch = createSpiceflowFetch<App>(baseUrl, {
+  const safeFetch = createSpiceflowFetch<any>(baseUrl, {
     headers: { Authorization: `Bearer ${sessionToken}` },
   })
   return { safeFetch }
