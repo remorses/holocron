@@ -251,6 +251,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let hasUserReactPlugin = false
   let hasUserSpiceflowPlugin = false
   let hasUserTailwindPlugin = false
+  let hasUserCloudflarePlugin = false
   const holocronPackagePattern = /^@holocron\.so\/vite(?:\/.*)?$/
 
   /** Resolved absolute path to the config file (docs.json, docs.jsonc, or holocron.jsonc) */
@@ -289,6 +290,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (pluginName.startsWith('vite:react')) hasUserReactPlugin = true
         if (pluginName.startsWith('spiceflow:')) hasUserSpiceflowPlugin = true
         if (pluginName.startsWith('@tailwindcss/vite:')) hasUserTailwindPlugin = true
+        if (pluginName === 'vite-plugin-cloudflare' || pluginName.startsWith('cloudflare')) hasUserCloudflarePlugin = true
       }
 
       // Alias `@holocron.so/vite/app` → source file. Must be done via
@@ -915,6 +917,29 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   }
   if (!hasUserReactPlugin) {
     pluginsToReturn.push(react())
+  }
+
+  // When HOLOCRON_DEPLOY=1 (set by `holocron deploy`), auto-inject the
+  // Cloudflare Vite plugin so the build targets Workers. The user's
+  // vite.config.ts doesn't need to include it — the CLI handles it.
+  // PluginOption supports Promise<Plugin>, so we push an async IIFE that
+  // dynamically imports the ESM-only @cloudflare/vite-plugin.
+  if (process.env.HOLOCRON_DEPLOY === '1' && !hasUserCloudflarePlugin) {
+    pluginsToReturn.push(
+      (async () => {
+        try {
+          const { cloudflare } = await import('@cloudflare/vite-plugin')
+          return cloudflare({
+            viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
+          })
+        } catch {
+          throw new Error(
+            `[holocron] HOLOCRON_DEPLOY=1 but @cloudflare/vite-plugin is not installed.\n` +
+            `Install it: pnpm add -D @cloudflare/vite-plugin`,
+          )
+        }
+      })(),
+    )
   }
 
   return pluginsToReturn

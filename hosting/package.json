@@ -1,0 +1,19 @@
+{
+  "name": "holocron-hosting",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run",
+    "types": "wrangler types",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy --env preview",
+    "deploy:prod": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.90.0"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "holocron-hosting",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-05-11",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ── Production (top-level) ──────────────────────────────────────────
+  "worker_loaders": [{ "binding": "LOADER" }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "holocron-db",
+      "database_id": "1b6a43e2-2e03-408c-9199-291faa305fa4"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "SITES_KV", "id": "b8814a26150b44b583854867c0bb9e53" }
+  ],
+  "workers_dev": true,
+  // Route: catch all *-site.holocron.so requests (production hosted docs)
+  "routes": [
+    { "pattern": "*-site.holocron.so/*", "zone_name": "holocron.so" }
+  ],
+
+  // ── Preview ─────────────────────────────────────────────────────────
+  // Bindings are NOT inherited — must duplicate everything here.
+  "env": {
+    "preview": {
+      "name": "holocron-hosting-preview",
+      "workers_dev": true,
+      "worker_loaders": [{ "binding": "LOADER" }],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "holocron-preview-db",
+          "database_id": "8c7b5000-0d42-4c55-9a0a-ecad450f1e3d"
+        }
+      ],
+      "kv_namespaces": [
+        { "binding": "SITES_KV", "id": "02e9e057c9b9430ca6a39194589d6ad1" }
+      ],
+      "routes": [
+        { "pattern": "*-site-preview.holocron.so/*", "zone_name": "holocron.so" }
+      ]
+    }
+  }
+}
