@@ -18,12 +18,14 @@ test.describe('custom CSS injection', () => {
 
     // The user's global.css defines --custom-css-test on :root.
     // Verify the variable is accessible via getComputedStyle.
+    // Browsers may normalize #ff00ff to shorthand #f0f, so compare lowercase.
     const varValue = await page.evaluate(() =>
       getComputedStyle(document.documentElement)
         .getPropertyValue('--custom-css-test')
-        .trim(),
+        .trim()
+        .toLowerCase(),
     )
-    expect(varValue).toBe('#ff00ff')
+    expect(['#ff00ff', '#f0f']).toContain(varValue)
   })
 
   test('HTML response includes page content', async ({ request }) => {
