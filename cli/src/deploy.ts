@@ -27,17 +27,6 @@ deployCli
     const cwd = proc.cwd
     const nonInteractive = isAgent || !process.stdin.isTTY
 
-    // ── Auth ──────────────────────────────────────────────────────
-    let auth: DeployAuth
-    try {
-      auth = resolveDeployAuth()
-    } catch (err) {
-      output.error((err as Error).message)
-      return proc.exit(1)
-    }
-
-    const { safeFetch } = getDeployClient()
-
     // ── Branch detection ─────────────────────────────────────────
     // Priority: explicit flag > HOLOCRON_BRANCH (from vite plugin OIDC) > GitHub CI env > git
     let branch = options.branch
@@ -64,7 +53,55 @@ deployCli
       } catch { /* not a git repo or git not installed */ }
     }
     branch = branch || 'main'
-    output.log(`Branch: ${branch}`)
+
+    // Detect if this is a PR deploy — PRs are always preview to prevent
+    // a PR branch named "main" from overwriting production.
+    const isPullRequest = !!(process.env.GITHUB_HEAD_REF || process.env.HOLOCRON_PREVIEW)
+    if (isPullRequest) {
+      output.log(`Branch: ${branch} (preview, PR detected)`)
+    } else {
+      output.log(`Branch: ${branch}`)
+    }
+
+    // ── Build (runs BEFORE auth so OIDC can write HOLOCRON_KEY to .env) ───
+    if (!options.skipBuild) {
+      output.log('Building for Cloudflare Workers...')
+      const { execSync } = await import('node:child_process')
+      const buildCmd = detectBuildCommand(cwd)
+      try {
+        execSync(buildCmd, {
+          cwd,
+          stdio: 'inherit',
+          env: { ...process.env, HOLOCRON_DEPLOY: '1' },
+        })
+      } catch {
+        output.error('Build failed.')
+        return proc.exit(1)
+      }
+
+      // Reload .env after the build — the vite plugin's OIDC flow may have
+      // written HOLOCRON_KEY and HOLOCRON_BRANCH during the build step.
+      try {
+        const { config } = await import('dotenv')
+        config({ path: path.resolve(cwd, '.env'), override: true })
+      } catch { /* dotenv not available or .env missing — non-fatal */ }
+
+      // Re-detect branch from env if the build set HOLOCRON_BRANCH
+      if (!options.branch && process.env.HOLOCRON_BRANCH) {
+        branch = process.env.HOLOCRON_BRANCH
+      }
+    }
+
+    // ── Auth (after build, so OIDC-written HOLOCRON_KEY is available) ─────
+    let auth: DeployAuth
+    try {
+      auth = resolveDeployAuth()
+    } catch (err) {
+      output.error((err as Error).message)
+      return proc.exit(1)
+    }
+
+    const { safeFetch } = getDeployClient()
 
     // ── Resolve project (only needed for session auth) ────────────
     let projectId = options.project
@@ -95,24 +132,6 @@ deployCli
         })
         if (clack.isCancel(selected)) return proc.exit(1)
         projectId = selected
-      }
-    }
-
-    // ── Build ─────────────────────────────────────────────────────
-    if (!options.skipBuild) {
-      output.log('Building for Cloudflare Workers...')
-      const { execSync } = await import('node:child_process')
-      // Detect the project's package manager to run the correct vite binary
-      const buildCmd = detectBuildCommand(cwd)
-      try {
-        execSync(buildCmd, {
-          cwd,
-          stdio: 'inherit',
-          env: { ...process.env, HOLOCRON_DEPLOY: '1' },
-        })
-      } catch {
-        output.error('Build failed.')
-        return proc.exit(1)
       }
     }
 
@@ -154,7 +173,8 @@ deployCli
     // ── Step 1: Create deployment ─────────────────────────────────
     output.log('Creating deployment...')
     const filePaths = files.map((f) => f.relativePath)
-    const createBody: { files: string[]; projectId?: string; branch?: string } = { files: filePaths, branch }
+    const createBody: { files: string[]; projectId?: string; branch?: string; preview?: boolean } = { files: filePaths, branch }
+    if (isPullRequest) createBody.preview = true
     if (projectId) createBody.projectId = projectId
 
     const createRes = await safeFetch('/api/v0/deployments', {

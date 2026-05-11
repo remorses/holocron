@@ -54,22 +54,27 @@ export function buildProjectSubdomain(project: {
 }
 
 /** Build a preview subdomain for a branch deployment.
- *  Format: `{sanitized-branch}-{project-subdomain}`. Truncated to 63 chars with
- *  hash suffix if needed. */
+ *  Format: `{sanitized-branch}-{hash}-{project-subdomain}`.
+ *
+ *  The hash is ALWAYS included (derived from the raw, unsanitized branch name)
+ *  so that branches that sanitize identically (feature/auth, feature_auth,
+ *  feature.auth) get distinct subdomains. Truncated to 63 chars if needed. */
 export function buildPreviewSubdomain(branchName: string, projectSubdomain: string): string {
-  const sanitizedBranch = sanitizeForDns(branchName)
-  const full = `${sanitizedBranch}-${projectSubdomain}`
-  if (full.length <= 63) return full
-  // Truncate branch part, keep a deterministic hash suffix
+  const sanitizedBranch = sanitizeForDns(branchName) || 'branch'
+  // djb2 hash of the raw branch name for deterministic uniqueness
   const hashNum = [...branchName].reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0)
-  const suffix = Math.abs(hashNum).toString(36).slice(0, 6)
-  const maxBranchLen = 63 - projectSubdomain.length - 1 - suffix.length - 1
+  const hashSuffix = Math.abs(hashNum).toString(36).slice(0, 6)
+  const full = `${sanitizedBranch}-${hashSuffix}-${projectSubdomain}`
+  if (full.length <= 63) return full
+  // Truncate the branch part to fit, keeping hash + project subdomain intact
+  const fixedLen = hashSuffix.length + 1 + projectSubdomain.length + 1
+  const maxBranchLen = 63 - fixedLen
   if (maxBranchLen < 1) {
-    // Project subdomain itself is near the limit; use hash only
-    return `${sanitizedBranch.slice(0, 50)}-${suffix}`.slice(0, 63)
+    // Project subdomain itself is near the limit
+    return `${sanitizedBranch.slice(0, 4)}-${hashSuffix}-${projectSubdomain}`.slice(0, 63)
   }
   const truncated = sanitizedBranch.slice(0, maxBranchLen).replace(/-$/, '')
-  return `${truncated}-${suffix}-${projectSubdomain}`
+  return `${truncated}-${hashSuffix}-${projectSubdomain}`
 }
 
 // ── Auth helpers ────────────────────────────────────────────────────
@@ -145,6 +150,7 @@ export const deployApp = new Spiceflow()
         .describe('File paths to upload'),
       projectId: z.string().optional().describe('Required for session auth; ignored for API key auth'),
       branch: z.string().max(200).optional().describe('Branch name for preview deployments. Defaults to "main".'),
+      preview: z.boolean().optional().describe('Force preview deployment (e.g. from a PR). Never updates production pointer.'),
     }),
     detail: {
       summary: 'Create deployment',
@@ -167,6 +173,7 @@ export const deployApp = new Spiceflow()
         version,
         status: 'uploading',
         branch: body.branch || 'main',
+        preview: body.preview ?? false,
         files: JSON.stringify(body.files),
       })
 
@@ -272,7 +279,10 @@ export const deployApp = new Spiceflow()
       }
 
       const branch = deploy.branch || 'main'
-      const isDefaultBranch = branch === (proj.defaultBranch || 'main')
+      // A deployment is production ONLY when it targets the default branch AND
+      // is not explicitly marked as preview. This prevents PR branches named
+      // "main" from overwriting production (PRs always set preview=true).
+      const isProduction = !deploy.preview && branch === (proj.defaultBranch || 'main')
 
       const declaredFiles: string[] = JSON.parse(deploy.files || '[]')
       const prefix = `site:${deploy.projectId}/v:${deploy.version}/`
@@ -322,7 +332,7 @@ export const deployApp = new Spiceflow()
       const isPreviewEnv = requestHost.startsWith('preview.')
       const siteSuffix = isPreviewEnv ? '-site-preview.holocron.so' : '-site.holocron.so'
 
-      if (isDefaultBranch) {
+      if (isProduction) {
         // Production deploy: supersede ALL active deployments for this project,
         // activate this one, and update the project pointer.
         // deployment.subdomain is set to the project subdomain so the hosting
@@ -349,14 +359,19 @@ export const deployApp = new Spiceflow()
             .where(orm.eq(schema.project.projectId, deploy.projectId)),
         ])
 
-        // Write site resolution data to KV so the hosting worker can resolve
-        // subdomain → project without a cross-region D1 query. KV is globally
-        // replicated (~1-5ms reads from any datacenter).
-        await writeSiteInfoToKv(projectSubdomain, {
-          projectId: deploy.projectId,
-          version: deploy.version,
-          files: declaredFiles,
+        // Verify this deployment won the race before writing KV. A concurrent
+        // finalize for the same branch could have superseded us between the
+        // D1 batch and this KV write.
+        const stillActive = await db.query.deployment.findFirst({
+          where: { id: deploy.id, status: 'active' },
         })
+        if (stillActive) {
+          await writeSiteInfoToKv(projectSubdomain, {
+            projectId: deploy.projectId,
+            version: deploy.version,
+            files: declaredFiles,
+          })
+        }
 
         const url = `https://${projectSubdomain}${siteSuffix}`
         return { url, deploymentId: deploy.id, branch }
@@ -380,11 +395,16 @@ export const deployApp = new Spiceflow()
             .where(orm.eq(schema.deployment.id, deploy.id)),
         ])
 
-        await writeSiteInfoToKv(previewSubdomain, {
-          projectId: deploy.projectId,
-          version: deploy.version,
-          files: declaredFiles,
+        const stillActive = await db.query.deployment.findFirst({
+          where: { id: deploy.id, status: 'active' },
         })
+        if (stillActive) {
+          await writeSiteInfoToKv(previewSubdomain, {
+            projectId: deploy.projectId,
+            version: deploy.version,
+            files: declaredFiles,
+          })
+        }
 
         const url = `https://${previewSubdomain}${siteSuffix}`
         return { url, deploymentId: deploy.id, branch }

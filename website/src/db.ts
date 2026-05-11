@@ -3,7 +3,8 @@
 // getDb() creates a drizzle-orm/d1 client bound to env.DB.
 // getAuth() creates a BetterAuth instance with GitHub social login + device flow.
 //
-// Performance: validateApiKey and org lookups are memoized via Cache API
+// Performance: org lookups are memoized via Cache API. API key validation
+// is NOT cached to avoid deleted keys staying valid during the cache window.
 // (5-10 min fresh, SWR) so repeated cross-region D1 queries are ~1-5ms
 // instead of 50-200ms. null results are never cached so deleted keys
 // and new users are immediately visible.
@@ -158,32 +159,22 @@ export async function ensureOrg(userId: string, userName: string): Promise<{ id:
 
 // ── API key validation ──────────────────────────────────────────────
 
-/** D1 lookup by key hash — the expensive cross-region query. Memoized via
- *  Cache API (5 min fresh, no SWR). SWR is disabled so deleted keys stop
- *  working within 5 minutes — with SWR they could stay valid for up to
- *  ttl + swr (15 min). null results (invalid keys) are never cached. */
-const findApiKeyByHash = memoize({
-  namespace: 'api-key-by-hash',
-  fn: async (hash: string): Promise<{ orgId: string; keyId: string; projectId: string } | null> => {
-    const db = getDb()
-    const found = await db.query.apiKey.findFirst({
-      where: { hash },
-    })
-    if (!found) return null
-    return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
-  },
-  ttl: 300,
-  swr: 0,
-})
+// NOT memoized. Caching auth lookups means deleted keys stay valid for the
+// cache TTL window, which is a security risk for deploy credentials. The D1
+// query is fast enough (<10ms in-region) and runs once per request at most.
 
 export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string } | null> {
   if (!authHeader) return null
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
   if (!token.startsWith('holo_')) return null
 
-  // Hash is CPU-only (fast), D1 lookup is memoized
   const hash = await hashApiKey(token)
-  return findApiKeyByHash(hash)
+  const db = getDb()
+  const found = await db.query.apiKey.findFirst({
+    where: { hash },
+  })
+  if (!found) return null
+  return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
 }
 
 

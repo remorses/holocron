@@ -215,10 +215,12 @@ async function registerViaOidc(): Promise<string | undefined> {
     if (res.ok) {
       const data = await res.json()
       if (data.apiKey) {
-        // Pass the OIDC-derived branch to the deploy CLI via env var.
-        // The CLI reads HOLOCRON_BRANCH as one of its branch detection sources.
+        // Pass the OIDC-derived branch and preview flag to the deploy CLI via env vars.
         if (data.branch) {
           process.env.HOLOCRON_BRANCH = data.branch
+        }
+        if (data.preview) {
+          process.env.HOLOCRON_PREVIEW = '1'
         }
         logger.info(
           formatHolocronSuccess(`registered deployment via OIDC: ${process.env.GITHUB_REPOSITORY}${data.branch ? ` (branch: ${data.branch})` : ''}`),
@@ -408,6 +410,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           ]
           if (process.env.HOLOCRON_BRANCH) {
             envPairs.push({ key: 'HOLOCRON_BRANCH', value: process.env.HOLOCRON_BRANCH })
+          }
+          if (process.env.HOLOCRON_PREVIEW) {
+            envPairs.push({ key: 'HOLOCRON_PREVIEW', value: '1' })
           }
 
           try {

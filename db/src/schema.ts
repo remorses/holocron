@@ -137,6 +137,10 @@ export const deployment = s.sqliteTable('deployment', {
   status: s.text('status', { enum: ['uploading', 'active', 'superseded'] }).notNull().default('uploading'),
   /** Branch name this deployment was built from (e.g. "main", "fix-typo"). */
   branch: s.text('branch').default('main'),
+  /** Explicitly marked as a preview deployment (e.g. from a PR). When true, finalize
+   *  NEVER updates project.currentDeploymentId, regardless of branch name. This prevents
+   *  a PR branch named "main" from accidentally overwriting production. */
+  preview: s.integer('preview', { mode: 'boolean' }).default(false),
   /** Full DNS subdomain label for this deployment (e.g. "my-docs-remorses" for production,
    *  "fix-typo-my-docs-remorses" for preview). Set during finalize. Used by the hosting
    *  worker to resolve both production and preview sites in a single query. */

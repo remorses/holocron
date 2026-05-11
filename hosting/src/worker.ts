@@ -3,15 +3,14 @@
 //
 // Request flow:
 //   1. Extract subdomain from hostname
-//   2. Look up project + deployment version + file list in D1 (memoized via Cache API)
+//   2. Look up site info from KV (written at deploy finalize time)
 //   3. Try serving static assets from KV (CSS, JS, images)
 //   4. Forward non-asset requests to a Dynamic Worker loaded from KV
 //
 // Performance: site resolution uses KV (globally replicated, ~1-5ms reads from
 // any datacenter) instead of cross-region D1 queries (50-200ms). KV entries are
-// written at deploy finalize time. D1 is used as a fallback for legacy deploys
-// that don't have a KV entry yet.
-// Worker module KV reads use cacheTtl since modules are immutable per version.
+// written at deploy finalize time. Worker module KV reads use cacheTtl since
+// modules are immutable per version.
 
 import { env } from 'cloudflare:workers'
 
@@ -39,75 +38,22 @@ function extractSubdomain(hostname: string): string | undefined {
   return undefined
 }
 
-/** Resolve site info from KV (fast, globally replicated) with D1 fallback.
- *
- *  Primary path: read "site-info:{subdomain}" from KV. Written at deploy
- *  finalize time by the website worker. KV reads are ~1-5ms globally.
- *
- *  Fallback: query D1 for legacy deployments that predate the KV write.
+/** Resolve site info from KV. Written at deploy finalize time.
+ *  KV reads are ~1-5ms globally (replicated to all datacenters).
  *  Uses raw SQL to keep the hosting worker lean (no drizzle-orm dependency). */
 async function resolveSite(
   subdomain: string,
 ): Promise<SiteInfo | null> {
-  // Primary: KV lookup (globally replicated, ~1-5ms)
   // KV cacheTtl minimum is 30 seconds (Cloudflare enforced).
   const kvData = await env.SITES_KV.get(`site-info:${subdomain}`, { type: 'text', cacheTtl: 30 })
-  if (kvData) {
-    try {
-      const parsed = JSON.parse(kvData) as { projectId: string; version: string; files: string[] }
-      return { projectId: parsed.projectId, version: parsed.version, subdomain, files: parsed.files }
-    } catch { /* corrupted KV entry, fall through to D1 */ }
-  }
-
-  // Fallback: D1 for legacy deploys without KV site-info entry
-  return resolveSiteFromD1(subdomain)
-}
-
-/** D1 fallback for deployments created before site-info KV writes were added. */
-async function resolveSiteFromD1(
-  subdomain: string,
-): Promise<SiteInfo | null> {
-  const db = env.DB
-  let row: { project_id: string; version: string; files: string | null } | null = null
+  if (!kvData) return null
 
   try {
-    row = await db
-      .prepare(
-        `SELECT d.project_id, d.version, d.files
-         FROM deployment d
-         WHERE d.subdomain = ?
-           AND d.status = 'active'
-         ORDER BY d.created_at DESC
-         LIMIT 1`,
-      )
-      .bind(subdomain)
-      .first()
+    const parsed = JSON.parse(kvData) as { projectId: string; version: string; files: string[] }
+    return { projectId: parsed.projectId, version: parsed.version, subdomain, files: parsed.files }
   } catch {
-    // Column may not exist yet (migration pending). Fall through to legacy path.
+    return null
   }
-
-  if (!row) {
-    row = await db
-      .prepare(
-        `SELECT p.project_id, d.version, d.files
-         FROM project p
-         JOIN deployment d ON d.id = p.current_deployment_id
-         WHERE p.subdomain = ?
-           AND d.status = 'active'
-         LIMIT 1`,
-      )
-      .bind(subdomain)
-      .first()
-  }
-
-  if (!row) return null
-
-  let files: string[] = []
-  try {
-    files = JSON.parse(row.files || '[]')
-  } catch { /* empty */ }
-
-  return { projectId: row.project_id, version: row.version, subdomain, files }
 }
 
 /** Try to serve a static asset (CSS, JS, images) from KV.

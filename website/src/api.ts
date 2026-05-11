@@ -304,6 +304,7 @@ export const apiApp = new Spiceflow()
         projectId: z.string().optional(),
         apiKey: z.string().optional().describe('Returned only for OIDC auth. Full holo_xxx key for the project.'),
         branch: z.string().optional().describe('Derived branch name from the OIDC JWT (head_ref for PRs, ref for pushes).'),
+        preview: z.boolean().optional().describe('True when the OIDC token comes from a pull_request event.'),
       }),
       401: ErrorResponse,
     },
@@ -326,6 +327,7 @@ export const apiApp = new Spiceflow()
         //   PR events: headRef is the source branch (e.g. "fix-typo")
         //   Push events: ref is "refs/heads/main" → strip prefix
         //   Tags/other: fall back to "main"
+        const isPullRequest = !!oidcResult.headRef
         const branch = oidcResult.headRef
           || (oidcResult.ref?.startsWith('refs/heads/')
             ? oidcResult.ref.slice('refs/heads/'.length)
@@ -368,7 +370,7 @@ export const apiApp = new Spiceflow()
           headRef: oidcResult.headRef,
           baseRef: oidcResult.baseRef,
         })
-        return { ...result, branch }
+        return { ...result, branch, preview: isPullRequest || undefined }
       }
 
       return json({ error: 'invalid or missing authentication' }, { status: 401 })
