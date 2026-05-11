@@ -34,7 +34,7 @@ createCli
   .option('--name <name>', 'Project/company name')
   .option('--skip-auth', 'Skip authentication and cloud setup')
   .option('--skip-install', 'Skip dependency installation')
-  .option('-u, --url [url]', 'Holocron API base URL')
+  .option('--api-url [url]', 'Holocron API base URL')
   .action(async (dir, options, { process: proc }) => {
     let name = options.name
     if (!name) {
@@ -61,7 +61,7 @@ createCli
       name,
       skipAuth: !!options.skipAuth,
       skipInstall: !!options.skipInstall,
-      baseUrl: options.url || getBaseUrl(),
+      baseUrl: options.apiUrl || getBaseUrl(),
     })
   })
 

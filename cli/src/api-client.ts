@@ -12,7 +12,7 @@
 
 import { createSpiceflowFetch } from 'spiceflow/client'
 import type { App } from 'website/src/server.tsx'
-import { loadConfig, getBaseUrl } from './config.ts'
+import { getBaseUrl, getSessionToken } from './config.ts'
 
 /** Create a client authenticated with a session token (from `holocron login`). */
 export function createSessionClient(baseUrl: string, sessionToken: string) {
@@ -32,12 +32,12 @@ export function createApiKeyClient(baseUrl: string, apiKey: string) {
 
 /** Create an API client from the stored auth config. Throws if not logged in. */
 export function getApiClient() {
-  const config = loadConfig()
-  if (!config.sessionToken) {
-    throw new Error('Not logged in. Run `holocron login` first.')
+  const baseUrl = getBaseUrl()
+  const token = getSessionToken(baseUrl)
+  if (!token) {
+    throw new Error(`Not logged in to ${baseUrl}. Run \`holocron login --api-url ${baseUrl}\` first.`)
   }
-  const baseUrl = config.baseUrl || 'https://holocron.so'
-  return createSessionClient(baseUrl, config.sessionToken)
+  return createSessionClient(baseUrl, token)
 }
 
 export type DeployAuth =
@@ -47,22 +47,22 @@ export type DeployAuth =
 /**
  * Resolve auth for deploy commands. Priority:
  *   1. HOLOCRON_KEY env var (loaded from process.env, which includes .env via dotenv)
- *   2. ~/.holocron/config.json session token (from `holocron login`)
+ *   2. ~/.holocron/config.json session token for the resolved URL (from `holocron login`)
  */
 export function resolveDeployAuth(): DeployAuth {
-  const baseUrl = process.env.HOLOCRON_API_URL || getBaseUrl()
+  const baseUrl = getBaseUrl()
 
   if (process.env.HOLOCRON_KEY) {
     return { type: 'apikey', key: process.env.HOLOCRON_KEY, baseUrl }
   }
 
-  const config = loadConfig()
-  if (config.sessionToken) {
-    return { type: 'session', token: config.sessionToken, baseUrl: config.baseUrl || baseUrl }
+  const token = getSessionToken(baseUrl)
+  if (token) {
+    return { type: 'session', token, baseUrl }
   }
 
   throw new Error(
-    'Not authenticated. Set HOLOCRON_KEY in your environment or .env file, or run `holocron login`.',
+    `Not authenticated for ${baseUrl}. Set HOLOCRON_KEY in your environment or .env file, or run \`holocron login --api-url ${baseUrl}\`.`,
   )
 }
 
