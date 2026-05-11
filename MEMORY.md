@@ -1746,3 +1746,21 @@ rmiz renders two wrapper divs (`[data-rmiz]` → `[data-rmiz-content]`) around c
 ## Config page extensions (2026-04-11)
 
 `docs.json` page entries and group `root` values can show up as `index.md`, `getting-started.mdx`, or `/guide/index.md`, but routing expects canonical slugs like `index` and `guide/index`. Normalize those strings once in `normalize-config.ts` by stripping a leading slash and a trailing `.md`/`.mdx`, so `/` and raw `.md` routes stay consistent everywhere.
+
+## Dynamic Workers hosting platform (2026-05-11)
+
+### Deploy pipeline architecture
+
+CLI (`holocron deploy`) builds with `@cloudflare/vite-plugin`, collects `dist/rsc/**` (worker modules) + `dist/client/**` (browser assets), uploads via 3-step protocol (create → parallel PUT → finalize). Files stored in KV. Hosting worker at `*-site.holocron.so` resolves site from D1, serves assets from KV, loads user's spiceflow app via `env.LOADER.get()`.
+
+### Key pitfalls discovered
+
+1. **`wrangler kv` defaults to local** — always use `--remote` for CLI KV operations. Workers always use remote KV; only the wrangler CLI defaults to local.
+2. **Dynamic Worker modules must be `.js`/`.py` only** — CSS files in the `modules` map crash with `TypeError`. Filter non-JS files before passing.
+3. **`@cloudflare/vite-plugin` builds don't export `default { fetch }`** — the platform wraps the entry at deploy time. Dynamic Workers need a wrapper module that imports `fetchHandler` and creates the default export.
+4. **RSC + SSR are separate module trees** — `ssr/index.js` imports `../index.js` (RSC entry). Must upload both `dist/rsc/ssr/` AND `dist/rsc/` root, preserving directory structure.
+5. **Wildcard routes on `holocron.so` conflict with the website worker** — `*holocron.so/*` catches ALL subdomains including `preview.holocron.so`. Use specific patterns like `*-site.holocron.so/*` that don't overlap.
+6. **SQLite `ALTER TABLE ADD ... UNIQUE` fails** — must split into `ALTER TABLE ADD column` + `CREATE UNIQUE INDEX`.
+7. **`worker_loaders` requires wrangler >= 4.86.0** — older versions crash at runtime with error 1101.
+8. **KV `list()` is eventually consistent** — use `getWithMetadata()` to verify specific keys, not `list()`.
+9. **Asset manifest path mapping** — CLI uploads `dist/client/` files under `assets/` prefix in KV. The manifest must map browser request paths (e.g. `/assets/style.css`) to KV keys (e.g. `site:.../assets/assets/style.css`). The double `assets/` is because `dist/client/assets/` → `assets/assets/`.
