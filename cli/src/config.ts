@@ -6,8 +6,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 
-const CONFIG_DIR = path.join(os.homedir(), '.holocron')
-const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json')
+function getConfigDir(): string {
+  return process.env.HOLOCRON_CONFIG_DIR || path.join(os.homedir(), '.holocron')
+}
+
+function getConfigFile(): string {
+  return path.join(getConfigDir(), 'config.json')
+}
 
 const DEFAULT_URL = 'https://holocron.so'
 
@@ -23,15 +28,15 @@ export function normalizeUrl(url: string): string {
 
 export function loadConfig(): CliConfig {
   try {
-    return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')) as CliConfig
+    return JSON.parse(fs.readFileSync(getConfigFile(), 'utf-8')) as CliConfig
   } catch {
     return {}
   }
 }
 
 export function saveConfig(config: CliConfig): void {
-  fs.mkdirSync(CONFIG_DIR, { recursive: true })
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2) + '\n')
+  fs.mkdirSync(getConfigDir(), { recursive: true })
+  fs.writeFileSync(getConfigFile(), JSON.stringify(config, null, 2) + '\n')
 }
 
 /** Save a session token for a specific server URL. */
