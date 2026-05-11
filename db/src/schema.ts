@@ -132,6 +132,7 @@ export const apiKey = s.sqliteTable('api_key', {
   name: s.text('name').notNull(),
   prefix: s.text('prefix').notNull(),
   hash: s.text('hash').notNull().unique(),
+  key: s.text('key'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
   s.index('api_key_org_id_idx').on(table.orgId),
