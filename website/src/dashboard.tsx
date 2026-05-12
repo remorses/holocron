@@ -18,8 +18,25 @@ import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 
 import { ulid } from 'ulid'
 import { Button, CopyButton } from './components/ui/button.tsx'
+import { SignOutButton } from './components/sign-out-button.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
+
+/** Format an epoch-ms timestamp as "3 days ago", "just now", etc. */
+function timeAgo(epochMs: number): string {
+  const seconds = Math.round((Date.now() - epochMs) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(seconds / 3600)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.round(seconds / 86400)
+  if (days < 30) return `${days}d ago`
+  const months = Math.round(seconds / 2592000)
+  if (months < 12) return `${months}mo ago`
+  const years = Math.round(seconds / 31536000)
+  return `${years}y ago`
+}
 
 // ── Dashboard layout with auth guard ────────────────────────────────
 
@@ -93,9 +110,11 @@ export const dashboardApp = new Spiceflow()
       with: { org: { with: { projects: true } } },
     })
 
-    return {
-      projects: membership?.org?.projects ?? [],
-    }
+    const projects = (membership?.org?.projects ?? [])
+      .slice()
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+
+    return { projects }
   })
 
   // Main dashboard page: lists all projects as cards. Shows empty states
@@ -158,8 +177,9 @@ export const dashboardApp = new Spiceflow()
                     </div>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {new Date(project.createdAt).toLocaleDateString()}
+                <div className="flex flex-col items-end gap-0.5 text-xs text-muted-foreground">
+                  <div>Updated {timeAgo(project.updatedAt)}</div>
+                  <div>Created {timeAgo(project.createdAt)}</div>
                 </div>
               </Link>
             ))}
@@ -274,6 +294,11 @@ export const dashboardApp = new Spiceflow()
             </div>
           </section>
         )}
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-medium">Session</h2>
+          <SignOutButton />
+        </section>
 
         {/* TODO: Stripe billing section */}
       </div>
