@@ -2,10 +2,9 @@
 // either the caller's docs.zip or inline localhost pages, creates the docs bash
 // tool, and streams AI SDK UI chunks through Spiceflow's typed SSE generator support.
 //
-// Usage tracking: authenticated requests are counted atomically in a per-org
-// Durable Object (UsageCounter). reserveUsage() checks the limit AND inserts a
-// placeholder row in one DO RPC (no race window). Token counts are filled in
-// after streaming via waitUntil so the update survives after the response closes.
+// Usage tracking: authenticated requests are counted in a per-org Durable Object
+// (UsageCounter). checkLimit() runs before streaming; recordUsage() inserts the
+// full row after streaming via waitUntil so it survives after the response closes.
 //
 // Unauthenticated requests are rate-limited by IP via the CHAT_RATE_LIMITER
 // binding (10 req / 60s). The rate limiter also applies to invalid API keys
@@ -129,24 +128,17 @@ export const gatewayApp = new Spiceflow()
       const messages: ModelMessage[] = body.messages
       const pageSlug = body.pageSlug ?? ''
 
-      // ── Authenticated: atomically reserve a usage slot via DO ───────
-      // reserveUsage() checks the monthly count AND inserts a placeholder
-      // row in one DO RPC. No race window between check and insert.
-      let usageId: number | undefined
+      // ── Authenticated: check monthly usage limit via DO ──────────────
       if (authResult) {
         const stub = getUsageStub(authResult.orgId)
-        const reservation = await stub.reserveUsage({
+        const { allowed } = await stub.checkLimit({
           sinceMs: getMonthStartMs(),
           limit: MONTHLY_REQUEST_LIMIT,
-          projectId: authResult.projectId,
-          model: DEFAULT_MODEL,
-          pageSlug,
         })
-        if (!reservation.allowed) {
+        if (!allowed) {
           yield NOTICE_USAGE_LIMIT_REACHED
           return
         }
-        usageId = reservation.usageId
       }
       const filesPromise = (() => {
         if (body.docsPages) return Promise.resolve(body.docsPages)
@@ -190,13 +182,15 @@ export const gatewayApp = new Spiceflow()
       }
       yield { type: 'model-messages', messages: (await result.response).messages }
 
-      // ── Update token counts via waitUntil (survives after response) ─
-      if (authResult && usageId !== undefined) {
+      // ── Record usage via waitUntil (survives after response closes) ──
+      if (authResult) {
         const usage = await result.usage
         const stub = getUsageStub(authResult.orgId)
         waitUntil(
-          stub.updateUsageTokens({
-            usageId,
+          stub.recordUsage({
+            projectId: authResult.projectId,
+            model: modelName,
+            pageSlug,
             inputTokens: usage.inputTokens ?? 0,
             outputTokens: usage.outputTokens ?? 0,
           }).catch(() => {}),
