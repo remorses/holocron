@@ -1,31 +1,23 @@
 // Deploy command — builds a holocron site for Cloudflare Workers and uploads
-// the built artifacts to holocron.so via parallel per-file uploads.
+// the built artifacts to holocron.so via zip-batched uploads.
 //
 // Auth priority:
 //   1. HOLOCRON_KEY env var (API key, project resolved server-side)
 //   2. ~/.holocron/config.json session token (from `holocron login`)
 //
 // Upload protocol:
-//   1. POST /api/v0/deployments — declare file list, get deploymentId
-//   2. PUT /api/v0/deployments/:id/files/* — upload each file (max 6 parallel)
+//   1. POST /api/v0/deployments — declare file list + optional site name, get deploymentId
+//   2. PUT /api/v0/deployments/:id/files — upload zip archive per batch (split by max size)
 //   3. POST /api/v0/deployments/:id/finalize — mark live, get URL
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 import * as clack from '@clack/prompts'
-import { goke, isAgent, colors as c } from 'goke'
+import { goke, isAgent } from 'goke'
+import { zipSync } from 'fflate'
 import { resolveDeployAuth, getDeployClient, type DeployAuth } from './api-client.ts'
-
-function logStep(msg: string) {
-  return `${c.cyan('●')} ${c.cyan('holocron')} ${msg}`
-}
-function logSuccess(msg: string) {
-  return `${c.green('✓')} ${c.cyan('holocron')} ${msg}`
-}
-function logError(msg: string) {
-  return `${c.red('✗')} ${c.cyan('holocron')} ${c.red(msg)}`
-}
+import { logger, colors as c, formatBytes } from './logger.ts'
 
 export const deployCli = goke()
 
@@ -40,13 +32,13 @@ deployCli
 
     const branch = detectBranch(cwd, options.branch)
     const isPullRequest = !!(process.env.GITHUB_HEAD_REF || process.env.HOLOCRON_PREVIEW)
-    output.log(logStep(isPullRequest ? `Branch: ${c.bold(branch)} ${c.dim('(preview, PR detected)')}` : `Branch: ${c.bold(branch)}`))
+    output.log(logger.step(isPullRequest ? `Branch: ${c.bold(branch)} ${c.dim('(preview, PR detected)')}` : `Branch: ${c.bold(branch)}`))
 
     // ── Build (runs BEFORE auth so OIDC can write HOLOCRON_KEY to .env) ───
     if (!options.skipBuild) {
       const buildErr = await runBuild(cwd)
       if (buildErr instanceof Error) {
-        output.error(logError('Build failed'))
+        output.error(logger.error('Build failed'))
         return proc.exit(1)
       }
     }
@@ -57,7 +49,7 @@ deployCli
       catch (err) { return err as Error }
     })()
     if (auth instanceof Error) {
-      output.error(logError(auth.message))
+      output.error(logger.error(auth.message))
       return proc.exit(1)
     }
 
@@ -74,15 +66,18 @@ deployCli
     // ── Collect build artifacts ───────────────────────────────────
     const files = collectBuildArtifacts(cwd)
     if (files instanceof Error) {
-      output.error(logError(files.message))
+      output.error(logger.error(files.message))
       return proc.exit(1)
     }
 
     const totalSize = files.reduce((sum, f) => sum + f.size, 0)
-    output.log(logStep(`Found ${c.bold(String(files.length))} files ${c.dim(`(${formatBytes(totalSize)})`)}`))
+    output.log(logger.step(`Found ${c.bold(String(files.length))} files ${c.dim(`(${formatBytes(totalSize)})`)}`))
+
+    // ── Read site name from docs.json for project name sync ───────
+    const siteName = readSiteName(cwd)
 
     // ── Step 1: Create deployment ─────────────────────────────────
-    output.log(logStep('Creating deployment...'))
+    output.log(logger.step('Creating deployment...'))
     const createRes = await safeFetch('/api/v0/deployments', {
       method: 'POST',
       body: {
@@ -90,44 +85,45 @@ deployCli
         branch,
         ...(isPullRequest && { preview: true }),
         ...(projectId && { projectId }),
+        ...(siteName && { name: siteName }),
       },
     })
     if (createRes instanceof Error) {
-      output.error(logError(`Failed to create deployment: ${createRes.message}`))
+      output.error(logger.error(`Failed to create deployment: ${createRes.message}`))
       return proc.exit(1)
     }
     const { deploymentId, version } = createRes as { deploymentId: string; version: string }
-    output.log(logSuccess(`Deployment ${c.bold(deploymentId)} ${c.dim(`(v${version})`)} created`))
+    output.log(logger.success(`Deployment ${c.bold(deploymentId)} ${c.dim(`(v${version})`)} created`))
 
-    // ── Step 2: Upload files in parallel (max 6) ──────────────────
-    output.log(logStep(`Uploading ${c.bold(String(files.length))} files...`))
+    // ── Step 2: Upload files in zip batches ─────────────────────
+    output.log('Uploading files...')
     const uploadErr = await uploadFiles({ files, deploymentId, authToken, baseUrl: auth.baseUrl, output })
     if (uploadErr instanceof Error) {
-      output.error(logError(uploadErr.message))
-      output.error(logError('Deploy aborted — deployment remains in "uploading" state and can be retried'))
+      output.error(logger.error(uploadErr.message))
+      output.error(logger.error('Deploy aborted — deployment remains in "uploading" state and can be retried'))
       return proc.exit(1)
     }
 
     // ── Step 3: Finalize deployment ───────────────────────────────
-    output.log(logStep('Finalizing deployment...'))
+    output.log(logger.step('Finalizing deployment...'))
     const finalizeRes = await safeFetch(`/api/v0/deployments/${deploymentId}/finalize`, {
       method: 'POST',
       body: {},
     })
     if (finalizeRes instanceof Error) {
-      output.error(logError(`Failed to finalize: ${finalizeRes.message}`))
+      output.error(logger.error(`Failed to finalize: ${finalizeRes.message}`))
       return proc.exit(1)
     }
     const finalized = finalizeRes as { url: string; deploymentId: string; branch: string }
     output.log('')
-    output.log(logSuccess(`Deployed! ${c.bold(finalized.url)}`))
+    output.log(logger.success(`Deployed! ${c.bold(finalized.url)}`))
 
     // Auto-set GitHub Actions step outputs so users don't need to parse stdout
     const ghOutputFile = process.env.GITHUB_OUTPUT
     if (ghOutputFile) {
       fs.appendFileSync(ghOutputFile, `holocron_url=${finalized.url}\n`)
       fs.appendFileSync(ghOutputFile, `holocron_deployment_id=${deploymentId}\n`)
-      output.log(logStep(c.dim('GitHub Actions step outputs set: holocron_url, holocron_deployment_id')))
+      output.log(logger.step(c.dim('GitHub Actions step outputs set: holocron_url, holocron_deployment_id')))
     }
   })
 
@@ -194,17 +190,17 @@ async function resolveProjectId(ctx: {
 }): Promise<string | Error> {
   const res = await ctx.safeFetch('/api/v0/projects')
   if (res instanceof Error) {
-    ctx.output.error(logError(`Failed to list projects: ${res.message}`))
+    ctx.output.error(logger.error(`Failed to list projects: ${res.message}`))
     return res
   }
   const projects = res.projects as Array<{ projectId: string; name: string }>
   if (projects.length === 0) {
-    ctx.output.error(logError('No projects found. Create one first: holocron projects create --name "My Docs"'))
+    ctx.output.error(logger.error('No projects found. Create one first: holocron projects create --name "My Docs"'))
     return new Error('No projects')
   }
   if (projects.length === 1) return projects[0]!.projectId
   if (ctx.nonInteractive) {
-    ctx.output.error(logError('Multiple projects found. Pass --project <id> to select one.'))
+    ctx.output.error(logger.error('Multiple projects found. Pass --project <id> to select one.'))
     return new Error('Multiple projects')
   }
   const selected = await clack.select({
@@ -215,38 +211,74 @@ async function resolveProjectId(ctx: {
   return selected
 }
 
-/** Upload files in parallel batches. Returns Error on first failure. */
+/** Max uncompressed size per zip batch. Files are grouped until this limit
+ *  is reached, then a new batch starts. A single file larger than this
+ *  gets its own batch. */
+const MAX_BATCH_SIZE = 50 * 1024 * 1024 // 50 MB
+
+/** Group files into batches by total uncompressed size. */
+function createBatches(
+  files: Array<{ relativePath: string; absPath: string; size: number }>,
+): Array<Array<typeof files[number]>> {
+  const batches: Array<Array<typeof files[number]>> = []
+  let currentBatch: Array<typeof files[number]> = []
+  let currentSize = 0
+
+  for (const file of files) {
+    if (currentBatch.length > 0 && currentSize + file.size > MAX_BATCH_SIZE) {
+      batches.push(currentBatch)
+      currentBatch = []
+      currentSize = 0
+    }
+    currentBatch.push(file)
+    currentSize += file.size
+  }
+
+  if (currentBatch.length > 0) {
+    batches.push(currentBatch)
+  }
+
+  return batches
+}
+
+/** Upload files in zip-batched requests. Returns Error on first failure. */
 async function uploadFiles(ctx: {
-  files: Array<{ relativePath: string; absPath: string }>
+  files: Array<{ relativePath: string; absPath: string; size: number }>
   deploymentId: string
   authToken: string
   baseUrl: string
   output: { log: (msg: string) => void }
 }): Promise<Error | void> {
-  const MAX_CONCURRENT = 6
+  const batches = createBatches(ctx.files)
   let completed = 0
 
-  for (let i = 0; i < ctx.files.length; i += MAX_CONCURRENT) {
-    const batch = ctx.files.slice(i, i + MAX_CONCURRENT)
-    const results = await Promise.all(batch.map(async (file) => {
-      const content = fs.readFileSync(file.absPath)
-      const encodedPath = file.relativePath
-      const uploadUrl = new URL(`/api/v0/deployments/${ctx.deploymentId}/files/${encodedPath}`, ctx.baseUrl)
-      const res = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${ctx.authToken}`, 'Content-Type': 'application/octet-stream' },
-        body: content,
-      }).catch((e: unknown) => e instanceof Error ? e : new Error(String(e)))
-      if (res instanceof Error) return new Error(`Upload failed for ${file.relativePath}: ${res.message}`)
-      if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        return new Error(`Upload failed for ${file.relativePath}: ${res.status} ${text}`)
-      }
-      completed++
-      ctx.output.log(`${c.dim(`[${completed}/${ctx.files.length}]`)} ${file.relativePath}`)
-    }))
-    const firstErr = results.find((r): r is Error => r instanceof Error)
-    if (firstErr) return firstErr
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i]!
+    const batchSize = batch.reduce((sum, f) => sum + f.size, 0)
+    ctx.output.log(logger.step(`Batch ${i + 1}/${batches.length} ${c.dim(`(${batch.length} files, ${formatBytes(batchSize)})`)}`))
+
+    // Build zip archive: keys are relative paths, values are file content
+    const zipInput: Record<string, Uint8Array> = {}
+    for (const file of batch) {
+      zipInput[file.relativePath] = new Uint8Array(fs.readFileSync(file.absPath))
+    }
+    const zipData = zipSync(zipInput)
+
+    const uploadUrl = new URL(`/api/v0/deployments/${ctx.deploymentId}/files`, ctx.baseUrl)
+    const res = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${ctx.authToken}`, 'Content-Type': 'application/zip' },
+      body: new Blob([zipData]),
+    }).catch((e: unknown) => e instanceof Error ? e : new Error(String(e)))
+
+    if (res instanceof Error) return new Error(`Upload batch ${i + 1} failed: ${res.message}`)
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      return new Error(`Upload batch ${i + 1} failed: ${res.status} ${text}`)
+    }
+
+    completed += batch.length
+    ctx.output.log(logger.success(`[${completed}/${ctx.files.length}] uploaded`))
   }
 }
 
@@ -287,8 +319,27 @@ function detectBuildCommand(cwd: string): string {
   return 'npx vite build'
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+const CONFIG_FILE_NAMES = ['docs.json', 'docs.jsonc', 'holocron.jsonc'] as const
+
+/** Read the site name from docs.json/docs.jsonc/holocron.jsonc.
+ *  Returns undefined if no config found or name is missing. */
+function readSiteName(cwd: string): string | undefined {
+  for (const name of CONFIG_FILE_NAMES) {
+    const filePath = path.join(cwd, name)
+    if (!fs.existsSync(filePath)) continue
+    try {
+      const raw = fs.readFileSync(filePath, 'utf-8')
+      // Strip JSONC comments (// and /* */) and trailing commas for .jsonc files
+      const cleaned = name.endsWith('.jsonc')
+        ? raw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/,\s*([\]}])/g, '$1')
+        : raw
+      const parsed = JSON.parse(cleaned)
+      if (parsed && typeof parsed === 'object' && typeof parsed.name === 'string') {
+        return parsed.name
+      }
+    } catch { /* ignore parse errors, deploy can proceed without name */ }
+    return undefined // found a config file but no name
+  }
+  return undefined
 }
+

@@ -6,6 +6,7 @@ import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
 import { stringify } from 'yaml'
 import { getApiClient } from './api-client.ts'
+import { logger, colors } from './logger.ts'
 
 export const keysCli = goke()
 
@@ -20,7 +21,7 @@ keysCli
     let name = options.name
     if (!name) {
       if (nonInteractive) {
-        output.error('Missing --name. Usage: holocron keys create --name production --project <projectId>')
+        output.error(logger.error('Missing --name. Usage: holocron keys create --name production --project <projectId>'))
         return proc.exit(1)
       }
       const prompted = await clack.text({
@@ -34,19 +35,19 @@ keysCli
     let projectId = options.project
     if (!projectId) {
       if (nonInteractive) {
-        output.error('Missing --project. Usage: holocron keys create --name production --project <projectId>')
+        output.error(logger.error('Missing --project. Usage: holocron keys create --name production --project <projectId>'))
         return proc.exit(1)
       }
 
       // Fetch projects and let user pick
       const projectsRes = await safeFetch('/api/v0/projects')
       if (projectsRes instanceof Error) {
-        clack.log.error(`Failed to list projects: ${projectsRes.message}`)
+        output.error(logger.error(`Failed to list projects: ${projectsRes.message}`))
         return proc.exit(1)
       }
 
       if (projectsRes.projects.length === 0) {
-        clack.log.error('No projects found. Create one first with `holocron projects create --name "My Docs"`.')
+        output.error(logger.error('No projects found. Create one first with `holocron projects create --name "My Docs"`.'))
         return proc.exit(1)
       }
 
@@ -67,21 +68,21 @@ keysCli
       body: { name, projectId },
     })
     if (res instanceof Error) {
-      clack.log.error(`Failed to create key: ${res.message}`)
+      output.error(logger.error(`Failed to create key: ${res.message}`))
       return proc.exit(1)
     }
 
-    clack.log.success('API key created successfully!')
+    output.log(logger.success('API key created!'))
     output.log('')
-    output.log(`  Name:    ${res.name}`)
-    output.log(`  Project: ${projectId}`)
+    output.log(`  Name:    ${colors.bold(res.name)}`)
+    output.log(`  Project: ${colors.dim(projectId)}`)
     output.log(`  Prefix:  ${res.prefix}...`)
-    output.log(`  Key:     ${res.key}`)
+    output.log(`  Key:     ${colors.green(res.key)}`)
     output.log('')
-    clack.log.warn('Save this key now. It will not be shown again.')
+    output.log(logger.warn('Save this key now. It will not be shown again.'))
     output.log('')
     output.log('Set it as an environment variable when deploying your docs site:')
-    output.log(`  HOLOCRON_KEY=${res.key}`)
+    output.log(`  ${colors.dim('HOLOCRON_KEY=')}${colors.green(res.key)}`)
   })
 
 keysCli
@@ -91,7 +92,7 @@ keysCli
 
     const res = await safeFetch('/api/v0/keys')
     if (res instanceof Error) {
-      clack.log.error(`Failed to list keys: ${res.message}`)
+      output.error(logger.error(`Failed to list keys: ${res.message}`))
       return proc.exit(1)
     }
 
@@ -128,9 +129,9 @@ keysCli
       params: { id: keyId },
     })
     if (res instanceof Error) {
-      clack.log.error(`Failed to delete key: ${res.message}`)
+      output.error(logger.error(`Failed to delete key: ${res.message}`))
       return proc.exit(1)
     }
 
-    clack.log.success('Key deleted.')
+    output.log(logger.success('Key deleted.'))
   })

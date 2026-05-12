@@ -5,6 +5,7 @@ import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
 import { stringify } from 'yaml'
 import { getApiClient } from './api-client.ts'
+import { logger, colors } from './logger.ts'
 
 export const projectsCli = goke()
 
@@ -15,7 +16,7 @@ projectsCli
 
     const res = await safeFetch('/api/v0/projects')
     if (res instanceof Error) {
-      clack.log.error(`Failed to list projects: ${res.message}`)
+      output.error(logger.error(`Failed to list projects: ${res.message}`))
       return proc.exit(1)
     }
 
@@ -43,7 +44,7 @@ projectsCli
     let name = options.name
     if (!name) {
       if (isAgent || !process.stdin.isTTY) {
-        output.error('Missing --name. Usage: holocron projects create --name "My Docs"')
+        output.error(logger.error('Missing --name. Usage: holocron projects create --name "My Docs"'))
         return proc.exit(1)
       }
       const prompted = await clack.text({
@@ -59,15 +60,15 @@ projectsCli
       body: { name },
     })
     if (res instanceof Error) {
-      clack.log.error(`Failed to create project: ${res.message}`)
+      output.error(logger.error(`Failed to create project: ${res.message}`))
       return proc.exit(1)
     }
 
-    clack.log.success('Project created!')
+    output.log(logger.success('Project created!'))
     output.log('')
-    output.log(`  Name: ${res.name}`)
-    output.log(`  ID:   ${res.projectId}`)
+    output.log(`  Name: ${colors.bold(res.name)}`)
+    output.log(`  ID:   ${colors.dim(res.projectId)}`)
     output.log('')
     output.log('Now create an API key for this project:')
-    output.log(`  holocron keys create --name production --project ${res.projectId}`)
+    output.log(`  ${colors.dim('holocron keys create --name production --project')} ${res.projectId}`)
   })
