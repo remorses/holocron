@@ -104,7 +104,9 @@ function createDeployRoot(branch: string): string {
 }
 
 function parseDeployUrl(output: string): string {
-  const match = output.match(/Deployed!\s+(https:\/\/\S+)/);
+  // Strip ANSI escape codes so bold/color sequences don't break the URL match
+  const clean = output.replace(/\x1b\[[0-9;]*m/g, '');
+  const match = clean.match(/Deployed!\s+(https:\/\/\S+)/);
   if (!match?.[1]) {
     throw new Error(`Could not find deployed URL in CLI output:\n\n${output}`);
   }
