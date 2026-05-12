@@ -641,6 +641,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
           this.addWatchFile(userEntryPath)
           return [
+            `export * from ${JSON.stringify(userEntryPath)}`,
             `import * as __userEntry from ${JSON.stringify(userEntryPath)}`,
             cssImportLine,
             `export const app = __userEntry.app`,

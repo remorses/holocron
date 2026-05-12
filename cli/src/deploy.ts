@@ -220,7 +220,7 @@ async function uploadFiles(ctx: {
     const batch = ctx.files.slice(i, i + MAX_CONCURRENT)
     const results = await Promise.all(batch.map(async (file) => {
       const content = fs.readFileSync(file.absPath)
-      const encodedPath = file.relativePath.split('/').map(encodeURIComponent).join('/')
+      const encodedPath = file.relativePath
       const uploadUrl = new URL(`/api/v0/deployments/${ctx.deploymentId}/files/${encodedPath}`, ctx.baseUrl)
       const res = await fetch(uploadUrl, {
         method: 'PUT',

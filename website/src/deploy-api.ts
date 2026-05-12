@@ -140,7 +140,7 @@ export const deployApp = new Spiceflow()
       files: z
         .array(
           z.string().min(1).max(512)
-            .regex(/^[A-Za-z0-9._\-/]+$/, 'Invalid characters in file path')
+            .refine((p) => !/[\x00-\x1f\\]/.test(p), 'Path contains control characters or backslashes')
             .refine((p) => !p.split('/').includes('..'), 'Path traversal not allowed')
             .refine((p) => p.startsWith('assets/') || p.startsWith('worker/'), 'Path must start with assets/ or worker/')
             .refine((p) => p !== 'worker/__dw_entry.js', 'Reserved path'),
