@@ -162,7 +162,7 @@ export const gatewayApp = new Spiceflow()
           code: 'HOLOCRON_TEMPORARY_AI_MODEL',
           title: 'Temporary AI model',
           message: 'Add HOLOCRON_KEY before deploying for reliable AI chat.',
-          command: 'npx @holocron.so/cli keys create --name production --project <projectId>',
+          command: 'npx -y @holocron.so/cli keys create --name production --project <projectId>',
         } as const
       }
 

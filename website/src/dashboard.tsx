@@ -47,9 +47,9 @@ export const dashboardApp = new Spiceflow()
     }
   })
 
-  // Shell layout: top nav bar with user email + settings link.
+  // Shell layout: top nav bar with navigation links.
   // Wraps all /dashboard/* pages.
-  .layout('/dashboard/*', async ({ children, loaderData }) => {
+  .layout('/dashboard/*', async ({ children }) => {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <header className="border-b border-border">
@@ -69,7 +69,7 @@ export const dashboardApp = new Spiceflow()
               />
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>{loaderData.user.email}</span>
+              <Link href="/dashboard" className="hover:text-foreground">Projects</Link>
               <Link href="/dashboard/settings" className="hover:text-foreground">Settings</Link>
             </div>
           </div>
@@ -358,23 +358,23 @@ export const dashboardApp = new Spiceflow()
               <div className="text-sm text-muted-foreground">Or create locally with the CLI:</div>
               <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
                 <CopyButton
-                  text={`HOLOCRON_KEY=${fullKey}\n\nnpx @holocron.so/cli create`}
+                  text="npx -y @holocron.so/cli create"
                   className="absolute right-2 top-2"
                 />
-                <div className="overflow-x-auto px-5 pt-12 pb-5">
-                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">{`HOLOCRON_KEY=${fullKey}\n\nnpx @holocron.so/cli create`}</pre>
+                <div className="overflow-x-auto px-5 py-4">
+                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">npx -y @holocron.so/cli create</pre>
                 </div>
               </div>
             </div>
 
             <div className="w-full rounded-lg border border-border bg-muted/30 px-5 py-4 text-left">
-              <div className="text-xs font-medium text-muted-foreground mb-2">Your API key (for non-GitHub deploys)</div>
+              <div className="text-xs font-medium text-muted-foreground mb-2">Your API key</div>
               <div className="relative">
                 <CopyButton text={fullKey} className="absolute right-0 top-0" />
-                <code className="font-mono text-sm break-all">{fullKey}</code>
+                <code className="font-mono text-sm break-all">{`holo_${fullKey.slice(5, 9)}${'•'.repeat(12)}${fullKey.slice(-4)}`}</code>
               </div>
-              <div className="mt-2 text-xs text-muted-foreground">
-                Set as <code className="font-mono">HOLOCRON_KEY</code> env var when deploying to Vercel, Cloudflare, etc.
+              <div className="mt-3 text-xs text-muted-foreground leading-relaxed">
+                Set <code className="font-mono">HOLOCRON_KEY</code> as an env var in your deploy environment (Vercel, Cloudflare, etc.) to link this project during deployment. Not needed for GitHub Actions deploys, which use OIDC automatically.
               </div>
             </div>
           </div>

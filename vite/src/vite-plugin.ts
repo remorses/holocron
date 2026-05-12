@@ -467,7 +467,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           ),
         )
         logger.warn(
-          `  Create a key: ${colors.cyan('npx @holocron.so/cli keys create --name production --project <projectId>')}`,
+          `  Create a key: ${colors.cyan('npx -y @holocron.so/cli keys create --name production --project <projectId>')}`,
         )
         logger.warn(
           `  Then add ${colors.cyan('HOLOCRON_KEY=holo_xxx')} to your environment.`,

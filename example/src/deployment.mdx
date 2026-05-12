@@ -123,7 +123,7 @@ For CI systems other than GitHub Actions, or if you prefer explicit authenticati
 
 ```bash
 # Create a key (requires login)
-npx @holocron.so/cli keys create --name production --project <projectId>
+npx -y @holocron.so/cli keys create --name production --project <projectId>
 
 # Deploy with the key
 HOLOCRON_KEY=holo_xxx npx holocron deploy
