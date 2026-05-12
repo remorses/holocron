@@ -60,8 +60,7 @@ describe('extractText', () => {
       { type: 'text', value: 'Use ' },
       { type: 'inlineCode', value: 'npm install' },
     ]
-    // inlineCode has no 'text' type and no children, returns ''
-    expect(extractText(children)).toBe('Use ')
+    expect(extractText(children)).toBe('Use npm install')
   })
 
   test('handles deeply nested content', () => {

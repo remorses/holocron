@@ -64,13 +64,16 @@ export function TocInline({
   const indicatorRef = useRef<HTMLDivElement>(null)
   const isSearchActive = searchState !== null
 
-  const hasMatchedHeading = isSearchActive && headings.some((heading) => {
+  // Skip headings with empty text (can happen with unresolved inline-code-only headings)
+  const filteredHeadings = headings.filter((h) => h.text)
+
+  const hasMatchedHeading = isSearchActive && filteredHeadings.some((heading) => {
     return searchState.matchedHrefs.has(`${pageHref}#${heading.slug}`)
   })
 
   // If this page has matched headings, keep sibling headings visible as context.
   // If the page only matched by title, keep the TOC hidden.
-  const visibleHeadings = hasMatchedHeading ? headings : isSearchActive ? [] : headings
+  const visibleHeadings = hasMatchedHeading ? filteredHeadings : isSearchActive ? [] : filteredHeadings
 
   // Single effect: position the active-heading indicator bar.
   useEffect(() => {

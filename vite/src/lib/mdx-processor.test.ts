@@ -235,6 +235,55 @@ Some content.`)
     expect(result.title).toBe('My heading')
   })
 
+  test('extracts headings with inline code', () => {
+    const result = processMdx(`## Overview
+
+Some text.
+
+### \`config\`
+
+Config section.
+
+### \`mdx\`
+
+MDX section.
+
+### \`navigation\`
+
+Navigation section.
+
+## Full example`)
+    expect(result.headings).toMatchInlineSnapshot(`
+      [
+        {
+          "depth": 2,
+          "slug": "overview",
+          "text": "Overview",
+        },
+        {
+          "depth": 3,
+          "slug": "config",
+          "text": "config",
+        },
+        {
+          "depth": 3,
+          "slug": "mdx",
+          "text": "mdx",
+        },
+        {
+          "depth": 3,
+          "slug": "navigation",
+          "text": "navigation",
+        },
+        {
+          "depth": 2,
+          "slug": "full-example",
+          "text": "Full example",
+        },
+      ]
+    `)
+  })
+
   test('collects relative image srcs', () => {
     const result = processMdx(`
 ![screenshot](./images/screenshot.png)

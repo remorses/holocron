@@ -113,7 +113,9 @@ export function TableOfContentsPanel({
   className?: string
 }) {
   const { currentHeadings } = useHolocronData()
-  const headings = propHeadings ?? currentHeadings
+  const rawHeadings = propHeadings ?? currentHeadings
+  // Skip headings with empty text (can happen with unresolved inline-code-only headings)
+  const headings = useMemo(() => rawHeadings.filter((h) => h.text), [rawHeadings])
   const headingIds = useMemo(() => headings.map((heading) => heading.slug), [headings])
   const fallbackId = headingIds[0] ?? ''
   const { activeId } = useActiveTocState({ fallbackId, headingIds })

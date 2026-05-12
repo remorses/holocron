@@ -36,8 +36,8 @@ export function slugify(text: string): string {
 export function extractText(children: PhrasingContent[]): string {
   return children
     .map((child) => {
-      if (child.type === 'text') {
-        return child.value
+      if (child.type === 'text' || child.type === 'inlineCode') {
+        return (child as { value: string }).value
       }
       if ('children' in child) {
         return extractText(child.children)

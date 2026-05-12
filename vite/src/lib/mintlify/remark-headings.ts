@@ -136,7 +136,7 @@ type TextLikeNode = {
 function extractText(children: readonly TextLikeNode[]): string {
   return children
     .map((child) => {
-      if (child.type === 'text' && typeof child.value === 'string') {
+      if ((child.type === 'text' || child.type === 'inlineCode') && typeof child.value === 'string') {
         return child.value
       }
       if (child.children) {

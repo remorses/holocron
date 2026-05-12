@@ -129,6 +129,7 @@ function collectIconRefsFromMdast({
 function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading | undefined {
   if (node.type === 'heading') {
     const text = extractText(node.children)
+    if (!text) return undefined
     return {
       depth: node.depth,
       text,
@@ -146,6 +147,7 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
     }
 
     const text = extractText(node.children ?? [])
+    if (!text) return undefined
     const explicitId = getJsxAttrValue(node, 'id')
     return {
       depth: getHeadingLevel(node),
@@ -159,6 +161,7 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
   }
 
   const text = extractText(node.children ?? [])
+  if (!text) return undefined
   const explicitId = getJsxAttrValue(node, 'id')
   return {
     depth: getNativeHeadingLevel(node),
@@ -428,8 +431,8 @@ function copyJsxAttrsExcept(node: JsxNode, attrNames: string[]): NonNullable<Jsx
 function extractText(children: readonly (PhrasingContent | RootContent)[]): string {
   return children
     .map((child) => {
-      if (child.type === 'text') {
-        return child.value
+      if (child.type === 'text' || child.type === 'inlineCode') {
+        return (child as { value: string }).value
       }
       const nestedChildren = Reflect.get(child, 'children')
       if (Array.isArray(nestedChildren)) {
