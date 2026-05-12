@@ -271,6 +271,7 @@ export async function syncNavigation({
   await processVirtualTabs({
     config,
     projectRoot,
+    pagesDir,
     mdxContent,
     providers: [openapiProvider],
   })

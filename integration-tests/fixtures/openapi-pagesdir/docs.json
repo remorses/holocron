@@ -1,0 +1,15 @@
+{
+  "name": "OpenAPI pagesDir Test",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "pages": ["index"]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "api.yaml"
+      }
+    ]
+  }
+}

@@ -21,7 +21,7 @@ export const openapiProvider: VirtualTabProvider = {
   name: 'openapi',
   claims: (tab) => !!tab.openapi,
 
-  async generate({ tab, projectRoot }): Promise<VirtualTabResult> {
+  async generate({ tab, projectRoot, pagesDir }): Promise<VirtualTabResult> {
     const specPaths = Array.isArray(tab.openapi) ? tab.openapi! : [tab.openapi!]
     const slugPrefix = tab.openapiBase ?? 'api'
     const mdxContent: Record<string, string> = {}
@@ -29,9 +29,18 @@ export const openapiProvider: VirtualTabProvider = {
     const allOps: OpWithDoc[] = []
 
     for (const specPath of specPaths) {
-      const resolvedPath = path.resolve(projectRoot, specPath)
-      if (!fs.existsSync(resolvedPath)) {
-        throw new Error(`[holocron] OpenAPI spec not found: ${resolvedPath}`)
+      // Probe pagesDir first (handles pagesDir: './src' with spec inside src/),
+      // fall back to projectRoot. Same resolution strategy as MDX imports.
+      const inPagesDir = path.resolve(pagesDir, specPath)
+      const inRoot = path.resolve(projectRoot, specPath)
+      const resolvedPath = fs.existsSync(inPagesDir) ? inPagesDir
+        : fs.existsSync(inRoot) ? inRoot
+        : null
+      if (!resolvedPath) {
+        const locations = pagesDir !== projectRoot
+          ? `\n  - ${inPagesDir}\n  - ${inRoot}`
+          : `\n  - ${inRoot}`
+        throw new Error(`[holocron] OpenAPI spec not found:${locations}`)
       }
 
       const { processOpenAPISpec, extractOperations } = await import('./process.ts')
@@ -65,7 +74,7 @@ export const openapiProvider: VirtualTabProvider = {
 
         // Warn if the slug shadows a real MDX page on disk
         for (const ext of ['.mdx', '.md']) {
-          if (fs.existsSync(path.join(projectRoot, slug + ext))) {
+          if (fs.existsSync(path.join(pagesDir, slug + ext)) || fs.existsSync(path.join(projectRoot, slug + ext))) {
             logger.warn(formatHolocronWarning(
               `OpenAPI page "${slug}" shadows an MDX file on disk. ` +
               `The virtual OpenAPI page will be used instead.`,

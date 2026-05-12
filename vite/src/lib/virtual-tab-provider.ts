@@ -47,6 +47,7 @@ export type VirtualTabProvider = {
   generate(ctx: {
     tab: ConfigNavTab
     projectRoot: string
+    pagesDir: string
   }): Promise<VirtualTabResult>
 }
 
@@ -62,11 +63,13 @@ export type VirtualTabProvider = {
 export async function processVirtualTabs({
   config,
   projectRoot,
+  pagesDir,
   mdxContent,
   providers,
 }: {
   config: { navigation: { tabs: ConfigNavTab[] } }
   projectRoot: string
+  pagesDir: string
   mdxContent: Record<string, string>
   providers: VirtualTabProvider[]
 }): Promise<void> {
@@ -86,7 +89,7 @@ export async function processVirtualTabs({
     const provider = claimers[0]
     if (!provider) continue
 
-    const result = await provider.generate({ tab, projectRoot })
+    const result = await provider.generate({ tab, projectRoot, pagesDir })
 
     // Centralized slug collision detection across all providers
     for (const slug of Object.keys(result.mdxContent)) {
