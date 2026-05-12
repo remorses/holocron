@@ -26,7 +26,7 @@ export function getDb() {
 
 // ── BetterAuth ──────────────────────────────────────────────────────
 
-function getAuth() {
+export function getAuth() {
   const db = getDb()
   return betterAuth({
     baseURL: getBaseUrl(),
@@ -51,43 +51,6 @@ function getAuth() {
       bearer(),
     ],
   })
-}
-
-export async function handleAuthRequest(request: Request): Promise<Response> {
-  return getAuth().handler(request)
-}
-
-export async function createGitHubSignInResponse(request: Pick<Request, 'headers'>, callbackURL: string): Promise<Response> {
-  const { response, headers } = await getAuth().api.signInSocial({
-    body: { provider: 'github', callbackURL },
-    headers: request.headers,
-    returnHeaders: true,
-  })
-  if (!response?.url) {
-    throw json({ error: 'failed to start github sign-in' }, { status: 500 })
-  }
-
-  const redirectResponse = new Response(null, {
-    status: 302,
-    headers: { Location: response.url },
-  })
-  for (const cookie of headers.getSetCookie()) {
-    redirectResponse.headers.append('Set-Cookie', cookie)
-  }
-  return redirectResponse
-}
-
-export async function verifyDeviceCode(userCode: string): Promise<boolean> {
-  const device = await getAuth().api.deviceVerify({ query: { user_code: userCode } }).catch(() => null)
-  return !!device
-}
-
-export async function approveDeviceCode(request: Request, userCode: string): Promise<void> {
-  await getAuth().api.deviceApprove({ body: { userCode }, headers: request.headers })
-}
-
-export async function denyDeviceCode(request: Request, userCode: string): Promise<void> {
-  await getAuth().api.deviceDeny({ body: { userCode }, headers: request.headers })
 }
 
 function getBaseUrl(): string {

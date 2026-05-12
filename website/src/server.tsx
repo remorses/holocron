@@ -5,7 +5,7 @@
 
 export { UsageCounter } from './usage-counter-do.ts'
 
-import { Spiceflow, redirect } from 'spiceflow'
+import { json, Spiceflow, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
 import { env } from 'cloudflare:workers'
@@ -15,7 +15,7 @@ import { deployApp } from './deploy-api.ts'
 import { aiLogoApp } from './ai-logo.ts'
 import { dashboardApp } from './dashboard.tsx'
 import { approveDevice, denyDevice } from './actions.tsx'
-import { createGitHubSignInResponse, getSession, handleAuthRequest, requireSession, verifyDeviceCode } from './db.ts'
+import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
 import { DeviceActionButtons } from './components/device-action-buttons.tsx'
@@ -30,6 +30,27 @@ const devicePageQuerySchema = z.object({
   user_code: z.string().optional(),
   status: z.enum(['approved', 'denied']).optional(),
 })
+
+async function createGitHubSignInRedirect(request: Pick<Request, 'headers'>, callbackURL: string) {
+  const auth = getAuth()
+  const { response, headers } = await auth.api.signInSocial({
+    body: { provider: 'github', callbackURL },
+    headers: request.headers,
+    returnHeaders: true,
+  })
+  if (!response?.url) {
+    throw json({ error: 'failed to start github sign-in' }, { status: 500 })
+  }
+
+  const redirectResponse = new Response(null, {
+    status: 302,
+    headers: { Location: response.url },
+  })
+  for (const cookie of headers.getSetCookie()) {
+    redirectResponse.headers.append('Set-Cookie', cookie)
+  }
+  return redirectResponse
+}
 
 const schemaApp = new Spiceflow()
   .get('/docs.json', () => {
@@ -71,7 +92,7 @@ const authApp = new Spiceflow()
     path: '/login/github',
     query: loginQuerySchema,
     async handler({ request, query }) {
-      return createGitHubSignInResponse(request, normalizeAuthRedirectPath(query.callbackURL))
+      return createGitHubSignInRedirect(request, normalizeAuthRedirectPath(query.callbackURL))
     },
   })
 
@@ -92,7 +113,9 @@ const authApp = new Spiceflow()
         )
       }
 
-      if (!await verifyDeviceCode(userCode)) {
+      const auth = getAuth()
+      const device = await auth.api.deviceVerify({ query: { user_code: userCode } }).catch(() => null)
+      if (!device) {
         return (
           <AuthPage
             title="Invalid Device Code"
@@ -226,7 +249,8 @@ const previewApp = new Spiceflow()
 export const app = new Spiceflow()
   .use(async ({ request }, next) => {
     if (request.parsedUrl.pathname.startsWith('/api/auth')) {
-      const res = await handleAuthRequest(request)
+      const auth = getAuth()
+      const res = await auth.handler(request)
       if (res.status !== 404) return res
     }
     return next()

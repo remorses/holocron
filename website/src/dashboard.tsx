@@ -9,7 +9,7 @@
 // TODO: add usage tracking per project via KV
 // TODO: add Stripe billing integration (checkout, portal, webhook)
 
-import { Spiceflow, redirect, json } from 'spiceflow'
+import { Spiceflow, redirect } from 'spiceflow'
 import { Link } from 'spiceflow/react'
 import { z } from 'zod'
 import { getDb, getSession, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
@@ -331,27 +331,6 @@ export const dashboardApp = new Spiceflow()
     )
   })
 
-  // ── Deploy status check (polled by DeployPoller client component) ───
-
-  .route({
-    method: 'GET',
-    path: '/api/deploy-status',
-    query: z.object({ projectId: z.string() }),
-    async handler({ request, query }) {
-      const session = await getSession(request)
-      if (!session) return json({ deployed: false })
-      const db = getDb()
-      const membership = await db.query.orgMember.findFirst({
-        where: { userId: session.userId },
-      })
-      if (!membership) return json({ deployed: false })
-      const project = await db.query.project.findFirst({
-        where: { projectId: query.projectId, orgId: membership.orgId },
-      })
-      return json({ deployed: !!project?.currentDeploymentId })
-    },
-  })
-
   // ── Deploy flow ─────────────────────────────────────────────────────
 
   // Single-page deploy: auto-creates project + API key on first visit
@@ -377,6 +356,7 @@ export const dashboardApp = new Spiceflow()
           where: { projectId, orgId: org.id },
         })
         if (!project) throw redirect('/dashboard')
+        if (project.currentDeploymentId) throw redirect(`/dashboard/projects/${projectId}`)
         fullKey = readDeployKeyCookie(request, projectId)
       }
 
@@ -414,7 +394,7 @@ export const dashboardApp = new Spiceflow()
 
       return (
         <div className="flex flex-col items-center gap-10 py-16">
-          <DeployPoller projectId={projectId} />
+          <DeployPoller />
           <div className="flex max-w-lg flex-col items-center gap-8 text-center">
             <div className="flex flex-col gap-2">
               <h1 className="text-2xl font-semibold">Create your docs site</h1>

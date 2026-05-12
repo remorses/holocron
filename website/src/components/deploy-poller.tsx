@@ -1,32 +1,15 @@
-// Polls /api/deploy-status every 5 seconds after the deploy page loads.
-// When the project's first deployment lands, redirects to the project dashboard.
+// Refreshes the deploy page every 5 seconds so the server can redirect once
+// the project's first deployment lands. Avoids an internal client fetch route.
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
+import { router } from 'spiceflow/react'
 
-export function DeployPoller({ projectId }: { projectId: string }) {
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
+export function DeployPoller() {
   useEffect(() => {
-    async function check() {
-      try {
-        const res = await fetch(`/api/deploy-status?projectId=${encodeURIComponent(projectId)}`)
-        if (!res.ok) return
-        const data: { deployed: boolean } = await res.json()
-        if (data.deployed) {
-          if (intervalRef.current) clearInterval(intervalRef.current)
-          window.location.href = `/dashboard/projects/${projectId}`
-        }
-      } catch {
-        // network error, retry next interval
-      }
-    }
-
-    intervalRef.current = setInterval(check, 5000)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [projectId])
+    const interval = setInterval(() => router.refresh(), 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   return null
 }
