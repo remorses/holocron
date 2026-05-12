@@ -99,6 +99,9 @@ export const project = s.sqliteTable('project', {
   orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
   name: s.text('name').notNull(),
   subdomain: s.text('subdomain').unique(),
+  /** Also synced to KV: when this changes, the finalize route writes the new deployment's
+   *  data to KV at "site-info:{subdomain}" so the hosting worker resolves the latest version.
+   *  D1 is the source of truth; KV is the read-optimized replica for request-time lookups. */
   currentDeploymentId: s.text('current_deployment_id'),
   /** Default branch for production deploys (e.g. "main", "master"). Deploys to this
    *  branch update project.currentDeploymentId; other branches create preview deployments. */
@@ -133,7 +136,15 @@ export const projectDomain = s.sqliteTable('project_domain', {
 export const deployment = s.sqliteTable('deployment', {
   id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
   projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
+  /** Unique ULID generated at deployment creation time. Used as a KV namespace to isolate
+   *  files between deploys: all uploaded files are stored at "site:{projectId}/v:{version}/{filePath}".
+   *  Not a sequential counter or semver; each deploy simply gets a fresh ULID.
+   *  Also synced to KV inside "site-info:{subdomain}" → { projectId, version, files[] }
+   *  so the hosting worker can build file paths without querying D1. */
   version: s.text('version').notNull(),
+  /** Also synced to KV: only the "active" deployment has a live "site-info:{subdomain}"
+   *  entry. Superseded deployments' KV entries are overwritten (same subdomain key)
+   *  when the new deployment for that branch is finalized. */
   status: s.text('status', { enum: ['uploading', 'active', 'superseded'] }).notNull().default('uploading'),
   /** Branch name this deployment was built from (e.g. "main", "fix-typo"). */
   branch: s.text('branch').default('main'),
@@ -142,10 +153,13 @@ export const deployment = s.sqliteTable('deployment', {
    *  a PR branch named "main" from accidentally overwriting production. */
   preview: s.integer('preview', { mode: 'boolean' }).default(false),
   /** Full DNS subdomain label for this deployment (e.g. "my-docs-remorses" for production,
-   *  "fix-typo-my-docs-remorses" for preview). Set during finalize. Used by the hosting
-   *  worker to resolve both production and preview sites in a single query. */
+   *  "fix-typo-my-docs-remorses" for preview). Set during finalize. Used as the KV key
+   *  suffix: "site-info:{subdomain}". Must stay in sync with KV; the finalize route
+   *  writes both D1 and KV atomically. */
   subdomain: s.text('subdomain'),
-  /** JSON array of declared file paths; validated during finalize to ensure all were uploaded. */
+  /** JSON array of declared file paths; validated during finalize to ensure all were uploaded.
+   *  Also synced to KV inside "site-info:{subdomain}" → { files[] } so the hosting worker
+   *  knows which worker/ modules to load without querying D1. */
   files: s.text('files'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [

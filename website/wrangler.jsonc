@@ -15,6 +15,16 @@
       "migrations_dir": "../db/drizzle"
     }
   ],
+  // USAGE_KV — AI gateway monthly request counters per org.
+  //   "usage:{orgId}:{YYYY-MM}"  → string (integer count), TTL 35 days
+  //
+  // AI_LOGO_KV — cached AI-generated logo images.
+  //   "ai-logo:{name}"           → ArrayBuffer (JPEG bytes), TTL controlled by CACHE_TTL in ai-logo.ts
+  //
+  // SITES_KV — all deployed site data (shared with hosting worker).
+  //   "site-info:{subdomain}"                          → JSON { projectId, version, files[] }    — site resolution at request time
+  //   "site:{projectId}/v:{version}/{filePath}"        → raw bytes (ArrayBuffer)                 — uploaded file content (assets + worker modules)
+  //   "site:{projectId}/v:{version}/manifest"          → JSON { [browserPath]: { contentType } } — asset manifest for static file serving
   "kv_namespaces": [
     { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" },
     { "binding": "AI_LOGO_KV", "id": "10c43383c2f341f79155740ee8a74eb6" },
@@ -55,6 +65,7 @@
           "migrations_dir": "../db/drizzle"
         }
       ],
+      // Same KV key shapes as production (see above)
       "kv_namespaces": [
         { "binding": "USAGE_KV", "id": "36b3209caddf42c79019b4c93d12b536" },
         { "binding": "AI_LOGO_KV", "id": "ad90e76eaa4a4af58b7ed22e4904fd51" },

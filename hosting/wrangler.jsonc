@@ -14,6 +14,10 @@
       "database_id": "1b6a43e2-2e03-408c-9199-291faa305fa4"
     }
   ],
+  // SITES_KV — all deployed site data. Key shapes:
+  //   "site-info:{subdomain}"                          → JSON { projectId, version, files[] }  — site resolution at request time
+  //   "site:{projectId}/v:{version}/{filePath}"        → raw bytes (ArrayBuffer)               — uploaded file content (assets + worker modules)
+  //   "site:{projectId}/v:{version}/manifest"          → JSON { [browserPath]: { contentType } } — asset manifest for static file serving
   "kv_namespaces": [
     { "binding": "SITES_KV", "id": "b8814a26150b44b583854867c0bb9e53" }
   ],
@@ -37,6 +41,7 @@
           "database_id": "8c7b5000-0d42-4c55-9a0a-ecad450f1e3d"
         }
       ],
+      // SITES_KV — same key shapes as production (see above)
       "kv_namespaces": [
         { "binding": "SITES_KV", "id": "02e9e057c9b9430ca6a39194589d6ad1" }
       ],
