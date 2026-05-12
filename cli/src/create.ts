@@ -207,7 +207,6 @@ async function scaffold(options: ScaffoldOptions) {
       '@holocron.so/vite': 'latest',
       react: '^19.2.5',
       'react-dom': '^19.2.5',
-      spiceflow: '1.23.1-rsc.0',
       vite: '^8.0.10',
     },
     devDependencies: {

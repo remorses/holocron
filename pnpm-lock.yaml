@@ -83,16 +83,13 @@ importers:
     dependencies:
       '@holocron.so/vite':
         specifier: latest
-        version: 0.5.0(@types/react@19.2.14)(spiceflow@1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3))(use-sync-external-store@1.6.0(react@19.2.5))(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+        version: 0.5.0(@types/react@19.2.14)(spiceflow@1.25.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3))(use-sync-external-store@1.6.0(react@19.2.5))(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
       react:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
-      spiceflow:
-        specifier: 1.23.1-rsc.0
-        version: 1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       vite:
         specifier: ^8.0.10
         version: 8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
@@ -118,9 +115,6 @@ importers:
       react-dom:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
-      spiceflow:
-        specifier: 1.25.0-rsc.0
-        version: 1.25.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       vite:
         specifier: ^8.0.10
         version: 8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
@@ -146,16 +140,10 @@ importers:
       react-dom:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
-      spiceflow:
-        specifier: 1.25.0-rsc.0
-        version: 1.25.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       vite:
         specifier: ^8.0.10
         version: 8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
     devDependencies:
-      '@cloudflare/vite-plugin':
-        specifier: ^1.32.2
-        version: 1.32.2(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(workerd@1.20260507.1)(wrangler@4.90.0)
       '@cloudflare/workers-types':
         specifier: ^4.20260408.0
         version: 4.20260409.1
@@ -4599,17 +4587,6 @@ packages:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
 
-  spiceflow@1.23.1-rsc.0:
-    resolution: {integrity: sha512-0x9CZ7uJ/nGT3BcHRUVBMpwOsUzu+plw+X0925DzXnPdnZ6LaJ3KfD+M76WdVwI6k4lij44OBsVxcC4Xi1UDlA==}
-    peerDependencies:
-      '@modelcontextprotocol/sdk': '*'
-      react: '*'
-      react-dom: '*'
-      zod: ^4.0.0
-    peerDependenciesMeta:
-      '@modelcontextprotocol/sdk':
-        optional: true
-
   spiceflow@1.24.4-rsc.0:
     resolution: {integrity: sha512-AMCuyvgt2o2Xhbiu+7VzlehhS2+2qeDi3RSQdIkJABehvvrKWGZDhW3QlmZ6/BFs47rhon+tNSJZMYz78t0QGg==}
     peerDependencies:
@@ -5740,7 +5717,7 @@ snapshots:
       - react-server-dom-webpack
       - vite
 
-  '@holocron.so/vite@0.5.0(@types/react@19.2.14)(spiceflow@1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3))(use-sync-external-store@1.6.0(react@19.2.5))(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))':
+  '@holocron.so/vite@0.5.0(@types/react@19.2.14)(spiceflow@1.25.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3))(use-sync-external-store@1.6.0(react@19.2.5))(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
       '@fastify/deepmerge': 3.2.1
       '@holocron.so/cli': 0.9.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
@@ -5776,7 +5753,7 @@ snapshots:
       remark-gfm: 4.0.1
       remark-mdx: 3.1.1
       safe-mdx: 1.11.0(react@19.2.5)
-      spiceflow: 1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
+      spiceflow: 1.25.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       string-dedent: 3.0.2
       tailwindcss: 4.2.2
       unist-util-visit: 5.1.0
@@ -9280,25 +9257,6 @@ snapshots:
   source-map-js@1.2.1: {}
 
   source-map@0.7.6: {}
-
-  spiceflow@1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3):
-    dependencies:
-      '@vitejs/plugin-rsc': 0.5.21(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
-      errore: 0.14.1
-      eventsource-parser: 3.0.8
-      history: 5.3.0
-      isbot: 4.4.0
-      its-fine: 2.0.0(@types/react@19.2.14)(react@19.2.5)
-      nf3: 0.3.16
-      openapi-types: 12.1.3
-      react: 19.2.5
-      react-dom: 19.2.5(react@19.2.5)
-      superjson: 2.2.6
-      zod: 4.4.3
-    transitivePeerDependencies:
-      - '@types/react'
-      - react-server-dom-webpack
-      - vite
 
   spiceflow@1.24.4-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3):
     dependencies:
