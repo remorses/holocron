@@ -1,29 +1,222 @@
 ---
 title: Deployment
-description: Build and serve a Holocron site in production.
+description: Deploy your docs with one command. Preview every branch automatically.
 icon: cloud-upload
 ---
 
-## Production build
+# Deployment
 
-Build the example with:
-
-```bash
-pnpm build
-```
-
-## Output
-
-The Vite build emits a server-rendered app that can be started locally with:
+Holocron deploys your documentation site to **holocron.so** with a single command. Every push gets a live URL; every pull request gets its own preview.
 
 ```bash
-pnpm start
+npx holocron deploy
 ```
 
-## Static assets
+The deploy command runs `vite build`, collects the output, and uploads it. Files are content-addressed (SHA-256 hashed), so unchanged files are never re-uploaded. A typical redeploy after a small edit uploads only the changed pages.
 
-Fonts, images, and processed MDX assets are bundled alongside the site so the production output stays self-contained.
+## GitHub Actions
 
-## Deployment targets
+The recommended way to deploy is from GitHub Actions. Add this workflow to your repo:
 
-Holocron is designed so the expensive MDX and image work happens at build time, keeping request-time rendering lightweight.
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+on:
+  push:
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: holocron
+      url: ${{ steps.deploy.outputs.holocron_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - name: Deploy
+        id: deploy
+        run: bunx holocron deploy
+        env:
+          HOLOCRON_KEY: ${{ secrets.HOLOCRON_KEY }}
+```
+
+<Aside>
+
+<Info>
+The `environment` block makes the deployed URL clickable as a **deployment status** on every commit and PR in GitHub's UI.
+</Info>
+
+</Aside>
+
+**What each section does:**
+
+- `permissions: id-token: write` enables keyless OIDC authentication (see below).
+- `environment.url` reads the deploy URL from a step output, so GitHub shows it inline.
+- `HOLOCRON_KEY` is optional if OIDC is configured. It serves as a fallback or explicit override.
+
+### Step outputs
+
+The deploy command automatically sets two GitHub Actions step outputs:
+
+| Output | Description |
+|---|---|
+| `holocron_url` | The live URL of the deployment |
+| `holocron_deployment_id` | The deployment ID for API calls |
+
+Use them in downstream steps, for example to post a comment with the preview link:
+
+```yaml
+- name: Comment preview URL
+  if: github.event_name == 'pull_request'
+  run: |
+    gh pr comment ${{ github.event.pull_request.number }} \
+      --body "Preview: ${{ steps.deploy.outputs.holocron_url }}"
+  env:
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Keyless deploys (OIDC)
+
+If you've signed in to [holocron.so](https://holocron.so) with your GitHub account, deployments from GitHub Actions **don't need any secrets**. The Vite plugin detects the GitHub Actions environment during `vite build` and authenticates via [OpenID Connect](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect).
+
+**How it works:**
+
+1. GitHub Actions mints a short-lived JWT containing your repo name, branch, and actor ID.
+2. The Vite plugin sends this token to `holocron.so` during the build step.
+3. The server verifies the JWT against GitHub's public keys, matches the actor to your holocron account, and returns a project-scoped API key.
+4. The deploy command uses that key for the rest of the upload.
+
+**Prerequisites:**
+
+- Sign in to [holocron.so](https://holocron.so) with the GitHub account that owns the repo (or has push access).
+- Set `permissions: id-token: write` in your workflow.
+
+No `HOLOCRON_KEY` secret is needed. If both OIDC and `HOLOCRON_KEY` are available, the explicit key takes priority.
+
+## Preview deployments
+
+Every branch and pull request gets its own isolated preview URL. The URL pattern is:
+
+| Event | URL |
+|---|---|
+| Push to default branch | `https://{repo}-{owner}-site.holocron.so` |
+| PR or non-default branch | `https://{branch}-{hash}-{repo}-{owner}-site-preview.holocron.so` |
+
+Preview deployments are **fully independent**. Each branch has its own URL that persists across pushes. When a new commit is pushed to the same branch, the previous deployment on that branch is superseded and the URL updates instantly.
+
+The branch name is detected automatically:
+
+- **Pull requests:** `GITHUB_HEAD_REF` (the source branch, e.g. `fix-typo`)
+- **Pushes:** `GITHUB_REF` stripped to the branch name (e.g. `refs/heads/main` → `main`)
+- **Explicit override:** `--branch <name>` flag on the deploy command
+
+## Using an API key
+
+For CI systems other than GitHub Actions, or if you prefer explicit authentication, create an API key and pass it as `HOLOCRON_KEY`:
+
+```bash
+# Create a key (requires login)
+npx @holocron.so/cli keys create --name production --project <projectId>
+
+# Deploy with the key
+HOLOCRON_KEY=holo_xxx npx holocron deploy
+```
+
+In GitHub Actions, store the key as a [repository secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and reference it with `${{ secrets.HOLOCRON_KEY }}`.
+
+## CLI options
+
+```bash
+npx holocron deploy [options]
+```
+
+| Option | Description |
+|---|---|
+| `--branch <name>` | Override the branch name for preview deployments |
+| `--project <id>` | Project ID (only needed with session auth, not with `HOLOCRON_KEY`) |
+| `--skip-build` | Skip the `vite build` step and upload the existing `dist/` |
+
+## Self-hosting
+
+If you prefer to host the site yourself, `vite build` produces a standalone server you can run anywhere.
+
+### Node.js
+
+```bash
+npx vite build
+node dist/rsc/index.js
+```
+
+The server listens on port **3000** by default. Set the `PORT` environment variable to change it. Place a reverse proxy (nginx, Caddy) in front for TLS and domain routing.
+
+### Docker
+
+```dockerfile
+FROM node:22-slim
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm build
+EXPOSE 3000
+CMD ["node", "dist/rsc/index.js"]
+```
+
+### Cloudflare Workers
+
+Install the Cloudflare Vite plugin:
+
+```bash
+pnpm add -D wrangler @cloudflare/vite-plugin
+```
+
+Update `vite.config.ts`:
+
+```ts
+import { cloudflare } from '@cloudflare/vite-plugin'
+import { holocron } from '@holocron.so/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    holocron(),
+    cloudflare({
+      viteEnvironment: {
+        name: 'rsc',
+        childEnvironments: ['ssr'],
+      },
+    }),
+  ],
+})
+```
+
+Create a `wrangler.jsonc`:
+
+```jsonc
+{
+  "name": "my-docs",
+  "main": "spiceflow/cloudflare-entrypoint",
+  "compatibility_date": "2026-04-14",
+  "compatibility_flags": ["nodejs_compat"]
+}
+```
+
+Build and deploy:
+
+```bash
+npx vite build
+npx wrangler deploy
+```
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | 3000 | Server listen port (Node.js only) |
