@@ -105,18 +105,19 @@
     "safe-mdx": "^1.11.0",
     "string-dedent": "^3.0.2",
     "tailwindcss": "^4.2.2",
-
     "unist-util-visit": "^5.1.0",
     "yaml": "^2.8.3",
     "zod": "^4.4.2",
     "zustand": "^5.0.12"
   },
   "peerDependencies": {
-    "spiceflow": ">=1.20.0-rsc.1",
-    "@cloudflare/vite-plugin": ">=1.0.0"
+    "@cloudflare/vite-plugin": ">=1.0.0",
+    "spiceflow": ">=1.20.0-rsc.1"
   },
   "peerDependenciesMeta": {
-    "@cloudflare/vite-plugin": { "optional": true }
+    "@cloudflare/vite-plugin": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
@@ -125,7 +126,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "sharp": "^0.34.5",
-    "spiceflow": "1.24.4-rsc.0",
+    "spiceflow": "1.25.0-rsc.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.10",
     "vitest": "^4.1.4"

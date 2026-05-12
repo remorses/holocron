@@ -15,7 +15,7 @@
   "dependencies": {
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "spiceflow": "1.24.4-rsc.0",
+    "spiceflow": "1.25.0-rsc.0",
     "takumi-js": "1.0.0-rc.15",
     "zod": "^4.4.3"
   },
