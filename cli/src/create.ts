@@ -19,13 +19,11 @@ import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
 import { loginWithDeviceFlow } from './device-flow.ts'
 import { createSessionClient } from './api-client.ts'
-import { getBaseUrl } from './config.ts'
+import { getBaseUrl, getSessionToken } from './config.ts'
 
 // Template lives in dist/template/ after build. When running from src/ via tsx,
 // resolve relative to the package root's dist/ instead.
-const TEMPLATE_DIR = fs.existsSync(path.resolve(import.meta.dirname, 'template'))
-  ? path.resolve(import.meta.dirname, 'template')
-  : path.resolve(import.meta.dirname, '..', 'dist', 'template')
+const TEMPLATE_DIR = path.resolve(import.meta.dirname, '..', 'dist', 'template')
 
 export const createCli = goke()
 
@@ -44,7 +42,7 @@ createCli
       }
       const prompted = await clack.text({
         message: 'What is your project/company name?',
-        placeholder: 'My Docs',
+        placeholder: 'Google',
         validate: (v) => (!v || v.length === 0 ? 'Name is required' : undefined),
       })
       if (clack.isCancel(prompted)) {
@@ -56,7 +54,7 @@ createCli
     }
 
     await scaffold({
-      dir: dir || name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+      dir: dir || name.toLowerCase().replace(/[^a-z0-9-]/g, '-') + '-docs',
       name,
       skipAuth: !!options.skipAuth,
       skipInstall: !!options.skipInstall,
@@ -86,8 +84,16 @@ async function setupCloud(options: {
 }): Promise<CloudSetupResult> {
   const { baseUrl, projectName, exit } = options
 
-  // 1. Device flow login
-  const { accessToken } = await loginWithDeviceFlow({ baseUrl, exit })
+  // 1. Reuse existing session if already logged in, otherwise device flow login
+  const existingToken = getSessionToken(baseUrl)
+  let accessToken: string
+  if (existingToken) {
+    clack.log.info('Already logged in, reusing session.')
+    accessToken = existingToken
+  } else {
+    const result = await loginWithDeviceFlow({ baseUrl, exit })
+    accessToken = result.accessToken
+  }
   const { safeFetch } = createSessionClient(baseUrl, accessToken)
 
   // 2. Create project (org auto-created server-side if needed)
@@ -243,6 +249,7 @@ async function scaffold(options: ScaffoldOptions) {
 
   // 7. Install dependencies
   const pm = detectPackageManager()
+  let didInstall = false
   if (!skipInstall) {
     const shouldInstall = nonInteractive
       ? true
@@ -256,6 +263,7 @@ async function scaffold(options: ScaffoldOptions) {
       try {
         execSync(`${pm} install`, { cwd: targetDir, stdio: 'pipe' })
         spinner.stop(`Dependencies installed with ${pm}`)
+        didInstall = true
       } catch {
         spinner.stop(`${pm} install failed`)
         clack.log.warn(`Run \`${pm} install\` manually in ${targetDir}`)
@@ -263,8 +271,8 @@ async function scaffold(options: ScaffoldOptions) {
     }
   }
 
-  // 8. Offer to start dev server (skip in non-interactive mode)
-  if (!nonInteractive) {
+  // 8. Offer to start dev server (skip in non-interactive mode, skip if deps not installed)
+  if (!nonInteractive && didInstall) {
     const shouldDev = await clack.confirm({
       message: 'Start development server?',
       initialValue: false,
