@@ -79,6 +79,34 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
 
+  dsfsadf:
+    dependencies:
+      '@holocron.so/vite':
+        specifier: latest
+        version: 0.5.0(@types/react@19.2.14)(spiceflow@1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3))(use-sync-external-store@1.6.0(react@19.2.5))(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      react:
+        specifier: ^19.2.5
+        version: 19.2.5
+      react-dom:
+        specifier: ^19.2.5
+        version: 19.2.5(react@19.2.5)
+      spiceflow:
+        specifier: 1.23.1-rsc.0
+        version: 1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.7
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   example:
     dependencies:
       '@holocron.so/vite':
@@ -240,7 +268,7 @@ importers:
     dependencies:
       '@cloudflare/vite-plugin':
         specifier: '>=1.0.0'
-        version: 1.32.2(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(workerd@1.20260507.1)(wrangler@4.90.0(@cloudflare/workers-types@4.20260409.1))
+        version: 1.32.2(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(workerd@1.20260507.1)(wrangler@4.90.0)
       '@fastify/deepmerge':
         specifier: ^3.2.1
         version: 3.2.1
@@ -1348,6 +1376,16 @@ packages:
 
   '@fontsource-variable/inter@5.2.8':
     resolution: {integrity: sha512-kOfP2D+ykbcX/P3IFnokOhVRNoTozo5/JxhAIVYLpea/UBmCQ/YWPBfWIDuBImXX/15KH+eKh4xpEUyS2sQQGQ==}
+
+  '@holocron.so/cli@0.9.0':
+    resolution: {integrity: sha512-fiBEXvTQs7xqEx5rO4Wjd7VIYHA4ooKj9PilsmoTbqsoZq9QQyhifFnU7VXInT+guKcTFsUm1M3EiBtxzI4Wbw==}
+    hasBin: true
+
+  '@holocron.so/vite@0.5.0':
+    resolution: {integrity: sha512-BVYETcu9GRn5IK2YBwah+AEHqfGia3v3kUBuFJvnxUnlqzexA3T4nDsMYYOA4o8AftKbYh7xzwMZd1U5XJbtyw==}
+    hasBin: true
+    peerDependencies:
+      spiceflow: '>=1.20.0-rsc.1'
 
   '@iconify-json/fa6-brands@1.2.6':
     resolution: {integrity: sha512-twL3X4KWcxAhbc1vz/mIDsVr+CAItk1/EIfxKUVQtpv6O4eydk5KNYqTZWdvJNHGInUgd6vKg21aWfVgb5DXEg==}
@@ -4561,6 +4599,28 @@ packages:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
 
+  spiceflow@1.23.1-rsc.0:
+    resolution: {integrity: sha512-0x9CZ7uJ/nGT3BcHRUVBMpwOsUzu+plw+X0925DzXnPdnZ6LaJ3KfD+M76WdVwI6k4lij44OBsVxcC4Xi1UDlA==}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '*'
+      react: '*'
+      react-dom: '*'
+      zod: ^4.0.0
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
+
+  spiceflow@1.24.4-rsc.0:
+    resolution: {integrity: sha512-AMCuyvgt2o2Xhbiu+7VzlehhS2+2qeDi3RSQdIkJABehvvrKWGZDhW3QlmZ6/BFs47rhon+tNSJZMYz78t0QGg==}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '*'
+      react: '*'
+      react-dom: '*'
+      zod: ^4.0.0
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
+
   spiceflow@1.25.0-rsc.0:
     resolution: {integrity: sha512-ktHG/YkUAthercp1wctbrwL/nnxoTa66/8CLl7qEF3KBWr2eN5uWZ3aVHLom6RXwGJre0KKd47BRrv8Pusj/8g==}
     peerDependencies:
@@ -5342,19 +5402,6 @@ snapshots:
     optionalDependencies:
       workerd: 1.20260507.1
 
-  '@cloudflare/vite-plugin@1.32.2(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(workerd@1.20260507.1)(wrangler@4.90.0(@cloudflare/workers-types@4.20260409.1))':
-    dependencies:
-      '@cloudflare/unenv-preset': 2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260507.1)
-      miniflare: 4.20260410.0
-      unenv: 2.0.0-rc.24
-      vite: 8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
-      wrangler: 4.90.0(@cloudflare/workers-types@4.20260409.1)
-      ws: 8.18.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-      - workerd
-
   '@cloudflare/vite-plugin@1.32.2(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(workerd@1.20260507.1)(wrangler@4.90.0)':
     dependencies:
       '@cloudflare/unenv-preset': 2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260507.1)
@@ -5676,6 +5723,78 @@ snapshots:
   '@floating-ui/utils@0.2.11': {}
 
   '@fontsource-variable/inter@5.2.8': {}
+
+  '@holocron.so/cli@0.9.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))':
+    dependencies:
+      '@clack/prompts': 1.2.0
+      goke: 6.10.0
+      spiceflow: 1.24.4-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
+      string-dedent: 3.0.2
+      yaml: 2.8.3
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@modelcontextprotocol/sdk'
+      - '@types/react'
+      - react
+      - react-dom
+      - react-server-dom-webpack
+      - vite
+
+  '@holocron.so/vite@0.5.0(@types/react@19.2.14)(spiceflow@1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3))(use-sync-external-store@1.6.0(react@19.2.5))(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))':
+    dependencies:
+      '@fastify/deepmerge': 3.2.1
+      '@holocron.so/cli': 0.9.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      '@iconify-json/fa6-brands': 1.2.6
+      '@iconify-json/fa6-regular': 1.2.4
+      '@iconify-json/fa6-solid': 1.2.4
+      '@iconify-json/lucide': 1.2.101
+      '@orama/orama': 3.1.18
+      '@scalar/json-magic': 0.12.8
+      '@scalar/openapi-upgrader': 0.2.6
+      '@tailwindcss/typography': 0.5.19(tailwindcss@4.2.2)
+      '@tailwindcss/vite': 4.2.2(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitejs/plugin-react': 6.0.1(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      cookie: 1.1.1
+      dedent: 1.7.2
+      fflate: 0.8.2
+      github-slugger: 2.0.0
+      image-size: 2.0.2
+      mdast-heading-id: 2.0.0
+      mdast-util-frontmatter: 2.0.1
+      mdast-util-gfm: 3.1.0
+      mdast-util-mdx: 3.0.0
+      mdast-util-to-markdown: 2.1.2
+      mermaid: 11.14.0
+      micromark-heading-id: 2.0.0
+      openapi-types: 12.1.3
+      prismjs: 1.30.0
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+      react-medium-image-zoom: 5.4.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      remark: 15.0.1
+      remark-frontmatter: 5.0.0
+      remark-gfm: 4.0.1
+      remark-mdx: 3.1.1
+      safe-mdx: 1.11.0(react@19.2.5)
+      spiceflow: 1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
+      string-dedent: 3.0.2
+      tailwindcss: 4.2.2
+      unist-util-visit: 5.1.0
+      yaml: 2.8.3
+      zod: 4.4.3
+      zustand: 5.0.12(@types/react@19.2.14)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))
+    transitivePeerDependencies:
+      - '@modelcontextprotocol/sdk'
+      - '@rolldown/plugin-babel'
+      - '@types/react'
+      - babel-plugin-macros
+      - babel-plugin-react-compiler
+      - canvas
+      - immer
+      - react-server-dom-webpack
+      - supports-color
+      - use-sync-external-store
+      - vite
 
   '@iconify-json/fa6-brands@1.2.6':
     dependencies:
@@ -9161,6 +9280,44 @@ snapshots:
   source-map-js@1.2.1: {}
 
   source-map@0.7.6: {}
+
+  spiceflow@1.23.1-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3):
+    dependencies:
+      '@vitejs/plugin-rsc': 0.5.21(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      errore: 0.14.1
+      eventsource-parser: 3.0.8
+      history: 5.3.0
+      isbot: 4.4.0
+      its-fine: 2.0.0(@types/react@19.2.14)(react@19.2.5)
+      nf3: 0.3.16
+      openapi-types: 12.1.3
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+      superjson: 2.2.6
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@types/react'
+      - react-server-dom-webpack
+      - vite
+
+  spiceflow@1.24.4-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3):
+    dependencies:
+      '@vitejs/plugin-rsc': 0.5.21(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      errore: 0.14.1
+      eventsource-parser: 3.0.8
+      history: 5.3.0
+      isbot: 4.4.0
+      its-fine: 2.0.0(@types/react@19.2.14)(react@19.2.5)
+      nf3: 0.3.16
+      openapi-types: 12.1.3
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+      superjson: 2.2.6
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@types/react'
+      - react-server-dom-webpack
+      - vite
 
   spiceflow@1.25.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3):
     dependencies:
