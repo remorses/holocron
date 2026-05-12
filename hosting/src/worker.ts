@@ -198,11 +198,8 @@ export default {
 
       const response = await worker.getEntrypoint().fetch(request)
 
-      // Surface Dynamic Worker errors for debugging. The user's spiceflow app
-      // may return a 500 with an error message in the body.
       if (!response.ok && response.status >= 500) {
-        const body = await response.text()
-        console.error(`Dynamic Worker returned ${response.status} for ${request.url}: ${body.slice(0, 500)}`)
+        console.error(`Dynamic Worker returned ${response.status} for ${request.url}`)
       }
 
       return response
