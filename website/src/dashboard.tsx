@@ -184,7 +184,7 @@ export const dashboardApp = new Spiceflow()
 
     const project = await db.query.project.findFirst({
       where: { projectId: params.projectId, orgId: membership.orgId },
-      with: { domains: true, keys: true },
+      with: { keys: true },
     })
     if (!project) throw redirect('/dashboard')
 
@@ -213,38 +213,6 @@ export const dashboardApp = new Spiceflow()
             </a>
           )}
         </div>
-
-        {/* Domains */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">Domains</h2>
-          {project.domains.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              No domains detected yet. Deploy your docs site and domains will appear here.
-            </div>
-          ) : (
-            <div className="rounded-lg border border-border">
-              {project.domains.map((domain: typeof schema.projectDomain.$inferSelect, i: number) => (
-                <div
-                  key={domain.projectDomainId}
-                  className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-border' : ''}`}
-                >
-                  <div>
-                    <div className="font-mono text-sm">{domain.host}{domain.basePath !== '/' ? domain.basePath : ''}</div>
-                    <div className="mt-0.5 flex gap-2 text-xs text-muted-foreground">
-                      <span className="rounded bg-muted px-1.5 py-0.5">{domain.platform}</span>
-                      <span className="rounded bg-muted px-1.5 py-0.5">{domain.environment}</span>
-                    </div>
-                  </div>
-                  {!!domain.lastSeenAt && (
-                    <div className="text-xs text-muted-foreground">
-                      Last seen {new Date(domain.lastSeenAt).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
 
         {/* API Keys */}
         <section className="flex flex-col gap-3">

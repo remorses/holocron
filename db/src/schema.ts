@@ -114,22 +114,7 @@ export const project = s.sqliteTable('project', {
   s.index('project_org_id_idx').on(table.orgId),
 ])
 
-export const projectDomain = s.sqliteTable('project_domain', {
-  projectDomainId: s.text('project_domain_id').primaryKey().notNull().$defaultFn(() => ulid()),
-  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
-  host: s.text('host').notNull(),
-  basePath: s.text('base_path').notNull().default('/'),
-  platform: s.text('platform', { enum: ['vercel', 'cloudflare', 'holocron', 'detected'] }).notNull().default('detected'),
-  environment: s.text('environment', { enum: ['preview', 'production'] }).notNull().default('production'),
-  githubBranch: s.text('github_branch'),
-  firstSeenAt: epochMs('first_seen_at').$defaultFn(() => Date.now()),
-  lastSeenAt: epochMs('last_seen_at').$defaultFn(() => Date.now()),
-  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
-  updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
-}, (table) => [
-  s.index('project_domain_project_id_idx').on(table.projectId),
-  s.uniqueIndex('project_domain_host_base_path_unique').on(table.host, table.basePath),
-])
+
 
 // ── Deployments (version history per project, stored in KV) ─────────
 
@@ -203,7 +188,7 @@ export const deviceCode = s.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, apiKey, deviceCode, project, projectDomain, deployment },
+  { user, session, account, verification, org, orgMember, apiKey, deviceCode, project, deployment },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -242,12 +227,8 @@ export const relations = defineRelations(
     },
     project: {
       org: r.one.org({ from: r.project.orgId, to: r.org.id }),
-      domains: r.many.projectDomain(),
       keys: r.many.apiKey(),
       deployments: r.many.deployment(),
-    },
-    projectDomain: {
-      project: r.one.project({ from: r.projectDomain.projectId, to: r.project.projectId }),
     },
     deployment: {
       project: r.one.project({ from: r.deployment.projectId, to: r.project.projectId }),
