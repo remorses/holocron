@@ -672,22 +672,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             `export default __userEntry.default`,
           ].filter(Boolean).join('\n')
         }
-        // Guard listen() with import.meta.main so the built output can be
-        // imported by another framework (e.g. Next.js catch-all route) without
-        // starting a second server. The process.argv[1] fallback covers
-        // Node < 22.18 where import.meta.main doesn't exist yet.
+        // listen() is NOT injected here — it's appended to the final RSC
+        // entry chunk in renderChunk(). If we put it here, the bundler's
+        // code-splitting moves it into a dependency chunk where
+        // import.meta.url no longer points at the entry file and the
+        // "is this the main module?" guard always fails.
         return [
           `import { app } from '@holocron.so/vite/src/app'`,
-          `import { fileURLToPath } from 'node:url'`,
-          `import { realpathSync } from 'node:fs'`,
           cssImportLine,
           `export { app }`,
-          `const __isMain = typeof import.meta.main === 'boolean'`,
-          `  ? import.meta.main`,
-          `  : typeof process !== 'undefined' && process.argv[1] && typeof import.meta.url === 'string'`,
-          `    ? fileURLToPath(import.meta.url) === realpathSync(process.argv[1])`,
-          `    : false`,
-          `if (__isMain) app.listen(Number(process.env.PORT || 3000))`,
         ].filter(Boolean).join('\n')
       }
     },
@@ -898,11 +891,51 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
   }
 
+  // Append listen() to the RSC entry chunk AFTER bundling.
+  //
+  // The listen guard cannot live in virtual:holocron-app because the
+  // STABLE_GROUP code-splitting config moves all framework code (anything
+  // matching node_modules/, @holocron.so/vite/, spiceflow/) into a separate
+  // chunk. Once there, import.meta.url resolves to the chunk's URL instead
+  // of the entry's URL, so the "is this the main module?" check always
+  // fails and the server never starts.
+  //
+  // By appending in renderChunk we guarantee the code is physically in
+  // index.js where import.meta.url is correct.
+  const listenGuardPlugin: Plugin = {
+    name: 'holocron:listen-guard',
+    renderChunk(code, chunk) {
+      // Only inject into the RSC entry chunk, and skip when the user
+      // provides their own entry (they own .listen() themselves).
+      if (this.environment.name !== 'rsc') return
+      if (!chunk.isEntry) return
+      if (options.entry) return
+
+      const guard = [
+        '',
+        '// Auto-injected listen guard (holocron:listen-guard plugin).',
+        '// Appended to the entry chunk so import.meta.url correctly',
+        '// resolves to this file for the "is main module?" check.',
+        'import { fileURLToPath as __hcFileURLToPath } from "node:url";',
+        'import { realpathSync as __hcRealpathSync } from "node:fs";',
+        'const __hcIsMain = typeof import.meta.main === "boolean"',
+        '  ? import.meta.main',
+        '  : typeof process !== "undefined" && process.argv[1] && typeof import.meta.url === "string"',
+        '    ? __hcFileURLToPath(import.meta.url) === __hcRealpathSync(process.argv[1])',
+        '    : false;',
+        'if (__hcIsMain) app.listen(Number(process.env.PORT || 3000));',
+      ].join('\n')
+
+      return code + guard
+    },
+  }
+
   const pluginsToReturn: PluginOption[] = [
     rawImportPlugin(),
     holocronPlugin,
     holocronRscPackagePlugin,
     dynamicWorkerModulePlugin,
+    listenGuardPlugin,
   ]
 
   // Auto-add spiceflow/tailwind/react unless the user already installed each.
