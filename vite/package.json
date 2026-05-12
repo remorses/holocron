@@ -77,6 +77,7 @@
     "@iconify-json/lucide": "^1.2.101",
     "@orama/orama": "^3.1.18",
     "@scalar/json-magic": "^0.12.8",
+    "@cloudflare/vite-plugin": "^1.32.2",
     "@scalar/openapi-upgrader": "^0.2.6",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
@@ -111,13 +112,7 @@
     "zustand": "^5.0.12"
   },
   "peerDependencies": {
-    "@cloudflare/vite-plugin": ">=1.0.0",
     "spiceflow": ">=1.20.0-rsc.1"
-  },
-  "peerDependenciesMeta": {
-    "@cloudflare/vite-plugin": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",

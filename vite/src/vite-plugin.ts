@@ -964,10 +964,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           return cloudflare({
             viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
           })
-        } catch {
+        } catch (e) {
           throw new Error(
-            `[holocron] HOLOCRON_DEPLOY=1 but @cloudflare/vite-plugin is not installed.\n` +
-            `Install it: pnpm add -D @cloudflare/vite-plugin`,
+            `[holocron] HOLOCRON_DEPLOY=1 but failed to load @cloudflare/vite-plugin: ${e}`,
           )
         }
       })(),
