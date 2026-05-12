@@ -6,6 +6,9 @@
   "colors": {
     "primary": "#3e9fff"
   },
+  "icons": {
+    "library": "lucide"
+  },
   "navbar": {
     "links": [
       { "type": "github", "href": "https://github.com/remorses/playwriter" },
