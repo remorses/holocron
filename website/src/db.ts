@@ -12,7 +12,7 @@
 import { env } from 'cloudflare:workers'
 import { drizzle } from 'drizzle-orm/d1'
 import * as schema from 'db/schema'
-import { betterAuth } from 'better-auth'
+import { betterAuth } from 'better-auth/minimal'
 import { deviceAuthorization, bearer } from 'better-auth/plugins'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter/relations-v2'
 import { json } from 'spiceflow'
