@@ -22,7 +22,7 @@
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "spiceflow": "1.25.0-rsc.0",
+    "spiceflow": "1.25.1-rsc.0",
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.10"
   },

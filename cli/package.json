@@ -54,7 +54,7 @@
     "dotenv": "^17.4.2",
     "fflate": "^0.8.2",
     "goke": "^6.10.0",
-    "spiceflow": "1.25.0-rsc.0",
+    "spiceflow": "1.25.1-rsc.0",
     "string-dedent": "^3.0.2",
     "yaml": "^2.8.0",
     "zod": "latest"

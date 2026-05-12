@@ -112,7 +112,7 @@
     "zustand": "^5.0.12"
   },
   "peerDependencies": {
-    "spiceflow": ">=1.20.0-rsc.1"
+    "spiceflow": ">=1.25.1-rsc.0"
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
@@ -121,7 +121,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "sharp": "^0.34.5",
-    "spiceflow": "1.25.0-rsc.0",
+    "spiceflow": "1.25.1-rsc.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.10",
     "vitest": "^4.1.4"
