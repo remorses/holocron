@@ -10,7 +10,7 @@ export function resolve(
 ) {
   if (specifier === 'cloudflare:workers') {
     return {
-      url: 'data:text/javascript,export const env = new Proxy({}, { get: () => undefined })',
+      url: 'data:text/javascript,export const env = new Proxy({}, { get: () => undefined }); export function waitUntil() {}; export class DurableObject {}',
       shortCircuit: true,
     }
   }

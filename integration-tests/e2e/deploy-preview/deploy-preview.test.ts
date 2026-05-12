@@ -17,8 +17,8 @@ const previewApiUrl = process.env["HOLOCRON_PREVIEW_API_URL"]
 
 test.skip(!deployE2EEnabled, "Set HOLOCRON_DEPLOY_E2E=1 to run the live preview deploy test.");
 test.skip(
-  deployE2EEnabled && !previewApiKey && !previewProjectId,
-  "Set HOLOCRON_PREVIEW_KEY/HOLOCRON_KEY, or set HOLOCRON_PREVIEW_PROJECT_ID and log in to preview.",
+  deployE2EEnabled && !previewApiKey,
+  "Set HOLOCRON_PREVIEW_KEY or HOLOCRON_KEY to run the live preview deploy test.",
 );
 
 const repoRoot = path.resolve(integrationTestsDir, "..");

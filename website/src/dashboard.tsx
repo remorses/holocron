@@ -22,6 +22,21 @@ import { SignOutButton } from './components/sign-out-button.tsx'
 import { DeployPoller } from './components/deploy-poller.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
+const DEPLOY_KEY_COOKIE = 'holocron_deploy_key'
+
+function readDeployKeyCookie(request: Request, projectId: string): string | undefined {
+  const cookies = request.headers.get('cookie') ?? ''
+  const cookie = cookies.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${DEPLOY_KEY_COOKIE}=`))
+  const value = cookie?.slice(DEPLOY_KEY_COOKIE.length + 1)
+  if (!value) return undefined
+  const [cookieProjectId, key] = decodeURIComponent(value).split(':')
+  return cookieProjectId === projectId ? key : undefined
+}
+
+function deployKeyCookie({ request, projectId, fullKey }: { request: Request; projectId: string; fullKey: string }): string {
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : ''
+  return `${DEPLOY_KEY_COOKIE}=${encodeURIComponent(`${projectId}:${fullKey}`)}; Max-Age=120; Path=/dashboard/deploy; HttpOnly; SameSite=Lax${secure}`
+}
 
 /** Format an epoch-ms timestamp as "3 days ago", "just now", etc. */
 function timeAgo(epochMs: number): string {
@@ -208,7 +223,18 @@ export const dashboardApp = new Spiceflow()
     })
     if (!project) throw redirect('/dashboard')
 
-    return { project }
+    return {
+      project: {
+        ...project,
+        keys: project.keys.map(({ id, name, prefix, projectId, createdAt }) => ({
+          id,
+          name,
+          prefix,
+          projectId,
+          createdAt,
+        })),
+      },
+    }
   })
 
   // Single project page: shows detected domains and API keys for this project.
@@ -243,7 +269,7 @@ export const dashboardApp = new Spiceflow()
             </div>
           ) : (
             <div className="rounded-lg border border-border">
-              {project.keys.map((key: typeof schema.apiKey.$inferSelect, i: number) => (
+              {project.keys.map((key: { id: string; name: string; prefix: string; projectId: string; createdAt: number }, i: number) => (
                 <div
                   key={key.id}
                   className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-border' : ''}`}
@@ -315,8 +341,12 @@ export const dashboardApp = new Spiceflow()
       const session = await getSession(request)
       if (!session) return json({ deployed: false })
       const db = getDb()
+      const membership = await db.query.orgMember.findFirst({
+        where: { userId: session.userId },
+      })
+      if (!membership) return json({ deployed: false })
       const project = await db.query.project.findFirst({
-        where: { projectId: query.projectId },
+        where: { projectId: query.projectId, orgId: membership.orgId },
       })
       return json({ deployed: !!project?.currentDeploymentId })
     },
@@ -333,19 +363,27 @@ export const dashboardApp = new Spiceflow()
     path: '/dashboard/deploy',
     query: z.object({
       projectId: z.string().optional(),
-      key: z.string().optional(),
     }),
     handler: async ({ request, query }) => {
       const session = await requireSession(request)
 
       let projectId = query.projectId
-      let fullKey = query.key
+      let fullKey: string | undefined
+      const org = await ensureOrg(session.userId, session.user.name)
+      const db = getDb()
 
-      // Auto-create project + API key if not already in URL
-      if (!projectId || !fullKey) {
-        const org = await ensureOrg(session.userId, session.user.name)
-        const db = getDb()
+      if (projectId) {
+        const project = await db.query.project.findFirst({
+          where: { projectId, orgId: org.id },
+        })
+        if (!project) throw redirect('/dashboard')
+        fullKey = readDeployKeyCookie(request, projectId)
+      }
 
+      // Auto-create project + API key on first load. Redirect with only the
+      // project id in the URL, and keep the one-time full key in a short-lived
+      // HttpOnly cookie so reloads never create duplicate projects.
+      if (!projectId) {
         projectId = ulid()
         const generated = generateApiKey()
         fullKey = generated.fullKey
@@ -364,11 +402,12 @@ export const dashboardApp = new Spiceflow()
             name: 'deploy',
             prefix: generated.prefix,
             hash: keyHash,
-            key: fullKey,
           }),
         ])
 
-        throw redirect(`/dashboard/deploy?projectId=${projectId}&key=${encodeURIComponent(fullKey)}`)
+        throw redirect(`/dashboard/deploy?projectId=${projectId}`, {
+          headers: { 'Set-Cookie': deployKeyCookie({ request, projectId, fullKey }) },
+        })
       }
 
       const templateUrl = `${TEMPLATE_REPO_URL}/generate`
@@ -410,16 +449,18 @@ export const dashboardApp = new Spiceflow()
               </div>
             </div>
 
-            <div className="w-full rounded-lg border border-border bg-muted/30 px-5 py-4 text-left">
-              <div className="text-xs font-medium text-muted-foreground mb-2">Your API key</div>
-              <div className="relative">
-                <CopyButton text={fullKey} className="absolute right-0 top-0" />
-                <code className="font-mono text-sm break-all">{`holo_${fullKey.slice(5, 9)}${'•'.repeat(12)}${fullKey.slice(-4)}`}</code>
+            {fullKey && (
+              <div className="w-full rounded-lg border border-border bg-muted/30 px-5 py-4 text-left">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Your API key</div>
+                <div className="relative">
+                  <CopyButton text={fullKey} className="absolute right-0 top-0" />
+                  <code className="font-mono text-sm break-all">{`holo_${fullKey.slice(5, 9)}${'•'.repeat(12)}${fullKey.slice(-4)}`}</code>
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground leading-relaxed">
+                  Set <code className="font-mono">HOLOCRON_KEY</code> as an env var in your deploy environment (Vercel, Cloudflare, etc.) to link this project during deployment. Not needed for GitHub Actions deploys, which use OIDC automatically.
+                </div>
               </div>
-              <div className="mt-3 text-xs text-muted-foreground leading-relaxed">
-                Set <code className="font-mono">HOLOCRON_KEY</code> as an env var in your deploy environment (Vercel, Cloudflare, etc.) to link this project during deployment. Not needed for GitHub Actions deploys, which use OIDC automatically.
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )

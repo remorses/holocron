@@ -12,7 +12,7 @@ export function DeployPoller({ projectId }: { projectId: string }) {
       try {
         const res = await fetch(`/api/deploy-status?projectId=${encodeURIComponent(projectId)}`)
         if (!res.ok) return
-        const data = await res.json() as { deployed: boolean }
+        const data: { deployed: boolean } = await res.json()
         if (data.deployed) {
           if (intervalRef.current) clearInterval(intervalRef.current)
           window.location.href = `/dashboard/projects/${projectId}`

@@ -15,7 +15,6 @@ import { createSelectSchema } from 'drizzle-orm/zod'
 import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
 import { ulid } from 'ulid'
-import * as jose from 'jose'
 import {
   getDb,
   requireSession,
@@ -24,7 +23,7 @@ import {
   hashApiKey,
 } from './db.ts'
 import { gatewayApp } from './gateway.ts'
-import { buildProjectSubdomain } from './deploy-api.ts'
+import { resolveGithubOidcDeployAuth } from './deploy-auth.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
 
@@ -108,7 +107,6 @@ export const apiApp = new Spiceflow()
         name: body.name,
         prefix,
         hash,
-        key: fullKey,
       })
 
       return { id, name: body.name, prefix, key: fullKey }
@@ -139,7 +137,15 @@ export const apiApp = new Spiceflow()
         orderBy: { createdAt: 'desc' },
       })
 
-      return { keys }
+      return {
+        keys: keys.map(({ id, name, prefix, projectId, createdAt }) => ({
+          id,
+          name,
+          prefix,
+          projectId,
+          createdAt,
+        })),
+      }
     },
   })
 
@@ -280,7 +286,7 @@ export const apiApp = new Spiceflow()
   // ── Deployment registration (OIDC only, called at build time) ──
 
   // Called by the holocron vite plugin during `vite build` in GitHub Actions.
-  // Auth: GitHub Actions OIDC → oidcToken in body. JWT is verified against
+  // Auth: GitHub Actions OIDC in X-Holocron-GitHub-OIDC-Token. JWT is verified against
   // GitHub's JWKS. The actor's GitHub user ID is matched against the account
   // table (providerId=github) to find the holocron user, then their first
   // admin org is used to find-or-create the project.
@@ -289,9 +295,7 @@ export const apiApp = new Spiceflow()
   .route({
     method: 'POST',
     path: '/api/v0/register-deployment',
-    request: z.object({
-      oidcToken: z.string().optional(),
-    }),
+    request: z.object({}).optional(),
     detail: {
       summary: 'Register deployment',
       description:
@@ -302,215 +306,16 @@ export const apiApp = new Spiceflow()
       200: z.object({
         ok: z.boolean(),
         projectId: z.string().optional(),
-        apiKey: z.string().optional().describe('Returned only for OIDC auth. Full holo_xxx key for the project.'),
         branch: z.string().optional().describe('Derived branch name from the OIDC JWT (head_ref for PRs, ref for pushes).'),
         preview: z.boolean().optional().describe('True when the OIDC token comes from a pull_request event.'),
       }),
       401: ErrorResponse,
     },
     async handler({ request }) {
-      const body = await request.json()
-      const db = getDb()
-
-      // Only OIDC auth is supported. GitHub owner/repo are derived from the
-      // verified JWT's `repository` claim, never from unverified body values.
-      // API key auth was removed because it could only bump updatedAt (no
-      // github metadata) and nothing in the vite plugin calls it anymore.
-      if (body.oidcToken) {
-        const audience = new URL(request.url).origin
-        const oidcResult = await verifyGitHubOidc(body.oidcToken, audience)
-        if (oidcResult instanceof Error) {
-          return json({ error: oidcResult.message }, { status: 401 })
-        }
-
-        // Derive branch from OIDC context:
-        //   PR events: headRef is the source branch (e.g. "fix-typo")
-        //   Push events: ref is "refs/heads/main" → strip prefix
-        //   Tags/other: fall back to "main"
-        const isPullRequest = !!oidcResult.headRef
-        const branch = oidcResult.headRef
-          || (oidcResult.ref?.startsWith('refs/heads/')
-            ? oidcResult.ref.slice('refs/heads/'.length)
-            : undefined)
-          || 'main'
-
-        // Find holocron user by GitHub numeric user ID
-        const githubAccount = await db.query.account.findFirst({
-          where: {
-            providerId: 'github',
-            accountId: oidcResult.ownerIdStr,
-          },
-        })
-        if (!githubAccount) {
-          return json(
-            { error: 'no holocron account found for this GitHub user. sign in at holocron.so first.' },
-            { status: 401 },
-          )
-        }
-
-        // Find or create org for the user
-        const adminMembership = await db.query.orgMember.findFirst({
-          where: { userId: githubAccount.userId, role: 'admin' },
-          with: { org: true },
-        })
-        const orgId = adminMembership?.orgId ?? await (async () => {
-          const userRow = await db.query.user.findFirst({ where: { id: githubAccount.userId } })
-          const created = await ensureOrg(githubAccount.userId, userRow?.name ?? 'My Org')
-          return created.id
-        })()
-
-        const result = await upsertProjectForOidc(db, orgId, oidcResult.owner, oidcResult.repo, {
-          ref: oidcResult.ref,
-          headRef: oidcResult.headRef,
-          baseRef: oidcResult.baseRef,
-        })
-        return { ...result, branch, preview: isPullRequest || undefined }
-      }
-
-      return json({ error: 'invalid or missing authentication' }, { status: 401 })
+      const auth = await resolveGithubOidcDeployAuth(request, { upsertProject: true })
+      if (!auth) return json({ error: 'invalid or missing GitHub OIDC authentication' }, { status: 401 })
+      return { ok: true, projectId: auth.projectId, branch: auth.branch, preview: auth.preview || undefined }
     },
   })
-
-// ── GitHub Actions OIDC verification ──────────────────────────────────────
-
-const GITHUB_OIDC_JWKS = jose.createRemoteJWKSet(
-  new URL('https://token.actions.githubusercontent.com/.well-known/jwks'),
-)
-
-type OidcResult = {
-  ownerIdStr: string
-  owner: string
-  repo: string
-  /** Full git ref, e.g. "refs/heads/main" or "refs/pull/123/merge" */
-  ref?: string
-  /** PR source branch, e.g. "fix-typo" (only set for pull_request events) */
-  headRef?: string
-  /** PR target branch, e.g. "main" (only set for pull_request events) */
-  baseRef?: string
-}
-
-// PR safety: we intentionally do NOT reject tokens from pull_request workflows.
-// The actor_id claim maps to the PR author's GitHub user ID, so the project is
-// created/found under the PR author's own holocron org, not the repo owner's.
-// A PR from an external contributor without a holocron account gets a 401.
-// A PR from a maintainer who IS the project owner deploys to the real project,
-// but that's expected: maintainers already have push access to the repo.
-// Fork PRs can't get OIDC tokens unless the base repo workflow explicitly
-// grants id-token:write, which is the repo owner's responsibility.
-async function verifyGitHubOidc(token: string, audience: string): Promise<OidcResult | Error> {
-  try {
-    const { payload } = await jose.jwtVerify(token, GITHUB_OIDC_JWKS, {
-      issuer: 'https://token.actions.githubusercontent.com',
-      audience,
-    })
-
-    // Use actor_id (the user who triggered the workflow) instead of
-    // repository_owner_id which would be the org ID for org-owned repos.
-    // actor_id always maps to the GitHub user's personal account ID, which
-    // matches what better-auth stores in account.accountId during OAuth.
-    const actorIdStr = String(payload.actor_id ?? '')
-    if (!actorIdStr) {
-      return new Error('OIDC token missing actor_id claim')
-    }
-
-    // Derive repo metadata from the verified token, not from the request body,
-    // so a valid token from one repo can't claim to be a different repo.
-    const repository = String(payload.repository ?? '')
-    const [owner, repo] = repository.split('/')
-    if (!owner || !repo) {
-      return new Error('OIDC token missing repository claim')
-    }
-
-    // Branch context from OIDC claims:
-    //   push events:  ref="refs/heads/main", head_ref="", base_ref=""
-    //   PR events:    ref="refs/pull/123/merge", head_ref="fix-typo", base_ref="main"
-    const ref = String(payload.ref ?? '') || undefined
-    const headRef = String(payload.head_ref ?? '') || undefined
-    const baseRef = String(payload.base_ref ?? '') || undefined
-
-    return { ownerIdStr: actorIdStr, owner, repo, ref, headRef, baseRef }
-  } catch (err) {
-    return new Error(`OIDC verification failed: ${err instanceof Error ? err.message : err}`)
-  }
-}
-
-// Find or create a project for the given org + GitHub repo, then find or
-// create an API key for it. Returns the full holo_xxx key so the vite plugin
-// can set HOLOCRON_KEY for the rest of the build.
-// D1 is single-writer so true races are unlikely.
-async function upsertProjectForOidc(
-  db: ReturnType<typeof getDb>,
-  orgId: string,
-  githubOwner: string,
-  githubRepo: string,
-  oidcBranch?: { ref?: string; headRef?: string; baseRef?: string },
-) {
-  // Try to find existing project with this repo in this org
-  let projectId: string
-  const existing = await db.query.project.findFirst({
-    where: {
-      orgId,
-      githubOwner,
-      githubRepo,
-    },
-  })
-
-  if (existing) {
-    projectId = existing.projectId
-    await db.update(schema.project)
-      .set({ updatedAt: Date.now() })
-      .where(orm.eq(schema.project.projectId, projectId))
-      .limit(1)
-  } else {
-    // Derive default branch from OIDC context:
-    //   PR events: baseRef is the target (default) branch
-    //   Push events: ref is the branch being pushed to (likely the default on first CI setup)
-    let defaultBranch = 'main'
-    if (oidcBranch?.baseRef) {
-      defaultBranch = oidcBranch.baseRef
-    } else if (oidcBranch?.ref?.startsWith('refs/heads/')) {
-      defaultBranch = oidcBranch.ref.slice('refs/heads/'.length)
-    }
-
-    // Set subdomain eagerly so the URL is ready before the first deploy finalizes.
-    // buildProjectSubdomain returns "{repo}-{owner}" for OIDC projects.
-    projectId = ulid()
-    const subdomain = buildProjectSubdomain({ githubOwner, githubRepo, projectId })
-
-    await db.insert(schema.project).values({
-      projectId,
-      orgId,
-      name: `${githubOwner}/${githubRepo}`,
-      githubOwner,
-      githubRepo,
-      defaultBranch,
-      subdomain,
-    })
-  }
-
-  // Find existing API key for this project, or create one
-  const existingKey = await db.query.apiKey.findFirst({
-    where: { projectId },
-  })
-
-  if (existingKey?.key) {
-    return { ok: true, projectId, apiKey: existingKey.key }
-  }
-
-  // Create a new API key for this project
-  const { fullKey, prefix } = generateApiKey()
-  const keyHash = await hashApiKey(fullKey)
-  await db.insert(schema.apiKey).values({
-    id: ulid(),
-    orgId,
-    projectId,
-    name: 'oidc-deploy',
-    prefix,
-    hash: keyHash,
-    key: fullKey,
-  })
-
-  return { ok: true, projectId, apiKey: fullKey }
-}
 
 export type ApiApp = typeof apiApp

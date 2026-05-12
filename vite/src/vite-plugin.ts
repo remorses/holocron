@@ -183,83 +183,6 @@ function getPluginName(plugin: PluginOption): string | undefined {
   return typeof maybeName === 'string' ? maybeName : undefined
 }
 
-// Mint a GitHub Actions OIDC JWT for keyless deployment registration.
-// Requires ACTIONS_ID_TOKEN_REQUEST_URL and ACTIONS_ID_TOKEN_REQUEST_TOKEN
-// (injected by GitHub Actions when `permissions: id-token: write` is set).
-// The audience is derived from the API URL so preview/self-hosted deployments
-// get a correctly scoped token.
-// Returns the JWT string on success, undefined on failure (with logged warning).
-async function mintGitHubOidcToken(apiUrl: string): Promise<string | undefined> {
-  const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL
-  const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
-  if (!requestUrl || !requestToken) return undefined
-
-  try {
-    const audience = new URL(apiUrl).origin
-    const tokenUrl = `${requestUrl}&audience=${encodeURIComponent(audience)}`
-    const res = await fetch(tokenUrl, {
-      headers: { authorization: `bearer ${requestToken}` },
-    })
-    if (res.ok) {
-      const data = await res.json()
-      return data.value
-    }
-    logger.warn(formatHolocronWarning(`failed to mint GitHub OIDC token (${res.status})`))
-  } catch (err) {
-    logger.warn(formatHolocronWarning(`GitHub OIDC token request failed: ${err}`))
-  }
-  return undefined
-}
-
-// Run the full OIDC registration flow: detect GitHub env, mint token, call
-// the register-deployment endpoint. Returns the API key on success so the
-// caller can set process.env.HOLOCRON_KEY before the build continues.
-// Returns undefined if OIDC is not available or registration fails.
-async function registerViaOidc(): Promise<string | undefined> {
-  const hasOidc = !!(process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN)
-  if (!hasOidc) return undefined
-
-  // GITHUB_REPOSITORY is only used as a guard: skip OIDC if we can't confirm
-  // we're inside a GitHub Actions run. The actual owner/repo values are derived
-  // server-side from the verified JWT's `repository` claim, not from env vars.
-  if (!process.env.GITHUB_REPOSITORY) return undefined
-
-  const apiUrl = process.env.HOLOCRON_API_URL || 'https://holocron.so'
-  const oidcToken = await mintGitHubOidcToken(apiUrl)
-  if (!oidcToken) return undefined
-
-  const url = `${apiUrl}/api/v0/register-deployment`
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ oidcToken }),
-    })
-    if (res.ok) {
-      const data = await res.json()
-      if (data.apiKey) {
-        // Pass the OIDC-derived branch and preview flag to the deploy CLI via env vars.
-        if (data.branch) {
-          process.env.HOLOCRON_BRANCH = data.branch
-        }
-        if (data.preview) {
-          process.env.HOLOCRON_PREVIEW = '1'
-        }
-        logger.info(
-          formatHolocronSuccess(`registered deployment via OIDC: ${process.env.GITHUB_REPOSITORY}${data.branch ? ` (branch: ${data.branch})` : ''}`),
-        )
-        return data.apiKey
-      }
-    }
-    const text = await res.text().catch(() => '')
-    logger.warn(formatHolocronWarning(`OIDC deployment registration failed (${res.status}): ${text}`))
-  } catch (err) {
-    logger.warn(formatHolocronWarning(`OIDC deployment registration request failed: ${err}`))
-  }
-  return undefined
-}
-
 export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let root: string
   let config: HolocronConfig
@@ -411,52 +334,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             message: `using custom CSS: ${path.relative(root, userCssPath)}`,
           }),
         )
-      }
-
-      // In build mode, if no HOLOCRON_KEY is set but GitHub Actions OIDC is
-      // available, register the deployment early and set HOLOCRON_KEY from the
-      // returned API key. This makes the key available for the rest of the build
-      // (e.g. AI chat gateway auth at runtime) without any user-configured secrets.
-      // Also writes the key to .env so subsequent commands (e.g. `start`) can
-      // read it without re-running the OIDC flow.
-      if (resolved.command === 'build' && !process.env.HOLOCRON_KEY) {
-        const oidcKey = await registerViaOidc()
-        if (oidcKey) {
-          process.env.HOLOCRON_KEY = oidcKey
-          // Persist to .env so the key survives across commands (build → start).
-          // Matches lines like `HOLOCRON_KEY=...` or `export HOLOCRON_KEY=...`,
-          // but not commented-out lines like `# HOLOCRON_KEY=...`.
-          const envPath = path.resolve(root, '.env')
-
-          // Build the env lines to persist: HOLOCRON_KEY (always) + HOLOCRON_BRANCH (if available)
-          const envPairs: Array<{ key: string; value: string }> = [
-            { key: 'HOLOCRON_KEY', value: oidcKey },
-          ]
-          if (process.env.HOLOCRON_BRANCH) {
-            envPairs.push({ key: 'HOLOCRON_BRANCH', value: process.env.HOLOCRON_BRANCH })
-          }
-          if (process.env.HOLOCRON_PREVIEW) {
-            envPairs.push({ key: 'HOLOCRON_PREVIEW', value: '1' })
-          }
-
-          try {
-            let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : ''
-            for (const { key, value } of envPairs) {
-              const lineRe = new RegExp(`^(?:export\\s+)?${key}=.*$`, 'm')
-              const envLine = `${key}=${value}`
-              if (lineRe.test(content)) {
-                content = content.replace(lineRe, envLine)
-              } else {
-                const sep = content.length > 0 && !content.endsWith('\n') ? '\n' : ''
-                content = `${content}${sep}${envLine}\n`
-              }
-            }
-            fs.writeFileSync(envPath, content)
-            logger.info(formatHolocronStep({ message: 'saved HOLOCRON_KEY to .env' }))
-          } catch {
-            // Non-fatal — the key is still in process.env for this build
-          }
-        }
       }
 
       if (config.assistant?.enabled !== false && !process.env.HOLOCRON_KEY) {

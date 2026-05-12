@@ -30,6 +30,16 @@ export function createApiKeyClient(baseUrl: string, apiKey: string) {
   return { safeFetch }
 }
 
+export const GITHUB_OIDC_HEADER = 'X-Holocron-GitHub-OIDC-Token'
+
+/** Create a client authenticated with a GitHub Actions OIDC token. */
+export function createGithubOidcClient(baseUrl: string, oidcToken: string) {
+  const safeFetch = createSpiceflowFetch<App>(baseUrl, {
+    headers: { [GITHUB_OIDC_HEADER]: oidcToken },
+  })
+  return { safeFetch }
+}
+
 /** Create an API client from the stored auth config. Throws if not logged in. */
 export function getApiClient() {
   const baseUrl = getBaseUrl()
@@ -43,13 +53,15 @@ export function getApiClient() {
 export type DeployAuth =
   | { type: 'apikey'; key: string; baseUrl: string }
   | { type: 'session'; token: string; baseUrl: string }
+  | { type: 'github-oidc'; token: string; baseUrl: string }
 
 /**
  * Resolve auth for deploy commands. Priority:
  *   1. HOLOCRON_KEY env var (loaded from process.env, which includes .env via dotenv)
  *   2. ~/.holocron/config.json session token for the resolved URL (from `holocron login`)
+ *   3. GitHub Actions OIDC token
  */
-export function resolveDeployAuth(): DeployAuth {
+export async function resolveDeployAuth(): Promise<DeployAuth> {
   const baseUrl = getBaseUrl()
 
   if (process.env.HOLOCRON_KEY) {
@@ -61,16 +73,47 @@ export function resolveDeployAuth(): DeployAuth {
     return { type: 'session', token, baseUrl }
   }
 
+  const oidcToken = await mintGitHubOidcToken(baseUrl)
+  if (oidcToken) {
+    return { type: 'github-oidc', token: oidcToken, baseUrl }
+  }
+
   throw new Error(
-    `Not authenticated. Set HOLOCRON_KEY in your environment or .env file, or run ${loginHint(baseUrl)}.`,
+    `Not authenticated. Set HOLOCRON_KEY in your environment, run ${loginHint(baseUrl)}, or deploy from GitHub Actions with id-token: write.`,
   )
 }
 
 /** Create an API client from the resolved deploy auth. */
-export function getDeployClient() {
-  const auth = resolveDeployAuth()
+export async function getDeployClient() {
+  const auth = await resolveDeployAuth()
   if (auth.type === 'apikey') {
     return { ...createApiKeyClient(auth.baseUrl, auth.key), auth }
   }
-  return { ...createSessionClient(auth.baseUrl, auth.token), auth }
+  if (auth.type === 'session') {
+    return { ...createSessionClient(auth.baseUrl, auth.token), auth }
+  }
+  return { ...createGithubOidcClient(auth.baseUrl, auth.token), auth }
+}
+
+export async function getDeployAuthHeaders(auth: DeployAuth): Promise<Record<string, string>> {
+  if (auth.type === 'apikey') return { Authorization: `Bearer ${auth.key}` }
+  if (auth.type === 'session') return { Authorization: `Bearer ${auth.token}` }
+  const token = await mintGitHubOidcToken(auth.baseUrl)
+  if (!token) throw new Error('Failed to refresh GitHub Actions OIDC token')
+  return { [GITHUB_OIDC_HEADER]: token }
+}
+
+async function mintGitHubOidcToken(baseUrl: string): Promise<string | undefined> {
+  const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL
+  const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+  if (!requestUrl || !requestToken || !process.env.GITHUB_REPOSITORY) return undefined
+
+  const audience = new URL(baseUrl).origin
+  const tokenUrl = `${requestUrl}&audience=${encodeURIComponent(audience)}`
+  const res = await fetch(tokenUrl, {
+    headers: { authorization: `bearer ${requestToken}` },
+  })
+  if (!res.ok) return undefined
+  const data = await res.json() as { value?: string }
+  return typeof data.value === 'string' ? data.value : undefined
 }

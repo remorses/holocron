@@ -21,7 +21,7 @@ import { execSync } from 'node:child_process'
 import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
 import { zipSync } from 'fflate'
-import { resolveDeployAuth, getDeployClient, type DeployAuth } from './api-client.ts'
+import { getDeployAuthHeaders, getDeployClient, type DeployAuth } from './api-client.ts'
 import { logger, colors as c, formatBytes } from './logger.ts'
 
 export const deployCli = goke()
@@ -39,7 +39,7 @@ deployCli
     const isPullRequest = !!(process.env.GITHUB_HEAD_REF || process.env.HOLOCRON_PREVIEW)
     output.log(logger.step(isPullRequest ? `Branch: ${c.bold(branch)} ${c.dim('(preview, PR detected)')}` : `Branch: ${c.bold(branch)}`))
 
-    // ── Build (runs BEFORE auth so OIDC can write HOLOCRON_KEY to .env) ───
+    // ── Build (runs BEFORE auth so GitHub OIDC is minted as late as possible) ───
     if (!options.skipBuild) {
       const buildErr = await runBuild(cwd)
       if (buildErr instanceof Error) {
@@ -48,18 +48,15 @@ deployCli
       }
     }
 
-    // ── Auth (after build, so OIDC-written HOLOCRON_KEY is available) ─────
-    const auth = (() => {
-      try { return resolveDeployAuth() }
-      catch (err) { return err as Error }
-    })()
-    if (auth instanceof Error) {
-      output.error(logger.error(auth.message))
+    // ── Auth (after build, so GitHub OIDC tokens stay fresh) ──────────────
+    let deployClient: Awaited<ReturnType<typeof getDeployClient>>
+    try {
+      deployClient = await getDeployClient()
+    } catch (err) {
+      output.error(logger.error(err instanceof Error ? err.message : String(err)))
       return proc.exit(1)
     }
-
-    const { safeFetch } = getDeployClient()
-    const authToken = auth.type === 'apikey' ? auth.key : auth.token
+    const { safeFetch, auth } = deployClient
 
     // ── Resolve project (only needed for session auth) ────────────
     const projectId = auth.type === 'session' && !options.project
@@ -97,11 +94,7 @@ deployCli
       output.error(logger.error(`Failed to create deployment: ${createRes.message}`))
       return proc.exit(1)
     }
-    const { deploymentId, version, existingHashes } = createRes as {
-      deploymentId: string
-      version: string
-      existingHashes: string[]
-    }
+    const { deploymentId, version, existingHashes } = createRes
     output.log(logger.success(`Deployment ${c.bold(deploymentId)} ${c.dim(`(v${version})`)} created`))
 
     // ── Step 2: Upload only new files (skip those already in KV) ─
@@ -115,7 +108,7 @@ deployCli
     }
 
     const uploadErr = newFiles.length > 0
-      ? await uploadFiles({ files: newFiles, deploymentId, authToken, baseUrl: auth.baseUrl, output })
+      ? await uploadFiles({ files: newFiles, deploymentId, auth, baseUrl: auth.baseUrl, output })
       : undefined
     if (uploadErr instanceof Error) {
       output.error(logger.error(uploadErr.message))
@@ -125,7 +118,14 @@ deployCli
 
     // ── Step 3: Finalize deployment ───────────────────────────────
     output.log(logger.step('Finalizing deployment...'))
-    const finalizeRes = await safeFetch(`/api/v0/deployments/${deploymentId}/finalize`, {
+    const finalizeClient = auth.type === 'github-oidc'
+      ? await getDeployClient().catch((err) => err instanceof Error ? err : new Error(String(err)))
+      : deployClient
+    if (finalizeClient instanceof Error) {
+      output.error(logger.error(finalizeClient.message))
+      return proc.exit(1)
+    }
+    const finalizeRes = await finalizeClient.safeFetch(`/api/v0/deployments/${deploymentId}/finalize`, {
       method: 'POST',
       body: {},
     })
@@ -133,14 +133,13 @@ deployCli
       output.error(logger.error(`Failed to finalize: ${finalizeRes.message}`))
       return proc.exit(1)
     }
-    const finalized = finalizeRes as { url: string; deploymentId: string; branch: string }
     output.log('')
-    output.log(logger.success(`Deployed! ${c.bold(finalized.url)}`))
+    output.log(logger.success(`Deployed! ${c.bold(finalizeRes.url)}`))
 
     // Auto-set GitHub Actions step outputs so users don't need to parse stdout
     const ghOutputFile = process.env.GITHUB_OUTPUT
     if (ghOutputFile) {
-      fs.appendFileSync(ghOutputFile, `holocron_url=${finalized.url}\n`)
+      fs.appendFileSync(ghOutputFile, `holocron_url=${finalizeRes.url}\n`)
       fs.appendFileSync(ghOutputFile, `holocron_deployment_id=${deploymentId}\n`)
       output.log(logger.step(c.dim('GitHub Actions step outputs set: holocron_url, holocron_deployment_id')))
     }
@@ -172,7 +171,7 @@ async function runBuild(cwd: string): Promise<Error | void> {
   } catch {
     return new Error('Build failed')
   }
-  // Reload .env — the vite plugin OIDC flow may have written HOLOCRON_KEY + HOLOCRON_BRANCH
+  // Reload .env — user build steps may have written HOLOCRON_KEY or HOLOCRON_BRANCH
   try {
     const { config } = await import('dotenv')
     config({ path: path.resolve(cwd, '.env'), override: true })
@@ -204,7 +203,7 @@ function collectBuildArtifacts(cwd: string): Error | BuildFile[] {
 
 /** Interactively resolve projectId for session auth. Logs errors internally, returns Error on failure. */
 async function resolveProjectId(ctx: {
-  safeFetch: ReturnType<typeof getDeployClient>['safeFetch']
+  safeFetch: Awaited<ReturnType<typeof getDeployClient>>['safeFetch']
   nonInteractive: boolean
   output: { log: (msg: string) => void; error: (msg: string) => void }
   proc: { exit: (code: number) => void }
@@ -214,7 +213,7 @@ async function resolveProjectId(ctx: {
     ctx.output.error(logger.error(`Failed to list projects: ${res.message}`))
     return res
   }
-  const projects = res.projects as Array<{ projectId: string; name: string }>
+  const projects = res.projects
   if (projects.length === 0) {
     ctx.output.error(logger.error('No projects found. Create one first: holocron projects create --name "My Docs"'))
     return new Error('No projects')
@@ -267,7 +266,7 @@ function createBatches(files: BuildFile[]): BuildFile[][] {
 async function uploadFiles(ctx: {
   files: BuildFile[]
   deploymentId: string
-  authToken: string
+  auth: DeployAuth
   baseUrl: string
   output: { log: (msg: string) => void }
 }): Promise<Error | void> {
@@ -287,13 +286,23 @@ async function uploadFiles(ctx: {
     const zipData = zipSync(zipInput)
 
     const uploadUrl = new URL(`/api/v0/deployments/${ctx.deploymentId}/files`, ctx.baseUrl)
-    const res = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${ctx.authToken}`, 'Content-Type': 'application/zip' },
-      body: Buffer.from(zipData),
-    }).catch((e: unknown) => e instanceof Error ? e : new Error(String(e)))
+    let authHeaders: Record<string, string>
+    try {
+      authHeaders = await getDeployAuthHeaders(ctx.auth)
+    } catch (err) {
+      return new Error(err instanceof Error ? err.message : String(err))
+    }
+    let res: Response
+    try {
+      res = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { ...authHeaders, 'Content-Type': 'application/zip' },
+        body: Buffer.from(zipData),
+      })
+    } catch (err) {
+      return new Error(`Upload batch ${i + 1} failed: ${err instanceof Error ? err.message : String(err)}`)
+    }
 
-    if (res instanceof Error) return new Error(`Upload batch ${i + 1} failed: ${res.message}`)
     if (!res.ok) {
       const text = await res.text().catch(() => '')
       return new Error(`Upload batch ${i + 1} failed: ${res.status} ${text}`)
@@ -381,4 +390,3 @@ function readSiteName(cwd: string): string | undefined {
   }
   return undefined
 }
-

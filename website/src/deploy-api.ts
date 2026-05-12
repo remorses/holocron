@@ -22,42 +22,10 @@ import * as schema from 'db/schema'
 import { env } from 'cloudflare:workers'
 import { ulid } from 'ulid'
 import { unzipSync } from 'fflate'
-import {
-  getDb,
-  requireSession,
-  ensureOrg,
-  validateApiKey,
-} from './db.ts'
+import { getDb } from './db.ts'
+import { buildProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
 
 // ── Subdomain helpers ───────────────────────────────────────────────
-
-/** Sanitize a string for use in DNS hostnames. Only [a-z0-9-], max 63 chars. */
-export function sanitizeForDns(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
-/** Build the project's base subdomain from github info or projectId.
- *  Format: `{repo}-{owner}` for OIDC projects, `{projectId}` for manual ones. */
-export function buildProjectSubdomain(project: {
-  githubOwner?: string | null
-  githubRepo?: string | null
-  projectId: string
-}): string {
-  if (project.githubOwner && project.githubRepo) {
-    const raw = `${project.githubRepo}-${project.githubOwner}`
-    const sanitized = sanitizeForDns(raw)
-    if (sanitized.length <= 63) return sanitized
-    // Truncate with deterministic hash suffix for uniqueness
-    const hashNum = [...raw].reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0)
-    const suffix = Math.abs(hashNum).toString(36).slice(0, 6)
-    return `${sanitized.slice(0, 63 - suffix.length - 1).replace(/-$/, '')}-${suffix}`
-  }
-  return project.projectId.toLowerCase()
-}
 
 /** Build a preview subdomain for a branch deployment.
  *  Format: `{sanitized-branch}-{hash}-{project-subdomain}`.
@@ -81,57 +49,6 @@ export function buildPreviewSubdomain(branchName: string, projectSubdomain: stri
   }
   const truncated = sanitizedBranch.slice(0, maxBranchLen).replace(/-$/, '')
   return `${truncated}-${hashSuffix}-${projectSubdomain}`
-}
-
-// ── Auth helpers ────────────────────────────────────────────────────
-
-type DeployAuth = { orgId: string; projectId: string }
-
-/** Resolve auth for the create-deployment route. Needs bodyProjectId for session auth. */
-async function resolveCreateAuth(request: Request, bodyProjectId?: string): Promise<DeployAuth> {
-  const apiKeyAuth = await validateApiKey(request.headers.get('authorization'))
-  if (apiKeyAuth) {
-    return { orgId: apiKeyAuth.orgId, projectId: apiKeyAuth.projectId }
-  }
-
-  const session = await requireSession(request)
-  const org = await ensureOrg(session.userId, session.user.name)
-
-  if (!bodyProjectId) {
-    throw json({ error: 'projectId is required when using session auth' }, { status: 400 })
-  }
-
-  const db = getDb()
-  const proj = await db.query.project.findFirst({
-    where: { projectId: bodyProjectId, orgId: org.id },
-  })
-  if (!proj) {
-    throw json({ error: 'project not found in your org' }, { status: 404 })
-  }
-
-  return { orgId: org.id, projectId: bodyProjectId }
-}
-
-/** Verify the caller has access to the project that owns a deployment.
- *  Used by upload and finalize routes where projectId comes from the deployment row. */
-async function requireDeployAccess(request: Request, projectId: string): Promise<void> {
-  const apiKeyAuth = await validateApiKey(request.headers.get('authorization'))
-  if (apiKeyAuth) {
-    if (apiKeyAuth.projectId !== projectId) {
-      throw json({ error: 'deployment does not belong to your project' }, { status: 403 })
-    }
-    return
-  }
-
-  const session = await requireSession(request)
-  const org = await ensureOrg(session.userId, session.user.name)
-  const db = getDb()
-  const proj = await db.query.project.findFirst({
-    where: { projectId, orgId: org.id },
-  })
-  if (!proj) {
-    throw json({ error: 'deployment does not belong to your project' }, { status: 403 })
-  }
 }
 
 // ── Deploy app ──────────────────────────────────────────────────────
@@ -174,7 +91,7 @@ export const deployApp = new Spiceflow()
     },
     async handler({ request }) {
       const body = await request.json()
-      const auth = await resolveCreateAuth(request, body.projectId)
+      const auth = await resolveCreateDeployAuth(request, body.projectId)
       const db = getDb()
 
       const deploymentId = ulid()
@@ -186,8 +103,8 @@ export const deployApp = new Spiceflow()
         projectId: auth.projectId,
         version,
         status: 'uploading',
-        branch: body.branch || 'main',
-        preview: body.preview ?? false,
+        branch: auth.type === 'github-oidc' ? auth.branch : body.branch || 'main',
+        preview: auth.type === 'github-oidc' ? auth.preview : body.preview ?? false,
         files: JSON.stringify(body.files),
       })
 
