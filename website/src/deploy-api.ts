@@ -1,8 +1,8 @@
-// Deploy API routes: create deployment, upload file, finalize.
+// Deploy API routes: create deployment, upload files, finalize.
 //
 // Upload protocol:
 //   1. POST /api/v0/deployments — declare file list, get deploymentId + version
-//   2. PUT /api/v0/deployments/:deploymentId/files/* — upload each file as raw bytes
+//   2. PUT /api/v0/deployments/:deploymentId/files — batch upload via multipart/form-data
 //   3. POST /api/v0/deployments/:deploymentId/finalize — validate, build manifest, go live
 //
 // Auth: both API key (HOLOCRON_KEY) and session token are supported.
@@ -16,6 +16,7 @@ import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
 import { env } from 'cloudflare:workers'
 import { ulid } from 'ulid'
+import { unzipSync } from 'fflate'
 import {
   getDb,
   requireSession,
@@ -151,6 +152,7 @@ export const deployApp = new Spiceflow()
       projectId: z.string().optional().describe('Required for session auth; ignored for API key auth'),
       branch: z.string().max(200).optional().describe('Branch name for preview deployments. Defaults to "main".'),
       preview: z.boolean().optional().describe('Force preview deployment (e.g. from a PR). Never updates production pointer.'),
+      name: z.string().max(200).optional().describe('Site name from docs.json. Updates the project name if provided.'),
     }),
     detail: {
       summary: 'Create deployment',
@@ -177,27 +179,34 @@ export const deployApp = new Spiceflow()
         files: JSON.stringify(body.files),
       })
 
+      // Bump project.updatedAt so the project list is ordered by last deploy activity.
+      // Also sync project.name from docs.json if provided.
+      await db.update(schema.project)
+        .set({
+          updatedAt: Date.now(),
+          ...(body.name ? { name: body.name } : {}),
+        })
+        .where(orm.eq(schema.project.projectId, auth.projectId))
+
       return { deploymentId, version }
     },
   })
 
-  // Step 2: Upload a single file (plain * wildcard, filePath in params['*'])
+  // Step 2: Upload files as a zip archive (batch upload)
   .route({
     method: 'PUT',
-    path: '/api/v0/deployments/:deploymentId/files/*',
+    path: '/api/v0/deployments/:deploymentId/files',
     params: z.object({
       deploymentId: z.string(),
-      '*': z.string(),
     }),
     detail: {
-      summary: 'Upload deployment file',
+      summary: 'Upload deployment files (zip batch)',
       tags: ['Deploy'],
     },
     response: {
-      200: z.object({ ok: z.boolean() }),
+      200: z.object({ uploaded: z.number() }),
     },
     async handler({ request, params }) {
-      const filePath = params['*']
       const db = getDb()
 
       const deploy = await db.query.deployment.findFirst({
@@ -212,28 +221,39 @@ export const deployApp = new Spiceflow()
 
       await requireDeployAccess(request, deploy.projectId)
 
-      // Verify the file path was declared
       const declaredFiles: string[] = JSON.parse(deploy.files || '[]')
-      if (!declaredFiles.includes(filePath)) {
-        throw json(
-          { error: `file path "${filePath}" was not declared in the deployment` },
-          { status: 400 },
-        )
-      }
+      const zipBuffer = new Uint8Array(await request.arrayBuffer())
+      const extracted = unzipSync(zipBuffer)
 
-      // Read raw body and store in KV (max 25MB per file, KV value limit)
-      const content = await request.arrayBuffer()
+      // Validate all files before writing any to KV
       const MAX_FILE_SIZE = 25 * 1024 * 1024
-      if (content.byteLength > MAX_FILE_SIZE) {
-        throw json(
-          { error: `file "${filePath}" exceeds 25MB limit (${(content.byteLength / 1024 / 1024).toFixed(1)}MB)` },
-          { status: 413 },
-        )
-      }
-      const kvKey = `site:${deploy.projectId}/v:${deploy.version}/${filePath}`
-      await env.SITES_KV.put(kvKey, content)
+      const entries: Array<{ filePath: string; content: Uint8Array }> = []
 
-      return { ok: true }
+      for (const [filePath, content] of Object.entries(extracted)) {
+        if (!declaredFiles.includes(filePath)) {
+          throw json(
+            { error: `file path "${filePath}" was not declared in the deployment` },
+            { status: 400 },
+          )
+        }
+        if (content.byteLength > MAX_FILE_SIZE) {
+          throw json(
+            { error: `file "${filePath}" exceeds 25MB limit (${(content.byteLength / 1024 / 1024).toFixed(1)}MB)` },
+            { status: 413 },
+          )
+        }
+        entries.push({ filePath, content })
+      }
+
+      // Write all files to KV in parallel
+      await Promise.all(
+        entries.map(({ filePath, content }) => {
+          const kvKey = `site:${deploy.projectId}/v:${deploy.version}/${filePath}`
+          return env.SITES_KV.put(kvKey, content)
+        }),
+      )
+
+      return { uploaded: entries.length }
     },
   })
 

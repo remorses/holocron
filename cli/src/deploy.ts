@@ -268,7 +268,7 @@ async function uploadFiles(ctx: {
     const res = await fetch(uploadUrl, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${ctx.authToken}`, 'Content-Type': 'application/zip' },
-      body: new Blob([zipData]),
+      body: zipData as unknown as BodyInit,
     }).catch((e: unknown) => e instanceof Error ? e : new Error(String(e)))
 
     if (res instanceof Error) return new Error(`Upload batch ${i + 1} failed: ${res.message}`)

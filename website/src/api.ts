@@ -232,7 +232,7 @@ export const apiApp = new Spiceflow()
       const db = getDb()
       const projects = await db.query.project.findMany({
         where: { orgId: org.id },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' },
       })
 
       return { projects }
