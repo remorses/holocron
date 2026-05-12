@@ -4,7 +4,7 @@
 
 import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
-import { getBaseUrl, setServerAuth, clearServerAuth, getSessionToken, normalizeUrl } from './config.ts'
+import { getBaseUrl, setServerAuth, clearServerAuth, getSessionToken, normalizeUrl, loginHint } from './config.ts'
 import { loginWithDeviceFlow } from './device-flow.ts'
 import { logger, colors } from './logger.ts'
 
@@ -46,14 +46,14 @@ loginCli
     const baseUrl = normalizeUrl(getBaseUrl())
     const sessionToken = getSessionToken(baseUrl)
     if (!sessionToken) {
-      output.error(logger.error(`Not logged in to ${baseUrl}. Run \`holocron login --api-url ${baseUrl}\` first.`))
+      output.error(logger.error(`Not logged in. Run ${loginHint(baseUrl)} first.`))
       return proc.exit(1)
     }
     const res = await fetch(new URL('/api/auth/get-session', baseUrl), {
       headers: { Authorization: `Bearer ${sessionToken}` },
     })
     if (!res.ok) {
-      output.error(logger.error(`Session expired or invalid for ${baseUrl}. Run \`holocron login --api-url ${baseUrl}\` again.`))
+      output.error(logger.error(`Session expired or invalid. Run ${loginHint(baseUrl)} again.`))
       return proc.exit(1)
     }
     const session = await readJson<{ user?: { name?: string; email?: string } }>(res)

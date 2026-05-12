@@ -63,6 +63,12 @@ export function getBaseUrl(): string {
   return process.env.HOLOCRON_API_URL || DEFAULT_URL
 }
 
+/** Format a `holocron login` hint, omitting --api-url when using the default. */
+export function loginHint(baseUrl: string): string {
+  const url = normalizeUrl(baseUrl)
+  return url === DEFAULT_URL ? '`holocron login`' : `\`holocron login --api-url ${url}\``
+}
+
 /** Get the session token for a specific base URL. */
 export function getSessionToken(baseUrl?: string): string | undefined {
   const url = normalizeUrl(baseUrl || getBaseUrl())
@@ -74,7 +80,7 @@ export function requireAuth(baseUrl?: string): { sessionToken: string; baseUrl: 
   const url = normalizeUrl(baseUrl || getBaseUrl())
   const token = loadConfig().servers?.[url]?.sessionToken
   if (!token) {
-    throw new Error(`Not logged in to ${url}. Run \`holocron login --api-url ${url}\` first.`)
+    throw new Error(`Not logged in. Run ${loginHint(url)} first.`)
   }
   return { sessionToken: token, baseUrl: url }
 }

@@ -12,7 +12,7 @@
 
 import { createSpiceflowFetch } from 'spiceflow/client'
 import type { App } from 'website/src/server.tsx'
-import { getBaseUrl, getSessionToken } from './config.ts'
+import { getBaseUrl, getSessionToken, loginHint } from './config.ts'
 
 /** Create a client authenticated with a session token (from `holocron login`). */
 export function createSessionClient(baseUrl: string, sessionToken: string) {
@@ -35,7 +35,7 @@ export function getApiClient() {
   const baseUrl = getBaseUrl()
   const token = getSessionToken(baseUrl)
   if (!token) {
-    throw new Error(`Not logged in to ${baseUrl}. Run \`holocron login --api-url ${baseUrl}\` first.`)
+    throw new Error(`Not logged in. Run ${loginHint(baseUrl)} first.`)
   }
   return createSessionClient(baseUrl, token)
 }
@@ -62,7 +62,7 @@ export function resolveDeployAuth(): DeployAuth {
   }
 
   throw new Error(
-    `Not authenticated for ${baseUrl}. Set HOLOCRON_KEY in your environment or .env file, or run \`holocron login --api-url ${baseUrl}\`.`,
+    `Not authenticated. Set HOLOCRON_KEY in your environment or .env file, or run ${loginHint(baseUrl)}.`,
   )
 }
 
