@@ -3,6 +3,38 @@ title: Holocron
 description: Mintlify drop-in open source replacement as a Vite plugin. Use it to create documentation websites.
 ---
 
+## Page frontmatter reference
+
+Every MDX page supports YAML frontmatter. The schema uses `.passthrough()` so unknown fields are preserved. Source of truth: `vite/src/lib/page-frontmatter.ts`.
+
+- **`title`** (string) — Page title for sidebar, browser tab, and auto-injected `<h1>`. Falls back to first heading, then `"Untitled"`.
+- **`description`** (string) — Page description for `<meta name="description">` and OpenGraph. Falls back to site-level description.
+- **`icon`** (string) — Icon name shown next to the page in the sidebar. Uses the configured library (Font Awesome or Lucide). Supports `library:name` format like `fontawesome:brands:discord`.
+- **`sidebarTitle`** (string) — Overrides the title shown in sidebar navigation (useful when the full title is too long).
+- **`tag`** (string) — Small badge next to the page in sidebar (e.g. `BETA`, `NEW`). Only shows when `api` is not set.
+- **`deprecated`** (boolean) — Adds a `Deprecated` badge next to the page in the sidebar.
+- **`api`** (string) — Mintlify API page convention. Set to `"METHOD /path"` (e.g. `"GET /users"`). The HTTP method renders as a colored badge in the sidebar.
+- **`hidden`** (boolean) — Hides the page from sidebar and adds `noindex` robots tag. Page remains routable by URL.
+- **`noindex`** (boolean) — Adds `<meta name="robots" content="noindex">` but keeps the page visible in sidebar.
+- **`robots`** (string) — Custom `<meta name="robots">` value (e.g. `noarchive`, `nofollow`).
+- **`keywords`** (string[]) — Rendered as `<meta name="keywords">`. Also boosts the page in Holocron sidebar search.
+- **`gridGap`** (number) — Overrides horizontal gap (px) between content and sidebars. Default `60`, OpenAPI pages use `30`.
+- **`cache-control`** (string) — Custom `Cache-Control` header on page response. Default: `s-maxage=300, stale-while-revalidate=86400`.
+- **`og:title`** (string) — OpenGraph title. Defaults to `{title} — {siteName}`.
+- **`og:description`** (string) — OpenGraph description. Defaults to page `description`.
+- **`og:image`** (string) — OpenGraph image URL. Defaults to auto-generated OG image.
+- **`og:url`** (string) — Canonical URL for the page.
+- **`og:type`** (string) — OpenGraph type (e.g. `article`).
+- **`og:image:width`** (string | number) — OG image width in pixels.
+- **`og:image:height`** (string | number) — OG image height in pixels.
+- **`twitter:title`** (string) — Twitter card title. Defaults to `og:title`.
+- **`twitter:description`** (string) — Twitter card description. Defaults to `og:description`.
+- **`twitter:image`** (string) — Twitter card image. Defaults to `og:image`.
+- **`twitter:card`** (string) — Card type: `summary` or `summary_large_image` (default).
+- **`twitter:site`** (string) — Twitter handle for the site (e.g. `@mycompany`).
+- **`twitter:image:width`** (string | number) — Twitter image width in pixels.
+- **`twitter:image:height`** (string | number) — Twitter image height in pixels.
+
 ## Icons
 
 The default icon library is **Font Awesome** (`fontawesome`). To use Lucide icons instead, set `"icons": { "library": "lucide" }` in `docs.json`. Icon names like `home`, `zap`, `file-text`, `panel-left` are Lucide names and won't resolve with the default Font Awesome library.

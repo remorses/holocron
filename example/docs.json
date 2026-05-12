@@ -45,7 +45,7 @@
           {
             "group": "Reference",
             "icon": "book",
-            "pages": ["configuration", "deployment", "custom-virtual-modules"]
+            "pages": ["configuration", "frontmatter", "deployment", "custom-virtual-modules"]
           }
         ]
       },

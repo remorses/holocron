@@ -1,0 +1,165 @@
+---
+title: Frontmatter
+description: Page-level metadata you can set in YAML frontmatter at the top of any MDX file.
+icon: file-text
+---
+
+Every MDX page can include a YAML frontmatter block at the top. Frontmatter controls the page title, sidebar appearance, SEO tags, and other per-page behavior.
+
+```yaml
+---
+title: Getting Started
+description: Learn how to set up your first project.
+icon: rocket
+---
+```
+
+## Core fields
+
+**`title`** sets the page title used in the sidebar, browser tab, and `<h1>` heading. If omitted, Holocron falls back to the first heading in the MDX body, then `"Untitled"`.
+
+**`description`** sets the page description used in the `<meta name="description">` tag and OpenGraph metadata. Falls back to the site-level description from `docs.json` if not set.
+
+**`icon`** sets an icon displayed next to the page title in the sidebar. Uses the icon library configured in `docs.json` (Font Awesome by default, or Lucide). You can also use the full `library:name` format like `fontawesome:brands:discord`.
+
+```yaml
+---
+title: Authentication
+description: Learn how to authenticate API requests.
+icon: lock
+---
+```
+
+## Sidebar fields
+
+**`sidebarTitle`** overrides the title shown in the sidebar navigation. Useful when the full title is too long for the sidebar but you want it as the page heading.
+
+**`tag`** adds a small badge next to the page title in the sidebar. Common values are `BETA`, `NEW`, `PREVIEW`. The tag only shows when `api` is not set.
+
+**`deprecated`** adds a `Deprecated` badge next to the page in the sidebar when set to `true`.
+
+**`api`** is a Mintlify convention for API reference pages. Set it to an HTTP method and path like `"GET /users"`. The HTTP method (`GET`, `POST`, etc.) renders as a colored badge in the sidebar.
+
+```yaml
+---
+title: List Users
+api: GET /users
+---
+```
+
+```yaml
+---
+title: Sidebar Override
+sidebarTitle: Short Name
+tag: BETA
+deprecated: true
+---
+```
+
+## Visibility and indexing
+
+**`hidden`** hides the page from the sidebar navigation and adds a `noindex` robots meta tag. The page is still routable by its URL.
+
+**`noindex`** adds a `<meta name="robots" content="noindex">` tag but keeps the page visible in the sidebar. Use this for pages that should be accessible but not indexed by search engines.
+
+**`robots`** sets a custom `<meta name="robots">` value. Overrides the default behavior. Common values: `noindex`, `noarchive`, `nofollow`.
+
+```yaml
+---
+title: Internal Guide
+hidden: true
+---
+```
+
+```yaml
+---
+title: Draft Page
+noindex: true
+---
+```
+
+## SEO and keywords
+
+**`keywords`** is an array of strings rendered as a `<meta name="keywords">` tag. Keywords also boost the page in Holocron's built-in sidebar search.
+
+```yaml
+---
+title: Configuration
+keywords: ["setup", "config", "options"]
+---
+```
+
+## OpenGraph metadata
+
+Override the default OpenGraph tags for social sharing previews. These are rendered as `<meta property="og:...">` tags in the page `<head>`.
+
+| Field | Description |
+|---|---|
+| `og:title` | Social share title. Defaults to `{title} — {siteName}`. |
+| `og:description` | Social share description. Defaults to page `description`. |
+| `og:image` | Social share image URL. Defaults to auto-generated OG image. |
+| `og:url` | Canonical URL for the page. |
+| `og:type` | OpenGraph type, e.g. `article`. |
+| `og:image:width` | Image width in pixels (string or number). |
+| `og:image:height` | Image height in pixels (string or number). |
+
+```yaml
+---
+title: API Overview
+"og:title": Custom Social Title
+"og:description": A custom description for social cards.
+"og:image": https://example.com/og.png
+"og:image:width": 1200
+"og:image:height": 630
+---
+```
+
+## Twitter/X metadata
+
+Override the default Twitter Card tags. These are rendered as `<meta name="twitter:...">` tags.
+
+| Field | Description |
+|---|---|
+| `twitter:title` | Twitter card title. Defaults to `og:title`. |
+| `twitter:description` | Twitter card description. Defaults to `og:description`. |
+| `twitter:image` | Twitter card image. Defaults to `og:image`. |
+| `twitter:card` | Card type: `summary` or `summary_large_image` (default). |
+| `twitter:site` | Twitter handle for the site, e.g. `@mycompany`. |
+| `twitter:image:width` | Image width in pixels (string or number). |
+| `twitter:image:height` | Image height in pixels (string or number). |
+
+```yaml
+---
+"twitter:card": summary
+"twitter:site": "@mycompany"
+"twitter:image": https://example.com/twitter.png
+---
+```
+
+## Advanced fields
+
+**`gridGap`** overrides the horizontal gap (in pixels) between the content column and sidebars for this page only. The default is `60`. OpenAPI pages use `30` automatically.
+
+**`cache-control`** sets a custom `Cache-Control` header on the page response. Defaults to `s-maxage=300, stale-while-revalidate=86400`. Set to `s-maxage=0, no-store` to disable caching entirely.
+
+```yaml
+---
+title: Real-time Dashboard
+cache-control: "s-maxage=0, no-store"
+gridGap: 40
+---
+```
+
+## Passthrough
+
+The frontmatter schema uses `.passthrough()`, so any additional YAML fields you add are preserved and accessible in the parsed frontmatter object. This is useful for custom metadata consumed by your own components or plugins.
+
+```yaml
+---
+title: Custom Page
+myCustomField: hello
+myList:
+  - one
+  - two
+---
+```
