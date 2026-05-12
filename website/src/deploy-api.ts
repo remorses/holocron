@@ -365,13 +365,17 @@ export const deployApp = new Spiceflow()
       const stillActive = await db.query.deployment.findFirst({
         where: { id: deploy.id, status: 'active' },
       })
-      if (stillActive) {
-        await writeSiteInfoToKv(deploySubdomain, {
-          projectId: deploy.projectId,
-          version: deploy.version,
-          files: declaredFiles,
-        })
+      if (!stillActive) {
+        throw json(
+          { error: 'deployment was superseded by a concurrent finalize' },
+          { status: 409 },
+        )
       }
+      await writeSiteInfoToKv(deploySubdomain, {
+        projectId: deploy.projectId,
+        version: deploy.version,
+        files: declaredFiles,
+      })
 
       const requestHost = new URL(request.url).hostname
       const isPreviewEnv = requestHost.startsWith('preview.')

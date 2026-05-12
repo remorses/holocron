@@ -12,6 +12,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { execSync } from 'node:child_process'
 import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
 import { resolveDeployAuth, getDeployClient, type DeployAuth } from './api-client.ts'
@@ -122,7 +123,6 @@ function detectBranch(cwd: string, explicit?: string): string {
   const ref = process.env.GITHUB_REF
   if (ref?.startsWith('refs/heads/')) return ref.slice('refs/heads/'.length)
   try {
-    const { execSync } = require('node:child_process')
     return execSync('git rev-parse --abbrev-ref HEAD', {
       cwd,
       encoding: 'utf-8',
@@ -133,7 +133,6 @@ function detectBranch(cwd: string, explicit?: string): string {
 
 /** Run vite build and reload .env afterward. Returns Error on failure. */
 async function runBuild(cwd: string): Promise<Error | void> {
-  const { execSync } = await import('node:child_process')
   const buildCmd = detectBuildCommand(cwd)
   try {
     execSync(buildCmd, { cwd, stdio: 'inherit', env: { ...process.env, HOLOCRON_DEPLOY: '1' } })
