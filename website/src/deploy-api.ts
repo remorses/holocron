@@ -306,7 +306,7 @@ export const deployApp = new Spiceflow()
       const blobs = new Map<string, Uint8Array>()
 
       for (const [filePath, content] of Object.entries(extracted)) {
-        const hashBuffer = await crypto.subtle.digest('SHA-256', new Uint8Array(content).buffer as ArrayBuffer)
+          const hashBuffer = await crypto.subtle.digest('SHA-256', content as unknown as ArrayBuffer)
         const computedHash = [...new Uint8Array(hashBuffer)]
           .map((b) => b.toString(16).padStart(2, '0'))
           .join('')
@@ -378,7 +378,7 @@ export const deployApp = new Spiceflow()
 
       const declaredFiles: Array<{ path: string; hash: string }> = JSON.parse(deploy.files || '[]')
 
-      // The worker entry must exist or the hosting worker can't load the site
+      // The worker entry must be declared or the hosting worker can't load the site
       if (!declaredFiles.some((f) => f.path === 'worker/ssr/index.js')) {
         throw json(
           { error: 'deployment must include worker/ssr/index.js (the SSR entry)' },
@@ -386,31 +386,9 @@ export const deployApp = new Spiceflow()
         )
       }
 
-      // Verify all blobs exist in KV via bulk reads (25 keys per op).
-      const uniqueHashes = [...new Set(declaredFiles.map((f) => f.hash))]
-      const missingHashes: string[] = []
-      for (let i = 0; i < uniqueHashes.length; i += 25) {
-        const chunk = uniqueHashes.slice(i, i + 25)
-        const results = await env.SITES_KV.get(
-          chunk.map((h) => `blob:${h}`),
-          { type: 'text' },
-        )
-        for (const [key, value] of results) {
-          if (value === null) missingHashes.push(key.slice('blob:'.length))
-        }
-      }
-      if (missingHashes.length > 0) {
-        // Find which files are affected for a useful error message
-        const missingSet = new Set(missingHashes)
-        const missingFiles = declaredFiles
-          .filter((f) => missingSet.has(f.hash))
-          .map((f) => f.path)
-          .slice(0, 10)
-        throw json(
-          { error: `missing blobs for files: ${missingFiles.join(', ')}` },
-          { status: 400 },
-        )
-      }
+      // No blob existence check here — the CLI already verifies each upload
+      // batch returned 200. Skipping saves KV reads and avoids the 25MB bulk
+      // response limit for large blobs.
 
       // Build the manifest: maps file paths to their content hash + metadata.
       // The hosting worker reads this to resolve file paths to blob keys.

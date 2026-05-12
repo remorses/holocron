@@ -117,7 +117,7 @@ async function loadWorkerModules(
   await Promise.all(
     uniqueHashes.map(async (hash) => {
       const content = await kv.get(`blob:${hash}`, { type: 'text', cacheTtl: 86400 })
-      if (content) blobMap.set(hash, content)
+      if (content !== null) blobMap.set(hash, content)
     }),
   )
 
@@ -125,7 +125,7 @@ async function loadWorkerModules(
   for (const [filePath, entry] of workerEntries) {
     const moduleName = filePath.slice('worker/'.length)
     const content = blobMap.get(entry.hash)
-    if (content && moduleName) {
+    if (content !== undefined && moduleName) {
       modules[moduleName] = content
     }
   }
@@ -196,7 +196,16 @@ export default {
         }
       })
 
-      return worker.getEntrypoint().fetch(request)
+      const response = await worker.getEntrypoint().fetch(request)
+
+      // Surface Dynamic Worker errors for debugging. The user's spiceflow app
+      // may return a 500 with an error message in the body.
+      if (!response.ok && response.status >= 500) {
+        const body = await response.text()
+        console.error(`Dynamic Worker returned ${response.status} for ${request.url}: ${body.slice(0, 500)}`)
+      }
+
+      return response
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       const stack = err instanceof Error ? err.stack : ''
