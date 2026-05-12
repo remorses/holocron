@@ -1048,6 +1048,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
             messages,
             ...docsPayload,
             skillUrls: [],
+            pageSlug: body.currentSlug,
           },
         })
 

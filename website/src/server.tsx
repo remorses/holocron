@@ -3,6 +3,8 @@
 // then holocron docs. The /docs.json route serves the Holocron JSON Schema.
 // Cloudflare Workers fetch handler is provided by spiceflow/cloudflare-entrypoint.
 
+export { UsageCounter } from './usage-counter-do.ts'
+
 import { json, Spiceflow, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'

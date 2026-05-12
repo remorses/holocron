@@ -15,9 +15,6 @@
       "migrations_dir": "../db/drizzle"
     }
   ],
-  // USAGE_KV — AI gateway monthly request counters per org.
-  //   "usage:{orgId}:{YYYY-MM}"  → string (integer count), TTL 35 days
-  //
   // AI_LOGO_KV — cached AI-generated logo images.
   //   "ai-logo:{name}"           → ArrayBuffer (JPEG bytes), TTL controlled by CACHE_TTL in ai-logo.ts
   //
@@ -26,9 +23,30 @@
   //   "site:{projectId}/v:{version}/{filePath}"        → raw bytes (ArrayBuffer)                 — uploaded file content (assets + worker modules)
   //   "site:{projectId}/v:{version}/manifest"          → JSON { [browserPath]: { contentType } } — asset manifest for static file serving
   "kv_namespaces": [
-    { "binding": "USAGE_KV", "id": "c11af2ba45384d5598ed06eb93f3dd55" },
     { "binding": "AI_LOGO_KV", "id": "10c43383c2f341f79155740ee8a74eb6" },
     { "binding": "SITES_KV", "id": "b8814a26150b44b583854867c0bb9e53" }
+  ],
+  // USAGE_COUNTER — per-org AI chat usage tracking via Durable Object with SQLite.
+  // One instance per org (idFromName(orgId)). Tracks requests, tokens, model, page slug.
+  "durable_objects": {
+    "bindings": [
+      { "name": "USAGE_COUNTER", "class_name": "UsageCounter" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] }
+  ],
+  // CHAT_RATE_LIMITER — IP-based rate limiting for unauthenticated chat requests.
+  // 10 requests per 60 seconds per IP. Only applied when no HOLOCRON_KEY is present.
+  "ratelimits": [
+    {
+      "name": "CHAT_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    }
   ],
   "ai": {
     "binding": "AI"
@@ -65,11 +83,27 @@
           "migrations_dir": "../db/drizzle"
         }
       ],
-      // Same KV key shapes as production (see above)
       "kv_namespaces": [
-        { "binding": "USAGE_KV", "id": "36b3209caddf42c79019b4c93d12b536" },
         { "binding": "AI_LOGO_KV", "id": "ad90e76eaa4a4af58b7ed22e4904fd51" },
         { "binding": "SITES_KV", "id": "02e9e057c9b9430ca6a39194589d6ad1" }
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "USAGE_COUNTER", "class_name": "UsageCounter" }
+        ]
+      },
+      "migrations": [
+        { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] }
+      ],
+      "ratelimits": [
+        {
+          "name": "CHAT_RATE_LIMITER",
+          "namespace_id": "1001",
+          "simple": {
+            "limit": 10,
+            "period": 60
+          }
+        }
       ],
       "ai": {
         "binding": "AI"
