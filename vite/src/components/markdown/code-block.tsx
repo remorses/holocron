@@ -2,22 +2,15 @@
 
 /**
  * CodeBlock with Prism syntax highlighting and line numbers.
- * Also registers a custom "diagram" language for ASCII/Unicode box-drawing.
+ *
+ * Prism is loaded via `#prism` conditional import: the browser gets real
+ * prismjs with all grammars registered; SSR/RSC get a noop stub that returns
+ * unhighlighted text. This avoids bundling prismjs (~500KB) in the server
+ * build and sidesteps the CJS global issue in Dynamic Workers.
  */
 
 import React, { useMemo } from 'react'
-import '@holocron.so/vite/src/prism'
-import * as PrismModule from 'prismjs'
-
-const Prism = PrismModule.default ?? PrismModule
-
-/* Custom "diagram" language for ASCII/Unicode box-drawing diagrams.
-   Tokenizes box-drawing chars as neutral structure, text as highlighted labels. */
-Prism.languages.diagram = {
-  'box-drawing': /[┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷]+/,
-  'line-char': /[-_|<>]+/,
-  label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>]+/,
-}
+import { Prism } from '#prism'
 
 export function CodeBlock({
   children,

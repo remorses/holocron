@@ -42,10 +42,16 @@
   },
   "imports": {
     "#mermaid": {
-      "types": "./src/lib/mermaid-browser.ts",
+      "types": "./dist/lib/mermaid-browser.d.ts",
       "ssr": "./dist/lib/empty-mermaid.js",
       "browser": "./dist/lib/mermaid-browser.js",
       "default": "./dist/lib/mermaid-browser.js"
+    },
+    "#prism": {
+      "types": "./dist/prism.d.ts",
+      "ssr": "./dist/prism-noop.js",
+      "browser": "./dist/prism.js",
+      "default": "./dist/prism.js"
     }
   },
   "files": [

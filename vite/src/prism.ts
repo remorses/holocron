@@ -313,6 +313,14 @@ if (markdownGrammar) {
   Prism.languages.mdx = markdownGrammar
 }
 
+/* Custom "diagram" language for ASCII/Unicode box-drawing diagrams.
+   Tokenizes box-drawing chars as neutral structure, text as highlighted labels. */
+Prism.languages.diagram = {
+  'box-drawing': /[┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷]+/,
+  'line-char': /[-_|<>]+/,
+  label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>]+/,
+}
+
 export const prismLanguageIds = Object.keys(prismComponents.languages).filter((id) => id !== 'meta')
 
-export {}
+export { Prism }
