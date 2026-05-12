@@ -1,5 +1,15 @@
 # @holocron.so/vite
 
+## 0.6.1
+
+1. **`@cloudflare/vite-plugin` is now a direct dependency** — users deploying to Cloudflare Workers no longer need to install it separately. It ships as a transitive dep of `@holocron.so/vite`.
+
+2. **Fixed OpenAPI spec resolution when `pagesDir` is set** — specs inside a custom `pagesDir` (e.g. `pagesDir: "./src"` with `api.yaml` in `src/`) now resolve correctly. Previously only the project root was probed, causing "OpenAPI spec not found" errors. The error message now lists all probed locations when neither has the file.
+
+3. **Removed build-time OIDC registration from the Vite plugin** — the OIDC token minting and `.env` write path has been moved to the CLI deploy command. The Vite plugin no longer writes `HOLOCRON_KEY` or `HOLOCRON_BRANCH` to `.env` during build. This is a security improvement; deploy authentication is now fully handled by `holocron deploy`.
+
+4. **Bumped spiceflow peer dep to `>=1.25.1-rsc.0`** — fixes deploy failures where the SSR entry wasn't nested inside the RSC output directory, causing "deployment must include worker/ssr/index.js" errors.
+
 ## 0.6.0
 
 1. **Self-hosted Inter font** — the default Inter font is now bundled via `@fontsource-variable/inter` instead of loading from third-party CDNs (`rsms.me`, Google Fonts). No external font requests on default config. Google Fonts preconnect tags only appear when you explicitly configure a custom Google font.

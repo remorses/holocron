@@ -1,3 +1,22 @@
+## 0.11.0
+
+1. **Keyless deploys from GitHub Actions via OIDC** — `holocron deploy` now supports GitHub Actions OIDC authentication natively. No `HOLOCRON_KEY` secret needed; just set `permissions: id-token: write` in your workflow:
+
+   ```yaml
+   permissions:
+     id-token: write
+     contents: read
+   steps:
+     - uses: actions/checkout@v4
+     - run: npx holocron deploy
+   ```
+
+   The CLI mints a fresh OIDC token for each deploy step (create, upload, finalize) and the server derives project, branch, and preview state from the verified JWT claims. API key and session auth continue to work as before.
+
+2. **Scaffold no longer lists `spiceflow` as a direct dependency** — `holocron create` generates a leaner `package.json`. Spiceflow is a transitive dependency of `@holocron.so/vite` so users don't need to install it separately.
+
+3. **Improved deploy error messages** — auth failure now suggests all three auth methods (env var, `holocron login`, or GitHub Actions OIDC) instead of only the first two.
+
 ## 0.10.0
 
 1. **New `holocron deploy` command** — build and deploy your docs site to holocron.so with a single command. Content-addressable uploads skip unchanged files across deploys:
