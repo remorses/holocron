@@ -111,6 +111,14 @@ deployCli
     const finalized = finalizeRes as { url: string; deploymentId: string; branch: string }
     output.log('')
     output.log(`Deployed! ${finalized.url}`)
+
+    // Auto-set GitHub Actions step outputs so users don't need to parse stdout
+    const ghOutputFile = process.env.GITHUB_OUTPUT
+    if (ghOutputFile) {
+      fs.appendFileSync(ghOutputFile, `holocron_url=${finalized.url}\n`)
+      fs.appendFileSync(ghOutputFile, `holocron_deployment_id=${deploymentId}\n`)
+      output.log('GitHub Actions step outputs set: holocron_url, holocron_deployment_id')
+    }
   })
 
 // ── Extracted functions ──────────────────────────────────────────────
