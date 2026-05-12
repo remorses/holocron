@@ -2,12 +2,17 @@
 // either the caller's docs.zip or inline localhost pages, creates the docs bash
 // tool, and streams AI SDK UI chunks through Spiceflow's typed SSE generator support.
 //
-// Usage tracking: authenticated requests are counted in a per-org Durable Object
-// (UsageCounter, one instance per orgId). Unauthenticated requests are rate-limited
-// by IP via the CHAT_RATE_LIMITER binding (10 req / 60s).
+// Usage tracking: authenticated requests are counted atomically in a per-org
+// Durable Object (UsageCounter). reserveUsage() checks the limit AND inserts a
+// placeholder row in one DO RPC (no race window). Token counts are filled in
+// after streaming via waitUntil so the update survives after the response closes.
+//
+// Unauthenticated requests are rate-limited by IP via the CHAT_RATE_LIMITER
+// binding (10 req / 60s). The rate limiter also applies to invalid API keys
+// so spamming bogus keys can't bypass the IP limit.
 
 import { streamText, type ModelMessage, type UIMessageChunk } from 'ai'
-import { env } from 'cloudflare:workers'
+import { env, waitUntil } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
@@ -106,35 +111,43 @@ export const gatewayApp = new Spiceflow()
     async *handler({ request }): AsyncGenerator<HolocronChatChunk> {
       const authHeader = request.headers.get('authorization')
       const authResult = await validateApiKey(authHeader)
-      if (authHeader && !authResult) {
-        throw new Response('Missing or invalid API key. Use a holo_xxx key in the Authorization header.', { status: 401 })
-      }
 
-      // ── Authenticated: check monthly usage limit via DO ──────────────
-      if (authResult) {
-        const stub = getUsageStub(authResult.orgId)
-        const { allowed } = await stub.checkLimit({
-          sinceMs: getMonthStartMs(),
-          limit: MONTHLY_REQUEST_LIMIT,
-        })
-        if (!allowed) {
-          yield NOTICE_USAGE_LIMIT_REACHED
-          return
-        }
-      }
-
-      // ── Unauthenticated: IP-based rate limit ────────────────────────
+      // ── Unauthenticated or invalid key: IP-based rate limit ─────────
+      // Applied before the 401 so spamming bogus keys can't bypass it.
       if (!authResult) {
         const ip = request.headers.get('cf-connecting-ip') || 'unknown'
         const { success } = await env.CHAT_RATE_LIMITER.limit({ key: ip })
         if (!success) {
           throw new Response('Rate limit exceeded. Try again later, or add a HOLOCRON_KEY for higher limits.', { status: 429 })
         }
+        if (authHeader) {
+          throw new Response('Missing or invalid API key. Use a holo_xxx key in the Authorization header.', { status: 401 })
+        }
       }
 
       const body = chatRequestSchema.parse(await request.json())
       const messages: ModelMessage[] = body.messages
       const pageSlug = body.pageSlug ?? ''
+
+      // ── Authenticated: atomically reserve a usage slot via DO ───────
+      // reserveUsage() checks the monthly count AND inserts a placeholder
+      // row in one DO RPC. No race window between check and insert.
+      let usageId: number | undefined
+      if (authResult) {
+        const stub = getUsageStub(authResult.orgId)
+        const reservation = await stub.reserveUsage({
+          sinceMs: getMonthStartMs(),
+          limit: MONTHLY_REQUEST_LIMIT,
+          projectId: authResult.projectId,
+          model: DEFAULT_MODEL,
+          pageSlug,
+        })
+        if (!reservation.allowed) {
+          yield NOTICE_USAGE_LIMIT_REACHED
+          return
+        }
+        usageId = reservation.usageId
+      }
       const filesPromise = (() => {
         if (body.docsPages) return Promise.resolve(body.docsPages)
         if (body.docsZipUrl) return getDocsZipFiles(body.docsZipUrl)
@@ -177,17 +190,17 @@ export const gatewayApp = new Spiceflow()
       }
       yield { type: 'model-messages', messages: (await result.response).messages }
 
-      // ── Record usage after streaming completes (fire-and-forget) ────
-      if (authResult) {
+      // ── Update token counts via waitUntil (survives after response) ─
+      if (authResult && usageId !== undefined) {
         const usage = await result.usage
         const stub = getUsageStub(authResult.orgId)
-        stub.recordUsage({
-          projectId: authResult.projectId,
-          model: modelName,
-          pageSlug,
-          inputTokens: usage.inputTokens ?? 0,
-          outputTokens: usage.outputTokens ?? 0,
-        }).catch(() => {})
+        waitUntil(
+          stub.updateUsageTokens({
+            usageId,
+            inputTokens: usage.inputTokens ?? 0,
+            outputTokens: usage.outputTokens ?? 0,
+          }).catch(() => {}),
+        )
       }
     },
   })
