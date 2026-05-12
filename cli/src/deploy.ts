@@ -14,8 +14,18 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 import * as clack from '@clack/prompts'
-import { goke, isAgent } from 'goke'
+import { goke, isAgent, colors as c } from 'goke'
 import { resolveDeployAuth, getDeployClient, type DeployAuth } from './api-client.ts'
+
+function logStep(msg: string) {
+  return `${c.cyan('●')} ${c.cyan('holocron')} ${msg}`
+}
+function logSuccess(msg: string) {
+  return `${c.green('✓')} ${c.cyan('holocron')} ${msg}`
+}
+function logError(msg: string) {
+  return `${c.red('✗')} ${c.cyan('holocron')} ${c.red(msg)}`
+}
 
 export const deployCli = goke()
 
@@ -30,13 +40,13 @@ deployCli
 
     const branch = detectBranch(cwd, options.branch)
     const isPullRequest = !!(process.env.GITHUB_HEAD_REF || process.env.HOLOCRON_PREVIEW)
-    output.log(isPullRequest ? `Branch: ${branch} (preview, PR detected)` : `Branch: ${branch}`)
+    output.log(logStep(isPullRequest ? `Branch: ${c.bold(branch)} ${c.dim('(preview, PR detected)')}` : `Branch: ${c.bold(branch)}`))
 
     // ── Build (runs BEFORE auth so OIDC can write HOLOCRON_KEY to .env) ───
     if (!options.skipBuild) {
       const buildErr = await runBuild(cwd)
       if (buildErr instanceof Error) {
-        output.error('Build failed.')
+        output.error(logError('Build failed'))
         return proc.exit(1)
       }
     }
@@ -47,7 +57,7 @@ deployCli
       catch (err) { return err as Error }
     })()
     if (auth instanceof Error) {
-      output.error(auth.message)
+      output.error(logError(auth.message))
       return proc.exit(1)
     }
 
@@ -64,15 +74,15 @@ deployCli
     // ── Collect build artifacts ───────────────────────────────────
     const files = collectBuildArtifacts(cwd)
     if (files instanceof Error) {
-      output.error(files.message)
+      output.error(logError(files.message))
       return proc.exit(1)
     }
 
     const totalSize = files.reduce((sum, f) => sum + f.size, 0)
-    output.log(`Found ${files.length} files (${formatBytes(totalSize)})`)
+    output.log(logStep(`Found ${c.bold(String(files.length))} files ${c.dim(`(${formatBytes(totalSize)})`)}`))
 
     // ── Step 1: Create deployment ─────────────────────────────────
-    output.log('Creating deployment...')
+    output.log(logStep('Creating deployment...'))
     const createRes = await safeFetch('/api/v0/deployments', {
       method: 'POST',
       body: {
@@ -83,41 +93,41 @@ deployCli
       },
     })
     if (createRes instanceof Error) {
-      output.error(`Failed to create deployment: ${createRes.message}`)
+      output.error(logError(`Failed to create deployment: ${createRes.message}`))
       return proc.exit(1)
     }
     const { deploymentId, version } = createRes as { deploymentId: string; version: string }
-    output.log(`Deployment ${deploymentId} (v${version}) created`)
+    output.log(logSuccess(`Deployment ${c.bold(deploymentId)} ${c.dim(`(v${version})`)} created`))
 
     // ── Step 2: Upload files in parallel (max 6) ──────────────────
-    output.log('Uploading files...')
+    output.log(logStep(`Uploading ${c.bold(String(files.length))} files...`))
     const uploadErr = await uploadFiles({ files, deploymentId, authToken, baseUrl: auth.baseUrl, output })
     if (uploadErr instanceof Error) {
-      output.error(uploadErr.message)
-      output.error('Deploy aborted. The deployment remains in "uploading" state and can be retried.')
+      output.error(logError(uploadErr.message))
+      output.error(logError('Deploy aborted — deployment remains in "uploading" state and can be retried'))
       return proc.exit(1)
     }
 
     // ── Step 3: Finalize deployment ───────────────────────────────
-    output.log('Finalizing deployment...')
+    output.log(logStep('Finalizing deployment...'))
     const finalizeRes = await safeFetch(`/api/v0/deployments/${deploymentId}/finalize`, {
       method: 'POST',
       body: {},
     })
     if (finalizeRes instanceof Error) {
-      output.error(`Failed to finalize deployment: ${finalizeRes.message}`)
+      output.error(logError(`Failed to finalize: ${finalizeRes.message}`))
       return proc.exit(1)
     }
     const finalized = finalizeRes as { url: string; deploymentId: string; branch: string }
     output.log('')
-    output.log(`Deployed! ${finalized.url}`)
+    output.log(logSuccess(`Deployed! ${c.bold(finalized.url)}`))
 
     // Auto-set GitHub Actions step outputs so users don't need to parse stdout
     const ghOutputFile = process.env.GITHUB_OUTPUT
     if (ghOutputFile) {
       fs.appendFileSync(ghOutputFile, `holocron_url=${finalized.url}\n`)
       fs.appendFileSync(ghOutputFile, `holocron_deployment_id=${deploymentId}\n`)
-      output.log('GitHub Actions step outputs set: holocron_url, holocron_deployment_id')
+      output.log(logStep(c.dim('GitHub Actions step outputs set: holocron_url, holocron_deployment_id')))
     }
   })
 
@@ -184,17 +194,17 @@ async function resolveProjectId(ctx: {
 }): Promise<string | Error> {
   const res = await ctx.safeFetch('/api/v0/projects')
   if (res instanceof Error) {
-    ctx.output.error(`Failed to list projects: ${res.message}`)
+    ctx.output.error(logError(`Failed to list projects: ${res.message}`))
     return res
   }
   const projects = res.projects as Array<{ projectId: string; name: string }>
   if (projects.length === 0) {
-    ctx.output.error('No projects found. Create one first: holocron projects create --name "My Docs"')
+    ctx.output.error(logError('No projects found. Create one first: holocron projects create --name "My Docs"'))
     return new Error('No projects')
   }
   if (projects.length === 1) return projects[0]!.projectId
   if (ctx.nonInteractive) {
-    ctx.output.error('Multiple projects found. Pass --project <id> to select one.')
+    ctx.output.error(logError('Multiple projects found. Pass --project <id> to select one.'))
     return new Error('Multiple projects')
   }
   const selected = await clack.select({
@@ -233,7 +243,7 @@ async function uploadFiles(ctx: {
         return new Error(`Upload failed for ${file.relativePath}: ${res.status} ${text}`)
       }
       completed++
-      ctx.output.log(`  [${completed}/${ctx.files.length}] ${file.relativePath}`)
+      ctx.output.log(`${c.dim(`[${completed}/${ctx.files.length}]`)} ${file.relativePath}`)
     }))
     const firstErr = results.find((r): r is Error => r instanceof Error)
     if (firstErr) return firstErr
