@@ -143,9 +143,14 @@ const MERMAID_GROUP = {
 // Changes only when holocron/spiceflow version or user's deps change.
 // The entry chunk is left with just virtual modules (~20KB) which change
 // every deploy, maximizing content-addressable deduplication.
+//
+// Excludes .react-server. paths: these are RSC guard stubs with top-level
+// `throw` statements (e.g. react-dom/server.react-server.js). Rolldown
+// normally isolates them in tiny never-imported chunks. Merging them into
+// the stable chunk crashes module initialization.
 const STABLE_GROUP = {
   name: 'holocron-stable',
-  test: /(?:node_modules|@holocron\.so[\/]vite[\/]|holocron[\/]vite[\/]src[\/]|spiceflow[\/])/,
+  test: /(?:node_modules|@holocron\.so[\/]vite[\/]|holocron[\/]vite[\/]src[\/]|spiceflow[\/])(?!.*\.react-server\.)/,
   priority: 20,
 }
 
@@ -859,13 +864,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         addCodeSplittingGroups(config, [MERMAID_GROUP])
       }
 
-      // For deploy builds: split stable deps (framework + node_modules) into
-      // their own chunk so the entry only contains virtual modules (~20KB).
-      // Content-addressable KV can then skip re-uploading the stable chunk.
+      // Split stable deps (framework + node_modules) into their own chunk
+      // so the RSC entry only contains virtual modules (~20KB). Maximizes
+      // content-addressable dedup for holocron deploy.
+      // RSC-only — SSR is self-contained and not dynamically imported.
+      if (name === 'rsc') {
+        addCodeSplittingGroups(config, [STABLE_GROUP])
+      }
+
       if (name === 'rsc' || name === 'ssr') {
-        if (process.env.HOLOCRON_DEPLOY === '1') {
-          addCodeSplittingGroups(config, [STABLE_GROUP])
-        }
         addNoExternal(config, holocronPackagePattern)
         addNoExternal(config, 'fflate')
       }
