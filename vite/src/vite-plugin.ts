@@ -122,7 +122,34 @@ function mergeUnique(existing: string | string[] | undefined, items: string[]): 
   return Array.from(new Set([...arr, ...items]))
 }
 
-function groupMermaidChunks(config: UserConfig) {
+// ── Code-splitting group definitions ────────────────────────────────
+//
+// Groups control how Rolldown splits shared modules into chunks.
+// Higher priority wins when a module matches multiple groups.
+//
+// For deploy deduplication: stable dependency chunks keep the same
+// content hash across deploys, so content-addressable KV storage can
+// skip re-uploading them. The RSC entry (index.js) shrinks to just
+// virtual modules and bootstrap code (~20KB), while all framework +
+// vendor code goes into a stable chunk that's uploaded once.
+
+const MERMAID_GROUP = {
+  name: 'holocron-mermaid',
+  test: /node_modules[\/](?:\.pnpm[\/])?(?:mermaid|@mermaid-js|cytoscape|cytoscape-cose-bilkent|dagre|dagre-d3-es|graphlib|katex|khroma|roughjs|stylis|d3(?:-|[\/])|lodash-es)/,
+  priority: 30,
+}
+
+// All stable code: node_modules + holocron framework + spiceflow runtime.
+// Changes only when holocron/spiceflow version or user's deps change.
+// The entry chunk is left with just virtual modules (~20KB) which change
+// every deploy, maximizing content-addressable deduplication.
+const STABLE_GROUP = {
+  name: 'holocron-stable',
+  test: /(?:node_modules|@holocron\.so[\/]vite[\/]|holocron[\/]vite[\/]src[\/]|spiceflow[\/])/,
+  priority: 20,
+}
+
+function addCodeSplittingGroups(config: UserConfig, groups: Array<{ name: string; test: RegExp; priority: number }>) {
   config.build ??= {}
   config.build.rolldownOptions ??= {}
   const output = config.build.rolldownOptions.output ??= {}
@@ -131,24 +158,16 @@ function groupMermaidChunks(config: UserConfig) {
 
   if (existing === false) return
 
-  const mermaidGroup = {
-    name: 'holocron-mermaid',
-    test: /node_modules[\/](?:\.pnpm[\/])?(?:mermaid|@mermaid-js|cytoscape|cytoscape-cose-bilkent|dagre|dagre-d3-es|graphlib|katex|khroma|roughjs|stylis|d3(?:-|[\/])|lodash-es)/,
-    priority: 30,
-  }
-
   if (existing && typeof existing === 'object') {
     const existingGroups = Reflect.get(existing, 'groups')
     Reflect.set(output, 'codeSplitting', {
       ...existing,
-      groups: [mermaidGroup, ...(Array.isArray(existingGroups) ? existingGroups : [])],
+      groups: [...groups, ...(Array.isArray(existingGroups) ? existingGroups : [])],
     })
     return
   }
 
-  Reflect.set(output, 'codeSplitting', {
-    groups: [mermaidGroup],
-  })
+  Reflect.set(output, 'codeSplitting', { groups })
 }
 
 function getPluginName(plugin: PluginOption): string | undefined {
@@ -826,7 +845,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         config.optimizeDeps.include = mergeUnique(
           config.optimizeDeps.include,
           [
-            '@holocron.so/vite/src/prism',
             '@holocron.so/vite > @orama/orama',
             '@holocron.so/vite > cookie',
             '@holocron.so/vite > prismjs',
@@ -838,10 +856,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       if (name === 'client' || name === 'ssr') {
-        groupMermaidChunks(config)
+        addCodeSplittingGroups(config, [MERMAID_GROUP])
       }
 
+      // For deploy builds: split stable deps (framework + node_modules) into
+      // their own chunk so the entry only contains virtual modules (~20KB).
+      // Content-addressable KV can then skip re-uploading the stable chunk.
       if (name === 'rsc' || name === 'ssr') {
+        if (process.env.HOLOCRON_DEPLOY === '1') {
+          addCodeSplittingGroups(config, [STABLE_GROUP])
+        }
         addNoExternal(config, holocronPackagePattern)
         addNoExternal(config, 'fflate')
       }

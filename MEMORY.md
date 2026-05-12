@@ -1751,7 +1751,7 @@ rmiz renders two wrapper divs (`[data-rmiz]` → `[data-rmiz-content]`) around c
 
 ### Deploy pipeline architecture
 
-CLI (`holocron deploy`) builds with `@cloudflare/vite-plugin`, collects `dist/rsc/**` (worker modules) + `dist/client/**` (browser assets), uploads via 3-step protocol (create → parallel PUT → finalize). Files stored in KV. Hosting worker at `*-site.holocron.so` resolves site from D1, serves assets from KV, loads user's spiceflow app via `env.LOADER.get()`.
+CLI (`holocron deploy`) builds with `@cloudflare/vite-plugin`, collects `dist/rsc/**` (worker modules) + `dist/client/**` (browser assets), SHA-256 hashes each file, uploads via 3-step protocol (create with file+hash pairs → zip upload of NEW files only → finalize). Files stored in content-addressable KV at `blob:{sha256hex}`. Manifest (path → hash mapping) embedded in `site-info:{subdomain}`. Hosting worker needs only one KV read per request (site-info), then resolves assets/modules from `blob:{hash}` keys.
 
 ### Key pitfalls discovered
 
@@ -1763,4 +1763,6 @@ CLI (`holocron deploy`) builds with `@cloudflare/vite-plugin`, collects `dist/rs
 6. **SQLite `ALTER TABLE ADD ... UNIQUE` fails** — must split into `ALTER TABLE ADD column` + `CREATE UNIQUE INDEX`.
 7. **`worker_loaders` requires wrangler >= 4.86.0** — older versions crash at runtime with error 1101.
 8. **KV `list()` is eventually consistent** — use `getWithMetadata()` to verify specific keys, not `list()`.
-9. **Asset manifest path mapping** — CLI uploads `dist/client/` files under `assets/` prefix in KV. The manifest must map browser request paths (e.g. `/assets/style.css`) to KV keys (e.g. `site:.../assets/assets/style.css`). The double `assets/` is because `dist/client/assets/` → `assets/assets/`.
+9. **Asset manifest path mapping** — CLI uploads `dist/client/` files under `assets/` prefix. The manifest maps `assets/assets/style.css` → `{ hash, contentType }`. Browser requests `/assets/style.css`, hosting worker looks up `assets/assets/style.css` in the manifest, reads from `blob:{hash}`.
+10. **Code splitting breaks prismjs in Dynamic Workers** — Rolldown's `codeSplitting.groups` (VENDOR_GROUP, FRAMEWORK_GROUP) split prismjs into a vendor chunk and holocron code into a framework chunk. Prismjs component files (`prism-python.js`, etc.) are CJS side-effect scripts that reference `Prism` as a free variable. In a single chunk the bundler rewires these to a local binding; across chunks, the CJS-to-ESM shim's free variable resolves against `globalThis` which is empty in Dynamic Worker module evaluation. Result: `ReferenceError: Prism is not defined`. Deploy code splitting is disabled until prismjs globals are explicitly bridged across chunks (e.g. by setting `globalThis.Prism` in the entry before component imports run).
+11. **ANSI codes in CLI output break test URL parsing** — the deploy CLI wraps URLs in bold ANSI codes (`\x1b[1m...\x1b[22m`). Test regexes matching `Deployed!\s+(https://...)` fail because the escape sequence sits between the space and `https://`. Strip ANSI with `.replace(/\x1b\[[0-9;]*m/g, '')` before matching.

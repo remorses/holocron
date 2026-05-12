@@ -1,9 +1,14 @@
 // Deploy API routes: create deployment, upload files, finalize.
 //
+// Content-addressable storage: files are stored in KV at "blob:{sha256hex}" keys.
+// Identical files across deployments share the same blob, saving storage and
+// upload bandwidth. The manifest (path → hash mapping) is embedded in the
+// "site-info:{subdomain}" KV entry so the hosting worker needs only one read.
+//
 // Upload protocol:
-//   1. POST /api/v0/deployments — declare file list, get deploymentId + version
-//   2. PUT /api/v0/deployments/:deploymentId/files — batch upload via multipart/form-data
-//   3. POST /api/v0/deployments/:deploymentId/finalize — validate, build manifest, go live
+//   1. POST /api/v0/deployments — declare file+hash pairs, get deploymentId + existingHashes
+//   2. PUT /api/v0/deployments/:deploymentId/files — upload zip of NEW files only (skip existing)
+//   3. POST /api/v0/deployments/:deploymentId/finalize — verify blobs, write site-info+manifest, go live
 //
 // Auth: both API key (HOLOCRON_KEY) and session token are supported.
 // API key auth resolves the project from the key.
@@ -133,22 +138,24 @@ async function requireDeployAccess(request: Request, projectId: string): Promise
 
 export const deployApp = new Spiceflow()
 
-  // Step 1: Create a deployment with declared file list
+  // Step 1: Create deployment with declared file+hash pairs.
+  // Returns which hashes already exist in KV so the CLI can skip uploading them.
   .route({
     method: 'POST',
     path: '/api/v0/deployments',
     request: z.object({
       files: z
-        .array(
-          z.string().min(1).max(512)
+        .array(z.object({
+          path: z.string().min(1).max(512)
             .refine((p) => !/[\x00-\x1f\\]/.test(p), 'Path contains control characters or backslashes')
             .refine((p) => !p.split('/').includes('..'), 'Path traversal not allowed')
             .refine((p) => p.startsWith('assets/') || p.startsWith('worker/'), 'Path must start with assets/ or worker/')
             .refine((p) => p !== 'worker/__dw_entry.js', 'Reserved path'),
-        )
+          hash: z.string().length(64).regex(/^[a-f0-9]+$/, 'Hash must be lowercase hex SHA-256'),
+        }))
         .min(1)
         .max(2000)
-        .describe('File paths to upload'),
+        .describe('File paths with SHA-256 content hashes'),
       projectId: z.string().optional().describe('Required for session auth; ignored for API key auth'),
       branch: z.string().max(200).optional().describe('Branch name for preview deployments. Defaults to "main".'),
       preview: z.boolean().optional().describe('Force preview deployment (e.g. from a PR). Never updates production pointer.'),
@@ -159,7 +166,11 @@ export const deployApp = new Spiceflow()
       tags: ['Deploy'],
     },
     response: {
-      200: z.object({ deploymentId: z.string(), version: z.string() }),
+      200: z.object({
+        deploymentId: z.string(),
+        version: z.string(),
+        existingHashes: z.array(z.string()).describe('Hashes that already exist in KV — CLI can skip uploading these files'),
+      }),
     },
     async handler({ request }) {
       const body = await request.json()
@@ -169,6 +180,7 @@ export const deployApp = new Spiceflow()
       const deploymentId = ulid()
       const version = ulid()
 
+      // Store the full file→hash manifest in the deployment row
       await db.insert(schema.deployment).values({
         id: deploymentId,
         projectId: auth.projectId,
@@ -188,11 +200,35 @@ export const deployApp = new Spiceflow()
         })
         .where(orm.eq(schema.project.projectId, auth.projectId))
 
-      return { deploymentId, version }
+      // Check which content hashes already exist in KV via bulk reads.
+      // Each bulk get(keys[]) counts as 1 op (vs 1 per key individually).
+      // Batch size 25 keeps response well under the 25MB KV bulk limit.
+      // If this fails for any reason, CLI just uploads everything (idempotent).
+      const uniqueHashes = [...new Set(body.files.map((f: { hash: string }) => f.hash))]
+      const existingHashes: string[] = []
+      try {
+        for (let i = 0; i < uniqueHashes.length; i += 25) {
+          const chunk = uniqueHashes.slice(i, i + 25)
+          const results = await env.SITES_KV.get(
+            chunk.map((h) => `blob:${h}`),
+            { type: 'text' },
+          )
+          for (const [key, value] of results) {
+            if (value !== null) existingHashes.push(key.slice('blob:'.length))
+          }
+        }
+      } catch {
+        // Bulk read failed (e.g. response too large). Return empty existingHashes
+        // so CLI uploads all files. Redundant but safe — writes are idempotent.
+      }
+
+      return { deploymentId, version, existingHashes }
     },
   })
 
-  // Step 2: Upload files as a zip archive (batch upload)
+  // Step 2: Upload new files as a zip archive.
+  // Files are stored at content-addressed blob:{sha256} keys. The CLI only
+  // sends files whose hash was NOT in the existingHashes response from step 1.
   .route({
     method: 'PUT',
     path: '/api/v0/deployments/:deploymentId/files',
@@ -221,21 +257,23 @@ export const deployApp = new Spiceflow()
 
       await requireDeployAccess(request, deploy.projectId)
 
-      const declaredFiles = new Set<string>(JSON.parse(deploy.files || '[]'))
+      // Build a lookup from path → declared hash for validation
+      const declaredFiles: Array<{ path: string; hash: string }> = JSON.parse(deploy.files || '[]')
+      const declaredPaths = new Set(declaredFiles.map((f) => f.path))
+      const declaredHashByPath = new Map(declaredFiles.map((f) => [f.path, f.hash]))
+
       const zipBuffer = new Uint8Array(await request.arrayBuffer())
 
       // Validate entries during decompression to protect against zip bombs.
-      // fflate's filter callback runs BEFORE decompressing each entry, so we
-      // can reject oversized or undeclared files without allocating memory.
       const MAX_FILE_SIZE = 25 * 1024 * 1024
-      const MAX_BATCH_UNCOMPRESSED = 100 * 1024 * 1024 // 100 MB safety cap
+      const MAX_BATCH_UNCOMPRESSED = 100 * 1024 * 1024
       let totalUncompressed = 0
 
       let extracted: Record<string, Uint8Array>
       try {
         extracted = unzipSync(zipBuffer, {
           filter(file) {
-            if (!declaredFiles.has(file.name)) {
+            if (!declaredPaths.has(file.name)) {
               throw json(
                 { error: `file path "${file.name}" was not declared in the deployment` },
                 { status: 400 },
@@ -258,25 +296,44 @@ export const deployApp = new Spiceflow()
           },
         })
       } catch (err) {
-        // Re-throw spiceflow json() responses (they are Response objects)
         if (err instanceof Response) throw err
         throw json({ error: 'invalid zip archive' }, { status: 400 })
       }
 
-      // Write all files to KV in parallel
-      const entries = Object.entries(extracted)
+      // Validate all hashes first, then deduplicate KV writes by hash.
+      // Multiple files can share the same content (e.g. empty shim modules),
+      // and KV has a 1 write/sec per-key limit so deduplication avoids 429s.
+      const blobs = new Map<string, Uint8Array>()
+
+      for (const [filePath, content] of Object.entries(extracted)) {
+        const hashBuffer = await crypto.subtle.digest('SHA-256', new Uint8Array(content).buffer as ArrayBuffer)
+        const computedHash = [...new Uint8Array(hashBuffer)]
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('')
+
+        const declaredHash = declaredHashByPath.get(filePath)
+        if (computedHash !== declaredHash) {
+          throw json(
+            { error: `hash mismatch for "${filePath}": declared ${declaredHash}, got ${computedHash}` },
+            { status: 400 },
+          )
+        }
+
+        if (!blobs.has(computedHash)) {
+          blobs.set(computedHash, content)
+        }
+      }
+
+      // Write each unique blob once. KV put is idempotent for identical content.
       await Promise.all(
-        entries.map(([filePath, content]) => {
-          const kvKey = `site:${deploy.projectId}/v:${deploy.version}/${filePath}`
-          return env.SITES_KV.put(kvKey, content)
-        }),
+        [...blobs].map(([hash, content]) => env.SITES_KV.put(`blob:${hash}`, content)),
       )
 
-      return { uploaded: entries.length }
+      return { uploaded: blobs.size }
     },
   })
 
-  // Step 3: Finalize deployment
+  // Step 3: Finalize deployment — verify all blobs exist, write manifest, go live
   .route({
     method: 'POST',
     path: '/api/v0/deployments/:deploymentId/finalize',
@@ -309,7 +366,6 @@ export const deployApp = new Spiceflow()
 
       await requireDeployAccess(request, deploy.projectId)
 
-      // Get project info for subdomain computation and branch comparison
       const proj = await db.query.project.findFirst({
         where: { projectId: deploy.projectId },
       })
@@ -318,61 +374,64 @@ export const deployApp = new Spiceflow()
       }
 
       const branch = deploy.branch || 'main'
-      // A deployment is production ONLY when it targets the default branch AND
-      // is not explicitly marked as preview. This prevents PR branches named
-      // "main" from overwriting production (PRs always set preview=true).
       const isProduction = !deploy.preview && branch === (proj.defaultBranch || 'main')
 
-      const declaredFiles: string[] = JSON.parse(deploy.files || '[]')
-      const prefix = `site:${deploy.projectId}/v:${deploy.version}/`
+      const declaredFiles: Array<{ path: string; hash: string }> = JSON.parse(deploy.files || '[]')
 
       // The worker entry must exist or the hosting worker can't load the site
-      if (!declaredFiles.includes('worker/ssr/index.js')) {
+      if (!declaredFiles.some((f) => f.path === 'worker/ssr/index.js')) {
         throw json(
           { error: 'deployment must include worker/ssr/index.js (the SSR entry)' },
           { status: 400 },
         )
       }
 
-      // Verify all files exist in KV by reading each key (not list, which is
-      // eventually consistent). Each check is a fast HEAD-like KV.get metadata call.
-      const missing: string[] = []
-      await Promise.all(
-        declaredFiles.map(async (filePath) => {
-          const meta = await env.SITES_KV.getWithMetadata(prefix + filePath)
-          if (meta.value === null) missing.push(filePath)
-        }),
-      )
-      if (missing.length > 0) {
+      // Verify all blobs exist in KV via bulk reads (25 keys per op).
+      const uniqueHashes = [...new Set(declaredFiles.map((f) => f.hash))]
+      const missingHashes: string[] = []
+      for (let i = 0; i < uniqueHashes.length; i += 25) {
+        const chunk = uniqueHashes.slice(i, i + 25)
+        const results = await env.SITES_KV.get(
+          chunk.map((h) => `blob:${h}`),
+          { type: 'text' },
+        )
+        for (const [key, value] of results) {
+          if (value === null) missingHashes.push(key.slice('blob:'.length))
+        }
+      }
+      if (missingHashes.length > 0) {
+        // Find which files are affected for a useful error message
+        const missingSet = new Set(missingHashes)
+        const missingFiles = declaredFiles
+          .filter((f) => missingSet.has(f.hash))
+          .map((f) => f.path)
+          .slice(0, 10)
         throw json(
-          { error: `missing files: ${missing.slice(0, 10).join(', ')}` },
+          { error: `missing blobs for files: ${missingFiles.join(', ')}` },
           { status: 400 },
         )
       }
 
-      // Build asset manifest from uploaded client assets.
-      // CLI uploads dist/client/ files under the "assets/" prefix, so a file like
-      // dist/client/assets/style.css becomes "assets/assets/style.css" in KV.
-      // The browser requests /assets/style.css, so we strip the "assets" prefix.
-      const assetFiles = declaredFiles.filter((f) => f.startsWith('assets/'))
-      const manifest: Record<string, { contentType: string }> = {}
-      for (const assetPath of assetFiles) {
-        const ext = assetPath.split('.').pop() || ''
-        const browserPath = '/' + assetPath.slice('assets/'.length)
-        manifest[browserPath] = { contentType: guessMimeType(ext) }
+      // Build the manifest: maps file paths to their content hash + metadata.
+      // The hosting worker reads this to resolve file paths to blob keys.
+      // Asset entries also include contentType for static serving.
+      const manifest: Record<string, { hash: string; contentType?: string }> = {}
+      for (const { path: filePath, hash } of declaredFiles) {
+        const entry: { hash: string; contentType?: string } = { hash }
+        if (filePath.startsWith('assets/')) {
+          const ext = filePath.split('.').pop() || ''
+          entry.contentType = guessMimeType(ext)
+        }
+        manifest[filePath] = entry
       }
-      await env.SITES_KV.put(`${prefix}manifest`, JSON.stringify(manifest))
 
-      // Compute subdomains and build the D1 batch statements.
-      // Both paths share the same supersede + activate pattern; production
-      // additionally updates the project pointer.
+      // Compute subdomains and batch D1 updates
       const projectSubdomain = buildProjectSubdomain(proj)
       const deploySubdomain = isProduction
         ? projectSubdomain
         : buildPreviewSubdomain(branch, projectSubdomain)
 
       const batchStatements = [
-        // Supersede active deployments for this branch
         db.update(schema.deployment)
           .set({ status: 'superseded' })
           .where(
@@ -382,11 +441,9 @@ export const deployApp = new Spiceflow()
               orm.eq(schema.deployment.branch, branch),
             ),
           ),
-        // Activate this deployment with the computed subdomain
         db.update(schema.deployment)
           .set({ status: 'active', subdomain: deploySubdomain })
           .where(orm.eq(schema.deployment.id, deploy.id)),
-        // Production only: update the project pointer
         ...(isProduction ? [
           db.update(schema.project)
             .set({
@@ -399,8 +456,6 @@ export const deployApp = new Spiceflow()
       ]
       await db.batch(batchStatements as [typeof batchStatements[0], ...typeof batchStatements])
 
-      // Verify this deployment won the race before writing KV. A concurrent
-      // finalize could have superseded us between the D1 batch and this write.
       const stillActive = await db.query.deployment.findFirst({
         where: { id: deploy.id, status: 'active' },
       })
@@ -410,11 +465,17 @@ export const deployApp = new Spiceflow()
           { status: 409 },
         )
       }
-      await writeSiteInfoToKv(deploySubdomain, {
-        projectId: deploy.projectId,
-        version: deploy.version,
-        files: declaredFiles,
-      })
+
+      // Write site-info to KV with the manifest embedded. The hosting worker
+      // reads this single key to get everything it needs — no second KV read.
+      await env.SITES_KV.put(
+        `site-info:${deploySubdomain}`,
+        JSON.stringify({
+          projectId: deploy.projectId,
+          version: deploy.version,
+          manifest,
+        }),
+      )
 
       const requestHost = new URL(request.url).hostname
       const isPreviewEnv = requestHost.startsWith('preview.')
@@ -423,18 +484,6 @@ export const deployApp = new Spiceflow()
       return { url, deploymentId: deploy.id, branch }
     },
   })
-
-/** Write site resolution data to KV for the hosting worker.
- *  Key: "site-info:{subdomain}" — matches what the hosting worker reads. */
-async function writeSiteInfoToKv(
-  subdomain: string,
-  data: { projectId: string; version: string; files: string[] },
-): Promise<void> {
-  await env.SITES_KV.put(
-    `site-info:${subdomain}`,
-    JSON.stringify(data),
-  )
-}
 
 function guessMimeType(ext: string): string {
   const types: Record<string, string> = {

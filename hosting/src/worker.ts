@@ -1,28 +1,34 @@
 // Holocron hosting worker — routes requests for *-site.holocron.so (production)
 // and *-site-preview.holocron.so (preview) to deployed docs sites via Dynamic Workers.
 //
+// Content-addressable storage: file content is stored at "blob:{sha256hex}" keys.
+// Site resolution + manifest is a single KV read at "site-info:{subdomain}".
+// The manifest maps file paths to content hashes so the worker can resolve them.
+//
 // Request flow:
 //   1. Extract subdomain from hostname
-//   2. Look up site info from KV (written at deploy finalize time)
-//   3. Try serving static assets from KV (CSS, JS, images)
-//   4. Forward non-asset requests to a Dynamic Worker loaded from KV
+//   2. Read site-info (includes manifest) from KV — single read per request
+//   3. Try serving static assets from blob:{hash} keys
+//   4. Forward non-asset requests to a Dynamic Worker loaded from blob:{hash} keys
 //
-// Performance: site resolution uses KV (globally replicated, ~1-5ms reads from
-// any datacenter) instead of cross-region D1 queries (50-200ms). KV entries are
-// written at deploy finalize time. Worker module KV reads use cacheTtl since
-// modules are immutable per version.
+// Performance: site-info uses KV (globally replicated, ~1-5ms reads) with 30s
+// cacheTtl. Blob reads use 86400s cacheTtl since content hashes are immutable.
+// Dynamic Workers are cached by env.LOADER.get(workerId) across requests.
 
 import { env } from 'cloudflare:workers'
 
 const SITE_SUFFIX = '-site.holocron.so'
 const PREVIEW_SITE_SUFFIX = '-site-preview.holocron.so'
 
+/** Manifest maps file paths to content hashes (+ contentType for assets).
+ *  Embedded in site-info so the hosting worker needs only one KV read. */
+type Manifest = Record<string, { hash: string; contentType?: string }>
+
 type SiteInfo = {
   projectId: string
   version: string
   subdomain: string
-  /** All file paths declared at deploy time (from deployment.files JSON column). */
-  files: string[]
+  manifest: Manifest
 }
 
 /** Extract the subdomain from the request hostname.
@@ -49,14 +55,15 @@ async function resolveSite(
   if (!kvData) return null
 
   try {
-    const parsed = JSON.parse(kvData) as { projectId: string; version: string; files: string[] }
-    return { projectId: parsed.projectId, version: parsed.version, subdomain, files: parsed.files }
+    const parsed = JSON.parse(kvData) as { projectId: string; version: string; manifest: Manifest }
+    return { projectId: parsed.projectId, version: parsed.version, subdomain, manifest: parsed.manifest }
   } catch {
     return null
   }
 }
 
 /** Try to serve a static asset (CSS, JS, images) from KV.
+ *  Resolves file paths via the manifest → content-addressed blob:{hash} keys.
  *  Returns a Response on hit, null on miss. */
 async function serveAsset(
   kv: KVNamespace,
@@ -66,23 +73,14 @@ async function serveAsset(
   const url = new URL(request.url)
   const pathname = url.pathname
 
-  // Load the asset manifest (JSON mapping path → { contentType })
-  const manifestKey = `site:${site.projectId}/v:${site.version}/manifest`
-  const manifestRaw = await kv.get(manifestKey, { type: 'text', cacheTtl: 300 })
-  if (!manifestRaw) return null
+  // The manifest maps "assets/..." paths. Browser requests "/assets/style.css",
+  // the manifest key is "assets/assets/style.css" (CLI prefix convention).
+  const manifestKey = `assets${pathname}`
+  const entry = site.manifest[manifestKey]
+  if (!entry || !entry.contentType) return null
 
-  let manifest: Record<string, { contentType: string }>
-  try {
-    manifest = JSON.parse(manifestRaw)
-  } catch {
-    return null
-  }
-
-  const entry = manifest[pathname]
-  if (!entry) return null
-
-  const assetKey = `site:${site.projectId}/v:${site.version}/assets${pathname}`
-  const content = await kv.get(assetKey, { type: 'arrayBuffer', cacheTtl: 86400 })
+  // Content-addressed: load from blob:{hash}
+  const content = await kv.get(`blob:${entry.hash}`, { type: 'arrayBuffer', cacheTtl: 86400 })
   if (!content) return null
 
   // Content-hashed filenames (e.g. style-abc123.css) are immutable.
@@ -100,7 +98,7 @@ async function serveAsset(
   })
 }
 
-/** Load all worker modules from KV using the file list from D1 (not KV.list).
+/** Load all worker modules from KV via manifest → blob:{hash} lookups.
  *  Only loads JS files under the worker/ prefix. */
 async function loadWorkerModules(
   kv: KVNamespace,
@@ -108,25 +106,29 @@ async function loadWorkerModules(
 ): Promise<Record<string, string>> {
   // Dynamic Workers only accept .js and .py modules. Filter out CSS, JSON, and
   // other non-JS files that end up in the worker/ directory from the Vite build.
-  const workerFiles = site.files.filter(
-    (f) => f.startsWith('worker/') && (f.endsWith('.js') || f.endsWith('.mjs')),
+  const workerEntries = Object.entries(site.manifest).filter(
+    ([path]) => path.startsWith('worker/') && (path.endsWith('.js') || path.endsWith('.mjs')),
   )
-  const kvPrefix = `site:${site.projectId}/v:${site.version}/`
 
-  const modules: Record<string, string> = {}
+  // Deduplicate blob reads: multiple file paths can share the same content
+  // hash (e.g. empty shim modules). Read each unique hash once.
+  const uniqueHashes = [...new Set(workerEntries.map(([, e]) => e.hash))]
+  const blobMap = new Map<string, string>()
   await Promise.all(
-    workerFiles.map(async (filePath) => {
-      // Worker modules are immutable per version (keyed by projectId + version).
-      // Cache aggressively — 24h TTL at the KV edge layer.
-      const content = await kv.get(kvPrefix + filePath, { type: 'text', cacheTtl: 86400 })
-      // Strip the worker/ prefix. The directory structure is preserved so
-      // ssr/index.js can import ../index.js (the RSC entry).
-      const moduleName = filePath.slice('worker/'.length)
-      if (content && moduleName) {
-        modules[moduleName] = content
-      }
+    uniqueHashes.map(async (hash) => {
+      const content = await kv.get(`blob:${hash}`, { type: 'text', cacheTtl: 86400 })
+      if (content) blobMap.set(hash, content)
     }),
   )
+
+  const modules: Record<string, string> = {}
+  for (const [filePath, entry] of workerEntries) {
+    const moduleName = filePath.slice('worker/'.length)
+    const content = blobMap.get(entry.hash)
+    if (content && moduleName) {
+      modules[moduleName] = content
+    }
+  }
 
   return modules
 }

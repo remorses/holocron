@@ -1,17 +1,22 @@
 // Deploy command — builds a holocron site for Cloudflare Workers and uploads
-// the built artifacts to holocron.so via zip-batched uploads.
+// the built artifacts to holocron.so via content-addressable zip-batched uploads.
+//
+// Content-addressable: each file is SHA-256 hashed locally. The server checks
+// which hashes already exist in KV and returns them. Only new files are uploaded,
+// skipping unchanged content across deploys.
 //
 // Auth priority:
 //   1. HOLOCRON_KEY env var (API key, project resolved server-side)
 //   2. ~/.holocron/config.json session token (from `holocron login`)
 //
 // Upload protocol:
-//   1. POST /api/v0/deployments — declare file list + optional site name, get deploymentId
-//   2. PUT /api/v0/deployments/:id/files — upload zip archive per batch (split by max size)
-//   3. POST /api/v0/deployments/:id/finalize — mark live, get URL
+//   1. POST /api/v0/deployments — declare file+hash pairs, get existingHashes
+//   2. PUT /api/v0/deployments/:id/files — upload zip of NEW files only (skip existing)
+//   3. POST /api/v0/deployments/:id/finalize — verify blobs, write site-info, go live
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { createHash } from 'node:crypto'
 import { execSync } from 'node:child_process'
 import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
@@ -81,7 +86,7 @@ deployCli
     const createRes = await safeFetch('/api/v0/deployments', {
       method: 'POST',
       body: {
-        files: files.map((f) => f.relativePath),
+        files: files.map((f) => ({ path: f.relativePath, hash: f.hash })),
         branch,
         ...(isPullRequest && { preview: true }),
         ...(projectId && { projectId }),
@@ -92,12 +97,26 @@ deployCli
       output.error(logger.error(`Failed to create deployment: ${createRes.message}`))
       return proc.exit(1)
     }
-    const { deploymentId, version } = createRes as { deploymentId: string; version: string }
+    const { deploymentId, version, existingHashes } = createRes as {
+      deploymentId: string
+      version: string
+      existingHashes: string[]
+    }
     output.log(logger.success(`Deployment ${c.bold(deploymentId)} ${c.dim(`(v${version})`)} created`))
 
-    // ── Step 2: Upload files in zip batches ─────────────────────
-    output.log('Uploading files...')
-    const uploadErr = await uploadFiles({ files, deploymentId, authToken, baseUrl: auth.baseUrl, output })
+    // ── Step 2: Upload only new files (skip those already in KV) ─
+    const existingSet = new Set(existingHashes)
+    const newFiles = files.filter((f) => !existingSet.has(f.hash))
+    const skippedCount = files.length - newFiles.length
+    const skippedSize = files.filter((f) => existingSet.has(f.hash)).reduce((sum, f) => sum + f.size, 0)
+
+    if (skippedCount > 0) {
+      output.log(logger.step(`Skipping ${c.bold(String(skippedCount))} unchanged files ${c.dim(`(${formatBytes(skippedSize)})`)}`))
+    }
+
+    const uploadErr = newFiles.length > 0
+      ? await uploadFiles({ files: newFiles, deploymentId, authToken, baseUrl: auth.baseUrl, output })
+      : undefined
     if (uploadErr instanceof Error) {
       output.error(logger.error(uploadErr.message))
       output.error(logger.error('Deploy aborted — deployment remains in "uploading" state and can be retried'))
@@ -160,12 +179,14 @@ async function runBuild(cwd: string): Promise<Error | void> {
   } catch { /* dotenv not available or .env missing */ }
 }
 
-/** Collect dist/rsc/** and dist/client/** into upload-ready file list. */
-function collectBuildArtifacts(cwd: string): Error | Array<{ relativePath: string; absPath: string; size: number }> {
+type BuildFile = { relativePath: string; absPath: string; size: number; hash: string }
+
+/** Collect dist/rsc/** and dist/client/** into upload-ready file list with SHA-256 hashes. */
+function collectBuildArtifacts(cwd: string): Error | BuildFile[] {
   const distDir = path.resolve(cwd, 'dist')
   if (!fs.existsSync(distDir)) return new Error('No dist/ directory found. Run the build first or remove --skip-build.')
 
-  const files: Array<{ relativePath: string; absPath: string; size: number }> = []
+  const files: BuildFile[] = []
 
   const rscDir = path.join(distDir, 'rsc')
   if (fs.existsSync(rscDir)) {
@@ -220,11 +241,9 @@ const MAX_BATCH_SIZE = 50 * 1024 * 1024 // 50 MB
 const MAX_BATCH_FILES = 500
 
 /** Group files into batches by total uncompressed size and file count. */
-function createBatches(
-  files: Array<{ relativePath: string; absPath: string; size: number }>,
-): Array<Array<typeof files[number]>> {
-  const batches: Array<Array<typeof files[number]>> = []
-  let currentBatch: Array<typeof files[number]> = []
+function createBatches(files: BuildFile[]): BuildFile[][] {
+  const batches: BuildFile[][] = []
+  let currentBatch: BuildFile[] = []
   let currentSize = 0
 
   for (const file of files) {
@@ -246,7 +265,7 @@ function createBatches(
 
 /** Upload files in zip-batched requests. Returns Error on first failure. */
 async function uploadFiles(ctx: {
-  files: Array<{ relativePath: string; absPath: string; size: number }>
+  files: BuildFile[]
   deploymentId: string
   authToken: string
   baseUrl: string
@@ -285,11 +304,11 @@ async function uploadFiles(ctx: {
   }
 }
 
-/** Recursively collect files from a directory into the files array. */
+/** Recursively collect files from a directory with SHA-256 content hashes. */
 function collectFiles(
   dir: string,
   prefix: string,
-  files: Array<{ relativePath: string; absPath: string; size: number }>,
+  files: BuildFile[],
   filter?: (relativePath: string) => boolean,
 ) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -299,10 +318,12 @@ function collectFiles(
       collectFiles(absPath, relPath, files, filter)
     } else if (entry.isFile()) {
       if (filter && !filter(relPath)) continue
+      const content = fs.readFileSync(absPath)
       files.push({
         relativePath: relPath,
         absPath,
-        size: fs.statSync(absPath).size,
+        size: content.byteLength,
+        hash: createHash('sha256').update(content).digest('hex'),
       })
     }
   }
