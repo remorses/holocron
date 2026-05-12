@@ -19,6 +19,7 @@ import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import { ulid } from 'ulid'
 import { Button, CopyButton } from './components/ui/button.tsx'
 import { SignOutButton } from './components/sign-out-button.tsx'
+import { DeployPoller } from './components/deploy-poller.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 
@@ -177,9 +178,8 @@ export const dashboardApp = new Spiceflow()
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col items-end gap-0.5 text-xs text-muted-foreground">
-                  <div>Updated {timeAgo(project.updatedAt)}</div>
-                  <div>Created {timeAgo(project.createdAt)}</div>
+                <div className="text-xs text-muted-foreground">
+                  Updated {timeAgo(project.updatedAt)}
                 </div>
               </Link>
             ))}
@@ -305,6 +305,23 @@ export const dashboardApp = new Spiceflow()
     )
   })
 
+  // ── Deploy status check (polled by DeployPoller client component) ───
+
+  .route({
+    method: 'GET',
+    path: '/api/deploy-status',
+    query: z.object({ projectId: z.string() }),
+    async handler({ request, query }) {
+      const session = await getSession(request)
+      if (!session) return json({ deployed: false })
+      const db = getDb()
+      const project = await db.query.project.findFirst({
+        where: { projectId: query.projectId },
+      })
+      return json({ deployed: !!project?.currentDeploymentId })
+    },
+  })
+
   // ── Deploy flow ─────────────────────────────────────────────────────
 
   // Single-page deploy: auto-creates project + API key on first visit
@@ -358,6 +375,7 @@ export const dashboardApp = new Spiceflow()
 
       return (
         <div className="flex flex-col items-center gap-10 py-16">
+          <DeployPoller projectId={projectId} />
           <div className="flex max-w-lg flex-col items-center gap-8 text-center">
             <div className="flex flex-col gap-2">
               <h1 className="text-2xl font-semibold">Create your docs site</h1>

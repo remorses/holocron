@@ -4,7 +4,7 @@
 const redirectBase = 'https://holocron.local'
 
 export function normalizeAuthRedirectPath(value: string | undefined): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/'
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/dashboard'
 
   const url = new URL(value, redirectBase)
   url.searchParams.delete('__rsc')

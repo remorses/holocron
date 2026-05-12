@@ -69,7 +69,7 @@ const authApp = new Spiceflow()
     query: loginQuerySchema,
     handler: async ({ request, query }) => {
       const session = await getSession(request)
-      if (session) throw redirect('/')
+      if (session) throw redirect('/dashboard')
       const callbackURL = normalizeAuthRedirectPath(query.callbackURL)
       return (
         <AuthPage
