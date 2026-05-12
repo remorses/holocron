@@ -1,5 +1,39 @@
 # @holocron.so/vite
 
+## 0.6.0
+
+1. **Self-hosted Inter font** — the default Inter font is now bundled via `@fontsource-variable/inter` instead of loading from third-party CDNs (`rsms.me`, Google Fonts). No external font requests on default config. Google Fonts preconnect tags only appear when you explicitly configure a custom Google font.
+
+2. **OIDC keyless deploys from GitHub Actions** — when `permissions: id-token: write` is set, the Vite plugin automatically mints a GitHub OIDC token and registers the deployment without any secret configuration. The API key is derived from the verified JWT and persisted to `.env`:
+
+   ```yaml
+   # No HOLOCRON_KEY secret needed
+   permissions:
+     id-token: write
+   steps:
+     - run: npx holocron deploy
+   ```
+
+3. **Prism excluded from SSR** — syntax highlighting now runs client-only via a `#prism` conditional import. SSR/RSC get a noop stub that returns unhighlighted text, then the client adds highlighting during hydration. Reduces SSR bundle by ~500KB and avoids the CJS global crash in Dynamic Workers.
+
+4. **Stable dependency code splitting** — framework and vendor code is grouped into a single `holocron-stable` chunk in the RSC build. The entry chunk shrinks to ~20KB of virtual modules that change every deploy, while the stable chunk stays content-addressable across deploys for maximum KV dedup.
+
+5. **`listen()` guard moved to renderChunk** — the auto-start `listen()` call is now appended to the final RSC entry chunk after bundling, not in the virtual module. This keeps `import.meta.url` correct even when code splitting moves framework code into dependency chunks.
+
+6. **Dynamic Workers `createRequire` fix** — `createRequire(import.meta.url)` calls in bundled CJS helpers are replaced at build time when `HOLOCRON_DEPLOY=1`, preventing module evaluation crashes in Dynamic Workers where `import.meta.url` is undefined.
+
+7. **Auto-inject Cloudflare plugin** — when `HOLOCRON_DEPLOY=1` is set (by `holocron deploy`), the `@cloudflare/vite-plugin` is auto-injected if not already present. Users don't need it in their `vite.config.ts`.
+
+8. **Headings with inline code** — `extractText` now handles `inlineCode` nodes, so headings like `` ### `config` `` appear correctly in the sidebar and table of contents instead of showing as empty entries.
+
+9. **Empty headings filtered** — headings with no text content are silently dropped from the sidebar TOC and right-side table of contents instead of rendering as blank items.
+
+10. **User entry exports preserved** — when a user provides a custom spiceflow entry, all their named exports are re-exported alongside `app` and `default`, so custom middleware and routes stay accessible.
+
+11. **`yaml` browser entry alias** — the `yaml` package is aliased to its browser entry at build time, fixing resolution issues in the browser bundle.
+
+12. **`@cloudflare/vite-plugin` optional peer dependency** — added as an optional peer so `pnpm install` doesn't warn when deploying to non-Cloudflare targets.
+
 ## 0.5.0
 
 1. **Decorative grid lines** — configurable vertical lines with dot ornaments at intersections. Set `decorativeLines` in your config to `"none"`, `"lines"`, `"dashed"`, or `"lines-with-dots"` (default):

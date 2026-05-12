@@ -5,13 +5,22 @@
 
 declare module 'cloudflare:workers' {
   const env: any
-  export { env }
+  const waitUntil: any
+  class DurableObject<E = any> {
+    ctx: any
+    env: E
+    constructor(ctx: any, env: E)
+  }
+  export { env, waitUntil, DurableObject }
 }
 
 declare module '*.css' {}
 
-// Cloudflare Workers global
+// Cloudflare Workers globals used by website/src/ transitive imports
 type ExportedHandler = any
+type DurableObjectStub<T = any> = T & { id: any; name?: string }
+type DurableObjectState = { storage: any; id: any; [k: string]: any }
+type Env = Record<string, any>
 
 // @holocron.so/vite subpaths used by website/src/server.tsx.
 // The actual types come from vite's dist/ but cli doesn't need them.

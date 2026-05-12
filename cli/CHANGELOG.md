@@ -1,3 +1,38 @@
+## 0.10.0
+
+1. **New `holocron deploy` command** — build and deploy your docs site to holocron.so with a single command. Content-addressable uploads skip unchanged files across deploys:
+
+   ```bash
+   holocron deploy
+   ```
+
+   Features:
+   - Auto-detects branch from git, GitHub Actions, or `--branch` flag
+   - Zip-batched parallel uploads with progress reporting
+   - SHA-256 content hashing; only new/changed files are uploaded
+   - Auto-sets `holocron_url` and `holocron_deployment_id` as GitHub Actions step outputs
+   - Reads project name from `docs.json` and syncs it server-side
+   - Supports `--skip-build` to deploy an existing `dist/`
+   - Auth via `HOLOCRON_KEY` env var or `holocron login` session
+
+2. **Multi-environment auth** — CLI now stores session tokens keyed by server URL, so you can be logged into production and preview simultaneously:
+
+   ```bash
+   holocron login                              # logs into holocron.so
+   holocron --api-url https://preview.holocron.so login  # separate session
+   holocron whoami                              # shows current server's user
+   ```
+
+3. **Global `--api-url` flag** — all commands now respect a top-level `--api-url` option instead of per-command `-u`/`--url` flags. Sets `HOLOCRON_API_URL` for the session.
+
+4. **Improved `create` command UX** — reuses existing login session instead of re-authenticating, appends `-docs` to the generated folder name, and skips the "start dev server?" prompt when dependencies weren't installed.
+
+5. **Colored CLI output** — all commands use a centralized logger with color-coded status icons (✓ success, ● step, ✗ error, ▲ warning) for better readability.
+
+6. **Non-TTY safety** — `holocron login` fails fast with a clear message in non-interactive environments instead of hanging on stdin.
+
+7. **Fixed ambient type stubs** — CLI now resolves Cloudflare Workers types from the website source without requiring wrangler installed locally.
+
 ## 0.9.0
 
 1. **New `holocron create` command** — scaffold a new docs project from a starter template with interactive setup. Optionally connects to holocron.so for AI chat and analytics:
