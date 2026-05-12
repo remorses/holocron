@@ -152,7 +152,7 @@ export const deployApp = new Spiceflow()
       projectId: z.string().optional().describe('Required for session auth; ignored for API key auth'),
       branch: z.string().max(200).optional().describe('Branch name for preview deployments. Defaults to "main".'),
       preview: z.boolean().optional().describe('Force preview deployment (e.g. from a PR). Never updates production pointer.'),
-      name: z.string().max(200).optional().describe('Site name from docs.json. Updates the project name if provided.'),
+      name: z.string().trim().min(1).max(200).optional().describe('Site name from docs.json. Updates the project name if provided.'),
     }),
     detail: {
       summary: 'Create deployment',
@@ -221,33 +221,52 @@ export const deployApp = new Spiceflow()
 
       await requireDeployAccess(request, deploy.projectId)
 
-      const declaredFiles: string[] = JSON.parse(deploy.files || '[]')
+      const declaredFiles = new Set<string>(JSON.parse(deploy.files || '[]'))
       const zipBuffer = new Uint8Array(await request.arrayBuffer())
-      const extracted = unzipSync(zipBuffer)
 
-      // Validate all files before writing any to KV
+      // Validate entries during decompression to protect against zip bombs.
+      // fflate's filter callback runs BEFORE decompressing each entry, so we
+      // can reject oversized or undeclared files without allocating memory.
       const MAX_FILE_SIZE = 25 * 1024 * 1024
-      const entries: Array<{ filePath: string; content: Uint8Array }> = []
+      const MAX_BATCH_UNCOMPRESSED = 100 * 1024 * 1024 // 100 MB safety cap
+      let totalUncompressed = 0
 
-      for (const [filePath, content] of Object.entries(extracted)) {
-        if (!declaredFiles.includes(filePath)) {
-          throw json(
-            { error: `file path "${filePath}" was not declared in the deployment` },
-            { status: 400 },
-          )
-        }
-        if (content.byteLength > MAX_FILE_SIZE) {
-          throw json(
-            { error: `file "${filePath}" exceeds 25MB limit (${(content.byteLength / 1024 / 1024).toFixed(1)}MB)` },
-            { status: 413 },
-          )
-        }
-        entries.push({ filePath, content })
+      let extracted: Record<string, Uint8Array>
+      try {
+        extracted = unzipSync(zipBuffer, {
+          filter(file) {
+            if (!declaredFiles.has(file.name)) {
+              throw json(
+                { error: `file path "${file.name}" was not declared in the deployment` },
+                { status: 400 },
+              )
+            }
+            if (file.originalSize > MAX_FILE_SIZE) {
+              throw json(
+                { error: `file "${file.name}" exceeds 25MB limit (${(file.originalSize / 1024 / 1024).toFixed(1)}MB)` },
+                { status: 413 },
+              )
+            }
+            totalUncompressed += file.originalSize
+            if (totalUncompressed > MAX_BATCH_UNCOMPRESSED) {
+              throw json(
+                { error: 'zip batch exceeds 100MB uncompressed limit' },
+                { status: 413 },
+              )
+            }
+            return true
+          },
+        })
+      } catch (err) {
+        // Re-throw spiceflow json() responses (they are Response objects)
+        if (err instanceof Response) throw err
+        throw json({ error: 'invalid zip archive' }, { status: 400 })
       }
 
       // Write all files to KV in parallel
+      const entries = Object.entries(extracted)
       await Promise.all(
-        entries.map(({ filePath, content }) => {
+        entries.map(([filePath, content]) => {
           const kvKey = `site:${deploy.projectId}/v:${deploy.version}/${filePath}`
           return env.SITES_KV.put(kvKey, content)
         }),

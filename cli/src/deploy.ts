@@ -216,7 +216,10 @@ async function resolveProjectId(ctx: {
  *  gets its own batch. */
 const MAX_BATCH_SIZE = 50 * 1024 * 1024 // 50 MB
 
-/** Group files into batches by total uncompressed size. */
+/** Max files per zip batch. Caps parallel KV writes on the server side. */
+const MAX_BATCH_FILES = 500
+
+/** Group files into batches by total uncompressed size and file count. */
 function createBatches(
   files: Array<{ relativePath: string; absPath: string; size: number }>,
 ): Array<Array<typeof files[number]>> {
@@ -225,7 +228,7 @@ function createBatches(
   let currentSize = 0
 
   for (const file of files) {
-    if (currentBatch.length > 0 && currentSize + file.size > MAX_BATCH_SIZE) {
+    if (currentBatch.length > 0 && (currentSize + file.size > MAX_BATCH_SIZE || currentBatch.length >= MAX_BATCH_FILES)) {
       batches.push(currentBatch)
       currentBatch = []
       currentSize = 0
@@ -268,7 +271,7 @@ async function uploadFiles(ctx: {
     const res = await fetch(uploadUrl, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${ctx.authToken}`, 'Content-Type': 'application/zip' },
-      body: zipData as unknown as BodyInit,
+      body: Buffer.from(zipData),
     }).catch((e: unknown) => e instanceof Error ? e : new Error(String(e)))
 
     if (res instanceof Error) return new Error(`Upload batch ${i + 1} failed: ${res.message}`)
@@ -321,6 +324,25 @@ function detectBuildCommand(cwd: string): string {
 
 const CONFIG_FILE_NAMES = ['docs.json', 'docs.jsonc', 'holocron.jsonc'] as const
 
+// JSONC parser — strips comments and trailing commas while preserving string
+// contents (e.g. URLs with "//"). Copied from vite/src/lib/jsonc.ts to avoid
+// cross-package import. Regex approach from tiny-jsonc: captures strings as $1,
+// matches comments as non-captured groups, replace keeps only $1.
+const stringOrCommentRe = /("(?:\\?[^])*?")|(\/\/.*)|(\/\*[^]*?\*\/)/g
+const stringOrTrailingCommaRe = /("(?:\\?[^])*?")|(,\s*)(?=]|})/g
+
+function parseJsonc(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return JSON.parse(
+      text
+        .replace(stringOrCommentRe, '$1')
+        .replace(stringOrTrailingCommaRe, '$1'),
+    )
+  }
+}
+
 /** Read the site name from docs.json/docs.jsonc/holocron.jsonc.
  *  Returns undefined if no config found or name is missing. */
 function readSiteName(cwd: string): string | undefined {
@@ -329,13 +351,9 @@ function readSiteName(cwd: string): string | undefined {
     if (!fs.existsSync(filePath)) continue
     try {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      // Strip JSONC comments (// and /* */) and trailing commas for .jsonc files
-      const cleaned = name.endsWith('.jsonc')
-        ? raw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/,\s*([\]}])/g, '$1')
-        : raw
-      const parsed = JSON.parse(cleaned)
-      if (parsed && typeof parsed === 'object' && typeof parsed.name === 'string') {
-        return parsed.name
+      const parsed = parseJsonc(raw)
+      if (parsed && typeof parsed === 'object' && typeof (parsed as Record<string, unknown>).name === 'string') {
+        return (parsed as Record<string, unknown>).name as string
       }
     } catch { /* ignore parse errors, deploy can proceed without name */ }
     return undefined // found a config file but no name
