@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
 
 test.describe("home page", () => {
   test("renders page title and MDX content", async ({ page }) => {
@@ -333,4 +335,21 @@ test.describe("not found", () => {
     const html = await response.text();
     expect(html).toContain("/foo/bar/baz");
   });
+});
+
+// @build — only runs against the built output (skipped in dev mode).
+// Verifies that the listen() guard is physically in the RSC entry file
+// (index.js) and not moved to a dependency chunk by code splitting.
+// If the guard ends up in a chunk, import.meta.url resolves to the chunk
+// path instead of the entry, and the server never starts.
+test("@build RSC entry contains listen() guard", () => {
+  const runId = process.env["E2E_RUN_ID"];
+  if (!runId) return; // dev mode — nothing to check
+  const fixtureRoot = path.resolve(import.meta.dirname, "../../fixtures/basic");
+  const sanitized = runId.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
+  const entryPath = path.join(fixtureRoot, ".e2e-dist", sanitized, "rsc/index.js");
+  if (!fs.existsSync(entryPath)) return; // no build output yet (dev mode)
+  const code = fs.readFileSync(entryPath, "utf-8");
+  expect(code).toContain(".listen(");
+  expect(code).toContain("import.meta.main");
 });
