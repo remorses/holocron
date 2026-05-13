@@ -54,12 +54,16 @@ export function ChatMessages({
   return (
     <div className='text-[13px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {messages.map((message, i) => {
+        const isLastMessage = i === messages.length - 1
         return (
-          <div key={i}>
+          <div key={i} data-message-id={`msg-${i}`} style={message.role === 'user' ? { scrollMarginTop: '8px' } : undefined}>
             {message.role === 'user'
               ? <ChatUserMessage text={message.parts.filter((part) => part.type === 'text').map((part) => part.text).join('\n')} />
               : (
-                  <div className='flex flex-col gap-4'>
+                  <div
+                    className='flex flex-col gap-4'
+                    style={{ minHeight: isLastMessage ? 'calc(100dvh - 248px)' : undefined }}
+                  >
                     {message.parts.map((part, partIndex) => {
                       if (part.type === 'notice') {
                         if (noticeRendered) return null

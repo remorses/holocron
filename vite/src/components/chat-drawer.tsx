@@ -64,6 +64,18 @@ function ChatDrawerInner() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [])
 
+  /** Scroll the last user message to the top of the scroll area so the
+   *  response streams in below it, matching fumabase's chat UX. */
+  const scrollToLastUserMessage = useCallback(() => {
+    const msgs = chatState.getState().messages
+    const lastUserIdx = msgs.findLastIndex((m) => m.role === 'user')
+    if (lastUserIdx === -1) return
+    const el = document.querySelector(`[data-message-id="msg-${lastUserIdx}"]`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [])
+
   // ── Submit ──────────────────────────────────────────────────────
 
   const handleSubmit = useCallback(
@@ -86,7 +98,7 @@ function ChatDrawerInner() {
         abortController: controller,
       }))
 
-      setTimeout(scrollToBottom, 0)
+      setTimeout(scrollToLastUserMessage, 0)
 
       try {
         const response = await fetch(`${basePath}/holocron-api/chat`, {
@@ -122,7 +134,6 @@ function ChatDrawerInner() {
           chatState.setState((s) => ({
             messages: appendAssistantPart(s.messages, part),
           }))
-          scrollToBottom()
         }
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -143,7 +154,7 @@ function ChatDrawerInner() {
         })
       }
     },
-    [currentPageHref, basePath, scrollToBottom],
+    [currentPageHref, basePath, scrollToBottom, scrollToLastUserMessage],
   )
 
   // ── Stop ────────────────────────────────────────────────────────
@@ -231,11 +242,11 @@ function ChatDrawerInner() {
       <div
         style={{
           position: 'fixed',
-          right: 48,
-          top: 32,
-          bottom: 32,
-          width: 'min(440px, calc(100vw - 96px))',
-          transform: isOpen ? 'translateX(0)' : 'translateX(calc(100% + 48px))',
+          right: 16,
+          top: 16,
+          bottom: 16,
+          width: 'min(440px, calc(100vw - 32px))',
+          transform: isOpen ? 'translateX(0)' : 'translateX(calc(100% + 16px))',
           transition: 'transform 200ms ease',
           background: 'var(--background)',
           borderRadius: 24,
@@ -305,6 +316,11 @@ function ChatDrawerInner() {
 
         {/* Messages area */}
         <div
+          onClick={() => {
+            const selection = window.getSelection()
+            if (selection && selection.toString().length > 0) return
+            drawerInputRef.current?.focus()
+          }}
           style={{
             flex: 1,
             overflowY: 'auto',
@@ -323,8 +339,15 @@ function ChatDrawerInner() {
             const hasTextAfterLastUser = messages.slice(lastUserIdx + 1).some((message) => (
               message.role === 'assistant' && message.parts.some((part) => part.type === 'text')
             ))
-            return !hasTextAfterLastUser
-          })() && <ChatLoadingDots />}
+            if (!hasTextAfterLastUser) {
+              return (
+                <div style={{ minHeight: 'calc(100dvh - 248px)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                  <ChatLoadingDots />
+                </div>
+              )
+            }
+            return null
+          })()}
 
           {errorMessage && (
             <ChatErrorMessage message={errorMessage} />
