@@ -75,6 +75,7 @@ import {
   Icon,
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
+import { colors, formatHolocronWarning, logger } from './logger.ts'
 
 import { SidebarAssistant } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
@@ -274,29 +275,76 @@ export function renderNode(
   return undefined
 }
 
+function getMdxErrorTypeLabel(type: SafeMdxError['type']): string {
+  switch (type) {
+    case 'missing-component': return 'missing component'
+    case 'validation': return 'validation'
+    case 'expression': return 'expression'
+    case 'esm-import': return 'ESM import'
+    default: return type
+  }
+}
+
+function formatMdxErrorMessage(message: string): string {
+  const unsupportedComponent = /^Unsupported jsx component (.+)$/.exec(message)
+  if (unsupportedComponent) {
+    return `Unsupported JSX component ${colors.yellow(unsupportedComponent[1]!)}`
+  }
+
+  return message
+}
+
+export function formatMdxError(error: SafeMdxError, source?: string): string {
+  const lines = [
+    formatHolocronWarning(`${colors.yellow('MDX')} ${getMdxErrorTypeLabel(error.type)}`),
+    `  ${colors.dim('reason')} ${formatMdxErrorMessage(error.message)}`,
+  ]
+
+  if (source) {
+    lines.splice(1, 0, `  ${colors.dim('source')} ${colors.cyan(source)}`)
+  } else if (error.line) {
+    lines.splice(1, 0, `  ${colors.dim('line')} ${colors.yellow(String(error.line))}`)
+  }
+
+  if (source && error.line) {
+    lines.splice(2, 0, `  ${colors.dim('line')} ${colors.yellow(String(error.line))}`)
+  }
+
+  if (error.type === 'missing-component') {
+    lines.push(`  ${colors.dim('fix')} register the component or import it from this MDX file`)
+  }
+
+  return lines.join('\n')
+}
+
 /** Log safe-mdx errors to stderr so missing components and expression
  *  failures surface in the Vite dev server terminal instead of being
- *  silently swallowed. */
-export function logMdxError(error: SafeMdxError): void {
-  const loc = error.line ? `:${error.line}` : ''
-  const tag = error.type === 'missing-component' ? 'MISSING COMPONENT'
-    : error.type === 'validation' ? 'VALIDATION'
-    : error.type === 'expression' ? 'EXPRESSION'
-    : error.type === 'esm-import' ? 'ESM IMPORT'
-    : error.type
-  console.warn(`[holocron] MDX ${tag}${loc}: ${error.message}`)
+ *  silently swallowed. This must never throw: MDX validation warnings should
+ *  not be able to kill the dev server if stderr is closed by a parent process. */
+export function logMdxError(error: SafeMdxError, source?: string): void {
+  try {
+    logger.warn(formatMdxError(error, source))
+  } catch {
+    // Best-effort terminal output only. Rendering can continue with the
+    // placeholder/null node that safe-mdx already returns for recoverable errors.
+  }
+}
+
+export function createMdxErrorLogger(source?: string): (error: SafeMdxError) => void {
+  return (error) => logMdxError(error, source)
 }
 
 /** Render an array of mdast nodes through safe-mdx with the editorial
  *  component map and `renderNode` transformer. Used to render content,
  *  aside, and above nodes server-side. */
-export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
+export function RenderNodes({ markdown, nodes, modules, baseUrl, sourcePath }: {
   markdown: string
   nodes: RootContent[]
   /** Pre-resolved modules for MDX import statements */
   modules?: EagerModules
   /** Directory of the current MDX file for resolving relative imports */
   baseUrl?: string
+  sourcePath?: string
 }) {
   const syntheticRoot: Root = { type: 'root', children: nodes }
   return (
@@ -307,7 +355,7 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
       renderNode={renderNode}
       modules={modules}
       baseUrl={baseUrl}
-      onError={logMdxError}
+      onError={createMdxErrorLogger(sourcePath)}
     />
   )
 }
@@ -317,9 +365,10 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl }: {
  *  Vite doesn't compile user MDX snippets as JSX, so the virtual modules map
  *  exposes raw markdown and this component renders it through the same safe-mdx
  *  component map used by pages. */
-export function RenderImportedMdx({ markdown, baseUrl }: {
+export function RenderImportedMdx({ markdown, baseUrl, sourcePath }: {
   markdown: string
   baseUrl?: string
+  sourcePath?: string
 }) {
   return (
     <SafeMdxRenderer
@@ -328,7 +377,7 @@ export function RenderImportedMdx({ markdown, baseUrl }: {
       components={mdxComponents}
       renderNode={renderNode}
       baseUrl={baseUrl}
-      onError={logMdxError}
+      onError={createMdxErrorLogger(sourcePath)}
     />
   )
 }

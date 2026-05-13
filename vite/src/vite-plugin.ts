@@ -498,11 +498,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
           if (/\.mdx?$/.test(absPath)) {
             const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
+            const sourcePath = './' + path.relative(root, absPath).replace(/\\/g, '/')
             return [
               `  ${JSON.stringify(moduleKey)}: async () => {`,
               `    const markdown = (await import(${JSON.stringify(absPath + '?raw')})).default`,
               `    return { default: function ImportedMdx(props) {`,
-              `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)} })`,
+              `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)}, sourcePath: ${JSON.stringify(sourcePath)} })`,
               `    } }`,
               `  }`,
             ].join('\n')

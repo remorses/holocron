@@ -4,7 +4,7 @@ import React from 'react'
 import type { RootContent } from 'mdast'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { Link } from 'spiceflow/react'
-import { logMdxError } from '../../lib/mdx-components-map.tsx'
+import { createMdxErrorLogger } from '../../lib/mdx-components-map.tsx'
 
 function BannerP({ children }: { children: React.ReactNode }) {
   return <span>{children}</span>
@@ -39,6 +39,6 @@ const bannerMdxComponents = {
   code: BannerCode,
 }
 
-export function RenderBannerNodes({ markdown, nodes }: { markdown: string; nodes: RootContent[] }) {
-  return <SafeMdxRenderer markdown={markdown} mdast={{ type: 'root', children: nodes }} components={bannerMdxComponents} onError={logMdxError} />
+export function RenderBannerNodes({ markdown, nodes, sourcePath }: { markdown: string; nodes: RootContent[]; sourcePath?: string }) {
+  return <SafeMdxRenderer markdown={markdown} mdast={{ type: 'root', children: nodes }} components={bannerMdxComponents} onError={createMdxErrorLogger(sourcePath)} />
 }

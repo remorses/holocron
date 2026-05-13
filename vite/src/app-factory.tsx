@@ -200,7 +200,7 @@ function getBannerJsx(site: HolocronSiteData, request: Request): React.ReactNode
   if (pageCookies['holocron-banner-dismissed'] === site.config.banner.content) return undefined
   const bannerMdx = site.config.banner.content
   const bannerMdast = mdxParse(bannerMdx)
-  return <RenderBannerNodes markdown={bannerMdx} nodes={bannerMdast.children} />
+  return <RenderBannerNodes markdown={bannerMdx} nodes={bannerMdast.children} sourcePath='docs.json banner' />
 }
 
 function renderMdxPage({
@@ -252,10 +252,10 @@ function renderMdxPage({
   const startsWithHeading = (() => {
     if (!firstContentNode) return false
     if (firstContentNode.type === 'heading') return true
-    const nodeType = firstContentNode.type as string
+    const nodeType: string = firstContentNode.type
     if (nodeType === 'mdxJsxFlowElement') {
-      const jsx = firstContentNode as unknown as { name: string | null; attributes: Array<{ type: string; name: string; value: unknown }> }
-      return /^h[1-6]$/.test(jsx.name ?? '') || jsx.name === 'Heading'
+      const name = Reflect.get(firstContentNode, 'name')
+      return typeof name === 'string' && (/^h[1-6]$/.test(name) || name === 'Heading')
     }
     return false
   })()
@@ -278,6 +278,7 @@ function renderMdxPage({
   // comes from pages/api/overview.mdx), so its directory is the baseUrl.
   const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
   const mdxBaseUrl = (pagesDirPrefix || './') + slugDir
+  const mdxSourcePath = slug === 'index' ? '/' : `/${slug}`
 
   const sections: EditorialSection[] = mdastSections.map((section, i) => {
     // Prepend import nodes so SafeMdxRenderer can resolve imported
@@ -290,9 +291,9 @@ function renderMdxPage({
       : section.asideNodes
     const aside =
       asideNodes.length > 0 ? (
-        <RenderNodes markdown={pageMdx} nodes={asideNodes} modules={modules} baseUrl={mdxBaseUrl} />
+        <RenderNodes markdown={pageMdx} nodes={asideNodes} modules={modules} baseUrl={mdxBaseUrl} sourcePath={mdxSourcePath} />
       ) : undefined
-    const renderedContent = <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} />
+    const renderedContent = <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} sourcePath={mdxSourcePath} />
     // Prepend a rendered H1 from frontmatter title when the MDX doesn't
     // start with one. Only the first section gets the heading.
     const content = (shouldInjectH1 && i === 0) ? (
@@ -318,7 +319,7 @@ function renderMdxPage({
     : aboveNodes
   const above =
     aboveWithImports.length > 0 ? (
-      <RenderNodes markdown={pageMdx} nodes={aboveWithImports} modules={modules} baseUrl={mdxBaseUrl} />
+      <RenderNodes markdown={pageMdx} nodes={aboveWithImports} modules={modules} baseUrl={mdxBaseUrl} sourcePath={mdxSourcePath} />
     ) : undefined
 
   const gridGap = loaderData.currentPageFrontmatter?.gridGap

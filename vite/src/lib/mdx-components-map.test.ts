@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { mdxComponents } from './mdx-components-map.tsx'
+import { formatMdxError, logMdxError, mdxComponents } from './mdx-components-map.tsx'
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe('mdxComponents', () => {
   it('does not override native heading tags', () => {
@@ -30,5 +34,32 @@ describe('mdxComponents', () => {
         "caption",
       ]
     `)
+  })
+})
+
+describe('formatMdxError', () => {
+  it('formats missing components as a readable terminal block', () => {
+    const formatted = formatMdxError(
+      { type: 'missing-component', line: 34, message: 'Unsupported jsx component Caption' },
+      '/components',
+    )
+
+    expect(formatted.replace(/\x1b\[[0-9;]*m/g, '')).toMatchInlineSnapshot(`
+      "▲ holocron MDX missing component
+        source /components
+        line 34
+        reason Unsupported JSX component Caption
+        fix register the component or import it from this MDX file"
+    `)
+  })
+})
+
+describe('logMdxError', () => {
+  it('does not throw when stderr logging fails', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {
+      throw new Error('EPIPE')
+    })
+
+    expect(() => logMdxError({ type: 'missing-component', line: 34, message: 'Unsupported jsx component Caption' })).not.toThrow()
   })
 })
