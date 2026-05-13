@@ -19,6 +19,7 @@ import { syncNavigation, type SyncResult } from './lib/sync.ts'
 import { colors, formatHolocronStep, formatHolocronSuccess, formatHolocronWarning, logger } from './lib/logger.ts'
 
 import react from '@vitejs/plugin-react'
+import { cloudflare as cloudflarePlugin } from '@cloudflare/vite-plugin'
 
 // `vite-plugin.ts` lives in `src/`, both in source and emitted `dist/`, so one
 // `..` always gets back to the package root and `src/` from there is stable.
@@ -833,25 +834,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     pluginsToReturn.push(react())
   }
 
-  // When HOLOCRON_DEPLOY=1 (set by `holocron deploy`), auto-inject the
-  // Cloudflare Vite plugin so the build targets Workers. The user's
-  // vite.config.ts doesn't need to include it — the CLI handles it.
-  // PluginOption supports Promise<Plugin>, so we push an async IIFE that
-  // dynamically imports the ESM-only @cloudflare/vite-plugin.
+  // Auto-inject the Cloudflare plugin for deploy builds. Must be a resolved
+  // Plugin (not a Promise) so spiceflow's hasPluginNamed() can detect it in
+  // config() and set noExternal=true for rsc/ssr.
   if (process.env.HOLOCRON_DEPLOY === '1' && !hasUserCloudflarePlugin) {
     pluginsToReturn.push(
-      (async () => {
-        try {
-          const { cloudflare } = await import('@cloudflare/vite-plugin')
-          return cloudflare({
-            viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
-          })
-        } catch (e) {
-          throw new Error(
-            `[holocron] HOLOCRON_DEPLOY=1 but failed to load @cloudflare/vite-plugin: ${e}`,
-          )
-        }
-      })(),
+      cloudflarePlugin({
+        viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
+      }),
     )
   }
 
