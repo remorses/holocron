@@ -246,7 +246,7 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
           }
           const statusLabel = r.status === 'default' ? 'Default' : r.status
           return (
-            <Expandable key={r.status} title={`${statusLabel}${r.description ? ` · ${r.description}` : ''}`}>
+            <Expandable key={r.status} title={`${statusLabel}${r.description ? ` · ${r.description}` : ''}`} defaultOpen={r.status === '200'}>
               {hasSchema && r.schema && <FieldList schema={r.schema} />}
               {!hasSchema && r.description && <div className='text-foreground'>{r.description}</div>}
             </Expandable>

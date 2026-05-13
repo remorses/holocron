@@ -89,6 +89,11 @@ test.describe('OpenAPI tab', () => {
     expect(html).toContain('409')
   })
 
+  test('200 response is open by default', async ({ page }) => {
+    await page.goto('/api/get-users')
+    await expect(page.locator('details').filter({ hasText: '200' }).first()).toHaveAttribute('open', '')
+  })
+
   test('endpoint page renders curl example', async ({ request }) => {
     const res = await request.get('/api/post-users')
     expect(res.ok()).toBe(true)
