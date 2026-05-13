@@ -1,6 +1,6 @@
 ---
 title: Code Blocks
-description: Syntax highlighting, titles, line highlights, and code groups.
+description: Syntax highlighting, code groups, and inline code.
 icon: code
 ---
 
@@ -14,34 +14,6 @@ Holocron uses Prism for syntax highlighting. Fenced code blocks are rendered wit
 ```ts
 const greeting = 'Hello, world!'
 console.log(greeting)
-```
-````
-
-## Code block with title
-
-Add a title after the language identifier:
-
-````mdx
-```ts vite.config.ts
-import { defineConfig } from 'vite'
-import { holocron } from '@holocron.so/vite'
-
-export default defineConfig({
-  plugins: [holocron()],
-})
-```
-````
-
-## Line highlighting
-
-Highlight specific lines using curly braces:
-
-````mdx
-```ts {2,4}
-const a = 1
-const b = 2  // highlighted
-const c = 3
-const d = 4  // highlighted
 ```
 ````
 

@@ -33,18 +33,25 @@ Instead, use **`@reference`**:
 
 ## How to load your CSS
 
-### With custom entry
+### Default Holocron site
 
-If you use a [custom entry](/custom-entry), import your CSS in your server file:
+Create `global.css` or `style.css` at your project root. Holocron auto-detects the first matching file and imports it after its own styles.
+
+```
+my-docs/
+├── docs.json
+├── global.css
+└── index.mdx
+```
+
+### With custom entry and another filename
+
+If you use a [custom entry](/custom-entry) and your CSS file is not root `global.css` or `style.css`, import it in your server file:
 
 ```tsx
 // src/server.tsx
 import './globals.css'
 ```
-
-### Without custom entry
-
-Place a CSS file in your project and import it from a layout or page component via local imports.
 
 ## Dark mode overrides
 

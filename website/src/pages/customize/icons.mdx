@@ -20,9 +20,9 @@ Supported libraries:
 
 | Library | Description |
 |---------|-------------|
-| `lucide` | Clean, consistent icons (default) |
-| `fontawesome` | Font Awesome (free set) |
-| `tabler` | Tabler Icons |
+| `fontawesome` | Font Awesome free set (default) |
+| `lucide` | Clean, consistent icons |
+| `tabler` | Accepted by config, but not rendered yet |
 
 ## Using icons in frontmatter
 
@@ -51,13 +51,14 @@ Groups and anchors accept an `icon` field:
 
 ## Icon object form
 
-For more control, use the object form to specify a library or style per-icon:
+For more control, use the object form to specify a library or style per icon. Font Awesome currently resolves the `solid`, `regular`, and `brands` styles:
 
 ```json
 {
   "icon": {
     "name": "github",
-    "library": "lucide"
+    "library": "fontawesome",
+    "style": "brands"
   }
 }
 ```

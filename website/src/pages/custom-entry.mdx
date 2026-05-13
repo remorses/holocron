@@ -57,6 +57,8 @@ export const app = new Spiceflow()
   .page('/dashboard', () => <h1>My Dashboard</h1>)
   // mount holocron last — it handles all docs pages
   .use(holocronApp)
+
+void app.listen(3000)
 ```
 
 Holocron registers routes for every page in your `docs.json` navigation. Your own routes take priority because they're registered first.
@@ -95,7 +97,7 @@ Use **`@reference`** instead. It gives your CSS access to Tailwind's theme varia
 }
 ```
 
-Import your CSS file normally in your server entry:
+If your CSS file is not named `global.css` or `style.css` at the project root, import it normally in your server entry:
 
 ```tsx
 import './globals.css'

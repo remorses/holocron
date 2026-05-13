@@ -36,13 +36,13 @@ export default defineConfig({
 })
 ```
 
-Create a `wrangler.jsonc`:
+Create a `wrangler.json` or `wrangler.jsonc`:
 
 ```jsonc
 {
   "name": "my-docs",
   "main": "spiceflow/cloudflare-entrypoint",
-  "compatibility_date": "2026-04-14",
+  "compatibility_date": "2026-04-13",
   "compatibility_flags": ["nodejs_compat"]
 }
 ```
@@ -60,4 +60,4 @@ If you use a [custom entry](/custom-entry), your Spiceflow app runs as the Worke
 
 ## Example project
 
-See the `example-cloudflare/` directory in the Holocron repo for a working Cloudflare Workers deployment.
+See the `example-cloudflare/` directory in the Holocron repo for a minimal Cloudflare Workers deployment.

@@ -38,7 +38,7 @@ Capture path segments with `:param` and reuse them in the destination:
 Match any path under a prefix:
 
 ```json
-{ "source": "/old-docs/:path*", "destination": "/docs/:path*" }
+{ "source": "/old-docs/*", "destination": "/docs/:splat" }
 ```
 
 ## Permanent vs temporary

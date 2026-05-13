@@ -8,9 +8,9 @@ icon: circle-help
 
 ## Spec not found
 
-If Holocron logs a warning about not finding your spec file, check:
+If Holocron cannot find your spec file, the dev server or build fails and prints the paths it checked. Check:
 
-- The path in `docs.json` is relative to the project root
+- The path in `docs.json` is relative to `pagesDir` first, then the project root
 - The file extension matches (`.json` or `.yaml`)
 - The file exists and is valid JSON/YAML
 
@@ -19,12 +19,12 @@ If Holocron logs a warning about not finding your spec file, check:
 If the API Reference tab is empty:
 
 - Make sure your spec has `paths` with at least one operation
-- Check that operations have at least one tag (untagged operations may not generate sidebar groups)
+- Untagged operations are grouped under **Default**, so missing tags do not prevent page generation
 
 ## Schema rendering issues
 
-- **Circular references**: Holocron handles `$ref` cycles, but deeply nested circular schemas may render with truncated depth
-- **`allOf`/`oneOf`/`anyOf`**: These are resolved and rendered as combined or union schemas
+- **References**: Holocron dereferences `$ref` values and limits deeply nested schema expansion to keep pages readable
+- **`allOf`/`oneOf`/`anyOf`**: Union fields are preserved and rendered in the schema view
 - **Missing descriptions**: Operations without a `summary` or `description` show the operationId as the title
 
 ## Wrong URL prefix

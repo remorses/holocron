@@ -46,7 +46,7 @@ If your project maintains multiple API or SDK versions, you can add a version sw
 
 - A native `<select>` dropdown appears in the header (right of the logo).
 - Selecting a version navigates to its first page and updates the sidebar.
-- The version marked `default: true` determines where `/` redirects to.
+- If no `index` page exists, the version marked `default: true` determines where `/` redirects to.
 - Inner tabs from all versions are flattened into routes, so every page gets a URL.
 
 ## Version fields
@@ -60,4 +60,3 @@ If your project maintains multiple API or SDK versions, you can add a version sw
 | `tabs` | array | Tabs within this version |
 | `groups` | array | Groups within this version (alternative to tabs) |
 | `pages` | array | Pages within this version (flat, no groups) |
-| `anchors` | array | Anchors within this version |

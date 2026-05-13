@@ -21,9 +21,9 @@ export default defineConfig({
 
 ## What it affects
 
-- All page routes are prefixed (e.g. `/docs/quickstart` instead of `/quickstart`)
+- Holocron registers base-prefixed page routes (e.g. `/docs/quickstart`) and currently also keeps root routes available
 - Static assets load from `/docs/assets/...`
-- AI routes adjust: `/docs/llms.txt`, `/docs/docs.zip`
+- AI routes are available at `/docs/llms.txt` and `/docs/docs.zip`; root `/llms.txt` and `/docs.zip` remain available too
 - Internal links and navigation are base-aware
 - The sitemap uses the base path in URLs
 
@@ -39,4 +39,4 @@ location /docs/ {
 
 ## Custom entry with base path
 
-If using a [custom entry](/custom-entry), the base path applies to both your custom routes and the Holocron docs routes.
+If using a [custom entry](/custom-entry), Holocron's docs routes are base-aware. Your custom routes are controlled by your own Spiceflow app, so prefix them explicitly if they should also live under the same base path.

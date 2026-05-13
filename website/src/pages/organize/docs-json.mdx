@@ -12,7 +12,7 @@ Every Holocron site needs a config file at the project root. Holocron supports t
 2. **`docs.jsonc`** (supports `//` comments)
 3. **`holocron.jsonc`** (legacy Holocron name, also supports comments)
 
-Both follow the same schema, which is compatible with Mintlify's `docs.json`.
+All three follow the same schema, which is compatible with Mintlify's `docs.json` for the fields Holocron consumes.
 
 ## Minimal config
 
@@ -79,7 +79,6 @@ Both follow the same schema, which is compatible with Mintlify's `docs.json`.
   ],
   "search": { "prompt": "Search docs..." },
   "seo": {
-    "indexing": "navigable",
     "metatags": { "author": "My Company" }
   },
   "assistant": { "enabled": true }
@@ -100,14 +99,14 @@ The schema is generated from the Zod definitions in `vite/src/schema.ts`.
 
 ## Passthrough behavior
 
-Holocron uses `.passthrough()` validation. Any fields from Mintlify that Holocron does not consume (like `integrations`, `analytics`, `api.playground`) are accepted without errors. This means you can use a Mintlify `docs.json` without stripping unknown fields.
+Holocron's schema accepts unknown fields. Any fields from Mintlify that Holocron does not consume, like `integrations`, `analytics`, or `api.playground`, are accepted without errors and ignored at runtime. This means you can usually use a Mintlify `docs.json` without stripping unknown fields.
 
 ## Config normalization
 
 Holocron normalizes shorthand forms into a consistent internal shape:
 
-- **`logo`**: `"/logo.svg"` becomes `{ light: "/logo.svg", dark: "/logo.svg" }`
+- **`logo`**: `"/logo.svg"` becomes `{ light: "/logo.svg" }` and is rendered for both modes unless `dark` is provided
 - **`favicon`**: `"/favicon.svg"` becomes `{ light: "/favicon.svg", dark: "/favicon.svg" }`
 - **`navigation`**: a flat array of groups is wrapped in a default tab
-- **`colors`**: missing `light`/`dark` variants are derived from `primary`
+- **`colors`**: missing light or dark values fall back from `primary` when styles are generated
 - **`products`**: normalized into `dropdowns` at config time

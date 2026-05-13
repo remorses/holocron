@@ -8,14 +8,14 @@ icon: info
 
 Holocron is a **documentation site generator** built as a Vite plugin. You write MDX files, define your navigation in a `docs.json` config, and Holocron produces a full docs site with search, dark mode, OpenAPI reference, and AI-readable exports.
 
-It is designed as a **drop-in replacement for Mintlify**. If you already have a Mintlify project, you can point Holocron at the same `docs.json` and MDX files and get a self-hosted site with the same component vocabulary.
+It is designed as a **Mintlify-compatible replacement**. If you already have a Mintlify project, you can point Holocron at the same `docs.json` and MDX files. Holocron accepts unknown Mintlify fields and supports the common component vocabulary it renders today.
 
 ## Why Holocron
 
 - **Local builds.** Run `vite build` and deploy the output anywhere. No hosted service required.
 - **Normal Git workflows.** Your docs live in your repo. PRs, branches, diffs all work the way you expect.
 - **Vite-native.** HMR, fast rebuilds, Tailwind, React Server Components, all powered by Spiceflow under the hood.
-- **Mintlify compatibility.** Same `docs.json` schema, same MDX components (`Tabs`, `Cards`, `Callouts`, `Steps`, etc.), same frontmatter fields.
+- **Mintlify compatibility.** Familiar `docs.json`, MDX components (`Tabs`, `Cards`, `Callouts`, `Steps`, etc.), and frontmatter fields.
 - **AI-first.** Every page gets a `.md` route, plus `/llms.txt`, `/docs.zip`, and `.well-known/agent-skills/` for agent discovery.
 
 ## How it works
@@ -39,7 +39,7 @@ docs.json + MDX files
   Full docs site with search, OpenAPI, dark mode, AI exports
 ```
 
-The plugin reads your config file, walks the navigation tree to discover MDX pages, and generates virtual modules that the Spiceflow app consumes at render time. Images are processed at build time (dimensions, placeholders, copying to `public/`). Only changed files get re-parsed on subsequent builds thanks to a git-SHA-based cache.
+The plugin reads your config file, walks the navigation tree to discover MDX pages, and generates virtual modules that the Spiceflow app consumes at render time. Local images outside `public/` can be copied into Holocron's generated image directory with dimensions and placeholders; images already in `public/` keep their public URL. Only changed files get re-parsed on subsequent builds thanks to a git-SHA-based cache.
 
 ## What you get
 

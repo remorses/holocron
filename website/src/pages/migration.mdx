@@ -6,7 +6,7 @@ icon: arrow-right-left
 
 # Migration from Mintlify
 
-If you already have a Mintlify docs project, migrating to Holocron takes a few minutes. Holocron reads the same `docs.json` schema and supports the same MDX component vocabulary.
+If you already have a Mintlify docs project, migrating to Holocron takes a few minutes. Holocron reads a Mintlify-compatible `docs.json` shape and supports the common MDX component vocabulary it renders today.
 
 ## Step 1: Install dependencies
 
@@ -29,7 +29,7 @@ export default defineConfig({
 
 ## Step 3: Keep your docs.json
 
-Your existing `docs.json` works as-is. Holocron uses `.passthrough()` validation, so Mintlify-only fields (like `integrations`, `analytics`, `api`) are accepted and silently ignored.
+Your existing `docs.json` usually works as-is. Holocron's schema accepts unknown Mintlify fields, and the runtime ignores fields it does not consume, like `integrations`, `analytics`, or Mintlify-specific API playground settings.
 
 ## Step 4: Run it
 

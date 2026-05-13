@@ -10,12 +10,12 @@ When you set `"openapi": "openapi.json"` on a tab, Holocron generates one page p
 
 ## Slug format
 
-Each operation gets a slug derived from the `operationId` or the method + path:
+Each operation gets a slug derived from the method and path:
 
 | Operation | Generated slug |
 |-----------|---------------|
-| `GET /users` with `operationId: listUsers` | `api/list-users` |
-| `POST /users` without operationId | `api/post-users` |
+| `GET /users` | `api/get-users` |
+| `POST /users` | `api/post-users` |
 
 The `openapiBase` prefix (default `"api"`) is prepended to all slugs.
 
@@ -39,8 +39,8 @@ paths:
 ```
 
 This produces:
-- **Users** group: `list-users`, `create-user`
-- **Teams** group: `list-teams`
+- **Users** group: `get-users`, `post-users`
+- **Teams** group: `get-teams`
 
 ## Page layout
 

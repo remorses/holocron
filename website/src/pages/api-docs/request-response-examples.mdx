@@ -22,7 +22,7 @@ Each response status code (200, 201, 400, etc.) is rendered with its schema. Mul
 
 ## Examples in the spec
 
-If your spec includes `example` or `examples` fields on schemas, parameters, or responses, Holocron renders them as code blocks in the right-side aside.
+Holocron renders a generated cURL request and the first JSON response `example` or `examples` entry in the right-side aside. Schema and parameter examples are still useful context, but they are not rendered as separate aside code blocks today.
 
 ```yaml
 paths:

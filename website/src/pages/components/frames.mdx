@@ -8,7 +8,7 @@ icon: square-dashed-bottom-code
 
 Use `Frame` to visually isolate an image, preview, or other embedded content from the surrounding prose.
 
-<Frame caption='Holocron preview frame' hint='Use this for screenshots and compact demos'>
+<Frame caption='Holocron preview frame'>
   <div className='rounded-md bg-muted p-6 text-center'>Preview content inside a frame</div>
 </Frame>
 
@@ -25,5 +25,5 @@ Use `Frame` to visually isolate an image, preview, or other embedded content fro
 
 ## Holocron differences
 
-- Holocron supports framed content plus `caption` and `hint` text.
+- Holocron supports framed content plus `description`, `caption`, or `hint` text. If more than one is set, it renders the first available value in that order.
 - Mintlify also documents media-specific polish around videos; Holocron's current frame is primarily a visual wrapper.

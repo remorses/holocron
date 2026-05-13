@@ -6,7 +6,7 @@ icon: package
 
 # Local Imports
 
-You can import `.tsx`, `.ts`, `.jsx`, or `.js` files directly in your MDX pages. This lets you use custom React components alongside the built-in MDX components.
+You can import `.tsx`, `.ts`, `.jsx`, `.js`, `.mdx`, or `.md` files directly in your MDX pages. This lets you use custom React components and shared Markdown snippets alongside the built-in MDX components.
 
 ## Basic usage
 
@@ -51,11 +51,11 @@ At build time, Holocron:
 2. Resolves the imports against the filesystem
 3. Generates a virtual module map so the imports work at render time
 
-At dev time, adding or removing importable files triggers HMR automatically.
+At dev time, adding or removing JS/TS importable files triggers HMR automatically. Markdown imports are resolved too, but edits to an MDX page are the most reliable way to refresh newly added Markdown snippets.
 
 ## Supported extensions
 
-The following extensions are tried in order: `.tsx`, `.ts`, `.jsx`, `.js`. You do not need to include the extension in the import path.
+The following extensions are tried in order: `.tsx`, `.ts`, `.jsx`, `.js`, `.mdx`, `.md`. You do not need to include the extension in the import path.
 
 ## Example: shared snippets
 
@@ -73,10 +73,10 @@ my-docs/
 // snippets/install-command.tsx
 export function InstallCommand() {
   return (
-    <CodeGroup>
-      <div data-title="npm">npm install @holocron.so/vite</div>
-      <div data-title="pnpm">pnpm add @holocron.so/vite</div>
-    </CodeGroup>
+    <div>
+      <div>npm install @holocron.so/vite</div>
+      <div>pnpm add @holocron.so/vite</div>
+    </div>
   )
 }
 ```

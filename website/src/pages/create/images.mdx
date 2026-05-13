@@ -16,7 +16,7 @@ Use standard Markdown image syntax:
 ![Alt text](/images/screenshot.png)
 ```
 
-Place image files in your `public/` directory and reference them with absolute paths.
+Place image files in your `public/` directory and reference them with absolute paths. Public images keep their original URL.
 
 ## HTML img tags
 
@@ -26,22 +26,24 @@ You can also use `<img>` tags:
 <img src="/images/diagram.png" alt="Architecture diagram" />
 ```
 
-Holocron's remark plugin automatically converts `<img>` tags to its internal image component with proper dimensions.
+Holocron's remark plugin converts `<img>` tags to its internal image component with dimensions when it can read the image metadata.
 
 ## Build-time processing
 
-For local images, Holocron:
+For local images outside `public/`, Holocron:
 
 1. **Reads dimensions** from the file so the rendered `<img>` has explicit `width` and `height`, preventing layout shift.
 2. **Generates placeholders** for a smooth loading experience.
-3. **Copies images** to `public/_holocron/images/` during build for consistent serving.
+3. **Copies images** to a generated Holocron image directory during build for consistent serving.
+
+Images already in `public/` are served from their public path and are not copied again.
 
 ## Remote images
 
-Remote image URLs (`https://...`) are supported. Holocron attempts to fetch metadata (dimensions) at build time. If the fetch fails, the image still renders but without layout-shift prevention.
+Remote image URLs (`https://...`) are supported. Remote URLs in JSX `<img>` tags can be fetched for metadata at build time. Markdown remote images still render, but they do not get build-time dimensions or placeholders.
 
 ```mdx
-![Remote image](https://example.com/photo.jpg)
+<img src="https://example.com/photo.jpg" alt="Remote photo" />
 ```
 
 ## Frames

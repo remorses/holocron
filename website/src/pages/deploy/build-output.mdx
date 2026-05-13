@@ -8,14 +8,14 @@ icon: folder-output
 
 Running `npx vite build` produces a `dist/` directory with everything needed to serve your docs site.
 
-## Directory structure
+## Normal build directory structure
 
 ```
 dist/
 ├── rsc/
-│   ├── index.js          # Node.js server entry
-│   ├── assets/           # Static assets (CSS, JS, images)
+│   ├── index.js          # server entry
 │   └── ...
+├── client/               # browser assets, CSS, JS, public files
 └── holocron-cache.json   # Navigation cache for fast rebuilds
 ```
 
@@ -25,8 +25,12 @@ dist/
 
 ## Static assets
 
-Fonts, processed images, and bundled JavaScript are placed in `dist/rsc/assets/`. These are fingerprinted with content hashes for long-term caching.
+Fonts, processed images, and bundled JavaScript are placed in the client output. These are fingerprinted with content hashes for long-term caching.
+
+## Deploy build output
+
+The `holocron deploy` CLI builds to `dist/.holocron/` before upload. It uploads `dist/.holocron/rsc` as Worker files and `dist/.holocron/client` as static assets.
 
 ## Self-contained output
 
-The production output is fully self-contained. All MDX processing and image work happens at build time. The runtime server only handles routing, rendering, and serving static assets.
+The production output is self-contained. Navigation, frontmatter, image metadata, and cache data are prepared at build time. Page requests still parse and render the MDX source at runtime through React Server Components.

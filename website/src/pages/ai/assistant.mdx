@@ -20,11 +20,13 @@ The assistant is enabled by default. To disable it:
 }
 ```
 
-When disabled, the sidebar widget, chat drawer, mobile "Ask AI" button, and the chat API endpoint are all hidden.
+When disabled, the sidebar widget, chat drawer, and mobile "Ask AI" button are hidden. The chat route still exists and returns `404 Assistant is disabled`.
 
 ## How it works
 
-The assistant uses the Holocron AI gateway to process questions. When deployed, it reads your docs content and generates answers grounded in your documentation pages.
+The assistant uses the hosted Holocron AI gateway to process questions. When deployed, the docs app sends the current page plus either inline docs in local development or a `docs.zip` URL in production, then streams the answer back into the chat UI.
+
+Hosted chat uses Cloudflare Workers AI. Authenticated sites send `HOLOCRON_KEY`; unauthenticated requests use a temporary fallback with stricter IP rate limits. The default model is GLM 4.7 Flash.
 
 ## What gets disabled
 
@@ -32,8 +34,8 @@ Setting `enabled: false` removes:
 - The sidebar chat widget
 - The chat drawer overlay
 - The mobile "Ask AI" floating button
-- The `/holocron-api/chat` endpoint
+- Useful responses from `/holocron-api/chat`; the endpoint returns 404 while disabled
 
 ## Skill loading
 
-The assistant can load remote `SKILL.md` files and make them available as context. Skills are fetched, cached, and presented to the AI model as available knowledge sources.
+The hosted gateway can accept remote skill URLs, but the built-in docs assistant does not expose a `docs.json` setting for them yet. Today it answers from the current docs content and the docs zip payload.
