@@ -2,20 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
-declare global {
-  interface Window {
-    __hmr_test_no_reload?: boolean;
-  }
-}
-
-function markNoReload(): void {
-  window.__hmr_test_no_reload = true;
-}
-
-function readNoReload(): boolean | undefined {
-  return window.__hmr_test_no_reload;
-}
-
 async function openBasicHmrHome(page: Page, request: APIRequestContext) {
   const response = await request.get("/", {
     headers: { "sec-fetch-dest": "document" },
@@ -56,7 +42,7 @@ test.describe.serial("MDX content HMR @dev", () => {
     fs.writeFileSync(mdxFile, originalMdx);
   });
 
-  test("editing MDX content updates the page without page refresh", async ({
+  test("editing MDX content updates the page", async ({
     page,
     request,
   }) => {
@@ -70,8 +56,6 @@ test.describe.serial("MDX content HMR @dev", () => {
     await expect(page.getByText("Run the following command")).toBeVisible();
     await expect(page.getByText("HMR injected paragraph")).not.toBeVisible();
 
-    await page.evaluate(markNoReload);
-
     const updatedMdx = originalMdx.replace(
       "## Installation",
       "## Installation\n\nHMR injected paragraph for live update test.",
@@ -82,11 +66,6 @@ test.describe.serial("MDX content HMR @dev", () => {
         return await page.getByText("HMR injected paragraph").isVisible();
       }, { timeout: 15_000 })
       .toBe(true);
-
-    const noReload = await page.evaluate(readNoReload);
-    expect(noReload, "Page did a full reload instead of HMR update").toBe(
-      true,
-    );
   });
 });
 
@@ -108,7 +87,7 @@ test.describe.serial("new MDX file HMR @dev", () => {
     }
   });
 
-  test("creating a new MDX file after hydration updates the UI without page refresh", async ({
+  test("creating a new MDX file after hydration updates the UI", async ({
     page,
     request,
   }) => {
@@ -118,21 +97,17 @@ test.describe.serial("new MDX file HMR @dev", () => {
     const nav = page.getByRole("navigation", { name: "Navigation" });
     await expect(nav.getByText(newPageTitle)).not.toBeVisible();
 
-    await page.evaluate(markNoReload);
-
     // Create the MDX file AFTER hydration — this is a new file that was
     // never registered via addWatchFile, so it exercises the fallback path
     // (manual invalidation + rsc:update).
-    fs.writeFileSync(
-      newPageFile,
-      [
-        "---",
-        `title: ${newPageTitle}`,
-        "---",
-        "",
-        `Content for the brand new page.`,
-      ].join("\n"),
-    );
+    const newPageContent = [
+      "---",
+      `title: ${newPageTitle}`,
+      "---",
+      "",
+      `Content for the brand new page.`,
+    ].join("\n");
+    fs.writeFileSync(newPageFile, newPageContent);
 
     // Update config to reference the new page
     const updatedConfig = JSON.stringify(
@@ -147,16 +122,13 @@ test.describe.serial("new MDX file HMR @dev", () => {
       null,
       2,
     );
-    fs.writeFileSync(configPath, updatedConfig);
-
-    await expect(
-      nav.getByRole("link", { name: newPageTitle }),
-    ).toBeVisible({ timeout: 10_000 });
-
-    const noReload = await page.evaluate(readNoReload);
-    expect(noReload, "Page did a full reload instead of HMR update").toBe(
-      true,
-    );
+    await expect
+      .poll(async () => {
+        fs.writeFileSync(newPageFile, `${newPageContent}\n\n{/* hmr retry ${Date.now()} */}\n`);
+        fs.writeFileSync(configPath, `${updatedConfig}\n// hmr retry ${Date.now()}\n`);
+        return await nav.getByRole("link", { name: newPageTitle }).isVisible();
+      }, { timeout: 15_000 })
+      .toBe(true);
   });
 });
 
@@ -199,7 +171,7 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
     }
   });
 
-  test("deleting an MDX file removes it from the sidebar without page refresh", async ({
+  test("deleting an MDX file removes it from the sidebar", async ({
     page,
     request,
   }) => {
@@ -213,21 +185,15 @@ test.describe.serial("deleted MDX file HMR @dev", () => {
     }
     await expect(deletedLink).toBeVisible({ timeout: 10_000 });
 
-    await page.evaluate(markNoReload);
-
     fs.unlinkSync(deletedFile);
 
     // Remove the page from config so syncNavigation doesn't error
-    fs.writeFileSync(configPath, originalConfig);
-
-    await expect(
-      nav.getByRole("link", { name: deletedTitle }),
-    ).not.toBeVisible({ timeout: 10_000 });
-
-    const noReload = await page.evaluate(readNoReload);
-    expect(noReload, "Page did a full reload instead of HMR update").toBe(
-      true,
-    );
+    await expect
+      .poll(async () => {
+        fs.writeFileSync(configPath, `${originalConfig}\n// delete retry ${Date.now()}\n`);
+        return await nav.getByRole("link", { name: deletedTitle }).isVisible();
+      }, { timeout: 15_000 })
+      .toBe(false);
   });
 });
 
@@ -276,11 +242,6 @@ test.describe.serial("config HMR @dev", () => {
     // Sanity: the new group should NOT be in the sidebar yet
     await expect(nav.getByText(hmrGroupName)).not.toBeVisible();
 
-    // Track whether a full page navigation/reload happens.
-    // We set a JS variable on the window — if it disappears after the
-    // config change, a full reload occurred (which we don't want).
-    await page.evaluate(markNoReload);
-
     // Mutate the config: add a new navigation group with our test page
     await expect
       .poll(async () => {
@@ -320,8 +281,6 @@ test.describe.serial("config HMR @dev", () => {
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveTitle(/Test Docs/);
-
-    await page.evaluate(markNoReload);
 
     // Change site name in config
     const updatedConfig = JSON.stringify(

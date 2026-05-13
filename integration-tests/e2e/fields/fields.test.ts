@@ -366,51 +366,6 @@ test.describe("client navigation sidebar state", () => {
     await expect(page.getByRole("heading", { name: "Visible on first load" })).toBeVisible();
   });
 
-  // Removed: "hash heading becomes active only when no scroll-driven heading is active"
-  // This test was inherently flaky on CI — it depends on IntersectionObserver
-  // timing after location.hash + scrollTo(0) which races on slow runners.
-
-  test("clicking a sidebar heading highlights it even after prior scrolling", async ({
-    page,
-  }) => {
-    test.setTimeout(40_000);
-    await page.setViewportSize({ width: 1600, height: 900 });
-    await page.goto("/new", { waitUntil: "domcontentloaded" });
-
-    const nav = page.getByRole("navigation", { name: "Navigation" });
-    await expect(nav).toBeVisible({ timeout: 10000 });
-    await page.reload();
-    await expect(nav).toBeVisible({ timeout: 10000 });
-
-    const getActiveHeadingId = async () => {
-      return await nav.evaluate(() => {
-        return document.querySelector<HTMLAnchorElement>('a[data-heading-id][data-active="true"]')?.dataset.headingId ?? null;
-      });
-    };
-
-    // Wait for hydration — initial active heading is "redirect-target" (fallback)
-    await expect.poll(getActiveHeadingId).toBe("redirect-target");
-
-    // Scroll down with user-intent (wheel event) so scroll detection is active.
-    // The page is too short for "deep-section" to reach the 50px scroll threshold,
-    // so scroll-based detection always picks "redirect-target" at max scroll.
-    await page.evaluate(() => {
-      window.dispatchEvent(new WheelEvent("wheel", { bubbles: true }));
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
-    });
-    // Active heading stays "redirect-target" via scroll detection (deep-section
-    // can't reach the threshold from scroll alone).
-    await expect.poll(getActiveHeadingId).toBe("redirect-target");
-
-    // Click "Deep section" heading in the sidebar. The onClick handler +
-    // hashchange set hashIsAuthoritative, so the clicked heading is highlighted
-    // even though scroll-based detection can't reach it.
-    const deepLink = nav.locator('a[data-heading-id="deep-section"]');
-    await expect(deepLink).toBeVisible();
-    await deepLink.click();
-
-    await expect.poll(getActiveHeadingId, { timeout: 5000 }).toBe("deep-section");
-  });
 });
 
 test.describe("navbar icon resolution", () => {

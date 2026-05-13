@@ -23,10 +23,9 @@ test.describe("mintlify components fixture", () => {
     await expect
       .poll(async () => {
         await pnpmTab.click();
-        return await pnpmTab.getAttribute("aria-selected");
-      })
-      .toBe("true");
-    await expect(page.getByText("pnpm add holocron")).toBeVisible();
+        return await page.getByText("pnpm add holocron").isVisible();
+      }, { timeout: 10_000 })
+      .toBe(true);
 
     const individualDevelopersTab = page.getByRole("tab", {
       name: "Individual Developers",
