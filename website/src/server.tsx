@@ -16,7 +16,7 @@ import { aiLogoApp } from './ai-logo.ts'
 import { dashboardApp } from './dashboard.tsx'
 import { approveDevice, denyDevice } from './actions.tsx'
 import { getAuth, getSession, requireSession } from './db.ts'
-import { AuthPage } from './components/auth-page.tsx'
+import { AuthPage, HolocronLogo } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
 import { DeviceActionButtons } from './components/device-action-buttons.tsx'
 // Auth pages use AuthPage — a minimal centered layout with no cards or shadows.
@@ -74,6 +74,7 @@ const authApp = new Spiceflow()
       return (
         <AuthPage
           title="Holocron"
+          visualTitle={<HolocronLogo imageClassName="h-9" />}
           headTitle="Sign in"
           description="Sign in to manage your account."
           footer={
@@ -188,6 +189,7 @@ const previewApp = new Spiceflow()
   .page('/preview/login', () => (
     <AuthPage
       title="Holocron"
+      visualTitle={<HolocronLogo imageClassName="h-9" />}
       headTitle="Sign in"
       description="Sign in to manage your account."
       footer={

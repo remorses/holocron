@@ -20,6 +20,7 @@ import { ulid } from 'ulid'
 import { Button, CopyButton } from './components/ui/button.tsx'
 import { SignOutButton } from './components/sign-out-button.tsx'
 import { DeployPoller } from './components/deploy-poller.tsx'
+import { HolocronLogo } from './components/auth-page.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 const DEPLOY_KEY_COOKIE = 'holocron_deploy_key'
@@ -88,18 +89,7 @@ export const dashboardApp = new Spiceflow()
         <header className="border-b border-border">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
             <Link href="/dashboard" className="no-underline flex items-center shrink-0">
-              <img
-                src="/api/ai-logo/holocron.jpeg"
-                alt="Holocron"
-                className="dark:hidden"
-                style={{ height: 30, width: 'auto', mixBlendMode: 'multiply' }}
-              />
-              <img
-                src="/api/ai-logo/holocron.jpeg"
-                alt="Holocron"
-                className="hidden dark:block"
-                style={{ height: 30, width: 'auto', mixBlendMode: 'screen', filter: 'invert(1)' }}
-              />
+              <HolocronLogo />
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link href="/dashboard" className="hover:text-foreground">Projects</Link>
