@@ -30,7 +30,6 @@ deployCli
   .command('deploy', 'Build and deploy your docs site to holocron.so')
   .option('--project [projectId]', 'Project ID (only needed with session auth, not with HOLOCRON_KEY)')
   .option('--branch [name]', 'Branch name for preview deployments (auto-detected from git/CI env)')
-  .option('--skip-build', 'Skip the vite build step (use existing dist/)')
   .action(async (options, { console: output, process: proc }) => {
     const cwd = proc.cwd
     const nonInteractive = isAgent || !process.stdin.isTTY
@@ -50,12 +49,10 @@ deployCli
     const { safeFetch, auth } = deployClient
 
     // ── Build ─────────────────────────────────────────────────────────────
-    if (!options.skipBuild) {
-      const buildErr = await runBuild(cwd)
-      if (buildErr instanceof Error) {
-        output.error(logger.error('Build failed'))
-        return proc.exit(1)
-      }
+    const buildErr = await runBuild(cwd)
+    if (buildErr instanceof Error) {
+      output.error(logger.error('Build failed'))
+      return proc.exit(1)
     }
 
     // ── Resolve project (only needed for session auth) ────────────
@@ -180,10 +177,10 @@ async function runBuild(cwd: string): Promise<Error | void> {
 
 type BuildFile = { relativePath: string; absPath: string; size: number; hash: string }
 
-/** Collect dist/rsc/** and dist/client/** into upload-ready file list with SHA-256 hashes. */
+/** Collect dist/.holocron/rsc/** and dist/.holocron/client/** into upload-ready file list with SHA-256 hashes. */
 function collectBuildArtifacts(cwd: string): Error | BuildFile[] {
-  const distDir = path.resolve(cwd, 'dist')
-  if (!fs.existsSync(distDir)) return new Error('No dist/ directory found. Run the build first or remove --skip-build.')
+  const distDir = path.resolve(cwd, 'dist/.holocron')
+  if (!fs.existsSync(distDir)) return new Error('No dist/.holocron/ directory found. Build may have failed.')
 
   const files: BuildFile[] = []
 
@@ -197,7 +194,7 @@ function collectBuildArtifacts(cwd: string): Error | BuildFile[] {
     collectFiles(clientDir, 'assets', files)
   }
 
-  if (files.length === 0) return new Error('No build artifacts found in dist/. Is the build configured correctly?')
+  if (files.length === 0) return new Error('No build artifacts found in dist/.holocron/. Is the build configured correctly?')
   return files
 }
 

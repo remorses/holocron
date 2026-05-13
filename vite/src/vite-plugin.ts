@@ -252,7 +252,13 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const safeMdxDir = path.dirname(nodeRequire.resolve('safe-mdx/package.json'))
       const zoomEntry = nodeRequire.resolve('react-medium-image-zoom')
       const zoomDir = path.dirname(zoomEntry)
-      const next: Pick<UserConfig, 'resolve'> = {
+      const next: Pick<UserConfig, 'resolve' | 'build'> = {
+        // When running under `holocron deploy` (HOLOCRON_DEPLOY=1), write
+        // build output to dist/.holocron so deploy artifacts don't collide
+        // with a normal `vite build` (which targets Cloudflare/Node differently).
+        ...(process.env.HOLOCRON_DEPLOY === '1' && {
+          build: { outDir: 'dist/.holocron' },
+        }),
         resolve: {
           alias: [
             { find: /^@holocron\.so\/vite\/app$/, replacement: HOLOCRON_APP_SRC_PATH },
