@@ -588,7 +588,11 @@ function resolveImportSources({
  *  existing path, or undefined if none match. */
 function tryResolveImport(basePath: string): string | undefined {
   // Try exact path first (if user wrote the extension)
-  if (fs.existsSync(basePath) && fs.statSync(basePath).isFile()) {
+  if (
+    IMPORT_EXTENSIONS.includes(path.extname(basePath)) &&
+    fs.existsSync(basePath) &&
+    fs.statSync(basePath).isFile()
+  ) {
     return basePath
   }
   // Try each extension

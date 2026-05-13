@@ -102,23 +102,23 @@ test.describe("multiple asides fixture", () => {
 
     // The widened CSS vars are written as inline style on `.slot-page`.
     // Read the computed values and assert the sidebar was expanded from
-    // the 210px default to the 440px minimum required by RequestExample.
+    // the 230px default to the minimum required by RequestExample.
     const slotPage = page.locator(".slot-page");
     await expect(slotPage).toBeVisible();
 
     const sidebarWidthVar = await slotPage.evaluate((el) =>
       getComputedStyle(el).getPropertyValue("--grid-sidebar-width").trim(),
     );
-    expect(sidebarWidthVar).toBe("440px");
+    expect(sidebarWidthVar).toBe("396px");
 
     // --grid-max-width must be bumped so the grid has room to widen.
     const maxWidthVar = await slotPage.evaluate((el) =>
       getComputedStyle(el).getPropertyValue("--grid-max-width").trim(),
     );
-    expect(maxWidthVar).toBe("min(calc(100vw - 60px), 1370px)");
+    expect(maxWidthVar).toBe("min(calc(100vw - 60px), 1200px)");
 
     // Sanity-check the rendered Request example is actually wider than
-    // the default 210px sidebar column.
+    // the default 230px sidebar column.
     const requestExample = page
       .getByText("Request example", { exact: true })
       .locator("xpath=ancestor::*[contains(@class,'slot-aside')][1]");

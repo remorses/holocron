@@ -24,7 +24,7 @@ test.describe('custom CSS injection', () => {
         .getPropertyValue('--custom-css-test')
         .trim(),
     )
-    expect(varValue).toBe('#ff00ff')
+    expect(varValue.toLowerCase()).toMatch(/^#(?:ff00ff|f0f)$/)
   })
 
   test('HTML response includes page content', async ({ request }) => {

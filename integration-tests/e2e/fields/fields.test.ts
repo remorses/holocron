@@ -371,12 +371,17 @@ test.describe("client navigation sidebar state", () => {
   }) => {
     test.setTimeout(40_000);
     await page.setViewportSize({ width: 1600, height: 900 });
-    await page.goto("/new");
+    await page.goto("/new#redirect-target");
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
     await expect(nav).toBeVisible({ timeout: 10000 });
     await page.reload();
     await expect(nav).toBeVisible({ timeout: 10000 });
+    await expect.poll(() => {
+      return nav.evaluate((node) => {
+        return Object.keys(node).some((key) => key.startsWith("__reactFiber"));
+      });
+    }).toBe(true);
     const getActiveHeadingId = async () => {
       return await nav.evaluate(() => {
         return document.querySelector<HTMLAnchorElement>('a[data-heading-id][data-active="true"]')?.dataset.headingId ?? null;
