@@ -243,7 +243,7 @@
   * {
     @apply border-border outline-ring/50;
     scrollbar-width: thin;
-    scrollbar-color: --alpha(var(--text-tertiary) / 50%) transparent;
+    scrollbar-color: --alpha(var(--text-tertiary) / 35%) transparent;
   }
   html {
     scrollbar-gutter: stable;
@@ -286,13 +286,13 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: --alpha(var(--text-tertiary) / 50%);
+    background: --alpha(var(--text-tertiary) / 35%);
     border-radius: var(--radius-md);
     border: none;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-tertiary);
+    background: --alpha(var(--text-tertiary) / 65%);
   }
 
   /* Stable scrollbar gutter only for scroll containers whose content should not
