@@ -745,6 +745,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (name === 'rsc' || name === 'ssr') {
         addNoExternal(config, holocronPackagePattern)
         addNoExternal(config, 'fflate')
+        config.optimizeDeps ??= {}
+        config.optimizeDeps.exclude = mergeUnique(
+          config.optimizeDeps.exclude,
+          ['spiceflow'],
+        )
       }
     },
   }
