@@ -112,12 +112,24 @@ export function P({ children, className = '' }: { children: React.ReactNode; cla
   )
 }
 
+function isExternalHref(href: string): boolean {
+  if (!href || href.startsWith('/') || href.startsWith('#') || href.startsWith('.')) return false
+  try {
+    const url = new URL(href, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+    if (typeof window !== 'undefined') return url.origin !== window.location.origin
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 export function A({ href, children }: { href: string; children: React.ReactNode }) {
+  const external = isExternalHref(href)
   return (
     <Link
       href={href}
-      target='_blank'
-      rel='noopener noreferrer'
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener noreferrer' : undefined}
       style={{
         color: 'var(--primary)',
         fontWeight: 'var(--weight-heading)',
