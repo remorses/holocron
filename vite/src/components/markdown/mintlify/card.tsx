@@ -47,7 +47,7 @@ export function Card({
   const showArrow = arrow ?? external
   const content = (
     <div className={`group/card relative flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4 ${horizontal ? 'flex-row items-center' : ''} ${disabled ? 'opacity-50' : ''} ${className}`.trim()}>
-      {img && <img src={img} alt='' className='w-full rounded-lg border border-border-subtle' />}
+      {img && <img src={img} alt='' className='w-full rounded-lg border border-border-subtle' style={{ maxWidth: '100%', height: 'auto' }} />}
       <div className='flex items-center gap-2'>
         {renderCompatIcon({ icon, iconType, size: 16, color })}
         {title ? <div className='text-sm font-semibold text-foreground'>{title}</div> : null}

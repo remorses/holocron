@@ -74,7 +74,7 @@ export function Image({
   }, [])
 
   if (!sourceWidth || !sourceHeight) {
-    return <img src={src} alt={alt} className={className} style={{ maxWidth: '100%', ...style }} />
+    return <img src={src} alt={alt} className={className} style={{ maxWidth: '100%', height: 'auto', ...style }} />
   }
 
   const frameStyle = buildImageFrameStyle({

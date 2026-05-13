@@ -117,12 +117,6 @@
 .editorial-article > :nth-child(n + 9) { animation-delay: 0.4s; }
 */
 
-/* Images and their wrappers must never overflow the content column */
-.slot-main img {
-  max-width: 100% !important;
-  height: auto;
-}
-
 /* Force all children of bleed to respect container width */
 .slot-main .bleed > * {
   max-width: 100% !important;
