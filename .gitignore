@@ -1,5 +1,6 @@
 node_modules
 dist
+.next
 esm
 .DS_Store
 *.tsbuildinfo
