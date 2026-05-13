@@ -1,6 +1,6 @@
 // Copies the template/ folder into dist/template/ at build time.
 // Only includes files that should be scaffolded for new projects:
-// MDX pages, docs.json, vite.config.ts, tsconfig.json, api.yaml, and public/.
+// MDX pages, docs.jsonc, vite.config.ts, tsconfig.json, api.yaml, and public/.
 // Excludes: node_modules, dist, tmp, .cache, lockfiles.
 
 import fs from 'node:fs'

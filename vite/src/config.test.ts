@@ -42,6 +42,16 @@ describe('readConfig file discovery', () => {
     expect(config.name).toBe('Docs JSONC Fallback')
   })
 
+  test('reads docs.jsonc with comments and trailing commas', () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-config-test-'))
+    fs.writeFileSync(path.join(tmpDir, 'docs.jsonc'), `{
+      // JSONC syntax should work for docs config files.
+      "name": "Docs JSONC Syntax",
+    }`)
+    const config = readConfig({ root: tmpDir })
+    expect(config.name).toBe('Docs JSONC Syntax')
+  })
+
   test('docs.json takes priority over docs.jsonc and holocron.jsonc', () => {
     const root = setupConfig('docs.json', { name: 'Primary' })
     fs.writeFileSync(path.join(root, 'docs.jsonc'), JSON.stringify({ name: 'Secondary' }))

@@ -5,7 +5,7 @@
 // files and writes .env + .gitignore + package.json.
 //
 // The template lives in dist/template/ (copied from template/ at build time
-// by scripts/copy-template.ts). We modify docs.json name + schema URL,
+// by scripts/copy-template.ts). We modify docs.jsonc name + schema URL,
 // and generate a fresh package.json with published @holocron.so/vite.
 //
 // Git metadata is NOT sent during scaffold because cwd is often a parent
@@ -24,6 +24,10 @@ import { getBaseUrl, getSessionToken } from './config.ts'
 // Template lives in dist/template/ after build. When running from src/ via tsx,
 // resolve relative to the package root's dist/ instead.
 const TEMPLATE_DIR = path.resolve(import.meta.dirname, '..', 'dist', 'template')
+
+// JSONC parser — allows the scaffold template to use comments and trailing commas.
+const stringOrCommentRe = /("(?:\\?[^])*?")|(\/\/.*)|(\/\*[^]*?\*\/)/g
+const stringOrTrailingCommaRe = /("(?:\\?[^])*?")|(,\s*)(?=]|})/g
 
 export const createCli = goke()
 
@@ -145,6 +149,26 @@ function copyDir(src: string, dest: string) {
   }
 }
 
+function parseJsonc(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return JSON.parse(
+      text
+        .replace(stringOrCommentRe, '$1')
+        .replace(stringOrTrailingCommaRe, '$1'),
+    )
+  }
+}
+
+function parseJsoncObject(text: string): Record<string, unknown> {
+  const parsed = parseJsonc(text)
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Template docs.jsonc must contain a top-level object')
+  }
+  return Object.fromEntries(Object.entries(parsed))
+}
+
 async function scaffold(options: ScaffoldOptions) {
   const { dir, name, skipAuth, skipInstall, baseUrl } = options
   const targetDir = path.resolve(dir)
@@ -184,10 +208,10 @@ async function scaffold(options: ScaffoldOptions) {
   }
   copyDir(TEMPLATE_DIR, targetDir)
 
-  // 3. Update docs.json with project name
-  const docsJsonPath = path.join(targetDir, 'docs.json')
+  // 3. Update docs.jsonc with project name
+  const docsJsonPath = path.join(targetDir, 'docs.jsonc')
   if (fs.existsSync(docsJsonPath)) {
-    const docsJson = JSON.parse(fs.readFileSync(docsJsonPath, 'utf-8'))
+    const docsJson = parseJsoncObject(fs.readFileSync(docsJsonPath, 'utf-8'))
     docsJson.name = name
     docsJson.$schema = 'https://unpkg.com/@holocron.so/vite/src/schema.json'
     fs.writeFileSync(docsJsonPath, JSON.stringify(docsJson, null, 2) + '\n')
