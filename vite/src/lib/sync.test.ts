@@ -1,4 +1,4 @@
-import { describe, test, expect, afterEach } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
@@ -49,6 +49,7 @@ function tracked(project: TmpProject): TmpProject {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks()
   for (const server of servers) {
     server.close()
   }
@@ -334,12 +335,13 @@ import { Widget } from '/components/widget'
     expect(first.parsedCount).toBe(1)
     expect(first.pageImports['index']).toEqual([])
 
-    // Create the file — MDX stays the same (same gitSha → cache hit)
+    // Create the file — MDX stays the same. The first run had a safe-mdx
+    // unresolved-import error, so that MDX was intentionally not cached.
     const componentsDir = path.join(project.pagesDir, 'components')
     fs.mkdirSync(componentsDir, { recursive: true })
     fs.writeFileSync(path.join(componentsDir, 'widget.tsx'), 'export const Widget = () => <div>w</div>')
 
-    // Second sync — cached MDX but re-resolved imports pick up new file
+    // Second sync — reprocesses MDX and picks up the newly-created import.
     const second = await syncNavigation({
       config,
       pagesDir: project.pagesDir,
@@ -347,9 +349,55 @@ import { Widget } from '/components/widget'
       projectRoot: project.root,
       distDir: project.distDir,
     })
-    expect(second.parsedCount).toBe(0)
-    expect(second.cachedCount).toBe(1)
+    expect(second.parsedCount).toBe(1)
+    expect(second.cachedCount).toBe(0)
     expect(second.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./components/widget.tsx'])
+  })
+
+  test('does not cache MDX pages with safe-mdx render errors', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+# Home
+
+<Caption>Missing component</Caption>
+`,
+      },
+    ))
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const config = readConfig({ root: project.root })
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.mdxContent.index).toContain('<Caption>Missing component</Caption>')
+    expect(JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))).toMatchObject({
+      content: {},
+      pageIconRefs: {},
+      pageImportSources: {},
+    })
+    expect(warn.mock.calls.map(([message]) => String(message).replace(/\x1b\[[0-9;]*m/g, ''))).toMatchInlineSnapshot(`
+      [
+        "▲ holocron MDX missing component
+        source /
+        line 7
+        reason Unsupported JSX component Caption
+        fix register the component or import it from this MDX file",
+      ]
+    `)
   })
 
   test('preserves typed page frontmatter metadata on NavPage', async () => {

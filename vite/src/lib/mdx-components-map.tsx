@@ -317,10 +317,8 @@ export function formatMdxError(error: SafeMdxError, source?: string): string {
   return lines.join('\n')
 }
 
-/** Log safe-mdx errors to stderr so missing components and expression
- *  failures surface in the Vite dev server terminal instead of being
- *  silently swallowed. This must never throw: MDX validation warnings should
- *  not be able to kill the dev server if stderr is closed by a parent process. */
+/** Log safe-mdx errors so missing components and expression failures surface
+ *  in the Vite dev server terminal instead of being silently swallowed. */
 export function logMdxError(error: SafeMdxError, source?: string): void {
   try {
     logger.warn(formatMdxError(error, source))
@@ -330,21 +328,17 @@ export function logMdxError(error: SafeMdxError, source?: string): void {
   }
 }
 
-export function createMdxErrorLogger(source?: string): (error: SafeMdxError) => void {
-  return (error) => logMdxError(error, source)
-}
-
 /** Render an array of mdast nodes through safe-mdx with the editorial
  *  component map and `renderNode` transformer. Used to render content,
  *  aside, and above nodes server-side. */
-export function RenderNodes({ markdown, nodes, modules, baseUrl, sourcePath }: {
+export function RenderNodes({ markdown, nodes, modules, baseUrl, source }: {
   markdown: string
   nodes: RootContent[]
   /** Pre-resolved modules for MDX import statements */
   modules?: EagerModules
   /** Directory of the current MDX file for resolving relative imports */
   baseUrl?: string
-  sourcePath?: string
+  source?: string
 }) {
   const syntheticRoot: Root = { type: 'root', children: nodes }
   return (
@@ -355,7 +349,7 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl, sourcePath }: {
       renderNode={renderNode}
       modules={modules}
       baseUrl={baseUrl}
-      onError={createMdxErrorLogger(sourcePath)}
+      onError={(error) => logMdxError(error, source)}
     />
   )
 }
@@ -365,10 +359,10 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl, sourcePath }: {
  *  Vite doesn't compile user MDX snippets as JSX, so the virtual modules map
  *  exposes raw markdown and this component renders it through the same safe-mdx
  *  component map used by pages. */
-export function RenderImportedMdx({ markdown, baseUrl, sourcePath }: {
+export function RenderImportedMdx({ markdown, baseUrl, source }: {
   markdown: string
   baseUrl?: string
-  sourcePath?: string
+  source?: string
 }) {
   return (
     <SafeMdxRenderer
@@ -377,7 +371,7 @@ export function RenderImportedMdx({ markdown, baseUrl, sourcePath }: {
       components={mdxComponents}
       renderNode={renderNode}
       baseUrl={baseUrl}
-      onError={createMdxErrorLogger(sourcePath)}
+      onError={(error) => logMdxError(error, source)}
     />
   )
 }

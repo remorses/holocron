@@ -27,7 +27,10 @@ import {
 } from '../config.ts'
 import { processVirtualTabs } from './virtual-tab-provider.ts'
 import { openapiProvider } from './openapi/provider.ts'
-import { formatHolocronWarning, logger } from './logger.ts'
+import { colors, formatHolocronWarning, logger } from './logger.ts'
+import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
+import type { EagerModules } from 'safe-mdx/parse'
+import type { Root } from 'mdast'
 import {
   type Navigation,
   type NavTab,
@@ -146,6 +149,9 @@ export async function syncNavigation({
   const pageImportSources: Record<string, string[]> = {}
   /** Resolved imports per page (computed fresh every sync from pageImportSources + filesystem) */
   const pageImports: Record<string, ResolvedImport[]> = {}
+  const mdxCacheContent: Record<string, string> = {}
+  const mdxCacheIconRefs: Record<string, IconRef[]> = {}
+  const mdxCacheImportSources: Record<string, string[]> = {}
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
@@ -159,6 +165,12 @@ export async function syncNavigation({
     if (virtualMdx) {
       const processed = processMdx(virtualMdx, config.icons.library)
       pageIconRefs[slug] = processed.iconRefs
+      const errors = collectMdxRenderErrors({ markdown: virtualMdx, mdast: processed.mdast, source: `/${slug}` })
+      if (errors.length === 0) {
+        mdxCacheContent[slug] = virtualMdx
+        mdxCacheIconRefs[slug] = processed.iconRefs
+        mdxCacheImportSources[slug] = []
+      }
       return {
         slug,
         href: slugToHref(slug),
@@ -186,13 +198,26 @@ export async function syncNavigation({
     if (cached && cached.gitSha === sha && cachedMdx) {
       cachedCount++
       mdxContent[slug] = cachedMdx
-      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
+      const processedCachedMdx = processMdx(cachedMdx, config.icons.library)
+      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processedCachedMdx.iconRefs
       // Restore cached raw import sources, then resolve fresh against the
       // current filesystem. This ensures newly-created files are picked up
       // without re-parsing the MDX.
       const cachedSources = oldPageImportSources[slug] ?? []
       pageImportSources[slug] = cachedSources
       pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
+      const renderErrors = collectMdxRenderErrors({
+        markdown: cachedMdx,
+        mdast: processedCachedMdx.mdast,
+        modules: createPlaceholderModules(pageImports[slug] ?? []),
+        baseUrl: getMdxBaseUrl({ slug, pagesDir, projectRoot }),
+        source: slug === 'index' ? '/' : `/${slug}`,
+      })
+      if (renderErrors.length === 0) {
+        mdxCacheContent[slug] = cachedMdx
+        mdxCacheIconRefs[slug] = pageIconRefs[slug] ?? []
+        mdxCacheImportSources[slug] = cachedSources
+      }
       return cached
     }
 
@@ -251,8 +276,20 @@ export async function syncNavigation({
     // Cache raw import sources (for future cache hits) and resolve fresh
     pageImportSources[slug] = processed.importSources
     pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
+    const renderErrors = collectMdxRenderErrors({
+      markdown: finalMdx,
+      mdast: processed.mdast,
+      modules: createPlaceholderModules(pageImports[slug] ?? []),
+      baseUrl: getMdxBaseUrl({ slug, pagesDir, projectRoot }),
+      source: slug === 'index' ? '/' : `/${slug}`,
+    })
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
+    if (renderErrors.length === 0) {
+      mdxCacheContent[slug] = finalMdx
+      mdxCacheIconRefs[slug] = processed.iconRefs
+      mdxCacheImportSources[slug] = processed.importSources
+    }
 
     return {
       slug,
@@ -317,7 +354,7 @@ export async function syncNavigation({
 
   // 5. Write caches
   writeCache(cachePath, navigation)
-  writeMdxCache(mdxCachePath, { content: mdxContent, pageIconRefs, pageImportSources })
+  writeMdxCache(mdxCachePath, { content: mdxCacheContent, pageIconRefs: mdxCacheIconRefs, pageImportSources: mdxCacheImportSources })
   saveImageCache({ distDir, cache: imageCache })
 
   return { navigation, switchers, mdxContent, pageIconRefs, pageImports, parsedCount, cachedCount }
@@ -408,7 +445,89 @@ function copyToPublic({ filePath, imageOutputDir }: { filePath: string; imageOut
   return destName
 }
 
+function PlaceholderMdxImport() {
+  return null
+}
 
+function createPlaceholderModules(imports: ResolvedImport[]): EagerModules {
+  const modules: EagerModules = {}
+  for (const { moduleKey } of imports) {
+    modules[moduleKey] = new Proxy({ default: PlaceholderMdxImport }, {
+      get() {
+        return PlaceholderMdxImport
+      },
+    })
+  }
+  return modules
+}
+
+function getMdxBaseUrl({ slug, pagesDir, projectRoot }: { slug: string; pagesDir: string; projectRoot: string }): string {
+  const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
+  const pagesDirRelative = path.relative(projectRoot, pagesDir)
+  const pagesDirPrefix = pagesDirRelative === '' ? './' : `./${pagesDirRelative}/`
+  return pagesDirPrefix + slugDir
+}
+
+// Build-time MDX validation must stay side-effect free. Do not import
+// mdx-components-map.tsx or markdown component barrels here: those pull client
+// components, CSS imports, and large runtime modules into Vite config loading.
+// Keep this as a tiny placeholder map that mirrors supported MDX component
+// names without executing user/runtime UI code.
+const safeMdxComponentNames = [
+  'p', 'Heading', 'a', 'code', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+  'ul', 'ol', 'li', 'Image', 'img', 'Bleed', 'Aside', 'FullWidth', 'Above', 'Hero',
+  'Callout', 'Note', 'Warning', 'Info', 'Tip', 'Check', 'Danger', 'Tabs', 'Tab', 'Accordion',
+  'AccordionGroup', 'Mermaid', 'Badge', 'Card', 'CardGroup', 'Columns', 'Column', 'Expandable',
+  'Frame', 'Prompt', 'ParamField', 'ResponseField', 'Steps', 'Step', 'Tile', 'Tooltip', 'Update',
+  'View', 'Panel', 'CodeCard', 'RequestExample', 'ResponseExample', 'Tree', 'Color', 'Icon', 'Markdown', 'Visibility',
+  'TableOfContentsPanel', 'HolocronAIAssistantWidget', 'OpenAPIEndpoint',
+]
+
+function createSafeMdxComponents() {
+  const components = Object.fromEntries(safeMdxComponentNames.map((name) => [name, PlaceholderMdxImport]))
+  components.Tree = Object.assign(PlaceholderMdxImport, {
+    Folder: PlaceholderMdxImport,
+    File: PlaceholderMdxImport,
+  })
+  components.Color = Object.assign(PlaceholderMdxImport, {
+    Row: PlaceholderMdxImport,
+    Item: PlaceholderMdxImport,
+  })
+  return components
+}
+
+function formatMdxRenderError(error: SafeMdxError, source: string): string {
+  const unsupportedComponent = /^Unsupported jsx component (.+)$/.exec(error.message)
+  const lines = [
+    formatHolocronWarning(`${colors.yellow('MDX')} ${error.type === 'missing-component' ? 'missing component' : error.type}`),
+    `  ${colors.dim('source')} ${colors.cyan(source)}`,
+    ...(error.line ? [`  ${colors.dim('line')} ${colors.yellow(String(error.line))}`] : []),
+    `  ${colors.dim('reason')} ${unsupportedComponent ? `Unsupported JSX component ${colors.yellow(unsupportedComponent[1]!)}` : error.message}`,
+  ]
+  if (error.type === 'missing-component') {
+    lines.push(`  ${colors.dim('fix')} register the component or import it from this MDX file`)
+  }
+  return lines.join('\n')
+}
+
+function collectMdxRenderErrors({ markdown, mdast, modules, baseUrl, source }: {
+  markdown: string
+  mdast: Root
+  modules?: EagerModules
+  baseUrl?: string
+  source: string
+}): SafeMdxError[] {
+  const visitor = new MdastToJsx({
+    markdown,
+    mdast,
+    components: createSafeMdxComponents(),
+    modules,
+    baseUrl,
+    onError: (error) => logger.warn(formatMdxRenderError(error, source)),
+  })
+  visitor.run()
+  return visitor.errors
+}
 
 /* ── Cache I/O ──────────────────────────────────────────────────────── */
 

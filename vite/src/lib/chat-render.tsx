@@ -7,7 +7,7 @@
 
 import type { Root, RootContent } from 'mdast'
 import { SafeMdxRenderer } from 'safe-mdx'
-import { createMdxErrorLogger, mdxComponents, renderNode } from './mdx-components-map.tsx'
+import { logMdxError, mdxComponents, renderNode } from './mdx-components-map.tsx'
 
 /** Render an array of mdast nodes through safe-mdx with the editorial
  *  component map. Used server-side to render AI chat response text. */
@@ -25,7 +25,7 @@ export function ChatRenderNodes({
       mdast={syntheticRoot}
       components={mdxComponents}
       renderNode={renderNode}
-      onError={createMdxErrorLogger('AI chat response')}
+      onError={(error) => logMdxError(error, 'AI chat response')}
     />
   )
 }
