@@ -821,6 +821,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     listenGuardPlugin,
   ]
 
+  // Auto-inject the Cloudflare plugin for deploy builds. Added before
+  // spiceflow so hasPluginNamed() sees it in config() and sets
+  // noExternal=true for rsc/ssr.
+  if (process.env.HOLOCRON_DEPLOY === '1' && !hasUserCloudflarePlugin) {
+    pluginsToReturn.push(
+      cloudflarePlugin({
+        viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
+      }),
+    )
+  }
+
   // Auto-add spiceflow/tailwind/react unless the user already installed each.
   // The `virtual:holocron-app` entry either boots the default holocron app
   // or re-exports the user's custom entry (see RESOLVED_APP in load()).
@@ -832,17 +843,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   }
   if (!hasUserReactPlugin) {
     pluginsToReturn.push(react())
-  }
-
-  // Auto-inject the Cloudflare plugin for deploy builds. Must be a resolved
-  // Plugin (not a Promise) so spiceflow's hasPluginNamed() can detect it in
-  // config() and set noExternal=true for rsc/ssr.
-  if (process.env.HOLOCRON_DEPLOY === '1' && !hasUserCloudflarePlugin) {
-    pluginsToReturn.push(
-      cloudflarePlugin({
-        viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
-      }),
-    )
   }
 
   return pluginsToReturn
