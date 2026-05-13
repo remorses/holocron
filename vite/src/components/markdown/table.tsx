@@ -57,7 +57,7 @@ export function TableHead({ className, ...props }: ComponentProps<'th'>) {
   return (
     <th
       data-slot='table-head'
-      className={classNames('h-10 px-2.5 text-left align-middle font-medium whitespace-nowrap text-muted-foreground', className)}
+      className={classNames('h-10 px-2.5 first:pl-0 last:pr-0 text-left align-middle font-medium whitespace-nowrap text-muted-foreground', className)}
       {...props}
     />
   )
@@ -67,7 +67,7 @@ export function TableCell({ className, ...props }: ComponentProps<'td'>) {
   return (
     <td
       data-slot='table-cell'
-      className={classNames('min-w-[150px] p-2.5 align-top', className)}
+      className={classNames('min-w-[150px] p-2.5 first:pl-0 last:pr-0 align-top', className)}
       {...props}
     />
   )
