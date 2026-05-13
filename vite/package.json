@@ -1,6 +1,6 @@
 {
   "name": "@holocron.so/vite",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Vite plugin for building documentation websites from MDX files with mintlify-compatible config",
   "type": "module",
   "main": "./dist/index.js",

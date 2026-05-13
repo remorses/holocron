@@ -1,5 +1,12 @@
 # @holocron.so/vite
 
+## 0.7.1
+
+1. **Fixed internal links opening in new tabs** — relative links, hash links, and same-origin links in docs content now navigate in-place using client-side navigation instead of opening a new browser tab. External links still open in a new tab as expected.
+2. **Table edges align flush with page content** — removed left padding from the first table column and right padding from the last column so table data aligns with surrounding editorial content.
+3. **Improved AI chat scroll behavior** — after submitting a message, the chat drawer now scrolls your message to the top of the viewport instead of jumping to the bottom. The loading state and assistant response area get enough height to keep the scroll position stable during streaming.
+4. **Fixed chat message overflow** — resolved an issue where `overflow-x-hidden` on chat text containers silently triggered vertical scrollbars due to CSS spec behavior. Content now grows naturally without nested scroll regions.
+
 ## 0.7.0
 
 1. **Auto-derive dark mode `--primary` when `colors.light` is not set** — previously, if you only configured `colors.primary` without an explicit `colors.light`, the dark mode accent color was identical to light mode, making links and buttons hard to read on dark backgrounds. Now it auto-generates a lighter variant via `color-mix(in oklch, <primary> 40%, white)`, roughly matching Tailwind's 200-scale lightness. If you explicitly set `colors.light`, your value is still used as-is.
