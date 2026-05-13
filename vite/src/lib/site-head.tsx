@@ -114,7 +114,9 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
   const colorStyles: string[] = []
   if (config.colors._hasUserColors) {
     const lightBrand = config.colors.dark ?? config.colors.primary
-    const darkBrand = config.colors.light ?? config.colors.primary
+    // When the user doesn't set colors.light, auto-derive a lighter variant
+    // for dark mode via color-mix. 40% of the original + 60% white ≈ Tailwind 200 scale.
+    const darkBrand = config.colors.light ?? `color-mix(in oklch, ${config.colors.primary} 40%, white)`
     colorStyles.push(`:root { --primary: ${lightBrand}; }`)
     colorStyles.push(`.dark { --primary: ${darkBrand}; }`)
   }
