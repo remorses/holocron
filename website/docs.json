@@ -2,6 +2,7 @@
     "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
     "name": "Holocron",
     "description": "Mintlify-compatible docs site generator as a Vite plugin.",
+    "favicon": "/favicon.ico",
     "colors": {
         "primary": "#5b7cff"
     },
