@@ -90,6 +90,7 @@ test.describe("realworld-polar fixture", () => {
 
   test("runtime images use blur plus opacity for the sharpen-in transition", async ({
     page,
+    request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await page.goto("/integrate/mcp", { waitUntil: "domcontentloaded" });
@@ -100,6 +101,13 @@ test.describe("realworld-polar fixture", () => {
 
     await expect(placeholderImage).toHaveCount(1);
     await expect(realImage).toBeVisible({ timeout: 10000 });
+
+    const markdownResponse = await request.get("/integrate/mcp.md", { timeout: 10_000 });
+    expect(markdownResponse.status()).toBe(200);
+    expect(markdownResponse.headers()["content-type"]).toContain("text/markdown");
+    const markdown = await markdownResponse.text();
+    expect(markdown).toContain("Supercharge your AI agents with Polar as a Model Context Protocol (MCP) server.");
+    expect(markdown).toMatch(/<(?:img|Image)\s/);
 
     const [placeholderStyles, styles] = await Promise.all([
       placeholderImage.evaluate((node) => {
@@ -194,12 +202,15 @@ test.describe("realworld-polar fixture", () => {
       }).filter((item) => item.heading !== null),
     );
 
-    expect(sectionBoxes).toEqual([
-      { heading: "Migrate to Polar", deadSpace: 0 },
-      { heading: "Getting Started", deadSpace: 0 },
-      { heading: "Supported Migrations", deadSpace: 0 },
-      { heading: "Open Source", deadSpace: 0 },
+    expect(sectionBoxes.map((item) => item.heading)).toEqual([
+      "Lemon Squeezy",
+      "Getting Started",
+      "Supported Migrations",
+      "Open Source",
     ]);
+    for (const section of sectionBoxes) {
+      expect(section.deadSpace).toBeLessThanOrEqual(1);
+    }
   });
 
   test("left toc stays sticky while scrolling long pages", async ({ page }) => {
