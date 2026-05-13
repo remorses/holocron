@@ -1,5 +1,14 @@
 # @holocron.so/vite
 
+## 0.7.0
+
+1. **Auto-derive dark mode `--primary` when `colors.light` is not set** — previously, if you only configured `colors.primary` without an explicit `colors.light`, the dark mode accent color was identical to light mode, making links and buttons hard to read on dark backgrounds. Now it auto-generates a lighter variant via `color-mix(in oklch, <primary> 40%, white)`, roughly matching Tailwind's 200-scale lightness. If you explicitly set `colors.light`, your value is still used as-is.
+2. **Fixed Cloudflare Workers deploy crash ("No such module ssr/isbot")** — the `@cloudflare/vite-plugin` was loaded via async `import()`, leaving an unresolved Promise in the plugins array. Spiceflow's `hasPluginNamed()` couldn't detect it, so `noExternal: true` was never set for SSR/RSC environments. Bare npm imports like `isbot` and `history` stayed external in the bundle, crashing Dynamic Workers at runtime. The plugin is now imported synchronously and placed before spiceflow in the plugin array so detection works correctly.
+3. **Fixed image height override in content area** — a blanket `.slot-main img { height: auto !important }` rule was overriding the explicit `height: 100%` set by the Image component for pixelated placeholder grid overlays. The global rule has been removed; `height: auto` and `max-width: 100%` are now applied only on the specific image paths that need them (bare fallback images and Card img props).
+4. **Tighter TOC panel spacing** — reduced right-sidebar table of contents item vertical padding from `py-1.5` to `py-1` so headings feel less spread out while keeping comfortable click targets.
+5. **Excluded spiceflow from RSC/SSR optimizeDeps** — prevents Vite from pre-bundling spiceflow in RSC and SSR environments so it stays in the transform pipeline as-is.
+6. **Deploy output writes to `dist/.holocron`** — when `HOLOCRON_DEPLOY=1` is set, the Vite plugin now sets `build.outDir` to `dist/.holocron` instead of `dist/`, keeping deploy artifacts separate from normal platform-specific builds.
+
 ## 0.6.1
 
 1. **`@cloudflare/vite-plugin` is now a direct dependency** — users deploying to Cloudflare Workers no longer need to install it separately. It ships as a transitive dep of `@holocron.so/vite`.

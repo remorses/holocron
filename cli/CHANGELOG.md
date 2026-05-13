@@ -1,3 +1,9 @@
+## 0.11.1
+
+1. **Deploy auth check runs before build** — credentials are validated upfront so missing auth fails immediately instead of after a full Vite build.
+2. **Deploy output separated from normal build** — `holocron deploy` now writes to `dist/.holocron` instead of `dist/`, keeping deploy artifacts isolated from platform-specific Vite builds (Cloudflare vs Node.js).
+3. **Removed `--skip-build` flag** — builds always run during deploy. The separate output dir makes the flag unnecessary.
+
 ## 0.11.0
 
 1. **Keyless deploys from GitHub Actions via OIDC** — `holocron deploy` now supports GitHub Actions OIDC authentication natively. No `HOLOCRON_KEY` secret needed; just set `permissions: id-token: write` in your workflow:
