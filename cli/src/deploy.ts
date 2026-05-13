@@ -39,16 +39,7 @@ deployCli
     const isPullRequest = !!(process.env.GITHUB_HEAD_REF || process.env.HOLOCRON_PREVIEW)
     output.log(logger.step(isPullRequest ? `Branch: ${c.bold(branch)} ${c.dim('(preview, PR detected)')}` : `Branch: ${c.bold(branch)}`))
 
-    // ── Build (runs BEFORE auth so GitHub OIDC is minted as late as possible) ───
-    if (!options.skipBuild) {
-      const buildErr = await runBuild(cwd)
-      if (buildErr instanceof Error) {
-        output.error(logger.error('Build failed'))
-        return proc.exit(1)
-      }
-    }
-
-    // ── Auth (after build, so GitHub OIDC tokens stay fresh) ──────────────
+    // ── Auth (fail fast before spending time on build) ──────────────────
     let deployClient: Awaited<ReturnType<typeof getDeployClient>>
     try {
       deployClient = await getDeployClient()
@@ -57,6 +48,15 @@ deployCli
       return proc.exit(1)
     }
     const { safeFetch, auth } = deployClient
+
+    // ── Build ─────────────────────────────────────────────────────────────
+    if (!options.skipBuild) {
+      const buildErr = await runBuild(cwd)
+      if (buildErr instanceof Error) {
+        output.error(logger.error('Build failed'))
+        return proc.exit(1)
+      }
+    }
 
     // ── Resolve project (only needed for session auth) ────────────
     const projectId = auth.type === 'session' && !options.project
