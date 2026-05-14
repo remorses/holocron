@@ -1,3 +1,13 @@
+## 0.12.0
+
+1. **Scaffolded projects now use `docs.jsonc`** — `holocron create` generates the starter config as JSONC, so new projects can keep comments and trailing commas in the same config file Holocron reads by default.
+
+   ```bash
+   npx -y @holocron.so/cli create my-docs
+   ```
+
+   The create command now parses the template as JSONC before writing the project name and schema URL, so custom starter templates can use JSONC syntax safely.
+
 ## 0.11.1
 
 1. **Deploy auth check runs before build** — credentials are validated upfront so missing auth fails immediately instead of after a full Vite build.

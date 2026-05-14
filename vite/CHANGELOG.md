@@ -1,5 +1,27 @@
 # @holocron.so/vite
 
+## 0.8.0
+
+1. **New `<Logo />` MDX component** — render the configured site logo directly inside docs content. It uses the same resolved light, dark, and generated logo variants as the navbar and footer.
+
+   ```mdx
+   <Logo />
+   ```
+
+2. **Tailwind scans your docs tree** — Holocron now adds your configured `pagesDir` as a Tailwind source, so utility classes used in MDX content and imported docs components are included in the generated CSS.
+
+3. **Better MDX error pages and build failures** — MDX parse failures stay attached to their page route in dev, rendering a focused error page instead of turning into a 404. Production builds fail with the formatted code-frame message so broken docs do not deploy silently.
+
+4. **MDX component validation during sync** — Holocron validates rendered MDX against the supported component map while syncing navigation. Unknown components and invalid imported MDX now surface earlier with the page source that caused the failure.
+
+5. **Self-hosted JetBrains Mono** — code now uses `@fontsource-variable/jetbrains-mono`, avoiding a third-party font request for the default monospace font.
+
+6. **JSONC syntax highlighting** — fenced `jsonc` code blocks now reuse Prism's JSON grammar instead of rendering without highlighting.
+
+7. **OpenAPI success responses open by default** — generated endpoint pages now expand successful response examples first, making the useful response shape visible immediately.
+
+8. **Navigation and layout polish** — browser scroll restoration works across docs navigation, unnamed sidebar groups no longer break search, responsive images keep their intended sizing, Frame captions align better, and the page AI widget stays hidden on mobile.
+
 ## 0.7.1
 
 1. **Fixed internal links opening in new tabs** — relative links, hash links, and same-origin links in docs content now navigate in-place using client-side navigation instead of opening a new browser tab. External links still open in a new tab as expected.
