@@ -200,7 +200,7 @@ function getBannerJsx(site: HolocronSiteData, request: Request): React.ReactNode
   if (pageCookies['holocron-banner-dismissed'] === site.config.banner.content) return undefined
   const bannerMdx = site.config.banner.content
   const bannerMdast = mdxParse(bannerMdx)
-  return <RenderBannerNodes markdown={bannerMdx} nodes={bannerMdast.children} sourcePath='docs.json banner' />
+  return <RenderBannerNodes markdown={bannerMdx} nodes={bannerMdast.children} source='docs.json banner' />
 }
 
 function renderMdxPage({
@@ -291,9 +291,9 @@ function renderMdxPage({
       : section.asideNodes
     const aside =
       asideNodes.length > 0 ? (
-        <RenderNodes markdown={pageMdx} nodes={asideNodes} modules={modules} baseUrl={mdxBaseUrl} sourcePath={mdxSourcePath} />
+        <RenderNodes markdown={pageMdx} nodes={asideNodes} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
       ) : undefined
-    const renderedContent = <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} sourcePath={mdxSourcePath} />
+    const renderedContent = <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
     // Prepend a rendered H1 from frontmatter title when the MDX doesn't
     // start with one. Only the first section gets the heading.
     const content = (shouldInjectH1 && i === 0) ? (
@@ -319,7 +319,7 @@ function renderMdxPage({
     : aboveNodes
   const above =
     aboveWithImports.length > 0 ? (
-      <RenderNodes markdown={pageMdx} nodes={aboveWithImports} modules={modules} baseUrl={mdxBaseUrl} sourcePath={mdxSourcePath} />
+      <RenderNodes markdown={pageMdx} nodes={aboveWithImports} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
     ) : undefined
 
   const gridGap = loaderData.currentPageFrontmatter?.gridGap

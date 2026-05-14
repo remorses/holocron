@@ -25,6 +25,7 @@ import { cloudflare as cloudflarePlugin } from '@cloudflare/vite-plugin'
 // `..` always gets back to the package root and `src/` from there is stable.
 const __holocronSrcDir = fileURLToPath(new URL('../src', import.meta.url))
 const HOLOCRON_APP_SRC_PATH = path.join(__holocronSrcDir, 'app.tsx')
+const HOLOCRON_GLOBALS_CSS_PATH = path.join(__holocronSrcDir, 'styles/globals.css')
 const nodeRequire = createRequire(import.meta.url)
 const yamlBrowserEntry = path.join(path.dirname(nodeRequire.resolve('yaml/package.json')), 'browser/index.js')
 
@@ -121,6 +122,13 @@ function addNoExternal(
 function mergeUnique(existing: string | string[] | undefined, items: string[]): string[] {
   const arr = Array.isArray(existing) ? existing : existing ? [existing] : []
   return Array.from(new Set([...arr, ...items]))
+}
+
+function toCssSourcePath(fromDir: string, toDir: string): string {
+  const relativePath = path.relative(fromDir, toDir).replace(/\\/g, '/')
+  if (relativePath === '') return '.'
+  if (relativePath.startsWith('.')) return relativePath
+  return './' + relativePath
 }
 
 // ── Code-splitting group definitions ────────────────────────────────
@@ -393,6 +401,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     load(id) {
+      if (id.replace(/[?#].*$/, '') === HOLOCRON_GLOBALS_CSS_PATH) {
+        const pagesSourcePath = toCssSourcePath(path.dirname(HOLOCRON_GLOBALS_CSS_PATH), pagesDir)
+        return [
+          fs.readFileSync(HOLOCRON_GLOBALS_CSS_PATH, 'utf-8'),
+          '',
+          '/* Scan the user docs tree too, including custom `pagesDir` locations. */',
+          `@source ${JSON.stringify(pagesSourcePath)};`,
+        ].join('\n')
+      }
+
       if (id === RESOLVED_CONFIG) {
         if (options.virtualModules?.config) {
           return options.virtualModules.config
@@ -498,12 +516,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
           if (/\.mdx?$/.test(absPath)) {
             const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
-            const sourcePath = './' + path.relative(root, absPath).replace(/\\/g, '/')
+            const source = './' + path.relative(root, absPath).replace(/\\/g, '/')
             return [
               `  ${JSON.stringify(moduleKey)}: async () => {`,
               `    const markdown = (await import(${JSON.stringify(absPath + '?raw')})).default`,
               `    return { default: function ImportedMdx(props) {`,
-              `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)}, sourcePath: ${JSON.stringify(sourcePath)} })`,
+              `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)}, source: ${JSON.stringify(source)} })`,
               `    } }`,
               `  }`,
             ].join('\n')
