@@ -4,7 +4,7 @@ import React from 'react'
 import type { RootContent } from 'mdast'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { Link } from 'spiceflow/react'
-import { logMdxError } from '../../lib/mdx-components-map.tsx'
+import { logMdxError } from '../../lib/logger.ts'
 
 function BannerP({ children }: { children: React.ReactNode }) {
   return <span>{children}</span>

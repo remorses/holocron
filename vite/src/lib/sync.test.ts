@@ -7,6 +7,7 @@ import { syncNavigation } from './sync.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import { readConfig } from '../config.ts'
 import { collectAllPages, findPage, buildPageIndex } from '../navigation.ts'
+import { logger } from './logger.ts'
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
@@ -372,7 +373,7 @@ title: Home
 `,
       },
     ))
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
     const config = readConfig({ root: project.root })
 
     const result = await syncNavigation({

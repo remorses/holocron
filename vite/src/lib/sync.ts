@@ -27,7 +27,7 @@ import {
 } from '../config.ts'
 import { processVirtualTabs } from './virtual-tab-provider.ts'
 import { openapiProvider } from './openapi/provider.ts'
-import { colors, formatHolocronWarning, logger } from './logger.ts'
+import { formatHolocronWarning, logger, logMdxError } from './logger.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import type { EagerModules } from 'safe-mdx/parse'
 import type { Root } from 'mdast'
@@ -165,7 +165,7 @@ export async function syncNavigation({
     if (virtualMdx) {
       const processed = processMdx(virtualMdx, config.icons.library)
       pageIconRefs[slug] = processed.iconRefs
-      const errors = collectMdxRenderErrors({ markdown: virtualMdx, mdast: processed.mdast, source: `/${slug}` })
+      const errors = validateAndReportMdx({ markdown: virtualMdx, mdast: processed.mdast, source: `/${slug}` })
       if (errors.length === 0) {
         mdxCacheContent[slug] = virtualMdx
         mdxCacheIconRefs[slug] = processed.iconRefs
@@ -198,26 +198,18 @@ export async function syncNavigation({
     if (cached && cached.gitSha === sha && cachedMdx) {
       cachedCount++
       mdxContent[slug] = cachedMdx
-      const processedCachedMdx = processMdx(cachedMdx, config.icons.library)
-      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processedCachedMdx.iconRefs
+      // Cached MDX entries were validated before being written. Do not
+      // validate again here, or cache hits would reparse every page on sync.
+      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
       // Restore cached raw import sources, then resolve fresh against the
       // current filesystem. This ensures newly-created files are picked up
       // without re-parsing the MDX.
       const cachedSources = oldPageImportSources[slug] ?? []
       pageImportSources[slug] = cachedSources
       pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
-      const renderErrors = collectMdxRenderErrors({
-        markdown: cachedMdx,
-        mdast: processedCachedMdx.mdast,
-        modules: createPlaceholderModules(pageImports[slug] ?? []),
-        baseUrl: getMdxBaseUrl({ slug, pagesDir, projectRoot }),
-        source: slug === 'index' ? '/' : `/${slug}`,
-      })
-      if (renderErrors.length === 0) {
-        mdxCacheContent[slug] = cachedMdx
-        mdxCacheIconRefs[slug] = pageIconRefs[slug] ?? []
-        mdxCacheImportSources[slug] = cachedSources
-      }
+      mdxCacheContent[slug] = cachedMdx
+      mdxCacheIconRefs[slug] = pageIconRefs[slug] ?? []
+      mdxCacheImportSources[slug] = cachedSources
       return cached
     }
 
@@ -276,7 +268,7 @@ export async function syncNavigation({
     // Cache raw import sources (for future cache hits) and resolve fresh
     pageImportSources[slug] = processed.importSources
     pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
-    const renderErrors = collectMdxRenderErrors({
+    const renderErrors = validateAndReportMdx({
       markdown: finalMdx,
       mdast: processed.mdast,
       modules: createPlaceholderModules(pageImports[slug] ?? []),
@@ -449,6 +441,18 @@ function PlaceholderMdxImport() {
   return null
 }
 
+function TreePlaceholder() {
+  return null
+}
+TreePlaceholder.Folder = PlaceholderMdxImport
+TreePlaceholder.File = PlaceholderMdxImport
+
+function ColorPlaceholder() {
+  return null
+}
+ColorPlaceholder.Row = PlaceholderMdxImport
+ColorPlaceholder.Item = PlaceholderMdxImport
+
 function createPlaceholderModules(imports: ResolvedImport[]): EagerModules {
   const modules: EagerModules = {}
   for (const { moduleKey } of imports) {
@@ -485,32 +489,12 @@ const safeMdxComponentNames = [
 
 function createSafeMdxComponents() {
   const components = Object.fromEntries(safeMdxComponentNames.map((name) => [name, PlaceholderMdxImport]))
-  components.Tree = Object.assign(PlaceholderMdxImport, {
-    Folder: PlaceholderMdxImport,
-    File: PlaceholderMdxImport,
-  })
-  components.Color = Object.assign(PlaceholderMdxImport, {
-    Row: PlaceholderMdxImport,
-    Item: PlaceholderMdxImport,
-  })
+  components.Tree = TreePlaceholder
+  components.Color = ColorPlaceholder
   return components
 }
 
-function formatMdxRenderError(error: SafeMdxError, source: string): string {
-  const unsupportedComponent = /^Unsupported jsx component (.+)$/.exec(error.message)
-  const lines = [
-    formatHolocronWarning(`${colors.yellow('MDX')} ${error.type === 'missing-component' ? 'missing component' : error.type}`),
-    `  ${colors.dim('source')} ${colors.cyan(source)}`,
-    ...(error.line ? [`  ${colors.dim('line')} ${colors.yellow(String(error.line))}`] : []),
-    `  ${colors.dim('reason')} ${unsupportedComponent ? `Unsupported JSX component ${colors.yellow(unsupportedComponent[1]!)}` : error.message}`,
-  ]
-  if (error.type === 'missing-component') {
-    lines.push(`  ${colors.dim('fix')} register the component or import it from this MDX file`)
-  }
-  return lines.join('\n')
-}
-
-function collectMdxRenderErrors({ markdown, mdast, modules, baseUrl, source }: {
+function validateAndReportMdx({ markdown, mdast, modules, baseUrl, source }: {
   markdown: string
   mdast: Root
   modules?: EagerModules
@@ -523,7 +507,7 @@ function collectMdxRenderErrors({ markdown, mdast, modules, baseUrl, source }: {
     components: createSafeMdxComponents(),
     modules,
     baseUrl,
-    onError: (error) => logger.warn(formatMdxRenderError(error, source)),
+    onError: (error) => logMdxError(error, source),
   })
   visitor.run()
   return visitor.errors

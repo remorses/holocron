@@ -4,7 +4,7 @@
  */
 
 import { Children, Fragment, type ReactNode } from 'react'
-import { SafeMdxRenderer, type SafeMdxError } from 'safe-mdx'
+import { SafeMdxRenderer } from 'safe-mdx'
 import type { PhrasingContent, Root, RootContent } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
 import { mdxParse, type EagerModules } from 'safe-mdx/parse'
@@ -75,7 +75,7 @@ import {
   Icon,
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
-import { colors, formatHolocronWarning, logger } from './logger.ts'
+import { logMdxError } from './logger.ts'
 
 import { SidebarAssistant } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
@@ -273,59 +273,6 @@ export function renderNode(
     )
   }
   return undefined
-}
-
-function getMdxErrorTypeLabel(type: SafeMdxError['type']): string {
-  switch (type) {
-    case 'missing-component': return 'missing component'
-    case 'validation': return 'validation'
-    case 'expression': return 'expression'
-    case 'esm-import': return 'ESM import'
-    default: return type
-  }
-}
-
-function formatMdxErrorMessage(message: string): string {
-  const unsupportedComponent = /^Unsupported jsx component (.+)$/.exec(message)
-  if (unsupportedComponent) {
-    return `Unsupported JSX component ${colors.yellow(unsupportedComponent[1]!)}`
-  }
-
-  return message
-}
-
-export function formatMdxError(error: SafeMdxError, source?: string): string {
-  const lines = [
-    formatHolocronWarning(`${colors.yellow('MDX')} ${getMdxErrorTypeLabel(error.type)}`),
-    `  ${colors.dim('reason')} ${formatMdxErrorMessage(error.message)}`,
-  ]
-
-  if (source) {
-    lines.splice(1, 0, `  ${colors.dim('source')} ${colors.cyan(source)}`)
-  } else if (error.line) {
-    lines.splice(1, 0, `  ${colors.dim('line')} ${colors.yellow(String(error.line))}`)
-  }
-
-  if (source && error.line) {
-    lines.splice(2, 0, `  ${colors.dim('line')} ${colors.yellow(String(error.line))}`)
-  }
-
-  if (error.type === 'missing-component') {
-    lines.push(`  ${colors.dim('fix')} register the component or import it from this MDX file`)
-  }
-
-  return lines.join('\n')
-}
-
-/** Log safe-mdx errors so missing components and expression failures surface
- *  in the Vite dev server terminal instead of being silently swallowed. */
-export function logMdxError(error: SafeMdxError, source?: string): void {
-  try {
-    logger.warn(formatMdxError(error, source))
-  } catch {
-    // Best-effort terminal output only. Rendering can continue with the
-    // placeholder/null node that safe-mdx already returns for recoverable errors.
-  }
 }
 
 /** Render an array of mdast nodes through safe-mdx with the editorial
