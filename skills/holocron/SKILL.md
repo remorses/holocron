@@ -1,51 +1,169 @@
 ---
-title: Holocron
-description: Mintlify drop-in open source replacement as a Vite plugin. Use it to create documentation websites.
+name: holocron
+repo: https://github.com/remorses/holocron
+description: >
+  Holocron is a Mintlify-compatible docs site generator and Vite plugin.
+  Use this skill when creating, migrating, customizing, or deploying a
+  Holocron documentation site.
 ---
 
-## Page frontmatter reference
+# Holocron
 
-Every MDX page supports YAML frontmatter. The schema uses `.passthrough()` so unknown fields are preserved. Source of truth: `vite/src/lib/page-frontmatter.ts`.
+Holocron documentation changes fast. Do not rely on stale training data or
+repository-relative source paths. Fetch the public docs first, then search them.
 
-- **`title`** (string) — Page title for sidebar, browser tab, and auto-injected `<h1>`. Falls back to first heading, then `"Untitled"`.
-- **`description`** (string) — Page description for `<meta name="description">` and OpenGraph. Falls back to site-level description.
-- **`icon`** (string) — Icon name shown next to the page in the sidebar. Uses the configured library (Font Awesome or Lucide). Supports `library:name` format like `fontawesome:brands:discord`.
-- **`sidebarTitle`** (string) — Overrides the title shown in sidebar navigation (useful when the full title is too long).
-- **`tag`** (string) — Small badge next to the page in sidebar (e.g. `BETA`, `NEW`). Only shows when `api` is not set.
-- **`deprecated`** (boolean) — Adds a `Deprecated` badge next to the page in the sidebar.
-- **`api`** (string) — Mintlify API page convention. Set to `"METHOD /path"` (e.g. `"GET /users"`). The HTTP method renders as a colored badge in the sidebar.
-- **`hidden`** (boolean) — Hides the page from sidebar and adds `noindex` robots tag. Page remains routable by URL.
-- **`noindex`** (boolean) — Adds `<meta name="robots" content="noindex">` but keeps the page visible in sidebar.
-- **`robots`** (string) — Custom `<meta name="robots">` value (e.g. `noarchive`, `nofollow`).
-- **`keywords`** (string[]) — Rendered as `<meta name="keywords">`. Also boosts the page in Holocron sidebar search.
-- **`gridGap`** (number) — Overrides horizontal gap (px) between content and sidebars. Default `60`, OpenAPI pages use `30`.
-- **`cache-control`** (string) — Custom `Cache-Control` header on page response. Default: `s-maxage=300, stale-while-revalidate=86400`.
-- **`og:title`** (string) — OpenGraph title. Defaults to `{title} — {siteName}`.
-- **`og:description`** (string) — OpenGraph description. Defaults to page `description`.
-- **`og:image`** (string) — OpenGraph image URL. Defaults to auto-generated OG image.
-- **`og:url`** (string) — Canonical URL for the page.
-- **`og:type`** (string) — OpenGraph type (e.g. `article`).
-- **`og:image:width`** (string | number) — OG image width in pixels.
-- **`og:image:height`** (string | number) — OG image height in pixels.
-- **`twitter:title`** (string) — Twitter card title. Defaults to `og:title`.
-- **`twitter:description`** (string) — Twitter card description. Defaults to `og:description`.
-- **`twitter:image`** (string) — Twitter card image. Defaults to `og:image`.
-- **`twitter:card`** (string) — Card type: `summary` or `summary_large_image` (default).
-- **`twitter:site`** (string) — Twitter handle for the site (e.g. `@mycompany`).
-- **`twitter:image:width`** (string | number) — Twitter image width in pixels.
-- **`twitter:image:height`** (string | number) — Twitter image height in pixels.
+## Always fetch the docs zip first
+
+Before answering Holocron usage questions or editing a Holocron project, fetch
+the latest docs zip and search it locally.
+
+```bash
+curl -fsSL https://holocron.so/docs.zip -o /tmp/holocron-docs.zip
+DOCS_DIR=$(mktemp -d /tmp/holocron-docs.XXXXXX)
+unzip -oq /tmp/holocron-docs.zip -d "$DOCS_DIR"
+```
+
+Never truncate docs output. Do not pipe docs through `head`, `tail`, `sed -n`,
+or any command that hides lines. Use full-file reads and targeted searches.
+
+Useful searches:
+
+```bash
+grep -R "project" "$DOCS_DIR"
+grep -R "docs.json" "$DOCS_DIR"
+grep -R "deploy" "$DOCS_DIR"
+grep -R "navigation" "$DOCS_DIR"
+grep -R "OpenAPI" "$DOCS_DIR"
+```
+
+## Always fetch the relevant how-to page
+
+When the user asks about a specific workflow, fetch the matching markdown page
+directly in addition to the docs zip.
+
+- **Overview**: https://holocron.so/llms.txt
+- **Quickstart / create a docs site**: https://holocron.so/quickstart.md
+- **What Holocron is**: https://holocron.so/what-is-holocron.md
+- **Create pages**: https://holocron.so/create/pages.md
+- **MDX syntax**: https://holocron.so/create/mdx.md
+- **Local imports**: https://holocron.so/create/local-imports.md
+- **`docs.json` config**: https://holocron.so/organize/docs-json.md
+- **Config schema**: https://unpkg.com/@holocron.so/vite/src/schema.json
+- **Navigation**: https://holocron.so/organize/navigation.md
+- **Navigation tabs**: https://holocron.so/organize/navigation.md
+- **Theme customization**: https://holocron.so/customize/theme.md
+- **Cloudflare deploy**: https://holocron.so/deploy/cloudflare.md
+- **Node deploy**: https://holocron.so/deploy/node.md
+- **AI assistant docs**: https://holocron.so/ai/assistant.md
+
+Example:
+
+```bash
+curl -fsSL https://holocron.so/quickstart.md
+curl -fsSL https://holocron.so/organize/docs-json.md
+curl -fsSL https://unpkg.com/@holocron.so/vite/src/schema.json
+```
+
+## `docs.jsonc` basics
+
+Holocron reads `docs.json`, `docs.jsonc`, or `holocron.jsonc`. Prefer
+`docs.jsonc` when writing by hand because comments and trailing commas make it
+easier to maintain. Use `docs.json` when a tool needs strict JSON.
+
+Always fetch the schema before adding uncommon config fields so you can see the
+current full option set:
+
+```bash
+curl -fsSL https://unpkg.com/@holocron.so/vite/src/schema.json
+```
+
+Simple `docs.jsonc`:
+
+```jsonc
+{
+  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
+  "name": "Acme",
+  "description": "Documentation for Acme.",
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg"
+  },
+  "navigation": [
+    {
+      "group": "Get started",
+      "pages": ["index", "quickstart"]
+    },
+    {
+      "group": "Guides",
+      "pages": ["guides/install", "guides/deploy"]
+    }
+  ]
+}
+```
+
+Page slugs in `navigation.pages` map to MDX files. For example `quickstart`
+loads `quickstart.mdx`, and `guides/install` loads `guides/install.mdx`.
+
+## Page frontmatter
+
+Every MDX page can include YAML frontmatter. Keep it concise and only add fields
+that change rendering, SEO, or navigation.
+
+```mdx
+---
+title: Quickstart
+description: Build and deploy your first Holocron docs site.
+icon: rocket
+tag: NEW
+---
+
+# Quickstart
+```
+
+Common fields:
+
+- **`title`** — page title for sidebar, browser tab, and generated heading.
+- **`description`** — page description for SEO and social previews.
+- **`icon`** — sidebar icon name. Supports configured icon library names.
+- **`sidebarTitle`** — shorter title just for sidebar navigation.
+- **`tag`** — small sidebar badge like `NEW` or `BETA`.
+- **`deprecated`** — marks the page as deprecated in navigation.
+- **`api`** — Mintlify API page label like `GET /users`.
+- **`hidden`** — hides the page from sidebar and adds `noindex`.
+- **`noindex`** — keeps the page visible but adds robots `noindex`.
+- **`robots`** — custom robots meta value.
+- **`keywords`** — search and metadata keywords.
+- **`cache-control`** — custom response cache header.
+- **`og:title`**, **`og:description`**, **`og:image`** — OpenGraph metadata.
+- **`twitter:title`**, **`twitter:description`**, **`twitter:image`** — Twitter card metadata.
 
 ## Icons
 
-The default icon library is **Font Awesome** (`fontawesome`). To use Lucide icons instead, set `"icons": { "library": "lucide" }` in `docs.json`. Icon names like `home`, `zap`, `file-text`, `panel-left` are Lucide names and won't resolve with the default Font Awesome library.
+The default icon library is **Font Awesome**. To use Lucide icons instead, set
+the icon library in `docs.jsonc`:
 
-If you add an icon to a page group don't use the same icon to the first page. This will look like there are 2 duplicate icons in the navigation tree.
+```jsonc
+{
+  "icons": {
+    "library": "lucide"
+  }
+}
+```
 
-If you use icons in cards components use it for all items, not only some. Otherwise it will look bad.
+Icon names like `home`, `zap`, `file-text`, and `panel-left` are Lucide names
+and will not resolve with the default Font Awesome library.
 
-## MDX authoring: multi-line container components
+If a group has an icon, do not use the same icon on the first page in that
+group. It looks like a duplicate icon in the navigation tree.
 
-Always use multi-line form for container components (Callout, Note, Warning, Info, Tip, Check, Danger, Aside, Accordion, Steps, Card, Expandable, Panel, Frame, Prompt, etc.). Put content on its own line with a newline after the opening tag. Single-line form produces bare phrasing children without paragraph wrapping.
+If cards use icons, use icons for every card in the group. Mixing icon and
+non-icon cards looks broken.
+
+## MDX container components
+
+Always use multi-line form for container components like `Callout`, `Note`,
+`Warning`, `Info`, `Tip`, `Check`, `Danger`, `Aside`, `Accordion`, `Steps`,
+`Card`, `Expandable`, `Panel`, `Frame`, and `Prompt`.
 
 ```mdx
 <Note>
@@ -53,9 +171,13 @@ Use `Note` for neutral supporting information.
 </Note>
 ```
 
-## Aside must always contain a component
+Single-line form can produce bare phrasing children without paragraph wrapping,
+which changes styling.
 
-`<Aside>` is positioning-only with no visual frame. Always wrap content in `<Note>`, `<Tip>`, `<Info>`, `<Warning>`, `<Callout>`, or another framed component. Exception: `<Aside full>` with `<TableOfContentsPanel />`.
+## Aside content
+
+`Aside` is positioning-only and has no visual frame. Always wrap visible content
+inside `Note`, `Tip`, `Info`, `Warning`, `Callout`, or another framed component.
 
 ```mdx
 <Aside>
@@ -67,25 +189,40 @@ This appears in the sidebar with a proper callout frame.
 </Aside>
 ```
 
-## New MDX pages must be added to docs.json navigation
+Exception: `Aside full` can contain `TableOfContentsPanel` directly.
 
-After creating a new `.mdx` file, add its slug to `docs.json` navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.
+## New pages and navigation
 
-## Deployment
+After creating a new `.mdx` or `.md` page, add its slug to `docs.jsonc`
+navigation. Pages not in the navigation tree will not appear in the sidebar.
 
-Use **Sigillo** for deployment secrets. Deployment scripts for D1-backed Cloudflare Workers must run the remote D1 migration before building or deploying the worker, and the migration script must print a Unix timestamp first so D1 time travel has a known restore point if something goes wrong.
+Read the existing navigation structure first, then place the page in the best
+tab, group, and reading order.
 
-```json
-{
-  "scripts": {
-    "db:migrate:prod": "echo \"D1 pre-migration timestamp: $(date +%s)\" && CI=1 wrangler d1 migrations apply DB --remote",
-    "db:migrate:preview": "echo \"D1 pre-migration timestamp: $(date +%s)\" && CI=1 wrangler d1 migrations apply DB --remote --env preview",
-    "deployment": "CLOUDFLARE_ENV=preview sigillo run -c preview --command 'pnpm db:migrate:preview && vite build && wrangler deploy --env preview'",
-    "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && vite build && wrangler deploy'"
-  }
-}
+## Built-in deploy command
+
+Use `holocron deploy` when the user wants hosted Holocron deployment instead of
+self-hosting on Node.js or Cloudflare Workers.
+
+```bash
+npx -y @holocron.so/cli deploy
 ```
 
-Always deploy **preview before production**. If preview migration or deploy fails, stop and do not continue to production.
+For local deploys, authenticate with `npx -y @holocron.so/cli login`. For CI
+deploys, use `HOLOCRON_KEY=holo_xxx`. The API key identifies the project, so
+`--project` is only needed with session auth when the account has multiple
+projects.
 
-`CI=1` is intentional for remote D1 migrations. Wrangler skips the interactive confirmation prompt in non-interactive/CI mode while still creating the pre-migration backup.
+Hosted deploy currently supports generated Holocron subdomains only. Do not tell
+users custom domains are supported by `holocron deploy` yet.
+
+## Deployment rule
+
+Always deploy preview before production. If preview migration, build, or deploy
+fails, stop and do not continue to production.
+
+## Agent rules
+
+- Prefer the latest fetched docs over anything remembered from previous sessions.
+- Keep rule-like project behavior in this skill so agents see it even before
+  fetching the full docs.
