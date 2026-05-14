@@ -263,7 +263,7 @@ export function renderNode(
     const lang = node.lang || 'bash'
     const isDiagram = lang === 'diagram'
     return (
-      <CodeBlock lang={lang} lineHeight={isDiagram ? '1.3' : '1.6'} showLineNumbers={!isDiagram}>
+      <CodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={!isDiagram}>
         {node.value}
       </CodeBlock>
     )

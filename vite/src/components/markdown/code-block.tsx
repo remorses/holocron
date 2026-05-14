@@ -38,14 +38,13 @@ export function CodeBlock({
   }, [children, lang])
 
   return (
-    <figure className='m-0 bleed'>
+    <figure className={showLineNumbers ? 'm-0 bleed py-1' : 'm-0 py-1'}>
       <div className='relative'>
         <pre
           className='overflow-x-auto scrollbar-none'
           style={{
             // borderRadius: 'var(--border-radius-md)',
             margin: 0,
-            padding: 0,
           }}
         >
           <div
