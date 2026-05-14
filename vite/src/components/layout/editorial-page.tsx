@@ -24,7 +24,7 @@ import { TabLink } from './tab-link.tsx'
 import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
-import { Footer, PoweredBy } from './footer.tsx'
+import { Footer, Logo, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner-dismiss.tsx'
 import { ChatDrawer } from '../chat-drawer.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
@@ -100,9 +100,7 @@ export function EditorialPage({
   const siteHeaderLinks = buildHeaderLinks(site)
   const siteVersionItems = buildVersionItems(site)
   const siteDropdownItems = buildDropdownItems(site)
-  const logo = siteLogo.light
   const logoLinkHref = siteLogo.href || '/'
-  const siteName = siteConfig.name
   const tabs = siteTabs
   const headerLinks = siteHeaderLinks
   const primary = siteConfig.navbar.primary
@@ -147,22 +145,7 @@ export function EditorialPage({
           {/* Left side: logo + version/dropdown selects */}
           <div className='flex items-center gap-3'>
             <Link href={logoLinkHref} className='slot-logo no-underline flex items-center shrink-0'>
-              <>
-                <img
-                  src={logo}
-                  alt={siteName || 'Logo'}
-                  style={{ height: 'var(--logo-height)', width: 'auto', ...(siteLogo.generated ? { mixBlendMode: 'multiply' } : {}) }}
-                  className={siteLogo.generated ? 'dark:hidden' : siteLogo.dark ? 'dark:hidden' : 'dark:invert'}
-                />
-                {(siteLogo.dark || siteLogo.generated) && (
-                  <img
-                    src={siteLogo.generated ? logo : siteLogo.dark}
-                    alt={siteName || 'Logo'}
-                    style={{ height: 'var(--logo-height)', width: 'auto', ...(siteLogo.generated ? { mixBlendMode: 'screen', filter: 'invert(1)' } : {}) }}
-                    className='hidden dark:block'
-                  />
-                )}
-              </>
+              <Logo className='' style={{ height: 'var(--logo-height)' }} />
             </Link>
             {versionItems.length > 0 && (
               <span className='hidden lg:inline-flex'>

@@ -61,6 +61,7 @@ test.describe("mintlify components fixture", () => {
     await expect(page.getByText("Added nested content coverage")).toBeVisible();
     await expect(page.getByText("JavaScript-specific content.")).toBeVisible();
     await expect(page.getByText("Python-specific content.")).toBeVisible();
+    await expect(page.locator("img.mdx-logo-test").first()).toBeVisible();
   });
 
   test("server html includes key Mintlify component content", async ({ request }) => {
@@ -81,5 +82,6 @@ test.describe("mintlify components fixture", () => {
     expect(html).toContain("Step paragraph content.");
     expect(html).toContain("2026-04-07");
     expect(html).toContain("Added nested content coverage");
+    expect(html).toContain("mdx-logo-test");
   });
 });

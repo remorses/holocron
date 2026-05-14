@@ -73,6 +73,7 @@ import {
   ColorItem,
   Visibility,
   Icon,
+  Logo,
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
@@ -201,6 +202,7 @@ export const mdxComponents = {
   'Color.Row': ColorRow,
   'Color.Item': ColorItem,
   Icon: Icon,
+  Logo,
   Markdown,
   Visibility,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.

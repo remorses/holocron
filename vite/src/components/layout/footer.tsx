@@ -13,6 +13,51 @@ import { useHolocronData } from '../../router.ts'
 import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
 
+export type LogoProps = Omit<React.ComponentProps<'img'>, 'src' | 'alt'> & {
+  alt?: string
+}
+
+export function Logo({ className = 'h-6 w-auto', alt, style, ...props }: LogoProps) {
+  const { site } = useHolocronData()
+  const siteConfig = site.config
+  const logo = getResolvedLogo(site)
+  const label = (alt ?? siteConfig.name) || 'Logo'
+  const baseStyle: React.CSSProperties = { width: 'auto', ...style }
+  const classNames = (...values: (string | undefined | false)[]) => values.filter(Boolean).join(' ')
+
+  if (logo.generated) {
+    return (
+      <>
+        <img
+          {...props}
+          src={logo.light}
+          alt={label}
+          className={classNames(className, 'dark:hidden')}
+          style={{ ...baseStyle, mixBlendMode: 'multiply' }}
+        />
+        <img
+          {...props}
+          src={logo.light}
+          alt={label}
+          className={classNames(className, 'hidden dark:block')}
+          style={{ ...baseStyle, mixBlendMode: 'screen', filter: 'invert(1)' }}
+        />
+      </>
+    )
+  }
+
+  if (logo.dark) {
+    return (
+      <>
+        <img {...props} src={logo.light} alt={label} className={classNames(className, 'dark:hidden')} style={baseStyle} />
+        <img {...props} src={logo.dark} alt={label} className={classNames(className, 'hidden dark:block')} style={baseStyle} />
+      </>
+    )
+  }
+
+  return <img {...props} src={logo.light} alt={label} className={classNames(className, 'dark:invert')} style={baseStyle} />
+}
+
 export function Footer() {
   const { site } = useHolocronData()
   const siteConfig = site.config
@@ -31,21 +76,7 @@ export function Footer() {
         {/* Top row: logo + social icons */}
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <Link href={logoLinkHref} className='no-underline flex items-center'>
-            <>
-              {logo.generated ? (
-                <>
-                  <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:hidden' style={{ mixBlendMode: 'multiply' }} />
-                  <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto hidden dark:block' style={{ mixBlendMode: 'screen', filter: 'invert(1)' }} />
-                </>
-              ) : logo.dark ? (
-                <>
-                  <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:hidden' />
-                  <img src={logo.dark} alt={siteConfig.name || 'Logo'} className='h-6 w-auto hidden dark:block' />
-                </>
-              ) : (
-                <img src={logo.light} alt={siteConfig.name || 'Logo'} className='h-6 w-auto dark:invert' />
-              )}
-            </>
+            <Logo />
           </Link>
           {hasSocials && (
             <div className='flex items-center gap-3'>
