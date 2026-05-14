@@ -79,6 +79,7 @@
   --font-code:
     'JetBrainsMono NF Mono', 'JetBrains Mono', 'SF Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', Menlo,
     Courier, monospace;
+  --font-diagram: Menlo, 'Courier New', Monaco, monospace;
 
   /* Typography weights & rhythm */
   --weight-regular: 400;

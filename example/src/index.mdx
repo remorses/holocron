@@ -99,20 +99,13 @@ WebSocket to a local relay. Your agent (CLI, MCP, or a Playwright script) connec
 Chrome restart, no flags, no special setup.
 
 ```diagram
-┌─────────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│   BROWSER           │     │   LOCALHOST          │     │   CLIENT        │
-│                     │     │                      │     │                 │
-│  ┌───────────────┐  │     │ WebSocket Server     │     │  ┌───────────┐  │
-│  │   Extension   │<───────┬───>  :19988          │     │  │ CLI / MCP │  │
-│  └───────┬───────┘  │ WS  │                      │     │  └───────────┘  │
-│          │          │     │  /extension          │     │        │        │
-│    chrome.debugger  │     │       │              │     │        v        │
-│          v          │     │       v              │     │  ┌────────────┐ │
-│  ┌───────────────┐  │     │  /cdp/:id <───────────────>│  │ execute    │ │
-│  │ Tab 1 (green) │  │     └──────────────────────┘  WS │  └────────────┘ │
-│  │ Tab 2 (green) │  │                                  │        │        │
-│  │ Tab 3 (gray)  │  │     Tab 3 not controlled         │ Playwright API  │
-└─────────────────────┘     (extension not clicked)      └─────────────────┘
+┌───────────────────────┐       WebSocket       ┌──────────────────────┐
+│ Chrome tab            │◄─────────────────────►│ Local relay :19988   │
+│ extension enabled     │                       │ /extension + /cdp/id │
+└───────────┬───────────┘                       └──────────┬───────────┘
+            │ chrome.debugger                              │ Playwright CDP
+            ▼                                              ▼
+      Page DOM, network, JS                         CLI, MCP, agents
 ```
 
 The relay **multiplexes sessions**, so multiple agents or CLI instances can work with the same

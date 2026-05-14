@@ -132,7 +132,9 @@ pre[class*='language-'] {
 
 /* Diagram language: neutral box-drawing, colored text labels */
 code.language-diagram {
+  font-family: var(--font-diagram, Menlo, 'Courier New', Monaco, monospace);
   font-weight: 400;
+  letter-spacing: normal;
 }
 
 .language-diagram .token.box-drawing {
