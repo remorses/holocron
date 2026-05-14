@@ -19,12 +19,15 @@ test.describe('custom CSS injection', () => {
     // The user's global.css defines --custom-css-test on :root.
     // Just verify the variable is defined (non-empty). Don't assert the
     // exact color value — browsers normalize hex colors inconsistently.
-    const varValue = await page.evaluate(() =>
-      getComputedStyle(document.documentElement)
-        .getPropertyValue('--custom-css-test')
-        .trim(),
-    )
-    expect(varValue).toBeTruthy()
+    await expect
+      .poll(async () =>
+        await page.evaluate(() =>
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--custom-css-test')
+            .trim(),
+        ),
+      )
+      .toBeTruthy()
   })
 
   test('HTML response includes page content', async ({ request }) => {

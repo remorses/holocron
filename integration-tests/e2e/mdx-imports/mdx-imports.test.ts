@@ -33,7 +33,9 @@ test.describe('MDX imports', () => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)
     const html = await response.text()
-    expect(html).toContain('Plain markdown snippet imported from a `.md` file.')
+    expect(html).toContain('Plain markdown snippet imported from a ')
+    expect(html).toContain('>.md</code>')
+    expect(html).toContain(' file.')
   })
 
   test('renders imported .md file outside the Vite app root', async ({ request }) => {
