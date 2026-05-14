@@ -38,7 +38,7 @@ export function CodeBlock({
   }, [children, lang])
 
   return (
-    <figure className={showLineNumbers ? 'm-0 bleed py-1' : 'm-0 py-1'}>
+    <figure className={showLineNumbers ? 'm-0 bleed py-2' : 'm-0 py-2'}>
       <div className='relative'>
         <pre
           className='overflow-x-auto scrollbar-none'

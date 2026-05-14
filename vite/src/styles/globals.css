@@ -79,7 +79,9 @@
   --font-code:
     'JetBrainsMono NF Mono', 'JetBrains Mono', 'SF Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', Menlo,
     Courier, monospace;
-  --font-diagram: Menlo, 'Courier New', Monaco, monospace;
+  --font-diagram:
+    Menlo, 'Cascadia Mono', 'Cascadia Code', Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', Monaco,
+    monospace;
 
   /* Typography weights & rhythm */
   --weight-regular: 400;
@@ -244,7 +246,7 @@
   * {
     @apply border-border outline-ring/50;
     scrollbar-width: thin;
-    scrollbar-color: --alpha(var(--text-tertiary) / 35%) transparent;
+    scrollbar-color: --alpha(var(--text-tertiary) / 15%) transparent;
   }
   html {
     scrollbar-gutter: stable;
@@ -287,7 +289,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: --alpha(var(--text-tertiary) / 35%);
+    background: --alpha(var(--text-tertiary) / 15%);
     border-radius: var(--radius-md);
     border: none;
   }
