@@ -24,7 +24,11 @@ export async function buildNavigationData({
     if (content === undefined) {
       throw new Error(`[holocron] custom navigation builder could not load MDX for page "${slug}"`)
     }
-    const processed = processMdx(content, config.icons.library)
+    const pageSource = slug === 'index' ? '/' : `/${slug}`
+    const processed = processMdx(content, config.icons.library, pageSource)
+    // In the custom virtual modules path, parse errors are fatal — no
+    // sync cache to store them in, so propagate as a thrown error.
+    if (processed instanceof Error) throw processed
     return {
       slug,
       href: slugToHref(slug),

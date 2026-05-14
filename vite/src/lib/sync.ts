@@ -27,7 +27,7 @@ import {
 } from '../config.ts'
 import { processVirtualTabs } from './virtual-tab-provider.ts'
 import { openapiProvider } from './openapi/provider.ts'
-import { formatHolocronWarning, logger, logMdxError } from './logger.ts'
+import { formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import type { EagerModules } from 'safe-mdx/parse'
 import type { Root } from 'mdast'
@@ -95,6 +95,11 @@ export type SyncResult = {
   navigation: Navigation
   /** Version/dropdown metadata with enriched inner navigation. */
   switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
+  /** MDX parse errors keyed by page slug. Pages with parse errors are still
+   *  in the navigation tree (so they show in the sidebar) but their MDX
+   *  content is missing from `mdxContent`. The render layer uses this to
+   *  show an error page instead of a 404. */
+  mdxParseErrors: Record<string, HolocronMdxParseError>
   /** Pre-processed MDX content keyed by page slug. Kept separate from the
    *  navigation tree so only the server bundle includes it — the client
    *  only receives the lightweight nav tree (titles, headings, slugs). */
@@ -150,6 +155,7 @@ export async function syncNavigation({
   /** Resolved imports per page (computed fresh every sync from pageImportSources + filesystem) */
   const pageImports: Record<string, ResolvedImport[]> = {}
   const mdxContentErrors = new Set<string>()
+  const mdxParseErrors: Record<string, HolocronMdxParseError> = {}
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
@@ -170,12 +176,15 @@ export async function syncNavigation({
   }
 
   async function enrichPageUncached(slug: string): Promise<NavPage> {
+    const pageSource = slug === 'index' ? '/' : `/${slug}`
+
     // Virtual pages (e.g. from OpenAPI) already have content in mdxContent
     const virtualMdx = mdxContent[slug]
     if (virtualMdx) {
-      const processed = processMdx(virtualMdx, config.icons.library)
+      const processed = processMdx(virtualMdx, config.icons.library, pageSource)
+      if (processed instanceof Error) return handleParseError(slug, processed)
       pageIconRefs[slug] = processed.iconRefs
-      const errors = validateAndReportMdx({ markdown: virtualMdx, mdast: processed.mdast, source: `/${slug}` })
+      const errors = validateAndReportMdx({ markdown: virtualMdx, mdast: processed.mdast, source: pageSource })
       if (errors.length > 0) {
         mdxContentErrors.add(slug)
       }
@@ -208,7 +217,13 @@ export async function syncNavigation({
       mdxContent[slug] = cachedMdx
       // Cached MDX entries were validated before being written. Do not
       // validate again here, or cache hits would reparse every page on sync.
-      pageIconRefs[slug] = oldPageIconRefs[slug] ?? processMdx(cachedMdx, config.icons.library).iconRefs
+      if (oldPageIconRefs[slug]) {
+        pageIconRefs[slug] = oldPageIconRefs[slug]
+      } else {
+        const reprocessed = processMdx(cachedMdx, config.icons.library, pageSource)
+        if (reprocessed instanceof Error) return handleParseError(slug, reprocessed)
+        pageIconRefs[slug] = reprocessed.iconRefs
+      }
       // Restore cached raw import sources, then resolve fresh against the
       // current filesystem. This ensures newly-created files are picked up
       // without re-parsing the MDX.
@@ -219,7 +234,8 @@ export async function syncNavigation({
     }
 
     // Cache miss — full processing
-    const processed = processMdx(content, config.icons.library)
+    const processed = processMdx(content, config.icons.library, pageSource)
+    if (processed instanceof Error) return handleParseError(slug, processed)
     parsedCount++
 
     const mdxDir = path.dirname(mdxPath)
@@ -299,6 +315,22 @@ export async function syncNavigation({
     }
   }
 
+  /** Handle a parse error: log it, store it for the error overlay, and return a
+   *  stub NavPage so the rest of the navigation tree can still be built. */
+  function handleParseError(slug: string, err: HolocronMdxParseError): NavPage {
+    logger.error(formatHolocronError(`failed to parse ${err.source ?? slug}\n\n${err.reason}\n\n${err.codeFrame}\n`))
+    mdxContentErrors.add(slug)
+    mdxParseErrors[slug] = err
+    return {
+      slug,
+      href: slugToHref(slug),
+      title: titleFromSlug(slug),
+      gitSha: 'error',
+      headings: [],
+      frontmatter: {},
+    }
+  }
+
   // 2b. Process virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages
   await processVirtualTabs({
     config,
@@ -352,7 +384,7 @@ export async function syncNavigation({
   writeMdxCache(mdxCachePath, { content: filterErroredMdxContent({ content: mdxContent, mdxContentErrors }), pageIconRefs, pageImportSources })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, pageIconRefs, pageImports, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, parsedCount, cachedCount }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -478,20 +510,12 @@ function getMdxBaseUrl({ slug, pagesDir, projectRoot }: { slug: string; pagesDir
 // Build-time MDX validation must stay side-effect free. Do not import
 // mdx-components-map.tsx or markdown component barrels here: those pull client
 // components, CSS imports, and large runtime modules into Vite config loading.
-// Keep this as a tiny placeholder map that mirrors supported MDX component
-// names without executing user/runtime UI code.
-const safeMdxComponentNames = [
-  'p', 'Heading', 'a', 'code', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
-  'ul', 'ol', 'li', 'Image', 'img', 'Bleed', 'Aside', 'FullWidth', 'Above', 'Hero',
-  'Callout', 'Note', 'Warning', 'Info', 'Tip', 'Check', 'Danger', 'Tabs', 'Tab', 'Accordion',
-  'AccordionGroup', 'Mermaid', 'Badge', 'Card', 'CardGroup', 'Columns', 'Column', 'Expandable',
-  'Frame', 'Prompt', 'ParamField', 'ResponseField', 'Steps', 'Step', 'Tile', 'Tooltip', 'Update',
-  'View', 'Panel', 'CodeCard', 'RequestExample', 'ResponseExample', 'Tree', 'Color', 'Icon', 'Markdown', 'Visibility',
-  'TableOfContentsPanel', 'HolocronAIAssistantWidget', 'OpenAPIEndpoint',
-]
+// The canonical component name list lives in mdx-component-names.ts (shared
+// with the runtime map for type-safe sync).
+import { SAFE_MDX_COMPONENT_NAMES } from './mdx-component-names.ts'
 
 function createSafeMdxComponents() {
-  const components = Object.fromEntries(safeMdxComponentNames.map((name) => [name, PlaceholderMdxImport]))
+  const components = Object.fromEntries(SAFE_MDX_COMPONENT_NAMES.map((name) => [name, PlaceholderMdxImport]))
   components.Tree = TreePlaceholder
   components.Color = ColorPlaceholder
   return components

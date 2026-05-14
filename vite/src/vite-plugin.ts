@@ -436,7 +436,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return [
           `const navigation = ${JSON.stringify(syncResult.navigation)}`,
           `const switchers = ${JSON.stringify(syncResult.switchers)}`,
-          `export function getNavigationData() { return { navigation, switchers } }`,
+          `const mdxParseErrors = ${JSON.stringify(syncResult.mdxParseErrors)}`,
+          `export function getNavigationData() { return { navigation, switchers, mdxParseErrors } }`,
         ].join('\n')
       }
       if (id === RESOLVED_MDX) {
@@ -446,7 +447,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // Register every known MDX file as a dependency so edits to existing
         // pages flow through the module graph (same mechanism as config above).
         // New MDX files that don't exist yet are handled separately in hotUpdate.
-        const slugs = Object.keys(syncResult.mdxContent).sort()
+        // Include errored page slugs so their routes still get registered
+        // (they render the error overlay instead of 404/redirect loops).
+        const slugs = [...new Set([
+          ...Object.keys(syncResult.mdxContent),
+          ...Object.keys(syncResult.mdxParseErrors),
+        ])].sort()
         for (const slug of slugs) {
           const mdxPath = getMdxPathForSlug(pagesDir, slug)
           if (mdxPath) {
@@ -476,6 +482,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
         const markdown = syncResult.mdxContent[slug]
         if (markdown === undefined) {
+          // Page has a parse error or was filtered out — return undefined
+          // so the render layer can show the error overlay instead of crashing.
+          if (syncResult.mdxParseErrors[slug]) {
+            return `export default undefined`
+          }
           throw new Error(`[holocron] missing virtual MDX page for slug "${slug}"`)
         }
         return `export default ${JSON.stringify(markdown)}`

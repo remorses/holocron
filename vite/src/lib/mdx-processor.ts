@@ -14,6 +14,7 @@ import type { Root, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
 import { normalizeMdx } from './mintlify/normalize-mdx.ts'
+import { HolocronMdxParseError } from './logger.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
 import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
 import { extractImports } from 'safe-mdx/parse'
@@ -44,17 +45,21 @@ type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 
 /**
  * Parse MDX content and extract metadata + icon/image refs.
- * Returns the mdast tree for reuse by rewriteMdxImages.
+ * Returns HolocronMdxParseError on syntax errors instead of throwing.
  *
  * normalizeMdx already parses the content into an mdast tree (to run
  * remark plugins), so we reuse that tree directly instead of
  * serializing → re-parsing — saving one full mdxParse per page.
+ *
+ * @param source - optional slug or file path for error messages (e.g. "/getting-started")
  */
 export function processMdx(
   content: string,
   defaultLibrary: IconLibrary = 'fontawesome',
-): ProcessedMdx {
-  const normalized = normalizeMdx(content)
+  source?: string,
+): HolocronMdxParseError | ProcessedMdx {
+  const normalized = normalizeMdx(content, source)
+  if (normalized instanceof Error) return normalized
   const normalizedContent = normalized.content
   const frontmatter = parsePageFrontmatter(content)
   const mdast = normalized.mdast

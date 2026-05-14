@@ -1,5 +1,12 @@
 import { describe, test, expect } from 'vitest'
-import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
+import { processMdx as _processMdx, rewriteMdxImages, type ResolvedImage, type ProcessedMdx } from './mdx-processor.ts'
+
+/** Wrapper that asserts processMdx succeeded (not a parse error). */
+function processMdx(...args: Parameters<typeof _processMdx>): ProcessedMdx {
+  const result = _processMdx(...args)
+  expect(result).not.toBeInstanceOf(Error)
+  return result as ProcessedMdx
+}
 
 describe('processMdx', () => {
   test('collects icon refs from the initial parse using the configured library', () => {

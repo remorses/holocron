@@ -15,6 +15,7 @@ import { remarkHeadings } from './remark-headings.ts'
 import { remarkMermaidCode } from './remark-mermaid.ts'
 import { remarkSidebarComponents } from './remark-sidebar-components.ts'
 import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
+import { HolocronMdxParseError, extractParseErrorInfo } from '../logger.ts'
 
 export type NormalizedMdx = {
   /** Serialized MDX string after all remark transforms */
@@ -23,7 +24,12 @@ export type NormalizedMdx = {
   mdast: Root
 }
 
-export function normalizeMdx(content: string): NormalizedMdx {
+/**
+ * Parse MDX content and run all remark transform plugins.
+ * Returns HolocronMdxParseError on syntax errors instead of throwing.
+ * @param source - optional file path or slug for error messages (e.g. "/getting-started")
+ */
+export function normalizeMdx(content: string, source?: string): HolocronMdxParseError | NormalizedMdx {
   const processor = remark()
     .use(remarkMdx)
     .use(remarkFrontmatter, ['yaml'])
@@ -36,8 +42,15 @@ export function normalizeMdx(content: string): NormalizedMdx {
     .use(remarkSingleAccordionItems)
     .use(remarkSidebarComponents)
 
-  const parsed = processor.parse(content)
-  const mdast = processor.runSync(parsed) as Root
+  // Remark's parse() and runSync() throw VFileMessage on syntax errors.
+  // Convert at the boundary to a returned error value.
+  const parseResult = trySync(() => processor.parse(content), content, source)
+  if (parseResult instanceof Error) return parseResult
+
+  const runResult = trySync(() => processor.runSync(parseResult) as Root, content, source)
+  if (runResult instanceof Error) return runResult
+
+  const mdast = runResult
 
   // Serialize BEFORE unravel — mdxToMarkdown corrupts phrasing children
   // of flow elements by inserting blank lines between them, which creates
@@ -57,4 +70,15 @@ export function normalizeMdx(content: string): NormalizedMdx {
   remarkMarkAndUnravel()(mdast)
 
   return { content: serialized, mdast }
+}
+
+/** Sync boundary: catch thrown errors from remark and convert to HolocronMdxParseError. */
+function trySync<T>(fn: () => T, mdxSource: string, source?: string): HolocronMdxParseError | T {
+  try {
+    return fn()
+  } catch (err) {
+    if (err instanceof HolocronMdxParseError) return err
+    const { line, column, reason } = extractParseErrorInfo(err)
+    return new HolocronMdxParseError({ reason, line, column, source, mdxSource })
+  }
 }

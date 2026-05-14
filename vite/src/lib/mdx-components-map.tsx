@@ -77,6 +77,7 @@ import {
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
+import type { SafeMdxComponentName } from './mdx-component-names.ts'
 
 import { SidebarAssistant } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
@@ -210,7 +211,8 @@ export const mdxComponents = {
   TableOfContentsPanel,
   HolocronAIAssistantWidget: SidebarAssistant,
   OpenAPIEndpoint,
-}
+} satisfies Record<SafeMdxComponentName | `${string}.${string}`, unknown>
+
 
 export function renderNode(
   node: MyRootContent,

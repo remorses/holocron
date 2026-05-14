@@ -13,7 +13,9 @@ import { normalizeMdx } from './mintlify/normalize-mdx.ts'
 import { RenderNodes } from './mdx-components-map.tsx'
 
 function renderMdx(raw: string) {
-  const { content, mdast } = normalizeMdx(raw)
+  const result = normalizeMdx(raw)
+  if (result instanceof Error) throw result
+  const { content, mdast } = result
   const html = renderToStaticMarkup(
     createElement(RenderNodes, { markdown: content, nodes: mdast.children }),
   )

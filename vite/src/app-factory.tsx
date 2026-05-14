@@ -24,6 +24,9 @@ import {
 } from './components/layout/editorial-page.tsx'
 import { RenderBannerNodes } from './components/layout/banner.tsx'
 import { P, SectionHeading } from './components/markdown/typography.tsx'
+import { Danger } from './components/markdown/callout.tsx'
+import { CodeBlock } from './components/markdown/code-block.tsx'
+import { extractParseErrorInfo } from './lib/logger.ts'
 import { slugify } from './lib/toc-tree.ts'
 import { NotFound } from './components/not-found.tsx'
 import {
@@ -141,9 +144,18 @@ export type HolocronLoaderData = {
   currentPageFrontmatter: PageFrontmatter | undefined
 }
 
+type MdxParseErrorInfo = {
+  reason: string
+  line: number
+  column?: number
+  source?: string
+  mdxSource: string
+}
+
 type HolocronNavigationData = {
   navigation: Navigation
   switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
+  mdxParseErrors?: Record<string, MdxParseErrorInfo>
 }
 
 type HolocronProviders = {
@@ -199,8 +211,14 @@ function getBannerJsx(site: HolocronSiteData, request: Request): React.ReactNode
   const pageCookies = parseCookies(request.headers.get('cookie') || '')
   if (pageCookies['holocron-banner-dismissed'] === site.config.banner.content) return undefined
   const bannerMdx = site.config.banner.content
-  const bannerMdast = mdxParse(bannerMdx)
-  return <RenderBannerNodes markdown={bannerMdx} nodes={bannerMdast.children} source='docs.json banner' />
+  try {
+    const bannerMdast = mdxParse(bannerMdx)
+    return <RenderBannerNodes markdown={bannerMdx} nodes={bannerMdast.children} source='docs.json banner' />
+  } catch {
+    // Banner MDX is from config, not user files. If it fails to parse,
+    // skip the banner silently rather than crashing the whole page.
+    return undefined
+  }
 }
 
 function renderMdxPage({
@@ -365,6 +383,44 @@ function renderMdxPage({
   )
 }
 
+/** Render an error page when MDX parsing fails. */
+function renderMdxParseErrorPage({
+  site,
+  slug,
+  error,
+  loaderData,
+  bannerJsx,
+}: {
+  site: HolocronSiteData
+  slug: string
+  error: MdxParseErrorInfo
+  loaderData: HolocronLoaderData
+  bannerJsx: React.ReactNode | undefined
+}) {
+  const locationStr = error.source
+    ? `${error.source}:${error.line}${error.column ? ':' + error.column : ''}`
+    : `line ${error.line}`
+
+  return (
+    <>
+      <Head>
+        <Head.Title>{`Parse Error - ${slug}`}</Head.Title>
+      </Head>
+      <EditorialPage
+        sections={[{
+          content: (
+            <Danger title={`MDX parse error at ${locationStr}`}>
+              <CodeBlock lang='text' showLineNumbers={false}>{error.reason}</CodeBlock>
+            </Danger>
+          ),
+        }]}
+        above={undefined}
+        bannerContent={bannerJsx}
+      />
+    </>
+  )
+}
+
 function parseChatRequestBody(value: unknown): {
   modelMessages: Record<string, unknown>[]
   message: string
@@ -405,7 +461,7 @@ function isHolocronLoaderData(value: unknown): value is HolocronLoaderData {
 
 /** Build the docs Spiceflow app. Await once at module load. */
 export async function createHolocronApp(providers: HolocronProviders): Promise<AnySpiceflow> {
-  const [config, { navigation, switchers }, slugs] = await Promise.all([
+  const [config, { navigation, switchers, mdxParseErrors }, slugs] = await Promise.all([
     providers.getConfig(),
     providers.getNavigationData(),
     providers.getMdxSlugs(),
@@ -640,6 +696,13 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         pageLabel: `${requestUrl.host}${loaderData.currentPageHref ?? pageHref}`,
       })
       const pageMdx = await providers.getMdxSource(slug)
+
+      // Check for parse errors from build-time sync. Show error overlay
+      // instead of a cryptic 500 or "content missing" crash.
+      const parseError = mdxParseErrors?.[slug]
+      if (pageMdx === undefined && parseError) {
+        return renderMdxParseErrorPage({ site, slug, error: parseError, loaderData, bannerJsx: getBannerJsx(site, request) })
+      }
       if (pageMdx === undefined) {
         throw new Error(`MDX content missing for registered page slug "${slug}"`)
       }
@@ -649,14 +712,26 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // Parse the mdast once and share it with renderMdxPage to avoid a duplicate parse.
       let modules: EagerModules | undefined
       let preParsedMdast: Root | undefined
-      if (lazyGlob && Object.keys(lazyGlob).length > 0) {
-        preParsedMdast = mdxParse(pageMdx)
-        const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
-        const baseUrl = (providers.pagesDirPrefix || './') + slugDir
-        modules = await resolveModules({ glob: lazyGlob, mdast: preParsedMdast, baseUrl })
-      }
+      try {
+        if (lazyGlob && Object.keys(lazyGlob).length > 0) {
+          preParsedMdast = mdxParse(pageMdx)
+          const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
+          const baseUrl = (providers.pagesDirPrefix || './') + slugDir
+          modules = await resolveModules({ glob: lazyGlob, mdast: preParsedMdast, baseUrl })
+        }
 
-      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast })
+        return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast })
+      } catch (err) {
+        // Runtime parse errors (e.g. HMR-injected bad MDX) — show error overlay
+        const { line, column, reason } = extractParseErrorInfo(err)
+        return renderMdxParseErrorPage({
+          site,
+          slug,
+          error: { reason, line, column, source: `/${slug}`, mdxSource: pageMdx },
+          loaderData,
+          bannerJsx: getBannerJsx(site, request),
+        })
+      }
     }
   }
 

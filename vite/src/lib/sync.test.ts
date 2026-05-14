@@ -1049,4 +1049,44 @@ Some content here.`,
     const page = findPage(result.navigation, 'page')!
     expect(page.title).toBe('My Page Title')
   })
+
+  test('catches MDX parse errors and stores them in mdxParseErrors', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['good-page', 'bad-page'] }],
+      },
+      {
+        'good-page': '# Good page\n\nThis is fine.',
+        'bad-page': '# Bad page\n\nHello {world',
+      },
+    ))
+    const config = readConfig({ root: project.root })
+
+    // Should NOT throw — parse errors are caught and stored
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    // Good page should still work
+    expect(result.mdxContent['good-page']).toBeTruthy()
+    expect(findPage(result.navigation, 'good-page')?.title).toBe('Good page')
+
+    // Bad page should have a parse error
+    expect(result.mdxParseErrors['bad-page']).toBeTruthy()
+    expect(result.mdxParseErrors['bad-page']!.reason).toContain('closing brace')
+    expect(result.mdxParseErrors['bad-page']!.line).toBe(3)
+    expect(result.mdxParseErrors['bad-page']!.source).toBe('/bad-page')
+
+    // Bad page should still be in the navigation tree (so sidebar shows it)
+    const badPage = findPage(result.navigation, 'bad-page')
+    expect(badPage).toBeTruthy()
+    expect(badPage!.gitSha).toBe('error')
+
+    // But its MDX content should not be in mdxContent
+    expect(result.mdxContent['bad-page']).toBeUndefined()
+  })
 })
