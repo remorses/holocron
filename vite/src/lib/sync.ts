@@ -149,9 +149,7 @@ export async function syncNavigation({
   const pageImportSources: Record<string, string[]> = {}
   /** Resolved imports per page (computed fresh every sync from pageImportSources + filesystem) */
   const pageImports: Record<string, ResolvedImport[]> = {}
-  const mdxCacheContent: Record<string, string> = {}
-  const mdxCacheIconRefs: Record<string, IconRef[]> = {}
-  const mdxCacheImportSources: Record<string, string[]> = {}
+  const mdxContentErrors = new Set<string>()
   const redirectBackedPageSlugs = new Set(
     config.redirects
       .map((rule) => redirectSourceToSlug(rule.source))
@@ -166,10 +164,8 @@ export async function syncNavigation({
       const processed = processMdx(virtualMdx, config.icons.library)
       pageIconRefs[slug] = processed.iconRefs
       const errors = validateAndReportMdx({ markdown: virtualMdx, mdast: processed.mdast, source: `/${slug}` })
-      if (errors.length === 0) {
-        mdxCacheContent[slug] = virtualMdx
-        mdxCacheIconRefs[slug] = processed.iconRefs
-        mdxCacheImportSources[slug] = []
+      if (errors.length > 0) {
+        mdxContentErrors.add(slug)
       }
       return {
         slug,
@@ -207,9 +203,6 @@ export async function syncNavigation({
       const cachedSources = oldPageImportSources[slug] ?? []
       pageImportSources[slug] = cachedSources
       pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
-      mdxCacheContent[slug] = cachedMdx
-      mdxCacheIconRefs[slug] = pageIconRefs[slug] ?? []
-      mdxCacheImportSources[slug] = cachedSources
       return cached
     }
 
@@ -277,10 +270,8 @@ export async function syncNavigation({
     })
     // Store MDX content separately from the nav tree
     mdxContent[slug] = finalMdx
-    if (renderErrors.length === 0) {
-      mdxCacheContent[slug] = finalMdx
-      mdxCacheIconRefs[slug] = processed.iconRefs
-      mdxCacheImportSources[slug] = processed.importSources
+    if (renderErrors.length > 0) {
+      mdxContentErrors.add(slug)
     }
 
     return {
@@ -346,7 +337,7 @@ export async function syncNavigation({
 
   // 5. Write caches
   writeCache(cachePath, navigation)
-  writeMdxCache(mdxCachePath, { content: mdxCacheContent, pageIconRefs: mdxCacheIconRefs, pageImportSources: mdxCacheImportSources })
+  writeMdxCache(mdxCachePath, { content: filterErroredMdxContent({ content: mdxContent, mdxContentErrors }), pageIconRefs, pageImportSources })
   saveImageCache({ distDir, cache: imageCache })
 
   return { navigation, switchers, mdxContent, pageIconRefs, pageImports, parsedCount, cachedCount }
@@ -511,6 +502,14 @@ function validateAndReportMdx({ markdown, mdast, modules, baseUrl, source }: {
   })
   visitor.run()
   return visitor.errors
+}
+
+function filterErroredMdxContent({ content, mdxContentErrors }: { content: Record<string, string>; mdxContentErrors: Set<string> }) {
+  if (mdxContentErrors.size === 0) return content
+
+  return Object.fromEntries(
+    Object.entries(content).filter(([slug]) => !mdxContentErrors.has(slug)),
+  )
 }
 
 /* ── Cache I/O ──────────────────────────────────────────────────────── */

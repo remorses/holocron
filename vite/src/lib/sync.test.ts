@@ -385,11 +385,10 @@ title: Home
     })
 
     expect(result.mdxContent.index).toContain('<Caption>Missing component</Caption>')
-    expect(JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))).toMatchObject({
-      content: {},
-      pageIconRefs: {},
-      pageImportSources: {},
-    })
+    const mdxCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))
+    expect(mdxCache.content).toEqual({})
+    expect(mdxCache.pageIconRefs).toMatchObject({ index: [] })
+    expect(mdxCache.pageImportSources).toMatchObject({ index: [] })
     expect(warn.mock.calls.map(([message]) => String(message).replace(/\x1b\[[0-9;]*m/g, ''))).toMatchInlineSnapshot(`
       [
         "▲ holocron MDX missing component
