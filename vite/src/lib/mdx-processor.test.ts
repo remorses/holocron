@@ -418,17 +418,17 @@ describe('rewriteMdxImages', () => {
     `)
   })
 
-  test('converts root-level JSX img to Image while preserving authored attrs', () => {
+  test('converts root-level JSX img to responsive Image while preserving non-sizing attrs', () => {
     const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
+      "<Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
 
-  test('converts nested flow JSX img to Image while preserving authored attrs', () => {
+  test('converts nested flow JSX img to responsive Image while preserving non-sizing attrs', () => {
     const { mdast } = processMdx(`
 <Step title="Create account">
   <img className="hero" height="200" src="./screenshot.png" />
@@ -437,7 +437,7 @@ describe('rewriteMdxImages', () => {
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Step title="Create account">
-        <Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
+        <Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
       </Step>
       "
     `)

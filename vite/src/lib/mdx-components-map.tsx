@@ -85,8 +85,6 @@ function ImageWithProps(props: {
   alt: string
   width?: string | number
   height?: string | number
-  intrinsicWidth?: string | number
-  intrinsicHeight?: string | number
   placeholder?: string
   className?: string
 }) {
@@ -96,8 +94,6 @@ function ImageWithProps(props: {
       alt={props.alt}
       width={props.width}
       height={props.height}
-      intrinsicWidth={props.intrinsicWidth}
-      intrinsicHeight={props.intrinsicHeight}
       placeholder={props.placeholder}
       className={props.className || ''}
     />

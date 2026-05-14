@@ -245,7 +245,7 @@ export type ResolvedImage = {
 /**
  * Mutate the mdast tree in place:
  * - Markdown images (![alt](src)) → converted to mdxJsxFlowElement Image
- * - Root-level JSX img → converted to Image while preserving authored attrs
+ * - Root-level JSX img → converted to responsive Image while preserving non-sizing attrs
  * - Existing JSX Image → src updated, width/height/placeholder attrs added
  *
  * Then serializes the mutated tree back to MDX string.
@@ -355,14 +355,14 @@ function createImageNode({ src, alt, meta }: { src: string; alt: string; meta: I
 }
 
 function createImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): RootContent {
-  const attributes = copyJsxAttrsExcept(node, ['src', 'placeholder', 'intrinsicWidth', 'intrinsicHeight'])
+  const attributes = copyJsxAttrsExcept(node, ['src', 'width', 'height', 'placeholder', 'intrinsicWidth', 'intrinsicHeight'])
   attributes.push({ type: 'mdxJsxAttribute', name: 'src', value: resolved.publicSrc })
   if (!attributes.some((attr) => attr.type === 'mdxJsxAttribute' && attr.name === 'alt')) {
     attributes.push({ type: 'mdxJsxAttribute', name: 'alt', value: '' })
   }
   attributes.push(
-    { type: 'mdxJsxAttribute', name: 'intrinsicWidth', value: String(resolved.meta.width) },
-    { type: 'mdxJsxAttribute', name: 'intrinsicHeight', value: String(resolved.meta.height) },
+    { type: 'mdxJsxAttribute', name: 'width', value: String(resolved.meta.width) },
+    { type: 'mdxJsxAttribute', name: 'height', value: String(resolved.meta.height) },
     { type: 'mdxJsxAttribute', name: 'placeholder', value: resolved.meta.placeholder },
   )
   const imageNode: FlowJsxNode = {
@@ -432,7 +432,7 @@ function extractText(children: readonly (PhrasingContent | RootContent)[]): stri
   return children
     .map((child) => {
       if (child.type === 'text' || child.type === 'inlineCode') {
-        return (child as { value: string }).value
+        return child.value
       }
       const nestedChildren = Reflect.get(child, 'children')
       if (Array.isArray(nestedChildren)) {

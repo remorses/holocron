@@ -36,8 +36,6 @@ export function Image({
   alt,
   width,
   height,
-  intrinsicWidth,
-  intrinsicHeight,
   className = '',
   style,
 }: {
@@ -53,17 +51,12 @@ export function Image({
   alt: string
   width?: number | string
   height?: number | string
-  intrinsicWidth?: number | string
-  intrinsicHeight?: number | string
   className?: string
   style?: React.CSSProperties
 }) {
   const [loaded, setLoaded] = useState(false)
-  const sourceWidth = readNumericAttr(intrinsicWidth) ?? readNumericAttr(width)
-  const sourceHeight = readNumericAttr(intrinsicHeight) ?? readNumericAttr(height)
-  const hasExplicitDisplaySize = intrinsicWidth !== undefined || intrinsicHeight !== undefined
-  const displayWidth = hasExplicitDisplaySize ? width : undefined
-  const displayHeight = hasExplicitDisplaySize ? height : undefined
+  const sourceWidth = readNumericAttr(width)
+  const sourceHeight = readNumericAttr(height)
 
   // Handles both the normal onLoad event and the case where the image is
   // already cached (img.complete is true before React mounts the handler).
@@ -80,8 +73,6 @@ export function Image({
   const frameStyle = buildImageFrameStyle({
     sourceWidth,
     sourceHeight,
-    displayWidth,
-    displayHeight,
   })
   const imgWidth = sourceWidth
   const imgHeight = sourceHeight
@@ -154,55 +145,18 @@ function readNumericAttr(value: number | string | undefined): number | undefined
   return undefined
 }
 
-function toCssLength(value: number | string | undefined): number | string | undefined {
-  if (typeof value === 'number') {
-    return value
-  }
-  if (typeof value !== 'string') {
-    return undefined
-  }
-  const trimmed = value.trim()
-  if (trimmed === '') {
-    return undefined
-  }
-  return /^\d+(?:\.\d+)?$/.test(trimmed) ? Number(trimmed) : trimmed
-}
-
 function buildImageFrameStyle({
   sourceWidth,
   sourceHeight,
-  displayWidth,
-  displayHeight,
 }: {
   sourceWidth: number
   sourceHeight: number
-  displayWidth: number | string | undefined
-  displayHeight: number | string | undefined
 }): React.CSSProperties {
-  const width = toCssLength(displayWidth)
-  const height = toCssLength(displayHeight)
-  const base: React.CSSProperties = {
+  return {
     display: 'grid',
     aspectRatio: `${sourceWidth} / ${sourceHeight}`,
-  }
-  if (width === undefined && height === undefined) {
-    return {
-      ...base,
-      width: '100%',
-      maxWidth: `min(${sourceWidth}px, 100%)`,
-    }
-  }
-  if (width !== undefined && height !== undefined) {
-    return { ...base, width, height, maxWidth: '100%' }
-  }
-  if (width !== undefined) {
-    return { ...base, width, maxWidth: '100%' }
-  }
-  return {
-    ...base,
-    display: 'inline-grid',
-    height,
-    maxWidth: '100%',
+    width: '100%',
+    maxWidth: `min(${sourceWidth}px, 100%)`,
   }
 }
 

@@ -584,7 +584,7 @@ title: Remote image
       distDir: project.distDir,
     })
 
-    expect(result.mdxContent.page).toContain(`<Image src="${imageUrl}" alt="" intrinsicWidth="1" intrinsicHeight="1" placeholder="data:image/webp;base64,`)
+    expect(result.mdxContent.page).toContain(`<Image src="${imageUrl}" alt="" width="1" height="1" placeholder="data:image/webp;base64,`)
   })
 
   test('cache invalidation when MDX file changes', async () => {
