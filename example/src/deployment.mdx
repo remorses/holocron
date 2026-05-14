@@ -6,10 +6,10 @@ icon: cloud-upload
 
 # Deployment
 
-Holocron deploys your documentation site to **holocron.so** with a single command. Every push gets a live URL; every pull request gets its own preview.
+Holocron deploys your documentation site to **holocron.so** with a single command. Every deploy gets a live URL.
 
 ```bash
-npx holocron deploy
+npx -y @holocron.so/cli deploy
 ```
 
 The deploy command runs `vite build`, collects the output, and uploads it. Files are content-addressed (SHA-256 hashed), so unchanged files are never re-uploaded. A typical redeploy after a small edit uploads only the changed pages.
@@ -42,7 +42,7 @@ jobs:
       - run: bun install
       - name: Deploy
         id: deploy
-        run: bunx holocron deploy
+        run: npx -y @holocron.so/cli deploy
         env:
           HOLOCRON_KEY: ${{ secrets.HOLOCRON_KEY }}
 ```
@@ -70,10 +70,10 @@ The deploy command automatically sets two GitHub Actions step outputs:
 | `holocron_url` | The live URL of the deployment |
 | `holocron_deployment_id` | The deployment ID for API calls |
 
-Use them in downstream steps, for example to post a comment with the preview link:
+Use them in downstream steps, for example to post a comment with the deployment link:
 
 ```yaml
-- name: Comment preview URL
+- name: Comment deployment URL
   if: github.event_name == 'pull_request'
   run: |
     gh pr comment ${{ github.event.pull_request.number }} \
@@ -100,16 +100,7 @@ If you've signed in to [holocron.so](https://holocron.so) with your GitHub accou
 
 No `HOLOCRON_KEY` secret is needed. If both OIDC and `HOLOCRON_KEY` are available, the explicit key takes priority.
 
-## Preview deployments
-
-Every branch and pull request gets its own isolated preview URL. The URL pattern is:
-
-| Event | URL |
-|---|---|
-| Push to default branch | `https://{repo}-{owner}-site.holocron.so` |
-| PR or non-default branch | `https://{branch}-{hash}-{repo}-{owner}-site-preview.holocron.so` |
-
-Preview deployments are **fully independent**. Each branch has its own URL that persists across pushes. When a new commit is pushed to the same branch, the previous deployment on that branch is superseded and the URL updates instantly.
+## Branch detection
 
 The branch name is detected automatically:
 
@@ -126,7 +117,7 @@ For CI systems other than GitHub Actions, or if you prefer explicit authenticati
 npx -y @holocron.so/cli keys create --name production --project <projectId>
 
 # Deploy with the key
-HOLOCRON_KEY=holo_xxx npx holocron deploy
+HOLOCRON_KEY=holo_xxx npx -y @holocron.so/cli deploy
 ```
 
 In GitHub Actions, store the key as a [repository secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and reference it with `${{ secrets.HOLOCRON_KEY }}`.
@@ -134,12 +125,12 @@ In GitHub Actions, store the key as a [repository secret](https://docs.github.co
 ## CLI options
 
 ```bash
-npx holocron deploy [options]
+npx -y @holocron.so/cli deploy [options]
 ```
 
 | Option | Description |
 |---|---|
-| `--branch <name>` | Override the branch name for preview deployments |
+| `--branch <name>` | Override the branch name for deployment metadata |
 | `--project <id>` | Project ID (only needed with session auth, not with `HOLOCRON_KEY`) |
 | `--skip-build` | Skip the `vite build` step and upload the existing `dist/` |
 

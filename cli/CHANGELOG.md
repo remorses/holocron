@@ -14,7 +14,7 @@
      contents: read
    steps:
      - uses: actions/checkout@v4
-     - run: npx holocron deploy
+     - run: npx -y @holocron.so/cli deploy
    ```
 
    The CLI mints a fresh OIDC token for each deploy step (create, upload, finalize) and the server derives project, branch, and preview state from the verified JWT claims. API key and session auth continue to work as before.

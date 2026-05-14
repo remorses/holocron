@@ -24,9 +24,25 @@ Supports three config file names (first found wins):
 
 both follow the same schema.
 
+## CLI package name
+
+The `holocron` binary is published by the scoped package `@holocron.so/cli`.
+When writing one-off command examples, use `npx -y @holocron.so/cli <command>`
+instead of `npx holocron <command>`. The unscoped `holocron` package is not the
+Holocron CLI.
+
+## Public docs wording
+
+Never mention `preview.holocron.so`, `*-site-preview.holocron.so`, preview
+environments, or preview deployment mechanics in public MDX docs or README files.
+Those are internal hosting details. Public docs should only describe the user
+visible deploy command and the returned deployment URL.
+
 **Schema**: the source of truth is `vite/src/schema.ts` — Zod schemas that describe the supported input shape. The JSON Schema at `vite/schema.json` is GENERATED from it via `pnpm -F @holocron.so/vite generate-schema` (runs automatically on build). Do not hand-edit `schema.json` — edit `src/schema.ts` and regenerate.
 
 The schema follows the Mintlify docs.json shape (https://mintlify.com/docs.json) for the subset Holocron consumes. Unknown Mintlify fields pass through `.passthrough()` so users can paste a full docs.json without validation errors.
+
+The Holocron docs.json schema is at https://holocron.so/docs.json
 
 ## Mintlify
 

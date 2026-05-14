@@ -37,7 +37,7 @@
    permissions:
      id-token: write
    steps:
-     - run: npx holocron deploy
+     - run: npx -y @holocron.so/cli deploy
    ```
 
 3. **Prism excluded from SSR** — syntax highlighting now runs client-only via a `#prism` conditional import. SSR/RSC get a noop stub that returns unhighlighted text, then the client adds highlighting during hydration. Reduces SSR bundle by ~500KB and avoids the CJS global crash in Dynamic Workers.

@@ -1,0 +1,72 @@
+---
+title: Holocron Deploy
+description: Deploy to a hosted holocron.so subdomain with the built-in CLI.
+icon: cloud-upload
+---
+
+{/* Built-in hosted deployment docs for the Holocron CLI deploy command. */}
+
+# Holocron Deploy
+
+`holocron deploy` builds your docs site and uploads it to Holocron hosting. It is
+the fastest way to publish a site without managing your own server or Cloudflare
+Worker.
+
+```bash
+npx -y @holocron.so/cli deploy
+```
+
+The command runs your build, uploads only changed files, finalizes the deployment,
+and prints the live URL.
+
+## Current limitation
+
+Hosted deploys currently publish to a generated Holocron subdomain. Custom
+domains are not supported yet.
+
+```txt
+https://<project>-<owner>-site.holocron.so
+```
+
+Use [Cloudflare Workers](/deploy/cloudflare) or [Node.js](/deploy/node) if you
+need to bring your own custom domain today.
+
+## Authentication
+
+For local deploys, log in once:
+
+```bash
+npx -y @holocron.so/cli login
+npx -y @holocron.so/cli deploy
+```
+
+For CI deploys, use a project API key:
+
+```bash
+HOLOCRON_KEY=holo_xxx npx -y @holocron.so/cli deploy
+```
+
+The API key identifies the project, so `--project` is only needed when deploying
+with a logged-in session that has access to multiple projects.
+
+```bash
+npx -y @holocron.so/cli deploy --project prj_xxx
+```
+
+## GitHub Actions outputs
+
+The deploy command sets GitHub Actions step outputs when `GITHUB_OUTPUT` is
+available:
+
+```txt
+holocron_url=https://...
+holocron_deployment_id=dep_...
+```
+
+## Build output
+
+`holocron deploy` uses the special deploy build output at `dist/.holocron/`.
+The server bundle is uploaded as Worker files and the client bundle is uploaded
+as static assets.
+
+See [Build Output](/deploy/build-output) for the directory structure.
