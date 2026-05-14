@@ -126,12 +126,14 @@ export async function syncNavigation({
   publicDir,
   projectRoot,
   distDir,
+  logParseErrors = true,
 }: {
   config: HolocronConfig
   pagesDir: string
   publicDir: string
   projectRoot: string
   distDir: string
+  logParseErrors?: boolean
 }): Promise<SyncResult> {
   // 1. Load caches from previous build
   const cachePath = path.join(distDir, CACHE_FILENAME)
@@ -318,7 +320,7 @@ export async function syncNavigation({
   /** Handle a parse error: log it, store it for the error overlay, and return a
    *  stub NavPage so the rest of the navigation tree can still be built. */
   function handleParseError(slug: string, err: HolocronMdxParseError): NavPage {
-    logger.error(formatHolocronError(`failed to parse ${err.source ?? slug}\n\n${err.reason}\n\n${err.codeFrame}\n`))
+    if (logParseErrors) logger.error(formatHolocronError(`failed to parse ${err.source ?? slug}\n\n${err.reason}\n\n${err.codeFrame}\n`))
     mdxContentErrors.add(slug)
     mdxParseErrors[slug] = err
     return {

@@ -5,7 +5,8 @@ import { processMdx as _processMdx, rewriteMdxImages, type ResolvedImage, type P
 function processMdx(...args: Parameters<typeof _processMdx>): ProcessedMdx {
   const result = _processMdx(...args)
   expect(result).not.toBeInstanceOf(Error)
-  return result as ProcessedMdx
+  if (result instanceof Error) throw result
+  return result
 }
 
 describe('processMdx', () => {

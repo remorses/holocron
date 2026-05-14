@@ -26,7 +26,7 @@ import { RenderBannerNodes } from './components/layout/banner.tsx'
 import { P, SectionHeading } from './components/markdown/typography.tsx'
 import { Danger } from './components/markdown/callout.tsx'
 import { CodeBlock } from './components/markdown/code-block.tsx'
-import { extractParseErrorInfo } from './lib/logger.ts'
+import { extractParseErrorInfo, HolocronMdxParseError } from './lib/logger.ts'
 import { slugify } from './lib/toc-tree.ts'
 import { NotFound } from './components/not-found.tsx'
 import {
@@ -385,16 +385,12 @@ function renderMdxPage({
 
 /** Render an error page when MDX parsing fails. */
 function renderMdxParseErrorPage({
-  site,
   slug,
   error,
-  loaderData,
   bannerJsx,
 }: {
-  site: HolocronSiteData
   slug: string
   error: MdxParseErrorInfo
-  loaderData: HolocronLoaderData
   bannerJsx: React.ReactNode | undefined
 }) {
   const locationStr = error.source
@@ -419,6 +415,16 @@ function renderMdxParseErrorPage({
       />
     </>
   )
+}
+
+/** Runtime parse boundary for MDX loaded during dev/HMR. */
+function parsePageMdx(markdown: string, source: string): HolocronMdxParseError | Root {
+  try {
+    return mdxParse(markdown)
+  } catch (err) {
+    const { line, column, reason } = extractParseErrorInfo(err)
+    return new HolocronMdxParseError({ reason, line, column, source, mdxSource: markdown })
+  }
 }
 
 function parseChatRequestBody(value: unknown): {
@@ -701,7 +707,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // instead of a cryptic 500 or "content missing" crash.
       const parseError = mdxParseErrors?.[slug]
       if (pageMdx === undefined && parseError) {
-        return renderMdxParseErrorPage({ site, slug, error: parseError, loaderData, bannerJsx: getBannerJsx(site, request) })
+        return renderMdxParseErrorPage({ slug, error: parseError, bannerJsx })
       }
       if (pageMdx === undefined) {
         throw new Error(`MDX content missing for registered page slug "${slug}"`)
@@ -710,28 +716,19 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // Resolve MDX import statements against the lazy glob.
       // Only loads modules that the current page actually imports.
       // Parse the mdast once and share it with renderMdxPage to avoid a duplicate parse.
-      let modules: EagerModules | undefined
-      let preParsedMdast: Root | undefined
-      try {
-        if (lazyGlob && Object.keys(lazyGlob).length > 0) {
-          preParsedMdast = mdxParse(pageMdx)
-          const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
-          const baseUrl = (providers.pagesDirPrefix || './') + slugDir
-          modules = await resolveModules({ glob: lazyGlob, mdast: preParsedMdast, baseUrl })
-        }
+      const pageSource = slug === 'index' ? '/' : `/${slug}`
+      const preParsedMdast = parsePageMdx(pageMdx, pageSource)
+      if (preParsedMdast instanceof Error) return renderMdxParseErrorPage({ slug, error: preParsedMdast, bannerJsx })
 
-        return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast })
-      } catch (err) {
-        // Runtime parse errors (e.g. HMR-injected bad MDX) — show error overlay
-        const { line, column, reason } = extractParseErrorInfo(err)
-        return renderMdxParseErrorPage({
-          site,
-          slug,
-          error: { reason, line, column, source: `/${slug}`, mdxSource: pageMdx },
-          loaderData,
-          bannerJsx: getBannerJsx(site, request),
-        })
-      }
+      const modules = lazyGlob && Object.keys(lazyGlob).length > 0
+        ? await resolveModules({
+            glob: lazyGlob,
+            mdast: preParsedMdast,
+            baseUrl: (providers.pagesDirPrefix || './') + (slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''),
+          })
+        : undefined
+
+      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast })
     }
   }
 

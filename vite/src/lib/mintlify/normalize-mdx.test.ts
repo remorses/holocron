@@ -5,7 +5,8 @@ import { HolocronMdxParseError } from '../logger.ts'
 /** Assert normalizeMdx succeeded and return the result. */
 function expectSuccess(result: HolocronMdxParseError | NormalizedMdx): NormalizedMdx {
   expect(result).not.toBeInstanceOf(Error)
-  return result as NormalizedMdx
+  if (result instanceof Error) throw result
+  return result
 }
 
 /** Strip positions from mdast nodes for readable snapshots. */

@@ -336,7 +336,13 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         publicDir: publicDirPath,
         projectRoot: root,
         distDir: distDirPath,
+        logParseErrors: resolved.command !== 'build',
       })
+
+      if (resolved.command === 'build') {
+        const firstParseError = Object.values(syncResult.mdxParseErrors)[0]
+        if (firstParseError) throw new Error(firstParseError.message)
+      }
 
       logger.info(
         formatHolocronSuccess(
