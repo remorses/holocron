@@ -63,7 +63,7 @@ export function Frame({
 
         {(description || caption || hint) && (
           <div
-            className='relative flex w-full justify-center rounded-2xl bg-background px-8 pb-2 pt-3 text-sm text-muted-foreground'
+            className='relative flex w-full justify-center rounded-2xl px-8 pb-1 pt-2 text-sm text-muted-foreground'
             contentEditable={false}
             data-component-part='frame-description'
           >
