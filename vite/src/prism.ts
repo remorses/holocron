@@ -308,9 +308,14 @@ import 'prismjs/components/prism-zig.js'
 const Prism = PrismModule.default ?? PrismModule
 
 const markdownGrammar = Prism.languages.md ?? Prism.languages.markdown
+const jsonGrammar = Prism.languages.json
 
 if (markdownGrammar) {
   Prism.languages.mdx = markdownGrammar
+}
+
+if (jsonGrammar) {
+  Prism.languages.jsonc = jsonGrammar
 }
 
 /* Custom "diagram" language for ASCII/Unicode box-drawing diagrams.

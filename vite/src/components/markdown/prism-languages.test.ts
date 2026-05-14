@@ -30,6 +30,10 @@ describe('prism-languages', () => {
     expect(Prism.languages.mdx).toBe(Prism.languages.md)
   })
 
+  test('aliases jsonc to json highlighting', () => {
+    expect(Prism.languages.jsonc).toBe(Prism.languages.json)
+  })
+
   test('highlights fenced code inside mdx snippets', () => {
     const snippet = '```ts\nconst greeting = "Hello"\n```'
     const highlighted = renderToStaticMarkup(createElement(CodeBlock, { lang: 'mdx', children: snippet }))
