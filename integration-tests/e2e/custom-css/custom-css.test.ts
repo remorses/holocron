@@ -36,4 +36,19 @@ test.describe('custom CSS injection', () => {
     expect(html).toContain('Custom CSS')
     expect(html).toContain('custom-css-target')
   })
+
+  test('sidebar search finds headings on the only index page', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 })
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+    const searchInput = page.getByPlaceholder(/search/i)
+    await expect(searchInput).toBeVisible({ timeout: 10000 })
+    await page.reload()
+    await expect(searchInput).toBeVisible({ timeout: 10000 })
+    await searchInput.fill('Runtime Styles')
+
+    const nav = page.getByRole('navigation', { name: 'Navigation' })
+    await expect(nav.getByRole('link', { name: 'Runtime Styles' })).toBeVisible()
+    await expect(nav.getByText('No results for', { exact: false })).not.toBeVisible()
+  })
 })

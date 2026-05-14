@@ -90,7 +90,7 @@ export function searchSidebar({ db, query, entries }: {
     matchedHrefs.add(entry.href)
 
     // Expand ancestor groups so the matched entry is reachable
-    if (entry.groupPath) {
+    if (entry.groupPath !== null) {
       const parts = entry.groupPath.split('\0')
       for (let i = 1; i <= parts.length; i++) {
         expandGroupKeys.add(parts.slice(0, i).join('\0'))

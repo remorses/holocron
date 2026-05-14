@@ -80,6 +80,20 @@ describe('searchSidebar', () => {
     expect(state!.matchedHrefs.has('/guide')).toBe(false)
   })
 
+  test('heading match in unnamed root pages group expands the empty group key', () => {
+    const entries = [
+      page({ href: '/', title: 'Home', groupPath: '' }),
+      heading({ pageHref: '/', slug: 'install', text: 'Install', groupPath: '' }),
+    ]
+    const { run } = setup(entries)
+    const state = run('Install')
+
+    expect(state).not.toBeNull()
+    expect(state!.matchedHrefs.has('/#install')).toBe(true)
+    expect(state!.visiblePages.has('/')).toBe(true)
+    expect(state!.expandGroupKeys.has('')).toBe(true)
+  })
+
   test('nested groups — full ancestor chain in expandGroupKeys', () => {
     const groupPath = 'outer\0inner\0leaf'
     const entries = [page({ href: '/deep', title: 'Deep page', groupPath })]
