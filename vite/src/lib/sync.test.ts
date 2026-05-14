@@ -391,11 +391,49 @@ title: Home
     expect(mdxCache.pageImportSources).toMatchObject({ index: [] })
     expect(warn.mock.calls.map(([message]) => String(message).replace(/\x1b\[[0-9;]*m/g, ''))).toMatchInlineSnapshot(`
       [
-        "▲ holocron MDX missing component
-        source /
-        line 7
-        reason Unsupported JSX component Caption
-        fix register the component or import it from this MDX file",
+        "▲ holocron MDX /:7 Unsupported jsx component Caption",
+      ]
+    `)
+  })
+
+  test('logs missing component once for pages reused by switchers', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: {
+          versions: [
+            { version: 'v1', default: true, pages: ['index'] },
+          ],
+        },
+      },
+      {
+        index: `---
+title: Home
+---
+
+# Home
+
+<Tipx>Missing component</Tipx>
+`,
+      },
+    ))
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    const config = readConfig({ root: project.root })
+
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const missingComponentWarnings = warn.mock.calls
+      .map(([message]) => String(message).replace(/\x1b\[[0-9;]*m/g, ''))
+      .filter((message) => message.includes('Unsupported jsx component Tipx'))
+
+    expect(missingComponentWarnings).toMatchInlineSnapshot(`
+      [
+        "▲ holocron MDX /:7 Unsupported jsx component Tipx",
       ]
     `)
   })

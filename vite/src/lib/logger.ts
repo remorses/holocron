@@ -46,46 +46,16 @@ export function formatHolocronError(message: string) {
   return formatHolocronStep({ icon: colors.red('✗'), message })
 }
 
-function getMdxErrorTypeLabel(type: SafeMdxError['type']): string {
-  switch (type) {
-    case 'missing-component': return 'missing component'
-    case 'validation': return 'validation'
-    case 'expression': return 'expression'
-    case 'esm-import': return 'ESM import'
-    default: return type
-  }
-}
-
-function formatMdxErrorMessage(message: string): string {
-  const unsupportedComponent = /^Unsupported jsx component (.+)$/.exec(message)
-  if (unsupportedComponent) {
-    return `Unsupported JSX component ${colors.yellow(unsupportedComponent[1]!)}`
-  }
-
-  return message
+function formatMdxErrorLocation(source: string | undefined, line: number | undefined): string | undefined {
+  if (source && line) return `${colors.cyan(source)}:${colors.yellow(String(line))}`
+  if (source) return colors.cyan(source)
+  if (line) return `line ${colors.yellow(String(line))}`
+  return undefined
 }
 
 export function formatMdxError(error: SafeMdxError, source?: string): string {
-  const lines = [
-    formatHolocronWarning(`${colors.yellow('MDX')} ${getMdxErrorTypeLabel(error.type)}`),
-    `  ${colors.dim('reason')} ${formatMdxErrorMessage(error.message)}`,
-  ]
-
-  if (source) {
-    lines.splice(1, 0, `  ${colors.dim('source')} ${colors.cyan(source)}`)
-  } else if (error.line) {
-    lines.splice(1, 0, `  ${colors.dim('line')} ${colors.yellow(String(error.line))}`)
-  }
-
-  if (source && error.line) {
-    lines.splice(2, 0, `  ${colors.dim('line')} ${colors.yellow(String(error.line))}`)
-  }
-
-  if (error.type === 'missing-component') {
-    lines.push(`  ${colors.dim('fix')} register the component or import it from this MDX file`)
-  }
-
-  return lines.join('\n')
+  const location = formatMdxErrorLocation(source, error.line)
+  return formatHolocronWarning(`${colors.yellow('MDX')}${location ? ` ${location}` : ''} ${error.message}`)
 }
 
 export function logMdxError(error: SafeMdxError, source?: string): void {

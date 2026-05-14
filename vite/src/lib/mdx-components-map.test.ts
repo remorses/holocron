@@ -35,18 +35,14 @@ describe('mdxComponents', () => {
 })
 
 describe('formatMdxError', () => {
-  it('formats missing components as a readable terminal block', () => {
+  it('formats missing components as a concise terminal line', () => {
     const formatted = formatMdxError(
       { type: 'missing-component', line: 34, message: 'Unsupported jsx component Caption' },
       '/components',
     )
 
     expect(formatted.replace(/\x1b\[[0-9;]*m/g, '')).toMatchInlineSnapshot(`
-      "▲ holocron MDX missing component
-        source /components
-        line 34
-        reason Unsupported JSX component Caption
-        fix register the component or import it from this MDX file"
+      "▲ holocron MDX /components:34 Unsupported jsx component Caption"
     `)
   })
 })

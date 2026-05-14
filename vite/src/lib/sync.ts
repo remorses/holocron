@@ -156,8 +156,20 @@ export async function syncNavigation({
       .filter(Boolean),
   )
 
+  const pageEnrichmentCache = new Map<string, Promise<NavPage>>()
+
   // 2. Enrich a single page slug
-  async function enrichPage(slug: string): Promise<NavPage> {
+  function enrichPage(slug: string): Promise<NavPage> {
+    const cached = pageEnrichmentCache.get(slug)
+    if (cached) {
+      return cached
+    }
+    const promise = enrichPageUncached(slug)
+    pageEnrichmentCache.set(slug, promise)
+    return promise
+  }
+
+  async function enrichPageUncached(slug: string): Promise<NavPage> {
     // Virtual pages (e.g. from OpenAPI) already have content in mdxContent
     const virtualMdx = mdxContent[slug]
     if (virtualMdx) {
