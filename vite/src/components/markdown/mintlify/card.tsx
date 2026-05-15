@@ -4,6 +4,7 @@
 
 import React from 'react'
 import { Link } from 'spiceflow/react'
+import { cn } from '../../../lib/css-vars.ts'
 import { isExternalHref, renderCompatIcon } from './shared.tsx'
 
 function resolveColumns(cols: number | undefined) {
@@ -46,7 +47,7 @@ export function Card({
   const external = isExternalHref(href)
   const showArrow = arrow ?? external
   const content = (
-    <div className={`group/card relative flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4 ${horizontal ? 'flex-row items-center' : ''} ${disabled ? 'opacity-50' : ''} ${className}`.trim()}>
+    <div className={cn('group/card relative flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4', horizontal && 'flex-row items-center', disabled && 'opacity-50', className)}>
       {img && <img src={img} alt='' className='w-full rounded-lg border border-border-subtle' style={{ maxWidth: '100%', height: 'auto' }} />}
       <div className='flex items-center gap-2'>
         {renderCompatIcon({ icon, iconType, size: 16, color })}

@@ -145,7 +145,7 @@ export function EditorialPage({
           {/* Left side: logo + version/dropdown selects */}
           <div className='flex items-center gap-3'>
             <Link href={logoLinkHref} className='slot-logo no-underline flex items-center shrink-0'>
-              <Logo className='' style={{ height: 'var(--logo-height)' }} />
+              <Logo style={{ height: 'var(--logo-height)' }} />
             </Link>
             {versionItems.length > 0 && (
               <span className='hidden lg:inline-flex'>

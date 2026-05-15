@@ -3,6 +3,7 @@
 /** Mintlify-compatible Expandable disclosure component. */
 
 import React from 'react'
+import { cn } from '../../../lib/css-vars.ts'
 import { Chevron } from './chevron.tsx'
 import { renderCompatIcon } from './shared.tsx'
 
@@ -27,7 +28,7 @@ export function Expandable({
 }) {
   const open = defaultOpen === true || defaultOpen === 'true'
   return (
-    <details className={`no-bleed group rounded-lg border border-border-subtle bg-card ${className}`.trim()} open={open}>
+    <details className={cn('no-bleed group rounded-lg border border-border-subtle bg-card', className)} open={open}>
       <summary className='flex cursor-pointer select-none list-none items-center gap-3 px-4 py-3 text-sm [&::-webkit-details-marker]:hidden'>
         {renderCompatIcon({ icon, iconType, size: 16 })}
         <span className='flex min-w-0 flex-col gap-1'>

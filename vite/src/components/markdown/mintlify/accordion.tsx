@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
+import { cn } from '../../../lib/css-vars.ts'
 import { Icon } from '../../icon.tsx'
 import { Chevron } from './chevron.tsx'
 
@@ -46,7 +47,7 @@ export function Accordion({
 
   return (
     <details
-      className={`no-bleed group rounded-lg border border-border-subtle bg-card ${_disabled ? 'opacity-60' : ''} ${className}`.trim()}
+      className={cn('no-bleed group rounded-lg border border-border-subtle bg-card', _disabled && 'opacity-60', className)}
       open={open}
       onToggle={(event) => {
         const nextOpen = event.currentTarget.open

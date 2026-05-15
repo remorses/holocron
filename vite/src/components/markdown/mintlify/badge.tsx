@@ -3,6 +3,7 @@
 /** Mintlify-compatible Badge component using Holocron color tokens. */
 
 import React from 'react'
+import { cn } from '../../../lib/css-vars.ts'
 import { Icon } from '../../icon.tsx'
 import { isExternalHref, renderCompatIcon } from './shared.tsx'
 
@@ -51,7 +52,7 @@ export function Badge({
   const trailing = renderCompatIcon({ icon: tailIcon ?? icon, iconType, size: iconSize })
 
   const renderBadge = (variantClass: string, iconColor?: string) => {
-    const badgeClass = `inline-flex w-fit self-start items-center gap-1 border ${sizeClass} ${shapeClass} ${variantClass} ${disabled ? 'opacity-50' : ''} ${(href || onClick) && !disabled ? 'cursor-pointer transition-opacity hover:opacity-80' : ''} ${className}`.trim()
+    const badgeClass = cn('inline-flex w-fit self-start items-center gap-1 border', sizeClass, shapeClass, variantClass, disabled && 'opacity-50', (href || onClick) && !disabled && 'cursor-pointer transition-opacity hover:opacity-80', className)
     const content = <>{leading}{children}{trailing || (iconColor && icon ? <Icon icon={String(icon)} iconType={iconType} size={iconSize} color={iconColor} /> : null)}</>
     if (href && !disabled) {
       const external = isExternalHref(href)

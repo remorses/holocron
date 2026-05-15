@@ -9,6 +9,7 @@
 import React from 'react'
 import { Link } from 'spiceflow/react'
 import { getDefaultTypeIcon } from '../../lib/collect-icons.ts'
+import { cn } from '../../lib/css-vars.ts'
 import { useHolocronData } from '../../router.ts'
 import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
@@ -17,13 +18,12 @@ export type LogoProps = Omit<React.ComponentProps<'img'>, 'src' | 'alt'> & {
   alt?: string
 }
 
-export function Logo({ className = 'h-6 w-auto', alt, style, ...props }: LogoProps) {
+export function Logo({ className, alt, style, ...props }: LogoProps) {
   const { site } = useHolocronData()
   const siteConfig = site.config
   const logo = getResolvedLogo(site)
   const label = (alt ?? siteConfig.name) || 'Logo'
   const baseStyle: React.CSSProperties = { width: 'auto', ...style }
-  const classNames = (...values: (string | undefined | false)[]) => values.filter(Boolean).join(' ')
 
   if (logo.generated) {
     return (
@@ -32,14 +32,14 @@ export function Logo({ className = 'h-6 w-auto', alt, style, ...props }: LogoPro
           {...props}
           src={logo.light}
           alt={label}
-          className={classNames(className, 'dark:hidden')}
+          className={cn('h-6 w-auto', className, 'dark:hidden')}
           style={{ ...baseStyle, mixBlendMode: 'multiply' }}
         />
         <img
           {...props}
           src={logo.light}
           alt={label}
-          className={classNames(className, 'hidden dark:block')}
+          className={cn('h-6 w-auto', className, 'hidden dark:block')}
           style={{ ...baseStyle, mixBlendMode: 'screen', filter: 'invert(1)' }}
         />
       </>
@@ -49,13 +49,13 @@ export function Logo({ className = 'h-6 w-auto', alt, style, ...props }: LogoPro
   if (logo.dark) {
     return (
       <>
-        <img {...props} src={logo.light} alt={label} className={classNames(className, 'dark:hidden')} style={baseStyle} />
-        <img {...props} src={logo.dark} alt={label} className={classNames(className, 'hidden dark:block')} style={baseStyle} />
+        <img {...props} src={logo.light} alt={label} className={cn('h-6 w-auto', className, 'dark:hidden')} style={baseStyle} />
+        <img {...props} src={logo.dark} alt={label} className={cn('h-6 w-auto', className, 'hidden dark:block')} style={baseStyle} />
       </>
     )
   }
 
-  return <img {...props} src={logo.light} alt={label} className={classNames(className, 'dark:invert')} style={baseStyle} />
+  return <img {...props} src={logo.light} alt={label} className={cn('h-6 w-auto', className, 'dark:invert')} style={baseStyle} />
 }
 
 export function Footer() {

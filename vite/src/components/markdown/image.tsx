@@ -22,6 +22,7 @@
 import React, { useCallback, useState } from 'react'
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
+import { cn } from '../../lib/css-vars.ts'
 
 /**
  * Mintlify-compatible image with a pixelated placeholder. Uses a tiny pre-generated image with CSS
@@ -79,7 +80,7 @@ export function Image({
 
   return (
     <div
-      className={`holocron-pixelated-image ${className}`.trim()}
+      className={cn('holocron-pixelated-image', className)}
       style={{
         position: 'relative',
         overflow: 'hidden',

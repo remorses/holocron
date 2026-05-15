@@ -4,6 +4,7 @@
 
 import React from 'react'
 import { Link } from 'spiceflow/react'
+import { cn } from '../../../lib/css-vars.ts'
 
 export function Tooltip({
   tip,
@@ -43,7 +44,7 @@ export function Tooltip({
     : children
   return (
     <span
-      className={`relative inline-flex w-fit cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2 ${className}`.trim()}
+      className={cn('relative inline-flex w-fit cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2', className)}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >

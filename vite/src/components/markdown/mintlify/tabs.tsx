@@ -1,6 +1,7 @@
 'use client'
 
 import React, { Children, isValidElement, useId, useMemo, useRef, useState } from 'react'
+import { cn } from '../../../lib/css-vars.ts'
 import { Icon } from '../../icon.tsx'
 
 type TabChildProps = {
@@ -61,7 +62,7 @@ export function Tabs({
   }
 
   return (
-    <div className={`rounded-2xl bg-accent px-0.5 pb-0.5 pt-px ${className}`.trim()}>
+    <div className={cn('rounded-2xl bg-accent px-0.5 pb-0.5 pt-px', className)}>
       <div className='overflow-x-auto px-2.5 py-1'>
         <div role='tablist' aria-label={ariaLabel} className='flex min-w-max gap-3'>
           {labels.map((label, index) => {

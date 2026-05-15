@@ -19,12 +19,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'spiceflow/react'
 import { useActiveTocState, notifyHeadingClick } from '../hooks/use-active-toc.ts'
+import { cn } from '../lib/css-vars.ts'
 import { useHolocronData } from '../router.ts'
-
-/** Simple className joiner — filters falsy values and joins. */
-function cn(...args: (string | false | null | undefined)[]): string {
-  return args.filter(Boolean).join(' ')
-}
 import type { NavHeading } from '../navigation.ts'
 
 export type { NavHeading }

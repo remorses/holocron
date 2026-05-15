@@ -280,6 +280,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.1(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       cookie:
         specifier: ^1.1.1
         version: 1.1.1
@@ -349,6 +352,9 @@ importers:
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
+      tailwind-merge:
+        specifier: ^3.5.0
+        version: 3.5.0
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.2

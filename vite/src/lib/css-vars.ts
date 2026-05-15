@@ -1,5 +1,6 @@
 /**
- * Unified CSS custom-property (CSS variable) type for the Holocron UI.
+ * Unified CSS custom-property (CSS variable) type for the Holocron UI,
+ * plus the shared `cn()` utility for className composition (shadcn convention).
  *
  * Every component that writes a `--my-var` inline style should type its
  * style object as `HolocronCSSProperties` (or spread a helper into it)
@@ -18,6 +19,13 @@
  */
 
 import type { CSSProperties } from 'react'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+/** Merge class names with Tailwind conflict resolution (shadcn convention). */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 export interface HolocronCSSProperties extends CSSProperties {
   /* ---------------------------------------------------------------- *

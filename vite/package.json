@@ -68,6 +68,7 @@
     "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
   },
   "dependencies": {
+    "@cloudflare/vite-plugin": "^1.32.2",
     "@fastify/deepmerge": "^3.2.1",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -78,11 +79,11 @@
     "@iconify-json/lucide": "^1.2.101",
     "@orama/orama": "^3.1.18",
     "@scalar/json-magic": "^0.12.8",
-    "@cloudflare/vite-plugin": "^1.32.2",
     "@scalar/openapi-upgrader": "^0.2.6",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
     "@vitejs/plugin-react": "^6.0.1",
+    "clsx": "^2.1.1",
     "cookie": "^1.1.1",
     "dedent": "^1.7.2",
     "fflate": "^0.8.2",
@@ -106,6 +107,7 @@
     "remark-mdx": "^3.1.1",
     "safe-mdx": "^1.11.0",
     "string-dedent": "^3.0.2",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "unist-util-visit": "^5.1.0",
     "yaml": "^2.8.3",

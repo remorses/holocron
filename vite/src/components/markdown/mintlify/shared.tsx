@@ -3,6 +3,7 @@
 /** Shared helpers for Mintlify-compatible MDX components. */
 
 import React from 'react'
+import { cn } from '../../../lib/css-vars.ts'
 import { Icon } from '../../icon.tsx'
 
 export function isExternalHref(href: string | undefined) {
@@ -27,7 +28,7 @@ export function renderCompatIcon({
 
 export function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`no-bleed flex flex-col gap-3 rounded-lg border border-border-subtle bg-card p-4 ${className}`.trim()}>
+    <div className={cn('no-bleed flex flex-col gap-3 rounded-lg border border-border-subtle bg-card p-4', className)}>
       {children}
     </div>
   )

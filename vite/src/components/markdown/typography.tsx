@@ -8,6 +8,7 @@
 import React, { Children, isValidElement } from 'react'
 import { Link } from 'spiceflow/react'
 
+import { cn } from '../../lib/css-vars.ts'
 import { slugify } from '../../lib/toc-tree.ts'
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
@@ -101,10 +102,10 @@ export function Heading({
 // Uses <div> instead of <p> to avoid hydration mismatches when MDX content
 // contains explicit <p> or <h1> tags whose text children also get wrapped
 // by this component (p→P mapping), creating invalid nested <p> elements.
-export function P({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+export function P({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`editorial-prose ${className}`}
+      className={cn('editorial-prose', className)}
       style={{ opacity: 0.82 }}
     >
       {children}
