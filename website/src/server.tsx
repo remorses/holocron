@@ -22,10 +22,10 @@ import { DeviceActionButtons } from './components/device-action-buttons.tsx'
 // Auth pages use AuthPage — a minimal centered layout with no cards or shadows.
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import schema from '@holocron.so/vite/src/schema.json' with { type: 'json' }
-import { icons as lucideIcons } from '@iconify-json/lucide'
-import { icons as fa6BrandsIcons } from '@iconify-json/fa6-brands'
-import { icons as fa6RegularIcons } from '@iconify-json/fa6-regular'
-import { icons as fa6SolidIcons } from '@iconify-json/fa6-solid'
+// Generated at build time by scripts/generate-icon-schemas.ts — contains only
+// icon name strings (no SVG bodies), keeping the Worker bundle small.
+import lucideIconsSchema from './generated/lucide-icons-schema.json' with { type: 'json' }
+import fontawesomeIconsSchema from './generated/fontawesome-icons-schema.json' with { type: 'json' }
 import './globals.css'
 
 const loginQuerySchema = z.object({ callbackURL: z.string().optional() })
@@ -58,27 +58,6 @@ async function createGitHubSignInRedirect(request: Pick<Request, 'headers'>, cal
 
 const corsJson = (data: unknown) =>
   Response.json(data, { headers: { 'access-control-allow-origin': '*' } })
-
-const lucideIconsSchema = {
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  type: 'string' as const,
-  description: 'Lucide icon name with "lucide:" prefix (https://lucide.dev/icons/)',
-  enum: [
-    ...Object.keys(lucideIcons.icons).map((n) => `lucide:${n}`),
-    ...Object.keys(lucideIcons.aliases || {}).map((n) => `lucide:${n}`),
-  ].sort(),
-}
-
-const fontawesomeIconsSchema = {
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  type: 'string' as const,
-  description: 'Font Awesome 6 icon name with "fontawesome:{style}:" prefix',
-  enum: [
-    ...Object.keys(fa6SolidIcons.icons).map((n) => `fontawesome:solid:${n}`),
-    ...Object.keys(fa6BrandsIcons.icons).map((n) => `fontawesome:brands:${n}`),
-    ...Object.keys(fa6RegularIcons.icons).map((n) => `fontawesome:regular:${n}`),
-  ].sort(),
-}
 
 const schemaApp = new Spiceflow()
   .get('/docs.json', () => corsJson(schema))

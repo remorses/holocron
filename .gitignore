@@ -19,6 +19,7 @@ play
 worker-configuration.d.ts
 !website/worker-configuration.d.ts
 website/openapi.json
+website/src/generated
 template/node_modules
 template/dist
 template/pnpm-lock.yaml

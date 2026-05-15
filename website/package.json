@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "pnpm db:migrate:local && sigillo run -- vite dev",
     "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
-    "build": "pnpm generate-openapi && vite build && tsc",
+    "generate-icon-schemas": "tsx scripts/generate-icon-schemas.ts",
+    "build": "pnpm generate-openapi && pnpm generate-icon-schemas && vite build && tsc",
     "start": "node dist/rsc/index.js",
     "test:preview-ai-chat": "tsx scripts/test-preview-ai-chat.ts",
     "types": "wrangler types",
@@ -23,10 +24,6 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/@better-auth/drizzle-adapter@9489",
     "@holocron.so/vite": "workspace:^",
-    "@iconify-json/fa6-brands": "^1.2.6",
-    "@iconify-json/fa6-regular": "^1.2.4",
-    "@iconify-json/fa6-solid": "^1.2.4",
-    "@iconify-json/lucide": "^1.2.101",
     "@tailwindcss/vite": "^4.2.2",
     "ai": "^6.0.149",
     "better-auth": "https://pkg.pr.new/better-auth@9489",
@@ -52,6 +49,10 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.32.2",
+    "@iconify-json/fa6-brands": "^1.2.6",
+    "@iconify-json/fa6-regular": "^1.2.4",
+    "@iconify-json/fa6-solid": "^1.2.4",
+    "@iconify-json/lucide": "^1.2.101",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
