@@ -623,10 +623,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
     // hotUpdate — per-environment HMR hook.
     //
-    // addWatchFile in load() puts our virtual module in ctx.modules for
-    // existing files, so @tailwindcss/vite sees a JS module and skips its
-    // full-reload. For new/deleted MDX files, we inject virtual modules
-    // into ctx.modules (same pattern as vite:import-glob).
+    // MDX files are scanned by Tailwind through @source, not imported as real
+    // JS modules. If ctx.modules only contains the raw .mdx asset module,
+    // @tailwindcss/vite treats the edit as an external template change and
+    // sends a full reload. Inject the virtual modules that own MDX rendering
+    // (same pattern as vite:import-glob) so Tailwind lets Holocron handle HMR.
     //
     // We return [] in ALL environments because ctx.modules also contains
     // the raw .mdx/.jsonc file entries which the RSC plugin would try to
@@ -659,12 +660,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return
       }
 
-      // For new/deleted MDX files (type !== "update"), the file isn't
-      // registered via addWatchFile yet so our virtual modules won't be
-      // in ctx.modules. Inject them — mirroring how vite:import-glob
-      // adds glob-owning modules on create/delete. This makes downstream
-      // plugins (Tailwind) see a JS module and skip their full-reload.
-      if (ctx.type !== 'update' && isMdx && ctx.file.startsWith(pagesDir)) {
+      if (isMdx && ctx.file.startsWith(pagesDir)) {
         for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod && !ctx.modules.includes(mod)) {
@@ -729,8 +725,28 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           this.environment.moduleGraph.invalidateModule(mod)
         }
       }
+      const cssMods = this.environment.moduleGraph.getModulesByFile(HOLOCRON_GLOBALS_CSS_PATH)
+      if (cssMods) {
+        for (const mod of cssMods) {
+          this.environment.moduleGraph.invalidateModule(mod)
+        }
+      }
 
       if (this.environment.name === 'client') {
+        const cssUpdates = [...(this.environment.moduleGraph.getModulesByFile(HOLOCRON_GLOBALS_CSS_PATH) ?? [])]
+          .filter((mod) => mod.url)
+          .map((mod) => ({
+            type: 'css-update' as const,
+            timestamp: Date.now(),
+            path: mod.url!,
+            acceptedPath: mod.url!,
+          }))
+        if (cssUpdates.length > 0) {
+          ctx.server.environments.client?.hot.send({
+            type: 'update',
+            updates: cssUpdates,
+          })
+        }
         ctx.server.environments.client?.hot.send({
           type: 'custom',
           event: 'rsc:update',
@@ -816,6 +832,27 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
   }
 
+  const tailwindHmrOwnerPlugin: Plugin = {
+    name: 'holocron:tailwind-hmr-owner',
+    enforce: 'pre',
+    hotUpdate(ctx) {
+      const isMdx = (ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md'))
+        && ctx.file.startsWith(pagesDir)
+      if (!isMdx) return
+
+      // @tailwindcss/vite also runs in `enforce: pre`. It full-reloads when
+      // every module for a scanned file is an asset/no-id module. MDX pages are
+      // scanned by @source but rendered through these virtual modules, so mark
+      // the update as framework-owned before Tailwind's HMR hook runs.
+      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX]) {
+        const mod = this.environment.moduleGraph.getModuleById(resolvedId)
+        if (mod && !ctx.modules.includes(mod)) {
+          ctx.modules = [...ctx.modules, mod]
+        }
+      }
+    },
+  }
+
   // Append listen() to the RSC entry chunk AFTER bundling.
   //
   // The listen guard cannot live in virtual:holocron-app because the
@@ -857,6 +894,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
   const pluginsToReturn: PluginOption[] = [
     rawImportPlugin(),
+    tailwindHmrOwnerPlugin,
     holocronPlugin,
     holocronRscPackagePlugin,
     dynamicWorkerModulePlugin,

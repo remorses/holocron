@@ -1,0 +1,11 @@
+{
+  "name": "Tailwind Scan Test",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Guides",
+        "pages": ["index"]
+      }
+    ]
+  }
+}
