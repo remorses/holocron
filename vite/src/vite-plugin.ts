@@ -628,6 +628,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     // @tailwindcss/vite treats the edit as an external template change and
     // sends a full reload. Inject the virtual modules that own MDX rendering
     // (same pattern as vite:import-glob) so Tailwind lets Holocron handle HMR.
+    // Relevant upstream context:
+    // - https://github.com/tailwindlabs/tailwindcss/issues/16764
+    // - https://github.com/tailwindlabs/tailwindcss/issues/19903
+    // - https://github.com/tailwindlabs/tailwindcss/pull/19904
     //
     // We return [] in ALL environments because ctx.modules also contains
     // the raw .mdx/.jsonc file entries which the RSC plugin would try to
@@ -844,6 +848,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // every module for a scanned file is an asset/no-id module. MDX pages are
       // scanned by @source but rendered through these virtual modules, so mark
       // the update as framework-owned before Tailwind's HMR hook runs.
+      // This is the same class of workaround discussed in:
+      // https://github.com/tailwindlabs/tailwindcss/issues/16764
       for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX]) {
         const mod = this.environment.moduleGraph.getModuleById(resolvedId)
         if (mod && !ctx.modules.includes(mod)) {
