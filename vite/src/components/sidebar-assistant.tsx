@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useRef, useMemo, useCallback } from 'react'
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
 import { useHolocronData } from '../router.ts'
@@ -200,6 +201,42 @@ function CheckIcon() {
   )
 }
 
+function NavTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLSpanElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+
+  useEffect(() => {
+    if (!open || !triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    setPos({
+      top: rect.top + window.scrollY - 6,
+      left: rect.left + rect.width / 2 + window.scrollX,
+    })
+  }, [open])
+
+  return (
+    <span
+      ref={triggerRef}
+      className='inline-flex'
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      {children}
+      {open && typeof document !== 'undefined' && createPortal(
+        <span
+          className='fixed z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border-subtle bg-card px-2 py-1 text-[11px] text-foreground shadow-md pointer-events-none'
+          role='tooltip'
+          style={{ top: pos.top, left: pos.left }}
+        >
+          {label}
+        </span>,
+        document.body,
+      )}
+    </span>
+  )
+}
+
 export function PageNavRow() {
   const { site, currentPageHref } = useHolocronData()
   const [copied, setCopied] = useState(false)
@@ -244,13 +281,14 @@ export function PageNavRow() {
       <div className='grow' />
 
       {prevPage ? (
-        <Link
-          href={basePath + prevPage.href}
-          className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
-          title={prevPage.title}
-        >
-          <ChevronLeftIcon />
-        </Link>
+        <NavTooltip label={prevPage.title}>
+          <Link
+            href={basePath + prevPage.href}
+            className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
+          >
+            <ChevronLeftIcon />
+          </Link>
+        </NavTooltip>
       ) : (
         <span className='inline-flex items-center justify-center size-6 text-muted-foreground/30'>
           <ChevronLeftIcon />
@@ -258,13 +296,14 @@ export function PageNavRow() {
       )}
 
       {nextPage ? (
-        <Link
-          href={basePath + nextPage.href}
-          className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
-          title={nextPage.title}
-        >
-          <ChevronRightIcon />
-        </Link>
+        <NavTooltip label={nextPage.title}>
+          <Link
+            href={basePath + nextPage.href}
+            className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
+          >
+            <ChevronRightIcon />
+          </Link>
+        </NavTooltip>
       ) : (
         <span className='inline-flex items-center justify-center size-6 text-muted-foreground/30'>
           <ChevronRightIcon />
