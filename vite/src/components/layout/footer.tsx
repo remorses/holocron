@@ -10,19 +10,24 @@ import React from 'react'
 import { Link } from 'spiceflow/react'
 import { getDefaultTypeIcon } from '../../lib/collect-icons.ts'
 import { cn } from '../../lib/css-vars.ts'
+import { getGeneratedLogoUrl } from '../../lib/generated-logo.tsx'
 import { useHolocronData } from '../../router.ts'
 import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
 
 export type LogoProps = Omit<React.ComponentProps<'img'>, 'src' | 'alt'> & {
   alt?: string
+  /** When provided, always renders the AI-generated logo using this text. */
+  text?: string
 }
 
-export function Logo({ className, alt, style, ...props }: LogoProps) {
+export function Logo({ className, alt, style, text, ...props }: LogoProps) {
   const { site } = useHolocronData()
   const siteConfig = site.config
-  const logo = getResolvedLogo(site)
-  const label = (alt ?? siteConfig.name) || 'Logo'
+  const logo = text
+    ? { light: getGeneratedLogoUrl(text), dark: getGeneratedLogoUrl(text), generated: true as const }
+    : getResolvedLogo(site)
+  const label = (alt ?? text ?? siteConfig.name) || 'Logo'
   const baseStyle: React.CSSProperties = { width: 'auto', ...style }
 
   if (logo.generated) {
