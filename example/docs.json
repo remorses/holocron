@@ -1,6 +1,7 @@
 {
-  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
+  "$schema": "https://holocron.so/docs.json?sdfsd",
   "name": "Playwriter",
+
   "logo": "/playwriter-logo.svg",
   "favicon": "/favicon-32.png",
   "colors": {
@@ -29,7 +30,7 @@
         "groups": [
           {
             "group": "Overview",
-            "icon": "compass",
+            "icon": "fontawesome:solid:compass",
             "pages": ["index"]
           },
           {
