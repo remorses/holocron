@@ -320,8 +320,7 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.1s ease;
   }
   .search-input:focus {
-    border-color: var(--text-tertiary);
-    box-shadow: 0 0 0 1px var(--text-tertiary);
+    border-color: var(--muted-foreground);
   }
 
   /* Layout slots — only important page entities use CSS classes.
