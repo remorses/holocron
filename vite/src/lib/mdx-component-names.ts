@@ -20,7 +20,7 @@ export const SAFE_MDX_COMPONENT_NAMES = [
   'Frame', 'Prompt', 'ParamField', 'ResponseField', 'Steps', 'Step', 'Tile', 'Tooltip', 'Update',
   'View', 'Panel', 'CodeCard', 'RequestExample', 'ResponseExample', 'Tree', 'Color', 'Icon',
   'Logo', 'Markdown', 'Visibility',
-  'TableOfContentsPanel', 'HolocronAIAssistantWidget', 'OpenAPIEndpoint',
+  'TableOfContentsPanel', 'HolocronAIAssistantWidget', 'HolocronPageNavRow', 'OpenAPIEndpoint',
 ] as const
 
 export type SafeMdxComponentName = (typeof SAFE_MDX_COMPONENT_NAMES)[number]

@@ -35,6 +35,8 @@ Body
       [ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
@@ -65,6 +67,8 @@ Body
       [ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
@@ -95,6 +99,8 @@ Body
       [ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
@@ -123,6 +129,8 @@ Body
       [ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
@@ -147,6 +155,8 @@ Body
       [ASIDE]
       <Aside>
         <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
 
         My aside
       </Aside>
@@ -208,6 +218,8 @@ Part 3 content
       <Aside full>
         <HolocronAIAssistantWidget />
 
+        <HolocronPageNavRow />
+
         This is a full aside.
       </Aside>
 
@@ -254,6 +266,8 @@ Response body
       [ASIDE]
       <Aside>
         <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
 
         Intro aside
       </Aside>
@@ -313,6 +327,8 @@ Response body
       <Aside>
         <HolocronAIAssistantWidget />
 
+        <HolocronPageNavRow />
+
         Intro aside
       </Aside>
 
@@ -367,6 +383,8 @@ Content
       [ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })

@@ -79,7 +79,7 @@ import { slugify, extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
 import type { SafeMdxComponentName } from './mdx-component-names.ts'
 
-import { SidebarAssistant } from '../components/sidebar-assistant.tsx'
+import { SidebarAssistant, PageNavRow } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
 
 function ImageWithProps(props: {
@@ -210,6 +210,7 @@ export const mdxComponents = {
   // No more per-page closure binding.
   TableOfContentsPanel,
   HolocronAIAssistantWidget: SidebarAssistant,
+  HolocronPageNavRow: PageNavRow,
   OpenAPIEndpoint,
 } satisfies Record<SafeMdxComponentName | `${string}.${string}`, unknown>
 

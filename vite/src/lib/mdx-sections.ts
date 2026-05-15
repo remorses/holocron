@@ -103,14 +103,26 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
     return node.type !== 'yaml' && node.type !== 'definition' && node.type !== 'mdxjsEsm'
   })
 
+  // Build the list of nodes to inject into the first section's aside.
+  // The page nav row (copy MD + prev/next) is always injected; the AI
+  // assistant widget is only injected when enabled.
+  const injectedNodes: FlowJsxNode[] = []
   if (enableAssistant) {
-    const assistantNode: FlowJsxNode = {
+    injectedNodes.push({
       type: 'mdxJsxFlowElement',
       name: 'HolocronAIAssistantWidget',
       attributes: [],
       children: [],
-    }
+    })
+  }
+  injectedNodes.push({
+    type: 'mdxJsxFlowElement',
+    name: 'HolocronPageNavRow',
+    attributes: [],
+    children: [],
+  })
 
+  {
     let firstSectionEnd = children.length
     for (let i = 0; i < children.length; i++) {
       if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
@@ -130,14 +142,14 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
     if (firstAsideIdx !== -1) {
       const asideNode = children[firstAsideIdx]
       if (asideNode && isAsideNode(asideNode)) {
-        asideNode.children.unshift(assistantNode)
+        asideNode.children.unshift(...injectedNodes)
       }
     } else {
       const fullAsideNode: FlowJsxNode = {
         type: 'mdxJsxFlowElement',
         name: 'Aside',
         attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }],
-        children: [assistantNode],
+        children: [...injectedNodes],
       }
       children.unshift(fullAsideNode)
     }
