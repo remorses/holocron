@@ -767,6 +767,14 @@
     "iconSchema": {
       "anyOf": [
         {
+          "type": "string",
+          "$ref": "https://holocron.so/schemas/lucide-icons.json"
+        },
+        {
+          "type": "string",
+          "$ref": "https://holocron.so/schemas/fontawesome-icons.json"
+        },
+        {
           "type": "string"
         },
         {

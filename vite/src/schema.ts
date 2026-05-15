@@ -20,6 +20,16 @@
 import { z } from 'zod'
 import dedent from 'dedent'
 
+/* ── Icon name schemas (external $ref for IDE autocomplete) ───────────── */
+
+const lucideIconNameSchema = z
+  .string()
+  .meta({ $ref: 'https://holocron.so/schemas/lucide-icons.json' })
+
+const fontawesomeIconNameSchema = z
+  .string()
+  .meta({ $ref: 'https://holocron.so/schemas/fontawesome-icons.json' })
+
 /* ── Icon ─────────────────────────────────────────────────────────────── */
 
 const iconObjectSchema = z.object({
@@ -47,7 +57,7 @@ const iconObjectSchema = z.object({
 })
 
 export const iconSchema = z
-  .union([z.string(), iconObjectSchema])
+  .union([lucideIconNameSchema, fontawesomeIconNameSchema, z.string(), iconObjectSchema])
   .describe('The icon to be displayed in the section')
   .meta({ id: 'iconSchema' })
 

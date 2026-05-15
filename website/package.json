@@ -23,6 +23,10 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/@better-auth/drizzle-adapter@9489",
     "@holocron.so/vite": "workspace:^",
+    "@iconify-json/fa6-brands": "^1.2.6",
+    "@iconify-json/fa6-regular": "^1.2.4",
+    "@iconify-json/fa6-solid": "^1.2.4",
+    "@iconify-json/lucide": "^1.2.101",
     "@tailwindcss/vite": "^4.2.2",
     "ai": "^6.0.149",
     "better-auth": "https://pkg.pr.new/better-auth@9489",

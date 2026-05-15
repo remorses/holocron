@@ -22,6 +22,10 @@ import { DeviceActionButtons } from './components/device-action-buttons.tsx'
 // Auth pages use AuthPage — a minimal centered layout with no cards or shadows.
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import schema from '@holocron.so/vite/src/schema.json' with { type: 'json' }
+import { icons as lucideIcons } from '@iconify-json/lucide'
+import { icons as fa6BrandsIcons } from '@iconify-json/fa6-brands'
+import { icons as fa6RegularIcons } from '@iconify-json/fa6-regular'
+import { icons as fa6SolidIcons } from '@iconify-json/fa6-solid'
 import './globals.css'
 
 const loginQuerySchema = z.object({ callbackURL: z.string().optional() })
@@ -52,12 +56,34 @@ async function createGitHubSignInRedirect(request: Pick<Request, 'headers'>, cal
   return redirectResponse
 }
 
+const corsJson = (data: unknown) =>
+  Response.json(data, { headers: { 'access-control-allow-origin': '*' } })
+
+const lucideIconsSchema = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  type: 'string' as const,
+  description: 'Lucide icon name with "lucide:" prefix (https://lucide.dev/icons/)',
+  enum: [
+    ...Object.keys(lucideIcons.icons).map((n) => `lucide:${n}`),
+    ...Object.keys(lucideIcons.aliases || {}).map((n) => `lucide:${n}`),
+  ].sort(),
+}
+
+const fontawesomeIconsSchema = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  type: 'string' as const,
+  description: 'Font Awesome 6 icon name with "fontawesome:{style}:" prefix',
+  enum: [
+    ...Object.keys(fa6SolidIcons.icons).map((n) => `fontawesome:solid:${n}`),
+    ...Object.keys(fa6BrandsIcons.icons).map((n) => `fontawesome:brands:${n}`),
+    ...Object.keys(fa6RegularIcons.icons).map((n) => `fontawesome:regular:${n}`),
+  ].sort(),
+}
+
 const schemaApp = new Spiceflow()
-  .get('/docs.json', () => {
-    return Response.json(schema, {
-      headers: { 'access-control-allow-origin': '*' },
-    })
-  })
+  .get('/docs.json', () => corsJson(schema))
+  .get('/schemas/lucide-icons.json', () => corsJson(lucideIconsSchema))
+  .get('/schemas/fontawesome-icons.json', () => corsJson(fontawesomeIconsSchema))
 
 // ── Auth app: middleware + login + device pages ─────────────────────
 
