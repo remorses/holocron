@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "URL of the JSON Schema for this frontmatter",
+      "type": "string"
+    },
+    "title": {
+      "description": "The page title displayed in the sidebar, browser tab, and heading",
+      "type": "string"
+    },
+    "description": {
+      "description": "Page description used for SEO meta tags and search indexing",
+      "type": "string"
+    },
+    "icon": {
+      "description": "Icon name from the configured icon library (e.g. \"rocket\", \"home\")",
+      "type": "string"
+    },
+    "sidebarTitle": {
+      "description": "Override the title shown in the sidebar navigation",
+      "type": "string"
+    },
+    "tag": {
+      "description": "Badge label displayed next to the page title in the sidebar",
+      "type": "string"
+    },
+    "deprecated": {
+      "description": "Mark the page as deprecated",
+      "type": "boolean"
+    },
+    "gridGap": {
+      "description": "Override the grid gap (in pixels) between content and sidebar columns",
+      "type": "number"
+    },
+    "hidden": {
+      "description": "Hide the page from sidebar navigation and search results",
+      "type": "boolean"
+    },
+    "noindex": {
+      "description": "Prevent search engines from indexing this page",
+      "type": "boolean"
+    },
+    "keywords": {
+      "description": "Additional keywords for search indexing",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "robots": {
+      "description": "Custom robots meta tag value (e.g. \"noindex, nofollow\")",
+      "type": "string"
+    },
+    "og:title": {
+      "description": "Open Graph title override",
+      "type": "string"
+    },
+    "og:description": {
+      "description": "Open Graph description override",
+      "type": "string"
+    },
+    "og:image": {
+      "description": "Open Graph image URL",
+      "type": "string"
+    },
+    "og:url": {
+      "description": "Open Graph canonical URL",
+      "type": "string"
+    },
+    "og:type": {
+      "description": "Open Graph type (e.g. \"article\", \"website\")",
+      "type": "string"
+    },
+    "og:image:width": {
+      "description": "Open Graph image width in pixels",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "og:image:height": {
+      "description": "Open Graph image height in pixels",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "twitter:title": {
+      "description": "Twitter card title override",
+      "type": "string"
+    },
+    "twitter:description": {
+      "description": "Twitter card description override",
+      "type": "string"
+    },
+    "twitter:image": {
+      "description": "Twitter card image URL",
+      "type": "string"
+    },
+    "twitter:card": {
+      "description": "Twitter card type (e.g. \"summary\", \"summary_large_image\")",
+      "type": "string"
+    },
+    "twitter:site": {
+      "description": "Twitter @username for the site",
+      "type": "string"
+    },
+    "twitter:image:width": {
+      "description": "Twitter card image width in pixels",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "twitter:image:height": {
+      "description": "Twitter card image height in pixels",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "cache-control": {
+      "description": "Raw Cache-Control header value for this page (e.g. \"s-maxage=0, no-store\")",
+      "type": "string"
+    }
+  },
+  "additionalProperties": {}
+}

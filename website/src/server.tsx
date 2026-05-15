@@ -22,6 +22,7 @@ import { DeviceActionButtons } from './components/device-action-buttons.tsx'
 // Auth pages use AuthPage — a minimal centered layout with no cards or shadows.
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import schema from '@holocron.so/vite/src/schema.json' with { type: 'json' }
+import frontmatterSchema from '@holocron.so/vite/src/frontmatter-schema.json' with { type: 'json' }
 // Generated at build time by scripts/generate-icon-schemas.ts — contains only
 // icon name strings (no SVG bodies), keeping the Worker bundle small.
 import lucideIconsSchema from './generated/lucide-icons-schema.json' with { type: 'json' }
@@ -61,6 +62,7 @@ const corsJson = (data: unknown) =>
 
 const schemaApp = new Spiceflow()
   .get('/docs.json', () => corsJson(schema))
+  .get('/frontmatter.json', () => corsJson(frontmatterSchema))
   .get('/schemas/lucide-icons.json', () => corsJson(lucideIconsSchema))
   .get('/schemas/fontawesome-icons.json', () => corsJson(fontawesomeIconsSchema))
 

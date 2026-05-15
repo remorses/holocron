@@ -1,11 +1,10 @@
 /**
- * Generates vite/schema.json from the Zod schemas defined in src/schema.ts.
+ * Generates vite/schema.json and vite/src/frontmatter-schema.json from Zod schemas.
  *
  * Run with: pnpm -F @holocron.so/vite generate-schema
  *
- * The generated schema.json is the JSON Schema that users reference from
- * their holocron.jsonc (via `"$schema": "..."`) to get IDE autocomplete
- * and validation.
+ * - schema.json: the config JSON Schema users reference from holocron.jsonc
+ * - frontmatter-schema.json: the frontmatter JSON Schema for MDX page YAML frontmatter
  */
 
 import { z } from 'zod'
@@ -13,9 +12,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { holocronConfigSchema } from '../src/schema.ts'
+import { pageFrontmatterSchema } from '../src/lib/page-frontmatter.ts'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const schemaPath = path.join(here, '..', 'src', 'schema.json')
+const frontmatterSchemaPath = path.join(here, '..', 'src', 'frontmatter-schema.json')
 
 // Register the root schema in the global registry so `metadata` extracts
 // all schemas with `.meta({ id })` into top-level definitions.
@@ -79,3 +80,31 @@ const output: Record<string, unknown> = {
 
 fs.writeFileSync(schemaPath, JSON.stringify(output, null, 2) + '\n')
 console.log(`✓ wrote ${path.relative(process.cwd(), schemaPath)}`)
+
+// ── Frontmatter schema ──────────────────────────────────────────────────
+
+const frontmatterGenerated = z.toJSONSchema(pageFrontmatterSchema, {
+  target: 'draft-7',
+  unrepresentable: 'any',
+})
+
+const frontmatterCleaned = clean(frontmatterGenerated) as Record<string, unknown>
+
+// The stringOrNumber transform fields lose their type during JSON Schema
+// generation (unrepresentable union+transform). Patch them to accept both.
+const fmProps = (frontmatterCleaned as { properties?: Record<string, Record<string, unknown>> }).properties
+if (fmProps) {
+  for (const key of ['og:image:width', 'og:image:height', 'twitter:image:width', 'twitter:image:height']) {
+    if (fmProps[key] && !fmProps[key].type) {
+      fmProps[key].type = ['string', 'number']
+    }
+  }
+}
+
+const frontmatterOutput: Record<string, unknown> = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  ...frontmatterCleaned,
+}
+
+fs.writeFileSync(frontmatterSchemaPath, JSON.stringify(frontmatterOutput, null, 2) + '\n')
+console.log(`✓ wrote ${path.relative(process.cwd(), frontmatterSchemaPath)}`)
