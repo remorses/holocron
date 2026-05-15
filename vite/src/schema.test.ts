@@ -180,42 +180,20 @@ describe('schema.json regen-check', () => {
     const schemaPath = path.join(import.meta.dirname, 'schema.json')
     const onDisk = fs.readFileSync(schemaPath, 'utf-8')
 
+    // Same options as scripts/generate-schema.ts — override strips redundant `id`
     const generated = z.toJSONSchema(holocronConfigSchema, {
       target: 'draft-7',
       metadata: z.globalRegistry,
       reused: 'inline',
       unrepresentable: 'any',
+      override: (ctx) => {
+        if ('id' in ctx.jsonSchema) {
+          delete ctx.jsonSchema.id
+        }
+      },
     })
 
-    // Same clean() logic as scripts/generate-schema.ts
-    const clean = (node: unknown): unknown => {
-      if (Array.isArray(node)) return node.map(clean)
-      if (node === null || typeof node !== 'object') return node
-      const obj = node as Record<string, unknown>
-      if (
-        Array.isArray(obj.allOf) &&
-        obj.allOf.length === 1 &&
-        obj.allOf[0] &&
-        typeof obj.allOf[0] === 'object' &&
-        Object.keys(obj).length === 1
-      ) {
-        return clean(obj.allOf[0])
-      }
-      const result: Record<string, unknown> = {}
-      for (const [key, value] of Object.entries(obj)) {
-        if (key === 'id') continue
-        result[key] = clean(value)
-      }
-      return result
-    }
-
-    const cleaned = clean(generated) as Record<string, unknown>
-    const expected =
-      JSON.stringify(
-        { $schema: 'http://json-schema.org/draft-07/schema#', ...cleaned },
-        null,
-        2,
-      ) + '\n'
+    const expected = JSON.stringify(generated, null, 2) + '\n'
 
     if (onDisk !== expected) {
       throw new Error(

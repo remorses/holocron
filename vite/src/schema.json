@@ -16,31 +16,67 @@
       "type": "string"
     },
     "logo": {
-      "$ref": "#/definitions/logoSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/logoSchema"
+        }
+      ]
     },
     "favicon": {
-      "$ref": "#/definitions/faviconSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/faviconSchema"
+        }
+      ]
     },
     "colors": {
-      "$ref": "#/definitions/colorsSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/colorsSchema"
+        }
+      ]
     },
     "appearance": {
-      "$ref": "#/definitions/appearanceSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/appearanceSchema"
+        }
+      ]
     },
     "fonts": {
-      "$ref": "#/definitions/fontsSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/fontsSchema"
+        }
+      ]
     },
     "icons": {
-      "$ref": "#/definitions/iconsSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/iconsSchema"
+        }
+      ]
     },
     "navigation": {
-      "$ref": "#/definitions/navigationSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/navigationSchema"
+        }
+      ]
     },
     "navbar": {
-      "$ref": "#/definitions/navbarSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/navbarSchema"
+        }
+      ]
     },
     "banner": {
-      "$ref": "#/definitions/bannerSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/bannerSchema"
+        }
+      ]
     },
     "footer": {
       "type": "object",
@@ -128,16 +164,32 @@
       }
     },
     "search": {
-      "$ref": "#/definitions/searchSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/searchSchema"
+        }
+      ]
     },
     "seo": {
-      "$ref": "#/definitions/seoSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/seoSchema"
+        }
+      ]
     },
     "assistant": {
-      "$ref": "#/definitions/assistantSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/assistantSchema"
+        }
+      ]
     },
     "decorativeLines": {
-      "$ref": "#/definitions/decorativeLinesSchema"
+      "allOf": [
+        {
+          "$ref": "#/definitions/decorativeLinesSchema"
+        }
+      ]
     }
   },
   "required": [
@@ -607,7 +659,11 @@
               "description": "The name of the tab"
             },
             "icon": {
-              "$ref": "#/definitions/iconSchema"
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
             },
             "hidden": {
               "description": "Whether the tab is hidden by default",
@@ -644,7 +700,11 @@
               "description": "The name of the tab"
             },
             "icon": {
-              "$ref": "#/definitions/iconSchema"
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
             },
             "hidden": {
               "description": "Whether the tab is hidden by default",
@@ -688,7 +748,11 @@
               "description": "The name of the tab"
             },
             "icon": {
-              "$ref": "#/definitions/iconSchema"
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
             },
             "hidden": {
               "description": "Whether the tab is hidden by default",
@@ -722,7 +786,11 @@
               "description": "The name of the tab"
             },
             "icon": {
-              "$ref": "#/definitions/iconSchema"
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
             },
             "hidden": {
               "description": "Whether the tab is hidden by default",
@@ -828,7 +896,11 @@
           "description": "The name of the group"
         },
         "icon": {
-          "$ref": "#/definitions/iconSchema"
+          "allOf": [
+            {
+              "$ref": "#/definitions/iconSchema"
+            }
+          ]
         },
         "hidden": {
           "description": "Whether the group is hidden by default",
@@ -882,7 +954,11 @@
           "description": "A valid path or external link"
         },
         "icon": {
-          "$ref": "#/definitions/iconSchema"
+          "allOf": [
+            {
+              "$ref": "#/definitions/iconSchema"
+            }
+          ]
         },
         "hidden": {
           "description": "Whether the anchor is hidden by default",
@@ -967,7 +1043,11 @@
           "description": "Display name of the dropdown item"
         },
         "icon": {
-          "$ref": "#/definitions/iconSchema"
+          "allOf": [
+            {
+              "$ref": "#/definitions/iconSchema"
+            }
+          ]
         },
         "hidden": {
           "description": "Whether this dropdown item is hidden",
@@ -1032,7 +1112,11 @@
           "type": "string"
         },
         "icon": {
-          "$ref": "#/definitions/iconSchema"
+          "allOf": [
+            {
+              "$ref": "#/definitions/iconSchema"
+            }
+          ]
         },
         "href": {
           "description": "A URL for a link-only product entry",
@@ -1091,7 +1175,11 @@
           }
         },
         "primary": {
-          "$ref": "#/definitions/navbarPrimarySchema"
+          "allOf": [
+            {
+              "$ref": "#/definitions/navbarPrimarySchema"
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -1117,7 +1205,11 @@
           "type": "string"
         },
         "icon": {
-          "$ref": "#/definitions/iconSchema"
+          "allOf": [
+            {
+              "$ref": "#/definitions/iconSchema"
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -1143,7 +1235,11 @@
           "type": "string"
         },
         "icon": {
-          "$ref": "#/definitions/iconSchema"
+          "allOf": [
+            {
+              "$ref": "#/definitions/iconSchema"
+            }
+          ]
         }
       },
       "additionalProperties": false,
