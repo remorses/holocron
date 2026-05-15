@@ -5,6 +5,11 @@
  *
  * - schema.json: the config JSON Schema users reference from holocron.jsonc
  * - frontmatter-schema.json: the frontmatter JSON Schema for MDX page YAML frontmatter
+ *
+ * Uses Zod v4's `override` callback to clean up the output inline instead of
+ * a recursive post-processing pass. Uses `io: "input"` for frontmatter so
+ * union+transform fields (e.g. og:image:width accepting string|number) are
+ * represented natively as `anyOf` without manual patching.
  */
 
 import { z } from 'zod'
@@ -18,93 +23,60 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const schemaPath = path.join(here, '..', 'src', 'schema.json')
 const frontmatterSchemaPath = path.join(here, '..', 'src', 'frontmatter-schema.json')
 
-// Register the root schema in the global registry so `metadata` extracts
-// all schemas with `.meta({ id })` into top-level definitions.
-const generated = z.toJSONSchema(holocronConfigSchema, {
+/**
+ * Zod v4 `override` callback that cleans up two quirks inline during traversal:
+ *
+ * 1. Strips the duplicate `id` field Zod writes inside every named definition.
+ *    The key inside `definitions/` already identifies the schema.
+ *
+ * 2. Unwraps `allOf: [{ $ref }]` to just `{ $ref }` when there is only a single
+ *    ref and no extra metadata on the wrapper. Zod emits this wrapper whenever
+ *    `.optional()` is called on a schema with `.meta({ id })`, because JSON Schema
+ *    forbids siblings next to `$ref`.
+ */
+function cleanOverride(ctx: { jsonSchema: Record<string, unknown> }) {
+  // Strip duplicate id
+  if ('id' in ctx.jsonSchema) {
+    delete ctx.jsonSchema.id
+  }
+
+  // Unwrap single-item allOf containing just a $ref
+  const { allOf } = ctx.jsonSchema
+  if (
+    Array.isArray(allOf) &&
+    allOf.length === 1 &&
+    allOf[0] &&
+    typeof allOf[0] === 'object' &&
+    Object.keys(ctx.jsonSchema).length === 1
+  ) {
+    const inner = allOf[0] as Record<string, unknown>
+    delete ctx.jsonSchema.allOf
+    Object.assign(ctx.jsonSchema, inner)
+  }
+}
+
+// ── Config schema ───────────────────────────────────────────────────────
+
+const configSchema = z.toJSONSchema(holocronConfigSchema, {
   target: 'draft-7',
   metadata: z.globalRegistry,
   reused: 'inline',
   unrepresentable: 'any',
+  override: cleanOverride,
 })
 
-/**
- * Post-processing:
- *
- * 1. Strip the duplicate `id` field Zod writes inside every named
- *    definition. The key inside `definitions/` already identifies the
- *    schema, so the inner `id` is noise.
- *
- * 2. Unwrap `allOf: [{ $ref }]` → just `{ $ref }` when there is only
- *    a single ref and no extra metadata on the wrapper. Zod emits this
- *    wrapper whenever `.optional()` is called on a schema that has an
- *    `id`, because JSON Schema forbids siblings next to `$ref`.
- */
-function clean(node: unknown): unknown {
-  if (Array.isArray(node)) {
-    return node.map(clean)
-  }
-  if (node === null || typeof node !== 'object') {
-    return node
-  }
-  const obj = node as Record<string, unknown>
-
-  // Unwrap single-item allOf containing just a $ref + nothing else
-  if (
-    Array.isArray(obj.allOf) &&
-    obj.allOf.length === 1 &&
-    obj.allOf[0] &&
-    typeof obj.allOf[0] === 'object' &&
-    Object.keys(obj).length === 1
-  ) {
-    return clean(obj.allOf[0])
-  }
-
-  const result: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(obj)) {
-    if (key === 'id') continue
-    result[key] = clean(value)
-  }
-  return result
-}
-
-const cleaned = clean(generated) as Record<string, unknown>
-
-// Zod emits draft-2020-12 style `$defs` by default. For draft-07 output
-// with `target: 'draft-7'`, it uses `definitions` — keep as-is.
-// Prepend the draft-07 `$schema` meta so downstream tooling targets the
-// correct validator.
-const output: Record<string, unknown> = {
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  ...cleaned,
-}
-
-fs.writeFileSync(schemaPath, JSON.stringify(output, null, 2) + '\n')
+fs.writeFileSync(schemaPath, JSON.stringify(configSchema, null, 2) + '\n')
 console.log(`✓ wrote ${path.relative(process.cwd(), schemaPath)}`)
 
 // ── Frontmatter schema ──────────────────────────────────────────────────
+// io: "input" represents the schema before transforms, so z.union([string, number])
+// becomes `anyOf: [{ type: "string" }, { type: "number" }]` natively.
 
-const frontmatterGenerated = z.toJSONSchema(pageFrontmatterSchema, {
+const frontmatterOutput = z.toJSONSchema(pageFrontmatterSchema, {
   target: 'draft-7',
   unrepresentable: 'any',
+  io: 'input',
 })
-
-const frontmatterCleaned = clean(frontmatterGenerated) as Record<string, unknown>
-
-// The stringOrNumber transform fields lose their type during JSON Schema
-// generation (unrepresentable union+transform). Patch them to accept both.
-const fmProps = (frontmatterCleaned as { properties?: Record<string, Record<string, unknown>> }).properties
-if (fmProps) {
-  for (const key of ['og:image:width', 'og:image:height', 'twitter:image:width', 'twitter:image:height']) {
-    if (fmProps[key] && !fmProps[key].type) {
-      fmProps[key].type = ['string', 'number']
-    }
-  }
-}
-
-const frontmatterOutput: Record<string, unknown> = {
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  ...frontmatterCleaned,
-}
 
 fs.writeFileSync(frontmatterSchemaPath, JSON.stringify(frontmatterOutput, null, 2) + '\n')
 console.log(`✓ wrote ${path.relative(process.cwd(), frontmatterSchemaPath)}`)

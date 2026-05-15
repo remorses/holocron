@@ -75,16 +75,24 @@
     },
     "og:image:width": {
       "description": "Open Graph image width in pixels",
-      "type": [
-        "string",
-        "number"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
       ]
     },
     "og:image:height": {
       "description": "Open Graph image height in pixels",
-      "type": [
-        "string",
-        "number"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
       ]
     },
     "twitter:title": {
@@ -109,16 +117,24 @@
     },
     "twitter:image:width": {
       "description": "Twitter card image width in pixels",
-      "type": [
-        "string",
-        "number"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
       ]
     },
     "twitter:image:height": {
       "description": "Twitter card image height in pixels",
-      "type": [
-        "string",
-        "number"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
       ]
     },
     "cache-control": {
