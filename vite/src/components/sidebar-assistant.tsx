@@ -265,8 +265,6 @@ export function PageNavRow() {
     }
   }, [copied])
 
-  const basePath = site.base === '/' ? '' : `/${site.base.replace(/^\/+|\/+$/g, '')}`
-
   return (
     <div className='hidden lg:flex items-center gap-1.5 w-full'>
       <button
@@ -283,7 +281,7 @@ export function PageNavRow() {
       {prevPage ? (
         <NavTooltip label={prevPage.title}>
           <Link
-            href={basePath + prevPage.href}
+            href={prevPage.href}
             className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
           >
             <ChevronLeftIcon />
@@ -298,7 +296,7 @@ export function PageNavRow() {
       {nextPage ? (
         <NavTooltip label={nextPage.title}>
           <Link
-            href={basePath + nextPage.href}
+            href={nextPage.href}
             className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
           >
             <ChevronRightIcon />
