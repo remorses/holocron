@@ -2,6 +2,41 @@ import { describe, expect, it } from 'vitest'
 
 import { mdxComponents } from './mdx-components-map.tsx'
 import { buildCodeFrame, formatMdxError, HolocronMdxParseError } from './logger.ts'
+import { normalizeMdx } from './mintlify/normalize-mdx.ts'
+import { RenderNodes } from './mdx-components-map.tsx'
+import { mdxParse } from 'safe-mdx/parse'
+import type { Root, RootContent } from 'mdast'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import dedent from 'string-dedent'
+
+/**
+ * Full production pipeline: raw MDX → normalizeMdx (remark plugins + serialize)
+ * → mdxParse (safe-mdx re-parse) → RenderNodes → HTML string.
+ *
+ * This matches app-factory.tsx's renderMdxPage path:
+ * 1. normalizeMdx runs remark plugins and serializes to MDX string (done during sync)
+ * 2. mdxParse re-parses the serialized MDX into a fresh mdast (done at request time)
+ * 3. RenderNodes renders nodes through SafeMdxRenderer + mdxComponents + renderNode
+ *
+ * buildSections is skipped because it injects PageNavRow/assistant components
+ * that need runtime context. Section splitting doesn't affect component mapping.
+ */
+function renderMdx(raw: string) {
+  // Step 1: normalizeMdx (remark plugins + serialize) — same as sync.ts
+  const normalized = normalizeMdx(raw)
+  if (normalized instanceof Error) throw normalized
+
+  // Step 2: mdxParse re-parses serialized content — same as parsePageMdx in app-factory.tsx
+  const mdast = mdxParse(normalized.content)
+
+  // Step 3: RenderNodes — same as renderMdxPage (minus section splitting)
+  const html = renderToStaticMarkup(
+    createElement(RenderNodes, { markdown: normalized.content, nodes: mdast.children }),
+  )
+
+  return { html, mdast, normalized: normalized.content }
+}
 
 describe('mdxComponents', () => {
   it('does not override native heading tags', () => {
@@ -104,5 +139,46 @@ describe('formatMdxError', () => {
     expect(formatted.replace(/\x1b\[[0-9;]*m/g, '')).toMatchInlineSnapshot(`
       "▲ holocron MDX /components:34 Unsupported jsx component Caption"
     `)
+  })
+})
+
+describe('MDX paragraph rendering — full production pipeline', () => {
+  it('plain markdown text gets editorial-prose styling', () => {
+    const { html } = renderMdx('Hello world')
+    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose" style="opacity:0.82">Hello world</div>"`)
+  })
+
+  it('JSX <p> gets same editorial-prose styling as markdown paragraph', () => {
+    const { html } = renderMdx('<p>Hello world</p>')
+    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose" style="opacity:0.82">Hello world</div>"`)
+  })
+
+  it('JSX <p> with className merges into editorial-prose', () => {
+    const { html } = renderMdx(dedent`
+      <p className='text-center font-medium'>Styled paragraph</p>
+    `)
+    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose text-center font-medium" style="opacity:0.82">Styled paragraph</div>"`)
+  })
+
+  it('JSX <p> inside Hero gets editorial-prose', () => {
+    const { html } = renderMdx(dedent`
+      <Hero>
+
+      <p className='text-center'>Inner paragraph</p>
+
+      </Hero>
+    `)
+    expect(html).toMatchInlineSnapshot(`"<div><div class="editorial-prose text-center" style="opacity:0.82">Inner paragraph</div></div>"`)
+  })
+
+  it('plain text inside Hero gets editorial-prose', () => {
+    const { html } = renderMdx(dedent`
+      <Hero>
+
+      Inner paragraph text
+
+      </Hero>
+    `)
+    expect(html).toMatchInlineSnapshot(`"<div><div class="editorial-prose" style="opacity:0.82">Inner paragraph text</div></div>"`)
   })
 })
