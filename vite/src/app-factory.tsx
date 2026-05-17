@@ -14,7 +14,7 @@ import './styles/globals.css'
 import React from 'react'
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
 import { createSpiceflowFetch } from 'spiceflow/client'
-import { Head, ProgressBar, ScrollRestoration } from 'spiceflow/react'
+import { Head, ProgressBar } from 'spiceflow/react'
 import { mdxParse, resolveModules, type EagerModules } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
@@ -646,7 +646,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         <body>
           <div className='sr-only'>{buildAgentDocsDirective(site.base)}</div>
           <ProgressBar color='var(--primary)' />
-          <ScrollRestoration />
           {children ?? notFoundContent}
         </body>
       </html>
