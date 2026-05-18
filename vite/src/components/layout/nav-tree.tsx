@@ -264,6 +264,7 @@ export function NavGroupNode({
 
   const isSearchActive = searchState !== null
   const isDimmed = isSearchActive
+  const groupLabel = group.group.trim()
 
   const renderChildren = (forceExpanded: boolean) =>
     group.pages.map((entry) => {
@@ -293,17 +294,19 @@ export function NavGroupNode({
   if (depth === 0) {
     return (
       <div className='flex flex-col gap-2.5'>
-        <div
-          className='cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
-          style={{
-            opacity: isDimmed ? 0.45 : 1,
-          fontVariationSettings: '"wght" 500',
-          color: 'var(--muted-foreground)',
-          transition: animate ? 'opacity 0.15s ease' : 'none',
-          }}
-        >
-          {group.group}
-        </div>
+        {groupLabel && (
+          <div
+            className='cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
+            style={{
+              opacity: isDimmed ? 0.45 : 1,
+              fontVariationSettings: '"wght" 500',
+              color: 'var(--muted-foreground)',
+              transition: animate ? 'opacity 0.15s ease' : 'none',
+            }}
+          >
+            {groupLabel}
+          </div>
+        )}
         {renderChildren(true)}
       </div>
     )
