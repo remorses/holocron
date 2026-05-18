@@ -112,10 +112,8 @@
     "unist-util-visit": "^5.1.0",
     "yaml": "^2.8.3",
     "zod": "^4.4.3",
+    "spiceflow": "^1.25.3-rsc.0",
     "zustand": "^5.0.12"
-  },
-  "peerDependencies": {
-    "spiceflow": ">=1.25.3-rsc.0"
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
@@ -124,7 +122,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "sharp": "^0.34.5",
-    "spiceflow": "1.25.3-rsc.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.10",
     "vitest": "^4.1.4"

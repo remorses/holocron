@@ -349,6 +349,9 @@ importers:
       safe-mdx:
         specifier: ^1.11.0
         version: 1.11.0(react@19.2.5)
+      spiceflow:
+        specifier: ^1.25.3-rsc.0
+        version: 1.25.3-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.8.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -389,9 +392,6 @@ importers:
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
-      spiceflow:
-        specifier: 1.25.3-rsc.0
-        version: 1.25.3-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.8.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
