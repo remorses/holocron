@@ -36,6 +36,16 @@ describe('readConfig file discovery', () => {
     expect(config.name).toBe('Docs Fallback')
   })
 
+  test('reads docs.json with comments and trailing commas', () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-config-test-'))
+    fs.writeFileSync(path.join(tmpDir, 'docs.json'), `{
+      // Mintlify-compatible docs.json may still use JSONC syntax.
+      "name": "Docs JSONC Syntax",
+    }`)
+    const config = readConfig({ root: tmpDir })
+    expect(config.name).toBe('Docs JSONC Syntax')
+  })
+
   test('reads docs.jsonc as fallback', () => {
     const root = setupConfig('docs.jsonc', { name: 'Docs JSONC Fallback' })
     const config = readConfig({ root })

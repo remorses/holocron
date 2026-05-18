@@ -7,7 +7,7 @@
  * are defined here. Normalization logic lives in `lib/normalize-config.ts`.
  *
  * Supports three file names (first found wins):
- *   1. docs.json — Mintlify format (drop-in compatible)
+ *   1. docs.json — Mintlify format, parsed as JSONC for comments/trailing commas
  *   2. docs.jsonc — Mintlify format with comments/trailing commas
  *   3. holocron.jsonc — legacy Holocron format with comments/trailing commas
  */
