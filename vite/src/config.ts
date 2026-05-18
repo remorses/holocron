@@ -163,6 +163,10 @@ function parseConfigObject(raw: string): Record<string, unknown> {
   return Object.fromEntries(Object.entries(parsed))
 }
 
+export function parseConfigSource(raw: string): HolocronConfig {
+  return normalize(parseConfigObject(raw))
+}
+
 /**
  * Read and normalize the config file. All docs.json union variants are
  * collapsed into a single canonical shape so consumers never deal with
@@ -180,7 +184,7 @@ export function readConfig({
     const resolved = path.resolve(root, configPath)
     if (fs.existsSync(resolved)) {
       const raw = fs.readFileSync(resolved, 'utf-8')
-      return normalize(parseConfigObject(raw))
+      return parseConfigSource(raw)
     }
     throw new Error(`Config file not found at: ${resolved}`)
   }
@@ -189,7 +193,7 @@ export function readConfig({
     const filePath = path.join(root, name)
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      return normalize(parseConfigObject(raw))
+      return parseConfigSource(raw)
     }
   }
   throw new Error(

@@ -300,4 +300,38 @@ test.describe.serial("config HMR @dev", () => {
     await expect(page).toHaveTitle(/Updated Docs Name/, { timeout: 15_000 });
 
   });
+
+  test("changing colors.primary updates the page color without refresh", async ({
+    page,
+    request,
+  }) => {
+    await openBasicHmrHome(page, request);
+    await page.waitForLoadState("networkidle");
+
+    const marker = `config-color-hmr-${Date.now()}`;
+    await page.evaluate((value) => Object.assign(window, { __configColorHmrMarker: value }), marker);
+
+    await expect
+      .poll(async () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--primary").trim()))
+      .toBe("#0969da");
+
+    fs.writeFileSync(
+      configPath,
+      JSON.stringify(
+        {
+          ...JSON.parse(originalConfig),
+          colors: { primary: "#d12470" },
+        },
+        null,
+        2,
+      ),
+    );
+
+    await expect
+      .poll(async () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--primary").trim()), { timeout: 15_000 })
+      .toBe("#d12470");
+    await expect
+      .poll(async () => page.evaluate(() => Reflect.get(window, "__configColorHmrMarker")))
+      .toBe(marker);
+  });
 });

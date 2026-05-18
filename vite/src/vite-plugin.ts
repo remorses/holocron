@@ -29,6 +29,17 @@ const HOLOCRON_GLOBALS_CSS_PATH = path.join(__holocronSrcDir, 'styles/globals.cs
 const nodeRequire = createRequire(import.meta.url)
 const yamlBrowserEntry = path.join(path.dirname(nodeRequire.resolve('yaml/package.json')), 'browser/index.js')
 
+function buildConfigColorCss(config: HolocronConfig): string {
+  if (!config.colors._hasUserColors) return ''
+
+  const lightBrand = config.colors.dark ?? config.colors.primary
+  const darkBrand = config.colors.light ?? `color-mix(in oklch, ${config.colors.primary} 40%, white)`
+  return [`:root:root { --primary: ${lightBrand}; }`, `:root.dark { --primary: ${darkBrand}; }`].join('\n')
+}
+
+function sameConfigExceptColors(a: HolocronConfig, b: HolocronConfig): boolean {
+  return JSON.stringify({ ...a, colors: undefined }) === JSON.stringify({ ...b, colors: undefined })
+}
 export type HolocronVirtualModules = {
   /** Custom source for `virtual:holocron-config` */
   config?: string
@@ -409,11 +420,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     load(id) {
       if (id.replace(/[?#].*$/, '') === HOLOCRON_GLOBALS_CSS_PATH) {
         const pagesSourcePath = toCssSourcePath(path.dirname(HOLOCRON_GLOBALS_CSS_PATH), pagesDir)
+        const configSourcePath = configFilePath
+          ? toCssSourcePath(path.dirname(HOLOCRON_GLOBALS_CSS_PATH), configFilePath)
+          : undefined
         return [
           fs.readFileSync(HOLOCRON_GLOBALS_CSS_PATH, 'utf-8'),
           '',
           '/* Scan the user docs tree too, including custom `pagesDir` locations. */',
           `@source ${JSON.stringify(pagesSourcePath)};`,
+          configSourcePath && `@source not ${JSON.stringify(configSourcePath)};`,
         ].join('\n')
       }
 
@@ -421,18 +436,19 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (options.virtualModules?.config) {
           return options.virtualModules.config
         }
-        // Register the config file as a dependency so it enters the module
-        // graph. When the file changes, Vite associates the change with this
-        // virtual module — @tailwindcss/vite sees a JS module in ctx.modules
-        // and skips its full-reload, and @vitejs/plugin-rsc handles the HMR
-        // via rsc:update automatically.
-        if (configFilePath) {
-          this.addWatchFile(configFilePath)
+        if (!configFilePath) {
+          return [
+            `export const base = ${JSON.stringify(viteBase)}`,
+            `const config = ${JSON.stringify(config)}`,
+            `export async function getConfig() { return config }`,
+          ].join('\n')
         }
         return [
+          `import rawConfig from ${JSON.stringify(configFilePath + '?raw')}`,
+          `import { parseConfigSource } from '@holocron.so/vite/src/config'`,
           `export const base = ${JSON.stringify(viteBase)}`,
-          `const config = ${JSON.stringify(config)}`,
-          `export function getConfig() { return config }`,
+          `export async function getConfig() { return parseConfigSource(rawConfig) }`,
+          `if (import.meta.hot) import.meta.hot.accept()`,
         ].join('\n')
       }
       if (id === RESOLVED_NAVIGATION) {
@@ -606,13 +622,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     configureServer(server) {
-      // Config file is read with fs.readFileSync (not imported), so Vite
-      // wouldn't watch it by default. addWatchFile in load() registers it
-      // as a dependency of the virtual module, but the file must also be
-      // watched by chokidar to trigger change events.
-      if (configFilePath) {
-        server.watcher.add(configFilePath)
-      }
       // User CSS is imported via the virtual app module, but the raw file
       // also needs to be watched by chokidar so edits trigger HMR.
       if (userCssPath) {
@@ -662,6 +671,19 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       if (!isMdx && !isConfig && !isImportableAddOrRemove) {
         return
+      }
+
+      if (isConfig && this.environment.name === 'client') {
+        const nextConfig = readConfig({ root, configPath: options.configPath })
+        if (sameConfigExceptColors(config, nextConfig)) {
+          config = nextConfig
+          ctx.server.environments.client?.hot.send({
+            type: 'custom',
+            event: 'holocron:config-colors',
+            data: { css: buildConfigColorCss(config) },
+          })
+          return []
+        }
       }
 
       if (isMdx && ctx.file.startsWith(pagesDir)) {
@@ -737,7 +759,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       if (this.environment.name === 'client') {
-        const cssUpdates = [...(this.environment.moduleGraph.getModulesByFile(HOLOCRON_GLOBALS_CSS_PATH) ?? [])]
+        const cssUpdates = [
+          ...(this.environment.moduleGraph.getModulesByFile(HOLOCRON_GLOBALS_CSS_PATH) ?? []),
+        ]
+          .filter((mod): mod is NonNullable<typeof mod> => Boolean(mod))
           .filter((mod) => mod.url)
           .map((mod) => ({
             type: 'css-update' as const,
