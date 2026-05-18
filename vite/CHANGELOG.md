@@ -1,5 +1,25 @@
 # @holocron.so/vite
 
+## 0.9.0
+
+1. **New prev/next page navigation in the right sidebar** — every page now shows chevron arrows linking to the previous and next pages in navigation order, plus a "Copy as Markdown" button that copies the current page content to clipboard. Tooltips on the arrows show the target page title via portal-based rendering to avoid clipping.
+
+2. **Frontmatter JSON Schema** — a new `frontmatter-schema.json` is generated alongside the config schema, describing all supported MDX frontmatter fields (title, description, icon, SEO meta, hidden, etc.). Add `$schema: "https://holocron.so/frontmatter.json"` to your MDX frontmatter for IDE autocomplete and validation.
+
+3. **Icon name autocomplete in `docs.json`** — the config JSON schema now references external enum schemas for lucide and Font Awesome icon names. IDEs that support `$ref` resolution fetch icon name lists on demand from holocron.so, giving you autocomplete for all 4,000+ supported icon names.
+
+4. **Shared `cn()` utility (clsx + tailwind-merge)** — all components now use a shared `cn()` following the shadcn convention. This fixes a bug where passing `className` to `<Logo>` would completely replace the base sizing classes instead of merging with them. All components with className props now merge correctly via `tailwind-merge`.
+
+5. **`text` prop on `<Logo />`** — pass `<Logo text="My Docs" />` to render an AI-generated logo using that text, bypassing the site config logo entirely.
+
+6. **Fixed Tailwind HMR for MDX page edits** — editing MDX files or imported components no longer triggers a full page reload. New Tailwind utility classes are now compiled and injected in-place during HMR, preserving client state. Previously, Tailwind treated MDX files as external template changes and forced a reload.
+
+7. **Upgraded Spiceflow to 1.25.3-rsc.0** — aligns all workspace packages on the same RSC build, avoiding duplicate framework versions.
+
+8. **Search bar focus styling** — replaced the thick box-shadow focus ring with a subtle border-color change to `muted-foreground` for a cleaner active state.
+
+9. **AI chat polish** — reduced the ShowMore collapsed height from 80px to 40px for tighter tool output previews.
+
 ## 0.8.0
 
 1. **New `<Logo />` MDX component** — render the configured site logo directly inside docs content. It uses the same resolved light, dark, and generated logo variants as the navbar and footer.

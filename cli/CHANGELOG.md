@@ -1,3 +1,7 @@
+## 0.12.1
+
+1. **Upgraded Spiceflow to 1.25.3-rsc.0** — aligns with the latest RSC build used by `@holocron.so/vite`, avoiding duplicate framework versions at runtime.
+
 ## 0.12.0
 
 1. **Scaffolded projects now use `docs.jsonc`** — `holocron create` generates the starter config as JSONC, so new projects can keep comments and trailing commas in the same config file Holocron reads by default.
