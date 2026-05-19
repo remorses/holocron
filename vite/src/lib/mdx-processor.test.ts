@@ -589,3 +589,77 @@ icon: rocket
 `, 'fontawesome').iconRefs).toEqual(['fontawesome:brands:discord', 'fontawesome:regular:user'])
   })
 })
+
+describe('internal link collection', () => {
+  test('collects markdown links with absolute paths', () => {
+    const result = processMdx(`
+Check the [quickstart](/quickstart) and [API reference](/api/overview).
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/quickstart",
+        "/api/overview",
+      ]
+    `)
+  })
+
+  test('collects relative markdown links', () => {
+    const result = processMdx(`
+See [next page](./next) and [parent](../intro).
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "./next",
+        "../intro",
+      ]
+    `)
+  })
+
+  test('collects JSX Card and a element hrefs', () => {
+    const result = processMdx(`
+<Card href="/getting-started">Get Started</Card>
+<a href="/api/overview">API</a>
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/getting-started",
+        "/api/overview",
+      ]
+    `)
+  })
+
+  test('excludes external URLs, anchors, and special protocols', () => {
+    const result = processMdx(`
+[External](https://example.com)
+[Mail](mailto:user@example.com)
+[Anchor](#section)
+[HTTP](http://example.com)
+[Internal](/real-page)
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/real-page",
+      ]
+    `)
+  })
+
+  test('preserves hash fragments and query strings in href', () => {
+    const result = processMdx(`
+See [setup](/getting-started#setup) and [filtered](/api?version=2).
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/getting-started#setup",
+        "/api?version=2",
+      ]
+    `)
+  })
+
+  test('deduplicates links by href', () => {
+    const result = processMdx(`
+[First](/same-page) and [Second](/same-page).
+`)
+    expect(result.internalLinks).toHaveLength(1)
+    expect(result.internalLinks[0]!.href).toBe('/same-page')
+  })
+})

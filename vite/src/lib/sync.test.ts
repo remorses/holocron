@@ -1294,3 +1294,121 @@ Some content here.`,
     expect(result.mdxContent['bad-page']).toBeUndefined()
   })
 })
+
+/* ── Broken internal link warnings ──────────────────────────────────── */
+
+describe('broken internal link warnings', () => {
+  test('warns about links pointing to non-existent pages', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index', 'getting-started'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Check the [quickstart](/quickstart) and [getting started](/getting-started).
+`,
+        'getting-started': `---
+title: Getting Started
+---
+
+See [home](/) and [nonexistent](./does-not-exist).
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    // /quickstart does not exist → should warn
+    expect(warnings.some((w) => w.includes('/quickstart'))).toBe(true)
+    // ./does-not-exist from getting-started → should warn
+    expect(warnings.some((w) => w.includes('./does-not-exist'))).toBe(true)
+    // Only 2 broken links total (the two non-existent ones)
+    expect(warnings).toHaveLength(2)
+  })
+
+  test('does not warn for links matching redirect sources', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        redirects: [
+          { source: '/old-page', destination: '/index' },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Link to [old page](/old-page) and [missing](/truly-missing).
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    // /old-page has a redirect → should NOT warn
+    expect(warnings.some((w) => w.includes('/old-page'))).toBe(false)
+    // /truly-missing has no page and no redirect → should warn
+    expect(warnings.some((w) => w.includes('/truly-missing'))).toBe(true)
+  })
+
+  test('strips hash fragments before validating links', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index', 'setup'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Go to [setup section](/setup#installation).
+`,
+        setup: `---
+title: Setup
+---
+
+Content here.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    // /setup exists, hash should be stripped → no warning
+    expect(warnings).toHaveLength(0)
+  })
+})

@@ -27,6 +27,15 @@ export type ImportBinding = {
   source: string
 }
 
+/** An internal link found in MDX content. Used for broken-link validation
+ *  after the full navigation tree is built. */
+export type InternalLink = {
+  /** The raw href as written in MDX (e.g. '/getting-started', './other#section') */
+  href: string
+  /** 1-based line number in the MDX source, if available */
+  line?: number
+}
+
 export type ProcessedMdx = {
   normalizedContent: string
   title: string
@@ -40,6 +49,9 @@ export type ProcessedMdx = {
   headings: NavHeading[]
   /** All image srcs that need build-time processing */
   imageSrcs: string[]
+  /** Internal links (relative/absolute paths within the site) for broken-link
+   *  validation. External URLs, anchors-only, and protocol links are excluded. */
+  internalLinks: InternalLink[]
   /** Raw import source strings from MDX import declarations (e.g. '/snippets/greeting',
    *  '../components/badge'). Bare specifiers (npm packages) are excluded. Used by
    *  sync.ts to resolve actual file paths at build time. */
@@ -86,6 +98,7 @@ export function processMdx(
   }
 
   const imageSrcs = collectImageSrcs(mdast)
+  const internalLinks = collectInternalLinks(mdast)
 
   // Extract local import sources (relative/absolute paths) from MDX import
   // declarations. Bare specifiers (npm packages) are excluded — they start
@@ -114,6 +127,7 @@ export function processMdx(
     iconRefs,
     headings,
     imageSrcs,
+    internalLinks,
     importSources,
     importBindings,
     mdast,
@@ -260,6 +274,66 @@ function collectImageSrcs(root: Root): string[] {
 
   walk(root.children)
   return [...new Set(srcs)]
+}
+
+/* ── Internal link collection ────────────────────────────────────────── */
+
+/** Hrefs that are clearly not internal page links. */
+function isExternalOrSpecialHref(href: string): boolean {
+  return (
+    href.startsWith('http://') ||
+    href.startsWith('https://') ||
+    href.startsWith('mailto:') ||
+    href.startsWith('tel:') ||
+    href.startsWith('#') ||
+    href.startsWith('javascript:')
+  )
+}
+
+/** JSX element names that commonly carry an `href` attribute pointing to pages. */
+const JSX_HREF_ELEMENTS = new Set(['a', 'Card', 'card'])
+
+/**
+ * Walk the mdast tree and collect internal links (relative or absolute paths
+ * within the site). External URLs, anchor-only links, and special protocols
+ * are excluded.
+ *
+ * Collects from:
+ * - Markdown links: `[text](/path)` or `[text](./relative)`
+ * - JSX elements with `href` attribute: `<a href="...">`, `<Card href="...">`
+ */
+function collectInternalLinks(root: Root): InternalLink[] {
+  const links: InternalLink[] = []
+  const seen = new Set<string>()
+
+  function add(href: string, line?: number) {
+    if (!href || isExternalOrSpecialHref(href)) return
+    // Deduplicate by href (keep first occurrence for line number)
+    if (seen.has(href)) return
+    seen.add(href)
+    links.push({ href, line })
+  }
+
+  function walk(nodes: RootContent[]) {
+    for (const node of nodes) {
+      if (node.type === 'link' && node.url) {
+        add(node.url, node.position?.start?.line)
+      }
+      if (isJsxElement(node) && JSX_HREF_ELEMENTS.has(node.name ?? '')) {
+        const href = getJsxAttrValue(node, 'href')
+        if (href) {
+          add(href, node.position?.start?.line)
+        }
+      }
+      const children = Reflect.get(node, 'children')
+      if (Array.isArray(children)) {
+        walk(children)
+      }
+    }
+  }
+
+  walk(root.children)
+  return links
 }
 
 /* ── AST-based image rewriting ───────────────────────────────────────── */

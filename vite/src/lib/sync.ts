@@ -17,7 +17,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { processMdx, rewriteMdxImages, type ResolvedImage } from './mdx-processor.ts'
+import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink } from './mdx-processor.ts'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
@@ -27,7 +27,7 @@ import {
 } from '../config.ts'
 import { processVirtualTabs } from './virtual-tab-provider.ts'
 import { openapiProvider } from './openapi/provider.ts'
-import { formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
+import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { extractImports, type EagerModules } from 'safe-mdx/parse'
 import type { Root } from 'mdast'
@@ -155,6 +155,7 @@ export async function syncNavigation({
   const oldMdxContent = oldMdxCache.content
   const oldPageIconRefs = oldMdxCache.pageIconRefs
   const oldPageImportSources = oldMdxCache.pageImportSources
+  const oldPageInternalLinks = oldMdxCache.pageInternalLinks
   const imageCache = loadImageCache({ distDir })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
@@ -167,6 +168,8 @@ export async function syncNavigation({
   const pageImportSources: Record<string, string[]> = {}
   /** Resolved imports per page (computed fresh every sync from pageImportSources + filesystem) */
   const pageImports: Record<string, ResolvedImport[]> = {}
+  /** Internal links per page slug (for broken-link validation after nav is built) */
+  const pageInternalLinks: Record<string, InternalLink[]> = {}
   const mdxContentErrors = new Set<string>()
   const mdxParseErrors: Record<string, HolocronMdxParseError> = {}
   const redirectBackedPageSlugs = new Set(
@@ -197,6 +200,7 @@ export async function syncNavigation({
       const processed = processMdx(virtualMdx, config.icons.library, pageSource)
       if (processed instanceof Error) return handleParseError(slug, processed)
       pageIconRefs[slug] = processed.iconRefs
+      if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
       const errors = validateAndReportMdx({ markdown: virtualMdx, mdast: processed.mdast, source: pageSource })
       if (errors.length > 0) {
         mdxContentErrors.add(slug)
@@ -237,6 +241,9 @@ export async function syncNavigation({
         if (reprocessed instanceof Error) return handleParseError(slug, reprocessed)
         pageIconRefs[slug] = reprocessed.iconRefs
       }
+      // Restore cached internal links for broken-link validation
+      const cachedLinks = oldPageInternalLinks[slug]
+      if (cachedLinks && cachedLinks.length > 0) pageInternalLinks[slug] = cachedLinks
       // Restore cached raw import sources, then resolve fresh against the
       // current filesystem. This ensures newly-created files are picked up
       // without re-parsing the MDX.
@@ -284,6 +291,7 @@ export async function syncNavigation({
       : processed.normalizedContent
 
     pageIconRefs[slug] = processed.iconRefs
+    if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
     // Cache raw import sources (for future cache hits) and resolve fresh
     pageImportSources[slug] = processed.importSources
     pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
@@ -415,12 +423,22 @@ export async function syncNavigation({
     }
   }
 
+  // 4f. Validate internal links — warn about links pointing to non-existent pages
+  if (logParseErrors) {
+    validateInternalLinks({
+      navigation,
+      pageInternalLinks,
+      redirects: config.redirects,
+    })
+  }
+
   // 5. Write caches
   writeCache(cachePath, navigation)
   writeMdxCache(mdxCachePath, {
     content: filterErroredMdxContent({ content: mdxContent, mdxContentErrors }),
     pageIconRefs,
     pageImportSources,
+    pageInternalLinks,
   })
   saveImageCache({ distDir, cache: imageCache })
 
@@ -946,6 +964,103 @@ function filterErroredMdxContent({ content, mdxContentErrors }: { content: Recor
   )
 }
 
+/* ── Internal link validation ────────────────────────────────────────── */
+
+/**
+ * Validate that internal links in MDX pages point to existing pages or
+ * redirect sources. Logs a warning for each broken link, similar to how
+ * safe-mdx errors are reported.
+ *
+ * Resolution rules:
+ * - Strip hash fragments and query strings before matching
+ * - Absolute links `/foo/bar` → match against page hrefs
+ * - Relative links `./foo` or `../bar` → resolve from the linking page's slug directory
+ * - A link is valid if it matches a page href OR a redirect source
+ */
+function validateInternalLinks({
+  navigation,
+  pageInternalLinks,
+  redirects,
+}: {
+  navigation: Navigation
+  pageInternalLinks: Record<string, InternalLink[]>
+  redirects: HolocronConfig['redirects']
+}): void {
+  const pageIndex = buildPageIndex(navigation)
+  // Build a set of all known hrefs (pages + redirect sources)
+  const knownHrefs = new Set<string>()
+  for (const page of pageIndex.values()) {
+    knownHrefs.add(page.href)
+  }
+  for (const rule of redirects) {
+    // Only add static redirect sources (no wildcards/params)
+    const source = rule.source.replace(/[?#].*$/, '').replace(/\/+$/, '') || '/'
+    if (!source.includes('*') && !source.includes(':')) {
+      knownHrefs.add(source)
+    }
+  }
+
+  for (const [slug, links] of Object.entries(pageInternalLinks)) {
+    const source = slug === 'index' ? '/' : `/${slug}`
+    const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
+
+    for (const { href, line } of links) {
+      const resolved = resolveInternalHref(href, slugDir)
+      if (!resolved) continue // Skip hrefs we can't resolve (e.g. malformed)
+      if (knownHrefs.has(resolved)) continue
+
+      const location = line
+        ? ` ${colors.cyan(source)}:${colors.yellow(String(line))}`
+        : ` ${colors.cyan(source)}`
+      logger.warn(formatHolocronWarning(
+        `broken link${location} → ${colors.yellow(href)} (no matching page found)`,
+      ))
+    }
+  }
+}
+
+/**
+ * Resolve an internal href to a normalized absolute path that can be matched
+ * against page hrefs. Returns undefined for malformed or unresolvable hrefs.
+ *
+ * - Strips hash fragments and query strings
+ * - Absolute `/foo/bar` → `/foo/bar`
+ * - Relative `./foo` from slugDir `docs` → `/docs/foo`
+ * - Trailing slashes normalized away
+ */
+function resolveInternalHref(href: string, slugDir: string): string | undefined {
+  // Strip hash and query
+  const clean = href.replace(/[?#].*$/, '')
+  if (!clean) return undefined
+
+  let resolved: string
+  if (clean.startsWith('/')) {
+    resolved = clean
+  } else {
+    // Relative: resolve from slugDir
+    const base = slugDir ? `/${slugDir}` : ''
+    const segments = (base + '/' + clean).split('/').filter(Boolean)
+    // Resolve . and .. segments
+    const stack: string[] = []
+    for (const seg of segments) {
+      if (seg === '.') continue
+      if (seg === '..') {
+        stack.pop()
+        continue
+      }
+      stack.push(seg)
+    }
+    resolved = '/' + stack.join('/')
+  }
+
+  // Normalize: strip trailing slash (but keep '/' for root)
+  if (resolved !== '/' && resolved.endsWith('/')) {
+    resolved = resolved.slice(0, -1)
+  }
+
+  return resolved || '/'
+}
+
 /* ── Cache I/O ──────────────────────────────────────────────────────── */
 
 type NavCacheEnvelope = {
@@ -960,6 +1075,9 @@ type MdxCacheEnvelope = {
   /** Raw import source strings from MDX (e.g. '/snippets/greeting', '../components/badge').
    *  Cached so we can re-resolve them on every sync without re-parsing MDX. */
   pageImportSources: Record<string, string[]>
+  /** Internal links per page for broken-link validation. Cached so we can
+   *  validate links on cache hits without re-parsing MDX. */
+  pageInternalLinks: Record<string, InternalLink[]>
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -991,10 +1109,11 @@ type MdxCacheData = {
   content: Record<string, string>
   pageIconRefs: Record<string, IconRef[]>
   pageImportSources: Record<string, string[]>
+  pageInternalLinks: Record<string, InternalLink[]>
 }
 
 function readMdxCache(cachePath: string): MdxCacheData {
-  const empty: MdxCacheData = { content: {}, pageIconRefs: {}, pageImportSources: {} }
+  const empty: MdxCacheData = { content: {}, pageIconRefs: {}, pageImportSources: {}, pageInternalLinks: {} }
   if (!fs.existsSync(cachePath)) return empty
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
@@ -1004,6 +1123,7 @@ function readMdxCache(cachePath: string): MdxCacheData {
         content: envelope.content,
         pageIconRefs: envelope.pageIconRefs ?? {},
         pageImportSources: envelope.pageImportSources ?? {},
+        pageInternalLinks: envelope.pageInternalLinks ?? {},
       }
     }
     return empty
@@ -1023,6 +1143,7 @@ function writeMdxCache(
     content: data.content,
     pageIconRefs: data.pageIconRefs,
     pageImportSources: data.pageImportSources,
+    pageInternalLinks: data.pageInternalLinks,
   }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
