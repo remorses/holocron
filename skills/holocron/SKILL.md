@@ -278,11 +278,9 @@ inside `Note`, `Tip`, `Info`, `Warning`, `Callout`, or another framed component.
 
 ```mdx
 <Aside>
-
 <Note>
 This appears in the sidebar with a proper callout frame.
 </Note>
-
 </Aside>
 ```
 
@@ -391,6 +389,98 @@ users custom domains are supported by `holocron deploy` yet.
 
 Always deploy preview before production. If preview migration, build, or deploy
 fails, stop and do not continue to production.
+
+## Writing style for MDX pages
+
+### Bold keywords for skimmability
+
+Every section and every paragraph must have at least **one bold keyword or phrase**. Readers skim docs pages; they do not read every word. Bold text acts as anchor points that let the eye jump to the relevant paragraph without reading the full text.
+
+Pick the word or phrase that captures the core idea of the paragraph. Do not bold entire sentences or generic filler words like "important" or "note". Bold the specific term, API name, or concept that a reader would scan for.
+
+```mdx
+Holocron reads **`docs.json`**, **`docs.jsonc`**, or **`holocron.jsonc`** from
+your project root. The first file found wins.
+
+Use the **`redirects`** array in your config to map old URLs to new ones.
+Supports exact paths, named `:param` captures, and `*` wildcards.
+
+The deploy command authenticates via **GitHub Actions OIDC** when running in CI.
+No API key is needed if the repo owner matches the Holocron account.
+```
+
+### Use Aside frequently for side content
+
+Use `<Aside>` often to place supplementary content in the right sidebar column. Asides break the monotony of a single-column text flow, fill the empty right-side space, and give readers contextual notes exactly where they are relevant. A page with zero asides looks flat and underuses the layout.
+
+Good candidates for Aside content:
+
+- **Tips and gotchas** that relate to the current section but are not part of the main narrative
+- **Version notes** or compatibility warnings (e.g. "Available since v1.2")
+- **Links to related pages** or external references that add context
+- **Short code snippets** showing an alternative approach or edge case
+- **Definitions or clarifications** of a term introduced in the main text
+
+Always wrap Aside content in a framed component (`Note`, `Tip`, `Info`, `Warning`, `Callout`). Bare text in an Aside looks like random floating text with no visual boundary.
+
+```mdx
+## Redirects
+
+When restructuring docs, add redirects so old links keep working. Supports
+exact paths, named `:param` captures, and `*` wildcards.
+
+<Aside>
+<Tip>
+Redirects are evaluated **before** page routing, so they work even if the old
+path never had a page.
+</Tip>
+</Aside>
+```
+
+```mdx
+## Authentication
+
+The deploy command authenticates via **GitHub Actions OIDC** when running in CI.
+
+<Aside>
+<Info>
+If OIDC is not available, fall back to a **`HOLOCRON_KEY`** environment variable
+or a session token from `holocron login`.
+</Info>
+</Aside>
+```
+
+```mdx
+## Icons
+
+Use **prefixed icon names** so the source library is explicit.
+
+<Aside>
+<Note>
+Fetch the full icon list with:
+
+```bash
+curl -s https://holocron.so/schemas/lucide-icons.json
+```
+
+</Note>
+</Aside>
+```
+
+```mdx
+## Custom entry
+
+Mount Holocron inside a **Spiceflow** app to add API routes alongside docs.
+
+<Aside>
+<Warning>
+When using a custom entry, the built-in dev server flag changes. Make sure
+your `vite.config.ts` passes the `entry` option to the plugin.
+</Warning>
+</Aside>
+```
+
+Aim for roughly **one Aside per major section** (per `##` heading). Not every section needs one, but if a page has more than three `##` sections without a single Aside, look for opportunities to pull side notes, tips, or related links into the sidebar.
 
 ## Agent rules
 
