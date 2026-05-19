@@ -50,6 +50,9 @@
   "ai": {
     "binding": "AI"
   },
+  "send_email": [
+    { "name": "EMAIL", "remote": true }
+  ],
   "services": [
     { "binding": "OG_WORKER", "service": "holocron-og" }
   ],
@@ -107,6 +110,9 @@
       "ai": {
         "binding": "AI"
       },
+      "send_email": [
+        { "name": "EMAIL" }
+      ],
       "services": [
         { "binding": "OG_WORKER", "service": "holocron-og-preview" }
       ],

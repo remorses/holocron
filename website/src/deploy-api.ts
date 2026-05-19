@@ -19,11 +19,12 @@ import { json, Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
-import { env } from 'cloudflare:workers'
+import { env, waitUntil } from 'cloudflare:workers'
 import { ulid } from 'ulid'
 import { unzipSync } from 'fflate'
 import { getDb } from './db.ts'
 import { buildProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
+import { buildDeployEmailHtml, buildDeployEmailSubject, type DeployEmailData } from './deploy-email.tsx'
 
 // ── Subdomain helpers ───────────────────────────────────────────────
 
@@ -376,9 +377,60 @@ export const deployApp = new Spiceflow()
       const isPreviewEnv = requestHost.startsWith('preview.')
       const siteSuffix = isPreviewEnv ? '-site-preview.holocron.so' : '-site.holocron.so'
       const url = `https://${deploySubdomain}${siteSuffix}`
+
+      // Send a welcome email on first production deploy for OIDC projects.
+      // proj.currentDeploymentId was read before the batch update, so null
+      // means this is the very first production deploy for this project.
+      const isFirstDeploy = isProduction && !proj.currentDeploymentId
+      if (isFirstDeploy && proj.githubOwner && proj.githubRepo) {
+        waitUntil(sendFirstDeployEmail({
+          db,
+          orgId: proj.orgId,
+          emailData: {
+            githubOwner: proj.githubOwner,
+            githubRepo: proj.githubRepo,
+            url,
+            branch,
+          },
+        }))
+      }
+
       return { url, deploymentId: deploy.id, branch }
     },
   })
+
+async function sendFirstDeployEmail({
+  db,
+  orgId,
+  emailData,
+}: {
+  db: ReturnType<typeof getDb>
+  orgId: string
+  emailData: DeployEmailData
+}): Promise<void> {
+  try {
+    // Find admin user's email for this org
+    const adminMember = await db.query.orgMember.findFirst({
+      where: { orgId, role: 'admin' },
+      with: { user: true },
+    })
+    const email = adminMember?.user?.email
+    if (!email) return
+
+    const subject = buildDeployEmailSubject(emailData)
+    const html = await buildDeployEmailHtml(emailData)
+
+    await env.EMAIL.send({
+      from: { email: 'deploy@holocron.so', name: 'Holocron' },
+      to: email,
+      subject,
+      html,
+    })
+  } catch (err) {
+    // Email is best-effort; never fail the deploy response
+    console.error('[deploy] first-deploy email failed:', err)
+  }
+}
 
 function guessMimeType(ext: string): string {
   const types: Record<string, string> = {
