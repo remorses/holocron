@@ -1375,6 +1375,44 @@ Link to [old page](/old-page) and [missing](/truly-missing).
     expect(warnings.some((w) => w.includes('/truly-missing'))).toBe(true)
   })
 
+  test('does not warn for links matching knownPaths (exact and wildcard)', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        knownPaths: ['/dashboard', '/api/*', '/blog/*'],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Go to [dashboard](/dashboard), [API](/api/users), [blog post](/blog/hello),
+and [missing](/unknown-page).
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    // /dashboard, /api/users, /blog/hello are all covered by knownPaths
+    expect(warnings.some((w) => w.includes('/dashboard'))).toBe(false)
+    expect(warnings.some((w) => w.includes('/api/users'))).toBe(false)
+    expect(warnings.some((w) => w.includes('/blog/hello'))).toBe(false)
+    // /unknown-page is not covered → should warn
+    expect(warnings.some((w) => w.includes('/unknown-page'))).toBe(true)
+    expect(warnings).toHaveLength(1)
+  })
+
   test('strips hash fragments before validating links', async () => {
     const project = tracked(createProject(
       {

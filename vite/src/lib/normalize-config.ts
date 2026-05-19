@@ -118,6 +118,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     navbar: normalizeNavbar(raw.navbar, icons.library),
     banner: normalizeBanner(raw.banner),
     redirects: normalizeRedirects(raw.redirects),
+    knownPaths: normalizeKnownPaths(raw.knownPaths),
     footer: normalizeFooter(raw.footer),
     search: normalizeSearch(raw.search),
     seo: normalizeSeo(raw.seo),
@@ -559,6 +560,11 @@ function normalizeRedirects(raw: unknown): HolocronConfig['redirects'] {
       permanent: r.permanent as boolean | undefined,
     }
   })
+}
+
+function normalizeKnownPaths(raw: unknown): HolocronConfig['knownPaths'] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter((p): p is string => typeof p === 'string' && p.length > 0)
 }
 
 function normalizeFooter(raw: unknown): HolocronConfig['footer'] {

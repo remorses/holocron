@@ -877,6 +877,18 @@ export const holocronConfigSchema = z
       .array(redirectSchema)
       .optional()
       .describe('URL redirect rules applied before routing'),
+    knownPaths: z
+      .array(z.string())
+      .optional()
+      .describe(
+        dedent`
+          Paths that should not trigger broken-link warnings even if they
+          don't correspond to an MDX page. Useful when mounting the docs
+          app alongside other routes (API endpoints, custom pages, external
+          apps). Supports exact paths and prefix patterns with trailing
+          wildcards. Example: \`["/api/*", "/dashboard", "/blog/*"]\`
+        `,
+      ),
     search: searchSchema.optional(),
     seo: seoSchema.optional(),
     assistant: assistantSchema.optional(),

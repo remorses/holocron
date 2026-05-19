@@ -77,6 +77,7 @@ All three follow the same schema, which is compatible with Mintlify's `docs.json
   "redirects": [
     { "source": "/old", "destination": "/new" }
   ],
+  "knownPaths": ["/api/*", "/dashboard"],
   "search": { "prompt": "Search docs..." },
   "seo": {
     "metatags": { "author": "My Company" }
@@ -110,3 +111,25 @@ Holocron normalizes shorthand forms into a consistent internal shape:
 - **`navigation`**: a flat array of groups is wrapped in a default tab
 - **`colors`**: missing light or dark values fall back from `primary` when styles are generated
 - **`products`**: normalized into `dropdowns` at config time
+
+## Broken link detection
+
+Holocron automatically checks all internal links in your MDX files during build and dev. If a link points to a page that does not exist in the navigation tree, a warning is printed:
+
+```
+▲ holocron broken link /quickstart:12 → /missing-page (no matching page found)
+```
+
+Links to **redirect sources** and **static files** (paths with file extensions like `.json`, `.pdf`) are not flagged.
+
+### Known paths
+
+When mounting docs alongside other routes (API endpoints, dashboards, external apps), use `knownPaths` to suppress warnings for paths that exist outside of Holocron:
+
+```json
+{
+  "knownPaths": ["/api/*", "/dashboard", "/blog/*"]
+}
+```
+
+Supports **exact paths** (`"/dashboard"`) and **prefix patterns** with trailing wildcards (`"/api/*"`).

@@ -429,6 +429,7 @@ export async function syncNavigation({
       navigation,
       pageInternalLinks,
       redirects: config.redirects,
+      knownPaths: config.knownPaths,
     })
   }
 
@@ -981,10 +982,12 @@ function validateInternalLinks({
   navigation,
   pageInternalLinks,
   redirects,
+  knownPaths,
 }: {
   navigation: Navigation
   pageInternalLinks: Record<string, InternalLink[]>
   redirects: HolocronConfig['redirects']
+  knownPaths: string[]
 }): void {
   const pageIndex = buildPageIndex(navigation)
   // Build a set of all known hrefs (pages + redirect sources)
@@ -999,6 +1002,16 @@ function validateInternalLinks({
       knownHrefs.add(source)
     }
   }
+  // Separate exact knownPaths from wildcard prefix patterns
+  const knownPathPrefixes: string[] = []
+  for (const p of knownPaths) {
+    if (p.endsWith('/*')) {
+      knownPathPrefixes.push(p.slice(0, -1)) // '/api/*' → '/api/'
+    } else {
+      const normalized = p.endsWith('/') && p !== '/' ? p.slice(0, -1) : p
+      knownHrefs.add(normalized)
+    }
+  }
 
   for (const [slug, links] of Object.entries(pageInternalLinks)) {
     const source = slug === 'index' ? '/' : `/${slug}`
@@ -1008,6 +1021,7 @@ function validateInternalLinks({
       const resolved = resolveInternalHref(href, slugDir)
       if (!resolved) continue // Skip hrefs we can't resolve (e.g. malformed)
       if (knownHrefs.has(resolved)) continue
+      if (knownPathPrefixes.some((prefix) => resolved.startsWith(prefix))) continue
 
       const location = line
         ? ` ${colors.cyan(source)}:${colors.yellow(String(line))}`

@@ -229,6 +229,23 @@ working. Supports exact paths, named `:param` captures, and `*` wildcards:
 
 See https://holocron.so/create/redirects.md for details.
 
+## Broken link detection
+
+Holocron warns about internal links pointing to non-existent pages during build
+and dev. Links to redirect sources and static files (`.json`, `.pdf`, etc.) are
+not flagged.
+
+When mounting docs alongside other routes, use `knownPaths` to suppress warnings
+for paths that exist outside of Holocron:
+
+```jsonc
+{
+  "knownPaths": ["/api/*", "/dashboard", "/blog/*"]
+}
+```
+
+Supports exact paths and prefix patterns with trailing `*` wildcards.
+
 ## Custom entry (Spiceflow)
 
 Holocron can be mounted inside a Spiceflow app to add API routes, middleware,

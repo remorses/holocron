@@ -135,6 +135,7 @@ export type HolocronConfig = {
   }
   banner?: { content: string; dismissible: boolean }
   redirects: Array<z.output<typeof redirectSchema>>
+  knownPaths: string[]
   footer: {
     socials: NonNullable<z.output<typeof footerSchema>['socials']>
     links: FooterLinkColumn[]

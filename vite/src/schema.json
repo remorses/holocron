@@ -163,6 +163,13 @@
         "$ref": "#/definitions/redirectSchema"
       }
     },
+    "knownPaths": {
+      "description": "Paths that should not trigger broken-link warnings even if they\ndon't correspond to an MDX page. Useful when mounting the docs\napp alongside other routes (API endpoints, custom pages, external\napps). Supports exact paths and prefix patterns with trailing\nwildcards. Example: `[\"/api/*\", \"/dashboard\", \"/blog/*\"]`",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "search": {
       "allOf": [
         {
