@@ -124,6 +124,36 @@ test.describe('MDX imports', () => {
   })
 })
 
+test.describe('imported MDX headings in sidebar TOC', () => {
+  test('headings from imported .md files appear in the sidebar navigation', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    // The plain-markdown.md snippet has "## Snippet Section" and
+    // "### Snippet Subsection" headings. After the merge step, these
+    // should appear in the page's heading list and render in the sidebar TOC.
+    expect(html).toContain('Snippet Section')
+    expect(html).toContain('Snippet Subsection')
+    // The headings should have anchor links (data-toc-heading="true")
+    expect(html).toContain('snippet-section')
+    expect(html).toContain('snippet-subsection')
+  })
+
+  test('imported headings appear in sidebar nav tree alongside page headings', async ({ page }) => {
+    // Use a wide viewport so the sidebar is visible (sidebar hidden below lg/1080px)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: 'Import Test Page' })).toBeVisible()
+    // The sidebar TOC should show both the page's own heading and the imported ones.
+    // TocInline only renders when the page is active AND has >1 heading.
+    const sidebar = page.locator('[class*="slot-sidebar-left"]')
+    await expect(sidebar).toBeVisible()
+    // Imported snippet headings should be in the TOC links
+    await expect(sidebar.getByRole('link', { name: 'Snippet Section' })).toBeVisible()
+    await expect(sidebar.getByRole('link', { name: 'Snippet Subsection' })).toBeVisible()
+  })
+})
+
 test.describe.serial('imported .md HMR @dev', () => {
   const mdFile = path.join(fixtureRoot, 'snippets/plain-markdown.md')
   let originalContent: string

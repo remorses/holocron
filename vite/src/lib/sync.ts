@@ -29,13 +29,14 @@ import { processVirtualTabs } from './virtual-tab-provider.ts'
 import { openapiProvider } from './openapi/provider.ts'
 import { formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
-import type { EagerModules } from 'safe-mdx/parse'
+import { extractImports, type EagerModules } from 'safe-mdx/parse'
 import type { Root } from 'mdast'
 import {
   type Navigation,
   type NavTab,
   type NavGroup,
   type NavPage,
+  type NavHeading,
   type NavVersionItem,
   type NavDropdownItem,
   isNavPage,
@@ -242,6 +243,23 @@ export async function syncNavigation({
       const cachedSources = oldPageImportSources[slug] ?? []
       pageImportSources[slug] = cachedSources
       pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
+      // Merge headings from imported .md/.mdx files into the page's heading
+      // list so the sidebar TOC includes them. Must reprocess the cached MDX
+      // to get fresh own-only headings (cached.headings may already contain
+      // merged imported headings from a previous sync).
+      if (cachedSources.length > 0) {
+        const reprocessedForHeadings = processMdx(cachedMdx, config.icons.library, pageSource)
+        if (!(reprocessedForHeadings instanceof Error)) {
+          const merged = buildMergedHeadings({
+            mdast: reprocessedForHeadings.mdast,
+            ownHeadings: reprocessedForHeadings.headings,
+            imports: pageImports[slug] ?? [],
+            projectRoot,
+            iconLibrary: config.icons.library,
+          })
+          if (merged) cached.headings = merged
+        }
+      }
       return cached
     }
 
@@ -282,13 +300,24 @@ export async function syncNavigation({
       mdxContentErrors.add(slug)
     }
 
+    // Merge headings from imported .md/.mdx files into the page's heading
+    // list so the sidebar TOC includes them. We already have the mdast and
+    // resolved imports at this point, so no re-parsing needed.
+    const mergedHeadings = buildMergedHeadings({
+      mdast: processed.mdast,
+      ownHeadings: processed.headings,
+      imports: pageImports[slug] ?? [],
+      projectRoot,
+      iconLibrary: config.icons.library,
+    })
+
     return {
       slug,
       href: slugToHref(slug),
       title: processed.title,
       description: processed.description,
       gitSha: sha,
-      headings: processed.headings,
+      headings: mergedHeadings ?? processed.headings,
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
       frontmatter: processed.frontmatter,
@@ -396,6 +425,124 @@ export async function syncNavigation({
   saveImageCache({ distDir, cache: imageCache })
 
   return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedMdxContent, importedImageDepPaths: importedMdx.imageDepPaths, parsedCount, cachedCount }
+}
+
+/* ── Imported heading merge (inline during enrichment) ───────────────── */
+
+/**
+ * Build a merged heading list that includes headings from imported .md/.mdx
+ * files in correct document order. Called inline during enrichPageUncached
+ * so headings are correct from the start — no post-processing pass needed.
+ *
+ * Walks mdast.children: for heading nodes, uses the page's own extracted
+ * heading (preserving its slug, which may be an explicit ID). For JSX nodes
+ * whose name matches an imported .md/.mdx file, reads and parses that file
+ * to extract its headings and inserts them (also preserving their slugs).
+ *
+ * Returns the merged array, or undefined if no imported headings were found.
+ */
+function buildMergedHeadings({
+  mdast,
+  ownHeadings,
+  imports,
+  iconLibrary,
+  projectRoot,
+}: {
+  mdast: Root
+  ownHeadings: NavHeading[]
+  imports: ResolvedImport[]
+  iconLibrary: import('./collect-icons.ts').IconLibrary
+  projectRoot: string
+}): NavHeading[] | undefined {
+  if (imports.length === 0) return undefined
+
+  // Build a map from raw import source (stripped of query) to resolved import.
+  // Only include .md/.mdx files — .tsx imports can't contribute headings.
+  const sourceToImport = new Map<string, ResolvedImport>()
+  for (const ri of imports) {
+    if (ri.moduleKey.includes('?')) continue
+    if (!/\.mdx?$/.test(ri.absPath)) continue
+    const cleanSource = ri.source.replace(/\?.*$/, '')
+    sourceToImport.set(cleanSource, ri)
+  }
+  if (sourceToImport.size === 0) return undefined
+
+  // Extract import bindings from the mdast (local JSX name → source)
+  // and match to resolved imports by exact source string.
+  const rawImports = extractImports(mdast)
+  const isLocalSource = (src: string) => src.startsWith('/') || src.startsWith('./') || src.startsWith('../')
+  const bindingToAbsPath = new Map<string, string>()
+  for (const imp of rawImports) {
+    if (!isLocalSource(imp.source)) continue
+    const cleanSource = imp.source.replace(/\?.*$/, '')
+    const resolved = sourceToImport.get(cleanSource)
+    if (!resolved) continue
+    for (const spec of imp.specifiers) {
+      bindingToAbsPath.set(spec.local, resolved.absPath)
+    }
+  }
+  if (bindingToAbsPath.size === 0) return undefined
+
+  // Extract headings from each imported .md/.mdx file (cheap: just parse + walk)
+  const importedHeadingsCache = new Map<string, NavHeading[]>()
+  function getImportedHeadings(absPath: string): NavHeading[] {
+    const cached = importedHeadingsCache.get(absPath)
+    if (cached) return cached
+    if (!fs.existsSync(absPath)) return []
+    try {
+      const content = fs.readFileSync(absPath, 'utf-8')
+      const processed = processMdx(content, iconLibrary, './' + path.relative(projectRoot, absPath).replace(/\\/g, '/'))
+      if (processed instanceof Error) return []
+      importedHeadingsCache.set(absPath, processed.headings)
+      return processed.headings
+    } catch {
+      return []
+    }
+  }
+
+  // Walk mdast.children in document order, building the merged heading list.
+  // Preserve original slug values (including explicit IDs like {#setup})
+  // instead of re-slugging, so TOC links match the rendered DOM anchors.
+  const merged: NavHeading[] = []
+  const insertedPaths = new Set<string>()
+  let ownIdx = 0
+  let addedImported = false
+
+  for (const node of mdast.children) {
+    if (node.type === 'heading' || isJsxHeading(node)) {
+      if (ownIdx < ownHeadings.length) {
+        merged.push(ownHeadings[ownIdx]!)
+        ownIdx++
+      }
+      continue
+    }
+    if (isJsxNode(node)) {
+      const absPath = bindingToAbsPath.get(node.name ?? '')
+      if (absPath && !insertedPaths.has(absPath)) {
+        insertedPaths.add(absPath)
+        for (const h of getImportedHeadings(absPath)) {
+          merged.push(h)
+          addedImported = true
+        }
+      }
+    }
+  }
+  // Append any remaining own headings
+  while (ownIdx < ownHeadings.length) {
+    merged.push(ownHeadings[ownIdx]!)
+    ownIdx++
+  }
+  return addedImported ? merged : undefined
+}
+
+function isJsxNode(node: import('mdast').RootContent): node is import('mdast').RootContent & { name: string | null } {
+  return node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement'
+}
+
+function isJsxHeading(node: import('mdast').RootContent): boolean {
+  if (!isJsxNode(node)) return false
+  const name = node.name
+  return name === 'Heading' || (typeof name === 'string' && /^h[1-6]$/.test(name))
 }
 
 /* ── Image processing helper ─────────────────────────────────────────── */
@@ -615,7 +762,7 @@ function resolveImportSourcesForFile({
         const moduleKey = (path.extname(cleanSource) ? normalized : normalized + ext) + querySuffix
         if (!seen.has(moduleKey)) {
           seen.add(moduleKey)
-          result.push({ moduleKey, absPath: resolved })
+          result.push({ source, moduleKey, absPath: resolved })
         }
       }
       continue
@@ -630,7 +777,7 @@ function resolveImportSourcesForFile({
         : './' + relativeToRoot) + querySuffix
       if (!seen.has(moduleKey)) {
         seen.add(moduleKey)
-        result.push({ moduleKey, absPath: resolved })
+        result.push({ source, moduleKey, absPath: resolved })
       }
     }
   }
@@ -905,6 +1052,10 @@ const IMPORT_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js', '.mdx', '.md']
 /** A resolved import with both the module key (for safe-mdx matching) and
  *  the absolute filesystem path (for the lazy import() call). */
 export type ResolvedImport = {
+  /** Raw import source as written in MDX (e.g. '/snippets/greeting',
+   *  '../components/badge'). Preserved for exact matching when merging
+   *  imported headings into the parent page's TOC. */
+  source: string
   /** Key matching safe-mdx's glob key format. For absolute imports `/snippets/greeting`,
    *  this is `./snippets/greeting.tsx`. For relative imports `../components/badge`,
    *  this is the normalized path from the pagesDirPrefix base. */
@@ -962,7 +1113,7 @@ function resolveImportSources({
         const moduleKey = (path.extname(cleanSource) ? normalized : normalized + ext) + querySuffix
         if (!seen.has(moduleKey)) {
           seen.add(moduleKey)
-          result.push({ moduleKey, absPath: resolved })
+          result.push({ source, moduleKey, absPath: resolved })
         }
       }
       continue
@@ -980,7 +1131,7 @@ function resolveImportSources({
         : './' + relativeToRoot) + querySuffix
       if (!seen.has(moduleKey)) {
         seen.add(moduleKey)
-        result.push({ moduleKey, absPath: resolved })
+        result.push({ source, moduleKey, absPath: resolved })
       }
     }
   }

@@ -19,6 +19,14 @@ import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.t
 import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
 import { extractImports } from 'safe-mdx/parse'
 
+/** A binding from an MDX import declaration — maps a local JSX name to its
+ *  source specifier. For `import Foo from './bar'`, local='Foo' source='./bar'.
+ *  For `import { X } from './bar'`, local='X' source='./bar'. */
+export type ImportBinding = {
+  local: string
+  source: string
+}
+
 export type ProcessedMdx = {
   normalizedContent: string
   title: string
@@ -36,6 +44,10 @@ export type ProcessedMdx = {
    *  '../components/badge'). Bare specifiers (npm packages) are excluded. Used by
    *  sync.ts to resolve actual file paths at build time. */
   importSources: string[]
+  /** Local-name → source bindings for all local imports. Used to map JSX
+   *  element names back to their import source for merging imported MDX
+   *  headings into the page's TOC. */
+  importBindings: ImportBinding[]
   /** The parsed mdast tree (reused for image rewriting without re-parsing) */
   mdast: Root
 }
@@ -78,9 +90,20 @@ export function processMdx(
   // Extract local import sources (relative/absolute paths) from MDX import
   // declarations. Bare specifiers (npm packages) are excluded — they start
   // with neither '/' nor './' nor '../'.
-  const importSources = extractImports(mdast)
+  const rawImports = extractImports(mdast)
+  const isLocalSource = (src: string) => src.startsWith('/') || src.startsWith('./') || src.startsWith('../')
+  const importSources = rawImports
     .map((imp) => imp.source)
-    .filter((src) => src.startsWith('/') || src.startsWith('./') || src.startsWith('../'))
+    .filter(isLocalSource)
+
+  // Build binding map: local JSX name → import source (only for local imports)
+  const importBindings: ImportBinding[] = []
+  for (const imp of rawImports) {
+    if (!isLocalSource(imp.source)) continue
+    for (const spec of imp.specifiers) {
+      importBindings.push({ local: spec.local, source: imp.source })
+    }
+  }
 
   return {
     normalizedContent,
@@ -92,6 +115,7 @@ export function processMdx(
     headings,
     imageSrcs,
     importSources,
+    importBindings,
     mdast,
   }
 }
