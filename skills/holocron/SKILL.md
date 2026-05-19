@@ -482,6 +482,63 @@ your `vite.config.ts` passes the `entry` option to the plugin.
 
 Aim for roughly **one Aside per major section** (per `##` heading). Not every section needs one, but if a page has more than three `##` sections without a single Aside, look for opportunities to pull side notes, tips, or related links into the sidebar.
 
+### Use diagrams to explain architecture and flows
+
+Use ASCII diagrams frequently in MDX pages to explain architecture, data flows, request lifecycles, and relationships between components. A diagram communicates structure faster than any paragraph. Prefer diagrams over lengthy text explanations whenever the content describes how things connect or flow.
+
+Always use the **`diagram`** language hint on the code fence. Holocron renders `diagram` fences with special styling; Unicode box-drawing characters (`─`, `│`, `┌`, `┐`, `└`, `┘`, `├`, `┤`, `┬`, `┴`, `┼`) and arrows (`►`, `◄`, `▼`, `▲`, `→`, `←`) get colored differently from labels, making the diagram visually rich and easy to read. Plain `` ```text `` or `` ``` `` fences render everything in one flat color.
+
+**Layout rules:**
+
+- Diagrams should try to cover the **full width of the content column**, roughly **94 characters** wide. Do not cram everything into narrow 50-char diagrams; use the space.
+- Never exceed 94 characters per line or the diagram will overflow on smaller screens.
+- Prefer a **varied, organic layout**. Not every label needs a box. Mix plain text labels, boxes for major components, and directional arrows for connections. Avoid perfectly symmetric grid layouts; asymmetric fanouts and side annotations look more natural.
+- All connections must use **directional arrows**. Never use plain lines (`───`) without an arrowhead. The reader should always know which direction data or control flows.
+- Verify alignment by counting characters precisely: every box border (`┌┐└┘`) must match the width of its content lines (`│...│`).
+
+````mdx
+```diagram
+                     ┌───────────────┐
+   docs.jsonc ──────►│  Vite Plugin  │──────► Build Output
+                     └───────┬───────┘
+                             │
+                     ┌───────▼───────┐
+                     │   sync.ts     │       MDX files ──► parsed sections
+                     │  (walk nav)   │       git SHA diff ──► cache hit/miss
+                     └───────┬───────┘
+                             │
+               ┌─────────────┼─────────────┐
+               ▼             ▼             ▼
+          navigation     page cache    virtual modules
+          tree.json      holocron-     holocron-pages
+                         mdx.json     holocron-config
+```
+````
+
+````mdx
+```diagram
+  Browser request
+        │
+        ▼
+  ┌───────────┐    miss     ┌────────────┐
+  │   Edge    │ ───────────►│   Origin   │
+  │   Cache   │             │   Worker   │
+  │           │◄────────────│            │
+  └───────────┘   response  └────────────┘
+        │
+        ▼
+  Client renders
+```
+````
+
+Good candidates for diagrams:
+
+- **Deploy pipelines** showing the steps from source to production
+- **Request lifecycles** through middleware, auth, routing, and rendering
+- **Config resolution** showing which file wins and how fields map to UI
+- **Component trees** showing parent/child relationships and data flow
+- **Navigation structure** showing how tabs, groups, and pages nest
+
 ## Agent rules
 
 - Prefer the latest fetched docs over anything remembered from previous sessions.
