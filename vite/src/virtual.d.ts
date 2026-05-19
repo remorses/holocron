@@ -21,9 +21,6 @@ declare module 'virtual:holocron-mdx' {
   export function getMdxSlugs(): Promise<string[]>
   export function getMdxSource(slug: string): Promise<string | undefined>
   export function getPageIconRefs(slug: string): Promise<IconRef[]>
-  /** Processed MDX content of imported .md/.mdx files (snippets, shared fragments).
-   *  Keys are relative paths from project root (e.g. './snippets/note.md'). */
-  export function getImportedMdxSources(): Record<string, string>
 }
 
 declare module 'virtual:holocron-mdx-page/*' {

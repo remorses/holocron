@@ -24,16 +24,38 @@ export type NormalizedMdx = {
   mdast: Root
 }
 
+export type NormalizeMdxOptions = {
+  /** Remark plugins to run before the standard pipeline (e.g. remarkInlineImports).
+   *  Each entry is [plugin, options] or just plugin. */
+  prependPlugins?: Array<[any, any] | any>
+}
+
 /**
  * Parse MDX content and run all remark transform plugins.
  * Returns HolocronMdxParseError on syntax errors instead of throwing.
  * @param source - optional file path or slug for error messages (e.g. "/getting-started")
  */
-export function normalizeMdx(content: string, source?: string): HolocronMdxParseError | NormalizedMdx {
+export function normalizeMdx(content: string, source?: string, options?: NormalizeMdxOptions): HolocronMdxParseError | NormalizedMdx {
   const processor = remark()
     .use(remarkMdx)
     .use(remarkFrontmatter, ['yaml'])
     .use(remarkGfm)
+
+  // Prepend plugins run before the standard pipeline. This is where
+  // remarkInlineImports goes: it must expand imported .md/.mdx content
+  // before other remark plugins (headings, code groups, callouts, etc.)
+  // process the combined tree.
+  if (options?.prependPlugins) {
+    for (const entry of options.prependPlugins) {
+      if (Array.isArray(entry)) {
+        processor.use(entry[0], entry[1])
+      } else {
+        processor.use(entry)
+      }
+    }
+  }
+
+  processor
     .use(remarkHeadings as never)
     .use(remarkCodeGroup)
     .use(remarkDetailsToggle)

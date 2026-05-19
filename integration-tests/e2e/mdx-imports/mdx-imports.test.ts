@@ -185,8 +185,8 @@ test.describe.serial('imported .md HMR @dev', () => {
   })
 })
 
-test.describe('docs.zip includes imported md files', () => {
-  test('zip contains imported .md snippets alongside pages', async ({ request }) => {
+test.describe('docs.zip contains page content with inlined imports', () => {
+  test('zip contains pages with inlined imported content', async ({ request }) => {
     const { unzipSync, strFromU8 } = await import('fflate')
     const res = await request.get('/docs.zip')
     expect(res.status()).toBe(200)
@@ -198,17 +198,10 @@ test.describe('docs.zip includes imported md files', () => {
     expect(filenames).toContain('index.md')
     expect(filenames).toContain('guides/relative-imports.md')
 
-    // Imported .md files should also be in the zip
-    expect(filenames).toContain('snippets/plain-markdown.md')
-  })
-
-  test('imported .md content in zip is the processed MDX', async ({ request }) => {
-    const { unzipSync, strFromU8 } = await import('fflate')
-    const res = await request.get('/docs.zip')
-    const buffer = await res.body()
-    const files = unzipSync(new Uint8Array(buffer))
-    const snippetMd = strFromU8(files['snippets/plain-markdown.md']!)
-    expect(snippetMd).toContain('Plain markdown snippet imported from a')
+    // The imported .md content is inlined into the page's MDX,
+    // so it shows up inside the page content, not as a separate file.
+    const indexMd = strFromU8(files['index.md']!)
+    expect(indexMd).toContain('Plain markdown snippet imported from a')
   })
 })
 

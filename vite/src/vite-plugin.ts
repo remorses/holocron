@@ -475,28 +475,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         const loaderEntries = slugs.map((slug) => {
           return `${JSON.stringify(slug)}: () => import(${JSON.stringify(VIRTUAL_MDX_PAGE_PREFIX + encodeURIComponent(slug))}).then((m) => m.default)`
         })
-        // Build imported MDX sources map keyed by relative path from project root.
-        // Files outside projectRoot keep their ../  segments so they remain unique.
-        const importedMdxEntries: Record<string, string> = {}
-        for (const [absPath, content] of Object.entries(syncResult.importedMdxContent)) {
-          const relPath = path.relative(root, absPath).replace(/\\/g, '/')
-          const key = relPath.startsWith('../') || path.isAbsolute(relPath)
-            ? relPath
-            : './' + relPath
-          importedMdxEntries[key] = content
-        }
         return [
           `const slugs = ${JSON.stringify(slugs)}`,
           `const pageIconRefs = ${JSON.stringify(syncResult.pageIconRefs)}`,
           `const loaders = { ${loaderEntries.join(', ')} }`,
-          `const importedMdxSources = ${JSON.stringify(importedMdxEntries)}`,
           `export function getMdxSlugs() { return slugs }`,
           `export async function getMdxSource(slug) {`,
           `  const load = loaders[slug]`,
           `  return load ? await load() : undefined`,
           `}`,
           `export function getPageIconRefs(slug) { return pageIconRefs[slug] ?? [] }`,
-          `export function getImportedMdxSources() { return importedMdxSources }`,
         ].join('\n')
       }
       if (id.startsWith(RESOLVED_MDX_PAGE_PREFIX)) {
@@ -541,62 +529,42 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
         // Register imported .md/.mdx files as watch dependencies so edits
         // (including files added after initial startup) trigger HMR.
-        // configureServer() only runs once at startup; this load hook runs
-        // every time the virtual module is regenerated after a re-sync.
         for (const [moduleKey, absPath] of sortedImports) {
           if (!moduleKey.includes('?') && /\.mdx?$/.test(absPath)) {
             this.addWatchFile(absPath)
           }
         }
-        // Also watch image files referenced by imported .md/.mdx files
-        // so dimension/placeholder changes trigger re-sync.
-        for (const imgPath of syncResult.importedImageDepPaths) {
-          this.addWatchFile(imgPath)
-        }
 
-        // Only count non-queried .md/.mdx imports for the RenderImportedMdx wrapper.
-        // Queried imports like README.md?raw are plain Vite imports, not MDX renders.
-        const hasMdxImports = sortedImports.some(([moduleKey, absPath]) =>
-          !moduleKey.includes('?') && /\.mdx?$/.test(absPath))
+        // .md/.mdx imports are inlined at build time by remarkInlineImports,
+        // so the import declaration in MDX is dead code. The virtual module
+        // still needs to export something valid (safe-mdx resolves it), but
+        // the component is never rendered since <Guide /> usages have been
+        // replaced with the inlined content. We use a ?raw import wrapped
+        // in a dummy component so the module graph tracks the file for HMR.
+        const hasMdxImports = sortedImports.some(([moduleKey]) =>
+          !moduleKey.includes('?') && /\.mdx?$/.test(moduleKey))
         const entries = sortedImports.map(([moduleKey, absPath]) => {
-          // Vite query imports (?raw, ?url, ?inline, ?worker, etc.): forward the
-          // query suffix to the import() call so Vite applies the right transform.
           const qIdx = moduleKey.indexOf('?')
           if (qIdx >= 0) {
             const querySuffix = moduleKey.slice(qIdx)
             return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath + querySuffix)})`
           }
           if (/\.mdx?$/.test(absPath)) {
-            const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
-            const source = './' + path.relative(root, absPath).replace(/\\/g, '/')
-            // Use pre-processed content from the build-time pipeline when
-            // available (remark plugins, image dimensions/placeholders applied).
-            // Falls back to ?raw import for files that failed processing.
-            const processedContent = syncResult.importedMdxContent[absPath]
-            const markdownExpr = processedContent !== undefined
-              ? JSON.stringify(processedContent)
-              : `(await import(${JSON.stringify(absPath + '?raw')})).default`
-            return [
-              `  ${JSON.stringify(moduleKey)}: async () => {`,
-              `    const markdown = ${markdownExpr}`,
-              `    return { default: function ImportedMdx(props) {`,
-              `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)}, source: ${JSON.stringify(source)} })`,
-              `    } }`,
-              `  }`,
-            ].join('\n')
+            // Dead import: remarkInlineImports already spliced the content
+            // inline. This wrapper exists only so the import resolves and
+            // Vite tracks the file in the module graph for HMR.
+            return `  ${JSON.stringify(moduleKey)}: async () => ({ default: function _InlinedMdx() { return null } })`
           }
           return `  ${JSON.stringify(moduleKey)}: () => import(${JSON.stringify(absPath)})`
         })
 
         return [
-          hasMdxImports ? `import React from 'react'` : undefined,
-          hasMdxImports ? `import { RenderImportedMdx } from '@holocron.so/vite/src/lib/mdx-components-map'` : undefined,
           `const modules = {`,
           entries.join(',\n'),
           `}`,
           `export function getModules() { return modules }`,
           `export const pagesDirPrefix = ${JSON.stringify(pagesDirPrefix)}`,
-        ].filter(Boolean).join('\n')
+        ].join('\n')
       }
       if (id === RESOLVED_APP) {
         // When `options.entry` is set, re-export the user's file (they own
@@ -663,11 +631,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
         }
       }
-      // Watch image files referenced by imported .md/.mdx so changing an
-      // image (e.g. dimensions) triggers re-sync with updated metadata.
-      for (const imgPath of syncResult.importedImageDepPaths) {
-        server.watcher.add(imgPath)
-      }
     },
 
     // hotUpdate — per-environment HMR hook.
@@ -689,9 +652,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     async hotUpdate(ctx) {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
-      // Check if the changed file is an image dependency of an imported
-      // .md/.mdx file. If so, re-sync to pick up updated dimensions/placeholder.
-      const isTrackedImageDep = syncResult.importedImageDepPaths.includes(ctx.file)
       const isMdxInsidePagesDir = isMdx && isInsideDir(pagesDir, ctx.file)
       const changedSlug = isMdxInsidePagesDir
         ? path.relative(pagesDir, ctx.file).replace(/\.[^.]+$/, '').replace(/\\/g, '/')
@@ -713,7 +673,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep) {
+      if (!isMdx && !isConfig && !isImportableAddOrRemove) {
         return
       }
 
@@ -773,6 +733,18 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
         if (changedSlug) {
           resolvedIds.add(RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(changedSlug))
+        }
+        // When an imported .md/.mdx file changes, invalidate ALL per-page
+        // MDX modules because the changed content is inlined into the
+        // importing page's MDX. Without this, the importing page's virtual
+        // module stays cached with stale inlined content.
+        if (!changedSlug || !syncResult.mdxContent[changedSlug]) {
+          // The changed file is not a page slug — it's an imported snippet.
+          // Invalidate all per-page MDX modules so pages that inline it get
+          // fresh content.
+          for (const slug of Object.keys(syncResult.mdxContent)) {
+            resolvedIds.add(RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(slug))
+          }
         }
       }
 

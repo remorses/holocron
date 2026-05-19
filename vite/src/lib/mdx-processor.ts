@@ -13,7 +13,7 @@ import GithubSlugger from 'github-slugger'
 import type { Root, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
-import { normalizeMdx } from './mintlify/normalize-mdx.ts'
+import { normalizeMdx, type NormalizeMdxOptions } from './mintlify/normalize-mdx.ts'
 import { HolocronMdxParseError } from './logger.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
 import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
@@ -77,12 +77,18 @@ type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
  *
  * @param source - optional slug or file path for error messages (e.g. "/getting-started")
  */
+export type ProcessMdxOptions = {
+  /** Options for the normalizeMdx pipeline (e.g. prepend plugins). */
+  normalizeMdxOptions?: NormalizeMdxOptions
+}
+
 export function processMdx(
   content: string,
   defaultLibrary: IconLibrary = 'fontawesome',
   source?: string,
+  options?: ProcessMdxOptions,
 ): HolocronMdxParseError | ProcessedMdx {
-  const normalized = normalizeMdx(content, source)
+  const normalized = normalizeMdx(content, source, options?.normalizeMdxOptions)
   if (normalized instanceof Error) return normalized
   const normalizedContent = normalized.content
   const frontmatter = parsePageFrontmatter(content)

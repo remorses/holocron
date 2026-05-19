@@ -964,7 +964,7 @@ title: API Reference
     expect(result.navigation[1]!.align).toBe('end')
   })
 
-  test('processes imported .md/.mdx files through build-time pipeline', async () => {
+  test('inlines imported .md content into page MDX with image processing', async () => {
     const project = tracked(createProject(
       {
         navigation: [{ group: 'Docs', pages: ['index'] }],
@@ -1004,16 +1004,17 @@ import Snippet from '/snippets/guide.md'
       distDir: project.distDir,
     })
 
-    // The imported .md file should be in importedMdxContent
-    const guidePath = path.join(snippetsDir, 'guide.md')
-    expect(result.importedMdxContent[guidePath]).toBeDefined()
-    // Image should have been processed: converted to <Image> with dimensions
-    expect(result.importedMdxContent[guidePath]).toContain('<Image')
-    expect(result.importedMdxContent[guidePath]).toContain('width="24"')
-    expect(result.importedMdxContent[guidePath]).toContain('height="12"')
+    // With inline imports, the imported content is part of the page's MDX.
+    // Image should have been processed: converted to <Image> with dimensions.
+    const pageMdx = result.mdxContent['index']
+    expect(pageMdx).toBeDefined()
+    expect(pageMdx).toContain('Some guide content.')
+    expect(pageMdx).toContain('<Image')
+    expect(pageMdx).toContain('width="24"')
+    expect(pageMdx).toContain('height="12"')
   })
 
-  test('reprocesses imported .md on every sync (no stale cache for image deps)', async () => {
+  test('inlines imported .md headings into page TOC', async () => {
     const project = tracked(createProject(
       {
         navigation: [{ group: 'Docs', pages: ['index'] }],
@@ -1023,7 +1024,7 @@ import Snippet from '/snippets/guide.md'
 title: Home
 ---
 
-import Snippet from '/snippets/note.md'
+import Snippet from '/snippets/guide.md'
 
 # Home
 
@@ -1035,16 +1036,12 @@ import Snippet from '/snippets/note.md'
     const snippetsDir = path.join(project.pagesDir, 'snippets')
     fs.mkdirSync(snippetsDir, { recursive: true })
     fs.writeFileSync(
-      path.join(snippetsDir, 'note.md'),
-      '# Note\n\n![img](./icon.svg)\n\nSome note content.',
-    )
-    fs.writeFileSync(
-      path.join(snippetsDir, 'icon.svg'),
-      `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="5" viewBox="0 0 10 5"><rect width="10" height="5" fill="#000" /></svg>`,
+      path.join(snippetsDir, 'guide.md'),
+      `## Setup\n\nSetup instructions.\n\n## Usage\n\nUsage instructions.`,
     )
 
     const config = readConfig({ root: project.root })
-    const first = await syncNavigation({
+    const result = await syncNavigation({
       config,
       pagesDir: project.pagesDir,
       publicDir: project.publicDir,
@@ -1052,30 +1049,19 @@ import Snippet from '/snippets/note.md'
       distDir: project.distDir,
     })
 
-    const notePath = path.join(snippetsDir, 'note.md')
-    expect(first.importedMdxContent[notePath]).toContain('width="10"')
-    expect(first.importedMdxContent[notePath]).toContain('height="5"')
-
-    // Change the image dimensions without editing the .md file
-    fs.writeFileSync(
-      path.join(snippetsDir, 'icon.svg'),
-      `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10" viewBox="0 0 20 10"><rect width="20" height="10" fill="#000" /></svg>`,
-    )
-
-    const second = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-
-    // Should pick up the new dimensions because imported .md is always reprocessed
-    expect(second.importedMdxContent[notePath]).toContain('width="20"')
-    expect(second.importedMdxContent[notePath]).toContain('height="10"')
+    // Headings from the imported .md file should appear in the page's headings
+    // because remarkInlineImports splices them into the page's mdast before
+    // heading extraction runs.
+    const page = result.navigation[0]?.groups[0]?.pages[0]
+    expect(page).toBeDefined()
+    if (page && 'headings' in page) {
+      const headingTexts = page.headings.map((h) => h.text)
+      expect(headingTexts).toContain('Setup')
+      expect(headingTexts).toContain('Usage')
+    }
   })
 
-  test('discovers nested imports from imported .mdx files recursively', async () => {
+  test('discovers nested imports from inlined .mdx content', async () => {
     const project = tracked(createProject(
       {
         navigation: [{ group: 'Docs', pages: ['index'] }],
@@ -1096,7 +1082,8 @@ import Guide from '/snippets/guide.mdx'
 
     const snippetsDir = path.join(project.pagesDir, 'snippets')
     fs.mkdirSync(snippetsDir, { recursive: true })
-    // guide.mdx imports badge.tsx — a nested import that the page doesn't know about
+    // guide.mdx imports badge.tsx — when inlined, the import declaration
+    // becomes part of the page's AST and should be discovered by processMdx
     fs.writeFileSync(
       path.join(snippetsDir, 'guide.mdx'),
       `import { Badge } from './badge'\n\n# Guide\n\n<Badge />`,
@@ -1116,56 +1103,16 @@ import Guide from '/snippets/guide.mdx'
     })
 
     // The guide.mdx import is discovered from the page
-    const guidePath = path.join(snippetsDir, 'guide.mdx')
-    expect(result.importedMdxContent[guidePath]).toBeDefined()
-
-    // The nested badge.tsx import should be discovered recursively
-    // and added to pageImports under a synthetic key
     const allModuleKeys = Object.values(result.pageImports)
       .flat()
       .map((i) => i.moduleKey)
     expect(allModuleKeys).toContain('./snippets/guide.mdx')
+    // The nested badge.tsx import is discovered because remarkInlineImports
+    // rewrites its source (./badge → ./snippets/badge) when inlining guide.mdx.
+    // The rewritten import becomes part of the page's AST and processMdx
+    // extracts it. The moduleKey includes the pagesDir prefix since badge.tsx
+    // lives inside pagesDir.
     expect(allModuleKeys).toContain('./pages/snippets/badge.tsx')
-  })
-
-  test('collects image dependency paths from imported .md files', async () => {
-    const project = tracked(createProject(
-      {
-        navigation: [{ group: 'Docs', pages: ['index'] }],
-      },
-      {
-        index: `---
-title: Home
----
-
-import Snippet from '/snippets/with-image.md'
-
-# Home
-
-<Snippet />
-`,
-      },
-    ))
-
-    const snippetsDir = path.join(project.pagesDir, 'snippets')
-    fs.mkdirSync(snippetsDir, { recursive: true })
-    fs.writeFileSync(path.join(snippetsDir, 'with-image.md'), '![icon](./icon.svg)')
-    fs.writeFileSync(
-      path.join(snippetsDir, 'icon.svg'),
-      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" fill="#000" /></svg>`,
-    )
-
-    const config = readConfig({ root: project.root })
-    const result = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-
-    // Image dep paths should include the SVG file
-    expect(result.importedImageDepPaths).toContain(path.join(snippetsDir, 'icon.svg'))
   })
 
   test('collects per-page icon refs using the configured project library', async () => {

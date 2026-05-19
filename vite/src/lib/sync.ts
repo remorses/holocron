@@ -17,7 +17,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink } from './mdx-processor.ts'
+import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink, type ProcessMdxOptions } from './mdx-processor.ts'
+import { remarkInlineImports, type InlineImportEntry } from './mintlify/remark-inline-imports.ts'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
@@ -36,7 +37,6 @@ import {
   type NavTab,
   type NavGroup,
   type NavPage,
-  type NavHeading,
   type NavVersionItem,
   type NavDropdownItem,
   isNavPage,
@@ -112,16 +112,6 @@ export type SyncResult = {
    *  and an `absPath` (absolute filesystem path for the import() call).
    *  Built fresh on every sync from cached importSources + filesystem probing. */
   pageImports: Record<string, ResolvedImport[]>
-  /** Pre-processed MDX content for imported .md/.mdx files, keyed by absolute
-   *  path. These files go through the same build-time pipeline as pages
-   *  (normalizeMdx + image resolution) so they get remark plugins, image
-   *  dimensions/placeholders, and link rewriting. The virtual module template
-   *  embeds this content as a string literal instead of using a ?raw import. */
-  importedMdxContent: Record<string, string>
-  /** Absolute paths of local image files referenced by imported .md/.mdx
-   *  files. Used by the dev server to watch for image changes and trigger
-   *  re-sync so updated dimensions/placeholders are picked up. */
-  importedImageDepPaths: string[]
   parsedCount: number
   cachedCount: number
 }
@@ -224,9 +214,24 @@ export async function syncNavigation({
       throw new Error(`MDX file not found for page "${slug}". Looked in ${pagesDir}`)
     }
     const content = fs.readFileSync(mdxPath, 'utf-8')
-    const sha = gitBlobSha(content)
+    const mdxDir = path.dirname(mdxPath)
 
-    // Cache hit — MDX unchanged and we have cached MDX content
+    // Resolve .md/.mdx imports early so we can incorporate their SHAs
+    // into the cache key. This makes cache hits sensitive to imported
+    // file changes, not just the page's own content.
+    const inlineImportMap = resolveInlineImports({ content, mdxDir, pagesDir, projectRoot })
+    let sha = gitBlobSha(content)
+    if (inlineImportMap.size > 0) {
+      // Combine page SHA with imported file SHAs so changes to imported
+      // files invalidate the cache.
+      const importShas = [...inlineImportMap.values()]
+        .map((e) => gitBlobSha(e.content))
+        .sort()
+        .join(':')
+      sha = gitBlobSha(sha + ':' + importShas)
+    }
+
+    // Cache hit — MDX unchanged and all imported files unchanged
     const cached = oldPages.get(slug)
     const cachedMdx = oldMdxContent[slug]
     if (cached && cached.gitSha === sha && cachedMdx) {
@@ -250,32 +255,23 @@ export async function syncNavigation({
       const cachedSources = oldPageImportSources[slug] ?? []
       pageImportSources[slug] = cachedSources
       pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
-      // Merge headings from imported .md/.mdx files into the page's heading
-      // list so the sidebar TOC includes them. Must reprocess the cached MDX
-      // to get fresh own-only headings (cached.headings may already contain
-      // merged imported headings from a previous sync).
-      if (cachedSources.length > 0) {
-        const reprocessedForHeadings = processMdx(cachedMdx, config.icons.library, pageSource)
-        if (!(reprocessedForHeadings instanceof Error)) {
-          const merged = buildMergedHeadings({
-            mdast: reprocessedForHeadings.mdast,
-            ownHeadings: reprocessedForHeadings.headings,
-            imports: pageImports[slug] ?? [],
-            projectRoot,
-            iconLibrary: config.icons.library,
-          })
-          if (merged) cached.headings = merged
-        }
-      }
       return cached
     }
 
-    // Cache miss — full processing
-    const processed = processMdx(content, config.icons.library, pageSource)
+    // Cache miss — full processing.
+    // inlineImportMap was already resolved above (for cache key computation).
+    const processMdxOptions: ProcessMdxOptions | undefined = inlineImportMap.size > 0
+      ? {
+        normalizeMdxOptions: {
+          prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]],
+        },
+      }
+      : undefined
+
+    const processed = processMdx(content, config.icons.library, pageSource, processMdxOptions)
     if (processed instanceof Error) return handleParseError(slug, processed)
     parsedCount++
 
-    const mdxDir = path.dirname(mdxPath)
     const resolvedImages = await resolveAndProcessImages({
       imageSrcs: processed.imageSrcs,
       mdxDir,
@@ -308,24 +304,13 @@ export async function syncNavigation({
       mdxContentErrors.add(slug)
     }
 
-    // Merge headings from imported .md/.mdx files into the page's heading
-    // list so the sidebar TOC includes them. We already have the mdast and
-    // resolved imports at this point, so no re-parsing needed.
-    const mergedHeadings = buildMergedHeadings({
-      mdast: processed.mdast,
-      ownHeadings: processed.headings,
-      imports: pageImports[slug] ?? [],
-      projectRoot,
-      iconLibrary: config.icons.library,
-    })
-
     return {
       slug,
       href: slugToHref(slug),
       title: processed.title,
       description: processed.description,
       gitSha: sha,
-      headings: mergedHeadings ?? processed.headings,
+      headings: processed.headings,
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
       frontmatter: processed.frontmatter,
@@ -396,34 +381,7 @@ export async function syncNavigation({
     }
   }
 
-  // 4d. Process imported .md/.mdx files through the same build-time pipeline
-  //     as regular pages (normalizeMdx + image resolution). This runs after
-  //     all pages are enriched so pageImports is fully populated.
-  const importedMdx = await processImportedMdxFiles({
-    pageImports,
-    config,
-    pagesDir,
-    publicDir,
-    projectRoot,
-    imageCache,
-    imageOutputDir,
-  })
-  const importedMdxContent = importedMdx.content
-
-  // 4e. Merge icon refs from imported .md/.mdx files into their importing
-  //     pages. Without this, icons used only in snippets (e.g. <Card icon="github" />)
-  //     would not have their SVGs resolved in the icon atlas.
-  for (const [slug, imports] of Object.entries(pageImports)) {
-    for (const { absPath, moduleKey } of imports) {
-      if (moduleKey.includes('?')) continue
-      const refs = importedMdx.iconRefs[absPath]
-      if (refs && refs.length > 0) {
-        pageIconRefs[slug] = [...(pageIconRefs[slug] ?? []), ...refs]
-      }
-    }
-  }
-
-  // 4f. Validate internal links — warn about links pointing to non-existent pages
+  // 4d. Validate internal links — warn about links pointing to non-existent pages
   if (logParseErrors) {
     validateInternalLinks({
       navigation,
@@ -443,132 +401,13 @@ export async function syncNavigation({
   })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedMdxContent, importedImageDepPaths: importedMdx.imageDepPaths, parsedCount, cachedCount }
-}
-
-/* ── Imported heading merge (inline during enrichment) ───────────────── */
-
-/**
- * Build a merged heading list that includes headings from imported .md/.mdx
- * files in correct document order. Called inline during enrichPageUncached
- * so headings are correct from the start — no post-processing pass needed.
- *
- * Walks mdast.children: for heading nodes, uses the page's own extracted
- * heading (preserving its slug, which may be an explicit ID). For JSX nodes
- * whose name matches an imported .md/.mdx file, reads and parses that file
- * to extract its headings and inserts them (also preserving their slugs).
- *
- * Returns the merged array, or undefined if no imported headings were found.
- */
-function buildMergedHeadings({
-  mdast,
-  ownHeadings,
-  imports,
-  iconLibrary,
-  projectRoot,
-}: {
-  mdast: Root
-  ownHeadings: NavHeading[]
-  imports: ResolvedImport[]
-  iconLibrary: import('./collect-icons.ts').IconLibrary
-  projectRoot: string
-}): NavHeading[] | undefined {
-  if (imports.length === 0) return undefined
-
-  // Build a map from raw import source (stripped of query) to resolved import.
-  // Only include .md/.mdx files — .tsx imports can't contribute headings.
-  const sourceToImport = new Map<string, ResolvedImport>()
-  for (const ri of imports) {
-    if (ri.moduleKey.includes('?')) continue
-    if (!/\.mdx?$/.test(ri.absPath)) continue
-    const cleanSource = ri.source.replace(/\?.*$/, '')
-    sourceToImport.set(cleanSource, ri)
-  }
-  if (sourceToImport.size === 0) return undefined
-
-  // Extract import bindings from the mdast (local JSX name → source)
-  // and match to resolved imports by exact source string.
-  const rawImports = extractImports(mdast)
-  const isLocalSource = (src: string) => src.startsWith('/') || src.startsWith('./') || src.startsWith('../')
-  const bindingToAbsPath = new Map<string, string>()
-  for (const imp of rawImports) {
-    if (!isLocalSource(imp.source)) continue
-    const cleanSource = imp.source.replace(/\?.*$/, '')
-    const resolved = sourceToImport.get(cleanSource)
-    if (!resolved) continue
-    for (const spec of imp.specifiers) {
-      bindingToAbsPath.set(spec.local, resolved.absPath)
-    }
-  }
-  if (bindingToAbsPath.size === 0) return undefined
-
-  // Extract headings from each imported .md/.mdx file (cheap: just parse + walk)
-  const importedHeadingsCache = new Map<string, NavHeading[]>()
-  function getImportedHeadings(absPath: string): NavHeading[] {
-    const cached = importedHeadingsCache.get(absPath)
-    if (cached) return cached
-    if (!fs.existsSync(absPath)) return []
-    try {
-      const content = fs.readFileSync(absPath, 'utf-8')
-      const processed = processMdx(content, iconLibrary, './' + path.relative(projectRoot, absPath).replace(/\\/g, '/'))
-      if (processed instanceof Error) return []
-      importedHeadingsCache.set(absPath, processed.headings)
-      return processed.headings
-    } catch {
-      return []
-    }
-  }
-
-  // Walk mdast.children in document order, building the merged heading list.
-  // Preserve original slug values (including explicit IDs like {#setup})
-  // instead of re-slugging, so TOC links match the rendered DOM anchors.
-  const merged: NavHeading[] = []
-  const insertedPaths = new Set<string>()
-  let ownIdx = 0
-  let addedImported = false
-
-  for (const node of mdast.children) {
-    if (node.type === 'heading' || isJsxHeading(node)) {
-      if (ownIdx < ownHeadings.length) {
-        merged.push(ownHeadings[ownIdx]!)
-        ownIdx++
-      }
-      continue
-    }
-    if (isJsxNode(node)) {
-      const absPath = bindingToAbsPath.get(node.name ?? '')
-      if (absPath && !insertedPaths.has(absPath)) {
-        insertedPaths.add(absPath)
-        for (const h of getImportedHeadings(absPath)) {
-          merged.push(h)
-          addedImported = true
-        }
-      }
-    }
-  }
-  // Append any remaining own headings
-  while (ownIdx < ownHeadings.length) {
-    merged.push(ownHeadings[ownIdx]!)
-    ownIdx++
-  }
-  return addedImported ? merged : undefined
-}
-
-function isJsxNode(node: import('mdast').RootContent): node is import('mdast').RootContent & { name: string | null } {
-  return node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement'
-}
-
-function isJsxHeading(node: import('mdast').RootContent): boolean {
-  if (!isJsxNode(node)) return false
-  const name = node.name
-  return name === 'Heading' || (typeof name === 'string' && /^h[1-6]$/.test(name))
+  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, parsedCount, cachedCount }
 }
 
 /* ── Image processing helper ─────────────────────────────────────────── */
 
 /**
- * Resolve and process all images in an MDX file. Shared by page enrichment
- * and imported-MDX processing so both go through the exact same pipeline.
+ * Resolve and process all images in an MDX file.
  *
  * For each image src: resolves to a filesystem path, processes with sharp
  * (dimensions + placeholder), copies to public if needed, and returns a
@@ -620,188 +459,6 @@ async function resolveAndProcessImages({
     }
   }
   return resolvedImages
-}
-
-/* ── Imported MDX processing ─────────────────────────────────────────── */
-
-/**
- * Process imported .md/.mdx files through the same build-time pipeline as
- * regular pages. Each imported file gets normalizeMdx (remark plugins) +
- * image resolution (dimensions, placeholders, copy to public).
- *
- * No content caching: imported snippets are typically few and cheap to
- * process. Caching by file SHA alone would miss image dependency changes
- * (e.g. updating diagram.svg without editing the .md that references it).
- *
- * Recursive: if an imported .mdx file itself imports components or other
- * .md/.mdx files, those nested imports are discovered and added to
- * `pageImports` so they appear in the virtual module map. Uses a queue
- * with a visited set to avoid cycles.
- *
- * Returns processed MDX content keyed by absPath, icon refs per file,
- * and the set of local image file paths used (for HMR watching).
- */
-async function processImportedMdxFiles({
-  pageImports,
-  config,
-  pagesDir,
-  publicDir,
-  projectRoot,
-  imageCache,
-  imageOutputDir,
-}: {
-  pageImports: Record<string, ResolvedImport[]>
-  config: HolocronConfig
-  pagesDir: string
-  publicDir: string
-  projectRoot: string
-  imageCache: ReturnType<typeof loadImageCache>
-  imageOutputDir: string
-}): Promise<{
-  content: Record<string, string>
-  iconRefs: Record<string, IconRef[]>
-  /** Absolute paths of local image files used by imported MDX, for HMR watching. */
-  imageDepPaths: string[]
-}> {
-  // Seed the queue with all .md/.mdx imports from pages
-  const queue: string[] = []
-  const visited = new Set<string>()
-  for (const imports of Object.values(pageImports)) {
-    for (const { moduleKey, absPath } of imports) {
-      if (moduleKey.includes('?')) continue
-      if (/\.mdx?$/.test(absPath) && !visited.has(absPath)) {
-        visited.add(absPath)
-        queue.push(absPath)
-      }
-    }
-  }
-
-  const content: Record<string, string> = {}
-  const iconRefs: Record<string, IconRef[]> = {}
-  const imageDepPaths: string[] = []
-
-  while (queue.length > 0) {
-    const absPath = queue.shift()!
-    if (!fs.existsSync(absPath)) continue
-
-    const fileContent = fs.readFileSync(absPath, 'utf-8')
-    const source = './' + path.relative(projectRoot, absPath).replace(/\\/g, '/')
-    const processed = processMdx(fileContent, config.icons.library, source)
-    if (processed instanceof Error) {
-      logger.warn(formatHolocronWarning(
-        `failed to process imported MDX ${source}: ${processed.reason}`,
-      ))
-      continue
-    }
-
-    // Discover nested imports from this imported file and add them to
-    // the global pageImports so they appear in virtual:holocron-modules.
-    if (processed.importSources.length > 0) {
-      const nestedImports = resolveImportSourcesForFile({
-        importSources: processed.importSources,
-        importerAbsPath: absPath,
-        pagesDir,
-        projectRoot,
-      })
-      for (const nested of nestedImports) {
-        // Add to a synthetic pageImports entry so vite-plugin.ts picks them up
-        const syntheticKey = `__imported:${absPath}`
-        if (!pageImports[syntheticKey]) pageImports[syntheticKey] = []
-        if (!pageImports[syntheticKey].some((i) => i.moduleKey === nested.moduleKey)) {
-          pageImports[syntheticKey].push(nested)
-        }
-        // If the nested import is itself .md/.mdx, queue it for processing
-        if (!nested.moduleKey.includes('?') && /\.mdx?$/.test(nested.absPath) && !visited.has(nested.absPath)) {
-          visited.add(nested.absPath)
-          queue.push(nested.absPath)
-        }
-      }
-    }
-
-    const mdxDir = path.dirname(absPath)
-    const resolvedImages = await resolveAndProcessImages({
-      imageSrcs: processed.imageSrcs,
-      mdxDir,
-      publicDir,
-      projectRoot,
-      imageCache,
-      imageOutputDir,
-    })
-
-    // Collect local image file paths for HMR watching
-    for (const src of processed.imageSrcs) {
-      if (src.startsWith('http://') || src.startsWith('https://')) continue
-      const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
-      if (resolved) imageDepPaths.push(resolved.filePath)
-    }
-
-    const finalMdx = resolvedImages.size > 0
-      ? rewriteMdxImages(processed.mdast, resolvedImages)
-      : processed.normalizedContent
-
-    content[absPath] = finalMdx
-    if (processed.iconRefs.length > 0) {
-      iconRefs[absPath] = processed.iconRefs
-    }
-  }
-
-  return { content, iconRefs, imageDepPaths }
-}
-
-/**
- * Resolve import sources relative to an arbitrary file (not a page slug).
- * Used for nested imports inside imported .md/.mdx files.
- */
-function resolveImportSourcesForFile({
-  importSources,
-  importerAbsPath,
-  pagesDir,
-  projectRoot,
-}: {
-  importSources: string[]
-  importerAbsPath: string
-  pagesDir: string
-  projectRoot: string
-}): ResolvedImport[] {
-  const result: ResolvedImport[] = []
-  const seen = new Set<string>()
-  const importerDir = path.dirname(importerAbsPath)
-
-  for (const source of importSources) {
-    const queryIdx = source.indexOf('?')
-    const querySuffix = queryIdx >= 0 ? source.slice(queryIdx) : ''
-    const cleanSource = queryIdx >= 0 ? source.slice(0, queryIdx) : source
-
-    if (cleanSource.startsWith('/')) {
-      const normalized = '.' + cleanSource
-      const resolved = tryResolveImport(path.join(pagesDir, cleanSource.slice(1)))
-        ?? tryResolveImport(path.join(projectRoot, cleanSource.slice(1)))
-      if (resolved) {
-        const ext = path.extname(resolved)
-        const moduleKey = (path.extname(cleanSource) ? normalized : normalized + ext) + querySuffix
-        if (!seen.has(moduleKey)) {
-          seen.add(moduleKey)
-          result.push({ source, moduleKey, absPath: resolved })
-        }
-      }
-      continue
-    }
-
-    // Relative import: resolve from the importer file's directory
-    const resolved = tryResolveImport(path.resolve(importerDir, cleanSource))
-    if (resolved) {
-      const relativeToRoot = path.relative(projectRoot, resolved).replace(/\\/g, '/')
-      const moduleKey = (relativeToRoot.startsWith('../') || path.isAbsolute(relativeToRoot)
-        ? relativeToRoot
-        : './' + relativeToRoot) + querySuffix
-      if (!seen.has(moduleKey)) {
-        seen.add(moduleKey)
-        result.push({ source, moduleKey, absPath: resolved })
-      }
-    }
-  }
-
-  return result
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -1073,6 +730,124 @@ function resolveInternalHref(href: string, slugDir: string): string | undefined 
   }
 
   return resolved || '/'
+}
+
+/* ── Inline import resolution ────────────────────────────────────────── */
+
+const MD_EXTENSIONS = new Set(['.md', '.mdx'])
+
+/**
+ * Quick pre-parse of MDX content to find .md/.mdx imports that should be
+ * inlined by remarkInlineImports. Returns a map from raw import source →
+ * InlineImportEntry with the file content and relative directory.
+ *
+ * This runs BEFORE processMdx so the remark plugin can expand the content
+ * before other remark plugins (headings, callouts, code groups, etc.)
+ * process the combined tree.
+ */
+function resolveInlineImports({
+  content,
+  mdxDir,
+  pagesDir,
+  projectRoot,
+}: {
+  content: string
+  mdxDir: string
+  pagesDir: string
+  projectRoot: string
+}): Map<string, InlineImportEntry> {
+  const result = new Map<string, InlineImportEntry>()
+
+  // Quick parse to extract imports — only need the mdxjsEsm nodes
+  let mdast: Root
+  try {
+    const processor = quickMdxParser()
+    mdast = processor.parse(content)
+    mdast = processor.runSync(mdast) as Root
+  } catch {
+    // If parsing fails, processMdx will catch the error properly
+    return result
+  }
+
+  const imports = extractImports(mdast)
+
+  for (const imp of imports) {
+    // Strip query strings (?raw etc.) — those are not .md/.mdx inlining candidates
+    if (imp.source.includes('?')) continue
+
+    // Only handle default imports (import X from './file.md')
+    const hasDefault = imp.specifiers.some((s) => s.type === 'default')
+    if (!hasDefault) continue
+
+    // Resolve the import source to an absolute path
+    const absPath = resolveImportSourceToPath(imp.source, mdxDir, pagesDir, projectRoot)
+    if (!absPath) continue
+
+    // Only inline .md/.mdx files
+    const ext = path.extname(absPath)
+    if (!MD_EXTENSIONS.has(ext)) continue
+
+    // Read the file content
+    let importContent: string
+    try {
+      importContent = fs.readFileSync(absPath, 'utf-8')
+    } catch {
+      continue
+    }
+
+    // Compute the relative directory from the parent file to the imported file.
+    // This is used to rewrite relative URLs in the imported content.
+    const importDir = path.dirname(absPath)
+    const relativeDir = path.relative(mdxDir, importDir).replace(/\\/g, '/')
+    // Normalize to posix style with trailing /
+    const relativeDirNorm = relativeDir === ''
+      ? './'
+      : (relativeDir.startsWith('.') ? relativeDir : './' + relativeDir) + '/'
+
+    result.set(imp.source, {
+      content: importContent,
+      absPath,
+      relativeDir: relativeDirNorm,
+    })
+  }
+
+  return result
+}
+
+/**
+ * Resolve an import source string to an absolute filesystem path.
+ * Handles absolute (/snippets/foo) and relative (./foo, ../foo) paths.
+ */
+function resolveImportSourceToPath(
+  source: string,
+  mdxDir: string,
+  pagesDir: string,
+  projectRoot: string,
+): string | undefined {
+  if (source.startsWith('/')) {
+    // Absolute import — try pagesDir first, then projectRoot
+    return tryResolveImport(path.join(pagesDir, source.slice(1)))
+      ?? tryResolveImport(path.join(projectRoot, source.slice(1)))
+  }
+
+  if (source.startsWith('./') || source.startsWith('../')) {
+    // Relative import — resolve from MDX file's directory
+    return tryResolveImport(path.resolve(mdxDir, source))
+  }
+
+  return undefined
+}
+
+import remarkMdx from 'remark-mdx'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
+import { remark } from 'remark'
+
+function quickMdxParser() {
+  return remark()
+    .use(remarkMdx)
+    .use(remarkFrontmatter, ['yaml'])
+    .use(remarkGfm)
 }
 
 /* ── Cache I/O ──────────────────────────────────────────────────────── */

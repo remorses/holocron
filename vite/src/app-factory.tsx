@@ -165,9 +165,6 @@ type HolocronProviders = {
   getMdxSlugs(): Promise<string[]>
   getMdxSource(slug: string): Promise<string | undefined>
   getPageIconRefs(slug: string): Promise<IconRef[]>
-  /** Processed MDX content of imported .md/.mdx files (snippets, shared fragments).
-   *  Keys are relative paths from project root (e.g. './snippets/note.md'). */
-  getImportedMdxSources?(): Record<string, string>
   /** Lazy glob of importable files (snippets, components, colocated pages).
    *  Used by resolveModules() to resolve MDX import statements at render time. */
   getModules?(): Record<string, () => Promise<Record<string, any>>>
@@ -187,17 +184,6 @@ function withBaseRoute(base: string, route: string): string {
   if (!normalizedBase) return route
   if (route === '/') return normalizedBase
   return `${normalizedBase}${route}`
-}
-
-/** Normalize an imported MDX relative path (from getImportedMdxSources) to a
- *  clean zip-safe path. Files inside the project get their `./` stripped.
- *  Files outside the project (starting with `../`) get `../` segments collapsed
- *  into an `_imports/` prefix so they stay inside the `/docs/` sandbox in the
- *  AI chat filesystem instead of escaping via path traversal. */
-function importedMdxRelPathToZipPath(relPath: string): string {
-  if (relPath.startsWith('./')) return relPath.slice(2)
-  if (relPath.startsWith('../')) return '_imports/' + relPath.replaceAll('../', '')
-  return relPath
 }
 
 function isLocalhostUrl(requestUrl: string): boolean {
@@ -884,17 +870,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         files[slug + '.md'] = strToU8(buildMarkdownSource(mdx))
       }
 
-      // Include imported .md/.mdx files (snippets, shared fragments) so agents
-      // can grep the full content including reusable markdown pieces.
-      const importedSources = providers.getImportedMdxSources?.() ?? {}
-      for (const [relPath, content] of Object.entries(importedSources)) {
-        const zipPath = importedMdxRelPathToZipPath(relPath)
-        // Skip if a page slug already occupies this path (pages take precedence)
-        if (!files[zipPath]) {
-          files[zipPath] = strToU8(content)
-        }
-      }
-
       const zipped = zipSync(files)
       const zipBody = new Uint8Array(zipped.byteLength)
       zipBody.set(zipped)
@@ -1144,16 +1119,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
                     return mdx === undefined ? undefined : [`/docs/${slug}.mdx`, buildMarkdownSource(mdx)] as const
                   }))).filter((page) => page !== undefined),
                 ),
-                // Imported .md/.mdx files (snippets, shared fragments outside pagesDir)
-                // so the AI agent can grep/read them the same way it does in production
-                // where they're included in docs.zip.
-                ...Object.fromEntries(
-                  Object.entries(providers.getImportedMdxSources?.() ?? {}).map(([relPath, content]) => {
-                    const zipPath = importedMdxRelPathToZipPath(relPath)
-                    const slug = zipPath.replace(/\.mdx?$/, '')
-                    return [`/docs/${slug}.mdx`, content]
-                  }),
-                ),
+
               },
             }
           : { docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString() }
