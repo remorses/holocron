@@ -113,15 +113,11 @@ export function P({ children, className }: { children: React.ReactNode; classNam
   )
 }
 
+// Must NOT use `typeof window` branching — that causes hydration mismatches
+// because server and client disagree on the result for relative paths.
+// A link is external only if it has an explicit protocol or protocol-relative prefix.
 function isExternalHref(href: string): boolean {
-  if (!href || href.startsWith('/') || href.startsWith('#') || href.startsWith('.')) return false
-  try {
-    const url = new URL(href, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
-    if (typeof window !== 'undefined') return url.origin !== window.location.origin
-    return url.protocol === 'http:' || url.protocol === 'https:'
-  } catch {
-    return false
-  }
+  return /^(https?:)?\/\//.test(href)
 }
 
 export function A({ href, children }: { href: string; children: React.ReactNode }) {

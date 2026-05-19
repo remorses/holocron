@@ -56,7 +56,7 @@ export function Badge({
     const content = <>{leading}{children}{trailing || (iconColor && icon ? <Icon icon={String(icon)} iconType={iconType} size={iconSize} color={iconColor} /> : null)}</>
     if (href && !disabled) {
       const external = isExternalHref(href)
-      return <a className={badgeClass} href={href} onClick={onClick} target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined}>{content}</a>
+      return <a className={badgeClass} href={href} onClick={onClick} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>{content}</a>
     }
     if (onClick && !disabled) {
       return <button type='button' className={badgeClass} onClick={onClick}>{content}</button>

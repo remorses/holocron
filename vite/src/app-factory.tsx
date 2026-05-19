@@ -1074,13 +1074,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         First grep for likely terms from the user's question to find relevant sections, then cat the best matching files.
         Files are at /docs/<slug>.mdx. Use grep -rn "term" /docs/ to search, cat /docs/slug.mdx to read.
 
-        When linking to another docs page, render a normal markdown link.
+        When linking to another docs page, render a normal markdown link with an absolute path starting with /.
         Convert file paths to page paths by removing the /docs/ prefix and removing the .mdx extension.
-        Also remove a trailing /index segment. Do not include the docs base path or origin; relative root paths are rewritten by the docs app.
+        Also remove a trailing /index segment.
+        NEVER include the site origin, base URL, or domain in links. NEVER use bare relative paths like "docs/foo" without a leading slash. Always use root-relative paths starting with /.
         Examples:
         - /docs/index.mdx with title "Home" -> [Home](/)
         - /docs/quickstart.mdx with title "Quickstart" -> [Quickstart](/quickstart)
         - /docs/guide/index.mdx with title "Guide" -> [Guide](/guide)
+        - /docs/api/overview.mdx with title "API" -> [API](/api/overview)
 
         Answer concisely based on the documentation. Include code examples when relevant.
       `

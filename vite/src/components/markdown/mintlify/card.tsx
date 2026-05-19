@@ -62,7 +62,7 @@ export function Card({
     const Component = as
     return <Component>{content}</Component>
   }
-  if (external) return <a href={href} target='_blank' rel='noreferrer' className='no-underline'>{content}</a>
+  if (external) return <a href={href} target='_blank' rel='noopener noreferrer' className='no-underline'>{content}</a>
   return <Link href={href} className='no-underline'>{content}</Link>
 }
 
