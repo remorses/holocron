@@ -12,9 +12,10 @@ You can make the layout span the full viewport by overriding a single CSS variab
 
 ## Override `--grid-max-width`
 
-In your custom CSS file (see [Custom CSS](/customize/custom-css)):
+In your `style.css` file (see [Custom CSS](/customize/custom-css)):
 
 ```css
+/* style.css */
 :root {
   --grid-max-width: 2600px;
 }
@@ -62,6 +63,7 @@ This means increasing `--grid-max-width` does not make the content column infini
 If you want the grid to always fill the viewport regardless of screen size, use `100vw`:
 
 ```css
+/* style.css */
 :root {
   --grid-max-width: 100vw;
 }

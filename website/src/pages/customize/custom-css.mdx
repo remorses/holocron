@@ -6,51 +6,28 @@ icon: paintbrush
 
 # Custom CSS
 
-Holocron includes Tailwind CSS automatically. You can add your own styles on top, but there is one important rule.
-
-## Do not import Tailwind again
-
-Holocron already adds `@import 'tailwindcss'` internally. If your CSS also imports it, you get duplicate style layers that break layout and cascade order.
-
-Instead, use **`@reference`**:
-
-```css
-/* src/globals.css */
-@reference "tailwindcss";
-
-:root {
-  --primary: #e11d48;
-  --background: #fafafa;
-
-  @variant dark {
-    --background: #0a0a0a;
-    --primary: #fb7185;
-  }
-}
-```
-
-`@reference` gives you access to Tailwind's theme variables, `@apply`, and `@variant` without emitting duplicate styles.
+Holocron includes Tailwind CSS automatically. You can add your own styles on top.
 
 ## How to load your CSS
 
 ### Default Holocron site
 
-Create `global.css` or `style.css` at your project root. Holocron auto-detects the first matching file and imports it after its own styles.
+Create `style.css` at your project root. Holocron auto-detects the first matching file and imports it after its own styles.
 
 ```diagram
 my-docs/
 ├── docs.json
-├── global.css
+├── style.css
 └── index.mdx
 ```
 
 ### With custom entry and another filename
 
-If you use a [custom entry](/custom-entry) and your CSS file is not root `global.css` or `style.css`, import it in your server file:
+If you use a [custom entry](/custom-entry) and your CSS file has a different name, import it in your server file:
 
 ```tsx
 // src/server.tsx
-import './globals.css'
+import './style.css'
 ```
 
 ## Dark mode overrides
@@ -58,6 +35,7 @@ import './globals.css'
 Use `@variant dark` inside your CSS instead of Tailwind's `dark:` utility classes:
 
 ```css
+/* style.css */
 :root {
   --card: #ffffff;
   --card-foreground: #0a0a0a;
@@ -76,11 +54,33 @@ This keeps dark mode values colocated with their light mode counterparts in CSS 
 You can also change variables by breakpoint:
 
 ```css
+/* style.css */
 :root {
   --bleed: 16px;
 
   @variant lg {
     --bleed: 32px;
+  }
+}
+```
+
+## Do not import Tailwind again
+
+Holocron already adds `@import 'tailwindcss'` internally. If your CSS also imports it, you get duplicate style layers that break layout and cascade order.
+
+Instead, use **`@reference`** to access Tailwind's theme variables, `@apply`, and `@variant` without emitting duplicate styles:
+
+```css
+/* style.css */
+@reference "tailwindcss";
+
+:root {
+  --primary: #e11d48;
+  --background: #fafafa;
+
+  @variant dark {
+    --background: #0a0a0a;
+    --primary: #fb7185;
   }
 }
 ```
