@@ -19,12 +19,23 @@ test.describe("raw markdown via .md path suffix", () => {
     expect(body).toContain("## Configuration");
   });
 
-  test("GET /getting-started.mdx does NOT serve raw markdown (Vite intercepts .mdx)", async ({
+  test("GET /getting-started.mdx returns raw markdown (same as .md)", async ({
     request,
   }) => {
     const res = await request.get("/getting-started.mdx");
-    const contentType = res.headers()["content-type"] || "";
-    expect(contentType).not.toContain("text/markdown");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/markdown");
+    const body = await res.text();
+    expect(body).toContain("## Installation");
+    expect(body).toContain("## Configuration");
+  });
+
+  test("GET /index.mdx returns raw markdown", async ({ request }) => {
+    const res = await request.get("/index.mdx");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/markdown");
+    const body = await res.text();
+    expect(body).toContain("## Overview");
   });
 
   test("GET /nonexistent.md returns 404", async ({ request }) => {
@@ -131,6 +142,18 @@ test.describe("agent detection redirects to .md URL", () => {
     expect(res.status()).toBe(200);
     expect(res.url()).toContain("/getting-started.md");
     expect(res.headers()["content-type"]).toContain("text/markdown");
+  });
+
+  test("agent requesting .mdx directly is NOT redirected (served inline)", async ({
+    request,
+  }) => {
+    const res = await request.get("/getting-started.mdx", {
+      headers: { "user-agent": "claude-code/1.0" },
+    });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/markdown");
+    // Should NOT have been redirected to .md — served directly at .mdx
+    expect(res.url()).toContain("/getting-started.mdx");
   });
 
   test("agent on nonexistent page falls through to 404", async ({
