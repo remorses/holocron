@@ -1,5 +1,11 @@
 # @holocron.so/vite
 
+## 0.10.1
+
+1. **Fixed custom entry CSS under Cloudflare dev** — custom-entry apps now correctly load Holocron's global stylesheet when running under `wrangler dev`. The Spiceflow RSC entry now uses the real custom entry file instead of routing through a virtual module, so vite-rsc can walk the import graph and collect all CSS dependencies.
+
+2. **Removed manual safe-mdx aliases** — safe-mdx 1.11.1 ships a package-level `react-server` export map fallback, so Holocron no longer needs to carry private path aliases for `safe-mdx`, `safe-mdx/parse`, and `safe-mdx/client`.
+
 ## 0.10.0
 
 1. **Build-time processing for imported `.md`/`.mdx` files** — imported markdown files (e.g. `import Guide from "./snippets/guide.md"`) now go through the same build pipeline as regular pages: all remark plugins (GitHub callouts, code groups, etc.), image resolution (dimensions, placeholders, copy to public), and normalization. Previously these were loaded as raw strings and parsed at render time without any processing.
