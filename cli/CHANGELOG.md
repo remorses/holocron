@@ -1,3 +1,7 @@
+## 0.12.2
+
+1. **Fixed `$schema` URL in scaffolded projects** — `holocron create` now writes `"$schema": "https://holocron.so/docs.json"` instead of the old unpkg URL that depended on npm publish timing and internal file paths.
+
 ## 0.12.1
 
 1. **Upgraded Spiceflow to 1.25.3-rsc.0** — aligns with the latest RSC build used by `@holocron.so/vite`, avoiding duplicate framework versions at runtime.

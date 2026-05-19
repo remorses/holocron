@@ -1,5 +1,29 @@
 # @holocron.so/vite
 
+## 0.10.0
+
+1. **Build-time processing for imported `.md`/`.mdx` files** — imported markdown files (e.g. `import Guide from "./snippets/guide.md"`) now go through the same build pipeline as regular pages: all remark plugins (GitHub callouts, code groups, etc.), image resolution (dimensions, placeholders, copy to public), and normalization. Previously these were loaded as raw strings and parsed at render time without any processing.
+
+2. **Imported MDX headings appear in sidebar TOC** — headings from imported `.md`/`.mdx` files now show up in the left sidebar table of contents in correct document order. Previously imported components were opaque JSX nodes, so their headings were invisible to the TOC.
+
+3. **Broken internal link warnings during sync** — Holocron now walks the mdast tree during sync and resolves every internal link against the page index and redirect sources. Links pointing to non-existent pages log a warning with source location. Handles absolute (`/foo`), relative (`./foo`, `../bar`), hash fragments, and query strings.
+
+4. **Serve raw markdown at `.mdx` URLs** — pages were already served as raw markdown at `/<slug>.md` for AI agents. Now `.mdx` URLs work identically, returning the same content with `text/markdown` content-type.
+
+5. **Imported files included in `/docs.zip`** — the `/docs.zip` endpoint now includes imported markdown files (snippets, shared fragments, files outside pagesDir) alongside navigation pages.
+
+6. **Global CSS loads for custom entries** — custom-entry apps that mount Holocron through a user-owned Spiceflow entry now correctly load Holocron's global stylesheet. Previously the CSS dependency could be missed under Cloudflare dev when vite-rsc collected stylesheets only from the virtual module.
+
+7. **Spiceflow moved to regular dependencies** — users no longer need to install spiceflow separately. It ships as a regular dependency, so `pnpm install` resolves it automatically.
+
+8. **Fixed copy-as-markdown button on index pages** — the "Copy as Markdown" button was fetching `/.md` (404) on the root page instead of `/index.md`. Now correctly appends `index.md` for root and trailing-slash paths.
+
+9. **Fixed link hydration mismatch** — `isExternalHref` used `new URL()` origin comparison that produced different results on server vs client for relative paths like `docs/openapi.md#section`. Replaced with a simple regex that's consistent across environments.
+
+10. **Fixed empty sidebar group labels** — unnamed sidebar groups no longer render an empty `<div>` wrapper.
+
+11. **Fixed config HMR** — editing `docs.json` colors and styles now hot-reloads correctly without stale CSS artifacts.
+
 ## 0.9.0
 
 1. **New prev/next page navigation in the right sidebar** — every page now shows chevron arrows linking to the previous and next pages in navigation order, plus a "Copy as Markdown" button that copies the current page content to clipboard. Tooltips on the arrows show the target page title via portal-based rendering to avoid clipping.
