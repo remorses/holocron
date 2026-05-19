@@ -253,7 +253,12 @@ export function PageNavRow() {
   const handleCopyMd = useCallback(async () => {
     if (copied) return
     try {
-      const url = window.location.pathname + '.md'
+      // For `/` or paths ending with `/`, append `index.md` instead of `.md`
+      // so the request hits the correct server route (e.g. `/index.md`).
+      const pathname = window.location.pathname
+      const url = pathname === '/' || pathname.endsWith('/')
+        ? pathname + 'index.md'
+        : pathname + '.md'
       const res = await fetch(url)
       if (!res.ok) throw new Error(`Failed to fetch ${url}`)
       const text = await res.text()
