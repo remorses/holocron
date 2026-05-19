@@ -1,0 +1,70 @@
+---
+title: Full-Width Layout
+description: Stretch the page grid to the edges of the screen.
+icon: arrows-left-right-to-line
+---
+
+# Full-Width Layout
+
+By default Holocron caps the page grid at **1200px**. The left sidebar, content column, and right sidebar all live inside that constraint.
+
+You can make the layout span the full viewport by overriding a single CSS variable.
+
+## Override `--grid-max-width`
+
+In your custom CSS file (see [Custom CSS](/customize/custom-css)):
+
+```css
+:root {
+  --grid-max-width: 2600px;
+}
+```
+
+This pushes the left and right sidebars toward the screen edges. The content column grows to fill the extra space, up to its **720px** cap. Any remaining width is distributed as gap between the three columns.
+
+```
+Default (1200px max)
+┌────────────────────────────────────────────────────────────────────────────┐
+│              ┌───────┐    ┌──────────────┐    ┌───────┐                    │
+│              │  nav  │    │   content    │    │ aside │                    │
+│              └───────┘    └──────────────┘    └───────┘                    │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Full-width (2600px max)
+┌──────────────────────────────────────────────────────────────────────────────────────────┐
+│ ┌───────┐                        ┌──────────────┐                        ┌───────┐       │
+│ │  nav  │                        │   content    │                        │ aside │       │
+│ └───────┘                        └──────────────┘                        └───────┘       │
+└──────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+## How the grid works
+
+Holocron's page grid is controlled by four CSS variables:
+
+| Variable | Default | Description |
+|---|---|---|
+| `--grid-max-width` | `1200px` | Overall page cap |
+| `--grid-nav-width` | `230px` | Left sidebar (table of contents) |
+| `--grid-sidebar-width` | `230px` | Right sidebar (aside content) |
+| `--grid-gap` | `60px` | Gap between columns |
+
+The **content column width** is derived automatically:
+
+```
+content = min(720px, max-width - nav - sidebar - 2 × gap)
+```
+
+This means increasing `--grid-max-width` does not make the content column infinitely wide. It grows until it hits the 720px cap, then the extra space becomes gap.
+
+## True edge-to-edge
+
+If you want the grid to always fill the viewport regardless of screen size, use `100vw`:
+
+```css
+:root {
+  --grid-max-width: 100vw;
+}
+```
+
+This removes the max-width constraint entirely. The grid stretches on every screen.
