@@ -63,7 +63,7 @@
   color: var(--foreground);
   margin: 0;
   padding: 0;
-  scroll-margin-top: var(--header-height);
+  scroll-margin-top: var(--sticky-top);
 }
 
 /* Headings carry NO vertical padding — all vertical rhythm comes from
