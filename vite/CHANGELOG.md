@@ -1,10 +1,12 @@
 # @holocron.so/vite
 
-## 0.10.1
+## 0.10.2
 
 1. **Fixed custom entry CSS under Cloudflare dev** — custom-entry apps now correctly load Holocron's global stylesheet when running under `wrangler dev`. The Spiceflow RSC entry now uses the real custom entry file instead of routing through a virtual module, so vite-rsc can walk the import graph and collect all CSS dependencies.
 
 2. **Removed manual safe-mdx aliases** — safe-mdx 1.11.1 ships a package-level `react-server` export map fallback, so Holocron no longer needs to carry private path aliases for `safe-mdx`, `safe-mdx/parse`, and `safe-mdx/client`.
+
+3. **Fixed broken 0.10.1 publish** — 0.10.1 was published with npm instead of pnpm, leaving `workspace:^` references unresolved in the published package.json.
 
 ## 0.10.0
 
