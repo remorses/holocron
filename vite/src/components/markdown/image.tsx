@@ -329,7 +329,7 @@ export function ChartPlaceholder({ height = 200, label }: { height?: number; lab
               color: '#3b82f6',
               fontFamily: 'var(--font-code)',
               fontWeight: 'var(--weight-prose)',
-              fontSize: 'var(--type-table-size)',
+              fontSize: 'var(--type-code-size)',
             }}
           >
             {label}

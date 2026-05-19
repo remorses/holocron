@@ -102,8 +102,8 @@
   --type-heading-2-size: 16px;
   --type-heading-3-size: 16px;
   --type-small-size: 13px;
-  --type-code-size: 12px;
-  --type-table-size: 11px;
+  --type-code-size: 13px;
+
 
   /* Bleed: mobile-first (0), enabled at lg where grid has room.
      Code blocks (.bleed class) and images (<Bleed> wrapper) extend by
