@@ -69,6 +69,13 @@ test.describe('MDX imports', () => {
     expect(html).toContain('Delightful docs. Mintlify drop in replacement as a Vite plugin')
   })
 
+  test('renders imported .md from outside pagesDir via ../', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain('This snippet lives outside the pagesDir boundary')
+  })
+
   test('renders named import from /components/', async ({ request }) => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)
@@ -143,6 +150,38 @@ test.describe.serial('imported .md HMR @dev', () => {
         const updated = originalContent + `\nHMR injected imported markdown paragraph ${Date.now()}.\n`
         fs.writeFileSync(mdFile, updated)
         return await page.getByText('HMR injected imported markdown').isVisible()
+      }, { timeout: 15_000 })
+      .toBe(true)
+  })
+})
+
+test.describe.serial('imported .md outside pagesDir HMR @dev', () => {
+  // This file lives outside the fixture root (pagesDir), imported via ../
+  const outsideFile = path.resolve(fixtureRoot, '../outside-pagesdir-snippet.md')
+  let originalContent: string
+
+  test.beforeEach(() => {
+    originalContent = fs.readFileSync(outsideFile, 'utf-8')
+  })
+
+  test.afterEach(() => {
+    fs.writeFileSync(outsideFile, originalContent)
+  })
+
+  test('editing an imported .md outside pagesDir triggers HMR', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: 'Import Test Page' })).toBeVisible({ timeout: 10_000 })
+
+    // Verify the outside snippet is rendered
+    await expect(page.getByText('This snippet lives outside the pagesDir boundary')).toBeVisible()
+    await expect(page.getByText('HMR outside pagesDir update')).not.toBeVisible()
+
+    // Mutate the file outside pagesDir — watcher should pick it up
+    await expect
+      .poll(async () => {
+        const updated = originalContent + `\nHMR outside pagesDir update ${Date.now()}.\n`
+        fs.writeFileSync(outsideFile, updated)
+        return await page.getByText('HMR outside pagesDir update').isVisible()
       }, { timeout: 15_000 })
       .toBe(true)
   })
