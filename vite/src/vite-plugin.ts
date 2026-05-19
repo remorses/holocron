@@ -551,9 +551,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           if (/\.mdx?$/.test(absPath)) {
             const baseUrl = './' + path.relative(root, path.dirname(absPath)).replace(/\\/g, '/') + '/'
             const source = './' + path.relative(root, absPath).replace(/\\/g, '/')
+            // Use pre-processed content from the build-time pipeline when
+            // available (remark plugins, image dimensions/placeholders applied).
+            // Falls back to ?raw import for files that failed processing.
+            const processedContent = syncResult.importedMdxContent[absPath]
+            const markdownExpr = processedContent !== undefined
+              ? JSON.stringify(processedContent)
+              : `(await import(${JSON.stringify(absPath + '?raw')})).default`
             return [
               `  ${JSON.stringify(moduleKey)}: async () => {`,
-              `    const markdown = (await import(${JSON.stringify(absPath + '?raw')})).default`,
+              `    const markdown = ${markdownExpr}`,
               `    return { default: function ImportedMdx(props) {`,
               `      return React.createElement(RenderImportedMdx, { ...props, markdown, baseUrl: ${JSON.stringify(baseUrl)}, source: ${JSON.stringify(source)} })`,
               `    } }`,
@@ -629,6 +636,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         server.watcher.add(userCssPath)
       }
       server.watcher.add(pagesDir)
+      // Watch imported .md/.mdx files that live outside pagesDir so edits
+      // trigger re-sync. Files inside pagesDir are already covered above.
+      for (const imports of Object.values(syncResult.pageImports)) {
+        for (const { absPath } of imports) {
+          if (/\.mdx?$/.test(absPath) && !absPath.startsWith(pagesDir)) {
+            server.watcher.add(absPath)
+          }
+        }
+      }
     },
 
     // hotUpdate — per-environment HMR hook.

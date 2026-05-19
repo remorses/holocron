@@ -964,6 +964,103 @@ title: API Reference
     expect(result.navigation[1]!.align).toBe('end')
   })
 
+  test('processes imported .md/.mdx files through build-time pipeline', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import Snippet from '/snippets/guide.md'
+
+# Home
+
+<Snippet />
+`,
+      },
+    ))
+
+    // Create the imported .md file with an image reference
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.writeFileSync(
+      path.join(snippetsDir, 'guide.md'),
+      `# Guide\n\n![diagram](./diagram.svg)\n\nSome guide content.`,
+    )
+    fs.writeFileSync(
+      path.join(snippetsDir, 'diagram.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="12" viewBox="0 0 24 12"><rect width="24" height="12" fill="#000" /></svg>`,
+    )
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    // The imported .md file should be in importedMdxContent
+    const guidePath = path.join(snippetsDir, 'guide.md')
+    expect(result.importedMdxContent[guidePath]).toBeDefined()
+    // Image should have been processed: converted to <Image> with dimensions
+    expect(result.importedMdxContent[guidePath]).toContain('<Image')
+    expect(result.importedMdxContent[guidePath]).toContain('width="24"')
+    expect(result.importedMdxContent[guidePath]).toContain('height="12"')
+  })
+
+  test('caches imported .md/.mdx content and reuses on subsequent sync', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import Snippet from '/snippets/note.md'
+
+# Home
+
+<Snippet />
+`,
+      },
+    ))
+
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.writeFileSync(path.join(snippetsDir, 'note.md'), '# Note\n\nSome note content.')
+
+    const config = readConfig({ root: project.root })
+    const first = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const notePath = path.join(snippetsDir, 'note.md')
+    expect(first.importedMdxContent[notePath]).toBeDefined()
+    expect(first.importedMdxContent[notePath]).toContain('Note')
+
+    // Second sync — imported file unchanged, should use cache
+    const second = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(second.importedMdxContent[notePath]).toEqual(first.importedMdxContent[notePath])
+  })
+
   test('collects per-page icon refs using the configured project library', async () => {
     const project = tracked(createProject(
       {

@@ -38,6 +38,26 @@ test.describe('MDX imports', () => {
     expect(html).toContain(' file.')
   })
 
+  test('imported .md gets build-time image processing (dimensions + placeholder)', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    // The image in plain-markdown.md should have been processed by the
+    // build-time pipeline: converted from markdown img to <Image> with
+    // width, height, and placeholder attributes.
+    expect(html).toMatch(/width="16"/)
+    expect(html).toMatch(/height="8"/)
+  })
+
+  test('imported .md gets remark plugin processing (github callouts)', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    // The > [!NOTE] callout in plain-markdown.md should be transformed
+    // by the remark-github-callouts plugin into a Note component.
+    expect(html).toContain('This callout should be processed by remark plugins')
+  })
+
   test('renders imported .md file outside the Vite app root', async ({ request }) => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)
