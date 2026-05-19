@@ -1,0 +1,8 @@
+// Cloudflare dev config for the custom-entry fixture.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "holocron-custom-entry-fixture",
+  "main": "./server.tsx",
+  "compatibility_date": "2026-04-17",
+  "compatibility_flags": ["nodejs_compat"]
+}

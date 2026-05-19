@@ -29,3 +29,9 @@ export const app = new Spiceflow()
   .use(holocronApp)
 
 void app.listen(Number(process.env.PORT || 3000))
+
+export default {
+  fetch(request: Request) {
+    return app.handle(request)
+  },
+}

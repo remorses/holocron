@@ -105,7 +105,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
-    "safe-mdx": "^1.11.0",
+    "safe-mdx": "^1.11.1",
     "string-dedent": "^3.0.2",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",

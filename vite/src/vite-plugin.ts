@@ -263,7 +263,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // Also alias transitive runtime deps that Holocron source imports
       // directly. The consumer only installs `@holocron.so/vite`, so bare
       // imports like `safe-mdx/client` must resolve through our package too.
-      const safeMdxDir = path.dirname(nodeRequire.resolve('safe-mdx/package.json'))
       const zoomEntry = nodeRequire.resolve('react-medium-image-zoom')
       const zoomDir = path.dirname(zoomEntry)
       const next: Pick<UserConfig, 'resolve' | 'build'> = {
@@ -276,9 +275,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         resolve: {
           alias: [
             { find: /^@holocron\.so\/vite\/app$/, replacement: HOLOCRON_APP_SRC_PATH },
-            { find: /^safe-mdx$/, replacement: path.join(safeMdxDir, 'dist/safe-mdx.js') },
-            { find: /^safe-mdx\/parse$/, replacement: path.join(safeMdxDir, 'dist/parse.js') },
-            { find: /^safe-mdx\/client$/, replacement: path.join(safeMdxDir, 'dist/dynamic-esm-component.js') },
             { find: /^react-medium-image-zoom$/, replacement: zoomEntry },
             { find: /^react-medium-image-zoom\/dist\/styles\.css$/, replacement: path.join(zoomDir, 'styles.css') },
             { find: /^yaml$/, replacement: yamlBrowserEntry },
@@ -612,9 +608,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // Uses file:// URL so Windows paths with backslashes work as
         // ES import specifiers. Imported after holocron's globals.css
         // (which lives inside app-factory.tsx) so user overrides win.
-        const holocronCssImportLine = options.entry
-          ? `import ${JSON.stringify(pathToFileURL(HOLOCRON_GLOBALS_CSS_PATH).href)}`
-          : undefined
         const cssImportLine = userCssPath
           ? `import ${JSON.stringify(pathToFileURL(userCssPath).href)}`
           : undefined
@@ -634,7 +627,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
           this.addWatchFile(userEntryPath)
           return [
-            holocronCssImportLine,
             `export * from ${JSON.stringify(userEntryPath)}`,
             `import * as __userEntry from ${JSON.stringify(userEntryPath)}`,
             cssImportLine,
@@ -984,10 +976,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   }
 
   // Auto-add spiceflow/tailwind/react unless the user already installed each.
-  // The `virtual:holocron-app` entry either boots the default holocron app
-  // or re-exports the user's custom entry (see RESOLVED_APP in load()).
+  // Custom entries must stay as filesystem entries so vite-rsc can walk their
+  // imports and collect Holocron's global CSS under Cloudflare dev.
   if (!hasUserSpiceflowPlugin) {
-    pluginsToReturn.push(spiceflowPlugin({ entry: VIRTUAL_APP }))
+    pluginsToReturn.push(spiceflowPlugin({ entry: options.entry ?? VIRTUAL_APP }))
   }
   if (!hasUserTailwindPlugin) {
     pluginsToReturn.push(tailwindcss())
