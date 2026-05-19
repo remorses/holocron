@@ -85,7 +85,7 @@ async function fetchDocsZip(url: string): Promise<Record<string, string>> {
   const zip = unzipSync(new Uint8Array(await response.arrayBuffer()))
   return Object.fromEntries(
     Object.entries(zip).map(([name, bytes]) => {
-      const slug = name.replace(/\.md$/, '')
+      const slug = name.replace(/\.mdx?$/, '')
       return [`/docs/${slug}.mdx`, strFromU8(bytes)]
     }),
   )
