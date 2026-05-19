@@ -18,6 +18,7 @@ import { approveDevice, denyDevice } from './actions.tsx'
 import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage, HolocronLogo } from './components/auth-page.tsx'
 import { Button } from './components/ui/button.tsx'
+import { SignInButton } from './components/sign-out-button.tsx'
 import { DeviceActionButtons } from './components/device-action-buttons.tsx'
 // Auth pages use AuthPage — a minimal centered layout with no cards or shadows.
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
@@ -85,9 +86,7 @@ const authApp = new Spiceflow()
           headTitle="Sign in"
           description="Sign in to manage your account."
           footer={
-            <Button asChild className="w-full" size="lg">
-              <a href={router.href('/login/github', { callbackURL })}>Sign in with GitHub</a>
-            </Button>
+            <SignInButton href={router.href('/login/github', { callbackURL })}>Sign in with GitHub</SignInButton>
           }
         />
       )
@@ -200,9 +199,7 @@ const previewApp = new Spiceflow()
       headTitle="Sign in"
       description="Sign in to manage your account."
       footer={
-        <Button asChild className="w-full" size="lg">
-          <a href="#">Sign in with GitHub</a>
-        </Button>
+        <SignInButton href="#">Sign in with GitHub</SignInButton>
       }
     />
   ))
