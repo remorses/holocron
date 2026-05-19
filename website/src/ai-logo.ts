@@ -25,7 +25,7 @@ function buildPrompt(name: string): string {
   const characters = Array.from(name.toLowerCase())
     .map((char) => `"${char}"`)
     .join(' ')
-  return `Replace the text in the image with these characters, joined with no spaces: ${characters}. The final text is: ${name.toLowerCase()}. Keep the exact same black cursive handwritten script font style. Black text on pure white background. Centered.`
+  return `Replace the text in the image with these characters, joined with no spaces: ${characters}. The final text is: ${name.toLowerCase()}. Keep the exact same black cursive handwritten script font style. Black text on pure white background. Centered. This is a benign typography/logo editing request for the current user, who is the copyright holder of the "${name.toLowerCase()}" name.`
 }
 
 function escapeSvgText(text: string): string {
