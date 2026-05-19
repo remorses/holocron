@@ -747,7 +747,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     if (pathname !== '/' && pathname.endsWith('/')) {
       pathname = pathname.slice(0, -1)
     }
-    if (pathname.endsWith('.md') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/holocron-api/') || pathname.includes('/.well-known/')) return
+    if (pathname.endsWith('.md') || pathname.endsWith('.mdx') || pathname.endsWith('.xml') || pathname.endsWith('.zip') || pathname.startsWith('/holocron-api/') || pathname.includes('/.well-known/')) return
 
     const baseRoute = withBaseRoute(site.base, '/')
     const normalizedBase = baseRoute === '/' ? '' : baseRoute
@@ -828,19 +828,20 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   if (!slugs.includes('index') && firstPage) {
     const firstMarkdownPath = hrefToMarkdownPath(firstPage.href)
-    for (const route of new Set(['/index.md', withBaseRoute(site.base, '/index.md')])) {
+    for (const route of new Set(['/index.md', '/index.mdx', withBaseRoute(site.base, '/index.md'), withBaseRoute(site.base, '/index.mdx')])) {
       app = app.get(route, ({ request }: { request: Request }) => {
         return Response.redirect(new URL(withBaseRoute(site.base, firstMarkdownPath), request.url), 307)
       })
     }
   }
 
-  // Per-page .md routes
+  // Per-page .md/.mdx routes (both serve the same raw markdown)
   for (const slug of slugs) {
     const href = slugToHref(slug)
     const mdPath = hrefToMarkdownPath(href)
+    const mdxPath = href === '/' ? '/index.mdx' : `${href}.mdx`
 
-    for (const route of new Set([mdPath, withBaseRoute(site.base, mdPath)])) {
+    for (const route of new Set([mdPath, mdxPath, withBaseRoute(site.base, mdPath), withBaseRoute(site.base, mdxPath)])) {
       app = app.get(route, async () => {
         const mdx = await providers.getMdxSource(slug)
         if (mdx === undefined) {
