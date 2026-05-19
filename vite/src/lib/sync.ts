@@ -19,6 +19,7 @@ import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink, type ProcessMdxOptions } from './mdx-processor.ts'
 import { remarkInlineImports, type InlineImportEntry } from './mintlify/remark-inline-imports.ts'
+import { visit } from 'unist-util-visit'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
@@ -112,6 +113,10 @@ export type SyncResult = {
    *  and an `absPath` (absolute filesystem path for the import() call).
    *  Built fresh on every sync from cached importSources + filesystem probing. */
   pageImports: Record<string, ResolvedImport[]>
+  /** Absolute paths of local image files referenced by imported .md/.mdx
+   *  files. Used by the dev server to watch for image changes and trigger
+   *  re-sync so updated dimensions/placeholders are picked up. */
+  importedImageDepPaths: string[]
   parsedCount: number
   cachedCount: number
 }
@@ -160,6 +165,8 @@ export async function syncNavigation({
   const pageImports: Record<string, ResolvedImport[]> = {}
   /** Internal links per page slug (for broken-link validation after nav is built) */
   const pageInternalLinks: Record<string, InternalLink[]> = {}
+  /** Image files referenced by imported .md/.mdx (for HMR watching) */
+  const allImportedImageDepPaths = new Set<string>()
   const mdxContentErrors = new Set<string>()
   const mdxParseErrors: Record<string, HolocronMdxParseError> = {}
   const redirectBackedPageSlugs = new Set(
@@ -219,16 +226,23 @@ export async function syncNavigation({
     // Resolve .md/.mdx imports early so we can incorporate their SHAs
     // into the cache key. This makes cache hits sensitive to imported
     // file changes, not just the page's own content.
-    const inlineImportMap = resolveInlineImports({ content, mdxDir, pagesDir, projectRoot })
+    const inlineResult = resolveInlineImports({ content, mdxDir, pagesDir, projectRoot, publicDir })
+    const inlineImportMap = inlineResult.imports
+    for (const p of inlineResult.imageDepPaths) allImportedImageDepPaths.add(p)
     let sha = gitBlobSha(content)
     if (inlineImportMap.size > 0) {
-      // Combine page SHA with imported file SHAs so changes to imported
-      // files invalidate the cache.
-      const importShas = [...inlineImportMap.values()]
-        .map((e) => gitBlobSha(e.content))
+      // Combine page SHA with imported file SHAs + image dep SHAs so
+      // changes to imported files OR their referenced images invalidate
+      // the cache.
+      const parts = [...inlineImportMap.values()]
+        .map((e) => `${e.absPath}:${gitBlobSha(e.content)}`)
         .sort()
-        .join(':')
-      sha = gitBlobSha(sha + ':' + importShas)
+      for (const imgPath of inlineResult.imageDepPaths) {
+        try {
+          parts.push(`img:${imgPath}:${gitBlobSha(fs.readFileSync(imgPath, 'utf-8'))}`)
+        } catch { /* ignore missing files */ }
+      }
+      sha = gitBlobSha(sha + '\n' + parts.join('\n'))
     }
 
     // Cache hit — MDX unchanged and all imported files unchanged
@@ -401,7 +415,7 @@ export async function syncNavigation({
   })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedImageDepPaths: [...allImportedImageDepPaths], parsedCount, cachedCount }
 }
 
 /* ── Image processing helper ─────────────────────────────────────────── */
@@ -741,6 +755,12 @@ const MD_EXTENSIONS = new Set(['.md', '.mdx'])
  * inlined by remarkInlineImports. Returns a map from raw import source →
  * InlineImportEntry with the file content and relative directory.
  *
+ * Recursive: if an imported .md/.mdx file itself imports other .md/.mdx
+ * files, those are discovered and added to the map too, with source keys
+ * rewritten to be relative to the page's directory (matching what
+ * remarkInlineImports' rewriteRelativeImportSources will produce).
+ * A visited set prevents cycles.
+ *
  * This runs BEFORE processMdx so the remark plugin can expand the content
  * before other remark plugins (headings, callouts, code groups, etc.)
  * process the combined tree.
@@ -750,68 +770,132 @@ function resolveInlineImports({
   mdxDir,
   pagesDir,
   projectRoot,
+  publicDir,
 }: {
   content: string
   mdxDir: string
   pagesDir: string
   projectRoot: string
-}): Map<string, InlineImportEntry> {
+  publicDir: string
+}): { imports: Map<string, InlineImportEntry>; imageDepPaths: string[] } {
   const result = new Map<string, InlineImportEntry>()
+  const imageDepPaths: string[] = []
+  const visitedAbsPaths = new Set<string>()
 
-  // Quick parse to extract imports — only need the mdxjsEsm nodes
-  let mdast: Root
-  try {
-    const processor = quickMdxParser()
-    mdast = processor.parse(content)
-    mdast = processor.runSync(mdast) as Root
-  } catch {
-    // If parsing fails, processMdx will catch the error properly
-    return result
-  }
-
-  const imports = extractImports(mdast)
-
-  for (const imp of imports) {
-    // Strip query strings (?raw etc.) — those are not .md/.mdx inlining candidates
-    if (imp.source.includes('?')) continue
-
-    // Only handle default imports (import X from './file.md')
-    const hasDefault = imp.specifiers.some((s) => s.type === 'default')
-    if (!hasDefault) continue
-
-    // Resolve the import source to an absolute path
-    const absPath = resolveImportSourceToPath(imp.source, mdxDir, pagesDir, projectRoot)
-    if (!absPath) continue
-
-    // Only inline .md/.mdx files
-    const ext = path.extname(absPath)
-    if (!MD_EXTENSIONS.has(ext)) continue
-
-    // Read the file content
-    let importContent: string
+  // Scan a file's content for .md/.mdx default imports and add them to result.
+  // fileDir is the directory of the file being scanned (for relative resolution).
+  // relDirFromPage is the relative path from the page's dir to fileDir
+  // (used to compute rewritten source keys for nested imports).
+  function scanFile(fileContent: string, fileDir: string, relDirFromPage: string) {
+    let mdast: Root
     try {
-      importContent = fs.readFileSync(absPath, 'utf-8')
+      const processor = quickMdxParser()
+      mdast = processor.parse(fileContent)
+      mdast = processor.runSync(mdast) as Root
     } catch {
-      continue
+      return
     }
 
-    // Compute the relative directory from the parent file to the imported file.
-    // This is used to rewrite relative URLs in the imported content.
-    const importDir = path.dirname(absPath)
-    const relativeDir = path.relative(mdxDir, importDir).replace(/\\/g, '/')
-    // Normalize to posix style with trailing /
-    const relativeDirNorm = relativeDir === ''
-      ? './'
-      : (relativeDir.startsWith('.') ? relativeDir : './' + relativeDir) + '/'
+    const imports = extractImports(mdast)
 
-    result.set(imp.source, {
-      content: importContent,
-      absPath,
-      relativeDir: relativeDirNorm,
+    for (const imp of imports) {
+      if (imp.source.includes('?')) continue
+      const hasDefault = imp.specifiers.some((s) => s.type === 'default')
+      if (!hasDefault) continue
+
+      const absPath = resolveImportSourceToPath(imp.source, fileDir, pagesDir, projectRoot)
+      if (!absPath) continue
+
+      const ext = path.extname(absPath)
+      if (!MD_EXTENSIONS.has(ext)) continue
+      if (visitedAbsPaths.has(absPath)) continue
+      visitedAbsPaths.add(absPath)
+
+      let importContent: string
+      try {
+        importContent = fs.readFileSync(absPath, 'utf-8')
+      } catch {
+        continue
+      }
+
+      const importDir = path.dirname(absPath)
+      const relativeDir = path.relative(fileDir, importDir).replace(/\\/g, '/')
+      const relativeDirNorm = relativeDir === ''
+        ? './'
+        : (relativeDir.startsWith('.') ? relativeDir : './' + relativeDir) + '/'
+
+      // For top-level imports (relDirFromPage === ''), the source key is the
+      // raw import source. For nested imports, the source key is what
+      // remarkInlineImports will produce after rewriting: the relative path
+      // from the page's directory to the imported file.
+      let sourceKey: string
+      if (relDirFromPage === '') {
+        sourceKey = imp.source
+      } else {
+        // Rewrite source relative to the page dir (same logic as
+        // resolveRelativeUrl in the remark plugin)
+        if (imp.source.startsWith('./') || imp.source.startsWith('../')) {
+          const joined = path.posix.join(relDirFromPage, imp.source)
+          sourceKey = joined.startsWith('../') || joined.startsWith('./')
+            ? joined
+            : './' + joined
+        } else {
+          sourceKey = imp.source // absolute imports don't get rewritten
+        }
+      }
+
+      // relativeDir for this entry is from the PAGE's dir (mdxDir), not the
+      // importing file's dir. remarkInlineImports uses this to rewrite URLs
+      // in the inlined content.
+      const relFromPage = path.relative(mdxDir, importDir).replace(/\\/g, '/')
+      const relFromPageNorm = relFromPage === ''
+        ? './'
+        : (relFromPage.startsWith('.') ? relFromPage : './' + relFromPage) + '/'
+
+      result.set(sourceKey, {
+        content: importContent,
+        absPath,
+        relativeDir: relFromPageNorm,
+      })
+
+      // Parse the imported file separately to collect image dep paths for
+      // HMR watching and cache key computation.
+      try {
+        const importedProcessor = quickMdxParser()
+        const importedMdast = importedProcessor.runSync(importedProcessor.parse(importContent)) as Root
+        collectImageDeps(importedMdast, importDir)
+      } catch { /* parsing errors don't affect image dep collection */ }
+
+      // Recurse into the imported file to discover its own .md/.mdx imports
+      scanFile(importContent, importDir, relFromPageNorm)
+    }
+  }
+
+  function collectImageDeps(mdast: Root, fileDir: string) {
+    visit(mdast, (node) => {
+      if (node.type === 'image') {
+        const src = (node as import('mdast').Image).url
+        if (!src || src.startsWith('http://') || src.startsWith('https://')) return
+        const resolved = resolveImagePath({ src, mdxDir: fileDir, publicDir, projectRoot })
+        if (resolved) imageDepPaths.push(resolved.filePath)
+        return
+      }
+      if ((node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && (node as any).name === 'Image') {
+        const attrs = (node as any).attributes ?? []
+        for (const attr of attrs) {
+          if (attr.type === 'mdxJsxAttribute' && attr.name === 'src' && typeof attr.value === 'string') {
+            const src = attr.value
+            if (src.startsWith('http://') || src.startsWith('https://')) continue
+            const resolved = resolveImagePath({ src, mdxDir: fileDir, publicDir, projectRoot })
+            if (resolved) imageDepPaths.push(resolved.filePath)
+          }
+        }
+      }
     })
   }
 
-  return result
+  scanFile(content, mdxDir, '')
+  return { imports: result, imageDepPaths }
 }
 
 /**

@@ -66,35 +66,42 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
     const { resolvedImports } = options
     if (resolvedImports.size === 0) return
 
-    // Step 1: Extract imports from the AST and find which ones are .md/.mdx
-    const allImports = extractImports(tree)
-    const inlineable = new Map<string, InlineImportEntry>()
+    // Run to a fixed point: after inlining outer.mdx, it may contain
+    // <Inner /> from a nested .md import. The resolvedImports map already
+    // has all nested entries (computed recursively by resolveInlineImports
+    // in sync.ts), so we just need to re-scan for new bindings and replace.
+    const alreadyInlined = new Set<string>()
+    const MAX_DEPTH = 10
 
-    for (const imp of allImports) {
-      const entry = resolvedImports.get(imp.source)
-      if (!entry) continue
-      // Only inline default imports (import X from './file.md')
-      for (const spec of imp.specifiers) {
-        if (spec.type === 'default') {
-          inlineable.set(spec.local, entry)
+    for (let round = 0; round < MAX_DEPTH; round++) {
+      const allImports = extractImports(tree)
+      const inlineable = new Map<string, InlineImportEntry>()
+
+      for (const imp of allImports) {
+        const entry = resolvedImports.get(imp.source)
+        if (!entry) continue
+        if (alreadyInlined.has(entry.absPath)) continue
+        for (const spec of imp.specifiers) {
+          if (spec.type === 'default') {
+            inlineable.set(spec.local, entry)
+          }
         }
       }
+
+      if (inlineable.size === 0) break
+
+      const parsedImports = new Map<string, RootContent[]>()
+      for (const [localName, entry] of inlineable) {
+        alreadyInlined.add(entry.absPath)
+        const nodes = parseAndRewriteImportedContent(entry)
+        parsedImports.set(localName, nodes)
+      }
+
+      // Replace <X /> usages with inlined nodes.
+      // Import declarations are intentionally kept as dead code so the
+      // virtual module system tracks the .md/.mdx files for HMR watching.
+      replaceJsxUsages(tree, parsedImports)
     }
-
-    if (inlineable.size === 0) return
-
-    // Step 2: Parse each imported file and rewrite relative URLs
-    const parsedImports = new Map<string, RootContent[]>()
-    for (const [localName, entry] of inlineable) {
-      const nodes = parseAndRewriteImportedContent(entry)
-      parsedImports.set(localName, nodes)
-    }
-
-    // Step 3: Replace <X /> usages with inlined nodes.
-    // Import declarations are intentionally kept as dead code so the
-    // virtual module system tracks the .md/.mdx files for HMR watching,
-    // and line numbers in the original source are preserved.
-    replaceJsxUsages(tree, parsedImports)
   }
 }
 

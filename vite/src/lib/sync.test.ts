@@ -1115,6 +1115,46 @@ import Guide from '/snippets/guide.mdx'
     expect(allModuleKeys).toContain('./pages/snippets/badge.tsx')
   })
 
+  test('collects image dependency paths from imported .md files', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import Snippet from '/snippets/with-image.md'
+
+# Home
+
+<Snippet />
+`,
+      },
+    ))
+
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.writeFileSync(path.join(snippetsDir, 'with-image.md'), '![icon](./icon.svg)')
+    fs.writeFileSync(
+      path.join(snippetsDir, 'icon.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" fill="#000" /></svg>`,
+    )
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    // Image dep paths should include the SVG file
+    expect(result.importedImageDepPaths).toContain(path.join(snippetsDir, 'icon.svg'))
+  })
+
   test('collects per-page icon refs using the configured project library', async () => {
     const project = tracked(createProject(
       {

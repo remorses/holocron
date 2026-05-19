@@ -62,6 +62,21 @@ test.describe('MDX imports', () => {
     expect(html).toContain('This callout should be processed by remark plugins')
   })
 
+  test('renders <Aside> from imported .md in the sidebar column', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: 'Import Test Page' })).toBeVisible()
+
+    // The aside content from aside-snippet.md should be rendered in a
+    // slot-aside element (sidebar column), not inline in the main content.
+    const asideText = 'This aside note comes from an imported'
+    const aside = page.locator('.slot-aside').filter({ hasText: asideText })
+    await expect(aside).toBeVisible()
+
+    // The main content from the snippet should still be in the content column
+    await expect(page.getByText('This content comes from an imported')).toBeVisible()
+  })
+
   test('renders imported .md file outside the Vite app root', async ({ request }) => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)
@@ -149,7 +164,7 @@ test.describe('imported MDX headings in sidebar TOC', () => {
     const sidebar = page.locator('[class*="slot-sidebar-left"]')
     await expect(sidebar).toBeVisible()
     // Imported snippet headings should be in the TOC links
-    await expect(sidebar.getByRole('link', { name: 'Snippet Section' })).toBeVisible()
+    await expect(sidebar.getByRole('link', { name: 'Snippet Section', exact: true })).toBeVisible()
     await expect(sidebar.getByRole('link', { name: 'Snippet Subsection' })).toBeVisible()
   })
 })

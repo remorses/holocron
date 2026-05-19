@@ -534,6 +534,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             this.addWatchFile(absPath)
           }
         }
+        // Watch image files referenced by imported .md/.mdx so dimension
+        // or placeholder changes trigger re-sync.
+        for (const imgPath of syncResult.importedImageDepPaths) {
+          this.addWatchFile(imgPath)
+        }
 
         // .md/.mdx imports are inlined at build time by remarkInlineImports,
         // so the import declaration in MDX is dead code. The virtual module
@@ -631,6 +636,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
         }
       }
+      // Watch image files referenced by imported .md/.mdx so changing an
+      // image (e.g. dimensions) triggers re-sync with updated metadata.
+      for (const imgPath of syncResult.importedImageDepPaths) {
+        server.watcher.add(imgPath)
+      }
     },
 
     // hotUpdate — per-environment HMR hook.
@@ -652,6 +662,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     async hotUpdate(ctx) {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
+      const isTrackedImageDep = syncResult.importedImageDepPaths.includes(ctx.file)
       const isMdxInsidePagesDir = isMdx && isInsideDir(pagesDir, ctx.file)
       const changedSlug = isMdxInsidePagesDir
         ? path.relative(pagesDir, ctx.file).replace(/\.[^.]+$/, '').replace(/\\/g, '/')
@@ -673,7 +684,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      if (!isMdx && !isConfig && !isImportableAddOrRemove) {
+      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep) {
         return
       }
 
