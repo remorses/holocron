@@ -341,7 +341,7 @@ function ChatDrawerInner() {
             ))
             if (!hasTextAfterLastUser) {
               return (
-                <div style={{ minHeight: 'calc(100dvh - 248px)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                <div style={{ minHeight: 'calc(100dvh - 248px)' }}>
                   <ChatLoadingDots />
                 </div>
               )
