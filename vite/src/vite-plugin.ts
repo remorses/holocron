@@ -612,6 +612,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // Uses file:// URL so Windows paths with backslashes work as
         // ES import specifiers. Imported after holocron's globals.css
         // (which lives inside app-factory.tsx) so user overrides win.
+        const holocronCssImportLine = options.entry
+          ? `import ${JSON.stringify(pathToFileURL(HOLOCRON_GLOBALS_CSS_PATH).href)}`
+          : undefined
         const cssImportLine = userCssPath
           ? `import ${JSON.stringify(pathToFileURL(userCssPath).href)}`
           : undefined
@@ -631,6 +634,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
           this.addWatchFile(userEntryPath)
           return [
+            holocronCssImportLine,
             `export * from ${JSON.stringify(userEntryPath)}`,
             `import * as __userEntry from ${JSON.stringify(userEntryPath)}`,
             cssImportLine,

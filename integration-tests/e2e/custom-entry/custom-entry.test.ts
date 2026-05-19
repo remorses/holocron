@@ -73,6 +73,22 @@ test.describe("holocron pages rendered by mounted holocronApp", () => {
     expect(userLayoutAttr).toBeNull();
   });
 
+  test("loads holocron global CSS through the custom entry", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const stylesheets = await page.locator("link[rel='stylesheet']").evaluateAll((links) =>
+      links.map((link) => ({
+        href: (link as HTMLLinkElement).href,
+        loaded: Boolean((link as HTMLLinkElement).sheet),
+      }))
+    );
+
+    expect(stylesheets.some((stylesheet) => stylesheet.loaded)).toBe(true);
+    await expect
+      .poll(async () => page.evaluate(() => getComputedStyle(document.body).fontFamily))
+      .toContain("Inter");
+  });
+
   test("GET /sitemap.xml lists holocron-owned slugs only", async ({ request }) => {
     const res = await request.get("/sitemap.xml");
     expect(res.status()).toBe(200);
