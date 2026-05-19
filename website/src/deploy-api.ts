@@ -421,7 +421,7 @@ async function sendFirstDeployEmail({
     const html = await buildDeployEmailHtml(emailData)
 
     await env.EMAIL.send({
-      from: { email: 'deploy@holocron.so', name: 'Holocron' },
+      from: { email: 'tommy@tommy.holocron.so', name: 'Tommy' },
       to: email,
       subject,
       html,
