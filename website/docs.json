@@ -47,7 +47,8 @@
                             "create/code",
                             "create/images",
                             "create/local-imports",
-                            "create/redirects"
+                            "create/redirects",
+                            "create/broken-links"
                         ]
                     },
                     {

@@ -1,0 +1,110 @@
+---
+title: Broken Link Detection
+description: Holocron warns about internal links pointing to missing pages during build and dev.
+icon: link-2-off
+---
+
+# Broken Link Detection
+
+Holocron checks every internal link in your MDX files during **build** and **dev server startup**. When a link points to a page that doesn't exist in the navigation tree, a warning is printed to the terminal:
+
+```
+▲ holocron broken link /quickstart:12 → /missing-page (no matching page found)
+```
+
+The warning includes the **source file**, the **line number**, and the **broken href** so you can fix it quickly.
+
+## What gets checked
+
+Holocron scans two types of links:
+
+**Markdown links**
+
+```mdx
+[Getting Started](/getting-started)
+[Next section](./next)
+[Parent page](../overview)
+```
+
+**JSX component hrefs**
+
+```mdx
+<Card href="/quickstart">Get Started</Card>
+<Tile href="/guides/deploy">Deploy</Tile>
+<a href="/api/overview">API Reference</a>
+```
+
+Components checked: `a`, `Card`, `Tile`, `Tooltip`, `Badge`.
+
+## What is not checked
+
+These links are **skipped** and never produce warnings:
+
+- **External URLs**: `https://example.com`, `http://...`
+- **Anchor-only links**: `#section-id`
+- **Special protocols**: `mailto:`, `tel:`, `javascript:`
+- **Static files**: paths with file extensions like `/openapi.json`, `/guide.pdf`, `/logo.png`
+- **Dynamic JSX expressions**: `<Card href={dynamicUrl}>` (only static string attributes are checked)
+
+## How links are resolved
+
+**Absolute links** like `/getting-started` are matched directly against page hrefs in your navigation tree.
+
+**Relative links** like `./next` or `../overview` are resolved from the linking page's directory. For example, a link `./deploy` inside `guides/setup.mdx` resolves to `/guides/deploy`.
+
+**Hash fragments** and **query strings** are stripped before matching. `/setup#installation` checks whether `/setup` exists as a page.
+
+## Valid link targets
+
+A link is considered valid if it matches any of:
+
+1. A page in the navigation tree
+2. A redirect source defined in `redirects`
+3. A path declared in `knownPaths`
+
+## Known paths
+
+When your docs app is mounted alongside other routes (API endpoints, dashboards, external apps), links to those routes would trigger false warnings. Use `knownPaths` to declare paths that exist outside of Holocron:
+
+```json
+{
+  "knownPaths": ["/api/*", "/dashboard", "/blog/*"]
+}
+```
+
+### Exact paths
+
+`"/dashboard"` matches only `/dashboard`.
+
+### Wildcard prefixes
+
+`"/api/*"` matches `/api/users`, `/api/v2/auth`, and any other path starting with `/api/`.
+
+### Example
+
+A Spiceflow custom entry that serves both docs and an API:
+
+```json
+{
+  "navigation": [
+    { "group": "Docs", "pages": ["index", "quickstart"] }
+  ],
+  "knownPaths": ["/api/*", "/health"]
+}
+```
+
+Now a link like `[API Reference](/api/overview)` in your MDX won't trigger a warning, even though `/api/overview` isn't an MDX page.
+
+## When it runs
+
+Link validation runs as part of the **sync phase**, which processes all MDX files and builds the navigation tree. This happens:
+
+- On **`npx vite build`** (production build)
+- On **dev server startup** (`npx vite`)
+- On **HMR** when an MDX file or the config file changes
+
+The sync phase first parses every page and collects all internal links, then validates them against the fully built navigation tree. This means links are checked after all pages (including OpenAPI-generated ones) are registered.
+
+## Caching
+
+Link data is cached alongside other page metadata in `dist/holocron-mdx.json`. When an MDX file hasn't changed between builds, its links are restored from cache without re-parsing. Validation still runs on every sync, just the link extraction step is skipped for unchanged files.
