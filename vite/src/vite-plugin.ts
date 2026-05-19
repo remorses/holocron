@@ -136,6 +136,12 @@ function mergeUnique(existing: string | string[] | undefined, items: string[]): 
   return Array.from(new Set([...arr, ...items]))
 }
 
+/** Check if `child` is inside `parent` directory (proper path containment). */
+function isInsideDir(parent: string, child: string): boolean {
+  const rel = path.relative(parent, child)
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))
+}
+
 function toCssSourcePath(fromDir: string, toDir: string): string {
   const relativePath = path.relative(fromDir, toDir).replace(/\\/g, '/')
   if (relativePath === '') return '.'
@@ -536,6 +542,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
         const sortedImports = [...allImports.entries()]
           .sort(([a], [b]) => a.localeCompare(b))
+
+        // Register imported .md/.mdx files as watch dependencies so edits
+        // (including files added after initial startup) trigger HMR.
+        // configureServer() only runs once at startup; this load hook runs
+        // every time the virtual module is regenerated after a re-sync.
+        for (const [moduleKey, absPath] of sortedImports) {
+          if (!moduleKey.includes('?') && /\.mdx?$/.test(absPath)) {
+            this.addWatchFile(absPath)
+          }
+        }
+
         // Only count non-queried .md/.mdx imports for the RenderImportedMdx wrapper.
         // Queried imports like README.md?raw are plain Vite imports, not MDX renders.
         const hasMdxImports = sortedImports.some(([moduleKey, absPath]) =>
@@ -640,7 +657,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // trigger re-sync. Files inside pagesDir are already covered above.
       for (const imports of Object.values(syncResult.pageImports)) {
         for (const { absPath } of imports) {
-          if (/\.mdx?$/.test(absPath) && !absPath.startsWith(pagesDir)) {
+          if (/\.mdx?$/.test(absPath) && !isInsideDir(pagesDir, absPath)) {
             server.watcher.add(absPath)
           }
         }

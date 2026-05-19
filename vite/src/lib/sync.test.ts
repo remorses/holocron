@@ -1013,7 +1013,7 @@ import Snippet from '/snippets/guide.md'
     expect(result.importedMdxContent[guidePath]).toContain('height="12"')
   })
 
-  test('caches imported .md/.mdx content and reuses on subsequent sync', async () => {
+  test('reprocesses imported .md on every sync (no stale cache for image deps)', async () => {
     const project = tracked(createProject(
       {
         navigation: [{ group: 'Docs', pages: ['index'] }],
@@ -1034,7 +1034,14 @@ import Snippet from '/snippets/note.md'
 
     const snippetsDir = path.join(project.pagesDir, 'snippets')
     fs.mkdirSync(snippetsDir, { recursive: true })
-    fs.writeFileSync(path.join(snippetsDir, 'note.md'), '# Note\n\nSome note content.')
+    fs.writeFileSync(
+      path.join(snippetsDir, 'note.md'),
+      '# Note\n\n![img](./icon.svg)\n\nSome note content.',
+    )
+    fs.writeFileSync(
+      path.join(snippetsDir, 'icon.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="5" viewBox="0 0 10 5"><rect width="10" height="5" fill="#000" /></svg>`,
+    )
 
     const config = readConfig({ root: project.root })
     const first = await syncNavigation({
@@ -1046,10 +1053,15 @@ import Snippet from '/snippets/note.md'
     })
 
     const notePath = path.join(snippetsDir, 'note.md')
-    expect(first.importedMdxContent[notePath]).toBeDefined()
-    expect(first.importedMdxContent[notePath]).toContain('Note')
+    expect(first.importedMdxContent[notePath]).toContain('width="10"')
+    expect(first.importedMdxContent[notePath]).toContain('height="5"')
 
-    // Second sync — imported file unchanged, should use cache
+    // Change the image dimensions without editing the .md file
+    fs.writeFileSync(
+      path.join(snippetsDir, 'icon.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10" viewBox="0 0 20 10"><rect width="20" height="10" fill="#000" /></svg>`,
+    )
+
     const second = await syncNavigation({
       config,
       pagesDir: project.pagesDir,
@@ -1058,7 +1070,9 @@ import Snippet from '/snippets/note.md'
       distDir: project.distDir,
     })
 
-    expect(second.importedMdxContent[notePath]).toEqual(first.importedMdxContent[notePath])
+    // Should pick up the new dimensions because imported .md is always reprocessed
+    expect(second.importedMdxContent[notePath]).toContain('width="20"')
+    expect(second.importedMdxContent[notePath]).toContain('height="10"')
   })
 
   test('collects per-page icon refs using the configured project library', async () => {

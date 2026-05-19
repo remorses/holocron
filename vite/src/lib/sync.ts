@@ -358,16 +358,28 @@ export async function syncNavigation({
   // 4d. Process imported .md/.mdx files through the same build-time pipeline
   //     as regular pages (normalizeMdx + image resolution). This runs after
   //     all pages are enriched so pageImports is fully populated.
-  const importedMdxContent = await processImportedMdxFiles({
+  const importedMdx = await processImportedMdxFiles({
     pageImports,
     config,
     publicDir,
     projectRoot,
     imageCache,
     imageOutputDir,
-    oldImportedMdxShas: oldMdxCache.importedMdxShas,
-    oldImportedMdxContent: oldMdxCache.importedMdxContent,
   })
+  const importedMdxContent = importedMdx.content
+
+  // 4e. Merge icon refs from imported .md/.mdx files into their importing
+  //     pages. Without this, icons used only in snippets (e.g. <Card icon="github" />)
+  //     would not have their SVGs resolved in the icon atlas.
+  for (const [slug, imports] of Object.entries(pageImports)) {
+    for (const { absPath, moduleKey } of imports) {
+      if (moduleKey.includes('?')) continue
+      const refs = importedMdx.iconRefs[absPath]
+      if (refs && refs.length > 0) {
+        pageIconRefs[slug] = [...(pageIconRefs[slug] ?? []), ...refs]
+      }
+    }
+  }
 
   // 5. Write caches
   writeCache(cachePath, navigation)
@@ -375,13 +387,6 @@ export async function syncNavigation({
     content: filterErroredMdxContent({ content: mdxContent, mdxContentErrors }),
     pageIconRefs,
     pageImportSources,
-    importedMdxShas: Object.fromEntries(
-      Object.entries(importedMdxContent).map(([absPath]) => {
-        const content = fs.readFileSync(absPath, 'utf-8')
-        return [absPath, gitBlobSha(content)]
-      }),
-    ),
-    importedMdxContent,
   })
   saveImageCache({ distDir, cache: imageCache })
 
@@ -453,8 +458,12 @@ async function resolveAndProcessImages({
  * regular pages. Each imported file gets normalizeMdx (remark plugins) +
  * image resolution (dimensions, placeholders, copy to public).
  *
- * Returns a map of absPath → processed MDX string. The virtual module
- * template embeds this content as a string literal instead of using ?raw.
+ * No content caching: imported snippets are typically few and cheap to
+ * process. Caching by file SHA alone would miss image dependency changes
+ * (e.g. updating diagram.svg without editing the .md that references it).
+ *
+ * Returns processed MDX content keyed by absPath, plus icon refs per file
+ * so they can be merged into the importing page's icon set.
  */
 async function processImportedMdxFiles({
   pageImports,
@@ -463,8 +472,6 @@ async function processImportedMdxFiles({
   projectRoot,
   imageCache,
   imageOutputDir,
-  oldImportedMdxShas,
-  oldImportedMdxContent,
 }: {
   pageImports: Record<string, ResolvedImport[]>
   config: HolocronConfig
@@ -472,11 +479,9 @@ async function processImportedMdxFiles({
   projectRoot: string
   imageCache: ReturnType<typeof loadImageCache>
   imageOutputDir: string
-  oldImportedMdxShas: Record<string, string>
-  oldImportedMdxContent: Record<string, string>
-}): Promise<Record<string, string>> {
+}): Promise<{ content: Record<string, string>; iconRefs: Record<string, IconRef[]> }> {
   // Collect all unique .md/.mdx imports (exclude queried imports like ?raw)
-  const mdxImports = new Map<string, string>() // absPath → absPath
+  const mdxImports = new Map<string, string>()
   for (const imports of Object.values(pageImports)) {
     for (const { moduleKey, absPath } of imports) {
       if (moduleKey.includes('?')) continue
@@ -486,23 +491,15 @@ async function processImportedMdxFiles({
     }
   }
 
-  const result: Record<string, string> = {}
+  const content: Record<string, string> = {}
+  const iconRefs: Record<string, IconRef[]> = {}
 
   for (const absPath of mdxImports.keys()) {
     if (!fs.existsSync(absPath)) continue
 
-    const content = fs.readFileSync(absPath, 'utf-8')
-    const sha = gitBlobSha(content)
-
-    // Cache hit: SHA matches and we have cached processed content
-    if (oldImportedMdxShas[absPath] === sha && oldImportedMdxContent[absPath]) {
-      result[absPath] = oldImportedMdxContent[absPath]
-      continue
-    }
-
-    // Cache miss: full processing
+    const fileContent = fs.readFileSync(absPath, 'utf-8')
     const source = './' + path.relative(projectRoot, absPath).replace(/\\/g, '/')
-    const processed = processMdx(content, config.icons.library, source)
+    const processed = processMdx(fileContent, config.icons.library, source)
     if (processed instanceof Error) {
       logger.warn(formatHolocronWarning(
         `failed to process imported MDX ${source}: ${processed.reason}`,
@@ -520,15 +517,17 @@ async function processImportedMdxFiles({
       imageOutputDir,
     })
 
-    // Rewrite images in the mdast and serialize back to MDX string
     const finalMdx = resolvedImages.size > 0
       ? rewriteMdxImages(processed.mdast, resolvedImages)
       : processed.normalizedContent
 
-    result[absPath] = finalMdx
+    content[absPath] = finalMdx
+    if (processed.iconRefs.length > 0) {
+      iconRefs[absPath] = processed.iconRefs
+    }
   }
 
-  return result
+  return { content, iconRefs }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -706,11 +705,6 @@ type MdxCacheEnvelope = {
   /** Raw import source strings from MDX (e.g. '/snippets/greeting', '../components/badge').
    *  Cached so we can re-resolve them on every sync without re-parsing MDX. */
   pageImportSources: Record<string, string[]>
-  /** Git blob SHAs for imported .md/.mdx files, keyed by absPath.
-   *  Used to skip reprocessing unchanged imported files on subsequent syncs. */
-  importedMdxShas: Record<string, string>
-  /** Pre-processed MDX content for imported .md/.mdx files, keyed by absPath. */
-  importedMdxContent: Record<string, string>
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -742,12 +736,10 @@ type MdxCacheData = {
   content: Record<string, string>
   pageIconRefs: Record<string, IconRef[]>
   pageImportSources: Record<string, string[]>
-  importedMdxShas: Record<string, string>
-  importedMdxContent: Record<string, string>
 }
 
 function readMdxCache(cachePath: string): MdxCacheData {
-  const empty: MdxCacheData = { content: {}, pageIconRefs: {}, pageImportSources: {}, importedMdxShas: {}, importedMdxContent: {} }
+  const empty: MdxCacheData = { content: {}, pageIconRefs: {}, pageImportSources: {} }
   if (!fs.existsSync(cachePath)) return empty
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
@@ -757,8 +749,6 @@ function readMdxCache(cachePath: string): MdxCacheData {
         content: envelope.content,
         pageIconRefs: envelope.pageIconRefs ?? {},
         pageImportSources: envelope.pageImportSources ?? {},
-        importedMdxShas: envelope.importedMdxShas ?? {},
-        importedMdxContent: envelope.importedMdxContent ?? {},
       }
     }
     return empty
@@ -778,8 +768,6 @@ function writeMdxCache(
     content: data.content,
     pageIconRefs: data.pageIconRefs,
     pageImportSources: data.pageImportSources,
-    importedMdxShas: data.importedMdxShas,
-    importedMdxContent: data.importedMdxContent,
   }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
