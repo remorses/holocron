@@ -1,4 +1,8 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import { expect, test } from '@playwright/test'
+
+const fixtureRoot = path.resolve(import.meta.dirname, '../../fixtures/mdx-imports')
 
 test.describe('MDX imports', () => {
   test('renders imported component inside <Above>', async ({ request }) => {
@@ -110,5 +114,36 @@ test.describe('MDX imports', () => {
     await expect(page.getByRole('heading', { name: 'Relative Imports Page' })).toBeVisible()
     await expect(page.getByTestId('greeting')).toContainText('Hello, Relative!')
     await expect(page.getByTestId('custom-badge')).toContainText('relative-badge')
+  })
+})
+
+test.describe.serial('imported .md HMR @dev', () => {
+  const mdFile = path.join(fixtureRoot, 'snippets/plain-markdown.md')
+  let originalContent: string
+
+  test.beforeEach(() => {
+    originalContent = fs.readFileSync(mdFile, 'utf-8')
+  })
+
+  test.afterEach(() => {
+    fs.writeFileSync(mdFile, originalContent)
+  })
+
+  test('editing an imported .md file updates the page via HMR', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: 'Import Test Page' })).toBeVisible({ timeout: 10_000 })
+
+    // Verify initial content is rendered
+    await expect(page.getByText('Plain markdown snippet imported from a')).toBeVisible()
+    await expect(page.getByText('HMR injected imported markdown')).not.toBeVisible()
+
+    // Mutate the imported .md file — should trigger re-sync + HMR update
+    await expect
+      .poll(async () => {
+        const updated = originalContent + `\nHMR injected imported markdown paragraph ${Date.now()}.\n`
+        fs.writeFileSync(mdFile, updated)
+        return await page.getByText('HMR injected imported markdown').isVisible()
+      }, { timeout: 15_000 })
+      .toBe(true)
   })
 })
