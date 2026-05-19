@@ -154,7 +154,7 @@ export function TocInline({
                 data-active={isActive}
                 data-heading-id={heading.slug}
                 onClick={(e) => notifyHeadingClick(e)}
-                className={`block leading-4 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+                className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
                 tabIndex={isDimmed ? -1 : 0}
                 style={{
                   color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
