@@ -552,6 +552,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             this.addWatchFile(absPath)
           }
         }
+        // Also watch image files referenced by imported .md/.mdx files
+        // so dimension/placeholder changes trigger re-sync.
+        for (const imgPath of syncResult.importedImageDepPaths) {
+          this.addWatchFile(imgPath)
+        }
 
         // Only count non-queried .md/.mdx imports for the RenderImportedMdx wrapper.
         // Queried imports like README.md?raw are plain Vite imports, not MDX renders.
@@ -662,6 +667,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           }
         }
       }
+      // Watch image files referenced by imported .md/.mdx so changing an
+      // image (e.g. dimensions) triggers re-sync with updated metadata.
+      for (const imgPath of syncResult.importedImageDepPaths) {
+        server.watcher.add(imgPath)
+      }
     },
 
     // hotUpdate — per-environment HMR hook.
@@ -683,7 +693,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     async hotUpdate(ctx) {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
-      const changedSlug = isMdx && ctx.file.startsWith(pagesDir)
+      // Check if the changed file is an image dependency of an imported
+      // .md/.mdx file. If so, re-sync to pick up updated dimensions/placeholder.
+      const isTrackedImageDep = syncResult.importedImageDepPaths.includes(ctx.file)
+      const isMdxInsidePagesDir = isMdx && isInsideDir(pagesDir, ctx.file)
+      const changedSlug = isMdxInsidePagesDir
         ? path.relative(pagesDir, ctx.file).replace(/\.[^.]+$/, '').replace(/\\/g, '/')
         : undefined
 
@@ -703,7 +717,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      if (!isMdx && !isConfig && !isImportableAddOrRemove) {
+      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep) {
         return
       }
 
@@ -720,7 +734,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      if (isMdx && ctx.file.startsWith(pagesDir)) {
+      if (isMdxInsidePagesDir) {
         for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX]) {
           const mod = this.environment.moduleGraph.getModuleById(resolvedId)
           if (mod && !ctx.modules.includes(mod)) {
@@ -900,7 +914,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     enforce: 'pre',
     hotUpdate(ctx) {
       const isMdx = (ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md'))
-        && ctx.file.startsWith(pagesDir)
+        && isInsideDir(pagesDir, ctx.file)
       const isConfig = Boolean(configFilePath && ctx.file === configFilePath)
       if (!isMdx && !isConfig) return
 

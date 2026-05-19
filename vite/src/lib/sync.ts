@@ -117,6 +117,10 @@ export type SyncResult = {
    *  dimensions/placeholders, and link rewriting. The virtual module template
    *  embeds this content as a string literal instead of using a ?raw import. */
   importedMdxContent: Record<string, string>
+  /** Absolute paths of local image files referenced by imported .md/.mdx
+   *  files. Used by the dev server to watch for image changes and trigger
+   *  re-sync so updated dimensions/placeholders are picked up. */
+  importedImageDepPaths: string[]
   parsedCount: number
   cachedCount: number
 }
@@ -361,6 +365,7 @@ export async function syncNavigation({
   const importedMdx = await processImportedMdxFiles({
     pageImports,
     config,
+    pagesDir,
     publicDir,
     projectRoot,
     imageCache,
@@ -390,7 +395,7 @@ export async function syncNavigation({
   })
   saveImageCache({ distDir, cache: imageCache })
 
-  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedMdxContent, parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedMdxContent, importedImageDepPaths: importedMdx.imageDepPaths, parsedCount, cachedCount }
 }
 
 /* ── Image processing helper ─────────────────────────────────────────── */
@@ -462,12 +467,18 @@ async function resolveAndProcessImages({
  * process. Caching by file SHA alone would miss image dependency changes
  * (e.g. updating diagram.svg without editing the .md that references it).
  *
- * Returns processed MDX content keyed by absPath, plus icon refs per file
- * so they can be merged into the importing page's icon set.
+ * Recursive: if an imported .mdx file itself imports components or other
+ * .md/.mdx files, those nested imports are discovered and added to
+ * `pageImports` so they appear in the virtual module map. Uses a queue
+ * with a visited set to avoid cycles.
+ *
+ * Returns processed MDX content keyed by absPath, icon refs per file,
+ * and the set of local image file paths used (for HMR watching).
  */
 async function processImportedMdxFiles({
   pageImports,
   config,
+  pagesDir,
   publicDir,
   projectRoot,
   imageCache,
@@ -475,26 +486,36 @@ async function processImportedMdxFiles({
 }: {
   pageImports: Record<string, ResolvedImport[]>
   config: HolocronConfig
+  pagesDir: string
   publicDir: string
   projectRoot: string
   imageCache: ReturnType<typeof loadImageCache>
   imageOutputDir: string
-}): Promise<{ content: Record<string, string>; iconRefs: Record<string, IconRef[]> }> {
-  // Collect all unique .md/.mdx imports (exclude queried imports like ?raw)
-  const mdxImports = new Map<string, string>()
+}): Promise<{
+  content: Record<string, string>
+  iconRefs: Record<string, IconRef[]>
+  /** Absolute paths of local image files used by imported MDX, for HMR watching. */
+  imageDepPaths: string[]
+}> {
+  // Seed the queue with all .md/.mdx imports from pages
+  const queue: string[] = []
+  const visited = new Set<string>()
   for (const imports of Object.values(pageImports)) {
     for (const { moduleKey, absPath } of imports) {
       if (moduleKey.includes('?')) continue
-      if (/\.mdx?$/.test(absPath)) {
-        mdxImports.set(absPath, absPath)
+      if (/\.mdx?$/.test(absPath) && !visited.has(absPath)) {
+        visited.add(absPath)
+        queue.push(absPath)
       }
     }
   }
 
   const content: Record<string, string> = {}
   const iconRefs: Record<string, IconRef[]> = {}
+  const imageDepPaths: string[] = []
 
-  for (const absPath of mdxImports.keys()) {
+  while (queue.length > 0) {
+    const absPath = queue.shift()!
     if (!fs.existsSync(absPath)) continue
 
     const fileContent = fs.readFileSync(absPath, 'utf-8')
@@ -507,6 +528,30 @@ async function processImportedMdxFiles({
       continue
     }
 
+    // Discover nested imports from this imported file and add them to
+    // the global pageImports so they appear in virtual:holocron-modules.
+    if (processed.importSources.length > 0) {
+      const nestedImports = resolveImportSourcesForFile({
+        importSources: processed.importSources,
+        importerAbsPath: absPath,
+        pagesDir,
+        projectRoot,
+      })
+      for (const nested of nestedImports) {
+        // Add to a synthetic pageImports entry so vite-plugin.ts picks them up
+        const syntheticKey = `__imported:${absPath}`
+        if (!pageImports[syntheticKey]) pageImports[syntheticKey] = []
+        if (!pageImports[syntheticKey].some((i) => i.moduleKey === nested.moduleKey)) {
+          pageImports[syntheticKey].push(nested)
+        }
+        // If the nested import is itself .md/.mdx, queue it for processing
+        if (!nested.moduleKey.includes('?') && /\.mdx?$/.test(nested.absPath) && !visited.has(nested.absPath)) {
+          visited.add(nested.absPath)
+          queue.push(nested.absPath)
+        }
+      }
+    }
+
     const mdxDir = path.dirname(absPath)
     const resolvedImages = await resolveAndProcessImages({
       imageSrcs: processed.imageSrcs,
@@ -516,6 +561,13 @@ async function processImportedMdxFiles({
       imageCache,
       imageOutputDir,
     })
+
+    // Collect local image file paths for HMR watching
+    for (const src of processed.imageSrcs) {
+      if (src.startsWith('http://') || src.startsWith('https://')) continue
+      const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
+      if (resolved) imageDepPaths.push(resolved.filePath)
+    }
 
     const finalMdx = resolvedImages.size > 0
       ? rewriteMdxImages(processed.mdast, resolvedImages)
@@ -527,7 +579,63 @@ async function processImportedMdxFiles({
     }
   }
 
-  return { content, iconRefs }
+  return { content, iconRefs, imageDepPaths }
+}
+
+/**
+ * Resolve import sources relative to an arbitrary file (not a page slug).
+ * Used for nested imports inside imported .md/.mdx files.
+ */
+function resolveImportSourcesForFile({
+  importSources,
+  importerAbsPath,
+  pagesDir,
+  projectRoot,
+}: {
+  importSources: string[]
+  importerAbsPath: string
+  pagesDir: string
+  projectRoot: string
+}): ResolvedImport[] {
+  const result: ResolvedImport[] = []
+  const seen = new Set<string>()
+  const importerDir = path.dirname(importerAbsPath)
+
+  for (const source of importSources) {
+    const queryIdx = source.indexOf('?')
+    const querySuffix = queryIdx >= 0 ? source.slice(queryIdx) : ''
+    const cleanSource = queryIdx >= 0 ? source.slice(0, queryIdx) : source
+
+    if (cleanSource.startsWith('/')) {
+      const normalized = '.' + cleanSource
+      const resolved = tryResolveImport(path.join(pagesDir, cleanSource.slice(1)))
+        ?? tryResolveImport(path.join(projectRoot, cleanSource.slice(1)))
+      if (resolved) {
+        const ext = path.extname(resolved)
+        const moduleKey = (path.extname(cleanSource) ? normalized : normalized + ext) + querySuffix
+        if (!seen.has(moduleKey)) {
+          seen.add(moduleKey)
+          result.push({ moduleKey, absPath: resolved })
+        }
+      }
+      continue
+    }
+
+    // Relative import: resolve from the importer file's directory
+    const resolved = tryResolveImport(path.resolve(importerDir, cleanSource))
+    if (resolved) {
+      const relativeToRoot = path.relative(projectRoot, resolved).replace(/\\/g, '/')
+      const moduleKey = (relativeToRoot.startsWith('../') || path.isAbsolute(relativeToRoot)
+        ? relativeToRoot
+        : './' + relativeToRoot) + querySuffix
+      if (!seen.has(moduleKey)) {
+        seen.add(moduleKey)
+        result.push({ moduleKey, absPath: resolved })
+      }
+    }
+  }
+
+  return result
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
