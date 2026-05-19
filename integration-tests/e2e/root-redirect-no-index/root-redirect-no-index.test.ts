@@ -3,7 +3,7 @@
  * does not exist in the fixture.
  */
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 test.describe("root redirect without index", () => {
   test("GET / redirects to the first page", async ({ request }) => {

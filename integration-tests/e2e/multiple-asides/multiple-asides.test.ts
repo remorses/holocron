@@ -3,7 +3,7 @@
  * and stack vertically instead of creating overlapping sticky regions.
  */
 
-import { expect, test, type Locator } from "@playwright/test";
+import { expect, test, type Locator } from "../helpers/test.ts";
 
 function getSlotAsideIndex(locator: Locator) {
   return locator.evaluate((node: Element) => {

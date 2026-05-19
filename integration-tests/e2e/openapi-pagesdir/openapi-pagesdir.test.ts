@@ -5,7 +5,7 @@
  * projectRoot and missed specs inside pagesDir.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../helpers/test.ts'
 
 test('API endpoint page loads when spec is inside pagesDir', async ({ request }) => {
   const res = await request.get('/api/get-users')

@@ -1,12 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 import { createServer } from "node:net";
-import fs from "node:fs";
-import path from "node:path";
 import {
   discoverFixtures,
   ensureE2ERunId,
-  getFixtureOutDir,
-  integrationTestsDir,
 } from "./scripts/fixtures.ts";
 
 function getFreePort(): Promise<number> {
@@ -31,12 +27,12 @@ if (fixtures.length === 0) {
 }
 
 const isStart = Boolean(process.env.E2E_START);
-const runId = ensureE2ERunId();
-const logsDir = path.join(integrationTestsDir, ".playwright-logs");
-fs.mkdirSync(logsDir, { recursive: true });
+ensureE2ERunId();
 
-function quoteForShell(value: string): string {
-  return `'${value.replaceAll(`'`, `'\\''`)}'`;
+function getWorkerCount(): number {
+  const raw = process.env["E2E_WORKERS"]?.trim();
+  const value = raw ? Number(raw) : 1;
+  return Number.isInteger(value) && value > 0 ? value : 1;
 }
 
 // Playwright imports this config file multiple times (once for the main
@@ -52,30 +48,6 @@ const fixturePorts = await Promise.all(
     return { fixture, port };
   }),
 );
-
-const webServers = fixturePorts.map(({ fixture, port }) => {
-  // Use a per-fixture vite.config.ts if present, otherwise the shared one
-  const fixtureConfig = path.join(fixture.rootDir, "vite.config.ts");
-  const configFlag = fs.existsSync(fixtureConfig)
-    ? `--config ${fixture.rootRel}/vite.config.ts`
-    : `--config vite.config.ts`;
-  const builtServerEntry = path.join(getFixtureOutDir(fixture.rootDir, runId), "rsc/index.js");
-  const envPrefix = `E2E_RUN_ID=${quoteForShell(runId)} E2E_FIXTURE_ROOT=${quoteForShell(fixture.rootDir)}`;
-  const serverCommand = isStart
-    ? `cd ${quoteForShell(fixture.rootRel)} && ${envPrefix} PORT=${port} node ${quoteForShell(builtServerEntry)}`
-    : `${envPrefix} pnpm exec vite ${fixture.rootRel} ${configFlag} --port ${port} --strictPort`;
-  const logPath = path.join(logsDir, `${fixture.name}.${isStart ? "start" : "dev"}.${runId}.log`);
-  fs.writeFileSync(logPath, "");
-  const command = `${serverCommand} > ${quoteForShell(logPath)} 2>&1`;
-  return {
-    command,
-    stdout: "pipe" as const,
-    stderr: "pipe" as const,
-    port,
-    timeout: 30_000,
-    reuseExistingServer: false,
-  };
-});
 
 // Fixtures whose test files mutate shared state (config, MDX pages) on disk
 // must avoid in-project parallelism so multiple mutating files don't race on
@@ -106,12 +78,11 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects,
-  webServer: webServers,
   fullyParallel: true,
   // Dev-mode e2e runs one Vite server per fixture and several tests assert HMR
   // without reloads. Keep dev runs serial so fixture servers and websocket HMR
   // do not starve each other on busy machines.
-  workers: process.env["CI"] ? 1 : isStart ? undefined : 1,
+  workers: getWorkerCount(),
   // Config-HMR tests tagged @dev only run against the dev server; build-mode
   // tests skip them (and vice-versa). Non-tagged tests run in both modes.
   grepInvert: isStart ? /@dev/ : /@build/,

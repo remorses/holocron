@@ -1,6 +1,6 @@
 // Custom-entry fixture: user Spiceflow entry mounting holocron as a child.
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 test.describe("user API routes alongside holocron", () => {
   test("GET /api/hello returns user-owned JSON", async ({ request }) => {

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../helpers/test.ts'
 
 test.describe('custom CSS injection', () => {
   test('user global.css is loaded and applies styles', async ({ page }) => {

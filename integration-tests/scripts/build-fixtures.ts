@@ -1,5 +1,5 @@
 /**
- * Build every fixture's `dist/` in parallel.
+ * Build fixture `dist/` folders with bounded concurrency.
  *
  * Used by `pretest-e2e-start` to produce one production build per fixture
  * before Playwright spins up the `start` web servers.
@@ -16,6 +16,32 @@ import {
 } from "./fixtures.ts";
 
 const runId = ensureE2ERunId();
+
+function getConcurrency(): number {
+  const raw = process.env["E2E_BUILD_CONCURRENCY"]?.trim();
+  const value = raw ? Number(raw) : 2;
+  return Number.isInteger(value) && value > 0 ? value : 2;
+}
+
+async function runWithConcurrency<T>({
+  items,
+  limit,
+  run,
+}: {
+  items: T[];
+  limit: number;
+  run: (item: T) => Promise<void>;
+}): Promise<void> {
+  const queue = [...items];
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (queue.length > 0) {
+      const item = queue.shift();
+      if (!item) return;
+      await run(item);
+    }
+  });
+  await Promise.all(workers);
+}
 
 function cleanFixtureBuildOutput(rootDir: string): void {
   const outDir = getFixtureOutDir(rootDir, runId);
@@ -70,7 +96,7 @@ if (fixtures.length === 0) {
 }
 
 console.log(
-  `[build-fixtures] run ${runId}: building ${fixtures.length} fixture(s) in parallel: ${fixtures
+  `[build-fixtures] run ${runId}: building ${fixtures.length} fixture(s) with concurrency ${getConcurrency()}: ${fixtures
     .map((f) => f.name)
     .join(", ")}`,
 );
@@ -81,6 +107,10 @@ console.log(
 for (const fixture of fixtures) {
   cleanFixtureBuildOutput(fixture.rootDir);
 }
-await Promise.all(fixtures.map((fixture) => buildFixture(fixture.rootRel)));
+await runWithConcurrency({
+  items: fixtures,
+  limit: getConcurrency(),
+  run: (fixture) => buildFixture(fixture.rootRel),
+});
 
 console.log(`\n[build-fixtures] done — built ${fixtures.length} fixture(s)`);

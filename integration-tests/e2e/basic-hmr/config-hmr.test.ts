@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "../helpers/test.ts";
 
 async function openBasicHmrHome(page: Page, request: APIRequestContext) {
   const response = await request.get("/", {

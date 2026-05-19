@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "../helpers/test.ts";
 
 /**
  * Fixture: fixtures/tabs/
@@ -90,12 +90,12 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
   });
 
   test("banner content inherits the banner contrast color in light and dark mode", async ({
-    page,
+    context,
     request,
   }) => {
-    await page.setViewportSize({ width: 1600, height: 1200 });
-
     for (const colorScheme of ["light", "dark"] as const) {
+      const page = await context.newPage();
+      await page.setViewportSize({ width: 1600, height: 1200 });
       await page.emulateMedia({ colorScheme });
       await openTabsHome(page, request);
 
@@ -119,6 +119,7 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
       });
 
       expect(snapshot.uniqueTextColors).toEqual([snapshot.bannerColor]);
+      await page.close();
     }
   });
 

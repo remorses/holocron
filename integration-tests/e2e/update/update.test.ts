@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 // Integration tests for the Mintlify-style <Update> component. The component
 // must render as a two-column row: a sticky label rail on the left and MDX

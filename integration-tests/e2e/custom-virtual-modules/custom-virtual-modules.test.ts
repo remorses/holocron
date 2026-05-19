@@ -1,6 +1,6 @@
 /** Validates that hardcoded custom virtual modules override on-disk fixture content in dev and build modes. */
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 test.describe("custom virtual modules", () => {
   test("virtual config overrides the local config and renders the version select", async ({ page }) => {

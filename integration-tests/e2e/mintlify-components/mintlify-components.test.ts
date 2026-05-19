@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 test.describe("mintlify components fixture", () => {
   test("loads the page and renders representative components", async ({ page }) => {

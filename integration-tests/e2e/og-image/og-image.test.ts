@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../helpers/test.ts'
 
 test.describe('og-image meta tags', () => {
   test('home page emits social image tags pointing to holocron.so', async ({ request }) => {

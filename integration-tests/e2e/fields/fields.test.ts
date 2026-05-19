@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 test.describe("site-wide description meta", () => {
   test("<meta name='description'> falls back to root config.description", async ({

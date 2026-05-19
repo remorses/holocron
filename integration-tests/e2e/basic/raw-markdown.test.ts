@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 test.describe("raw markdown via .md path suffix", () => {
   test("GET /index.md returns raw markdown", async ({ request }) => {

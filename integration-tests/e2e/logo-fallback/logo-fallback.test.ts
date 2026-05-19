@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../helpers/test.ts'
 
 test.describe('generated logo fallback', () => {
   test('home page html uses AI generated logo image from holocron.so', async ({ request }) => {

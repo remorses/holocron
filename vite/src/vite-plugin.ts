@@ -29,18 +29,6 @@ const HOLOCRON_GLOBALS_CSS_PATH = path.join(__holocronSrcDir, 'styles/globals.cs
 const nodeRequire = createRequire(import.meta.url)
 const yamlBrowserEntry = path.join(path.dirname(nodeRequire.resolve('yaml/package.json')), 'browser/index.js')
 
-function buildConfigColorCss(config: HolocronConfig): string {
-  if (!config.colors._hasUserColors) return ''
-
-  const lightBrand = config.colors.dark ?? config.colors.primary
-  const darkBrand = config.colors.light ?? `color-mix(in oklch, ${config.colors.primary} 40%, white)`
-  return [`:root:root { --primary: ${lightBrand}; }`, `:root.dark { --primary: ${darkBrand}; }`].join('\n')
-}
-
-function sameConfigExceptColors(a: HolocronConfig, b: HolocronConfig): boolean {
-  return JSON.stringify({ ...a, colors: undefined }) === JSON.stringify({ ...b, colors: undefined })
-}
-
 export type HolocronVirtualModules = {
   /** Custom source for `virtual:holocron-config` */
   config?: string
@@ -719,19 +707,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep) {
         return
-      }
-
-      if (isConfig && this.environment.name === 'client') {
-        const nextConfig = readConfig({ root, configPath: options.configPath })
-        if (sameConfigExceptColors(config, nextConfig)) {
-          config = nextConfig
-          ctx.server.environments.client?.hot.send({
-            type: 'custom',
-            event: 'holocron:config-colors',
-            data: { css: buildConfigColorCss(config) },
-          })
-          return []
-        }
       }
 
       if (isMdxInsidePagesDir) {

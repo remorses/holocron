@@ -6,7 +6,7 @@
  * parameter rendering, and code examples.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../helpers/test.ts'
 
 test.describe('docs + API tabs coexist', () => {
   test('root page serves the documentation tab content', async ({ request }) => {

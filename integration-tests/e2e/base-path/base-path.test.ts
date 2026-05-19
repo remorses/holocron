@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../helpers/test.ts";
 
 test.describe("pages under base path", () => {
   test("root redirects or serves intro page", async ({ request }) => {
