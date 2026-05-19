@@ -22,7 +22,26 @@ const CACHE_TTL = 60 * 60 * 24 * 365
 const KV_PREFIX = 'ai-logo:'
 
 function buildPrompt(name: string): string {
-  return `Replace the text in the image with the word "${name.toLowerCase()}". Keep the exact same black cursive handwritten script font style. Black text on pure white background. Centered.`
+  const characters = Array.from(name.toLowerCase())
+    .map((char) => `"${char}"`)
+    .join(' ')
+  return `Replace the text in the image with these characters, joined with no spaces: ${characters}. The final text is: ${name.toLowerCase()}. Keep the exact same black cursive handwritten script font style. Black text on pure white background. Centered.`
+}
+
+function escapeSvgText(text: string): string {
+  return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+}
+
+function createFallbackLogo(name: string): Response {
+  const text = escapeSvgText(name.toLowerCase())
+  const width = Math.max(160, Math.min(640, 44 + Array.from(text).length * 30))
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="96" viewBox="0 0 ${width} 96"><rect width="100%" height="100%" fill="white"/><text x="50%" y="58" text-anchor="middle" font-family="Brush Script MT, Snell Roundhand, cursive" font-size="56" fill="black">${text}</text></svg>`
+  return new Response(svg, {
+    headers: {
+      'content-type': 'image/svg+xml; charset=utf-8',
+      'cache-control': 's-maxage=300',
+    },
+  })
 }
 
 /** Decode base64 string to Uint8Array */
@@ -37,10 +56,9 @@ function base64ToBytes(b64: string): Uint8Array {
 
 /** Find bounding box of non-white pixels and crop the RGBA buffer */
 function cropWhiteEdges(
-  rgba: Uint8Array,
-  width: number,
-  height: number,
+  input: { rgba: Uint8Array; width: number; height: number },
 ): { data: Uint8Array; width: number; height: number } {
+  const { rgba, width, height } = input
   let minX = width
   let minY = height
   let maxX = 0
@@ -82,14 +100,6 @@ function cropWhiteEdges(
   }
 
   return { data: cropped, width: cropW, height: cropH }
-}
-
-/** Load the template image from public/ as a Blob for FormData */
-async function getTemplateBlob(): Promise<Blob> {
-  // Fetch the template from the same worker's static assets
-  const res = await fetch(new URL('/ai-logo-template.jpeg', 'http://localhost'))
-  if (!res.ok) throw new Error(`Failed to load template: ${res.status}`)
-  return res.blob()
 }
 
 // Cache the template blob across requests
@@ -145,16 +155,16 @@ export const aiLogoApp = new Spiceflow().get(
     // Call Flux via Workers AI binding
     let result: { image?: string }
     try {
-      result = (await env.AI.run(MODEL, {
+      result = await env.AI.run(MODEL, {
         multipart: {
           body: formStream,
           contentType: formContentType,
         },
-      })) as { image?: string }
+      })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      if (msg.includes('NSFW') || msg.includes('flagged')) {
-        return new Response('Content filtered', { status: 422 })
+      if (/\b(NSFW|flagged|content filter|safety filter|content policy)\b/i.test(msg)) {
+        return createFallbackLogo(name)
       }
       return new Response(`AI error: ${msg}`, { status: 502 })
     }
@@ -171,18 +181,20 @@ export const aiLogoApp = new Spiceflow().get(
     const rgba = new Uint8Array(decoded.data.buffer)
 
     // Crop white edges
-    const cropped = cropWhiteEdges(rgba, decoded.width, decoded.height)
+    const cropped = cropWhiteEdges({ rgba, width: decoded.width, height: decoded.height })
 
     // Re-encode to JPEG
     const encoded = jpeg.encode(
       { data: cropped.data, width: cropped.width, height: cropped.height },
       JPEG_QUALITY,
     )
+    const image = new Uint8Array(encoded.data.byteLength)
+    image.set(encoded.data)
 
     // Store in KV (globally replicated, persists across deploys)
-    await env.AI_LOGO_KV.put(kvKey, encoded.data.buffer as ArrayBuffer, { expirationTtl: CACHE_TTL })
+    await env.AI_LOGO_KV.put(kvKey, image.buffer, { expirationTtl: CACHE_TTL })
 
-    return new Response(encoded.data.buffer as ArrayBuffer, {
+    return new Response(image.buffer, {
       headers: {
         'content-type': 'image/jpeg',
         'cache-control': 's-maxage=31536000, immutable',
