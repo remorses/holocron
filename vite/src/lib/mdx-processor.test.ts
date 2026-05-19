@@ -662,4 +662,43 @@ See [setup](/getting-started#setup) and [filtered](/api?version=2).
     expect(result.internalLinks).toHaveLength(1)
     expect(result.internalLinks[0]!.href).toBe('/same-page')
   })
+
+  test('excludes links to static files with extensions', () => {
+    const result = processMdx(`
+Download the [schema](/openapi.json) and [guide](/docs/guide.pdf).
+Also [image](/logo.png) and [real page](/getting-started).
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/getting-started",
+      ]
+    `)
+  })
+
+  test('collects Tile, Tooltip, and Badge hrefs', () => {
+    const result = processMdx(`
+<Tile href="/tile-page">Tile</Tile>
+<Tooltip href="/tooltip-page">Tip</Tooltip>
+<Badge href="/badge-page">New</Badge>
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/tile-page",
+        "/tooltip-page",
+        "/badge-page",
+      ]
+    `)
+  })
+
+  test('skips dynamic JSX expression href attributes', () => {
+    const result = processMdx(`
+<Card href="/static-page">Static</Card>
+<Card href={dynamicUrl}>Dynamic</Card>
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/static-page",
+      ]
+    `)
+  })
 })

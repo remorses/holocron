@@ -280,18 +280,26 @@ function collectImageSrcs(root: Root): string[] {
 
 /** Hrefs that are clearly not internal page links. */
 function isExternalOrSpecialHref(href: string): boolean {
-  return (
+  if (
     href.startsWith('http://') ||
     href.startsWith('https://') ||
     href.startsWith('mailto:') ||
     href.startsWith('tel:') ||
     href.startsWith('#') ||
     href.startsWith('javascript:')
-  )
+  ) return true
+  // Skip links to static files (e.g. /openapi.json, /docs/guide.pdf).
+  // These are public assets, not pages. Strip query/hash before checking.
+  const clean = href.replace(/[?#].*$/, '')
+  const lastSegment = clean.split('/').pop() ?? ''
+  if (/\.[a-z0-9]+$/i.test(lastSegment)) return true
+  return false
 }
 
 /** JSX element names that commonly carry an `href` attribute pointing to pages. */
-const JSX_HREF_ELEMENTS = new Set(['a', 'Card', 'card'])
+const JSX_HREF_ELEMENTS = new Set([
+  'a', 'Card', 'card', 'Tile', 'tile', 'Tooltip', 'tooltip', 'Badge', 'badge',
+])
 
 /**
  * Walk the mdast tree and collect internal links (relative or absolute paths
@@ -320,7 +328,7 @@ function collectInternalLinks(root: Root): InternalLink[] {
         add(node.url, node.position?.start?.line)
       }
       if (isJsxElement(node) && JSX_HREF_ELEMENTS.has(node.name ?? '')) {
-        const href = getJsxAttrValue(node, 'href')
+        const href = getStaticJsxStringAttr(node, 'href')
         if (href) {
           add(href, node.position?.start?.line)
         }
@@ -520,6 +528,20 @@ function setJsxAttr({ node, attrName, value }: { node: JsxNode; attrName: string
   } else {
     node.attributes.push({ type: 'mdxJsxAttribute', name: attrName, value })
   }
+}
+
+/**
+ * Extract a JSX attribute value only if it is a plain static string literal.
+ * Returns undefined for expression attributes like `href={url}` or
+ * `href={`/path/${id}`}`, avoiding false positives in link validation.
+ */
+function getStaticJsxStringAttr(node: JsxNode, attrName: string): string | undefined {
+  const attr = node.attributes?.find((a) => a.type === 'mdxJsxAttribute' && a.name === attrName)
+  if (!attr) return undefined
+  // Plain string attribute: <Card href="/path">
+  if (typeof attr.value === 'string') return attr.value
+  // MDX expression attribute: <Card href={expr}> → skip (not a static string)
+  return undefined
 }
 
 function copyJsxAttrsExcept(node: JsxNode, attrNames: string[]): NonNullable<JsxNode['attributes']> {
