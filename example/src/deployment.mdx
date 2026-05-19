@@ -100,6 +100,23 @@ If you've signed in to [holocron.so](https://holocron.so) with your GitHub accou
 
 No `HOLOCRON_KEY` secret is needed. If both OIDC and `HOLOCRON_KEY` are available, the explicit key takes priority.
 
+## Deployment URLs
+
+When deploying from **GitHub Actions** (OIDC), your site URL is derived from the
+verified GitHub **repo name** and **owner**:
+
+```txt
+https://<repo>-<owner>-site.holocron.so
+```
+
+Pushing to the default branch (usually `main`) updates the production URL.
+Pushing to any other branch or opening a pull request creates a unique preview
+URL that includes the branch name. The deploy command prints the URL and sets it
+as the `holocron_url` step output.
+
+When deploying **locally** or with an **API key**, the URL uses the project ID
+instead (`https://<projectId>-site.holocron.so`).
+
 ## Branch detection
 
 The branch name is detected automatically:

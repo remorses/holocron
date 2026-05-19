@@ -12,23 +12,9 @@ description: >
 Holocron documentation changes fast. Do not rely on stale training data or
 repository-relative source paths. Fetch the public docs first, then search them.
 
-## Always fetch the docs zip first
-
-Before answering Holocron usage questions or editing a Holocron project, fetch
-the latest docs zip and search it locally.
-
-```bash
-curl -fsSL https://holocron.so/docs.zip -o /tmp/holocron-docs.zip
-DOCS_DIR=$(mktemp -d /tmp/holocron-docs.XXXXXX)
-unzip -oq /tmp/holocron-docs.zip -d "$DOCS_DIR"
-```
-
-Never truncate docs output. Do not pipe docs through `head`, `tail`, `sed -n`,
-or any command that hides lines. Use full-file reads and targeted searches.
-
 ## Relevant docs pages
 
-Fetch `/sitemap.xml` to see all available pages. Append `.md` to any page URL
+Fetch `https://holocron.so/sitemap.xml` to see all available pages. Append `.md` to any page URL
 to get raw markdown:
 
 ```bash
@@ -46,7 +32,7 @@ When the user asks about a specific workflow, fetch the matching page directly:
 - **Local imports**: https://holocron.so/create/local-imports.md
 - **Redirects**: https://holocron.so/create/redirects.md
 - **`docs.json` config**: https://holocron.so/organize/docs-json.md
-- **Config schema**: https://unpkg.com/@holocron.so/vite/src/schema.json
+- **Config schema**: https://holocron.so/docs.json
 - **Navigation**: https://holocron.so/organize/navigation.md
 - **Theme customization**: https://holocron.so/customize/theme.md
 - **Icons**: https://holocron.so/customize/icons.md
@@ -59,9 +45,6 @@ When the user asks about a specific workflow, fetch the matching page directly:
 ```bash
 curl -fsSL https://holocron.so/quickstart.md
 curl -fsSL https://holocron.so/organize/docs-json.md
-
-# discover all available pages
-curl -s https://holocron.so/sitemap.xml
 ```
 
 ## Scaffolding a new project
@@ -72,7 +55,7 @@ Use the CLI to create a new docs site with a working template:
 npx -y @holocron.so/cli create --name "My Docs" my-docs --skip-auth
 ```
 
-The `--skip-auth` flag skips cloud setup (suitable for agents and local-only
+The `--skip-auth` flag skips cloud setup & AI chat setup (suitable for agents and local-only
 usage). The template includes `vite.config.ts`, `docs.jsonc`, sample pages,
 navigation with tabs, anchors, and icons.
 
@@ -88,20 +71,20 @@ pnpm dev
 
 Holocron reads `docs.json`, `docs.jsonc`, or `holocron.jsonc`. Prefer
 `docs.jsonc` when writing by hand because comments and trailing commas make it
-easier to maintain. Use `docs.json` when a tool needs strict JSON.
+easier to maintain.
 
 Always fetch the schema before adding uncommon config fields so you can see the
 current full option set:
 
 ```bash
-curl -fsSL https://unpkg.com/@holocron.so/vite/src/schema.json
+curl -fsSL https://holocron.so/docs.json
 ```
 
 Simple `docs.jsonc`:
 
 ```jsonc
 {
-  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
+  "$schema": "https://holocron.so/docs.json",
   "name": "Acme",
   "description": "Documentation for Acme.",
   "colors": { "primary": "#6366f1" },
@@ -205,6 +188,7 @@ that change rendering, SEO, or navigation.
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Quickstart
 description: Build and deploy your first Holocron docs site.
 icon: lucide:rocket
@@ -248,24 +232,7 @@ See https://holocron.so/create/redirects.md for details.
 ## Custom entry (Spiceflow)
 
 Holocron can be mounted inside a Spiceflow app to add API routes, middleware,
-or auth alongside docs. Pass `entry` to the plugin and import the holocron app:
-
-```ts
-// vite.config.ts
-export default defineConfig({
-  plugins: [holocron({ entry: './src/server.tsx' })],
-})
-```
-
-```tsx
-// src/server.tsx
-import { Spiceflow } from 'spiceflow'
-import { app as holocronApp } from '@holocron.so/vite/app'
-
-export const app = new Spiceflow()
-  .get('/api/hello', () => ({ hello: 'world' }))
-  .use(holocronApp)
-```
+or auth alongside docs. Passing `entry` to the plugin and import the holocron app
 
 See https://holocron.so/custom-entry.md and https://holocron.so/spiceflow.md
 for the full pattern including middleware, Cloudflare Workers, and diagrams.
@@ -287,6 +254,8 @@ which changes styling.
 
 ## Aside content
 
+Aside let you put content on the right sidebar next to the main MDX content. Useful to add notes and callouts.
+
 `Aside` is positioning-only and has no visual frame. Always wrap visible content
 inside `Note`, `Tip`, `Info`, `Warning`, `Callout`, or another framed component.
 
@@ -300,7 +269,7 @@ This appears in the sidebar with a proper callout frame.
 </Aside>
 ```
 
-Exception: `Aside full` can contain `TableOfContentsPanel` directly.
+Exception: `Aside full` can contain `TableOfContentsPanel` directly, when user wants to show a typical table of contents on the right.
 
 ## New pages and navigation
 
@@ -311,19 +280,92 @@ and return 404.
 Read the existing navigation structure first, then place the page in the best
 tab, group, and reading order.
 
+## Authentication
+
+Before deploying locally, log in via the CLI. This opens a browser window for
+device-flow authentication with holocron.so:
+
+```bash
+npx -y @holocron.so/cli login
+```
+
+After login, a session token is stored in `~/.holocron/config.json`. Verify
+your session with:
+
+```bash
+npx -y @holocron.so/cli whoami
+```
+
+To remove stored credentials:
+
+```bash
+npx -y @holocron.so/cli logout
+```
+
 ## Built-in deploy command
 
 Use `holocron deploy` when the user wants hosted Holocron deployment instead of
-self-hosting on Node.js or Cloudflare Workers.
+self-hosting on Node.js or Cloudflare Workers. This is the fastest way to quickly
+get a deployed holocron website.
 
 ```bash
 npx -y @holocron.so/cli deploy
 ```
 
-For local deploys, authenticate with `npx -y @holocron.so/cli login`. For CI
-deploys, use `HOLOCRON_KEY=holo_xxx`. The API key identifies the project, so
-`--project` is only needed with session auth when the account has multiple
-projects.
+**Auth priority for deploys:**
+
+1. `HOLOCRON_KEY` env var (API key, identifies the project directly)
+2. Session token from `holocron login` (requires `--project` if the account has
+   multiple projects)
+3. GitHub Actions OIDC token (automatic in GitHub Actions with `id-token: write`)
+
+### GitHub Actions OIDC (keyless deploys)
+
+The deploy command does not need an API key when run inside GitHub Actions and
+the user signed in to holocron.so with the same GitHub account that owns the
+repo. Holocron uses the GitHub OIDC token to authenticate. The workflow needs
+`permissions: id-token: write`.
+
+### Deployment URLs
+
+The URL format depends on the auth method. `githubOwner` and `githubRepo` are
+**OIDC-only fields** — they can only be set from a verified GitHub Actions JWT,
+never from local deploys or API key requests.
+
+**GitHub Actions OIDC deploys**: the subdomain uses verified repo metadata from
+the JWT. Default branch (production):
+
+```
+https://<repo>-<owner>-site.holocron.so
+```
+
+For example, repo `remorses/my-docs` on the default branch deploys to
+`https://my-docs-remorses-site.holocron.so`.
+
+Non-default branches and PRs (preview): the preview subdomain includes the
+sanitized branch name, a short hash, and the project subdomain:
+
+```
+https://<branch>-<hash>-<repo>-<owner>-site-preview.holocron.so
+```
+
+For example, branch `fix-typo` on repo `remorses/my-docs` deploys to something
+like `https://fix-typo-abc123-my-docs-remorses-site-preview.holocron.so`.
+
+**Local deploys (session or API key)**: the subdomain uses the project ID since
+there is no verified GitHub context:
+
+```
+https://<projectId>-site.holocron.so
+```
+
+**How branch detection works in GitHub Actions:**
+
+- **Pull requests**: `head_ref` OIDC claim (the PR source branch). Marked as
+  preview automatically.
+- **Pushes**: `ref` claim stripped to branch name (`refs/heads/main` → `main`).
+  Compared against the project's default branch to decide production vs preview.
+- **Explicit override**: `--branch <name>` CLI flag.
 
 Hosted deploy currently supports generated Holocron subdomains only. Do not tell
 users custom domains are supported by `holocron deploy` yet.

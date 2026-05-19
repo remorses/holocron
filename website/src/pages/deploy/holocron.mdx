@@ -19,17 +19,33 @@ npx -y @holocron.so/cli deploy
 The command runs your build, uploads only changed files, finalizes the deployment,
 and prints the live URL.
 
-## Current limitation
+## Deployment URLs
 
-Hosted deploys currently publish to a generated Holocron subdomain. Custom
-domains are not supported yet.
+The URL format depends on how you deploy.
+
+**From GitHub Actions (OIDC)**: the subdomain is derived from your GitHub **repo
+name** and **owner**, verified from the OIDC token. Pushing to the default branch
+(usually `main`) deploys to:
 
 ```txt
-https://<project>-<owner>-site.holocron.so
+https://<repo>-<owner>-site.holocron.so
 ```
 
-Use [Cloudflare Workers](/deploy/cloudflare) or [Node.js](/deploy/node) if you
-need to bring your own custom domain today.
+For example, `remorses/my-docs` on `main` → `https://my-docs-remorses-site.holocron.so`.
+
+Pushes to non-default branches or pull request events produce a unique preview URL
+that includes the branch name. The deploy command prints the URL after each deploy,
+and sets it as a GitHub Actions step output (`holocron_url`).
+
+**From local or API key**: the subdomain uses the project ID instead of the GitHub
+repo name, since there is no verified GitHub context:
+
+```txt
+https://<projectId>-site.holocron.so
+```
+
+Custom domains are not supported yet. Use [Cloudflare Workers](/deploy/cloudflare)
+or [Node.js](/deploy/node) if you need your own domain today.
 
 ## Authentication
 
