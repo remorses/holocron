@@ -236,6 +236,10 @@ test.describe.serial("config HMR @dev", () => {
   }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await openBasicHmrHome(page, request);
+    await page.waitForLoadState("networkidle");
+
+    const marker = `config-nav-hmr-${Date.now()}`;
+    await page.evaluate((value) => Object.assign(window, { __configNavHmrMarker: value }), marker);
 
     const nav = page.getByRole("navigation", { name: "Navigation" });
 
@@ -267,10 +271,9 @@ test.describe.serial("config HMR @dev", () => {
     await expect(
       nav.getByRole("link", { name: hmrPageTitle }),
     ).toBeVisible({ timeout: 5_000 });
-
-    // Config edits can trigger either RSC HMR or a full dev refresh depending
-    // on Vite's file-change timing. The user-visible contract is that the
-    // navigation updates without manual reload.
+    await expect
+      .poll(async () => page.evaluate(() => Reflect.get(window, "__configNavHmrMarker")))
+      .toBe(marker);
   });
 
   test("changing the site name updates the document title", async ({

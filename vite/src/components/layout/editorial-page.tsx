@@ -36,14 +36,6 @@ import {
 import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
 import { GridLinesFrame, TabBarDots, NavbarLines, AboveBottomDots } from './grid-lines.tsx'
 
-if (import.meta.hot) {
-  import.meta.hot.on('holocron:config-colors', ({ css }: { css: string }) => {
-    const style = document.createElement('style')
-    style.textContent = css
-    document.head.append(style)
-  })
-}
-
 
 export type EditorialSection = {
   content: React.ReactNode

@@ -40,6 +40,7 @@ function buildConfigColorCss(config: HolocronConfig): string {
 function sameConfigExceptColors(a: HolocronConfig, b: HolocronConfig): boolean {
   return JSON.stringify({ ...a, colors: undefined }) === JSON.stringify({ ...b, colors: undefined })
 }
+
 export type HolocronVirtualModules = {
   /** Custom source for `virtual:holocron-config` */
   config?: string
@@ -867,7 +868,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     hotUpdate(ctx) {
       const isMdx = (ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md'))
         && ctx.file.startsWith(pagesDir)
-      if (!isMdx) return
+      const isConfig = Boolean(configFilePath && ctx.file === configFilePath)
+      if (!isMdx && !isConfig) return
 
       // @tailwindcss/vite also runs in `enforce: pre`. It full-reloads when
       // every module for a scanned file is an asset/no-id module. MDX pages are

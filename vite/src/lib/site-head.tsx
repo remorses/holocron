@@ -48,6 +48,14 @@ export type FontHeadState = {
   preconnectGoogle: boolean
 }
 
+function stableHash(value: string): string {
+  let hash = 0
+  for (let i = 0; i < value.length; i++) {
+    hash = (Math.imul(31, hash) + value.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash).toString(36)
+}
+
 export function buildFontHeadState(config: HolocronConfig): FontHeadState {
   const stylesheetLinks = new Set<string>()
   const fontFaces: string[] = []
@@ -128,6 +136,7 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
     ...fontHead.fontFaces,
     fontHead.fontVarOverrides.length > 0 ? `:root { ${fontHead.fontVarOverrides.join(' ')} }` : '',
   ].filter(Boolean).join('\n')
+  const injectedStylesHref = `/holocron-injected-styles?${stableHash(injectedStyles)}`
 
   return (
     <Head>
@@ -146,7 +155,7 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
       ))}
       {/* Injected styles: colors + font-face + font var overrides */}
       {injectedStyles && (
-        <style href='/holocron-injected-styles' precedence='default' dangerouslySetInnerHTML={{ __html: injectedStyles }} />
+        <style href={injectedStylesHref} precedence='default' dangerouslySetInnerHTML={{ __html: injectedStyles }} />
       )}
       {hasBoth ? (
         <>
