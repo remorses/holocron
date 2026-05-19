@@ -103,6 +103,6 @@ export function buildGridTokenStyle(
     ...(gridGap !== undefined && { '--grid-gap': `${gridGap}px` }),
     '--grid-sidebar-width': `${sidebarWidth}px`,
     '--grid-max-width': `min(calc(100vw - 60px), ${maxW}px)`,
-    '--grid-content-width': `minmax(0, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap)))`,
+    '--grid-content-width': `minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap))))`,
   }
 }
