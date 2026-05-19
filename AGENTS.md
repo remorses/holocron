@@ -510,6 +510,17 @@ Do not add brittle tests that hardcode visual constants like pixel gaps, widths,
 
 **Running tests**:
 
+**Always run a single fixture** to save time. Running all fixtures spins up many Vite servers and is slow. Only run the full suite before merging or when asked.
+
+```bash
+# Run one fixture (preferred — fast, focused)
+pnpm --dir integration-tests test-e2e --project=basic
+
+# Other examples
+pnpm --dir integration-tests test-e2e --project=tabs
+pnpm --dir integration-tests test-e2e --project=realworld-polar
+```
+
 - `pnpm test-e2e` — runs every fixture in dev mode (one Vite server per fixture)
 - `pnpm test-e2e-start` — builds every fixture, runs every fixture in prod mode
 - `pnpm test-e2e --project=<name>` — runs one specific fixture
