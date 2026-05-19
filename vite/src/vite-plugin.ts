@@ -479,16 +479,28 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         const loaderEntries = slugs.map((slug) => {
           return `${JSON.stringify(slug)}: () => import(${JSON.stringify(VIRTUAL_MDX_PAGE_PREFIX + encodeURIComponent(slug))}).then((m) => m.default)`
         })
+        // Build imported MDX sources map keyed by relative path from project root.
+        // Files outside projectRoot keep their ../  segments so they remain unique.
+        const importedMdxEntries: Record<string, string> = {}
+        for (const [absPath, content] of Object.entries(syncResult.importedMdxContent)) {
+          const relPath = path.relative(root, absPath).replace(/\\/g, '/')
+          const key = relPath.startsWith('../') || path.isAbsolute(relPath)
+            ? relPath
+            : './' + relPath
+          importedMdxEntries[key] = content
+        }
         return [
           `const slugs = ${JSON.stringify(slugs)}`,
           `const pageIconRefs = ${JSON.stringify(syncResult.pageIconRefs)}`,
           `const loaders = { ${loaderEntries.join(', ')} }`,
+          `const importedMdxSources = ${JSON.stringify(importedMdxEntries)}`,
           `export function getMdxSlugs() { return slugs }`,
           `export async function getMdxSource(slug) {`,
           `  const load = loaders[slug]`,
           `  return load ? await load() : undefined`,
           `}`,
           `export function getPageIconRefs(slug) { return pageIconRefs[slug] ?? [] }`,
+          `export function getImportedMdxSources() { return importedMdxSources }`,
         ].join('\n')
       }
       if (id.startsWith(RESOLVED_MDX_PAGE_PREFIX)) {

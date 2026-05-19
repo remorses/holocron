@@ -155,6 +155,33 @@ test.describe.serial('imported .md HMR @dev', () => {
   })
 })
 
+test.describe('docs.zip includes imported md files', () => {
+  test('zip contains imported .md snippets alongside pages', async ({ request }) => {
+    const { unzipSync, strFromU8 } = await import('fflate')
+    const res = await request.get('/docs.zip')
+    expect(res.status()).toBe(200)
+    const buffer = await res.body()
+    const files = unzipSync(new Uint8Array(buffer))
+    const filenames = Object.keys(files).sort()
+
+    // Page slugs should be present
+    expect(filenames).toContain('index.md')
+    expect(filenames).toContain('guides/relative-imports.md')
+
+    // Imported .md files should also be in the zip
+    expect(filenames).toContain('snippets/plain-markdown.md')
+  })
+
+  test('imported .md content in zip is the processed MDX', async ({ request }) => {
+    const { unzipSync, strFromU8 } = await import('fflate')
+    const res = await request.get('/docs.zip')
+    const buffer = await res.body()
+    const files = unzipSync(new Uint8Array(buffer))
+    const snippetMd = strFromU8(files['snippets/plain-markdown.md']!)
+    expect(snippetMd).toContain('Plain markdown snippet imported from a')
+  })
+})
+
 test.describe.serial('imported .md outside pagesDir HMR @dev', () => {
   // This file lives outside the fixture root (pagesDir), imported via ../
   const outsideFile = path.resolve(fixtureRoot, '../outside-pagesdir-snippet.md')
