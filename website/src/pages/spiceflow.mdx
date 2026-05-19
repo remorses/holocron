@@ -1,0 +1,187 @@
+---
+title: Spiceflow
+description: How Holocron uses Spiceflow under the hood and how to extend your docs with API routes, middleware, and auth.
+icon: flame
+---
+
+# Spiceflow
+
+[Spiceflow](https://github.com/remorses/spiceflow) is a type-safe API and React Server Components framework for TypeScript. Holocron uses it as its web framework under the hood.
+
+When you add `holocron()` to your Vite config, the plugin automatically adds the Spiceflow Vite plugin, React, and Tailwind CSS. You don't configure any of these separately. Holocron creates a Spiceflow app internally that registers routes for every page in your `docs.json` navigation.
+
+```diagram
+vite.config.ts
+     │
+     ▼
+holocron() plugin
+     │
+     ├── spiceflow() vite plugin (auto-added)
+     ├── @vitejs/plugin-react (auto-added)
+     ├── @tailwindcss/vite (auto-added)
+     │
+     └── creates Spiceflow app internally
+            │
+            ├── page routes from docs.json
+            ├── layout with sidebar, navbar, search
+            ├── MDX rendering pipeline
+            └── static assets (CSS, icons, fonts)
+```
+
+For most documentation sites, you never interact with Spiceflow directly. The `holocron()` plugin handles everything.
+
+## When you need Spiceflow
+
+Sometimes a docs site needs more than static pages. You might want to:
+
+- Add **API routes** for webhooks, health checks, or data endpoints
+- Add **middleware** for auth, logging, or custom headers on every request
+- Add **redirects** that can't be expressed in `docs.json`
+- Serve **custom pages** like a dashboard or admin panel alongside docs
+- Mount holocron under a **sub-path** of a larger application
+
+In these cases, you create a **custom entry** file that gives you a full Spiceflow app. Holocron becomes a child app you mount with `.use()`.
+
+## Custom entry setup
+
+Pass `entry` to the holocron plugin:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({ entry: './src/server.tsx' }),
+  ],
+})
+```
+
+Then create your server file. Import the holocron app and mount it last so your own routes take priority:
+
+```tsx
+// src/server.tsx
+import { Spiceflow } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  // API routes
+  .get('/api/health', () => ({ status: 'ok' }))
+  .post('/api/webhook', async ({ request }) => {
+    const body = await request.json()
+    // process webhook...
+    return { received: true }
+  })
+  // mount holocron last — it handles all docs pages
+  .use(holocronApp)
+```
+
+```diagram
+Request ──► your middleware ──► your routes ──► holocronApp
+                                                   │
+                                           docs pages, search,
+                                           sidebar, MDX rendering
+```
+
+Your routes are checked first. If none match, the request falls through to holocron which serves the docs pages, search API, and static assets.
+
+## Middleware
+
+Middleware registered before `.use(holocronApp)` runs on **every request**, including docs pages. This is useful for auth, analytics, or headers:
+
+```tsx
+export const app = new Spiceflow()
+  .use(async ({ request }, next) => {
+    console.log(request.method, new URL(request.url).pathname)
+    const res = await next()
+    if (res) res.headers.set('x-docs-version', '2.0')
+    return res
+  })
+  .use(holocronApp)
+```
+
+For auth-gated docs, check the session before holocron handles the request:
+
+```tsx
+export const app = new Spiceflow()
+  .use(async ({ request }, next) => {
+    const url = new URL(request.url)
+    // public pages
+    if (url.pathname === '/' || url.pathname.startsWith('/api/')) {
+      return next()
+    }
+    // check auth for all other pages
+    const session = await getSession(request)
+    if (!session) {
+      return Response.redirect(new URL('/login', url.origin).href)
+    }
+    return next()
+  })
+  .use(holocronApp)
+```
+
+## Serving extra files
+
+A common pattern is serving an `llms.txt` file for AI agents or adding redirects that need custom logic:
+
+```tsx
+import readmeRaw from '../README.md?raw'
+
+export const app = new Spiceflow()
+  .get('/llms.txt', () => {
+    return new Response(readmeRaw, {
+      headers: { 'Content-Type': 'text/plain' },
+    })
+  })
+  .get('/gh', ({ request }) => {
+    return Response.redirect('https://github.com/example/repo', 302)
+  })
+  .use(holocronApp)
+```
+
+## Cloudflare Workers
+
+When deploying to Cloudflare Workers, your entry file needs a `default export` with a `fetch` handler:
+
+```tsx
+import { Spiceflow } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  .get('/api/hello', () => ({ hello: 'world' }))
+  .use(holocronApp)
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    return app.handle(request)
+  },
+}
+```
+
+Add the Cloudflare Vite plugin after holocron in your config:
+
+```ts
+import { cloudflare } from '@cloudflare/vite-plugin'
+import { holocron } from '@holocron.so/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({ entry: './src/server.tsx' }),
+    cloudflare({
+      viteEnvironment: {
+        name: 'rsc',
+        childEnvironments: ['ssr'],
+      },
+    }),
+  ],
+})
+```
+
+See [Cloudflare Workers deployment](/deploy/cloudflare) for `wrangler.jsonc` setup and build commands.
+
+## Real-world examples
+
+- The [holocron.so website](https://github.com/remorses/holocron/tree/main/website) uses a custom entry with auth routes (better-auth), an AI gateway proxy, and device authorization flow alongside the docs.
+- The [spiceflow website](https://github.com/remorses/spiceflow/tree/main/website) uses a custom entry to serve `/llms.txt` and `/gh` redirect alongside holocron docs, deployed to Cloudflare Workers.

@@ -26,45 +26,65 @@ unzip -oq /tmp/holocron-docs.zip -d "$DOCS_DIR"
 Never truncate docs output. Do not pipe docs through `head`, `tail`, `sed -n`,
 or any command that hides lines. Use full-file reads and targeted searches.
 
-Useful searches:
+## Relevant docs pages
+
+Fetch `/sitemap.xml` to see all available pages. Append `.md` to any page URL
+to get raw markdown:
 
 ```bash
-grep -R "project" "$DOCS_DIR"
-grep -R "docs.json" "$DOCS_DIR"
-grep -R "deploy" "$DOCS_DIR"
-grep -R "navigation" "$DOCS_DIR"
-grep -R "OpenAPI" "$DOCS_DIR"
+curl -s https://holocron.so/sitemap.xml
+curl -s https://holocron.so/quickstart.md
 ```
 
-## Always fetch the relevant how-to page
-
-When the user asks about a specific workflow, fetch the matching markdown page
-directly in addition to the docs zip.
+When the user asks about a specific workflow, fetch the matching page directly:
 
 - **Overview**: https://holocron.so/llms.txt
-- **Quickstart / create a docs site**: https://holocron.so/quickstart.md
+- **Quickstart**: https://holocron.so/quickstart.md
 - **What Holocron is**: https://holocron.so/what-is-holocron.md
 - **Create pages**: https://holocron.so/create/pages.md
 - **MDX syntax**: https://holocron.so/create/mdx.md
 - **Local imports**: https://holocron.so/create/local-imports.md
+- **Redirects**: https://holocron.so/create/redirects.md
 - **`docs.json` config**: https://holocron.so/organize/docs-json.md
 - **Config schema**: https://unpkg.com/@holocron.so/vite/src/schema.json
 - **Navigation**: https://holocron.so/organize/navigation.md
-- **Navigation tabs**: https://holocron.so/organize/navigation.md
 - **Theme customization**: https://holocron.so/customize/theme.md
+- **Icons**: https://holocron.so/customize/icons.md
+- **Custom entry (Spiceflow)**: https://holocron.so/custom-entry.md
+- **Spiceflow integration**: https://holocron.so/spiceflow.md
 - **Cloudflare deploy**: https://holocron.so/deploy/cloudflare.md
 - **Node deploy**: https://holocron.so/deploy/node.md
 - **AI assistant docs**: https://holocron.so/ai/assistant.md
 
-Example:
-
 ```bash
 curl -fsSL https://holocron.so/quickstart.md
 curl -fsSL https://holocron.so/organize/docs-json.md
-curl -fsSL https://unpkg.com/@holocron.so/vite/src/schema.json
+
+# discover all available pages
+curl -s https://holocron.so/sitemap.xml
 ```
 
-## `docs.jsonc` basics
+## Scaffolding a new project
+
+Use the CLI to create a new docs site with a working template:
+
+```bash
+npx -y @holocron.so/cli create --name "My Docs" my-docs --skip-auth
+```
+
+The `--skip-auth` flag skips cloud setup (suitable for agents and local-only
+usage). The template includes `vite.config.ts`, `docs.jsonc`, sample pages,
+navigation with tabs, anchors, and icons.
+
+After scaffolding, start the dev server:
+
+```bash
+cd my-docs
+pnpm install
+pnpm dev
+```
+
+## `docs.json` basics
 
 Holocron reads `docs.json`, `docs.jsonc`, or `holocron.jsonc`. Prefer
 `docs.jsonc` when writing by hand because comments and trailing commas make it
@@ -84,25 +104,99 @@ Simple `docs.jsonc`:
   "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
   "name": "Acme",
   "description": "Documentation for Acme.",
-  "logo": {
-    "light": "/logo-light.svg",
-    "dark": "/logo-dark.svg"
-  },
-  "navigation": [
-    {
-      "group": "Get started",
-      "pages": ["index", "quickstart"]
-    },
-    {
-      "group": "Guides",
-      "pages": ["guides/install", "guides/deploy"]
+  "colors": { "primary": "#6366f1" },
+  "icons": { "library": "lucide" },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "icon": "lucide:rocket",
+        "pages": ["index", "quickstart"]
+      },
+      {
+        "group": "Guides",
+        "icon": "lucide:map",
+        "pages": ["guides/install", "guides/deploy"]
+      }
+    ],
+    "global": {
+      "anchors": [
+        { "anchor": "GitHub", "href": "https://github.com/example/docs", "icon": "lucide:github" },
+        { "anchor": "Changelog", "href": "https://github.com/example/docs/releases", "icon": "lucide:newspaper" }
+      ]
     }
-  ]
+  }
 }
 ```
 
-Page slugs in `navigation.pages` map to MDX files. For example `quickstart`
-loads `quickstart.mdx`, and `guides/install` loads `guides/install.mdx`.
+Page slugs in `navigation.pages` map to MDX files. `quickstart` loads
+`quickstart.mdx`, and `guides/install` loads `guides/install.mdx`.
+
+**Anchors** in `navigation.global.anchors` are persistent sidebar links visible
+across all tabs. Use them for GitHub, Changelog, Discord, or other external
+links. See https://holocron.so/organize/navigation.md for details.
+
+## Icons
+
+Supported icon libraries: **Lucide** and **Font Awesome**.
+
+Use **prefixed icon names** so the source library is explicit. This also lets
+you mix icons from different libraries in the same project:
+
+```jsonc
+// Lucide icons (recommended)
+"icon": "lucide:rocket"
+"icon": "lucide:shield"
+
+// Font Awesome icons
+"icon": "fontawesome:brands:github"
+"icon": "fontawesome:solid:compass"
+
+// Plain names resolve against the configured library
+"icon": "rocket"  // resolves to lucide:rocket if "icons.library": "lucide"
+```
+
+Icons work in page frontmatter, navigation groups, anchors, and MDX components
+like `Card` and `Accordion`.
+
+To find valid icon names, fetch the schema JSONs:
+
+```bash
+# All lucide icon names
+curl -s https://holocron.so/schemas/lucide-icons.json | jq '.enum[:10]'
+
+# All fontawesome icon names
+curl -s https://holocron.so/schemas/fontawesome-icons.json | jq '.enum[:10]'
+```
+
+Set the default library in `docs.json`:
+
+```jsonc
+{
+  "icons": { "library": "lucide" }
+}
+```
+
+If a group has an icon, do not use the same icon on the first page in that
+group. It looks like a duplicate in the navigation tree.
+
+## Local imports
+
+MDX pages can import other `.md`, `.mdx`, `.tsx`, or `.ts` files. This avoids
+content duplication. For example, import a root README as the index page:
+
+```mdx
+---
+title: My Project
+---
+
+import Readme from '../../README.md'
+
+<Readme />
+```
+
+Resolution: `/` = project root, `../` = relative to the MDX file. See
+https://holocron.so/create/local-imports.md for details.
 
 ## Page frontmatter
 
@@ -113,7 +207,7 @@ that change rendering, SEO, or navigation.
 ---
 title: Quickstart
 description: Build and deploy your first Holocron docs site.
-icon: rocket
+icon: lucide:rocket
 tag: NEW
 ---
 
@@ -124,40 +218,57 @@ Common fields:
 
 - **`title`** — page title for sidebar, browser tab, and generated heading.
 - **`description`** — page description for SEO and social previews.
-- **`icon`** — sidebar icon name. Supports configured icon library names.
+- **`icon`** — sidebar icon name (prefixed or plain).
 - **`sidebarTitle`** — shorter title just for sidebar navigation.
 - **`tag`** — small sidebar badge like `NEW` or `BETA`.
 - **`deprecated`** — marks the page as deprecated in navigation.
 - **`api`** — Mintlify API page label like `GET /users`.
 - **`hidden`** — hides the page from sidebar and adds `noindex`.
 - **`noindex`** — keeps the page visible but adds robots `noindex`.
-- **`robots`** — custom robots meta value.
-- **`keywords`** — search and metadata keywords.
 - **`cache-control`** — custom response cache header.
 - **`og:title`**, **`og:description`**, **`og:image`** — OpenGraph metadata.
 - **`twitter:title`**, **`twitter:description`**, **`twitter:image`** — Twitter card metadata.
 
-## Icons
+## Redirects
 
-The default icon library is **Font Awesome**. To use Lucide icons instead, set
-the icon library in `docs.jsonc`:
+When restructuring docs, add redirects in `docs.json` so old links keep
+working. Supports exact paths, named `:param` captures, and `*` wildcards:
 
 ```jsonc
 {
-  "icons": {
-    "library": "lucide"
-  }
+  "redirects": [
+    { "source": "/old-page", "destination": "/new-page" },
+    { "source": "/docs/:slug", "destination": "/:slug" }
+  ]
 }
 ```
 
-Icon names like `home`, `zap`, `file-text`, and `panel-left` are Lucide names
-and will not resolve with the default Font Awesome library.
+See https://holocron.so/create/redirects.md for details.
 
-If a group has an icon, do not use the same icon on the first page in that
-group. It looks like a duplicate icon in the navigation tree.
+## Custom entry (Spiceflow)
 
-If cards use icons, use icons for every card in the group. Mixing icon and
-non-icon cards looks broken.
+Holocron can be mounted inside a Spiceflow app to add API routes, middleware,
+or auth alongside docs. Pass `entry` to the plugin and import the holocron app:
+
+```ts
+// vite.config.ts
+export default defineConfig({
+  plugins: [holocron({ entry: './src/server.tsx' })],
+})
+```
+
+```tsx
+// src/server.tsx
+import { Spiceflow } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  .get('/api/hello', () => ({ hello: 'world' }))
+  .use(holocronApp)
+```
+
+See https://holocron.so/custom-entry.md and https://holocron.so/spiceflow.md
+for the full pattern including middleware, Cloudflare Workers, and diagrams.
 
 ## MDX container components
 
@@ -194,7 +305,8 @@ Exception: `Aside full` can contain `TableOfContentsPanel` directly.
 ## New pages and navigation
 
 After creating a new `.mdx` or `.md` page, add its slug to `docs.jsonc`
-navigation. Pages not in the navigation tree will not appear in the sidebar.
+navigation. Pages not in the navigation tree will not appear in the sidebar
+and return 404.
 
 Read the existing navigation structure first, then place the page in the best
 tab, group, and reading order.
@@ -226,3 +338,6 @@ fails, stop and do not continue to production.
 - Prefer the latest fetched docs over anything remembered from previous sessions.
 - Keep rule-like project behavior in this skill so agents see it even before
   fetching the full docs.
+- All ASCII diagrams in MDX pages must use the `diagram` language hint on the
+  code fence (` ```diagram `). This renders them with proper styling on the
+  website instead of plain monospace.

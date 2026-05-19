@@ -72,7 +72,8 @@
                             "customize/logo-and-favicon",
                             "customize/navbar-footer-banner",
                             "customize/custom-css",
-                            "custom-entry"
+                            "custom-entry",
+                            "spiceflow"
                         ]
                     },
                     {
