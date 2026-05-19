@@ -213,7 +213,7 @@ async function scaffold(options: ScaffoldOptions) {
   if (fs.existsSync(docsJsonPath)) {
     const docsJson = parseJsoncObject(fs.readFileSync(docsJsonPath, 'utf-8'))
     docsJson.name = name
-    docsJson.$schema = 'https://unpkg.com/@holocron.so/vite/src/schema.json'
+    docsJson.$schema = 'https://holocron.so/docs.json'
     fs.writeFileSync(docsJsonPath, JSON.stringify(docsJson, null, 2) + '\n')
   }
 

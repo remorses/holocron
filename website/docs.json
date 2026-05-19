@@ -1,5 +1,5 @@
 {
-    "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
+    "$schema": "https://holocron.so/docs.json",
     "name": "Holocron",
     "description": "Mintlify-compatible docs site generator as a Vite plugin.",
     "favicon": "/favicon.ico",

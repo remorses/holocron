@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/@holocron.so/vite/src/schema.json",
+  "$schema": "https://holocron.so/docs.json",
   "theme": "maple",
   "name": "Libretto",
   "icons": { "library": "lucide" },
