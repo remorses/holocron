@@ -1,5 +1,27 @@
 # @holocron.so/vite
 
+## 0.11.0
+
+1. **Inline `.md`/`.mdx` imports at remark level** — imported markdown files are now spliced directly into the page's mdast tree before any remark plugins run, replacing the previous multi-pipeline approach. Headings from imported files appear in the TOC automatically, images go through the normal build-time processor, and all remark plugins (callouts, code groups, mermaid, etc.) apply to the inlined content. Recursive imports are supported with cycle detection.
+
+2. **New `knownPaths` config field** — suppress false broken-link warnings when mounting docs alongside other routes (API endpoints, dashboards, external apps). Supports exact paths and prefix wildcards:
+
+   ```json
+   {
+     "knownPaths": ["/api/*", "/dashboard", "/blog/*"]
+   }
+   ```
+
+3. **Imported `.md`/`.mdx` files included in AI chat context** — imported markdown snippets and shared fragments are now sent to the AI chat agent during local dev, matching production behavior where they were already included via `docs.zip`.
+
+4. **Content column capped at 720px** — the derived `--grid-content-width` is now wrapped in `min(720px, ...)` so it never grows beyond 720px regardless of grid geometry.
+
+5. **Fixed heading anchor scroll offset** — `scroll-margin-top` now uses `--sticky-top` instead of `--header-height`, adding breathing room below the navbar when navigating to `#id` anchors.
+
+6. **Fixed AI chat loading dots alignment** — loading indicator dots are now aligned to top-start instead of vertically centered.
+
+7. **Reduced parse count for imported `.md`/`.mdx` files** — each imported file is parsed exactly once and the mdast is reused for import extraction, image dep collection, and pre-building spliced nodes. Pages without `.md` imports skip the full AST parse entirely via a regex fast path.
+
 ## 0.10.2
 
 1. **Fixed custom entry CSS under Cloudflare dev** — custom-entry apps now correctly load Holocron's global stylesheet when running under `wrangler dev`. The Spiceflow RSC entry now uses the real custom entry file instead of routing through a virtual module, so vite-rsc can walk the import graph and collect all CSS dependencies.
