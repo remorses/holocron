@@ -146,6 +146,13 @@ export const deployment = s.sqliteTable('deployment', {
    *  Also synced to KV inside "site-info:{subdomain}" → { files[] } so the hosting worker
    *  knows which worker/ modules to load without querying D1. */
   files: s.text('files'),
+  /** User who triggered the deployment via session or API key auth. Null for OIDC-only deploys
+   *  where the user might not be in our DB (rare — we require sign-in before OIDC works). */
+  triggeredByUserId: s.text('triggered_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+  /** GitHub username from OIDC JWT `actor` claim. Used to build avatar URL
+   *  (`https://github.com/{actor}.png`) in the deployment history UI.
+   *  Also set for session auth if we know the user's GitHub username from their account. */
+  githubActor: s.text('github_actor'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
   s.index('deployment_project_id_idx').on(table.projectId),
@@ -231,6 +238,7 @@ export const relations = defineRelations(
     },
     deployment: {
       project: r.one.project({ from: r.deployment.projectId, to: r.project.projectId }),
+      triggeredByUser: r.one.user({ from: r.deployment.triggeredByUserId, to: r.user.id }),
     },
   }),
 )

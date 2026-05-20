@@ -107,6 +107,8 @@ export const deployApp = new Spiceflow()
         branch: auth.type === 'github-oidc' ? auth.branch : body.branch || 'main',
         preview: auth.type === 'github-oidc' ? auth.preview : body.preview ?? false,
         files: JSON.stringify(body.files),
+        triggeredByUserId: auth.userId ?? null,
+        githubActor: auth.type === 'github-oidc' ? auth.githubActor ?? null : null,
       })
 
       // Bump project.updatedAt so the project list is ordered by last deploy activity.

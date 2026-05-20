@@ -17,7 +17,11 @@
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "website/src/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }

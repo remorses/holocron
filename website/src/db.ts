@@ -80,7 +80,7 @@ export function generateApiKey(): { fullKey: string; prefix: string } {
 
 // ── Session helpers ─────────────────────────────────────────────────
 
-type Session = { userId: string; user: { id: string; name: string; email: string } }
+type Session = { userId: string; user: { id: string; name: string; email: string; image: string | null } }
 
 type RequestHeaders = Pick<Request, 'headers'>
 
@@ -95,7 +95,7 @@ export async function getSession(request: RequestHeaders): Promise<Session | nul
   if (!session) return null
   return {
     userId: session.user.id,
-    user: { id: session.user.id, name: session.user.name, email: session.user.email },
+    user: { id: session.user.id, name: session.user.name, email: session.user.email, image: session.user.image ?? null },
   }
 }
 

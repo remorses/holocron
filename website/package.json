@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./src/*": "./src/*"
+  },
   "scripts": {
     "dev": "pnpm db:migrate:local && sigillo run -- vite dev",
     "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
@@ -22,6 +26,7 @@
     "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && vite build && wrangler deploy && pnpm --dir ../og-worker deployment:prod'"
   },
   "dependencies": {
+    "@base-ui/react": "^1.5.0",
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/@better-auth/drizzle-adapter@9489",
     "@holocron.so/vite": "workspace:^",
     "@tailwindcss/vite": "^4.2.2",
@@ -35,6 +40,7 @@
     "jose": "^6.2.3",
     "jpeg-js": "^0.4.4",
     "just-bash": "^2.14.0",
+    "lucide-react": "^1.16.0",
     "radix-ui": "latest",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

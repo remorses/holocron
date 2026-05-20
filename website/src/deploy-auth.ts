@@ -46,14 +46,15 @@ type OidcResult = {
   ownerIdStr: string
   owner: string
   repo: string
+  actor?: string
   ref?: string
   headRef?: string
   baseRef?: string
 }
 
 export type DeployAuth =
-  | { type: 'api-key'; orgId: string; projectId: string }
-  | { type: 'session'; orgId: string; projectId: string }
+  | { type: 'api-key'; orgId: string; projectId: string; userId?: string }
+  | { type: 'session'; orgId: string; projectId: string; userId: string }
   | {
       type: 'github-oidc'
       orgId: string
@@ -62,6 +63,8 @@ export type DeployAuth =
       githubRepo: string
       branch: string
       preview: boolean
+      githubActor?: string
+      userId?: string
     }
 
 export async function resolveCreateDeployAuth(request: Request, bodyProjectId?: string): Promise<DeployAuth> {
@@ -85,7 +88,7 @@ export async function resolveCreateDeployAuth(request: Request, bodyProjectId?: 
       throw json({ error: 'project not found in your org' }, { status: 404 })
     }
 
-    return { type: 'session', orgId: org.id, projectId: bodyProjectId }
+    return { type: 'session', orgId: org.id, projectId: bodyProjectId, userId: session.userId }
   }
 
   const oidcAuth = await resolveGithubOidcDeployAuth(request, { upsertProject: true })
@@ -113,7 +116,7 @@ export async function requireDeployAccess(request: Request, projectId: string): 
     if (!proj) {
       throw json({ error: 'deployment does not belong to your project' }, { status: 403 })
     }
-    return { type: 'session', orgId: org.id, projectId }
+    return { type: 'session', orgId: org.id, projectId, userId: session.userId }
   }
 
   const oidcAuth = await resolveGithubOidcDeployAuth(request)
@@ -196,6 +199,8 @@ export async function resolveGithubOidcDeployAuth(
     githubRepo: oidcResult.repo,
     branch,
     preview,
+    githubActor: oidcResult.actor,
+    userId: githubAccount.userId,
   }
 }
 
@@ -230,11 +235,12 @@ async function verifyGitHubOidc(token: string, audience: string): Promise<OidcRe
     const [owner, repo] = repository.split('/')
     if (!owner || !repo) return new Error('OIDC token missing repository claim')
 
+    const actor = String(payload.actor ?? '') || undefined
     const ref = String(payload.ref ?? '') || undefined
     const headRef = String(payload.head_ref ?? '') || undefined
     const baseRef = String(payload.base_ref ?? '') || undefined
 
-    return { ownerIdStr: actorIdStr, owner, repo, ref, headRef, baseRef }
+    return { ownerIdStr: actorIdStr, owner, repo, actor, ref, headRef, baseRef }
   } catch (err) {
     return new Error(`OIDC verification failed: ${err instanceof Error ? err.message : err}`)
   }

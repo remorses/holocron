@@ -1,3 +1,18 @@
 /* @reference, not @import — Holocron already imports Tailwind.
    @reference gives access to @variant, @apply, theme() without duplicate styles. */
 @reference "tailwindcss";
+
+/* ── Dashboard-specific CSS ────────────────────────────────────────── */
+
+:root {
+  --content-max-width: 1200px;
+}
+
+/* Hide scrollbar utility for horizontal tab scrolling on mobile */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
