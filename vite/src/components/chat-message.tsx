@@ -52,7 +52,7 @@ export function ChatMessages({
   if (messages.length === 0) return null
   let noticeRendered = false
   return (
-    <div className='text-[13px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div className='text-[14px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {messages.map((message, i) => {
         const isLastMessage = i === messages.length - 1
         return (
@@ -93,7 +93,7 @@ function ChatPartRenderer({
 
   if (part.type === 'text') {
     return (
-      <div className='flex min-w-0 flex-col gap-(--prose-gap) overflow-x-clip overflow-y-visible text-[13px]'>
+      <div className='flex min-w-0 flex-col gap-(--prose-gap) overflow-x-clip overflow-y-visible'>
         {part.jsx ?? part.text}
       </div>
     )
@@ -227,7 +227,6 @@ function ToolPreviewContainer({
     <div
       style={{
         fontFamily: 'var(--font-code)',
-        fontSize: '13px',
         padding: '4px 0',
         lineHeight: '1.5',
         width: '100%',
