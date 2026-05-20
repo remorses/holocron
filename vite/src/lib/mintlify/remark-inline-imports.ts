@@ -27,7 +27,7 @@
  * using Vite's resolver or any async resolution strategy externally.
  */
 
-import type { Root, RootContent, Image, Link } from 'mdast'
+import type { Root, RootContent } from 'mdast'
 import { visit } from 'unist-util-visit'
 import { extractImports } from 'safe-mdx/parse'
 import remarkMdx from 'remark-mdx'
@@ -169,13 +169,13 @@ function rewriteRelativeUrls(tree: Root, relativeDir: string) {
   visit(tree, (node) => {
     // Markdown image: ![alt](./img.png)
     if (node.type === 'image') {
-      ;(node as Image).url = resolveRelativeUrl((node as Image).url, relativeDir)
+      node.url = resolveRelativeUrl(node.url, relativeDir)
       return
     }
 
     // Markdown link: [text](./other.md)
     if (node.type === 'link') {
-      ;(node as Link).url = resolveRelativeUrl((node as Link).url, relativeDir)
+      node.url = resolveRelativeUrl(node.url, relativeDir)
       return
     }
 

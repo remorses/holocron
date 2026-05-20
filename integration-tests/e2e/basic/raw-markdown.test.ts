@@ -19,7 +19,7 @@ test.describe("raw markdown via .md path suffix", () => {
     expect(body).toContain("## Configuration");
   });
 
-  test("GET /getting-started.mdx returns raw markdown (same as .md)", async ({
+  test("GET /getting-started.mdx returns raw markdown (same as .md) @build", async ({
     request,
   }) => {
     const res = await request.get("/getting-started.mdx");
@@ -30,7 +30,7 @@ test.describe("raw markdown via .md path suffix", () => {
     expect(body).toContain("## Configuration");
   });
 
-  test("GET /index.mdx returns raw markdown", async ({ request }) => {
+  test("GET /index.mdx returns raw markdown @build", async ({ request }) => {
     const res = await request.get("/index.mdx");
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
@@ -144,7 +144,7 @@ test.describe("agent detection redirects to .md URL", () => {
     expect(res.headers()["content-type"]).toContain("text/markdown");
   });
 
-  test("agent requesting .mdx directly is NOT redirected (served inline)", async ({
+  test("agent requesting .mdx directly is NOT redirected (served inline) @build", async ({
     request,
   }) => {
     const res = await request.get("/getting-started.mdx", {

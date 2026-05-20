@@ -28,6 +28,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Install Playwright Chromium
         run: pnpm --filter integration-tests exec playwright install --with-deps chromium
+      - name: Generate website icon schemas
+        run: pnpm --filter website generate-icon-schemas
       - name: Build workspace
         run: pnpm --filter @holocron.so/cli build && pnpm --filter @holocron.so/vite build && pnpm build
       - name: Run vite tests

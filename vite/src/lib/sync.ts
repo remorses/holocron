@@ -978,7 +978,7 @@ function resolveInlineImports({
   function collectImageDeps(mdast: Root, fileDir: string) {
     visit(mdast, (node) => {
       if (node.type === 'image') {
-        const src = (node as import('mdast').Image).url
+        const src = node.url
         if (!src || src.startsWith('http://') || src.startsWith('https://')) return
         const resolved = resolveImagePath({ src, mdxDir: fileDir, publicDir, projectRoot })
         if (resolved) imageDepPaths.push(resolved.filePath)
