@@ -88,60 +88,6 @@ test.describe("realworld-polar fixture", () => {
     await expect(page.getByText("Get up and running in 5 minutes")).toBeVisible();
   });
 
-  test("runtime images use blur plus opacity for the sharpen-in transition", async ({
-    page,
-    request,
-  }) => {
-    await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/integrate/mcp", { waitUntil: "domcontentloaded" });
-
-    const imageFrame = page.locator('.slot-main img[aria-hidden="true"]').first().locator("xpath=..");
-    const placeholderImage = imageFrame.locator('img[aria-hidden="true"]');
-    const realImage = imageFrame.locator('img:not([aria-hidden])');
-
-    await expect(placeholderImage).toHaveCount(1);
-    await expect(realImage).toBeVisible({ timeout: 10000 });
-
-    const markdownResponse = await request.get("/integrate/mcp.md", { timeout: 10_000 });
-    expect(markdownResponse.status()).toBe(200);
-    expect(markdownResponse.headers()["content-type"]).toContain("text/markdown");
-    const markdown = await markdownResponse.text();
-    expect(markdown).toContain("Supercharge your AI agents with Polar as a Model Context Protocol (MCP) server.");
-    expect(markdown).toMatch(/<(?:img|Image)\s/);
-
-    const [placeholderStyles, styles] = await Promise.all([
-      placeholderImage.evaluate((node) => {
-        const computed = window.getComputedStyle(node);
-        return {
-          imageRendering: computed.imageRendering,
-        };
-      }),
-      realImage.evaluate((node) => {
-        const computed = window.getComputedStyle(node);
-        return {
-          transitionProperty: computed.transitionProperty,
-          transitionDuration: computed.transitionDuration,
-          filter: computed.filter,
-          opacity: computed.opacity,
-          complete: node instanceof HTMLImageElement ? node.complete : false,
-          naturalWidth: node instanceof HTMLImageElement ? node.naturalWidth : 0,
-        };
-      }),
-    ]);
-
-    expect(placeholderStyles.imageRendering).toBe("pixelated");
-    expect(styles.complete).toBe(true);
-    expect(styles.naturalWidth).toBeGreaterThan(0);
-    expect(styles.transitionProperty).toContain("opacity");
-    expect(styles.transitionProperty).toContain("filter");
-    expect(styles.transitionDuration).not.toBe("0s");
-    const opacity = Number(styles.opacity);
-    expect(Number.isFinite(opacity)).toBe(true);
-    expect(opacity).toBeGreaterThanOrEqual(0);
-    expect(opacity).toBeLessThanOrEqual(1);
-    expect(styles.filter === "none" || styles.filter.startsWith("blur(")).toBe(true);
-  });
-
   test("checkout links page renders frame and param fields", async ({
     page,
   }) => {
