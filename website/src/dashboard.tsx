@@ -10,7 +10,7 @@
 //   /dashboard/projects/:projectId/members   → org members table
 //   /dashboard/projects/:projectId/assistant → coming soon
 //   /dashboard/projects/:projectId/analytics → coming soon
-//   /dashboard/projects/:projectId/settings  → coming soon
+//   /dashboard/projects/:projectId/keys        → API keys table
 //   /dashboard/deploy                    → create project flow
 
 import { Spiceflow, redirect } from 'spiceflow'
@@ -510,27 +510,6 @@ export const dashboardApp = new Spiceflow()
         <ProjectTabBar projectId={project.projectId} currentTab="analytics" />
         <div className="border-t border-border" />
         <ComingSoon title="Analytics" />
-      </>
-    )
-  })
-
-  .loader('/dashboard/projects/:projectId/settings', async ({ request, params }) => {
-    const session = await requireSession(request)
-    const db = getDb()
-    const membership = await db.query.orgMember.findFirst({ where: { userId: session.userId } })
-    if (!membership) throw redirect('/dashboard')
-    const project = await db.query.project.findFirst({ where: { projectId: params.projectId, orgId: membership.orgId } })
-    if (!project) throw redirect('/dashboard')
-    return { project }
-  })
-
-  .page('/dashboard/projects/:projectId/settings', async ({ loaderData }) => {
-    const { project } = loaderData
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="settings" />
-        <div className="border-t border-border" />
-        <ComingSoon title="Settings" />
       </>
     )
   })

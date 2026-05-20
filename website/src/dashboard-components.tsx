@@ -280,7 +280,6 @@ export function ProjectTabBar({ projectId, currentTab }: { projectId: string; cu
     { label: 'Members', href: `${base}/members`, active: currentTab === 'members' },
     { label: 'Assistant', href: `${base}/assistant`, active: currentTab === 'assistant', comingSoon: true },
     { label: 'Analytics', href: `${base}/analytics`, active: currentTab === 'analytics', comingSoon: true },
-    { label: 'Settings', href: `${base}/settings`, active: currentTab === 'settings', comingSoon: true },
   ]
 
   return (
