@@ -21,7 +21,7 @@ import * as schema from 'db/schema'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import { ulid } from 'ulid'
 import { cn, timeAgo } from './lib/utils.ts'
-import { Button, CopyButton } from './components/ui/button.tsx'
+import { CopyButton } from './components/ui/button.tsx'
 import { DeployPoller } from './components/deploy-poller.tsx'
 import { HolocronLogo } from './components/auth-page.tsx'
 import { Frame } from './components/ui/frame.tsx'
@@ -39,6 +39,9 @@ import {
   ProjectTabBar,
   MembersTable,
   ComingSoon,
+  CreateApiKeyButton,
+  CreateProjectButton,
+  InviteButton,
 } from './dashboard-components.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
@@ -144,17 +147,17 @@ export const dashboardApp = new Spiceflow()
           <>
             <div className="text-lg font-medium">No organization yet</div>
             <div className="mt-1 text-sm text-muted-foreground">Create your first project to get started.</div>
-            <Link href="/dashboard/deploy" className="mt-4 inline-block">
-              <Button>Create Project</Button>
-            </Link>
+            <div className="mt-4">
+              <CreateProjectButton />
+            </div>
           </>
         ) : (
           <>
             <div className="text-lg font-medium">No projects yet</div>
             <div className="mt-1 text-sm text-muted-foreground">Deploy your first docs site to see it here.</div>
-            <Link href="/dashboard/deploy" className="mt-4 inline-block">
-              <Button>Create Project</Button>
-            </Link>
+            <div className="mt-4">
+              <CreateProjectButton />
+            </div>
           </>
         )}
       </div>
@@ -390,6 +393,7 @@ export const dashboardApp = new Spiceflow()
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+              <InviteButton projectId={project.projectId} />
             </div>
             <MembersTable members={members} />
           </div>
@@ -426,13 +430,13 @@ export const dashboardApp = new Spiceflow()
         <div className="border-t border-border" />
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
           <div className="flex flex-col gap-6">
-            <div>
+            <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+              <CreateApiKeyButton projectId={project.projectId} />
             </div>
             {keys.length === 0 ? (
               <div className="text-sm text-muted-foreground">
-                No API keys for this project. Create one with the CLI:{' '}
-                <code className="font-mono text-xs">holocron keys create --project {project.projectId}</code>
+                No API keys yet. Create one to deploy from CI or the CLI.
               </div>
             ) : (
               <Frame className="w-full">

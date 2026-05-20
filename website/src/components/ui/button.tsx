@@ -74,7 +74,14 @@ export function Button({
       type={asChild ? undefined : type}
       {...props}
     >
-      {isLoading ? loadingText ?? 'Loading...' : children}
+      {isLoading ? (
+        <>
+          <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+          </svg>
+          {loadingText ?? children}
+        </>
+      ) : children}
     </Comp>
   )
 }

@@ -4,21 +4,37 @@
 
 'use client'
 
+import { useState } from 'react'
 import { Link } from 'spiceflow/react'
 import {
   BuildingIcon,
+  CheckIcon,
   ChevronsUpDownIcon,
+  CopyIcon,
   FolderIcon,
   FolderOpenIcon,
+  KeyIcon,
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
   PlusIcon,
   SunIcon,
+  UserPlusIcon,
 } from 'lucide-react'
 import { createAuthClient } from 'better-auth/react'
 import { cn, formatTime } from './lib/utils.ts'
+import { Button, CopyButton } from './components/ui/button.tsx'
+import {
+  Dialog,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPopup,
+  DialogTitle,
+} from './components/ui/dialog.tsx'
 import { Frame } from './components/ui/frame.tsx'
+import { Input } from './components/ui/input.tsx'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -35,6 +51,7 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
+import { createApiKeyAction, createProjectAction, inviteMemberAction } from './dashboard-actions.ts'
 
 const authClient = createAuthClient()
 
@@ -184,13 +201,7 @@ export function DashboardSidebar({
               </Link>
             )
           })}
-          <Link
-            href="/dashboard/deploy"
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground no-underline"
-          >
-            <PlusIcon className="size-4 shrink-0 opacity-60" />
-            New project
-          </Link>
+          <NewProjectSidebarItem />
         </nav>
       </div>
 
@@ -260,6 +271,110 @@ export function DashboardSidebar({
         </DropdownMenu>
       </div>
     </aside>
+  )
+}
+
+// ── Create Project ──────────────────────────────────────────────────
+
+function NewProjectSidebarItem() {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground cursor-pointer"
+      >
+        <PlusIcon className="size-4 shrink-0 opacity-60" />
+        New project
+      </button>
+      <CreateProjectDialog open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
+
+export function CreateProjectButton() {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>
+        <PlusIcon className="size-4" />
+        Create project
+      </Button>
+      <CreateProjectDialog open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
+
+function CreateProjectDialog({ open, onOpenChange }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setName('')
+      setError(null)
+    }
+    onOpenChange(nextOpen)
+  }
+
+  async function handleCreate() {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await createProjectAction({ name })
+      // Navigate to the deploy page for the new project
+      window.location.href = `/dashboard/deploy?projectId=${result.projectId}`
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create project')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogPopup>
+        <DialogHeader>
+          <DialogTitle>New Project</DialogTitle>
+          <DialogDescription>
+            Create a new docs site project. You will be guided through linking it to a GitHub repo next.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 pb-2">
+          {error && (
+            <div className="text-sm text-destructive mb-3">{error}</div>
+          )}
+          <div className="flex flex-col gap-3">
+            <Input
+              placeholder="Project name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && name.trim()) {
+                  e.preventDefault()
+                  handleCreate()
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter variant="bare" className="mt-4">
+            <DialogClose render={<Button variant="outline" />}>
+              Cancel
+            </DialogClose>
+            <Button onClick={handleCreate} loading={loading} disabled={!name.trim()}>
+              Create project
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogPopup>
+    </Dialog>
   )
 }
 
@@ -390,5 +505,229 @@ export function ComingSoon({ title }: { title: string }) {
       <div className="text-lg font-medium text-muted-foreground">{title}</div>
       <div className="mt-2 text-sm text-muted-foreground/60">This feature is coming soon.</div>
     </div>
+  )
+}
+
+// ── Create API Key ──────────────────────────────────────────────────
+
+export function CreateApiKeyButton({ projectId }: { projectId: string }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <KeyIcon className="size-4" />
+        Create API key
+      </Button>
+      <CreateApiKeyDialog open={open} onOpenChange={setOpen} projectId={projectId} />
+    </>
+  )
+}
+
+function CreateApiKeyDialog({ open, onOpenChange, projectId }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  projectId: string
+}) {
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [createdKey, setCreatedKey] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setName('')
+      setError(null)
+      setCreatedKey(null)
+      setCopied(false)
+    }
+    onOpenChange(nextOpen)
+  }
+
+  async function handleCreate() {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await createApiKeyAction({ name, projectId })
+      setCreatedKey(result.fullKey)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create API key')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleCopy() {
+    if (!createdKey) return
+    await navigator.clipboard.writeText(createdKey)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogPopup>
+        <DialogHeader>
+          <DialogTitle>Create API key</DialogTitle>
+          <DialogDescription>
+            {createdKey
+              ? 'Copy your API key now. You will not be able to see it again.'
+              : 'Give your key a name to help you remember what it is used for.'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 pb-2">
+          {error && (
+            <div className="text-sm text-destructive mb-3">{error}</div>
+          )}
+          {createdKey ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={createdKey}
+                  className="w-full font-mono text-xs"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <Button variant="outline" size="icon" onClick={handleCopy}>
+                  {copied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Set <code className="font-mono">HOLOCRON_KEY</code> as an env var in your deploy environment.
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <Input
+                placeholder="e.g. production deploy"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && name.trim()) {
+                    e.preventDefault()
+                    handleCreate()
+                  }
+                }}
+                autoFocus
+              />
+              <Button
+                onClick={handleCreate}
+                loading={loading}
+                disabled={!name.trim()}
+                className="w-full"
+              >
+                Create key
+              </Button>
+            </div>
+          )}
+          <DialogFooter variant="bare" className="mt-4">
+            <DialogClose render={<Button variant="outline" />}>
+              {createdKey ? 'Done' : 'Cancel'}
+            </DialogClose>
+          </DialogFooter>
+        </div>
+      </DialogPopup>
+    </Dialog>
+  )
+}
+
+// ── Invite Member ───────────────────────────────────────────────────
+
+export function InviteButton({ projectId }: { projectId: string }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <UserPlusIcon className="size-4" />
+        Invite member
+      </Button>
+      <InviteMemberDialog open={open} onOpenChange={setOpen} projectId={projectId} />
+    </>
+  )
+}
+
+function InviteMemberDialog({ open, onOpenChange, projectId }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  projectId: string
+}) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setEmail('')
+      setError(null)
+      setSuccess(null)
+    }
+    onOpenChange(nextOpen)
+  }
+
+  async function handleInvite() {
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const result = await inviteMemberAction({ email, projectId })
+      setSuccess(`${result.userName} has been added to the organization.`)
+      setEmail('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to invite member')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogPopup>
+        <DialogHeader>
+          <DialogTitle>Invite member</DialogTitle>
+          <DialogDescription>
+            Add a member to your organization by email. They must already have a Holocron account.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 pb-2">
+          {error && (
+            <div className="text-sm text-destructive mb-3">{error}</div>
+          )}
+          {success && (
+            <div className="text-sm text-green-600 mb-3">{success}</div>
+          )}
+          <div className="flex flex-col gap-3">
+            <Input
+              type="email"
+              placeholder="colleague@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && email.trim()) {
+                  e.preventDefault()
+                  handleInvite()
+                }
+              }}
+              autoFocus
+            />
+            <Button
+              onClick={handleInvite}
+              loading={loading}
+              disabled={!email.trim()}
+              className="w-full"
+            >
+              Add member
+            </Button>
+          </div>
+          <DialogFooter variant="bare" className="mt-4">
+            <DialogClose render={<Button variant="outline" />}>
+              {success ? 'Done' : 'Cancel'}
+            </DialogClose>
+          </DialogFooter>
+        </div>
+      </DialogPopup>
+    </Dialog>
   )
 }
