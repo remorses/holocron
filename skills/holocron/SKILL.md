@@ -295,6 +295,19 @@ and return 404.
 Read the existing navigation structure first, then place the page in the best
 tab, group, and reading order.
 
+### Where to put new content
+
+Before adding content to the example docs (`example/src/*.mdx`), **always read
+`example/docs.json`** first to see the full navigation tree and existing pages.
+Then decide:
+
+1. Does an existing page already cover this topic? Add a section there.
+2. Is the topic distinct enough for its own page? Create a new `.mdx` file and
+   add it to the best group in `docs.json`.
+
+Never append unrelated sections to a page just because it was the last file you
+had open. Match the topic to the right page or create a new one.
+
 ## Authentication
 
 Before deploying locally, log in via the CLI. This opens a browser window for
