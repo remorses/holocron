@@ -48,6 +48,10 @@ export type InlineImportEntry = {
    * this would be `../snippets/` (from pages/ to snippets/).
    */
   relativeDir: string
+  /** Pre-built mdast nodes ready for splicing. When set, the remark plugin
+   *  skips parsing and just clones these nodes. Built by resolveInlineImports
+   *  in sync.ts to avoid double-parsing imported files. */
+  parsedNodes?: RootContent[]
 }
 
 export type RemarkInlineImportsOptions = {
@@ -100,7 +104,10 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
 
       const parsedImports = new Map<string, RootContent[]>()
       for (const [localName, entry] of inlineable) {
-        const nodes = parseAndRewriteImportedContent(entry)
+        // Use pre-built nodes from resolveInlineImports (sync.ts) when
+        // available to avoid double-parsing. Falls back to parsing from
+        // content string for unit tests and standalone usage.
+        const nodes = entry.parsedNodes ?? parseAndRewriteImportedContent(entry)
         parsedImports.set(localName, nodes)
       }
 
@@ -114,7 +121,8 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
 
 /**
  * Parse imported .md/.mdx content and rewrite relative URLs to be
- * correct when inlined into the parent file.
+ * correct when inlined into the parent file. Used as fallback when
+ * pre-built parsedNodes aren't available (unit tests, standalone usage).
  */
 function parseAndRewriteImportedContent(entry: InlineImportEntry): RootContent[] {
   const processor = remark()
@@ -124,14 +132,24 @@ function parseAndRewriteImportedContent(entry: InlineImportEntry): RootContent[]
 
   const parsed = processor.parse(entry.content)
   const mdast = processor.runSync(parsed) as Root
+  return buildSplicedNodes(mdast, entry.relativeDir)
+}
 
+/**
+ * Prepare mdast nodes for splicing into a parent page: strip frontmatter
+ * and rewrite relative URLs/import sources. Works on an already-parsed
+ * mdast tree (from quickMdxParser or remark). Called by:
+ * - resolveInlineImports (sync.ts) to pre-build nodes during sync
+ * - parseAndRewriteImportedContent (above) as fallback in the remark plugin
+ */
+export function buildSplicedNodes(mdast: Root, relativeDir: string): RootContent[] {
   // Strip frontmatter — it belongs to the imported file, not the parent
   mdast.children = mdast.children.filter((node) => node.type !== 'yaml')
 
   // Rewrite relative URLs in images, links, JSX src/href, and import sources
-  if (entry.relativeDir !== '' && entry.relativeDir !== './') {
-    rewriteRelativeUrls(mdast, entry.relativeDir)
-    rewriteRelativeImportSources(mdast, entry.relativeDir)
+  if (relativeDir !== '' && relativeDir !== './') {
+    rewriteRelativeUrls(mdast, relativeDir)
+    rewriteRelativeImportSources(mdast, relativeDir)
   }
 
   return mdast.children

@@ -18,7 +18,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink, type ProcessMdxOptions } from './mdx-processor.ts'
-import { remarkInlineImports, type InlineImportEntry } from './mintlify/remark-inline-imports.ts'
+import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from './mintlify/remark-inline-imports.ts'
 import { visit } from 'unist-util-visit'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
@@ -750,16 +750,29 @@ function resolveInternalHref(href: string, slugDir: string): string | undefined 
 
 const MD_EXTENSIONS = new Set(['.md', '.mdx'])
 
+/** Fast check: if the content has no .md/.mdx import source strings at all,
+ *  skip the full parse. No false negatives — any real .md/.mdx import MUST
+ *  contain this pattern. False positives (e.g. the pattern in a string
+ *  constant or comment) are fine — we just do the full parse. */
+const MAY_HAVE_MD_IMPORTS = /\.mdx?['"]/
+
 /**
  * Quick pre-parse of MDX content to find .md/.mdx imports that should be
  * inlined by remarkInlineImports. Returns a map from raw import source →
- * InlineImportEntry with the file content and relative directory.
+ * InlineImportEntry with the file content, relative directory, and
+ * pre-built spliced mdast nodes ready for the remark plugin to clone.
  *
  * Recursive: if an imported .md/.mdx file itself imports other .md/.mdx
  * files, those are discovered and added to the map too, with source keys
  * rewritten to be relative to the page's directory (matching what
  * remarkInlineImports' rewriteRelativeImportSources will produce).
  * A visited set prevents cycles.
+ *
+ * Each imported file is parsed exactly ONCE (by quickMdxParser). The
+ * resulting mdast is reused for three purposes:
+ * 1. extractImports() — discover nested .md/.mdx imports
+ * 2. collectImageDeps() — find image file paths for HMR/cache key
+ * 3. buildSplicedNodes() — pre-build rewritten nodes for the remark plugin
  *
  * This runs BEFORE processMdx so the remark plugin can expand the content
  * before other remark plugins (headings, callouts, code groups, etc.)
@@ -778,6 +791,11 @@ function resolveInlineImports({
   projectRoot: string
   publicDir: string
 }): { imports: Map<string, InlineImportEntry>; imageDepPaths: string[] } {
+  const empty = { imports: new Map<string, InlineImportEntry>(), imageDepPaths: [] }
+
+  // Regex fast path: skip the full parse if content has no .md/.mdx imports
+  if (!MAY_HAVE_MD_IMPORTS.test(content)) return empty
+
   const result = new Map<string, InlineImportEntry>()
   const imageDepPaths: string[] = []
   const visitedAbsPaths = new Set<string>()
@@ -787,6 +805,9 @@ function resolveInlineImports({
   // relDirFromPage is the relative path from the page's dir to fileDir
   // (used to compute rewritten source keys for nested imports).
   function scanFile(fileContent: string, fileDir: string, relDirFromPage: string) {
+    // Regex fast path for nested files: skip if no .md/.mdx import sources
+    if (!MAY_HAVE_MD_IMPORTS.test(fileContent)) return
+
     let mdast: Root
     try {
       const processor = quickMdxParser()
@@ -819,10 +840,6 @@ function resolveInlineImports({
       }
 
       const importDir = path.dirname(absPath)
-      const relativeDir = path.relative(fileDir, importDir).replace(/\\/g, '/')
-      const relativeDirNorm = relativeDir === ''
-        ? './'
-        : (relativeDir.startsWith('.') ? relativeDir : './' + relativeDir) + '/'
 
       // For top-level imports (relDirFromPage === ''), the source key is the
       // raw import source. For nested imports, the source key is what
@@ -832,42 +849,128 @@ function resolveInlineImports({
       if (relDirFromPage === '') {
         sourceKey = imp.source
       } else {
-        // Rewrite source relative to the page dir (same logic as
-        // resolveRelativeUrl in the remark plugin)
         if (imp.source.startsWith('./') || imp.source.startsWith('../')) {
           const joined = path.posix.join(relDirFromPage, imp.source)
           sourceKey = joined.startsWith('../') || joined.startsWith('./')
             ? joined
             : './' + joined
         } else {
-          sourceKey = imp.source // absolute imports don't get rewritten
+          sourceKey = imp.source
         }
       }
 
-      // relativeDir for this entry is from the PAGE's dir (mdxDir), not the
-      // importing file's dir. remarkInlineImports uses this to rewrite URLs
-      // in the inlined content.
+      // relativeDir for this entry is from the PAGE's dir (mdxDir)
       const relFromPage = path.relative(mdxDir, importDir).replace(/\\/g, '/')
       const relFromPageNorm = relFromPage === ''
         ? './'
         : (relFromPage.startsWith('.') ? relFromPage : './' + relFromPage) + '/'
 
+      // Single parse of the imported file. Reuse the mdast for all three
+      // purposes: nested import discovery, image dep collection, and
+      // pre-building the spliced nodes for the remark plugin.
+      let importedMdast: Root | undefined
+      try {
+        const proc = quickMdxParser()
+        importedMdast = proc.runSync(proc.parse(importContent)) as Root
+      } catch { /* parse errors handled by processMdx later */ }
+
+      // Collect image dep paths from this one parse
+      if (importedMdast) {
+        collectImageDeps(importedMdast, importDir)
+      }
+
+      // Pre-build spliced nodes (strip frontmatter + rewrite URLs).
+      // Uses a clone so the original mdast can still be scanned for
+      // nested imports without mutation interference.
+      let parsedNodes: import('mdast').RootContent[] | undefined
+      if (importedMdast) {
+        const cloned = structuredClone(importedMdast)
+        parsedNodes = buildSplicedNodes(cloned, relFromPageNorm)
+      }
+
       result.set(sourceKey, {
         content: importContent,
         absPath,
         relativeDir: relFromPageNorm,
+        parsedNodes,
       })
 
-      // Parse the imported file separately to collect image dep paths for
-      // HMR watching and cache key computation.
-      try {
-        const importedProcessor = quickMdxParser()
-        const importedMdast = importedProcessor.runSync(importedProcessor.parse(importContent)) as Root
-        collectImageDeps(importedMdast, importDir)
-      } catch { /* parsing errors don't affect image dep collection */ }
+      // Recurse: extract nested imports from the SAME parsed mdast
+      // (no second parse of importContent). We only recurse if the
+      // imported file itself might have .md/.mdx imports.
+      if (importedMdast && MAY_HAVE_MD_IMPORTS.test(importContent)) {
+        scanMdast(importedMdast, importDir, relFromPageNorm)
+      }
+    }
+  }
 
-      // Recurse into the imported file to discover its own .md/.mdx imports
-      scanFile(importContent, importDir, relFromPageNorm)
+  // Like scanFile but works on an already-parsed mdast to avoid
+  // re-parsing. Used for nested import discovery.
+  function scanMdast(mdast: Root, fileDir: string, relDirFromPage: string) {
+    const imports = extractImports(mdast)
+
+    for (const imp of imports) {
+      if (imp.source.includes('?')) continue
+      const hasDefault = imp.specifiers.some((s) => s.type === 'default')
+      if (!hasDefault) continue
+
+      const absPath = resolveImportSourceToPath(imp.source, fileDir, pagesDir, projectRoot)
+      if (!absPath) continue
+
+      const ext = path.extname(absPath)
+      if (!MD_EXTENSIONS.has(ext)) continue
+      if (visitedAbsPaths.has(absPath)) continue
+      visitedAbsPaths.add(absPath)
+
+      let importContent: string
+      try {
+        importContent = fs.readFileSync(absPath, 'utf-8')
+      } catch {
+        continue
+      }
+
+      const importDir = path.dirname(absPath)
+
+      let sourceKey: string
+      if (imp.source.startsWith('./') || imp.source.startsWith('../')) {
+        const joined = path.posix.join(relDirFromPage, imp.source)
+        sourceKey = joined.startsWith('../') || joined.startsWith('./')
+          ? joined
+          : './' + joined
+      } else {
+        sourceKey = imp.source
+      }
+
+      const relFromPage = path.relative(mdxDir, importDir).replace(/\\/g, '/')
+      const relFromPageNorm = relFromPage === ''
+        ? './'
+        : (relFromPage.startsWith('.') ? relFromPage : './' + relFromPage) + '/'
+
+      let nestedMdast: Root | undefined
+      try {
+        const proc = quickMdxParser()
+        nestedMdast = proc.runSync(proc.parse(importContent)) as Root
+      } catch { }
+
+      if (nestedMdast) {
+        collectImageDeps(nestedMdast, importDir)
+      }
+
+      let parsedNodes: import('mdast').RootContent[] | undefined
+      if (nestedMdast) {
+        parsedNodes = buildSplicedNodes(structuredClone(nestedMdast), relFromPageNorm)
+      }
+
+      result.set(sourceKey, {
+        content: importContent,
+        absPath,
+        relativeDir: relFromPageNorm,
+        parsedNodes,
+      })
+
+      if (nestedMdast && MAY_HAVE_MD_IMPORTS.test(importContent)) {
+        scanMdast(nestedMdast, importDir, relFromPageNorm)
+      }
     }
   }
 
