@@ -297,13 +297,15 @@ tab, group, and reading order.
 
 ### Where to put new content
 
-Before adding content to the example docs (`example/src/*.mdx`), **always read
-`example/docs.json`** first to see the full navigation tree and existing pages.
-Then decide:
+The real docs live in **`website/src/pages/`**, not `example/src/`. The `example/`
+folder is a demo fixture, not the published docs site.
+
+Before adding or editing docs content, **always read `website/docs.json`** first
+to see the full navigation tree and existing pages. Then decide:
 
 1. Does an existing page already cover this topic? Add a section there.
 2. Is the topic distinct enough for its own page? Create a new `.mdx` file and
-   add it to the best group in `docs.json`.
+   add it to the best group in `website/docs.json`.
 
 Never append unrelated sections to a page just because it was the last file you
 had open. Match the topic to the right page or create a new one.

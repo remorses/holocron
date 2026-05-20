@@ -105,6 +105,70 @@ import './globals.css'
 
 Your custom properties override Holocron's defaults because CSS custom properties are not affected by cascade layers.
 
+## Docs in a subfolder
+
+To serve docs under `/docs/*` while keeping `/` for your own page, put MDX files inside a `docs/` subfolder and reference them with the `docs/` prefix in `docs.json`:
+
+```diagram
+my-project/
+├── docs/
+│   ├── getting-started.mdx
+│   └── configuration.mdx
+├── docs.json
+├── server.tsx
+├── vite.config.ts
+└── package.json
+```
+
+```json
+{
+  "name": "My Product",
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["docs/getting-started", "docs/configuration"]
+    }
+  ]
+}
+```
+
+The docs pages are available at `/docs/getting-started` and `/docs/configuration`. Your homepage at `/` stays untouched. Holocron will not redirect `/` to the first doc page when a parent route already handles it.
+
+<Aside>
+
+<Tip>
+Page slugs in `docs.json` map directly to file paths. `docs/getting-started` loads `docs/getting-started.mdx`.
+</Tip>
+
+</Aside>
+
+Here is a full `server.tsx` with a custom homepage:
+
+```tsx
+// server.tsx
+import { Spiceflow } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  .page('/', () => (
+    <html lang='en'>
+      <head><title>My Product</title></head>
+      <body>
+        <h1>Welcome to My Product</h1>
+        <a href='/docs/getting-started'>Read the docs</a>
+      </body>
+    </html>
+  ))
+  .get('/api/hello', () => ({ hello: 'world' }))
+  .use(holocronApp)
+
+export default {
+  fetch(request: Request) {
+    return app.handle(request)
+  },
+}
+```
+
 ## Real-world example
 
 The [holocron.so website](https://github.com/remorses/holocron/tree/main/website) uses this pattern. It mounts holocron docs alongside auth routes (better-auth with Google login), an AI gateway proxy, and a device authorization flow.
