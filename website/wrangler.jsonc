@@ -5,6 +5,7 @@
   "workers_dev": true,
   "compatibility_date": "2026-04-14",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "placement": { "mode": "smart" },
 
   // ── Production (top-level) ──────────────────────────────────────────
   "d1_databases": [
@@ -74,6 +75,7 @@
     "preview": {
       "name": "holocron-website-preview",
       "workers_dev": true,
+      "placement": { "mode": "smart" },
       "routes": [
         { "pattern": "preview.holocron.so", "custom_domain": true }
       ],
