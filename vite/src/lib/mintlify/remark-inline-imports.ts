@@ -70,7 +70,12 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
     // <Inner /> from a nested .md import. The resolvedImports map already
     // has all nested entries (computed recursively by resolveInlineImports
     // in sync.ts), so we just need to re-scan for new bindings and replace.
-    const alreadyInlined = new Set<string>()
+    //
+    // Cycle prevention: track which (source, local) pairs have been processed.
+    // The same file CAN be inlined in multiple rounds if it appears under
+    // different local names (e.g. page imports Inner directly, AND outer.mdx
+    // also imports Inner — both usages should be replaced).
+    const processedBindings = new Set<string>()
     const MAX_DEPTH = 10
 
     for (let round = 0; round < MAX_DEPTH; round++) {
@@ -80,10 +85,13 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
       for (const imp of allImports) {
         const entry = resolvedImports.get(imp.source)
         if (!entry) continue
-        if (alreadyInlined.has(entry.absPath)) continue
         for (const spec of imp.specifiers) {
           if (spec.type === 'default') {
-            inlineable.set(spec.local, entry)
+            const bindingKey = `${imp.source}:${spec.local}`
+            if (!processedBindings.has(bindingKey)) {
+              processedBindings.add(bindingKey)
+              inlineable.set(spec.local, entry)
+            }
           }
         }
       }
@@ -92,7 +100,6 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
 
       const parsedImports = new Map<string, RootContent[]>()
       for (const [localName, entry] of inlineable) {
-        alreadyInlined.add(entry.absPath)
         const nodes = parseAndRewriteImportedContent(entry)
         parsedImports.set(localName, nodes)
       }

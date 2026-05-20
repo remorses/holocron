@@ -738,21 +738,18 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         RESOLVED_MODULES,
       ])
 
-      if (isMdx) {
+      if (isMdx || isTrackedImageDep) {
         if (ctx.type !== 'update') {
           resolvedIds.add(RESOLVED_MDX)
         }
         if (changedSlug) {
           resolvedIds.add(RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(changedSlug))
         }
-        // When an imported .md/.mdx file changes, invalidate ALL per-page
-        // MDX modules because the changed content is inlined into the
-        // importing page's MDX. Without this, the importing page's virtual
-        // module stays cached with stale inlined content.
-        if (!changedSlug || !syncResult.mdxContent[changedSlug]) {
-          // The changed file is not a page slug — it's an imported snippet.
-          // Invalidate all per-page MDX modules so pages that inline it get
-          // fresh content.
+        // When an imported .md/.mdx file or its image dependency changes,
+        // invalidate ALL per-page MDX modules because the changed content
+        // is inlined into the importing page's MDX. Without this, the
+        // importing page's virtual module stays cached with stale content.
+        if (isTrackedImageDep || !changedSlug || !syncResult.mdxContent[changedSlug]) {
           for (const slug of Object.keys(syncResult.mdxContent)) {
             resolvedIds.add(RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(slug))
           }

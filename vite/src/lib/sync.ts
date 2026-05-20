@@ -880,7 +880,8 @@ function resolveInlineImports({
         if (resolved) imageDepPaths.push(resolved.filePath)
         return
       }
-      if ((node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && (node as any).name === 'Image') {
+      const jsxName = (node as any).name
+      if ((node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && (jsxName === 'Image' || jsxName === 'img')) {
         const attrs = (node as any).attributes ?? []
         for (const attr of attrs) {
           if (attr.type === 'mdxJsxAttribute' && attr.name === 'src' && typeof attr.value === 'string') {
