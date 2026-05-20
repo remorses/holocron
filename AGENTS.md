@@ -334,6 +334,89 @@ The build-time resolver and safe-mdx's render-time resolver must produce identic
 
 Raw import source strings are cached in `holocron-mdx.json` alongside `pageIconRefs`. Resolution to actual file paths happens fresh on every sync (just `fs.existsSync` probing, very cheap). This avoids stale cache when files are created or deleted between builds.
 
+## Inline .md/.mdx imports
+
+When a page has `import Guide from './snippets/guide.md'` and uses `<Guide />`, the imported file's content is **spliced directly into the page's mdast at build time**. No runtime component, no separate processing pipeline. The import declaration stays as dead code for HMR.
+
+This means headings from imported files appear in the TOC automatically, images go through the normal build-time processor, and all remark plugins (callouts, code groups, mermaid, etc.) apply to the inlined content.
+
+### Architecture
+
+```
+┌─ enrichPageUncached (sync.ts) ──────────────────────────────────────────┐
+│                                                                          │
+│  page.mdx content                                                        │
+│       │                                                                  │
+│       ▼                                                                  │
+│  regex /\.mdx?['"]/ ── no match ──► skip to processMdx (most pages)      │
+│       │ match                                                            │
+│       ▼                                                                  │
+│  resolveInlineImports                                                    │
+│    quickMdxParser(page) ──► extractImports                               │
+│    for each .md/.mdx default import:                                     │
+│      read file, quickMdxParser (ONE parse), reuse mdast for:             │
+│        ├──► extractImports (nested discovery)                            │
+│        ├──► collectImageDeps (HMR + cache key)                           │
+│        └──► buildSplicedNodes (strip yaml, rewrite URLs)                 │
+│      store as InlineImportEntry { content, absPath, parsedNodes }        │
+│      recurse into nested .md/.mdx via scanMdast (same parsed tree)       │
+│       │                                                                  │
+│       ▼                                                                  │
+│  combined SHA = hash(page + imported files + image deps)                 │
+│       │                                                                  │
+│       ├── cache hit ──► return cached                                    │
+│       │                                                                  │
+│       ▼  cache miss                                                      │
+│  processMdx ──► normalizeMdx                                             │
+│    remarkInlineImports (PREPENDED, runs first):                          │
+│      fixed-point loop: clone pre-built parsedNodes, splice in place      │
+│      of <Guide />, next round handles nested <Inner /> from outer.mdx   │
+│    then: remarkHeadings, remarkCodeGroup, remarkCallouts, ...            │
+│       │                                                                  │
+│       ▼                                                                  │
+│  headings, images, links extracted from unified mdast                    │
+│  image processing (sharp dimensions, placeholders)                       │
+│  serialize to MDX string ──► mdxContent[slug]                            │
+└──────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼  at request time
+  /<slug>      ──► safe-mdx renders (inlined content included)
+  /<slug>.md   ──► serves raw MDX string
+  /docs.zip    ──► zips all MDX strings
+```
+
+### Parse count
+
+- **No .md imports** (most pages): 1 regex + 1 normalizeMdx + 1 safe-mdx render = **2 parses**
+- **N .md imports**: 1 page quickParse + N import quickParses + 1 normalizeMdx + 1 render = **N + 3 parses**
+
+Each imported file is parsed exactly once. The mdast is reused for import extraction, image dep collection, and pre-building spliced nodes. The remark plugin does zero parsing; it clones pre-built nodes.
+
+### Cache key
+
+Combined SHA covers page content + all imported file contents (recursive) + all image files referenced by imported content. Any change invalidates the cache.
+
+### HMR
+
+- Imported .md changes → watcher detects → re-sync → combined SHA differs → cache miss → all per-page MDX modules invalidated → rsc:update
+- Image referenced by imported .md changes → same flow via `importedImageDepPaths` tracking
+- Import declarations kept as dead code ensure Vite's module graph tracks .md files
+
+### Key files
+
+- `vite/src/lib/mintlify/remark-inline-imports.ts` — remark plugin + `buildSplicedNodes`
+- `vite/src/lib/sync.ts` — `resolveInlineImports`, cache key, `scanFile`/`scanMdast`
+- `vite/src/lib/mdx-processor.ts` — `ProcessMdxOptions` for prepend plugins
+- `vite/src/lib/mintlify/normalize-mdx.ts` — `NormalizeMdxOptions` with `prependPlugins`
+
+### Rules
+
+- .md/.mdx imports **must include the file extension** (extensionless imports are not resolved for inlining)
+- The regex fast path `/\.mdx?['"]/` skips the full AST parse for pages without .md imports
+- `buildSplicedNodes` strips frontmatter and rewrites relative URLs/import sources so paths resolve correctly from the page's directory
+- Recursive inlining uses a visited set (by absPath) to prevent import cycles
+- The fixed-point loop in the remark plugin tracks processed `source:local` bindings and only marks them after actual JSX replacement happens
+
 ## MDX content loading
 
 MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on disk until a page is requested. At request time, the MDX is parsed with `safe-mdx`, split into sections, and rendered with the editorial components.
