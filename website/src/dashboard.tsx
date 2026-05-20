@@ -119,8 +119,7 @@ export const dashboardApp = new Spiceflow()
   })
 
   // Shell layout: navbar + sidebar + main content area
-  .layout('/dashboard/*', async ({ children, loaderData, request }) => {
-    const { user, projects, org, orgs } = loaderData
+  .layout('/dashboard/*', async ({ children, request }) => {
     // Extract projectId from the URL path since layout runs before sub-loaders
     const pathMatch = request.parsedUrl.pathname.match(/^\/dashboard\/projects\/([^/]+)/)
     const projectId = pathMatch?.[1] ?? null
@@ -145,13 +144,7 @@ export const dashboardApp = new Spiceflow()
         <div className="isolate grow relative flex max-w-(--content-max-width) mx-auto w-full border-x border-border">
           <GridDot position="tl" />
           <GridDot position="tr" />
-          <DashboardSidebar
-            projects={projects}
-            currentProjectId={projectId}
-            orgs={orgs}
-            org={org ? { id: org.id, name: org.name } : null}
-            user={{ name: user.name, email: user.email, image: user.image }}
-          />
+          <DashboardSidebar currentProjectId={projectId} />
           <div className="flex-1 flex flex-col min-w-0">
             {children}
           </div>
@@ -406,7 +399,7 @@ export const dashboardApp = new Spiceflow()
               <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
               <InviteButton orgId={orgId} />
             </div>
-            <MembersTable members={members} />
+            <MembersTable />
           </div>
         </main>
       </>

@@ -13,6 +13,7 @@
 
 import { waitUntil } from 'cloudflare:workers'
 import { getDeploymentId } from 'spiceflow'
+import superjson from 'superjson'
 
 const CACHE_BASE = 'https://0.0.0.0/'
 
@@ -57,7 +58,7 @@ export function memoize<Args extends unknown[], T>(
     }
 
     if (hit) {
-      const envelope = JSON.parse(await hit.text()) as CacheEnvelope<T>
+      const envelope = superjson.parse<CacheEnvelope<T>>(await hit.text())
       const age = (Date.now() - envelope.createdAt) / 1000
 
       if (age < ttl) {
@@ -104,7 +105,7 @@ async function putCache<T>(
   maxAge: number,
 ): Promise<void> {
   const envelope: CacheEnvelope<T> = { value, createdAt: Date.now() }
-  const response = new Response(JSON.stringify(envelope), {
+  const response = new Response(superjson.stringify(envelope), {
     headers: {
       'content-type': 'application/json',
       'cache-control': `s-maxage=${maxAge}`,
@@ -122,7 +123,7 @@ export async function invalidate(namespace: string, ...args: unknown[]): Promise
 async function buildCacheKey(namespace: string, args: unknown[]): Promise<string> {
   const id = await getDeploymentId()
   const prefix = id ? `${CACHE_BASE}${id}/` : CACHE_BASE
-  const serialized = JSON.stringify(args)
+  const serialized = superjson.stringify(args)
   const hash = await sha256(serialized)
   return `${prefix}${namespace}/${hash}`
 }

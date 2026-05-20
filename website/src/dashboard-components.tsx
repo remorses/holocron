@@ -5,7 +5,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Link } from 'spiceflow/react'
+import { Link, useLoaderData } from 'spiceflow/react'
 import {
   BuildingIcon,
   CheckIcon,
@@ -53,6 +53,9 @@ import {
   TableRow,
 } from './components/ui/table.tsx'
 import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, createProjectAction } from './dashboard-actions.ts'
+import type { dashboardApp } from './dashboard.tsx'
+
+type DashboardApp = typeof dashboardApp
 
 const authClient = createAuthClient()
 
@@ -101,37 +104,12 @@ function setTheme(theme: 'light' | 'dark' | 'system') {
 
 // ── Sidebar ─────────────────────────────────────────────────────────
 
-type SidebarProject = {
-  projectId: string
-  name: string
-}
-
-type SidebarOrg = {
-  id: string
-  name: string
-  role?: string
-  firstProjectId?: string | null
-}
-
-type SidebarUser = {
-  name: string
-  email: string
-  image?: string | null
-}
-
 export function DashboardSidebar({
-  projects,
   currentProjectId,
-  orgs,
-  org,
-  user,
 }: {
-  projects: SidebarProject[]
   currentProjectId: string | null
-  orgs: SidebarOrg[]
-  org: SidebarOrg | null
-  user: SidebarUser
 }) {
+  const { projects, orgs, org, user } = useLoaderData<DashboardApp, '/dashboard/*'>('/dashboard/*')
   const userInitials = user.name
     ? user.name
         .split(' ')
@@ -538,19 +516,8 @@ export function ProjectTabBar({ projectId, currentTab }: { projectId: string; cu
 
 // ── Members table ───────────────────────────────────────────────────
 
-type Member = {
-  id: string
-  createdAt: number
-  role: 'admin' | 'member'
-  user: {
-    id: string
-    email: string
-    image: string | null
-    name: string
-  } | null
-}
-
-export function MembersTable({ members }: { members: Member[] }) {
+export function MembersTable() {
+  const { members } = useLoaderData<DashboardApp, '/dashboard/projects/:projectId/members'>('/dashboard/projects/:projectId/members')
   return (
     <Frame className="w-full">
       <Table className="table-fixed">
