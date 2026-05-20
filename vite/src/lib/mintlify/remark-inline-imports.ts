@@ -75,16 +75,17 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
     // has all nested entries (computed recursively by resolveInlineImports
     // in sync.ts), so we just need to re-scan for new bindings and replace.
     //
-    // Cycle prevention: track which (source, local) pairs have been processed.
-    // The same file CAN be inlined in multiple rounds if it appears under
-    // different local names (e.g. page imports Inner directly, AND outer.mdx
-    // also imports Inner — both usages should be replaced).
+    // Cycle prevention: only mark bindings as processed AFTER their JSX
+    // usage was actually replaced. This ensures that if a page declares
+    // `import Inner from './inner.md'` but has no `<Inner />` usage yet
+    // (it appears later via spliced outer.mdx), the binding stays eligible
+    // for replacement in subsequent rounds.
     const processedBindings = new Set<string>()
     const MAX_DEPTH = 10
 
     for (let round = 0; round < MAX_DEPTH; round++) {
       const allImports = extractImports(tree)
-      const inlineable = new Map<string, InlineImportEntry>()
+      const inlineable = new Map<string, { entry: InlineImportEntry; bindingKey: string }>()
 
       for (const imp of allImports) {
         const entry = resolvedImports.get(imp.source)
@@ -93,8 +94,7 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
           if (spec.type === 'default') {
             const bindingKey = `${imp.source}:${spec.local}`
             if (!processedBindings.has(bindingKey)) {
-              processedBindings.add(bindingKey)
-              inlineable.set(spec.local, entry)
+              inlineable.set(spec.local, { entry, bindingKey })
             }
           }
         }
@@ -103,18 +103,21 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
       if (inlineable.size === 0) break
 
       const parsedImports = new Map<string, RootContent[]>()
-      for (const [localName, entry] of inlineable) {
-        // Use pre-built nodes from resolveInlineImports (sync.ts) when
-        // available to avoid double-parsing. Falls back to parsing from
-        // content string for unit tests and standalone usage.
+      for (const [localName, { entry }] of inlineable) {
         const nodes = entry.parsedNodes ?? parseAndRewriteImportedContent(entry)
         parsedImports.set(localName, nodes)
       }
 
-      // Replace <X /> usages with inlined nodes.
-      // Import declarations are intentionally kept as dead code so the
-      // virtual module system tracks the .md/.mdx files for HMR watching.
-      replaceJsxUsages(tree, parsedImports)
+      // Replace <X /> usages with inlined nodes. Returns which local names
+      // had actual JSX replacements. Only mark those as processed so
+      // unreplaced bindings stay eligible for future rounds.
+      const replacedLocals = replaceJsxUsages(tree, parsedImports)
+      if (replacedLocals.size === 0) break
+
+      for (const localName of replacedLocals) {
+        const info = inlineable.get(localName)
+        if (info) processedBindings.add(info.bindingKey)
+      }
     }
   }
 }
@@ -266,11 +269,14 @@ function rewriteRelativeImportSources(tree: Root, relativeDir: string) {
 /**
  * Walk the AST and replace JSX usages of inlined imports with their parsed nodes.
  * Handles both flow and text elements: `<Guide />` and inline `<Guide />`.
+ * Returns the set of local names that had at least one JSX usage replaced.
  */
 function replaceJsxUsages(
   tree: Root,
   parsedImports: Map<string, RootContent[]>,
-) {
+): Set<string> {
+  const replacedLocals = new Set<string>()
+
   function walkChildren(children: RootContent[]): RootContent[] {
     const result: RootContent[] = []
     for (const child of children) {
@@ -281,6 +287,7 @@ function replaceJsxUsages(
         if (nodes) {
           // Splice in the parsed nodes (clone to allow multiple usages)
           result.push(...structuredClone(nodes))
+          replacedLocals.add(name)
           continue
         }
       }
@@ -295,4 +302,5 @@ function replaceJsxUsages(
   }
 
   tree.children = walkChildren(tree.children)
+  return replacedLocals
 }

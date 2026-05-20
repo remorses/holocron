@@ -239,7 +239,7 @@ export async function syncNavigation({
         .sort()
       for (const imgPath of inlineResult.imageDepPaths) {
         try {
-          parts.push(`img:${imgPath}:${gitBlobSha(fs.readFileSync(imgPath, 'utf-8'))}`)
+          parts.push(`img:${imgPath}:${crypto.createHash('sha1').update(fs.readFileSync(imgPath)).digest('hex')}`)
         } catch { /* ignore missing files */ }
       }
       sha = gitBlobSha(sha + '\n' + parts.join('\n'))
@@ -752,8 +752,9 @@ const MD_EXTENSIONS = new Set(['.md', '.mdx'])
 
 /** Fast check: if the content has no .md/.mdx import source strings at all,
  *  skip the full parse. No false negatives — any real .md/.mdx import MUST
- *  contain this pattern. False positives (e.g. the pattern in a string
- *  constant or comment) are fine — we just do the full parse. */
+ *  contain this pattern (extensionless imports are not supported for .md/.mdx).
+ *  False positives (e.g. the pattern in a string constant) are fine — we
+ *  just do the full parse. */
 const MAY_HAVE_MD_IMPORTS = /\.mdx?['"]/
 
 /**
@@ -793,7 +794,7 @@ function resolveInlineImports({
 }): { imports: Map<string, InlineImportEntry>; imageDepPaths: string[] } {
   const empty = { imports: new Map<string, InlineImportEntry>(), imageDepPaths: [] }
 
-  // Regex fast path: skip the full parse if content has no .md/.mdx imports
+  // Regex fast path: skip the full parse if content has no local default imports
   if (!MAY_HAVE_MD_IMPORTS.test(content)) return empty
 
   const result = new Map<string, InlineImportEntry>()
@@ -805,7 +806,7 @@ function resolveInlineImports({
   // relDirFromPage is the relative path from the page's dir to fileDir
   // (used to compute rewritten source keys for nested imports).
   function scanFile(fileContent: string, fileDir: string, relDirFromPage: string) {
-    // Regex fast path for nested files: skip if no .md/.mdx import sources
+    // Regex fast path for nested files: skip if no local default imports
     if (!MAY_HAVE_MD_IMPORTS.test(fileContent)) return
 
     let mdast: Root
