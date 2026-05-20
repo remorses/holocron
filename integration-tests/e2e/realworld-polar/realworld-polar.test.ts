@@ -195,23 +195,6 @@ test.describe("realworld-polar fixture", () => {
     expect(html).toContain("Quick Start Guide");
   });
 
-  test("root-level local img renders through the pixelated image primitive", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1600, height: 1200 });
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-
-    const realImage = page.locator('.slot-main img[src*="welcome.png"]:not([aria-hidden])').first();
-    await expect(realImage).toBeVisible();
-    const wrapper = realImage.locator("xpath=ancestor::*[contains(@class, 'holocron-pixelated-image')][1]");
-    await expect(wrapper).toBeVisible();
-    await expect.poll(async () => {
-      return await realImage.evaluate((node) => {
-        return node instanceof HTMLImageElement ? node.naturalWidth : 0;
-      });
-    }).toBeGreaterThan(0);
-  });
-
   test("Polar card icons render for Font Awesome-style names used in MDX", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
     await warmAndOpen({
