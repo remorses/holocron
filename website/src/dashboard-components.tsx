@@ -51,7 +51,7 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
-import { createApiKeyAction, createProjectAction, inviteMemberAction } from './dashboard-actions.ts'
+import { createApiKeyAction, createOrgAction, createProjectAction, inviteMemberAction } from './dashboard-actions.ts'
 
 const authClient = createAuthClient()
 
@@ -108,6 +108,7 @@ type SidebarProject = {
 type SidebarOrg = {
   id: string
   name: string
+  role?: string
 }
 
 type SidebarUser = {
@@ -119,11 +120,13 @@ type SidebarUser = {
 export function DashboardSidebar({
   projects,
   currentProjectId,
+  orgs,
   org,
   user,
 }: {
   projects: SidebarProject[]
   currentProjectId: string | null
+  orgs: SidebarOrg[]
   org: SidebarOrg | null
   user: SidebarUser
 }) {
@@ -157,20 +160,25 @@ export function DashboardSidebar({
         </DropdownMenuTrigger>
 
         <DropdownMenuPopup side="bottom" align="start" sideOffset={4}>
-          <DropdownMenuLabel>Organization</DropdownMenuLabel>
-          {org && (
-            <DropdownMenuItem>
+          <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+          {orgs.map((o) => (
+            <DropdownMenuItem key={o.id}>
               <div className="flex size-6 items-center justify-center rounded-md border">
                 <BuildingIcon className="size-3.5 shrink-0" />
               </div>
-              <span className="flex-1 truncate">{org.name}</span>
+              <span className="flex-1 truncate">{o.name}</span>
+              {o.id === org?.id && (
+                <CheckIcon className="size-3.5 text-muted-foreground" />
+              )}
             </DropdownMenuItem>
-          )}
-          {!org && (
+          ))}
+          {orgs.length === 0 && (
             <div className="px-2 py-1.5 text-xs text-muted-foreground">
               No organization yet
             </div>
           )}
+          <DropdownMenuSeparator />
+          <CreateOrgMenuItem />
         </DropdownMenuPopup>
       </DropdownMenu>
 
@@ -274,6 +282,94 @@ export function DashboardSidebar({
   )
 }
 
+// ── Create Organization ─────────────────────────────────────────────
+
+function CreateOrgMenuItem() {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <DropdownMenuItem onClick={() => setOpen(true)}>
+        <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+          <PlusIcon className="size-4" />
+        </div>
+        <span className="text-muted-foreground font-medium">Add organization</span>
+      </DropdownMenuItem>
+      <CreateOrgDialog open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
+
+function CreateOrgDialog({ open, onOpenChange }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setName('')
+      setError(null)
+    }
+    onOpenChange(nextOpen)
+  }
+
+  async function handleCreate() {
+    setLoading(true)
+    setError(null)
+    try {
+      await createOrgAction({ name })
+      // Reload to pick up the new org in the sidebar
+      window.location.reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create organization')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogPopup>
+        <DialogHeader>
+          <DialogTitle>New Organization</DialogTitle>
+          <DialogDescription>
+            Create a new organization. You will be its admin.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 pb-2">
+          {error && (
+            <div className="text-sm text-destructive mb-3">{error}</div>
+          )}
+          <div className="flex flex-col gap-3">
+            <Input
+              placeholder="Organization name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && name.trim()) {
+                  e.preventDefault()
+                  handleCreate()
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter variant="bare" className="mt-4">
+            <DialogClose render={<Button variant="outline" />}>
+              Cancel
+            </DialogClose>
+            <Button onClick={handleCreate} loading={loading} disabled={!name.trim()}>
+              Create organization
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogPopup>
+    </Dialog>
+  )
+}
+
 // ── Create Project ──────────────────────────────────────────────────
 
 function NewProjectSidebarItem() {
@@ -328,9 +424,8 @@ function CreateProjectDialog({ open, onOpenChange }: {
     setLoading(true)
     setError(null)
     try {
-      const result = await createProjectAction({ name })
-      // Navigate to the deploy page for the new project
-      window.location.href = `/dashboard/deploy?projectId=${result.projectId}`
+      // Action throws redirect with deploy-key cookie → spiceflow handles navigation
+      await createProjectAction({ name })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create project')
       setLoading(false)

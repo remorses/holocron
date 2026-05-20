@@ -44,22 +44,9 @@ import {
   InviteButton,
 } from './dashboard-components.tsx'
 
+import { readDeployKeyCookie, deployKeyCookie } from './dashboard-cookies.ts'
+
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
-const DEPLOY_KEY_COOKIE = 'holocron_deploy_key'
-
-function readDeployKeyCookie(request: Request, projectId: string): string | undefined {
-  const cookies = request.headers.get('cookie') ?? ''
-  const cookie = cookies.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${DEPLOY_KEY_COOKIE}=`))
-  const value = cookie?.slice(DEPLOY_KEY_COOKIE.length + 1)
-  if (!value) return undefined
-  const [cookieProjectId, key] = decodeURIComponent(value).split(':')
-  return cookieProjectId === projectId ? key : undefined
-}
-
-function deployKeyCookie({ request, projectId, fullKey }: { request: Request; projectId: string; fullKey: string }): string {
-  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : ''
-  return `${DEPLOY_KEY_COOKIE}=${encodeURIComponent(`${projectId}:${fullKey}`)}; Max-Age=120; Path=/dashboard/deploy; HttpOnly; SameSite=Lax${secure}`
-}
 
 // ── Dashboard app ───────────────────────────────────────────────────
 
@@ -74,26 +61,34 @@ export const dashboardApp = new Spiceflow()
     }
 
     const db = getDb()
-    const membership = await db.query.orgMember.findFirst({
+    // Load all org memberships so the org switcher can list them
+    const memberships = await db.query.orgMember.findMany({
       where: { userId: session.userId },
       with: { org: { with: { projects: true } } },
     })
 
-    const projects = (membership?.org?.projects ?? [])
+    const orgs = memberships
+      .filter((m) => m.org)
+      .map((m) => ({ id: m.org!.id, name: m.org!.name, role: m.role }))
+
+    // Pick first org's projects for the sidebar (switcher changes this client-side on reload)
+    const firstMembership = memberships[0]
+    const projects = (firstMembership?.org?.projects ?? [])
       .slice()
       .sort((a, b) => b.updatedAt - a.updatedAt)
 
     return {
       user: session.user,
-      org: membership?.org ?? null,
-      orgId: membership?.org?.id ?? null,
+      orgs,
+      org: firstMembership?.org ?? null,
+      orgId: firstMembership?.org?.id ?? null,
       projects,
     }
   })
 
   // Shell layout: navbar + sidebar + main content area
   .layout('/dashboard/*', async ({ children, loaderData, request }) => {
-    const { user, projects, org } = loaderData
+    const { user, projects, org, orgs } = loaderData
     // Extract projectId from the URL path since layout runs before sub-loaders
     const pathMatch = request.parsedUrl.pathname.match(/^\/dashboard\/projects\/([^/]+)/)
     const projectId = pathMatch?.[1] ?? null
@@ -121,6 +116,7 @@ export const dashboardApp = new Spiceflow()
           <DashboardSidebar
             projects={projects}
             currentProjectId={projectId}
+            orgs={orgs}
             org={org ? { id: org.id, name: org.name } : null}
             user={{ name: user.name, email: user.email, image: user.image }}
           />

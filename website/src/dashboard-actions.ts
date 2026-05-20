@@ -2,46 +2,72 @@
 // Client components import these directly. Every action authenticates
 // via getActionRequest() → requireSession() and verifies org membership
 // before mutating data. Actions throw on error and return objects on success.
+//
+// Authorization is resolved from the projectId: look up the project first,
+// then check membership in that exact org. This avoids the pitfall where a
+// user belongs to multiple orgs and findFirst picks the wrong one.
 
 'use server'
 
 import { ulid } from 'ulid'
-import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
-import { getActionRequest } from 'spiceflow'
+import { getActionRequest, redirect } from 'spiceflow'
 import { getDb, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
+import { deployKeyCookie } from './dashboard-cookies.ts'
 
 async function authenticateRequest() {
   const request = getActionRequest()
   return requireSession(request)
 }
 
-async function requireOrgMembership(userId: string, projectId: string) {
+/** Resolve authorization from the projectId: find the project, then check
+ *  the caller is a member of the project's org. Optionally require admin role. */
+async function requireProjectMembership(userId: string, projectId: string, options?: { adminOnly?: boolean }) {
   const db = getDb()
-  const membership = await db.query.orgMember.findFirst({
-    where: { userId },
-  })
-  if (!membership) throw new Error('Not a member of any organization')
 
   const project = await db.query.project.findFirst({
-    where: { projectId, orgId: membership.orgId },
+    where: { projectId },
   })
   if (!project) throw new Error('Project not found')
 
-  return { membership, project, orgId: membership.orgId }
+  const membership = await db.query.orgMember.findFirst({
+    where: { userId, orgId: project.orgId },
+  })
+  if (!membership) throw new Error('Not a member of this organization')
+
+  if (options?.adminOnly && membership.role !== 'admin') {
+    throw new Error('Only admins can perform this action')
+  }
+
+  return { membership, project, orgId: project.orgId }
 }
 
 // ── Create Project ──────────────────────────────────────────────────
 
-export async function createProjectAction({ name }: {
+export async function createProjectAction({ name, orgId }: {
   name: string
-}): Promise<{ projectId: string }> {
+  orgId?: string
+}): Promise<never> {
   if (!name.trim()) throw new Error('Name is required')
 
-  const session = await authenticateRequest()
-  const org = await ensureOrg(session.userId, session.user.name)
-  const db = getDb()
+  const request = getActionRequest()
+  const session = await requireSession(request)
 
+  // Use provided orgId or fall back to ensureOrg (creates one if needed)
+  let resolvedOrgId: string
+  if (orgId) {
+    const db = getDb()
+    const membership = await db.query.orgMember.findFirst({
+      where: { userId: session.userId, orgId },
+    })
+    if (!membership) throw new Error('Not a member of this organization')
+    resolvedOrgId = orgId
+  } else {
+    const org = await ensureOrg(session.userId, session.user.name)
+    resolvedOrgId = org.id
+  }
+
+  const db = getDb()
   const projectId = ulid()
   const generated = generateApiKey()
   const keyHash = await hashApiKey(generated.fullKey)
@@ -49,12 +75,12 @@ export async function createProjectAction({ name }: {
   await db.batch([
     db.insert(schema.project).values({
       projectId,
-      orgId: org.id,
+      orgId: resolvedOrgId,
       name: name.trim(),
     }),
     db.insert(schema.apiKey).values({
       id: ulid(),
-      orgId: org.id,
+      orgId: resolvedOrgId,
       projectId,
       name: 'deploy',
       prefix: generated.prefix,
@@ -62,7 +88,12 @@ export async function createProjectAction({ name }: {
     }),
   ])
 
-  return { projectId }
+  // Redirect with deploy-key cookie so the deploy page can show the key
+  throw redirect(`/dashboard/deploy?projectId=${projectId}`, {
+    headers: {
+      'Set-Cookie': deployKeyCookie({ request, projectId, fullKey: generated.fullKey }),
+    },
+  })
 }
 
 // ── Create API Key ──────────────────────────────────────────────────
@@ -75,7 +106,7 @@ export async function createApiKeyAction({ name, projectId }: {
   if (!projectId) throw new Error('Project ID is required')
 
   const session = await authenticateRequest()
-  const { orgId } = await requireOrgMembership(session.userId, projectId)
+  const { orgId } = await requireProjectMembership(session.userId, projectId, { adminOnly: true })
 
   const generated = generateApiKey()
   const keyHash = await hashApiKey(generated.fullKey)
@@ -105,7 +136,7 @@ export async function inviteMemberAction({ email, projectId }: {
   if (!projectId) throw new Error('Project ID is required')
 
   const session = await authenticateRequest()
-  const { orgId } = await requireOrgMembership(session.userId, projectId)
+  const { orgId } = await requireProjectMembership(session.userId, projectId, { adminOnly: true })
 
   const db = getDb()
 
@@ -131,4 +162,23 @@ export async function inviteMemberAction({ email, projectId }: {
     .returning({ id: schema.orgMember.id })
 
   return { memberId: member!.id, userName: targetUser.name }
+}
+
+// ── Create Organization ─────────────────────────────────────────────
+
+export async function createOrgAction({ name }: {
+  name: string
+}): Promise<{ orgId: string }> {
+  if (!name.trim()) throw new Error('Name is required')
+
+  const session = await authenticateRequest()
+  const db = getDb()
+
+  const orgId = ulid()
+  await db.batch([
+    db.insert(schema.org).values({ id: orgId, name: name.trim() }),
+    db.insert(schema.orgMember).values({ orgId, userId: session.userId, role: 'admin' }),
+  ])
+
+  return { orgId }
 }
