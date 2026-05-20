@@ -12,7 +12,6 @@ export type ResolvedLogo = HolocronConfig['logo'] & {
   generated?: boolean
 }
 
-const WEBSITE_BASE_URL = 'https://holocron.so'
 const DEFAULT_LOGO_TEXT = 'documentation'
 
 export function normalizeGeneratedLogoText(text: string): string {
@@ -20,9 +19,11 @@ export function normalizeGeneratedLogoText(text: string): string {
   return normalized || DEFAULT_LOGO_TEXT
 }
 
+/** Returns a root-relative URL that hits the local ai-logo proxy route
+ *  (registered in app-factory.tsx), avoiding cross-origin requests. */
 export function getGeneratedLogoUrl(text: string): string {
   const normalized = normalizeGeneratedLogoText(text)
-  return `${WEBSITE_BASE_URL}/api/ai-logo/${encodeURIComponent(normalized)}.jpeg`
+  return `/api/ai-logo/${encodeURIComponent(normalized)}.jpeg`
 }
 
 export function resolveLogo(logo: ResolvedLogo, siteName: string): ResolvedLogo {

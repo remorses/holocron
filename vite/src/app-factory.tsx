@@ -1043,8 +1043,49 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     })
   }
 
-  // OG image routes are handled by the og-worker at holocron.so. Generated
-  // fallback logo URLs point to website /api/ai-logo, not to takumi.
+  // /api/ai-logo/:text — proxy AI-generated logos from holocron.so to avoid
+  // cross-origin requests and improve latency via Cache API caching.
+  for (const logoRoute of new Set(['/api/ai-logo/:text', withBaseRoute(site.base, '/api/ai-logo/:text')])) {
+    app = app.get(logoRoute, async ({ params, request }: { params: Record<string, string>; request: Request }) => {
+      const text = params.text || ''
+      if (!text) return new Response('Missing logo text', { status: 400 })
+
+      const upstreamUrl = `https://holocron.so/api/ai-logo/${encodeURIComponent(text)}`
+
+      // Try Cache API first (available on Cloudflare Workers; no-op in dev)
+      const cache = typeof caches !== 'undefined' ? await caches.open('ai-logo') : undefined
+      const cacheKey = new Request(upstreamUrl)
+      if (cache) {
+        const cached = await cache.match(cacheKey)
+        if (cached) return cached
+      }
+
+      const upstream = await fetch(upstreamUrl, {
+        headers: { accept: request.headers.get('accept') || 'image/*' },
+      })
+      if (!upstream.ok) {
+        return new Response(upstream.body, {
+          status: upstream.status,
+          headers: { 'content-type': upstream.headers.get('content-type') || 'text/plain' },
+        })
+      }
+
+      const body = await upstream.arrayBuffer()
+      const response = new Response(body, {
+        headers: {
+          'content-type': upstream.headers.get('content-type') || 'image/jpeg',
+          'cache-control': 's-maxage=31536000, immutable',
+        },
+      })
+
+      // Store in Cache API for subsequent requests
+      if (cache) {
+        await cache.put(cacheKey, response.clone())
+      }
+
+      return response
+    })
+  }
 
   // /holocron-api/chat — only registered when assistant is enabled
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {

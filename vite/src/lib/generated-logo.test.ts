@@ -6,9 +6,9 @@ import {
 } from './generated-logo.tsx'
 
 describe('getGeneratedLogoUrl', () => {
-  test('builds absolute URL to holocron.so', () => {
+  test('builds root-relative URL to local ai-logo proxy', () => {
     expect(getGeneratedLogoUrl('Test Docs')).toBe(
-      'https://holocron.so/api/ai-logo/test%20docs.jpeg',
+      '/api/ai-logo/test%20docs.jpeg',
     )
   })
 
@@ -16,10 +16,10 @@ describe('getGeneratedLogoUrl', () => {
     expect(normalizeGeneratedLogoText('Test Docs')).toBe('test docs')
   })
 
-  test('resolveLogo falls back to one AI-generated image on holocron.so', () => {
+  test('resolveLogo falls back to one AI-generated image via local proxy', () => {
     expect(resolveLogo({ light: '', href: '/home' }, 'Test Docs')).toEqual({
-      light: 'https://holocron.so/api/ai-logo/test%20docs.jpeg',
-      dark: 'https://holocron.so/api/ai-logo/test%20docs.jpeg',
+      light: '/api/ai-logo/test%20docs.jpeg',
+      dark: '/api/ai-logo/test%20docs.jpeg',
       href: '/home',
       generated: true,
     })
