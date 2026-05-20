@@ -1,0 +1,10 @@
+{
+  "name": "Docs Subfolder Test",
+  "colors": { "primary": "#6366f1" },
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["docs/getting-started", "docs/configuration"]
+    }
+  ]
+}

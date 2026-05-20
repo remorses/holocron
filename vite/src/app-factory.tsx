@@ -666,11 +666,24 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   // Wildcard fallback. `children === null` means no `.page()` matched
   // → real 404. Otherwise a more specific layout is nested; return a
   // Fragment so exactly one <html> stays at the root.
+  //
+  // Root redirect lives here (not as a `.get('/')`) so parent-app routes
+  // take priority when holocron is mounted as a child.
   const wildcardLayoutFn = async ({ children, request, response, loaderData: rawLoaderData }: { children?: React.ReactNode; request: Request; response: { status?: number; headers: Headers }; loaderData: unknown }) => {
     if (!isHolocronLoaderData(rawLoaderData)) {
       throw new Error('Holocron loader data missing in wildcard layout')
     }
     if (children === null || children === undefined) {
+      // Redirect `/` (or base route) to the first doc page when no
+      // index.mdx exists. This only fires if no parent route handled `/`.
+      if (needsRootRedirect) {
+        const url = new URL(request.url)
+        const rootRoutes = new Set(['/', withBaseRoute(site.base, '/')])
+        const pathname = url.pathname.replace(/\/+$/, '') || '/'
+        if (rootRoutes.has(pathname)) {
+          throw redirect(new URL(withBaseRoute(site.base, firstPage!.href), request.url).href, { status: 307 })
+        }
+      }
       response.status = 404
       return renderFullShell({ children: null, request, loaderData: rawLoaderData })
     }
@@ -769,14 +782,16 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
   }
 
-  // Root redirect when no explicit index page is defined
-  if (!slugs.includes('index') && firstPage) {
-    for (const rootRoute of new Set(['/', withBaseRoute(site.base, '/')])) {
-      app = app.get(rootRoute, ({ request }: { request: Request }) => {
-        return Response.redirect(new URL(withBaseRoute(site.base, firstPage.href), request.url), 307)
-      })
-    }
-  }
+  // Root redirect when no explicit index page is defined.
+  // Registered as a middleware so it does NOT block parent-app routes when
+  // holocron is mounted as a child via `.use(holocronApp)`. A `.get('/')`
+  // would register an explicit route that competes with the parent's own
+  // `/` page, preventing users from owning the root while serving docs
+  // under a subfolder like `/docs/*`.
+  //
+  // As a middleware, the parent's routes are checked first. Only if no
+  // parent route handled `/` does this fire and redirect.
+  const needsRootRedirect = !slugs.includes('index') && !!firstPage
 
   // /sitemap.xml
   for (const sitemapRoute of new Set(['/sitemap.xml', withBaseRoute(site.base, '/sitemap.xml')])) {
