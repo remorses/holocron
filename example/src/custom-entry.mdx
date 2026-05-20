@@ -1,0 +1,118 @@
+---
+title: Custom Entry
+description: Mount Holocron alongside your own API routes, pages, and middleware using a custom Spiceflow server entry.
+icon: plug
+---
+
+## Overview
+
+By default, Holocron owns the entire server. If you already have a backend (API routes, authentication, a landing page) and want to add docs alongside it, use a **custom entry point**. You write your own [Spiceflow](https://spiceflow.dev) server and mount holocron as a child app.
+
+Pass the `entry` option to the plugin pointing to your server file:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({ entry: './server.tsx' }),
+  ],
+})
+```
+
+Your server file creates a Spiceflow app, registers your own routes, and mounts holocron at the end:
+
+```tsx
+// server.tsx
+import { Spiceflow } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  .get('/api/hello', () => ({ hello: 'world' }))
+  .use(holocronApp)
+
+export default {
+  fetch(request: Request) {
+    return app.handle(request)
+  },
+}
+```
+
+Your routes are checked first. Holocron only handles requests that your routes don't match, so there's no conflict between your pages and the documentation.
+
+<Aside>
+
+<Note>
+The server file must `export const app` (the Spiceflow instance) and `export default { fetch }` for Cloudflare Workers compatibility. For Node.js, also call `app.listen()`.
+</Note>
+
+</Aside>
+
+## Docs in a subfolder
+
+To serve docs under `/docs/*` while keeping `/` for your own page, put MDX files inside a `docs/` subfolder and reference them with the `docs/` prefix in `docs.json`:
+
+```diagram
+my-project/
+├── docs/
+│   ├── getting-started.mdx
+│   └── configuration.mdx
+├── docs.json
+├── server.tsx
+├── vite.config.ts
+└── package.json
+```
+
+```json
+{
+  "name": "My Product",
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["docs/getting-started", "docs/configuration"]
+    }
+  ]
+}
+```
+
+The docs pages are available at `/docs/getting-started` and `/docs/configuration`. Your homepage at `/` stays untouched. Holocron will not redirect `/` to the first doc page when a parent route already handles it.
+
+Here is a full `server.tsx` example with a custom homepage and docs in a subfolder:
+
+```tsx
+// server.tsx
+import { Spiceflow } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  .page('/', () => (
+    <html lang='en'>
+      <head><title>My Product</title></head>
+      <body>
+        <h1>Welcome to My Product</h1>
+        <a href='/docs/getting-started'>Read the docs</a>
+      </body>
+    </html>
+  ))
+  .get('/api/hello', () => ({ hello: 'world' }))
+  .use(holocronApp)
+
+export default {
+  fetch(request: Request) {
+    return app.handle(request)
+  },
+}
+```
+
+## What you can add
+
+A custom entry lets you register anything Spiceflow supports before mounting holocron:
+
+- **API routes** with `.get()`, `.post()`, etc.
+- **Pages** with `.page()` and `.layout()` for your own React pages
+- **Middleware** with `.use()` for auth, logging, headers
+- **Static files** or any other route handler
+
+All of these coexist with the holocron docs without conflict.
