@@ -49,6 +49,25 @@ import { readDeployKeyCookie, deployKeyCookie } from './dashboard-cookies.ts'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 
+/** Resolve project + verify the caller is a member of the project's org.
+ *  All project page loaders must use this instead of looking up membership first. */
+async function resolveProjectAccess(request: Request, projectId: string) {
+  const session = await requireSession(request)
+  const db = getDb()
+
+  const project = await db.query.project.findFirst({
+    where: { projectId },
+  })
+  if (!project) throw redirect('/dashboard')
+
+  const membership = await db.query.orgMember.findFirst({
+    where: { userId: session.userId, orgId: project.orgId },
+  })
+  if (!membership) throw redirect('/dashboard')
+
+  return { session, db, project, membership, orgId: project.orgId }
+}
+
 // ── Dashboard app ───────────────────────────────────────────────────
 
 export const dashboardApp = new Spiceflow()
@@ -70,19 +89,31 @@ export const dashboardApp = new Spiceflow()
 
     const orgs = memberships
       .filter((m) => m.org)
-      .map((m) => ({ id: m.org!.id, name: m.org!.name, role: m.role }))
+      .map((m) => ({
+        id: m.org!.id,
+        name: m.org!.name,
+        role: m.role,
+        firstProjectId: m.org!.projects.slice().sort((a, b) => b.updatedAt - a.updatedAt)[0]?.projectId ?? null,
+      }))
 
-    // Pick first org's projects for the sidebar (switcher changes this client-side on reload)
-    const firstMembership = memberships[0]
-    const projects = (firstMembership?.org?.projects ?? [])
+    // Derive selected org from the current URL: projectId in path or orgId in query
+    const projectId = request.parsedUrl.pathname.match(/^\/dashboard\/projects\/([^/]+)/)?.[1]
+    const requestedOrgId = new URL(request.url).searchParams.get('orgId')
+
+    let selectedMembership = projectId
+      ? memberships.find((m) => m.org?.projects.some((p) => p.projectId === projectId))
+      : memberships.find((m) => m.orgId === requestedOrgId)
+    if (!selectedMembership) selectedMembership = memberships[0]
+
+    const projects = (selectedMembership?.org?.projects ?? [])
       .slice()
       .sort((a, b) => b.updatedAt - a.updatedAt)
 
     return {
       user: session.user,
       orgs,
-      org: firstMembership?.org ?? null,
-      orgId: firstMembership?.org?.id ?? null,
+      org: selectedMembership?.org ?? null,
+      orgId: selectedMembership?.org?.id ?? null,
       projects,
     }
   })
@@ -132,7 +163,7 @@ export const dashboardApp = new Spiceflow()
   // ── Dashboard index → redirect to first project ────────────────────
 
   .page('/dashboard', async ({ loaderData }) => {
-    const { projects, org } = loaderData
+    const { projects, org, orgId } = loaderData
     const firstProject = projects[0]
     if (firstProject) {
       throw redirect(`/dashboard/projects/${firstProject.projectId}`)
@@ -153,7 +184,7 @@ export const dashboardApp = new Spiceflow()
             <div className="text-lg font-medium">No projects yet</div>
             <div className="mt-1 text-sm text-muted-foreground">Deploy your first docs site to see it here.</div>
             <div className="mt-4">
-              <CreateProjectButton />
+              <CreateProjectButton orgId={orgId} />
             </div>
           </>
         )}
@@ -164,16 +195,10 @@ export const dashboardApp = new Spiceflow()
   // ── Project overview tab ───────────────────────────────────────────
 
   .loader('/dashboard/projects/:projectId', async ({ request, params }) => {
-    const session = await requireSession(request)
-    const db = getDb()
-
-    const membership = await db.query.orgMember.findFirst({
-      where: { userId: session.userId },
-    })
-    if (!membership) throw redirect('/dashboard')
+    const { db } = await resolveProjectAccess(request, params.projectId)
 
     const project = await db.query.project.findFirst({
-      where: { projectId: params.projectId, orgId: membership.orgId },
+      where: { projectId: params.projectId },
       with: {
         deployments: {
           orderBy: { createdAt: 'desc' },
@@ -358,25 +383,14 @@ export const dashboardApp = new Spiceflow()
   // ── Members tab ────────────────────────────────────────────────────
 
   .loader('/dashboard/projects/:projectId/members', async ({ request, params }) => {
-    const session = await requireSession(request)
-    const db = getDb()
-
-    const membership = await db.query.orgMember.findFirst({
-      where: { userId: session.userId },
-    })
-    if (!membership) throw redirect('/dashboard')
-
-    const project = await db.query.project.findFirst({
-      where: { projectId: params.projectId, orgId: membership.orgId },
-    })
-    if (!project) throw redirect('/dashboard')
+    const { db, project, orgId } = await resolveProjectAccess(request, params.projectId)
 
     const members = await db.query.orgMember.findMany({
-      where: { orgId: membership.orgId },
+      where: { orgId },
       with: { user: true },
     })
 
-    return { project, members, orgId: membership.orgId }
+    return { project, members, orgId }
   })
 
   .page('/dashboard/projects/:projectId/members', async ({ loaderData }) => {
@@ -402,15 +416,14 @@ export const dashboardApp = new Spiceflow()
   // ── API Keys tab ────────────────────────────────────────────────────
 
   .loader('/dashboard/projects/:projectId/keys', async ({ request, params }) => {
-    const session = await requireSession(request)
-    const db = getDb()
-    const membership = await db.query.orgMember.findFirst({ where: { userId: session.userId } })
-    if (!membership) throw redirect('/dashboard')
+    const { db } = await resolveProjectAccess(request, params.projectId)
+
     const project = await db.query.project.findFirst({
-      where: { projectId: params.projectId, orgId: membership.orgId },
+      where: { projectId: params.projectId },
       with: { keys: true },
     })
     if (!project) throw redirect('/dashboard')
+
     return {
       project,
       keys: project.keys.map(({ id, name, prefix, projectId, createdAt }) => ({
@@ -474,12 +487,7 @@ export const dashboardApp = new Spiceflow()
   // ── Coming soon tabs ───────────────────────────────────────────────
 
   .loader('/dashboard/projects/:projectId/assistant', async ({ request, params }) => {
-    const session = await requireSession(request)
-    const db = getDb()
-    const membership = await db.query.orgMember.findFirst({ where: { userId: session.userId } })
-    if (!membership) throw redirect('/dashboard')
-    const project = await db.query.project.findFirst({ where: { projectId: params.projectId, orgId: membership.orgId } })
-    if (!project) throw redirect('/dashboard')
+    const { project } = await resolveProjectAccess(request, params.projectId)
     return { project }
   })
 
@@ -495,12 +503,7 @@ export const dashboardApp = new Spiceflow()
   })
 
   .loader('/dashboard/projects/:projectId/analytics', async ({ request, params }) => {
-    const session = await requireSession(request)
-    const db = getDb()
-    const membership = await db.query.orgMember.findFirst({ where: { userId: session.userId } })
-    if (!membership) throw redirect('/dashboard')
-    const project = await db.query.project.findFirst({ where: { projectId: params.projectId, orgId: membership.orgId } })
-    if (!project) throw redirect('/dashboard')
+    const { project } = await resolveProjectAccess(request, params.projectId)
     return { project }
   })
 
@@ -527,19 +530,22 @@ export const dashboardApp = new Spiceflow()
 
       let projectId = query.projectId
       let fullKey: string | undefined
-      const org = await ensureOrg(session.userId, session.user.name)
       const db = getDb()
 
       if (projectId) {
-        const project = await db.query.project.findFirst({
-          where: { projectId, orgId: org.id },
-        })
+        // Verify user has access to this project's org
+        const project = await db.query.project.findFirst({ where: { projectId } })
         if (!project) throw redirect('/dashboard')
+        const membership = await db.query.orgMember.findFirst({
+          where: { userId: session.userId, orgId: project.orgId },
+        })
+        if (!membership) throw redirect('/dashboard')
         if (project.currentDeploymentId) throw redirect(`/dashboard/projects/${projectId}`)
         fullKey = readDeployKeyCookie(request, projectId)
       }
 
       if (!projectId) {
+        const org = await ensureOrg(session.userId, session.user.name)
         projectId = ulid()
         const generated = generateApiKey()
         fullKey = generated.fullKey

@@ -110,6 +110,7 @@ type SidebarOrg = {
   id: string
   name: string
   role?: string
+  firstProjectId?: string | null
 }
 
 type SidebarUser = {
@@ -163,7 +164,15 @@ export function DashboardSidebar({
         <DropdownMenuPopup side="bottom" align="start" sideOffset={4}>
           <DropdownMenuLabel>Organizations</DropdownMenuLabel>
           {orgs.map((o) => (
-            <DropdownMenuItem key={o.id}>
+            <DropdownMenuItem
+              key={o.id}
+              onClick={() => {
+                const href = o.firstProjectId
+                  ? `/dashboard/projects/${o.firstProjectId}`
+                  : `/dashboard?orgId=${o.id}`
+                window.location.href = href
+              }}
+            >
               <div className="flex size-6 items-center justify-center rounded-md border">
                 <BuildingIcon className="size-3.5 shrink-0" />
               </div>
@@ -210,7 +219,7 @@ export function DashboardSidebar({
               </Link>
             )
           })}
-          <NewProjectSidebarItem />
+          <NewProjectSidebarItem orgId={org?.id} />
         </nav>
       </div>
 
@@ -321,9 +330,8 @@ function CreateOrgDialog({ open, onOpenChange }: {
     setLoading(true)
     setError(null)
     try {
-      await createOrgAction({ name })
-      // Reload to pick up the new org in the sidebar
-      window.location.reload()
+      const result = await createOrgAction({ name })
+      window.location.href = `/dashboard?orgId=${result.orgId}`
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create organization')
       setLoading(false)
@@ -373,7 +381,7 @@ function CreateOrgDialog({ open, onOpenChange }: {
 
 // ── Create Project ──────────────────────────────────────────────────
 
-function NewProjectSidebarItem() {
+function NewProjectSidebarItem({ orgId }: { orgId?: string | null }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -386,12 +394,12 @@ function NewProjectSidebarItem() {
         <PlusIcon className="size-4 shrink-0 opacity-60" />
         New project
       </button>
-      <CreateProjectDialog open={open} onOpenChange={setOpen} />
+      <CreateProjectDialog open={open} onOpenChange={setOpen} orgId={orgId} />
     </>
   )
 }
 
-export function CreateProjectButton() {
+export function CreateProjectButton({ orgId }: { orgId?: string | null }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -400,14 +408,15 @@ export function CreateProjectButton() {
         <PlusIcon className="size-4" />
         Create project
       </Button>
-      <CreateProjectDialog open={open} onOpenChange={setOpen} />
+      <CreateProjectDialog open={open} onOpenChange={setOpen} orgId={orgId} />
     </>
   )
 }
 
-function CreateProjectDialog({ open, onOpenChange }: {
+function CreateProjectDialog({ open, onOpenChange, orgId }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  orgId?: string | null
 }) {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -426,7 +435,7 @@ function CreateProjectDialog({ open, onOpenChange }: {
     setError(null)
     try {
       // Action throws redirect with deploy-key cookie → spiceflow handles navigation
-      await createProjectAction({ name })
+      await createProjectAction({ name, orgId: orgId ?? undefined })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create project')
       setLoading(false)
