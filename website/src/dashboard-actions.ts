@@ -128,40 +128,53 @@ export async function createApiKeyAction({ name, projectId }: {
 
 // ── Invite Member ───────────────────────────────────────────────────
 
-export async function inviteMemberAction({ email, projectId }: {
-  email: string
-  projectId: string
-}): Promise<{ memberId: string; userName: string }> {
-  if (!email.trim()) throw new Error('Email is required')
-  if (!projectId) throw new Error('Project ID is required')
+// ── Invite Member (link-based) ──────────────────────────────────────
+
+const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+export async function createInviteAction({ orgId }: {
+  orgId: string
+}): Promise<{ id: string }> {
+  if (!orgId) throw new Error('No org selected')
 
   const session = await authenticateRequest()
-  const { orgId } = await requireProjectMembership(session.userId, projectId, { adminOnly: true })
-
   const db = getDb()
 
-  // Check if user exists by email
-  const targetUser = await db.query.user.findFirst({
-    where: { email: email.trim().toLowerCase() },
+  // Verify caller is admin of this org
+  const membership = await db.query.orgMember.findFirst({
+    where: { userId: session.userId, orgId },
   })
-  if (!targetUser) {
-    throw new Error('No user found with that email. They need to sign up first.')
-  }
+  if (!membership) throw new Error('Not a member of this organization')
+  if (membership.role !== 'admin') throw new Error('Only admins can create invites')
 
-  // Check if already a member
-  const existing = await db.query.orgMember.findFirst({
-    where: { orgId, userId: targetUser.id },
+  const [invite] = await db.insert(schema.orgInvitation).values({
+    orgId,
+    createdBy: session.userId,
+    expiresAt: Date.now() + INVITE_EXPIRY_MS,
+  }).returning({ id: schema.orgInvitation.id })
+
+  return { id: invite!.id }
+}
+
+export async function acceptInviteAction({ invitationId }: {
+  invitationId: string
+}): Promise<never> {
+  if (!invitationId) throw new Error('Invitation ID is required')
+
+  const session = await authenticateRequest()
+  const db = getDb()
+
+  const invite = await db.query.orgInvitation.findFirst({
+    where: { id: invitationId },
   })
-  if (existing) {
-    throw new Error('This user is already a member of this organization')
-  }
+  if (!invite || invite.expiresAt < Date.now()) throw new Error('Invitation not found or expired')
 
-  // Add as member
-  const [member] = await db.insert(schema.orgMember)
-    .values({ orgId, userId: targetUser.id, role: 'member' })
-    .returning({ id: schema.orgMember.id })
+  // Insert membership; onConflictDoNothing handles already-member case
+  await db.insert(schema.orgMember)
+    .values({ orgId: invite.orgId, userId: session.userId, role: invite.role })
+    .onConflictDoNothing({ target: [schema.orgMember.orgId, schema.orgMember.userId] })
 
-  return { memberId: member!.id, userName: targetUser.name }
+  throw redirect(`/dashboard`)
 }
 
 // ── Create Organization ─────────────────────────────────────────────

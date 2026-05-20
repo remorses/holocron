@@ -39,6 +39,7 @@ import {
   ProjectTabBar,
   MembersTable,
   ComingSoon,
+  AcceptInviteButton,
   CreateApiKeyButton,
   CreateProjectButton,
   InviteButton,
@@ -375,11 +376,11 @@ export const dashboardApp = new Spiceflow()
       with: { user: true },
     })
 
-    return { project, members }
+    return { project, members, orgId: membership.orgId }
   })
 
   .page('/dashboard/projects/:projectId/members', async ({ loaderData }) => {
-    const { project, members } = loaderData
+    const { project, members, orgId } = loaderData
 
     return (
       <>
@@ -389,7 +390,7 @@ export const dashboardApp = new Spiceflow()
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-              <InviteButton projectId={project.projectId} />
+              <InviteButton orgId={orgId} />
             </div>
             <MembersTable members={members} />
           </div>
@@ -622,4 +623,52 @@ export const dashboardApp = new Spiceflow()
         </main>
       )
     },
+  })
+
+  // ── Invite accept page (standalone, no dashboard layout) ──────────
+
+  .page('/invite/:id', async ({ params, request }) => {
+    const db = getDb()
+    const invite = await db.query.orgInvitation.findFirst({
+      where: { id: params.id },
+      with: { org: true, creator: true },
+    })
+
+    if (!invite || invite.expiresAt < Date.now()) {
+      return (
+        <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+          <div className="text-center max-w-sm">
+            <h1 className="text-2xl font-bold tracking-tight mb-2">Invalid Invitation</h1>
+            <div className="text-muted-foreground text-sm">This invitation link is invalid or has expired.</div>
+          </div>
+        </div>
+      )
+    }
+
+    const session = await getSession(request)
+    if (!session) {
+      const returnTo = `/invite/${encodeURIComponent(params.id)}`
+      throw redirect(`/login?callbackURL=${encodeURIComponent(returnTo)}`)
+    }
+
+    // Already a member? Go straight to dashboard
+    const existing = await db.query.orgMember.findFirst({
+      where: { orgId: invite.orgId, userId: session.userId },
+    })
+    if (existing) throw redirect('/dashboard')
+
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center max-w-sm flex flex-col items-center gap-4">
+          <h1 className="text-2xl font-bold tracking-tight">Join {invite.org!.name}</h1>
+          <div className="text-muted-foreground text-sm">
+            <span className="font-medium text-foreground">{invite.creator!.name}</span> invited you to join this organization.
+          </div>
+          <div className="text-muted-foreground text-xs">
+            This will give you access to <strong>all projects</strong> in this organization.
+          </div>
+          <AcceptInviteButton invitationId={params.id} />
+        </div>
+      </div>
+    )
   })

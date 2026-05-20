@@ -92,6 +92,19 @@ export const orgMember = s.sqliteTable('org_member', {
   s.uniqueIndex('org_member_org_id_user_id_unique').on(table.orgId, table.userId),
 ])
 
+// ── Org invitations (link-based invite flow) ────────────────────────
+
+export const orgInvitation = s.sqliteTable('org_invitation', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
+  role: s.text('role', { enum: ['admin', 'member'] }).notNull().default('member'),
+  createdBy: s.text('created_by').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  expiresAt: epochMs('expires_at').notNull(),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  s.index('org_invitation_org_id_idx').on(table.orgId),
+])
+
 // ── Projects (one docs site = one project, tied to an org) ──────────
 
 export const project = s.sqliteTable('project', {
@@ -194,7 +207,7 @@ export const deviceCode = s.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, apiKey, deviceCode, project, deployment },
+  { user, session, account, verification, org, orgMember, orgInvitation, apiKey, deviceCode, project, deployment },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -213,6 +226,7 @@ export const relations = defineRelations(
     verification: {},
     org: {
       members: r.many.orgMember(),
+      invitations: r.many.orgInvitation(),
       keys: r.many.apiKey(),
       projects: r.many.project(),
       users: r.many.user({
@@ -223,6 +237,10 @@ export const relations = defineRelations(
     orgMember: {
       org: r.one.org({ from: r.orgMember.orgId, to: r.org.id }),
       user: r.one.user({ from: r.orgMember.userId, to: r.user.id }),
+    },
+    orgInvitation: {
+      org: r.one.org({ from: r.orgInvitation.orgId, to: r.org.id }),
+      creator: r.one.user({ from: r.orgInvitation.createdBy, to: r.user.id }),
     },
     apiKey: {
       org: r.one.org({ from: r.apiKey.orgId, to: r.org.id }),

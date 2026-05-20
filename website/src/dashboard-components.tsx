@@ -14,6 +14,7 @@ import {
   FolderIcon,
   FolderOpenIcon,
   KeyIcon,
+  LinkIcon,
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
@@ -51,7 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
-import { createApiKeyAction, createOrgAction, createProjectAction, inviteMemberAction } from './dashboard-actions.ts'
+import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, createProjectAction } from './dashboard-actions.ts'
 
 const authClient = createAuthClient()
 
@@ -727,9 +728,9 @@ function CreateApiKeyDialog({ open, onOpenChange, projectId }: {
   )
 }
 
-// ── Invite Member ───────────────────────────────────────────────────
+// ── Invite Member (link-based) ──────────────────────────────────────
 
-export function InviteButton({ projectId }: { projectId: string }) {
+export function InviteButton({ orgId }: { orgId: string }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -738,43 +739,48 @@ export function InviteButton({ projectId }: { projectId: string }) {
         <UserPlusIcon className="size-4" />
         Invite member
       </Button>
-      <InviteMemberDialog open={open} onOpenChange={setOpen} projectId={projectId} />
+      <InviteDialog open={open} onOpenChange={setOpen} orgId={orgId} />
     </>
   )
 }
 
-function InviteMemberDialog({ open, onOpenChange, projectId }: {
+function InviteDialog({ open, onOpenChange, orgId }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  projectId: string
+  orgId: string
 }) {
-  const [email, setEmail] = useState('')
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
-  function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) {
-      setEmail('')
-      setError(null)
-      setSuccess(null)
-    }
-    onOpenChange(nextOpen)
-  }
-
-  async function handleInvite() {
+  async function handleGenerate() {
     setLoading(true)
     setError(null)
-    setSuccess(null)
     try {
-      const result = await inviteMemberAction({ email, projectId })
-      setSuccess(`${result.userName} has been added to the organization.`)
-      setEmail('')
+      const result = await createInviteAction({ orgId })
+      setInviteUrl(`${window.location.origin}/invite/${result.id}`)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to invite member')
+      setError(e instanceof Error ? e.message : 'Failed to generate invite link')
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleCopy() {
+    if (!inviteUrl) return
+    await navigator.clipboard.writeText(inviteUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setInviteUrl(null)
+      setCopied(false)
+      setError(null)
+    }
+    onOpenChange(nextOpen)
   }
 
   return (
@@ -783,46 +789,73 @@ function InviteMemberDialog({ open, onOpenChange, projectId }: {
         <DialogHeader>
           <DialogTitle>Invite member</DialogTitle>
           <DialogDescription>
-            Add a member to your organization by email. They must already have a Holocron account.
+            Generate a link to invite someone to this organization.
+            Anyone with the link can join <strong>all projects</strong> in this organization. The link expires in 7 days.
           </DialogDescription>
         </DialogHeader>
         <div className="px-6 pb-2">
           {error && (
             <div className="text-sm text-destructive mb-3">{error}</div>
           )}
-          {success && (
-            <div className="text-sm text-green-600 mb-3">{success}</div>
-          )}
-          <div className="flex flex-col gap-3">
-            <Input
-              type="email"
-              placeholder="colleague@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && email.trim()) {
-                  e.preventDefault()
-                  handleInvite()
-                }
-              }}
-              autoFocus
-            />
-            <Button
-              onClick={handleInvite}
-              loading={loading}
-              disabled={!email.trim()}
-              className="w-full"
-            >
-              Add member
+          {inviteUrl ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={inviteUrl}
+                  className="w-full font-mono text-xs"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <Button variant="outline" size="icon" onClick={handleCopy}>
+                  {copied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Share this link with the person you want to invite. They will need to sign in first.
+              </div>
+            </div>
+          ) : (
+            <Button onClick={handleGenerate} loading={loading} className="w-full">
+              <LinkIcon className="size-4" />
+              Generate invite link
             </Button>
-          </div>
+          )}
           <DialogFooter variant="bare" className="mt-4">
             <DialogClose render={<Button variant="outline" />}>
-              {success ? 'Done' : 'Cancel'}
+              {inviteUrl ? 'Done' : 'Cancel'}
             </DialogClose>
           </DialogFooter>
         </div>
       </DialogPopup>
     </Dialog>
+  )
+}
+
+// ── Accept Invite Button ────────────────────────────────────────────
+
+export function AcceptInviteButton({ invitationId }: { invitationId: string }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleAccept() {
+    setLoading(true)
+    setError(null)
+    try {
+      await acceptInviteAction({ invitationId })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to join organization')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      {error && (
+        <div className="text-sm text-destructive">{error}</div>
+      )}
+      <Button onClick={handleAccept} loading={loading}>
+        Join organization
+      </Button>
+    </div>
   )
 }
