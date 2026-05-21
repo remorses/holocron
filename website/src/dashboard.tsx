@@ -268,23 +268,25 @@ export const dashboardApp = new Spiceflow()
 
                 <div className="flex w-full flex-col gap-3">
                   <div className="text-sm text-muted-foreground">Or create locally with the CLI:</div>
-                  <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
-                    <CopyButton
-                      text={deployKey
-                        ? `npx -y @holocron.so/cli create --key ${deployKey}`
-                        : 'npx -y @holocron.so/cli create'}
-                      className="absolute right-2 top-2"
-                    />
-                    <div className="overflow-x-auto px-5 py-4">
-                      <pre className="whitespace-pre font-mono text-sm leading-relaxed">{deployKey
-                        ? `npx -y @holocron.so/cli create --key holo_${deployKey.slice(5, 9)}${'•'.repeat(8)}${deployKey.slice(-4)}`
-                        : 'npx -y @holocron.so/cli create'}</pre>
-                    </div>
-                  </div>
-                  {deployKey && (
-                    <div className="text-xs text-muted-foreground leading-relaxed">
-                      The copied command includes your API key to link this project automatically.
-                      You can also set <code className="font-mono text-xs">HOLOCRON_KEY</code> as an env var for deploys.
+                  {deployKey ? (
+                    <>
+                      <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
+                        <CopyButton
+                          text={`npx -y @holocron.so/cli create --key ${deployKey}`}
+                          className="absolute right-2 top-2"
+                        />
+                        <div className="overflow-x-auto px-5 py-4">
+                          <pre className="whitespace-pre font-mono text-sm leading-relaxed">{`npx -y @holocron.so/cli create --key holo_${deployKey.slice(5, 9)}${'•'.repeat(8)}${deployKey.slice(-4)}`}</pre>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground leading-relaxed">
+                        The copied command includes your API key to link this project automatically.
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      The setup key for this project has expired. Create a new API key from the <strong>Keys</strong> tab,
+                      then run: <code className="font-mono text-xs">npx -y @holocron.so/cli create --key YOUR_KEY</code>
                     </div>
                   )}
                 </div>

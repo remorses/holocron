@@ -34,6 +34,7 @@ export const createCli = goke()
 createCli
   .command('create [dir]', 'Scaffold a new Holocron docs site')
   .option('--name <name>', 'Project/company name')
+  .option('--key <key>', 'API key to write to .env (skips cloud setup)')
   .option('--skip-auth', 'Skip authentication and cloud setup')
   .option('--skip-install', 'Skip dependency installation')
   .action(async (dir, options, { process: proc }) => {
@@ -60,6 +61,7 @@ createCli
     await scaffold({
       dir: dir || name.toLowerCase().replace(/[^a-z0-9-]/g, '-') + '-docs',
       name,
+      key: options.key,
       skipAuth: !!options.skipAuth,
       skipInstall: !!options.skipInstall,
       baseUrl: getBaseUrl(),
@@ -71,6 +73,7 @@ createCli
 interface ScaffoldOptions {
   dir: string
   name: string
+  key?: string
   skipAuth: boolean
   skipInstall: boolean
   baseUrl: string
@@ -170,15 +173,19 @@ function parseJsoncObject(text: string): Record<string, unknown> {
 }
 
 async function scaffold(options: ScaffoldOptions) {
-  const { dir, name, skipAuth, skipInstall, baseUrl } = options
+  const { dir, name, key, skipAuth, skipInstall, baseUrl } = options
   const targetDir = path.resolve(dir)
   const nonInteractive = isAgent || !process.stdin.isTTY
 
   clack.intro('Holocron — Create')
 
   // 1. Cloud setup (login + project + API key)
+  // When --key is provided, skip the entire cloud setup and use the key directly.
   let cloud: CloudSetupResult | null = null
-  if (!skipAuth) {
+  if (key) {
+    cloud = { holocronKey: key, baseUrl }
+    clack.log.info('Using provided API key.')
+  } else if (!skipAuth) {
     if (nonInteractive) {
       clack.log.info('Non-interactive mode: skipping cloud setup. Set HOLOCRON_KEY manually.')
     } else {
