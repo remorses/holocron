@@ -48,6 +48,78 @@ tool definitions. And it runs in your existing browser, so **nothing extra gets 
 
 One tool to rule them all. Pass any Playwright code and it runs in your browser.
 
+```ts bleed=true title="automate.ts"
+import { chromium } from 'playwright'
+
+async function automateWorkflow() {
+  const browser = await chromium.connectOverCDP('http://localhost:9222')
+  const context = browser.contexts()[0]
+  const page = context.pages()[0]
+
+  // Navigate and wait for network idle
+  await page.goto('https://app.example.com/dashboard', {
+    waitUntil: 'networkidle',
+  })
+
+  // Fill in the search form
+  const searchInput = page.locator('[data-testid="search-input"]')
+  await searchInput.fill('quarterly report')
+  await searchInput.press('Enter')
+
+  // Wait for results and extract data
+  await page.waitForSelector('.results-table tbody tr')
+  const rows = await page.$$eval('.results-table tbody tr', (trs) =>
+    trs.map((tr) => ({
+      title: tr.querySelector('td:nth-child(1)')?.textContent?.trim(),
+      date: tr.querySelector('td:nth-child(2)')?.textContent?.trim(),
+      status: tr.querySelector('td:nth-child(3)')?.textContent?.trim(),
+    })),
+  )
+
+  console.log(`Found ${rows.length} results`)
+  for (const row of rows) {
+    console.log(`  ${row.title} — ${row.date} — ${row.status}`)
+  }
+
+  // Click the first result and download
+  await page.locator('.results-table tbody tr:first-child a').click()
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('button:has-text("Export PDF")').click(),
+  ])
+
+  const path = await download.path()
+  console.log(`Downloaded to: ${path}`)
+}
+
+automateWorkflow()
+```
+
+Here's another example without full bleed (default `bleed-right`):
+
+```ts title="scraper.ts"
+import { chromium } from 'playwright'
+
+async function scrapeData() {
+  const browser = await chromium.connectOverCDP('http://localhost:9222')
+  const context = browser.contexts()[0]
+  const page = context.pages()[0]
+
+  await page.goto('https://news.example.com')
+  const articles = await page.$$eval('article', (els) =>
+    els.map((el) => ({
+      title: el.querySelector('h2')?.textContent,
+      link: el.querySelector('a')?.href,
+      summary: el.querySelector('p')?.textContent,
+    })),
+  )
+
+  return articles.filter((a) => a.title)
+}
+
+scrapeData().then(console.log)
+```
+
 ## Getting started
 
 **Four steps** and your agent is browsing.

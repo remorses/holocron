@@ -60,3 +60,134 @@ Start the production server:
 ```bash
 pnpm start
 ```
+
+## Full example
+
+A complete Vite config with all the options:
+
+```ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({
+      // Site name shown in the navbar
+      name: 'My Documentation',
+
+      // Logo configuration
+      logo: {
+        light: '/logo-light.svg',
+        dark: '/logo-dark.svg',
+      },
+
+      // Navigation structure
+      navigation: [
+        {
+          group: 'Getting Started',
+          pages: [
+            'introduction',
+            'quickstart',
+            'configuration',
+          ],
+        },
+        {
+          group: 'Guides',
+          pages: [
+            'guides/authentication',
+            'guides/authorization',
+            'guides/deployment',
+            'guides/monitoring',
+            'guides/performance',
+            'guides/caching',
+            'guides/rate-limiting',
+            'guides/error-handling',
+            'guides/logging',
+            'guides/testing',
+          ],
+        },
+        {
+          group: 'API Reference',
+          pages: [
+            'api/overview',
+            'api/authentication',
+            'api/users',
+            'api/teams',
+            'api/projects',
+            'api/billing',
+            'api/webhooks',
+            'api/events',
+            'api/metrics',
+            'api/search',
+          ],
+        },
+        {
+          group: 'Components',
+          pages: [
+            'components/buttons',
+            'components/forms',
+            'components/tables',
+            'components/modals',
+            'components/tooltips',
+            'components/alerts',
+            'components/badges',
+            'components/cards',
+            'components/tabs',
+            'components/accordions',
+          ],
+        },
+        {
+          group: 'Advanced',
+          pages: [
+            'advanced/custom-plugins',
+            'advanced/middleware',
+            'advanced/streaming',
+            'advanced/edge-functions',
+            'advanced/database',
+            'advanced/migrations',
+            'advanced/multi-tenancy',
+            'advanced/i18n',
+            'advanced/a11y',
+            'advanced/seo',
+          ],
+        },
+      ],
+
+      // Theme colors
+      colors: {
+        primary: '#6366f1',
+        light: '#818cf8',
+        dark: '#4f46e5',
+      },
+
+      // Navbar links
+      navbar: {
+        links: [
+          { label: 'Blog', href: 'https://example.com/blog' },
+          { label: 'GitHub', href: 'https://github.com' },
+        ],
+      },
+
+      // Footer configuration
+      footer: {
+        socials: {
+          github: 'https://github.com',
+          twitter: 'https://twitter.com',
+          discord: 'https://discord.gg',
+        },
+      },
+
+      // Search configuration
+      search: {
+        provider: 'inkeep',
+      },
+
+      // Redirects for moved pages
+      redirects: [
+        { source: '/old-page', destination: '/new-page' },
+        { source: '/docs/:slug', destination: '/guides/:slug' },
+      ],
+    }),
+  ],
+})
+```

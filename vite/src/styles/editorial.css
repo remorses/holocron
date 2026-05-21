@@ -143,11 +143,13 @@
 */
 
 /* Force all children of bleed to respect container width */
-.slot-main .bleed > * {
+.slot-main .bleed > *,
+.slot-main .bleed-right > * {
   max-width: 100% !important;
 }
 
-.slot-main .bleed {
+.slot-main .bleed,
+.slot-main .bleed-right {
   overflow: hidden;
 }
 
@@ -159,6 +161,10 @@
 
 .bleed {
   margin-left: calc(-1 * var(--bleed));
+  margin-right: calc(-1 * var(--bleed));
+}
+
+.bleed-right {
   margin-right: calc(-1 * var(--bleed));
 }
 

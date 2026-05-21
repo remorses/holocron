@@ -73,16 +73,16 @@ export function CodeBlock({
   }, [children, lang])
 
   return (
-    <figure className={`m-0 py-2${bleed ? ' bleed' : ''}`}>
+    <figure className={`m-0 py-2${bleed ? ' bleed' : ' bleed-right'}`}>
       {title && (
         <div
           className='font-mono pb-1'
           style={{
             fontSize: 'var(--code-font-size)',
             color: 'var(--muted-foreground)',
-            // Align title with code text: when line numbers are shown the code
-            // starts after the gutter (bleed width + gutter padding = bleed * 2).
-            paddingLeft: showLineNumbers ? 'calc(var(--bleed) * 2)' : undefined,
+            // Align title with code text start. With border-box the flex
+            // item width equals the total gutter space (padding included).
+            paddingLeft: showLineNumbers ? (bleed ? 'var(--bleed)' : '26px') : undefined,
           }}
         >
           {title}
@@ -119,8 +119,8 @@ export function CodeBlock({
                 style={{
                   color: 'var(--text-tertiary)',
                   textAlign: 'right',
-                  paddingRight: 'var(--bleed)',
-                  width: 'var(--bleed)',
+                  paddingRight: bleed ? 'var(--bleed)' : '16px',
+                  width: bleed ? 'var(--bleed)' : '26px',
                   overflow: 'hidden',
                   userSelect: 'none',
                 }}

@@ -42,9 +42,9 @@ describe('prism-languages', () => {
     expect(highlighted).toContain('token string')
   })
 
-  test('does not bleed code blocks without line numbers', () => {
+  test('does not full-bleed code blocks without line numbers', () => {
     const rendered = renderToStaticMarkup(createElement(CodeBlock, { lang: 'diagram', showLineNumbers: false, children: 'A --> B' }))
 
-    expect(rendered).not.toContain('bleed')
+    expect(rendered).not.toContain('class="m-0 py-2 bleed"')
   })
 })
