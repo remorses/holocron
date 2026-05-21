@@ -6,9 +6,16 @@ icon: code
 
 # Code Blocks
 
-Holocron uses Prism for syntax highlighting. Fenced code blocks are rendered with full language support.
+Holocron uses Prism for syntax highlighting. Fenced code blocks are rendered with full language support and configurable meta options.
 
 ## Basic code block
+
+```ts
+const greeting = 'Hello, world!'
+console.log(greeting)
+```
+
+Line numbers are shown by default. Format:
 
 ````mdx
 ```ts
@@ -17,9 +24,135 @@ console.log(greeting)
 ```
 ````
 
+## Meta options
+
+Add options after the language identifier to customize code blocks. Options use `key=value` syntax. Bare words (without `=`) become the **title**.
+
+### Title
+
+The first bare word(s) after the language become the title, useful for showing filenames:
+
+```ts vite.config.ts
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+````mdx
+```ts vite.config.ts
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+````
+
+You can also set the title explicitly with `title="..."` for titles with special characters:
+
+````mdx
+```ts title="src/vite.config.ts"
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+````
+
+### Line numbers
+
+Line numbers are **on by default**. Disable them with `lines=false`:
+
+```bash lines=false
+npm install @holocron.so/vite
+```
+
+````mdx
+```bash lines=false
+npm install @holocron.so/vite
+```
+````
+
+### Bleed
+
+By default code blocks stay inside the content column. Enable `bleed=true` to extend the code block into the page margins:
+
+```ts bleed=true
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+````mdx
+```ts bleed=true
+import { defineConfig } from 'vite'
+...
+```
+````
+
+### Highlight lines
+
+Dim all lines except the ones you want to focus on. Pass a comma-separated list of line numbers or ranges to `highlight`:
+
+```ts highlight="1,4-5"
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+````mdx
+```ts highlight="1,4-5"
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+````
+
+### Combining options
+
+Options can be combined freely:
+
+```ts vite.config.ts highlight="3" bleed=true
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+````mdx
+```ts vite.config.ts highlight="3" bleed=true
+import { defineConfig } from 'vite'
+...
+```
+````
+
 ## Code groups
 
-Group related code blocks into tabs with the `CodeGroup` component. Wrap multiple fenced code blocks inside `<CodeGroup>` and `</CodeGroup>` tags:
+Group related code blocks into tabs with the `CodeGroup` component. The bare word after the language becomes the tab label:
+
+<CodeGroup>
+
+```bash npm
+npm install @holocron.so/vite
+```
+
+```bash pnpm
+pnpm add @holocron.so/vite
+```
+
+```bash yarn
+yarn add @holocron.so/vite
+```
+
+</CodeGroup>
 
 ````mdx
 <CodeGroup>
