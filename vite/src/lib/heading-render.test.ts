@@ -72,12 +72,12 @@ describe('heading rendering pipeline', () => {
     `)
     expect(html).toContain('id="custom-id"')
     expect(html).not.toContain('editorial-prose')
-    expect(html).toMatchInlineSnapshot(`"<h2 id="custom-id" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span style="white-space:normal">My Section</span></h2>"`)
+    expect(html).toMatchInlineSnapshot(`"<h2 id="custom-id" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span style="white-space:nowrap">My Section</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2>"`)
   })
 
   test('multiple headings with body text', () => {
     const { html } = renderMdx('## H2 Title\n\n### H3 Title\n\nSome body text.')
-    expect(html).toMatchInlineSnapshot(`"<h1 id="h2-title" class="editorial-heading editorial-h1" data-toc-heading="true" data-toc-level="1"><span style="white-space:nowrap">H2 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h1><h2 id="h3-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span style="white-space:normal">H3 Title</span></h2><div class="editorial-prose" style="opacity:0.82">Some body text.</div>"`)
+    expect(html).toMatchInlineSnapshot(`"<h1 id="h2-title" class="editorial-heading editorial-h1" data-toc-heading="true" data-toc-level="1"><span style="white-space:nowrap">H2 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h1><h2 id="h3-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span style="white-space:nowrap">H3 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2><div class="editorial-prose" style="opacity:0.82">Some body text.</div>"`)
   })
 
   test('details summary markdown renders through mdx components', () => {
