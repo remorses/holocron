@@ -308,6 +308,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         ? path.resolve(root, resolved.build.outDir)
         : path.resolve(root, 'dist')
 
+      // Clean stale build env folders so old artifacts never leak into
+      // a fresh build. Preserve holocron-*.json caches for incremental builds.
+      if (resolved.command === 'build') {
+        for (const sub of ['client', 'rsc', 'ssr', 'package.json']) {
+          fs.rmSync(path.join(distDirPath, sub), { recursive: true, force: true })
+        }
+      }
+
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
       viteBase = resolved.base || '/'
 
