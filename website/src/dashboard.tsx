@@ -14,7 +14,7 @@
 //   /dashboard/deploy                    → create project flow
 
 import { Spiceflow, redirect } from 'spiceflow'
-import { Link } from 'spiceflow/react'
+import { Link, router } from 'spiceflow/react'
 import { z } from 'zod'
 import { getDb, getSession, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
 import * as schema from 'db/schema'
@@ -133,11 +133,11 @@ export const dashboardApp = new Spiceflow()
           <div className="mx-auto flex max-w-(--content-max-width) items-center justify-between px-6 py-4 border-x border-border relative">
             <GridDot position="bl" />
             <GridDot position="br" />
-            <Link href="/dashboard" className="no-underline flex items-center shrink-0">
+            <Link href={router.href('/dashboard')} className="no-underline flex items-center shrink-0">
               <HolocronLogo />
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <Link href="/" className="hover:text-foreground no-underline">Docs</Link>
+              <Link href={router.href('/')} className="hover:text-foreground no-underline">Docs</Link>
               <a href="https://github.com/remorses/holocron" target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline">GitHub</a>
             </div>
           </div>

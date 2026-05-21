@@ -27,6 +27,7 @@
         "tabs": [
             {
                 "tab": "Documentation",
+                "icon": "book-open",
                 "groups": [
                     {
                         "group": "Start",
@@ -152,6 +153,7 @@
             },
             {
                 "tab": "API Reference",
+                "icon": "server",
                 "openapi": "openapi.json"
             }
         ]
