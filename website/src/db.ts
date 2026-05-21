@@ -84,12 +84,45 @@ type Session = { userId: string; user: { id: string; name: string; email: string
 
 type RequestHeaders = Pick<Request, 'headers'>
 
+/** Memoized bearer token session lookup. BetterAuth's cookieCache only
+ *  covers cookie-based auth (browser dashboard). CLI requests use bearer
+ *  tokens which hit D1 on every call without this cache layer.
+ *  2 min fresh, 5 min SWR. null results are never cached (memoize
+ *  convention) so invalid tokens always get a fresh D1 check. */
+const resolveBearerSession = memoize({
+  namespace: 'bearer-session',
+  fn: async (token: string): Promise<Session | null> => {
+    const auth = getAuth()
+    const session = await auth.api.getSession({
+      headers: new Headers({ authorization: `Bearer ${token}` }),
+    })
+    if (!session) return null
+    return {
+      userId: session.user.id,
+      user: { id: session.user.id, name: session.user.name, email: session.user.email, image: session.user.image ?? null },
+    }
+  },
+  ttl: 120,
+  swr: 300,
+})
+
 export async function getSession(request: RequestHeaders): Promise<Session | null> {
   const hasCookie = request.headers.has('cookie')
   const hasAuthorization = request.headers.has('authorization')
   if (!hasCookie && !hasAuthorization) {
     return null
   }
+
+  // Bearer tokens from CLI: use memoized lookup to avoid D1 on every request.
+  // Cookie-based requests (dashboard): let BetterAuth handle its own cookieCache.
+  if (hasAuthorization && !hasCookie) {
+    const authHeader = request.headers.get('authorization') || ''
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+    if (token && !token.startsWith('holo_')) {
+      return resolveBearerSession(token)
+    }
+  }
+
   const auth = getAuth()
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) return null

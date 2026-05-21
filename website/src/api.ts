@@ -248,17 +248,29 @@ export const apiApp = new Spiceflow()
     async handler({ request }) {
       const session = await requireSession(request)
       const orgs = await getOrgsForUser(session.userId)
-      const db = getDb()
 
-      const orgsWithProjects = await Promise.all(
-        orgs.map(async (org) => {
-          const projects = await db.query.project.findMany({
-            where: { orgId: org.id },
-            orderBy: { updatedAt: 'desc' },
-          })
-          return { ...org, projects }
-        }),
-      )
+      let orgsWithProjects: Array<typeof orgs[number] & { projects: (typeof schema.project.$inferSelect)[] }>
+      if (orgs.length === 0) {
+        orgsWithProjects = []
+      } else {
+        const db = getDb()
+        const orgIds = orgs.map((o) => o.id)
+        const allProjects = await db
+          .select()
+          .from(schema.project)
+          .where(orm.inArray(schema.project.orgId, orgIds))
+          .orderBy(orm.desc(schema.project.updatedAt))
+        const projectsByOrg = new Map<string, typeof allProjects>()
+        for (const p of allProjects) {
+          const list = projectsByOrg.get(p.orgId) || []
+          list.push(p)
+          projectsByOrg.set(p.orgId, list)
+        }
+        orgsWithProjects = orgs.map((org) => ({
+          ...org,
+          projects: projectsByOrg.get(org.id) || [],
+        }))
+      }
 
       return {
         user: {
@@ -298,22 +310,22 @@ export const apiApp = new Spiceflow()
 
       // If user has no orgs yet, create their default one
       if (orgs.length === 0) {
-        const org = await ensureOrg(session.userId, session.user.name)
+        await ensureOrg(session.userId, session.user.name)
         return { projects: [] }
       }
 
       const db = getDb()
-      const allProjects = await Promise.all(
-        orgs.map(async (org) => {
-          const projects = await db.query.project.findMany({
-            where: { orgId: org.id },
-            orderBy: { updatedAt: 'desc' },
-          })
-          return projects.map((p) => ({ ...p, orgName: org.name }))
-        }),
-      )
+      const orgIds = orgs.map((o) => o.id)
+      const allProjects = await db
+        .select()
+        .from(schema.project)
+        .where(orm.inArray(schema.project.orgId, orgIds))
+        .orderBy(orm.desc(schema.project.updatedAt))
 
-      return { projects: allProjects.flat() }
+      const orgNameById = new Map(orgs.map((o) => [o.id, o.name]))
+      return {
+        projects: allProjects.map((p) => ({ ...p, orgName: orgNameById.get(p.orgId) || '' })),
+      }
     },
   })
 
@@ -344,15 +356,12 @@ export const apiApp = new Spiceflow()
 
       // githubOwner/githubRepo are only set via OIDC (verified JWT claims).
       // Project creation never accepts unverified github metadata.
-      await db.insert(schema.project).values({
+      const [created] = await db.insert(schema.project).values({
         projectId,
         orgId: org.id,
         name: body.name,
-      })
+      }).returning()
 
-      const created = await db.query.project.findFirst({
-        where: { projectId },
-      })
       return created!
     },
   })
