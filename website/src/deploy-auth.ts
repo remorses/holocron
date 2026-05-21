@@ -157,15 +157,26 @@ export async function resolveGithubOidcDeployAuth(
     )
   }
 
-  // For org repos (owner != actor), verify the deploying user is an admin
-  // of the GitHub org. Personal repos (owner == actor) skip this check.
-  const isOrgRepo = oidcResult.actor && oidcResult.owner !== oidcResult.actor
-  if (isOrgRepo) {
-    await requireGitHubOrgAdmin({
-      accessToken: githubAccount.accessToken,
-      org: oidcResult.owner,
-      username: oidcResult.actor!,
-    })
+  // For org repos, verify the deploying user is an admin of the GitHub org.
+  // Personal repos (owner == actor) skip this check. When owner != actor,
+  // we call the GitHub API to check if the owner is actually an org before
+  // routing to the membership check (avoids false positives on personal repos
+  // where a collaborator triggers the deploy).
+  if (!oidcResult.actor) {
+    throw json(
+      { error: 'OIDC token missing actor claim.' },
+      { status: 401 },
+    )
+  }
+  if (oidcResult.owner.toLowerCase() !== oidcResult.actor.toLowerCase()) {
+    const ownerIsOrg = await isGitHubOrg(oidcResult.owner)
+    if (ownerIsOrg) {
+      await requireGitHubOrgAdmin({
+        accessToken: githubAccount.accessToken,
+        org: oidcResult.owner,
+        username: oidcResult.actor,
+      })
+    }
   }
 
   const adminMembership = await db.query.orgMember.findFirst({
@@ -303,7 +314,31 @@ async function upsertProjectForOidc({
   return projectId
 }
 
-// ── GitHub org membership check ─────────────────────────────────────
+// ── GitHub org helpers ───────────────────────────────────────────────
+
+const GITHUB_API_HEADERS = {
+  Accept: 'application/vnd.github+json',
+  'X-GitHub-Api-Version': '2022-11-28',
+  'User-Agent': 'holocron-deploy',
+} as const
+
+/** Check if a GitHub owner (from the OIDC repository claim) is an org.
+ *  Uses the unauthenticated /users/:username endpoint which returns
+ *  `{ type: "Organization" }` for orgs and `{ type: "User" }` for users.
+ *  Returns false on any failure (network error, rate limit) to avoid
+ *  blocking deploys when the check is inconclusive. */
+async function isGitHubOrg(owner: string): Promise<boolean> {
+  try {
+    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(owner)}`, {
+      headers: GITHUB_API_HEADERS,
+    })
+    if (!res.ok) return false
+    const data = await res.json() as { type?: string }
+    return data.type === 'Organization'
+  } catch {
+    return false
+  }
+}
 
 /** Verify the GitHub user is an admin of the given GitHub org.
  *  Uses the user's stored OAuth access token (requires read:org scope).
@@ -324,14 +359,17 @@ async function requireGitHubOrgAdmin({
     )
   }
 
-  const res = await fetch(`https://api.github.com/orgs/${encodeURIComponent(org)}/memberships/${encodeURIComponent(username)}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'holocron-deploy',
-    },
-  })
+  let res: Response
+  try {
+    res = await fetch(`https://api.github.com/orgs/${encodeURIComponent(org)}/memberships/${encodeURIComponent(username)}`, {
+      headers: { ...GITHUB_API_HEADERS, Authorization: `Bearer ${accessToken}` },
+    })
+  } catch {
+    throw json(
+      { error: `failed to verify org membership: GitHub API request failed` },
+      { status: 502 },
+    )
+  }
 
   if (res.status === 401 || res.status === 403) {
     throw json(
@@ -354,7 +392,16 @@ async function requireGitHubOrgAdmin({
     )
   }
 
-  const data = await res.json() as { role?: string; state?: string }
+  let data: { role?: string; state?: string }
+  try {
+    data = await res.json() as { role?: string; state?: string }
+  } catch {
+    throw json(
+      { error: `failed to verify org membership: GitHub API returned an invalid response` },
+      { status: 502 },
+    )
+  }
+
   if (data.state !== 'active') {
     throw json(
       { error: `GitHub user ${username} has a pending invitation to ${org} but is not yet an active member.` },
