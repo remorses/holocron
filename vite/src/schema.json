@@ -972,7 +972,7 @@
           "type": "boolean"
         },
         "placement": {
-          "description": "Where to render this anchor. \"tabs\" (default) shows it in the header tab bar, \"sidebar\" shows it in the left navigation sidebar",
+          "description": "Where to render this anchor. \"sidebar\" (default) shows it in the left navigation sidebar, \"tabs\" shows it in the header tab bar",
           "type": "string",
           "enum": [
             "tabs",

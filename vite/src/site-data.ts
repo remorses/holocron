@@ -195,9 +195,9 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
           }
         })
 
-  // Anchors with placement === 'tabs' (default) go into the tab bar
+  // Only anchors explicitly placed in tabs go into the tab bar
   const tabAnchors: TabItem[] = site.config.navigation.anchors
-    .filter((a) => !a.hidden && a.placement !== 'sidebar')
+    .filter((a) => !a.hidden && a.placement === 'tabs')
     .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon }))
 
   // When tab-placed anchors exist but there are no explicit content tabs,
@@ -217,10 +217,10 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
   return [...navTabs, ...tabAnchors]
 }
 
-/** Anchors placed in the left sidebar (placement === 'sidebar'). */
+/** Anchors placed in the left sidebar (default, or explicit placement === 'sidebar'). */
 export function buildSidebarAnchors(site: HolocronSiteData): SidebarAnchor[] {
   return site.config.navigation.anchors
-    .filter((a) => !a.hidden && a.placement === 'sidebar')
+    .filter((a) => !a.hidden && a.placement !== 'tabs')
     .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon }))
 }
 

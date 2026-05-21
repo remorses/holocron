@@ -176,7 +176,7 @@ export const anchorSchema = z
     placement: z
       .enum(['tabs', 'sidebar'])
       .optional()
-      .describe('Where to render this anchor. "tabs" (default) shows it in the header tab bar, "sidebar" shows it in the left navigation sidebar'),
+      .describe('Where to render this anchor. "sidebar" (default) shows it in the left navigation sidebar, "tabs" shows it in the header tab bar'),
   })
   .describe('A persistent link rendered in the tab bar or sidebar')
   .meta({ id: 'anchorSchema' })
