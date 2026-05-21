@@ -178,21 +178,21 @@ Your site should render at `http://localhost:5173`.
 ## How it works
 
 ```diagram
-docs.json + MDX files
-        │
-        ▼
-  ┌──────────────┐
-  │ Vite Plugin   │  reads config, syncs navigation tree, processes MDX
-  │ (holocron())  │
-  └──────┬───────┘
-         │
-         ▼
-  ┌──────────────┐
-  │  Spiceflow    │  React Server Components framework
-  │  + Tailwind   │  auto-added by the plugin
-  └──────┬───────┘
-         │
-         ▼
+  docs.json + MDX files
+          │
+          ▼
+  ┌────────────────┐
+  │  Vite Plugin   │  reads config, syncs navigation tree, processes MDX
+  │  (holocron())  │
+  └───────┬────────┘
+          │
+          ▼
+  ┌────────────────┐
+  │   Spiceflow    │  React Server Components framework
+  │   + Tailwind   │  auto-added by the plugin
+  └───────┬────────┘
+          │
+          ▼
   Full docs site with search, OpenAPI, dark mode, AI exports
 ```
 
