@@ -1,6 +1,6 @@
 import type { Root } from 'mdast'
 import { visit } from 'unist-util-visit'
-import { parseCodeMeta } from './code-meta.ts'
+import { parseCodeMeta, metaBool } from './code-meta.ts'
 import { booleanExpression, createElement, expressionAttribute, literalAttribute, type JsxAttribute } from './jsx-utils.ts'
 
 /**
@@ -16,11 +16,12 @@ export function remarkMermaidCode() {
 
       const meta = parseCodeMeta(node.meta)
       const attributes: JsxAttribute[] = [literalAttribute('chart', node.value)]
-      if (typeof meta.attributes.placement === 'string') {
+      if (meta.attributes.placement) {
         attributes.push(literalAttribute('placement', meta.attributes.placement))
       }
-      if (typeof meta.attributes.actions === 'boolean') {
-        attributes.push(expressionAttribute('actions', booleanExpression(meta.attributes.actions)))
+      const actions = metaBool(meta.attributes.actions)
+      if (actions !== undefined) {
+        attributes.push(expressionAttribute('actions', booleanExpression(actions)))
       }
 
       parent.children.splice(index, 1, createElement({ name: 'Mermaid', attributes }))

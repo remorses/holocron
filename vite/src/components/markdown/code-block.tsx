@@ -12,18 +12,50 @@
 import React, { useMemo } from 'react'
 import { Prism } from '#prism'
 
+/**
+ * Parse a highlight range string like "1-3,7,10-12" into a Set of 1-based
+ * line numbers. Returns undefined when no valid lines are found so the
+ * highlight overlay is skipped entirely for malformed values.
+ */
+function parseHighlightLines(value: string, lineCount: number): Set<number> | undefined {
+  const result = new Set<number>()
+  for (const part of value.split(',')) {
+    const match = /^(\d+)(?:-(\d+))?$/.exec(part.trim())
+    if (!match) continue
+    const start = Number(match[1])
+    const end = Number(match[2] ?? match[1])
+    if (start < 1 || end < start) continue
+    for (let i = start; i <= Math.min(end, lineCount); i++) result.add(i)
+  }
+  return result.size > 0 ? result : undefined
+}
+
 export function CodeBlock({
   children,
   lang = 'jsx',
   lineHeight = '1.6',
   showLineNumbers = true,
+  bleed = false,
+  title,
+  highlight,
 }: {
   children: string
   lang?: string
   lineHeight?: string
+  /** Show line numbers on the left. On by default, disable with `lines=false`. */
   showLineNumbers?: boolean
+  /** Extend code block into the margins. Off by default, enable with `bleed` meta flag. */
+  bleed?: boolean
+  /** Filename or label shown above the code block. */
+  title?: string
+  /** Comma-separated line numbers/ranges to highlight, e.g. "1-3,7". */
+  highlight?: string
 }) {
   const lines = children.split('\n')
+  const highlightLines = useMemo(
+    () => highlight ? parseHighlightLines(highlight, lines.length) : undefined,
+    [highlight, lines.length],
+  )
 
   /* Use Prism.highlight() to get highlighted HTML as a string. Works on both
      server and client (no DOM dependency), avoiding hydration mismatch issues
@@ -38,7 +70,21 @@ export function CodeBlock({
   }, [children, lang])
 
   return (
-    <figure className={showLineNumbers ? 'm-0 bleed py-2' : 'm-0 py-2'}>
+    <figure className={`m-0 py-2${bleed ? ' bleed' : ''}`}>
+      {title && (
+        <div
+          className='font-mono pb-1'
+          style={{
+            fontSize: 'var(--code-font-size)',
+            color: 'var(--muted-foreground)',
+            // Align title with code text: when line numbers are shown the code
+            // starts after the gutter (bleed width + gutter padding = bleed * 2).
+            paddingLeft: showLineNumbers ? 'calc(var(--bleed) * 2)' : undefined,
+          }}
+        >
+          {title}
+        </div>
+      )}
       <div className='relative'>
         <pre
           className='overflow-x-auto scrollbar-none'
@@ -97,6 +143,33 @@ export function CodeBlock({
             )}
           </div>
         </pre>
+        {/* Highlight overlay: per-line background strips that dim non-highlighted
+            lines. Uses the same font-size and line-height as the code so each
+            strip at height = lineHeight × font-size aligns perfectly with one
+            code line. Covers both line numbers and code text. */}
+        {highlightLines && (
+          <div
+            aria-hidden='true'
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              fontSize: 'var(--type-code-size)',
+              lineHeight,
+            }}
+          >
+            {lines.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  height: `${lineHeight}em`,
+                  background: highlightLines.has(i + 1) ? 'transparent' : 'var(--background)',
+                  opacity: highlightLines.has(i + 1) ? 0 : 0.4,
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </figure>
   )
