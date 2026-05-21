@@ -158,10 +158,8 @@ export async function resolveGithubOidcDeployAuth(
   }
 
   // For org repos, verify the deploying user is an admin of the GitHub org.
-  // Personal repos (owner == actor) skip this check. When owner != actor,
-  // we call the GitHub API to check if the owner is actually an org before
-  // routing to the membership check (avoids false positives on personal repos
-  // where a collaborator triggers the deploy).
+  // Personal repos (owner == actor) skip this check. The membership endpoint
+  // returns 404 for non-org owners too, so no separate org-type check needed.
   if (!oidcResult.actor) {
     throw json(
       { error: 'OIDC token missing actor claim.' },
@@ -169,14 +167,11 @@ export async function resolveGithubOidcDeployAuth(
     )
   }
   if (oidcResult.owner.toLowerCase() !== oidcResult.actor.toLowerCase()) {
-    const ownerIsOrg = await isGitHubOrg(oidcResult.owner)
-    if (ownerIsOrg) {
-      await requireGitHubOrgAdmin({
-        accessToken: githubAccount.accessToken,
-        org: oidcResult.owner,
-        username: oidcResult.actor,
-      })
-    }
+    await requireGitHubOrgAdmin({
+      accessToken: githubAccount.accessToken,
+      org: oidcResult.owner,
+      username: oidcResult.actor,
+    })
   }
 
   const adminMembership = await db.query.orgMember.findFirst({
@@ -314,34 +309,12 @@ async function upsertProjectForOidc({
   return projectId
 }
 
-// ── GitHub org helpers ───────────────────────────────────────────────
-
-const GITHUB_API_HEADERS = {
-  Accept: 'application/vnd.github+json',
-  'X-GitHub-Api-Version': '2022-11-28',
-  'User-Agent': 'holocron-deploy',
-} as const
-
-/** Check if a GitHub owner (from the OIDC repository claim) is an org.
- *  Uses the unauthenticated /users/:username endpoint which returns
- *  `{ type: "Organization" }` for orgs and `{ type: "User" }` for users.
- *  Returns false on any failure (network error, rate limit) to avoid
- *  blocking deploys when the check is inconclusive. */
-async function isGitHubOrg(owner: string): Promise<boolean> {
-  try {
-    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(owner)}`, {
-      headers: GITHUB_API_HEADERS,
-    })
-    if (!res.ok) return false
-    const data = await res.json() as { type?: string }
-    return data.type === 'Organization'
-  } catch {
-    return false
-  }
-}
+// ── GitHub org membership check ─────────────────────────────────────
 
 /** Verify the GitHub user is an admin of the given GitHub org.
  *  Uses the user's stored OAuth access token (requires read:org scope).
+ *  The membership endpoint returns 404 for non-org owners too, so this
+ *  doubles as a safe no-op for personal repos owned by someone else.
  *  Throws a JSON error if the user is not an admin or the token lacks scope. */
 async function requireGitHubOrgAdmin({
   accessToken,
@@ -362,7 +335,12 @@ async function requireGitHubOrgAdmin({
   let res: Response
   try {
     res = await fetch(`https://api.github.com/orgs/${encodeURIComponent(org)}/memberships/${encodeURIComponent(username)}`, {
-      headers: { ...GITHUB_API_HEADERS, Authorization: `Bearer ${accessToken}` },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'holocron-deploy',
+      },
     })
   } catch {
     throw json(
@@ -392,25 +370,10 @@ async function requireGitHubOrgAdmin({
     )
   }
 
-  let data: { role?: string; state?: string }
-  try {
-    data = await res.json() as { role?: string; state?: string }
-  } catch {
-    throw json(
-      { error: `failed to verify org membership: GitHub API returned an invalid response` },
-      { status: 502 },
-    )
-  }
-
-  if (data.state !== 'active') {
-    throw json(
-      { error: `GitHub user ${username} has a pending invitation to ${org} but is not yet an active member.` },
-      { status: 403 },
-    )
-  }
+  const data = await res.json() as { role?: string; state?: string }
   if (data.role !== 'admin') {
     throw json(
-      { error: `GitHub user ${username} is a member of ${org} but not an admin. Only org admins can deploy.` },
+      { error: `GitHub user ${username} is not an admin of ${org}. Only org admins can deploy.` },
       { status: 403 },
     )
   }
