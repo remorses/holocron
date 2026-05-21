@@ -137,7 +137,7 @@ export const dashboardApp = new Spiceflow()
               <HolocronLogo />
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <Link href={router.href('/')} className="hover:text-foreground no-underline">Docs</Link>
+              <a href="/" className="hover:text-foreground no-underline">Docs</a>
               <a href="https://github.com/remorses/holocron" target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline">GitHub</a>
             </div>
           </div>
