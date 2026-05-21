@@ -173,8 +173,12 @@ export const anchorSchema = z
       .boolean()
       .optional()
       .describe('Whether the anchor is hidden by default'),
+    placement: z
+      .enum(['tabs', 'sidebar'])
+      .optional()
+      .describe('Where to render this anchor. "tabs" (default) shows it in the header tab bar, "sidebar" shows it in the left navigation sidebar'),
   })
-  .describe('A persistent link rendered as a tab in the tab bar')
+  .describe('A persistent link rendered in the tab bar or sidebar')
   .meta({ id: 'anchorSchema' })
 
 /* ── Pages / Groups (recursive) ───────────────────────────────────────── */

@@ -25,7 +25,7 @@ export type HolocronSiteData = {
   icons: IconAtlas
 }
 
-/** A top-level tab or anchor rendered in the tab bar. */
+/** A top-level tab rendered in the tab bar. */
 export type TabItem = {
   label: string
   href: string
@@ -33,6 +33,13 @@ export type TabItem = {
   align?: 'start' | 'end'
   /** All page hrefs belonging to this tab (for active tab matching). */
   pageHrefs?: string[]
+}
+
+/** An anchor link rendered in the left sidebar (external links like GitHub, Discord, etc.). */
+export type SidebarAnchor = {
+  label: string
+  href: string
+  icon?: NavIcon
 }
 
 /** A link in the top navbar (icon-only typically). */
@@ -187,14 +194,15 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
             pageHrefs,
           }
         })
-  const anchors: TabItem[] = site.config.navigation.anchors
-    .filter((a) => !a.hidden)
+
+  // Anchors with placement === 'tabs' (default) go into the tab bar
+  const tabAnchors: TabItem[] = site.config.navigation.anchors
+    .filter((a) => !a.hidden && a.placement !== 'sidebar')
     .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon }))
 
-  // When anchors exist but there are no explicit content tabs, add an implicit
-  // "Docs" tab so the user can navigate back to the docs content. Without this,
-  // the tab bar would only show external links with no way to reach the docs.
-  if (anchors.length > 0 && navTabs.length === 0) {
+  // When tab-placed anchors exist but there are no explicit content tabs,
+  // add an implicit "Docs" tab so the user can navigate back to docs content.
+  if (tabAnchors.length > 0 && navTabs.length === 0) {
     const implicitTab = site.navigation.find((t) => t.tab === '')
     if (implicitTab) {
       const firstPage = findFirstPageInTab(implicitTab)
@@ -206,7 +214,14 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
     }
   }
 
-  return [...navTabs, ...anchors]
+  return [...navTabs, ...tabAnchors]
+}
+
+/** Anchors placed in the left sidebar (placement === 'sidebar'). */
+export function buildSidebarAnchors(site: HolocronSiteData): SidebarAnchor[] {
+  return site.config.navigation.anchors
+    .filter((a) => !a.hidden && a.placement === 'sidebar')
+    .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon }))
 }
 
 export function buildHeaderLinks(site: HolocronSiteData): HeaderLink[] {

@@ -6,15 +6,16 @@
  * `useHolocronData()` (per-request) and `useRouterState()`. Hosts the sidebar search input.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties } from 'react'
 import { flushSync } from 'react-dom'
 import { router, useRouterState } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
 import { useHolocronData } from '../../router.ts'
-import { buildSearchEntries, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
+import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
+import { Icon } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 
 // Platform detection — stable refs for useSyncExternalStore (no re-subscription)
@@ -51,6 +52,7 @@ export function SideNav() {
   const effectiveCurrentPageHref = pathname || currentPageHref
   const siteConfig = site.config
   const searchEntries = useMemo(() => buildSearchEntries(site), [site])
+  const sidebarAnchors = useMemo(() => buildSidebarAnchors(site), [site])
 
   // Active tab's groups. Derived from static nav + current href.
   const groups = useMemo(
@@ -245,6 +247,11 @@ export function SideNav() {
       {/* `pl-1` gives the search-highlight box-shadow 4px of horizontal
           clearance inside nav's overflow-y-auto clip. */}
       <nav aria-label='Navigation' className='overflow-y-auto scrollbar-stable min-h-0 pl-1 pr-1 pb-6 flex flex-col gap-2'>
+        {/* Sidebar anchors — external links like GitHub, Discord, etc.
+            Rendered above the nav groups, matching Mintlify's sidebar anchor placement. */}
+        {sidebarAnchors.length > 0 && (
+          <SidebarAnchors anchors={sidebarAnchors} />
+        )}
         <SidebarTreeProvider value={sidebarTreeContext}>
           {noResults ? (
             <div
@@ -266,5 +273,33 @@ export function SideNav() {
         </SidebarTreeProvider>
       </nav>
     </aside>
+  )
+}
+
+/** Anchor links rendered at the top of the sidebar — external links like
+ *  GitHub, Discord, npm, Changelog, etc. Each anchor has an icon inside a
+ *  small rounded square, matching Mintlify's sidebar anchor placement. */
+function SidebarAnchors({ anchors }: { anchors: ReturnType<typeof buildSidebarAnchors> }) {
+  return (
+    <div className='flex flex-col gap-2.5 mt-2 mb-0.5'>
+      {anchors.map((anchor) => (
+        <a
+          key={anchor.href}
+          href={anchor.href}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='no-underline flex items-center gap-1.5 hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]'
+          style={{
+            color: 'var(--sidebar-foreground)',
+            fontVariationSettings: '"wght" 450',
+            transition: 'color 0.15s',
+          }}
+        >
+          <Icon icon={anchor.icon} size={12} />
+          <span>{anchor.label}</span>
+          <span className='ml-auto mr-3 opacity-50'>↗</span>
+        </a>
+      ))}
+    </div>
   )
 }

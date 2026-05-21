@@ -970,6 +970,14 @@
         "hidden": {
           "description": "Whether the anchor is hidden by default",
           "type": "boolean"
+        },
+        "placement": {
+          "description": "Where to render this anchor. \"tabs\" (default) shows it in the header tab bar, \"sidebar\" shows it in the left navigation sidebar",
+          "type": "string",
+          "enum": [
+            "tabs",
+            "sidebar"
+          ]
         }
       },
       "required": [
@@ -977,7 +985,7 @@
         "href"
       ],
       "additionalProperties": false,
-      "description": "A persistent link rendered as a tab in the tab bar"
+      "description": "A persistent link rendered in the tab bar or sidebar"
     },
     "versionSchema": {
       "type": "object",
