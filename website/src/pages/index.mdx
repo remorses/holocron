@@ -5,6 +5,7 @@ icon: home
 ---
 
 import { HeroSection } from '../components/hero-section.tsx'
+import Readme from '../../../README.md'
 
 <Above>
 
@@ -12,70 +13,4 @@ import { HeroSection } from '../components/hero-section.tsx'
 
 </Above>
 
-# Holocron
-
-Holocron turns MDX pages and a `docs.json` config into a full documentation site. It runs as a **Vite plugin**, builds locally, and deploys anywhere.
-
-Designed as a **Mintlify-compatible replacement** for the common docs patterns: familiar config, MDX components, and frontmatter fields.
-
-## Install
-
-```bash
-pnpm add @holocron.so/vite react react-dom vite
-```
-
-```ts vite.config.ts
-import { defineConfig } from 'vite'
-import { holocron } from '@holocron.so/vite'
-
-export default defineConfig({
-  plugins: [holocron()],
-})
-```
-
-The plugin auto-adds Spiceflow, Tailwind CSS, and React. No extra setup needed.
-
-## Explore
-
-<CardGroup cols={2}>
-  <Card title='Quickstart' icon='zap' href='/quickstart'>
-    Get a docs site running in under a minute.
-  </Card>
-  <Card title='Migration from Mintlify' icon='arrow-right-left' href='/migration'>
-    Move an existing Mintlify project to Holocron.
-  </Card>
-  <Card title='Navigation' icon='panel-left' href='/organize/navigation'>
-    Tabs, groups, pages, anchors, versions, and dropdowns.
-  </Card>
-  <Card title='Theme and Colors' icon='palette' href='/customize/theme'>
-    shadcn-compatible CSS variables and color tokens.
-  </Card>
-  <Card title='OpenAPI Reference' icon='braces' href='/api-docs/openapi'>
-    Generate API docs from an OpenAPI spec.
-  </Card>
-  <Card title='AI-Readable Docs' icon='bot' href='/ai/llms-txt'>
-    /llms.txt, /docs.zip, .md routes, and skill discovery.
-  </Card>
-  <Card title='MDX Components' icon='blocks' href='/components'>
-    Accordions, Cards, Callouts, Steps, Tabs, and more.
-  </Card>
-  <Card title='Deploy' icon='cloud-upload' href='/deploy/node'>
-    Node.js, Cloudflare Workers, and build output.
-  </Card>
-</CardGroup>
-
-## What you get
-
-<Aside>
-<Note>
-Holocron is a **Mintlify drop-in replacement**. If you already have a Mintlify site, you can [migrate in about 2 minutes](/migration).
-</Note>
-</Aside>
-
-- **Local builds** with `vite build`, deploy the output anywhere
-- **Mintlify-compatible docs.json** schema and MDX components
-- **OpenAPI** reference pages generated from your spec
-- **Search** powered by Orama, built into the sidebar
-- **Dark mode** with system detection and manual toggle
-- **AI exports** for agents: `.md` per page, `/llms.txt`, `/docs.zip`, skill discovery
-- **Custom entry** to mount docs alongside your own Spiceflow routes
+<Readme />
