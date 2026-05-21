@@ -146,7 +146,7 @@ code.language-diagram {
 }
 
 .language-diagram .token.label {
-  color: #0d7a5f;
+  color: var(--primary);
 }
 
 /* No text shadow on any token */
@@ -179,7 +179,6 @@ code.language-diagram {
     --prism-regex: #a5d6ff;
     --prism-bash-fn: #79c0ff;
     --prism-diagram-structure: #666;
-    --prism-diagram-label: #6ee7b7;
   }
 }
 
@@ -315,6 +314,6 @@ pre[class*='language-'] {
 
 .language-diagram .token.label {
   @variant dark {
-    color: var(--prism-diagram-label);
+    color: var(--primary);
   }
 }
