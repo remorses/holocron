@@ -1,5 +1,28 @@
 # @holocron.so/vite
 
+## 0.13.0
+
+1. **Anchor placement in tabs or sidebar** — anchors now support a `placement` field that controls where they render. `"sidebar"` (the new default) places anchors at the top of the left navigation sidebar with icon and label. `"tabs"` places them in the header tab bar, preserving the previous behavior. You can mix both placements in the same config:
+
+   ```json
+   {
+     "navbar": {
+       "links": [
+         { "label": "GitHub", "url": "https://github.com/...", "placement": "sidebar" },
+         { "label": "Changelog", "url": "/changelog", "placement": "tabs" }
+       ]
+     }
+   }
+   ```
+
+2. **Copy-to-clipboard button on code blocks** — every fenced code block now shows a copy button on hover in the top-right corner. The button fades in, transitions to a checkmark icon on success, and gracefully handles clipboard write failures in insecure contexts.
+
+3. **`.md`/`.mdx` extensions stripped from internal links** — links like `[guide](/getting-started.md)` are now automatically rewritten to `/getting-started` at build time. Previously these links were excluded from broken-link validation and would serve raw markdown or 404. Reference-style links and JSX `href` attributes are also handled.
+
+4. **Dark mode persists across reloads** — a blocking `<script>` now reads the `holocron-theme` cookie before first paint, preventing the theme from flashing or resetting during RSC streaming. Previously the theme script existed but was never injected into the page.
+
+5. **Stale build artifacts cleaned before each build** — `vite build` now removes old `client/`, `rsc/`, `ssr/` directories from `dist/` before building, preventing stale artifacts from leaking into fresh builds. Cache files (`holocron-cache.json`, `holocron-images.json`, `holocron-mdx.json`) are preserved for incremental builds.
+
 ## 0.12.0
 
 1. **Code block meta props: bleed, lines, title, highlight** — fenced code blocks now support meta string options parsed at build time:

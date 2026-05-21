@@ -1,3 +1,13 @@
+## 0.13.0
+
+1. **New `--key` option for `holocron create`** — pass an existing API key to skip the entire cloud setup flow (no device flow login, no project creation, no API key creation). The key is written directly to `.env`:
+
+   ```bash
+   npx -y @holocron.so/cli create my-docs --key holo_xxxxxxxxxxxx
+   ```
+
+   This enables one-step scaffolding when the key is already known, e.g. from the holocron.so dashboard.
+
 ## 0.12.2
 
 1. **Fixed `$schema` URL in scaffolded projects** — `holocron create` now writes `"$schema": "https://holocron.so/docs.json"` instead of the old unpkg URL that depended on npm publish timing and internal file paths.
