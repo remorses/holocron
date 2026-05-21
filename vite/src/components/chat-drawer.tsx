@@ -340,11 +340,8 @@ function ChatDrawerInner() {
               message.role === 'assistant' && message.parts.some((part) => part.type === 'text')
             ))
             if (!hasTextAfterLastUser) {
-              return (
-                <div style={{ minHeight: 'calc(100dvh - 248px)' }}>
-                  <ChatLoadingDots />
-                </div>
-              )
+              return <ChatLoadingDots />
+            
             }
             return null
           })()}
@@ -353,6 +350,10 @@ function ChatDrawerInner() {
             <ChatErrorMessage message={errorMessage} />
           )}
 
+          {/* Spacer — pushes content to the top while keeping the scroll
+              area tall enough so the user can scroll the last message to
+              the top of the viewport. */}
+          <div style={{ minHeight: 'calc(100dvh - 248px)', flexShrink: 0 }} />
           <div ref={messagesEndRef} />
         </div>
 

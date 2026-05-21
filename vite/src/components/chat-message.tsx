@@ -54,7 +54,6 @@ export function ChatMessages({
   return (
     <div className='text-[14px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {messages.map((message, i) => {
-        const isLastMessage = i === messages.length - 1
         return (
           <div key={i} data-message-id={`msg-${i}`} style={message.role === 'user' ? { scrollMarginTop: '8px' } : undefined}>
             {message.role === 'user'
@@ -62,7 +61,6 @@ export function ChatMessages({
               : (
                   <div
                     className='flex flex-col gap-4'
-                    style={{ minHeight: isLastMessage ? 'calc(100dvh - 248px)' : undefined }}
                   >
                     {message.parts.map((part, partIndex) => {
                       if (part.type === 'notice') {
