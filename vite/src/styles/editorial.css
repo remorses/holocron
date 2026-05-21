@@ -80,10 +80,31 @@
 
 .editorial-h2 {
   font-size: var(--type-heading-2-size);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .editorial-h3 {
   font-size: var(--type-heading-3-size);
+}
+
+/* Inline code inside headings should match the heading's font size and weight,
+   not shrink to --code-font-size. Keep the mono font-family and remove the
+   pill background so it looks like a natural part of the heading. */
+.editorial-heading .inline-code {
+  font-size: inherit;
+  font-weight: inherit;
+  padding: 0;
+  color: var(--foreground);
+
+  @variant dark {
+    color: var(--foreground);
+  }
+}
+
+.editorial-heading .inline-code::before {
+  display: none;
 }
 
 /* ========================================================================
