@@ -366,7 +366,7 @@ function NewProjectSidebarItem() {
       className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground no-underline"
     >
       <PlusIcon className="size-4 shrink-0 opacity-60" />
-      New project
+      New site
     </Link>
   )
 }
@@ -676,7 +676,7 @@ function InviteDialog({ open, onOpenChange, orgId }: {
           <DialogTitle>Invite member</DialogTitle>
           <DialogDescription>
             Generate a link to invite someone to this organization.
-            Anyone with the link can join <strong>all projects</strong> in this organization. The link expires in 7 days.
+            Anyone with the link can join <strong>all sites</strong> in this organization. The link expires in 7 days.
           </DialogDescription>
         </DialogHeader>
         <div className="px-6 pb-2">

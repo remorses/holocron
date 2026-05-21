@@ -97,28 +97,28 @@ function DashboardSetupPanel({ mode }: { mode: 'create' | 'deploy' }) {
     {
       title: 'GitHub template',
       description: isCreate
-        ? <>Create a repository from the template. When GitHub Actions deploys from your GitHub account or org, Holocron links the project automatically.</>
-        : <>Create a repository from the template. Its first GitHub Actions deploy from your GitHub account or org creates a separate linked project automatically.</>,
+        ? <>Create a repository from the template. When GitHub Actions deploys from your GitHub account or org, Holocron links the site automatically.</>
+        : <>Create a repository from the template. Its first GitHub Actions deploy from your GitHub account or org creates a separate linked site automatically.</>,
       action: <GitHubButton />,
     },
     {
-      title: isCreate ? 'Local CLI' : 'Deploy this project',
+      title: isCreate ? 'Local CLI' : 'Deploy this site',
       description: isCreate
-        ? <>Run the create command. The CLI logs in, creates the project, and writes the deploy key into the generated site.</>
-        : <>Create an API key from this project&apos;s Keys tab, set it as <code className="font-mono text-xs">HOLOCRON_KEY</code>, then deploy from your docs repo.</>,
+        ? <>Run the create command. The CLI logs in, creates the site, and writes the deploy key for you.</>
+        : <>Create an API key from the <strong>Keys</strong> tab, set it as <code className="font-mono text-xs">HOLOCRON_KEY</code>, then deploy from your docs repo.</>,
       action: <CommandBlock command={isCreate ? CLI_CREATE_COMMAND : CLI_DEPLOY_COMMAND} />,
     },
   ]
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 py-16">
-      <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-semibold">{isCreate ? 'Create a docs project' : 'Deploy your docs site'}</h1>
+      <div className="flex flex-col gap-2 text-center text-balance">
+        <h1 className="text-2xl font-semibold">{isCreate ? 'Create a docs website' : 'Deploy your docs site'}</h1>
         <div className="text-sm text-muted-foreground">
           {isCreate ? (
-            <>Projects are created by your first deploy. Start from the GitHub template, or create a local site with the CLI.</>
+            <>Your site is created on the first deploy. Start from the GitHub template, or scaffold locally with the CLI.</>
           ) : (
-            <>This project has no deployments yet. Deploy with an API key from the <strong>Keys</strong> tab, or create a separate GitHub-linked project.</>
+            <>This site has no deployments yet. Deploy with an API key from the <strong>Keys</strong> tab, or create a separate GitHub-linked site.</>
           )}
         </div>
       </div>
@@ -128,8 +128,8 @@ function DashboardSetupPanel({ mode }: { mode: 'create' | 'deploy' }) {
       </div>
 
       {isCreate && (
-        <div className="text-center text-xs text-muted-foreground">
-          After the first deployment finishes, refresh the dashboard and the project will appear in the sidebar.
+        <div className="text-center text-balance text-xs text-muted-foreground">
+          After the first deployment finishes, refresh the dashboard and your site will appear in the sidebar.
         </div>
       )}
     </div>
