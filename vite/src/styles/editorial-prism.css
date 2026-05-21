@@ -135,6 +135,7 @@ code.language-diagram {
   font-family: var(--font-diagram, Menlo, 'Courier New', Monaco, monospace);
   font-weight: 400;
   letter-spacing: normal;
+  line-height: 1.3;
 }
 
 .language-diagram .token.box-drawing {
