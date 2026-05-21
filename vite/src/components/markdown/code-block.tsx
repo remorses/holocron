@@ -20,11 +20,13 @@ import { Prism } from '#prism'
 function parseHighlightLines(value: string, lineCount: number): Set<number> | undefined {
   const result = new Set<number>()
   for (const part of value.split(',')) {
-    const match = /^(\d+)(?:-(\d+))?$/.exec(part.trim())
-    if (!match) continue
+    const trimmed = part.trim()
+    if (!trimmed) continue
+    const match = /^(\d+)(?:-(\d+))?$/.exec(trimmed)
+    if (!match) return undefined
     const start = Number(match[1])
     const end = Number(match[2] ?? match[1])
-    if (start < 1 || end < start) continue
+    if (start < 1 || end < start) return undefined
     for (let i = start; i <= Math.min(end, lineCount); i++) result.add(i)
   }
   return result.size > 0 ? result : undefined
@@ -85,7 +87,14 @@ export function CodeBlock({
           {title}
         </div>
       )}
-      <div className='relative'>
+      <div
+        className='relative'
+        style={{
+          fontFamily: 'var(--font-code)',
+          fontSize: 'var(--type-code-size)',
+          lineHeight,
+        }}
+      >
         <pre
           className='overflow-x-auto scrollbar-none'
           style={{
@@ -96,10 +105,7 @@ export function CodeBlock({
           <div
             className='flex'
             style={{
-              fontFamily: 'var(--font-code)',
-              fontSize: 'var(--type-code-size)',
               fontWeight: 'var(--weight-regular)',
-              lineHeight,
               letterSpacing: 'normal',
               color: 'var(--foreground)',
               tabSize: 2,
@@ -144,25 +150,18 @@ export function CodeBlock({
           </div>
         </pre>
         {/* Highlight overlay: per-line background strips that dim non-highlighted
-            lines. Uses the same font-size and line-height as the code so each
-            strip at height = lineHeight × font-size aligns perfectly with one
-            code line. Covers both line numbers and code text. */}
+            lines. Inherits font-size and line-height from the parent so each
+            strip at height=1lh aligns perfectly with one code line. */}
         {highlightLines && (
           <div
             aria-hidden='true'
-            style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              fontSize: 'var(--type-code-size)',
-              lineHeight,
-            }}
+            className='absolute inset-0 pointer-events-none'
           >
             {lines.map((_, i) => (
               <div
                 key={i}
                 style={{
-                  height: `${lineHeight}em`,
+                  height: '1lh',
                   background: highlightLines.has(i + 1) ? 'transparent' : 'var(--background)',
                   opacity: highlightLines.has(i + 1) ? 0 : 0.4,
                 }}

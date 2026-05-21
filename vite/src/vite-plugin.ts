@@ -148,12 +148,6 @@ function toCssSourcePath(fromDir: string, toDir: string): string {
 // virtual modules and bootstrap code (~20KB), while all framework +
 // vendor code goes into a stable chunk that's uploaded once.
 
-const MERMAID_GROUP = {
-  name: 'holocron-mermaid',
-  test: /node_modules[\/](?:\.pnpm[\/])?(?:mermaid|@mermaid-js|cytoscape|cytoscape-cose-bilkent|dagre|dagre-d3-es|graphlib|katex|khroma|roughjs|stylis|d3(?:-|[\/])|lodash-es)/,
-  priority: 30,
-}
-
 // All stable code: node_modules + holocron framework + spiceflow runtime.
 // Changes only when holocron/spiceflow version or user's deps change.
 // The entry chunk is left with just virtual modules (~20KB) which change
@@ -829,9 +823,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         )
       }
 
-      if (name === 'client' || name === 'ssr') {
-        addCodeSplittingGroups(config, [MERMAID_GROUP])
-      }
+      // NOTE: MERMAID_GROUP was removed from client/ssr. Forcing mermaid + d3 +
+      // lodash-es + katex into one chunk backfires: if ANY of those packages
+      // share modules with non-mermaid code, the bundler creates a static
+      // import edge from the editorial-page chunk to the mermaid chunk. This
+      // makes the RSC plugin add <link rel="modulepreload"> for the 3.3MB
+      // mermaid chunk on every page, even pages without mermaid diagrams.
+      // The dynamic `import('#mermaid')` in mermaid.tsx already creates a
+      // natural code-splitting boundary; the bundler handles this correctly
+      // without forced grouping.
 
       // Split stable deps (framework + node_modules) into their own chunk
       // so the RSC entry only contains virtual modules (~20KB). Maximizes
