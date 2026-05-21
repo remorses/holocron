@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import { createAuthClient } from 'better-auth/react'
 import { cn, formatTime } from './lib/utils.ts'
-import { Button, CopyButton } from './components/ui/button.tsx'
+import { Button } from './components/ui/button.tsx'
 import {
   Dialog,
   DialogClose,
@@ -52,7 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
-import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, createProjectAction } from './dashboard-actions.ts'
+import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction } from './dashboard-actions.ts'
 import type { dashboardApp } from './dashboard.tsx'
 
 type DashboardApp = typeof dashboardApp
@@ -197,7 +197,7 @@ export function DashboardSidebar({
               </Link>
             )
           })}
-          <NewProjectSidebarItem orgId={org?.id} />
+          <NewProjectSidebarItem />
         </nav>
       </div>
 
@@ -359,105 +359,26 @@ function CreateOrgDialog({ open, onOpenChange }: {
 
 // ── Create Project ──────────────────────────────────────────────────
 
-function NewProjectSidebarItem({ orgId }: { orgId?: string | null }) {
-  const [open, setOpen] = useState(false)
-
+function NewProjectSidebarItem() {
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground cursor-pointer"
-      >
-        <PlusIcon className="size-4 shrink-0 opacity-60" />
-        New project
-      </button>
-      <CreateProjectDialog open={open} onOpenChange={setOpen} orgId={orgId} />
-    </>
+    <Link
+      href="/dashboard/deploy"
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground no-underline"
+    >
+      <PlusIcon className="size-4 shrink-0 opacity-60" />
+      New project
+    </Link>
   )
 }
 
-export function CreateProjectButton({ orgId }: { orgId?: string | null }) {
-  const [open, setOpen] = useState(false)
-
+export function CreateProjectButton() {
   return (
-    <>
-      <Button onClick={() => setOpen(true)}>
+    <Button asChild>
+      <Link href="/dashboard/deploy">
         <PlusIcon className="size-4" />
         Create project
-      </Button>
-      <CreateProjectDialog open={open} onOpenChange={setOpen} orgId={orgId} />
-    </>
-  )
-}
-
-function CreateProjectDialog({ open, onOpenChange, orgId }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  orgId?: string | null
-}) {
-  const [name, setName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) {
-      setName('')
-      setError(null)
-    }
-    onOpenChange(nextOpen)
-  }
-
-  async function handleCreate() {
-    setLoading(true)
-    setError(null)
-    try {
-      // Action throws redirect with deploy-key cookie → spiceflow handles navigation
-      await createProjectAction({ name, orgId: orgId ?? undefined })
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create project')
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogPopup>
-        <DialogHeader>
-          <DialogTitle>New Project</DialogTitle>
-          <DialogDescription>
-            Create a new docs site project. You will be guided through linking it to a GitHub repo next.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="px-6 pb-2">
-          {error && (
-            <div className="text-sm text-destructive mb-3">{error}</div>
-          )}
-          <div className="flex flex-col gap-3">
-            <Input
-              placeholder="Project name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && name.trim()) {
-                  e.preventDefault()
-                  handleCreate()
-                }
-              }}
-              autoFocus
-            />
-          </div>
-          <DialogFooter variant="bare" className="mt-4">
-            <DialogClose render={<Button variant="outline" />}>
-              Cancel
-            </DialogClose>
-            <Button onClick={handleCreate} loading={loading} disabled={!name.trim()}>
-              Create project
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogPopup>
-    </Dialog>
+      </Link>
+    </Button>
   )
 }
 

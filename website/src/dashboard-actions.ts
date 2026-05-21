@@ -12,8 +12,7 @@
 import { ulid } from 'ulid'
 import * as schema from 'db/schema'
 import { getActionRequest, redirect } from 'spiceflow'
-import { getDb, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
-import { deployKeyCookie } from './dashboard-cookies.ts'
+import { getDb, requireSession, generateApiKey, hashApiKey } from './db.ts'
 
 async function authenticateRequest() {
   const request = getActionRequest()
@@ -40,60 +39,6 @@ async function requireProjectMembership(userId: string, projectId: string, optio
   }
 
   return { membership, project, orgId: project.orgId }
-}
-
-// ── Create Project ──────────────────────────────────────────────────
-
-export async function createProjectAction({ name, orgId }: {
-  name: string
-  orgId?: string
-}): Promise<never> {
-  if (!name.trim()) throw new Error('Name is required')
-
-  const request = getActionRequest()
-  const session = await requireSession(request)
-
-  // Use provided orgId or fall back to ensureOrg (creates one if needed)
-  let resolvedOrgId: string
-  if (orgId) {
-    const db = getDb()
-    const membership = await db.query.orgMember.findFirst({
-      where: { userId: session.userId, orgId },
-    })
-    if (!membership) throw new Error('Not a member of this organization')
-    resolvedOrgId = orgId
-  } else {
-    const org = await ensureOrg(session.userId, session.user.name)
-    resolvedOrgId = org.id
-  }
-
-  const db = getDb()
-  const projectId = ulid()
-  const generated = generateApiKey()
-  const keyHash = await hashApiKey(generated.fullKey)
-
-  await db.batch([
-    db.insert(schema.project).values({
-      projectId,
-      orgId: resolvedOrgId,
-      name: name.trim(),
-    }),
-    db.insert(schema.apiKey).values({
-      id: ulid(),
-      orgId: resolvedOrgId,
-      projectId,
-      name: 'deploy',
-      prefix: generated.prefix,
-      hash: keyHash,
-    }),
-  ])
-
-  // Redirect with deploy-key cookie so the overview page can show the key
-  throw redirect(`/dashboard/projects/${projectId}`, {
-    headers: {
-      'Set-Cookie': deployKeyCookie({ request, projectId, fullKey: generated.fullKey }),
-    },
-  })
 }
 
 // ── Create API Key ──────────────────────────────────────────────────

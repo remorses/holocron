@@ -15,13 +15,11 @@
 
 import { Spiceflow, redirect } from 'spiceflow'
 import { Link, router } from 'spiceflow/react'
-import { z } from 'zod'
-import { getDb, getSession, requireSession, ensureOrg, generateApiKey, hashApiKey } from './db.ts'
+import { getDb, getSession, requireSession } from './db.ts'
 import * as schema from 'db/schema'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
-import { ulid } from 'ulid'
 import { cn, timeAgo } from './lib/utils.ts'
-import { CopyButton } from './components/ui/button.tsx'
+import { Button } from './components/ui/button.tsx'
 import { DeployPoller } from './components/deploy-poller.tsx'
 import { HolocronLogo } from './components/auth-page.tsx'
 import { Frame } from './components/ui/frame.tsx'
@@ -45,9 +43,8 @@ import {
   InviteButton,
 } from './dashboard-components.tsx'
 
-import { readDeployKeyCookie, deployKeyCookie } from './dashboard-cookies.ts'
-
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
+const CLI_CREATE_COMMAND = 'npx -y @holocron.so/cli create'
 
 /** Resolve project + verify the caller is a member of the project's org.
  *  All project page loaders must use this instead of looking up membership first. */
@@ -159,7 +156,7 @@ export const dashboardApp = new Spiceflow()
   // ── Dashboard index → redirect to first project ────────────────────
 
   .page('/dashboard', async ({ loaderData }) => {
-    const { projects, org, orgId } = loaderData
+    const { projects, org } = loaderData
     const firstProject = projects[0]
     if (firstProject) {
       throw redirect(`/dashboard/projects/${firstProject.projectId}`)
@@ -180,7 +177,7 @@ export const dashboardApp = new Spiceflow()
             <div className="text-lg font-medium">No projects yet</div>
             <div className="mt-1 text-sm text-muted-foreground">Deploy your first docs site to see it here.</div>
             <div className="mt-4">
-              <CreateProjectButton orgId={orgId} />
+              <CreateProjectButton />
             </div>
           </>
         )}
@@ -202,11 +199,6 @@ export const dashboardApp = new Spiceflow()
       },
     }))
 
-    // If no deployments yet, read the deploy key from the cookie (set during project creation)
-    const deployKey = project.deployments.length === 0
-      ? readDeployKeyCookie(request, params.projectId!)
-      : undefined
-
     return {
       project: {
         ...project,
@@ -224,12 +216,11 @@ export const dashboardApp = new Spiceflow()
           } : null,
         })),
       },
-      deployKey,
     }
   })
 
   .page('/dashboard/projects/:projectId', async ({ loaderData }) => {
-    const { project, deployKey } = loaderData
+    const { project } = loaderData
     const hasDeployments = project.deployments.length > 0
 
     const siteUrl = project.subdomain
@@ -247,48 +238,29 @@ export const dashboardApp = new Spiceflow()
               <DeployPoller />
               <div className="flex max-w-lg flex-col items-center gap-8 text-center">
                 <div className="flex flex-col gap-2">
-                  <h1 className="text-2xl font-semibold">Create your docs site</h1>
+                  <h1 className="text-2xl font-semibold">Deploy your docs site</h1>
                   <div className="text-sm text-muted-foreground">
-                    Create a new repo from the Holocron template. Your site will be
-                    automatically linked to this project via GitHub Actions.
+                    This project has no deployments yet. Deploy with an API key from
+                    the <strong>Keys</strong> tab, or create a new GitHub-linked project.
                   </div>
                 </div>
 
-                <a
-                  href={`${TEMPLATE_REPO_URL}/generate`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2.5 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-black/90 hover:shadow-md dark:bg-white dark:text-black dark:hover:bg-white/90"
-                >
-                  <svg height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-                  </svg>
-                  Create example GitHub repo
-                </a>
+                <Button asChild>
+                  <a href={`${TEMPLATE_REPO_URL}/generate`} target="_blank" rel="noopener noreferrer">
+                    Create GitHub-linked project
+                  </a>
+                </Button>
 
                 <div className="flex w-full flex-col gap-3">
                   <div className="text-sm text-muted-foreground">Or create locally with the CLI:</div>
-                  {deployKey ? (
-                    <>
-                      <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
-                        <CopyButton
-                          text={`npx -y @holocron.so/cli create --key ${deployKey}`}
-                          className="absolute right-2 top-2"
-                        />
-                        <div className="overflow-x-auto px-5 py-4">
-                          <pre className="whitespace-pre font-mono text-sm leading-relaxed">{`npx -y @holocron.so/cli create --key holo_${deployKey.slice(5, 9)}${'•'.repeat(8)}${deployKey.slice(-4)}`}</pre>
-                        </div>
-                      </div>
-                      <div className="text-xs text-muted-foreground leading-relaxed">
-                        The copied command includes your API key to link this project automatically.
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      The setup key for this project has expired. Create a new API key from the <strong>Keys</strong> tab,
-                      then run: <code className="font-mono text-xs">npx -y @holocron.so/cli create --key YOUR_KEY</code>
+                  <div className="w-full rounded-lg border border-border bg-muted/50 text-left">
+                    <div className="overflow-x-auto px-5 py-4">
+                      <pre className="whitespace-pre font-mono text-sm leading-relaxed">{CLI_CREATE_COMMAND}</pre>
                     </div>
-                  )}
+                  </div>
+                  <div className="text-xs text-muted-foreground leading-relaxed">
+                    The CLI logs in, creates the Holocron project, and writes a deploy key locally.
+                  </div>
                 </div>
               </div>
             </div>
@@ -573,49 +545,56 @@ export const dashboardApp = new Spiceflow()
 
   // ── Deploy flow ─────────────────────────────────────────────────────
 
-  .page({
-    path: '/dashboard/deploy',
-    query: z.object({
-      projectId: z.string().optional(),
-    }),
-    handler: async ({ request, query }) => {
-      const session = await requireSession(request)
+  .page('/dashboard/deploy', async () => {
+    return (
+      <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
+        <div className="mx-auto flex max-w-2xl flex-col gap-8 py-16">
+          <div className="flex flex-col gap-2 text-center">
+            <h1 className="text-2xl font-semibold">Create a docs project</h1>
+            <div className="text-sm text-muted-foreground">
+              Projects are created by your first deploy. Start from the GitHub template,
+              or create a local site with the CLI.
+            </div>
+          </div>
 
-      let projectId = query.projectId
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-sm font-semibold">GitHub template</h2>
+                <div className="text-sm text-muted-foreground">
+                  Create a repository from the template. GitHub Actions deploys it and
+                  Holocron links the project from verified GitHub OIDC claims.
+                </div>
+              </div>
+              <Button asChild>
+                <a href={`${TEMPLATE_REPO_URL}/generate`} target="_blank" rel="noopener noreferrer">
+                  Create from GitHub
+                </a>
+              </Button>
+            </div>
 
-      if (projectId) {
-        // Project already exists, redirect to its overview (setup UI shown there if no deployments)
-        throw redirect(`/dashboard/projects/${projectId}`)
-      }
+            <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-sm font-semibold">Local CLI</h2>
+                <div className="text-sm text-muted-foreground">
+                  Run the create command. The CLI logs in, creates the project, and
+                  writes the deploy key into the generated site.
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/50 text-left">
+                <div className="overflow-x-auto px-4 py-3">
+                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">{CLI_CREATE_COMMAND}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      // No projectId: create a new project and redirect to its overview
-      const org = await ensureOrg(session.userId, session.user.name)
-      const db = getDb()
-      projectId = ulid()
-      const generated = generateApiKey()
-      const fullKey = generated.fullKey
-      const keyHash = await hashApiKey(fullKey)
-
-      await db.batch([
-        db.insert(schema.project).values({
-          projectId,
-          orgId: org.id,
-          name: `${session.user.name}'s Docs`,
-        }),
-        db.insert(schema.apiKey).values({
-          id: ulid(),
-          orgId: org.id,
-          projectId,
-          name: 'deploy',
-          prefix: generated.prefix,
-          hash: keyHash,
-        }),
-      ])
-
-      throw redirect(`/dashboard/projects/${projectId}`, {
-        headers: { 'Set-Cookie': deployKeyCookie({ request, projectId, fullKey }) },
-      })
-    },
+          <div className="text-center text-xs text-muted-foreground">
+            After the first deployment finishes, refresh the dashboard and the project will appear in the sidebar.
+          </div>
+        </div>
+      </main>
+    )
   })
 
   // ── Invite accept page (standalone, no dashboard layout) ──────────
