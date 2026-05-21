@@ -405,6 +405,22 @@ users custom domains are supported by `holocron deploy` yet.
 Always deploy preview before production. If preview migration, build, or deploy
 fails, stop and do not continue to production.
 
+## Icon consistency
+
+When adding icons to any element in `docs.json` or MDX frontmatter, apply them **consistently across all siblings** at the same level. Inconsistent icon usage looks unfinished and breaks visual rhythm.
+
+**Rules:**
+
+- **Tabs**: if one tab has an icon, every tab must have an icon.
+- **Groups**: if one sidebar group has an icon, every sibling group in the same tab should have one.
+- **Anchors**: if one anchor in `navigation.global.anchors` has an icon, all anchors must.
+- **Pages**: if one page in a group has a frontmatter `icon`, all pages in that group should. Exception: a group with only 1-2 pages where icons add no navigational value.
+- **Cards / CardGroup**: if one `<Card>` in a `<CardGroup>` has an `icon` prop, every card in that group must.
+- **Accordion / AccordionGroup**: same rule. Either all items have icons or none do.
+- **Steps**: individual steps do not take icons, so this does not apply.
+
+When reviewing or creating navigation and MDX content, scan siblings and fill in missing icons before finishing. Pick icons from the same library (usually Lucide) and choose semantically distinct icons for each item so they are easy to tell apart at a glance.
+
 ## Writing style for MDX pages
 
 ### Bold keywords for skimmability
