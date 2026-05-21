@@ -48,7 +48,7 @@ import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes } from './lib/mdx-components-map.tsx'
-import { SiteHead } from './lib/site-head.tsx'
+import { SiteHead, THEME_SCRIPT } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
@@ -644,6 +644,12 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           </Head>
         )}
         <body>
+          {/* Blocking theme script — runs before any content is painted to set
+              .dark class from the holocron-theme cookie. Prevents flash of wrong
+              theme on reload. The server also sets className on <html> from the
+              cookie, but this script handles streaming race conditions where the
+              browser renders before the server class attribute arrives. */}
+          <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
           <div className='sr-only'>{buildAgentDocsDirective(site.base)}</div>
           <ProgressBar color='var(--primary)' />
           {children ?? notFoundContent}
