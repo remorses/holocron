@@ -11,12 +11,6 @@ Holocron turns MDX pages and a `docs.json` config into a full documentation site
 
 Designed as a **Mintlify-compatible replacement**: same config shape, same MDX components, same frontmatter fields. If you have a Mintlify project, you can migrate in about 2 minutes.
 
-<Aside>
-<Note>
-Holocron is a **Mintlify drop-in replacement**. If you already have a Mintlify site, you can [migrate in about 2 minutes](/migration).
-</Note>
-</Aside>
-
 ## Install skill for AI agents
 
 ```bash
@@ -55,12 +49,6 @@ export default defineConfig({
 ```
 
 The plugin auto-adds Spiceflow, Tailwind CSS, and React. No extra setup needed.
-
-<Aside>
-<Note>
-Holocron supports **`docs.json`**, **`docs.jsonc`**, and **`holocron.jsonc`**. First found wins. JSONC is nice for hand-editing because it allows comments and trailing commas.
-</Note>
-</Aside>
 
 Create a `docs.json` at the project root:
 
@@ -134,12 +122,6 @@ node dist/rsc/index.js
 | **Framework** | Proprietary | Vite + React Server Components |
 
 Holocron accepts unknown Mintlify fields via `.passthrough()`, so you can paste a full Mintlify `docs.json` without validation errors. Fields Holocron does not consume are silently ignored.
-
-<Aside>
-<Note>
-Holocron is **free and open source** (MIT). You own your docs, your build, and your deploy pipeline.
-</Note>
-</Aside>
 
 ## Migration from Mintlify
 
@@ -228,12 +210,6 @@ npx -y @holocron.so/cli deploy
 
 In **GitHub Actions**, the deploy command uses OIDC tokens automatically (no API key needed). Add `permissions: id-token: write` to your workflow.
 
-<Aside>
-<Note>
-No API key needed in GitHub Actions. Holocron verifies your identity via **OIDC tokens** from the GitHub Actions runner.
-</Note>
-</Aside>
-
 ### Node.js
 
 ```bash
@@ -260,12 +236,6 @@ Every Holocron site generates AI-friendly endpoints out of the box:
 - **`/llms.txt`**: an index of all pages with titles and `.md` URLs. Agents read this to discover the site structure.
 - **`/docs.zip`**: download every page as a `.md` file in one zip. Agents can grep it locally.
 - **Skill discovery**: `/.well-known/agent-skills/index.json` exposes your docs as an installable AI skill.
-
-<Aside>
-<Note>
-AI agents can **download and grep** your entire docs set locally with `/docs.zip`. This is faster than fetching pages one by one.
-</Note>
-</Aside>
 
 ```bash
 curl https://your-site.com/llms.txt

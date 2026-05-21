@@ -183,12 +183,15 @@ https://holocron.so/create/local-imports.md for details.
 
 ## MDX JSX in README files
 
-Using MDX JSX components (like `<Aside>`, `<Note>`, `<CardGroup>`, `<Card>`,
-etc.) inside `README.md` is fine. GitHub simply does not render unknown HTML
-tags; it strips them and shows the inner text content. The README stays
-perfectly readable on GitHub while getting full rich rendering when imported
-into a Holocron MDX page. This is the recommended pattern for keeping the
-README as the single source of truth for both GitHub and the docs site.
+Do **not** use MDX JSX components (like `<Aside>`, `<Note>`, `<CardGroup>`,
+`<Card>`, etc.) inside `README.md`. GitHub does not render markdown inside
+unknown HTML tags; content inside them appears as raw unformatted text.
+
+The README should use only standard markdown (headings, bold, lists, tables,
+code blocks, links). MDX-specific components like Asides and Cards belong in
+the `.mdx` file that imports the README, not in the README itself. The
+`website/src/pages/index.mdx` demonstrates this: it imports the README for
+the main content and adds CardGroup/Card components below the import.
 
 ## Page frontmatter
 
