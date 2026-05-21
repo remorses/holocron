@@ -181,6 +181,15 @@ import Readme from '../../README.md'
 Resolution: `/` = project root, `../` = relative to the MDX file. See
 https://holocron.so/create/local-imports.md for details.
 
+## MDX JSX in README files
+
+Using MDX JSX components (like `<Aside>`, `<Note>`, `<CardGroup>`, `<Card>`,
+etc.) inside `README.md` is fine. GitHub simply does not render unknown HTML
+tags; it strips them and shows the inner text content. The README stays
+perfectly readable on GitHub while getting full rich rendering when imported
+into a Holocron MDX page. This is the recommended pattern for keeping the
+README as the single source of truth for both GitHub and the docs site.
+
 ## Page frontmatter
 
 Every MDX page can include YAML frontmatter. Keep it concise and only add fields
@@ -310,27 +319,73 @@ to see the full navigation tree and existing pages. Then decide:
 Never append unrelated sections to a page just because it was the last file you
 had open. Match the topic to the right page or create a new one.
 
+## CLI overview
+
+Run `--help` to see all available commands:
+
+```bash
+npx -y @holocron.so/cli --help
+```
+
+Key commands: `login`, `logout`, `whoami`, `deploy`, `projects list`,
+`projects create`, `keys list`, `keys create`, `keys delete`, `create`.
+
 ## Authentication
 
-Before deploying locally, log in via the CLI. This opens a browser window for
-device-flow authentication with holocron.so:
+Before logging in, check if you are already authenticated:
+
+```bash
+npx -y @holocron.so/cli whoami
+```
+
+If that succeeds and shows your user, orgs, and projects, skip login. If it
+fails, log in via the CLI. This opens a browser window for device-flow
+authentication with holocron.so:
 
 ```bash
 npx -y @holocron.so/cli login
 ```
 
-After login, a session token is stored in `~/.holocron/config.json`. Verify
-your session with:
-
-```bash
-npx -y @holocron.so/cli whoami
-```
+After login, a session token is stored in `~/.holocron/config.json`.
 
 To remove stored credentials:
 
 ```bash
 npx -y @holocron.so/cli logout
 ```
+
+## Organizations and project resolution
+
+Each user gets a **personal org** auto-created on first login. All projects and
+API keys are scoped to an org. `whoami` shows all orgs and projects the user
+belongs to.
+
+**How project resolution works in the CLI:**
+
+- **API key auth** (`HOLOCRON_KEY`): the key is scoped to a specific project.
+  The server resolves the org and project from the key. No flags needed.
+- **Session auth** (`holocron login`): the CLI lists all projects across all
+  the user's orgs. If there is exactly one project, it is auto-selected. If
+  there are multiple, the CLI prompts interactively or requires `--project <id>`.
+- **GitHub OIDC**: the server resolves the project from the verified JWT.
+
+No project ID is saved locally on disk. It is either derived from the API key,
+passed via `--project`, or selected interactively at deploy time.
+
+**Creating projects in a specific org:**
+
+When a user belongs to multiple orgs, `projects create` prompts which org to
+use. Pass `--org <orgId>` to skip the prompt:
+
+```bash
+npx -y @holocron.so/cli projects create --name "My Docs" --org <orgId>
+```
+
+Run `whoami` to see org IDs.
+
+**Deploy does not need `--org`.** The deploy command resolves the org from the
+project itself. Just pass `--project <id>` if you have multiple projects, or
+let it prompt interactively.
 
 ## Built-in deploy command
 
