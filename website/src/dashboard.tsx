@@ -202,6 +202,11 @@ export const dashboardApp = new Spiceflow()
       },
     }))
 
+    // If no deployments yet, read the deploy key from the cookie (set during project creation)
+    const deployKey = project.deployments.length === 0
+      ? readDeployKeyCookie(request, params.projectId!)
+      : undefined
+
     return {
       project: {
         ...project,
@@ -219,11 +224,13 @@ export const dashboardApp = new Spiceflow()
           } : null,
         })),
       },
+      deployKey,
     }
   })
 
   .page('/dashboard/projects/:projectId', async ({ loaderData }) => {
-    const { project } = loaderData
+    const { project, deployKey } = loaderData
+    const hasDeployments = project.deployments.length > 0
 
     const siteUrl = project.subdomain
       ? `https://${project.subdomain}-site.holocron.so`
@@ -234,68 +241,116 @@ export const dashboardApp = new Spiceflow()
         <ProjectTabBar projectId={project.projectId} currentTab="overview" />
         <div className="border-t border-border" />
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-          <div className="flex flex-col gap-6">
-            {/* Header */}
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-              {project.githubOwner && project.githubRepo && (
+          {!hasDeployments ? (
+            // Setup UI: shown when the project has no deployments yet
+            <div className="flex flex-col items-center gap-10 py-16">
+              <DeployPoller />
+              <div className="flex max-w-lg flex-col items-center gap-8 text-center">
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-2xl font-semibold">Create your docs site</h1>
+                  <div className="text-sm text-muted-foreground">
+                    Create a new repo from the Holocron template. Your site will be
+                    automatically linked to this project via GitHub Actions.
+                  </div>
+                </div>
+
                 <a
-                  href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
+                  href={`${TEMPLATE_REPO_URL}/generate`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                  className="inline-flex items-center justify-center gap-2.5 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-black/90 hover:shadow-md dark:bg-white dark:text-black dark:hover:bg-white/90"
                 >
-                  {project.githubOwner}/{project.githubRepo} ↗
+                  <svg height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                  </svg>
+                  Create example GitHub repo
                 </a>
-              )}
-            </div>
 
-            {/* Project info */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Project Info</h2>
-              <Frame className="w-full">
-                <div className="rounded-xl border bg-background p-4">
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-sm">
-                    {siteUrl && (
-                      <>
-                        <dt className="text-muted-foreground">Website</dt>
-                        <dd>
-                          <a href={siteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                            {siteUrl} ↗
-                          </a>
-                        </dd>
-                      </>
-                    )}
-                    {project.githubOwner && project.githubRepo && (
-                      <>
-                        <dt className="text-muted-foreground">GitHub</dt>
-                        <dd>
-                          <a
-                            href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            {project.githubOwner}/{project.githubRepo} ↗
-                          </a>
-                        </dd>
-                      </>
-                    )}
-                    <dt className="text-muted-foreground">Default Branch</dt>
-                    <dd className="font-mono text-xs">{project.defaultBranch || 'main'}</dd>
-                    <dt className="text-muted-foreground">Created</dt>
-                    <dd>{timeAgo(project.createdAt)}</dd>
-                  </dl>
+                <div className="flex w-full flex-col gap-3">
+                  <div className="text-sm text-muted-foreground">Or create locally with the CLI:</div>
+                  <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
+                    <CopyButton
+                      text={deployKey
+                        ? `npx -y @holocron.so/cli create --key ${deployKey}`
+                        : 'npx -y @holocron.so/cli create'}
+                      className="absolute right-2 top-2"
+                    />
+                    <div className="overflow-x-auto px-5 py-4">
+                      <pre className="whitespace-pre font-mono text-sm leading-relaxed">{deployKey
+                        ? `npx -y @holocron.so/cli create --key holo_${deployKey.slice(5, 9)}${'•'.repeat(8)}${deployKey.slice(-4)}`
+                        : 'npx -y @holocron.so/cli create'}</pre>
+                    </div>
+                  </div>
+                  {deployKey && (
+                    <div className="text-xs text-muted-foreground leading-relaxed">
+                      The copied command includes your API key to link this project automatically.
+                      You can also set <code className="font-mono text-xs">HOLOCRON_KEY</code> as an env var for deploys.
+                    </div>
+                  )}
                 </div>
-              </Frame>
-            </section>
+              </div>
+            </div>
+          ) : (
+            // Normal overview: project info + deployments table
+            <div className="flex flex-col gap-6">
+              {/* Header */}
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+                {project.githubOwner && project.githubRepo && (
+                  <a
+                    href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                  >
+                    {project.githubOwner}/{project.githubRepo} ↗
+                  </a>
+                )}
+              </div>
 
-            {/* Recent Deployments */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Recent Deployments</h2>
-              {project.deployments.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No deployments yet.</div>
-              ) : (
+              {/* Project info */}
+              <section className="flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Project Info</h2>
+                <Frame className="w-full">
+                  <div className="rounded-xl border bg-background p-4">
+                    <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-sm">
+                      {siteUrl && (
+                        <>
+                          <dt className="text-muted-foreground">Website</dt>
+                          <dd>
+                            <a href={siteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              {siteUrl} ↗
+                            </a>
+                          </dd>
+                        </>
+                      )}
+                      {project.githubOwner && project.githubRepo && (
+                        <>
+                          <dt className="text-muted-foreground">GitHub</dt>
+                          <dd>
+                            <a
+                              href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              {project.githubOwner}/{project.githubRepo} ↗
+                            </a>
+                          </dd>
+                        </>
+                      )}
+                      <dt className="text-muted-foreground">Default Branch</dt>
+                      <dd className="font-mono text-xs">{project.defaultBranch || 'main'}</dd>
+                      <dt className="text-muted-foreground">Created</dt>
+                      <dd>{timeAgo(project.createdAt)}</dd>
+                    </dl>
+                  </div>
+                </Frame>
+              </section>
+
+              {/* Recent Deployments */}
+              <section className="flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Recent Deployments</h2>
                 <Frame className="w-full">
                   <Table>
                     <TableHeader>
@@ -325,7 +380,7 @@ export const dashboardApp = new Spiceflow()
                                   href={deployUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs text-primary hover:underline font-mono truncate max-w-48 block"
+                                  className="text-xs text-primary hover:underline font-mono truncate max-w-80 block"
                                 >
                                   {d.subdomain}
                                 </a>
@@ -365,9 +420,9 @@ export const dashboardApp = new Spiceflow()
                     </TableBody>
                   </Table>
                 </Frame>
-              )}
-            </section>
-          </div>
+              </section>
+            </div>
+          )}
         </main>
       </>
     )
@@ -525,102 +580,39 @@ export const dashboardApp = new Spiceflow()
       const session = await requireSession(request)
 
       let projectId = query.projectId
-      let fullKey: string | undefined
-      const db = getDb()
 
       if (projectId) {
-        // Verify user has access to this project's org
-        const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-          where: { projectId },
-        }))
-        if (project.currentDeploymentId) throw redirect(`/dashboard/projects/${projectId}`)
-        fullKey = readDeployKeyCookie(request, projectId)
+        // Project already exists, redirect to its overview (setup UI shown there if no deployments)
+        throw redirect(`/dashboard/projects/${projectId}`)
       }
 
-      if (!projectId) {
-        const org = await ensureOrg(session.userId, session.user.name)
-        projectId = ulid()
-        const generated = generateApiKey()
-        fullKey = generated.fullKey
-        const keyHash = await hashApiKey(fullKey)
+      // No projectId: create a new project and redirect to its overview
+      const org = await ensureOrg(session.userId, session.user.name)
+      const db = getDb()
+      projectId = ulid()
+      const generated = generateApiKey()
+      const fullKey = generated.fullKey
+      const keyHash = await hashApiKey(fullKey)
 
-        await db.batch([
-          db.insert(schema.project).values({
-            projectId,
-            orgId: org.id,
-            name: `${session.user.name}'s Docs`,
-          }),
-          db.insert(schema.apiKey).values({
-            id: ulid(),
-            orgId: org.id,
-            projectId,
-            name: 'deploy',
-            prefix: generated.prefix,
-            hash: keyHash,
-          }),
-        ])
+      await db.batch([
+        db.insert(schema.project).values({
+          projectId,
+          orgId: org.id,
+          name: `${session.user.name}'s Docs`,
+        }),
+        db.insert(schema.apiKey).values({
+          id: ulid(),
+          orgId: org.id,
+          projectId,
+          name: 'deploy',
+          prefix: generated.prefix,
+          hash: keyHash,
+        }),
+      ])
 
-        throw redirect(`/dashboard/deploy?projectId=${projectId}`, {
-          headers: { 'Set-Cookie': deployKeyCookie({ request, projectId, fullKey }) },
-        })
-      }
-
-      const templateUrl = `${TEMPLATE_REPO_URL}/generate`
-
-      return (
-        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-          <div className="flex flex-col items-center gap-10 py-16">
-            <DeployPoller />
-            <div className="flex max-w-lg flex-col items-center gap-8 text-center">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold">Create your docs site</h1>
-                <div className="text-sm text-muted-foreground">
-                  Create a new repo from the Holocron template. Your site will be
-                  automatically linked to this project via GitHub Actions.
-                </div>
-              </div>
-
-              <a
-                href={templateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-black/90 hover:shadow-md dark:bg-white dark:text-black dark:hover:bg-white/90"
-              >
-                <svg height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-                </svg>
-                Create example GitHub repo
-              </a>
-
-              <div className="flex w-full flex-col gap-3">
-                <div className="text-sm text-muted-foreground">Or create locally with the CLI:</div>
-                <div className="relative w-full rounded-lg border border-border bg-muted/50 text-left">
-                  <CopyButton
-                    text="npx -y @holocron.so/cli create"
-                    className="absolute right-2 top-2"
-                  />
-                  <div className="overflow-x-auto px-5 py-4">
-                    <pre className="whitespace-pre font-mono text-sm leading-relaxed">npx -y @holocron.so/cli create</pre>
-                  </div>
-                </div>
-              </div>
-
-              {fullKey && (
-                <div className="w-full rounded-lg border border-border bg-muted/30 px-5 py-4 text-left">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Your API key</div>
-                  <div className="relative">
-                    <CopyButton text={fullKey} className="absolute right-0 top-0" />
-                    <code className="font-mono text-sm break-all">{`holo_${fullKey.slice(5, 9)}${'•'.repeat(12)}${fullKey.slice(-4)}`}</code>
-                  </div>
-                  <div className="mt-3 text-xs text-muted-foreground leading-relaxed">
-                    Set <code className="font-mono">HOLOCRON_KEY</code> as an env var in your deploy environment (Vercel, Cloudflare, etc.) to link this project during deployment. Not needed for GitHub Actions deploys, which use OIDC automatically.
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </main>
-      )
+      throw redirect(`/dashboard/projects/${projectId}`, {
+        headers: { 'Set-Cookie': deployKeyCookie({ request, projectId, fullKey }) },
+      })
     },
   })
 

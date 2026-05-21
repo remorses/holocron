@@ -14,5 +14,5 @@ export function readDeployKeyCookie(request: Request, projectId: string): string
 
 export function deployKeyCookie({ request, projectId, fullKey }: { request: Request; projectId: string; fullKey: string }): string {
   const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : ''
-  return `${DEPLOY_KEY_COOKIE}=${encodeURIComponent(`${projectId}:${fullKey}`)}; Max-Age=120; Path=/dashboard/deploy; HttpOnly; SameSite=Lax${secure}`
+  return `${DEPLOY_KEY_COOKIE}=${encodeURIComponent(`${projectId}:${fullKey}`)}; Max-Age=120; Path=/dashboard/projects; HttpOnly; SameSite=Lax${secure}`
 }

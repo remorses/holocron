@@ -88,8 +88,8 @@ export async function createProjectAction({ name, orgId }: {
     }),
   ])
 
-  // Redirect with deploy-key cookie so the deploy page can show the key
-  throw redirect(`/dashboard/deploy?projectId=${projectId}`, {
+  // Redirect with deploy-key cookie so the overview page can show the key
+  throw redirect(`/dashboard/projects/${projectId}`, {
     headers: {
       'Set-Cookie': deployKeyCookie({ request, projectId, fullKey: generated.fullKey }),
     },
