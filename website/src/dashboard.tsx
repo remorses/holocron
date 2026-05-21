@@ -15,8 +15,8 @@
 
 import { Spiceflow, redirect } from 'spiceflow'
 import { Link, router } from 'spiceflow/react'
+import type * as React from 'react'
 import { getDb, getSession, requireSession } from './db.ts'
-import * as schema from 'db/schema'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import { cn, timeAgo } from './lib/utils.ts'
 import { Button } from './components/ui/button.tsx'
@@ -39,12 +39,102 @@ import {
   ComingSoon,
   AcceptInviteButton,
   CreateApiKeyButton,
-  CreateProjectButton,
   InviteButton,
 } from './dashboard-components.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 const CLI_CREATE_COMMAND = 'npx -y @holocron.so/cli create'
+const CLI_DEPLOY_COMMAND = 'npx -y @holocron.so/cli deploy'
+
+function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  )
+}
+
+function GitHubButton() {
+  return (
+    <Button asChild>
+      <a href={`${TEMPLATE_REPO_URL}/generate`} target="_blank" rel="noopener noreferrer">
+        <GitHubIcon data-icon="inline-start" />
+        Create from GitHub
+      </a>
+    </Button>
+  )
+}
+
+function CommandBlock({ command }: { command: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-muted/50 text-left">
+      <div className="overflow-x-auto px-4 py-3">
+        <pre className="whitespace-pre font-mono text-sm leading-relaxed">{command}</pre>
+      </div>
+    </div>
+  )
+}
+
+function SetupCard({ title, description, action }: {
+  title: string
+  description: React.ReactNode
+  action: React.ReactNode
+}) {
+  return (
+    <div className="flex h-full flex-col gap-4 rounded-xl border border-border bg-background p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-sm font-semibold">{title}</h2>
+        <div className="text-sm text-muted-foreground">{description}</div>
+      </div>
+      <div className="mt-auto">{action}</div>
+    </div>
+  )
+}
+
+function DashboardSetupPanel({ mode }: { mode: 'create' | 'deploy' }) {
+  const isCreate = mode === 'create'
+  const cards = [
+    {
+      title: 'GitHub template',
+      description: isCreate
+        ? <>Create a repository from the template. When GitHub Actions deploys from your GitHub account or org, Holocron links the project automatically.</>
+        : <>Create a repository from the template. Its first GitHub Actions deploy from your GitHub account or org creates a separate linked project automatically.</>,
+      action: <GitHubButton />,
+    },
+    {
+      title: isCreate ? 'Local CLI' : 'Deploy this project',
+      description: isCreate
+        ? <>Run the create command. The CLI logs in, creates the project, and writes the deploy key into the generated site.</>
+        : <>Create an API key from this project&apos;s Keys tab, set it as <code className="font-mono text-xs">HOLOCRON_KEY</code>, then deploy from your docs repo.</>,
+      action: <CommandBlock command={isCreate ? CLI_CREATE_COMMAND : CLI_DEPLOY_COMMAND} />,
+    },
+  ]
+
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 py-16">
+      <div className="flex flex-col gap-2 text-center">
+        <h1 className="text-2xl font-semibold">{isCreate ? 'Create a docs project' : 'Deploy your docs site'}</h1>
+        <div className="text-sm text-muted-foreground">
+          {isCreate ? (
+            <>Projects are created by your first deploy. Start from the GitHub template, or create a local site with the CLI.</>
+          ) : (
+            <>This project has no deployments yet. Deploy with an API key from the <strong>Keys</strong> tab, or create a separate GitHub-linked project.</>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {cards.map((card) => <SetupCard key={card.title} {...card} />)}
+      </div>
+
+      {isCreate && (
+        <div className="text-center text-xs text-muted-foreground">
+          After the first deployment finishes, refresh the dashboard and the project will appear in the sidebar.
+        </div>
+      )}
+    </div>
+  )
+}
 
 /** Resolve project + verify the caller is a member of the project's org.
  *  All project page loaders must use this instead of looking up membership first. */
@@ -156,31 +246,15 @@ export const dashboardApp = new Spiceflow()
   // ── Dashboard index → redirect to first project ────────────────────
 
   .page('/dashboard', async ({ loaderData }) => {
-    const { projects, org } = loaderData
+    const { projects } = loaderData
     const firstProject = projects[0]
     if (firstProject) {
       throw redirect(`/dashboard/projects/${firstProject.projectId}`)
     }
 
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center px-6">
-        {!org ? (
-          <>
-            <div className="text-lg font-medium">No organization yet</div>
-            <div className="mt-1 text-sm text-muted-foreground">Create your first project to get started.</div>
-            <div className="mt-4">
-              <CreateProjectButton />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-lg font-medium">No projects yet</div>
-            <div className="mt-1 text-sm text-muted-foreground">Deploy your first docs site to see it here.</div>
-            <div className="mt-4">
-              <CreateProjectButton />
-            </div>
-          </>
-        )}
+      <div className="px-6">
+        <DashboardSetupPanel mode="create" />
       </div>
     )
   })
@@ -236,33 +310,7 @@ export const dashboardApp = new Spiceflow()
             // Setup UI: shown when the project has no deployments yet
             <div className="flex flex-col items-center gap-10 py-16">
               <DeployPoller />
-              <div className="flex max-w-lg flex-col items-center gap-8 text-center">
-                <div className="flex flex-col gap-2">
-                  <h1 className="text-2xl font-semibold">Deploy your docs site</h1>
-                  <div className="text-sm text-muted-foreground">
-                    This project has no deployments yet. Deploy with an API key from
-                    the <strong>Keys</strong> tab, or create a new GitHub-linked project.
-                  </div>
-                </div>
-
-                <Button asChild>
-                  <a href={`${TEMPLATE_REPO_URL}/generate`} target="_blank" rel="noopener noreferrer">
-                    Create GitHub-linked project
-                  </a>
-                </Button>
-
-                <div className="flex w-full flex-col gap-3">
-                  <div className="text-sm text-muted-foreground">Or create locally with the CLI:</div>
-                  <div className="w-full rounded-lg border border-border bg-muted/50 text-left">
-                    <div className="overflow-x-auto px-5 py-4">
-                      <pre className="whitespace-pre font-mono text-sm leading-relaxed">{CLI_CREATE_COMMAND}</pre>
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground leading-relaxed">
-                    The CLI logs in, creates the Holocron project, and writes a deploy key locally.
-                  </div>
-                </div>
-              </div>
+              <DashboardSetupPanel mode="deploy" />
             </div>
           ) : (
             // Normal overview: project info + deployments table
@@ -548,51 +596,7 @@ export const dashboardApp = new Spiceflow()
   .page('/dashboard/deploy', async () => {
     return (
       <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-        <div className="mx-auto flex max-w-2xl flex-col gap-8 py-16">
-          <div className="flex flex-col gap-2 text-center">
-            <h1 className="text-2xl font-semibold">Create a docs project</h1>
-            <div className="text-sm text-muted-foreground">
-              Projects are created by your first deploy. Start from the GitHub template,
-              or create a local site with the CLI.
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-sm font-semibold">GitHub template</h2>
-                <div className="text-sm text-muted-foreground">
-                  Create a repository from the template. GitHub Actions deploys it and
-                  Holocron links the project from verified GitHub OIDC claims.
-                </div>
-              </div>
-              <Button asChild>
-                <a href={`${TEMPLATE_REPO_URL}/generate`} target="_blank" rel="noopener noreferrer">
-                  Create from GitHub
-                </a>
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-sm font-semibold">Local CLI</h2>
-                <div className="text-sm text-muted-foreground">
-                  Run the create command. The CLI logs in, creates the project, and
-                  writes the deploy key into the generated site.
-                </div>
-              </div>
-              <div className="rounded-lg border border-border bg-muted/50 text-left">
-                <div className="overflow-x-auto px-4 py-3">
-                  <pre className="whitespace-pre font-mono text-sm leading-relaxed">{CLI_CREATE_COMMAND}</pre>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center text-xs text-muted-foreground">
-            After the first deployment finishes, refresh the dashboard and the project will appear in the sidebar.
-          </div>
-        </div>
+        <DashboardSetupPanel mode="create" />
       </main>
     )
   })

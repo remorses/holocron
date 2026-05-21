@@ -371,17 +371,6 @@ function NewProjectSidebarItem() {
   )
 }
 
-export function CreateProjectButton() {
-  return (
-    <Button asChild>
-      <Link href="/dashboard/deploy">
-        <PlusIcon className="size-4" />
-        Create project
-      </Link>
-    </Button>
-  )
-}
-
 // ── TabBar ───────────────────────────────────────────────────────────
 
 type Tab = {
