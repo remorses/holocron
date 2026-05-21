@@ -1115,6 +1115,384 @@ import Guide from '/snippets/guide.mdx'
     expect(allModuleKeys).toContain('./pages/snippets/badge.tsx')
   })
 
+  test('absolute import /x falls back to projectRoot when not in pagesDir', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Badge } from '/components/badge'
+
+# Home
+
+<Badge />
+`,
+      },
+    ))
+
+    // Place badge.tsx at projectRoot/components/, NOT pagesDir/components/
+    const componentsDir = path.join(project.root, 'components')
+    fs.mkdirSync(componentsDir, { recursive: true })
+    fs.writeFileSync(path.join(componentsDir, 'badge.tsx'), 'export const Badge = () => <span>b</span>')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const imports = result.pageImports['index']?.map((i) => i.moduleKey)
+    expect(imports).toMatchInlineSnapshot(`
+      [
+        "./components/badge.tsx",
+      ]
+    `)
+  })
+
+  test('absolute import /x prefers pagesDir over projectRoot', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Widget } from '/shared/widget'
+
+# Home
+
+<Widget />
+`,
+      },
+    ))
+
+    // Put widget in BOTH pagesDir and projectRoot — pagesDir should win
+    const pageShared = path.join(project.pagesDir, 'shared')
+    const rootShared = path.join(project.root, 'shared')
+    fs.mkdirSync(pageShared, { recursive: true })
+    fs.mkdirSync(rootShared, { recursive: true })
+    fs.writeFileSync(path.join(pageShared, 'widget.tsx'), 'export const Widget = () => <div>pages</div>')
+    fs.writeFileSync(path.join(rootShared, 'widget.tsx'), 'export const Widget = () => <div>root</div>')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const imports = result.pageImports['index']
+    expect(imports).toHaveLength(1)
+    // absPath should point to pagesDir version, not projectRoot version
+    expect(imports![0]!.absPath).toBe(path.join(pageShared, 'widget.tsx'))
+  })
+
+  test('resolves index file for directory imports (/components → /components/index.tsx)', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Utils } from '/lib'
+
+# Home
+
+<Utils />
+`,
+      },
+    ))
+
+    // Create lib/index.tsx in pagesDir
+    const libDir = path.join(project.pagesDir, 'lib')
+    fs.mkdirSync(libDir, { recursive: true })
+    fs.writeFileSync(path.join(libDir, 'index.tsx'), 'export const Utils = () => <div>u</div>')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const imports = result.pageImports['index']?.map((i) => i.moduleKey)
+    // moduleKey is ./lib.tsx (not ./lib/index.tsx) because safe-mdx normalizes
+    // /lib → ./lib then probes ./lib.tsx — the index resolution is transparent
+    expect(imports).toMatchInlineSnapshot(`
+      [
+        "./lib.tsx",
+      ]
+    `)
+    // But absPath should point to the actual index file on disk
+    expect(result.pageImports['index']![0]!.absPath).toBe(path.join(project.pagesDir, 'lib', 'index.tsx'))
+  })
+
+  test('resolves index file in projectRoot fallback (/utils → root/utils/index.ts)', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { helper } from '/utils'
+
+# Home
+`,
+      },
+    ))
+
+    // Create utils/index.ts at projectRoot (not in pagesDir)
+    const utilsDir = path.join(project.root, 'utils')
+    fs.mkdirSync(utilsDir, { recursive: true })
+    fs.writeFileSync(path.join(utilsDir, 'index.ts'), 'export const helper = () => "hi"')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const imports = result.pageImports['index']?.map((i) => i.moduleKey)
+    // Same as above: ./utils.ts moduleKey, but absPath is utils/index.ts
+    expect(imports).toMatchInlineSnapshot(`
+      [
+        "./utils.ts",
+      ]
+    `)
+  })
+
+  test('deeply nested relative import resolves to file outside pagesDir', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['guides/deep/page'] }],
+      },
+      {
+        'guides/deep/page': `---
+title: Deep Page
+---
+
+import { helper } from '../../../lib/helper'
+
+# Deep Page
+`,
+      },
+    ))
+
+    // ../../../lib/helper from pages/guides/deep/ → root/lib/helper
+    const libDir = path.join(project.root, 'lib')
+    fs.mkdirSync(libDir, { recursive: true })
+    fs.writeFileSync(path.join(libDir, 'helper.ts'), 'export const helper = () => "hi"')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const imports = result.pageImports['guides/deep/page']?.map((i) => i.moduleKey)
+    expect(imports).toMatchInlineSnapshot(`
+      [
+        "./lib/helper.ts",
+      ]
+    `)
+  })
+
+  test('relative import from root-level page to sibling outside pagesDir', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Config } from '../config/settings'
+
+# Home
+`,
+      },
+    ))
+
+    // ../config/settings from pages/index → root/config/settings
+    const configDir = path.join(project.root, 'config')
+    fs.mkdirSync(configDir, { recursive: true })
+    fs.writeFileSync(path.join(configDir, 'settings.ts'), 'export const Config = { debug: true }')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const imports = result.pageImports['index']?.map((i) => i.moduleKey)
+    expect(imports).toMatchInlineSnapshot(`
+      [
+        "./config/settings.ts",
+      ]
+    `)
+  })
+
+  test('import with explicit extension skips probing', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Greeting } from '/snippets/greeting.tsx'
+
+# Home
+
+<Greeting />
+`,
+      },
+    ))
+
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.writeFileSync(path.join(snippetsDir, 'greeting.tsx'), 'export const Greeting = () => <div>hi</div>')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const imports = result.pageImports['index']?.map((i) => i.moduleKey)
+    expect(imports).toMatchInlineSnapshot(`
+      [
+        "./snippets/greeting.tsx",
+      ]
+    `)
+  })
+
+  test('duplicate imports across pages produce deduplicated module keys', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page-a', 'page-b'] }],
+      },
+      {
+        'page-a': `---
+title: Page A
+---
+
+import { Shared } from '/shared/component'
+
+# Page A
+
+<Shared />
+`,
+        'page-b': `---
+title: Page B
+---
+
+import { Shared } from '/shared/component'
+
+# Page B
+
+<Shared />
+`,
+      },
+    ))
+
+    const sharedDir = path.join(project.pagesDir, 'shared')
+    fs.mkdirSync(sharedDir, { recursive: true })
+    fs.writeFileSync(path.join(sharedDir, 'component.tsx'), 'export const Shared = () => <div>s</div>')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    // Both pages should resolve the same module key
+    const aImports = result.pageImports['page-a']?.map((i) => i.moduleKey)
+    const bImports = result.pageImports['page-b']?.map((i) => i.moduleKey)
+    expect(aImports).toEqual(['./shared/component.tsx'])
+    expect(bImports).toEqual(['./shared/component.tsx'])
+
+    // absPath should be the same for both
+    const aPath = result.pageImports['page-a']![0]!.absPath
+    const bPath = result.pageImports['page-b']![0]!.absPath
+    expect(aPath).toBe(bPath)
+  })
+
+  test('unresolvable import is silently skipped', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['index'] }],
+      },
+      {
+        index: `---
+title: Home
+---
+
+import { Ghost } from '/does-not-exist'
+import { Real } from '/snippets/real'
+
+# Home
+
+<Real />
+`,
+      },
+    ))
+
+    const snippetsDir = path.join(project.pagesDir, 'snippets')
+    fs.mkdirSync(snippetsDir, { recursive: true })
+    fs.writeFileSync(path.join(snippetsDir, 'real.tsx'), 'export const Real = () => <div>r</div>')
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    // Only the resolvable import should appear
+    const imports = result.pageImports['index']?.map((i) => i.moduleKey)
+    expect(imports).toEqual(['./snippets/real.tsx'])
+  })
+
   test('collects image dependency paths from imported .md files', async () => {
     const project = tracked(createProject(
       {
@@ -1434,6 +1812,85 @@ Content here.
 
     const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
     // /setup exists, hash should be stripped → no warning
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('validates .md/.mdx extension links against page slugs', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index', 'getting-started'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+See [guide](/getting-started.md) and [setup](/getting-started.mdx).
+Also [broken](/nonexistent.md) and [relative](./getting-started.mdx).
+`,
+        'getting-started': `---
+title: Getting Started
+---
+
+Content here.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    // /getting-started.md and /getting-started.mdx should resolve to /getting-started → no warning
+    // ./getting-started.mdx from index → /getting-started → no warning
+    // /nonexistent.md should strip to /nonexistent → warn
+    expect(warnings.some((w) => w.includes('/getting-started'))).toBe(false)
+    expect(warnings.some((w) => w.includes('/nonexistent'))).toBe(true)
+    expect(warnings).toHaveLength(1)
+  })
+
+  test('validates .md/.mdx links with hash fragments', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index', 'setup'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Go to [install](/setup.md#installation).
+`,
+        setup: `---
+title: Setup
+---
+
+Content here.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    // /setup.md#installation → strips to /setup → exists → no warning
     expect(warnings).toHaveLength(0)
   })
 })

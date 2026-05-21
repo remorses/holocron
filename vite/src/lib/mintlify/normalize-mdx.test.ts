@@ -349,3 +349,94 @@ second paragraph
     `)
   })
 })
+
+describe('normalizeMdx .md/.mdx link extension stripping', () => {
+  test('strips .md extension from markdown links', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [guide](/getting-started.md) and [setup](./setup.md).
+`))
+    expect(content).toContain('[guide](/getting-started)')
+    expect(content).toContain('[setup](./setup)')
+    expect(content).not.toContain('.md')
+  })
+
+  test('strips .mdx extension from markdown links', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [guide](/getting-started.mdx) and [setup](./setup.mdx).
+`))
+    expect(content).toContain('[guide](/getting-started)')
+    expect(content).toContain('[setup](./setup)')
+    expect(content).not.toContain('.mdx')
+  })
+
+  test('preserves hash fragment after stripping extension', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [install](/getting-started.md#installation).
+`))
+    expect(content).toContain('[install](/getting-started#installation)')
+    expect(content).not.toContain('.md')
+  })
+
+  test('preserves query string after stripping extension', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [filtered](/api.mdx?version=2).
+`))
+    expect(content).toContain('[filtered](/api?version=2)')
+    expect(content).not.toContain('.mdx')
+  })
+
+  test('does not strip extensions from external URLs', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [external](https://example.com/guide.md).
+`))
+    expect(content).toContain('https://example.com/guide.md')
+  })
+
+  test('does not strip non-.md extensions', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+Download [schema](/openapi.json) and [logo](/logo.png).
+`))
+    expect(content).toContain('/openapi.json')
+    expect(content).toContain('/logo.png')
+  })
+
+  test('strips .md from JSX href attributes', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+<Card href="/getting-started.md">Get Started</Card>
+<a href="./setup.mdx">Setup</a>
+`))
+    expect(content).toContain('href="/getting-started"')
+    expect(content).toContain('href="./setup"')
+    expect(content).not.toContain('.md')
+    expect(content).not.toContain('.mdx')
+  })
+
+  test('strips .md from relative ../path links', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [parent](../intro.md) and [deep](../../api/overview.mdx).
+`))
+    expect(content).toContain('[parent](../intro)')
+    expect(content).toContain('[deep](../../api/overview)')
+  })
+
+  test('does not strip .md inside query strings or hash values', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [search](/search?file=guide.md) and [section](/page#readme.md).
+`))
+    expect(content).toContain('/search?file=guide.md')
+    expect(content).toContain('/page#readme.md')
+  })
+
+  test('strips extension from reference-style link definitions', () => {
+    const { content } = expectSuccess(normalizeMdx(`
+See [guide][g] and [setup][s].
+
+[g]: /getting-started.md
+[s]: ./setup.mdx#config
+`))
+    expect(content).toContain('[g]: /getting-started')
+    expect(content).not.toContain('/getting-started.md')
+    expect(content).toContain('[s]: ./setup#config')
+    expect(content).not.toContain('./setup.mdx')
+  })
+})

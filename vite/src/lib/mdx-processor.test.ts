@@ -701,4 +701,74 @@ Also [image](/logo.png) and [real page](/getting-started).
       ]
     `)
   })
+
+  test('collects .md/.mdx links as page links with extensions stripped', () => {
+    const result = processMdx(`
+See [guide](/getting-started.md) and [setup](./setup.mdx).
+Also [nested](/docs/intro.md) and [relative](../api/overview.mdx).
+`)
+    // .md/.mdx are page links, not static files — they should be collected
+    // with extensions stripped so they match page hrefs
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/getting-started",
+        "./setup",
+        "/docs/intro",
+        "../api/overview",
+      ]
+    `)
+  })
+
+  test('collects .md/.mdx JSX href links with extensions stripped', () => {
+    const result = processMdx(`
+<Card href="/getting-started.mdx">Get Started</Card>
+<a href="./setup.md">Setup</a>
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/getting-started",
+        "./setup",
+      ]
+    `)
+  })
+
+  test('.md/.mdx links with hash fragments strip extension but keep hash', () => {
+    const result = processMdx(`
+See [install](/getting-started.md#installation) and [config](./setup.mdx#config).
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/getting-started#installation",
+        "./setup#config",
+      ]
+    `)
+  })
+
+  test('does not strip .md inside query strings or hash values', () => {
+    const result = processMdx(`
+See [search](/search?file=guide.md) and [section](/page#readme.md).
+`)
+    // .md inside query/hash should NOT be stripped — only path extensions
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/search?file=guide.md",
+        "/page#readme.md",
+      ]
+    `)
+  })
+
+  test('collects reference-style markdown links with extension stripped', () => {
+    const result = processMdx(`
+See [guide][g] and [setup][s].
+
+[g]: /getting-started.md
+[s]: ./setup.mdx#config
+`)
+    expect(result.internalLinks.map((l) => l.href)).toMatchInlineSnapshot(`
+      [
+        "/getting-started",
+        "./setup#config",
+      ]
+    `)
+  })
 })

@@ -2,7 +2,7 @@ import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
 import { gfmToMarkdown } from 'mdast-util-gfm'
 import { mdxToMarkdown } from 'mdast-util-mdx'
 import { toMarkdown } from 'mdast-util-to-markdown'
-import type { Root } from 'mdast'
+import type { Root, RootContent } from 'mdast'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
@@ -16,6 +16,7 @@ import { remarkMermaidCode } from './remark-mermaid.ts'
 import { remarkSidebarComponents } from './remark-sidebar-components.ts'
 import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
 import { HolocronMdxParseError, extractParseErrorInfo } from '../logger.ts'
+import { stripMdExtFromPath, isExternalUrl } from '../link-utils.ts'
 
 export type NormalizedMdx = {
   /** Serialized MDX string after all remark transforms */
@@ -56,6 +57,7 @@ export function normalizeMdx(content: string, source?: string, options?: Normali
   }
 
   processor
+    .use(remarkStripMdExtensions)
     .use(remarkHeadings as never)
     .use(remarkCodeGroup)
     .use(remarkDetailsToggle)
@@ -102,5 +104,50 @@ function trySync<T>(fn: () => T, mdxSource: string, source?: string): HolocronMd
     if (err instanceof HolocronMdxParseError) return err
     const { line, column, reason } = extractParseErrorInfo(err)
     return new HolocronMdxParseError({ reason, line, column, source, mdxSource })
+  }
+}
+
+/**
+ * Strip .md/.mdx extensions from internal links so they resolve to page
+ * slugs instead of raw markdown files. Handles markdown links [text](url),
+ * reference-style definitions [id]: /path.md, and JSX href attributes.
+ *
+ * Only strips from local paths. External URLs are left alone.
+ * Only strips from the path portion — query strings and hash fragments
+ * that contain ".md" are preserved.
+ */
+function remarkStripMdExtensions() {
+  return (tree: Root) => {
+    walkStripMd(tree.children)
+  }
+}
+
+function stripMdExtLocal(url: string): string {
+  if (!url || isExternalUrl(url)) return url
+  return stripMdExtFromPath(url)
+}
+
+function walkStripMd(nodes: RootContent[]) {
+  for (const node of nodes) {
+    if (node.type === 'link') {
+      node.url = stripMdExtLocal(node.url)
+    }
+    // Reference-style link definitions: [id]: /path.md
+    if (node.type === 'definition') {
+      node.url = stripMdExtLocal(node.url)
+    }
+    // JSX elements with href attribute
+    if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
+      const jsxNode = node as { attributes?: Array<{ type: string; name: string; value: unknown }> }
+      for (const attr of jsxNode.attributes ?? []) {
+        if (attr.type === 'mdxJsxAttribute' && attr.name === 'href' && typeof attr.value === 'string') {
+          attr.value = stripMdExtLocal(attr.value)
+        }
+      }
+    }
+    const children = Reflect.get(node, 'children')
+    if (Array.isArray(children)) {
+      walkStripMd(children)
+    }
   }
 }

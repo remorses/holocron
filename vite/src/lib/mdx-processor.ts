@@ -18,6 +18,7 @@ import { HolocronMdxParseError } from './logger.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
 import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
 import { extractImports } from 'safe-mdx/parse'
+import { stripMdExtFromPath, isExternalUrl } from './link-utils.ts'
 
 /** A binding from an MDX import declaration — maps a local JSX name to its
  *  source specifier. For `import Foo from './bar'`, local='Foo' source='./bar'.
@@ -286,19 +287,14 @@ function collectImageSrcs(root: Root): string[] {
 
 /** Hrefs that are clearly not internal page links. */
 function isExternalOrSpecialHref(href: string): boolean {
-  if (
-    href.startsWith('http://') ||
-    href.startsWith('https://') ||
-    href.startsWith('mailto:') ||
-    href.startsWith('tel:') ||
-    href.startsWith('#') ||
-    href.startsWith('javascript:')
-  ) return true
+  if (href.startsWith('#') || isExternalUrl(href)) return true
   // Skip links to static files (e.g. /openapi.json, /docs/guide.pdf).
   // These are public assets, not pages. Strip query/hash before checking.
+  // .md/.mdx links are page links, not static files — they get their
+  // extension stripped during collection and resolve to page slugs.
   const clean = href.replace(/[?#].*$/, '')
   const lastSegment = clean.split('/').pop() ?? ''
-  if (/\.[a-z0-9]+$/i.test(lastSegment)) return true
+  if (/\.[a-z0-9]+$/i.test(lastSegment) && !/\.mdx?$/i.test(lastSegment)) return true
   return false
 }
 
@@ -322,6 +318,9 @@ function collectInternalLinks(root: Root): InternalLink[] {
 
   function add(href: string, line?: number) {
     if (!href || isExternalOrSpecialHref(href)) return
+    // Strip .md/.mdx extension from the path portion only, preserving
+    // hash/query that may themselves contain ".md" strings.
+    href = stripMdExtFromPath(href)
     // Deduplicate by href (keep first occurrence for line number)
     if (seen.has(href)) return
     seen.add(href)
@@ -331,6 +330,10 @@ function collectInternalLinks(root: Root): InternalLink[] {
   function walk(nodes: RootContent[]) {
     for (const node of nodes) {
       if (node.type === 'link' && node.url) {
+        add(node.url, node.position?.start?.line)
+      }
+      // Reference-style links: [text][id] with [id]: /path.md
+      if (node.type === 'definition' && node.url) {
         add(node.url, node.position?.start?.line)
       }
       if (isJsxElement(node) && JSX_HREF_ELEMENTS.has(node.name ?? '')) {
