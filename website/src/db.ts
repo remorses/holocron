@@ -130,8 +130,28 @@ const findOrgForUser = memoize({
 /** Get or create the user's org. Idempotent and race-safe:
  *  if two concurrent requests both try to create, the loser catches
  *  the unique constraint error and re-reads the winner's row.
- *  The lookup is memoized; the create path always hits D1. */
-export async function ensureOrg(userId: string, userName: string): Promise<{ id: string; name: string }> {
+ *  The lookup is memoized; the create path always hits D1.
+ *
+ *  When `targetOrgId` is provided, returns that specific org instead of the
+ *  user's default. Validates the user is a member of the target org;
+ *  throws 403 if not. Does NOT auto-create an org when a target is given. */
+export async function ensureOrg(
+  userId: string,
+  userName: string,
+  targetOrgId?: string,
+): Promise<{ id: string; name: string }> {
+  if (targetOrgId) {
+    const db = getDb()
+    const membership = await db.query.orgMember.findFirst({
+      where: { userId, orgId: targetOrgId },
+      with: { org: true },
+    })
+    if (!membership?.org) {
+      throw json({ error: 'not a member of the specified org' }, { status: 403 })
+    }
+    return { id: membership.org.id, name: membership.org.name }
+  }
+
   const cached = await findOrgForUser(userId)
   if (cached) return cached
 
@@ -155,6 +175,18 @@ export async function ensureOrg(userId: string, userName: string): Promise<{ id:
     if (winner?.org) return { id: winner.org.id, name: winner.org.name }
     throw err
   }
+}
+
+/** Get all orgs a user is a member of, with their role. */
+export async function getOrgsForUser(userId: string): Promise<Array<{ id: string; name: string; role: string }>> {
+  const db = getDb()
+  const memberships = await db.query.orgMember.findMany({
+    where: { userId },
+    with: { org: true },
+  })
+  return memberships
+    .filter((m) => m.org)
+    .map((m) => ({ id: m.org!.id, name: m.org!.name, role: m.role }))
 }
 
 // ── API key validation ──────────────────────────────────────────────

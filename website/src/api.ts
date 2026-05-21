@@ -19,6 +19,7 @@ import {
   getDb,
   requireSession,
   ensureOrg,
+  getOrgsForUser,
   generateApiKey,
   hashApiKey,
 } from './db.ts'
@@ -219,52 +220,125 @@ export const apiApp = new Spiceflow()
     },
   })
 
+  // ── Account info ─────────────────────────────────────────────────
+
+  .route({
+    method: 'GET',
+    path: '/api/v0/me',
+    detail: {
+      summary: 'Current user info',
+      description: 'Returns the authenticated user, all orgs they belong to, and projects per org.',
+      tags: ['Account'],
+    },
+    response: {
+      200: z.object({
+        user: z.object({
+          name: z.string(),
+          email: z.string(),
+          image: z.string().nullable(),
+        }),
+        orgs: z.array(z.object({
+          id: z.string(),
+          name: z.string(),
+          role: z.string(),
+          projects: z.array(ProjectResponse),
+        })),
+      }),
+    },
+    async handler({ request }) {
+      const session = await requireSession(request)
+      const orgs = await getOrgsForUser(session.userId)
+      const db = getDb()
+
+      const orgsWithProjects = await Promise.all(
+        orgs.map(async (org) => {
+          const projects = await db.query.project.findMany({
+            where: { orgId: org.id },
+            orderBy: { updatedAt: 'desc' },
+          })
+          return { ...org, projects }
+        }),
+      )
+
+      return {
+        user: {
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+        },
+        orgs: orgsWithProjects,
+      }
+    },
+  })
+
   // ── Projects (session auth, under org) ───────────────────────────────
 
-  // List all projects for the caller's org.
+  // List all projects across all orgs the user belongs to.
   .route({
     method: 'GET',
     path: '/api/v0/projects',
     detail: {
       summary: 'List projects',
-      description: 'Lists all projects for the caller\'s org.',
+      description: 'Lists all projects across all orgs the caller belongs to.',
       tags: ['Projects'],
     },
-    response: { 200: z.object({ projects: z.array(ProjectResponse) }) },
+    response: {
+      200: z.object({
+        projects: z.array(
+          ProjectResponse.extend({
+            orgId: z.string(),
+            orgName: z.string(),
+          }),
+        ),
+      }),
+    },
     async handler({ request }) {
       const session = await requireSession(request)
-      const org = await ensureOrg(session.userId, session.user.name)
+      const orgs = await getOrgsForUser(session.userId)
+
+      // If user has no orgs yet, create their default one
+      if (orgs.length === 0) {
+        const org = await ensureOrg(session.userId, session.user.name)
+        return { projects: [] }
+      }
 
       const db = getDb()
-      const projects = await db.query.project.findMany({
-        where: { orgId: org.id },
-        orderBy: { updatedAt: 'desc' },
-      })
+      const allProjects = await Promise.all(
+        orgs.map(async (org) => {
+          const projects = await db.query.project.findMany({
+            where: { orgId: org.id },
+            orderBy: { updatedAt: 'desc' },
+          })
+          return projects.map((p) => ({ ...p, orgName: org.name }))
+        }),
+      )
 
-      return { projects }
+      return { projects: allProjects.flat() }
     },
   })
 
   // Called by: @holocron.so/cli create after device flow login,
   // and the /deploy server action (via actions.tsx).
   // Creates a docs site project record tied to the caller's org (auto-created if needed).
+  // When orgId is provided, creates the project in that specific org (user must be a member).
   .route({
     method: 'POST',
     path: '/api/v0/projects',
     request: z.object({
       name: z.string().min(1),
+      orgId: z.string().min(1).optional().describe('Target org ID. If omitted, uses the default org (auto-created if needed).'),
     }),
     detail: {
       summary: 'Create project',
-      description: 'Creates a new project in the caller\'s org (auto-created if needed).',
+      description: 'Creates a new project in the caller\'s org (auto-created if needed). Pass orgId to target a specific org.',
       tags: ['Projects'],
     },
     response: { 200: ProjectResponse },
     async handler({ request }) {
       const session = await requireSession(request)
-      const org = await ensureOrg(session.userId, session.user.name)
-
       const body = await request.json()
+      const org = await ensureOrg(session.userId, session.user.name, body.orgId)
+
       const db = getDb()
       const projectId = ulid()
 

@@ -218,11 +218,21 @@ async function resolveProjectId(ctx: {
   if (projects.length === 1) return projects[0]!.projectId
   if (ctx.nonInteractive) {
     ctx.output.error(logger.error('Multiple projects found. Pass --project <id> to select one.'))
+    ctx.output.error(logger.error('Run `holocron whoami` to see all projects and their IDs.'))
     return new Error('Multiple projects')
   }
+
+  // Check if projects span multiple orgs — show org name in that case
+  const orgNames = new Set(projects.map((p: any) => p.orgName).filter(Boolean))
+  const showOrg = orgNames.size > 1
+
   const selected = await clack.select({
     message: 'Select a project to deploy to:',
-    options: projects.map((p) => ({ value: p.projectId, label: p.name, hint: p.projectId })),
+    options: projects.map((p: any) => ({
+      value: p.projectId,
+      label: showOrg && p.orgName ? `${p.name} (${p.orgName})` : p.name,
+      hint: p.projectId,
+    })),
   })
   if (clack.isCancel(selected)) return new Error('Cancelled')
   return selected

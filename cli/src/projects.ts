@@ -1,5 +1,9 @@
 // Project management commands: list, create.
 // Each command calls getApiClient() internally for typed API access.
+//
+// projects list: returns projects from ALL orgs the user belongs to, with org name.
+// projects create: accepts --org to target a specific org. If the user has multiple
+// orgs and no --org is given, prompts interactively.
 
 import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
@@ -28,6 +32,7 @@ projectsCli
     const formatted = res.projects.map((p: any) => ({
       id: p.projectId,
       name: p.name,
+      org: p.orgName,
       ...(p.githubOwner && p.githubRepo ? { github: `${p.githubOwner}/${p.githubRepo}` } : {}),
       created: new Date(p.createdAt).toISOString().slice(0, 10),
     }))
@@ -38,12 +43,14 @@ projectsCli
 projectsCli
   .command('projects create', 'Create a new project')
   .option('--name [name]', 'Project name')
+  .option('--org [orgId]', 'Org ID to create the project in (see `holocron whoami` for org IDs)')
   .action(async (options, { console: output, process: proc }) => {
     const { safeFetch } = getApiClient()
+    const nonInteractive = isAgent || !process.stdin.isTTY
 
     let name = options.name
     if (!name) {
-      if (isAgent || !process.stdin.isTTY) {
+      if (nonInteractive) {
         output.error(logger.error('Missing --name. Usage: holocron projects create --name "My Docs"'))
         return proc.exit(1)
       }
@@ -55,9 +62,27 @@ projectsCli
       name = prompted
     }
 
+    // Resolve org: explicit flag, interactive selection if multiple, or let server pick default
+    let orgId = options.org
+    if (!orgId && !nonInteractive) {
+      const meRes = await safeFetch('/api/v0/me')
+      if (!(meRes instanceof Error) && meRes.orgs.length > 1) {
+        const selected = await clack.select({
+          message: 'Which org should own this project?',
+          options: meRes.orgs.map((o: any) => ({
+            value: o.id,
+            label: o.name,
+            hint: `${o.projects.length} project${o.projects.length === 1 ? '' : 's'}`,
+          })),
+        })
+        if (clack.isCancel(selected)) return proc.exit(1)
+        orgId = selected as string
+      }
+    }
+
     const res = await safeFetch('/api/v0/projects', {
       method: 'POST',
-      body: { name },
+      body: { name, ...(orgId ? { orgId } : {}) },
     })
     if (res instanceof Error) {
       output.error(logger.error(`Failed to create project: ${res.message}`))
