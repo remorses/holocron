@@ -35,7 +35,7 @@ function parseHighlightLines(value: string, lineCount: number): Set<number> | un
 export function CodeBlock({
   children,
   lang = 'jsx',
-  lineHeight = '1.6',
+  lineHeight: lineHeightProp,
   showLineNumbers = true,
   bleed = false,
   title,
@@ -53,6 +53,7 @@ export function CodeBlock({
   /** Comma-separated line numbers/ranges to highlight, e.g. "1-3,7". */
   highlight?: string
 }) {
+  const lineHeight = lineHeightProp ?? (lang === 'diagram' ? '1.3' : '1.6')
   const lines = children.split('\n')
   const highlightLines = useMemo(
     () => highlight ? parseHighlightLines(highlight, lines.length) : undefined,
