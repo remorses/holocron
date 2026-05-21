@@ -157,6 +157,17 @@ export async function resolveGithubOidcDeployAuth(
     )
   }
 
+  // For org repos (owner != actor), verify the deploying user is an admin
+  // of the GitHub org. Personal repos (owner == actor) skip this check.
+  const isOrgRepo = oidcResult.actor && oidcResult.owner !== oidcResult.actor
+  if (isOrgRepo) {
+    await requireGitHubOrgAdmin({
+      accessToken: githubAccount.accessToken,
+      org: oidcResult.owner,
+      username: oidcResult.actor!,
+    })
+  }
+
   const adminMembership = await db.query.orgMember.findFirst({
     where: { userId: githubAccount.userId, role: 'admin' },
     with: { org: true },
@@ -290,4 +301,70 @@ async function upsertProjectForOidc({
   })
 
   return projectId
+}
+
+// ── GitHub org membership check ─────────────────────────────────────
+
+/** Verify the GitHub user is an admin of the given GitHub org.
+ *  Uses the user's stored OAuth access token (requires read:org scope).
+ *  Throws a JSON error if the user is not an admin or the token lacks scope. */
+async function requireGitHubOrgAdmin({
+  accessToken,
+  org,
+  username,
+}: {
+  accessToken: string | null
+  org: string
+  username: string
+}): Promise<void> {
+  if (!accessToken) {
+    throw json(
+      { error: `cannot verify org membership for ${org}. sign in again at holocron.so to grant the required permissions.` },
+      { status: 403 },
+    )
+  }
+
+  const res = await fetch(`https://api.github.com/orgs/${encodeURIComponent(org)}/memberships/${encodeURIComponent(username)}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'holocron-deploy',
+    },
+  })
+
+  if (res.status === 401 || res.status === 403) {
+    throw json(
+      { error: `cannot verify org membership for ${org}. sign in again at holocron.so to grant the read:org permission.` },
+      { status: 403 },
+    )
+  }
+
+  if (res.status === 404) {
+    throw json(
+      { error: `GitHub user ${username} is not a member of the ${org} organization.` },
+      { status: 403 },
+    )
+  }
+
+  if (!res.ok) {
+    throw json(
+      { error: `failed to verify org membership: GitHub API returned ${res.status}` },
+      { status: 502 },
+    )
+  }
+
+  const data = await res.json() as { role?: string; state?: string }
+  if (data.state !== 'active') {
+    throw json(
+      { error: `GitHub user ${username} has a pending invitation to ${org} but is not yet an active member.` },
+      { status: 403 },
+    )
+  }
+  if (data.role !== 'admin') {
+    throw json(
+      { error: `GitHub user ${username} is a member of ${org} but not an admin. Only org admins can deploy.` },
+      { status: 403 },
+    )
+  }
 }
