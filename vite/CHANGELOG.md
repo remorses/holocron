@@ -1,5 +1,33 @@
 # @holocron.so/vite
 
+## 0.12.0
+
+1. **Code block meta props: bleed, lines, title, highlight** — fenced code blocks now support meta string options parsed at build time:
+
+   ````md
+   ```ts title="vite.config.ts" highlight="3-5" lines=false bleed=true
+   import { defineConfig } from 'vite'
+   import holocron from '@holocron.so/vite'
+
+   export default defineConfig({
+     plugins: [holocron()],
+   })
+   ```
+   ````
+
+   - `title="..."` or bare words → filename/label header above the code block
+   - `highlight="1-3,7"` → dims non-highlighted lines with a background overlay
+   - `lines=false` → hides line numbers (on by default)
+   - `bleed=true` → extends the code block into page margins
+
+2. **Improved inline code in headings** — inline code inside headings now inherits the heading's font size and weight instead of shrinking to `0.875em`. Background pill is hidden, and color uses full-contrast `var(--foreground)` to match heading text. H2 headings also get a decorative divider line (previously h1 only).
+
+3. **Theme-adaptive diagram labels** — ASCII diagram labels in code blocks now use `var(--primary)` instead of hardcoded green values, so they automatically match the site's color theme.
+
+4. **Tighter line-height for diagram code blocks** — code blocks with diagram languages (`diagram`, `ascii`, `box`) use `line-height: 1.3` instead of `1.6`, improving vertical alignment of box-drawing characters and connected lines.
+
+5. **Inline code color fix** — `.inline-code` now uses `var(--foreground)` in both light and dark mode instead of hardcoded `rgba()` values, so it adapts to custom themes.
+
 ## 0.11.0
 
 1. **Inline `.md`/`.mdx` imports at remark level** — imported markdown files are now spliced directly into the page's mdast tree before any remark plugins run, replacing the previous multi-pipeline approach. Headings from imported files appear in the TOC automatically, images go through the normal build-time processor, and all remark plugins (callouts, code groups, mermaid, etc.) apply to the inlined content. Recursive imports are supported with cycle detection.
