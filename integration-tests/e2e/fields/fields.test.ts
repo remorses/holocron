@@ -187,12 +187,11 @@ test.describe("hidden filters", () => {
     expect(html).not.toContain(">Secret<");
   });
 
-  test("hidden anchor does NOT appear in sidebar", async ({ request }) => {
+  test("hidden anchor does NOT appear in tab bar", async ({ request }) => {
     const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
-    // Anchors default to sidebar placement
     expect(html).toContain("Visible Anchor");
     expect(html).not.toContain("Hidden Anchor");
   });

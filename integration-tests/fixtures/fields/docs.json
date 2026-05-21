@@ -81,8 +81,8 @@
     ],
     "global": {
       "anchors": [
-        { "anchor": "Visible Anchor", "href": "https://example.com/a" },
-        { "anchor": "Hidden Anchor", "href": "https://example.com/b", "hidden": true }
+        { "anchor": "Visible Anchor", "href": "https://example.com/a", "placement": "tabs" },
+        { "anchor": "Hidden Anchor", "href": "https://example.com/b", "hidden": true, "placement": "tabs" }
       ]
     }
   }
