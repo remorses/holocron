@@ -44,6 +44,10 @@ Playwriter gives agents the **full Playwright API** through a single `execute` t
 tool, any Playwright code, no wrappers. Low context usage because there's no schema bloat from dozens of
 tool definitions. And it runs in your existing browser, so **nothing extra gets spawned**.
 
+## The `execute` tool
+
+One tool to rule them all. Pass any Playwright code and it runs in your browser.
+
 ## Getting started
 
 **Four steps** and your agent is browsing.
@@ -91,7 +95,7 @@ playwriter -e "page.locator('aria-ref=e5').click()"
 
 *Extension icon green = connected. Gray = not attached to this tab.*
 
-## How it works
+## Using `chrome.debugger` API
 
 Click the extension icon on a tab — it attaches via `chrome.debugger` and opens a
 WebSocket to a local relay. Your agent (CLI, MCP, or a Playwright script) connects to the same relay.

@@ -95,8 +95,12 @@
 .editorial-heading .inline-code {
   font-size: inherit;
   font-weight: inherit;
-  padding: 0;
+  line-height: inherit;
+  display: inline;
+  padding: 2px 6px;
   color: var(--foreground);
+  background: var(--accent);
+  border-radius: 4px;
 
   @variant dark {
     color: var(--foreground);
