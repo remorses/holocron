@@ -63,7 +63,7 @@ export function Marquee({
       <style dangerouslySetInnerHTML={{ __html: keyframes }} />
       <div
         className={cn(
-          'flex w-full overflow-hidden',
+          'flex w-full my-6 overflow-hidden',
           isVertical && 'flex-col',
           className,
         )}

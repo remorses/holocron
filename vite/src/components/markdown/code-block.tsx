@@ -181,7 +181,7 @@ export function CodeBlock({
           type='button'
           onClick={handleCopy}
           aria-label='Copy code'
-          className='absolute right-1 top-1 z-10 flex size-[28px] cursor-pointer items-center justify-center rounded-md bg-background/80 text-muted-foreground opacity-0 backdrop-blur-sm transition-all hover:text-foreground group-hover/code:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          className='absolute -mt-2 right-1 top-1 z-10 flex size-[28px] cursor-pointer items-center justify-center rounded-md bg-background/80 text-muted-foreground opacity-0 backdrop-blur-sm transition-all hover:text-foreground group-hover/code:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           style={{ opacity: copied ? 1 : undefined }}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
