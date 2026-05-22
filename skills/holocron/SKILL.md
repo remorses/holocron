@@ -245,10 +245,14 @@ See https://holocron.so/docs/create/redirects.md for details.
 
 Holocron warns about internal links pointing to non-existent pages during build
 and dev. Links to redirect sources and static files (`.json`, `.pdf`, etc.) are
-not flagged.
+not flagged. The warning includes the **source page**, **line number**, and the
+broken href so you can find and fix it quickly.
 
-When mounting docs alongside other routes, use `knownPaths` to suppress warnings
-for paths that exist outside of Holocron:
+### Suppressing false positives with `knownPaths`
+
+When docs are mounted alongside other routes (API endpoints, dashboards, blogs),
+internal links to those non-MDX paths trigger false broken-link warnings. Use
+the **`knownPaths`** field in `docs.json` to tell Holocron these paths are valid:
 
 ```jsonc
 {
@@ -256,7 +260,14 @@ for paths that exist outside of Holocron:
 }
 ```
 
-Supports exact paths and prefix patterns with trailing `*` wildcards.
+**Supported patterns:**
+
+- **Exact paths** — `"/dashboard"` matches only `/dashboard`.
+- **Wildcard prefixes** — `"/api/*"` matches `/api/users`, `/api/v2/health`,
+  and any other path starting with `/api/`.
+
+Wildcards only work as a trailing `/*` suffix. Glob patterns like `/api/*/users`
+are not supported.
 
 ## Custom entry (Spiceflow)
 
@@ -321,6 +332,29 @@ to see the full navigation tree and existing pages. Then decide:
 
 Never append unrelated sections to a page just because it was the last file you
 had open. Match the topic to the right page or create a new one.
+
+## Feedback loop
+
+After all your edits to MDX pages, `docs.json` navigation, or frontmatter, always **build the site** to
+catch issues early. The build surfaces broken internal links, MDX parsing errors, missing pages
+referenced in navigation, and rendering problems that the dev server may not show until a page
+is visited.
+
+```bash
+pnpm build
+```
+
+Fix any warnings or errors before considering the changes done. Common issues:
+
+- **Broken links** — an internal `[link](/some-page)` pointing to a slug not in navigation.
+- **MDX parse errors** — malformed JSX, unclosed tags, or invalid frontmatter YAML.
+- **Missing pages** — a slug listed in `docs.json` navigation but no matching `.mdx` file exists.
+- **Rendering errors** — components used incorrectly (e.g. wrong props, missing children).
+
+If the build warns about links to paths that are **not MDX pages but do exist** at runtime (API
+routes, external apps mounted alongside docs, dashboard pages), suppress those warnings with
+the `knownPaths` field in `docs.json`. See the [Broken link detection](#broken-link-detection)
+section below.
 
 ## CLI overview
 
