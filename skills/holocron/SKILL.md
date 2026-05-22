@@ -138,8 +138,20 @@ group. It looks like a duplicate in the navigation tree.
 ## Local imports
 
 MDX pages can import `.md`, `.mdx`, `.tsx`, or `.ts` files. Prefer **relative
-imports** (`./` or `../`) over absolute `/` imports. See
-https://holocron.so/docs/create/local-imports.md for details.
+imports** (`./` or `../`) over absolute `/` imports. For example, import a root
+README as the index page:
+
+```mdx
+---
+title: My Project
+---
+
+import Readme from '../../README.md'
+
+<Readme />
+```
+
+See https://holocron.so/docs/create/local-imports.md for details.
 
 ## MDX JSX in README files
 
