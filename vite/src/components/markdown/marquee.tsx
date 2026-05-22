@@ -2,13 +2,16 @@
 
 /**
  * Marquee — infinite scrolling component with customizable speed, direction,
- * fade edges, and slow-on-hover. Works with any children: icons, images,
- * cards, text, etc.
+ * fade edges, and progressive slow-on-hover. Works with any children: icons,
+ * images, cards, text, etc.
  *
- * Ported from spell.sh/spell-ui with adaptations for Holocron:
- * - Uses React.useId() for scoped keyframe names (multiple marquees per page)
+ * Animation is driven by requestAnimationFrame instead of CSS @keyframes so
+ * speed changes (hover slow-down) are smooth and progressive — no jumps.
+ * Speed lerps toward the target each frame with a configurable easing factor.
+ *
+ * Adapted for Holocron:
  * - Uses Holocron's cn() utility and CSS tokens
- * - No external dependencies (no styled-jsx, no cn from shadcn)
+ * - No external dependencies
  */
 
 import React from 'react'
@@ -17,7 +20,7 @@ import { cn } from '../../lib/css-vars.ts'
 interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Time in seconds for one full scroll cycle. Lower = faster. More children means more distance covered in the same time, so perceived speed increases with content. */
   duration?: number
-  /** Slow down the animation when the user hovers (3x slower). */
+  /** Progressively slow down the animation on hover (6x slower). */
   slowOnHover?: boolean
   /** Scroll direction. */
   direction?: 'left' | 'right' | 'up' | 'down'
@@ -28,6 +31,9 @@ interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Gap between items in pixels. */
   gap?: number
 }
+
+/** Lerp factor per frame — closer to 0 = smoother/slower transition, closer to 1 = snappier. */
+const LERP_FACTOR = 0.04
 
 export function Marquee({
   children,
@@ -40,23 +46,85 @@ export function Marquee({
   gap = 24,
   ...props
 }: MarqueeProps) {
-  const id = React.useId().replace(/:/g, '')
-  const [isHovered, setIsHovered] = React.useState(false)
-
   const items = React.Children.toArray(children)
   const isVertical = direction === 'up' || direction === 'down'
   const isReverse = direction === 'right' || direction === 'down'
 
-  const animationName = `marquee-${id}`
-  const keyframes = [
-    isVertical
-      ? `@keyframes ${animationName} { from { transform: translateY(0); } to { transform: translateY(-50%); } }`
-      : `@keyframes ${animationName} { from { transform: translateX(0); } to { transform: translateX(-50%); } }`,
-    // Transition-like slow-down: the inner div has two class states with different durations.
-    // CSS cannot transition animation-duration, so we use two classes and swap them.
-    `.${animationName}-track { animation: ${animationName} ${duration}s linear infinite; }`,
-    `.${animationName}-track.slow { animation-duration: ${duration * 3}s; }`,
-  ].join('\n')
+  const trackRef = React.useRef<HTMLDivElement>(null)
+  const offsetRef = React.useRef(0)
+  const speedRef = React.useRef(0) // current pixels-per-ms, set on first measure
+  const targetSpeedRef = React.useRef(0)
+  const lastTimeRef = React.useRef(0)
+  const hoveredRef = React.useRef(false)
+  const rafRef = React.useRef(0)
+  const measuredRef = React.useRef(false)
+
+  // Compute base speed once the track is measured. Half the track = one content
+  // width (children are duplicated). We scroll that distance in `duration` seconds.
+  const measureAndSetSpeed = React.useCallback(() => {
+    const el = trackRef.current
+    if (!el || measuredRef.current) return
+    const halfSize = isVertical ? el.scrollHeight / 2 : el.scrollWidth / 2
+    if (halfSize === 0) return
+    const basePxPerMs = halfSize / (duration * 1000)
+    speedRef.current = basePxPerMs
+    targetSpeedRef.current = basePxPerMs
+    measuredRef.current = true
+  }, [duration, isVertical])
+
+  React.useEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+
+    measureAndSetSpeed()
+
+    const tick = (now: number) => {
+      if (!measuredRef.current) measureAndSetSpeed()
+
+      const dt = lastTimeRef.current ? now - lastTimeRef.current : 16
+      lastTimeRef.current = now
+
+      // Lerp current speed toward target
+      speedRef.current += (targetSpeedRef.current - speedRef.current) * LERP_FACTOR
+
+      const halfSize = isVertical ? el.scrollHeight / 2 : el.scrollWidth / 2
+      if (halfSize > 0) {
+        offsetRef.current = (offsetRef.current + speedRef.current * dt) % halfSize
+        const translate = isReverse ? offsetRef.current : -offsetRef.current
+        el.style.transform = isVertical
+          ? `translateY(${translate}px)`
+          : `translateX(${translate}px)`
+      }
+
+      rafRef.current = requestAnimationFrame(tick)
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [isVertical, isReverse, measureAndSetSpeed])
+
+  // Update target speed when hover state changes
+  const onEnter = React.useCallback(() => {
+    if (!slowOnHover) return
+    hoveredRef.current = true
+    if (measuredRef.current) {
+      const el = trackRef.current
+      if (!el) return
+      const halfSize = isVertical ? el.scrollHeight / 2 : el.scrollWidth / 2
+      targetSpeedRef.current = halfSize / (duration * 6 * 1000)
+    }
+  }, [slowOnHover, duration, isVertical])
+
+  const onLeave = React.useCallback(() => {
+    if (!slowOnHover) return
+    hoveredRef.current = false
+    if (measuredRef.current) {
+      const el = trackRef.current
+      if (!el) return
+      const halfSize = isVertical ? el.scrollHeight / 2 : el.scrollWidth / 2
+      targetSpeedRef.current = halfSize / (duration * 1000)
+    }
+  }, [slowOnHover, duration, isVertical])
 
   const maskImage = fade
     ? isVertical
@@ -65,46 +133,42 @@ export function Marquee({
     : undefined
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: keyframes }} />
+    <div
+      className={cn(
+        'flex w-full my-6 overflow-hidden',
+        isVertical && 'flex-col',
+        className,
+      )}
+      style={{
+        maskImage,
+        WebkitMaskImage: maskImage,
+      }}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      {...props}
+    >
       <div
+        ref={trackRef}
         className={cn(
-          'flex w-full my-6 overflow-hidden',
+          'flex shrink-0 items-center',
           isVertical && 'flex-col',
-          className,
         )}
         style={{
-          maskImage,
-          WebkitMaskImage: maskImage,
+          gap: `${gap}px`,
+          willChange: 'transform',
         }}
-        onMouseEnter={() => slowOnHover && setIsHovered(true)}
-        onMouseLeave={() => slowOnHover && setIsHovered(false)}
-        {...props}
       >
-        <div
-          className={cn(
-            'flex shrink-0 items-center',
-            isVertical && 'flex-col',
-            `${animationName}-track`,
-            isHovered && 'slow',
-          )}
-          style={{
-            gap: `${gap}px`,
-            animationDirection: isReverse ? 'reverse' : 'normal',
-          }}
-        >
-          {items.map((item, i) => (
-            <div key={`a-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')}>
-              {item}
-            </div>
-          ))}
-          {items.map((item, i) => (
-            <div key={`b-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')} aria-hidden='true'>
-              {item}
-            </div>
-          ))}
-        </div>
+        {items.map((item, i) => (
+          <div key={`a-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')}>
+            {item}
+          </div>
+        ))}
+        {items.map((item, i) => (
+          <div key={`b-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')} aria-hidden='true'>
+            {item}
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   )
 }
