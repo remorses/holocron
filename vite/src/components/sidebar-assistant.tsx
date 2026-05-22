@@ -4,6 +4,7 @@ import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
+import { CHAT_INPUT_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import { collectAllPages, isVisibleNavPage } from '../navigation.ts'
 import {
@@ -119,6 +120,7 @@ export function SidebarAssistant() {
   // submits and clears draftText. We sync TO the store on every change
   // so the drawer can read it, but never read back from the store.
   const [inputValue, setInputValue] = useState('')
+  const drawerState = chatState((s) => s.drawerState)
 
   const handleChange = (value: string) => {
     setInputValue(value)
@@ -128,21 +130,38 @@ export function SidebarAssistant() {
   const handleSubmit = () => {
     const text = inputValue.trim()
     if (!text) return
-    chatState.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
+    withViewTransition(() => {
+      chatState.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
+    })
   }
 
   const handleFocus = () => {
     // Read the store lazily on focus instead of subscribing during render.
     // This keeps the sidebar input SSR-safe in the RSC page shell while
     // preserving the "reopen existing chat" behavior on the client.
-    // Sync current local value to draftText so the drawer shows it.
     if (chatState.getState().messages.length > 0) {
-      chatState.setState({ drawerState: 'open' })
+      withViewTransition(() => {
+        chatState.setState({ drawerState: 'open' })
+      })
     }
   }
 
+  // Sidebar owns the view-transition-name only when drawer is closed.
+  // When drawer is open, the drawer footer owns it instead.
+  // Also hide the sidebar input when the drawer is open so only one
+  // textarea is visible — the view transition already captured the old
+  // snapshot before this state update commits.
+  const isDrawerOpen = drawerState === 'open'
+  const vtName = isDrawerOpen ? 'none' : CHAT_INPUT_VT_NAME
+
   return (
-    <div className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'>
+    <div
+      className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
+      style={{
+        viewTransitionName: vtName,
+        visibility: isDrawerOpen ? 'hidden' : 'visible',
+      } as React.CSSProperties}
+    >
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
         <span className='text-muted-foreground shrink-0'>
           <InfoCircleIcon />

@@ -493,3 +493,25 @@
 [data-rmiz-modal][open] [data-rmiz-modal-overlay="visible"] {
   background-color: var(--background);
 }
+
+/* ── View transition: chat input morph (sidebar ↔ drawer) ────────── */
+::view-transition-group(holocron-chat-input) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Cross-fade the old/new snapshots smoothly */
+::view-transition-old(holocron-chat-input),
+::view-transition-new(holocron-chat-input) {
+  animation-duration: 250ms;
+  animation-timing-function: ease;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(holocron-chat-input),
+  ::view-transition-old(holocron-chat-input),
+  ::view-transition-new(holocron-chat-input) {
+    animation-duration: 0ms;
+  }
+}

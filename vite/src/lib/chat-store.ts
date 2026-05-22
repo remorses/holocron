@@ -5,6 +5,7 @@
 
 import { createStore } from 'zustand'
 import type { ReactNode } from 'react'
+import { flushSync } from 'react-dom'
 
 export type DrawerState = 'closed' | 'open'
 
@@ -64,3 +65,25 @@ export const chatStore = createStore<ChatState>(() => ({
   abortController: null,
   errorMessage: null,
 }))
+
+/**
+ * View transition name shared between sidebar assistant and drawer footer.
+ * Only one element should have this name at a time — the sidebar owns it
+ * when the drawer is closed, the drawer footer owns it when open.
+ */
+export const CHAT_INPUT_VT_NAME = 'holocron-chat-input'
+
+/**
+ * Wrap a DOM mutation in the browser's View Transitions API.
+ * Falls back to immediate execution when the API is unavailable.
+ * Uses flushSync so React commits synchronously inside the transition callback.
+ */
+export function withViewTransition(fn: () => void): void {
+  if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+    ;(document as any).startViewTransition(() => {
+      flushSync(fn)
+    })
+  } else {
+    fn()
+  }
+}

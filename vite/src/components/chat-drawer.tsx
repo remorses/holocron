@@ -16,6 +16,7 @@ import { createPortal } from 'react-dom'
 import { decodeFederationPayload } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
 import type { ChatMessage, ChatModelMessage, ChatPart } from '../lib/chat-store.ts'
+import { CHAT_INPUT_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import {
   ChatMessages,
@@ -181,7 +182,9 @@ function ChatDrawerInner() {
   // ── Close ──────────────────────────────────────────────────────
 
   const handleClose = useCallback(() => {
-    chatState.setState({ drawerState: 'closed' })
+    withViewTransition(() => {
+      chatState.setState({ drawerState: 'closed' })
+    })
   }, [])
 
   // ── Draft auto-submit (sidebar → drawer handoff) ───────────────
@@ -234,11 +237,15 @@ function ChatDrawerInner() {
           background: 'rgb(0 0 0 / 0.3)',
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
-          transition: 'opacity 200ms ease',
+          transition: isOpen
+            ? 'opacity 250ms ease 150ms'
+            : 'opacity 150ms ease',
         }}
       />
 
-      {/* Drawer panel */}
+      {/* Drawer panel — scales in-place instead of sliding from right.
+       * scale(0.95) + opacity start per Emil design-eng principles:
+       * nothing appears from scale(0), ease-out gives instant feedback. */}
       <div
         style={{
           position: 'fixed',
@@ -246,8 +253,15 @@ function ChatDrawerInner() {
           top: 16,
           bottom: 16,
           width: 'min(440px, calc(100vw - 32px))',
-          transform: isOpen ? 'translateX(0)' : 'translateX(calc(100% + 16px))',
-          transition: 'transform 200ms ease',
+          transform: isOpen ? 'scale(1)' : 'scale(0.95)',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          // Delay the panel entrance so the textarea morph plays first (300ms).
+          // On close (isOpen=false) no delay — panel fades out immediately.
+          transition: isOpen
+            ? 'transform 250ms cubic-bezier(0.23, 1, 0.32, 1) 200ms, opacity 250ms cubic-bezier(0.23, 1, 0.32, 1) 200ms'
+            : 'transform 200ms cubic-bezier(0.23, 1, 0.32, 1), opacity 200ms cubic-bezier(0.23, 1, 0.32, 1)',
+          transformOrigin: 'bottom right',
           background: 'var(--background)',
           borderRadius: 24,
           display: 'flex',
@@ -357,9 +371,14 @@ function ChatDrawerInner() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Footer — same muted frame as sidebar assistant */}
+        {/* Footer — same muted frame as sidebar assistant.
+         * Owns the view-transition-name when drawer is open so the browser
+         * morphs the chat input from the sidebar position to here. */}
         <div style={{ flexShrink: 0 }}>
-          <div className='m-3 rounded-2xl bg-accent px-0.5 pt-px pb-0.5'>
+          <div
+            className='m-3 rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
+            style={{ viewTransitionName: isOpen ? CHAT_INPUT_VT_NAME : 'none' } as React.CSSProperties}
+          >
             <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
               <span className='text-muted-foreground shrink-0'>
                 <InfoCircleIcon />
