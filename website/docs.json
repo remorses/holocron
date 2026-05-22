@@ -33,82 +33,82 @@
                         "group": "Start",
                         "icon": "sparkles",
                         "pages": [
-                            "index",
-                            "what-is-holocron",
-                            "quickstart",
-                            "migration"
+                            "docs/index",
+                            "docs/what-is-holocron",
+                            "docs/quickstart",
+                            "docs/migration"
                         ]
                     },
                     {
                         "group": "Create",
                         "icon": "pencil",
                         "pages": [
-                            "create/pages",
-                            "create/mdx",
-                            "create/code",
-                            "create/images",
-                            "create/local-imports",
-                            "create/redirects",
-                            "create/broken-links"
+                            "docs/create/pages",
+                            "docs/create/mdx",
+                            "docs/create/code",
+                            "docs/create/images",
+                            "docs/create/local-imports",
+                            "docs/create/redirects",
+                            "docs/create/broken-links"
                         ]
                     },
                     {
                         "group": "Organize",
                         "icon": "folder-tree",
                         "pages": [
-                            "organize/docs-json",
-                            "organize/navigation",
-                            "organize/versions",
-                            "organize/dropdowns",
-                            "organize/hidden-pages",
-                            "organize/pages-dir"
+                            "docs/organize/docs-json",
+                            "docs/organize/navigation",
+                            "docs/organize/versions",
+                            "docs/organize/dropdowns",
+                            "docs/organize/hidden-pages",
+                            "docs/organize/pages-dir"
                         ]
                     },
                     {
                         "group": "Customize",
                         "icon": "palette",
                         "pages": [
-                            "customize/theme",
-                            "customize/fonts",
-                            "customize/icons",
-                            "customize/logo-and-favicon",
-                            "customize/navbar-footer-banner",
-                            "customize/custom-css",
-                            "customize/layout",
-                            "custom-entry",
-                            "spiceflow"
+                            "docs/customize/theme",
+                            "docs/customize/fonts",
+                            "docs/customize/icons",
+                            "docs/customize/logo-and-favicon",
+                            "docs/customize/navbar-footer-banner",
+                            "docs/customize/custom-css",
+                            "docs/customize/layout",
+                            "docs/custom-entry",
+                            "docs/spiceflow"
                         ]
                     },
                     {
                         "group": "API Docs",
                         "icon": "braces",
                         "pages": [
-                            "api-docs/openapi",
-                            "api-docs/generated-pages",
-                            "api-docs/request-response-examples",
-                            "api-docs/troubleshooting"
+                            "docs/api-docs/openapi",
+                            "docs/api-docs/generated-pages",
+                            "docs/api-docs/request-response-examples",
+                            "docs/api-docs/troubleshooting"
                         ]
                     },
                     {
                         "group": "AI-Readable Docs",
                         "icon": "bot",
                         "pages": [
-                            "ai/markdown-routes",
-                            "ai/llms-txt",
-                            "ai/docs-zip",
-                            "ai/skill-discovery",
-                            "ai/assistant"
+                            "docs/ai/markdown-routes",
+                            "docs/ai/llms-txt",
+                            "docs/ai/docs-zip",
+                            "docs/ai/skill-discovery",
+                            "docs/ai/assistant"
                         ]
                     },
                     {
                         "group": "Deploy",
                         "icon": "cloud-upload",
                         "pages": [
-                            "deploy/holocron",
-                            "deploy/node",
-                            "deploy/cloudflare",
-                            "deploy/build-output",
-                            "deploy/base-path"
+                            "docs/deploy/holocron",
+                            "docs/deploy/node",
+                            "docs/deploy/cloudflare",
+                            "docs/deploy/build-output",
+                            "docs/deploy/base-path"
                         ]
                     }
                 ]
@@ -121,33 +121,33 @@
                         "group": "Components",
                         "icon": "blocks",
                         "pages": [
-                            "components/index",
-                            "components/accordions",
-                            "components/badge",
-                            "components/banner",
-                            "components/callouts",
-                            "components/cards",
-                            "components/code-groups",
-                            "components/color",
-                            "components/columns",
-                            "components/examples",
-                            "components/expandables",
-                            "components/fields",
-                            "components/frames",
-                            "components/icons",
-                            "components/marquee",
-                            "components/mermaid-diagrams",
-                            "components/panel",
-                            "components/prompt",
-                            "components/responses",
-                            "components/steps",
-                            "components/tabs",
-                            "components/tiles",
-                            "components/tooltips",
-                            "components/tree",
-                            "components/update",
-                            "components/view",
-                            "components/visibility"
+                            "docs/components/index",
+                            "docs/components/accordions",
+                            "docs/components/badge",
+                            "docs/components/banner",
+                            "docs/components/callouts",
+                            "docs/components/cards",
+                            "docs/components/code-groups",
+                            "docs/components/color",
+                            "docs/components/columns",
+                            "docs/components/examples",
+                            "docs/components/expandables",
+                            "docs/components/fields",
+                            "docs/components/frames",
+                            "docs/components/icons",
+                            "docs/components/marquee",
+                            "docs/components/mermaid-diagrams",
+                            "docs/components/panel",
+                            "docs/components/prompt",
+                            "docs/components/responses",
+                            "docs/components/steps",
+                            "docs/components/tabs",
+                            "docs/components/tiles",
+                            "docs/components/tooltips",
+                            "docs/components/tree",
+                            "docs/components/update",
+                            "docs/components/view",
+                            "docs/components/visibility"
                         ]
                     }
                 ]
@@ -159,5 +159,20 @@
             }
         ]
     },
-    // "decorativeLines": "none"
+    "redirects": [
+        { "source": "/", "destination": "/docs" },
+        { "source": "/quickstart", "destination": "/docs/quickstart" },
+        { "source": "/migration", "destination": "/docs/migration" },
+        { "source": "/what-is-holocron", "destination": "/docs/what-is-holocron" },
+        { "source": "/custom-entry", "destination": "/docs/custom-entry" },
+        { "source": "/spiceflow", "destination": "/docs/spiceflow" },
+        { "source": "/create/:slug*", "destination": "/docs/create/:slug*" },
+        { "source": "/organize/:slug*", "destination": "/docs/organize/:slug*" },
+        { "source": "/customize/:slug*", "destination": "/docs/customize/:slug*" },
+        { "source": "/api-docs/:slug*", "destination": "/docs/api-docs/:slug*" },
+        { "source": "/ai/:slug*", "destination": "/docs/ai/:slug*" },
+        { "source": "/deploy/:slug*", "destination": "/docs/deploy/:slug*" },
+        { "source": "/components/:slug*", "destination": "/docs/components/:slug*" },
+        { "source": "/components", "destination": "/docs/components" }
+    ]
 }
