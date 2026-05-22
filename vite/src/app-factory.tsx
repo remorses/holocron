@@ -15,6 +15,7 @@ import React from 'react'
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
 import { createSpiceflowFetch } from 'spiceflow/client'
 import { Head, ProgressBar } from 'spiceflow/react'
+import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { mdxParse, resolveModules, type EagerModules } from 'safe-mdx/parse'
 import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
@@ -24,7 +25,7 @@ import {
 } from './components/layout/editorial-page.tsx'
 import { RenderBannerNodes } from './components/layout/banner.tsx'
 import { P, SectionHeading } from './components/markdown/typography.tsx'
-import { Danger } from './components/markdown/callout.tsx'
+import { Danger, Warning } from './components/markdown/callout.tsx'
 import { CodeBlock } from './components/markdown/code-block.tsx'
 import { extractParseErrorInfo, HolocronMdxParseError } from './lib/logger.ts'
 import { slugify } from './lib/toc-tree.ts'
@@ -47,7 +48,7 @@ import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
-import { RenderNodes } from './lib/mdx-components-map.tsx'
+import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
 import { SiteHead, THEME_SCRIPT, GtmNoscript } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
@@ -231,6 +232,7 @@ function renderMdxPage({
   modules,
   pagesDirPrefix,
   preParsedMdast,
+  devRenderErrors,
 }: {
   site: HolocronSiteData
   slug: string
@@ -244,6 +246,8 @@ function renderMdxPage({
   pagesDirPrefix?: string
   /** Pre-parsed mdast — avoids re-parsing when the caller already parsed it (e.g. for resolveModules) */
   preParsedMdast?: Root
+  /** Safe-mdx render errors collected during dev-only pre-validation. */
+  devRenderErrors?: SafeMdxError[]
 }) {
   const pageSeoMeta = getPageSeoMeta(loaderData.currentPageFrontmatter)
   const pageKeywords = serializeKeywords(loaderData.currentPageFrontmatter?.keywords)
@@ -341,6 +345,27 @@ function renderMdxPage({
     ) : undefined
 
   const gridGap = loaderData.currentPageFrontmatter?.gridGap
+
+  // In dev mode, prepend a warning section showing safe-mdx render errors
+  // (missing components, invalid expressions, etc.) so the user sees them
+  // directly in the page without checking the console.
+  if (devRenderErrors && devRenderErrors.length > 0) {
+    const errorList = devRenderErrors.map((err) => {
+      const loc = err.line ? `${mdxSourcePath}:${err.line}` : mdxSourcePath
+      return `${loc} — ${err.message}`
+    })
+    sections.unshift({
+      content: (
+        <Warning title={`${devRenderErrors.length} MDX rendering ${devRenderErrors.length === 1 ? 'issue' : 'issues'}`}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {errorList.map((msg, i) => (
+              <CodeBlock key={i} lang='text' showLineNumbers={false}>{msg}</CodeBlock>
+            ))}
+          </div>
+        </Warning>
+      ),
+    })
+  }
 
   return (
     <>
@@ -747,7 +772,26 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           })
         : undefined
 
-      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast })
+      // In dev mode, pre-validate the MDX to collect safe-mdx render errors
+      // (missing components, invalid expressions, etc.) so we can show them
+      // in the page. Production builds skip this entirely (tree-shaken).
+      let devRenderErrors: SafeMdxError[] | undefined
+      if (import.meta.env.DEV) {
+        const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
+        const mdxBaseUrl = (providers.pagesDirPrefix || './') + slugDir
+        const visitor = new MdastToJsx({
+          markdown: pageMdx,
+          mdast: preParsedMdast,
+          components: mdxComponents,
+          renderNode,
+          modules,
+          baseUrl: mdxBaseUrl,
+        })
+        visitor.run()
+        if (visitor.errors.length > 0) devRenderErrors = visitor.errors
+      }
+
+      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast, devRenderErrors })
     }
   }
 
