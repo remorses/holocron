@@ -54,6 +54,16 @@ Fetch those docs every time we need to find out some info about Mintlify
 
 The open-source Mintlify component implementations live at https://github.com/mintlify/components. Use that repo as the canonical reference for component props and behavior when adding or adjusting Mintlify-compatible MDX components.
 
+### Component compatibility with Mintlify
+
+When touching any MDX component in `vite/src/components/markdown/` (accordion, card, tabs, expandable, steps, fields, badge, etc.), always use `opensrc` to fetch and read the Mintlify source code from https://github.com/mintlify/components first:
+
+```bash
+bunx opensrc path mintlify/components
+```
+
+Then read the relevant component file to understand its prop types and implementation. Holocron must remain a **drop-in replacement** for Mintlify, meaning all Mintlify prop interfaces must be supported. Feel free to extend components and add more props for custom Holocron-specific use cases, but never remove or break existing Mintlify-compatible props.
+
 
 ### How config maps to UI
 
