@@ -171,7 +171,7 @@ export const openapiProvider: VirtualTabProvider = {
           '',
           '<RequestExample>',
           '',
-          '```bash',
+          '```bash lines=false',
           curl,
           '```',
           '',
@@ -180,7 +180,7 @@ export const openapiProvider: VirtualTabProvider = {
           ...(responseExampleJson ? [
             '<ResponseExample>',
             '',
-            '```json',
+            '```json lines=false',
             responseExampleJson,
             '```',
             '',
