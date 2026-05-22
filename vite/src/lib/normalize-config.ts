@@ -124,6 +124,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     seo: normalizeSeo(raw.seo),
     assistant: normalizeAssistant(raw.assistant),
     decorativeLines: normalizeDecorativeLines(raw.decorativeLines),
+    integrations: normalizeIntegrations(raw.integrations),
   }
 }
 
@@ -655,6 +656,11 @@ function normalizeAssistant(raw: unknown): HolocronConfig['assistant'] {
   if (!raw || typeof raw !== 'object') return { enabled: true }
   const obj = raw as Record<string, unknown>
   return { enabled: obj.enabled !== false }
+}
+
+function normalizeIntegrations(raw: unknown): HolocronConfig['integrations'] {
+  if (!raw || typeof raw !== 'object') return {}
+  return raw as HolocronConfig['integrations']
 }
 
 const VALID_DECORATIVE_LINES = new Set(['none', 'lines', 'dashed', 'lines-with-dots'])

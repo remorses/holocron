@@ -1,0 +1,13 @@
+{
+  "$schema": "https://holocron.so/docs.json",
+  "name": "Analytics Test",
+  "navigation": [{ "group": "Docs", "pages": ["index"] }],
+  "integrations": {
+    "fathom": { "siteId": "FATHOM_TEST" },
+    "ga4": { "measurementId": "G-TEST12345" },
+    "gtm": { "tagId": "GTM-TEST" },
+    "plausible": { "domain": "test.example.com" },
+    "clarity": { "projectId": "clarity_test" },
+    "pirsch": { "id": "pirsch_test" }
+  }
+}

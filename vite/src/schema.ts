@@ -843,6 +843,122 @@ export const decorativeLinesSchema = z
   )
   .meta({ id: 'decorativeLinesSchema' })
 
+/* ── Integrations (analytics) ─────────────────────────────────────────── */
+
+export const integrationsSchema = z
+  .object({
+    fathom: z
+      .object({
+        siteId: z.string().describe('Your Fathom site ID'),
+      })
+      .optional()
+      .describe('Fathom Analytics — privacy-first website analytics'),
+    ga4: z
+      .object({
+        measurementId: z
+          .string()
+          .describe('Google Analytics 4 measurement ID (starts with G-)'),
+      })
+      .optional()
+      .describe('Google Analytics 4'),
+    gtm: z
+      .object({
+        tagId: z
+          .string()
+          .describe('Google Tag Manager container ID (starts with GTM-)'),
+      })
+      .optional()
+      .describe('Google Tag Manager'),
+    posthog: z
+      .object({
+        apiKey: z.string().describe('PostHog project API key (starts with phc_)'),
+        apiHost: z
+          .string()
+          .optional()
+          .describe(
+            'PostHog API host. Defaults to https://us.i.posthog.com',
+          ),
+      })
+      .optional()
+      .describe('PostHog product analytics'),
+    plausible: z
+      .object({
+        domain: z.string().describe('Your domain as registered in Plausible'),
+        server: z
+          .string()
+          .optional()
+          .describe(
+            'Custom Plausible server hostname for self-hosted instances (e.g. "plausible.example.com")',
+          ),
+      })
+      .optional()
+      .describe('Plausible Analytics — lightweight, privacy-friendly analytics'),
+    mixpanel: z
+      .object({
+        projectToken: z.string().describe('Mixpanel project token'),
+      })
+      .optional()
+      .describe('Mixpanel product analytics'),
+    amplitude: z
+      .object({
+        apiKey: z.string().describe('Amplitude project API key'),
+      })
+      .optional()
+      .describe('Amplitude analytics'),
+    hotjar: z
+      .object({
+        hjid: z.string().describe('Hotjar Site ID'),
+        hjsv: z.string().describe('Hotjar Snippet Version'),
+      })
+      .optional()
+      .describe('Hotjar behavior analytics (heatmaps, recordings)'),
+    pirsch: z
+      .object({
+        id: z.string().describe('Pirsch identification code'),
+      })
+      .optional()
+      .describe('Pirsch Analytics — cookie-free web analytics'),
+    heap: z
+      .object({
+        appId: z.string().describe('Heap application ID'),
+      })
+      .optional()
+      .describe('Heap product analytics (auto-capture)'),
+    segment: z
+      .object({
+        key: z.string().describe('Segment write key'),
+      })
+      .optional()
+      .describe('Segment analytics data platform'),
+    clarity: z
+      .object({
+        projectId: z.string().describe('Microsoft Clarity project ID'),
+      })
+      .optional()
+      .describe('Microsoft Clarity — free heatmaps and session recordings'),
+    logrocket: z
+      .object({
+        appId: z.string().describe('LogRocket application ID'),
+      })
+      .optional()
+      .describe('LogRocket session replay and error tracking'),
+    clearbit: z
+      .object({
+        publicApiKey: z.string().describe('Clearbit public API key'),
+      })
+      .optional()
+      .describe('Clearbit visitor identification'),
+  })
+  .passthrough()
+  .describe(
+    dedent`
+      Third-party analytics integrations. Add your provider credentials
+      here and the corresponding tracking scripts are injected automatically.
+      Only public API keys are needed — never include private/secret keys
+    `,
+  )
+  .meta({ id: 'integrationsSchema' })
+
 /* ── Root config ──────────────────────────────────────────────────────── */
 
 export const holocronConfigSchema = z
@@ -897,6 +1013,7 @@ export const holocronConfigSchema = z
     seo: seoSchema.optional(),
     assistant: assistantSchema.optional(),
     decorativeLines: decorativeLinesSchema.optional(),
+    integrations: integrationsSchema.optional(),
   })
   .passthrough()
   .describe(

@@ -197,6 +197,13 @@
           "$ref": "#/definitions/decorativeLinesSchema"
         }
       ]
+    },
+    "integrations": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/integrationsSchema"
+        }
+      ]
     }
   },
   "required": [
@@ -1358,6 +1365,222 @@
         "lines-with-dots"
       ],
       "description": "Decorative border lines framing the page layout at grid boundaries.\n`none` disables all decorative lines.\n`lines` renders solid 1px lines at the page edges and content column boundaries.\n`dashed` renders segmented (dashed) lines.\n`lines-with-dots` renders solid lines with dot ornaments at vertices.\nDefaults to `lines-with-dots`"
+    },
+    "integrationsSchema": {
+      "type": "object",
+      "properties": {
+        "fathom": {
+          "description": "Fathom Analytics — privacy-first website analytics",
+          "type": "object",
+          "properties": {
+            "siteId": {
+              "type": "string",
+              "description": "Your Fathom site ID"
+            }
+          },
+          "required": [
+            "siteId"
+          ],
+          "additionalProperties": false
+        },
+        "ga4": {
+          "description": "Google Analytics 4",
+          "type": "object",
+          "properties": {
+            "measurementId": {
+              "type": "string",
+              "description": "Google Analytics 4 measurement ID (starts with G-)"
+            }
+          },
+          "required": [
+            "measurementId"
+          ],
+          "additionalProperties": false
+        },
+        "gtm": {
+          "description": "Google Tag Manager",
+          "type": "object",
+          "properties": {
+            "tagId": {
+              "type": "string",
+              "description": "Google Tag Manager container ID (starts with GTM-)"
+            }
+          },
+          "required": [
+            "tagId"
+          ],
+          "additionalProperties": false
+        },
+        "posthog": {
+          "description": "PostHog product analytics",
+          "type": "object",
+          "properties": {
+            "apiKey": {
+              "type": "string",
+              "description": "PostHog project API key (starts with phc_)"
+            },
+            "apiHost": {
+              "description": "PostHog API host. Defaults to https://us.i.posthog.com",
+              "type": "string"
+            }
+          },
+          "required": [
+            "apiKey"
+          ],
+          "additionalProperties": false
+        },
+        "plausible": {
+          "description": "Plausible Analytics — lightweight, privacy-friendly analytics",
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "description": "Your domain as registered in Plausible"
+            },
+            "server": {
+              "description": "Custom Plausible server hostname for self-hosted instances (e.g. \"plausible.example.com\")",
+              "type": "string"
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false
+        },
+        "mixpanel": {
+          "description": "Mixpanel product analytics",
+          "type": "object",
+          "properties": {
+            "projectToken": {
+              "type": "string",
+              "description": "Mixpanel project token"
+            }
+          },
+          "required": [
+            "projectToken"
+          ],
+          "additionalProperties": false
+        },
+        "amplitude": {
+          "description": "Amplitude analytics",
+          "type": "object",
+          "properties": {
+            "apiKey": {
+              "type": "string",
+              "description": "Amplitude project API key"
+            }
+          },
+          "required": [
+            "apiKey"
+          ],
+          "additionalProperties": false
+        },
+        "hotjar": {
+          "description": "Hotjar behavior analytics (heatmaps, recordings)",
+          "type": "object",
+          "properties": {
+            "hjid": {
+              "type": "string",
+              "description": "Hotjar Site ID"
+            },
+            "hjsv": {
+              "type": "string",
+              "description": "Hotjar Snippet Version"
+            }
+          },
+          "required": [
+            "hjid",
+            "hjsv"
+          ],
+          "additionalProperties": false
+        },
+        "pirsch": {
+          "description": "Pirsch Analytics — cookie-free web analytics",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Pirsch identification code"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        "heap": {
+          "description": "Heap product analytics (auto-capture)",
+          "type": "object",
+          "properties": {
+            "appId": {
+              "type": "string",
+              "description": "Heap application ID"
+            }
+          },
+          "required": [
+            "appId"
+          ],
+          "additionalProperties": false
+        },
+        "segment": {
+          "description": "Segment analytics data platform",
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Segment write key"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        },
+        "clarity": {
+          "description": "Microsoft Clarity — free heatmaps and session recordings",
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "description": "Microsoft Clarity project ID"
+            }
+          },
+          "required": [
+            "projectId"
+          ],
+          "additionalProperties": false
+        },
+        "logrocket": {
+          "description": "LogRocket session replay and error tracking",
+          "type": "object",
+          "properties": {
+            "appId": {
+              "type": "string",
+              "description": "LogRocket application ID"
+            }
+          },
+          "required": [
+            "appId"
+          ],
+          "additionalProperties": false
+        },
+        "clearbit": {
+          "description": "Clearbit visitor identification",
+          "type": "object",
+          "properties": {
+            "publicApiKey": {
+              "type": "string",
+              "description": "Clearbit public API key"
+            }
+          },
+          "required": [
+            "publicApiKey"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": {},
+      "description": "Third-party analytics integrations. Add your provider credentials\nhere and the corresponding tracking scripts are injected automatically.\nOnly public API keys are needed — never include private/secret keys"
     }
   }
 }

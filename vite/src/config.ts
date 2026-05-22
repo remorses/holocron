@@ -29,6 +29,7 @@ import type {
   seoSchema,
   searchSchema,
   bannerSchema,
+  integrationsSchema,
 } from './schema.ts'
 import { parseJsonc } from './lib/jsonc.ts'
 import { normalize } from './lib/normalize-config.ts'
@@ -144,6 +145,7 @@ export type HolocronConfig = {
   seo: { indexing?: 'navigable' | 'all'; metatags?: Record<string, string> }
   assistant: { enabled: boolean }
   decorativeLines: 'none' | 'lines' | 'dashed' | 'lines-with-dots'
+  integrations: z.output<typeof integrationsSchema>
 }
 
 /* ── Type guard (for page entries) ───────────────────────────────────── */
