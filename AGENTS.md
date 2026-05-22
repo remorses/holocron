@@ -346,6 +346,36 @@ The build-time resolver and safe-mdx's render-time resolver must produce identic
 
 Raw import source strings are cached in `holocron-mdx.json` alongside `pageIconRefs`. Resolution to actual file paths happens fresh on every sync (just `fs.existsSync` probing, very cheap). This avoids stale cache when files are created or deleted between builds.
 
+## Adding new MDX components
+
+When adding a new component that users can use directly in MDX (no import needed), follow these steps:
+
+**1. Create the component file** in `vite/src/components/markdown/<name>.tsx`
+
+- Mark it `'use client'` if it uses hooks, state, or browser events.
+- Use Holocron's `cn()` from `../../lib/css-vars.ts` for className composition.
+- Use shadcn/Holocron CSS tokens for colors (`--foreground`, `--muted-foreground`, `--border`, `--primary`, etc.) and spacing (`--prose-gap`, `--section-gap`). Never hardcode colors; derive from existing tokens with opacity (`bg-primary/10`, `text-muted-foreground`). See `globals.css` for the full token set.
+- Use Tailwind utilities for layout and styling. Prefer `gap` over margin for spacing between siblings.
+- If the component needs scoped CSS (animations, keyframes), use `React.useId()` to generate unique names so multiple instances on one page don't collide.
+- No external dependencies. Port from source and adapt to Holocron's conventions.
+
+**2. Register the component** in three files (TypeScript will error if any is missing):
+
+- `vite/src/lib/mdx-component-names.ts` — add the name to `SAFE_MDX_COMPONENT_NAMES` array
+- `vite/src/components/markdown/index.tsx` — add the barrel export
+- `vite/src/lib/mdx-components-map.tsx` — import from barrel, add to `mdxComponents` object
+
+**3. Add a usage example** to `example/src/index.mdx` (or another example page) so the component is exercised in the dev fixture.
+
+**4. Document it** in `website/src/pages/components/<name>.mdx`:
+
+- Frontmatter with `title`, `description`, `icon`.
+- Live rendered examples with matching code blocks showing the MDX source.
+- Props section using `<ResponseField>` components.
+- Add the page slug to `website/docs.json` under the "MDX Components" tab's `pages` array, in alphabetical order.
+
+**5. Build and verify** — run `pnpm --dir vite build` to confirm the component compiles. The build will fail if the component name list and runtime map are out of sync.
+
 ## Inline .md/.mdx imports
 
 When a page has `import Guide from './snippets/guide.md'` and uses `<Guide />`, the imported file's content is **spliced directly into the page's mdast at build time**. No runtime component, no separate processing pipeline. The import declaration stays as dead code for HMR.
