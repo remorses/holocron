@@ -135,6 +135,7 @@
                             "components/fields",
                             "components/frames",
                             "components/icons",
+                            "components/marquee",
                             "components/mermaid-diagrams",
                             "components/panel",
                             "components/prompt",

@@ -74,6 +74,7 @@ import {
   Visibility,
   Icon,
   Logo,
+  Marquee,
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
@@ -206,6 +207,7 @@ export const mdxComponents = {
   Icon: Icon,
   Logo,
   Markdown,
+  Marquee,
   Visibility,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.

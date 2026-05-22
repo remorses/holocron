@@ -1,0 +1,140 @@
+---
+title: Marquee
+description: Infinite scrolling content with customizable speed, direction, and fade edges.
+icon: move-horizontal
+---
+
+# Marquee
+
+Use `Marquee` to create an infinite scrolling loop of icons, logos, cards, or any content. Works well for partner logos, feature highlights, or testimonial carousels.
+
+## Logo carousel
+
+Scroll partner or integration logos using `img` tags with relative paths from your `public/` folder.
+
+```mdx
+<Marquee duration={20} pauseOnHover gap={64}>
+  <img src="/logos/vercel.svg" alt="Vercel" width={120} height={30} />
+  <img src="/logos/stripe.svg" alt="Stripe" width={120} height={30} />
+  <img src="/logos/github.svg" alt="GitHub" width={120} height={30} />
+  <img src="/logos/cloudflare.svg" alt="Cloudflare" width={120} height={30} />
+  <img src="/logos/linear.svg" alt="Linear" width={120} height={30} />
+</Marquee>
+```
+
+Images resolve relative to your project root, so `/logos/vercel.svg` maps to `public/logos/vercel.svg`. You can also use relative paths like `./assets/logo.png` from the MDX file's directory.
+
+## Icon marquee
+
+Combine with `Icon` to scroll through icon sets.
+
+<Marquee duration={15} pauseOnHover gap={48}>
+  <Icon icon="lucide:rocket" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:zap" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:shield" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:database" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:cloud" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:code" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:globe" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:heart" size={28} color="var(--muted-foreground)" />
+</Marquee>
+
+```mdx
+<Marquee duration={15} pauseOnHover gap={48}>
+  <Icon icon="lucide:rocket" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:zap" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:shield" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:database" size={28} color="var(--muted-foreground)" />
+</Marquee>
+```
+
+## Reverse direction
+
+Scroll right instead of left.
+
+<Marquee direction="right" duration={20} gap={48}>
+  <Icon icon="lucide:star" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:sparkles" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:sun" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:moon" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:cloud" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:bolt" size={28} color="var(--muted-foreground)" />
+</Marquee>
+
+```mdx
+<Marquee direction="right" duration={20}>
+  <Icon icon="lucide:star" size={28} />
+  <Icon icon="lucide:sparkles" size={28} />
+</Marquee>
+```
+
+## Pause on hover
+
+Hover to pause the animation.
+
+<Marquee pauseOnHover duration={12} gap={48}>
+  <Badge color="blue">TypeScript</Badge>
+  <Badge color="green">Fast builds</Badge>
+  <Badge color="purple">MDX</Badge>
+  <Badge color="orange">Vite</Badge>
+  <Badge color="red">Deploy</Badge>
+  <Badge color="blue">Search</Badge>
+  <Badge color="green">Theming</Badge>
+  <Badge color="purple">OpenAPI</Badge>
+</Marquee>
+
+```mdx
+<Marquee pauseOnHover duration={12}>
+  <Badge color="blue">TypeScript</Badge>
+  <Badge color="green">Fast builds</Badge>
+  <Badge color="purple">MDX</Badge>
+  <Badge color="orange">Vite</Badge>
+</Marquee>
+```
+
+## No fade
+
+Disable edge fading with `fade={false}`.
+
+<Marquee fade={false} duration={18} gap={48}>
+  <Icon icon="lucide:terminal" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:monitor" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:cpu" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:hard-drive" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:wifi" size={28} color="var(--muted-foreground)" />
+  <Icon icon="lucide:bluetooth" size={28} color="var(--muted-foreground)" />
+</Marquee>
+
+## Props
+
+<ResponseField name="duration" type="number" default="20">
+Time in seconds for one full scroll cycle. Controls perceived speed: `duration={10}` scrolls twice as fast as `duration={20}`. The actual pixel speed depends on how many children you have, since more items means more distance to cover in the same time.
+</ResponseField>
+
+<ResponseField name="pauseOnHover" type="boolean" default="false">
+Pause the animation when the user hovers over the marquee.
+</ResponseField>
+
+<ResponseField name="direction" type='"left" | "right" | "up" | "down"' default='"left"'>
+Scroll direction. Use `up` or `down` for vertical marquees.
+</ResponseField>
+
+<ResponseField name="fade" type="boolean" default="true">
+Show a fade gradient at the edges.
+</ResponseField>
+
+<ResponseField name="fadeAmount" type="number" default="10">
+Percentage of the container used for the fade gradient (0-100).
+</ResponseField>
+
+<ResponseField name="gap" type="number" default="24">
+Gap between items in pixels.
+</ResponseField>
+
+<ResponseField name="className" type="string">
+Additional CSS classes applied to the outer container.
+</ResponseField>
+
+<ResponseField name="children" type="React.ReactNode" required>
+Content to scroll. Each direct child becomes a marquee item.
+</ResponseField>
