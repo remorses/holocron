@@ -166,13 +166,13 @@
         { "source": "/what-is-holocron", "destination": "/docs/what-is-holocron" },
         { "source": "/custom-entry", "destination": "/docs/custom-entry" },
         { "source": "/spiceflow", "destination": "/docs/spiceflow" },
-        { "source": "/create/:slug*", "destination": "/docs/create/:slug*" },
-        { "source": "/organize/:slug*", "destination": "/docs/organize/:slug*" },
-        { "source": "/customize/:slug*", "destination": "/docs/customize/:slug*" },
-        { "source": "/api-docs/:slug*", "destination": "/docs/api-docs/:slug*" },
-        { "source": "/ai/:slug*", "destination": "/docs/ai/:slug*" },
-        { "source": "/deploy/:slug*", "destination": "/docs/deploy/:slug*" },
-        { "source": "/components/:slug*", "destination": "/docs/components/:slug*" },
+        { "source": "/create/*", "destination": "/docs/create/:splat" },
+        { "source": "/organize/*", "destination": "/docs/organize/:splat" },
+        { "source": "/customize/*", "destination": "/docs/customize/:splat" },
+        { "source": "/api-docs/*", "destination": "/docs/api-docs/:splat" },
+        { "source": "/ai/*", "destination": "/docs/ai/:splat" },
+        { "source": "/deploy/*", "destination": "/docs/deploy/:splat" },
+        { "source": "/components/*", "destination": "/docs/components/:splat" },
         { "source": "/components", "destination": "/docs/components" }
     ]
 }

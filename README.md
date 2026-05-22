@@ -107,7 +107,7 @@ node dist/rsc/index.js
 
 | Area | Mintlify | Holocron |
 |------|----------|----------|
-| **Hosting** | Cloud only | Self-hosted, or [holocron.so](/deploy/holocron) managed hosting |
+| **Hosting** | Cloud only | Self-hosted, or [holocron.so](/docs/deploy/holocron) managed hosting |
 | **Build** | Cloud build on push | Local `vite build`, standard CI |
 | **Pricing** | Starts at $150/mo | Free, open source (MIT) |
 | **Git workflow** | Mintlify-managed deploys | Standard git: PRs, branches, diffs |
@@ -226,7 +226,7 @@ npx vite build
 npx wrangler deploy
 ```
 
-See [Cloudflare deploy docs](/deploy/cloudflare) for `wrangler.jsonc` setup.
+See [Cloudflare deploy docs](/docs/deploy/cloudflare) for `wrangler.jsonc` setup.
 
 ## AI-readable docs
 
@@ -260,12 +260,12 @@ my-docs/
 
 Full documentation at **[holocron.so](https://holocron.so)**.
 
-- [Quickstart](/quickstart)
-- [Navigation](/organize/navigation): tabs, groups, pages, anchors, versions, dropdowns
-- [Theme and Colors](/customize/theme): shadcn-compatible CSS variables
-- [OpenAPI Reference](/api-docs/openapi): generate API docs from a spec
-- [MDX Components](/components): Accordions, Cards, Callouts, Steps, Tabs, and more
-- [Deploy](/deploy/node): Node.js, Cloudflare Workers, and holocron.so hosting
+- [Quickstart](/docs/quickstart)
+- [Navigation](/docs/organize/navigation): tabs, groups, pages, anchors, versions, dropdowns
+- [Theme and Colors](/docs/customize/theme): shadcn-compatible CSS variables
+- [OpenAPI Reference](/docs/api-docs/openapi): generate API docs from a spec
+- [MDX Components](/docs/components): Accordions, Cards, Callouts, Steps, Tabs, and more
+- [Deploy](/docs/deploy/node): Node.js, Cloudflare Workers, and holocron.so hosting
 
 ## License
 

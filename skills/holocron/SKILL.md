@@ -19,32 +19,32 @@ to get raw markdown:
 
 ```bash
 curl -s https://holocron.so/sitemap.xml
-curl -s https://holocron.so/quickstart.md
+curl -s https://holocron.so/docs/quickstart.md
 ```
 
 When the user asks about a specific workflow, fetch the matching page directly:
 
 - **Overview**: https://holocron.so/llms.txt
-- **Quickstart**: https://holocron.so/quickstart.md
-- **What Holocron is**: https://holocron.so/what-is-holocron.md
-- **Create pages**: https://holocron.so/create/pages.md
-- **MDX syntax**: https://holocron.so/create/mdx.md
-- **Local imports**: https://holocron.so/create/local-imports.md
-- **Redirects**: https://holocron.so/create/redirects.md
-- **`docs.json` config**: https://holocron.so/organize/docs-json.md
+- **Quickstart**: https://holocron.so/docs/quickstart.md
+- **What Holocron is**: https://holocron.so/docs/what-is-holocron.md
+- **Create pages**: https://holocron.so/docs/create/pages.md
+- **MDX syntax**: https://holocron.so/docs/create/mdx.md
+- **Local imports**: https://holocron.so/docs/create/local-imports.md
+- **Redirects**: https://holocron.so/docs/create/redirects.md
+- **`docs.json` config**: https://holocron.so/docs/organize/docs-json.md
 - **Config schema**: https://holocron.so/docs.json
-- **Navigation**: https://holocron.so/organize/navigation.md
-- **Theme customization**: https://holocron.so/customize/theme.md
-- **Icons**: https://holocron.so/customize/icons.md
-- **Custom entry (Spiceflow)**: https://holocron.so/custom-entry.md
-- **Spiceflow integration**: https://holocron.so/spiceflow.md
-- **Cloudflare deploy**: https://holocron.so/deploy/cloudflare.md
-- **Node deploy**: https://holocron.so/deploy/node.md
-- **AI assistant docs**: https://holocron.so/ai/assistant.md
+- **Navigation**: https://holocron.so/docs/organize/navigation.md
+- **Theme customization**: https://holocron.so/docs/customize/theme.md
+- **Icons**: https://holocron.so/docs/customize/icons.md
+- **Custom entry (Spiceflow)**: https://holocron.so/docs/custom-entry.md
+- **Spiceflow integration**: https://holocron.so/docs/spiceflow.md
+- **Cloudflare deploy**: https://holocron.so/docs/deploy/cloudflare.md
+- **Node deploy**: https://holocron.so/docs/deploy/node.md
+- **AI assistant docs**: https://holocron.so/docs/ai/assistant.md
 
 ```bash
-curl -fsSL https://holocron.so/quickstart.md
-curl -fsSL https://holocron.so/organize/docs-json.md
+curl -fsSL https://holocron.so/docs/quickstart.md
+curl -fsSL https://holocron.so/docs/organize/docs-json.md
 ```
 
 ## Scaffolding a new project
@@ -117,7 +117,7 @@ Page slugs in `navigation.pages` map to MDX files. `quickstart` loads
 
 **Anchors** in `navigation.global.anchors` are persistent sidebar links visible
 across all tabs. Use them for GitHub, Changelog, Discord, or other external
-links. See https://holocron.so/organize/navigation.md for details.
+links. See https://holocron.so/docs/organize/navigation.md for details.
 
 ## Icons
 
@@ -179,7 +179,7 @@ import Readme from '../../README.md'
 ```
 
 Resolution: `/` = project root, `../` = relative to the MDX file. See
-https://holocron.so/create/local-imports.md for details.
+https://holocron.so/docs/create/local-imports.md for details.
 
 ## MDX JSX in README files
 
@@ -239,7 +239,7 @@ working. Supports exact paths, named `:param` captures, and `*` wildcards:
 }
 ```
 
-See https://holocron.so/create/redirects.md for details.
+See https://holocron.so/docs/create/redirects.md for details.
 
 ## Broken link detection
 
@@ -263,7 +263,7 @@ Supports exact paths and prefix patterns with trailing `*` wildcards.
 Holocron can be mounted inside a Spiceflow app to add API routes, middleware,
 or auth alongside docs. Passing `entry` to the plugin and import the holocron app
 
-See https://holocron.so/custom-entry.md and https://holocron.so/spiceflow.md
+See https://holocron.so/docs/custom-entry.md and https://holocron.so/docs/spiceflow.md
 for the full pattern including middleware, Cloudflare Workers, and diagrams.
 
 ## MDX container components
@@ -309,7 +309,7 @@ tab, group, and reading order.
 
 ### Where to put new content
 
-The real docs live in **`website/src/pages/`**, not `example/src/`. The `example/`
+The real docs live in **`website/src/pages/docs/`**, not `example/src/`. The `example/`
 folder is a demo fixture, not the published docs site.
 
 Before adding or editing docs content, **always read `website/docs.json`** first

@@ -367,7 +367,7 @@ When adding a new component that users can use directly in MDX (no import needed
 
 **3. Add a usage example** to `example/src/index.mdx` (or another example page) so the component is exercised in the dev fixture.
 
-**4. Document it** in `website/src/pages/components/<name>.mdx`:
+**4. Document it** in `website/src/pages/docs/components/<name>.mdx`:
 
 - Frontmatter with `title`, `description`, `icon`.
 - Live rendered examples with matching code blocks showing the MDX source.
