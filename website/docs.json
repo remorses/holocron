@@ -160,19 +160,6 @@
         ]
     },
     "redirects": [
-        { "source": "/", "destination": "/docs" },
-        { "source": "/quickstart", "destination": "/docs/quickstart" },
-        { "source": "/migration", "destination": "/docs/migration" },
-        { "source": "/what-is-holocron", "destination": "/docs/what-is-holocron" },
-        { "source": "/custom-entry", "destination": "/docs/custom-entry" },
-        { "source": "/spiceflow", "destination": "/docs/spiceflow" },
-        { "source": "/create/*", "destination": "/docs/create/:splat" },
-        { "source": "/organize/*", "destination": "/docs/organize/:splat" },
-        { "source": "/customize/*", "destination": "/docs/customize/:splat" },
-        { "source": "/api-docs/*", "destination": "/docs/api-docs/:splat" },
-        { "source": "/ai/*", "destination": "/docs/ai/:splat" },
-        { "source": "/deploy/*", "destination": "/docs/deploy/:splat" },
-        { "source": "/components/*", "destination": "/docs/components/:splat" },
-        { "source": "/components", "destination": "/docs/components" }
+        { "source": "/", "destination": "/docs" }
     ]
 }
