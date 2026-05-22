@@ -24,6 +24,24 @@ Supported libraries:
 | `lucide` | Clean, consistent icons |
 | `tabler` | Accepted by config, but not rendered yet |
 
+## Prefixed icon names
+
+Use **prefixed icon names** so the source library is explicit. This also lets you mix icons
+from different libraries in the same project:
+
+```jsonc
+// Lucide icons (recommended)
+"icon": "lucide:rocket"
+"icon": "lucide:shield"
+
+// Font Awesome icons
+"icon": "fontawesome:brands:github"
+"icon": "fontawesome:solid:compass"
+
+// Plain names resolve against the configured library
+"icon": "rocket"  // resolves to lucide:rocket if "icons.library": "lucide"
+```
+
 ## Using icons in frontmatter
 
 Set an icon on any page via frontmatter:
@@ -31,11 +49,11 @@ Set an icon on any page via frontmatter:
 ```mdx
 ---
 title: Authentication
-icon: lock
+icon: lucide:lock
 ---
 ```
 
-The icon name is resolved against the configured library.
+The icon name is resolved against the configured library if no prefix is given.
 
 ## Using icons in navigation
 
@@ -44,7 +62,7 @@ Groups and anchors accept an `icon` field:
 ```json
 {
   "group": "Security",
-  "icon": "shield",
+  "icon": "lucide:shield",
   "pages": ["security/overview"]
 }
 ```
@@ -62,6 +80,32 @@ For more control, use the object form to specify a library or style per icon. Fo
   }
 }
 ```
+
+## Finding icon names
+
+To browse all available icon names, fetch the schema JSONs:
+
+```bash
+# All lucide icon names
+curl -s https://holocron.so/schemas/lucide-icons.json | jq '.enum[:10]'
+
+# All fontawesome icon names
+curl -s https://holocron.so/schemas/fontawesome-icons.json | jq '.enum[:10]'
+```
+
+## Icon consistency
+
+When adding icons, apply them **consistently across all siblings** at the same level. Inconsistent
+icon usage looks unfinished and breaks visual rhythm.
+
+- **Tabs**: if one tab has an icon, every tab must have an icon.
+- **Groups**: if one sidebar group has an icon, every sibling group in the same tab should too.
+- **Anchors**: if one anchor has an icon, all anchors must.
+- **Pages**: if one page in a group has a frontmatter `icon`, all pages in that group should.
+- **Cards**: if one `<Card>` in a `<CardGroup>` has an `icon` prop, every card in that group must.
+
+If a group has an icon, avoid using the **same icon** on the first page in that group. It looks
+like a duplicate in the navigation tree.
 
 ## Build-time atlas
 

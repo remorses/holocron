@@ -25,13 +25,14 @@ A Chrome extension that let your agents control **your actual browser** — with
 logins, extensions, and cookies already there. No headless instance, no bot detection, no extra memory.
 
 
+<Bleed>
 <img
   src='/screenshot@2x.png'
   alt='Playwriter controlling Chrome with accessibility labels overlay'
   width={1280}
   height={800}
 />
-
+</Bleed>
 
 *Your existing Chrome session. Extensions, logins, cookies — all there.*
 
@@ -45,6 +46,8 @@ tool, any Playwright code, no wrappers. Low context usage because there's no sch
 tool definitions. And it runs in your existing browser, so **nothing extra gets spawned**.
 
 ## Trusted by developers everywhere
+
+This is a Marquee component example
 
 <Marquee duration={15} pauseOnHover gap={48}>
   <Icon icon="lucide:chrome" size={32} color="var(--muted-foreground)" />
@@ -61,7 +64,7 @@ tool definitions. And it runs in your existing browser, so **nothing extra gets 
 
 One tool to rule them all. Pass any Playwright code and it runs in your browser.
 
-```ts bleed=true title="automate.ts"
+```ts title="automate.ts"
 import { chromium } from 'playwright'
 
 async function automateWorkflow() {
@@ -154,14 +157,14 @@ scrapeData().then(console.log)
 
 Install the CLI, then add the skill so your agent knows the good Playwriter workflows.
 
-```bash
+```bash bleed=true 
 npm i -g playwriter
 ```
 
 Then install the **skill** — it teaches your agent how to use Playwriter: which
 selectors to use, how to avoid timeouts, how to read snapshots, and all available utilities.
 
-```bash
+```bash bleed=true 
 npx -y skills add remorses/playwriter
 ```
 

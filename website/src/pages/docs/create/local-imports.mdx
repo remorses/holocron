@@ -20,7 +20,17 @@ import { PricingTable } from '/components/pricing-table'
 
 ## Import resolution
 
-Holocron resolves imports using two rules:
+Prefer **relative imports** (`./` or `../`) over absolute imports. They are simpler, work
+consistently regardless of `pagesDir`, and match standard JavaScript conventions.
+
+### Relative imports (recommended)
+
+Relative paths resolve from the MDX file's directory:
+
+```mdx
+import { Badge } from '../components/badge'
+import Guide from './snippets/guide.md'
+```
 
 ### Absolute imports (starting with `/`)
 
@@ -34,13 +44,7 @@ If your `pagesDir` is `./pages`, this looks for:
 1. `./pages/components/chart.tsx` (pages dir first)
 2. `./components/chart.tsx` (project root fallback)
 
-### Relative imports
-
-Relative paths resolve from the MDX file's directory:
-
-```mdx
-import { Badge } from '../components/badge'
-```
+Absolute imports can be ambiguous when `pagesDir` is set. Prefer relative imports instead.
 
 ## How it works
 

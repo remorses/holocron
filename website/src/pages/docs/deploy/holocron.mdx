@@ -49,6 +49,12 @@ or [Node.js](/docs/deploy/node) if you need your own domain today.
 
 ## Authentication
 
+**Auth priority** (first match wins):
+
+1. **`HOLOCRON_KEY`** env var — API key scoped to a specific project. The server resolves the org and project from the key. No flags needed.
+2. **Session token** from `npx -y @holocron.so/cli login` — if the account has multiple projects, pass `--project prj_xxx` or the CLI prompts interactively.
+3. **GitHub Actions OIDC** — automatic when running in GitHub Actions with `permissions: id-token: write`. No API key or login needed if the repo owner matches the Holocron account.
+
 For local deploys, log in once:
 
 ```bash
@@ -62,12 +68,41 @@ For CI deploys, use a project API key:
 HOLOCRON_KEY=holo_xxx npx -y @holocron.so/cli deploy
 ```
 
-The API key identifies the project, so `--project` is only needed when deploying
-with a logged-in session that has access to multiple projects.
+No project ID is saved locally on disk. It is either derived from the API key,
+passed via `--project`, or selected interactively at deploy time.
+
+### GitHub Actions OIDC (keyless deploys)
+
+The deploy command does not need an API key when run inside GitHub Actions and
+the user signed in to holocron.so with the same GitHub account that owns the
+repo. Holocron verifies the GitHub OIDC token to authenticate. The workflow needs:
+
+```yaml
+permissions:
+  id-token: write
+```
+
+**How branch detection works:**
+
+- **Pull requests**: uses the `head_ref` OIDC claim (the PR source branch). Marked as preview automatically.
+- **Pushes**: uses the `ref` claim stripped to branch name (`refs/heads/main` → `main`). Compared against the project's default branch to decide production vs preview.
+- **Explicit override**: `--branch <name>` CLI flag.
+
+### Organizations and project resolution
+
+Each user gets a **personal org** auto-created on first login. All projects and
+API keys are scoped to an org. Run `npx -y @holocron.so/cli whoami` to see all orgs
+and projects.
+
+When a user belongs to multiple orgs, `projects create` prompts which org to
+use. Pass `--org <orgId>` to skip the prompt:
 
 ```bash
-npx -y @holocron.so/cli deploy --project prj_xxx
+npx -y @holocron.so/cli projects create --name "My Docs" --org <orgId>
 ```
+
+The deploy command resolves the org from the project itself, so `--org` is not
+needed for deploys.
 
 ## GitHub Actions outputs
 

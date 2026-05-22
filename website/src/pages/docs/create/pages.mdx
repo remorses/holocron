@@ -34,13 +34,15 @@ Reference these slugs in your `docs.json` navigation:
 
 ## Frontmatter
 
-Every page can have YAML frontmatter at the top:
+Every page can have YAML frontmatter at the top. Add `$schema` for editor
+autocompletion and validation:
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Authentication
 description: How to set up auth in your app.
-icon: lock
+icon: lucide:lock
 sidebarTitle: Auth
 tag: New
 ---
@@ -56,14 +58,17 @@ tag: New
 | `sidebarTitle` | string | Override the title shown in the sidebar |
 | `tag` | string | Badge label next to the page title in sidebar |
 | `deprecated` | boolean | Marks the page as deprecated |
-| `hidden` | boolean | Hides the page from navigation |
-| `noindex` | boolean | Prevents search engines from indexing |
+| `api` | string | Mintlify API page label like `GET /users` |
+| `hidden` | boolean | Hides the page from navigation and adds `noindex` |
+| `noindex` | boolean | Keeps the page visible but adds robots `noindex` |
+| `cache-control` | string | Custom response cache header |
 | `keywords` | string[] | Additional keywords for search |
 | `robots` | string | Custom robots meta value |
 | `og:title` | string | Open Graph title override |
 | `og:description` | string | Open Graph description |
 | `og:image` | string | Open Graph image URL |
 | `twitter:title` | string | Twitter card title |
+| `twitter:description` | string | Twitter card description |
 | `twitter:image` | string | Twitter card image |
 
 ## The index page

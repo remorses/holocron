@@ -2,7 +2,7 @@
  * Cache sync engine — builds the enriched navigation tree from config + MDX files.
  *
  * All processing (MDX parsing, image resolution, sharp placeholders) happens
- * here at build time. The resulting NavPage.mdx field is the final content —
+ * here at build time. The resulting NavPage.mdx field is the final content;
  * request-time rendering is just parse + render with zero I/O.
  *
  * Build flow:
