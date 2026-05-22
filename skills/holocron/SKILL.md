@@ -297,16 +297,23 @@ If `whoami` succeeds and shows user, orgs, and projects, skip login. Only run
 
 ## Deploy
 
-Use `holocron deploy` for hosted deployment. See
-https://holocron.so/docs/deploy/holocron.md for the full reference including
-deployment URLs, authentication methods, and GitHub Actions OIDC setup.
+`holocron deploy` builds the docs site and uploads it to holocron.so hosting.
+It is the fastest way to publish without managing your own server.
 
 ```bash
 npx -y @holocron.so/cli deploy
 ```
 
+The command runs the build, uploads only changed files, finalizes the deployment,
+and prints the live URL. Use `--project prj_xxx` if the account has multiple
+projects and you are using session auth. Use `--branch <name>` to override
+branch detection for preview deploys.
+
 **Auth priority:** `HOLOCRON_KEY` env var > session token from `holocron login` >
-GitHub Actions OIDC token (automatic with `id-token: write` permission).
+GitHub Actions OIDC token (automatic in GitHub Actions with `id-token: write`).
+
+See https://holocron.so/docs/deploy/holocron.md for the full reference including
+deployment URLs, GitHub Actions OIDC setup, and org/project resolution.
 
 Always deploy preview before production. If preview fails, stop.
 
