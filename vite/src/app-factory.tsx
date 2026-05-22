@@ -635,7 +635,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     const cookies = parseCookies(request.headers.get('cookie') || '')
     const cookieTheme = site.config.appearance.strict
       ? null
-      : (cookies['holocron-theme'] === 'light' || cookies['holocron-theme'] === 'dark' ? cookies['holocron-theme'] : null)
+      : (cookies['color-theme'] === 'light' || cookies['color-theme'] === 'dark' ? cookies['color-theme'] : null)
     const isDark =
       cookieTheme === 'dark' ||
       (!cookieTheme && site.config.appearance.default === 'dark')
@@ -670,7 +670,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         )}
         <body>
           {/* Blocking theme script — runs before any content is painted to set
-              .dark class from the holocron-theme cookie. Prevents flash of wrong
+              .dark class from the color-theme cookie. Prevents flash of wrong
               theme on reload. The server also sets className on <html> from the
               cookie, but this script handles streaming race conditions where the
               browser renders before the server class attribute arrives. */}

@@ -5,7 +5,7 @@
  *
  * The blocking theme script runs BEFORE first paint to set the `.dark`
  * class on `<html>`, preventing a flash of wrong theme. It reads the
- * `holocron-theme` cookie, falling back to the config default.
+ * `color-theme` cookie, falling back to the config default.
  *
  * Analytics scripts are injected as async/deferred `<script>` tags in the
  * `<head>`. Each provider's snippet is built from the user's
@@ -22,7 +22,7 @@ import type { HolocronConfig } from '../config.ts'
    based on cookie or config default. Must be synchronous and in <head>. */
 /* Blocking script that runs before paint. Sets `.dark` class on <html>.
    When data-strict-theme is set, ignores the cookie and uses config default only. */
-export const THEME_SCRIPT = `(function(){var d=document.documentElement;var strict=d.hasAttribute("data-strict-theme");var m=strict?null:document.cookie.match(/holocron-theme=(light|dark)/);var t=m?m[1]:null;if(!t){var def=d.getAttribute("data-default-theme")||"system";t=def==="system"?(window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):def}if(t==="dark")d.classList.add("dark");else d.classList.remove("dark")})()`
+export const THEME_SCRIPT = `(function(){var d=document.documentElement;var strict=d.hasAttribute("data-strict-theme");var m=strict?null:document.cookie.match(/color-theme=(light|dark)/);var t=m?m[1]:null;if(!t){var def=d.getAttribute("data-default-theme")||"system";t=def==="system"?(window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):def}if(t==="dark")d.classList.add("dark");else d.classList.remove("dark")})()`
 
 /** Build Google Fonts URL for a family. Returns undefined if the family
  *  looks like a self-hosted font (has a source URL). */

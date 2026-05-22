@@ -30,6 +30,34 @@ test.describe('custom CSS injection', () => {
       .toBeTruthy()
   })
 
+  test('user theme tokens override holocron defaults before and after dark toggle', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'commit' })
+
+    await page.evaluate(() => {
+      document.documentElement.classList.remove('dark')
+    })
+    await expect
+      .poll(async () =>
+        await page.evaluate(() => ({
+          background: getComputedStyle(document.documentElement).getPropertyValue('--background').trim(),
+          custom: getComputedStyle(document.documentElement).getPropertyValue('--custom-css-test').trim(),
+        })),
+      )
+      .toEqual({ background: '#fafafa', custom: '#ff00ff' })
+
+    await page.evaluate(() => {
+      document.documentElement.classList.add('dark')
+    })
+    await expect
+      .poll(async () =>
+        await page.evaluate(() => ({
+          background: getComputedStyle(document.documentElement).getPropertyValue('--background').trim(),
+          custom: getComputedStyle(document.documentElement).getPropertyValue('--custom-css-test').trim(),
+        })),
+      )
+      .toEqual({ background: '#0a0a0a', custom: '#00ffff' })
+  })
+
   test('HTML response includes page content', async ({ request }) => {
     const response = await request.get('/', {
       headers: { 'sec-fetch-dest': 'document' },

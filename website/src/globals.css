@@ -1,6 +1,7 @@
 /* @reference, not @import — Holocron already imports Tailwind.
    @reference gives access to @variant, @apply, theme() without duplicate styles. */
 @reference "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ── Dashboard-specific CSS ────────────────────────────────────────── */
 

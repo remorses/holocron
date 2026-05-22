@@ -17,11 +17,12 @@
 
 /* =====================================================================
    shadcn/ui v2 token layer — standard naming convention.
-   Users can override any of these by redeclaring :root { --token: ... }
-   in their own CSS. CSS custom properties are NOT affected by cascade
-   layers, so `:root` blocks stay outside `@layer holocron`.
+   These are Holocron defaults, so they live in the low-priority theme
+   cascade layer. Unlayered user CSS can override these tokens regardless
+   of stylesheet load order.
    ===================================================================== */
 
+@layer theme {
 :root {
   --radius: 0.625rem;
 
@@ -185,6 +186,7 @@
     --purple: #c4b5fd;
   }
 }
+}
 
 
 
@@ -265,8 +267,8 @@
    Layer order: theme < base < components < utilities < holocron < unlayered
 
    What stays OUTSIDE this layer:
-   - :root CSS variable declarations (custom properties aren't affected
-     by cascade layers — users override them by redeclaring :root)
+   - @layer theme token defaults (low priority so user CSS wins even if
+     Holocron's stylesheet loads later)
    - @theme / @theme inline blocks (Tailwind config, not style rules)
    - @layer base block (Tailwind's own layer system)
    ===================================================================== */

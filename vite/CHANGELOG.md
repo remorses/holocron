@@ -19,7 +19,7 @@
 
 3. **`.md`/`.mdx` extensions stripped from internal links** — links like `[guide](/getting-started.md)` are now automatically rewritten to `/getting-started` at build time. Previously these links were excluded from broken-link validation and would serve raw markdown or 404. Reference-style links and JSX `href` attributes are also handled.
 
-4. **Dark mode persists across reloads** — a blocking `<script>` now reads the `holocron-theme` cookie before first paint, preventing the theme from flashing or resetting during RSC streaming. Previously the theme script existed but was never injected into the page.
+4. **Dark mode persists across reloads** — a blocking `<script>` now reads the `color-theme` cookie before first paint, preventing the theme from flashing or resetting during RSC streaming. Previously the theme script existed but was never injected into the page.
 
 5. **Stale build artifacts cleaned before each build** — `vite build` now removes old `client/`, `rsc/`, `ssr/` directories from `dist/` before building, preventing stale artifacts from leaking into fresh builds. Cache files (`holocron-cache.json`, `holocron-images.json`, `holocron-mdx.json`) are preserved for incremental builds.
 

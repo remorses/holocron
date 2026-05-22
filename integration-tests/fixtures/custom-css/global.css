@@ -2,8 +2,17 @@
  * This file is auto-detected by the holocron Vite plugin when
  * placed at the project root as global.css or style.css. */
 
+@reference "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --custom-css-test: #ff00ff;
+  --background: #fafafa;
+
+  @variant dark {
+    --custom-css-test: #00ffff;
+    --background: #0a0a0a;
+  }
 }
 
 #custom-css-target {

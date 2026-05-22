@@ -36,6 +36,9 @@ Use `@variant dark` inside your CSS instead of Tailwind's `dark:` utility classe
 
 ```css
 /* style.css */
+@reference "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --card: #ffffff;
   --card-foreground: #0a0a0a;
@@ -47,7 +50,7 @@ Use `@variant dark` inside your CSS instead of Tailwind's `dark:` utility classe
 }
 ```
 
-This keeps dark mode values colocated with their light mode counterparts in CSS variables.
+This keeps dark mode values colocated with their light mode counterparts in CSS variables. Holocron toggles dark mode with the `.dark` class on `<html>`, so any CSS file using `@variant dark` must define the same `@custom-variant dark` directive.
 
 ## Responsive overrides
 
@@ -73,6 +76,7 @@ Instead, use **`@reference`** to access Tailwind's theme variables, `@apply`, an
 ```css
 /* style.css */
 @reference "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --primary: #e11d48;

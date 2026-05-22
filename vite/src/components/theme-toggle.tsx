@@ -15,10 +15,6 @@ function getTheme(): 'light' | 'dark' {
   return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
 }
 
-function hasExplicitCookie(): boolean {
-  return document.cookie.includes('holocron-theme=')
-}
-
 const getServerTheme = () => 'light' as const
 
 function subscribe(cb: () => void) {
@@ -31,7 +27,7 @@ function subscribe(cb: () => void) {
   // to OS changes — their explicit choice wins.
   const media = window.matchMedia('(prefers-color-scheme: dark)')
   const onSystemChange = (e: MediaQueryListEvent) => {
-    if (hasExplicitCookie()) return
+    if (document.cookie.includes('color-theme=')) return
     document.documentElement.classList.toggle('dark', e.matches)
     cb()
   }
@@ -45,7 +41,7 @@ function subscribe(cb: () => void) {
 
 function setTheme(theme: 'light' | 'dark') {
   document.documentElement.classList.toggle('dark', theme === 'dark')
-  document.cookie = serialize('holocron-theme', theme, {
+  document.cookie = serialize('color-theme', theme, {
     path: '/',
     maxAge: 31536000,
     sameSite: 'lax',

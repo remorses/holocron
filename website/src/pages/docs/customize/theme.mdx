@@ -59,6 +59,9 @@ Control the default color mode and whether users can toggle:
 Holocron's tokens follow the shadcn naming convention. Override them in your own CSS file:
 
 ```css
+@reference "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #fafafa;
   --foreground: #0a0a0a;
@@ -75,7 +78,7 @@ Holocron's tokens follow the shadcn naming convention. Override them in your own
 }
 ```
 
-Use `@variant dark` instead of Tailwind's `dark:` for dark mode overrides. This keeps all theme values in CSS variables that adapt automatically.
+Use `@variant dark` instead of Tailwind's `dark:` for dark mode overrides. This keeps all theme values in CSS variables that adapt automatically. The `@custom-variant dark` line makes those overrides follow Holocron's persisted `.dark` class instead of the browser system media query.
 
 ## Available tokens
 
