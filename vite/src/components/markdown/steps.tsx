@@ -3,7 +3,7 @@
 /** Mintlify-compatible Steps and Step components. */
 
 import React from 'react'
-import { Icon } from '../../icon.tsx'
+import { Icon } from '../icon.tsx'
 
 export function Steps({ children, titleSize = 'p' }: { children: React.ReactNode; titleSize?: 'p' | 'h2' | 'h3' | 'h4' }) {
   return <ol className='no-bleed m-0 flex list-none flex-col gap-(--prose-gap) ps-0 [counter-reset:step]'>{children}</ol>

@@ -77,7 +77,7 @@ import {
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
-import { parseCodeMeta, metaBool } from './mintlify/code-meta.ts'
+import { parseCodeMeta, metaBool } from './code-meta.ts'
 import type { SafeMdxComponentName } from './mdx-component-names.ts'
 
 import { SidebarAssistant, PageNavRow } from '../components/sidebar-assistant.tsx'

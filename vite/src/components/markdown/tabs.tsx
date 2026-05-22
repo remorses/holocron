@@ -1,8 +1,8 @@
 'use client'
 
 import React, { Children, isValidElement, useId, useMemo, useRef, useState } from 'react'
-import { cn } from '../../../lib/css-vars.ts'
-import { Icon } from '../../icon.tsx'
+import { cn } from '../../lib/css-vars.ts'
+import { Icon } from '../icon.tsx'
 
 type TabChildProps = {
   id?: string

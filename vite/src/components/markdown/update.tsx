@@ -4,7 +4,7 @@
 
 import React from 'react'
 import { Link } from 'spiceflow/react'
-import { slugify } from '../../../lib/toc-tree.ts'
+import { slugify } from '../../lib/toc-tree.ts'
 import { Badge } from './badge.tsx'
 
 export function Update({

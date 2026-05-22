@@ -3,7 +3,7 @@
 /** Mintlify-compatible Expandable disclosure component. */
 
 import React from 'react'
-import { cn } from '../../../lib/css-vars.ts'
+import { cn } from '../../lib/css-vars.ts'
 import { Chevron } from './chevron.tsx'
 import { renderCompatIcon } from './shared.tsx'
 

@@ -3,8 +3,8 @@
 /** Shared helpers for Mintlify-compatible MDX components. */
 
 import React from 'react'
-import { cn } from '../../../lib/css-vars.ts'
-import { Icon } from '../../icon.tsx'
+import { cn } from '../../lib/css-vars.ts'
+import { Icon } from '../icon.tsx'
 
 export function isExternalHref(href: string | undefined) {
   return href?.startsWith('http://') || href?.startsWith('https://')

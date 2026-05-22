@@ -3,7 +3,7 @@
 /** Mintlify-compatible Prompt component with optional copy action. */
 
 import React from 'react'
-import { Icon } from '../../icon.tsx'
+import { Icon } from '../icon.tsx'
 import { SectionCard } from './shared.tsx'
 
 export function Prompt({

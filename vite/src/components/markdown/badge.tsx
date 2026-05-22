@@ -3,8 +3,8 @@
 /** Mintlify-compatible Badge component using Holocron color tokens. */
 
 import React from 'react'
-import { cn } from '../../../lib/css-vars.ts'
-import { Icon } from '../../icon.tsx'
+import { cn } from '../../lib/css-vars.ts'
+import { Icon } from '../icon.tsx'
 import { isExternalHref, renderCompatIcon } from './shared.tsx'
 
 export function Badge({

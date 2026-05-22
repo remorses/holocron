@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
-import { cn } from '../../../lib/css-vars.ts'
-import { Icon } from '../../icon.tsx'
+import { cn } from '../../lib/css-vars.ts'
+import { Icon } from '../icon.tsx'
 import { Chevron } from './chevron.tsx'
 
 export function AccordionGroup({ children }: { children: React.ReactNode }) {

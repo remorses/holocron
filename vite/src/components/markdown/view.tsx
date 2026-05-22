@@ -3,7 +3,7 @@
 /** Mintlify-compatible View component for alternative content blocks. */
 
 import React from 'react'
-import { Icon } from '../../icon.tsx'
+import { Icon } from '../icon.tsx'
 import { SectionCard } from './shared.tsx'
 
 export function View({ title, icon, iconType, children }: { title: string; icon?: string; /** Font Awesome styles and explicit library prefixes are forwarded to <Icon>. */ iconType?: string; children: React.ReactNode }) {

@@ -8,7 +8,7 @@
 'use client'
 
 import React from 'react'
-import { Expandable } from '../../components/markdown/mintlify/expandable.tsx'
+import { Expandable } from '../../components/markdown/expandable.tsx'
 import { MethodBadge, NavBadge } from '../../components/layout/nav-badge.tsx'
 
 /* ── Types ────────────────────────────────────────────────────────────── */

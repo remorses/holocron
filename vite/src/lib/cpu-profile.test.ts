@@ -164,9 +164,9 @@ describe('realworld-polar dev cpu profile', () => {
         "408 processMdx @ <repo>/vite/dist/lib/mdx-processor.js",
         "359 processMdx @ <repo>/vite/dist/lib/mdx-processor.js",
         "347 enrichPage @ <repo>/vite/dist/lib/sync.js",
-        "238 normalizeMdx @ <repo>/vite/dist/lib/mintlify/normalize-mdx.js",
+        "238 normalizeMdx @ <repo>/vite/dist/lib/normalize-mdx.js",
         "219 collectMdxIconRefs @ <repo>/vite/dist/lib/mdx-processor.js",
-        "207 normalizeMdx @ <repo>/vite/dist/lib/mintlify/normalize-mdx.js",
+        "207 normalizeMdx @ <repo>/vite/dist/lib/normalize-mdx.js",
         "177 parse @ nm/unified@11.0.5/node_modules/unified/lib/index.js",
         "175 parser @ nm/remark-parse@11.0.0/node_modules/remark-parse/lib/index.js",
       ]

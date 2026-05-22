@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { normalizeMdx, type NormalizedMdx } from './normalize-mdx.ts'
-import { HolocronMdxParseError } from '../logger.ts'
+import { HolocronMdxParseError } from './logger.ts'
 
 /** Assert normalizeMdx succeeded and return the result. */
 function expectSuccess(result: HolocronMdxParseError | NormalizedMdx): NormalizedMdx {

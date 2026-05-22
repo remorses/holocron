@@ -4,7 +4,7 @@
 
 import React from 'react'
 import { Link } from 'spiceflow/react'
-import { cn } from '../../../lib/css-vars.ts'
+import { cn } from '../../lib/css-vars.ts'
 import { isExternalHref, renderCompatIcon } from './shared.tsx'
 
 function resolveColumns(cols: number | undefined) {

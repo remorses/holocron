@@ -3,7 +3,7 @@
 /** Mintlify-compatible file tree components. */
 
 import React from 'react'
-import { cn } from '../../../lib/css-vars.ts'
+import { cn } from '../../lib/css-vars.ts'
 import { Chevron } from './chevron.tsx'
 import { renderCompatIcon, SectionCard } from './shared.tsx'
 

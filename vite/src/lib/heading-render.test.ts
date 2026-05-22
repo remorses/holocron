@@ -9,7 +9,7 @@
 import { describe, expect, test } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { normalizeMdx } from './mintlify/normalize-mdx.ts'
+import { normalizeMdx } from './normalize-mdx.ts'
 import { RenderNodes } from './mdx-components-map.tsx'
 
 function renderMdx(raw: string) {

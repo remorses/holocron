@@ -15,8 +15,8 @@ import { remarkHeadings } from './remark-headings.ts'
 import { remarkMermaidCode } from './remark-mermaid.ts'
 import { remarkSidebarComponents } from './remark-sidebar-components.ts'
 import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
-import { HolocronMdxParseError, extractParseErrorInfo } from '../logger.ts'
-import { stripMdExtFromPath, isExternalUrl } from '../link-utils.ts'
+import { HolocronMdxParseError, extractParseErrorInfo } from './logger.ts'
+import { stripMdExtFromPath, isExternalUrl } from './link-utils.ts'
 
 export type NormalizedMdx = {
   /** Serialized MDX string after all remark transforms */

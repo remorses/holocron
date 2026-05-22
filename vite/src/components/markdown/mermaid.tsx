@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { CodeBlock } from '../code-block.tsx'
+import { CodeBlock } from './code-block.tsx'
 
 /**
  * Mermaid diagram renderer — detects dark mode from <html class="dark">

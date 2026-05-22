@@ -406,10 +406,10 @@ Combined SHA covers page content + all imported file contents (recursive) + all 
 
 ### Key files
 
-- `vite/src/lib/mintlify/remark-inline-imports.ts` — remark plugin + `buildSplicedNodes`
+- `vite/src/lib/remark-inline-imports.ts` — remark plugin + `buildSplicedNodes`
 - `vite/src/lib/sync.ts` — `resolveInlineImports`, cache key, `scanFile`/`scanMdast`
 - `vite/src/lib/mdx-processor.ts` — `ProcessMdxOptions` for prepend plugins
-- `vite/src/lib/mintlify/normalize-mdx.ts` — `NormalizeMdxOptions` with `prependPlugins`
+- `vite/src/lib/normalize-mdx.ts` — `NormalizeMdxOptions` with `prependPlugins`
 
 ### Rules
 

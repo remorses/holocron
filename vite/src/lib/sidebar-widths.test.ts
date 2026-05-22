@@ -7,7 +7,7 @@ import {
 } from './sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { buildSections } from './mdx-sections.ts'
-import { normalizeMdx } from './mintlify/normalize-mdx.ts'
+import { normalizeMdx } from './normalize-mdx.ts'
 
 // Mirrors the real pipeline in app-factory.tsx: mdx is normalized (which
 // wraps RequestExample / ResponseExample in <Aside>), then parsed, then

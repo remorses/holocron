@@ -6,7 +6,7 @@ This document lists every MDX component Mintlify supports, with their props and 
 
 ## Implementation Status
 
-Components already implemented in Holocron (`vite/src/components/markdown/mintlify/` and `index.tsx`) are marked with **[IMPLEMENTED]**.
+Components already implemented in Holocron (`vite/src/components/markdown/` and `index.tsx`) are marked with **[IMPLEMENTED]**.
 
 ---
 
@@ -118,7 +118,7 @@ Navigation/content card with optional icon, image, and link.
 
 Tabbed code block container for displaying multiple code examples.
 
-**[IMPLEMENTED]** (via `mintlify/tabs.tsx` — CodeGroup uses same sync mechanism)
+**[IMPLEMENTED]** (via `tabs.tsx` — CodeGroup uses same sync mechanism)
 
 | Prop | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|

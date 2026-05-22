@@ -3,7 +3,7 @@ import { expect, test } from "../helpers/test.ts";
 // Integration tests for the Mintlify-style <Update> component. The component
 // must render as a two-column row: a sticky label rail on the left and MDX
 // children on the right. On mobile viewports the rail stacks above the
-// content. See vite/src/components/markdown/mintlify/update.tsx.
+// content. See vite/src/components/markdown/update.tsx.
 //
 // Gotcha: the slugified ids here (e.g. "2026-04-11") start with a digit, so
 // raw CSS id selectors like `#2026-04-11` are invalid in querySelector. We

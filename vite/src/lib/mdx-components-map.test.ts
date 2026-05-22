@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { mdxComponents } from './mdx-components-map.tsx'
 import { buildCodeFrame, formatMdxError, HolocronMdxParseError } from './logger.ts'
-import { normalizeMdx } from './mintlify/normalize-mdx.ts'
+import { normalizeMdx } from './normalize-mdx.ts'
 import { RenderNodes } from './mdx-components-map.tsx'
 import { mdxParse } from 'safe-mdx/parse'
 import type { Root, RootContent } from 'mdast'
