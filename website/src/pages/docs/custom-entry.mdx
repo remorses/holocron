@@ -108,11 +108,13 @@ export const app = new Spiceflow()
   .use(holocronApp)
 ```
 
-## Custom CSS and Tailwind
+## Custom CSS
 
 Holocron includes Tailwind CSS automatically. **Do not add `@import 'tailwindcss'` in your own CSS files.** A second import creates duplicate style layers that break layout, spacing, and cascade order.
 
-Use **`@reference`** instead. It gives your CSS access to Tailwind's theme variables, `@apply`, and `@variant` without emitting duplicate styles:
+## Tailwind references
+
+Use **`@reference`** instead of `@import`. It gives your CSS access to Tailwind's theme variables, `@apply`, and `@variant` without emitting duplicate styles:
 
 ```css
 /* src/globals.css */
@@ -130,11 +132,13 @@ Use **`@reference`** instead. It gives your CSS access to Tailwind's theme varia
 }
 ```
 
-### Dark mode variant limitation
+## Dark mode variant limitation
 
 `@custom-variant dark` must be repeated in every Tailwind-processed CSS file that uses `@variant dark`. This is a Tailwind limitation: `@custom-variant` is a **compile-time directive**, not a runtime CSS variable or inherited browser setting.
 
 Holocron defines the dark variant in its own stylesheet, but that only affects CSS compiled in Holocron's Tailwind processing context. Your custom entry CSS is processed as a separate stylesheet, so Tailwind does not automatically know that Holocron uses class-based dark mode.
+
+## Required dark variant
 
 If you omit this line:
 
@@ -144,7 +148,9 @@ If you omit this line:
 
 then `@variant dark` in your CSS can compile to Tailwind's default dark behavior, which may follow the browser system media query. That makes your app theme disagree with Holocron's persisted toggle, because Holocron stores the selected theme by adding or removing `.dark` on `<html>`.
 
-Holocron persists the selected mode in the `color-theme` cookie and mirrors it on `<html class="dark">`. If your app has its own theme toggle outside the docs layout, use the same cookie so both your pages and Holocron pages share one persisted state:
+## Shared theme cookie
+
+Holocron persists the selected mode in the **`color-theme`** cookie and mirrors it on `<html class="dark">`. If your app has its own theme toggle outside the docs layout, use the same cookie so both your pages and Holocron pages share one persisted state:
 
 ```tsx
 'use client'
@@ -164,7 +170,9 @@ export function ThemeToggle() {
 }
 ```
 
-If your custom pages render their own `<html>` shell, read the same cookie on the server and set the initial class before the page paints:
+## Server-rendered theme class
+
+If your custom pages render their own `<html>` shell, read the **same cookie** on the server and set the initial class before the page paints:
 
 ```tsx
 function getInitialThemeClass(request: Request) {
@@ -180,7 +188,9 @@ export const app = new Spiceflow()
   ))
 ```
 
-If your CSS file is not named `global.css` or `style.css` at the project root, import it normally in your server entry:
+## Importing custom CSS
+
+If your CSS file is not named **`global.css`** or **`style.css`** at the project root, import it normally in your server entry:
 
 ```tsx
 import './globals.css'
