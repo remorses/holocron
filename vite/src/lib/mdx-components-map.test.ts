@@ -142,6 +142,45 @@ describe('formatMdxError', () => {
   })
 })
 
+describe('ordered list numbering — full production pipeline', () => {
+  it('preserves start attribute on ordered lists split by code blocks', () => {
+    const { html } = renderMdx(dedent`
+      1. Clone the repo:
+
+      \`\`\`bash
+      git clone https://github.com/example/repo.git
+      \`\`\`
+
+      2. Install dependencies:
+
+      \`\`\`bash
+      pnpm install
+      \`\`\`
+
+      3. Run locally:
+
+      \`\`\`bash
+      pnpm dev
+      \`\`\`
+
+      4. Deploy:
+
+      \`\`\`bash
+      pnpm deploy
+      \`\`\`
+    `)
+
+    // Each separate <ol> must have the correct start attribute so the
+    // browser renders 1, 2, 3, 4 instead of 1, 1, 1, 1.
+    const olMatches = html.match(/<ol[^>]*>/g) || []
+    expect(olMatches.length).toBe(4)
+    expect(olMatches[0]).toContain('start="1"')
+    expect(olMatches[1]).toContain('start="2"')
+    expect(olMatches[2]).toContain('start="3"')
+    expect(olMatches[3]).toContain('start="4"')
+  })
+})
+
 describe('MDX paragraph rendering — full production pipeline', () => {
   it('plain markdown text gets editorial-prose styling', () => {
     const { html } = renderMdx('Hello world')

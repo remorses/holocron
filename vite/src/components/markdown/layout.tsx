@@ -54,8 +54,8 @@ export function Section({
   )
 }
 
-export function OL({ children }: { children: React.ReactNode }) {
-  return <ol className='no-bleed editorial-prose pl-5 flex flex-col gap-(--list-gap)' style={{ listStyleType: 'decimal' }}>{children}</ol>
+export function OL({ children, start }: { children: React.ReactNode; start?: number }) {
+  return <ol start={start} className='no-bleed editorial-prose pl-5 flex flex-col gap-(--list-gap)' style={{ listStyleType: 'decimal' }}>{children}</ol>
 }
 
 export function List({ children }: { children: React.ReactNode }) {
