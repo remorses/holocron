@@ -52,10 +52,10 @@ export type EditorialSection = {
 
 function ContentFooter() {
   return (
-    <div className='bleed'>
+    <>
       <Footer />
       <PoweredBy />
-    </div>
+    </>
   )
 }
 
