@@ -14,6 +14,38 @@ Holocron can be mounted as a **child app** inside your existing Spiceflow projec
 - You need middleware (auth, logging, headers) to wrap both your routes and the docs
 - You want API routes like `/api/chat` living next to your documentation
 
+## Keep docs in a subfolder
+
+When mounting Holocron alongside your own app, **always put MDX files inside a subfolder** like `docs/`. This way all documentation lives under `/docs/*` and won't collide with your app routes like `/api`, `/login`, `/dashboard`, or `/pricing`.
+
+Without a subfolder, a page like `configuration.mdx` maps to `/configuration`, which could easily conflict with a current or future app route. With a `docs/` prefix it becomes `/docs/configuration` and stays cleanly isolated. As your app grows you never have to worry about a new feature route clashing with a docs page.
+
+```diagram
+my-project/
+├── docs/               ← all MDX pages live here
+│   ├── getting-started.mdx
+│   └── configuration.mdx
+├── docs.json
+├── server.tsx
+├── vite.config.ts
+└── package.json
+```
+
+Reference pages in `docs.json` with the `docs/` prefix:
+
+```json
+{
+  "navigation": [
+    {
+      "group": "Guides",
+      "pages": ["docs/getting-started", "docs/configuration"]
+    }
+  ]
+}
+```
+
+Page slugs map directly to file paths. `docs/getting-started` resolves to `docs/getting-started.mdx` and is served at `/docs/getting-started`.
+
 ## Setup
 
 Pass `entry` to the holocron plugin pointing to your Spiceflow server file:
@@ -105,44 +137,9 @@ import './globals.css'
 
 Your custom properties override Holocron's defaults because CSS custom properties are not affected by cascade layers.
 
-## Docs in a subfolder
+## Custom homepage
 
-To serve docs under `/docs/*` while keeping `/` for your own page, put MDX files inside a `docs/` subfolder and reference them with the `docs/` prefix in `docs.json`:
-
-```diagram
-my-project/
-├── docs/
-│   ├── getting-started.mdx
-│   └── configuration.mdx
-├── docs.json
-├── server.tsx
-├── vite.config.ts
-└── package.json
-```
-
-```json
-{
-  "name": "My Product",
-  "navigation": [
-    {
-      "group": "Guides",
-      "pages": ["docs/getting-started", "docs/configuration"]
-    }
-  ]
-}
-```
-
-The docs pages are available at `/docs/getting-started` and `/docs/configuration`. Your homepage at `/` stays untouched. Holocron will not redirect `/` to the first doc page when a parent route already handles it.
-
-<Aside>
-
-<Tip>
-Page slugs in `docs.json` map directly to file paths. `docs/getting-started` loads `docs/getting-started.mdx`.
-</Tip>
-
-</Aside>
-
-Here is a full `server.tsx` with a custom homepage:
+With docs nested in `docs/`, your `/` route stays free for a custom homepage. Holocron will not redirect `/` to the first doc page when a parent route already handles it.
 
 ```tsx
 // server.tsx
