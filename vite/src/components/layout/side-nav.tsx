@@ -18,36 +18,7 @@ import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 
-// Search shortcut hint detection.
-// Uses navigator.keyboard.getLayoutMap() (Chrome/Edge) to check if the
-// physical Slash key produces "/" directly. If it does, show "/" as the
-// hint; otherwise fall back to ⌘K (Mac) or Ctrl K (others). On browsers
-// that don't support the Keyboard API (Firefox, Safari), fall back to
-// the platform-based hint immediately.
-function useSearchShortcutHint(): string {
-  const [hint, setHint] = useState<string | null>(null)
-
-  useEffect(() => {
-    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
-    const fallback = isMac ? '⌘K' : 'Ctrl K'
-
-    const nav = navigator as Navigator & { keyboard?: { getLayoutMap?: () => Promise<Map<string, string>> } }
-    if (!nav.keyboard?.getLayoutMap) {
-      setHint(fallback)
-      return
-    }
-
-    nav.keyboard.getLayoutMap!().then((layoutMap) => {
-      const slashChar = layoutMap.get('Slash')
-      setHint(slashChar === '/' ? '/' : fallback)
-    }).catch(() => {
-      setHint(fallback)
-    })
-  }, [])
-
-  // SSR / first render: return null (hint hidden until detected)
-  return hint ?? '⌘K'
-}
+const SEARCH_SHORTCUT_HINT = '/'
 
 // Sidebar animation gate — animations are disabled by default, enabled only
 // when `<html class="sidebar-animate">` is present. Uses a MutationObserver
@@ -66,7 +37,7 @@ function subscribeSidebarAnimate(cb: () => void) {
  * from the Spiceflow loader via `useHolocronData()`.
  */
 export function SideNav() {
-  const searchShortcutHint = useSearchShortcutHint()
+  const searchShortcutHint = SEARCH_SHORTCUT_HINT
   const sidebarAnimate = useSyncExternalStore(subscribeSidebarAnimate, getSidebarAnimate, getServerSidebarAnimate)
   const {
     site,
@@ -152,21 +123,14 @@ export function SideNav() {
     [db, searchEntries],
   )
 
-  // Global ⌘K / Ctrl+K / "/" hotkey to focus search input
+  // Global "/" hotkey to focus search input
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        searchInputRef.current?.focus()
-        return
-      }
-      // "/" shortcut — only when no input/textarea is focused (standard convention)
-      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const tag = (e.target as HTMLElement)?.tagName
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
-        e.preventDefault()
-        searchInputRef.current?.focus()
-      }
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+      e.preventDefault()
+      searchInputRef.current?.focus()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -223,7 +187,7 @@ export function SideNav() {
 
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
-      {/* Search input — leading magnifier icon + F hotkey kbd on the right. */}
+      {/* Search input — leading magnifier icon + "/" hotkey kbd on the right. */}
       <div className='pb-3 pl-1 pr-1 flex items-center relative shrink-0'>
         <span
           aria-hidden='true'
