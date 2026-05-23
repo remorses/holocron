@@ -71,7 +71,7 @@ level ||= 1
     'data-toc-heading': 'true',
     'data-toc-level': level,
   },
-    <span style={{ whiteSpace: level <= 2 ? 'nowrap' : 'normal' }}>{children}</span>,
+    <span>{children}</span>,
     level <= 2 ? <span style={{ flex: 1, height: '1px', background: 'var(--divider)' }} /> : null,
   )
 }
