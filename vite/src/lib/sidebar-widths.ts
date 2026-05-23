@@ -44,8 +44,8 @@ export const DEFAULT_SIDEBAR_WIDTH: number = GRID_TOKENS['--grid-sidebar-width']
  *  given MDX component name. Components not listed fall through to the
  *  DEFAULT_SIDEBAR_WIDTH. */
 export const COMPONENT_SIDEBAR_WIDTHS: Record<string, number> = {
-  RequestExample: 440,
-  ResponseExample: 440,
+  RequestExample: 460,
+  ResponseExample: 460,
 }
 
 /**
