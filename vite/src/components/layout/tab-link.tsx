@@ -50,28 +50,10 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
     />
   )
 
-  if (isExternal) {
-    return (
-      <Link
-        href={tab.href}
-        target='_blank'
-        rel='noopener noreferrer'
-        className={tabClassName}
-        style={tabStyle}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <Icon icon={tab.icon} size={14} />
-        {tab.label}
-        <span className='opacity-50'>↗</span>
-        {indicator}
-      </Link>
-    )
-  }
-
   return (
     <Link
       href={tab.href}
+      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={tabClassName}
       style={tabStyle}
       onMouseEnter={handleMouseEnter}
@@ -79,6 +61,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
     >
       <Icon icon={tab.icon} size={14} />
       {tab.label}
+      {isExternal && <span className='opacity-50'>↗</span>}
       {indicator}
     </Link>
   )

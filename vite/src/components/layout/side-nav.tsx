@@ -8,7 +8,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { flushSync } from 'react-dom'
-import { router, useRouterState } from 'spiceflow/react'
+import { Link, router, useRouterState } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
@@ -327,24 +327,26 @@ export function SideNav() {
 function SidebarAnchors({ anchors }: { anchors: ReturnType<typeof buildSidebarAnchors> }) {
   return (
     <div className='flex flex-col gap-2.5 mt-2 mb-0.5'>
-      {anchors.map((anchor) => (
-        <a
-          key={anchor.href}
-          href={anchor.href}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='no-underline flex items-center gap-1.5 hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]'
-          style={{
-            color: 'var(--sidebar-foreground)',
-            fontVariationSettings: '"wght" 450',
-            transition: 'color 0.15s',
-          }}
-        >
-          <Icon icon={anchor.icon} size={12} />
-          <span>{anchor.label}</span>
-          <span className='ml-auto mr-3 opacity-50'>↗</span>
-        </a>
-      ))}
+      {anchors.map((anchor) => {
+        const isExternal = anchor.href.startsWith('http')
+        return (
+          <Link
+            key={anchor.href}
+            href={anchor.href}
+            {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            className='no-underline flex items-center gap-1.5 hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]'
+            style={{
+              color: 'var(--sidebar-foreground)',
+              fontVariationSettings: '"wght" 450',
+              transition: 'color 0.15s',
+            }}
+          >
+            <Icon icon={anchor.icon} size={12} />
+            <span>{anchor.label}</span>
+            {isExternal && <span className='ml-auto mr-3 opacity-50'>↗</span>}
+          </Link>
+        )
+      })}
     </div>
   )
 }
