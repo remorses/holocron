@@ -124,6 +124,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     seo: normalizeSeo(raw.seo),
     assistant: normalizeAssistant(raw.assistant),
     decorativeLines: normalizeDecorativeLines(raw.decorativeLines),
+    layout: normalizeLayout(raw.layout),
     integrations: normalizeIntegrations(raw.integrations),
   }
 }
@@ -603,7 +604,7 @@ function normalizeAppearance(raw: unknown): HolocronConfig['appearance'] {
 function normalizeFonts(raw: unknown): HolocronConfig['fonts'] {
   if (!raw || typeof raw !== 'object') return undefined
   const obj = raw as Record<string, unknown>
-  const normFontObj = (v: unknown): { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2' } | undefined => {
+  const normFontObj = (v: unknown): { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2'; fontSize?: number } | undefined => {
     if (!v || typeof v !== 'object') return undefined
     const o = v as Record<string, unknown>
     if (typeof o.family !== 'string') return undefined
@@ -612,6 +613,7 @@ function normalizeFonts(raw: unknown): HolocronConfig['fonts'] {
       weight: typeof o.weight === 'number' ? o.weight : undefined,
       source: typeof o.source === 'string' ? normalizeStaticPath(o.source) : undefined,
       format: o.format === 'woff' || o.format === 'woff2' ? o.format : undefined,
+      fontSize: typeof o.fontSize === 'number' ? o.fontSize : undefined,
     }
   }
   return {
@@ -619,6 +621,7 @@ function normalizeFonts(raw: unknown): HolocronConfig['fonts'] {
     weight: typeof obj.weight === 'number' ? obj.weight : undefined,
     source: typeof obj.source === 'string' ? normalizeStaticPath(obj.source) : undefined,
     format: obj.format === 'woff' || obj.format === 'woff2' ? obj.format : undefined,
+    fontSize: typeof obj.fontSize === 'number' ? obj.fontSize : undefined,
     heading: normFontObj(obj.heading),
     body: normFontObj(obj.body),
   }
@@ -671,4 +674,21 @@ function normalizeDecorativeLines(raw: unknown): HolocronConfig['decorativeLines
     return raw as HolocronConfig['decorativeLines']
   }
   return 'lines-with-dots'
+}
+
+function normalizeLayout(raw: unknown): HolocronConfig['layout'] {
+  const defaults: HolocronConfig['layout'] = {
+    maxWidth: 1200,
+    sidebarWidth: 230,
+    columnGap: 60,
+    radius: 10,
+  }
+  if (!raw || typeof raw !== 'object') return defaults
+  const obj = raw as Record<string, unknown>
+  return {
+    maxWidth: typeof obj.maxWidth === 'number' ? obj.maxWidth : defaults.maxWidth,
+    sidebarWidth: typeof obj.sidebarWidth === 'number' ? obj.sidebarWidth : defaults.sidebarWidth,
+    columnGap: typeof obj.columnGap === 'number' ? obj.columnGap : defaults.columnGap,
+    radius: typeof obj.radius === 'number' ? obj.radius : defaults.radius,
+  }
 }

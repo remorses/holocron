@@ -782,6 +782,16 @@ const fontBaseSchema = z.object({
     .enum(['woff', 'woff2'])
     .optional()
     .describe('Font file format. Required when using a local source file'),
+  fontSize: z
+    .number()
+    .optional()
+    .describe(
+      dedent`
+        Font size in pixels for this font role. For heading fonts,
+        this sets the size of all heading levels (h1, h2, h3).
+        Defaults to \`16\` for headings
+      `,
+    ),
 })
 
 export const fontsSchema = z
@@ -808,6 +818,14 @@ export const fontsSchema = z
       .enum(['woff', 'woff2'])
       .optional()
       .describe('Font file format. Required when using a local source file'),
+    fontSize: z
+      .number()
+      .optional()
+      .describe(
+        dedent`
+          Body text font size in pixels. Defaults to \`14\`
+        `,
+      ),
     heading: fontBaseSchema.optional().describe('Override font settings for headings'),
     body: fontBaseSchema.optional().describe('Override font settings for body text'),
   })
@@ -835,6 +853,58 @@ const footerLinkColumnSchema = z.object({
   header: z.string().optional().describe('Column header title'),
   items: z.array(footerLinkItemSchema).describe('Links in the column'),
 })
+
+/* ── Layout ───────────────────────────────────────────────────────────── */
+
+export const layoutSchema = z
+  .object({
+    maxWidth: z
+      .number()
+      .optional()
+      .describe(
+        dedent`
+          Maximum page width in pixels. The page grid is capped at this
+          value. Content, sidebars, and gaps all live inside this
+          constraint. Defaults to \`1200\`
+        `,
+      ),
+    sidebarWidth: z
+      .number()
+      .optional()
+      .describe(
+        dedent`
+          Width of the left sidebar (table of contents) in pixels.
+          Defaults to \`230\`
+        `,
+      ),
+    columnGap: z
+      .number()
+      .optional()
+      .describe(
+        dedent`
+          Gap between the three grid columns (left sidebar, content,
+          right sidebar) in pixels. Defaults to \`60\`
+        `,
+      ),
+    radius: z
+      .number()
+      .optional()
+      .describe(
+        dedent`
+          Base border radius in pixels. All rounded corners in the UI
+          derive from this value. Defaults to \`10\`
+        `,
+      ),
+  })
+  .describe(
+    dedent`
+      Page grid layout and geometry. The content column width is derived
+      automatically: content = maxWidth - sidebarWidth - rightSidebar - 2 × columnGap.
+      Increasing maxWidth grows the content column up to its 720px cap,
+      then extra space becomes gap
+    `,
+  )
+  .meta({ id: 'layoutSchema' })
 
 /* ── Decorative lines ─────────────────────────────────────────────────── */
 
@@ -1022,6 +1092,7 @@ export const holocronConfigSchema = z
     seo: seoSchema.optional(),
     assistant: assistantSchema.optional(),
     decorativeLines: decorativeLinesSchema.optional(),
+    layout: layoutSchema.optional(),
     integrations: integrationsSchema.optional(),
   })
   .passthrough()

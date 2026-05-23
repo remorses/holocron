@@ -21,11 +21,12 @@
  * the default sidebar width.
  */
 
+import type { HolocronConfig } from '../config.ts'
 import type { HolocronCSSProperties } from './css-vars.ts'
 
 /**
- * Grid geometry tokens (px). Only the 4 independent values — content
- * width is derived from these via calc() in `buildGridTokenStyle()`.
+ * Default grid geometry tokens (px). Used as fallback when no config
+ * is provided. The `layout` field in docs.json can override these.
  *
  * Keys match the CSS custom-property names that get injected as inline
  * style on `.slot-page`.
@@ -90,19 +91,26 @@ export function computeSidebarWidthFromAsideNodes(
  *
  * This keeps the page max-width constant regardless of sidebar width.
  * Bump `--grid-max-width` and the content column grows automatically.
+ *
+ * When `configLayout` is provided, its values override the hardcoded
+ * GRID_TOKENS defaults.
  */
 export function buildGridTokenStyle(
   sidebarWidth: number,
   gridGap?: number,
+  configLayout?: HolocronConfig['layout'],
 ): HolocronCSSProperties {
-  const nav = GRID_TOKENS['--grid-nav-width']
-  const maxW = GRID_TOKENS['--grid-max-width']
+  const nav = configLayout?.sidebarWidth ?? GRID_TOKENS['--grid-nav-width']
+  const maxW = configLayout?.maxWidth ?? GRID_TOKENS['--grid-max-width']
+  const gap = gridGap ?? configLayout?.columnGap ?? GRID_TOKENS['--grid-gap']
+  const radius = configLayout?.radius
 
   return {
     '--grid-nav-width': `${nav}px`,
-    ...(gridGap !== undefined && { '--grid-gap': `${gridGap}px` }),
+    '--grid-gap': `${gap}px`,
     '--grid-sidebar-width': `${sidebarWidth}px`,
     '--grid-max-width': `min(calc(100vw - 60px), ${maxW}px)`,
     '--grid-content-width': `minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap))))`,
+    ...(radius !== undefined && { '--radius': `${radius / 16}rem` }),
   }
 }

@@ -45,7 +45,7 @@ curl https://api.example.com
 \`\`\`
 </RequestExample>
 `
-    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`460`)
   })
 
   test('ResponseExample also bumps width', () => {
@@ -57,7 +57,7 @@ curl https://api.example.com
 \`\`\`
 </ResponseExample>
 `
-    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`460`)
   })
 
   test('unknown component in aside keeps default width', () => {
@@ -83,7 +83,7 @@ curl
 \`\`\`
 </RequestExample>
 `
-    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`460`)
   })
 
   test('deeply nested RequestExample is still detected', () => {
@@ -99,14 +99,14 @@ curl
   </div>
 </Aside>
 `
-    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`396`)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`460`)
   })
 
   test('exports a static widths map for the sidebar components', () => {
     expect(COMPONENT_SIDEBAR_WIDTHS).toMatchInlineSnapshot(`
       {
-        "RequestExample": 396,
-        "ResponseExample": 396,
+        "RequestExample": 460,
+        "ResponseExample": 460,
       }
     `)
   })

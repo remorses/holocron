@@ -30,6 +30,7 @@ import type {
   searchSchema,
   bannerSchema,
   integrationsSchema,
+  layoutSchema,
 } from './schema.ts'
 import { parseJsonc } from './lib/jsonc.ts'
 import { normalize } from './lib/normalize-config.ts'
@@ -121,8 +122,9 @@ export type HolocronConfig = {
     weight?: number
     source?: string
     format?: 'woff' | 'woff2'
-    heading?: { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2' }
-    body?: { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2' }
+    fontSize?: number
+    heading?: { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2'; fontSize?: number }
+    body?: { family: string; weight?: number; source?: string; format?: 'woff' | 'woff2'; fontSize?: number }
   }
   navigation: {
     tabs: ConfigNavTab[]
@@ -145,6 +147,7 @@ export type HolocronConfig = {
   seo: { indexing?: 'navigable' | 'all'; metatags?: Record<string, string> }
   assistant: { enabled: boolean }
   decorativeLines: 'none' | 'lines' | 'dashed' | 'lines-with-dots'
+  layout: { maxWidth: number; sidebarWidth: number; columnGap: number; radius: number }
   integrations: z.output<typeof integrationsSchema>
 }
 

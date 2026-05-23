@@ -24,6 +24,7 @@ import { TabLink } from './tab-link.tsx'
 import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon } from '../icon.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
+import { ConfigPanel } from '../config-panel.tsx'
 import { Footer, Logo, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner-dismiss.tsx'
 import { ChatDrawer } from '../chat-drawer.tsx'
@@ -92,7 +93,7 @@ export function EditorialPage({
   /** Optional page-level grid gap from frontmatter. */
   gridGap?: number
 }) {
-  const { site, activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
+  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const siteLogo = getResolvedLogo(site)
@@ -116,11 +117,21 @@ export function EditorialPage({
   // object so there's only one place to edit. `buildGridTokenStyle`
   // also bumps `--grid-max-width` when the right sidebar is wider than
   // the default (e.g. pages with RequestExample / ResponseExample).
+  // Font size overrides from config.fonts
+  const bodyFontSize = siteConfig.fonts?.fontSize
+  const headingFontSize = siteConfig.fonts?.heading?.fontSize
+
   const pageStyle: HolocronCSSProperties = {
     WebkitFontSmoothing: 'antialiased',
     '--banner-height': bannerContent ? '36px' : '0px',
     '--grid-line-style': decorativeLines === 'none' ? 'none' : decorativeLines === 'dashed' ? 'dashed' : 'solid',
-    ...buildGridTokenStyle(sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH, gridGap),
+    ...(bodyFontSize !== undefined && { '--type-body-size': `${bodyFontSize}px` }),
+    ...(headingFontSize !== undefined && {
+      '--type-heading-1-size': `${headingFontSize}px`,
+      '--type-heading-2-size': `${headingFontSize}px`,
+      '--type-heading-3-size': `${headingFontSize}px`,
+    }),
+    ...buildGridTokenStyle(sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH, gridGap, siteConfig.layout),
   }
 
   return (
@@ -408,6 +419,11 @@ export function EditorialPage({
 
       {/* Mobile navigation drawer (lg:hidden) */}
       <NavDrawer />
+
+      {/* Config customization panel — loaded asynchronously when idle.
+          Only mounted in dev mode and on preview subdomains. DialKit
+          renders its own floating toggle button. */}
+      {showConfigPanel && <ConfigPanel config={siteConfig} />}
     </div>
   )
 }

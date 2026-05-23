@@ -198,6 +198,13 @@
         }
       ]
     },
+    "layout": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/layoutSchema"
+        }
+      ]
+    },
     "integrations": {
       "allOf": [
         {
@@ -343,6 +350,10 @@
             "woff2"
           ]
         },
+        "fontSize": {
+          "description": "Body text font size in pixels. Defaults to `14`",
+          "type": "number"
+        },
         "heading": {
           "description": "Override font settings for headings",
           "type": "object",
@@ -366,6 +377,10 @@
                 "woff",
                 "woff2"
               ]
+            },
+            "fontSize": {
+              "description": "Font size in pixels for this font role. For heading fonts,\nthis sets the size of all heading levels (h1, h2, h3).\nDefaults to `16` for headings",
+              "type": "number"
             }
           },
           "required": [
@@ -396,6 +411,10 @@
                 "woff",
                 "woff2"
               ]
+            },
+            "fontSize": {
+              "description": "Font size in pixels for this font role. For heading fonts,\nthis sets the size of all heading levels (h1, h2, h3).\nDefaults to `16` for headings",
+              "type": "number"
             }
           },
           "required": [
@@ -1369,6 +1388,29 @@
         "lines-with-dots"
       ],
       "description": "Decorative border lines framing the page layout at grid boundaries.\n`none` disables all decorative lines.\n`lines` renders solid 1px lines at the page edges and content column boundaries.\n`dashed` renders segmented (dashed) lines.\n`lines-with-dots` renders solid lines with dot ornaments at vertices.\nDefaults to `lines-with-dots`"
+    },
+    "layoutSchema": {
+      "type": "object",
+      "properties": {
+        "maxWidth": {
+          "description": "Maximum page width in pixels. The page grid is capped at this\nvalue. Content, sidebars, and gaps all live inside this\nconstraint. Defaults to `1200`",
+          "type": "number"
+        },
+        "sidebarWidth": {
+          "description": "Width of the left sidebar (table of contents) in pixels.\nDefaults to `230`",
+          "type": "number"
+        },
+        "columnGap": {
+          "description": "Gap between the three grid columns (left sidebar, content,\nright sidebar) in pixels. Defaults to `60`",
+          "type": "number"
+        },
+        "radius": {
+          "description": "Base border radius in pixels. All rounded corners in the UI\nderive from this value. Defaults to `10`",
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Page grid layout and geometry. The content column width is derived\nautomatically: content = maxWidth - sidebarWidth - rightSidebar - 2 × columnGap.\nIncreasing maxWidth grows the content column up to its 720px cap,\nthen extra space becomes gap"
     },
     "integrationsSchema": {
       "type": "object",
