@@ -27,26 +27,36 @@
         "version": "v2",
         "default": true,
         "tag": "Latest",
-        "groups": [
+        "tabs": [
           {
-            "group": "Overview",
-            "icon": "fontawesome:solid:compass",
-            "pages": ["index"]
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Overview",
+                "icon": "fontawesome:solid:compass",
+                "pages": ["index"]
+              },
+              {
+                "group": "Getting Started",
+                "icon": "rocket",
+                "pages": ["introduction", "quickstart"]
+              },
+              {
+                "group": "Guides",
+                "icon": "map",
+                "pages": ["navigation", "theming", "search"]
+              },
+              {
+                "group": "Reference",
+                "icon": "book",
+                "pages": ["configuration", "frontmatter", "deployment", "custom-virtual-modules"]
+              }
+            ]
           },
           {
-            "group": "Getting Started",
-            "icon": "rocket",
-            "pages": ["introduction", "quickstart"]
-          },
-          {
-            "group": "Guides",
-            "icon": "map",
-            "pages": ["navigation", "theming", "search"]
-          },
-          {
-            "group": "Reference",
-            "icon": "book",
-            "pages": ["configuration", "frontmatter", "deployment", "custom-virtual-modules"]
+            "tab": "API Reference",
+            "icon": "code",
+            "openapi": "api.yaml"
           }
         ]
       },
