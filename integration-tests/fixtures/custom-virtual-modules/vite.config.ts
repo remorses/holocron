@@ -46,6 +46,7 @@ const config = normalize({
       {
         anchor: "Changelog",
         href: "https://example.com/changelog",
+        placement: "tabs",
       },
     ],
     versions: [

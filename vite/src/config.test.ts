@@ -596,6 +596,7 @@ describe('tab icon / hidden / align preservation', () => {
         "hidden": true,
         "href": "https://github.com/example",
         "icon": "/gh.svg",
+        "placement": "tabs",
       }
     `)
   })

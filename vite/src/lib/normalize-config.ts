@@ -427,10 +427,12 @@ function normalizeTabsAndAnchors(
     }
 
     // Link-only tab → convert to anchor
-    if (raw.href && !raw.groups && !raw.pages && !raw.openapi) {
+    if (typeof raw.href === 'string' && !raw.groups && !raw.pages && !raw.openapi) {
+      const placement = raw.placement === 'sidebar' ? 'sidebar' : 'tabs'
       anchors.push({
         anchor: name,
-        href: raw.href as string,
+        href: raw.href,
+        placement,
         ...extras,
       })
       continue

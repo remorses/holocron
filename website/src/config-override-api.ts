@@ -101,7 +101,7 @@ export const configOverrideApp = new Spiceflow()
 
     const body = storeBodySchema.parse(JSON.parse(rawBody))
 
-    let id: DurableObjectId
+    let id: ReturnType<typeof env.CONFIG_OVERRIDE.newUniqueId>
     if (body.doId) {
       try {
         id = env.CONFIG_OVERRIDE.idFromString(body.doId)

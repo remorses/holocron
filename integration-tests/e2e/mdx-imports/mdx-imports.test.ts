@@ -81,7 +81,7 @@ test.describe('MDX imports', () => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)
     const html = await response.text()
-    expect(html).toContain('Delightful docs. Mintlify drop in replacement as a Vite plugin')
+    expect(html).toContain('Delightful docs. Mintlify drop-in replacement as a Vite plugin.')
   })
 
   test('renders imported .md from outside pagesDir via ../', async ({ request }) => {

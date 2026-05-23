@@ -92,18 +92,13 @@ test.describe("getting-started page", () => {
     const nav = page.getByRole("navigation", { name: "Navigation" });
     const noResults = nav.getByText("No results for", { exact: false });
 
-    for (let attempt = 0; attempt < 20; attempt += 1) {
+    await expect.poll(async () => {
       const activeInput = page.getByPlaceholder("search...");
       await expect(activeInput).toBeVisible({ timeout: 10000 });
       await activeInput.click();
-      await activeInput.fill("zzzz-no-match");
-
-      if (await noResults.isVisible()) {
-        break;
-      }
-
-      await page.waitForTimeout(500);
-    }
+      await activeInput.fill(`zzzz-no-match-${Date.now()}`);
+      return noResults.isVisible();
+    }, { timeout: 10000 }).toBe(true);
 
     await expect(noResults).toBeVisible();
     await expect(nav.getByRole("link", { name: "Welcome to Test Docs" })).not.toBeVisible();

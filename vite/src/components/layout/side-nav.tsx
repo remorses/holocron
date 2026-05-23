@@ -6,14 +6,14 @@
  * `useHolocronData()` (per-request) and `useRouterState()`. Hosts the sidebar search input.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { flushSync } from 'react-dom'
 import { Link, router, useRouterState } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
 import { useHolocronData } from '../../router.ts'
-import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys } from '../../site-data.ts'
+import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys, type SidebarAnchor } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
@@ -101,7 +101,6 @@ export function SideNav() {
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const highlightedRef = useRef<HTMLAnchorElement>(null)
-  const [isPending, startTransition] = useTransition()
 
   // Focusable hrefs in document order — derived from the static entries list
   // so arrow-key cycling matches the rendered order.
@@ -115,10 +114,8 @@ export function SideNav() {
   const handleQueryChange = useCallback(
     (value: string) => {
       setQuery(value)
-      startTransition(() => {
-        setSearchState(searchSidebar({ db, query: value, entries: searchEntries }))
-        setHighlightedIndex(0)
-      })
+      setSearchState(searchSidebar({ db, query: value, entries: searchEntries }))
+      setHighlightedIndex(0)
     },
     [db, searchEntries],
   )
@@ -127,8 +124,10 @@ export function SideNav() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
-      const tag = (e.target as HTMLElement)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return
+      }
       e.preventDefault()
       searchInputRef.current?.focus()
     }
@@ -212,7 +211,6 @@ export function SideNav() {
             background: 'transparent',
             letterSpacing: 'normal',
             lineHeight: 'var(--lh-prose)',
-            opacity: isPending ? 0.5 : 1,
           }}
         />
         {query ? (
@@ -288,7 +286,7 @@ export function SideNav() {
 /** Anchor links rendered at the top of the sidebar — external links like
  *  GitHub, Discord, npm, Changelog, etc. Each anchor has an icon inside a
  *  small rounded square, matching Mintlify's sidebar anchor placement. */
-function SidebarAnchors({ anchors }: { anchors: ReturnType<typeof buildSidebarAnchors> }) {
+function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
   return (
     <div className='flex flex-col gap-2.5 mt-2 mb-0.5'>
       {anchors.map((anchor) => {

@@ -816,7 +816,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         config.optimizeDeps ??= {}
         config.optimizeDeps.exclude = mergeUnique(
           config.optimizeDeps.exclude,
-          ['@holocron.so/vite'],
+          ['@holocron.so/vite', 'dialkit'],
         )
         config.optimizeDeps.include = mergeUnique(
           config.optimizeDeps.include,
