@@ -26,7 +26,7 @@
     "navigation": {
         "tabs": [
             {
-                "tab": "Documentation",
+                "tab": "Docs",
                 "icon": "book-open",
                 "groups": [
                     {
@@ -114,7 +114,7 @@
                 ]
             },
             {
-                "tab": "MDX Components",
+                "tab": "Components",
                 "icon": "blocks",
                 "groups": [
                     {
