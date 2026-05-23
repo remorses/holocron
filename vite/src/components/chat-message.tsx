@@ -166,8 +166,7 @@ function ToolCallStarted({
       <span style={{ whiteSpace: 'pre' }}>
         {hasResult ? <span>◆ </span> : <PieLoader />}
       </span>
-      Running:{' '}
-      <Highlight>{truncatedCommand}</Highlight>
+      <span className='truncate'><Highlight>{truncatedCommand}</Highlight></span>
     </ToolPreviewContainer>
   )
 }
@@ -223,6 +222,7 @@ function ToolPreviewContainer({
 }) {
   return (
     <div
+      className='flex items-center min-w-0 text-xs'
       style={{
         fontFamily: 'var(--font-code)',
         padding: '4px 0',

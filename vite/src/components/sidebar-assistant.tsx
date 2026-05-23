@@ -166,7 +166,7 @@ export function SidebarAssistant() {
         <span className='text-muted-foreground shrink-0'>
           <InfoCircleIcon />
         </span>
-        <span className='text-[11px] text-muted-foreground'>
+        <span className='text-[11px] font-medium text-muted-foreground'>
           Ask AI about this page
         </span>
       </div>

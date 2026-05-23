@@ -13,7 +13,7 @@
 
 import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { decodeFederationPayload } from 'spiceflow/react'
+import { decodeFederationPayload, useRouterState } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
 import type { ChatMessage, ChatModelMessage, ChatPart } from '../lib/chat-store.ts'
 import { CHAT_INPUT_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
@@ -23,7 +23,7 @@ import {
   ChatLoadingDots,
 } from './chat-message.tsx'
 import { ChatInput } from './sidebar-assistant.tsx'
-import { TrashIcon, CloseIcon, InfoCircleIcon } from './chat-icons.tsx'
+import { TrashIcon, CloseIcon } from './chat-icons.tsx'
 
 // ── ChatDrawer ───────────────────────────────────────────────────────
 
@@ -57,6 +57,7 @@ function ChatDrawerInner() {
   const errorMessage = chatState((s) => s.errorMessage)
   const draftText = chatState((s) => s.draftText)
   const { currentPageHref, site } = useHolocronData()
+  const { pathname } = useRouterState()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   // Prefix API calls with the Vite base path so they work when mounted at e.g. /docs
   const basePath = site.base === '/' ? '' : `/${site.base.replace(/^\/+|\/+$/g, '')}`
@@ -214,6 +215,16 @@ function ChatDrawerInner() {
     }
   }, [drawerState])
 
+  // Auto-close drawer when the user navigates to a different page
+  // (e.g. clicking a link in an AI chat response).
+  const prevPathnameRef = useRef(pathname)
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname && chatState.getState().drawerState === 'open') {
+      chatState.setState({ drawerState: 'closed' })
+    }
+    prevPathnameRef.current = pathname
+  }, [pathname])
+
   const isOpen = drawerState === 'open'
 
   // Portal to <body> so the drawer sits outside all stacking contexts
@@ -291,6 +302,7 @@ function ChatDrawerInner() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button
               onClick={handleClear}
+              title='New chat'
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -309,6 +321,7 @@ function ChatDrawerInner() {
             </button>
             <button
               onClick={handleClose}
+              title='Close'
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -347,18 +360,7 @@ function ChatDrawerInner() {
           {!isGenerating && messages.length === 0 && <WelcomeMessage />}
 
           {messages.length > 0 && <ChatMessages messages={messages} />}
-          {isGenerating && (() => {
-            // Show loading dots if the last user message has no text response after it yet
-            const lastUserIdx = messages.findLastIndex((message) => message.role === 'user')
-            const hasTextAfterLastUser = messages.slice(lastUserIdx + 1).some((message) => (
-              message.role === 'assistant' && message.parts.some((part) => part.type === 'text')
-            ))
-            if (!hasTextAfterLastUser) {
-              return <ChatLoadingDots />
-            
-            }
-            return null
-          })()}
+          {isGenerating && <ChatLoadingDots />}
 
           {errorMessage && (
             <ChatErrorMessage message={errorMessage} />
@@ -367,7 +369,7 @@ function ChatDrawerInner() {
           {/* Spacer — pushes content to the top while keeping the scroll
               area tall enough so the user can scroll the last message to
               the top of the viewport. */}
-          <div style={{ minHeight: 'calc(100dvh - 248px)', flexShrink: 0 }} />
+          <div style={{ minHeight: '300px', flexShrink: 0 }} />
           <div ref={messagesEndRef} />
         </div>
 
@@ -376,17 +378,9 @@ function ChatDrawerInner() {
          * morphs the chat input from the sidebar position to here. */}
         <div style={{ flexShrink: 0 }}>
           <div
-            className='m-3 rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
+            className='m-3 rounded-2xl bg-accent px-0.5 pt-0.5 pb-0.5'
             style={{ viewTransitionName: isOpen ? CHAT_INPUT_VT_NAME : 'none' } as React.CSSProperties}
           >
-            <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
-              <span className='text-muted-foreground shrink-0'>
-                <InfoCircleIcon />
-              </span>
-              <span className='text-[11px] text-muted-foreground'>
-                Ask AI about this page
-              </span>
-            </div>
             <ChatInput
               value={draftText}
               onChange={(v) => chatState.setState({ draftText: v })}
