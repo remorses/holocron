@@ -152,6 +152,7 @@ function normalizeLogo(raw: unknown): HolocronConfig['logo'] {
     light: normalizeStaticPath(obj.light) || '',
     ...(obj.dark && obj.dark !== obj.light ? { dark: normalizeStaticPath(obj.dark) } : {}),
     href: obj.href,
+    text: obj.text,
   }
 }
 

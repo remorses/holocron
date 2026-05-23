@@ -116,6 +116,15 @@ export const logoSchema = z
             the logo will link to the homepage. Example: \`https://example.com\`
           `,
         ),
+      text: z
+        .string()
+        .optional()
+        .describe(
+          dedent`
+            Text to display next to the logo image, typically the site or
+            product name. Example: \`"Libretto"\`
+          `,
+        ),
     }),
   ])
   .describe(

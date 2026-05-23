@@ -111,7 +111,7 @@ export type ConfigDropdownItem = {
 export type HolocronConfig = {
   name: string
   description?: string
-  logo: { light: string; dark?: string; href?: string }
+  logo: { light: string; dark?: string; href?: string; text?: string }
   favicon: { light: string; dark: string }
   colors: z.output<typeof colorsSchema> & { _hasUserColors: boolean }
   icons: z.output<typeof iconsSchema> & { library: 'fontawesome' | 'lucide' | 'tabler' }

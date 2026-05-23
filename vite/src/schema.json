@@ -233,6 +233,10 @@
             "href": {
               "description": "The URL to redirect to when clicking the logo. If not provided,\nthe logo will link to the homepage. Example: `https://example.com`",
               "type": "string"
+            },
+            "text": {
+              "description": "Text to display next to the logo image, typically the site or\nproduct name. Example: `\"Libretto\"`",
+              "type": "string"
             }
           },
           "required": [
