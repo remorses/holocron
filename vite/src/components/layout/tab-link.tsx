@@ -15,7 +15,6 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
   const tabClassName = 'slot-tab no-underline inline-flex items-center gap-1.5 font-[475] [font-family:var(--font-sans)] transition-colors duration-150'
   const tabStyle = {
     color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
-    textShadow: isActive ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : 'none',
   }
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isActive) {
