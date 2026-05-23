@@ -6,7 +6,7 @@
  * `useHolocronData()` (per-request) and `useRouterState()`. Hosts the sidebar search input.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { flushSync } from 'react-dom'
 import { router, useRouterState } from 'spiceflow/react'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
@@ -18,10 +18,36 @@ import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 
-// Platform detection — stable refs for useSyncExternalStore (no re-subscription)
-const noopSubscribe = () => () => {}
-const getIsMac = () => /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
-const getServerIsMac = () => true // default to ⌘K on SSR
+// Search shortcut hint detection.
+// Uses navigator.keyboard.getLayoutMap() (Chrome/Edge) to check if the
+// physical Slash key produces "/" directly. If it does, show "/" as the
+// hint; otherwise fall back to ⌘K (Mac) or Ctrl K (others). On browsers
+// that don't support the Keyboard API (Firefox, Safari), fall back to
+// the platform-based hint immediately.
+function useSearchShortcutHint(): string {
+  const [hint, setHint] = useState<string | null>(null)
+
+  useEffect(() => {
+    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
+    const fallback = isMac ? '⌘K' : 'Ctrl K'
+
+    const nav = navigator as Navigator & { keyboard?: { getLayoutMap?: () => Promise<Map<string, string>> } }
+    if (!nav.keyboard?.getLayoutMap) {
+      setHint(fallback)
+      return
+    }
+
+    nav.keyboard.getLayoutMap!().then((layoutMap) => {
+      const slashChar = layoutMap.get('Slash')
+      setHint(slashChar === '/' ? '/' : fallback)
+    }).catch(() => {
+      setHint(fallback)
+    })
+  }, [])
+
+  // SSR / first render: return null (hint hidden until detected)
+  return hint ?? '⌘K'
+}
 
 // Sidebar animation gate — animations are disabled by default, enabled only
 // when `<html class="sidebar-animate">` is present. Uses a MutationObserver
@@ -40,7 +66,7 @@ function subscribeSidebarAnimate(cb: () => void) {
  * from the Spiceflow loader via `useHolocronData()`.
  */
 export function SideNav() {
-  const isMac = useSyncExternalStore(noopSubscribe, getIsMac, getServerIsMac)
+  const searchShortcutHint = useSearchShortcutHint()
   const sidebarAnimate = useSyncExternalStore(subscribeSidebarAnimate, getSidebarAnimate, getServerSidebarAnimate)
   const {
     site,
@@ -126,10 +152,18 @@ export function SideNav() {
     [db, searchEntries],
   )
 
-  // Global ⌘K / Ctrl+K hotkey to focus search input
+  // Global ⌘K / Ctrl+K / "/" hotkey to focus search input
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+      // "/" shortcut — only when no input/textarea is focused (standard convention)
+      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
         e.preventDefault()
         searchInputRef.current?.focus()
       }
@@ -205,7 +239,7 @@ export function SideNav() {
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           placeholder={siteConfig.search.prompt || 'Search...'}
-            className='w-full outline-none box-border search-input'
+          className={`w-full outline-none box-border search-input${query ? ' search-input-active' : ''}`}
           style={{
             padding: '6px 34px 6px 28px',
             fontFamily: 'var(--font-sans)',
@@ -216,37 +250,48 @@ export function SideNav() {
             lineHeight: 'var(--lh-prose)',
             opacity: isPending ? 0.5 : 1,
           }}
-
         />
-        {!query && (
+        {query ? (
+          <button
+            type='button'
+            onClick={() => {
+              handleQueryChange('')
+              searchInputRef.current?.focus()
+            }}
+            className='absolute right-2.5 flex items-center justify-center size-5 rounded-sm cursor-pointer border-none bg-transparent transition-colors'
+            style={{ color: 'var(--muted-foreground)' }}
+            aria-label='Clear search'
+          >
+            <svg width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round'>
+              <path d='M2 2l8 8M10 2l-8 8' />
+            </svg>
+          </button>
+        ) : (
           <span
             aria-hidden='true'
             className='absolute right-2.5 pointer-events-none flex items-center gap-1'
             style={{ color: 'var(--muted-foreground)' }}
           >
-            {(isMac ? ['⌘', 'K'] : ['Ctrl', 'K']).map((key) => (
-              <kbd
-                key={key}
-                style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  lineHeight: '18px',
-                  padding: '0 5px',
-                  border: '1px solid var(--text-tertiary)',
-                  borderRadius: '5px',
-                }}
-              >
-                {key}
-              </kbd>
-            ))}
+            <kbd
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: '12px',
+                fontWeight: 500,
+                lineHeight: '18px',
+                padding: '0 5px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '5px',
+              }}
+            >
+              {searchShortcutHint}
+            </kbd>
           </span>
         )}
       </div>
 
       {/* `pl-1` gives the search-highlight box-shadow 4px of horizontal
           clearance inside nav's overflow-y-auto clip. */}
-      <nav aria-label='Navigation' className='overflow-y-auto scrollbar-stable min-h-0 pl-1 pr-1 pb-6 flex flex-col gap-2'>
+      <nav aria-label='Navigation' className='overflow-y-auto scrollbar-stable min-h-0 pl-1 pr-1 pb-6 flex flex-col gap-1'>
         {/* Sidebar anchors — external links like GitHub, Discord, etc.
             Rendered above the nav groups, matching Mintlify's sidebar anchor placement. */}
         {sidebarAnchors.length > 0 && (

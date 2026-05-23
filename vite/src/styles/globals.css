@@ -324,6 +324,12 @@
   .search-input:focus {
     border-color: var(--muted-foreground);
   }
+  .search-input-active {
+    border-color: var(--primary);
+  }
+  .search-input-active:focus {
+    border-color: var(--primary);
+  }
 
   /* Layout slots — only important page entities use CSS classes.
      Inner wrappers use Tailwind utilities directly in JSX. */
