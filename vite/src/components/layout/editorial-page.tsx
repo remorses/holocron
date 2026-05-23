@@ -92,11 +92,11 @@ export function EditorialPage({
   /** Optional page-level grid gap from frontmatter. */
   gridGap?: number
 }) {
-  const { site, activeTabHref, activeVersionHref, activeDropdownHref, currentPageHref } = useHolocronData()
+  const { site, activeTabHref, activeVersionHref, activeDropdownHref } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const siteLogo = getResolvedLogo(site)
-  const siteTabs = buildTabItems(site, currentPageHref)
+  const siteTabs = buildTabItems(site)
   const siteHeaderLinks = buildHeaderLinks(site)
   const siteVersionItems = buildVersionItems(site)
   const siteDropdownItems = buildDropdownItems(site)

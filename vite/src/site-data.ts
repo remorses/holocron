@@ -174,21 +174,11 @@ function collectTabPageHrefs(tab: NavTab): string[] {
   return hrefs
 }
 
-export function buildTabItems(site: HolocronSiteData, pageHref?: string): TabItem[] {
-  const hasSwitchers =
-    site.switchers.versions.length > 0 ||
-    site.switchers.dropdowns.some((d) => !!d.navigation)
-
-  let sourceTabs: NavTab[]
-  if (hasSwitchers) {
-    // Find the active version/dropdown's inner tabs based on the current page.
-    // Each version/dropdown owns a set of tabs; we show only the active one's tabs.
-    sourceTabs = resolveActiveSwitcherTabs(site, pageHref) ?? []
-  } else {
-    sourceTabs = site.navigation
-  }
-
-  const navTabs: TabItem[] = sourceTabs
+export function buildTabItems(site: HolocronSiteData): TabItem[] {
+  // All version/dropdown inner tabs are flattened into site.navigation.
+  // Named tabs (tab !== '') are shown in the tab bar; unnamed tabs (from
+  // versions that use groups directly) are filtered out.
+  const navTabs: TabItem[] = site.navigation
     .filter((t) => t.tab !== '' && !t.hidden)
     .map((t) => {
       const firstPage = findFirstPageInTab(t)
@@ -210,7 +200,7 @@ export function buildTabItems(site: HolocronSiteData, pageHref?: string): TabIte
   // When tab-placed anchors exist but there are no explicit content tabs,
   // add an implicit "Docs" tab so the user can navigate back to docs content.
   if (tabAnchors.length > 0 && navTabs.length === 0) {
-    const implicitTab = sourceTabs.find((t) => t.tab === '')
+    const implicitTab = site.navigation.find((t) => t.tab === '')
     if (implicitTab) {
       const firstPage = findFirstPageInTab(implicitTab)
       navTabs.push({
@@ -222,33 +212,6 @@ export function buildTabItems(site: HolocronSiteData, pageHref?: string): TabIte
   }
 
   return [...navTabs, ...tabAnchors]
-}
-
-/** Given the current page href, find the active version or dropdown and return
- *  its inner tabs. Returns undefined if no switcher owns the current page. */
-function resolveActiveSwitcherTabs(site: HolocronSiteData, pageHref: string | undefined): NavTab[] | undefined {
-  // Check versions first
-  for (const v of site.switchers.versions) {
-    const versionPageHrefs = collectPageHrefsFromTabs(v.navigation.tabs, true)
-    if (pageHref && versionPageHrefs.includes(pageHref)) {
-      return v.navigation.tabs
-    }
-  }
-  // Check dropdowns
-  for (const d of site.switchers.dropdowns) {
-    if (!d.navigation) continue
-    const dropdownPageHrefs = collectPageHrefsFromTabs(d.navigation.tabs, true)
-    if (pageHref && dropdownPageHrefs.includes(pageHref)) {
-      return d.navigation.tabs
-    }
-  }
-  // Fall back to default version's tabs
-  const defaultVersion = site.switchers.versions.find((v) => v.default) ?? site.switchers.versions[0]
-  if (defaultVersion) return defaultVersion.navigation.tabs
-  // Fall back to first dropdown with navigation
-  const firstDropdown = site.switchers.dropdowns.find((d) => !!d.navigation)
-  if (firstDropdown?.navigation) return firstDropdown.navigation.tabs
-  return undefined
 }
 
 /** Anchors placed in the left sidebar (default, or explicit placement === 'sidebar'). */
@@ -377,7 +340,7 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
 }
 
 export function resolveActiveTabHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
-  const tabs = buildTabItems(site, pageHref)
+  const tabs = buildTabItems(site)
   if (!pageHref) return tabs[0]?.href
   // Match by page membership first (exact), then fall back to href prefix matching
   const memberMatch = tabs.find((t) => t.pageHrefs?.includes(pageHref))

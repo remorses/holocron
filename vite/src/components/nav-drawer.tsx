@@ -47,7 +47,7 @@ function NavDrawerInner() {
   const versionItems = buildVersionItems(site)
   const dropdownSelectItems = buildDropdownItems(site)
   const headerLinks = buildHeaderLinks(site)
-  const tabs = buildTabItems(site, currentPageHref)
+  const tabs = buildTabItems(site)
 
   const handleClose = useCallback(() => {
     chatState.setState({ navDrawerOpen: false })
