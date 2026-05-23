@@ -1,4 +1,4 @@
-<div align='center'>
+<div align='center' class="hidden">
     <br/>
     <br/>
     <h3>holocron</h3>
