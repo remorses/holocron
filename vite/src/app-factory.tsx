@@ -508,7 +508,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     icons: { icons: {} },
   }
   const sharedIconRefs = collectIconRefs({ config, navigation })
-  const clientSite = buildVisibleSiteData(site)
   const firstPage = findFirstPage(site)
   const hrefToSlug = buildHrefToSlugMap(slugs)
   const absoluteUrlBase = (() => {
@@ -564,15 +563,12 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   async function buildLoaderSite(
     slug: string | undefined,
-    configOverride?: HolocronConfig,
+    effectiveConfig: HolocronConfig,
   ): Promise<HolocronSiteData> {
     const pageIconRefs = slug ? await providers.getPageIconRefs(slug) : []
     const { resolveIconSvgs } = await import('./lib/resolve-icons.ts')
-    const baseSite = configOverride
-      ? buildVisibleSiteData({ ...site, config: configOverride })
-      : clientSite
     return {
-      ...baseSite,
+      ...buildVisibleSiteData({ ...site, config: effectiveConfig }),
       icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])),
     }
   }
@@ -602,11 +598,9 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       resolveConfigOverride(request, site.config),
     ])
 
-    const hasOverride = effectiveConfig !== site.config
-
     if (!currentPage || !hasMdx) {
       return {
-        site: await buildLoaderSite(undefined, hasOverride ? effectiveConfig : undefined),
+        site: await buildLoaderSite(undefined, effectiveConfig),
         currentPageHref: undefined,
         currentPageTitle: undefined,
         currentPageDescription: undefined,
@@ -624,7 +618,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
 
     return {
-      site: await buildLoaderSite(slug, hasOverride ? effectiveConfig : undefined),
+      site: await buildLoaderSite(slug, effectiveConfig),
       currentPageHref: currentPage.href,
       currentPageTitle: currentPage.title,
       currentPageDescription: currentPage.description ?? effectiveConfig.description,
