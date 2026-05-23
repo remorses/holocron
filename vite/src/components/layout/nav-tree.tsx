@@ -299,7 +299,10 @@ export function NavGroupNode({
             className='cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
             style={{
               opacity: isDimmed ? 0.45 : 1,
-              fontVariationSettings: '"wght" 500',
+              fontVariationSettings: '"wght" 550',
+              fontSize: '13px',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
               color: 'var(--muted-foreground)',
               transition: animate ? 'opacity 0.15s ease' : 'none',
             }}
@@ -325,6 +328,7 @@ export function NavGroupNode({
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: '"wght" 500',
+          fontSize: '13px',
           color: 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${(depth - 1) * 12}px` : undefined,
           transition: animate ? 'opacity 0.15s ease' : 'none',
