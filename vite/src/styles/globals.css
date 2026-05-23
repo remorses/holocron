@@ -408,7 +408,10 @@
     border-radius: 9999px;
     background: var(--background);
     pointer-events: none;
-    display: flex;
+    /* display is controlled by Tailwind: hidden lg:flex (in grid-lines.tsx).
+       Do NOT set display here — it would override the hidden utility and
+       cause grid-dots to leak past the viewport on mobile, creating
+       horizontal scroll. */
     align-items: center;
     justify-content: center;
   }
