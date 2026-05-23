@@ -178,6 +178,9 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
   // All version/dropdown inner tabs are flattened into site.navigation.
   // Named tabs (tab !== '') are shown in the tab bar; unnamed tabs (from
   // versions that use groups directly) are filtered out.
+  // TODO: when multiple versions each have named tabs, all of them show at
+  // once (duplicate labels). Fix by scoping to the active version's tabs
+  // using pageHref + resolveActiveSwitcherTabs().
   const navTabs: TabItem[] = site.navigation
     .filter((t) => t.tab !== '' && !t.hidden)
     .map((t) => {
