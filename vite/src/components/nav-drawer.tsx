@@ -129,7 +129,7 @@ function NavDrawerInner() {
               justifyContent: 'center',
               width: '32px',
               height: '32px',
-              borderRadius: '6px',
+              borderRadius: 'var(--radius-sm)',
               border: 'none',
               background: 'transparent',
               color: 'var(--muted-foreground)',

@@ -100,7 +100,7 @@
   padding: 2px 6px;
   color: var(--foreground);
   background: var(--accent);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 
   @variant dark {
     color: var(--foreground);
@@ -227,7 +227,7 @@
   position: absolute;
   inset: -1px 0;
   background: rgba(0, 0, 0, 0.04);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   z-index: -1;
 }
 

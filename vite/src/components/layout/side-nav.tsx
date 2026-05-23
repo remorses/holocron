@@ -244,7 +244,7 @@ export function SideNav() {
                 lineHeight: '18px',
                 padding: '0 5px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '5px',
+                borderRadius: 'var(--radius-sm)',
               }}
             >
               {searchShortcutHint}
@@ -298,7 +298,7 @@ function SidebarAnchors({ anchors }: { anchors: ReturnType<typeof buildSidebarAn
             key={anchor.href}
             href={anchor.href}
             {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            className='no-underline flex items-center gap-1.5 hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]'
+            className='no-underline flex items-center gap-1.5 hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]'
             style={{
               color: 'var(--sidebar-foreground)',
               fontVariationSettings: '"wght" 450',

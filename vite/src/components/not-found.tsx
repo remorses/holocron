@@ -79,7 +79,7 @@ export function NotFound({
             color: 'var(--foreground)',
             background: 'var(--accent)',
             padding: '2px 6px',
-            borderRadius: '4px',
+            borderRadius: 'var(--radius-sm)',
             wordBreak: 'break-all',
           }}
         >

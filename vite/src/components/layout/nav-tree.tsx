@@ -154,13 +154,13 @@ export function TocInline({
                 data-active={isActive}
                 data-heading-id={heading.slug}
                 onClick={(e) => notifyHeadingClick(e)}
-                className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+                className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
                 tabIndex={isDimmed ? -1 : 0}
                 style={{
                   color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                   fontWeight: isEmphasized ? 500 : 400,
                   background: isHighlighted ? 'var(--accent)' : undefined,
-                  borderRadius: isHighlighted ? '4px' : undefined,
+                  borderRadius: isHighlighted ? 'var(--radius-sm)' : undefined,
                   boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
                 }}
               >
@@ -206,7 +206,7 @@ export function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className={`flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: isEmphasized ? '"wght" 550' : '"wght" 450',
@@ -214,7 +214,7 @@ export function NavPageLink({
           paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
           transition: animate ? 'color 0.15s, font-variation-settings 0.25s, opacity 0.15s ease' : 'none',
           background: isHighlighted ? 'var(--accent)' : undefined,
-          borderRadius: isHighlighted ? '4px' : undefined,
+          borderRadius: isHighlighted ? 'var(--radius-sm)' : undefined,
           boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
         }}
       >
@@ -324,7 +324,7 @@ export function NavGroupNode({
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-[4px] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: '"wght" 500',

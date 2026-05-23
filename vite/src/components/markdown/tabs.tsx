@@ -119,7 +119,7 @@ export function Tabs({
         role='tabpanel'
         aria-labelledby={tabIds[activeIndex]}
         tabIndex={0}
-        className='no-bleed flex flex-col gap-(--prose-gap) rounded-[15px] bg-background p-4'
+        className='no-bleed flex flex-col gap-(--prose-gap) rounded-xl bg-background p-4'
       >
         {activeTab?.props.children}
       </div>

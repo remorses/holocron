@@ -242,6 +242,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.4);
 }
 
 @layer base {
@@ -318,7 +319,7 @@
   /* Search input border + focus ring */
   .search-input {
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.1s ease;
   }
   .search-input:focus {
