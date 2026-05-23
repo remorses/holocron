@@ -137,7 +137,7 @@ export function TocInline({
       />
       <ul
         ref={listRef}
-        className='relative list-none m-0 p-0 flex flex-col gap-2.5 pt-1.5 pl-3 leading-[1.33] box-content'
+        className='relative list-none m-0 p-0 flex flex-col gap-1.5 pt-1.5 pl-3 leading-[1.33] box-content'
       >
         {visibleHeadings.map((heading) => {
           const isActive = heading.slug === activeHeadingId
