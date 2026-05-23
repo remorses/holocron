@@ -13,7 +13,7 @@ Use `Marquee` to create an infinite scrolling loop of icons, logos, cards, or an
 Scroll partner or integration logos using `img` tags with relative paths from your `public/` folder.
 
 ```mdx
-<Marquee duration={20} pauseOnHover gap={64}>
+<Marquee duration={20} slowOnHover gap={64}>
   <img src="/logos/vercel.svg" alt="Vercel" width={120} height={30} />
   <img src="/logos/stripe.svg" alt="Stripe" width={120} height={30} />
   <img src="/logos/github.svg" alt="GitHub" width={120} height={30} />
@@ -28,7 +28,7 @@ Images resolve relative to your project root, so `/logos/vercel.svg` maps to `pu
 
 Combine with `Icon` to scroll through icon sets.
 
-<Marquee duration={15} pauseOnHover gap={48}>
+<Marquee duration={15} slowOnHover gap={48}>
   <Icon icon="lucide:rocket" size={28} color="var(--muted-foreground)" />
   <Icon icon="lucide:zap" size={28} color="var(--muted-foreground)" />
   <Icon icon="lucide:shield" size={28} color="var(--muted-foreground)" />
@@ -40,7 +40,7 @@ Combine with `Icon` to scroll through icon sets.
 </Marquee>
 
 ```mdx
-<Marquee duration={15} pauseOnHover gap={48}>
+<Marquee duration={15} slowOnHover gap={48}>
   <Icon icon="lucide:rocket" size={28} color="var(--muted-foreground)" />
   <Icon icon="lucide:zap" size={28} color="var(--muted-foreground)" />
   <Icon icon="lucide:shield" size={28} color="var(--muted-foreground)" />
@@ -72,7 +72,7 @@ Scroll right instead of left.
 
 Hover to pause the animation.
 
-<Marquee pauseOnHover duration={12} gap={48}>
+<Marquee slowOnHover duration={12} gap={48}>
   <Badge color="blue">TypeScript</Badge>
   <Badge color="green">Fast builds</Badge>
   <Badge color="purple">MDX</Badge>
@@ -84,7 +84,7 @@ Hover to pause the animation.
 </Marquee>
 
 ```mdx
-<Marquee pauseOnHover duration={12}>
+<Marquee slowOnHover duration={12}>
   <Badge color="blue">TypeScript</Badge>
   <Badge color="green">Fast builds</Badge>
   <Badge color="purple">MDX</Badge>
@@ -111,7 +111,7 @@ Disable edge fading with `fade={false}`.
 Time in seconds for one full scroll cycle. Controls perceived speed: `duration={10}` scrolls twice as fast as `duration={20}`. The actual pixel speed depends on how many children you have, since more items means more distance to cover in the same time.
 </ResponseField>
 
-<ResponseField name="pauseOnHover" type="boolean" default="false">
+<ResponseField name="slowOnHover" type="boolean" default="false">
 Pause the animation when the user hovers over the marquee.
 </ResponseField>
 
