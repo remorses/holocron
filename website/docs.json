@@ -33,7 +33,7 @@
                         "group": "Start",
                         "icon": "sparkles",
                         "pages": [
-                            "docs/index",
+                            "index",
                             "docs/what-is-holocron",
                             "docs/quickstart",
                             "docs/migration"
@@ -158,8 +158,5 @@
                 "openapi": "openapi.json"
             }
         ]
-    },
-    "redirects": [
-        { "source": "/", "destination": "/docs" }
-    ]
+    }
 }
