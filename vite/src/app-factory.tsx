@@ -66,6 +66,7 @@ import {
 } from './site-data.ts'
 import type { HolocronConfig } from './config.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
+import { resolveConfigOverride, shouldShowConfigPanel } from './lib/config-override.ts'
 
 /* ── Server-only page lookup (uses parsePageFrontmatter → zod/yaml) ── */
 
@@ -143,6 +144,8 @@ export type HolocronLoaderData = {
   headRobots: string | undefined
   /** Parsed frontmatter for the active page. */
   currentPageFrontmatter: PageFrontmatter | undefined
+  /** Whether the config customization panel should be shown. */
+  showConfigPanel: boolean
 }
 
 type MdxParseErrorInfo = {
@@ -559,11 +562,17 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     `
   }
 
-  async function buildLoaderSite(slug: string | undefined): Promise<HolocronSiteData> {
+  async function buildLoaderSite(
+    slug: string | undefined,
+    configOverride?: HolocronConfig,
+  ): Promise<HolocronSiteData> {
     const pageIconRefs = slug ? await providers.getPageIconRefs(slug) : []
     const { resolveIconSvgs } = await import('./lib/resolve-icons.ts')
+    const baseSite = configOverride
+      ? buildVisibleSiteData({ ...site, config: configOverride })
+      : clientSite
     return {
-      ...clientSite,
+      ...baseSite,
       icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])),
     }
   }
@@ -582,12 +591,22 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   // spiceflow passes `children === null` (true 404 case).
   const loaderFn = async ({ request }: { request: Request }): Promise<HolocronLoaderData> => {
     const slug = slugFromRequest(request)
-    const currentPage = await findPageBySlug({ nav: site.navigation, slug, getMdxSource: providers.getMdxSource })
-    const hasMdx = (await providers.getMdxSource(slug)) !== undefined
+    const showPanel = shouldShowConfigPanel(request)
+
+    // Run page lookup, MDX source check, and config override fetch in parallel.
+    // The override fetch only does work when the cookie is present; otherwise
+    // it returns the base config immediately (zero overhead).
+    const [currentPage, hasMdx, effectiveConfig] = await Promise.all([
+      findPageBySlug({ nav: site.navigation, slug, getMdxSource: providers.getMdxSource }),
+      providers.getMdxSource(slug),
+      resolveConfigOverride(request, site.config),
+    ])
+
+    const hasOverride = effectiveConfig !== site.config
 
     if (!currentPage || !hasMdx) {
       return {
-        site: await buildLoaderSite(undefined),
+        site: await buildLoaderSite(undefined, hasOverride ? effectiveConfig : undefined),
         currentPageHref: undefined,
         currentPageTitle: undefined,
         currentPageDescription: undefined,
@@ -597,26 +616,28 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         activeVersionHref: resolveActiveVersionHref(site, firstPage?.href),
         activeDropdownHref: resolveActiveDropdownHref(site, firstPage?.href),
         notFoundPath: '/' + slug,
-        headTitle: `Page not found — ${site.config.name}`,
+        headTitle: `Page not found — ${effectiveConfig.name}`,
         headRobots: 'noindex',
         currentPageFrontmatter: undefined,
+        showConfigPanel: showPanel,
       }
     }
 
     return {
-      site: await buildLoaderSite(slug),
+      site: await buildLoaderSite(slug, hasOverride ? effectiveConfig : undefined),
       currentPageHref: currentPage.href,
       currentPageTitle: currentPage.title,
-      currentPageDescription: currentPage.description ?? site.config.description,
+      currentPageDescription: currentPage.description ?? effectiveConfig.description,
       currentHeadings: currentPage.headings,
       ancestorGroupKeys: collectAncestorGroupKeys(site, currentPage.href),
       activeTabHref: resolveActiveTabHref(site, currentPage.href),
       activeVersionHref: resolveActiveVersionHref(site, currentPage.href),
       activeDropdownHref: resolveActiveDropdownHref(site, currentPage.href),
       notFoundPath: undefined,
-      headTitle: `${currentPage.title} — ${site.config.name}`,
+      headTitle: `${currentPage.title} — ${effectiveConfig.name}`,
       headRobots: getPageRobots(currentPage.frontmatter),
       currentPageFrontmatter: currentPage.frontmatter,
+      showConfigPanel: showPanel,
     }
   }
 
@@ -632,16 +653,21 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     request: Request
     loaderData: HolocronLoaderData
   }) {
+    // Use the loader's site data which includes any config overrides
+    // from the holo-config-override cookie. The closure `site` is the
+    // base config; `loaderData.site.config` is the merged effective config.
+    const effectiveConfig = loaderData.site.config
+
     const cookies = parseCookies(request.headers.get('cookie') || '')
-    const cookieTheme = site.config.appearance.strict
+    const cookieTheme = effectiveConfig.appearance.strict
       ? null
       : (cookies['color-theme'] === 'light' || cookies['color-theme'] === 'dark' ? cookies['color-theme'] : null)
     const isDark =
       cookieTheme === 'dark' ||
-      (!cookieTheme && site.config.appearance.default === 'dark')
+      (!cookieTheme && effectiveConfig.appearance.default === 'dark')
 
     const isNotFound = children === null
-    const bannerJsx = getBannerJsx(site, request)
+    const bannerJsx = getBannerJsx(loaderData.site, request)
     const notFoundContent = (
       <EditorialPage bannerContent={bannerJsx}>
         <NotFound
@@ -655,13 +681,13 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       <html
         lang='en'
         className={isDark ? 'dark' : undefined}
-        data-default-theme={site.config.appearance.default}
+        data-default-theme={effectiveConfig.appearance.default}
         suppressHydrationWarning
-        {...(site.config.appearance.strict ? { 'data-strict-theme': '' } : {})}
+        {...(effectiveConfig.appearance.strict ? { 'data-strict-theme': '' } : {})}
       >
         <SiteHead
-          config={site.config}
-          titleOverride={isNotFound ? (loaderData?.headTitle ?? `Page not found — ${site.config.name}`) : undefined}
+          config={effectiveConfig}
+          titleOverride={isNotFound ? (loaderData?.headTitle ?? `Page not found — ${effectiveConfig.name}`) : undefined}
         />
         {isNotFound && (
           <Head>
@@ -675,7 +701,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               cookie, but this script handles streaming race conditions where the
               browser renders before the server class attribute arrives. */}
           <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-          <GtmNoscript integrations={site.config.integrations} />
+          <GtmNoscript integrations={effectiveConfig.integrations} />
           <div className='sr-only'>{buildAgentDocsDirective(site.base)}</div>
           <ProgressBar color='var(--primary)' />
           {children ?? notFoundContent}
@@ -735,14 +761,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         throw new Error('Holocron loader data missing in page route')
       }
       const loaderData = rawLoaderData
-      const bannerJsx = getBannerJsx(site, request)
+      const effectiveConfig = loaderData.site.config
+      const bannerJsx = getBannerJsx(loaderData.site, request)
       const requestUrl = new URL(request.url)
-      const faviconUrl = site.config.favicon.light || site.config.favicon.dark
+      const faviconUrl = effectiveConfig.favicon.light || effectiveConfig.favicon.dark
       const ogImageUrl = buildOgImageUrl({
-        title: loaderData.currentPageTitle ?? site.config.name,
-        description: loaderData.currentPageDescription ?? site.config.description,
+        title: loaderData.currentPageTitle ?? effectiveConfig.name,
+        description: loaderData.currentPageDescription ?? effectiveConfig.description,
         iconUrl: faviconUrl ? new URL(faviconUrl, request.url).toString() : undefined,
-        siteName: site.config.name,
+        siteName: effectiveConfig.name,
         pageLabel: `${requestUrl.host}${loaderData.currentPageHref ?? pageHref}`,
       })
       const pageMdx = await providers.getMdxSource(slug)
@@ -791,7 +818,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         if (visitor.errors.length > 0) devRenderErrors = visitor.errors
       }
 
-      return renderMdxPage({ site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast, devRenderErrors })
+      return renderMdxPage({ site: loaderData.site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast, devRenderErrors })
     }
   }
 

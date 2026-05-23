@@ -4,6 +4,7 @@
 // Cloudflare Workers fetch handler is provided by spiceflow/cloudflare-entrypoint.
 
 export { UsageCounter } from './usage-counter-do.ts'
+export { ConfigOverrideDO } from './config-override-do.ts'
 
 import { json, Spiceflow, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
@@ -13,6 +14,7 @@ import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
 import { deployApp } from './deploy-api.ts'
 import { aiLogoApp } from './ai-logo.ts'
+import { configOverrideApp } from './config-override-api.ts'
 import { dashboardApp } from './dashboard.tsx'
 import { approveDevice, denyDevice } from './actions.tsx'
 import { getAuth, getSession, requireSession } from './db.ts'
@@ -252,8 +254,18 @@ const previewApp = new Spiceflow()
 // BetterAuth middleware — must be on the root app so it intercepts /api/auth/*
 // before holocron can render a 404 page. Child app middleware only runs for
 // routes that child app owns.
+const CONFIG_OVERRIDE_CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+}
+
 export const app = new Spiceflow()
   .use(async ({ request }, next) => {
+    // CORS preflight for config override API (cross-origin from docs sites)
+    if (request.method === 'OPTIONS' && request.parsedUrl.pathname.startsWith('/api/config-override')) {
+      return new Response(null, { status: 204, headers: CONFIG_OVERRIDE_CORS })
+    }
     if (request.parsedUrl.pathname.startsWith('/api/auth')) {
       const auth = getAuth()
       const res = await auth.handler(request)
@@ -267,6 +279,7 @@ export const app = new Spiceflow()
   .use(apiApp)
   .use(deployApp)
   .use(aiLogoApp)
+  .use(configOverrideApp)
   .get('/api/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
   .use(schemaApp)
   .use(holocronApp)

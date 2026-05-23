@@ -30,11 +30,13 @@
   // One instance per org (idFromName(orgId)). Tracks requests, tokens, model, page slug.
   "durable_objects": {
     "bindings": [
-      { "name": "USAGE_COUNTER", "class_name": "UsageCounter" }
+      { "name": "USAGE_COUNTER", "class_name": "UsageCounter" },
+      { "name": "CONFIG_OVERRIDE", "class_name": "ConfigOverrideDO" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] }
+    { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] },
+    { "tag": "v2", "new_sqlite_classes": ["ConfigOverrideDO"] }
   ],
   // CHAT_RATE_LIMITER — IP-based rate limiting for unauthenticated chat requests.
   // 10 requests per 60 seconds per IP. Only applied when no HOLOCRON_KEY is present.
@@ -93,11 +95,13 @@
       ],
       "durable_objects": {
         "bindings": [
-          { "name": "USAGE_COUNTER", "class_name": "UsageCounter" }
+          { "name": "USAGE_COUNTER", "class_name": "UsageCounter" },
+          { "name": "CONFIG_OVERRIDE", "class_name": "ConfigOverrideDO" }
         ]
       },
       "migrations": [
-        { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] }
+        { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] },
+        { "tag": "v2", "new_sqlite_classes": ["ConfigOverrideDO"] }
       ],
       "ratelimits": [
         {
