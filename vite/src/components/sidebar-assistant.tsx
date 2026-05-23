@@ -72,7 +72,7 @@ export function ChatInput({
   }
 
   return (
-    <div className={`bg-background rounded-[15px] p-2 flex flex-col gap-1.5 ${className || ''}`}>
+    <div className={`bg-background rounded-xl p-2 flex flex-col gap-1.5 ${className || ''}`}>
       <textarea
         ref={inputRef}
         value={value}
@@ -122,6 +122,7 @@ export function SidebarAssistant() {
   const [inputValue, setInputValue] = useState('')
   const drawerState = chatState((s) => s.drawerState)
 
+  const {site } = useHolocronData()
   const handleChange = (value: string) => {
     setInputValue(value)
     chatState.setState({ draftText: value })
@@ -175,7 +176,7 @@ export function SidebarAssistant() {
         onChange={handleChange}
         onSubmit={handleSubmit}
         onFocus={handleFocus}
-        placeholder='How can I help?'
+        placeholder={`what is ${site.config?.name || 'this page'}?`}
       />
     </div>
   )

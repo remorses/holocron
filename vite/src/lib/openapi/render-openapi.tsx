@@ -119,7 +119,7 @@ function Property({ name, schema, required, depth = 0 }: {
   const tags = collectTags(schema)
 
   return (
-    <div className='flex flex-col gap-3 border-b border-border-subtle py-4 first:pt-0 last:border-b-0 last:pb-0'>
+    <div className='flex flex-col gap-3 border-b border-border-subtle py-3 first:pt-0 last:border-b-0 last:pb-0'>
       <div className='flex flex-wrap items-center gap-2'>
         <span className='font-medium font-mono code-font-size text-primary'>
           {name}{required ? <span className='text-red'> *</span> : <span className='text-muted-foreground'>?</span>}

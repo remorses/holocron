@@ -68,7 +68,7 @@ export function HeroSection() {
 
       {/* Foreground content */}
       <div className='relative z-2 flex flex-col items-center text-center max-w-[720px] w-full px-5 pb-20 lg:pb-[160px] gap-6'>
-        <h1 className='flex flex-col items-center leading-none'>
+        <h1 className='flex flex-col items-center leading-tight'>
           <span
             className='italic text-[28px] sm:text-[38px] md:text-[48px] font-normal text-foreground'
             style={{ fontFamily: SERIF_FONT }}

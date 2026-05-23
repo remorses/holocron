@@ -136,6 +136,7 @@ describe('logo normalization', () => {
         "dark": "/dark.svg",
         "href": "/",
         "light": "/light.svg",
+        "text": undefined,
       }
     `)
   })
