@@ -177,6 +177,14 @@ tag: NEW
 ---
 ```
 
+**Title** should be **50-60 characters** max. It appears in the OG image at large
+font size, in the browser tab, and in search results. Keep it concise and
+descriptive.
+
+**Description** should be **120-150 characters**. It appears in the OG image
+below the title and in search engine snippets. Write a single sentence that
+summarizes the page content. Longer descriptions get truncated with an ellipsis.
+
 ## Redirects
 
 When restructuring docs, add redirects in `docs.json`. See
