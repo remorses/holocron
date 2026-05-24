@@ -10,6 +10,7 @@
  */
 
 import { Spiceflow } from 'spiceflow'
+import { env } from 'cloudflare:workers'
 import { z } from 'zod'
 
 const ogQuerySchema = z.object({
@@ -21,13 +22,12 @@ const ogQuerySchema = z.object({
 })
 
 /**
- * Pre-fetch a remote icon and convert to a base64 data URL.
+ * Fetch a remote resource and convert to a base64 data URL.
  * Satori/takumi fetches `<img src>` during rendering inside the Worker;
  * if that internal fetch fails the entire body stream errors silently and
- * the response is 200 with an empty body. Pre-fetching lets us fall back
- * to the built-in Holocron icon when the remote URL is broken or slow.
+ * the response is 200 with an empty body. Pre-fetching avoids this.
  */
-async function fetchIconAsDataUrl(url: string): Promise<string | undefined> {
+async function fetchAsDataUrl(url: string): Promise<string | undefined> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(4000) })
     if (!res.ok) return undefined
@@ -44,20 +44,43 @@ async function fetchIconAsDataUrl(url: string): Promise<string | undefined> {
   }
 }
 
+/** Fetch a local asset via the ASSETS binding and convert to data URL */
+async function fetchAssetAsDataUrl(assets: Fetcher, path: string): Promise<string | undefined> {
+  try {
+    const res = await assets.fetch(new URL(path, 'https://assets.local'))
+    if (!res.ok) return undefined
+    const contentType = res.headers.get('content-type') || 'image/jpeg'
+    const buf = await res.arrayBuffer()
+    if (buf.byteLength === 0) return undefined
+    const bytes = new Uint8Array(buf)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+    return `data:${contentType};base64,${btoa(binary)}`
+  } catch {
+    return undefined
+  }
+}
+
 export const app = new Spiceflow().route({
   method: 'GET',
   path: '/api/og',
   query: ogQuerySchema,
   async handler({ query }) {
-    const iconDataUrl = query.icon ? await fetchIconAsDataUrl(query.icon) : undefined
+    const { createOgImageResponse, hashTitle, BG_IMAGE_COUNT } = await import('./og.tsx')
 
-    const { createOgImageResponse } = await import('./og.tsx')
+    const bgIndex = hashTitle(query.title) % BG_IMAGE_COUNT
+    const [iconDataUrl, bgDataUrl] = await Promise.all([
+      query.icon ? fetchAsDataUrl(query.icon) : Promise.resolve(undefined),
+      fetchAssetAsDataUrl(env.ASSETS, `/bg/${bgIndex}.jpg`),
+    ])
+
     const response = createOgImageResponse({
       title: query.title,
       description: query.description,
       iconUrl: iconDataUrl,
       siteName: query.siteName,
       pageLabel: query.pageLabel,
+      backgroundUrl: bgDataUrl,
     })
     response.headers.set('cache-control', 's-maxage=3600')
     return response
