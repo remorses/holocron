@@ -51,6 +51,18 @@ const BG_IMAGES = [
   'https://cdn.midjourney.com/ffcccfa1-1024-49b3-95b9-606bd0821c54/0_2.png',
   'https://cdn.midjourney.com/a2b7113a-d4aa-4e0f-949e-0f5f01d3d410/0_2.png',
   'https://cdn.midjourney.com/4fcd185a-c350-436f-b9d4-75fcc3ba3672/0_0.png',
+  'https://cdn.midjourney.com/b9704ad1-1b92-4017-927e-8c82ae80ac1a/0_0.png',
+  'https://cdn.midjourney.com/b9704ad1-1b92-4017-927e-8c82ae80ac1a/0_2.png',
+  'https://cdn.midjourney.com/8d6c592c-541d-4f79-982d-f5995f454053/0_2.png',
+  'https://cdn.midjourney.com/404f0e19-5956-4752-9a8e-df991bf70c7e/0_0.png',
+  'https://cdn.midjourney.com/e3c7e3a5-a8ae-41cd-9379-aad2d91298a3/0_3.png',
+  'https://cdn.midjourney.com/851d6a59-5e9b-4a82-8e34-c183b5400135/0_1.png',
+  'https://cdn.midjourney.com/419dc067-3555-4bb7-898f-6f2b7be503c1/0_2.png',
+  'https://cdn.midjourney.com/e1c26816-4d8f-443e-9725-98b46318a534/0_0.png',
+  'https://cdn.midjourney.com/32b57d29-e1a9-4cb6-a3ee-718d0910e268/0_0.png',
+  'https://cdn.midjourney.com/1a2fd2f9-4c9e-471f-b18c-a2c75e2e4027/0_0.png',
+  'https://cdn.midjourney.com/7636c35d-56c7-4885-906c-d02707212396/0_2.png',
+  'https://cdn.midjourney.com/226c604a-38eb-4542-a437-64a49a1173fd/0_0.png',
 ]
 
 function hashTitle(title: string): number {
