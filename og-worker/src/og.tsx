@@ -89,6 +89,7 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
           width: '100%',
           height: '100%',
           objectFit: 'cover',
+          filter: 'saturate(0.5)',
         }}
       />
       <div
