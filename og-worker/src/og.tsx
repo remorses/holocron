@@ -63,6 +63,7 @@ const BG_IMAGES = [
   'https://cdn.midjourney.com/1a2fd2f9-4c9e-471f-b18c-a2c75e2e4027/0_0.png',
   'https://cdn.midjourney.com/7636c35d-56c7-4885-906c-d02707212396/0_2.png',
   'https://cdn.midjourney.com/226c604a-38eb-4542-a437-64a49a1173fd/0_0.png',
+  'https://cdn.midjourney.com/7d9c6480-6dfa-4f98-9c90-5bd516c4f80c/0_1.png',
 ]
 
 function hashTitle(title: string): number {
