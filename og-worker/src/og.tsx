@@ -100,7 +100,7 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
           flexDirection: 'column',
           justifyContent: 'space-between',
           position: 'relative',
-          padding: '64px 72px',
+          padding: '64px 72px 32px',
           width: '100%',
           height: '100%',
         }}
