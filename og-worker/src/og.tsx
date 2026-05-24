@@ -45,7 +45,7 @@ function OgIcon({ iconUrl, size }: { iconUrl?: string; size: number }) {
 const BG_IMAGES = [
   'https://cdn.midjourney.com/0497ef8a-8266-4105-81d6-a176e74c7960/0_1.png',
   'https://cdn.midjourney.com/4937e6b7-012c-4fb7-ac8b-abe255b2e5af/0_0.png',
-  'https://cdn.midjourney.com/4937e6b7-012c-4fb7-ac8b-abe255b2e5af/0_1.png',
+  'https://cdn.midjourney.com/1973d3c5-fddf-489b-9d97-2b2194c52def/0_2.png',
   'https://cdn.midjourney.com/1973d3c5-fddf-489b-9d97-2b2194c52def/0_1.png',
   'https://cdn.midjourney.com/938da541-c838-415e-8d85-943f796b9c82/0_0.png',
   'https://cdn.midjourney.com/ffcccfa1-1024-49b3-95b9-606bd0821c54/0_2.png',
