@@ -136,7 +136,7 @@ export function EditorialPage({
 
   return (
     <div
-      className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-foreground [font-family:var(--font-sans)] antialiased [text-rendering:optimizeLegibility]'
+      className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-foreground [font-family:var(--font-sans)] antialiased [text-rendering:optimizeLegibility] overflow-x-clip'
       style={pageStyle}
     >
       {!!bannerContent && (
