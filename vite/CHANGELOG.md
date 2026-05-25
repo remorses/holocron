@@ -1,10 +1,11 @@
 # @holocron.so/vite
 
-## 0.14.2
+## 0.14.3
 
-1. **Logo text uses heading font** — the logo text in the navbar now renders with the configured heading font-family, heavier weight (560), and tighter letter-spacing at 22px, matching the editorial heading style.
-2. **Removed preserveSymlinks resolver** — eliminated custom `resolveId` hooks for `spiceflow` and `@holocron.so/vite/src/*` that were only needed when spiceflow was a workspace dependency. Vite's default resolution now handles everything correctly, fixing transitive dep resolution in strict pnpm workspaces.
-3. **Updated spiceflow to 1.25.4-rsc.0**
+1. **Fixed spiceflow resolution in strict pnpm workspaces** — spiceflow is a transitive dependency of `@holocron.so/vite` and is not hoisted to the user's `node_modules` in strict pnpm. Spiceflow's own `virtual:app-entry` module imports from `spiceflow`, but virtual modules have no filesystem location so Vite falls back to resolving from the project root where spiceflow doesn't exist. A `resolveId` hook now resolves `spiceflow` from holocron's own source directory where pnpm places it as a sibling in the `.pnpm` store.
+2. **Logo text uses heading font** — the logo text in the navbar now renders with the configured heading font-family, heavier weight (560), and tighter letter-spacing at 22px, matching the editorial heading style.
+3. **Removed preserveSymlinks resolver** — eliminated the custom `@holocron.so/vite/src/*` resolveId hook that was only needed when spiceflow was a workspace dependency.
+4. **Updated spiceflow to 1.25.4-rsc.0**
 
 ## 0.14.1
 
