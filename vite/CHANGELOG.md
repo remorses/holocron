@@ -1,5 +1,10 @@
 # @holocron.so/vite
 
+## 0.14.4
+
+1. **Fixed `module is not defined` browser error** — removed the custom spiceflow `resolveId` hook that was interfering with `@vitejs/plugin-rsc`'s browser entry resolution. The underlying issue (bare `'spiceflow'` import in a virtual module) is now fixed upstream in spiceflow 1.25.5-rsc.0.
+2. **Updated spiceflow to 1.25.5-rsc.0**
+
 ## 0.14.3
 
 1. **Fixed spiceflow resolution in strict pnpm workspaces** — spiceflow is a transitive dependency of `@holocron.so/vite` and is not hoisted to the user's `node_modules` in strict pnpm. Spiceflow's own `virtual:app-entry` module imports from `spiceflow`, but virtual modules have no filesystem location so Vite falls back to resolving from the project root where spiceflow doesn't exist. A `resolveId` hook now resolves `spiceflow` from holocron's own source directory where pnpm places it as a sibling in the `.pnpm` store.

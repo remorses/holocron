@@ -370,19 +370,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     async resolveId(id, importer) {
-      // Resolve `spiceflow` and `spiceflow/*` from holocron's own deps.
-      // Spiceflow's vite plugin creates a `virtual:app-entry` module that
-      // imports from `spiceflow`. Virtual modules have no filesystem location,
-      // so Vite falls back to resolving from the project root. In strict pnpm
-      // workspaces, spiceflow is a transitive dep of @holocron.so/vite and
-      // not hoisted to the user's node_modules, causing resolution failure.
-      // This hook resolves spiceflow from holocron's source dir where pnpm
-      // places it as a sibling in the .pnpm store.
-      if (id === 'spiceflow' || id.startsWith('spiceflow/')) {
-        const resolved = await this.resolve(id, HOLOCRON_APP_SRC_PATH, { skipSelf: true })
-        if (resolved) return resolved
-      }
-
       if (id === VIRTUAL_CONFIG) {
         return RESOLVED_CONFIG
       }
