@@ -14,7 +14,7 @@
 import type { HolocronConfig } from '../config.ts'
 import { parse as parseCookies } from 'cookie'
 import { holocronUrl } from './holocron-url.ts'
-import { DialConfig } from 'dialkit'
+import type { DialConfig } from 'dialkit'
 
 /* ── Overridable subset ──────────────────────────────────────────────── */
 
