@@ -1,3 +1,15 @@
+## 0.14.0
+
+1. **Rich `whoami` command with multi-org support** — `holocron whoami` now shows your user info, all organizations with IDs and roles, and projects grouped per org:
+
+   ```bash
+   npx -y @holocron.so/cli whoami
+   ```
+
+2. **Multi-org project creation** — `holocron projects create` now accepts `--org [orgId]` to target a specific organization. When you belong to multiple orgs and don't pass `--org`, an interactive picker appears.
+
+3. **Deploy project picker shows org names** — when deploying with multiple projects across orgs, the interactive picker now displays the org name alongside each project for easier identification.
+
 ## 0.13.0
 
 1. **New `--key` option for `holocron create`** — pass an existing API key to skip the entire cloud setup flow (no device flow login, no project creation, no API key creation). The key is written directly to `.env`:

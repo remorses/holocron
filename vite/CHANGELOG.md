@@ -1,5 +1,91 @@
 # @holocron.so/vite
 
+## 0.14.0
+
+1. **Analytics integrations for 14 providers** — new `integrations` field in docs.json injects client-side analytics scripts. Supports Fathom, Plausible, Pirsch, GA4, GTM, PostHog, Mixpanel, Hotjar, Heap, Segment, Clarity, Amplitude, LogRocket, and Clearbit. Mintlify-compatible config shape:
+
+   ```json
+   {
+     "integrations": {
+       "ga4": { "measurementId": "G-XXXXXXXXXX" },
+       "plausible": { "domain": "docs.example.com" },
+       "fathom": { "siteId": "ABCDEF" }
+     }
+   }
+   ```
+
+2. **New `<Marquee>` MDX component** — infinite scrolling content strip, available directly in MDX without imports. Supports horizontal and vertical directions, fade edges, configurable speed, and hover deceleration. Safe with multiple instances per page via `React.useId()` scoped keyframes:
+
+   ```mdx
+   <Marquee duration={30} fade slowOnHover>
+     <img src="/logos/github.svg" />
+     <img src="/logos/vercel.svg" />
+     <img src="/logos/stripe.svg" />
+   </Marquee>
+   ```
+
+3. **`logo.text` config field** — display a site name next to the logo in the navbar:
+
+   ```json
+   {
+     "logo": {
+       "light": "/favicon.svg",
+       "dark": "/favicon.svg",
+       "text": "My Docs"
+     }
+   }
+   ```
+
+4. **Layout and typography controls in docs.json** — new `layout` and `fonts` fields for customizing page geometry and font sizes without custom CSS:
+
+   ```json
+   {
+     "layout": {
+       "maxWidth": 1200,
+       "sidebarWidth": 230,
+       "columnGap": 60,
+       "radius": 10
+     },
+     "fonts": {
+       "fontSize": 14,
+       "heading": { "fontSize": 16 }
+     }
+   }
+   ```
+
+5. **Live config panel on preview deployments** — a DialKit-powered config panel appears in dev mode and on preview deployments, letting you live-tweak colors, layout, fonts, decorative lines, and assistant settings. Changes are stored as config overrides via a Durable Object backend and applied via cookie.
+
+6. **Relative-path global anchors with client-side navigation** — anchors pointing to relative paths now use client-side navigation instead of full page reloads, and no longer show the external link arrow icon.
+
+7. **Version/dropdown inner tabs visible in the tab bar** — when a version or dropdown contains inner tabs (e.g. "Documentation" + "API Reference"), those tabs now correctly appear in the header tab bar instead of being hidden.
+
+8. **Search UI improvements** — keyboard-layout-aware shortcut hints (shows "/" on US layouts, ⌘K/Ctrl K on layouts where "/" requires a modifier), accent border on focus, clear button, and the "/" shortcut now works alongside ⌘K/Ctrl K.
+
+9. **Lazy-loaded Prism.js for faster initial page render** — syntax highlighting is now loaded via dynamic `import()` instead of blocking the initial bundle. Code blocks render unhighlighted text immediately (matching SSR output), then syntax highlighting appears asynchronously.
+
+10. **Safe-mdx render errors shown in-page during development** — missing components, invalid expressions, and unsupported JSX now display as a Warning callout directly on the page in dev mode, instead of only logging to the terminal.
+
+11. **CSS variable border-radius tokens** — all hardcoded border-radius values are now derived from the `--radius` CSS variable, making border radius globally customizable via `layout.radius` in docs.json.
+
+12. **`sidebarTitle` frontmatter for SEO-friendly page titles** — use a long `title` for search engines while keeping the sidebar label short:
+
+    ```yaml
+    ---
+    title: "Holocron — Open Source Documentation Site Generator"
+    sidebarTitle: "Holocron"
+    ---
+    ```
+
+13. **Fixed ordered list numbering** — lists split by code blocks now continue their numbering correctly instead of restarting at 1.
+
+14. **Fixed theme token cascade** — Holocron design tokens now use a low-priority CSS cascade layer so user CSS overrides them regardless of stylesheet load order. Theme cookie renamed to `color-theme` for cross-app compatibility.
+
+15. **Fixed sidebar search filtering** — search results now update synchronously instead of being wrapped in a transition, fixing flaky no-results states.
+
+16. **Fixed mobile overflow** — removed hardcoded `display:flex` from grid-dot that caused horizontal overflow on mobile.
+
+17. **UI polish** — hover background on clickable cards, bottom border on last table row, removed faux-bold text-shadow from active tabs, differentiated group labels from page links in sidebar, tighter heading section padding in navigation, wider API reference aside panel (460px), hidden line numbers in API reference examples, removed `white-space:nowrap` from heading text spans, removed bleed class from footer wrapper.
+
 ## 0.13.0
 
 1. **Anchor placement in tabs or sidebar** — anchors now support a `placement` field that controls where they render. `"sidebar"` (the new default) places anchors at the top of the left navigation sidebar with icon and label. `"tabs"` places them in the header tab bar, preserving the previous behavior. You can mix both placements in the same config:
