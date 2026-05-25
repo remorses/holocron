@@ -7,7 +7,7 @@
  * Hidden when `appearance.strict` is true.
  */
 
-import React, { useCallback, useSyncExternalStore } from 'react'
+import React, { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { serialize } from 'cookie'
 
 function getTheme(): 'light' | 'dark' {
@@ -48,12 +48,44 @@ function setTheme(theme: 'light' | 'dark') {
   })
 }
 
+function toggleTheme() {
+  setTheme(getTheme() === 'dark' ? 'light' : 'dark')
+}
+
+/** Pressing `d` anywhere (unless typing in an input/textarea/contenteditable) toggles dark mode.
+ *  Uses a module-level ref count so multiple ThemeToggle mounts don't double-register. */
+let shortcutRefCount = 0
+
+function onThemeKeyDown(e: KeyboardEvent) {
+  if (e.key !== 'd' && e.key !== 'D') return
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
+  const tag = (e.target as HTMLElement)?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+  if ((e.target as HTMLElement)?.isContentEditable) return
+  e.preventDefault()
+  toggleTheme()
+}
+
+function useThemeShortcut() {
+  useEffect(() => {
+    if (shortcutRefCount++ === 0) {
+      document.addEventListener('keydown', onThemeKeyDown)
+    }
+    return () => {
+      if (--shortcutRefCount === 0) {
+        document.removeEventListener('keydown', onThemeKeyDown)
+      }
+    }
+  }, [])
+}
+
 export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribe, getTheme, getServerTheme)
+  useThemeShortcut()
 
   const toggle = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }, [theme])
+    toggleTheme()
+  }, [])
 
   return (
     <button
