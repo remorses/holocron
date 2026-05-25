@@ -57,6 +57,7 @@ function toggleTheme() {
 let shortcutRefCount = 0
 
 function onThemeKeyDown(e: KeyboardEvent) {
+  if (e.defaultPrevented) return
   if (e.key !== 'd' && e.key !== 'D') return
   if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
   const tag = (e.target as HTMLElement)?.tagName
