@@ -16,7 +16,7 @@
  * and loads ~600ms late.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { preload } from 'react-dom'
 import * as THREE from 'three'
 
@@ -405,7 +405,7 @@ function createFBO(w: number, h: number, format: THREE.PixelFormat = THREE.RGBAF
 
 // ─── Engine ────────────────────────────────────────────────────────────────
 
-function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideoConfig) {
+function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideoConfig & { onReady?: () => void }) {
   const config = { ...DEFAULT_CONFIG, ...userConfig }
 
   const width = container.clientWidth
@@ -444,6 +444,18 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     video.currentTime = config.loopAt
     video.play().catch(() => {})
   })
+
+  // Fire onReady when the video has enough data to render a frame.
+  // readyState >= HAVE_FUTURE_DATA means canplay already fired before we
+  // attached the listener (e.g. video was cached / preloaded), so we call
+  // onReady synchronously. Otherwise we wait for the canplay event.
+  if (config.onReady) {
+    if (video.readyState >= 3) {
+      config.onReady()
+    } else {
+      video.addEventListener('canplay', () => config.onReady!(), { once: true })
+    }
+  }
 
   const videoTexture = new THREE.VideoTexture(video)
   videoTexture.minFilter = THREE.NearestFilter
@@ -777,9 +789,11 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
 export function DottedVideoBackground({
   className = '',
   config,
+  onReady,
 }: {
   className?: string
   config?: Partial<DottedVideoConfig>
+  onReady?: () => void
 }) {
   // React 19: emits <link rel="preload" as="video"> into SSR HTML so the
   // browser starts downloading the video before any JS executes.
@@ -793,6 +807,7 @@ export function DottedVideoBackground({
 
     const engine = createDottedVideoEngine(container, {
       ...config,
+      onReady,
     })
 
     return () => {

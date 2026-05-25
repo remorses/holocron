@@ -2,6 +2,7 @@
 // and centered CTA. Breaks out of the Above column constraint via w-screen + negative margin.
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Link } from 'spiceflow/react'
 import { Button } from './ui/button.tsx'
 import { DottedVideoBackground } from './dotted-video-background.tsx'
@@ -36,20 +37,32 @@ const BOTTOM_GRADIENT = [
 ].join(' ')
 
 export function HeroSection() {
+  const [fontsReady, setFontsReady] = useState(false)
+  const [canvasReady, setCanvasReady] = useState(false)
+
+  useEffect(() => {
+    // Safety timeout: show everything after 3s even if events never fire
+    const timeout = setTimeout(() => {
+      setFontsReady(true)
+      setCanvasReady(true)
+    }, 3000)
+    document.fonts.ready.then(() => setFontsReady(true))
+    return () => clearTimeout(timeout)
+  }, [])
+
   return (
     <div className='relative mt-4 lg:mt-8 mb-6 lg:mb-10 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden'>
-      {/* Three.js dotted video background */}
+      {/* Three.js dotted video background + gradient overlays fade in together */}
       <div
         className='absolute inset-0 w-full h-full z-0 overflow-hidden dark:opacity-60 opacity-40'
         style={{
-          maskImage:
-            'linear-gradient(to bottom, black 60%, transparent 100%)',
-          WebkitMaskImage:
-            'linear-gradient(to bottom, black 60%, transparent 100%)',
+          opacity: canvasReady ? 1 : 0,
+          transition: 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
         }}
       >
         <DottedVideoBackground
           className='w-full h-full'
+          onReady={() => setCanvasReady(true)}
           config={{
             dotColor: '#8da4ff',
             dotSize: 6,
@@ -67,17 +80,31 @@ export function HeroSection() {
       {/* Top gradient overlay */}
       <div
         className='absolute top-0 inset-x-0 h-[60%] z-[1] pointer-events-none'
-        style={{ background: TOP_GRADIENT }}
+        style={{
+          background: TOP_GRADIENT,
+          opacity: canvasReady ? 1 : 0,
+          transition: 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+        }}
       />
 
       {/* Bottom gradient overlay */}
       <div
         className='absolute bottom-0 inset-x-0 h-[40%] z-[1] pointer-events-none'
-        style={{ background: BOTTOM_GRADIENT }}
+        style={{
+          background: BOTTOM_GRADIENT,
+          opacity: canvasReady ? 1 : 0,
+          transition: 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+        }}
       />
 
       {/* Foreground content */}
-      <div className='relative z-[2] flex flex-col items-center justify-center text-center max-w-[820px] w-full px-5 pt-16 sm:pt-24 pb-20 lg:pb-[160px] gap-6'>
+      <div
+        className='relative z-[2] flex flex-col items-center justify-center text-center max-w-[820px] w-full px-5 pt-16 sm:pt-24 pb-20 lg:pb-[160px] gap-6'
+        style={{
+          opacity: fontsReady ? 1 : 0,
+          transition: 'opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
+        }}
+      >
         <h1
           className='flex flex-col items-center leading-none text-[40px] sm:text-[56px] md:text-[68px] text-foreground'
           style={{ fontFamily: HERO_FONT }}
