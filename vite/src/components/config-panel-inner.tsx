@@ -18,6 +18,26 @@ import {
 } from '../lib/config-override.ts'
 import { saveConfigOverride } from '../lib/config-actions.ts'
 
+const DIALKIT_OPEN_KEY = 'holocron-dialkit-open'
+
+function getPersistedOpen(): boolean {
+  try {
+    return localStorage.getItem(DIALKIT_OPEN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function persistOpen(open: boolean) {
+  try {
+    if (open) {
+      localStorage.setItem(DIALKIT_OPEN_KEY, '1')
+    } else {
+      localStorage.removeItem(DIALKIT_OPEN_KEY)
+    }
+  } catch {}
+}
+
 /** Read the existing doId from the cookie on the client side. */
 function getExistingDoId(): string | undefined {
   if (typeof document === 'undefined') return undefined
@@ -133,9 +153,53 @@ export default function ConfigPanelInner({
     }
   }, [paramsJson])
 
+  // Persist open/closed state in localStorage so the panel survives
+  // RSC refreshes and page reloads. First visit = closed, user opens
+  // it = saved as open, refresh = stays open.
+  //
+  // DialRoot uses createPortal to render into document.body, so the
+  // .dialkit-panel-inner element is NOT inside our React tree. We
+  // observe data-collapsed attribute changes on document.body to
+  // detect open/close. DialKit sets data-collapsed on the panel
+  // inner div when collapsing/expanding.
+  const [initialOpen] = useState(getPersistedOpen)
+
+  useEffect(() => {
+    let collapsedObserver: MutationObserver | null = null
+
+    function startObserving(inner: Element) {
+      collapsedObserver = new MutationObserver(() => {
+        const collapsed = inner.getAttribute('data-collapsed') === 'true'
+        persistOpen(!collapsed)
+      })
+      collapsedObserver.observe(inner, { attributes: true, attributeFilter: ['data-collapsed'] })
+    }
+
+    // DialKit portals into body and mounts after useEffect, so the
+    // element may not exist yet. Watch for it to appear.
+    const inner = document.querySelector('.dialkit-panel-inner')
+    if (inner) {
+      startObserving(inner)
+    } else {
+      const bodyObserver = new MutationObserver(() => {
+        const el = document.querySelector('.dialkit-panel-inner')
+        if (el) {
+          bodyObserver.disconnect()
+          startObserving(el)
+        }
+      })
+      bodyObserver.observe(document.body, { childList: true, subtree: true })
+      return () => {
+        bodyObserver.disconnect()
+        collapsedObserver?.disconnect()
+      }
+    }
+    return () => collapsedObserver?.disconnect()
+  }, [])
+
   return (
     <>
-      <DialRoot position='top-right' defaultOpen={false} theme='system' productionEnabled />
+      <DialRoot position='top-right' defaultOpen={initialOpen} theme='system' productionEnabled />
       {saveError && (
         <div className='fixed right-3 top-14 z-50 max-w-72 rounded-md border border-red/20 bg-background px-3 py-2 text-xs text-red'>
           {saveError}
