@@ -55,7 +55,7 @@ tag: New
 | `title` | string | Page title, used in sidebar and `<title>` tag |
 | `description` | string | SEO description and subtitle |
 | `icon` | string | Icon name displayed in the sidebar |
-| `sidebarTitle` | string | Override the title shown in the sidebar |
+| `sidebarTitle` | string | Short label for the sidebar, letting `title` be longer for SEO |
 | `tag` | string | Badge label next to the page title in sidebar |
 | `deprecated` | boolean | Marks the page as deprecated |
 | `api` | string | Mintlify API page label like `GET /users` |
@@ -70,6 +70,21 @@ tag: New
 | `twitter:title` | string | Twitter card title |
 | `twitter:description` | string | Twitter card description |
 | `twitter:image` | string | Twitter card image |
+
+## Sidebar title
+
+Use `sidebarTitle` to show a **shorter label** in the sidebar while keeping a longer, more descriptive `title` for SEO and browser tabs.
+
+The `title` field controls the `<title>` tag, which is what Google shows in search results. Longer, keyword-rich titles rank better. But long titles make the sidebar hard to scan, so `sidebarTitle` lets you decouple the two.
+
+```mdx
+---
+title: Authentication — Setting Up OAuth and API Keys
+sidebarTitle: Authentication
+---
+```
+
+In this example, Google sees "Authentication — Setting Up OAuth and API Keys" but the sidebar just shows "Authentication".
 
 ## The index page
 

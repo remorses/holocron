@@ -19,7 +19,7 @@
       "type": "string"
     },
     "sidebarTitle": {
-      "description": "Override the title shown in the sidebar navigation",
+      "description": "Override the title shown in the sidebar navigation. Use this to keep the sidebar label short while using a longer, SEO-friendly title in the title field for search engines and browser tabs.",
       "type": "string"
     },
     "tag": {
