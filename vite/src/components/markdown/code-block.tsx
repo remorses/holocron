@@ -3,14 +3,14 @@
 /**
  * CodeBlock with Prism syntax highlighting and line numbers.
  *
- * Prism is loaded via `#prism` conditional import: the browser gets real
- * prismjs with all grammars registered; SSR/RSC get a noop stub that returns
- * unhighlighted text. This avoids bundling prismjs (~500KB) in the server
- * build and sidesteps the CJS global issue in Dynamic Workers.
+ * Prism is lazy-loaded via dynamic import() so the ~891KB bundle doesn't
+ * block initial page render. First paint shows unhighlighted code (same as
+ * SSR output), then highlighting appears once Prism finishes loading.
+ * The module is cached after first load so subsequent code blocks highlight
+ * instantly.
  */
 
-import React, { useMemo, useState, useCallback } from 'react'
-import { Prism } from '#prism'
+import React, { useMemo, useState, useCallback, useEffect } from 'react'
 
 function CopyIcon() {
   return (
@@ -87,16 +87,19 @@ export function CodeBlock({
     [highlight, lines.length],
   )
 
-  /* Use Prism.highlight() to get highlighted HTML as a string. Works on both
-     server and client (no DOM dependency), avoiding hydration mismatch issues
-     that occur with useEffect + highlightElement. */
-  const highlightedHtml = useMemo(() => {
-    const prismLang = lang === 'mdx' ? 'markdown' : lang
-    const grammar = prismLang ? Prism.languages[prismLang] : undefined
-    if (!grammar) {
-      return undefined
-    }
-    return Prism.highlight(children, grammar, prismLang)
+  // Prism is lazy-loaded so the ~891KB bundle doesn't block first paint.
+  // SSR returns null (unhighlighted), client loads Prism then re-renders.
+  const [highlightedHtml, setHighlightedHtml] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    let cancelled = false
+    import('#prism').then(({ Prism }) => {
+      if (cancelled) return
+      const prismLang = lang === 'mdx' ? 'markdown' : lang
+      const grammar = prismLang ? Prism.languages[prismLang] : undefined
+      if (!grammar) return
+      setHighlightedHtml(Prism.highlight(children, grammar, prismLang))
+    })
+    return () => { cancelled = true }
   }, [children, lang])
 
   return (

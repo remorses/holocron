@@ -112,7 +112,8 @@ const value = 'ok'
     expect(html).toContain('<table')
     expect(html).toContain('>foo</td>')
     expect(html).toContain('language-ts')
-    expect(html).toContain('token keyword')
+    // Prism is lazy-loaded via useEffect, so static markup won't contain
+    // highlighted tokens. Just verify the code text is present.
     expect(html).toContain('value')
   })
 })

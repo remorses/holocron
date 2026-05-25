@@ -810,8 +810,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
   // Keep `@holocron.so/vite/*` inside the RSC/SSR transform pipeline so
   // `@vitejs/plugin-rsc` emits stable `client-package-proxy/...` imports.
-  // The Prism registry now lives behind one Holocron package file, so users
-  // only see a single optimizeDeps entry instead of one line per grammar.
+  // Prism grammars are pre-bundled into src/generated/prism-bundle.js so
+  // they don't trigger per-grammar optimize-deps discovery.
   const holocronRscPackagePlugin: Plugin = {
     name: 'holocron:rsc-package-source',
     configEnvironment(name, config) {
@@ -826,10 +826,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           [
             '@holocron.so/vite > @orama/orama',
             '@holocron.so/vite > cookie',
-            '@holocron.so/vite > prismjs',
+            // prismjs is pre-bundled into src/generated/prism-bundle.js, no optimize entry needed
             '@holocron.so/vite > mermaid',
+            '@holocron.so/vite > clsx',
             '@holocron.so/vite > react-medium-image-zoom',
             '@holocron.so/vite > zustand',
+            '@holocron.so/vite > tailwind-merge',
           ],
         )
       }
