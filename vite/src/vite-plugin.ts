@@ -802,6 +802,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           config.optimizeDeps.include,
           [
             '@holocron.so/vite > @orama/orama',
+            '@holocron.so/vite > spiceflow > @vitejs/plugin-rsc/vendor/react-server-dom/client.browser',
             '@holocron.so/vite > cookie',
             // prismjs is pre-bundled into src/generated/prism-bundle.js, no optimize entry needed
             '@holocron.so/vite > mermaid',
@@ -951,7 +952,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   // Custom entries must stay as filesystem entries so vite-rsc can walk their
   // imports and collect Holocron's global CSS under Cloudflare dev.
   if (!hasUserSpiceflowPlugin) {
-    pluginsToReturn.push(spiceflowPlugin({ entry: options.entry ?? VIRTUAL_APP }))
+    pluginsToReturn.push(
+      spiceflowPlugin({
+        entry: options.entry ?? VIRTUAL_APP,
+        serveStaticImport: '@holocron.so/vite/src/serve-static',
+      }),
+    )
   }
   if (!hasUserTailwindPlugin) {
     pluginsToReturn.push(tailwindcss())

@@ -1,6 +1,6 @@
 {
   "name": "@holocron.so/vite",
-  "version": "0.14.4",
+  "version": "0.14.5",
   "description": "Vite plugin for building documentation websites from MDX files with mintlify-compatible config",
   "type": "module",
   "main": "./dist/index.js",
@@ -108,7 +108,7 @@
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
     "safe-mdx": "^1.11.1",
-    "spiceflow": "1.25.5-rsc.0",
+    "spiceflow": "1.25.5-rsc.2",
     "string-dedent": "^3.0.2",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",

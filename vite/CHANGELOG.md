@@ -1,5 +1,10 @@
 # @holocron.so/vite
 
+## 0.14.5
+
+1. **Fixed dev-server `module is not defined` crashes** — Holocron now uses `spiceflow@1.25.5-rsc.2`, which prebundles `@vitejs/plugin-rsc`'s browser RSC client instead of letting Vite serve the raw CommonJS vendor file to browsers.
+2. **Resolved production static middleware through Holocron** — Spiceflow's production virtual app entry now imports `serveStatic` through `@holocron.so/vite/src/serve-static`, so strict pnpm projects resolve the static middleware from Holocron's package context.
+
 ## 0.14.4
 
 1. **Fixed `module is not defined` browser error** — removed the custom spiceflow `resolveId` hook that was interfering with `@vitejs/plugin-rsc`'s browser entry resolution. The underlying issue (bare `'spiceflow'` import in a virtual module) is now fixed upstream in spiceflow 1.25.5-rsc.0.

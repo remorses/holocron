@@ -249,6 +249,33 @@ test.describe("hydration", () => {
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
 
+  test("dev server prebundles plugin-rsc browser client", async ({ page }) => {
+    const errors: string[] = [];
+    const pluginRscBrowserClientRequests: string[] = [];
+
+    page.on("request", (request) => {
+      const url = request.url();
+      if (url.includes("react-server-dom") && url.includes("browser")) {
+        pluginRscBrowserClientRequests.push(url);
+      }
+    });
+    page.on("pageerror", (err) => {
+      if (isIgnorableDevReloadError(err.message)) return;
+      errors.push(err.message);
+    });
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+
+    expect(errors, `Browser errors found:\n${errors.join("\n")}`).toHaveLength(0);
+    expect(pluginRscBrowserClientRequests).toEqual(
+      expect.arrayContaining([expect.stringMatching(/\/node_modules\/\.vite\/.*\/deps\//)]),
+    );
+    expect(pluginRscBrowserClientRequests).not.toEqual(
+      expect.arrayContaining([expect.stringContaining("/@fs/")]),
+    );
+  });
+
   test("no hydration errors on getting-started page", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (msg) => {
