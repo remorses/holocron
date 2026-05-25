@@ -1,5 +1,10 @@
 # @holocron.so/vite
 
+## 0.14.1
+
+1. **DialKit config panel persists open/closed state** — the config panel no longer resets to its default state on page refresh or RSC remount. Open/closed state is saved to localStorage so the panel stays how you left it.
+2. **Reduced main bundle size** — DialKit is now fully lazy-loaded. A stray value import was pulling the entire dialkit package into the eager bundle; switching to `import type` ensures it only loads when the config panel is opened.
+
 ## 0.14.0
 
 1. **Analytics integrations for 14 providers** — new `integrations` field in docs.json injects client-side analytics scripts. Supports Fathom, Plausible, Pirsch, GA4, GTM, PostHog, Mixpanel, Hotjar, Heap, Segment, Clarity, Amplitude, LogRocket, and Clearbit. Mintlify-compatible config shape:
