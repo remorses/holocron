@@ -1,5 +1,11 @@
 # @holocron.so/vite
 
+## 0.14.2
+
+1. **Logo text uses heading font** — the logo text in the navbar now renders with the configured heading font-family, heavier weight (560), and tighter letter-spacing at 22px, matching the editorial heading style.
+2. **Removed preserveSymlinks resolver** — eliminated custom `resolveId` hooks for `spiceflow` and `@holocron.so/vite/src/*` that were only needed when spiceflow was a workspace dependency. Vite's default resolution now handles everything correctly, fixing transitive dep resolution in strict pnpm workspaces.
+3. **Updated spiceflow to 1.25.4-rsc.0**
+
 ## 0.14.1
 
 1. **DialKit config panel persists open/closed state** — the config panel no longer resets to its default state on page refresh or RSC remount. Open/closed state is saved to localStorage so the panel stays how you left it.
