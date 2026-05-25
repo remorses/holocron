@@ -44,7 +44,7 @@
     "radix-ui": "latest",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "spiceflow": "1.25.3-rsc.0",
+    "spiceflow": "1.25.4-rsc.0",
     "string-dedent": "^3.0.2",
     "superjson": "^2.2.5",
     "tailwind-merge": "^3.5.0",

@@ -383,6 +383,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     async resolveId(id, importer) {
+      // Resolve `spiceflow` and `spiceflow/*` from holocron's own deps.
+      // In strict pnpm workspaces, transitive deps like spiceflow aren't
+      // hoisted to the user's node_modules. Without this, Vite can't find
+      // `spiceflow` when the virtual app entry (which lives in @holocron.so/vite)
+      // imports it. Uses Vite's resolver (not nodeRequire.resolve) so export
+      // conditions (import, browser, react-server) are respected per environment.
+      if (id === 'spiceflow' || id.startsWith('spiceflow/')) {
+        const resolved = await this.resolve(id, HOLOCRON_APP_SRC_PATH, { skipSelf: true,  })
+        if (resolved) return resolved
+      }
+
       // `@holocron.so/vite/app` is handled by resolve.alias in config().
       // The `./src/*` branch stays here for holocron's own internal imports.
       if (id.startsWith('@holocron.so/vite/src/')) {
