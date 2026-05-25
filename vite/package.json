@@ -38,7 +38,8 @@
       "types": "./dist/app.d.ts",
       "default": "./dist/app.js"
     },
-    "./src/*": "./src/*"
+    "./src/*": "./src/*",
+    "./dist/*": "./dist/*"
   },
   "imports": {
     "#mermaid": {
@@ -62,7 +63,8 @@
   ],
   "scripts": {
     "generate-schema": "tsx scripts/generate-schema.ts",
-    "build": "pnpm generate-schema && tsc && chmod +x dist/bin.js",
+    "bundle-prism": "tsx scripts/bundle-prism.ts",
+    "build": "pnpm generate-schema && pnpm bundle-prism && tsc && chmod +x dist/bin.js",
     "typecheck": "tsc",
     "test": "vitest --run",
     "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
