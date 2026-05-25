@@ -13,6 +13,7 @@
 
 import type { HolocronConfig } from '../config.ts'
 import { parse as parseCookies } from 'cookie'
+import { holocronUrl } from './holocron-url.ts'
 
 /* ── Overridable subset ──────────────────────────────────────────────── */
 
@@ -226,9 +227,6 @@ export function configOverrideToDocsJsonPartial(override: ConfigOverride): Recor
 
 /* ── Resolve override from cookie (server-side) ──────────────────────── */
 
-// TODO: revert to 'https://holocron.so' after testing
-const OVERRIDE_API_BASE = 'https://preview.holocron.so'
-
 /** In-memory cache for resolved overrides. Keys are `doId:hash` strings.
  *  Since the hash is derived from the override content, same key = same
  *  config forever. Safe to cache indefinitely within a process lifetime. */
@@ -251,7 +249,7 @@ export async function resolveConfigOverride(
 
   try {
     const res = await fetch(
-      `${OVERRIDE_API_BASE}/api/config-override/${encodeURIComponent(parsed.doId)}/${encodeURIComponent(parsed.hash)}`,
+      holocronUrl(`/api/config-override/${encodeURIComponent(parsed.doId)}/${encodeURIComponent(parsed.hash)}`),
     )
     if (!res.ok) return baseConfig
     const override = (await res.json()) as ConfigOverride

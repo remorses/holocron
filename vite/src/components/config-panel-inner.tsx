@@ -5,7 +5,7 @@
 // config panel button). Imports dialkit + motion + styles here so they
 // stay out of the main bundle.
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { router } from 'spiceflow/react'
 import { useDialKit, DialRoot } from 'dialkit'
 import 'dialkit/styles.css'
@@ -41,14 +41,14 @@ function clearOverrideCookie() {
 
 export default function ConfigPanelInner({
   config,
-  onReset,
 }: {
   config: HolocronConfig
-  onReset: () => void
 }) {
   const dialConfig = configToDialConfig(config)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialRenderRef = useRef(true)
+  const resetVersionRef = useRef(0)
 
   // Save-latest loop refs: ensures we never drop a pending change.
   // If a save is in-flight when a new change arrives, the loop keeps
@@ -62,11 +62,16 @@ export default function ConfigPanelInner({
       if (actionPath === 'actions.copy') {
         const override = dialValuesToOverride(params)
         const partial = configOverrideToDocsJsonPartial(override)
-        navigator.clipboard.writeText(JSON.stringify(partial, null, 2))
+        void navigator.clipboard.writeText(JSON.stringify(partial, null, 2)).catch((err) => {
+          setSaveError(err instanceof Error ? err.message : 'Failed to copy config override')
+        })
       }
       if (actionPath === 'actions.reset') {
+        resetVersionRef.current += 1
+        setSaveError(null)
+        latestJsonRef.current = savedJsonRef.current
+        if (debounceRef.current) clearTimeout(debounceRef.current)
         clearOverrideCookie()
-        onReset()
         router.refresh()
       }
     },
@@ -79,6 +84,7 @@ export default function ConfigPanelInner({
   async function saveLatest() {
     if (savingRef.current) return
     savingRef.current = true
+    const resetVersion = resetVersionRef.current
     try {
       // Keep saving until latestJson matches what we last saved.
       // This handles the case where a new change arrives while we're
@@ -88,13 +94,18 @@ export default function ConfigPanelInner({
         const override = JSON.parse(jsonToSave)
         const existingDoId = getExistingDoId()
         const { key } = await saveConfigOverride(override, existingDoId)
+        if (resetVersion !== resetVersionRef.current) return
         setOverrideCookie(key)
         savedJsonRef.current = jsonToSave
       }
       // RSC refresh: re-runs loaders with the new cookie so the page
       // updates with the overridden config. Preserves client state
       // (including the DialKit panel) unlike window.location.reload().
+      setSaveError(null)
       router.refresh()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save config override'
+      setSaveError(message)
     } finally {
       savingRef.current = false
     }
@@ -114,20 +125,21 @@ export default function ConfigPanelInner({
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      saveLatest()
+      void saveLatest()
     }, 200)
-  }, [paramsJson])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [])
+  }, [paramsJson])
 
   return (
     <>
       <DialRoot position='top-right' defaultOpen theme='system' productionEnabled />
+      {saveError && (
+        <div className='fixed right-3 top-14 z-50 max-w-72 rounded-md border border-red/20 bg-background px-3 py-2 text-xs text-red'>
+          {saveError}
+        </div>
+      )}
     </>
   )
 }

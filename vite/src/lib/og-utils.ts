@@ -1,9 +1,9 @@
 /**
- * OG image URL helpers. Builds absolute URLs pointing to the holocron.so
+ * OG image URL helpers. Builds absolute URLs pointing to the hosted Holocron
  * OG worker, which renders OG images server-side via takumi.
  */
 
-const OG_BASE_URL = 'https://holocron.so'
+import { holocronUrl } from './holocron-url.ts'
 
 export type OgImageUrlOptions = {
   title: string
@@ -20,5 +20,5 @@ export function buildOgImageUrl(options: OgImageUrlOptions): string {
   if (options.iconUrl) params.set('icon', options.iconUrl)
   if (options.siteName) params.set('siteName', options.siteName)
   if (options.pageLabel) params.set('pageLabel', options.pageLabel)
-  return `${OG_BASE_URL}/api/og?${params}`
+  return holocronUrl(`/api/og?${params}`)
 }

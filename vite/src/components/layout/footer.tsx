@@ -11,6 +11,7 @@ import { Link } from 'spiceflow/react'
 import { getDefaultTypeIcon } from '../../lib/collect-icons.ts'
 import { cn } from '../../lib/css-vars.ts'
 import { getGeneratedLogoUrl } from '../../lib/generated-logo.tsx'
+import { holocronUrl } from '../../lib/holocron-url.ts'
 import { useHolocronData } from '../../router.ts'
 import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
@@ -135,7 +136,7 @@ export function PoweredBy() {
   return (
     <div className='flex items-center justify-center pt-6 pb-12'>
       <Link
-        href='https://holocron.so?utm_source=powered-by'
+        href={holocronUrl('/?utm_source=powered-by')}
         target='_blank'
         rel='noopener noreferrer'
         className='no-underline flex items-baseline gap-1 text-xs opacity-40 hover:opacity-70 transition-opacity duration-150'

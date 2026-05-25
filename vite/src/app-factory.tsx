@@ -55,6 +55,7 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
+import { getHolocronBaseUrl, holocronUrl } from './lib/holocron-url.ts'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -179,7 +180,7 @@ type HolocronProviders = {
 
 /* ── Constants ───────────────────────────────────────────────────────── */
 
-const POWERED_BY_FOOTER = '\n\n---\n\n*Powered by [holocron.so](https://holocron.so)*\n'
+const POWERED_BY_FOOTER = `\n\n---\n\n*Powered by [holocron.so](${getHolocronBaseUrl()})*\n`
 
 /* ── Shared helpers ──────────────────────────────────────────────────── */
 
@@ -1122,7 +1123,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const text = params.text || ''
       if (!text) return new Response('Missing logo text', { status: 400 })
 
-      const upstreamUrl = `https://holocron.so/api/ai-logo/${encodeURIComponent(text)}`
+      const upstreamUrl = holocronUrl(`/api/ai-logo/${encodeURIComponent(text)}`)
 
       // Try Cache API first (available on Cloudflare Workers; no-op in dev)
       const cache = typeof caches !== 'undefined' ? await caches.open('ai-logo') : undefined
@@ -1225,7 +1226,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       // Points to the hosted Holocron chat route. It owns model selection,
       // quota checks, docs.zip fetching, and AI SDK streaming.
-      const chatUrl = new URL('https://preview.holocron.so/api/holocron/chat')
+      const chatUrl = new URL(holocronUrl('/api/holocron/chat'))
       const useInlineDocs = isLocalhostUrl(request.url)
       const apiKey = process.env.HOLOCRON_KEY || ''
       let textBuffer = ''

@@ -7,6 +7,7 @@ import {
   configOverrideToDocsJsonPartial,
   type ConfigOverride,
 } from './config-override.ts'
+import { getHolocronBaseUrl, holocronUrl } from './holocron-url.ts'
 import type { HolocronConfig } from '../config.ts'
 
 function makeBaseConfig(overrides: Partial<HolocronConfig> = {}): HolocronConfig {
@@ -180,5 +181,31 @@ describe('configOverrideToDocsJsonPartial', () => {
     const override: ConfigOverride = {}
     const result = configOverrideToDocsJsonPartial(override)
     expect(result).toEqual({})
+  })
+})
+
+describe('holocronUrl', () => {
+  it('defaults to holocron.so', () => {
+    const previous = process.env.HOLOCRON_URL
+    delete process.env.HOLOCRON_URL
+    try {
+      expect(getHolocronBaseUrl()).toMatchInlineSnapshot(`"https://holocron.so"`)
+      expect(holocronUrl('/api/config-override')).toMatchInlineSnapshot(`"https://holocron.so/api/config-override"`)
+    } finally {
+      if (previous === undefined) delete process.env.HOLOCRON_URL
+      else process.env.HOLOCRON_URL = previous
+    }
+  })
+
+  it('uses HOLOCRON_URL without duplicating slashes', () => {
+    const previous = process.env.HOLOCRON_URL
+    process.env.HOLOCRON_URL = 'https://custom.example.com/'
+    try {
+      expect(getHolocronBaseUrl()).toMatchInlineSnapshot(`"https://custom.example.com"`)
+      expect(holocronUrl('/api/og?title=Hello')).toMatchInlineSnapshot(`"https://custom.example.com/api/og?title=Hello"`)
+    } finally {
+      if (previous === undefined) delete process.env.HOLOCRON_URL
+      else process.env.HOLOCRON_URL = previous
+    }
   })
 })

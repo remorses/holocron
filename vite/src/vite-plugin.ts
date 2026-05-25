@@ -259,7 +259,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // imports like `safe-mdx/client` must resolve through our package too.
       const zoomEntry = nodeRequire.resolve('react-medium-image-zoom')
       const zoomDir = path.dirname(zoomEntry)
-      const next: Pick<UserConfig, 'resolve' | 'build'> = {
+      const next: Pick<UserConfig, 'resolve' | 'build' | 'define'> = {
         // When running under `holocron deploy` (HOLOCRON_DEPLOY=1), write
         // build output to dist/.holocron so deploy artifacts don't collide
         // with a normal `vite build` (which targets Cloudflare/Node differently).
@@ -275,6 +275,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           ],
           dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
           tsconfigPaths: true,
+        },
+        define: {
+          'import.meta.env.HOLOCRON_URL': JSON.stringify(process.env.HOLOCRON_URL),
         },
       }
       return next
