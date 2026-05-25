@@ -1,12 +1,12 @@
-// Full-bleed hero with background video, non-linear gradient overlays, and centered CTA.
-// Breaks out of the Above column constraint via w-screen + negative margin.
-// Video is color-corrected so its black matches --background; inverted in light mode.
+// Full-bleed hero with DottedVideoBackground (Three.js fluid sim), serif title,
+// and centered CTA. Breaks out of the Above column constraint via w-screen + negative margin.
 'use client'
 
 import { Link } from 'spiceflow/react'
 import { Button } from './ui/button.tsx'
+import { DottedVideoBackground } from './dotted-video-background.tsx'
 
-const SERIF_FONT = 'Georgia, serif'
+const HERO_FONT = "'IvarText', serif"
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -19,68 +19,71 @@ function GitHubIcon({ className }: { className?: string }) {
 const TOP_GRADIENT = [
   'linear-gradient(to bottom,',
   'var(--background) 0%,',
-  'color-mix(in srgb, var(--background) 92%, transparent) 8%,',
-  'color-mix(in srgb, var(--background) 78%, transparent) 16%,',
-  'color-mix(in srgb, var(--background) 60%, transparent) 26%,',
-  'color-mix(in srgb, var(--background) 40%, transparent) 38%,',
-  'color-mix(in srgb, var(--background) 20%, transparent) 52%,',
-  'color-mix(in srgb, var(--background) 8%, transparent) 68%,',
-  'transparent 85%)',
+  'color-mix(in srgb, var(--background) 90%, transparent) 10%,',
+  'color-mix(in srgb, var(--background) 70%, transparent) 22%,',
+  'color-mix(in srgb, var(--background) 40%, transparent) 40%,',
+  'color-mix(in srgb, var(--background) 15%, transparent) 60%,',
+  'transparent 80%)',
 ].join(' ')
 
 const BOTTOM_GRADIENT = [
   'linear-gradient(to top,',
   'var(--background) 0%,',
-  'color-mix(in srgb, var(--background) 90%, transparent) 10%,',
-  'color-mix(in srgb, var(--background) 70%, transparent) 20%,',
-  'color-mix(in srgb, var(--background) 45%, transparent) 35%,',
-  'color-mix(in srgb, var(--background) 20%, transparent) 50%,',
-  'color-mix(in srgb, var(--background) 8%, transparent) 65%,',
-  'transparent 80%)',
+  'color-mix(in srgb, var(--background) 85%, transparent) 15%,',
+  'color-mix(in srgb, var(--background) 50%, transparent) 35%,',
+  'color-mix(in srgb, var(--background) 20%, transparent) 55%,',
+  'transparent 75%)',
 ].join(' ')
 
 export function HeroSection() {
   return (
-    <div className='relative mt-4 lg:mt-8 mb-6 lg:mb-10 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden bg-background'>
-      {/* Background video — width-based sizing, capped to the site grid, centered */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        poster='/hero-bg-poster.jpg'
-        className='absolute z-0 invert hue-rotate-290 dark:invert-0 dark:hue-rotate-0 w-full max-w-(--grid-max-width) left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2'
-      >
-        <source src='/hero-bg.mp4' type='video/mp4' />
-      </video>
-
-      {/* Top gradient */}
+    <div className='relative mt-4 lg:mt-8 mb-6 lg:mb-10 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden'>
+      {/* Three.js dotted video background */}
       <div
-        className='absolute top-0 inset-x-0 h-[70%] z-1 pointer-events-none'
+        className='absolute inset-0 w-full h-full z-0 overflow-hidden dark:opacity-60 opacity-40'
+        style={{
+          maskImage:
+            'linear-gradient(to bottom, black 60%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, black 60%, transparent 100%)',
+        }}
+      >
+        <DottedVideoBackground
+          className='w-full h-full'
+          config={{
+            dotColor: '#8da4ff',
+            dotSize: 6,
+            minDotSize: 1,
+            dotMargin: 1,
+            animSpeed: 3,
+            gamma: 0.8,
+            enableMask: false,
+            fluidStrength: 0.2,
+            fluidCurl: 80,
+          }}
+        />
+      </div>
+
+      {/* Top gradient overlay */}
+      <div
+        className='absolute top-0 inset-x-0 h-[60%] z-[1] pointer-events-none'
         style={{ background: TOP_GRADIENT }}
       />
 
-      {/* Bottom gradient */}
+      {/* Bottom gradient overlay */}
       <div
-        className='absolute bottom-0 inset-x-0 h-[40%] z-1 pointer-events-none'
+        className='absolute bottom-0 inset-x-0 h-[40%] z-[1] pointer-events-none'
         style={{ background: BOTTOM_GRADIENT }}
       />
 
       {/* Foreground content */}
-      <div className='relative z-2 flex flex-col items-center text-center max-w-[720px] w-full px-5 pb-20 lg:pb-[160px] gap-6'>
-        <h1 className='flex flex-col items-center leading-tight'>
-          <span
-            className='italic text-[28px] sm:text-[38px] md:text-[48px] font-normal text-foreground'
-            style={{ fontFamily: SERIF_FONT }}
-          >
-            delightful docs
-          </span>
-          <span
-            className='italic text-[28px] sm:text-[38px] md:text-[48px] font-normal text-foreground -mt-0.5 sm:-mt-1'
-            style={{ fontFamily: SERIF_FONT }}
-          >
-            for humans &amp; agents
-          </span>
+      <div className='relative z-[2] flex flex-col items-center justify-center text-center max-w-[820px] w-full px-5 pt-16 sm:pt-24 pb-20 lg:pb-[160px] gap-6'>
+        <h1
+          className='flex flex-col items-center leading-none text-[40px] sm:text-[56px] md:text-[68px] text-foreground'
+          style={{ fontFamily: HERO_FONT }}
+        >
+          <span>delightful docs</span>
+          <span>for humans &amp; agents</span>
         </h1>
 
         {/* CTAs */}

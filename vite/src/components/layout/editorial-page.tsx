@@ -158,7 +158,7 @@ export function EditorialPage({
             <Link href={logoLinkHref} className='slot-logo no-underline flex items-center gap-2 shrink-0'>
               <Logo style={{ height: 'var(--logo-height)' }} />
               {siteLogo.text && (
-                <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--foreground)' }}>
+                <span style={{ fontWeight: 400, fontSize: '16px', color: 'var(--foreground)' }}>
                   {siteLogo.text}
                 </span>
               )}
