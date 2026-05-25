@@ -14,6 +14,7 @@
 import type { HolocronConfig } from '../config.ts'
 import { parse as parseCookies } from 'cookie'
 import { holocronUrl } from './holocron-url.ts'
+import { DialConfig } from 'dialkit'
 
 /* ── Overridable subset ──────────────────────────────────────────────── */
 
@@ -94,7 +95,7 @@ export function parseOverrideCookie(
 
 /** Convert the current HolocronConfig into a DialKit config object.
  *  Each field maps to the appropriate DialKit control type. */
-export function configToDialConfig(config: HolocronConfig) {
+export function configToDialConfig(config: HolocronConfig): DialConfig {
   return {
     colors: {
       light: { type: 'color' as const, default: config.colors.dark || config.colors.primary || '#0D9373' },
@@ -104,6 +105,7 @@ export function configToDialConfig(config: HolocronConfig) {
       maxWidth: [config.layout.maxWidth, 800, 2600, 50] as [number, number, number, number],
       radius: [config.layout.radius, 0, 20, 1] as [number, number, number, number],
     },
+
     fonts: {
       bodySize: [config.fonts?.fontSize ?? 14, 12, 18, 1] as [number, number, number, number],
       headingSize: [config.fonts?.heading?.fontSize ?? 16, 12, 36, 1] as [number, number, number, number],
@@ -120,6 +122,7 @@ export function configToDialConfig(config: HolocronConfig) {
       copy: { type: 'action' as const },
       reset: { type: 'action' as const },
     },
+
   }
 }
 

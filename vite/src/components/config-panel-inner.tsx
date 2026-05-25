@@ -75,6 +75,7 @@ export default function ConfigPanelInner({
         router.refresh()
       }
     },
+
   })
 
   // Derive a stable string from params so the effect only fires when
