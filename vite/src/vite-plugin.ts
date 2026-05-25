@@ -854,8 +854,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       if (name === 'rsc' || name === 'ssr') {
         addNoExternal(config, holocronPackagePattern)
-        addNoExternal(config, 'fflate')
+        // addNoExternal(config, 'fflate')
         config.optimizeDeps ??= {}
+        config.optimizeDeps.include ??= []
+        config.optimizeDeps.include.push('@holocron.so/vite > fflate')
         config.optimizeDeps.exclude = mergeUnique(
           config.optimizeDeps.exclude,
           ['spiceflow'],

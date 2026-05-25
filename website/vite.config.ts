@@ -11,9 +11,7 @@ export default defineConfig({
   clearScreen: false,
   build: analyzeBundle ? { sourcemap: true } : undefined,
   environments: {
-    rsc: {
-      optimizeDeps: { include: ['@holocron.so/vite > safe-mdx > linkedom'] },
-    },
+
   },
   plugins: [
     holocron({ entry: './src/server.tsx', pagesDir: 'src/pages' }),
