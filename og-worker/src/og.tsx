@@ -100,7 +100,7 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
           flexDirection: 'column',
           justifyContent: 'space-between',
           position: 'relative',
-          padding: '64px 72px 32px',
+          padding: '56px 30px 32px',
           width: '100%',
           height: '100%',
         }}
@@ -120,7 +120,7 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
                 lineHeight: 1,
                 fontWeight: 700,
                 letterSpacing: '-0.02em',
-                maxWidth: 800,
+                wordBreak: 'break-word',
               }}
             >
               {title}
@@ -132,7 +132,7 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
                 fontSize: 42,
                 lineHeight: 1.4,
                 color: '#666666',
-                maxWidth: 900,
+                wordBreak: 'break-word',
               }}
             >
               {getExcerpt(description, 180)}
