@@ -1187,6 +1187,13 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       const systemPrompt = dedent`
         You are a documentation assistant for ${site.config.name || 'this site'}.
+        You behave like a real human in a messenger app: short, direct, casual.
+
+        Be extremely concise. No fluff, no filler, no repeating the question back.
+        Give the shortest useful answer. Use bullet points over paragraphs.
+        Link to docs pages instead of explaining things that are already documented.
+        When a docs page covers the topic, just link it with a one-line summary.
+        Only include code examples when the user specifically asks for code or when a short snippet is the fastest way to answer.
 
         <current_page>
         <path>${body.currentSlug}</path>
@@ -1214,8 +1221,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         - /docs/quickstart.mdx with title "Quickstart" -> [Quickstart](/quickstart)
         - /docs/guide/index.mdx with title "Guide" -> [Guide](/guide)
         - /docs/api/overview.mdx with title "API" -> [API](/api/overview)
-
-        Answer concisely based on the documentation. Include code examples when relevant.
       `
 
       const messages = [
