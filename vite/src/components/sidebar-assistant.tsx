@@ -83,7 +83,7 @@ export function ChatInput({
         disabled={disabled}
         autoFocus={autoFocus}
         rows={1}
-        className={`w-full resize-none border-0 bg-transparent leading-5 text-foreground placeholder:text-muted-foreground outline-none [field-sizing:content] min-h-5 max-h-40 ${textClassName || 'text-sm'}`}
+        className={`w-full resize-none border-0 bg-transparent leading-5 text-foreground placeholder:text-muted-foreground/75 outline-none [field-sizing:content] min-h-5 max-h-40 ${textClassName || 'text-sm'}`}
       />
       <div className='flex items-center justify-end' onClick={() => inputRef.current?.focus()}>
         {isGenerating ? (
