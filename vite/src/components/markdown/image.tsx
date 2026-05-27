@@ -23,6 +23,7 @@ import React, { useCallback, useState } from 'react'
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
 import { cn } from '../../lib/css-vars.ts'
+import { useInsideMarquee } from './marquee.tsx'
 
 /**
  * Mintlify-compatible image with a pixelated placeholder. Uses a tiny pre-generated image with CSS
@@ -58,12 +59,16 @@ export function Image({
   const [loaded, setLoaded] = useState(false)
   const sourceWidth = readNumericAttr(width)
   const sourceHeight = readNumericAttr(height)
+  const insideMarquee = useInsideMarquee()
 
-  // SVGs are vector and load instantly — a 16px rasterized WebP placeholder
-  // looks terrible (blocky pixelated text/shapes). Skip the placeholder system
-  // entirely for SVG sources.
+  // Skip the placeholder in two cases:
+  // 1. SVGs are vector and load instantly; a 16px rasterized WebP placeholder
+  //    looks terrible (blocky pixelated text/shapes).
+  // 2. Inside a Marquee, logos are small and often have transparent backgrounds.
+  //    The pixelated placeholder bleeds through the transparent areas of the
+  //    real PNG, creating a visible ghosting artifact behind the sharp image.
   const isSvg = typeof src === 'string' && src.endsWith('.svg')
-  const effectivePlaceholder = isSvg ? undefined : placeholder
+  const effectivePlaceholder = isSvg || insideMarquee ? undefined : placeholder
 
   // Handles both the normal onLoad event and the case where the image is
   // already cached (img.complete is true before React mounts the handler).
