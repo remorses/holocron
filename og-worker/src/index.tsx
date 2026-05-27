@@ -21,11 +21,16 @@ const ogQuerySchema = z.object({
   pageLabel: z.string().optional(),
 })
 
+import { extractPngFromIco, bytesToBase64DataUrl, ICO_CONTENT_TYPES } from './ico-utils.ts'
+
 /**
  * Fetch a remote resource and convert to a base64 data URL.
  * Satori/takumi fetches `<img src>` during rendering inside the Worker;
  * if that internal fetch fails the entire body stream errors silently and
  * the response is 200 with an empty body. Pre-fetching avoids this.
+ *
+ * ICO files are converted to PNG by extracting the embedded PNG from the
+ * ICO container. If the ICO only contains BMP data, returns undefined.
  */
 async function fetchAsDataUrl(url: string): Promise<string | undefined> {
   try {
@@ -34,11 +39,15 @@ async function fetchAsDataUrl(url: string): Promise<string | undefined> {
     const contentType = res.headers.get('content-type') || 'image/png'
     const buf = await res.arrayBuffer()
     if (buf.byteLength === 0) return undefined
-    const bytes = new Uint8Array(buf)
-    let binary = ''
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
-    const base64 = btoa(binary)
-    return `data:${contentType};base64,${base64}`
+
+    // ICO format: extract the embedded PNG so takumi can render it
+    if (ICO_CONTENT_TYPES.has(contentType) || url.endsWith('.ico')) {
+      const png = extractPngFromIco(buf)
+      if (!png) return undefined
+      return bytesToBase64DataUrl(png, 'image/png')
+    }
+
+    return bytesToBase64DataUrl(new Uint8Array(buf), contentType)
   } catch {
     return undefined
   }
@@ -52,10 +61,7 @@ async function fetchAssetAsDataUrl(assets: Fetcher, path: string): Promise<strin
     const contentType = res.headers.get('content-type') || 'image/jpeg'
     const buf = await res.arrayBuffer()
     if (buf.byteLength === 0) return undefined
-    const bytes = new Uint8Array(buf)
-    let binary = ''
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
-    return `data:${contentType};base64,${btoa(binary)}`
+    return bytesToBase64DataUrl(new Uint8Array(buf), contentType)
   } catch {
     return undefined
   }

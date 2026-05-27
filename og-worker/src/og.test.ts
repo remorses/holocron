@@ -8,8 +8,39 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { createOgImageResponse } from './og.tsx'
+import { extractPngFromIco } from './ico-utils.ts'
 
 const localBgUrl = `data:image/jpeg;base64,${fs.readFileSync(path.join(import.meta.dirname, 'og-background.jpg')).toString('base64')}`
+
+describe('extractPngFromIco', () => {
+  test('extracts PNG from a real ICO file', async () => {
+    const res = await fetch('https://traforo.dev/favicon.ico')
+    const buf = await res.arrayBuffer()
+    const png = extractPngFromIco(buf)
+    expect(png).toBeDefined()
+    expect(Array.from(png!.subarray(0, 4))).toEqual([0x89, 0x50, 0x4e, 0x47])
+    expect(png!.length).toBeGreaterThan(100)
+  })
+
+  test('returns undefined for non-ICO data', () => {
+    const pngMagic = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    expect(extractPngFromIco(pngMagic.buffer)).toBeUndefined()
+  })
+
+  test('returns undefined for empty buffer', () => {
+    expect(extractPngFromIco(new ArrayBuffer(0))).toBeUndefined()
+  })
+
+  test('returns undefined for truncated ICO header', () => {
+    // Valid ICO header but no directory entries
+    const buf = new ArrayBuffer(6)
+    const view = new DataView(buf)
+    view.setUint16(0, 0, true) // reserved
+    view.setUint16(2, 1, true) // type = ICO
+    view.setUint16(4, 1, true) // count = 1 but no entry data
+    expect(extractPngFromIco(buf)).toBeUndefined()
+  })
+})
 
 describe('createOgImageResponse', () => {
   test('renders a PNG response', { timeout: 30000 }, async () => {
@@ -72,6 +103,38 @@ describe('createOgImageResponse', () => {
     fs.writeFileSync(path.join(snapshotDir, 'og-image-favicon.png'), png)
     expect(Array.from(png.subarray(0, 4))).toEqual([137, 80, 78, 71])
     expect(png.length).toBeGreaterThan(0)
+  })
+
+  test('renders with an ICO favicon converted to PNG', { timeout: 30000 }, async () => {
+    // Fetch the traforo favicon.ico which contains an embedded PNG
+    const icoRes = await fetch('https://traforo.dev/favicon.ico')
+    const icoBuf = await icoRes.arrayBuffer()
+    const png = extractPngFromIco(icoBuf)
+    expect(png).toBeDefined()
+    // Verify the extracted bytes start with PNG magic
+    expect(Array.from(png!.subarray(0, 4))).toEqual([0x89, 0x50, 0x4e, 0x47])
+
+    // Build a data URL and render the OG image with the extracted PNG
+    let binary = ''
+    for (let i = 0; i < png!.length; i++) binary += String.fromCharCode(png![i])
+    const iconDataUrl = `data:image/png;base64,${btoa(binary)}`
+
+    const response = createOgImageResponse({
+      title: 'Traforo',
+      description: 'HTTP tunnel via Cloudflare Durable Objects and WebSockets',
+      siteName: 'Traforo',
+      pageLabel: 'traforo.dev/',
+      iconUrl: iconDataUrl,
+      backgroundUrl: localBgUrl,
+    })
+
+    await response.ready
+    const ogPng = Buffer.from(await response.arrayBuffer())
+    const snapshotDir = path.join(import.meta.dirname, '__snapshots__')
+    fs.mkdirSync(snapshotDir, { recursive: true })
+    fs.writeFileSync(path.join(snapshotDir, 'og-image-ico-favicon.png'), ogPng)
+    expect(Array.from(ogPng.subarray(0, 4))).toEqual([137, 80, 78, 71])
+    expect(ogPng.length).toBeGreaterThan(0)
   })
 
   test('each title gets a deterministic background from the pool', { timeout: 60000 }, async () => {
