@@ -94,8 +94,10 @@ export function Image({
         ...style,
       }}
     >
-      {/* Placeholder: tiny image rendered with nearest-neighbor sampling */}
-      {effectivePlaceholder && (
+      {/* Placeholder: tiny image rendered with nearest-neighbor sampling.
+          Unmounted after the real image loads so it can't bleed through
+          transparent areas of PNGs (logos, icons with alpha). */}
+      {effectivePlaceholder && !loaded && (
         <img
           src={effectivePlaceholder}
           alt=''
