@@ -10,19 +10,33 @@ Use `Marquee` to create an infinite scrolling loop of icons, logos, cards, or an
 
 ## Logo carousel
 
-Scroll partner or integration logos using `img` tags with relative paths from your `public/` folder.
+Scroll partner or integration logos using `img` tags with relative paths from your `public/` folder. Set a uniform `height` to keep all logos visually aligned; the width scales proportionally.
 
 ```mdx
-<Marquee duration={20} slowOnHover gap={64}>
-  <img src="/logos/vercel.svg" alt="Vercel" width={120} height={30} />
-  <img src="/logos/stripe.svg" alt="Stripe" width={120} height={30} />
-  <img src="/logos/github.svg" alt="GitHub" width={120} height={30} />
-  <img src="/logos/cloudflare.svg" alt="Cloudflare" width={120} height={30} />
-  <img src="/logos/linear.svg" alt="Linear" width={120} height={30} />
+<Marquee duration={20} slowOnHover gap={24}>
+  <img src="/logos/vercel.svg" alt="Vercel" height="32" />
+  <img src="/logos/stripe.svg" alt="Stripe" height="32" />
+  <img src="/logos/github.svg" alt="GitHub" height="32" />
+  <img src="/logos/cloudflare.svg" alt="Cloudflare" height="32" />
+  <img src="/logos/linear.svg" alt="Linear" height="32" />
 </Marquee>
 ```
 
 Images resolve relative to your project root, so `/logos/vercel.svg` maps to `public/logos/vercel.svg`. You can also use relative paths like `./assets/logo.png` from the MDX file's directory.
+
+### Dark mode with `dark:invert`
+
+For black logos on a white background, add `className="dark:invert"` so they flip to white in dark mode.
+
+```mdx
+<Marquee duration={20} slowOnHover gap={24}>
+  <img src="/logos/acme.svg" alt="ACME" height="32" className="dark:invert" />
+  <img src="/logos/stripe.svg" alt="Stripe" height="32" className="dark:invert" />
+  <img src="/logos/linear.svg" alt="Linear" height="32" className="dark:invert" />
+</Marquee>
+```
+
+This works because `<img>` tags inside Marquee are automatically converted to Holocron's `Image` component at build time, which preserves `className`.
 
 ## Icon marquee
 
