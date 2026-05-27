@@ -5,6 +5,10 @@
  * cloudflare:workers (which only resolves inside the Workers runtime).
  */
 
+function isPngMagic(data: Uint8Array): boolean {
+  return data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4e && data[3] === 0x47
+}
+
 /**
  * Extract the largest PNG image embedded inside an ICO container.
  *
@@ -15,9 +19,9 @@
  *           planes(2) + bpp(2) + size(4) + offset(4)
  *   [offset..offset+size]  image data (PNG or BMP)
  *
- * Modern favicons almost always embed PNG data. If the largest entry
- * is BMP (no PNG magic bytes) we return undefined and the OG image
- * renders without an icon instead of reserving invisible space.
+ * An ICO can contain both BMP and PNG entries. We collect all valid
+ * entries, sort by size descending, and return the first one with
+ * PNG magic bytes. If none contain PNG data, returns undefined.
  */
 export function extractPngFromIco(buf: ArrayBuffer): Uint8Array | undefined {
   const view = new DataView(buf)
@@ -27,26 +31,23 @@ export function extractPngFromIco(buf: ArrayBuffer): Uint8Array | undefined {
   const count = view.getUint16(4, true)
   if (count === 0 || buf.byteLength < 6 + count * 16) return undefined
 
-  // find the largest embedded image by byte size
-  let bestSize = 0
-  let bestOffset = 0
+  // collect all valid bounded entries, sorted largest-first
+  const entries: { size: number; offset: number }[] = []
   for (let i = 0; i < count; i++) {
     const entryStart = 6 + i * 16
     const size = view.getUint32(entryStart + 8, true)
     const offset = view.getUint32(entryStart + 12, true)
-    if (size > bestSize) {
-      bestSize = size
-      bestOffset = offset
-    }
+    if (size === 0) continue
+    if (offset > buf.byteLength || offset + size > buf.byteLength) continue
+    entries.push({ size, offset })
   }
-  if (bestSize === 0 || bestOffset + bestSize > buf.byteLength) return undefined
+  entries.sort((a, b) => b.size - a.size)
 
-  const data = new Uint8Array(buf, bestOffset, bestSize)
-  // PNG magic: 89 50 4E 47
-  if (data[0] !== 0x89 || data[1] !== 0x50 || data[2] !== 0x4e || data[3] !== 0x47) {
-    return undefined // BMP payload, not supported by takumi
+  for (const entry of entries) {
+    const data = new Uint8Array(buf, entry.offset, entry.size)
+    if (isPngMagic(data)) return data
   }
-  return data
+  return undefined
 }
 
 export function bytesToBase64DataUrl(bytes: Uint8Array, contentType: string): string {
@@ -55,4 +56,25 @@ export function bytesToBase64DataUrl(bytes: Uint8Array, contentType: string): st
   return `data:${contentType};base64,${btoa(binary)}`
 }
 
-export const ICO_CONTENT_TYPES = new Set(['image/vnd.microsoft.icon', 'image/x-icon'])
+const ICO_CONTENT_TYPES = new Set([
+  'image/vnd.microsoft.icon',
+  'image/x-icon',
+  'image/ico',
+  'image/icon',
+])
+
+/**
+ * Check if a fetched resource is an ICO file based on content-type
+ * and URL. Handles case-insensitive MIME types, parameters like
+ * `charset=binary`, query strings, and uppercase `.ICO` extensions.
+ */
+export function isIcoResponse(url: string, contentType: string): boolean {
+  const mediaType = contentType.split(';', 1)[0]!.trim().toLowerCase()
+  if (ICO_CONTENT_TYPES.has(mediaType)) return true
+
+  try {
+    return new URL(url).pathname.toLowerCase().endsWith('.ico')
+  } catch {
+    return url.toLowerCase().endsWith('.ico')
+  }
+}

@@ -21,7 +21,7 @@ const ogQuerySchema = z.object({
   pageLabel: z.string().optional(),
 })
 
-import { extractPngFromIco, bytesToBase64DataUrl, ICO_CONTENT_TYPES } from './ico-utils.ts'
+import { extractPngFromIco, bytesToBase64DataUrl, isIcoResponse } from './ico-utils.ts'
 
 /**
  * Fetch a remote resource and convert to a base64 data URL.
@@ -41,7 +41,7 @@ async function fetchAsDataUrl(url: string): Promise<string | undefined> {
     if (buf.byteLength === 0) return undefined
 
     // ICO format: extract the embedded PNG so takumi can render it
-    if (ICO_CONTENT_TYPES.has(contentType) || url.endsWith('.ico')) {
+    if (isIcoResponse(url, contentType)) {
       const png = extractPngFromIco(buf)
       if (!png) return undefined
       return bytesToBase64DataUrl(png, 'image/png')

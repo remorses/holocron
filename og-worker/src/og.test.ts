@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { createOgImageResponse } from './og.tsx'
-import { extractPngFromIco } from './ico-utils.ts'
+import { extractPngFromIco, isIcoResponse } from './ico-utils.ts'
 
 const localBgUrl = `data:image/jpeg;base64,${fs.readFileSync(path.join(import.meta.dirname, 'og-background.jpg')).toString('base64')}`
 
@@ -39,6 +39,66 @@ describe('extractPngFromIco', () => {
     view.setUint16(2, 1, true) // type = ICO
     view.setUint16(4, 1, true) // count = 1 but no entry data
     expect(extractPngFromIco(buf)).toBeUndefined()
+  })
+
+  test('skips BMP entries and returns a smaller PNG entry', () => {
+    // Build a synthetic ICO with 2 entries: first is BMP (larger), second is PNG (smaller)
+    const pngPayload = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00])
+    const bmpPayload = new Uint8Array([0x42, 0x4d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+
+    const headerSize = 6
+    const dirSize = 2 * 16 // 2 entries
+    const totalSize = headerSize + dirSize + bmpPayload.length + pngPayload.length
+    const buf = new ArrayBuffer(totalSize)
+    const view = new DataView(buf)
+    const bytes = new Uint8Array(buf)
+
+    // ICO header
+    view.setUint16(0, 0, true) // reserved
+    view.setUint16(2, 1, true) // type = ICO
+    view.setUint16(4, 2, true) // count = 2
+
+    // Entry 0: BMP (larger, 16 bytes)
+    const bmpOffset = headerSize + dirSize
+    view.setUint32(6 + 8, bmpPayload.length, true)  // size
+    view.setUint32(6 + 12, bmpOffset, true)          // offset
+
+    // Entry 1: PNG (smaller, 10 bytes)
+    const pngOffset = bmpOffset + bmpPayload.length
+    view.setUint32(6 + 16 + 8, pngPayload.length, true)  // size
+    view.setUint32(6 + 16 + 12, pngOffset, true)          // offset
+
+    // Write payloads
+    bytes.set(bmpPayload, bmpOffset)
+    bytes.set(pngPayload, pngOffset)
+
+    const result = extractPngFromIco(buf)
+    expect(result).toBeDefined()
+    expect(Array.from(result!.subarray(0, 4))).toEqual([0x89, 0x50, 0x4e, 0x47])
+  })
+})
+
+describe('isIcoResponse', () => {
+  test('detects standard ICO content types', () => {
+    expect(isIcoResponse('https://example.com/icon', 'image/vnd.microsoft.icon')).toBe(true)
+    expect(isIcoResponse('https://example.com/icon', 'image/x-icon')).toBe(true)
+    expect(isIcoResponse('https://example.com/icon', 'image/ico')).toBe(true)
+    expect(isIcoResponse('https://example.com/icon', 'image/icon')).toBe(true)
+  })
+
+  test('handles content-type with parameters and case', () => {
+    expect(isIcoResponse('https://example.com/icon', 'image/x-icon; charset=binary')).toBe(true)
+    expect(isIcoResponse('https://example.com/icon', 'IMAGE/VND.MICROSOFT.ICON')).toBe(true)
+  })
+
+  test('detects .ico URL extension with query params and case', () => {
+    expect(isIcoResponse('https://example.com/favicon.ico?v=1', 'application/octet-stream')).toBe(true)
+    expect(isIcoResponse('https://example.com/FAVICON.ICO', 'application/octet-stream')).toBe(true)
+  })
+
+  test('returns false for non-ICO', () => {
+    expect(isIcoResponse('https://example.com/logo.png', 'image/png')).toBe(false)
+    expect(isIcoResponse('https://example.com/favicon.svg', 'image/svg+xml')).toBe(false)
   })
 })
 
