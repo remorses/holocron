@@ -13,7 +13,7 @@
  * separately in the runtime map and don't need entries here.
  */
 export const SAFE_MDX_COMPONENT_NAMES = [
-  'p', 'Heading', 'a', 'code', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+  'p', 'Heading', 'a', 'code', 'blockquote', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
   'ul', 'ol', 'li', 'Image', 'img', 'Bleed', 'Aside', 'FullWidth', 'Above', 'Hero',
   'Callout', 'Note', 'Warning', 'Info', 'Tip', 'Check', 'Danger', 'Tabs', 'Tab', 'Accordion',
   'AccordionGroup', 'Mermaid', 'Badge', 'Card', 'CardGroup', 'Columns', 'Column', 'Expandable',

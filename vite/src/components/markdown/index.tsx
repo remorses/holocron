@@ -25,6 +25,7 @@ export {
 
 export {
   Bleed,
+  Blockquote,
   Divider,
   Section,
   OL,

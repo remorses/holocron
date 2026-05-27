@@ -67,3 +67,18 @@ export function List({ children }: { children: React.ReactNode }) {
 export function Li({ children }: { children: React.ReactNode }) {
   return <li className='ps-1'>{children}</li>
 }
+
+/** Styled blockquote for `> quoted text` in MDX. Left border accent,
+ *  muted italic text. GitHub callout blockquotes (`> [!NOTE]`) are
+ *  converted to Callout components by remark-github-callouts before
+ *  this component is reached, so this only handles plain quotes. */
+export function Blockquote({ children }: { children: React.ReactNode }) {
+  return (
+    <blockquote className='no-bleed flex flex-col gap-(--prose-gap) pl-4 italic' style={{
+      borderLeft: '3px solid var(--border)',
+      color: 'var(--muted-foreground)',
+    }}>
+      {children}
+    </blockquote>
+  )
+}
