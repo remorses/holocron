@@ -792,6 +792,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   const holocronRscPackagePlugin: Plugin = {
     name: 'holocron:rsc-package-source',
     configEnvironment(name, config) {
+      // Exclude all @holocron.so/vite subpaths (e.g. @holocron.so/vite/src/serve-static)
+      // from bundling/optimization in every environment via regex.
+      addNoExternal(config, holocronPackagePattern)
+
       if (name === 'client') {
         config.optimizeDeps ??= {}
         config.optimizeDeps.exclude = mergeUnique(
@@ -833,7 +837,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       }
 
       if (name === 'rsc' || name === 'ssr') {
-        addNoExternal(config, holocronPackagePattern)
         // addNoExternal(config, 'fflate')
         config.optimizeDeps ??= {}
         config.optimizeDeps.include ??= []
