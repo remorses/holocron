@@ -8,7 +8,7 @@ import {
 describe('getGeneratedLogoUrl', () => {
   test('builds root-relative URL to local ai-logo proxy', () => {
     expect(getGeneratedLogoUrl('Test Docs')).toBe(
-      '/api/ai-logo/test%20docs.jpeg',
+      '/holocron-api/ai-logo/test%20docs.jpeg',
     )
   })
 
@@ -18,8 +18,8 @@ describe('getGeneratedLogoUrl', () => {
 
   test('resolveLogo falls back to one AI-generated image via local proxy', () => {
     expect(resolveLogo({ light: '', href: '/home' }, 'Test Docs')).toEqual({
-      light: '/api/ai-logo/test%20docs.jpeg',
-      dark: '/api/ai-logo/test%20docs.jpeg',
+      light: '/holocron-api/ai-logo/test%20docs.jpeg',
+      dark: '/holocron-api/ai-logo/test%20docs.jpeg',
       href: '/home',
       generated: true,
     })

@@ -23,7 +23,7 @@ export function normalizeGeneratedLogoText(text: string): string {
  *  (registered in app-factory.tsx), avoiding cross-origin requests. */
 export function getGeneratedLogoUrl(text: string): string {
   const normalized = normalizeGeneratedLogoText(text)
-  return `/api/ai-logo/${encodeURIComponent(normalized)}.jpeg`
+  return `/holocron-api/ai-logo/${encodeURIComponent(normalized)}.jpeg`
 }
 
 export function resolveLogo(logo: ResolvedLogo, siteName: string): ResolvedLogo {

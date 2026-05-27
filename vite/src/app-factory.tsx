@@ -1116,9 +1116,9 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     })
   }
 
-  // /api/ai-logo/:text — proxy AI-generated logos from holocron.so to avoid
+  // /holocron-api/ai-logo/:text — proxy AI-generated logos from holocron.so to avoid
   // cross-origin requests and improve latency via Cache API caching.
-  for (const logoRoute of new Set(['/api/ai-logo/:text', withBaseRoute(site.base, '/api/ai-logo/:text')])) {
+  for (const logoRoute of new Set(['/holocron-api/ai-logo/:text', withBaseRoute(site.base, '/holocron-api/ai-logo/:text')])) {
     app = app.get(logoRoute, async ({ params, request }: { params: Record<string, string>; request: Request }) => {
       const text = params.text || ''
       if (!text) return new Response('Missing logo text', { status: 400 })
