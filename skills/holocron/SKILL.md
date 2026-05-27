@@ -181,6 +181,19 @@ tag: NEW
 font size, in the browser tab, and in search results. Keep it concise and
 descriptive.
 
+**Sidebar title** — if `title` is longer than **30 characters**, add a
+`sidebarTitle` field in frontmatter with a shorter label (under 30 chars). The
+left nav is only 230px wide; long titles wrap to multiple lines and break the
+visual rhythm. The `sidebarTitle` replaces the title only in sidebar navigation;
+the full title still appears in the page heading, browser tab, and OG image.
+
+```mdx
+---
+title: Configuring Authentication Providers
+sidebarTitle: Auth Providers
+---
+```
+
 **Description** should be **120-150 characters**. It appears in the OG image
 below the title and in search engine snippets. Write a single sentence that
 summarizes the page content. Longer descriptions get truncated with an ellipsis.
