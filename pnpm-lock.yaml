@@ -9,7 +9,7 @@ importers:
   .:
     devDependencies:
       spiceflow:
-        specifier: 1.26.0-rsc.0
+        specifier: ^1.26.0-rsc.0
         version: 1.26.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       tsx:
         specifier: ^4.21.0
@@ -39,7 +39,7 @@ importers:
         specifier: ^6.10.0
         version: 6.10.0
       spiceflow:
-        specifier: 1.26.0-rsc.0
+        specifier: ^1.26.0-rsc.0
         version: 1.26.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
@@ -183,7 +183,7 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
       spiceflow:
-        specifier: 1.26.0-rsc.0
+        specifier: ^1.26.0-rsc.0
         version: 1.26.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       tailwindcss:
         specifier: ^4.2.2
@@ -208,7 +208,7 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
       spiceflow:
-        specifier: 1.26.0-rsc.0
+        specifier: ^1.26.0-rsc.0
         version: 1.26.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       takumi-js:
         specifier: 1.0.0-rc.15
@@ -350,7 +350,7 @@ importers:
         specifier: ^1.11.1
         version: 1.11.1(react@19.2.5)
       spiceflow:
-        specifier: 1.26.0-rsc.0
+        specifier: ^1.26.0-rsc.0
         version: 1.26.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
@@ -469,7 +469,7 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
       spiceflow:
-        specifier: 1.26.0-rsc.0
+        specifier: ^1.26.0-rsc.0
         version: 1.26.0-rsc.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
