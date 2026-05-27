@@ -1133,7 +1133,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         cache = typeof caches !== 'undefined' ? await caches.open('ai-logo') : undefined
         if (cache) {
           const cached = await cache.match(cacheKey)
-          if (cached) return cached
+          if (cached) {
+            // Evict stale SVG fallbacks cached by older code
+            const cachedType = cached.headers.get('content-type') || ''
+            if (cachedType.includes('svg')) {
+              await cache.delete(cacheKey).catch(() => {})
+            } else {
+              return cached
+            }
+          }
         }
       } catch {
         cache = undefined
@@ -1272,7 +1280,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               },
             }
           : { docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString() }
-        const uiStream = await chatFetch('/holocron-api/chat', {
+        const uiStream = await chatFetch('/api/v0/chat', {
           method: 'POST',
           body: {
             messages,
