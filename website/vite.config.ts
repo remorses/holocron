@@ -1,6 +1,7 @@
 import { cloudflare } from '@cloudflare/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { holocron } from '@holocron.so/vite'
+import { stradaVitePlugin } from '@strada.sh/sdk/vite'
 import { defineConfig } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 
@@ -15,6 +16,7 @@ export default defineConfig({
   },
   plugins: [
     holocron({ entry: './src/server.tsx', pagesDir: 'src/pages' }),
+    stradaVitePlugin(),
     tailwindcss(),
     cloudflare({
       viteEnvironment: {

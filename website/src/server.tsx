@@ -6,6 +6,8 @@
 export { UsageCounter } from './usage-counter-do.ts'
 export { ConfigOverrideDO } from './config-override-do.ts'
 
+import './strada-ssr.ts'
+import { trace, captureException, SpanStatusCode } from '@strada.sh/sdk'
 import { json, Spiceflow, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
@@ -260,7 +262,12 @@ const CONFIG_OVERRIDE_CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
-export const app = new Spiceflow()
+export const app = new Spiceflow({ tracer: trace.getTracer('holocron') })
+  .onError(({ error, path, span }) => {
+    captureException(error, { tags: { path } })
+    span.recordException(error instanceof Error ? error : new Error(String(error)))
+    span.setStatus({ code: SpanStatusCode.ERROR })
+  })
   .use(async ({ request }, next) => {
     // CORS preflight for config override API (cross-origin from docs sites)
     if (request.method === 'OPTIONS' && request.parsedUrl.pathname.startsWith('/api/config-override')) {

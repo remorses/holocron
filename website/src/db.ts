@@ -15,6 +15,7 @@ import * as schema from 'db/schema'
 import { betterAuth } from 'better-auth/minimal'
 import { deviceAuthorization, bearer } from 'better-auth/plugins'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter/relations-v2'
+import { strataBetterAuth } from '@strada.sh/sdk/better-auth'
 import { json } from 'spiceflow'
 import { memoize } from './lib/memoize.ts'
 
@@ -49,6 +50,7 @@ export function getAuth() {
     plugins: [
       deviceAuthorization({ verificationUri: '/device', schema: {} }),
       bearer(),
+      strataBetterAuth(),
     ],
   })
 }
