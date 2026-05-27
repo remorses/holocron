@@ -14,19 +14,8 @@
  * - No external dependencies
  */
 
-import React, { createContext, useContext } from 'react'
+import React from 'react'
 import { cn } from '../../lib/css-vars.ts'
-
-/**
- * Context that tells child components they're inside a Marquee.
- * Image uses this to skip the pixelated placeholder, which bleeds through
- * transparent PNGs (logos) and causes a visible ghosting artifact.
- */
-const MarqueeContext = createContext(false)
-
-export function useInsideMarquee() {
-  return useContext(MarqueeContext)
-}
 
 interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Time in seconds for one full scroll cycle. Lower = faster. More children means more distance covered in the same time, so perceived speed increases with content. */
@@ -144,44 +133,42 @@ export function Marquee({
     : undefined
 
   return (
-    <MarqueeContext.Provider value={true}>
+    <div
+      className={cn(
+        'flex w-full overflow-hidden',
+        isVertical && 'flex-col',
+        className,
+      )}
+      style={{
+        maskImage,
+        WebkitMaskImage: maskImage,
+      }}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      {...props}
+    >
       <div
+        ref={trackRef}
         className={cn(
-          'flex w-full overflow-hidden',
+          'flex shrink-0 items-center',
           isVertical && 'flex-col',
-          className,
         )}
         style={{
-          maskImage,
-          WebkitMaskImage: maskImage,
+          gap: `${gap}px`,
+          willChange: 'transform',
         }}
-        onMouseEnter={onEnter}
-        onMouseLeave={onLeave}
-        {...props}
       >
-        <div
-          ref={trackRef}
-          className={cn(
-            'flex shrink-0 items-center',
-            isVertical && 'flex-col',
-          )}
-          style={{
-            gap: `${gap}px`,
-            willChange: 'transform',
-          }}
-        >
-          {items.map((item, i) => (
-            <div key={`a-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')}>
-              {item}
-            </div>
-          ))}
-          {items.map((item, i) => (
-            <div key={`b-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')} aria-hidden='true'>
-              {item}
-            </div>
-          ))}
-        </div>
+        {items.map((item, i) => (
+          <div key={`a-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')}>
+            {item}
+          </div>
+        ))}
+        {items.map((item, i) => (
+          <div key={`b-${i}`} className={cn('flex shrink-0', isVertical && 'w-full')} aria-hidden='true'>
+            {item}
+          </div>
+        ))}
       </div>
-    </MarqueeContext.Provider>
+    </div>
   )
 }
