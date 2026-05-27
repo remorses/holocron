@@ -270,7 +270,7 @@ export const app = new Spiceflow({ tracer: trace.getTracer('holocron') })
   })
   .use(async ({ request }, next) => {
     // CORS preflight for config override API (cross-origin from docs sites)
-    if (request.method === 'OPTIONS' && request.parsedUrl.pathname.startsWith('/api/config-override')) {
+    if (request.method === 'OPTIONS' && request.parsedUrl.pathname.startsWith('/api/v0/config-override')) {
       return new Response(null, { status: 204, headers: CONFIG_OVERRIDE_CORS })
     }
     if (request.parsedUrl.pathname.startsWith('/api/auth')) {
@@ -287,7 +287,7 @@ export const app = new Spiceflow({ tracer: trace.getTracer('holocron') })
   .use(deployApp)
   .use(aiLogoApp)
   .use(configOverrideApp)
-  .get('/api/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
+  .get('/api/v0/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
   .use(schemaApp)
   .use(holocronApp)
 

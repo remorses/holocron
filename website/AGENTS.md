@@ -4,7 +4,7 @@ The marketing site and AI gateway for holocron. Runs as a Cloudflare Worker with
 
 ## AI Gateway
 
-The `/api/holocron/chat` route is Holocron's hosted AI chat interface. It validates optional `holo_xxx` API keys, fetches the caller's `docs.zip`, creates the in-memory docs bash tool, calls AI SDK against Cloudflare Workers AI, and streams typed Spiceflow SSE chunks back to docs sites.
+The `/api/v0/chat` route is Holocron's hosted AI chat interface. It validates optional `holo_xxx` API keys, fetches the caller's `docs.zip`, creates the in-memory docs bash tool, calls AI SDK against Cloudflare Workers AI, and streams typed Spiceflow SSE chunks back to docs sites.
 
 Full CF AI Gateway docs: `curl https://developers.cloudflare.com/ai-gateway/llms-full.txt`
 Full CF Workers AI docs: `curl https://developers.cloudflare.com/workers-ai/llms-full.txt`

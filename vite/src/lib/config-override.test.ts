@@ -190,7 +190,7 @@ describe('holocronUrl', () => {
     delete process.env.HOLOCRON_URL
     try {
       expect(getHolocronBaseUrl()).toMatchInlineSnapshot(`"https://holocron.so"`)
-      expect(holocronUrl('/api/config-override')).toMatchInlineSnapshot(`"https://holocron.so/api/config-override"`)
+      expect(holocronUrl('/api/v0/config-override')).toMatchInlineSnapshot(`"https://holocron.so/api/v0/config-override"`)
     } finally {
       if (previous === undefined) delete process.env.HOLOCRON_URL
       else process.env.HOLOCRON_URL = previous
@@ -202,7 +202,7 @@ describe('holocronUrl', () => {
     process.env.HOLOCRON_URL = 'https://custom.example.com/'
     try {
       expect(getHolocronBaseUrl()).toMatchInlineSnapshot(`"https://custom.example.com"`)
-      expect(holocronUrl('/api/og?title=Hello')).toMatchInlineSnapshot(`"https://custom.example.com/api/og?title=Hello"`)
+      expect(holocronUrl('/api/v0/og?title=Hello')).toMatchInlineSnapshot(`"https://custom.example.com/api/v0/og?title=Hello"`)
     } finally {
       if (previous === undefined) delete process.env.HOLOCRON_URL
       else process.env.HOLOCRON_URL = previous

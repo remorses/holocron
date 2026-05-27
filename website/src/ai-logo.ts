@@ -106,7 +106,7 @@ function cropWhiteEdges(
 let cachedTemplateBlob: Blob | undefined
 
 export const aiLogoApp = new Spiceflow().get(
-  '/api/ai-logo/:text',
+  '/api/v0/ai-logo/:text',
   async ({ params, request }: { params: Record<string, string>; request: Request }) => {
     const rawText = params.text?.replace(/\.(png|jpe?g)$/i, '') || ''
     const name = decodeURIComponent(rawText).trim()

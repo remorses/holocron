@@ -6,7 +6,7 @@
  * service binding from the website worker (near-zero latency, same thread).
  *
  * Routes:
- *   GET /api/og?title=...&description=...&icon=...&siteName=...&pageLabel=...
+ *   GET /api/v0/og?title=...&description=...&icon=...&siteName=...&pageLabel=...
  */
 
 import { Spiceflow } from 'spiceflow'
@@ -69,7 +69,7 @@ async function fetchAssetAsDataUrl(assets: Fetcher, path: string): Promise<strin
 
 export const app = new Spiceflow().route({
   method: 'GET',
-  path: '/api/og',
+  path: '/api/v0/og',
   query: ogQuerySchema,
   async handler({ query }) {
     const { createOgImageResponse, hashTitle, BG_IMAGE_COUNT } = await import('./og.tsx')

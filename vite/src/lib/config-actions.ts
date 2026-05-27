@@ -15,7 +15,7 @@ export async function saveConfigOverride(
   override: ConfigOverride,
   existingDoId?: string,
 ): Promise<{ key: string }> {
-  const res = await fetch(holocronUrl('/api/config-override'), {
+  const res = await fetch(holocronUrl('/api/v0/config-override'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ override, doId: existingDoId }),

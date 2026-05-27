@@ -6,7 +6,7 @@ import type { ModelMessage } from 'ai'
 import type { HolocronChatChunk } from '../src/gateway.ts'
 import { createSpiceflowFetch } from 'spiceflow/client'
 
-const endpoint = new URL(process.env.HOLOCRON_PREVIEW_AI_CHAT_URL ?? 'https://preview.holocron.so/api/holocron/chat')
+const endpoint = new URL(process.env.HOLOCRON_PREVIEW_AI_CHAT_URL ?? 'https://preview.holocron.so/api/v0/chat')
 const docsZipUrl = process.env.HOLOCRON_PREVIEW_DOCS_ZIP_URL ?? 'https://preview.holocron.so/docs.zip'
 const prompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_PROMPT ?? 'Use the bash tool to run `cat /docs/index.mdx`, then answer with the first heading.'
 const resumePrompt = process.env.HOLOCRON_PREVIEW_AI_CHAT_RESUME_PROMPT ?? 'Using the previous tool result, answer briefly: what file did you read?'

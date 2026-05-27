@@ -252,7 +252,7 @@ export async function resolveConfigOverride(
 
   try {
     const res = await fetch(
-      holocronUrl(`/api/config-override/${encodeURIComponent(parsed.doId)}/${encodeURIComponent(parsed.hash)}`),
+      holocronUrl(`/api/v0/config-override/${encodeURIComponent(parsed.doId)}/${encodeURIComponent(parsed.hash)}`),
     )
     if (!res.ok) return baseConfig
     const override = (await res.json()) as ConfigOverride
