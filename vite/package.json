@@ -38,6 +38,10 @@
       "types": "./dist/app.d.ts",
       "default": "./dist/app.js"
     },
+    "./mdx": {
+      "types": "./dist/mdx-exports.d.ts",
+      "default": "./dist/mdx-exports.js"
+    },
     "./src/*": "./src/*",
     "./dist/*": "./dist/*"
   },
