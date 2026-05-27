@@ -300,7 +300,7 @@ export function NavGroupNode({
             style={{
               opacity: isDimmed ? 0.45 : 1,
               fontVariationSettings: '"wght" 550',
-              fontSize: '13px',
+              fontSize: 'var(--type-nav-group-size)',
               letterSpacing: '0.04em',
               textTransform: 'uppercase',
               color: 'var(--muted-foreground)',
@@ -328,7 +328,7 @@ export function NavGroupNode({
         style={{
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: '"wght" 500',
-          fontSize: '13px',
+          fontSize: 'var(--type-nav-group-size)',
           color: 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `${(depth - 1) * 12}px` : undefined,
           transition: animate ? 'opacity 0.15s ease' : 'none',
