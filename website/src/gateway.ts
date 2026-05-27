@@ -1,6 +1,7 @@
-// Hosted Holocron AI chat route. Validates holo_xxx API keys, reads docs from
-// either the caller's docs.zip or inline localhost pages, creates the docs bash
-// tool, and streams AI SDK UI chunks through Spiceflow's typed SSE generator support.
+// Hosted Holocron AI chat route (/holocron-api/chat). Validates holo_xxx API
+// keys, reads docs from either the caller's docs.zip or inline localhost pages,
+// creates the docs bash tool, and streams AI SDK UI chunks through Spiceflow's
+// typed SSE generator support.
 //
 // Usage tracking: authenticated requests are counted in a per-org Durable Object
 // (UsageCounter). checkLimit() runs before streaming; recordUsage() inserts the
@@ -105,7 +106,7 @@ function getDocsZipFiles(url: string): Promise<Record<string, string>> {
 export const gatewayApp = new Spiceflow()
   .route({
     method: 'POST',
-    path: '/api/holocron/chat',
+    path: '/holocron-api/chat',
     request: chatRequestSchema,
     async *handler({ request }): AsyncGenerator<HolocronChatChunk> {
       const authHeader = request.headers.get('authorization')

@@ -1123,7 +1123,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const text = params.text || ''
       if (!text) return new Response('Missing logo text', { status: 400 })
 
-      const upstreamUrl = holocronUrl(`/api/ai-logo/${encodeURIComponent(text)}`)
+      const upstreamUrl = holocronUrl(`/holocron-api/ai-logo/${encodeURIComponent(text)}`)
 
       // Try Cache API first (available on Cloudflare Workers; no-op in dev).
       // Gracefully degrade if Cache API throws (e.g. Dynamic Workers hosting).
@@ -1241,7 +1241,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       // Points to the hosted Holocron chat route. It owns model selection,
       // quota checks, docs.zip fetching, and AI SDK streaming.
-      const chatUrl = new URL(holocronUrl('/api/holocron/chat'))
+      const chatUrl = new URL(holocronUrl('/holocron-api/chat'))
       const useInlineDocs = isLocalhostUrl(request.url)
       const apiKey = process.env.HOLOCRON_KEY || ''
       let textBuffer = ''
@@ -1267,7 +1267,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               },
             }
           : { docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString() }
-        const uiStream = await chatFetch('/api/holocron/chat', {
+        const uiStream = await chatFetch('/holocron-api/chat', {
           method: 'POST',
           body: {
             messages,

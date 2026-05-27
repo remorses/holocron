@@ -9,8 +9,8 @@ test.describe('generated logo fallback', () => {
     expect(response.status()).toBe(200)
     const html = await response.text()
 
-    expect(html).toContain('/api/ai-logo/test%20docs.jpeg')
-    expect(html).not.toContain('https://holocron.so/api/ai-logo/')
-    expect(html).not.toContain('/api/og/logo/')
+    expect(html).toContain('/holocron-api/ai-logo/test%20docs.jpeg')
+    expect(html).not.toContain('https://holocron.so/holocron-api/ai-logo/')
+    expect(html).not.toContain('/holocron-api/og/logo/')
   })
 })

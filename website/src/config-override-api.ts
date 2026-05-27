@@ -1,7 +1,7 @@
 // Config override API — stores and retrieves live docs.json overrides.
 //
-// POST /api/config-override — store an override, returns { key: "<doId>:<hash>" }
-// GET  /api/config-override/:doId/:hash — retrieve an override by doId + hash
+// POST /holocron-api/config-override — store an override, returns { key: "<doId>:<hash>" }
+// GET  /holocron-api/config-override/:doId/:hash — retrieve an override by doId + hash
 //
 // Overrides are stored in ConfigOverrideDO (one DO per customization session).
 // The doId is a random unique ID (unguessable). The hash is SHA-256 of the
@@ -73,7 +73,7 @@ export const configOverrideApp = new Spiceflow()
     }
     return next()
   })
-  .get('/api/config-override/:doId/:hash', async ({ params, response }) => {
+  .get('/holocron-api/config-override/:doId/:hash', async ({ params, response }) => {
     try {
       const id = env.CONFIG_OVERRIDE.idFromString(params.doId)
       const stub = env.CONFIG_OVERRIDE.get(id) as DurableObjectStub<ConfigOverrideDO>
@@ -87,7 +87,7 @@ export const configOverrideApp = new Spiceflow()
       throw json({ error: 'invalid override key' }, { status: 400 })
     }
   })
-  .post('/api/config-override', async ({ request, response }) => {
+  .post('/holocron-api/config-override', async ({ request, response }) => {
     // Reject oversized payloads before parsing
     const contentLength = request.headers.get('content-length')
     if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
