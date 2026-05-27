@@ -54,7 +54,6 @@ export function hashTitle(title: string): number {
 }
 
 function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgroundUrl }: OgImageOptions) {
-  const bgUrl = backgroundUrl || ''
   return (
     <div
       style={{
@@ -69,21 +68,23 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
         fontFamily: 'Geist',
       }}
     >
-      <img
-        src={bgUrl}
-        alt=''
-        width={1200}
-        height={630}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          filter: 'saturate(0.8)',
-        }}
-      />
+      {!!backgroundUrl && (
+        <img
+          src={backgroundUrl}
+          alt=''
+          width={1200}
+          height={630}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            filter: 'saturate(0.8)',
+          }}
+        />
+      )}
       <div
         style={{
           position: 'absolute',

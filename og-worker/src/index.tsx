@@ -88,7 +88,19 @@ export const app = new Spiceflow().route({
       pageLabel: query.pageLabel,
       backgroundUrl: bgDataUrl,
     })
-    response.headers.set('cache-control', 's-maxage=3600')
+
+    // Only cache for 1h if all requested assets loaded successfully.
+    // If the icon or background fetch failed, the image is degraded
+    // (missing icon/background). Don't cache degraded images so the
+    // next request retries and picks up the asset once it's available.
+    const iconOk = !query.icon || iconDataUrl !== undefined
+    const bgOk = bgDataUrl !== undefined
+    if (iconOk && bgOk) {
+      response.headers.set('cache-control', 's-maxage=3600')
+    } else {
+      response.headers.set('cache-control', 'no-store')
+    }
+
     return response
   },
 })
