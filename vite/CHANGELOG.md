@@ -1,5 +1,31 @@
 # @holocron.so/vite
 
+## 0.15.0
+
+1. **Keyboard shortcut `d` to toggle dark mode** — press `d` anywhere on the page to switch between light and dark mode. Skips when focus is in an input, textarea, or contenteditable, and ignores modifier combos (Cmd+D, Ctrl+D, etc.).
+
+2. **Styled `<blockquote>` for plain MDX** — standard markdown `> quoted text` now renders with a left border accent and italic muted text. GitHub-style callouts (`> [!NOTE]`, etc.) still render as Callout components.
+
+3. **New `--type-nav-group-size` CSS variable** — controls font-size of sidebar group titles (both section labels and collapsible group buttons). Override it in your CSS to customize sidebar typography:
+
+   ```css
+   :root {
+     --type-nav-group-size: 14px;
+   }
+   ```
+
+4. **Smarter AI chat assistant** — the documentation chat assistant now gives shorter, messenger-style answers. Prefers linking to relevant docs pages over re-explaining content, and only includes code when explicitly asked.
+
+5. **Fixed ai-logo proxy crash in Dynamic Workers** — the `caches.open()` call in the ai-logo proxy route could throw in hosted environments where the Cache API is unavailable, causing a 500. Now gracefully falls back to a direct fetch.
+
+6. **Fixed theme shortcut firing during input** — custom interactive components (search, code playgrounds) that call `preventDefault()` no longer accidentally trigger the dark mode toggle.
+
+7. **Removed paragraph `opacity: 0.82`** — body text no longer renders at reduced opacity. The compensating counter-opacity on `<strong>` and inline code is also removed.
+
+8. **Fixed `@holocron.so/vite` subpath externalization in client builds** — `addNoExternal` for the `@holocron.so/vite` package pattern now runs in all Vite environments (client, ssr, rsc) instead of only rsc/ssr, preventing client bundles from failing to resolve subpath imports.
+
+9. **Updated spiceflow to 1.26.0-rsc.0**
+
 ## 0.14.5
 
 1. **Fixed dev-server `module is not defined` crashes** — Holocron now uses `spiceflow@1.25.5-rsc.2`, which prebundles `@vitejs/plugin-rsc`'s browser RSC client instead of letting Vite serve the raw CommonJS vendor file to browsers.

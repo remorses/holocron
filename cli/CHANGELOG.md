@@ -1,3 +1,7 @@
+## 0.14.1
+
+1. **Updated spiceflow to 1.26.0-rsc.0**
+
 ## 0.14.0
 
 1. **Rich `whoami` command with multi-org support** — `holocron whoami` now shows your user info, all organizations with IDs and roles, and projects grouped per org:
