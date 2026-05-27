@@ -291,12 +291,12 @@
           "description": "The primary color of the theme"
         },
         "light": {
-          "description": "The light color of the theme. Used for dark mode",
+          "description": "A lighter shade of the primary color, displayed in dark mode. The name describes the color tone, not the mode it appears in. Mintlify convention.",
           "type": "string",
           "pattern": "^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"
         },
         "dark": {
-          "description": "The dark color of the theme. Used for light mode",
+          "description": "A darker shade of the primary color, displayed in light mode. The name describes the color tone, not the mode it appears in. Mintlify convention.",
           "type": "string",
           "pattern": "^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"
         }

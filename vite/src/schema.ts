@@ -72,10 +72,14 @@ export const colorsSchema = z
     primary: hexColor.describe('The primary color of the theme'),
     light: hexColor
       .optional()
-      .describe('The light color of the theme. Used for dark mode'),
+      .describe(
+        'A lighter shade of the primary color, displayed in dark mode. The name describes the color tone, not the mode it appears in. Mintlify convention.',
+      ),
     dark: hexColor
       .optional()
-      .describe('The dark color of the theme. Used for light mode'),
+      .describe(
+        'A darker shade of the primary color, displayed in light mode. The name describes the color tone, not the mode it appears in. Mintlify convention.',
+      ),
   })
   .describe(
     dedent`
