@@ -4,6 +4,7 @@
 
 'use client'
 
+import './strada-client.ts'
 import { useState } from 'react'
 import { Link, useLoaderData } from 'spiceflow/react'
 import {
@@ -110,6 +111,7 @@ export function DashboardSidebar({
   currentProjectId: string | null
 }) {
   const { projects, orgs, org, user } = useLoaderData<DashboardApp, '/dashboard/*'>('/dashboard/*')
+  const [createOrgOpen, setCreateOrgOpen] = useState(false)
   const userInitials = user.name
     ? user.name
         .split(' ')
@@ -166,9 +168,10 @@ export function DashboardSidebar({
             </div>
           )}
           <DropdownMenuSeparator />
-          <CreateOrgMenuItem />
+          <CreateOrgMenuItem onClick={() => setCreateOrgOpen(true)} />
         </DropdownMenuPopup>
       </DropdownMenu>
+      <CreateOrgDialog open={createOrgOpen} onOpenChange={setCreateOrgOpen} />
 
       {/* ── Projects ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-auto pt-4">
@@ -272,19 +275,14 @@ export function DashboardSidebar({
 
 // ── Create Organization ─────────────────────────────────────────────
 
-function CreateOrgMenuItem() {
-  const [open, setOpen] = useState(false)
-
+function CreateOrgMenuItem({ onClick }: { onClick: () => void }) {
   return (
-    <>
-      <DropdownMenuItem onClick={() => setOpen(true)}>
-        <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-          <PlusIcon className="size-4" />
-        </div>
-        <span className="text-muted-foreground font-medium">Add organization</span>
-      </DropdownMenuItem>
-      <CreateOrgDialog open={open} onOpenChange={setOpen} />
-    </>
+    <DropdownMenuItem onClick={onClick}>
+      <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+        <PlusIcon className="size-4" />
+      </div>
+      <span className="text-muted-foreground font-medium">Add organization</span>
+    </DropdownMenuItem>
   )
 }
 

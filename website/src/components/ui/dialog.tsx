@@ -6,10 +6,27 @@
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { XIcon } from 'lucide-react'
 import type React from 'react'
+import { useEffect, useRef } from 'react'
+import { useRouterState } from 'spiceflow/react'
 import { cn } from '../../lib/utils.ts'
 import { Button } from './button.tsx'
 
-export const Dialog: typeof DialogPrimitive.Root = DialogPrimitive.Root
+// Wraps base-ui Dialog.Root to auto-close on client-side navigation.
+// Every controlled dialog in the app gets this behavior for free.
+export function Dialog(props: DialogPrimitive.Root.Props): React.ReactElement {
+  const { pathname } = useRouterState()
+  const prevPathname = useRef(pathname)
+  const { onOpenChange } = props
+
+  useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname
+      onOpenChange?.(false, undefined as never)
+    }
+  }, [pathname, onOpenChange])
+
+  return <DialogPrimitive.Root {...props} />
+}
 
 export function DialogTrigger(props: DialogPrimitive.Trigger.Props): React.ReactElement {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
