@@ -1,5 +1,33 @@
 # @holocron.so/vite
 
+## 0.16.0
+
+1. **New `@holocron.so/vite/mdx` export** — import Holocron MDX components in your own `.tsx` files. Useful when building custom components that compose Holocron primitives:
+
+   ```tsx
+   import { Card, CardGroup, Callout, Steps, Step } from '@holocron.so/vite/mdx'
+   ```
+
+   In MDX pages all components remain available globally without imports.
+
+2. **Image processing preserves user-specified dimensions** — when you set `width` or `height` on `<Image>` or `<img>` in MDX, those values are now preserved instead of being overridden with the natural image size. When only one dimension is provided, the other is computed proportionally from the aspect ratio.
+
+3. **SVG images skip placeholder generation** — SVG files no longer get a pixelated 16px rasterized WebP placeholder. Since SVGs are vector and render instantly, the placeholder system is bypassed entirely for `.svg` sources.
+
+4. **Fixed images in flex containers** — images inside `<Marquee>`, card grids, and other flex layouts now use a definite pixel width capped at 100% instead of `width: 100%`, which caused circular sizing dependencies in flex items.
+
+5. **AI logo proxy moved to `/holocron-api/` namespace** — the internal AI-generated logo proxy route moved from `/api/ai-logo/` to `/holocron-api/ai-logo/` to avoid collisions with user API routes.
+
+6. **AI logo cache improvements** — stale SVG fallback responses are now evicted from the Cache API, and SVG fallbacks are never cached. This ensures retries can fetch the real AI-generated image once it's ready.
+
+7. **Reduced nav group font size** — sidebar group titles decreased from 13px to 12px for a tighter, more refined sidebar.
+
+8. **Thinner search clear icon** — the X icon in the sidebar search input uses strokeWidth 1.5 instead of 2.
+
+9. **Reduced chat input placeholder opacity** — the AI chat input placeholder text is now rendered at 75% opacity for a subtler appearance.
+
+10. **Removed vertical margin from Marquee** — the `my-6` class was removed from the Marquee wrapper, letting the component inherit spacing from its parent layout gap.
+
 ## 0.15.0
 
 1. **Keyboard shortcut `d` to toggle dark mode** — press `d` anywhere on the page to switch between light and dark mode. Skips when focus is in an input, textarea, or contenteditable, and ignores modifier combos (Cmd+D, Ctrl+D, etc.).
