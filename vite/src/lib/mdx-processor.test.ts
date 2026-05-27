@@ -416,7 +416,7 @@ describe('rewriteMdxImages', () => {
     `)
   })
 
-  test('adds width/height/placeholder to existing JSX Image', () => {
+  test('adds width/height/placeholder to existing JSX Image without user dims', () => {
     const { mdast } = processMdx(`<Image src="./screenshot.png" alt="test" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
@@ -426,17 +426,29 @@ describe('rewriteMdxImages', () => {
     `)
   })
 
-  test('converts root-level JSX img to responsive Image while preserving non-sizing attrs', () => {
-    const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
+  test('preserves user-specified width/height on JSX Image', () => {
+    const { mdast } = processMdx(`<Image src="./screenshot.png" alt="logo" width="92" height="31" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
+    // User specified 92x31 — should NOT be overridden with natural 1200x800
     expect(result).toMatchInlineSnapshot(`
-      "<Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="logo" width="92" height="31" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
 
-  test('converts nested flow JSX img to responsive Image while preserving non-sizing attrs', () => {
+  test('converts root-level JSX img to responsive Image while preserving user height', () => {
+    const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
+    const images = new Map([['./screenshot.png', testMeta]])
+    const result = rewriteMdxImages(mdast, images)
+    // User specified height="200" — preserved. Width computed proportionally: 200 * 1200/800 = 300.
+    expect(result).toMatchInlineSnapshot(`
+      "<Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="300" height="200" placeholder="data:image/png;base64,abc123" />
+      "
+    `)
+  })
+
+  test('converts nested flow JSX img to responsive Image while preserving user height', () => {
     const { mdast } = processMdx(`
 <Step title="Create account">
   <img className="hero" height="200" src="./screenshot.png" />
@@ -445,7 +457,7 @@ describe('rewriteMdxImages', () => {
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Step title="Create account">
-        <Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+        <Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="300" height="200" placeholder="data:image/png;base64,abc123" />
       </Step>
       "
     `)

@@ -135,7 +135,7 @@ export function Marquee({
   return (
     <div
       className={cn(
-        'flex w-full my-6 overflow-hidden',
+        'flex w-full overflow-hidden',
         isVertical && 'flex-col',
         className,
       )}

@@ -74,15 +74,20 @@ export async function processImage({
     return undefined
   }
 
-  return processImageBuffer({ buffer: fs.readFileSync(filePath), cache })
+  const isSvg = filePath.endsWith('.svg')
+  return processImageBuffer({ buffer: fs.readFileSync(filePath), cache, skipPlaceholder: isSvg })
 }
 
 export async function processImageBuffer({
   buffer,
   cache,
+  skipPlaceholder = false,
 }: {
   buffer: Buffer
   cache: ImageCache
+  /** SVGs are vector and load instantly — skip the rasterized placeholder
+   *  which would produce an ugly 16px pixelated WebP of crisp vector art. */
+  skipPlaceholder?: boolean
 }): Promise<ImageMeta | undefined> {
   const buf = buffer
   const sha = gitBlobSha(buf)
@@ -104,15 +109,20 @@ export async function processImageBuffer({
   if (!metadata.width || !metadata.height) {
     return undefined
   }
-  const placeholderBuf = await sharp(buf)
-    .resize(PLACEHOLDER_WIDTH)
-    .webp({ quality: 50 })
-    .toBuffer()
+
+  let placeholder = ''
+  if (!skipPlaceholder) {
+    const placeholderBuf = await sharp(buf)
+      .resize(PLACEHOLDER_WIDTH)
+      .webp({ quality: 50 })
+      .toBuffer()
+    placeholder = `data:image/webp;base64,${placeholderBuf.toString('base64')}`
+  }
 
   const meta: ImageMeta = {
     width: metadata.width,
     height: metadata.height,
-    placeholder: `data:image/webp;base64,${placeholderBuf.toString('base64')}`,
+    placeholder,
   }
 
   // Store in cache by SHA (same content at different paths → one entry)

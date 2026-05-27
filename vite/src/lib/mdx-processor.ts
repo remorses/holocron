@@ -428,8 +428,19 @@ function rewriteNode(
       }
       setJsxAttr({ node, attrName: 'src', value: resolved.publicSrc })
       if (node.name === 'Image') {
-        setJsxAttr({ node, attrName: 'width', value: String(resolved.meta.width) })
-        setJsxAttr({ node, attrName: 'height', value: String(resolved.meta.height) })
+        // Preserve user-specified dimensions. When only one is set, compute
+        // the other proportionally from the natural aspect ratio.
+        const userW = getJsxAttrValue(node, 'width')
+        const userH = getJsxAttrValue(node, 'height')
+        const { width: natW, height: natH } = resolved.meta
+        if (!userW) {
+          const w = userH ? Math.round(Number(userH) * natW / natH) : natW
+          setJsxAttr({ node, attrName: 'width', value: String(w) })
+        }
+        if (!userH) {
+          const h = userW ? Math.round(Number(userW) * natH / natW) : natH
+          setJsxAttr({ node, attrName: 'height', value: String(h) })
+        }
         setJsxAttr({ node, attrName: 'placeholder', value: resolved.meta.placeholder })
       }
     }
@@ -475,14 +486,36 @@ function createImageNode({ src, alt, meta }: { src: string; alt: string; meta: I
 }
 
 function createImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): RootContent {
+  // Preserve user-specified width/height if present (e.g. <img height="24"> for logos).
+  // When only one dimension is specified, compute the other proportionally from the
+  // natural aspect ratio so the image doesn't distort.
+  const userWidth = getJsxAttrValue(node, 'width')
+  const userHeight = getJsxAttrValue(node, 'height')
+  const { width: natW, height: natH } = resolved.meta
+  let finalWidth: string
+  let finalHeight: string
+  if (userWidth && userHeight) {
+    finalWidth = userWidth
+    finalHeight = userHeight
+  } else if (userWidth) {
+    finalWidth = userWidth
+    finalHeight = String(Math.round(Number(userWidth) * natH / natW))
+  } else if (userHeight) {
+    finalWidth = String(Math.round(Number(userHeight) * natW / natH))
+    finalHeight = userHeight
+  } else {
+    finalWidth = String(natW)
+    finalHeight = String(natH)
+  }
+
   const attributes = copyJsxAttrsExcept(node, ['src', 'width', 'height', 'placeholder', 'intrinsicWidth', 'intrinsicHeight'])
   attributes.push({ type: 'mdxJsxAttribute', name: 'src', value: resolved.publicSrc })
   if (!attributes.some((attr) => attr.type === 'mdxJsxAttribute' && attr.name === 'alt')) {
     attributes.push({ type: 'mdxJsxAttribute', name: 'alt', value: '' })
   }
   attributes.push(
-    { type: 'mdxJsxAttribute', name: 'width', value: String(resolved.meta.width) },
-    { type: 'mdxJsxAttribute', name: 'height', value: String(resolved.meta.height) },
+    { type: 'mdxJsxAttribute', name: 'width', value: finalWidth },
+    { type: 'mdxJsxAttribute', name: 'height', value: finalHeight },
     { type: 'mdxJsxAttribute', name: 'placeholder', value: resolved.meta.placeholder },
   )
   const imageNode: FlowJsxNode = {

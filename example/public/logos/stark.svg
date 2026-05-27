@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="110" height="32" viewBox="0 0 110 32">
+  <polygon points="14,2 18,12 28,12 20,18 23,28 14,22 5,28 8,18 0,12 10,12" fill="currentColor" opacity="0.6"/>
+  <text x="34" y="23" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="currentColor">Stark</text>
+</svg>

@@ -47,7 +47,18 @@ tool definitions. And it runs in your existing browser, so **nothing extra gets 
 
 ## Trusted by developers everywhere
 
-This is a Marquee component example
+Marquee with logo images (SVG):
+
+<Marquee duration={20} slowOnHover gap={24}>
+  <img src="/logos/acme.svg" alt="ACME" height="32" className="dark:invert" />
+  <img src="/logos/globex.svg" alt="Globex" height="32" className="dark:invert" />
+  <img src="/logos/initech.svg" alt="Initech" height="32" className="dark:invert" />
+  <img src="/logos/stark.svg" alt="Stark" height="32" className="dark:invert" />
+  <img src="/logos/umbrella.svg" alt="Umbrella" height="32" className="dark:invert" />
+  <img src="/logos/wayne.svg" alt="Wayne" height="32" className="dark:invert" />
+</Marquee>
+
+Marquee with icons:
 
 <Marquee duration={15} slowOnHover gap={48}>
   <Icon icon="lucide:chrome" size={32} color="var(--muted-foreground)" />

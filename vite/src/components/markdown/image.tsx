@@ -59,6 +59,12 @@ export function Image({
   const sourceWidth = readNumericAttr(width)
   const sourceHeight = readNumericAttr(height)
 
+  // SVGs are vector and load instantly — a 16px rasterized WebP placeholder
+  // looks terrible (blocky pixelated text/shapes). Skip the placeholder system
+  // entirely for SVG sources.
+  const isSvg = typeof src === 'string' && src.endsWith('.svg')
+  const effectivePlaceholder = isSvg ? undefined : placeholder
+
   // Handles both the normal onLoad event and the case where the image is
   // already cached (img.complete is true before React mounts the handler).
   const imgRef = useCallback((img: HTMLImageElement | null) => {
@@ -89,9 +95,9 @@ export function Image({
       }}
     >
       {/* Placeholder: tiny image rendered with nearest-neighbor sampling */}
-      {placeholder && (
+      {effectivePlaceholder && (
         <img
-          src={placeholder}
+          src={effectivePlaceholder}
           alt=''
           aria-hidden
           width={imgWidth}
@@ -126,8 +132,8 @@ export function Image({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            filter: !placeholder || loaded ? 'blur(0px)' : 'blur(6px)',
-            opacity: !placeholder || loaded ? 1 : 0,
+            filter: !effectivePlaceholder || loaded ? 'blur(0px)' : 'blur(6px)',
+            opacity: !effectivePlaceholder || loaded ? 1 : 0,
             transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
           }}
         />
@@ -153,11 +159,17 @@ function buildImageFrameStyle({
   sourceWidth: number
   sourceHeight: number
 }): React.CSSProperties {
+  // Use a definite pixel width capped at 100% instead of `width: 100%` +
+  // `maxWidth: min(...)`. In flex containers (Marquee, card grids), `width: 100%`
+  // creates a circular dependency — the flex item auto-sizes from content, but the
+  // child's percentage width depends on the parent — causing the flex item to fall
+  // back to the image's intrinsic/natural size instead of the constrained size.
+  // A definite width avoids this and works correctly in both flex and block contexts.
   return {
     display: 'grid',
     aspectRatio: `${sourceWidth} / ${sourceHeight}`,
-    width: '100%',
-    maxWidth: `min(${sourceWidth}px, 100%)`,
+    width: `${sourceWidth}px`,
+    maxWidth: '100%',
   }
 }
 
