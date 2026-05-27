@@ -9,12 +9,12 @@ export function HolocronLogo({ className, imageClassName = 'h-[30px]' }: { class
   return (
     <span className={cn('inline-flex items-center', className)}>
       <img
-        src="/api/v0/ai-logo/holocron.jpeg"
+        src="/api/ai-logo/holocron.jpeg"
         alt="Holocron"
         className={cn('w-auto mix-blend-multiply dark:hidden', imageClassName)}
       />
       <img
-        src="/api/v0/ai-logo/holocron.jpeg"
+        src="/api/ai-logo/holocron.jpeg"
         alt="Holocron"
         className={cn('hidden w-auto invert mix-blend-screen dark:block', imageClassName)}
       />

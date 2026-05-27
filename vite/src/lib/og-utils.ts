@@ -20,5 +20,5 @@ export function buildOgImageUrl(options: OgImageUrlOptions): string {
   if (options.iconUrl) params.set('icon', options.iconUrl)
   if (options.siteName) params.set('siteName', options.siteName)
   if (options.pageLabel) params.set('pageLabel', options.pageLabel)
-  return holocronUrl(`/api/v0/og?${params}`)
+  return holocronUrl(`/api/og?${params}`)
 }
