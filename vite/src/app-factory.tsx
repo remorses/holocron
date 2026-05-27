@@ -1125,12 +1125,18 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       const upstreamUrl = holocronUrl(`/api/ai-logo/${encodeURIComponent(text)}`)
 
-      // Try Cache API first (available on Cloudflare Workers; no-op in dev)
-      const cache = typeof caches !== 'undefined' ? await caches.open('ai-logo') : undefined
+      // Try Cache API first (available on Cloudflare Workers; no-op in dev).
+      // Gracefully degrade if Cache API throws (e.g. Dynamic Workers hosting).
+      let cache: Cache | undefined
       const cacheKey = new Request(upstreamUrl)
-      if (cache) {
-        const cached = await cache.match(cacheKey)
-        if (cached) return cached
+      try {
+        cache = typeof caches !== 'undefined' ? await caches.open('ai-logo') : undefined
+        if (cache) {
+          const cached = await cache.match(cacheKey)
+          if (cached) return cached
+        }
+      } catch {
+        cache = undefined
       }
 
       const upstream = await fetch(upstreamUrl, {
@@ -1153,7 +1159,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       // Store in Cache API for subsequent requests
       if (cache) {
-        await cache.put(cacheKey, response.clone())
+        try {
+          await cache.put(cacheKey, response.clone())
+        } catch {
+          // Cache API unavailable; skip silently
+        }
       }
 
       return response
