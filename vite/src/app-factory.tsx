@@ -1123,7 +1123,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const text = params.text || ''
       if (!text) return new Response('Missing logo text', { status: 400 })
 
-      const upstreamUrl = holocronUrl(`/holocron-api/ai-logo/${encodeURIComponent(text)}`)
+      const upstreamUrl = holocronUrl(`/api/ai-logo/${encodeURIComponent(text)}`)
 
       // Try Cache API first (available on Cloudflare Workers; no-op in dev).
       // Gracefully degrade if Cache API throws (e.g. Dynamic Workers hosting).
@@ -1150,15 +1150,20 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       }
 
       const body = await upstream.arrayBuffer()
+      const contentType = upstream.headers.get('content-type') || 'image/jpeg'
+      const isFallback = contentType.includes('svg')
+
       const response = new Response(body, {
         headers: {
-          'content-type': upstream.headers.get('content-type') || 'image/jpeg',
-          'cache-control': 's-maxage=31536000, immutable',
+          'content-type': contentType,
+          // Never cache the SVG fallback — it's a temporary placeholder until
+          // the AI model generates a real JPEG. Caching it would prevent retries.
+          'cache-control': isFallback ? 'no-store' : 's-maxage=31536000, immutable',
         },
       })
 
-      // Store in Cache API for subsequent requests
-      if (cache) {
+      // Only store real images in Cache API, never fallback SVGs
+      if (cache && !isFallback) {
         try {
           await cache.put(cacheKey, response.clone())
         } catch {
@@ -1241,7 +1246,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       // Points to the hosted Holocron chat route. It owns model selection,
       // quota checks, docs.zip fetching, and AI SDK streaming.
-      const chatUrl = new URL(holocronUrl('/holocron-api/chat'))
+      const chatUrl = new URL(holocronUrl('/api/holocron/chat'))
       const useInlineDocs = isLocalhostUrl(request.url)
       const apiKey = process.env.HOLOCRON_KEY || ''
       let textBuffer = ''

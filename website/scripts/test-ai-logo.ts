@@ -14,7 +14,7 @@ const OUTPUT_DIR = join(import.meta.dirname!, '..', 'tmp', 'ai-logo-test')
 const TEST_NAMES = ['acme', 'moonlight', 'velocity', 'aurora', 'nimbus']
 
 async function testLogo(name: string): Promise<void> {
-  const url = `${BASE_URL}/holocron-api/ai-logo/${encodeURIComponent(name)}.png`
+  const url = `${BASE_URL}/api/ai-logo/${encodeURIComponent(name)}.png`
   console.log(`\n→ Testing: ${name}`)
   console.log(`  URL: ${url}`)
 

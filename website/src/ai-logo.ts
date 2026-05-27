@@ -39,7 +39,7 @@ function createFallbackLogo(name: string): Response {
   return new Response(svg, {
     headers: {
       'content-type': 'image/svg+xml; charset=utf-8',
-      'cache-control': 's-maxage=300',
+      'cache-control': 'no-store',
     },
   })
 }
@@ -106,7 +106,7 @@ function cropWhiteEdges(
 let cachedTemplateBlob: Blob | undefined
 
 export const aiLogoApp = new Spiceflow().get(
-  '/holocron-api/ai-logo/:text',
+  '/api/ai-logo/:text',
   async ({ params, request }: { params: Record<string, string>; request: Request }) => {
     const rawText = params.text?.replace(/\.(png|jpe?g)$/i, '') || ''
     const name = decodeURIComponent(rawText).trim()

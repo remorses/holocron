@@ -10,7 +10,7 @@ test.describe('og-image meta tags', () => {
     const html = await response.text()
 
     // OG images now point to the centralized holocron.so OG worker
-    expect(html).toContain('property="og:image" content="https://holocron.so/holocron-api/og?')
+    expect(html).toContain('property="og:image" content="https://holocron.so/api/og?')
     expect(html).toContain('name="twitter:card" content="summary_large_image"')
 
     // Should include title and siteName params
@@ -27,7 +27,7 @@ test.describe('og-image meta tags', () => {
     const html = await response.text()
 
     // Should contain OG image URL with page-specific title
-    expect(html).toContain('property="og:image" content="https://holocron.so/holocron-api/og?')
+    expect(html).toContain('property="og:image" content="https://holocron.so/api/og?')
     expect(html).toMatch(/og:image.*title=Getting/)
   })
 })
