@@ -106,7 +106,6 @@ export function P({ children, className }: { children: React.ReactNode; classNam
   return (
     <div
       className={cn('editorial-prose', className)}
-      style={{ opacity: 0.82 }}
     >
       {children}
     </div>

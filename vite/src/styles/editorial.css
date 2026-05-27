@@ -49,11 +49,7 @@
   margin: 0;
 }
 
-/* Bold and inline code inside prose punch through the reduced opacity */
-.editorial-prose strong,
-.editorial-prose .inline-code {
-  opacity: calc(1 / 0.82);
-}
+
 
 .editorial-heading {
   font-family: var(--font-heading, var(--font-body, var(--font-sans)));

@@ -184,19 +184,19 @@ describe('ordered list numbering — full production pipeline', () => {
 describe('MDX paragraph rendering — full production pipeline', () => {
   it('plain markdown text gets editorial-prose styling', () => {
     const { html } = renderMdx('Hello world')
-    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose" style="opacity:0.82">Hello world</div>"`)
+    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose">Hello world</div>"`)
   })
 
   it('JSX <p> gets same editorial-prose styling as markdown paragraph', () => {
     const { html } = renderMdx('<p>Hello world</p>')
-    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose" style="opacity:0.82">Hello world</div>"`)
+    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose">Hello world</div>"`)
   })
 
   it('JSX <p> with className merges into editorial-prose', () => {
     const { html } = renderMdx(dedent`
       <p className='text-center font-medium'>Styled paragraph</p>
     `)
-    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose text-center font-medium" style="opacity:0.82">Styled paragraph</div>"`)
+    expect(html).toMatchInlineSnapshot(`"<div class="editorial-prose text-center font-medium">Styled paragraph</div>"`)
   })
 
   it('JSX <p> inside Hero gets editorial-prose', () => {
@@ -207,7 +207,7 @@ describe('MDX paragraph rendering — full production pipeline', () => {
 
       </Hero>
     `)
-    expect(html).toMatchInlineSnapshot(`"<div><div class="editorial-prose text-center" style="opacity:0.82">Inner paragraph</div></div>"`)
+    expect(html).toMatchInlineSnapshot(`"<div><div class="editorial-prose text-center">Inner paragraph</div></div>"`)
   })
 
   it('plain text inside Hero gets editorial-prose', () => {
@@ -218,6 +218,6 @@ describe('MDX paragraph rendering — full production pipeline', () => {
 
       </Hero>
     `)
-    expect(html).toMatchInlineSnapshot(`"<div><div class="editorial-prose" style="opacity:0.82">Inner paragraph text</div></div>"`)
+    expect(html).toMatchInlineSnapshot(`"<div><div class="editorial-prose">Inner paragraph text</div></div>"`)
   })
 })

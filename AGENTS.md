@@ -696,7 +696,7 @@ MDX has two JSX node types in the mdast tree:
 - **`mdxJsxFlowElement`** — block-level. The MDX parser wraps bare text children in `<p>` nodes. Use for containers (AccordionGroup, Tabs, Aside, …).
 - **`mdxJsxTextElement`** — inline/phrasing-level. Text children stay inline with no `<p>` wrapping. Use for leaf wrappers whose children are purely inline (Heading, Badge, …).
 
-**Problem with flow elements for headings:** safe-mdx's P component adds `editorial-prose` class + `opacity: 0.82` to paragraph children. If a heading is a flow element, its text gets wrapped in P, making heading text look like body text.
+**Problem with flow elements for headings:** safe-mdx's P component adds `editorial-prose` class to paragraph children. If a heading is a flow element, its text gets wrapped in P, making heading text look like body text.
 
 **Solution — three-part fix:**
 
