@@ -437,6 +437,17 @@ describe('rewriteMdxImages', () => {
     `)
   })
 
+  test('falls back to natural dims when user width is non-numeric', () => {
+    const { mdast } = processMdx(`<img src="./screenshot.png" width="100%" />`)
+    const images = new Map([['./screenshot.png', testMeta]])
+    const result = rewriteMdxImages(mdast, images)
+    // "100%" is not a finite number — fall back to natural 1200x800, never emit NaN
+    expect(result).toMatchInlineSnapshot(`
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "
+    `)
+  })
+
   test('converts root-level JSX img to responsive Image while preserving user height', () => {
     const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
     const images = new Map([['./screenshot.png', testMeta]])

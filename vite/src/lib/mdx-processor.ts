@@ -429,16 +429,20 @@ function rewriteNode(
       setJsxAttr({ node, attrName: 'src', value: resolved.publicSrc })
       if (node.name === 'Image') {
         // Preserve user-specified dimensions. When only one is set, compute
-        // the other proportionally from the natural aspect ratio.
+        // the other proportionally from the natural aspect ratio. Non-numeric
+        // values like "100%" or expression attrs are preserved but not used
+        // for proportional computation (would produce NaN).
         const userW = getJsxAttrValue(node, 'width')
         const userH = getJsxAttrValue(node, 'height')
+        const userWNum = parseNumericDimension(userW)
+        const userHNum = parseNumericDimension(userH)
         const { width: natW, height: natH } = resolved.meta
         if (!userW) {
-          const w = userH ? Math.round(Number(userH) * natW / natH) : natW
+          const w = userHNum ? Math.round(userHNum * natW / natH) : natW
           setJsxAttr({ node, attrName: 'width', value: String(w) })
         }
         if (!userH) {
-          const h = userW ? Math.round(Number(userW) * natH / natW) : natH
+          const h = userWNum ? Math.round(userWNum * natH / natW) : natH
           setJsxAttr({ node, attrName: 'height', value: String(h) })
         }
         setJsxAttr({ node, attrName: 'placeholder', value: resolved.meta.placeholder })
@@ -491,19 +495,22 @@ function createImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): Ro
   // natural aspect ratio so the image doesn't distort.
   const userWidth = getJsxAttrValue(node, 'width')
   const userHeight = getJsxAttrValue(node, 'height')
+  const userWNum = parseNumericDimension(userWidth)
+  const userHNum = parseNumericDimension(userHeight)
   const { width: natW, height: natH } = resolved.meta
   let finalWidth: string
   let finalHeight: string
   if (userWidth && userHeight) {
     finalWidth = userWidth
     finalHeight = userHeight
-  } else if (userWidth) {
-    finalWidth = userWidth
-    finalHeight = String(Math.round(Number(userWidth) * natH / natW))
-  } else if (userHeight) {
-    finalWidth = String(Math.round(Number(userHeight) * natW / natH))
-    finalHeight = userHeight
+  } else if (userWNum) {
+    finalWidth = userWidth!
+    finalHeight = String(Math.round(userWNum * natH / natW))
+  } else if (userHNum) {
+    finalWidth = String(Math.round(userHNum * natW / natH))
+    finalHeight = userHeight!
   } else {
+    // Non-numeric user values (like "100%") or no values at all — use natural dims
     finalWidth = String(natW)
     finalHeight = String(natH)
   }
@@ -558,6 +565,13 @@ function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
     }
   }
   return undefined
+}
+
+/** Parse a JSX attr value as a finite number, returning undefined for non-numeric strings like "100%" or expression values. */
+function parseNumericDimension(value: string | undefined): number | undefined {
+  if (!value) return undefined
+  const n = Number(value)
+  return Number.isFinite(n) ? n : undefined
 }
 
 function setJsxAttr({ node, attrName, value }: { node: JsxNode; attrName: string; value: string }): void {
