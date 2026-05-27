@@ -191,6 +191,12 @@ export const aiLogoApp = new Spiceflow().get(
     const image = new Uint8Array(encoded.data.byteLength)
     image.set(encoded.data)
 
+    // Guard: don't persist empty or suspiciously small images in KV.
+    // A valid cropped JPEG should be at least a few hundred bytes.
+    if (image.byteLength < 100) {
+      return new Response('AI model produced an invalid image', { status: 502 })
+    }
+
     // Store in KV (globally replicated, persists across deploys)
     await env.AI_LOGO_KV.put(kvKey, image.buffer, { expirationTtl: CACHE_TTL })
 
