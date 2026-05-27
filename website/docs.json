@@ -24,6 +24,22 @@
         }
     },
     "navigation": {
+        "global": {
+            "anchors": [
+                {
+                    "anchor": "Changelog",
+                    "href": "https://github.com/remorses/holocron/releases",
+                    "icon": "newspaper",
+                    "placement": "sidebar"
+                },
+                {
+                    "anchor": "GitHub",
+                    "href": "https://github.com/remorses/holocron",
+                    "icon": "github",
+                    "placement": "sidebar"
+                }
+            ]
+        },
         "tabs": [
             {
                 "tab": "Docs",
