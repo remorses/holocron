@@ -1740,6 +1740,37 @@ Link to [old page](/old-page) and [missing](/truly-missing).
     expect(warnings.some((w) => w.includes('/truly-missing'))).toBe(true)
   })
 
+  test('warns about broken links even when parse errors are not logged', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Link to [missing](/missing-page).
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+      logParseErrors: false,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    expect(warnings.some((w) => w.includes('/missing-page'))).toBe(true)
+  })
+
   test('does not warn for links matching knownPaths (exact and wildcard)', async () => {
     const project = tracked(createProject(
       {

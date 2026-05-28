@@ -395,15 +395,13 @@ export async function syncNavigation({
     }
   }
 
-  // 4d. Validate internal links — warn about links pointing to non-existent pages
-  if (logParseErrors) {
-    validateInternalLinks({
-      navigation,
-      pageInternalLinks,
-      redirects: config.redirects,
-      knownPaths: config.knownPaths,
-    })
-  }
+  // 4d. Validate internal links — warn about links pointing to non-existent pages.
+  validateInternalLinks({
+    navigation,
+    pageInternalLinks,
+    redirects: config.redirects,
+    knownPaths: config.knownPaths,
+  })
 
   // 5. Write caches
   writeCache(cachePath, navigation)
