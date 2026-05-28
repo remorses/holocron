@@ -51,8 +51,24 @@ Content.
 `, remarkDetailsToggle)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Expandable title={<Markdown inline children=\"Use **rich** labels\" />}>
+      "<Expandable title={<Markdown inline children="Use **rich** labels" />}>
         Content.
+      </Expandable>
+      "
+    `)
+  })
+
+  test('handles inline summary with body on same line (no blank line)', () => {
+    const result = runRemarkPlugin(`
+<details>
+<summary>How it works</summary>
+Unframer cli will poll your website url every 2 seconds with a HEAD request, when the \`etag\` header changes it will re-export the components.
+</details>
+`, remarkDetailsToggle)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "<Expandable title={<Markdown inline children="How it works" />}>
+        Unframer cli will poll your website url every 2 seconds with a HEAD request, when the \`etag\` header changes it will re-export the components.
       </Expandable>
       "
     `)

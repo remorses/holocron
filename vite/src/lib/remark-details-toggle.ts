@@ -42,7 +42,7 @@ function titleFromSummary(summary: JsxElement): FlowElement['attributes'][number
 }
 
 function getSummary(child: FlowElement['children'][number]): JsxElement | undefined {
-  if (child.type === 'paragraph' && child.children.length === 1) {
+  if (child.type === 'paragraph' && child.children.length >= 1) {
     const [first] = child.children
     if (first && isJsxElement(first) && first.name === 'summary') {
       return first
@@ -52,6 +52,37 @@ function getSummary(child: FlowElement['children'][number]): JsxElement | undefi
   if (isJsxElement(child) && child.name === 'summary') {
     return child
   }
+}
+
+/**
+ * When `<summary>` and body text have no blank line between them, the MDX parser
+ * merges them into a single paragraph: `[summary, text, ...]`. This function
+ * splits such paragraphs so the summary is removed and the remaining siblings
+ * become a standalone paragraph (the body content).
+ */
+function stripSummaryFromChildren(children: FlowElement['children']): FlowElement['children'] {
+  return children.flatMap((child) => {
+    // Direct <summary> flow/text element — drop it
+    if (isJsxElement(child) && child.name === 'summary') return []
+
+    if (child.type !== 'paragraph') return [child]
+
+    const [first, ...rest] = child.children
+    if (!first || !isJsxElement(first) || first.name !== 'summary') return [child]
+
+    // Summary is the only child — drop the whole paragraph
+    if (rest.length === 0) return []
+
+    // Strip leading newline from the first remaining text node
+    const cleaned = rest.map((node, i) => {
+      if (i === 0 && node.type === 'text' && node.value.startsWith('\n')) {
+        return { ...node, value: node.value.slice(1) }
+      }
+      return node
+    })
+
+    return [{ ...child, children: cleaned }]
+  })
 }
 
 export function remarkDetailsToggle() {
@@ -70,7 +101,7 @@ export function remarkDetailsToggle() {
           return attribute
         }),
       ]
-      node.children = node.children.filter((child) => !getSummary(child))
+      node.children = stripSummaryFromChildren(node.children)
     })
   }
 }
