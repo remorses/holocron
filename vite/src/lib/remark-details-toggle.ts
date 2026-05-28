@@ -61,7 +61,7 @@ function getSummary(child: FlowElement['children'][number]): JsxElement | undefi
  * become a standalone paragraph (the body content).
  */
 function stripSummaryFromChildren(children: FlowElement['children']): FlowElement['children'] {
-  return children.flatMap((child) => {
+  return children.flatMap((child): FlowElement['children'] => {
     // Direct <summary> flow/text element — drop it
     if (isJsxElement(child) && child.name === 'summary') return []
 
