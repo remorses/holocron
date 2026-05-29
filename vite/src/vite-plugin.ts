@@ -302,7 +302,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // a fresh build. Preserve holocron-*.json caches for incremental builds.
       if (resolved.command === 'build') {
         for (const sub of ['client', 'rsc', 'ssr', 'package.json']) {
-          fs.rmSync(path.join(distDirPath, sub), { recursive: true, force: true })
+          try {
+            fs.rmSync(path.join(distDirPath, sub), { recursive: true, force: true })
+          } catch {}
         }
       }
 
