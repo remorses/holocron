@@ -4,7 +4,7 @@ import { formatHolocronWarning, logger } from './logger.ts'
 
 const stringOrNumberToStringSchema = z.union([z.string(), z.number()]).transform(String)
 
-export const pageSeoMetaKeys = [
+const pageSeoMetaKeys = [
   'robots',
   'og:title',
   'og:description',
@@ -32,6 +32,12 @@ export const pageFrontmatterSchema = z.object({
   sidebarTitle: z.string().optional().describe('Override the title shown in the sidebar navigation. Use this to keep the sidebar label short while using a longer, SEO-friendly title in the title field for search engines and browser tabs.'),
   tag: z.string().optional().describe('Badge label displayed next to the page title in the sidebar'),
   deprecated: z.boolean().optional().describe('Mark the page as deprecated'),
+  rendering: z
+    .enum(['ssr', 'static'])
+    .optional()
+    .describe(
+      'Rendering strategy for this page. "ssr" (default) renders the page on every request, so it can react to per-request data like cookies. "static" prerenders the page to static HTML at build time for faster delivery and cheaper hosting — use it for pages whose content never depends on the incoming request.',
+    ),
   gridGap: z.number().optional().describe('Override the grid gap (in pixels) between content and sidebar columns'),
   hidden: z.boolean().optional().describe('Hide the page from sidebar navigation and search results'),
   noindex: z.boolean().optional().describe('Prevent search engines from indexing this page'),
@@ -77,6 +83,13 @@ export function getPageSeoMeta(frontmatter: PageFrontmatter | undefined): PageSe
   return meta
 }
 
+export type PageRendering = 'ssr' | 'static'
+
+/** Rendering strategy for a page. Defaults to "ssr" when not set in frontmatter. */
+export function getPageRendering(frontmatter: PageFrontmatter | undefined): PageRendering {
+  return frontmatter?.rendering === 'static' ? 'static' : 'ssr'
+}
+
 export function getPageRobots(frontmatter: PageFrontmatter | undefined): string | undefined {
   if (!frontmatter) return undefined
   if (frontmatter.hidden || frontmatter.noindex) return 'noindex'
@@ -88,7 +101,7 @@ export function serializeKeywords(keywords: string[] | undefined): string | unde
   return keywords.join(', ')
 }
 
-export function isHiddenPage(frontmatter: PageFrontmatter | undefined): boolean {
+function isHiddenPage(frontmatter: PageFrontmatter | undefined): boolean {
   return frontmatter?.hidden === true
 }
 

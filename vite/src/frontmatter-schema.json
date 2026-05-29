@@ -30,6 +30,14 @@
       "description": "Mark the page as deprecated",
       "type": "boolean"
     },
+    "rendering": {
+      "description": "Rendering strategy for this page. \"ssr\" (default) renders the page on every request, so it can react to per-request data like cookies. \"static\" prerenders the page to static HTML at build time for faster delivery and cheaper hosting — use it for pages whose content never depends on the incoming request.",
+      "type": "string",
+      "enum": [
+        "ssr",
+        "static"
+      ]
+    },
     "gridGap": {
       "description": "Override the grid gap (in pixels) between content and sidebar columns",
       "type": "number"

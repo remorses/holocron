@@ -41,7 +41,7 @@ import {
   type NavVersionItem,
   type NavDropdownItem,
 } from './navigation.ts'
-import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
+
 import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
 import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
@@ -54,7 +54,7 @@ import { encodeFederationPayload } from 'spiceflow/federation'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
-import { getPageRobots, getPageSeoMeta, isIndexablePage, serializeKeywords, type PageFrontmatter } from './lib/page-frontmatter.ts'
+import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
 import { getHolocronBaseUrl, holocronUrl } from './lib/holocron-url.ts'
 import {
   buildVisibleSiteData,
@@ -1367,16 +1367,32 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     })
   }
 
+  // Resolve the per-page rendering strategy (ssr vs static) from frontmatter.
+  // Pages opting into `rendering: static` are registered with spiceflow's
+  // `.staticPage()`, which the prerender plugin (wired via spiceflowPlugin)
+  // prerenders to HTML + RSC data at build time. Prefer the navigation tree's
+  // already-parsed frontmatter; fall back to parsing the MDX for orphan pages
+  // that exist on disk but aren't listed in the navigation.
+  const renderingBySlug = new Map<string, PageRendering>(
+    await Promise.all(
+      slugs.map(async (slug): Promise<[string, PageRendering]> => {
+        const navPage = findPage(site.navigation, slug)
+        if (navPage) return [slug, getPageRendering(navPage.frontmatter)]
+        const mdx = await providers.getMdxSource(slug)
+        return [slug, getPageRendering(mdx ? parsePageFrontmatter(mdx) : undefined)]
+      }),
+    ),
+  )
+
   // Per-slug .loader/.layout/.page with shared fn references for client identity
   for (const slug of slugs) {
     const pageHref = slugToHref(slug)
     const pageHandler = makePageHandler(slug, pageHref)
+    const isStatic = renderingBySlug.get(slug) === 'static'
 
     for (const route of new Set([pageHref, withBaseRoute(site.base, pageHref)])) {
-      app = app
-        .loader(route, loaderFn)
-        .layout(route, layoutFn)
-        .page(route, pageHandler)
+      app = app.loader(route, loaderFn).layout(route, layoutFn)
+      app = isStatic ? app.staticPage(route, pageHandler) : app.page(route, pageHandler)
     }
   }
 

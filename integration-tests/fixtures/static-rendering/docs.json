@@ -1,0 +1,19 @@
+{
+  "name": "Static Rendering Docs",
+  "icons": { "library": "lucide" },
+  "colors": {
+    "primary": "#0969da"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Guides",
+        "pages": [
+          "index.mdx",
+          "static-page.mdx",
+          "ssr-page.mdx"
+        ]
+      }
+    ]
+  }
+}

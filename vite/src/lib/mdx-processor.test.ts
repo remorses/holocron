@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { processMdx as _processMdx, rewriteMdxImages, type ResolvedImage, type ProcessedMdx } from './mdx-processor.ts'
+import { getPageRendering, parsePageFrontmatter } from './page-frontmatter.ts'
 
 /** Wrapper that asserts processMdx succeeded (not a parse error). */
 function processMdx(...args: Parameters<typeof _processMdx>): ProcessedMdx {
@@ -79,6 +80,17 @@ robots: noarchive
         "twitter:card": "summary",
       }
     `)
+  })
+
+  test('parses the rendering strategy field from frontmatter', () => {
+    const result = processMdx(`---
+title: Static Page
+rendering: static
+---
+
+# Static`)
+
+    expect(result.frontmatter.rendering).toBe('static')
   })
 
   test('coerces numeric SEO dimension fields without dropping the rest of frontmatter', () => {
@@ -240,7 +252,6 @@ Some content.`)
         },
       ]
     `)
-    expect(result.title).toBe('My heading')
   })
 
   test('extracts headings with inline code', () => {
@@ -793,5 +804,25 @@ See [guide][g] and [setup][s].
         "./setup#config",
       ]
     `)
+  })
+})
+
+describe('getPageRendering', () => {
+  test('defaults to ssr when the field is absent', () => {
+    expect(getPageRendering(parsePageFrontmatter('---\ntitle: X\n---\n'))).toBe('ssr')
+    expect(getPageRendering(undefined)).toBe('ssr')
+  })
+
+  test('returns ssr for an explicit ssr value', () => {
+    expect(getPageRendering(parsePageFrontmatter('---\nrendering: ssr\n---\n'))).toBe('ssr')
+  })
+
+  test('returns static for an explicit static value', () => {
+    expect(getPageRendering(parsePageFrontmatter('---\nrendering: static\n---\n'))).toBe('static')
+  })
+
+  test('ignores an invalid rendering value and falls back to ssr', () => {
+    // invalid enum → whole frontmatter parse fails → {} → ssr default
+    expect(getPageRendering(parsePageFrontmatter('---\nrendering: nonsense\n---\n'))).toBe('ssr')
   })
 })

@@ -136,6 +136,19 @@ Override the default Twitter Card tags. These are rendered as `<meta name="twitt
 ---
 ```
 
+## Rendering strategy
+
+**`rendering`** controls how the page is rendered. It accepts `ssr` (the default) or `static`.
+
+With `ssr`, the page is rendered on every request, so it can react to per-request data like cookies. With `static`, the page is **prerendered to static HTML at build time** for faster delivery and cheaper hosting. Use `static` only for pages whose content never depends on the incoming request.
+
+```yaml
+---
+title: Changelog
+rendering: static
+---
+```
+
 ## Advanced fields
 
 **`gridGap`** overrides the horizontal gap (in pixels) between the content column and sidebars for this page only. The default is `60`. OpenAPI pages use `30` automatically.
