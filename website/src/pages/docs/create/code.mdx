@@ -177,3 +177,90 @@ See [Code Groups](/docs/components/code-groups) for more options.
 ## Inline code
 
 Use backticks for inline code: `` `variable` `` renders as `variable`.
+
+## Reusing Holocron's Prism bundle
+
+Holocron **vendors its own Prism bundle**: a single pre-built ESM module containing prismjs core plus all ~300 language grammars. This avoids Vite's dev optimizer discovering each grammar one by one, and keeps the highlighter out of the SSR build.
+
+If your app already depends on `@holocron.so/vite` and you need to highlight code **outside** of MDX (for example in a custom React component), import the same bundle from the `@holocron.so/vite/prism` export instead of adding `prismjs` yourself. This way you **don't ship a duplicate Prism bundle** in your client output.
+
+```tsx Highlighter.tsx
+import { useEffect, useState } from 'react'
+
+export function Highlighted({ code, lang }: { code: string; lang: string }) {
+  const [html, setHtml] = useState<string>()
+
+  // Lazy-load so the ~891KB Prism bundle doesn't block first paint.
+  useEffect(() => {
+    let cancelled = false
+    import('@holocron.so/vite/prism').then(({ Prism }) => {
+      if (cancelled) return
+      const grammar = Prism.languages[lang]
+      if (!grammar) return
+      setHtml(Prism.highlight(code, grammar, lang))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [code, lang])
+
+  if (html) {
+    return <code className={`language-${lang}`} dangerouslySetInnerHTML={{ __html: html }} />
+  }
+  return <code className={`language-${lang}`}>{code}</code>
+}
+```
+
+The export resolves by build condition:
+
+| Condition | Resolves to | Behavior |
+| --------- | ----------- | -------- |
+| `browser` | full Prism bundle | real syntax highlighting |
+| `ssr` | no-op stub | returns text unchanged, highlighting runs on the client |
+
+Because highlighting is client-only, always **lazy-load with a dynamic `import()`** and render plain code as the fallback so SSR output and first paint stay unhighlighted, then upgrade once Prism loads.
+
+> [!TIP]
+> Use `Prism.languages[lang]` to check a grammar exists before calling `Prism.highlight`. Missing grammars return `undefined`, so guard against it and fall back to plain text.
+
+### Rendering the CodeBlock component directly
+
+If you want the exact same code block UI that MDX renders (copy button, line numbers, line highlighting, Prism), import the `CodeBlock` component from `@holocron.so/vite/mdx`. This is handy for rendering code outside of docs, for example in a **dashboard** or settings page.
+
+```tsx Dashboard.tsx
+import { CodeBlock } from '@holocron.so/vite/mdx'
+
+const CLI_EXAMPLES = `npx @holocron.so/cli build
+npx @holocron.so/cli dev`
+
+export function CliHelp() {
+  return (
+    <div className='no-bleed'>
+      <CodeBlock lang='bash' showLineNumbers={false}>
+        {CLI_EXAMPLES}
+      </CodeBlock>
+    </div>
+  )
+}
+```
+
+`CodeBlock` lazy-loads the same vendored Prism bundle internally, so you get highlighting without shipping a duplicate prismjs. The `children` prop is the raw code **string**.
+
+The block always applies a right-edge **bleed** so it can extend into the docs page margins. Outside the docs layout (a dashboard, a modal, a card) you usually don't want that. Wrap it in a `no-bleed` container to pin the block fully inside its parent:
+
+```tsx
+<div className='no-bleed'>
+  <CodeBlock lang='bash'>{code}</CodeBlock>
+</div>
+```
+
+`no-bleed` sets the `--bleed` CSS variable to `0px`, which cascades to the code block so both `bleed` and the default right bleed collapse to zero.
+
+| Prop | Type | Description |
+| ---- | ---- | ----------- |
+| `children` | `string` | The raw code to render. |
+| `lang` | `string` | Language id for Prism, defaults to `jsx`. |
+| `showLineNumbers` | `boolean` | Line numbers on the left, on by default. |
+| `title` | `string` | Filename or label shown above the block. |
+| `highlight` | `string` | Comma-separated lines/ranges to focus, e.g. `"1-3,7"`. |
+| `bleed` | `boolean` | Extend into the page margins, off by default. |

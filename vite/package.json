@@ -42,6 +42,12 @@
       "types": "./dist/mdx-exports.d.ts",
       "default": "./dist/mdx-exports.js"
     },
+    "./prism": {
+      "types": "./dist/prism.d.ts",
+      "ssr": "./dist/prism-noop.js",
+      "browser": "./dist/prism.js",
+      "default": "./dist/prism.js"
+    },
     "./src/*": "./src/*",
     "./dist/*": "./dist/*"
   },
