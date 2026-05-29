@@ -100,6 +100,24 @@ export async function processVirtualTabs({
     const provider = claimers[0]
     if (!provider) continue
 
+    // The config object persists across dev-server re-syncs, and provider
+    // expansion mutates tab.groups in place (e.g. selective mode resolves
+    // `METHOD /path` refs and the `"..."` sentinel). Snapshot the author-written
+    // groups on first run and restore them before every run so expansion always
+    // starts from the original authored tree and stays idempotent. The snapshot
+    // is stored as a non-enumerable property so it is not serialized into
+    // `virtual:holocron-config`.
+    if (tab.authoredGroups) {
+      tab.groups = structuredClone(tab.authoredGroups)
+    } else {
+      Object.defineProperty(tab, 'authoredGroups', {
+        value: structuredClone(tab.groups),
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      })
+    }
+
     const result = await provider.generate({ tab, projectRoot, pagesDir })
 
     // Centralized slug collision detection across all providers

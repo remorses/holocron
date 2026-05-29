@@ -121,17 +121,19 @@ Listing every endpoint by hand is tedious. Add the special `"..."` entry to writ
 }
 ```
 
-This renders your `api/authentication` guide first, then expands every endpoint not listed elsewhere into tag groups:
+This renders your `api/authentication` guide first, then expands every endpoint not listed elsewhere into **top-level tag groups** (always-visible sidebar sections, exactly like dedicated mode):
 
 ```
 API Reference
 ├─ Authentication        ← api/authentication.mdx
-├─ Users                 ← group from "..." (tag: users)
+├─ Users                 ← top-level group from "..." (tag: users)
 │   ├─ GET  /users
 │   └─ POST /users
-└─ Orders                ← group from "..." (tag: orders)
+└─ Orders                ← top-level group from "..." (tag: orders)
     └─ POST /orders
 ```
+
+The tag groups are hoisted to the tab's top level so they render as separate sidebar sections, not collapsed sub-groups nested under your intro pages.
 
 The `"..."` entry only expands endpoints you did **not** already reference explicitly, so you can pin a few important endpoints up top and let the rest fall in afterward. Only one `"..."` is allowed per tab.
 

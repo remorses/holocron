@@ -67,6 +67,13 @@ export type ConfigNavTab = NavTabBase & {
   /** Slug prefix for generated OpenAPI pages. Defaults to `"api"`.
    *  Set to `""` for no prefix. */
   openapiBase?: string
+  /** Internal snapshot of the author-written groups before a virtual-tab
+   *  provider expands them (e.g. resolves `METHOD /path` refs and the `"..."`
+   *  sentinel). The config object persists across dev-server re-syncs and
+   *  `processVirtualTabs` mutates `groups` in place, so the original authored
+   *  groups must be preserved to keep expansion idempotent. Set by
+   *  `processVirtualTabs`; not part of the user-facing config. */
+  authoredGroups?: ConfigNavGroup[]
 }
 
 /** A navbar icon link (top-right of header). The normalized form has

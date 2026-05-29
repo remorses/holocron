@@ -225,13 +225,51 @@ export const openapiProvider: VirtualTabProvider = {
       if (sawRest) {
         const rest = allOps.filter((item) => !referenced.has(item))
         const restGroups = buildTagGroups(rest)
-        const splice = (pages: ConfigNavPageEntry[]): ConfigNavPageEntry[] =>
+
+        // The expanded tag groups must become TOP-LEVEL tab groups so they
+        // render as always-visible sidebar sections (like dedicated mode),
+        // not collapsed sub-groups nested inside a wrapper group. We therefore
+        // hoist at the tab.groups level: a top-level group containing the
+        // placeholder is split into [leading entries] + restGroups + [trailing
+        // entries], where the leading/trailing slices keep the author's group
+        // (so an explicitly named group is preserved). A placeholder nested
+        // deeper than the top level stays in place (the author asked for it
+        // inside that sub-group).
+        const containsPlaceholderShallow = (pages: ConfigNavPageEntry[]): boolean =>
+          pages.some((p) => p === REST_PLACEHOLDER)
+
+        // Splice a placeholder that is nested below the top level (rare): keep
+        // it as inline group entries within its parent's pages.
+        const spliceNested = (pages: ConfigNavPageEntry[]): ConfigNavPageEntry[] =>
           pages.flatMap((p): ConfigNavPageEntry[] => {
             if (p === REST_PLACEHOLDER) return restGroups
-            if (typeof p !== 'string') return [{ ...p, pages: splice(p.pages) }]
+            if (typeof p !== 'string') return [{ ...p, pages: spliceNested(p.pages) }]
             return [p]
           })
-        return { groups: groups.map((g) => ({ ...g, pages: splice(g.pages) })), mdxContent }
+
+        const hoisted: ConfigNavGroup[] = []
+        for (const g of groups) {
+          if (!containsPlaceholderShallow(g.pages)) {
+            // No top-level placeholder here, but it might be nested deeper.
+            hoisted.push({ ...g, pages: spliceNested(g.pages) })
+            continue
+          }
+          // Split this group's pages at the placeholder, hoisting restGroups to
+          // top level between the leading and trailing slices.
+          const idx = g.pages.findIndex((p) => p === REST_PLACEHOLDER)
+          const before = g.pages.slice(0, idx).map(spliceNestedEntry)
+          const after = g.pages.slice(idx + 1).map(spliceNestedEntry)
+          if (before.length > 0) hoisted.push({ ...g, pages: before })
+          hoisted.push(...restGroups)
+          if (after.length > 0) hoisted.push({ ...g, pages: after })
+        }
+
+        function spliceNestedEntry(p: ConfigNavPageEntry): ConfigNavPageEntry {
+          if (typeof p !== 'string') return { ...p, pages: spliceNested(p.pages) }
+          return p
+        }
+
+        return { groups: hoisted, mdxContent }
       }
 
       return { groups, mdxContent }
