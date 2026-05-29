@@ -1,0 +1,35 @@
+---
+title: Authentication
+description: How to get an API key and authenticate your requests.
+icon: key
+---
+
+## Authentication
+
+Every request to the Acme API must be authenticated. This page explains how to
+get a key and send it; the rest of this tab is the full endpoint reference,
+auto-generated from the OpenAPI spec.
+
+## Get your API key
+
+Open the dashboard, go to **Settings → Developers**, and copy the key shown
+under **API keys**. Treat it like a password.
+
+<Note>
+Keys are scoped to a single project. Create a separate key per environment
+(production, staging) so you can rotate them independently.
+</Note>
+
+## Send the key
+
+Pass the key on every request in the `X-API-Key` header:
+
+```bash
+curl https://api.acme.com/v1/users \
+  -H "X-API-Key: $ACME_API_KEY"
+```
+
+<Warning>
+Never embed your API key in client-side code or commit it to git. Read it from
+an environment variable on the server instead.
+</Warning>

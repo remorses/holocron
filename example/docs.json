@@ -56,7 +56,8 @@
           {
             "tab": "API Reference",
             "icon": "code",
-            "openapi": "api.yaml"
+            "openapi": "api.yaml",
+            "pages": ["api-authentication", "..."]
           }
         ]
       },
