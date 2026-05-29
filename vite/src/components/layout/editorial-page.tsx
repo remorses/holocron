@@ -35,7 +35,19 @@ import {
   buildGridTokenStyle,
 } from '../../lib/sidebar-widths.ts'
 import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
+import type { PageMode } from '../../lib/page-frontmatter.ts'
 import { GridLinesFrame, TabBarDots, NavbarLines, AboveBottomDots } from './grid-lines.tsx'
+
+type EditorialPageMode = 'default' | 'center'
+
+function resolveEditorialPageMode(mode: PageMode | undefined): EditorialPageMode {
+  // Holocron intentionally keeps page modes small: the default docs layout, or
+  // a center layout without the left navigation. Mintlify's other mode names
+  // are accepted for config compatibility, but only alias to these two
+  // layouts. Add real `wide`, `frame`, or `custom` layouts only when a user
+  // need cannot be represented by either `default` or `center`.
+  return mode === 'center' || mode === 'custom' ? 'center' : 'default'
+}
 
 
 export type EditorialSection = {
@@ -76,6 +88,7 @@ export function EditorialPage({
   bannerContent,
   sidebarWidth,
   gridGap,
+  mode,
 }: {
   sidebar?: React.ReactNode
   children?: React.ReactNode
@@ -92,6 +105,8 @@ export function EditorialPage({
   sidebarWidth?: number
   /** Optional page-level grid gap from frontmatter. */
   gridGap?: number
+  /** Mintlify-compatible page mode from MDX frontmatter. */
+  mode?: PageMode
 }) {
   const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel } = useHolocronData()
   const siteConfig = site.config
@@ -111,6 +126,20 @@ export function EditorialPage({
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
   const decorativeLines = siteConfig.decorativeLines
+  const pageMode = resolveEditorialPageMode(mode)
+  const showLeftNav = pageMode === 'default'
+  // In center mode the content + right rail occupy the page width without the
+  // left navigation column, so cap the grid width to drop that column's width.
+  const centerMaxWidthClass = 'lg:max-w-[calc(var(--grid-max-width)_-_var(--grid-nav-width)_-_var(--grid-gap))]'
+  const aboveClass = showLeftNav
+    ? 'relative mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'
+    : `relative mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between ${centerMaxWidthClass} lg:px-0`
+  const pageGridClass = showLeftNav
+    ? 'grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'
+    : `grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between ${centerMaxWidthClass} lg:px-0`
+  const contentGridClass = showLeftNav
+    ? 'grid grid-cols-1 gap-y-(--section-gap) lg:col-[2/-1] lg:grid-cols-subgrid lg:self-stretch'
+    : 'grid grid-cols-1 gap-y-(--section-gap) lg:col-[1/-1] lg:grid-cols-subgrid lg:self-stretch'
   // Grid geometry CSS vars are injected here from the single source of
   // truth in `lib/sidebar-widths.ts`. `globals.css` intentionally does
   // NOT declare `--grid-*` defaults — everything flows from this one
@@ -234,7 +263,7 @@ export function EditorialPage({
         </div>
 
         {/* Mobile bar: Ask AI + Menu — shown under logo bar on mobile */}
-        <MobileBar enableAssistant={enableAssistant} />
+        {showLeftNav && <MobileBar enableAssistant={enableAssistant} />}
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar ? (
@@ -271,31 +300,33 @@ export function EditorialPage({
         {/* Above: rendered above the 3-column grid, using the same column widths
             so above content aligns with the center content column (col 2). */}
         {!!above && (
-          <div className='relative mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'>
-            <div className='lg:col-start-2'>{above}</div>
+          <div className={aboveClass}>
+            <div className={showLeftNav ? 'lg:col-start-2' : undefined}>{above}</div>
             <AboveBottomDots mode={decorativeLines} />
           </div>
         )}
 
-        <div className='grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'>
+        <div className={pageGridClass}>
         {/* TOC sidebar: sticky in its own outer grid column so section rows
             below are sized only by the content/right-rail subgrid. */}
-        <div className='slot-sidebar-left shrink-0 lg:self-stretch'>
-          <div
-            style={{
-              position: 'sticky',
-              top: hasTabBar ? 'var(--sticky-top)' : 'calc(var(--header-row-height) + var(--layout-gap))',
-              maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top) - var(--layout-gap))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap) - var(--layout-gap))',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <SideNav />
+        {showLeftNav && (
+          <div className='slot-sidebar-left shrink-0 lg:self-stretch'>
+            <div
+              style={{
+                position: 'sticky',
+                top: hasTabBar ? 'var(--sticky-top)' : 'calc(var(--header-row-height) + var(--layout-gap))',
+                maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top) - var(--layout-gap))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap) - var(--layout-gap))',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <SideNav />
+            </div>
           </div>
-        </div>
+        )}
 
         <div
-          className='grid grid-cols-1 gap-y-(--section-gap) lg:col-[2/-1] lg:grid-cols-subgrid lg:self-stretch'
+          className={contentGridClass}
           style={sections ? {
             /* N auto rows for sections + 1fr spacer + auto footer → pushes footer to bottom */
             gridTemplateRows: `repeat(${sections.length}, auto) 1fr auto`,
@@ -418,7 +449,7 @@ export function EditorialPage({
       {enableAssistant && <ChatDrawer />}
 
       {/* Mobile navigation drawer (lg:hidden) */}
-      <NavDrawer />
+      {showLeftNav && <NavDrawer />}
 
       {/* Config customization panel — loaded asynchronously when idle.
           Only mounted in dev mode and on preview subdomains. DialKit

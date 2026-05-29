@@ -1,0 +1,19 @@
+{
+  "name": "Page Modes Docs",
+  "footer": {
+    "links": [
+      {
+        "header": "Resources",
+        "items": [{ "label": "Status", "href": "/" }]
+      }
+    ]
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Modes",
+        "pages": ["index", "wide", "center", "custom"]
+      }
+    ]
+  }
+}

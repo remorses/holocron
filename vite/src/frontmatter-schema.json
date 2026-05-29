@@ -26,6 +26,17 @@
       "description": "Badge label displayed next to the page title in the sidebar",
       "type": "string"
     },
+    "mode": {
+      "description": "Mintlify-compatible page layout mode. \"default\" keeps the full layout (left navigation sidebar, right table of contents, footer). \"center\" and \"custom\" hide the left navigation sidebar and center the content. \"wide\" and \"frame\" alias to the default layout.",
+      "type": "string",
+      "enum": [
+        "default",
+        "wide",
+        "custom",
+        "frame",
+        "center"
+      ]
+    },
     "deprecated": {
       "description": "Mark the page as deprecated",
       "type": "boolean"

@@ -3,6 +3,7 @@ import { parseFrontmatterObject } from './frontmatter.ts'
 import { formatHolocronWarning, logger } from './logger.ts'
 
 const stringOrNumberToStringSchema = z.union([z.string(), z.number()]).transform(String)
+const pageModeSchema = z.enum(['default', 'wide', 'custom', 'frame', 'center'])
 
 const pageSeoMetaKeys = [
   'robots',
@@ -31,6 +32,11 @@ export const pageFrontmatterSchema = z.object({
   icon: z.string().optional().describe('Icon name from the configured icon library (e.g. "rocket", "home")'),
   sidebarTitle: z.string().optional().describe('Override the title shown in the sidebar navigation. Use this to keep the sidebar label short while using a longer, SEO-friendly title in the title field for search engines and browser tabs.'),
   tag: z.string().optional().describe('Badge label displayed next to the page title in the sidebar'),
+  mode: pageModeSchema
+    .optional()
+    .describe(
+      'Mintlify-compatible page layout mode. "default" keeps the full layout (left navigation sidebar, right table of contents, footer). "center" and "custom" hide the left navigation sidebar and center the content. "wide" and "frame" alias to the default layout.',
+    ),
   deprecated: z.boolean().optional().describe('Mark the page as deprecated'),
   rendering: z
     .enum(['ssr', 'static'])
@@ -61,6 +67,7 @@ export const pageFrontmatterSchema = z.object({
 }).passthrough()
 
 export type PageFrontmatter = z.output<typeof pageFrontmatterSchema>
+export type PageMode = z.output<typeof pageModeSchema>
 export type PageSeoMeta = Partial<Record<PageSeoMetaKey, string>>
 
 export function parsePageFrontmatter(content: string): PageFrontmatter {

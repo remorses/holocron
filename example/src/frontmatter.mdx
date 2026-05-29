@@ -56,6 +56,31 @@ deprecated: true
 ---
 ```
 
+## Page layout mode
+
+**`mode`** controls the page layout. It is Mintlify-compatible and accepts `default`, `wide`, `center`, `custom`, or `frame`. Holocron keeps the layout system small and collapses these five values into two layouts.
+
+| `mode` | Left navigation sidebar | Aliases to |
+|---|---|---|
+| `default` | shown | — |
+| `wide` | shown | `default` |
+| `frame` | shown | `default` |
+| `center` | **hidden** | — |
+| `custom` | **hidden** | `center` |
+
+The `center` layout hides the left navigation sidebar and centers the content within the page width. Use it for landing pages, changelogs, or any page where you want the focus on the content instead of the navigation chrome.
+
+```yaml
+---
+title: Changelog
+mode: center
+---
+```
+
+<Note>
+Holocron only implements two real layouts (`default` and `center`). The other Mintlify mode names are accepted so existing `docs.json` projects validate without changes, but `wide` and `frame` alias to `default`, and `custom` aliases to `center`.
+</Note>
+
 ## Visibility and indexing
 
 **`hidden`** hides the page from the sidebar navigation and adds a `noindex` robots meta tag. The page is still routable by its URL.
