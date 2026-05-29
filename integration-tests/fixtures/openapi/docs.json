@@ -9,6 +9,32 @@
       {
         "tab": "API Reference",
         "openapi": "api.yaml"
+      },
+      {
+        "tab": "Guides",
+        "openapi": "api.yaml",
+        "openapiBase": "guide",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "guide/overview",
+              "guide/authentication",
+              "POST /auth/login",
+              "GET /users"
+            ]
+          },
+          {
+            "group": "Orders",
+            "pages": ["guide/orders-intro", "POST /orders"]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "openapi": "api.yaml",
+        "openapiBase": "ref",
+        "pages": ["ref/intro", "..."]
       }
     ]
   }

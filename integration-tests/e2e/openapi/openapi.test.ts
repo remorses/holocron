@@ -157,3 +157,87 @@ test.describe('OpenAPI tab', () => {
     expect(html).toContain('Path Parameters')
   })
 })
+
+test.describe('OpenAPI selective mode (custom pages + endpoint refs)', () => {
+  test('custom MDX page in an openapi tab renders its prose', async ({ request }) => {
+    const res = await request.get('/guide/authentication')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    expect(html).toContain('Authentication')
+    expect(html).toContain('Where to get your API key')
+  })
+
+  test('endpoint ref renders a generated endpoint page under openapiBase', async ({ request }) => {
+    // "POST /auth/login" → slug guide/post-auth-login (openapiBase: "guide")
+    const res = await request.get('/guide/post-auth-login')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    expect(html).toContain('Login')
+    expect(html).toContain('/auth/login')
+  })
+
+  test('custom page appears before endpoint page in the sidebar', async ({ request }) => {
+    const res = await request.get('/guide/overview')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    const authIdx = html.indexOf('Authentication')
+    const loginIdx = html.indexOf('Login')
+    expect(authIdx).toBeGreaterThan(-1)
+    expect(loginIdx).toBeGreaterThan(-1)
+    // The authored order puts the Authentication guide before POST /auth/login.
+    expect(authIdx).toBeLessThan(loginIdx)
+  })
+
+  test('authored groups are preserved (not replaced by tag groups)', async ({ request }) => {
+    const res = await request.get('/guide/overview')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    // Authored group names, not the spec's tag names (users/orders/products)
+    expect(html).toContain('Getting Started')
+    expect(html).toContain('Orders')
+  })
+
+  test('the same endpoint can render under two tabs with different slugs', async ({ request }) => {
+    // GET /users is auto-grouped under /api/... in the dedicated tab and
+    // explicitly referenced under /guide/... in the selective tab.
+    const dedicated = await request.get('/api/get-users')
+    const selective = await request.get('/guide/get-users')
+    expect(dedicated.ok()).toBe(true)
+    expect(selective.ok()).toBe(true)
+    expect(await selective.text()).toContain('List users')
+  })
+})
+
+test.describe('OpenAPI "..." rest expansion', () => {
+  test('intro MDX page renders before the auto-expanded endpoints', async ({ request }) => {
+    const res = await request.get('/ref/intro')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    expect(html).toContain('Reference Intro')
+    // The "..." entry expanded into tag groups, so the sidebar shows them.
+    expect(html).toContain('List users')
+  })
+
+  test('"..." expands every endpoint under the tab openapiBase', async ({ request }) => {
+    // No endpoints were listed explicitly, so "..." includes all of them.
+    for (const slug of ['ref/get-users', 'ref/post-users', 'ref/get-health']) {
+      const res = await request.get(`/${slug}`)
+      expect(res.ok()).toBe(true)
+    }
+  })
+
+  test('rest expansion includes endpoints from every tag', async ({ request }) => {
+    // "..." expanded into tag groups (auth, users, orders, products, default).
+    // Verify at least one endpoint from each major tag is routable under /ref.
+    for (const slug of [
+      'ref/post-auth-login',
+      'ref/get-users',
+      'ref/post-orders',
+      'ref/get-products',
+      'ref/get-health',
+    ]) {
+      const res = await request.get(`/${slug}`)
+      expect(res.ok()).toBe(true)
+    }
+  })
+})

@@ -1747,6 +1747,14 @@ rmiz renders two wrapper divs (`[data-rmiz]` → `[data-rmiz-content]`) around c
 
 `docs.json` page entries and group `root` values can show up as `index.md`, `getting-started.mdx`, or `/guide/index.md`, but routing expects canonical slugs like `index` and `guide/index`. Normalize those strings once in `normalize-config.ts` by stripping a leading slash and a trailing `.md`/`.mdx`, so `/` and raw `.md` routes stay consistent everywhere.
 
+## OpenAPI selective mode — mix MDX pages with endpoint refs (2026-05)
+
+OpenAPI tabs now support two modes. **Dedicated** (no `groups`/`pages`): endpoints auto-grouped by tag (unchanged). **Selective** (tab has `groups`/`pages`): the provider walks authored groups, replaces `METHOD /path` string entries with the operation's slug + emits only those endpoint pages, leaving MDX slugs untouched. `normalize-config.ts` keeps user groups instead of forcing `groups: []`; `virtual-tab-provider.ts` still assigns `tab.groups = result.groups` because the provider reads `tab.groups` and returns the merged tree. Same operation can render under two tabs with different `openapiBase` prefixes (e.g. `/api/get-users` + `/guide/get-users`) without href collision.
+
+A special `"..."` page entry in selective mode expands all **unlisted** endpoints (auto-grouped by tag) at that position — lets you write an intro page then auto-include the rest. Implemented as a two-pass walk: pass 1 resolves entries + records referenced ops + leaves a `REST_PLACEHOLDER` (a unique frozen object, compared by reference, NOT a string sentinel); pass 2 splices `buildTagGroups(allOps - referenced)` where the placeholder sits. Only one `"..."` per tab (errors otherwise). Ambiguous multi-spec refs (`GET /users` matching two specs with no specfile prefix) now error instead of silently picking the first. Note `tagDisplayName` returns the raw lowercase tag name when the spec tag has a `description`, so don't assert capitalized group labels in tests.
+
+**Selective mixing + `"..."` are OpenAPI-LOCAL, not in the generic virtual-tab layer.** `processVirtualTabs()` only owns claim → generate → merge → slug collisions. Oracle reviewed: defer generalizing the authored-walk/`"..."` machinery until a 2nd provider exists (avoid abstracting against one consumer). When generalizing, extract only the recursive walk + splice as a helper taking `resolveEntry(entry)→slug|null` + `expandRest()→entries`; do NOT build a 4-method provider interface (leaks internals). Scope note documented in `virtual-tab-provider.ts`.
+
 ## Dynamic Workers hosting platform (2026-05-11)
 
 ### Deploy pipeline architecture

@@ -858,6 +858,27 @@
             "openapiBase": {
               "description": "Slug prefix for generated OpenAPI pages. Defaults to `\"api\"`.\nSet to `\"\"` for no prefix. Example: with `\"reference\"`,\nendpoints are generated at `/reference/get-users` instead of\n`/api/get-users`",
               "type": "string"
+            },
+            "groups": {
+              "description": "Optional sidebar groups for \"selective endpoints\" mode. When set,\nendpoints are NOT auto-grouped by tag. Instead, list page entries\nexplicitly: normal slugs render MDX pages, while entries matching\n`METHOD /path` (e.g. `\"GET /users\"`) render the auto-generated\nendpoint page from the spec. This lets you interleave guides (auth,\nAPI keys, overview) with endpoint pages. Use the special `\"...\"`\nentry to expand all remaining (unlisted) endpoints, auto-grouped by\ntag, at that position",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/groupSchema"
+              }
+            },
+            "pages": {
+              "description": "Optional flat page list for \"selective endpoints\" mode. Same rules\nas `groups` but without a group wrapper. Mix MDX slugs with\n`METHOD /path` endpoint references to control ordering. Add a\n`\"...\"` entry to auto-include all remaining endpoints (grouped by\ntag) after your intro pages",
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/definitions/groupSchema"
+                  }
+                ]
+              }
             }
           },
           "required": [

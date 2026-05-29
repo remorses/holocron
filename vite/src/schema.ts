@@ -322,6 +322,35 @@ const tabWithOpenAPISchema = tabBaseSchema.extend({
         \`/api/get-users\`
       `,
     ),
+  groups: z
+    .array(groupSchema)
+    .optional()
+    .describe(
+      dedent`
+        Optional sidebar groups for "selective endpoints" mode. When set,
+        endpoints are NOT auto-grouped by tag. Instead, list page entries
+        explicitly: normal slugs render MDX pages, while entries matching
+        \`METHOD /path\` (e.g. \`"GET /users"\`) render the auto-generated
+        endpoint page from the spec. This lets you interleave guides (auth,
+        API keys, overview) with endpoint pages. Use the special \`"..."\`
+        entry to expand all remaining (unlisted) endpoints, auto-grouped by
+        tag, at that position
+      `,
+    ),
+  get pages() {
+    return z
+      .array(z.union([z.string(), groupSchema]))
+      .optional()
+      .describe(
+        dedent`
+          Optional flat page list for "selective endpoints" mode. Same rules
+          as \`groups\` but without a group wrapper. Mix MDX slugs with
+          \`METHOD /path\` endpoint references to control ordering. Add a
+          \`"..."\` entry to auto-include all remaining endpoints (grouped by
+          tag) after your intro pages
+        `,
+      )
+  },
 })
 
 export const tabSchema = z

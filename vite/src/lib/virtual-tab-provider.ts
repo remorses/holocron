@@ -12,6 +12,17 @@
  * Slug collision detection and multi-claimer guards are centralized in
  * processVirtualTabs() so providers don't need to coordinate with each other.
  *
+ * SCOPE NOTE: this generic layer only owns claim → generate → merge → collision
+ * detection. The "selective mode" walk (interleaving authored MDX slugs with
+ * `METHOD /path` endpoint refs) and the `"..."` rest-expansion sentinel live
+ * ENTIRELY inside openapi/provider.ts — they are NOT inherited by new providers.
+ * A future provider that wants the same authored-order mixing or `"..."` support
+ * must implement it itself (or, once a second provider exists, the recursive
+ * authored-nav walk + `"..."` splice should be extracted here as a shared helper
+ * that takes provider callbacks: `resolveEntry(entry) → slug | null` and
+ * `expandRest() → entries`). Deferred until provider #2 to avoid guessing the
+ * abstraction against a single consumer.
+ *
  * To add a new provider:
  * 1. Add a schema variant in schema.ts (e.g. tabWithChangelogSchema)
  * 2. Add the source field to ConfigNavTab in config.ts
@@ -106,7 +117,10 @@ export async function processVirtualTabs({
     // Merge virtual MDX into the shared content map
     Object.assign(mdxContent, result.mdxContent)
 
-    // Replace the empty placeholder groups with the generated ones
+    // Set the tab's groups to the provider's result. In "dedicated" mode this
+    // replaces the empty placeholder groups with auto-generated tag groups.
+    // In "selective" mode the provider has already merged the user-authored
+    // groups (read from tab.groups) with spliced endpoint pages.
     tab.groups = result.groups
   }
 }

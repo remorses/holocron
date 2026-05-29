@@ -60,9 +60,84 @@ Now endpoints render at `/reference/get-users` instead.
 
 Set `openapiBase` to `""` for no prefix.
 
+## Mixing guides with endpoint pages
+
+The basic setup above is **dedicated mode**: every endpoint is auto-grouped by tag. If you instead want to interleave hand-written pages (authentication, getting your API key, an overview) with specific endpoints, add a `groups` or `pages` array to the tab. This is **selective mode**.
+
+In selective mode, each page entry is one of:
+
+- a normal MDX slug like `guide/authentication` → renders that MDX file
+- an endpoint reference like `POST /users` → renders the auto-generated endpoint page from the spec
+
+```json
+{
+  "tab": "API Reference",
+  "openapi": "openapi.json",
+  "groups": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "api/overview",
+        "api/authentication",
+        "POST /auth/login",
+        "GET /users"
+      ]
+    },
+    {
+      "group": "Orders",
+      "pages": ["api/orders-intro", "POST /orders"]
+    }
+  ]
+}
+```
+
+The sidebar follows the exact order you write, so your authentication guide can sit right before the endpoints it explains:
+
+```
+API Reference
+├─ Getting Started
+│   ├─ Overview              ← api/overview.mdx
+│   ├─ Authentication        ← api/authentication.mdx
+│   ├─ POST /auth/login      ← generated endpoint page
+│   └─ GET /users            ← generated endpoint page
+└─ Orders
+    ├─ Working with Orders   ← api/orders-intro.mdx
+    └─ POST /orders          ← generated endpoint page
+```
+
+An endpoint reference matches the form `METHOD /path` (case-insensitive method). To pick a specific spec when you list several, prefix it with the file name: `"v2.json POST /orders"`.
+
+If an endpoint reference does not match any operation in the spec, the build fails with an error so typos surface immediately.
+
+### Intro page, then all endpoints
+
+Listing every endpoint by hand is tedious. Add the special `"..."` entry to write a short intro and then auto-include all the remaining endpoints, grouped by tag, right after it:
+
+```json
+{
+  "tab": "API Reference",
+  "openapi": "openapi.json",
+  "pages": ["api/authentication", "..."]
+}
+```
+
+This renders your `api/authentication` guide first, then expands every endpoint not listed elsewhere into tag groups:
+
+```
+API Reference
+├─ Authentication        ← api/authentication.mdx
+├─ Users                 ← group from "..." (tag: users)
+│   ├─ GET  /users
+│   └─ POST /users
+└─ Orders                ← group from "..." (tag: orders)
+    └─ POST /orders
+```
+
+The `"..."` entry only expands endpoints you did **not** already reference explicitly, so you can pin a few important endpoints up top and let the rest fall in afterward. Only one `"..."` is allowed per tab.
+
 ## How pages are generated
 
-Holocron reads the spec and creates one page per operation (path + method). Pages are grouped by the `tags` field on each operation. The sidebar shows tag groups with individual endpoint pages.
+In **dedicated mode**, Holocron reads the spec and creates one page per operation (path + method). Pages are grouped by the `tags` field on each operation. The sidebar shows tag groups with individual endpoint pages.
 
 Each generated page shows:
 - HTTP method and path

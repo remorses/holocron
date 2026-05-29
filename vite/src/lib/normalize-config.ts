@@ -438,12 +438,20 @@ function normalizeTabsAndAnchors(
       continue
     }
 
-    // OpenAPI tab → groups are auto-generated at sync time; store the
-    // openapi field on the tab so sync.ts can pick it up.
+    // OpenAPI tab → store the openapi field so sync.ts can pick it up.
+    //  - "dedicated" mode: no user groups/pages → endpoints auto-grouped by tag.
+    //  - "selective" mode: user provides groups/pages that mix MDX slugs with
+    //    `METHOD /path` endpoint refs; the openapi provider splices endpoint
+    //    pages in place and leaves the authored ordering intact.
     if (raw.openapi) {
       const openapi = raw.openapi as string | string[]
       const openapiBase = raw.openapiBase as string | undefined
-      tabs.push({ tab: name, ...tabExtras, groups: [], openapi, ...(openapiBase !== undefined && { openapiBase }) })
+      const groups: ConfigNavGroup[] = raw.groups
+        ? (raw.groups as ConfigNavGroup[]).map(normalizeGroup)
+        : raw.pages
+          ? [{ group: '', pages: (raw.pages as ConfigNavPageEntry[]).map(normalizePageEntry) }]
+          : []
+      tabs.push({ tab: name, ...tabExtras, groups, openapi, ...(openapiBase !== undefined && { openapiBase }) })
       continue
     }
 
