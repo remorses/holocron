@@ -11,7 +11,7 @@
  * Portals to <body> to sit above navbar stacking context.
  */
 
-import React, { useEffect, useRef, useCallback, useState } from 'react'
+import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { decodeFederationPayload, useRouterState } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
@@ -27,6 +27,13 @@ import { TrashIcon, CloseIcon } from './chat-icons.tsx'
 
 // ── ChatDrawer ───────────────────────────────────────────────────────
 
+// Module-level stable callbacks for useSyncExternalStore (see AGENTS.md rules)
+const emptySubscribe = () => () => {}
+const getTrue = () => true as const
+const getFalse = () => false as const
+const getBody = () => document.body
+const getNull = () => null
+
 function appendAssistantPart(messages: ChatMessage[], part: ChatPart): ChatMessage[] {
   const lastMessage = messages.at(-1)
   if (lastMessage?.role === 'assistant') {
@@ -39,14 +46,8 @@ function appendAssistantPart(messages: ChatMessage[], part: ChatPart): ChatMessa
 }
 
 export function ChatDrawer() {
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
+  const isMounted = useSyncExternalStore(emptySubscribe, getTrue, getFalse)
   if (!isMounted) return null
-
   return <ChatDrawerInner />
 }
 
@@ -228,11 +229,7 @@ function ChatDrawerInner() {
   const isOpen = drawerState === 'open'
 
   // Portal to <body> so the drawer sits outside all stacking contexts
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    setPortalTarget(document.body)
-  }, [])
-
+  const portalTarget = useSyncExternalStore(emptySubscribe, getBody, getNull)
   if (!portalTarget) return null
 
   return createPortal(

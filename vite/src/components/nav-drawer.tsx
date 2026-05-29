@@ -8,7 +8,7 @@
  * Closes on backdrop click, close button, or page navigation.
  */
 
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useSyncExternalStore, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
@@ -26,15 +26,16 @@ import {
 } from '../site-data.ts'
 import { TabLink } from './layout/tab-link.tsx'
 
+// Module-level stable callbacks for useSyncExternalStore (see AGENTS.md rules)
+const emptySubscribe = () => () => {}
+const getTrue = () => true as const
+const getFalse = () => false as const
+const getBody = () => document.body
+const getNull = () => null
+
 export function NavDrawer() {
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
+  const isMounted = useSyncExternalStore(emptySubscribe, getTrue, getFalse)
   if (!isMounted) return null
-
   return <NavDrawerInner />
 }
 
@@ -70,11 +71,7 @@ function NavDrawerInner() {
     }
   }, [isOpen])
 
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    setPortalTarget(document.body)
-  }, [])
-
+  const portalTarget = useSyncExternalStore(emptySubscribe, getBody, getNull)
   if (!portalTarget || !isOpen) return null
 
   return createPortal(
