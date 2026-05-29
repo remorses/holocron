@@ -171,7 +171,8 @@
             {
                 "tab": "API Reference",
                 "icon": "server",
-                "openapi": "openapi.json"
+                "openapi": "openapi.json",
+                "pages": ["docs/api-docs/authentication", "..."]
             }
         ]
     }

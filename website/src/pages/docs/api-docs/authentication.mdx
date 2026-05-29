@@ -1,0 +1,81 @@
+---
+title: Authentication
+description: How to get a Holocron API key and authenticate your API requests.
+icon: key
+---
+
+## Authentication
+
+Every request to the Holocron API is authenticated with an **API key**. Keys are
+scoped to a single project, so the key alone tells Holocron which project you are
+acting on; you never pass a project ID separately.
+
+API keys look like `holo_xxxxxxxx`. Send yours as a **Bearer token** in the
+`Authorization` header on every request:
+
+```bash
+curl https://holocron.so/api/v0/projects \
+  -H "Authorization: Bearer holo_xxxxxxxx"
+```
+
+<Warning>
+Treat API keys like passwords. Never commit them to git or embed them in
+client-side code. Read the key from an environment variable on the server, and
+create a separate key per environment so you can rotate them independently.
+</Warning>
+
+## Get an API key
+
+You can create a key two ways: from the CLI or from the holocron.so dashboard.
+Both produce the same `holo_xxx` key.
+
+### From the CLI
+
+First authenticate the CLI once with the device flow (opens your browser):
+
+```bash
+npx -y @holocron.so/cli login
+```
+
+If you do not have a project yet, create one:
+
+```bash
+npx -y @holocron.so/cli projects create --name "My Docs"
+```
+
+Then create a key scoped to that project:
+
+```bash
+npx -y @holocron.so/cli keys create --name production --project prj_xxxxxxxx
+```
+
+The command prints the key once. Copy it immediately; it is not shown again.
+
+<Tip>
+List existing keys with `npx -y @holocron.so/cli keys list` and revoke one with
+`npx -y @holocron.so/cli keys delete <keyId>`.
+</Tip>
+
+### From the holocron.so dashboard
+
+Sign in at [holocron.so](https://holocron.so), open your project, and go to its
+**API keys** section. Create a key, give it a name (for example `production`), and
+copy the `holo_xxx` value. The key is scoped to that project automatically.
+
+## Use the key
+
+Pass the key on every API call. The example below lists your projects:
+
+```bash
+export HOLOCRON_KEY=holo_xxxxxxxx
+
+curl https://holocron.so/api/v0/projects \
+  -H "Authorization: Bearer $HOLOCRON_KEY"
+```
+
+The same `HOLOCRON_KEY` environment variable is also what the CLI and CI use to
+deploy without an interactive login. See [Deploy to Holocron](/docs/deploy/holocron)
+for the full deploy flow.
+
+The rest of this section is the full endpoint reference, generated from the
+OpenAPI specification.
