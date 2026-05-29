@@ -48,11 +48,11 @@ function renderLibraryIcon(
 }
 
 export function Icon({ icon, size = 16, className, iconType, color }: IconProps): React.ReactElement | null {
-  if (!icon) return null
-
   const { site } = useHolocronData()
   const iconAtlas = site.icons
   const colorStyle = color ? { color } : undefined
+
+  if (!icon) return null
 
   if (typeof icon === 'string') {
     if (icon === '') return null

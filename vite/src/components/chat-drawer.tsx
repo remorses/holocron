@@ -200,7 +200,8 @@ function ChatDrawerInner() {
       void handleSubmit(draftText.trim())
     }
     // Focus the drawer textarea when opening
-    setTimeout(() => drawerInputRef.current?.focus(), 100)
+    const timer = setTimeout(() => drawerInputRef.current?.focus(), 100)
+    return () => clearTimeout(timer)
   }, [drawerState, handleSubmit])
 
   // ── Disable body scroll when open ──────────────────────────────
