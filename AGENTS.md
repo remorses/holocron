@@ -97,7 +97,7 @@ The full shadcn token set is defined in `globals.css` `:root` with editorial def
 **Three layers of variables:**
 
 1. **shadcn standard** — `--background`, `--foreground`, `--primary`, `--muted-foreground`, `--border`, `--accent`, `--sidebar-foreground`, `--sidebar-primary`, etc. Users override these to theme holocron.
-2. **Holocron extras** — `--text-tertiary`, `--border-subtle`, `--divider`. Things shadcn doesn't cover. No prefix, same naming style.
+2. **Holocron extras** — `--text-tertiary`, `--border-subtle`, `--divider`, `--prose-text`. Things shadcn doesn't cover. No prefix, same naming style. `--prose-text` is the body paragraph color: intentionally a bit softer than `--foreground` (derived via `color-mix` toward `--background`) so bold/`strong` words and headings — which keep full `--foreground` — stand out. `.editorial-prose` uses `--prose-text`; `.editorial-prose strong/b` reset to `--foreground`.
 3. **Semantic colors** — `--blue`, `--green`, `--yellow`, `--orange`, `--red`, `--purple`. Dark-mode-aware color tokens for callouts/badges. Use as `text-blue`, `bg-red/10`, `border-green/20` in Tailwind. Don't conflict with Tailwind's numbered palette (`text-blue-500`).
 
 **Do NOT introduce prefixed variable namespaces** (no `--hc-*`, no `--fd-*`, no `--editorial-*`). Keep everything in the flat shadcn naming style. If a new variable is needed, pick a descriptive name that could plausibly be a shadcn extension.

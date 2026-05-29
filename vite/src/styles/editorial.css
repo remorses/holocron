@@ -45,8 +45,16 @@
   font-weight: var(--weight-prose);
   line-height: var(--lh-prose);
   letter-spacing: var(--ls-prose);
-  color: var(--foreground);
+  color: var(--prose-text);
   margin: 0;
+}
+
+/* Bold/strong gets full-contrast --foreground (and the heading weight) so
+   emphasized words stand out against the softened --prose-text body color. */
+.editorial-prose strong,
+.editorial-prose b {
+  color: var(--foreground);
+  font-weight: var(--weight-heading);
 }
 
 
