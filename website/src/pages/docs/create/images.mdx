@@ -46,6 +46,16 @@ Remote image URLs (`https://...`) are supported. Remote URLs in JSX `<img>` tags
 <img src="https://example.com/photo.jpg" alt="Remote photo" />
 ```
 
+## Click to zoom
+
+Processed images are click-to-zoom by default. Clicking an image expands it into a Medium-style zoomed dialog. To turn this off for a specific image, pass `disableZoom`:
+
+```mdx
+<img src="/images/logo.svg" alt="Logo" disableZoom />
+```
+
+This is useful for small logos, icons, or images inside a [Marquee](/docs/components/marquee) where zooming on click is undesirable.
+
 ## Frames
 
 Wrap images in a `<Frame>` component for a styled border and optional caption:

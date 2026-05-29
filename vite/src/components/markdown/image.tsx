@@ -39,6 +39,7 @@ export function Image({
   height,
   className = '',
   style,
+  disableZoom = false,
 }: {
   src: string
   /**
@@ -54,6 +55,12 @@ export function Image({
   height?: number | string
   className?: string
   style?: React.CSSProperties
+  /**
+   * Disable the click-to-zoom behavior. When true, the image is rendered
+   * without the `react-medium-image-zoom` wrapper so clicking does nothing.
+   * Useful inside Marquee or other contexts where zoom is undesirable.
+   */
+  disableZoom?: boolean
 }) {
   const [loaded, setLoaded] = useState(false)
   const sourceWidth = readNumericAttr(width)
@@ -83,6 +90,28 @@ export function Image({
   })
   const imgWidth = sourceWidth
   const imgHeight = sourceHeight
+
+  const realImage = (
+    <img
+      ref={imgRef}
+      src={src}
+      alt={alt}
+      width={imgWidth}
+      height={imgHeight}
+      onLoad={() => {
+        setLoaded(true)
+      }}
+      style={{
+        display: 'block',
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        filter: !effectivePlaceholder || loaded ? 'blur(0px)' : 'blur(6px)',
+        opacity: !effectivePlaceholder || loaded ? 1 : 0,
+        transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
+      }}
+    />
+  )
 
   return (
     <div
@@ -115,31 +144,11 @@ export function Image({
         />
       )}
       {/* Real image: starts soft and transparent, then sharpens in over the
-          placeholder. Wrapped in <Zoom> so users can click to expand into a
-          Medium-style zoomed dialog. The wrapper divs (data-rmiz,
-          data-rmiz-content) inherit `grid-area: 1 / 1` + full sizing from
-          globals.css so the real image still stacks over the placeholder. */}
-      <Zoom>
-        <img
-          ref={imgRef}
-          src={src}
-          alt={alt}
-          width={imgWidth}
-          height={imgHeight}
-          onLoad={() => {
-            setLoaded(true)
-          }}
-          style={{
-            display: 'block',
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            filter: !effectivePlaceholder || loaded ? 'blur(0px)' : 'blur(6px)',
-            opacity: !effectivePlaceholder || loaded ? 1 : 0,
-            transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
-          }}
-        />
-      </Zoom>
+          placeholder. Wrapped in <Zoom> (unless disableZoom) so users can click
+          to expand into a Medium-style zoomed dialog. The wrapper divs
+          (data-rmiz, data-rmiz-content) inherit `grid-area: 1 / 1` + full sizing
+          from globals.css so the real image still stacks over the placeholder. */}
+      {disableZoom ? realImage : <Zoom>{realImage}</Zoom>}
     </div>
   )
 }
