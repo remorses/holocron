@@ -269,9 +269,15 @@ function renderMdxPage({
   const contentMdast: Root = { type: 'root', children: contentChildren }
   const mdastSections = buildSections(contentMdast, { enableAssistant: site.config.assistant.enabled })
 
-  // Check if the page content already starts with any heading. If not, we
+  // Check if the page content already starts with a heading. If not, we
   // prepend a rendered <SectionHeading> component at the top of the first
   // section so every page always shows a visible title.
+  //
+  // We skip the injection entirely when the page leads with JSX content
+  // (e.g. <Hero />, a custom component, or an expression). Authors who open
+  // with JSX are crafting a custom layout and don't want an auto title pushed
+  // above it. JSX nodes are mdxJsxFlowElement/mdxJsxTextElement (named tags)
+  // and mdxFlowExpression/mdxTextExpression (`{...}` expressions).
   const firstContentNode = contentChildren.find(
     (n) => n.type !== 'mdxjsEsm' && n.type !== 'yaml',
   )
@@ -285,7 +291,17 @@ function renderMdxPage({
     }
     return false
   })()
-  const shouldInjectH1 = !startsWithHeading && !!loaderData.currentPageTitle
+  const startsWithJsx = (() => {
+    if (!firstContentNode) return false
+    const nodeType: string = firstContentNode.type
+    return (
+      nodeType === 'mdxJsxFlowElement' ||
+      nodeType === 'mdxJsxTextElement' ||
+      nodeType === 'mdxFlowExpression' ||
+      nodeType === 'mdxTextExpression'
+    )
+  })()
+  const shouldInjectH1 = !startsWithHeading && !startsWithJsx && !!loaderData.currentPageTitle
 
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
   // prepended to each section. Section splitting separates import statements
