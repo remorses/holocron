@@ -301,7 +301,12 @@ function renderMdxPage({
       nodeType === 'mdxTextExpression'
     )
   })()
-  const shouldInjectH1 = !startsWithHeading && !startsWithJsx && !!loaderData.currentPageTitle
+  // Non-default page modes ("center", "custom") render a bespoke, centered
+  // layout where an auto title would interfere with the author's design.
+  // "wide" and "frame" alias the default layout, so they keep the auto H1.
+  const pageMode = loaderData.currentPageFrontmatter?.mode
+  const isCustomLayoutMode = pageMode === 'center' || pageMode === 'custom'
+  const shouldInjectH1 = !startsWithHeading && !startsWithJsx && !isCustomLayoutMode && !!loaderData.currentPageTitle
 
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
   // prepended to each section. Section splitting separates import statements
