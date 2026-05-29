@@ -37,7 +37,7 @@ export function Expandable({
         </span>
         <Chevron />
       </summary>
-      <div className='no-bleed flex flex-col gap-3 px-4 pb-4 text-sm text-muted-foreground'>{children}</div>
+      <div className='no-bleed flex flex-col gap-3 px-4 pb-4 text-sm text-foreground'>{children}</div>
     </details>
   )
 }
