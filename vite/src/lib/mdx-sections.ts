@@ -26,7 +26,7 @@ export function isAsideNode(node: RootContent): node is FlowJsxNode {
   return node.type === 'mdxJsxFlowElement' && node.name === 'Aside'
 }
 
-export function hasFullProp(node: RootContent): boolean {
+function hasFullProp(node: RootContent): boolean {
   return node.type === 'mdxJsxFlowElement' && node.attributes.some((a) => a.type === 'mdxJsxAttribute' && a.name === 'full')
 }
 

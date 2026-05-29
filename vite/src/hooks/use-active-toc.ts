@@ -93,7 +93,7 @@ export type ActiveTocSnapshot = {
  * When hashIsAuthoritative (user just clicked a heading link), the hash wins.
  * Otherwise, find the last heading above the fixed-header offset.
  */
-export function computeActiveId(validIds: Set<string>, fallbackId: string): string {
+function computeActiveId(validIds: Set<string>, fallbackId: string): string {
   const hash = window.location.hash.replace(/^#/, '')
 
   // Hash is authoritative after a hashchange until the user scrolls

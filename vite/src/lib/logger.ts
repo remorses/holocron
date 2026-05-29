@@ -173,7 +173,7 @@ export class HolocronMdxParseError extends Error {
 type VFileMessageLike = { line: number; column?: number; reason: string }
 
 /** Type guard for remark/VFileMessage errors thrown during MDX parsing. */
-export function isVFileMessage(err: unknown): err is VFileMessageLike {
+function isVFileMessage(err: unknown): err is VFileMessageLike {
   if (err == null || typeof err !== 'object') return false
   const line = Reflect.get(err, 'line')
   const reason = Reflect.get(err, 'reason')

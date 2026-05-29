@@ -21,7 +21,7 @@ import { ShowMore } from './show-more.tsx'
 
 // ── User message ─────────────────────────────────────────────────────
 
-export function ChatUserMessage({ text }: { text: string }) {
+function ChatUserMessage({ text }: { text: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
       <div

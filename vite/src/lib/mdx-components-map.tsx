@@ -316,7 +316,7 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl, source }: {
  *  Vite doesn't compile user MDX snippets as JSX, so the virtual modules map
  *  exposes raw markdown and this component renders it through the same safe-mdx
  *  component map used by pages. */
-export function RenderImportedMdx({ markdown, baseUrl, source }: {
+function RenderImportedMdx({ markdown, baseUrl, source }: {
   markdown: string
   baseUrl?: string
   source?: string

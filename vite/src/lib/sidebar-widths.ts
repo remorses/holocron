@@ -31,7 +31,7 @@ import type { HolocronCSSProperties } from './css-vars.ts'
  * Keys match the CSS custom-property names that get injected as inline
  * style on `.slot-page`.
  */
-export const GRID_TOKENS = {
+const GRID_TOKENS = {
   '--grid-nav-width': 230,
   '--grid-sidebar-width': 230,
   '--grid-gap': 60,

@@ -64,7 +64,7 @@ const MAX_VISIBLE_HEADINGS = 20
  *  only the first 15 are shown. A gradient fade + "N more sections..." button
  *  appear at the bottom. The list auto-expands when scroll reaches a hidden
  *  heading and auto-collapses when scrolling back to the visible range. */
-export function TocInline({
+function TocInline({
   headings,
   pageHref,
 }: {
@@ -241,7 +241,7 @@ export function TocInline({
   )
 }
 
-export function NavPageLink({
+function NavPageLink({
   page,
   depth,
 }: {
