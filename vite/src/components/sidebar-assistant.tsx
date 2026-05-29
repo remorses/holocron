@@ -88,6 +88,7 @@ export function ChatInput({
       <div className='flex items-center justify-end' onClick={() => inputRef.current?.focus()}>
         {isGenerating ? (
           <button
+            type='button'
             onClick={handleButtonClick}
             className='flex items-center justify-center w-6 h-6 rounded-md transition-colors bg-foreground/[0.06] text-muted-foreground/50 hover:bg-foreground/[0.12]'
             aria-label='Stop generating'
@@ -96,6 +97,7 @@ export function ChatInput({
           </button>
         ) : (
           <button
+            type='button'
             onClick={handleButtonClick}
             disabled={disabled || !value.trim()}
             className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
@@ -293,6 +295,7 @@ export function PageNavRow() {
   return (
     <div className='hidden lg:flex items-center gap-1.5 w-full'>
       <button
+        type='button'
         onClick={handleCopyMd}
         className='inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer'
         title='Copy page as Markdown'

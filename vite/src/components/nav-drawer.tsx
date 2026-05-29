@@ -119,6 +119,7 @@ function NavDrawerInner() {
           }}
         >
           <button
+            type='button'
             onClick={handleClose}
             style={{
               display: 'flex',

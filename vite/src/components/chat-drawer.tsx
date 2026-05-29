@@ -299,6 +299,7 @@ function ChatDrawerInner() {
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button
+              type='button'
               onClick={handleClear}
               title='New chat'
               style={{
@@ -318,6 +319,7 @@ function ChatDrawerInner() {
               <TrashIcon />
             </button>
             <button
+              type='button'
               onClick={handleClose}
               title='Close'
               style={{

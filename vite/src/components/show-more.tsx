@@ -63,6 +63,7 @@ export function ShowMore({
       {needsExpansion && (
         <div className='flex justify-center'>
           <button
+            type='button'
             onClick={() => setIsExpanded(!isExpanded)}
             style={{
               display: 'flex',

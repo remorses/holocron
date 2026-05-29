@@ -14,6 +14,7 @@ export function MobileBar({ enableAssistant = true }: { enableAssistant?: boolea
     <div className='flex items-center justify-between lg:hidden px-(--mobile-padding) py-2'>
       {enableAssistant ? (
         <button
+          type='button'
           onClick={() => chatState.setState({ drawerState: 'open' })}
           style={{
             fontSize: '13px',
@@ -29,6 +30,7 @@ export function MobileBar({ enableAssistant = true }: { enableAssistant?: boolea
         </button>
       ) : <div />}
       <button
+        type='button'
         onClick={() => chatState.setState({ navDrawerOpen: true })}
         style={{
           display: 'flex',
