@@ -104,14 +104,13 @@ export function TocInline({
   const isExpanded = !needsCollapse || manuallyExpanded || activeInHidden
 
   // Auto-collapse: when the active heading moves back into the visible range,
-  // reset manuallyExpanded so the list collapses.
+  // reset manuallyExpanded so the list collapses. Done during render per
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
   const prevActiveInHiddenRef = useRef(activeInHidden)
-  useEffect(() => {
-    if (prevActiveInHiddenRef.current && !activeInHidden) {
-      setManuallyExpanded(false)
-    }
-    prevActiveInHiddenRef.current = activeInHidden
-  }, [activeInHidden])
+  if (prevActiveInHiddenRef.current && !activeInHidden) {
+    setManuallyExpanded(false)
+  }
+  prevActiveInHiddenRef.current = activeInHidden
 
   const displayedHeadings = isExpanded
     ? allVisibleHeadings
