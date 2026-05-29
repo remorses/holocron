@@ -204,7 +204,7 @@ export function EditorialPage({
                     >
                       <Icon icon={link.icon} size={16} />
                       {!link.icon && (
-                        <span className='text-xs'>{link.label}</span>
+                        <span className='text-sm'>{link.label}</span>
                       )}
                     </Link>
                   )
