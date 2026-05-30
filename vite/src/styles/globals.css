@@ -90,12 +90,13 @@
   --weight-heading: 560;
   --lh-heading: 1.4;
   --lh-prose: 1.6;
-  --ls-prose: -0.09px;
+  --ls-prose: 0;
 
   /* Body prose text — slightly softer than --foreground so bold words pop.
      Full --foreground is reserved for headings + bold/strong. Mixing toward
-     --background keeps it theme-aware (works in both light and dark). */
-  --prose-text: color-mix(in oklch, var(--foreground) 82%, var(--background));
+     --background keeps it theme-aware, so this single 80% definition works in
+     both light and dark mode (no dark override needed). */
+  --prose-text: color-mix(in oklch, var(--foreground) 80%, var(--background));
 
   /* Mono text appears visually larger than sans at the same font-size.
      Use this em-based scale factor on any font-mono / <code> element
@@ -108,7 +109,10 @@
   --type-heading-2-size: 16px;
   --type-heading-3-size: 16px;
   --type-small-size: 13px;
-  --type-code-size: 13px;
+  /* Relative to body size (≈14px at 15px body). calc() keeps it a resolved
+     px value so nested `font-size: var(--type-code-size)` on pre + code does
+     not compound the way an `em` value would. */
+  --type-code-size: calc(var(--type-body-size) * 0.933);
   --type-nav-group-size: 12px;
 
 
@@ -183,9 +187,6 @@
     --text-tertiary: rgba(255, 255, 255, 0.25);
     --border-subtle: rgba(255, 255, 255, 0.12);
     --divider: rgba(255, 255, 255, 0.06);
-
-    /* Dark mode needs a gentler reduction so body text stays legible. */
-    --prose-text: color-mix(in oklch, var(--foreground) 78%, var(--background));
 
     --blue: #93c5fd;
     --green: #6ee7b7;
