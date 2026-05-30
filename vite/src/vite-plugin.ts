@@ -605,6 +605,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     configureServer(server) {
+      // Holocron's globals.css is injected from the package's own `src/` (see
+      // HOLOCRON_GLOBALS_CSS_PATH). When the package is consumed normally it
+      // lives under node_modules, which chokidar ignores by default, so edits
+      // never reach the hotUpdate hook. Add it explicitly so styling changes
+      // hot-reload during local development of holocron itself.
+      server.watcher.add(HOLOCRON_GLOBALS_CSS_PATH)
       // User CSS is imported via the virtual app module, but the raw file
       // also needs to be watched by chokidar so edits trigger HMR.
       if (userCssPath) {
@@ -675,16 +681,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep && !isGlobalsCss) {
         return
-      }
-
-      // Pure CSS edit (globals.css): no navigation/config/MDX impact, so skip
-      // the expensive re-sync and module invalidation. Just invalidate the CSS
-      // module and let Vite's normal CSS HMR (ctx.modules) hot-swap the styles.
-      if (isGlobalsCss && !isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep) {
-        for (const mod of this.environment.moduleGraph.getModulesByFile(HOLOCRON_GLOBALS_CSS_PATH) ?? []) {
-          this.environment.moduleGraph.invalidateModule(mod)
-        }
-        return ctx.modules
       }
 
       if (isMdxInsidePagesDir) {
@@ -766,6 +762,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         for (const mod of cssMods) {
           this.environment.moduleGraph.invalidateModule(mod)
         }
+      }
+
+      // A direct edit to holocron's globals.css is a plain CSS change: let Vite's
+      // native CSS HMR hot-swap the stylesheet by returning the CSS module(s)
+      // from this hook. The manual css-update + rsc:update path below targets
+      // the `?direct` module URL, which does not match the loaded <link> href
+      // and forces a full page reload instead of a seamless style swap.
+      if (isGlobalsCss && this.environment.name === 'client') {
+        return [...(cssMods ?? [])]
       }
 
       if (this.environment.name === 'client') {
