@@ -166,6 +166,40 @@ function ChatDrawerInner() {
     chatState.getState().abortController?.abort()
   }, [])
 
+  // ── Regenerate ──────────────────────────────────────────────────
+  //
+  // Deletes the last assistant message and resubmits the last user
+  // message. modelMessages is trimmed back to before the last user turn
+  // so handleSubmit re-appends a clean user message + history.
+
+  const handleRegenerate = useCallback(() => {
+    if (chatState.getState().isGenerating) return
+    const msgs = chatState.getState().messages
+    const lastUserIdx = msgs.findLastIndex((m) => m.role === 'user')
+    if (lastUserIdx === -1) return
+    const lastUserText = (msgs[lastUserIdx]?.parts ?? [])
+      .filter((part) => part.type === 'text')
+      .map((part) => part.text)
+      .join('\n')
+      .trim()
+    if (!lastUserText) return
+
+    // Trim modelMessages: drop trailing turns until we have removed the
+    // last user message, leaving the history just before that user turn.
+    const model = chatState.getState().modelMessages
+    let cut = model.length
+    while (cut > 0 && model[cut - 1]?.role !== 'user') cut--
+    if (cut > 0) cut-- // drop the last user message itself
+    const trimmedModel = model.slice(0, cut)
+
+    chatState.setState({
+      messages: msgs.slice(0, lastUserIdx),
+      modelMessages: trimmedModel,
+    })
+
+    void handleSubmit(lastUserText)
+  }, [handleSubmit])
+
   // ── Clear / new chat ───────────────────────────────────────────
 
   const handleClear = useCallback(() => {
@@ -359,7 +393,13 @@ function ChatDrawerInner() {
         >
           {!isGenerating && messages.length === 0 && <WelcomeMessage />}
 
-          {messages.length > 0 && <ChatMessages messages={messages} />}
+          {messages.length > 0 && (
+            <ChatMessages
+              messages={messages}
+              isGenerating={isGenerating}
+              onRegenerate={handleRegenerate}
+            />
+          )}
           {isGenerating && <ChatLoadingDots />}
 
           {errorMessage && (

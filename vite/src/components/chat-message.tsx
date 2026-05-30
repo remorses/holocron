@@ -14,9 +14,10 @@
  * - font-mono ToolPreviewContainer wrapper
  */
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import type { ChatMessage, ChatPart } from '../lib/chat-store.ts'
-import { ChevronDownIcon } from './chat-icons.tsx'
+import { CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
+import { NavTooltip } from './sidebar-assistant.tsx'
 import { ShowMore } from './show-more.tsx'
 
 // ── User message ─────────────────────────────────────────────────────
@@ -46,11 +47,16 @@ function ChatUserMessage({ text }: { text: string }) {
 
 export function ChatMessages({
   messages,
+  isGenerating,
+  onRegenerate,
 }: {
   messages: ChatMessage[]
+  isGenerating?: boolean
+  onRegenerate?: () => void
 }) {
   if (messages.length === 0) return null
   let noticeRendered = false
+  const lastAssistantIdx = messages.findLastIndex((m) => m.role === 'assistant')
   return (
     <div className='text-[14px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {messages.map((message, i) => {
@@ -69,11 +75,72 @@ export function ChatMessages({
                       }
                       return <ChatPartRenderer key={partIndex} part={part} allParts={message.parts} />
                     })}
+                    {/* Footer shows on the last assistant message once
+                        generation is done — copy as markdown + regenerate. */}
+                    {i === lastAssistantIdx && !isGenerating && (
+                      <ChatAssistantFooter
+                        parts={message.parts}
+                        onRegenerate={onRegenerate}
+                      />
+                    )}
                   </div>
                 )}
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── Assistant message footer (copy + regenerate) ─────────────────────
+
+function ChatAssistantFooter({
+  parts,
+  onRegenerate,
+}: {
+  parts: ChatPart[]
+  onRegenerate?: () => void
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const markdown = useMemo(
+    () =>
+      parts
+        .filter((part) => part.type === 'text')
+        .map((part) => part.text)
+        .join('\n')
+        .trim(),
+    [parts],
+  )
+
+  const handleCopy = useCallback(async () => {
+    if (!markdown) return
+    try {
+      await navigator.clipboard.writeText(markdown)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy message:', err)
+    }
+  }, [markdown])
+
+  const buttonClass =
+    'inline-flex items-center justify-center size-7 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer'
+
+  return (
+    <div className='flex items-center gap-1 -ml-1.5'>
+      <NavTooltip label={copied ? 'Copied' : 'Copy'}>
+        <button type='button' onClick={handleCopy} className={buttonClass} aria-label='Copy message'>
+          {copied ? <CheckIcon /> : <CopyIcon />}
+        </button>
+      </NavTooltip>
+      {onRegenerate && (
+        <NavTooltip label='Regenerate'>
+          <button type='button' onClick={onRegenerate} className={buttonClass} aria-label='Regenerate response'>
+            <RefreshIcon />
+          </button>
+        </NavTooltip>
+      )}
     </div>
   )
 }

@@ -11,6 +11,8 @@ import {
   InfoCircleIcon,
   ArrowUpIcon,
   StopSquareIcon,
+  CopyIcon,
+  CheckIcon,
 } from './chat-icons.tsx'
 
 // ── Reusable chat input (textarea + send/stop button) ────────────────
@@ -206,24 +208,7 @@ function ChevronRightIcon() {
   )
 }
 
-function CopyIcon() {
-  return (
-    <svg aria-hidden='true' viewBox='0 0 16 16' width='13' height='13' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round'>
-      <rect x='5' y='5' width='9' height='9' rx='1.5' />
-      <path d='M2 11V2.5A.5.5 0 012.5 2H11' />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg aria-hidden='true' viewBox='0 0 16 16' width='13' height='13' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round'>
-      <path d='M3 8.5l3.5 3.5 6.5-8' />
-    </svg>
-  )
-}
-
-function NavTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+export function NavTooltip({ label, children }: { label: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLSpanElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0 })
@@ -247,9 +232,9 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
       {children}
       {open && typeof document !== 'undefined' && createPortal(
         <span
-          className='fixed z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border-subtle bg-card px-2 py-1 text-[11px] text-foreground shadow-md pointer-events-none'
+          className='fixed -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border-subtle bg-card px-2 py-1 text-[11px] text-foreground shadow-md pointer-events-none'
           role='tooltip'
-          style={{ top: pos.top, left: pos.left }}
+          style={{ top: pos.top, left: pos.left, zIndex: 300 }}
         >
           {label}
         </span>,
@@ -301,7 +286,7 @@ export function PageNavRow() {
         title='Copy page as Markdown'
       >
         <span>{copied ? 'Copied' : 'Copy as Markdown'}</span>
-        {copied ? <CheckIcon /> : <CopyIcon />}
+        {copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
       </button>
 
       <div className='grow' />
