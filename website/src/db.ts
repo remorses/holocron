@@ -243,3 +243,41 @@ export async function validateApiKey(authHeader: string | null): Promise<{ orgId
   if (!found) return null
   return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
 }
+
+// ── Management API auth (session OR api-key) ─────────────────────────
+
+/** Auth context for the `/api/v0/*` management endpoints. Either a signed-in
+ *  BetterAuth session (browser/dashboard/device-flow) or a project-scoped
+ *  `holo_xxx` API key. API keys are NOT impersonated as a user: they are a
+ *  service principal pinned to one org + one project. Each route constrains
+ *  api-key callers to `projectId` so a key for project A cannot touch
+ *  project B in the same org. */
+export type ManagementAuth =
+  | { type: 'session'; userId: string; orgId: string; userName: string }
+  | { type: 'api-key'; orgId: string; projectId: string; keyId: string }
+
+/** Resolve management-API auth. Prefers a `holo_xxx` API key in the
+ *  Authorization header, otherwise falls back to a signed-in session.
+ *  Throws 401 when neither is present/valid.
+ *
+ *  Cost: validateApiKey does ZERO D1 reads unless the Authorization header
+ *  actually carries a `holo_` token (it short-circuits on a null header and
+ *  on the `holo_` prefix check before hashing or querying). So no-auth and
+ *  cookie/device-flow requests pay no extra D1 reads vs the old requireSession
+ *  path — the api-key lookup only runs for real api-key requests, and then it
+ *  returns immediately without calling getSession/ensureOrg.
+ *
+ *  validateApiKey is not memoized, so revoked keys stop working immediately. */
+export async function requireManagementAuth(request: RequestHeaders): Promise<ManagementAuth> {
+  const apiKey = await validateApiKey(request.headers.get('authorization'))
+  if (apiKey) {
+    return { type: 'api-key', orgId: apiKey.orgId, projectId: apiKey.projectId, keyId: apiKey.keyId }
+  }
+
+  const session = await getSession(request)
+  if (!session) {
+    throw json({ error: 'unauthorized' }, { status: 401 })
+  }
+  const org = await ensureOrg(session.userId, session.user.name)
+  return { type: 'session', userId: session.userId, orgId: org.id, userName: session.user.name }
+}

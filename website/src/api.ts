@@ -17,7 +17,7 @@ import * as schema from 'db/schema'
 import { ulid } from 'ulid'
 import {
   getDb,
-  requireSession,
+  requireManagementAuth,
   ensureOrg,
   getOrgsForUser,
   generateApiKey,
@@ -83,15 +83,19 @@ export const apiApp = new Spiceflow()
       200: ApiKeyCreatedResponse,
     },
     async handler({ request }) {
-      const session = await requireSession(request)
-      const org = await ensureOrg(session.userId, session.user.name)
+      const auth = await requireManagementAuth(request)
 
       const body = await request.json()
+
+      // A project-scoped API key may only create keys for its own project.
+      if (auth.type === 'api-key' && body.projectId !== auth.projectId) {
+        throw json({ error: 'API key cannot create keys for another project' }, { status: 403 })
+      }
 
       // Validate project belongs to this org
       const db = getDb()
       const proj = await db.query.project.findFirst({
-        where: { projectId: body.projectId, orgId: org.id },
+        where: { projectId: body.projectId, orgId: auth.orgId },
       })
       if (!proj) {
         throw json({ error: 'project not found in this org' }, { status: 404 })
@@ -103,7 +107,7 @@ export const apiApp = new Spiceflow()
 
       await db.insert(schema.apiKey).values({
         id,
-        orgId: org.id,
+        orgId: auth.orgId,
         projectId: body.projectId,
         name: body.name,
         prefix,
@@ -120,7 +124,7 @@ export const apiApp = new Spiceflow()
     detail: {
       summary: 'List API keys',
       description:
-        'Lists all API keys for the caller\'s org. Only the prefix is returned, not the full secret.',
+        'Lists API keys for the caller. A signed-in session lists every key in the org; a project-scoped API key lists only keys for its own project. Only the prefix is returned, not the full secret.',
       tags: ['API Keys'],
     },
     response: {
@@ -129,12 +133,14 @@ export const apiApp = new Spiceflow()
       }),
     },
     async handler({ request }) {
-      const session = await requireSession(request)
-      const org = await ensureOrg(session.userId, session.user.name)
+      const auth = await requireManagementAuth(request)
 
       const db = getDb()
       const keys = await db.query.apiKey.findMany({
-        where: { orgId: org.id },
+        // API keys are scoped to their own project; sessions see the whole org.
+        where: auth.type === 'api-key'
+          ? { orgId: auth.orgId, projectId: auth.projectId }
+          : { orgId: auth.orgId },
         orderBy: { createdAt: 'desc' },
       })
 
@@ -165,18 +171,21 @@ export const apiApp = new Spiceflow()
       404: ErrorResponse,
     },
     async handler({ request, params }) {
-      const session = await requireSession(request)
-      const org = await ensureOrg(session.userId, session.user.name)
+      const auth = await requireManagementAuth(request)
 
       const db = getDb()
+      // API keys may only delete keys within their own project; sessions
+      // may delete any key in the org.
+      const conditions = [
+        orm.eq(schema.apiKey.id, params.id),
+        orm.eq(schema.apiKey.orgId, auth.orgId),
+      ]
+      if (auth.type === 'api-key') {
+        conditions.push(orm.eq(schema.apiKey.projectId, auth.projectId))
+      }
       const deleted = await db
         .delete(schema.apiKey)
-        .where(
-          orm.and(
-            orm.eq(schema.apiKey.id, params.id),
-            orm.eq(schema.apiKey.orgId, org.id),
-          ),
-        )
+        .where(orm.and(...conditions))
         .returning({ id: schema.apiKey.id })
 
       if (deleted.length === 0) {
@@ -226,8 +235,9 @@ export const apiApp = new Spiceflow()
     method: 'GET',
     path: '/api/v0/me',
     detail: {
-      summary: 'Current user info',
-      description: 'Returns the authenticated user, all orgs they belong to, and projects per org.',
+      summary: 'Current caller info',
+      description:
+        'For a signed-in session, returns the user, all orgs they belong to, and projects per org. For a project-scoped API key, returns only the key\'s org and its single project (no user identity).',
       tags: ['Account'],
     },
     response: {
@@ -236,7 +246,7 @@ export const apiApp = new Spiceflow()
           name: z.string(),
           email: z.string(),
           image: z.string().nullable(),
-        }),
+        }).nullable().describe('Null when authenticated with an API key.'),
         orgs: z.array(z.object({
           id: z.string(),
           name: z.string(),
@@ -246,14 +256,29 @@ export const apiApp = new Spiceflow()
       }),
     },
     async handler({ request }) {
-      const session = await requireSession(request)
-      const orgs = await getOrgsForUser(session.userId)
+      const auth = await requireManagementAuth(request)
+      const db = getDb()
+
+      // API key: no user identity. Return only the key's org + its one project.
+      if (auth.type === 'api-key') {
+        const org = await db.query.org.findFirst({ where: { id: auth.orgId } })
+        const proj = await db.query.project.findFirst({
+          where: { projectId: auth.projectId, orgId: auth.orgId },
+        })
+        return {
+          user: null,
+          orgs: org
+            ? [{ id: org.id, name: org.name, role: 'api-key', projects: proj ? [proj] : [] }]
+            : [],
+        }
+      }
+
+      const orgs = await getOrgsForUser(auth.userId)
 
       let orgsWithProjects: Array<typeof orgs[number] & { projects: (typeof schema.project.$inferSelect)[] }>
       if (orgs.length === 0) {
         orgsWithProjects = []
       } else {
-        const db = getDb()
         const orgIds = orgs.map((o) => o.id)
         const allProjects = await db
           .select()
@@ -272,12 +297,11 @@ export const apiApp = new Spiceflow()
         }))
       }
 
+      const user = await db.query.user.findFirst({ where: { id: auth.userId } })
       return {
-        user: {
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image,
-        },
+        user: user
+          ? { name: user.name, email: user.email, image: user.image ?? null }
+          : null,
         orgs: orgsWithProjects,
       }
     },
@@ -291,7 +315,8 @@ export const apiApp = new Spiceflow()
     path: '/api/v0/projects',
     detail: {
       summary: 'List projects',
-      description: 'Lists all projects across all orgs the caller belongs to.',
+      description:
+        'For a signed-in session, lists every project across all orgs the caller belongs to. For a project-scoped API key, lists only the key\'s own project.',
       tags: ['Projects'],
     },
     response: {
@@ -305,16 +330,27 @@ export const apiApp = new Spiceflow()
       }),
     },
     async handler({ request }) {
-      const session = await requireSession(request)
-      const orgs = await getOrgsForUser(session.userId)
+      const auth = await requireManagementAuth(request)
+      const db = getDb()
+
+      // API key: only its own project.
+      if (auth.type === 'api-key') {
+        const proj = await db.query.project.findFirst({
+          where: { projectId: auth.projectId, orgId: auth.orgId },
+        })
+        if (!proj) return { projects: [] }
+        const org = await db.query.org.findFirst({ where: { id: auth.orgId } })
+        return { projects: [{ ...proj, orgName: org?.name || '' }] }
+      }
+
+      const orgs = await getOrgsForUser(auth.userId)
 
       // If user has no orgs yet, create their default one
       if (orgs.length === 0) {
-        await ensureOrg(session.userId, session.user.name)
+        await ensureOrg(auth.userId, auth.userName)
         return { projects: [] }
       }
 
-      const db = getDb()
       const orgIds = orgs.map((o) => o.id)
       const allProjects = await db
         .select()
@@ -342,14 +378,18 @@ export const apiApp = new Spiceflow()
     }),
     detail: {
       summary: 'Create project',
-      description: 'Creates a new project in the caller\'s org (auto-created if needed). Pass orgId to target a specific org.',
+      description: 'Creates a new project in the caller\'s org (auto-created if needed). Pass orgId to target a specific org. Requires a signed-in session; project-scoped API keys cannot create sibling projects.',
       tags: ['Projects'],
     },
-    response: { 200: ProjectResponse },
+    response: { 200: ProjectResponse, 403: ErrorResponse },
     async handler({ request }) {
-      const session = await requireSession(request)
+      const auth = await requireManagementAuth(request)
+      // A project-scoped API key must not create sibling projects in the org.
+      if (auth.type === 'api-key') {
+        throw json({ error: 'creating projects requires a signed-in session, not an API key' }, { status: 403 })
+      }
       const body = await request.json()
-      const org = await ensureOrg(session.userId, session.user.name, body.orgId)
+      const org = await ensureOrg(auth.userId, auth.userName, body.orgId)
 
       const db = getDb()
       const projectId = ulid()

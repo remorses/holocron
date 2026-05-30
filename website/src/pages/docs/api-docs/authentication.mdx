@@ -18,6 +18,12 @@ curl https://holocron.so/api/v0/projects \
   -H "Authorization: Bearer holo_xxxxxxxx"
 ```
 
+The same key works across the whole API: the management endpoints listed below
+(`/api/v0/keys`, `/api/v0/projects`, `/api/v0/me`), deploys (read from
+`HOLOCRON_KEY` by the CLI and CI), and the AI chat gateway (`POST /api/chat`).
+A key only ever acts on its own project; it cannot read or modify other projects
+in your org. Creating new projects requires signing in with the CLI or dashboard.
+
 <Warning>
 Treat API keys like passwords. Never commit them to git or embed them in
 client-side code. Read the key from an environment variable on the server, and
@@ -43,10 +49,11 @@ If you do not have a project yet, create one:
 npx -y @holocron.so/cli projects create --name "My Docs"
 ```
 
-Then create a key scoped to that project:
+Then create a key scoped to that project. Run `keys create` without `--project`
+to pick from a list, or pass the project ID directly:
 
 ```bash
-npx -y @holocron.so/cli keys create --name production --project prj_xxxxxxxx
+npx -y @holocron.so/cli keys create --name production --project <projectId>
 ```
 
 The command prints the key once. Copy it immediately; it is not shown again.
