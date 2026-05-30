@@ -55,7 +55,7 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
-import { getHolocronBaseUrl, holocronUrl } from './lib/holocron-url.ts'
+import { holocronUrl } from './lib/holocron-url.ts'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -177,10 +177,6 @@ type HolocronProviders = {
    *  E.g. './pages/' or './' when pagesDir is the project root. */
   pagesDirPrefix?: string
 }
-
-/* ── Constants ───────────────────────────────────────────────────────── */
-
-const POWERED_BY_FOOTER = `\n\n---\n\n*Powered by [holocron.so](${getHolocronBaseUrl()})*\n`
 
 /* ── Shared helpers ──────────────────────────────────────────────────── */
 
@@ -546,7 +542,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   }
 
   function buildMarkdownSource(mdx: string): string {
-    return `> ${buildAgentDocsDirective(site.base)}\n\n${stripVisibilityForAgents(mdx)}${POWERED_BY_FOOTER}`
+    return `> ${buildAgentDocsDirective(site.base)}\n\n${stripVisibilityForAgents(mdx)}`
   }
 
   function buildLlmsTxt(origin: string): string {

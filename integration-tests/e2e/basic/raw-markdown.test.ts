@@ -50,12 +50,6 @@ test.describe("raw markdown via .md path suffix", () => {
     expect(cacheControl).toContain("s-maxage=300");
   });
 
-  test("raw markdown includes powered-by footer", async ({ request }) => {
-    const res = await request.get("/index.md");
-    const body = await res.text();
-    expect(body).toContain("Powered by");
-    expect(body).toContain("holocron.so");
-  });
 });
 
 test.describe("agent detection redirects to .md URL", () => {
