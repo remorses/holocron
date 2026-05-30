@@ -1,0 +1,57 @@
+---
+title: 'Launching Playwriter: browser automation that reads like a script'
+description: 'Why we built Playwriter, what it does differently, and where it goes next.'
+mode: center
+---
+
+<Above>
+    <h1 className='w-full my-14 text-6xl font-bold text-balance leading-tight'>
+        Launching Playwriter
+    </h1>
+</Above>
+
+
+Browser automation has a reputation for being **slow to write and painful to maintain**. Selectors rot, waits are guesswork, and the moment a page changes your whole suite turns red. We kept hitting the same wall, so we built something different.
+
+Today we are launching **Playwriter**, a browser automation runtime that makes scripts read like the steps a person would actually take.
+
+## Why we built it
+
+Most automation tools force you to think like a machine: query a node, assert it exists, wait an arbitrary number of milliseconds, repeat. We wanted the opposite: describe the intent, let the runtime figure out the timing.
+
+> The best automation script is the one you can hand to a teammate and they understand it on the first read.
+
+That single idea shaped every decision. No magic globals, no hidden state, no sprawling config. Just a small surface area that does the obvious thing.
+
+## What makes it different
+
+Playwriter connects to your **existing Chrome** instead of launching a throwaway browser. That means cookies, logins, and extensions are already there, so the scripts you write match what you see every day.
+
+- **Readable steps** that map to real user actions.
+- **Reactive waiting** instead of blind sleeps.
+- **Resumable sessions** so a long flow can pick up where it left off.
+
+Each of these came from a real frustration, and each one removes a category of flaky test rather than papering over it.
+
+## A quick taste
+
+Here is the entire script to open a page, type into search, and read the first result. No setup boilerplate, no teardown ceremony.
+
+```ts
+import { open } from 'playwriter'
+
+const page = await open('https://example.com')
+await page.fill('search', 'browser automation')
+await page.press('Enter')
+
+const first = await page.text('.result >> first')
+console.log(first)
+```
+
+The same script runs locally against your own browser and in CI against a headless one. You do not rewrite anything to move between them.
+
+## Where it goes next
+
+This launch is the foundation. Next we are focused on **AI-assisted workflow generation**, so you can describe a flow in plain language and get a Playwriter script you can read, edit, and trust.
+
+If you have ever rage-quit a flaky end-to-end suite, this one is for you. Give it a try and tell us what breaks; that feedback is exactly how the timing model keeps getting smarter.
