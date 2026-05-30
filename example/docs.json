@@ -58,6 +58,16 @@
             "icon": "code",
             "openapi": "api.yaml",
             "pages": ["api-authentication", "..."]
+          },
+          {
+            "tab": "Blog",
+            "icon": "rss",
+            "groups": [
+              {
+                "group": "Posts",
+                "pages": ["blog/launching-playwriter"]
+              }
+            ]
           }
         ]
       },
