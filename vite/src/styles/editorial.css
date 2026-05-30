@@ -111,10 +111,6 @@
   }
 }
 
-.editorial-heading .inline-code::before {
-  display: none;
-}
-
 /* ========================================================================
    Stagger-in animation
    ======================================================================== */
@@ -209,40 +205,27 @@
 }
 
 /* ========================================================================
-   Inline code — subtle background pill via ::before pseudo-element.
-   Position relative, ::before with absolute inset creates a pill that
-   extends slightly above/below the text.
+   Inline code — GitHub-style subtle background pill. Em-based padding keeps
+   the pill proportional to the (slightly smaller) mono font-size; weight 400
+   and zero letter-spacing match the surrounding sans body for readability.
    ======================================================================== */
 
 .inline-code {
-  position: relative;
-  display: inline-block;
   font-family: var(--font-code);
   font-size: var(--code-font-size, 0.875em);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  padding: 2px 4px;
-  color: var(--foreground);
-}
-
-.inline-code::before {
-  content: '';
-  position: absolute;
-  inset: -1px 0;
-  background: rgba(0, 0, 0, 0.04);
+  font-weight: 400;
+  letter-spacing: 0;
+  padding: 0.15em 0.35em;
   border-radius: var(--radius-sm);
-  z-index: -1;
-}
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--foreground);
+  white-space: break-spaces;
+  /* Baseline tuning: nudge the pill up slightly so the code optically sits a
+     touch higher than the surrounding sans text. Using vertical-align (not
+     margin/translate) keeps the line-box height unchanged. */
+  vertical-align: 0.05em;
 
-.inline-code {
   @variant dark {
-    color: var(--foreground);
-  }
-}
-
-.inline-code::before {
-  @variant dark {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
   }
 }
