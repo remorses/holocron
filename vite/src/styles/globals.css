@@ -536,3 +536,145 @@
     animation-duration: 0ms;
   }
 }
+
+/*
+ * Left navigation scroll fade mask.
+ *
+ * Fades the top and bottom edges of the scrollable sidebar nav so list items
+ * dissolve into the background instead of being hard-clipped at the scroll
+ * container edges. Driven by a scroll-progress timeline so the top fade only
+ * appears once scrolled away from the top and the bottom fade disappears once
+ * scrolled to the bottom — the first and last items are never hidden when
+ * they are at rest against an edge.
+ *
+ * Targets the actual scroll container (the `<nav>` with overflow-y-auto),
+ * not the sticky wrapper, so `scroll(self)` tracks real scrolling.
+ *
+ * --nav-mask-size controls the fade height. The mask is built from two
+ * variables (--nav-mask-top / --nav-mask-bottom) that the scroll-driven
+ * animation animates between 0px (no fade) and --nav-mask-size (full fade).
+ *
+ * The fade is soft (multi-stop ease curve) and never reaches full
+ * transparency — faded items settle at --nav-mask-min-alpha so they stay
+ * faintly readable instead of vanishing. The taller fade zone makes the
+ * gradient gentler than a single hard transparent→black step.
+ */
+.slot-sidebar-nav {
+    --nav-mask-size: 3.5rem;
+    /* Minimum mask alpha at the very edge — keeps faded rows faintly visible. */
+    --nav-mask-min-alpha: 0.12;
+    --nav-mask-top: 0px;
+    --nav-mask-bottom: 0px;
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, var(--nav-mask-min-alpha)) 0,
+        rgba(0, 0, 0, 0.55) calc(var(--nav-mask-top) * 0.5),
+        black var(--nav-mask-top),
+        black calc(100% - var(--nav-mask-bottom)),
+        rgba(0, 0, 0, 0.55) calc(100% - var(--nav-mask-bottom) * 0.5),
+        rgba(0, 0, 0, var(--nav-mask-min-alpha)) 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, var(--nav-mask-min-alpha)) 0,
+        rgba(0, 0, 0, 0.55) calc(var(--nav-mask-top) * 0.5),
+        black var(--nav-mask-top),
+        black calc(100% - var(--nav-mask-bottom)),
+        rgba(0, 0, 0, 0.55) calc(100% - var(--nav-mask-bottom) * 0.5),
+        rgba(0, 0, 0, var(--nav-mask-min-alpha)) 100%
+    );
+}
+
+@supports (animation-timeline: scroll()) {
+    @property --nav-mask-top {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+    }
+    @property --nav-mask-bottom {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+    }
+
+    .slot-sidebar-nav {
+        animation: nav-scroll-fade linear both;
+        animation-timeline: scroll(self);
+    }
+
+    @keyframes nav-scroll-fade {
+        /* at top: no top fade, full bottom fade */
+        0% {
+            --nav-mask-top: 0px;
+            --nav-mask-bottom: var(--nav-mask-size);
+        }
+        /* tiny scroll in: top fade ramps up quickly */
+        5% {
+            --nav-mask-top: var(--nav-mask-size);
+            --nav-mask-bottom: var(--nav-mask-size);
+        }
+        /* near bottom: both fades present */
+        95% {
+            --nav-mask-top: var(--nav-mask-size);
+            --nav-mask-bottom: var(--nav-mask-size);
+        }
+        /* at bottom: bottom fade gone, top fade stays */
+        100% {
+            --nav-mask-top: var(--nav-mask-size);
+            --nav-mask-bottom: 0px;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .slot-sidebar-nav {
+        animation: none;
+    }
+}
+
+@supports (animation-timeline: scroll()) {
+    @property --nav-mask-top {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+    }
+    @property --nav-mask-bottom {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+    }
+
+    .slot-sidebar-left {
+        animation: nav-scroll-fade linear both;
+        animation-timeline: scroll(self);
+    }
+
+    @keyframes nav-scroll-fade {
+        /* at top: no top fade, full bottom fade */
+        0% {
+            --nav-mask-top: 0px;
+            --nav-mask-bottom: var(--nav-mask-size);
+        }
+        /* tiny scroll in: top fade ramps up quickly */
+        5% {
+            --nav-mask-top: var(--nav-mask-size);
+            --nav-mask-bottom: var(--nav-mask-size);
+        }
+        /* near bottom: both fades present */
+        95% {
+            --nav-mask-top: var(--nav-mask-size);
+            --nav-mask-bottom: var(--nav-mask-size);
+        }
+        /* at bottom: bottom fade gone, top fade stays */
+        100% {
+            --nav-mask-top: var(--nav-mask-size);
+            --nav-mask-bottom: 0px;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .slot-sidebar-left {
+        animation: none;
+    }
+}
