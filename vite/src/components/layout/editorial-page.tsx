@@ -94,7 +94,7 @@ export function EditorialPage({
   children?: React.ReactNode
   /** When provided, renders section rows with aside support instead of flat children */
   sections?: EditorialSection[]
-  /** Page-level content rendered above the 3-column grid, aligned with center column. */
+  /** Page-level content rendered above the 3-column grid, spanning the full grid width. */
   above?: React.ReactNode
   /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
   bannerContent?: React.ReactNode
@@ -131,9 +131,13 @@ export function EditorialPage({
   // In center mode the content + right rail occupy the page width without the
   // left navigation column, so cap the grid width to drop that column's width.
   const centerMaxWidthClass = 'lg:max-w-[calc(var(--grid-max-width)_-_var(--grid-nav-width)_-_var(--grid-gap))]'
+  // Above content spans the FULL grid width (left sidebar + content + right
+  // sidebar), not just the center column. It's a plain full-width block capped
+  // at --grid-max-width (or the reduced center-mode width when the left nav is
+  // dropped), mirroring the navbar/tab-bar container.
   const aboveClass = showLeftNav
-    ? 'relative mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'
-    : `relative mx-auto w-full max-w-full px-(--mobile-padding) lg:grid lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between ${centerMaxWidthClass} lg:px-0`
+    ? 'relative mx-auto w-full max-w-full px-(--mobile-padding) lg:max-w-(--grid-max-width) lg:px-0'
+    : `relative mx-auto w-full max-w-full px-(--mobile-padding) ${centerMaxWidthClass} lg:px-0`
   const pageGridClass = showLeftNav
     ? 'grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'
     : `grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between ${centerMaxWidthClass} lg:px-0`
@@ -297,11 +301,11 @@ export function EditorialPage({
       <div className='relative grow w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) lg:pt-(--layout-gap) overflow-y-clip'>
         <GridLinesFrame mode={decorativeLines} />
 
-        {/* Above: rendered above the 3-column grid, using the same column widths
-            so above content aligns with the center content column (col 2). */}
+        {/* Above: rendered above the 3-column grid, spanning the full grid
+            width (left sidebar + content + right sidebar). */}
         {!!above && (
           <div className={aboveClass}>
-            <div className={showLeftNav ? 'lg:col-start-2' : undefined}>{above}</div>
+            {above}
             <AboveBottomDots mode={decorativeLines} />
           </div>
         )}
