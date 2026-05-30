@@ -11,6 +11,7 @@
  */
 
 import React, { useMemo, useState, useCallback, useEffect } from 'react'
+import { bleedClass, hasLeftBleed, type BleedMode } from '../../lib/code-meta.ts'
 
 function CopyIcon() {
   return (
@@ -63,8 +64,13 @@ export function CodeBlock({
   lineHeight?: string
   /** Show line numbers on the left. On by default, disable with `lines=false`. */
   showLineNumbers?: boolean
-  /** Extend code block into the margins. Off by default, enable with `bleed` meta flag. */
-  bleed?: boolean
+  /**
+   * How far the block extends past its content column:
+   * - `'both'` / `true`: bleed into both margins.
+   * - `'right'`: bleed into the right margin only.
+   * - `'none'` / `false`: stay fully inside the parent (the default).
+   */
+  bleed?: boolean | BleedMode
   /** Filename or label shown above the code block. */
   title?: string
   /** Comma-separated line numbers/ranges to highlight, e.g. "1-3,7". */
@@ -102,8 +108,11 @@ export function CodeBlock({
     return () => { cancelled = true }
   }, [children, lang])
 
+  const bleedClassName = bleedClass(bleed)
+  const leftBleed = hasLeftBleed(bleed)
+
   return (
-    <figure className={`group/code m-0 py-2${bleed ? ' bleed' : ' bleed-right'}`}>
+    <figure className={`group/code m-0 py-2${bleedClassName ? ` ${bleedClassName}` : ''}`}>
       {title && (
         <div
           className='font-mono pb-1'
@@ -112,7 +121,7 @@ export function CodeBlock({
             color: 'var(--muted-foreground)',
             // Align title with code text start. With border-box the flex
             // item width equals the total gutter space (padding included).
-            paddingLeft: showLineNumbers ? (bleed ? 'var(--bleed)' : '26px') : undefined,
+            paddingLeft: showLineNumbers ? (leftBleed ? 'var(--bleed)' : '26px') : undefined,
           }}
         >
           {title}
@@ -149,8 +158,8 @@ export function CodeBlock({
                 style={{
                   color: 'var(--text-tertiary)',
                   textAlign: 'right',
-                  paddingRight: bleed ? 'var(--bleed)' : '16px',
-                  width: bleed ? 'var(--bleed)' : '26px',
+                  paddingRight: leftBleed ? 'var(--bleed)' : '16px',
+                  width: leftBleed ? 'var(--bleed)' : '26px',
                   overflow: 'hidden',
                   userSelect: 'none',
                 }}

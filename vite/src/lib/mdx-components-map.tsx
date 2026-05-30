@@ -79,7 +79,7 @@ import {
 } from '../components/markdown/index.tsx'
 import { slugify, extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
-import { parseCodeMeta, metaBool } from './code-meta.ts'
+import { parseCodeMeta, metaBool, type BleedMode } from './code-meta.ts'
 import type { SafeMdxComponentName } from './mdx-component-names.ts'
 
 import { SidebarAssistant, PageNavRow } from '../components/sidebar-assistant.tsx'
@@ -274,7 +274,16 @@ export function renderNode(
     const isDiagram = lang === 'diagram'
     const meta = parseCodeMeta(node.meta)
     const showLineNumbers = isDiagram ? false : metaBool(meta.attributes.lines)
-    const bleed = metaBool(meta.attributes.bleed) ?? false
+    // Fenced code blocks default to right-edge bleed so the code text lines up
+    // with the prose left edge. `bleed=true` → both sides, `bleed=false`/`none`
+    // → no bleed. The enum values (both/right/none) also pass through.
+    const rawBleed = meta.attributes.bleed
+    const bleed: boolean | BleedMode =
+      rawBleed === 'both' || rawBleed === 'right' || rawBleed === 'none'
+        ? rawBleed
+        : rawBleed === undefined
+          ? 'right'
+          : (metaBool(rawBleed) ?? 'right')
     const highlight = meta.attributes.highlight
     return (
       <CodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={showLineNumbers} bleed={bleed} title={meta.title} highlight={highlight}>

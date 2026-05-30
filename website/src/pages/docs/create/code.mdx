@@ -72,7 +72,7 @@ npm install @holocron.so/vite
 
 ### Bleed
 
-By default code blocks stay inside the content column. Enable `bleed=true` to extend the code block into the page margins:
+Fenced code blocks bleed into the **right** margin by default so the code text lines up with the prose left edge. Set `bleed=true` (or `bleed=both`) to extend into both margins, or `bleed=none` (or `bleed=false`) to keep the block fully inside the content column:
 
 ```ts bleed=true
 import { defineConfig } from 'vite'
@@ -89,6 +89,8 @@ import { defineConfig } from 'vite'
 ...
 ```
 ````
+
+The `bleed` meta accepts `true`/`both`, `right` (the fenced-block default), or `false`/`none`.
 
 ### Highlight lines
 
@@ -235,26 +237,22 @@ npx @holocron.so/cli dev`
 
 export function CliHelp() {
   return (
-    <div className='no-bleed'>
-      <CodeBlock lang='bash' showLineNumbers={false}>
-        {CLI_EXAMPLES}
-      </CodeBlock>
-    </div>
+    <CodeBlock lang='bash' showLineNumbers={false}>
+      {CLI_EXAMPLES}
+    </CodeBlock>
   )
 }
 ```
 
 `CodeBlock` lazy-loads the same vendored Prism bundle internally, so you get highlighting without shipping a duplicate prismjs. The `children` prop is the raw code **string**.
 
-The block always applies a right-edge **bleed** so it can extend into the docs page margins. Outside the docs layout (a dashboard, a modal, a card) you usually don't want that. Wrap it in a `no-bleed` container to pin the block fully inside its parent:
+The `bleed` prop controls how far the block extends past its content column. The component **defaults to no bleed**, so it stays fully inside its parent, which is what you want in a dashboard, modal, or card. Opt into bleed only when you render inside the docs prose column:
 
-```tsx
-<div className='no-bleed'>
-  <CodeBlock lang='bash'>{code}</CodeBlock>
-</div>
-```
-
-`no-bleed` sets the `--bleed` CSS variable to `0px`, which cascades to the code block so both `bleed` and the default right bleed collapse to zero.
+| `bleed` value | Behavior |
+| ------------- | -------- |
+| `'both'` / `true` | extends into both left and right margins |
+| `'right'` | extends into the right margin only |
+| `'none'` / `false` | no bleed, stays fully inside its parent (default) |
 
 | Prop | Type | Description |
 | ---- | ---- | ----------- |

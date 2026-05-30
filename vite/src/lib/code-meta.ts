@@ -26,6 +26,36 @@ export function metaBool(value: string | undefined): boolean | undefined {
   return undefined
 }
 
+/**
+ * Bleed controls how far a code block extends past its content column.
+ *
+ * - `'both'` / `true`: bleed into both left and right margins.
+ * - `'right'`: bleed into the right margin only, so the code text after line
+ *   numbers lines up with the prose left edge. This is the default the MDX
+ *   renderer passes for fenced code blocks.
+ * - `'none'` / `false`: no bleed, the block stays fully inside its parent.
+ *   This is the component default, useful when rendering <CodeBlock> outside
+ *   the docs layout (dashboard, modal, card).
+ */
+export type BleedMode = 'both' | 'right' | 'none'
+
+/**
+ * Map a `bleed` prop (boolean or enum) to the CSS class that applies the
+ * corresponding negative margins. `false` / `'none'` returns an empty string
+ * so no bleed class is added.
+ */
+export function bleedClass(bleed: boolean | BleedMode | undefined): '' | 'bleed' | 'bleed-right' {
+  if (bleed === true || bleed === 'both') return 'bleed'
+  if (bleed === 'right') return 'bleed-right'
+  // false, 'none', or undefined → no bleed.
+  return ''
+}
+
+/** Whether the given bleed value extends into the left margin. */
+export function hasLeftBleed(bleed: boolean | BleedMode | undefined): boolean {
+  return bleed === true || bleed === 'both'
+}
+
 function skipWhitespace(input: string, index: number) {
   let cursor = index
   while (cursor < input.length && /\s/.test(input[cursor] ?? '')) {
