@@ -647,6 +647,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
       const isTrackedImageDep = syncResult.importedImageDepPaths.includes(ctx.file)
+      // Holocron injects `src/styles/globals.css` directly from source into the
+      // dev module graph, so editing it must reach the CSS-update path below.
+      // Without this flag the early-return guard drops the event and styles only
+      // refresh as a side effect of an unrelated mdx/config change.
+      const isGlobalsCss = ctx.file.replace(/[?#].*$/, '') === HOLOCRON_GLOBALS_CSS_PATH
       const isMdxInsidePagesDir = isMdx && isInsideDir(pagesDir, ctx.file)
       const changedSlug = isMdxInsidePagesDir
         ? path.relative(pagesDir, ctx.file).replace(/\.[^.]+$/, '').replace(/\\/g, '/')
@@ -668,8 +673,18 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep) {
+      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep && !isGlobalsCss) {
         return
+      }
+
+      // Pure CSS edit (globals.css): no navigation/config/MDX impact, so skip
+      // the expensive re-sync and module invalidation. Just invalidate the CSS
+      // module and let Vite's normal CSS HMR (ctx.modules) hot-swap the styles.
+      if (isGlobalsCss && !isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep) {
+        for (const mod of this.environment.moduleGraph.getModulesByFile(HOLOCRON_GLOBALS_CSS_PATH) ?? []) {
+          this.environment.moduleGraph.invalidateModule(mod)
+        }
+        return ctx.modules
       }
 
       if (isMdxInsidePagesDir) {
