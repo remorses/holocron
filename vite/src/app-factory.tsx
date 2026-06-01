@@ -42,7 +42,7 @@ import {
   type NavDropdownItem,
 } from './navigation.ts'
 
-import { deduplicateRedirects, interpolateDestination } from './lib/redirects.ts'
+import { deduplicateRedirects, interpolateDestination, redirectSourceMatches } from './lib/redirects.ts'
 import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
@@ -1428,9 +1428,13 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   if (!allPageHrefs.has('/') && firstPage) {
     indexRedirectTargets.set('/index', firstPage.href)
   }
+  const configRedirectRules = deduplicateRedirects(site.config.redirects)
   for (const [indexHref, pageHref] of indexRedirectTargets) {
     // Skip if some other real page already owns the index-form href.
     if (allPageHrefs.has(indexHref)) continue
+    // Skip if a user-authored config redirect already covers this path —
+    // config redirects (registered earlier) must win over generated aliases.
+    if (configRedirectRules.some((rule) => redirectSourceMatches(rule.source, indexHref))) continue
     for (const route of new Set([indexHref, withBaseRoute(site.base, indexHref)])) {
       app = app.get(route, ({ request }: { request: Request }) => {
         const url = new URL(request.url)

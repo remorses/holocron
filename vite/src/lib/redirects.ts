@@ -31,3 +31,35 @@ export function deduplicateRedirects(rules: ConfigRedirect[]): ConfigRedirect[] 
     return true
   })
 }
+
+/**
+ * Does a redirect `source` pattern match a concrete pathname? Mirrors the
+ * source-pattern semantics registered as Spiceflow routes:
+ *
+ *   - Exact:             "/old"              matches "/old"
+ *   - Named parameter:   "/users/:id"        matches "/users/42"
+ *   - Trailing wildcard: "/blog/*"           matches "/blog" and "/blog/a/b"
+ *
+ * Used to avoid generating compatibility aliases (e.g. `/guide/index`) that
+ * would shadow a user-authored redirect with the same path.
+ */
+export function redirectSourceMatches(source: string, pathname: string): boolean {
+  // Strip hash/query from the source pattern, normalize trailing slashes.
+  const cleanSource = source.replace(/[?#].*$/, '')
+  const segments = cleanSource.split('/').filter(Boolean)
+  const target = pathname.split('/').filter(Boolean)
+
+  let i = 0
+  for (; i < segments.length; i++) {
+    const seg = segments[i]!
+    if (seg === '*') {
+      // Trailing wildcard matches the rest (including zero remaining segments).
+      return i === segments.length - 1
+    }
+    if (i >= target.length) return false
+    if (seg.startsWith(':')) continue // named param matches any single segment
+    if (seg !== target[i]) return false
+  }
+  // All source segments consumed: match only if the pathname had no extras.
+  return i === target.length
+}

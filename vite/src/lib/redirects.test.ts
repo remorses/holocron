@@ -6,7 +6,7 @@
  */
 import { describe, test, expect } from 'vitest'
 import { Spiceflow, redirect } from 'spiceflow'
-import { deduplicateRedirects, interpolateDestination } from './redirects.ts'
+import { deduplicateRedirects, interpolateDestination, redirectSourceMatches } from './redirects.ts'
 import type { HolocronConfig } from '../config.ts'
 
 type ConfigRedirect = HolocronConfig['redirects'][number]
@@ -255,5 +255,30 @@ describe('deduplicateRedirects', () => {
     expect(result).toHaveLength(2)
     expect(result[0]!.destination).toBe('/first')
     expect(result[1]!.destination).toBe('/b2')
+  })
+})
+
+describe('redirectSourceMatches', () => {
+  test('exact source matches exact pathname only', () => {
+    expect(redirectSourceMatches('/guide/index', '/guide/index')).toBe(true)
+    expect(redirectSourceMatches('/guide/index', '/guide/other')).toBe(false)
+    expect(redirectSourceMatches('/guide/index', '/guide/index/extra')).toBe(false)
+  })
+
+  test('named parameter matches any single segment', () => {
+    expect(redirectSourceMatches('/users/:id', '/users/42')).toBe(true)
+    expect(redirectSourceMatches('/users/:id', '/users')).toBe(false)
+    expect(redirectSourceMatches('/users/:id', '/users/42/edit')).toBe(false)
+  })
+
+  test('trailing wildcard matches base and nested', () => {
+    expect(redirectSourceMatches('/guide/*', '/guide')).toBe(true)
+    expect(redirectSourceMatches('/guide/*', '/guide/index')).toBe(true)
+    expect(redirectSourceMatches('/guide/*', '/guide/a/b/c')).toBe(true)
+    expect(redirectSourceMatches('/guide/*', '/other')).toBe(false)
+  })
+
+  test('ignores query and hash on the source', () => {
+    expect(redirectSourceMatches('/guide/index?x=1', '/guide/index')).toBe(true)
   })
 })
