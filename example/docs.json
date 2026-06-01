@@ -68,6 +68,11 @@
                 "pages": ["blog/launching-playwriter"]
               }
             ]
+          },
+          {
+            "tab": "Changelog",
+            "icon": "newspaper",
+            "changelog": "https://github.com/remorses/playwriter"
           }
         ]
       },
@@ -90,7 +95,6 @@
       "anchors": [
         { "anchor": "GitHub", "href": "https://github.com/remorses/playwriter", "icon": "github", "placement": "sidebar" },
         { "anchor": "Discord", "href": "https://discord.gg/example", "icon": "message-circle", "placement": "sidebar" },
-        { "anchor": "Changelog", "href": "https://github.com/remorses/playwriter/releases", "icon": "newspaper", "placement": "tabs" },
         { "anchor": "npm", "href": "https://www.npmjs.com/package/playwriter", "icon": "package", "placement": "tabs" }
       ]
     }

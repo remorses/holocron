@@ -46,19 +46,19 @@ Pass an array to combine multiple spec files:
 
 ## Custom base path
 
-By default, generated pages appear under `/api/` (e.g. `/api/get-users`). Change the prefix with `openapiBase`:
+By default, generated pages appear under `/api/` (e.g. `/api/get-users`). Change the prefix with `base`:
 
 ```json
 {
   "tab": "API Reference",
   "openapi": "openapi.json",
-  "openapiBase": "reference"
+  "base": "reference"
 }
 ```
 
 Now endpoints render at `/reference/get-users` instead.
 
-Set `openapiBase` to `""` for no prefix.
+Set `base` to `""` for no prefix.
 
 ## Mixing guides with endpoint pages
 

@@ -1,0 +1,54 @@
+---
+title: Changelog Tab
+description: Generate a changelog page from a GitHub repository's releases.
+icon: history
+---
+
+# Changelog Tab
+
+Holocron can generate a **changelog page** from a GitHub repository's releases. Point a tab at the repository URL and Holocron fetches the published releases, rendering one entry per release.
+
+## Basic setup
+
+Add a changelog tab to your `docs.json` navigation. The `changelog` field is the full URL of the repository:
+
+```json
+{
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [{ "group": "Getting Started", "pages": ["index"] }]
+      },
+      {
+        "tab": "Changelog",
+        "changelog": "https://github.com/owner/repo"
+      }
+    ]
+  }
+}
+```
+
+The generated page is served at `/changelog`. Each release becomes an entry showing its tag, publish date, and release notes (rendered as Markdown). Prereleases are included; draft releases are skipped.
+
+## Page layout
+
+The changelog page hides the **left navigation sidebar** so the release notes get the full content width. A notice in the right column explains the page is generated from the GitHub releases page.
+
+## Custom slug
+
+By default the page is served at `/changelog`. Change it with `base`:
+
+```json
+{
+  "tab": "Releases",
+  "changelog": "https://github.com/owner/repo",
+  "base": "releases"
+}
+```
+
+Now the page is served at `/releases`.
+
+## Rate limits
+
+Holocron calls the public GitHub releases API at build time. Unauthenticated requests are limited to 60 per hour. Set a `GITHUB_TOKEN` (or `GH_TOKEN`) environment variable to raise the limit; Holocron sends it as a bearer token when present.

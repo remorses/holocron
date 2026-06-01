@@ -27,12 +27,6 @@
         "global": {
             "anchors": [
                 {
-                    "anchor": "Changelog",
-                    "href": "https://github.com/remorses/holocron/releases",
-                    "icon": "newspaper",
-                    "placement": "sidebar"
-                },
-                {
                     "anchor": "GitHub",
                     "href": "https://github.com/remorses/holocron",
                     "icon": "github",
@@ -106,6 +100,11 @@
                         ]
                     },
                     {
+                        "group": "Changelog",
+                        "icon": "history",
+                        "pages": ["docs/changelog-tab"]
+                    },
+                    {
                         "group": "AI-Readable Docs",
                         "icon": "bot",
                         "pages": [
@@ -173,6 +172,11 @@
                 "icon": "server",
                 "openapi": "openapi.json",
                 "pages": ["docs/api-docs/authentication", "..."]
+            },
+            {
+                "tab": "Changelog",
+                "icon": "newspaper",
+                "changelog": "https://github.com/remorses/holocron"
             }
         ]
     }
