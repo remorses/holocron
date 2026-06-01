@@ -309,6 +309,7 @@ function buildEndpointMdx({
       description: body.description,
       contentType: jsonKey,
       schema: media.schema ? simplifySchema(media.schema as Record<string, unknown>) : undefined,
+      examples: collectExamples(media),
     }
   })()
 
@@ -320,12 +321,14 @@ function buildEndpointMdx({
         ?? Object.keys(r.content).find((k) => k.includes('json')))
       : undefined
     const jsonContent = jsonKey && r.content ? r.content[jsonKey] : undefined
-    const example = jsonContent?.example ?? pickFirstExample(jsonContent?.examples)
+    const examples = collectExamples(jsonContent)
     return {
       status,
       description: r.description,
       schema: jsonContent?.schema ? simplifySchema(jsonContent.schema as Record<string, unknown>) : undefined,
-      example,
+      // Keep `example` for backwards compatibility / single-example callers.
+      example: examples[0]?.value,
+      examples,
     }
   })
 
@@ -350,38 +353,47 @@ function buildEndpointMdx({
     deprecated: op.operation.deprecated,
   })
 
-  // Build response example lines if the spec provides one
-  const responseWithExample = responses.find((r) => r.example !== undefined)
-  const responseExampleJson = responseWithExample?.example !== undefined
-    ? (typeof responseWithExample.example === 'string'
-      ? responseWithExample.example
-      : JSON.stringify(responseWithExample.example, null, 2))
-    : undefined
-
-  const aside = [
-    '<RequestExample>',
-    '',
+  // Request example: the curl block, plus any named request-body examples.
+  // Multiple named examples render as a <CodeGroup> (tabbed) — Holocron's
+  // remarkCodeGroup rewrites titled fences into <Tabs>/<Tab> at normalize time.
+  const requestExampleBlocks: string[] = [
     '```bash lines=false',
     curl,
     '```',
-    '',
-    '</RequestExample>',
-    ...(responseExampleJson ? [
-      '',
-      '<ResponseExample>',
-      '',
-      '```json lines=false',
-      responseExampleJson,
-      '```',
-      '',
-      '</ResponseExample>',
-    ] : []),
+  ]
+  if (requestBody?.examples && requestBody.examples.length > 1) {
+    requestExampleBlocks.push(...exampleCodeBlocks(requestBody.examples))
+  }
+
+  // Response example: prefer the first 2xx response that defines examples,
+  // otherwise the first response with any example at all.
+  const responseWithExamples =
+    responses.find((r) => /^2\d\d$/.test(r.status) && r.examples.length > 0)
+    ?? responses.find((r) => r.examples.length > 0)
+  const responseExampleBlocks = responseWithExamples
+    ? exampleCodeBlocks(responseWithExamples.examples)
+    : []
+
+  const wrap = (tag: string, blocks: string[]): string[] => {
+    // Wrap 2+ code fences in <CodeGroup> so they become switchable tabs.
+    const inner = blocks.length > 1
+      ? ['<CodeGroup>', '', ...blocks, '', '</CodeGroup>']
+      : blocks
+    return [`<${tag}>`, '', ...inner, '', `</${tag}>`]
+  }
+
+  const aside = [
+    ...wrap('RequestExample', requestExampleBlocks),
+    ...(responseExampleBlocks.length > 0
+      ? ['', ...wrap('ResponseExample', responseExampleBlocks)]
+      : []),
   ].join('\n')
 
   return buildVirtualPageMdx({
     frontmatter: {
       title,
-      description: (op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
+      // Flatten markdown to plain text for the page <meta> description.
+      description: plainText(op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
       api: `${op.method.toUpperCase()} ${op.path}`,
       gridGap: 30,
       ...(op.operation.deprecated ? { deprecated: true } : {}),
@@ -392,6 +404,22 @@ function buildEndpointMdx({
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
+
+/** Strip common Markdown syntax to plain text for use in <meta> descriptions.
+ *  Keeps link/emphasis text, drops the markup around it. Not a full parser —
+ *  just enough to avoid leaking `[x](y)`, `##`, or backticks into meta tags. */
+function plainText(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, ' ')        // fenced code blocks
+    .replace(/`([^`]+)`/g, '$1')            // inline code
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1') // images → alt text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links → link text
+    .replace(/^#{1,6}\s+/gm, '')            // ATX headings
+    .replace(/(\*\*|__|\*|_)/g, '')          // bold/italic markers
+    .replace(/^\s*[-*+]\s+/gm, '')           // list bullets
+    .replace(/\s+/g, ' ')                    // collapse whitespace
+    .trim()
+}
 
 /** Simplify a schema object for serialization (strip non-essential fields). */
 function simplifySchema(schema: Record<string, unknown>): Record<string, unknown> {
@@ -421,13 +449,49 @@ function simplifySchema(schema: Record<string, unknown>): Record<string, unknown
   return result
 }
 
-function pickFirstExample(examples: Record<string, unknown> | undefined): unknown | undefined {
-  if (!examples) return undefined
-  const first = Object.values(examples)[0]
-  if (first && typeof first === 'object' && 'value' in (first as Record<string, unknown>)) {
-    return (first as Record<string, unknown>).value
+/** A named OpenAPI example: the map key becomes the tab label. */
+interface NamedExample {
+  name: string
+  value: unknown
+}
+
+/**
+ * Collect every example from a media-type object, preserving names/order.
+ *
+ * OpenAPI media types may carry a singular `example` and/or a plural
+ * `examples` map of `{ [name]: { value } }`. We merge both into an ordered
+ * list of named examples so the renderer can show all of them (issue #96).
+ * The singular `example` (when present and not duplicated by the map) is
+ * labeled "Example".
+ */
+function collectExamples(
+  media: { example?: unknown; examples?: Record<string, unknown> } | undefined,
+): NamedExample[] {
+  if (!media) return []
+  const out: NamedExample[] = []
+  if (media.examples && typeof media.examples === 'object') {
+    for (const [name, raw] of Object.entries(media.examples)) {
+      const value = raw && typeof raw === 'object' && 'value' in (raw as Record<string, unknown>)
+        ? (raw as Record<string, unknown>).value
+        : raw
+      out.push({ name, value })
+    }
   }
-  return first
+  if (media.example !== undefined && out.length === 0) {
+    out.push({ name: 'Example', value: media.example })
+  }
+  return out
+}
+
+/** Render named examples as titled ```json fences for an <CodeGroup>. */
+function exampleCodeBlocks(examples: NamedExample[]): string[] {
+  return examples.flatMap((ex) => {
+    const json = typeof ex.value === 'string'
+      ? ex.value
+      : JSON.stringify(ex.value, null, 2)
+    // `title` meta becomes the tab label after remarkCodeGroup rewrites it.
+    return [`\`\`\`json title="${ex.name.replace(/"/g, '\\"')}" lines=false`, json, '```']
+  })
 }
 
 function extractSecurityInfo(

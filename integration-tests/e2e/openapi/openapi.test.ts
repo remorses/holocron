@@ -121,13 +121,43 @@ test.describe('OpenAPI tab', () => {
   })
 
   test('endpoint with explicit example shows response example', async ({ request }) => {
-    // POST /orders has an explicit example in the 201 response
+    // POST /orders has named examples in the 201 response
     const res = await request.get('/api/post-orders')
     expect(res.ok()).toBe(true)
     const html = await res.text()
     // The response example is wrapped in ResponseExample inside the Aside
     expect(html).toContain('Response example')
     expect(html).toContain('order-001')
+  })
+
+  test('multiple named examples render as switchable tabs', async ({ request }) => {
+    // POST /orders defines two request and two response named examples.
+    const res = await request.get('/api/post-orders')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    // Example names become tab labels (request body examples).
+    expect(html).toContain('Single item')
+    expect(html).toContain('Multiple items')
+    // Response example names become tab labels too.
+    expect(html).toContain('Confirmed order')
+    expect(html).toContain('Empty order')
+    // Both response payloads are present, not just the first one.
+    expect(html).toContain('order-001')
+    expect(html).toContain('order-002')
+  })
+
+  test('markdown in endpoint description renders as HTML, not raw text', async ({ page }) => {
+    // POST /orders has a Markdown description (heading, list, inline code, link).
+    await page.goto('/api/post-orders')
+    // The markdown link becomes a real, visible anchor element.
+    const link = page.locator('a[href="https://example.com/orders"]', { hasText: 'orders guide' })
+    await expect(link).toBeVisible()
+    // The "## Pricing notes" heading renders as a heading element, not literal
+    // "## Pricing notes" body text.
+    await expect(page.getByText('## Pricing notes')).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Pricing notes' })).toBeVisible()
+    // Inline code `gift-wrap` renders inside a <code> element.
+    await expect(page.locator('code', { hasText: 'gift-wrap' }).first()).toBeVisible()
   })
 
   test('204 no-content response renders gracefully', async ({ request }) => {

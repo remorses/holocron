@@ -131,6 +131,63 @@ describe('openapi provider — selective mode', () => {
     expect(introGroup.pages.every((p) => typeof p === 'string')).toBe(true)
   })
 
+  test('emits CodeGroup tabs for multiple named examples', async () => {
+    const SPEC_EX = `
+openapi: "3.0.3"
+info: { title: Ex API, version: "1.0.0" }
+tags: [{ name: orders }]
+paths:
+  /orders:
+    post:
+      tags: [orders]
+      summary: Create order
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Single item: { value: { items: [{ id: "a" }] } }
+              Multiple items: { value: { items: [{ id: "a" }, { id: "b" }] } }
+      responses:
+        "201":
+          description: created
+          content:
+            application/json:
+              examples:
+                Confirmed: { value: { id: "order-1" } }
+                Empty: { value: { id: "order-2", items: [] } }
+`
+    const exDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-openapi-ex-'))
+    fs.writeFileSync(path.join(exDir, 'api.yaml'), SPEC_EX)
+    try {
+      const config = {
+        navigation: {
+          tabs: [{ tab: 'API', openapi: 'api.yaml', groups: [{ group: '', pages: ['...'] }] } as ConfigNavTab],
+        },
+      }
+      const mdxContent: Record<string, string> = {}
+      await processVirtualTabs({
+        config,
+        projectRoot: exDir,
+        pagesDir: exDir,
+        mdxContent,
+        providers: [openapiProvider],
+      })
+      const mdx = mdxContent['api/post-orders']
+      expect(mdx).toBeDefined()
+      // Request and response examples each become a <CodeGroup> with titled fences.
+      expect(mdx).toContain('<CodeGroup>')
+      expect(mdx).toContain('title="Single item"')
+      expect(mdx).toContain('title="Multiple items"')
+      expect(mdx).toContain('title="Confirmed"')
+      expect(mdx).toContain('title="Empty"')
+      // Both response payloads are present, not just the first.
+      expect(mdx).toContain('order-1')
+      expect(mdx).toContain('order-2')
+    } finally {
+      fs.rmSync(exDir, { recursive: true, force: true })
+    }
+  })
+
   test('is idempotent across re-syncs (dev-server HMR regression)', async () => {
     // The config object persists across dev-server re-syncs and the provider
     // mutates tab.groups in place. Running twice on the SAME config must yield

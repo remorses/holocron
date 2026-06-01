@@ -509,7 +509,15 @@ paths:
     post:
       tags: [orders]
       summary: Create order
-      description: Place a new order with one or more items.
+      description: |
+        Place a new order with one or more items.
+
+        ## Pricing notes
+
+        - Prices are returned in **cents** as integers.
+        - Use the `notes` field for `gift-wrap` instructions.
+
+        See the [orders guide](https://example.com/orders) for the full flow.
       requestBody:
         required: true
         content:
@@ -536,6 +544,20 @@ paths:
                   type: string
                 shippingAddress:
                   $ref: "#/components/schemas/Address"
+            examples:
+              Single item:
+                value:
+                  items:
+                    - productId: "prod-001"
+                      quantity: 1
+              Multiple items:
+                value:
+                  items:
+                    - productId: "prod-001"
+                      quantity: 2
+                    - productId: "prod-002"
+                      quantity: 1
+                  notes: "gift-wrap"
       responses:
         "201":
           description: Order created
@@ -543,15 +565,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Order"
-              example:
-                id: "order-001"
-                userId: "user-001"
-                items:
-                  - productId: "prod-001"
-                    quantity: 2
-                    price: 2999
-                status: "pending"
-                total: 5998
+              examples:
+                Confirmed order:
+                  value:
+                    id: "order-001"
+                    userId: "user-001"
+                    items:
+                      - productId: "prod-001"
+                        quantity: 2
+                        price: 2999
+                    status: "pending"
+                    total: 5998
+                Empty order:
+                  value:
+                    id: "order-002"
+                    userId: "user-001"
+                    items: []
+                    status: "pending"
+                    total: 0
         "400":
           description: Invalid order
           content:

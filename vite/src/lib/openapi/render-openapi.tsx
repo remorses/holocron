@@ -8,8 +8,70 @@
 'use client'
 
 import React from 'react'
+import { SafeMdxRenderer } from 'safe-mdx'
+import { mdxParse } from 'safe-mdx/parse'
 import { Expandable } from '../../components/markdown/expandable.tsx'
 import { MethodBadge, NavBadge } from '../../components/layout/nav-badge.tsx'
+import { P, A, Code } from '../../components/markdown/typography.tsx'
+import { List, OL, Li, Blockquote } from '../../components/markdown/layout.tsx'
+import { CodeBlock } from '../../components/markdown/code-block.tsx'
+
+/* ── Markdown descriptions ────────────────────────────────────────────── */
+
+/**
+ * OpenAPI `description` fields are Markdown by spec (headings, lists, code,
+ * links, emphasis). Render them through safe-mdx with a focused component map
+ * instead of dumping raw text (issue #96). safe-mdx is isomorphic, so this
+ * works inside this client component. The map is intentionally small to keep
+ * the client bundle light — no nested MDX components, just prose primitives.
+ */
+const descComponents = {
+  p: P,
+  a: A,
+  code: Code,
+  ul: List,
+  ol: OL,
+  li: Li,
+  blockquote: Blockquote,
+  pre: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+} as Record<string, unknown>
+
+function renderDescNode(
+  node: { type: string; lang?: string | null; value?: string; depth?: number },
+  transform: (n: unknown) => React.ReactNode,
+): React.ReactNode | undefined {
+  // Fenced code blocks → editorial CodeBlock (no bleed inside the panel).
+  if (node.type === 'code') {
+    return <CodeBlock lang={node.lang ?? 'text'} bleed='none' showLineNumbers={false}>{node.value ?? ''}</CodeBlock>
+  }
+  // Headings inside a description render as a styled <h*> with no anchor/TOC
+  // side effects (descriptions must not pollute the page table of contents).
+  if (node.type === 'heading') {
+    const level = Math.min(Math.max(node.depth ?? 2, 2), 4)
+    const Tag = `h${level}` as 'h2' | 'h3' | 'h4'
+    const children = (node as { children?: unknown[] }).children ?? []
+    return <Tag className='font-semibold text-foreground'>{children.map((c, i) => <React.Fragment key={i}>{transform(c)}</React.Fragment>)}</Tag>
+  }
+  return undefined
+}
+
+/** Render a Markdown description string. Returns null for empty input. */
+export function Desc({ children }: { children: string | undefined }) {
+  if (!children) return null
+  const markdown = children.trim()
+  if (!markdown) return null
+  return (
+    <div className='flex flex-col gap-2 text-foreground'>
+      <SafeMdxRenderer
+        markdown={markdown}
+        mdast={mdxParse(markdown)}
+        components={descComponents as never}
+        renderNode={renderDescNode as never}
+        onError={() => {}}
+      />
+    </div>
+  )
+}
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -127,7 +189,7 @@ function Property({ name, schema, required, depth = 0 }: {
         <span className='font-mono code-font-size text-muted-foreground'>{typeString(schema)}</span>
         {schema.deprecated && <NavBadge label='deprecated' color='yellow' />}
       </div>
-      {schema.description && <div className='text-foreground'>{schema.description}</div>}
+      {schema.description && <Desc>{schema.description}</Desc>}
       {tags.length > 0 && (
         <div className='flex flex-wrap gap-2'>
           {tags.map((t) => (
@@ -222,7 +284,7 @@ function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['
         {body.required && <NavBadge label='required' color='green' />}
       </div>
     }>
-      {body.description && <div className='text-muted-foreground'>{body.description}</div>}
+      {body.description && <Desc>{body.description}</Desc>}
       {body.schema && <FieldList schema={body.schema} />}
     </Section>
   )
@@ -248,7 +310,7 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
           return (
             <Expandable key={r.status} title={`${statusLabel}${r.description ? ` · ${r.description}` : ''}`} defaultOpen={r.status === '200'}>
               {hasSchema && r.schema && <FieldList schema={r.schema} />}
-              {!hasSchema && r.description && <div className='text-foreground'>{r.description}</div>}
+              {!hasSchema && r.description && <Desc>{r.description}</Desc>}
             </Expandable>
           )
         })}
@@ -273,7 +335,7 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
           <code className='code-font-size text-muted-foreground font-mono'>{props.path}</code>
           {props.deprecated && <NavBadge label='deprecated' color='orange' />}
         </div>
-        {props.description && <div className='text-foreground'>{props.description}</div>}
+        {props.description && <Desc>{props.description}</Desc>}
       </div>
       <AuthSection security={props.security} />
       <ParameterGroup title='Path Parameters' params={path} />
