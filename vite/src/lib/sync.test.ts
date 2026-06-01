@@ -1061,6 +1061,86 @@ import Snippet from '/snippets/guide.md'
     }
   })
 
+  test('rewrites a link to an imported .md to its first importer page', async () => {
+    // page-a imports links-to-other.md (which links to ./linked-from-other.md)
+    // page-b imports linked-from-other.md. linked-from-other.md is NOT a nav
+    // page, so the link inside page-a must be rewritten to page-b's href.
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page-a', 'page-b'] }],
+      },
+      {
+        'page-a': `---\ntitle: A\n---\n\nimport LinksToOther from '../links-to-other.md'\n\n# Page A\n\n<LinksToOther />\n`,
+        'page-b': `---\ntitle: B\n---\n\nimport LinkedFromOther from '../linked-from-other.md'\n\n# Page B\n\n<LinkedFromOther />\n`,
+      },
+    ))
+
+    // Both .md files live outside pagesDir (at the project root).
+    fs.writeFileSync(
+      path.join(project.root, 'links-to-other.md'),
+      `Some intro.\n\nSee [the linked snippet](./linked-from-other.md) for details.\n`,
+    )
+    fs.writeFileSync(
+      path.join(project.root, 'linked-from-other.md'),
+      `Linked snippet content.\n`,
+    )
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const pageA = result.mdxContent['page-a']
+    expect(pageA).toBeDefined()
+    // The link must point to page-b (first importer of linked-from-other.md),
+    // not to a dead .md path and not to the leftover marker.
+    expect(pageA).toContain('(/page-b)')
+    expect(pageA).not.toContain('holocron-md-import:')
+    expect(pageA).not.toMatch(/linked-from-other(\.md)?\)/)
+  })
+
+  test('rewrites a link to an imported .md that is also a nav page to its page href', async () => {
+    // shared.md is BOTH a nav page (via slug 'shared') and imported into
+    // page-a. A link to shared.md inside an inlined snippet should resolve
+    // to /shared (the nav page), not to an importer.
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page-a', 'shared'] }],
+      },
+      {
+        'page-a': `---\ntitle: A\n---\n\nimport Snippet from '../snippet.md'\n\n# Page A\n\n<Snippet />\n`,
+      },
+    ))
+
+    // 'shared' is a real nav page authored as a .md file (not .mdx).
+    fs.writeFileSync(
+      path.join(project.pagesDir, 'shared.md'),
+      `---\ntitle: Shared\n---\n\n# Shared\n`,
+    )
+    fs.writeFileSync(
+      path.join(project.root, 'snippet.md'),
+      `See [shared](./pages/shared.md) for details.\n`,
+    )
+
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const pageA = result.mdxContent['page-a']
+    expect(pageA).toBeDefined()
+    expect(pageA).toContain('(/shared)')
+    expect(pageA).not.toContain('holocron-md-import:')
+  })
+
   test('discovers nested imports from inlined .mdx content', async () => {
     const project = tracked(createProject(
       {

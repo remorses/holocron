@@ -19,6 +19,7 @@ import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink, type ProcessMdxOptions } from './mdx-processor.ts'
 import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from './remark-inline-imports.ts'
+import { encodeImportedMdLink, decodeImportedMdLink, stripMdExtFromPath, IMPORTED_MD_LINK_PREFIX } from './link-utils.ts'
 import { visit } from 'unist-util-visit'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
@@ -44,6 +45,7 @@ import {
   isNavPage,
   isNavGroup,
   buildPageIndex,
+  collectAllPages,
 } from '../navigation.ts'
 
 /** Collect all NavPage objects from a single enriched tab (for validation). */
@@ -168,6 +170,9 @@ export async function syncNavigation({
   const pageInternalLinks: Record<string, InternalLink[]> = {}
   /** Image files referenced by imported .md/.mdx (for HMR watching) */
   const allImportedImageDepPaths = new Set<string>()
+  /** Absolute paths of .md/.mdx files inlined into each page (recursively).
+   *  Used to build the first-importer map for cross-file link rewriting. */
+  const pageImportedMdAbsPaths: Record<string, string[]> = {}
   const mdxContentErrors = new Set<string>()
   const mdxParseErrors: Record<string, HolocronMdxParseError> = {}
   const redirectBackedPageSlugs = new Set(
@@ -230,6 +235,9 @@ export async function syncNavigation({
     const inlineResult = resolveInlineImports({ content, mdxDir, pagesDir, projectRoot, publicDir })
     const inlineImportMap = inlineResult.imports
     for (const p of inlineResult.imageDepPaths) allImportedImageDepPaths.add(p)
+    if (inlineImportMap.size > 0) {
+      pageImportedMdAbsPaths[slug] = [...inlineImportMap.values()].map((e) => e.absPath)
+    }
     let sha = gitBlobSha(content)
     if (inlineImportMap.size > 0) {
       // Combine page SHA with imported file SHAs + image dep SHAs so
@@ -395,6 +403,19 @@ export async function syncNavigation({
       }
     }
   }
+
+  // 4c-bis. Rewrite cross-file .md links. Links inside an inlined .md file
+  // that point to another imported .md file were rewritten to markers
+  // (holocron-md-import:<absPath>) during inline-import resolution. Now that
+  // every page's importers are known, resolve each marker to the href of the
+  // FIRST page (in navigation order) that imports that .md file. Markers that
+  // can't be mapped fall back to a best-effort relative href.
+  rewriteImportedMdLinksInPages({
+    mdxContent,
+    pageImportedMdAbsPaths,
+    navigation,
+    pagesDir,
+  })
 
   // 4d. Validate internal links — warn about links pointing to non-existent pages.
   validateInternalLinks({
@@ -885,7 +906,9 @@ function resolveInlineImports({
       let parsedNodes: import('mdast').RootContent[] | undefined
       if (importedMdast) {
         const cloned = structuredClone(importedMdast)
-        parsedNodes = buildSplicedNodes(cloned, relFromPageNorm)
+        parsedNodes = buildSplicedNodes(cloned, relFromPageNorm, {
+          rewriteMdLink: makeMdLinkRewriter({ importDir, pagesDir, projectRoot }),
+        })
       }
 
       result.set(sourceKey, {
@@ -958,7 +981,9 @@ function resolveInlineImports({
 
       let parsedNodes: import('mdast').RootContent[] | undefined
       if (nestedMdast) {
-        parsedNodes = buildSplicedNodes(structuredClone(nestedMdast), relFromPageNorm)
+        parsedNodes = buildSplicedNodes(structuredClone(nestedMdast), relFromPageNorm, {
+          rewriteMdLink: makeMdLinkRewriter({ importDir, pagesDir, projectRoot }),
+        })
       }
 
       result.set(sourceKey, {
@@ -1000,6 +1025,133 @@ function resolveInlineImports({
 
   scanFile(content, mdxDir, '')
   return { imports: result, imageDepPaths }
+}
+
+/**
+ * Resolve cross-file .md link markers in the final MDX content of every page.
+ *
+ * During inline-import resolution, links inside an imported .md file that
+ * point to another imported .md/.mdx file are rewritten to opaque markers of
+ * the form `holocron-md-import:<base64url(absPath)>` (see makeMdLinkRewriter).
+ * Those markers survive serialization untouched. Here, with the full set of
+ * page importers known, each marker is replaced with the href of the FIRST
+ * page (in navigation reading order) that imports that .md file.
+ *
+ * Resolution priority for a marker's absPath:
+ *   1. The .md file is itself a navigation page → link to that page's href.
+ *   2. The .md file is imported by one or more pages → link to the first
+ *      importer (navigation order).
+ *   3. Neither → best-effort: relative path from the current page to the
+ *      target file, with the .md extension stripped (likely a broken link,
+ *      but no worse than before).
+ */
+function rewriteImportedMdLinksInPages({
+  mdxContent,
+  pageImportedMdAbsPaths,
+  navigation,
+  pagesDir,
+}: {
+  mdxContent: Record<string, string>
+  pageImportedMdAbsPaths: Record<string, string[]>
+  navigation: Navigation
+  pagesDir: string
+}): void {
+  const orderedPages = collectAllPages(navigation)
+
+  // absPath → first importer page href (navigation order)
+  const firstImporterByAbsPath = new Map<string, string>()
+  for (const page of orderedPages) {
+    const absPaths = pageImportedMdAbsPaths[page.slug]
+    if (!absPaths) continue
+    for (const absPath of absPaths) {
+      if (!firstImporterByAbsPath.has(absPath)) {
+        firstImporterByAbsPath.set(absPath, page.href)
+      }
+    }
+  }
+
+  // absPath of a real navigation page → its href. A linked .md that is also
+  // a nav page lives at `<pagesDir>/<slug>.md|.mdx`.
+  const navPageHrefByAbsPath = new Map<string, string>()
+  for (const page of orderedPages) {
+    for (const ext of ['.mdx', '.md']) {
+      navPageHrefByAbsPath.set(path.join(pagesDir, page.slug + ext), page.href)
+    }
+  }
+
+  const markerRe = new RegExp(IMPORTED_MD_LINK_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[A-Za-z0-9_-]+(?:[?#][^\\s)"\\]]*)?', 'g')
+
+  for (const [slug, mdx] of Object.entries(mdxContent)) {
+    if (!mdx.includes(IMPORTED_MD_LINK_PREFIX)) continue
+    const pageDir = path.join(pagesDir, slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : '')
+    mdxContent[slug] = mdx.replace(markerRe, (marker) => {
+      const decoded = decodeImportedMdLink(marker)
+      if (!decoded) return marker
+      const { absPath, suffix } = decoded
+      const navHref = navPageHrefByAbsPath.get(absPath)
+      if (navHref) return navHref + suffix
+      const importerHref = firstImporterByAbsPath.get(absPath)
+      if (importerHref) return importerHref + suffix
+      // Fallback: relative path from this page to the target file, stripped.
+      const rel = path.relative(pageDir, absPath).replace(/\\/g, '/')
+      const relUrl = rel.startsWith('.') ? rel : './' + rel
+      return stripMdExtFromPath(relUrl) + suffix
+    })
+  }
+}
+
+/**
+ * Build a `rewriteMdLink` hook for buildSplicedNodes. Given a link URL as
+ * written inside an imported .md/.mdx file, resolve it to an absolute
+ * filesystem path. If the target is an existing .md/.mdx file, return a
+ * marker encoding that absPath so sync.ts can later rewrite the link to the
+ * first-importer page href. Returns undefined for anything else (external
+ * links, anchors, non-md files) so the default relative rewrite applies.
+ *
+ * Only relative (./, ../) and absolute (/foo) link paths are considered —
+ * external URLs and bare anchors (#x) are left to the default logic.
+ */
+function makeMdLinkRewriter({
+  importDir,
+  pagesDir,
+  projectRoot,
+}: {
+  importDir: string
+  pagesDir: string
+  projectRoot: string
+}): (linkUrl: string) => string | undefined {
+  return (linkUrl) => {
+    if (!linkUrl) return undefined
+    // Split off hash/query so we resolve only the path portion.
+    const m = linkUrl.match(/^([^?#]*)([?#].*)?$/)
+    if (!m) return undefined
+    const pathPart = m[1] ?? ''
+    const suffix = m[2] ?? ''
+    if (!pathPart) return undefined
+    // Only path-like targets ending in .md/.mdx are candidates.
+    if (!MD_EXTENSIONS.has(path.extname(pathPart))) return undefined
+
+    let absPath: string | undefined
+    if (pathPart.startsWith('/')) {
+      // Absolute link — probe pagesDir first, then projectRoot.
+      absPath = tryResolveExistingFile(path.join(pagesDir, pathPart.slice(1)))
+        ?? tryResolveExistingFile(path.join(projectRoot, pathPart.slice(1)))
+    } else if (pathPart.startsWith('./') || pathPart.startsWith('../')) {
+      absPath = tryResolveExistingFile(path.resolve(importDir, pathPart))
+    } else {
+      return undefined
+    }
+    if (!absPath) return undefined
+    return encodeImportedMdLink(absPath, suffix)
+  }
+}
+
+/** Return the path if it exists as a file, else undefined. */
+function tryResolveExistingFile(p: string): string | undefined {
+  try {
+    if (fs.existsSync(p) && fs.statSync(p).isFile()) return p
+  } catch { /* ignore */ }
+  return undefined
 }
 
 /**
