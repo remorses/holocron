@@ -40,4 +40,11 @@ test.describe("root redirect without index", () => {
     expect(response.headers()["content-type"]).toContain("text/markdown");
     expect(await response.text()).toContain("This page should receive visits to `/`");
   });
+
+  test("GET /index redirects to the first page", async ({ request }) => {
+    const response = await request.get("/index", { maxRedirects: 0 });
+
+    expect(response.status()).toBe(308);
+    expect(new URL(response.headers()["location"]!).pathname).toBe("/getting-started");
+  });
 });

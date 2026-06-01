@@ -1413,6 +1413,33 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
   }
 
+  // Redirect `/index`-style paths to their canonical href so links written
+  // against the source filename (e.g. `/guide/index` or `/index`) still work.
+  // A page authored as `index.mdx` serves at `/`, and `guide/index.mdx` serves
+  // at `/guide`; their `*/index` forms have no route and would otherwise 404.
+  const allPageHrefs = new Set(slugs.map((slug) => slugToHref(slug)))
+  // When no index.mdx exists, `/index` should still resolve to the same place
+  // as `/` (the first doc page) rather than 404.
+  const indexRedirectTargets = new Map<string, string>()
+  for (const pageHref of allPageHrefs) {
+    const indexHref = pageHref === '/' ? '/index' : `${pageHref}/index`
+    indexRedirectTargets.set(indexHref, pageHref)
+  }
+  if (!allPageHrefs.has('/') && firstPage) {
+    indexRedirectTargets.set('/index', firstPage.href)
+  }
+  for (const [indexHref, pageHref] of indexRedirectTargets) {
+    // Skip if some other real page already owns the index-form href.
+    if (allPageHrefs.has(indexHref)) continue
+    for (const route of new Set([indexHref, withBaseRoute(site.base, indexHref)])) {
+      app = app.get(route, ({ request }: { request: Request }) => {
+        const url = new URL(request.url)
+        const dest = withBaseRoute(site.base, pageHref) + url.search
+        throw redirect(new URL(dest, url.origin).href, { status: 308 })
+      })
+    }
+  }
+
   // Wildcard fallback for 404s (no .page('/*') — spiceflow passes
   // children=null when nothing matched, which the layout detects).
   app = app

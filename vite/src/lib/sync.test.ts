@@ -1740,6 +1740,58 @@ Link to [old page](/old-page) and [missing](/truly-missing).
     expect(warnings.some((w) => w.includes('/truly-missing'))).toBe(true)
   })
 
+  test('does not warn for links using the /index form of a page', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index', 'guide/index', 'guide/setup'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Links to [home index](/index), [guide index](/guide/index),
+and [setup](/guide/setup/index), plus [missing](/nope/index).
+`,
+        'guide/index': `---
+title: Guide
+---
+
+Guide home.
+`,
+        'guide/setup': `---
+title: Setup
+---
+
+Setup page.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    // Strip ANSI color codes so we can match the link target with boundaries.
+    const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, '')
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link')).map(stripAnsi)
+    const brokenTarget = (target: string) => warnings.some((w) => w.includes(`→ ${target} `))
+    // /index (→ /), /guide/index (→ /guide), /guide/setup/index (→ /guide/setup)
+    // are all valid index forms → should NOT warn
+    expect(brokenTarget('/index')).toBe(false)
+    expect(brokenTarget('/guide/index')).toBe(false)
+    expect(brokenTarget('/guide/setup/index')).toBe(false)
+    // /nope/index has no matching page → should warn
+    expect(brokenTarget('/nope/index')).toBe(true)
+  })
+
   test('warns about broken links even when parse errors are not logged', async () => {
     const project = tracked(createProject(
       {

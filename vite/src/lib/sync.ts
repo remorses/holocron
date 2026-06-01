@@ -197,9 +197,14 @@ export async function syncNavigation({
     if (virtualMdx) {
       const processed = processMdx(virtualMdx, config.icons.library, pageSource)
       if (processed instanceof Error) return handleParseError(slug, processed)
+      // Store the NORMALIZED content back so the served MDX has Holocron's
+      // authoring sugar applied (e.g. <CodeGroup> → <Tabs>/<Tab> for the
+      // multi-example aside). The render layer parses this with mdxParse, not
+      // normalizeMdx, so the rewrite must happen here.
+      mdxContent[slug] = processed.normalizedContent
       pageIconRefs[slug] = processed.iconRefs
       if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
-      const errors = validateAndReportMdx({ markdown: virtualMdx, mdast: processed.mdast, source: pageSource })
+      const errors = validateAndReportMdx({ markdown: processed.normalizedContent, mdast: processed.mdast, source: pageSource })
       if (errors.length > 0) {
         mdxContentErrors.add(slug)
       }
@@ -664,6 +669,10 @@ function validateInternalLinks({
   const knownHrefs = new Set<string>()
   for (const page of pageIndex.values()) {
     knownHrefs.add(page.href)
+    // Accept the `/index` form too: a page served at `/guide` (from
+    // `guide/index.mdx`) is also reachable via `/guide/index`, and the root
+    // page (`/`) via `/index`. The runtime registers 308 redirects for these.
+    knownHrefs.add(page.href === '/' ? '/index' : `${page.href}/index`)
   }
   for (const rule of redirects) {
     // Only add static redirect sources (no wildcards/params)

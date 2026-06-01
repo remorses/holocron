@@ -38,6 +38,34 @@ test.describe("home page", () => {
   });
 });
 
+test.describe("index path redirects", () => {
+  test("GET /index redirects to /", async ({ request }) => {
+    const response = await request.get("/index", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    expect(new URL(response.headers()["location"]!).pathname).toBe("/");
+  });
+
+  test("GET /getting-started/index redirects to /getting-started", async ({ request }) => {
+    const response = await request.get("/getting-started/index", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    expect(new URL(response.headers()["location"]!).pathname).toBe("/getting-started");
+  });
+
+  test("index redirect preserves the query string", async ({ request }) => {
+    const response = await request.get("/getting-started/index?foo=bar", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    const location = new URL(response.headers()["location"]!);
+    expect(location.pathname).toBe("/getting-started");
+    expect(location.search).toBe("?foo=bar");
+  });
+
+  test("browser navigation to /index lands on the home page", async ({ page }) => {
+    await page.goto("/index", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  });
+});
+
 test.describe("getting-started page", () => {
   test("renders page title and headings", async ({ page }) => {
     await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
