@@ -1,8 +1,10 @@
 import { expect, test } from "../helpers/test.ts";
 
 test.describe("raw markdown via .md path suffix", () => {
-  test("GET /index.md returns raw markdown", async ({ request }) => {
-    const res = await request.get("/index.md");
+  test("GET /index.md returns raw markdown (no redirect)", async ({ request }) => {
+    // Must serve markdown directly, NOT be intercepted by the `/index`
+    // extensionless redirect alias.
+    const res = await request.get("/index.md", { maxRedirects: 0 });
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
@@ -30,8 +32,10 @@ test.describe("raw markdown via .md path suffix", () => {
     expect(body).toContain("## Configuration");
   });
 
-  test("GET /index.mdx returns raw markdown @build", async ({ request }) => {
-    const res = await request.get("/index.mdx");
+  test("GET /index.mdx returns raw markdown (no redirect) @build", async ({ request }) => {
+    // Must serve markdown directly, NOT be intercepted by the `/index`
+    // extensionless redirect alias.
+    const res = await request.get("/index.mdx", { maxRedirects: 0 });
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
