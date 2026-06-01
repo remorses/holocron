@@ -52,13 +52,19 @@ By default, generated pages appear under `/api/` (e.g. `/api/get-users`). Change
 {
   "tab": "API Reference",
   "openapi": "openapi.json",
-  "base": "reference"
+  "base": "/reference"
 }
 ```
 
 Now endpoints render at `/reference/get-users` instead.
 
-Set `base` to `""` for no prefix.
+A **leading slash is optional**: `"/reference"` and `"reference"` behave the same. Set `base` to `""` for no prefix.
+
+<Aside>
+<Tip>
+When mounting docs inside your own app via [custom entry](/docs/custom-entry), set `base` to a `docs/`-prefixed slug like `/docs/api` so generated endpoints stay under `/docs/*` and don't collide with your real `/api` routes.
+</Tip>
+</Aside>
 
 ## Mixing guides with endpoint pages
 

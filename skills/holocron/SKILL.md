@@ -147,6 +147,11 @@ Rules:
 across all tabs. Use them for GitHub, Changelog, Discord, or other external
 links.
 
+**Tab order.** In `navigation.tabs`, list tabs that point to local pages first
+(groups, pages, OpenAPI, changelog) and tabs that link out to external URLs
+(`href`) last. Mixing external link tabs in between local tabs looks messy;
+keeping external links at the end reads cleaner.
+
 ## Icons
 
 Use **prefixed icon names** so the source library is explicit:
@@ -279,6 +284,18 @@ sidebarTitle: Auth Providers
 **Description** should be **120-150 characters**. It appears in the OG image
 below the title and in search engine snippets. Write a single sentence that
 summarizes the page content. Longer descriptions get truncated with an ellipsis.
+
+## Custom entry (mounting docs inside a Spiceflow app)
+
+When the site mounts Holocron inside an existing **Spiceflow** app (the `entry`
+option in the Vite plugin), always fetch the custom entry docs first. This page
+covers middleware order, the shared theme cookie, Tailwind `@reference` rules,
+and how to keep docs (including OpenAPI and Changelog tabs) under a `/docs/*`
+namespace so they never collide with app routes like `/api`:
+
+```bash
+curl -fsSL https://holocron.so/docs/custom-entry.md
+```
 
 ## Redirects
 

@@ -317,9 +317,10 @@ const tabWithOpenAPISchema = tabBaseSchema.extend({
     .describe(
       dedent`
         Slug prefix for generated OpenAPI pages. Defaults to \`"api"\`.
-        Set to \`""\` for no prefix. Example: with \`"reference"\`,
-        endpoints are generated at \`/reference/get-users\` instead of
-        \`/api/get-users\`
+        Set to \`""\` for no prefix. A leading slash is allowed and ignored,
+        so \`"/docs/api"\` behaves the same as \`"docs/api"\`. Example: with
+        \`"reference"\`, endpoints are generated at \`/reference/get-users\`
+        instead of \`/api/get-users\`
       `,
     ),
   groups: z
@@ -372,7 +373,9 @@ const tabWithChangelogSchema = tabBaseSchema.extend({
     .describe(
       dedent`
         Slug for the generated changelog page. Defaults to \`"changelog"\`,
-        so the page is served at \`/changelog\`
+        so the page is served at \`/changelog\`. A leading slash is allowed
+        and ignored, so \`"/docs/changelog"\` behaves the same as
+        \`"docs/changelog"\`
       `,
     ),
 })
@@ -504,7 +507,13 @@ const navigationGlobalSchema = z
   )
 
 const navigationTabsObjectSchema = z.object({
-  tabs: z.array(tabSchema).describe('The tabs rendered in the tab bar'),
+  tabs: z.array(tabSchema).describe(
+    dedent`
+      The tabs rendered in the tab bar. Order tabs that point to local pages
+      first (groups, pages, OpenAPI, changelog) and tabs that link out to
+      external URLs (\`href\`) last. This keeps the navigation looking clean
+    `,
+  ),
   global: navigationGlobalSchema.optional(),
   anchors: z.array(anchorSchema).optional().describe(
     dedent`

@@ -46,6 +46,43 @@ Reference pages in `docs.json` with the `docs/` prefix:
 
 Page slugs map directly to file paths. `docs/getting-started` resolves to `docs/getting-started.mdx` and is served at `/docs/getting-started`.
 
+## Set a `docs/` base for OpenAPI and Changelog tabs
+
+OpenAPI and Changelog tabs generate their pages from a **`base`** slug prefix, not from files on disk. The defaults put them at the **root** of your domain: OpenAPI endpoints land at `/api/*` and the changelog lands at `/changelog`.
+
+In a standalone docs site that is fine. **In a custom entry app it is a problem**, because those generated pages now sit at the root of your real product domain right next to `/api`, `/login`, and `/dashboard`. The OpenAPI default is the most dangerous one: `base: "api"` means the generated reference pages collide directly with your actual API routes like `/api/users`.
+
+Always prefix these `base` values with `docs/` so the generated pages stay under your docs namespace:
+
+```jsonc
+{
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.json",
+        // ✅ generates /docs/api/* instead of /api/* (which collides with your real API)
+        "base": "/docs/api"
+      },
+      {
+        "tab": "Changelog",
+        "changelog": "https://github.com/acme/acme",
+        // ✅ generates /docs/changelog instead of /changelog
+        "base": "/docs/changelog"
+      }
+    ]
+  }
+}
+```
+
+<Aside>
+<Warning>
+The OpenAPI **`base` defaults to `"api"`**, so without an override your generated reference pages are served at `/api/*` and will collide with your real API routes. Always set `base: "/docs/api"` (or another `docs/`-prefixed slug) in a custom entry app.
+</Warning>
+</Aside>
+
+This keeps every part of the docs, MDX pages, OpenAPI reference, and the changelog, under one predictable `/docs/*` namespace, leaving your app's root free for product routes.
+
 ## Setup
 
 Pass `entry` to the holocron plugin pointing to your Spiceflow server file:

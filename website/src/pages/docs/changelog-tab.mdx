@@ -43,11 +43,11 @@ By default the page is served at `/changelog`. Change it with `base`:
 {
   "tab": "Releases",
   "changelog": "https://github.com/owner/repo",
-  "base": "releases"
+  "base": "/releases"
 }
 ```
 
-Now the page is served at `/releases`.
+Now the page is served at `/releases`. A **leading slash is optional**: `"/releases"` and `"releases"` behave the same.
 
 ## Rate limits
 
