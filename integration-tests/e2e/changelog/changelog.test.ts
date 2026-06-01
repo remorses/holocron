@@ -41,8 +41,12 @@ test.describe("changelog fixture", () => {
     await page.goto("/changelog", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator(".slot-sidebar-left")).toHaveCount(0);
-    // The Update label pill renders the release tag.
-    await expect(page.getByText("v2.0.0", { exact: true }).first()).toBeVisible();
+    // The release name renders as the Update heading; the pill shows the date.
+    await expect(page.getByRole("heading", { name: "Version 2.0" }).first()).toBeVisible();
+    // The left rail pill shows the formatted publish date, not the version.
+    const label = page.locator('[data-component-part="update-label"]').first();
+    await expect(label).toBeVisible();
+    await expect(label).toContainText("2026");
   });
 
   test("changelog tab is reachable from the tab bar", async ({ request }) => {

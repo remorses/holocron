@@ -95,25 +95,29 @@ function buildChangelogMdx({
 /** Render one release as an `<Update>` block whose children are the release
  *  body markdown. The release name renders as an H2 heading inside the block.
  *
+ *  The left rail pill shows the release DATE (not the version). The version
+ *  (tag_name) is the H2 heading and the stable anchor `id`, so anchors stay
+ *  unique even when two releases share a date.
+ *
  *  GitHub release notes are Markdown, NOT MDX. Tags, names, and bodies may
  *  contain `"`, `<`, `{`, `}`, or even `</Update>`-looking text that would
  *  break the generated MDX or escape the wrapper. JSX attributes are emitted
  *  as `={JSON.stringify(value)}` expressions, and the heading + body have
  *  their MDX-significant characters escaped outside code regions. */
 function renderRelease(release: GitHubRelease): string {
-  const label = jsxAttr(release.tagName)
+  // The pill shows the date; fall back to the version when no date is set.
+  const dateLabel = formatDate(release.publishedAt) ?? release.tagName
+  const label = jsxAttr(dateLabel)
+  const id = jsxAttr(release.tagName)
   // Escape MDX-significant chars in the heading text (`<`, `{`, `}`).
   const heading = (release.name?.trim() || release.tagName).replace(/[<{}]/g, (ch) => `\\${ch}`)
-  const tags = release.prerelease ? ' tags={["Prerelease"]}' : ''
-  const date = formatDate(release.publishedAt)
-  const description = date ? ` description=${jsxAttr(date)}` : ''
 
   // The body is GitHub-flavored markdown. Blank lines around it ensure the
   // MDX parser treats the children as block content rather than inline.
   const bodyMd = escapeMdxMarkdown((release.body ?? '').trim())
 
   return [
-    `<Update label=${label}${description}${tags}>`,
+    `<Update id=${id} label=${label}>`,
     '',
     `## ${heading}`,
     ...(bodyMd ? ['', bodyMd] : []),

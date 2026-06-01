@@ -98,7 +98,7 @@ describe('changelogProvider', () => {
 
       </Aside>
 
-      <Update label={"v2.0.0"} description={"Jan 5, 2026"}>
+      <Update id={"v2.0.0"} label={"Jan 5, 2026"}>
 
       ## Version 2
 
@@ -108,7 +108,7 @@ describe('changelogProvider', () => {
 
       </Update>
 
-      <Update label={"v1.0.0"} description={"Dec 1, 2025"} tags={["Prerelease"]}>
+      <Update id={"v1.0.0"} label={"Dec 1, 2025"}>
 
       ## v1.0.0
 
@@ -132,7 +132,8 @@ describe('changelogProvider', () => {
     }
     const result = await changelogProvider.generate({ tab, ...ctx })
     expect(Object.keys(result.mdxContent)).toEqual(['releases'])
-    expect(result.mdxContent.releases).toContain('label={"v2"}')
+    // The version is the anchor id; the date is the pill label.
+    expect(result.mdxContent.releases).toContain('id={"v2"}')
     expect(result.mdxContent.releases).not.toContain('"v3"')
   })
 

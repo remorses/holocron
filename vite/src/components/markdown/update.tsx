@@ -8,12 +8,17 @@ import { slugify } from '../../lib/toc-tree.ts'
 import { Badge } from './badge.tsx'
 
 export function Update({
+  id: idProp,
   label,
   description,
   tags,
   rss: _rss,
   children,
 }: {
+  /** Explicit anchor id. Defaults to a slug of `label`. Pass this when the
+   *  label is not a stable identifier (e.g. a date) so the anchor stays
+   *  stable and unique. Mirrors Mintlify's `id` prop. */
+  id?: string
   label: string
   description?: string
   tags?: string[]
@@ -30,12 +35,17 @@ export function Update({
   // `min-w-0` on the content wrapper is required so flexbox can actually
   // shrink the content below its intrinsic size and avoid horizontal bleed.
   // `no-bleed` prevents nested code blocks / lists from escaping the column.
-  const id = slugify(label)
+  //
+  // `first:pt-0 last:pb-0`: the row padding (`py-8`) acts as spacing BETWEEN
+  // consecutive updates. Without zeroing the first row's top padding, the
+  // first Update sits ~32px below the page content top, misaligning it with
+  // a sticky `<Aside full>` (e.g. the AI widget) that starts at the top.
+  const id = idProp ? slugify(idProp) : slugify(label)
   return (
     <div
       id={id}
       data-component-part='update'
-      className='flex w-full flex-col items-start gap-3 py-6 lg:flex-row lg:gap-5 lg:py-8'
+      className='flex w-full flex-col items-start gap-3 py-6 first:pt-0 last:pb-0 lg:flex-row lg:gap-5 lg:py-8'
     >
       <div className='flex w-full flex-col items-start gap-3 lg:sticky lg:top-(--sticky-top) lg:w-[110px] lg:flex-shrink-0'>
         <Link
