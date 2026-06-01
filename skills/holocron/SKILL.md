@@ -180,6 +180,61 @@ import Readme from '../../README.md'
 
 See https://holocron.so/docs/create/local-imports.md for details.
 
+## Importing a README that also renders on GitHub
+
+A common pattern is importing a repo `README.md` as the docs index page so the
+same file renders on **both GitHub and the Holocron site**. The README links to
+other docs (pricing, guides, reference), and those links must work in both
+places.
+
+The rule is simple: **always link to the real target file with a correct
+relative path, ending in `.md` or `.mdx`.** Do not reason about slugs, `pagesDir`,
+or where `/` ends up. Write the link the way you would for GitHub: a relative
+path from the README to the actual file on disk.
+
+Holocron does the rest. When it inlines an imported file, it **recomputes every
+relative link to be correct relative to the importing page**, then **strips the
+`.md`/`.mdx` extension**. So a README link to a real file lands on that file's
+page automatically, with no per-environment guessing.
+
+### Rules
+
+1. **Link to the real file.** The target must be an actual `.md`/`.mdx` file on
+   disk at the relative path you write. This is what makes GitHub work, and it is
+   what Holocron rewrites. If the file does not exist, GitHub 404s and Holocron's
+   broken-link check warns.
+
+2. **Always use a relative path** (`./` or `../`), never absolute. The README is
+   rendered from different base directories on GitHub vs Holocron, so an absolute
+   `/docs/x` or a guessed path breaks in one of them. A relative path to the real
+   file works in both because Holocron recomputes it.
+
+3. **Keep the `.md`/`.mdx` extension.** GitHub needs it to open the file;
+   Holocron strips it automatically so the link resolves to the rendered page.
+
+4. **The target file must be rendered by a page in the site.** Holocron resolves
+   the rewritten link against pages. If the file you link to is itself a page (or
+   is imported by one) and that page is in `docs.json` navigation, the link
+   resolves. If nothing renders it, the site 404s — so add the page and put it in
+   navigation.
+
+```diagram
+   README.md   [pricing](./docs/pricing.md)   ◄── correct relative path to a real file
+        │
+        ├──────────────────────► GitHub opens ./docs/pricing.md
+        │
+        ▼  imported into the index page
+   Holocron recomputes the relative path ──► strips .md ──► lands on the page that renders pricing
+        │
+        ▼
+   /docs/pricing   ◄── resolves as long as a page renders that file and it is in docs.json
+```
+
+If the rewritten slug has no matching page, the build prints a broken-link
+warning pointing at the README line. Fix it by creating the page at
+`<pagesDir>/<slug>.mdx` (or a wrapper importing the shared `.md`) and adding its
+slug to `docs.json` navigation.
+
 ## MDX JSX in README files
 
 Do **not** use MDX JSX components (like `<Aside>`, `<Note>`, `<CardGroup>`,
