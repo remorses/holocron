@@ -116,6 +116,27 @@ Simple `docs.jsonc`:
 Page slugs in `navigation.pages` map to MDX files. `quickstart` loads
 `quickstart.mdx`, and `guides/install` loads `guides/install.mdx`.
 
+## Organize pages into folders that mirror groups
+
+Do not dump every page into one flat directory. **Put pages in subfolders named
+after their navigation group**, so the file layout matches the sidebar. This keeps
+large docs sites navigable and makes each slug self-documenting.
+
+A group named "Getting Started" maps to a `getting-started/` folder; `getting-started/setup.mdx`
+has slug `getting-started/setup` and is referenced as such in `navigation.pages`.
+
+Rules:
+
+- **One folder per group.** A group named "Getting Started" holds its pages in a
+  `getting-started/` folder. Use kebab-case folder names.
+- **The slug includes the folder.** `guides/deploy.mdx` has slug `guides/deploy`
+  and renders at `/guides/deploy`. Reference that full path in `navigation.pages`.
+- **Keep `index` at the root.** The home page stays `index.mdx` at the top level.
+- **Moving a page changes its URL.** When reorganizing files into folders, update
+  every `navigation.pages` slug and every internal link that points at the old flat
+  path (`/old-slug` becomes `/group/old-slug`). The build's broken-link check catches
+  links you miss.
+
 **Anchors** in `navigation.global.anchors` are persistent sidebar links visible
 across all tabs. Use them for GitHub, Changelog, Discord, or other external
 links.
@@ -413,25 +434,6 @@ Use ASCII diagrams frequently in MDX pages. Always use the **`diagram`** languag
 - Prefer a **varied, organic layout**. Mix plain text labels, boxes for major components, and directional arrows.
 - All connections must use **directional arrows**. Never use plain lines without an arrowhead.
 - Verify alignment by counting characters precisely.
-
-````mdx
-```diagram
-                     ┌───────────────┐
-   docs.jsonc ──────►│  Vite Plugin  │──────► Build Output
-                     └───────┬───────┘
-                             │
-                     ┌───────▼───────┐
-                     │   sync.ts     │       MDX files ──► parsed sections
-                     │  (walk nav)   │       git SHA diff ──► cache hit/miss
-                     └───────┬───────┘
-                             │
-               ┌─────────────┼─────────────┐
-               ▼             ▼             ▼
-          navigation     page cache    virtual modules
-          tree.json      holocron-     holocron-pages
-                         mdx.json     holocron-config
-```
-````
 
 ## Agent rules
 
