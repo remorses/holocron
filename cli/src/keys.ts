@@ -53,7 +53,7 @@ keysCli
 
       const selected = await clack.select({
         message: 'Select a project:',
-        options: projectsRes.projects.map((p: any) => ({
+        options: projectsRes.projects.map((p) => ({
           value: p.projectId,
           label: p.name,
           hint: p.projectId,
@@ -101,7 +101,7 @@ keysCli
       return
     }
 
-    const formatted = res.keys.map((k: any) => ({
+    const formatted = res.keys.map((k) => ({
       name: k.name,
       project: k.projectId,
       prefix: `holo_${k.prefix}...`,

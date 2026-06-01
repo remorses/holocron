@@ -1,0 +1,35 @@
+{
+  // Minimal wrangler config used ONLY by vitest.config.ts (the workers test
+  // pool). Strips the production-only bindings the test runtime can't provide
+  // (OG_WORKER service binding, send_email, ratelimits, AI, routes, real IDs).
+  // Keeps DB + KV + Durable Objects since the worker code touches them.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "holocron-website-test",
+  "main": "./src/server.tsx",
+  "compatibility_date": "2026-04-14",
+  // Do NOT add no_handle_cross_request_promise_resolution — the vitest pool
+  // adds it automatically and workerd rejects duplicates.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "test-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../db/drizzle"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "AI_LOGO_KV", "id": "test-ai-logo-kv" },
+    { "binding": "SITES_KV", "id": "test-sites-kv" }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "USAGE_COUNTER", "class_name": "UsageCounter" },
+      { "name": "CONFIG_OVERRIDE", "class_name": "ConfigOverrideDO" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] },
+    { "tag": "v2", "new_sqlite_classes": ["ConfigOverrideDO"] }
+  ]
+}

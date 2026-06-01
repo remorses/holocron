@@ -122,9 +122,10 @@ export function HeroSection() {
             </Link>
           </Button>
           <Button asChild variant='ghost' size='lg' className='no-underline gap-2'>
-            <Link href='https://github.com/remorses/holocron' target='_blank' rel='noopener noreferrer'>
+            {/* External URL → plain <a>; spiceflow's Link only types internal routes. */}
+            <a href='https://github.com/remorses/holocron' target='_blank' rel='noopener noreferrer'>
               GitHub ↗
-            </Link>
+            </a>
           </Button>
         </div>
       </div>

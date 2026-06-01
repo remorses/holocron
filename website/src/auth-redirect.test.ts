@@ -6,10 +6,10 @@ import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 
 test('normalizeAuthRedirectPath strips RSC transport markers from callback URLs', () => {
   const results = [
-    [undefined, '/'],
-    ['', '/'],
-    ['https://evil.com/dashboard', '/'],
-    ['//evil.com/dashboard', '/'],
+    [undefined, '/dashboard'],
+    ['', '/dashboard'],
+    ['https://evil.com/dashboard', '/dashboard'],
+    ['//evil.com/dashboard', '/dashboard'],
     ['/dashboard?__rsc=', '/dashboard'],
     ['/dashboard.rsc?__rsc=', '/dashboard'],
     ['/dashboard?project=abc&__rsc=', '/dashboard?project=abc'],
@@ -20,23 +20,23 @@ test('normalizeAuthRedirectPath strips RSC transport markers from callback URLs'
   expect(results).toMatchInlineSnapshot(`
     [
       {
-        "actual": "/",
-        "expected": "/",
+        "actual": "/dashboard",
+        "expected": "/dashboard",
         "input": undefined,
       },
       {
-        "actual": "/",
-        "expected": "/",
+        "actual": "/dashboard",
+        "expected": "/dashboard",
         "input": "",
       },
       {
-        "actual": "/",
-        "expected": "/",
+        "actual": "/dashboard",
+        "expected": "/dashboard",
         "input": "https://evil.com/dashboard",
       },
       {
-        "actual": "/",
-        "expected": "/",
+        "actual": "/dashboard",
+        "expected": "/dashboard",
         "input": "//evil.com/dashboard",
       },
       {

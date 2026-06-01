@@ -59,6 +59,12 @@ loginCli
       return proc.exit(1)
     }
 
+    // `user` is null only for API-key auth; `login` always uses a session token.
+    if (!res.user) {
+      output.error(logger.error(`Session expired or invalid. Run ${loginHint(baseUrl)} again.`))
+      return proc.exit(1)
+    }
+
     output.log(logger.success(`Logged in as ${colors.bold(res.user.name)} ${colors.dim(`(${res.user.email})`)}`))
     output.log(logger.info(`Server: ${colors.dim(baseUrl)}`))
     output.log('')

@@ -29,7 +29,7 @@ projectsCli
       return
     }
 
-    const formatted = res.projects.map((p: any) => ({
+    const formatted = res.projects.map((p) => ({
       id: p.projectId,
       name: p.name,
       org: p.orgName,
@@ -69,7 +69,7 @@ projectsCli
       if (!(meRes instanceof Error) && meRes.orgs.length > 1) {
         const selected = await clack.select({
           message: 'Which org should own this project?',
-          options: meRes.orgs.map((o: any) => ({
+          options: meRes.orgs.map((o) => ({
             value: o.id,
             label: o.name,
             hint: `${o.projects.length} project${o.projects.length === 1 ? '' : 's'}`,

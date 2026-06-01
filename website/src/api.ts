@@ -27,10 +27,19 @@ import { gatewayApp } from './gateway.ts'
 import { resolveGithubOidcDeployAuth } from './deploy-auth.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
+//
+// `epochMs` is a Drizzle customType whose TS data type is `number`, but
+// drizzle-zod can't introspect custom column types and falls back to
+// `z.unknown()`. We override every timestamp column with `z.number()` so the
+// generated response types (and the typed fetch client) expose real epoch-ms
+// numbers instead of `unknown`.
+const epochMsField = () => z.number().describe('Unix epoch milliseconds.')
 
 const ErrorResponse = z.object({ error: z.string() })
 
-const ApiKeyResponse = createSelectSchema(schema.apiKey).pick({
+const ApiKeyResponse = createSelectSchema(schema.apiKey, {
+  createdAt: epochMsField,
+}).pick({
   id: true,
   name: true,
   prefix: true,
@@ -44,7 +53,10 @@ const ApiKeyCreatedResponse = createSelectSchema(schema.apiKey)
     key: z.string().describe('Full `holo_xxx` key. Shown only once at creation.'),
   })
 
-const ProjectResponse = createSelectSchema(schema.project)
+const ProjectResponse = createSelectSchema(schema.project, {
+  createdAt: epochMsField,
+  updatedAt: epochMsField,
+})
 
 
 

@@ -13,6 +13,7 @@
     "generate-icon-schemas": "tsx scripts/generate-icon-schemas.ts",
     "build": "rm -rf dist && pnpm generate-openapi && pnpm generate-icon-schemas && vite build && tsc",
     "start": "node dist/rsc/index.js",
+    "test": "vitest run",
     "test:preview-ai-chat": "tsx scripts/test-preview-ai-chat.ts",
     "types": "wrangler types",
     "typecheck": "tsc --noEmit",
@@ -29,7 +30,7 @@
     "@base-ui/react": "^1.5.0",
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/@better-auth/drizzle-adapter@9489",
     "@holocron.so/vite": "workspace:^",
-    "@strada.sh/sdk": "0.4.0",
+    "@strada.sh/sdk": "0.4.3",
     "@tailwindcss/vite": "^4.2.2",
     "ai": "^6.0.149",
     "better-auth": "https://pkg.pr.new/better-auth@9489",
@@ -45,7 +46,7 @@
     "radix-ui": "latest",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "spiceflow": "^1.26.0-rsc.2",
+    "spiceflow": "^1.26.0-rsc.3",
     "string-dedent": "^3.0.2",
     "superjson": "^2.2.5",
     "tailwind-merge": "^3.5.0",
@@ -58,6 +59,8 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.32.2",
+    "@cloudflare/vitest-pool-workers": "^0.16.10",
+    "@cloudflare/workers-types": "^4.20260526.0",
     "@iconify-json/fa6-brands": "^1.2.6",
     "@iconify-json/fa6-regular": "^1.2.4",
     "@iconify-json/fa6-solid": "^1.2.4",
@@ -70,6 +73,7 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "wrangler": "^4.90.0"
+    "vitest": "^4.1.7",
+    "wrangler": "^4.95.0"
   }
 }

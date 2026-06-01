@@ -1,0 +1,3 @@
+# Holocron build cache artifact created by the holocron() vite plugin when it
+# runs inside the @cloudflare/vitest-pool-workers test build. Not a real folder.
+dummy-non-existing-folder/
