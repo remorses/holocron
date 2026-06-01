@@ -188,6 +188,58 @@ paths:
     }
   })
 
+  test('skips externalValue-only examples and escapes fence titles', async () => {
+    const SPEC_EX = `
+openapi: "3.0.3"
+info: { title: Ex API, version: "1.0.0" }
+tags: [{ name: orders }]
+paths:
+  /orders:
+    post:
+      tags: [orders]
+      summary: Create order
+      responses:
+        "201":
+          description: created
+          content:
+            application/json:
+              examples:
+                "weird \`name\`":
+                  value: { id: "inline-1" }
+                External only:
+                  externalValue: "https://example.com/big.json"
+`
+    const exDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-openapi-ext-'))
+    fs.writeFileSync(path.join(exDir, 'api.yaml'), SPEC_EX)
+    try {
+      const config = {
+        navigation: {
+          tabs: [{ tab: 'API', openapi: 'api.yaml', groups: [{ group: '', pages: ['...'] }] } as ConfigNavTab],
+        },
+      }
+      const mdxContent: Record<string, string> = {}
+      await processVirtualTabs({
+        config,
+        projectRoot: exDir,
+        pagesDir: exDir,
+        mdxContent,
+        providers: [openapiProvider],
+      })
+      const mdx = mdxContent['api/post-orders']
+      expect(mdx).toBeDefined()
+      // The inline example renders; backticks in the name are neutralized so
+      // the fence info line stays valid.
+      expect(mdx).toContain('inline-1')
+      expect(mdx).toContain("title=\"weird 'name'\"")
+      // The externalValue-only entry must NOT be rendered as a JSON payload.
+      expect(mdx).not.toContain('externalValue')
+      expect(mdx).not.toContain('big.json')
+      expect(mdx).not.toContain('title="External only"')
+    } finally {
+      fs.rmSync(exDir, { recursive: true, force: true })
+    }
+  })
+
   test('is idempotent across re-syncs (dev-server HMR regression)', async () => {
     // The config object persists across dev-server re-syncs and the provider
     // mutates tab.groups in place. Running twice on the SAME config must yield

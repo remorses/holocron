@@ -361,7 +361,7 @@ function buildEndpointMdx({
     curl,
     '```',
   ]
-  if (requestBody?.examples && requestBody.examples.length > 1) {
+  if (requestBody?.examples && requestBody.examples.length > 0) {
     requestExampleBlocks.push(...exampleCodeBlocks(requestBody.examples))
   }
 
@@ -471,16 +471,33 @@ function collectExamples(
   const out: NamedExample[] = []
   if (media.examples && typeof media.examples === 'object') {
     for (const [name, raw] of Object.entries(media.examples)) {
-      const value = raw && typeof raw === 'object' && 'value' in (raw as Record<string, unknown>)
-        ? (raw as Record<string, unknown>).value
-        : raw
-      out.push({ name, value })
+      if (raw && typeof raw === 'object') {
+        const obj = raw as Record<string, unknown>
+        // OpenAPI Example Object: use the inline `value`. Skip entries that
+        // only carry `externalValue` (a URL) — there is no inline payload to
+        // show and rendering the metadata object as JSON would be misleading.
+        if ('value' in obj) out.push({ name, value: obj.value })
+        else if (!('externalValue' in obj)) out.push({ name, value: raw })
+        continue
+      }
+      out.push({ name, value: raw })
     }
   }
   if (media.example !== undefined && out.length === 0) {
     out.push({ name: 'Example', value: media.example })
   }
   return out
+}
+
+/** Escape an example name for use inside a code-fence `title="..."` meta.
+ *  Backslashes and quotes are escaped for parseCodeMeta; backticks and
+ *  newlines would break the fence info line, so they are neutralized. */
+function fenceTitle(name: string): string {
+  return name
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/`/g, "'")
+    .replace(/[\r\n]+/g, ' ')
 }
 
 /** Render named examples as titled ```json fences for an <CodeGroup>. */
@@ -490,7 +507,7 @@ function exampleCodeBlocks(examples: NamedExample[]): string[] {
       ? ex.value
       : JSON.stringify(ex.value, null, 2)
     // `title` meta becomes the tab label after remarkCodeGroup rewrites it.
-    return [`\`\`\`json title="${ex.name.replace(/"/g, '\\"')}" lines=false`, json, '```']
+    return [`\`\`\`json title="${fenceTitle(ex.name)}" lines=false`, json, '```']
   })
 }
 
