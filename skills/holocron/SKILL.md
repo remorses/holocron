@@ -122,8 +122,14 @@ Do not dump every page into one flat directory. **Put pages in subfolders named
 after their navigation group**, so the file layout matches the sidebar. This keeps
 large docs sites navigable and makes each slug self-documenting.
 
-A group named "Getting Started" maps to a `getting-started/` folder; `getting-started/setup.mdx`
-has slug `getting-started/setup` and is referenced as such in `navigation.pages`.
+```diagram
+  docs.json group           file layout                      slug in nav
+  ┌────────────────┐       ┌──────────────────────────┐    ┌─────────────────────────┐
+  │ Getting Started│──────►│ getting-started/setup.mdx│───►│ getting-started/setup   │
+  │ Guides         │──────►│ guides/deploy.mdx        │───►│ guides/deploy           │
+  │ Reference      │──────►│ reference/commands.mdx   │───►│ reference/commands      │
+  └────────────────┘       └──────────────────────────┘    └─────────────────────────┘
+```
 
 Rules:
 
@@ -434,6 +440,25 @@ Use ASCII diagrams frequently in MDX pages. Always use the **`diagram`** languag
 - Prefer a **varied, organic layout**. Mix plain text labels, boxes for major components, and directional arrows.
 - All connections must use **directional arrows**. Never use plain lines without an arrowhead.
 - Verify alignment by counting characters precisely.
+
+````mdx
+```diagram
+                ┌───────────────┐
+docs.jsonc ───►│  Vite Plugin  │──────► Build Output
+               └───────┬───────┘
+                       │
+               ┌───────▼───────┐
+               │   sync.ts     │  MDX files ──► parsed sections
+               │  (walk nav)   │  git SHA diff ──► cache hit/miss
+               └───────┬───────┘
+                       │
+        ┌──────────────┼──────────────┐
+        ▼              ▼              ▼
+    navigation    page cache    virtual modules
+    tree.json     holocron-mdx   holocron-pages
+                  holocron-config holocron-config
+```
+````
 
 ## Agent rules
 
