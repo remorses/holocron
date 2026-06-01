@@ -311,7 +311,7 @@ const tabWithOpenAPISchema = tabBaseSchema.extend({
         \`["openapi/v1.json", "openapi/v2.json"]\`
       `,
     ),
-  openapiBase: z
+  base: z
     .string()
     .optional()
     .describe(
@@ -353,13 +353,44 @@ const tabWithOpenAPISchema = tabBaseSchema.extend({
   },
 })
 
+const tabWithChangelogSchema = tabBaseSchema.extend({
+  changelog: z
+    .string()
+    .describe(
+      dedent`
+        URL of a releases page to generate a changelog tab from. Currently
+        only GitHub is supported, e.g.
+        \`"https://github.com/owner/repo"\`. Holocron fetches the
+        repository's published releases and renders one changelog page with
+        an entry per release. The left navigation sidebar is hidden on this
+        page
+      `,
+    ),
+  base: z
+    .string()
+    .optional()
+    .describe(
+      dedent`
+        Slug for the generated changelog page. Defaults to \`"changelog"\`,
+        so the page is served at \`/changelog\`
+      `,
+    ),
+})
+
 export const tabSchema = z
-  .union([tabWithGroupsSchema, tabWithPagesSchema, tabWithHrefSchema, tabWithOpenAPISchema])
+  .union([
+    tabWithGroupsSchema,
+    tabWithPagesSchema,
+    tabWithHrefSchema,
+    tabWithOpenAPISchema,
+    tabWithChangelogSchema,
+  ])
   .describe(
     dedent`
       A top-level tab in the navigation. Either contains sidebar groups, a
-      flat list of pages, a link-only tab, or an OpenAPI spec for
-      auto-generated API reference pages
+      flat list of pages, a link-only tab, an OpenAPI spec for
+      auto-generated API reference pages, or a changelog generated from a
+      GitHub releases page
     `,
   )
   .meta({ id: 'tabSchema' })

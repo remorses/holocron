@@ -167,8 +167,8 @@ test.describe('OpenAPI selective mode (custom pages + endpoint refs)', () => {
     expect(html).toContain('Where to get your API key')
   })
 
-  test('endpoint ref renders a generated endpoint page under openapiBase', async ({ request }) => {
-    // "POST /auth/login" → slug guide/post-auth-login (openapiBase: "guide")
+  test('endpoint ref renders a generated endpoint page under base', async ({ request }) => {
+    // "POST /auth/login" → slug guide/post-auth-login (base: "guide")
     const res = await request.get('/guide/post-auth-login')
     expect(res.ok()).toBe(true)
     const html = await res.text()
@@ -218,7 +218,7 @@ test.describe('OpenAPI "..." rest expansion', () => {
     expect(html).toContain('List users')
   })
 
-  test('"..." expands every endpoint under the tab openapiBase', async ({ request }) => {
+  test('"..." expands every endpoint under the tab base', async ({ request }) => {
     // No endpoints were listed explicitly, so "..." includes all of them.
     for (const slug of ['ref/get-users', 'ref/post-users', 'ref/get-health']) {
       const res = await request.get(`/${slug}`)

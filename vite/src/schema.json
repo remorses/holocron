@@ -855,7 +855,7 @@
               ],
               "description": "Path to an OpenAPI specification file (JSON or YAML), or an array\nof paths. Endpoints from the spec are auto-generated as pages\ngrouped by tag. Example: `\"openapi.json\"` or\n`[\"openapi/v1.json\", \"openapi/v2.json\"]`"
             },
-            "openapiBase": {
+            "base": {
               "description": "Slug prefix for generated OpenAPI pages. Defaults to `\"api\"`.\nSet to `\"\"` for no prefix. Example: with `\"reference\"`,\nendpoints are generated at `/reference/get-users` instead of\n`/api/get-users`",
               "type": "string"
             },
@@ -886,9 +886,51 @@
             "openapi"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tab": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The name of the tab"
+            },
+            "icon": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
+            },
+            "hidden": {
+              "description": "Whether the tab is hidden by default",
+              "type": "boolean"
+            },
+            "align": {
+              "description": "Tab alignment in the navigation",
+              "type": "string",
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
+            "changelog": {
+              "type": "string",
+              "description": "URL of a releases page to generate a changelog tab from. Currently\nonly GitHub is supported, e.g.\n`\"https://github.com/owner/repo\"`. Holocron fetches the\nrepository's published releases and renders one changelog page with\nan entry per release. The left navigation sidebar is hidden on this\npage"
+            },
+            "base": {
+              "description": "Slug for the generated changelog page. Defaults to `\"changelog\"`,\nso the page is served at `/changelog`",
+              "type": "string"
+            }
+          },
+          "required": [
+            "tab",
+            "changelog"
+          ],
+          "additionalProperties": false
         }
       ],
-      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, or an OpenAPI spec for\nauto-generated API reference pages"
+      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, or a changelog generated from a\nGitHub releases page"
     },
     "iconSchema": {
       "anyOf": [

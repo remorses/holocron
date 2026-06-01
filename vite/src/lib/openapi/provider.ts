@@ -13,7 +13,7 @@ import type { OpenAPIV3 } from 'openapi-types'
 import type { ConfigNavGroup, ConfigNavPageEntry } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
 import type { ExtractedOperation, DereferencedDocument } from './process.ts'
-import { formatHolocronWarning, logger } from '../logger.ts'
+import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
 import { parseEndpointRef, endpointKey } from './endpoint-ref.ts'
 
 type OpWithDoc = { op: ExtractedOperation; doc: DereferencedDocument }
@@ -32,7 +32,7 @@ export const openapiProvider: VirtualTabProvider = {
 
   async generate({ tab, projectRoot, pagesDir }): Promise<VirtualTabResult> {
     const specPaths = Array.isArray(tab.openapi) ? tab.openapi! : [tab.openapi!]
-    const slugPrefix = tab.openapiBase ?? 'api'
+    const slugPrefix = tab.base ?? 'api'
     const mdxContent: Record<string, string> = {}
 
     const allOps: OpWithDoc[] = []
@@ -80,7 +80,7 @@ export const openapiProvider: VirtualTabProvider = {
 
     // Track which operation owns each emitted slug, so referencing the SAME
     // endpoint twice dedups, but two DISTINCT operations colliding on one slug
-    // (e.g. same METHOD+path across two specs under one openapiBase) errors.
+    // (e.g. same METHOD+path across two specs under one base prefix) errors.
     const emittedBySlug = new Map<string, OpWithDoc>()
 
     /** Build + register the virtual MDX for one operation; returns its slug. */
@@ -93,21 +93,13 @@ export const openapiProvider: VirtualTabProvider = {
         throw new Error(
           `[holocron] two different OpenAPI operations map to the same page slug "${slug}" ` +
           `in tab "${tab.tab}" (${existing.op.method.toUpperCase()} ${existing.op.path} and ` +
-          `${op.method.toUpperCase()} ${op.path}). Use distinct openapiBase prefixes or rename a path.`,
+          `${op.method.toUpperCase()} ${op.path}). Use distinct base prefixes or rename a path.`,
         )
       }
       emittedBySlug.set(slug, item)
 
-      // Warn if the slug shadows a real MDX page on disk
-      for (const ext of ['.mdx', '.md']) {
-        if (fs.existsSync(path.join(pagesDir, slug + ext)) || fs.existsSync(path.join(projectRoot, slug + ext))) {
-          logger.warn(formatHolocronWarning(
-            `OpenAPI page "${slug}" shadows an MDX file on disk. ` +
-            `The virtual OpenAPI page will be used instead.`,
-          ))
-          break
-        }
-      }
+      // Note: disk-shadow detection (warn if this slug shadows a real MDX file)
+      // is centralized in processVirtualTabs() so every provider gets it.
 
       mdxContent[slug] = buildEndpointMdx({
         op,
@@ -366,17 +358,7 @@ function buildEndpointMdx({
       : JSON.stringify(responseWithExample.example, null, 2))
     : undefined
 
-  return [
-    '---',
-    `title: "${title.replace(/"/g, '\\"')}"`,
-    `description: "${(op.operation.description ?? op.operation.summary ?? '').replace(/"/g, '\\"').replace(/\n/g, ' ').slice(0, 200)}"`,
-    `api: "${op.method.toUpperCase()} ${op.path}"`,
-    'gridGap: 30',
-    ...(op.operation.deprecated ? ['deprecated: true'] : []),
-    '---',
-    '',
-    '<Aside full>',
-    '',
+  const aside = [
     '<RequestExample>',
     '',
     '```bash lines=false',
@@ -384,8 +366,8 @@ function buildEndpointMdx({
     '```',
     '',
     '</RequestExample>',
-    '',
     ...(responseExampleJson ? [
+      '',
       '<ResponseExample>',
       '',
       '```json lines=false',
@@ -393,12 +375,20 @@ function buildEndpointMdx({
       '```',
       '',
       '</ResponseExample>',
-      '',
     ] : []),
-    '</Aside>',
-    '',
-    `<OpenAPIEndpoint {...${propsJson}} />`,
   ].join('\n')
+
+  return buildVirtualPageMdx({
+    frontmatter: {
+      title,
+      description: (op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
+      api: `${op.method.toUpperCase()} ${op.path}`,
+      gridGap: 30,
+      ...(op.operation.deprecated ? { deprecated: true } : {}),
+    },
+    aside,
+    body: `<OpenAPIEndpoint {...${propsJson}} />`,
+  })
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */

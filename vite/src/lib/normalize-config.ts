@@ -427,7 +427,7 @@ function normalizeTabsAndAnchors(
     }
 
     // Link-only tab → convert to anchor
-    if (typeof raw.href === 'string' && !raw.groups && !raw.pages && !raw.openapi) {
+    if (typeof raw.href === 'string' && !raw.groups && !raw.pages && !raw.openapi && !raw.changelog) {
       const placement = raw.placement === 'sidebar' ? 'sidebar' : 'tabs'
       anchors.push({
         anchor: name,
@@ -445,13 +445,23 @@ function normalizeTabsAndAnchors(
     //    pages in place and leaves the authored ordering intact.
     if (raw.openapi) {
       const openapi = raw.openapi as string | string[]
-      const openapiBase = raw.openapiBase as string | undefined
+      const base = raw.base as string | undefined
       const groups: ConfigNavGroup[] = raw.groups
         ? (raw.groups as ConfigNavGroup[]).map(normalizeGroup)
         : raw.pages
           ? [{ group: '', pages: (raw.pages as ConfigNavPageEntry[]).map(normalizePageEntry) }]
           : []
-      tabs.push({ tab: name, ...tabExtras, groups, openapi, ...(openapiBase !== undefined && { openapiBase }) })
+      tabs.push({ tab: name, ...tabExtras, groups, openapi, ...(base !== undefined && { base }) })
+      continue
+    }
+
+    // Changelog tab → store the changelog source URL so sync.ts can pick it
+    // up. The changelog provider fetches the repository's releases and
+    // generates a single page; groups are filled in by the provider.
+    if (raw.changelog) {
+      const changelog = raw.changelog as string
+      const base = raw.base as string | undefined
+      tabs.push({ tab: name, ...tabExtras, groups: [], changelog, ...(base !== undefined && { base }) })
       continue
     }
 

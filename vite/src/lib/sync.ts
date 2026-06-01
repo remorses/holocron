@@ -29,6 +29,7 @@ import {
 } from '../config.ts'
 import { processVirtualTabs } from './virtual-tab-provider.ts'
 import { openapiProvider } from './openapi/provider.ts'
+import { changelogProvider } from './changelog/provider.ts'
 import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { extractImports, type EagerModules } from 'safe-mdx/parse'
@@ -353,7 +354,7 @@ export async function syncNavigation({
     projectRoot,
     pagesDir,
     mdxContent,
-    providers: [openapiProvider],
+    providers: [openapiProvider, changelogProvider],
   })
 
   // 3. Walk config and enrich the shared navigation tree.

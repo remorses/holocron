@@ -23,6 +23,10 @@
  * `expandRest() → entries`). Deferred until provider #2 to avoid guessing the
  * abstraction against a single consumer.
  *
+ * Two providers ship today: openapi/provider.ts (spec → endpoint pages) and
+ * changelog/provider.ts (GitHub releases → one changelog page). Both share the
+ * tab `base` slug-prefix field and compose MDX via lib/virtual-page-mdx.ts.
+ *
  * To add a new provider:
  * 1. Add a schema variant in schema.ts (e.g. tabWithChangelogSchema)
  * 2. Add the source field to ConfigNavTab in config.ts
@@ -31,7 +35,10 @@
  * 5. Register it in sync.ts's providers array
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
 import type { ConfigNavGroup, ConfigNavTab } from '../config.ts'
+import { formatHolocronWarning, logger } from './logger.ts'
 
 export type VirtualTabResult = {
   groups: ConfigNavGroup[]
@@ -130,6 +137,25 @@ export async function processVirtualTabs({
         )
       }
       claimedSlugs.set(slug, `${provider.name} (tab "${tab.tab}")`)
+
+      // Warn if a generated slug shadows a real MDX file on disk. The virtual
+      // page wins (enrichPageUncached checks mdxContent[slug] first), so a
+      // same-named on-disk page would silently never render. Centralized here
+      // so every provider gets the check uniformly.
+      for (const ext of ['.mdx', '.md']) {
+        if (
+          fs.existsSync(path.join(pagesDir, slug + ext)) ||
+          fs.existsSync(path.join(projectRoot, slug + ext))
+        ) {
+          logger.warn(
+            formatHolocronWarning(
+              `${provider.name} page "${slug}" (tab "${tab.tab}") shadows an MDX file on disk. ` +
+              `The generated page will be used instead. Set a different "base" or remove the file.`,
+            ),
+          )
+          break
+        }
+      }
     }
 
     // Merge virtual MDX into the shared content map

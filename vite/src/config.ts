@@ -64,9 +64,14 @@ export type ConfigNavTab = NavTabBase & {
   /** OpenAPI spec path(s) — when present, groups are auto-generated from
    *  the spec at build time. Set by normalize when the raw tab has `openapi`. */
   openapi?: string | string[]
-  /** Slug prefix for generated OpenAPI pages. Defaults to `"api"`.
-   *  Set to `""` for no prefix. */
-  openapiBase?: string
+  /** Changelog source URL (e.g. `https://github.com/owner/repo`) — when
+   *  present, a single changelog page is generated from the repository's
+   *  releases. Set by normalize when the raw tab has `changelog`. */
+  changelog?: string
+  /** Slug prefix for generated virtual pages. For OpenAPI tabs this is the
+   *  endpoint-page prefix (defaults to `"api"`, `""` for no prefix). For
+   *  changelog tabs this is the single page slug (defaults to `"changelog"`). */
+  base?: string
   /** Internal snapshot of the author-written groups before a virtual-tab
    *  provider expands them (e.g. resolves `METHOD /path` refs and the `"..."`
    *  sentinel). The config object persists across dev-server re-syncs and

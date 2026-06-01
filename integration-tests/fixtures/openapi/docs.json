@@ -13,7 +13,7 @@
       {
         "tab": "Guides",
         "openapi": "api.yaml",
-        "openapiBase": "guide",
+        "base": "guide",
         "groups": [
           {
             "group": "Getting Started",
@@ -33,7 +33,7 @@
       {
         "tab": "Reference",
         "openapi": "api.yaml",
-        "openapiBase": "ref",
+        "base": "ref",
         "pages": ["ref/intro", "..."]
       }
     ]

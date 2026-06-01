@@ -1,0 +1,15 @@
+{
+  "name": "Changelog Fixture",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "pages": ["index"]
+      },
+      {
+        "tab": "Changelog",
+        "changelog": "https://github.com/acme/widgets"
+      }
+    ]
+  }
+}
