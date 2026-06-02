@@ -8,7 +8,7 @@
     "devDependencies": {
         "spiceflow": "^1.26.0-rsc.3",
         "tsx": "^4.21.0",
-        "tuistory": "^0.8.0",
+        "tuistory": "^0.8.1",
         "typescript": "^6.0.2",
         "vite": "^8.0.10",
         "vitest": "^4.1.4"
