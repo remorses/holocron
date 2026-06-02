@@ -176,7 +176,7 @@ describe('createOgImageResponse', () => {
 
     // Build a data URL and render the OG image with the extracted PNG
     let binary = ''
-    for (let i = 0; i < png!.length; i++) binary += String.fromCharCode(png![i])
+    for (let i = 0; i < png!.length; i++) binary += String.fromCharCode(png![i]!)
     const iconDataUrl = `data:image/png;base64,${btoa(binary)}`
 
     const response = createOgImageResponse({

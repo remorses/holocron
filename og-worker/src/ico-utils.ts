@@ -52,7 +52,7 @@ export function extractPngFromIco(buf: ArrayBuffer): Uint8Array | undefined {
 
 export function bytesToBase64DataUrl(bytes: Uint8Array, contentType: string): string {
   let binary = ''
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!)
   return `data:${contentType};base64,${btoa(binary)}`
 }
 
