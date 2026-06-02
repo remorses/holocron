@@ -111,10 +111,16 @@ components:
         status:
           type: string
           enum: [pending, confirmed, shipped, delivered, cancelled]
+          description: |
+            Lifecycle status. Transitions are **one-directional**:
+
+            - `pending` → `confirmed` once payment clears
+            - `confirmed` → `shipped` when the carrier picks up
+            - any state → `cancelled` (except `shipped`/`delivered`)
         total:
           type: number
           format: double
-          description: Total amount in cents
+          description: Total amount in **cents**. Divide by `100` for the display value.
         notes:
           type: string
           description: Optional order notes
@@ -509,7 +515,20 @@ paths:
     post:
       tags: [orders]
       summary: Create order
-      description: Place a new order with one or more items.
+      description: |
+        Place a new order with one or more items.
+
+        ## Pricing notes
+
+        - Prices are returned in **cents** as integers, never floats.
+        - Use the `notes` field for `gift-wrap` and similar instructions.
+        - Orders start in the `pending` status until payment clears.
+
+        ```json
+        { "items": [{ "productId": "prod-001", "quantity": 1 }] }
+        ```
+
+        See the [orders guide](https://example.com/orders) for the full flow.
       requestBody:
         required: true
         content:
@@ -536,22 +555,60 @@ paths:
                   type: string
                 shippingAddress:
                   $ref: "#/components/schemas/Address"
+            examples:
+              Single item:
+                summary: One product, no extras
+                value:
+                  items:
+                    - productId: "prod-001"
+                      quantity: 1
+              Multiple items:
+                summary: Several products with a gift note
+                value:
+                  items:
+                    - productId: "prod-001"
+                      quantity: 2
+                    - productId: "prod-002"
+                      quantity: 1
+                  notes: "gift-wrap"
+              With shipping address:
+                value:
+                  items:
+                    - productId: "prod-003"
+                      quantity: 1
+                  shippingAddress:
+                    street: "123 Main St"
+                    city: "Springfield"
+                    state: "IL"
+                    zip: "62704"
       responses:
         "201":
-          description: Order created
+          description: |
+            Order created. The response echoes the **computed** `total` and the
+            per-item `price` in cents. See examples below for a confirmed order
+            and an empty (zero-total) order.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Order"
-              example:
-                id: "order-001"
-                userId: "user-001"
-                items:
-                  - productId: "prod-001"
-                    quantity: 2
-                    price: 2999
-                status: "pending"
-                total: 5998
+              examples:
+                Confirmed order:
+                  value:
+                    id: "order-001"
+                    userId: "user-001"
+                    items:
+                      - productId: "prod-001"
+                        quantity: 2
+                        price: 2999
+                    status: "pending"
+                    total: 5998
+                Empty order:
+                  value:
+                    id: "order-002"
+                    userId: "user-001"
+                    items: []
+                    status: "pending"
+                    total: 0
         "400":
           description: Invalid order
           content:
@@ -577,6 +634,90 @@ paths:
                 $ref: "#/components/schemas/Order"
         "404":
           description: Order not found
+  /orders/{orderId}/refund:
+    post:
+      tags: [orders]
+      summary: Refund order
+      description: |
+        Issue a **full or partial refund** for a delivered order.
+
+        > Refunds are processed asynchronously. The response returns
+        > immediately with a `processing` status; listen for the
+        > `order.refunded` webhook to confirm completion.
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: |
+            The order ID, e.g. `order-001`. Must be an order in the
+            `delivered` state — see the [status enum](#order-status).
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: integer
+                  minimum: 1
+                  description: Amount to refund, in **cents**. Cannot exceed the order total.
+                reason:
+                  type: string
+                  enum: [duplicate, fraudulent, requested_by_customer]
+                  description: Reason code, surfaced in financial reports.
+            examples:
+              Full refund:
+                value:
+                  amount: 5998
+                  reason: requested_by_customer
+              Partial refund:
+                value:
+                  amount: 2999
+                  reason: duplicate
+      responses:
+        "202":
+          description: |
+            Refund accepted and **queued** for processing. The two examples
+            show a freshly-queued refund and one that was instantly approved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  refundId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [processing, succeeded, failed]
+                  amount:
+                    type: integer
+              examples:
+                Queued:
+                  value:
+                    refundId: "re_001"
+                    status: processing
+                    amount: 5998
+                Instantly approved:
+                  value:
+                    refundId: "re_002"
+                    status: succeeded
+                    amount: 2999
+        "402":
+          description: Refund exceeds the original charge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: refund_too_large
+                message: "Refund amount exceeds the captured total"
+        "409":
+          description: Order not in a refundable state
   /orders/{orderId}/cancel:
     post:
       tags: [orders]

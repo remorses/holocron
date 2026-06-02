@@ -3,6 +3,7 @@
 /** Mintlify-compatible code shell components with copy support. */
 
 import React from 'react'
+import { Tabs } from './tabs.tsx'
 
 function CopyIcon() {
   return (
@@ -79,10 +80,17 @@ export function CodeCard({
   )
 }
 
+/**
+ * RequestExample / ResponseExample — a single tabbed code panel. Each code
+ * fence child becomes a tab (labeled by its `title` meta), exactly like
+ * `<CodeGroup>`/`<Tabs>`. This avoids the previous double-framing where a
+ * `CodeCard` shell wrapped a separate `Tabs` shell. A single child renders a
+ * one-tab panel. The panel carries a persistent copy button.
+ */
 export function RequestExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
-  return <CodeCard title='Request example'>{children}</CodeCard>
+  return <Tabs title='Request example' copyable ariaLabel='Request example'>{children}</Tabs>
 }
 
 export function ResponseExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
-  return <CodeCard title='Response example'>{children}</CodeCard>
+  return <Tabs title='Response example' copyable ariaLabel='Response example'>{children}</Tabs>
 }

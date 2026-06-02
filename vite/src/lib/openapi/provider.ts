@@ -353,11 +353,12 @@ function buildEndpointMdx({
     deprecated: op.operation.deprecated,
   })
 
-  // Request example: the curl block, plus any named request-body examples.
-  // Multiple named examples render as a <CodeGroup> (tabbed) — Holocron's
-  // remarkCodeGroup rewrites titled fences into <Tabs>/<Tab> at normalize time.
+  // Request example: the curl block (first tab), plus any named request-body
+  // examples. RequestExample renders each titled code fence as a switchable
+  // tab itself (like <Tabs>), so we emit the fences directly — no <CodeGroup>
+  // wrapper and no double framing. `lines=false` hides line numbers.
   const requestExampleBlocks: string[] = [
-    '```bash lines=false',
+    '```bash title="cURL" lines=false',
     curl,
     '```',
   ]
@@ -375,11 +376,7 @@ function buildEndpointMdx({
     : []
 
   const wrap = (tag: string, blocks: string[]): string[] => {
-    // Wrap 2+ code fences in <CodeGroup> so they become switchable tabs.
-    const inner = blocks.length > 1
-      ? ['<CodeGroup>', '', ...blocks, '', '</CodeGroup>']
-      : blocks
-    return [`<${tag}>`, '', ...inner, '', `</${tag}>`]
+    return [`<${tag}>`, '', ...blocks, '', `</${tag}>`]
   }
 
   const aside = [

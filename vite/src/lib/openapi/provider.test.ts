@@ -131,7 +131,7 @@ describe('openapi provider — selective mode', () => {
     expect(introGroup.pages.every((p) => typeof p === 'string')).toBe(true)
   })
 
-  test('emits CodeGroup tabs for multiple named examples', async () => {
+  test('emits titled fences as tabs for multiple named examples', async () => {
     const SPEC_EX = `
 openapi: "3.0.3"
 info: { title: Ex API, version: "1.0.0" }
@@ -174,12 +174,17 @@ paths:
       })
       const mdx = mdxContent['api/post-orders']
       expect(mdx).toBeDefined()
-      // Request and response examples each become a <CodeGroup> with titled fences.
-      expect(mdx).toContain('<CodeGroup>')
+      // RequestExample/ResponseExample render titled fences as tabs themselves,
+      // so there is no <CodeGroup> wrapper (that would double-frame the panel).
+      expect(mdx).not.toContain('<CodeGroup>')
+      // The curl block is the first request tab.
+      expect(mdx).toContain('title="cURL"')
       expect(mdx).toContain('title="Single item"')
       expect(mdx).toContain('title="Multiple items"')
       expect(mdx).toContain('title="Confirmed"')
       expect(mdx).toContain('title="Empty"')
+      // Line numbers are disabled inside the example panels.
+      expect(mdx).toContain('lines=false')
       // Both response payloads are present, not just the first.
       expect(mdx).toContain('order-1')
       expect(mdx).toContain('order-2')

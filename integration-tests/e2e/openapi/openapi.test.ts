@@ -135,6 +135,8 @@ test.describe('OpenAPI tab', () => {
     const res = await request.get('/api/post-orders')
     expect(res.ok()).toBe(true)
     const html = await res.text()
+    // The curl request is the first tab, labeled "cURL".
+    expect(html).toContain('cURL')
     // Example names become tab labels (request body examples).
     expect(html).toContain('Single item')
     expect(html).toContain('Multiple items')
@@ -144,6 +146,43 @@ test.describe('OpenAPI tab', () => {
     // Both response payloads are present, not just the first one.
     expect(html).toContain('order-001')
     expect(html).toContain('order-002')
+  })
+
+  test('request/response examples render as a single tabbed panel (no double frame)', async ({ page }) => {
+    await page.goto('/api/post-orders')
+    // The "Request example" panel exposes its code fences as a tablist with
+    // the curl block plus the named examples as tabs. The whole panel is the
+    // container that holds the tablist labeled "Request example".
+    const requestTablist = page.getByRole('tablist', { name: 'Request example' })
+    // The panel shell is the accent-colored container that directly holds the
+    // request tablist (rounded-2xl bg-accent). Scoping here avoids matching a
+    // shared ancestor that also wraps the Response example panel.
+    const requestPanel = page.locator('div.rounded-2xl', { has: requestTablist }).first()
+    await expect(requestPanel).toBeVisible()
+    await expect(requestTablist.getByRole('tab', { name: 'cURL' })).toBeVisible()
+    await expect(requestTablist.getByRole('tab', { name: 'Single item' })).toBeVisible()
+    await expect(requestTablist.getByRole('tab', { name: 'Multiple items' })).toBeVisible()
+    // A persistent copy button is present in the panel.
+    await expect(requestPanel.getByRole('button', { name: 'Copy code' }).first()).toBeVisible()
+    // The panel renders a single accent shell (no nested double frame): the
+    // request example holds exactly one tablist (no CodeGroup-inside-CodeCard).
+    await expect(requestPanel.getByRole('tablist', { name: 'Request example' })).toHaveCount(1)
+    // Switching to the "Multiple items" tab reveals that example's payload
+    // (productId prod-002 only appears in the multiple-items example). The
+    // request shell renders exactly one active tabpanel at a time. Retry the
+    // click via expect.poll so the assertion is robust against the slower
+    // client hydration in dev mode (the tab is inert until React mounts).
+    const multipleTab = requestTablist.getByRole('tab', { name: 'Multiple items' })
+    await expect(async () => {
+      await multipleTab.click()
+      await expect(multipleTab).toHaveAttribute('aria-selected', 'true', { timeout: 1000 })
+    }).toPass()
+    await expect(requestPanel.getByRole('tabpanel')).toContainText('prod-002')
+
+    // Response example is also a single tablist (Confirmed / Empty order).
+    const responseTablist = page.getByRole('tablist', { name: 'Response example' })
+    await expect(responseTablist.getByRole('tab', { name: 'Confirmed order' })).toBeVisible()
+    await expect(responseTablist.getByRole('tab', { name: 'Empty order' })).toBeVisible()
   })
 
   test('markdown in endpoint description renders as HTML, not raw text', async ({ page }) => {
