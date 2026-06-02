@@ -23,6 +23,13 @@ const viteRoot = path.resolve(__dirname, '..')
 const outFile = path.join(viteRoot, 'src', 'generated', 'prism-bundle.js')
 const entryPoint = path.join(__dirname, 'prism-entry.ts')
 
+// Skip if the output already exists (it's checked into git).
+// Only re-run manually when upgrading prismjs.
+if (fs.existsSync(outFile)) {
+  console.log(`prism-bundle.js already exists, skipping. Re-run manually to update.`)
+  process.exit(0)
+}
+
 console.log('Bundling prismjs into single ESM file...')
 
 fs.mkdirSync(path.dirname(outFile), { recursive: true })
