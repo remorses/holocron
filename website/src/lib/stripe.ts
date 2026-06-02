@@ -14,6 +14,7 @@ import Stripe from 'stripe'
 import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
 import * as errore from 'errore'
+import { captureException } from '@strada.sh/sdk'
 import { env } from 'cloudflare:workers'
 import { getDb } from '../db.ts'
 import { PRO_PRICE_LOOKUP_KEYS, type BillingInterval } from './billing-rules.ts'
@@ -157,13 +158,17 @@ export async function handleSubscriptionChange(
   const ids = await resolveSubscriptionIds(latest)
   if (ids instanceof Error) return ids
   if (ids === null) {
-    console.warn(`[stripe] dropping subscription ${latest.id}: could not resolve org/project`)
+    captureException(new Error(`dropping subscription ${latest.id}: could not resolve org/project`), {
+      tags: { route: 'stripe-webhook', subscriptionId: latest.id },
+    })
     return null
   }
 
   const firstItem = latest.items.data[0]
   if (!firstItem) {
-    console.warn(`[stripe] subscription ${latest.id} has no items`)
+    captureException(new Error(`subscription ${latest.id} has no items`), {
+      tags: { route: 'stripe-webhook', subscriptionId: latest.id },
+    })
     return null
   }
 
@@ -214,7 +219,9 @@ async function resolveSubscriptionIds(
       .catch((e) => new DbError({ operation: 'project.findFirst', cause: e }))
     if (project instanceof Error) return project
     if (project) return { orgId: metaOrgId, projectId: metaProjectId }
-    console.warn(`[stripe] subscription ${sub.id} metadata points at unknown org/project`)
+    captureException(new Error(`subscription ${sub.id} metadata points at unknown org/project`), {
+      tags: { route: 'stripe-webhook', subscriptionId: sub.id },
+    })
   }
   return null
 }

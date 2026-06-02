@@ -9,6 +9,7 @@
 import { Spiceflow } from 'spiceflow'
 import * as errore from 'errore'
 import { env } from 'cloudflare:workers'
+import { captureException } from '@strada.sh/sdk'
 import { getStripe, handleSubscriptionChange } from './stripe.ts'
 
 export class WebhookSignatureError extends errore.createTaggedError({
@@ -32,7 +33,7 @@ export const stripeWebhookApp = new Spiceflow()
         .constructEventAsync(rawBody, sig, env.STRIPE_WEBHOOK_SECRET)
         .catch((e) => new WebhookSignatureError({ cause: e }))
       if (event instanceof Error) {
-        console.warn('[stripe] webhook signature verification failed:', event.message)
+        captureException(event, { tags: { route: 'stripe-webhook', reason: 'bad-signature' } })
         return new Response('Bad signature', { status: 400 })
       }
 
@@ -48,7 +49,9 @@ export const stripeWebhookApp = new Spiceflow()
       })()
 
       if (result instanceof Error) {
-        console.error(`[stripe] webhook ${event.type} failed:`, result.message)
+        captureException(result, {
+          tags: { route: 'stripe-webhook', eventType: event.type },
+        })
         return new Response('Webhook handler failed', { status: 500 })
       }
 

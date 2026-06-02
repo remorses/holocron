@@ -22,6 +22,10 @@ Key references:
 
 Allowed models are defined in `src/gateway.ts` (`ALLOWED_MODELS`). GLM 4.7 Flash is both the authenticated default and the missing-key temporary fallback. To add a new model, add its `@cf/` ID to the map.
 
+## Error tracking with strada
+
+All runtime errors must be reported via `captureException` from `@strada.sh/sdk`, not swallowed with `console.error` or `console.warn`. The server app's `.onError` handler already captures uncaught route errors, but any error handled inline (like webhook failures, API call errors, etc.) must call `captureException(error, { tags: { ... } })` explicitly. Always include relevant tags like `route` and context-specific identifiers so errors are filterable in strada.
+
 ## Documentation command examples
 
 Use `npx` for one-off command examples in MDX docs, like `npx vite` and `npx vite build`. It is more common and works regardless of whether the user installed dependencies with npm, pnpm, yarn, or bun.

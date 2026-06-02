@@ -13,6 +13,7 @@
 // yield a friendly notice chunk (rendered as a card) instead of a raw 429.
 
 import { streamText, type LanguageModelUsage, type ModelMessage, type UIMessageChunk } from 'ai'
+import { captureException } from '@strada.sh/sdk'
 import { env, waitUntil } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
@@ -234,7 +235,9 @@ export const gatewayApp = new Spiceflow()
       // glm fallback). A test asserts every ALLOWED_MODELS key has a rate; this
       // is the runtime backstop.
       if (!MODEL_USD_PER_1M_TOKENS[modelName]) {
-        console.error(`[gateway] no USD rate for model ${modelName} — billing at glm fallback rate, FIX MODEL_USD_PER_1M_TOKENS`)
+        captureException(new Error(`no USD rate for model ${modelName} — billing at glm fallback rate`), {
+          tags: { route: 'gateway', model: modelName },
+        })
       }
 
       try {
@@ -267,7 +270,9 @@ export const gatewayApp = new Spiceflow()
               // Zero tokens after a real stream means the provider dropped usage
               // and we'd bill nothing — surface it instead of silently under-billing.
               if (inputTokens === 0 && outputTokens === 0) {
-                console.error(`[gateway] zero AI usage recorded for project ${projectId} model ${modelName} — provider omitted usage?`)
+                captureException(new Error(`zero AI usage recorded for project ${projectId} model ${modelName} — provider omitted usage?`), {
+                  tags: { route: 'gateway', projectId, model: modelName },
+                })
               }
               await getUsageStub(orgId).recordUsage({
                 projectId,
@@ -278,7 +283,9 @@ export const gatewayApp = new Spiceflow()
                 costUsd,
               })
             })().catch((error) => {
-              console.error('[gateway] failed to record AI chat usage', error)
+              captureException(error instanceof Error ? error : new Error(String(error)), {
+                tags: { route: 'gateway', reason: 'record-usage-failed' },
+              })
             }),
           )
         }

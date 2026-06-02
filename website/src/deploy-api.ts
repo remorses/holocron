@@ -15,6 +15,7 @@
 // Session auth needs projectId in the create body; upload/finalize derive
 // the projectId from the deployment row and verify org membership.
 
+import { captureException } from '@strada.sh/sdk'
 import { json, Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import * as orm from 'drizzle-orm'
@@ -473,7 +474,9 @@ async function sendFirstDeployEmail({
     })
   } catch (err) {
     // Email is best-effort; never fail the deploy response
-    console.error('[deploy] first-deploy email failed:', err)
+    captureException(err instanceof Error ? err : new Error(String(err)), {
+      tags: { route: 'deploy', reason: 'first-deploy-email-failed' },
+    })
   }
 }
 
