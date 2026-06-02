@@ -53,7 +53,7 @@ export function canDeploy(opts: {
     return {
       allowed: false,
       code: 'SUBSCRIPTION_REQUIRED',
-      reason: `Free projects are limited to ${FREE_PRODUCTION_DEPLOY_LIMIT} production deployment. Subscribe to Holocron Pro for unlimited deployments.`,
+      reason: `Free projects are limited to ${FREE_PRODUCTION_DEPLOY_LIMIT} production deployment. Subscribe to Holocron Pro for unlimited preview deployments.`,
     }
   }
 

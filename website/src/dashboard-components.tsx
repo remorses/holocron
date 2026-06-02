@@ -8,6 +8,7 @@ import './strada-client.ts'
 import { useState } from 'react'
 import { Link, useLoaderData } from 'spiceflow/react'
 import {
+  ArrowRightIcon,
   BuildingIcon,
   CheckIcon,
   ChevronsUpDownIcon,
@@ -84,6 +85,36 @@ export function GridDot({ position }: { position: keyof typeof gridDotPosition }
         gridDotPosition[position],
       )}
     />
+  )
+}
+
+// ── Upgrade Banner ──────────────────────────────────────────────────
+
+export function UpgradeBanner({ projectId, isBillingPage }: { projectId: string | null; isBillingPage?: boolean }) {
+  const { hasSubscription } = useLoaderData<DashboardApp, '/dashboard/*'>('/dashboard/*')
+
+  if (!projectId || hasSubscription !== false) return null
+
+  return (
+    <div className="sticky top-0 z-10 border-b border-primary/20 bg-primary/5">
+    <div className="mx-auto flex max-w-(--content-max-width) items-center justify-between gap-4 py-2.5">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="font-medium text-primary">Ship docs faster with Pro</span>
+        <span className="hidden sm:inline text-muted-foreground">
+          — AI chat assistant and unlimited preview deployments.
+        </span>
+      </div>
+      {!isBillingPage && (
+        <Link
+          href={`/dashboard/projects/${projectId}/billing`}
+          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground no-underline hover:bg-primary/90 transition-colors shrink-0"
+        >
+          Subscribe
+          <ArrowRightIcon className="size-3" />
+        </Link>
+      )}
+    </div>
+    </div>
   )
 }
 
@@ -500,9 +531,8 @@ export type BillingSubscription = {
 }
 
 const PRO_FEATURES = [
-  'Unlimited production deployments',
-  'Preview deployments for every branch and PR',
   'Hosted AI chat assistant for your docs',
+  'Unlimited preview deployments for every branch and PR',
   'Analytics (coming soon)',
 ]
 

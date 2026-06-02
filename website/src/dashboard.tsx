@@ -41,6 +41,7 @@ import {
   BillingPanel,
   CreateApiKeyButton,
   InviteButton,
+  UpgradeBanner,
 } from './dashboard-components.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
@@ -200,12 +201,18 @@ export const dashboardApp = new Spiceflow()
       .slice()
       .sort((a, b) => b.updatedAt - a.updatedAt)
 
+    // Check subscription status for the current project (used by upgrade banner)
+    const hasSubscription = projectId
+      ? !!(await getProjectSubscription(projectId))
+      : null
+
     return {
       user: session.user,
       orgs,
       org: selectedMembership?.org ?? null,
       orgId: selectedMembership?.org?.id ?? null,
       projects,
+      hasSubscription,
     }
   })
 
@@ -216,6 +223,7 @@ export const dashboardApp = new Spiceflow()
     const projectId = pathMatch?.[1] ?? null
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <UpgradeBanner projectId={projectId} isBillingPage={request.parsedUrl.pathname.endsWith('/billing')} />
         {/* Navbar */}
         <header className="border-b border-border">
           <div className="mx-auto flex max-w-(--content-max-width) items-center justify-between px-6 py-4 border-x border-border relative">
