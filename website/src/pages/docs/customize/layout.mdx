@@ -58,6 +58,12 @@ content = min(720px, max-width - nav - sidebar - 2 × gap)
 
 This means increasing `--grid-max-width` does not make the content column infinitely wide. It grows until it hits the 720px cap, then the extra space becomes gap.
 
+## Aside height and section spacing
+
+A non-full `<Aside>` shares its vertical space with the section it belongs to (the content between two headings). The section row expands to fit whichever is taller: the main content or the aside. If the aside callout is taller than the section text, you will see extra whitespace below the main content.
+
+To avoid this, keep aside callouts **short** and only place them in sections with enough body text to match or exceed the aside height.
+
 ## True edge-to-edge
 
 If you want the grid to always fill the viewport regardless of screen size, use `100vw`:

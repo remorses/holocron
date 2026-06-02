@@ -396,6 +396,13 @@ This appears in the sidebar with a proper callout frame.
 
 Exception: `Aside full` can contain `TableOfContentsPanel` directly.
 
+**Only use `<Aside>` in sections with enough content.** A non-full Aside shares
+its vertical space with the section it belongs to (the content between two
+headings). If the aside is taller than the section text, extra whitespace appears
+below the main content to accommodate the aside height. Keep aside callouts
+short, and only place them in sections that have at least a few paragraphs of
+body text.
+
 ## New pages and navigation
 
 After creating a new `.mdx` or `.md` page, add its slug to `docs.jsonc`
@@ -536,6 +543,8 @@ or a session token from `holocron login`.
 ```
 
 Aim for roughly **one Aside per major section** (per `##` heading). Not every section needs one, but if a page has more than three `##` sections without a single Aside, look for opportunities.
+
+**Avoid asides in short sections.** A non-full Aside shares vertical space with its section (the text between two headings). If the aside callout is taller than the section body, empty whitespace fills the gap below the main content. Only add asides to sections with enough prose to match or exceed the aside height. Keep aside callouts concise (1-2 sentences).
 
 ### Use diagrams to explain architecture and flows
 
