@@ -24,25 +24,50 @@ export function monthlyCreditBudget(hasActiveSubscription: boolean): number {
   return hasActiveSubscription ? PRO_MONTHLY_CREDITS : FREE_MONTHLY_CREDITS
 }
 
+// Selectable Workers AI models: friendly name → `@cf/` model id passed to the
+// binding. Kept next to the price table so a model and its rate live together.
+export const ALLOWED_MODELS: Record<string, string> = {
+  'gemma-4-26b': '@cf/google/gemma-4-26b-a4b-it',
+  'glm-4.7-flash': '@cf/zai-org/glm-4.7-flash',
+  'qwen3-30b': '@cf/qwen/qwen3-30b-a3b-fp8',
+  'llama-3.1-8b': '@cf/meta/llama-3.1-8b-instruct-fast',
+  'kimi-k2.5': '@cf/moonshotai/kimi-k2.5',
+}
+
 // Official Workers AI per-million-token USD rates, copied from
 // developers.cloudflare.com/workers-ai/platform/pricing. Keyed by the
-// ALLOWED_MODELS name in gateway.ts. When you add a model there, add its rate
-// here too — computeUsdCost falls back to the glm rate and logs if it's missing.
-export const MODEL_USD_PER_1M_TOKENS: Record<string, { input: number; output: number }> = {
+// ALLOWED_MODELS name in gateway.ts. A test asserts every selectable model has
+// a rate here, so a model can never reach production without one.
+//
+// `cachedInput` is the (cheaper) cached-prompt rate where the model offers one;
+// computeUsdCost charges cached tokens at it and the rest at `input`.
+export const MODEL_USD_PER_1M_TOKENS: Record<string, { input: number; output: number; cachedInput?: number }> = {
   'glm-4.7-flash': { input: 0.06, output: 0.4 },
   'gemma-4-26b': { input: 0.1, output: 0.3 },
   'qwen3-30b': { input: 0.051, output: 0.335 },
+  // CF's pricing page lists this rate under `@cf/meta/llama-3.1-8b-instruct-fp8-fast`;
+  // gateway.ts selects `...-instruct-fast`, which is the same fp8-fast model (alias).
   'llama-3.1-8b': { input: 0.045, output: 0.384 },
-  'kimi-k2.5': { input: 0.6, output: 3.0 },
+  'kimi-k2.5': { input: 0.6, output: 3.0, cachedInput: 0.1 },
 }
 
 const DEFAULT_RATE = MODEL_USD_PER_1M_TOKENS['glm-4.7-flash']!
 
-/** Exact USD cost for a request from its token counts and the model's rate. */
+/** Exact USD cost for a request from its token counts and the model's rate.
+ *  `cachedInputTokens` (a subset of `inputTokens`) is billed at the model's
+ *  cheaper cached rate when it has one. Unknown models fall back to the glm
+ *  rate — a test guarantees every selectable model is in the table, so this
+ *  only ever applies to a genuine misconfiguration. */
 export function computeUsdCost(
   model: string,
-  tokens: { inputTokens: number; outputTokens: number },
+  tokens: { inputTokens: number; outputTokens: number; cachedInputTokens?: number },
 ): number {
   const rate = MODEL_USD_PER_1M_TOKENS[model] ?? DEFAULT_RATE
-  return (tokens.inputTokens / 1_000_000) * rate.input + (tokens.outputTokens / 1_000_000) * rate.output
+  const cached = Math.min(tokens.cachedInputTokens ?? 0, tokens.inputTokens)
+  const uncachedInput = tokens.inputTokens - cached
+  return (
+    (uncachedInput / 1_000_000) * rate.input +
+    (cached / 1_000_000) * (rate.cachedInput ?? rate.input) +
+    (tokens.outputTokens / 1_000_000) * rate.output
+  )
 }

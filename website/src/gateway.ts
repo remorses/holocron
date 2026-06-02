@@ -12,7 +12,7 @@
 // so spamming bogus keys can't bypass the IP limit. When the limit is hit we
 // yield a friendly notice chunk (rendered as a card) instead of a raw 429.
 
-import { streamText, type ModelMessage, type UIMessageChunk } from 'ai'
+import { streamText, type LanguageModelUsage, type ModelMessage, type UIMessageChunk } from 'ai'
 import { env, waitUntil } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
@@ -21,17 +21,9 @@ import { createWorkersAI } from 'workers-ai-provider'
 import type { WorkersAI } from 'workers-ai-provider'
 import { validateApiKey, getProjectSubscription } from './db.ts'
 import { shouldShowTempAiNotice } from './lib/billing-rules.ts'
-import { computeUsdCost, creditsToUsd, monthlyCreditBudget, MODEL_USD_PER_1M_TOKENS, usdToCredits } from './lib/credits.ts'
+import { ALLOWED_MODELS, computeUsdCost, creditsToUsd, monthlyCreditBudget, MODEL_USD_PER_1M_TOKENS, usdToCredits } from './lib/credits.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
 import { NOTICE_USAGE_LIMIT_REACHED, type UsageCounter } from './usage-counter-do.ts'
-
-const ALLOWED_MODELS: Record<string, string> = {
-  'gemma-4-26b': '@cf/google/gemma-4-26b-a4b-it',
-  'glm-4.7-flash': '@cf/zai-org/glm-4.7-flash',
-  'qwen3-30b': '@cf/qwen/qwen3-30b-a3b-fp8',
-  'llama-3.1-8b': '@cf/meta/llama-3.1-8b-instruct-fast',
-  'kimi-k2.5': '@cf/moonshotai/kimi-k2.5',
-}
 
 const DEFAULT_MODEL = 'glm-4.7-flash'
 const TEMPORARY_MODEL = 'glm-4.7-flash'
@@ -93,6 +85,23 @@ function getMonthStartMs(): number {
 function getUsageStub(orgId: string): DurableObjectStub<UsageCounter> {
   const id = env.USAGE_COUNTER.idFromName(orgId)
   return env.USAGE_COUNTER.get(id) as DurableObjectStub<UsageCounter>
+}
+
+// Resolve a turn's exact usage and USD cost. totalUsage sums every tool-call
+// step (result.usage is only the last step) and exposes cached prompt tokens,
+// which computeUsdCost bills at the model's cheaper cached rate. Tolerates a
+// rejected/absent usage promise (e.g. client abort before final usage) by
+// returning zeros.
+async function resolveUsageCost(
+  totalUsage: PromiseLike<LanguageModelUsage>,
+  modelName: string,
+): Promise<{ inputTokens: number; outputTokens: number; costUsd: number }> {
+  const usage = await Promise.resolve(totalUsage).catch(() => null)
+  const inputTokens = usage?.inputTokens ?? 0
+  const outputTokens = usage?.outputTokens ?? 0
+  const cachedInputTokens = usage?.inputTokenDetails?.cacheReadTokens ?? 0
+  const costUsd = computeUsdCost(modelName, { inputTokens, outputTokens, cachedInputTokens })
+  return { inputTokens, outputTokens, costUsd }
 }
 
 async function fetchDocsZip(url: string): Promise<Record<string, string>> {
@@ -221,8 +230,9 @@ export const gatewayApp = new Spiceflow()
         abortSignal: request.signal,
       })
 
-      // Catch a model added to ALLOWED_MODELS without a matching rate — it would
-      // silently bill at the glm fallback rate, so make it loud.
+      // A selectable model without a rate is a config bug (it would bill at the
+      // glm fallback). A test asserts every ALLOWED_MODELS key has a rate; this
+      // is the runtime backstop.
       if (!MODEL_USD_PER_1M_TOKENS[modelName]) {
         console.error(`[gateway] no USD rate for model ${modelName} — billing at glm fallback rate, FIX MODEL_USD_PER_1M_TOKENS`)
       }
@@ -231,14 +241,10 @@ export const gatewayApp = new Spiceflow()
         for await (const chunk of result.toUIMessageStream()) {
           yield chunk
         }
-        // Emit this turn's exact usage. totalUsage sums all tool-call steps
-        // (result.usage is only the last step). Cost is tokens × the per-model
-        // rate table — exact, synchronous, no gateway. Authenticated only.
+        // Emit this turn's exact usage (authenticated only). Cost is tokens ×
+        // the per-model rate table — synchronous, no gateway.
         if (authResult) {
-          const usage = await Promise.resolve(result.totalUsage).catch(() => null)
-          const inputTokens = usage?.inputTokens ?? 0
-          const outputTokens = usage?.outputTokens ?? 0
-          const costUsd = computeUsdCost(modelName, { inputTokens, outputTokens })
+          const { inputTokens, outputTokens, costUsd } = await resolveUsageCost(result.totalUsage, modelName)
           yield {
             type: 'usage',
             inputTokens,
@@ -257,10 +263,12 @@ export const gatewayApp = new Spiceflow()
           const orgId = authResult.orgId
           waitUntil(
             (async () => {
-              const usage = await Promise.resolve(result.totalUsage).catch(() => null)
-              const inputTokens = usage?.inputTokens ?? 0
-              const outputTokens = usage?.outputTokens ?? 0
-              const costUsd = computeUsdCost(modelName, { inputTokens, outputTokens })
+              const { inputTokens, outputTokens, costUsd } = await resolveUsageCost(result.totalUsage, modelName)
+              // Zero tokens after a real stream means the provider dropped usage
+              // and we'd bill nothing — surface it instead of silently under-billing.
+              if (inputTokens === 0 && outputTokens === 0) {
+                console.error(`[gateway] zero AI usage recorded for project ${projectId} model ${modelName} — provider omitted usage?`)
+              }
               await getUsageStub(orgId).recordUsage({
                 projectId,
                 model: modelName,

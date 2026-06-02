@@ -6,6 +6,7 @@ import {
   USD_PER_CREDIT,
   FREE_MONTHLY_CREDITS,
   PRO_MONTHLY_CREDITS,
+  ALLOWED_MODELS,
   MODEL_USD_PER_1M_TOKENS,
   creditsToUsd,
   usdToCredits,
@@ -57,10 +58,32 @@ describe('computeUsdCost — exact tokens × per-model rate', () => {
     expect(computeUsdCost('not-a-real-model', { inputTokens: 1234, outputTokens: 567 })).toBe(known)
   })
 
-  test('every ALLOWED model rate is present and sane', () => {
+  test('cached input tokens billed at the cheaper cached rate', () => {
+    // kimi: 1M input of which 1M cached, at $0.10 cached vs $0.60 normal.
+    const allCached = computeUsdCost('kimi-k2.5', { inputTokens: 1_000_000, outputTokens: 0, cachedInputTokens: 1_000_000 })
+    expect(allCached).toBeCloseTo(0.1, 10)
+    // Half cached: 0.5M × $0.60 + 0.5M × $0.10 = $0.35.
+    const halfCached = computeUsdCost('kimi-k2.5', { inputTokens: 1_000_000, outputTokens: 0, cachedInputTokens: 500_000 })
+    expect(halfCached).toBeCloseTo(0.35, 10)
+  })
+
+  test('cached tokens clamp to input and models without a cached rate ignore them', () => {
+    // glm has no cachedInput rate → cached billed at normal input rate.
+    const glm = computeUsdCost('glm-4.7-flash', { inputTokens: 1000, outputTokens: 0, cachedInputTokens: 999999 })
+    expect(glm).toBe(computeUsdCost('glm-4.7-flash', { inputTokens: 1000, outputTokens: 0 }))
+  })
+
+  test('every selectable model (ALLOWED_MODELS) has a rate', () => {
+    for (const name of Object.keys(ALLOWED_MODELS)) {
+      expect(MODEL_USD_PER_1M_TOKENS[name], name).toBeDefined()
+    }
+  })
+
+  test('every rate is sane', () => {
     for (const [name, rate] of Object.entries(MODEL_USD_PER_1M_TOKENS)) {
       expect(rate.input, name).toBeGreaterThan(0)
       expect(rate.output, name).toBeGreaterThan(0)
+      if (rate.cachedInput !== undefined) expect(rate.cachedInput, name).toBeLessThanOrEqual(rate.input)
     }
   })
 })
