@@ -111,6 +111,22 @@ test.describe('MDX imports', () => {
     expect(html).toContain('relative-badge')
   })
 
+  test('rewrites link to an imported .md file to its first importer page', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    // links-to-other.md (inlined into /) links to ./linked-from-other.md.
+    // linked-from-other.md is NOT a navigation page — it is only imported
+    // into /guides/relative-imports. So the link must be rewritten to point
+    // to the first importer page (/guides/relative-imports), not to a dead
+    // .md file path. Otherwise the link 404s on the deployed site.
+    const linkBlock = html.slice(html.indexOf('data-testid="links-to-other"'))
+    expect(linkBlock).toContain('href="/guides/relative-imports"')
+    // It must NOT point to the raw .md file path.
+    expect(linkBlock).not.toMatch(/href="[^"]*linked-from-other\.md"/)
+    expect(linkBlock).not.toMatch(/href="[^"]*linked-from-other"/)
+  })
+
   test('renders ?raw import as raw string content', async ({ request }) => {
     const response = await request.get('/')
     expect(response.status()).toBe(200)

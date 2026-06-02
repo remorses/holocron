@@ -138,6 +138,21 @@ function parseAndRewriteImportedContent(entry: InlineImportEntry): RootContent[]
   return buildSplicedNodes(mdast, entry.relativeDir)
 }
 
+export type BuildSplicedNodesOptions = {
+  /**
+   * Optional hook to rewrite a link URL that points to another imported
+   * .md/.mdx file. Receives the link URL exactly as written in the imported
+   * file (relative to the imported file's own directory) plus the imported
+   * file's directory. Returns a replacement href (e.g. a sentinel that
+   * sync.ts resolves to the first-importer page later) or undefined to fall
+   * back to the default directory-relative rewrite.
+   *
+   * Only applies to markdown `link` nodes and JSX `href` attributes — image
+   * URLs are always rewritten with the default relative logic.
+   */
+  rewriteMdLink?: (linkUrl: string) => string | undefined
+}
+
 /**
  * Prepare mdast nodes for splicing into a parent page: strip frontmatter
  * and rewrite relative URLs/import sources. Works on an already-parsed
@@ -145,9 +160,20 @@ function parseAndRewriteImportedContent(entry: InlineImportEntry): RootContent[]
  * - resolveInlineImports (sync.ts) to pre-build nodes during sync
  * - parseAndRewriteImportedContent (above) as fallback in the remark plugin
  */
-export function buildSplicedNodes(mdast: Root, relativeDir: string): RootContent[] {
+export function buildSplicedNodes(
+  mdast: Root,
+  relativeDir: string,
+  options?: BuildSplicedNodesOptions,
+): RootContent[] {
   // Strip frontmatter — it belongs to the imported file, not the parent
   mdast.children = mdast.children.filter((node) => node.type !== 'yaml')
+
+  // Rewrite links that point to other imported .md/.mdx files BEFORE the
+  // default relative rewrite. These links must resolve to the first
+  // importer page, not to a (non-existent) .md route relative to this page.
+  if (options?.rewriteMdLink) {
+    rewriteImportedMdLinks(mdast, options.rewriteMdLink)
+  }
 
   // Rewrite relative URLs in images, links, JSX src/href, and import sources
   if (relativeDir !== '' && relativeDir !== './') {
@@ -156,6 +182,35 @@ export function buildSplicedNodes(mdast: Root, relativeDir: string): RootContent
   }
 
   return mdast.children
+}
+
+/**
+ * Replace links/href attributes whose target is another imported .md/.mdx
+ * file with the value returned by `rewriteMdLink`. When the hook returns a
+ * value, that link is considered handled and is skipped by the later
+ * relative-URL rewrite (the marker is not relative so it is left untouched).
+ */
+function rewriteImportedMdLinks(
+  tree: Root,
+  rewriteMdLink: (linkUrl: string) => string | undefined,
+) {
+  visit(tree, (node) => {
+    if (node.type === 'link') {
+      const replacement = rewriteMdLink(node.url)
+      if (replacement !== undefined) node.url = replacement
+      return
+    }
+    if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
+      const jsxNode = node as JsxNode
+      for (const attr of jsxNode.attributes ?? []) {
+        if (attr.type !== 'mdxJsxAttribute') continue
+        if (attr.name !== 'href') continue
+        if (typeof attr.value !== 'string') continue
+        const replacement = rewriteMdLink(attr.value)
+        if (replacement !== undefined) attr.value = replacement
+      }
+    }
+  })
 }
 
 /**

@@ -9,6 +9,7 @@ import MarkdownSnippet from '/snippets/plain-markdown.md'
 import RootReadme from '../../../README.md'
 import OutsideSnippet from '../outside-pagesdir-snippet.md'
 import AsideSnippet from '/snippets/aside-snippet.md'
+import LinksToOther from '../links-to-other.md'
 import pyCode from '/snippets/example-code.py?raw'
 
 <Above>
@@ -34,5 +35,9 @@ This page tests MDX import resolution.
 <OutsideSnippet />
 
 <AsideSnippet />
+
+<div data-testid="links-to-other">
+<LinksToOther />
+</div>
 
 <pre data-testid="raw-import">{pyCode}</pre>
