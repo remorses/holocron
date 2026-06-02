@@ -114,7 +114,7 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
               gap: 24,
             }}
           >
-            <OgIcon iconUrl={iconUrl} size={88} />
+            <OgIcon iconUrl={iconUrl} size={64} />
             <div
               style={{
                 fontSize: 76,
