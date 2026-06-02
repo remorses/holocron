@@ -18,6 +18,7 @@ import { Link, router } from 'spiceflow/react'
 import type * as React from 'react'
 import { getDb, getSession, getProjectSubscription, requireSession } from './db.ts'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
+import { CircleHelpIcon } from 'lucide-react'
 import { cn, timeAgo } from './lib/utils.ts'
 import { Button } from './components/ui/button.tsx'
 import { DeployPoller } from './components/deploy-poller.tsx'
@@ -326,7 +327,15 @@ export const dashboardApp = new Spiceflow()
             <div className="flex flex-col gap-6">
               {/* Header */}
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+                <h1 className="text-2xl font-bold tracking-tight inline-flex items-center gap-2">
+                  {project.name}
+                  <span className="relative group">
+                    <CircleHelpIcon className="size-4 text-muted-foreground cursor-help" />
+                    <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 rounded-lg border border-border bg-background px-3 py-2 text-xs font-normal text-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                      Site name is set from the <code className="font-mono font-semibold">name</code> field in your <code className="font-mono font-semibold">docs.json</code> at deploy time via the associated API key.
+                    </span>
+                  </span>
+                </h1>
                 {project.githubOwner && project.githubRepo && (
                   <a
                     href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
