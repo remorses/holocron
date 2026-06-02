@@ -367,9 +367,9 @@ function hexToRgbNormalized(hex: string): { r: number; g: number; b: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (!result) return { r: 1, g: 1, b: 1 }
   return {
-    r: Number.parseInt(result[1], 16) / 255,
-    g: Number.parseInt(result[2], 16) / 255,
-    b: Number.parseInt(result[3], 16) / 255,
+    r: Number.parseInt(result[1]!, 16) / 255,
+    g: Number.parseInt(result[2]!, 16) / 255,
+    b: Number.parseInt(result[3]!, 16) / 255,
   }
 }
 
@@ -480,7 +480,28 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
 
   // ── Fluid simulation materials ──
 
-  const advectionMat = new THREE.RawShaderMaterial({
+  // Three.js types `uniforms` with an index signature (`{ [k: string]: IUniform }`),
+  // which under `noUncheckedIndexedAccess` makes every `mat.uniforms.foo` access
+  // `IUniform | undefined`. Re-typing the property to a record keyed by the exact
+  // uniform names we declare removes the spurious optionality at every call site.
+  type RawShaderMaterialWith<K extends string> = Omit<THREE.RawShaderMaterial, 'uniforms'> & {
+    uniforms: Record<K, THREE.IUniform>
+  }
+  function rawShaderMaterial<U extends Record<string, THREE.IUniform>>(
+    params: THREE.ShaderMaterialParameters & { uniforms: U },
+  ): RawShaderMaterialWith<Extract<keyof U, string>> {
+    return new THREE.RawShaderMaterial(params) as RawShaderMaterialWith<Extract<keyof U, string>>
+  }
+  type ShaderMaterialWith<K extends string> = Omit<THREE.ShaderMaterial, 'uniforms'> & {
+    uniforms: Record<K, THREE.IUniform>
+  }
+  function shaderMaterial<U extends Record<string, THREE.IUniform>>(
+    params: THREE.ShaderMaterialParameters & { uniforms: U },
+  ): ShaderMaterialWith<Extract<keyof U, string>> {
+    return new THREE.ShaderMaterial(params) as ShaderMaterialWith<Extract<keyof U, string>>
+  }
+
+  const advectionMat = rawShaderMaterial({
     vertexShader: FLUID_VERTEX,
     fragmentShader: ADVECTION_FRAG,
     uniforms: {
@@ -493,7 +514,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     glslVersion: THREE.GLSL1,
   })
 
-  const divergenceMat = new THREE.RawShaderMaterial({
+  const divergenceMat = rawShaderMaterial({
     vertexShader: FLUID_VERTEX,
     fragmentShader: DIVERGENCE_FRAG,
     uniforms: {
@@ -503,7 +524,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     glslVersion: THREE.GLSL1,
   })
 
-  const curlMat = new THREE.RawShaderMaterial({
+  const curlMat = rawShaderMaterial({
     vertexShader: FLUID_VERTEX,
     fragmentShader: CURL_FRAG,
     uniforms: {
@@ -513,7 +534,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     glslVersion: THREE.GLSL1,
   })
 
-  const vorticityMat = new THREE.RawShaderMaterial({
+  const vorticityMat = rawShaderMaterial({
     vertexShader: FLUID_VERTEX,
     fragmentShader: VORTICITY_FRAG,
     uniforms: {
@@ -526,7 +547,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     glslVersion: THREE.GLSL1,
   })
 
-  const pressureMat = new THREE.RawShaderMaterial({
+  const pressureMat = rawShaderMaterial({
     vertexShader: FLUID_VERTEX,
     fragmentShader: PRESSURE_FRAG,
     uniforms: {
@@ -537,7 +558,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     glslVersion: THREE.GLSL1,
   })
 
-  const gradientSubtractMat = new THREE.RawShaderMaterial({
+  const gradientSubtractMat = rawShaderMaterial({
     vertexShader: FLUID_VERTEX,
     fragmentShader: GRADIENT_SUBTRACT_FRAG,
     uniforms: {
@@ -548,7 +569,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     glslVersion: THREE.GLSL1,
   })
 
-  const splatMat = new THREE.RawShaderMaterial({
+  const splatMat = rawShaderMaterial({
     vertexShader: FLUID_VERTEX,
     fragmentShader: SPLAT_FRAG,
     uniforms: {
@@ -567,7 +588,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
   const gridLayoutIndex = { straight: 0, radial: 1, 'alternating-grid': 2 }[config.gridLayout] || 0
   const dotRgb = hexToRgbNormalized(config.dotColor)
 
-  const displayMat = new THREE.ShaderMaterial({
+  const displayMat = shaderMaterial({
     vertexShader: BASE_VERTEX,
     fragmentShader: DISPLAY_FRAG,
     uniforms: {
