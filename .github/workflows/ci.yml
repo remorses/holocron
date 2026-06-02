@@ -27,7 +27,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
       - name: Install Playwright Chromium
-        run: pnpm --filter integration-tests exec playwright install --with-deps chromium
+        run: pnpm --filter integration-tests exec playwright install chromium
+      - name: Install Playwright system deps
+        run: sudo pnpm --filter integration-tests exec playwright install-deps chromium
       - name: Generate website icon schemas
         run: pnpm --filter website generate-icon-schemas
       - name: Build workspace
