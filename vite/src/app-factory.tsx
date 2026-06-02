@@ -10,7 +10,13 @@
  * Providers are resolved once at setup time; HMR invalidates this module.
  */
 
-import './styles/globals.css'
+// Import the CSS from `../src` so it always resolves to the file that actually
+// ships in the package (only `src/styles/globals.css` is published; `tsc` does
+// not copy `.css` into `dist/`). From both `src/app-factory.tsx` and the
+// emitted `dist/app-factory.js`, one `..` reaches the package root, so `../src`
+// is stable in both. This matches the `../src` convention in vite-plugin.ts and
+// lets non-Vite consumers (e.g. the workerd test pool) resolve the stylesheet.
+import '../src/styles/globals.css'
 import React from 'react'
 import { Spiceflow, type AnySpiceflow, redirect } from 'spiceflow'
 import { createSpiceflowFetch } from 'spiceflow/client'
