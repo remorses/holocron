@@ -8,7 +8,7 @@
     "./src/*": "./src/*"
   },
   "scripts": {
-    "dev": "pnpm db:migrate:local && sigillo run -- vite dev",
+    "dev": "pnpm db:migrate:local && tuistory -- sigillo run -- vite dev",
     "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
     "generate-icon-schemas": "tsx scripts/generate-icon-schemas.ts",
     "build": "rm -rf dist && pnpm generate-openapi && pnpm generate-icon-schemas && vite build && tsc",

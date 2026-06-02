@@ -555,6 +555,12 @@ When a page renders but client behavior is dead (tree rows do not collapse, sear
         - React markers on TOC DOM
         - startup browser errors / unhandled rejections
 
+## Dev servers
+
+The user-facing apps wrap their dev server with `tuistory --` in `package.json`. Just run `pnpm dev` from the package folder (e.g. `pnpm --dir example dev`) — agents get a background session, humans get auto-attached, and a running session is reused instead of fighting over ports. Inspect or control a session with `tuistory read -s x`, `tuistory -s x wait "/local/i"`, `tuistory -s x restart`. Never stop a session started by someone else unless asked.
+
+The `integration-tests` fixtures do NOT use tuistory — their e2e harness spawns Vite directly (detached process groups + log-file piping) and tuistory would interfere with teardown.
+
 ## Deployments
 
 **Always deploy preview first, then production.** Never go straight to production.

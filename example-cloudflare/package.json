@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "tuistory -- vite dev",
     "build": "vite build",
     "preview": "vite preview",
     "deployment": "vite build && wrangler deploy"
