@@ -28,8 +28,8 @@ test.describe("raw markdown under base path", () => {
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
+    expect(body).toContain("Agent-readable docs index: /docs/llms.txt");
     expect(body).toContain("# Introduction");
-    expect(body).toContain("holocron.so");
   });
 
   test("GET /docs/guide.md returns raw markdown", async ({ request }) => {

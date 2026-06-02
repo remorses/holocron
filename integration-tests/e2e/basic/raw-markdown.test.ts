@@ -318,8 +318,8 @@ test.describe("docs.zip", () => {
     const buffer = await res.body();
     const files = unzipSync(new Uint8Array(buffer));
     const indexMd = strFromU8(files["index.md"]!);
+    expect(indexMd).toContain("Agent-readable docs index: /llms.txt");
     expect(indexMd).toContain("## Overview");
-    expect(indexMd).toContain("holocron.so");
   });
 
   test("zip has cache-control and nosniff headers", async ({ request }) => {
