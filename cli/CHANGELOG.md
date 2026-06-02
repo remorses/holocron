@@ -1,3 +1,17 @@
+## 0.15.0
+
+1. **Clear deploy error when a subscription is required** — when a deploy exceeds the free plan (a preview deploy, or a 2nd production deploy on the free tier), the server returns a `SUBSCRIPTION_REQUIRED` error. The CLI now surfaces the server's actionable message plus the upgrade URL instead of a generic `Failed to create deployment`:
+
+   ```bash
+   npx -y @holocron.so/cli deploy
+   # A Holocron Pro subscription is required for this deployment.
+   # Subscribe to continue: https://holocron.so/...
+   ```
+
+2. **Clearer expired-session message on `login`** — when a saved session token is expired or invalid, the CLI now tells you to run the login command again instead of failing with a confusing error.
+
+3. **Updated spiceflow to 1.26.0-rsc.3**
+
 ## 0.14.1
 
 1. **Updated spiceflow to 1.26.0-rsc.0**

@@ -1,5 +1,90 @@
 # @holocron.so/vite
 
+## 0.17.0
+
+1. **Changelog tab generated from GitHub releases** — add a tab with a `changelog` URL and Holocron fetches the repository's published releases at build time, rendering one page with a Mintlify-compatible `<Update>` entry per release (newest first, drafts skipped):
+
+   ```jsonc
+   {
+     "tab": "Changelog",
+     "changelog": "https://github.com/owner/repo"
+   }
+   ```
+
+   The generated page uses `mode: center` (left nav hidden) with a right-side notice explaining it's generated from GitHub releases. Release notes are Markdown and are safely escaped so a release body can never break the page. Set a `GITHUB_TOKEN` / `GH_TOKEN` to avoid rate limits; the token is only ever sent to `api.github.com`. Transient GitHub outages render a warning page instead of failing the build.
+
+2. **Page mode frontmatter (`mode: center`)** — hide the left navigation sidebar on a per-page basis, matching Mintlify's `mode` layout control:
+
+   ```mdx
+   ---
+   title: Landing
+   mode: center
+   ---
+   ```
+
+   Holocron collapses Mintlify's five mode values into two real layouts: `default` / `wide` / `frame` keep the left nav; `center` / `custom` hide it and center the content. All five names are accepted so existing Mintlify frontmatter works unchanged.
+
+3. **Static page prerendering with `rendering: static`** — opt a page into build-time prerendering. Static pages are rendered to HTML + RSC data at build for faster delivery and cheaper hosting. Use it for pages whose content never depends on the incoming request:
+
+   ```mdx
+   ---
+   title: Overview
+   rendering: static
+   ---
+   ```
+
+   The default is `ssr`, which renders on every request so pages can react to per-request data like cookies.
+
+4. **Multiple OpenAPI examples render as switchable tabs** — when an operation defines several named examples for a request body or response (the `examples` map), Holocron renders all of them as a tabbed code group instead of showing only the first. Example names become the tab labels:
+
+   ```yaml
+   responses:
+     '201':
+       content:
+         application/json:
+           examples:
+             Confirmed order:
+               value: { id: 'order-001', status: 'pending' }
+             Empty order:
+               value: { id: 'order-002', items: [] }
+   ```
+
+5. **Markdown in OpenAPI descriptions** — `description` fields (which are Markdown by spec) now render as formatted HTML — headings, lists, inline code, links, emphasis, code blocks — everywhere they appear: endpoint summary, parameters, schema properties, request bodies, and responses. Previously they were dumped as plain text. The page `<meta>` description is still flattened to clean plain text. (Closes #96)
+
+6. **Mix MDX pages with endpoint pages in OpenAPI tabs** — an API Reference tab can now interleave hand-written MDX pages (overviews, authentication guides) with auto-generated endpoint pages, instead of being limited to generated endpoints only.
+
+7. **`/index` paths resolve to their canonical href** — pages authored as `index.mdx` serve at `/` and `guide/index.mdx` at `/guide`. The `*/index` forms now 308-redirect to the canonical href at runtime (query strings preserved) and are treated as valid targets by build-time broken-link detection, so links to `/guide/index` no longer 404 or get flagged as broken.
+
+8. **New `@holocron.so/vite/prism` export** — reuse Holocron's vendored Prism bundle (prismjs core + ~300 grammars in one ESM module) to highlight code outside MDX, without shipping a duplicate Prism bundle in your client output:
+
+   ```tsx
+   import { Prism } from '@holocron.so/vite/prism'
+
+   const html = Prism.highlight(code, Prism.languages[lang], lang)
+   ```
+
+9. **`bleed` prop on CodeBlock accepts `'both' | 'right' | 'none'`** — control how a code block bleeds into the page margins. `'both'` (or `true`) bleeds both sides, `'right'` only the right margin, `'none'` (or `false`) stays inside the parent.
+
+10. **Scroll-driven fade mask on the left navigation sidebar** — the sidebar top/bottom edges now fade as you scroll, for a cleaner overflow appearance.
+
+11. **Collapsible TOC headings in the left sidebar** — nested headings in the left navigation can now collapse and expand.
+
+12. **Broken link validation runs during builds** — links pointing to non-existent pages are now reported at build time.
+
+13. **`base` slug prefix accepts a leading slash** — the `base` field on OpenAPI and Changelog tabs is a slug prefix, not a route, so a leading slash is now allowed and ignored (`"/docs/api"` behaves like `"docs/api"`); trailing slashes are also trimmed. Useful when mounting docs inside your own app via custom entry. The field was renamed from `openapiBase` to `base` and is now shared across virtual-tab providers.
+
+14. **`<Above>` hero spans the full grid width** including the side rails.
+
+15. **Restyled inline code pills** — GitHub-style with baseline alignment; body prose softened so bold text and headings stand out at full foreground color.
+
+16. **Seamless HMR for `globals.css` edits** — editing Holocron's global stylesheet now hot-reloads without a full page refresh.
+
+17. **Skip auto H1 injection for non-default page modes and JSX-first pages** — pages in `center`/`custom` mode, or pages that start with a JSX component, no longer get an automatic H1 prepended from the title.
+
+18. **Fixed per-section asides scoped on heading-first pages** — asides stay scoped to their section even when a page begins with a heading.
+
+19. **Updated spiceflow to 1.26.0-rsc.3**
+
 ## 0.16.0
 
 1. **New `@holocron.so/vite/mdx` export** — import Holocron MDX components in your own `.tsx` files. Useful when building custom components that compose Holocron primitives:
