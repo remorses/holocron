@@ -61,7 +61,7 @@ import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
-import { holocronUrl } from './lib/holocron-url.ts'
+import { holocronUrl, getHolocronApiKey } from './lib/holocron-url.ts'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -1279,7 +1279,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // quota checks, docs.zip fetching, and AI SDK streaming.
       const chatUrl = new URL(holocronUrl('/api/chat'))
       const useInlineDocs = isLocalhostUrl(request.url)
-      const apiKey = process.env.HOLOCRON_KEY || ''
+      const apiKey = getHolocronApiKey()
       let textBuffer = ''
       const toolNames = new Map<string, string>()
 

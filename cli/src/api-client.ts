@@ -14,6 +14,20 @@ import { createSpiceflowFetch } from 'spiceflow/client'
 import type { App } from 'website/src/server.tsx'
 import { getBaseUrl, getSessionToken, loginHint } from './config.ts'
 
+/**
+ * Environment variable names that can hold a Holocron API key (`holo_xxx`).
+ * Checked in order; the first defined value wins. Add new aliases here.
+ * Keep in sync with vite/src/lib/holocron-url.ts.
+ */
+const HOLOCRON_API_KEY_ENV_NAMES = ['HOLOCRON_KEY', 'HOLOCRON_TOKEN'] as const
+
+function getHolocronApiKey(): string {
+  for (const name of HOLOCRON_API_KEY_ENV_NAMES) {
+    if (process.env[name]) return process.env[name]!
+  }
+  return ''
+}
+
 /** Create a client authenticated with a session token (from `holocron login`). */
 export function createSessionClient(baseUrl: string, sessionToken: string) {
   const safeFetch = createSpiceflowFetch<App>(baseUrl, {
@@ -57,15 +71,16 @@ export type DeployAuth =
 
 /**
  * Resolve auth for deploy commands. Priority:
- *   1. HOLOCRON_KEY env var (loaded from process.env, which includes .env via dotenv)
+ *   1. HOLOCRON_KEY / HOLOCRON_TOKEN env var (first defined wins)
  *   2. ~/.holocron/config.json session token for the resolved URL (from `holocron login`)
  *   3. GitHub Actions OIDC token
  */
 export async function resolveDeployAuth(): Promise<DeployAuth> {
   const baseUrl = getBaseUrl()
 
-  if (process.env.HOLOCRON_KEY) {
-    return { type: 'apikey', key: process.env.HOLOCRON_KEY, baseUrl }
+  const apiKey = getHolocronApiKey()
+  if (apiKey) {
+    return { type: 'apikey', key: apiKey, baseUrl }
   }
 
   const token = getSessionToken(baseUrl)
@@ -78,8 +93,9 @@ export async function resolveDeployAuth(): Promise<DeployAuth> {
     return { type: 'github-oidc', token: oidcToken, baseUrl }
   }
 
+  const envNames = HOLOCRON_API_KEY_ENV_NAMES.join(' or ')
   throw new Error(
-    `Not authenticated. Set HOLOCRON_KEY in your environment, run ${loginHint(baseUrl)}, or deploy from GitHub Actions with id-token: write.`,
+    `Not authenticated. Set ${envNames} in your environment, run ${loginHint(baseUrl)}, or deploy from GitHub Actions with id-token: write.`,
   )
 }
 

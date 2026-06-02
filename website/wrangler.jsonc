@@ -72,6 +72,7 @@
       "STRADA_TOKEN",
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
+      "HOLOCRON_TOKEN",
     ]
   },
 
@@ -136,6 +137,7 @@
           "STRADA_TOKEN",
           "STRIPE_SECRET_KEY",
           "STRIPE_WEBHOOK_SECRET",
+          "HOLOCRON_TOKEN",
         ]
       }
     }

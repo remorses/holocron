@@ -9,7 +9,7 @@ import path from "node:path";
 import { integrationTestsDir } from "../../scripts/fixtures.ts";
 
 const deployE2EEnabled = process.env["HOLOCRON_DEPLOY_E2E"] === "1";
-const previewApiKey = process.env["HOLOCRON_PREVIEW_KEY"] || process.env["HOLOCRON_KEY"];
+const previewApiKey = process.env["HOLOCRON_PREVIEW_KEY"] || process.env["HOLOCRON_KEY"] || process.env["HOLOCRON_TOKEN"];
 const previewProjectId = process.env["HOLOCRON_PREVIEW_PROJECT_ID"];
 const previewApiUrl = process.env["HOLOCRON_PREVIEW_API_URL"]
   || process.env["HOLOCRON_API_URL"]

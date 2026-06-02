@@ -26,3 +26,29 @@ export function getHolocronBaseUrl(): string {
 export function holocronUrl(path: string): string {
   return new URL(path, getHolocronBaseUrl()).toString()
 }
+
+/**
+ * Environment variable names that can hold a Holocron API key (`holo_xxx`).
+ * Checked in order; the first defined value wins. Add new aliases here.
+ */
+export const HOLOCRON_API_KEY_ENV_NAMES = ['HOLOCRON_KEY', 'HOLOCRON_TOKEN'] as const
+
+/**
+ * Read the Holocron API key from environment variables.
+ * Returns the first defined value from HOLOCRON_API_KEY_ENV_NAMES, or `''`.
+ */
+export function getHolocronApiKey(): string {
+  const processEnv = typeof process === 'undefined' ? undefined : process.env
+  if (!processEnv) return ''
+  for (const name of HOLOCRON_API_KEY_ENV_NAMES) {
+    if (processEnv[name]) return processEnv[name]!
+  }
+  return ''
+}
+
+/**
+ * Check whether any Holocron API key env var is set.
+ */
+export function hasHolocronApiKey(): boolean {
+  return getHolocronApiKey() !== ''
+}

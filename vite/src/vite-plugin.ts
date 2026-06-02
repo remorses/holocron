@@ -17,6 +17,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, type SyncResult } from './lib/sync.ts'
 import { colors, formatHolocronStep, formatHolocronSuccess, formatHolocronWarning, logger } from './lib/logger.ts'
+import { hasHolocronApiKey, HOLOCRON_API_KEY_ENV_NAMES } from './lib/holocron-url.ts'
 
 import react from '@vitejs/plugin-react'
 import { cloudflare as cloudflarePlugin } from '@cloudflare/vite-plugin'
@@ -353,11 +354,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         )
       }
 
-      if (config.assistant?.enabled !== false && !process.env.HOLOCRON_KEY) {
+      if (config.assistant?.enabled !== false && !hasHolocronApiKey()) {
+        const envNames = HOLOCRON_API_KEY_ENV_NAMES.join(' or ')
         logger.warn('')
         logger.warn(
           formatHolocronWarning(
-            `no HOLOCRON_KEY found — AI chat will use a temporary model with lower limits.`,
+            `no ${envNames} found — AI chat will use a temporary model with lower limits.`,
           ),
         )
         logger.warn(
