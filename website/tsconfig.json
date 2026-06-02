@@ -18,7 +18,6 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "types": ["node", "@cloudflare/vitest-pool-workers/types"],
-    "baseUrl": ".",
     "paths": {
       "website/src/*": ["./src/*"]
     }
