@@ -15,7 +15,6 @@
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.32.2",
     "@holocron.so/vite": "workspace:^",
-    "@playwright/test": "^1.50.1",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.7",
@@ -27,6 +26,7 @@
     "vite": "^8.0.10"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "fflate": "^0.8.2",
     "rollup-plugin-visualizer": "^7.0.1"
   }
