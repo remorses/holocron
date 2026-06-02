@@ -277,7 +277,7 @@ test.describe("hydration", () => {
     expect(errors, `Hydration errors found:\n${errors.join("\n")}`).toHaveLength(0);
   });
 
-  test("dev server prebundles plugin-rsc browser client", async ({ page }) => {
+  test("dev server prebundles plugin-rsc browser client @dev", async ({ page }) => {
     const errors: string[] = [];
     const pluginRscBrowserClientRequests: string[] = [];
 
