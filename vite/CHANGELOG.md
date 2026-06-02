@@ -1,5 +1,13 @@
 # @holocron.so/vite
 
+## 0.17.1
+
+1. **Fixed OpenAPI double-framed code panels** — when an operation defined multiple named request body or response examples, `RequestExample` and `ResponseExample` wrapped them in a `CodeGroup` inside a `CodeCard`, producing a double frame. Now they render as a single tabbed panel with each example as a named tab.
+
+2. **Fixed app entry CSS crash without the Vite plugin** — importing `@holocron.so/vite/app` outside the holocron Vite plugin (e.g. inside a `@cloudflare/vitest-pool-workers` test) crashed with `Cannot find module './styles/globals.css'`. The import now resolves from the package `src/` directory which is stable from both `src/` and `dist/`.
+
+3. **Hidden tab scrollbars and press feedback** — the horizontal tab scroll container no longer shows a scrollbar on overflow, and tab buttons no longer flash a press/active highlight.
+
 ## 0.17.0
 
 1. **Changelog tab generated from GitHub releases** — add a tab with a `changelog` URL and Holocron fetches the repository's published releases at build time, rendering one page with a Mintlify-compatible `<Update>` entry per release (newest first, drafts skipped):
