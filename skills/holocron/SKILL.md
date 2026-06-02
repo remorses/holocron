@@ -185,6 +185,28 @@ import Readme from '../../README.md'
 
 See https://holocron.so/docs/create/local-imports.md for details.
 
+## Linking between pages
+
+For **any** internal link from one page to another, link to the **real target
+file with a relative path** (`./` or `../`) **keeping the `.md`/`.mdx`
+extension**. Never write absolute root-based links like `/sdk/README` or
+`/docs/guide`.
+
+```mdx
+See the [SDK reference](../sdk/README.mdx).
+See [Browser Analytics](../docs/browser-analytics.mdx).
+```
+
+The reason: an absolute `/slug` link hardcodes the route, which depends on
+`pagesDir`. The same file produces different slugs across projects
+(`pagesDir: './src'` vs `pagesDir: './src/pages'`), so absolute links are
+fragile and break when `pagesDir` or the folder layout changes. A relative path
+to the real file is `pagesDir`-independent: Holocron resolves it to the right
+route and strips the extension, and the link also opens the real file on GitHub.
+
+**Never reason about slugs or `pagesDir` when writing a link.** Write the path
+to the actual file on disk, the way you would for GitHub. Holocron does the rest.
+
 ## Importing a README that also renders on GitHub
 
 A common pattern is importing a repo `README.md` as the docs index page so the
