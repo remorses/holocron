@@ -101,7 +101,7 @@ export function UpgradeBanner({ projectId, isBillingPage }: { projectId: string 
       <div className="flex items-center gap-2 text-sm">
         <span className="font-medium text-primary">Ship docs faster with Pro</span>
         <span className="hidden sm:inline text-muted-foreground">
-          — AI chat assistant and unlimited preview deployments.
+          — AI chat assistant and unlimited preview deployments
         </span>
       </div>
       {!isBillingPage && (
