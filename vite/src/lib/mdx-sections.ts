@@ -123,8 +123,13 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
   })
 
   {
+    // Skip a leading heading so the first section's body (intro paragraphs +
+    // intro `<Aside>`) is scanned. Otherwise a heading-first page (`# Pricing`)
+    // sets firstSectionEnd=0, misses the intro aside, and a synthetic
+    // `<Aside full>` swallows every per-section aside into one top-pinned aside.
+    const scanStart = children[0] && isHeadingNode(children[0]) ? 1 : 0
     let firstSectionEnd = children.length
-    for (let i = 0; i < children.length; i++) {
+    for (let i = scanStart; i < children.length; i++) {
       if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
         firstSectionEnd = i
         break

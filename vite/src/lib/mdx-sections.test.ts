@@ -362,6 +362,107 @@ Response body
     `)
   })
 
+  test('page starting with a heading keeps per-section asides scoped (pricing page repro)', () => {
+    // Heading-first page with an intro <Aside> + two per-section asides.
+    // Each aside must stay in its own section, not collapse into one shared
+    // <Aside full> pinned at the top.
+    const mdx = `# Pricing
+
+Holocron is free to start.
+
+<Aside>
+<Info>
+Subscriptions are per site.
+</Info>
+</Aside>
+
+## Plans
+
+Plans table.
+
+## What Pro unlocks
+
+### Preview deployments
+
+Every branch gets a preview URL.
+
+<Aside>
+<Tip>
+Preview deployments are automatic.
+</Tip>
+</Aside>
+
+## Subscribe
+
+Manage billing from the dashboard.
+
+<Aside>
+<Note>
+Billing runs on Stripe.
+</Note>
+</Aside>
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      # Pricing
+
+      Holocron is free to start.
+
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+
+        <Info>
+          Subscriptions are per site.
+        </Info>
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Plans
+
+      Plans table.
+
+      --- SECTION 2 ---
+
+      [CONTENT]
+      ## What Pro unlocks
+
+      --- SECTION 3 ---
+
+      [CONTENT]
+      ### Preview deployments
+
+      Every branch gets a preview URL.
+
+      [ASIDE]
+      <Aside>
+        <Tip>
+          Preview deployments are automatic.
+        </Tip>
+      </Aside>
+
+      --- SECTION 4 ---
+
+      [CONTENT]
+      ## Subscribe
+
+      Manage billing from the dashboard.
+
+      [ASIDE]
+      <Aside>
+        <Note>
+          Billing runs on Stripe.
+        </Note>
+      </Aside>"
+    `)
+  })
+
   test('handles FullWidth nodes', () => {
     const mdx = `<FullWidth>
 This should be full width.
