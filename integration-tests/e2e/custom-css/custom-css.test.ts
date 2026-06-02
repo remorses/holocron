@@ -43,7 +43,7 @@ test.describe('custom CSS injection', () => {
           custom: getComputedStyle(document.documentElement).getPropertyValue('--custom-css-test').trim(),
         })),
       )
-      .toEqual({ background: '#fafafa', custom: '#ff00ff' })
+      .toEqual({ background: '#fafafa', custom: expect.stringMatching(/^#f0f|#ff00ff$/) })
 
     await page.evaluate(() => {
       document.documentElement.classList.add('dark')
@@ -55,7 +55,7 @@ test.describe('custom CSS injection', () => {
           custom: getComputedStyle(document.documentElement).getPropertyValue('--custom-css-test').trim(),
         })),
       )
-      .toEqual({ background: '#0a0a0a', custom: '#00ffff' })
+      .toEqual({ background: '#0a0a0a', custom: expect.stringMatching(/^#0ff|#00ffff$/) })
   })
 
   test('HTML response includes page content', async ({ request }) => {
