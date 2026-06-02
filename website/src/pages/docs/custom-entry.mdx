@@ -145,6 +145,68 @@ export const app = new Spiceflow()
   .use(holocronApp)
 ```
 
+## Testing with Vitest
+
+Your custom entry imports `@holocron.so/vite/app`. The `holocron()` plugin **aliases** that import to its source app and provides the `virtual:holocron-config`, `virtual:holocron-navigation`, `virtual:holocron-mdx`, and `virtual:holocron-modules` modules. In normal `dev` and `build` the plugin is always present, so this just works.
+
+In tests it is easy to drop the plugin by accident. If you build a separate Vitest config without `holocron()`, importing your server file fails at module load:
+
+```bash
+Error: Cannot find package 'virtual:holocron-config'
+```
+
+The fix is to **keep `holocron()` in your test Vite config** so the alias and virtual modules exist there too. Point its `entry` at the same server file you ship.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [
+    holocron({ entry: './src/server.tsx' }),
+  ],
+  test: {
+    // your Vitest options
+  },
+})
+```
+
+### Cloudflare Workers tests
+
+When testing a Workers custom entry with `@cloudflare/vitest-pool-workers`, the pool wants the raw `react` and `spiceflow` plugins so it can run your app inside `workerd`, while `cloudflare()` must be **off** in tests (the pool manages `workerd` itself). You still need `holocron()` for the alias and virtual modules.
+
+These coexist. The `holocron()` plugin **detects** an already-installed React, Spiceflow, Tailwind, or Cloudflare plugin and skips adding its own duplicate, so listing them yourself is safe.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import { cloudflareTest } from '@cloudflare/vitest-pool-workers'
+import react from '@vitejs/plugin-react'
+import { spiceflowPlugin } from 'spiceflow/vite'
+import { holocron } from '@holocron.so/vite'
+
+const isTest = !!process.env.VITEST
+
+export default defineConfig({
+  plugins: [
+    isTest ? cloudflareTest({ wrangler: { configPath: './wrangler.test.jsonc' } }) : null,
+    // In tests: raw react + spiceflow so the pool can run the app, plus holocron
+    // for the `@holocron.so/vite/app` alias and `virtual:*` modules. holocron
+    // sees the raw plugins and skips re-adding them.
+    react(),
+    spiceflowPlugin({ entry: './src/server.tsx' }),
+    holocron({ entry: './src/server.tsx' }),
+  ],
+})
+```
+
+<Aside>
+<Warning>
+Do not load `cloudflare()` (the deploy plugin) in test mode. Both it and the Workers test pool manage `workerd`, and running them together conflicts. Keep `cloudflare()` for `dev`/`build` only and use `cloudflareTest()` for tests.
+</Warning>
+</Aside>
+
 ## Custom CSS
 
 Holocron includes Tailwind CSS automatically. **Do not add `@import 'tailwindcss'` in your own CSS files.** A second import creates duplicate style layers that break layout, spacing, and cascade order.
