@@ -106,7 +106,7 @@ export function UpgradeBanner({ projectId, isBillingPage }: { projectId: string 
       </div>
         <Link
           href={isBillingPage ? undefined : `/dashboard/projects/${projectId}/billing`}
-          className={`inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground no-underline hover:bg-primary/90 transition-colors shrink-0 ${isBillingPage ? 'invisible pointer-events-none' : ''}`}
+          className={cn('inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground no-underline hover:bg-primary/90 transition-colors shrink-0', isBillingPage && 'invisible pointer-events-none')}
         >
           Subscribe
           <ArrowRightIcon className="size-3" />
