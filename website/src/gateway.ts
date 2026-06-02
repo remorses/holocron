@@ -21,6 +21,7 @@ import { createWorkersAI } from 'workers-ai-provider'
 import type { WorkersAI } from 'workers-ai-provider'
 import { validateApiKey, getProjectSubscription } from './db.ts'
 import { shouldShowTempAiNotice } from './lib/billing-rules.ts'
+import { computeUsdCost, creditsToUsd, monthlyCreditBudget, MODEL_USD_PER_1M_TOKENS, usdToCredits } from './lib/credits.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
 import { NOTICE_USAGE_LIMIT_REACHED, type UsageCounter } from './usage-counter-do.ts'
 
@@ -34,8 +35,8 @@ const ALLOWED_MODELS: Record<string, string> = {
 
 const DEFAULT_MODEL = 'glm-4.7-flash'
 const TEMPORARY_MODEL = 'glm-4.7-flash'
-const MONTHLY_REQUEST_LIMIT = 1000
 const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
+
 const THINKING_DISABLED = {
   reasoning_effort: null,
   chat_template_kwargs: { enable_thinking: false },
@@ -49,7 +50,18 @@ export type HolocronChatNoticeChunk = {
   command?: string
 }
 
+// Usage for THIS turn, yielded just before the stream closes. Cost is computed
+// exactly from token counts × the per-model rate table (lib/credits.ts).
+export type HolocronChatUsageChunk = {
+  type: 'usage'
+  inputTokens: number
+  outputTokens: number
+  costUsd: number
+  credits: number
+}
+
 export type HolocronChatChunk = UIMessageChunk | HolocronChatNoticeChunk
+  | HolocronChatUsageChunk
   | { type: 'model-messages'; messages: ModelMessage[] }
 
 // Shown in the chat UI (as a yellow notice card) when an unauthenticated
@@ -145,19 +157,20 @@ export const gatewayApp = new Spiceflow()
       const messages: ModelMessage[] = body.messages
       const pageSlug = body.pageSlug ?? ''
 
-      // ── Authenticated: usage limit (DO) + subscription (D1) ──────────
-      // These hit two different systems (Durable Object RPC vs D1), so they
-      // can't be batched together — run them concurrently with Promise.all
-      // and check the usage limit first for the early return.
-      const [limitCheck, subscriptionResult] = authResult
-        ? await Promise.all([
-            getUsageStub(authResult.orgId).checkLimit({
-              sinceMs: getMonthStartMs(),
-              limit: MONTHLY_REQUEST_LIMIT,
-            }),
-            getProjectSubscription(authResult.projectId),
-          ])
-        : [null, null]
+      // ── Authenticated: subscription (D1) → per-project credit limit (DO) ─
+      // The limit is per project and depends on the subscription (Pro gets a
+      // bigger budget), so resolve the subscription first, then check spend.
+      const subscriptionResult = authResult
+        ? await getProjectSubscription(authResult.projectId)
+        : null
+
+      const limitCheck = authResult
+        ? await getUsageStub(authResult.orgId).checkLimit({
+            projectId: authResult.projectId,
+            sinceMs: getMonthStartMs(),
+            usdLimit: creditsToUsd(monthlyCreditBudget(!!subscriptionResult)),
+          })
+        : null
 
       if (limitCheck && !limitCheck.allowed) {
         yield NOTICE_USAGE_LIMIT_REACHED
@@ -208,24 +221,59 @@ export const gatewayApp = new Spiceflow()
         abortSignal: request.signal,
       })
 
-      for await (const chunk of result.toUIMessageStream()) {
-        yield chunk
+      // Catch a model added to ALLOWED_MODELS without a matching rate — it would
+      // silently bill at the glm fallback rate, so make it loud.
+      if (!MODEL_USD_PER_1M_TOKENS[modelName]) {
+        console.error(`[gateway] no USD rate for model ${modelName} — billing at glm fallback rate, FIX MODEL_USD_PER_1M_TOKENS`)
       }
-      yield { type: 'model-messages', messages: (await result.response).messages }
 
-      // ── Record usage via waitUntil (survives after response closes) ──
-      if (authResult) {
-        const usage = await result.usage
-        const stub = getUsageStub(authResult.orgId)
-        waitUntil(
-          stub.recordUsage({
-            projectId: authResult.projectId,
-            model: modelName,
-            pageSlug,
-            inputTokens: usage.inputTokens ?? 0,
-            outputTokens: usage.outputTokens ?? 0,
-          }).catch(() => {}),
-        )
+      try {
+        for await (const chunk of result.toUIMessageStream()) {
+          yield chunk
+        }
+        // Emit this turn's exact usage. totalUsage sums all tool-call steps
+        // (result.usage is only the last step). Cost is tokens × the per-model
+        // rate table — exact, synchronous, no gateway. Authenticated only.
+        if (authResult) {
+          const usage = await Promise.resolve(result.totalUsage).catch(() => null)
+          const inputTokens = usage?.inputTokens ?? 0
+          const outputTokens = usage?.outputTokens ?? 0
+          const costUsd = computeUsdCost(modelName, { inputTokens, outputTokens })
+          yield {
+            type: 'usage',
+            inputTokens,
+            outputTokens,
+            costUsd,
+            credits: usdToCredits(costUsd),
+          } satisfies HolocronChatUsageChunk
+        }
+        yield { type: 'model-messages', messages: (await result.response).messages }
+      } finally {
+        // Record usage in `finally` so it runs even on stream error/abort —
+        // the model already cost money, so skipping it would let a project keep
+        // spending while checkLimit sees 0. waitUntil survives the response.
+        if (authResult) {
+          const projectId = authResult.projectId
+          const orgId = authResult.orgId
+          waitUntil(
+            (async () => {
+              const usage = await Promise.resolve(result.totalUsage).catch(() => null)
+              const inputTokens = usage?.inputTokens ?? 0
+              const outputTokens = usage?.outputTokens ?? 0
+              const costUsd = computeUsdCost(modelName, { inputTokens, outputTokens })
+              await getUsageStub(orgId).recordUsage({
+                projectId,
+                model: modelName,
+                pageSlug,
+                inputTokens,
+                outputTokens,
+                costUsd,
+              })
+            })().catch((error) => {
+              console.error('[gateway] failed to record AI chat usage', error)
+            }),
+          )
+        }
       }
     },
   })

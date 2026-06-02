@@ -47,6 +47,7 @@ async function runChatTurn(label: string, messages: ModelMessage[]) {
   let toolResults = 0
   const toolOutputs: unknown[] = []
   let responseMessages: ModelMessage[] | undefined
+  let usage: { inputTokens: number; outputTokens: number; costUsd: number; credits: number } | undefined
   for await (const chunk of stream as AsyncIterable<HolocronChatChunk>) {
     chunks.push(chunk)
     console.log(JSON.stringify(chunk))
@@ -58,12 +59,18 @@ async function runChatTurn(label: string, messages: ModelMessage[]) {
       toolOutputs.push(chunk.output)
     }
     if (chunk.type === 'model-messages') responseMessages = chunk.messages
+    if (chunk.type === 'usage') {
+      usage = { inputTokens: chunk.inputTokens, outputTokens: chunk.outputTokens, costUsd: chunk.costUsd, credits: chunk.credits }
+    }
   }
 
   console.log(`\n${label} chunks:`)
   console.log(JSON.stringify(chunks, null, 2))
   console.log(`\n${label} summary:`)
-  console.log(JSON.stringify({ text, toolCalls, toolResults, responseMessages: responseMessages?.length ?? 0 }, null, 2))
+  console.log(JSON.stringify({ text, toolCalls, toolResults, responseMessages: responseMessages?.length ?? 0, usage }, null, 2))
+  if (apiKey && !usage) {
+    throw new Error(`${label} turn did not emit a usage chunk (credits/dollars tracking)`)
+  }
   if (!text.trim()) {
     throw new Error(`${label} turn returned no text chunks`)
   }
