@@ -18,6 +18,7 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter/relations-v2'
 import { strataBetterAuth } from '@strada.sh/sdk/better-auth'
 import { json } from 'spiceflow'
 import { memoize } from './lib/memoize.ts'
+import { ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
 
 // ── Drizzle client via D1 ───────────────────────────────────────────
 
@@ -55,7 +56,7 @@ export function getAuth() {
   })
 }
 
-function getBaseUrl(): string {
+export function getBaseUrl(): string {
   // BETTER_AUTH_URL comes from wrangler.jsonc [vars] per environment.
   // Production: https://holocron.so, Preview: https://preview.holocron.so.
   // In local dev, wrangler injects the var from the top-level config; the code
@@ -209,6 +210,36 @@ export async function ensureOrg(
     })
     if (winner?.org) return { id: winner.org.id, name: winner.org.name }
     throw err
+  }
+}
+
+// ── Subscription helpers ────────────────────────────────────────────
+
+export type ProjectSubscription = {
+  subscriptionId: string
+  status: string
+  interval: 'month' | 'year' | null
+  currentPeriodEnd: number | null
+  cancelAtPeriodEnd: boolean
+}
+
+/** Return the project's active subscription (active | trialing | past_due), or
+ *  null if the project has no paid subscription. NOT memoized: billing state
+ *  must reflect the latest webhook immediately, otherwise a just-subscribed user
+ *  would stay blocked until a cache TTL expired. The D1 query is a single
+ *  indexed lookup, fast enough to run per request. */
+export async function getProjectSubscription(projectId: string): Promise<ProjectSubscription | null> {
+  const db = getDb()
+  const active = await db.query.subscription.findFirst({
+    where: { projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
+  })
+  if (!active) return null
+  return {
+    subscriptionId: active.subscriptionId,
+    status: active.status,
+    interval: active.interval ?? null,
+    currentPeriodEnd: active.currentPeriodEnd ?? null,
+    cancelAtPeriodEnd: active.cancelAtPeriodEnd ?? false,
   }
 }
 

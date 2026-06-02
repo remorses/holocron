@@ -45,7 +45,7 @@
       "name": "CHAT_RATE_LIMITER",
       "namespace_id": "1001",
       "simple": {
-        "limit": 10,
+        "limit": 5,
         "period": 60
       }
     }
@@ -70,6 +70,8 @@
       "GITHUB_CLIENT_SECRET",
       "STRADA_PROJECT_ID",
       "STRADA_TOKEN",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
     ]
   },
 
@@ -110,7 +112,7 @@
           "name": "CHAT_RATE_LIMITER",
           "namespace_id": "1002",
           "simple": {
-            "limit": 10,
+            "limit": 5,
             "period": 60
           }
         }
@@ -132,6 +134,8 @@
           "GITHUB_CLIENT_SECRET",
           "STRADA_PROJECT_ID",
           "STRADA_TOKEN",
+          "STRIPE_SECRET_KEY",
+          "STRIPE_WEBHOOK_SECRET",
         ]
       }
     }

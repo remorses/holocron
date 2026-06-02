@@ -46,6 +46,8 @@ export default defineConfig(async () => {
             BETTER_AUTH_URL: 'http://localhost',
             GITHUB_CLIENT_ID: 'test',
             GITHUB_CLIENT_SECRET: 'test',
+            STRIPE_SECRET_KEY: 'sk_test_dummy',
+            STRIPE_WEBHOOK_SECRET: 'whsec_test_dummy',
           },
         },
       }),

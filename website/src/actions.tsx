@@ -6,7 +6,9 @@
 import { getActionRequest, parseFormData, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
-import { getAuth, requireSession } from './db.ts'
+import { getAuth, getBaseUrl, getDb, ensureOrg, getProjectSubscription, requireSession } from './db.ts'
+import { getOrCreateStripeCustomer, getProPriceId, getStripe } from './lib/stripe.ts'
+import type { BillingInterval } from './lib/billing-rules.ts'
 
 const deviceUserCodeSchema = z.object({ userCode: z.string().min(1) })
 
@@ -28,4 +30,78 @@ export async function denyDevice(formData: FormData) {
   const auth = getAuth()
   await auth.api.deviceDeny({ body: { userCode }, headers: actionRequest.headers })
   throw redirect(router.href('/device', { user_code: userCode, status: 'denied' }))
+}
+
+// ── Billing actions (used by /dashboard/projects/:projectId/billing) ─
+
+const checkoutSchema = z.object({
+  projectId: z.string().min(1),
+  interval: z.enum(['monthly', 'yearly']),
+})
+const portalSchema = z.object({ projectId: z.string().min(1) })
+
+/** Resolve the caller's session + org and verify they own the project.
+ *  Returns the org + the docs return path for that project's billing tab. */
+async function resolveBillingContext(projectId: string) {
+  const actionRequest = getActionRequest()
+  const session = await requireSession(actionRequest)
+  const org = await ensureOrg(session.userId, session.user.name)
+  const db = getDb()
+  const project = await db.query.project.findFirst({
+    where: { projectId, orgId: org.id },
+  })
+  if (!project) throw new Error('Project not found in your org')
+  const returnUrl = new URL(`/dashboard/projects/${projectId}/billing`, getBaseUrl()).toString()
+  return { session, org, returnUrl }
+}
+
+/** Start a Stripe Checkout for a project subscription. If the project already
+ *  has an active subscription, redirect to the billing portal instead so we
+ *  never create a duplicate. Subscription metadata carries orgId + projectId so
+ *  the webhook can mirror state back to the right project. */
+export async function startCheckout(formData: FormData) {
+  const { projectId, interval } = parseFormData(checkoutSchema, formData)
+  const billingInterval: BillingInterval = interval === 'monthly' ? 'monthly' : 'yearly'
+  const { session, org, returnUrl } = await resolveBillingContext(projectId)
+
+  const customerId = await getOrCreateStripeCustomer({ orgId: org.id, email: session.user.email })
+  if (customerId instanceof Error) throw customerId
+
+  const stripe = getStripe()
+
+  const existing = await getProjectSubscription(projectId)
+  if (existing) {
+    const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: returnUrl })
+    throw redirect(portal.url)
+  }
+
+  const priceId = await getProPriceId(billingInterval)
+  if (priceId instanceof Error) throw priceId
+
+  const checkout = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    customer: customerId,
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: returnUrl,
+    cancel_url: returnUrl,
+    allow_promotion_codes: true,
+    client_reference_id: projectId,
+    metadata: { orgId: org.id, projectId },
+    subscription_data: { metadata: { orgId: org.id, projectId } },
+  })
+  if (!checkout.url) throw new Error('Checkout session has no URL')
+  throw redirect(checkout.url)
+}
+
+/** Open the Stripe Billing Portal for managing an existing subscription. */
+export async function openBillingPortal(formData: FormData) {
+  const { projectId } = parseFormData(portalSchema, formData)
+  const { org, returnUrl } = await resolveBillingContext(projectId)
+
+  const customerId = await getOrCreateStripeCustomer({ orgId: org.id, email: null })
+  if (customerId instanceof Error) throw customerId
+
+  const stripe = getStripe()
+  const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: returnUrl })
+  throw redirect(portal.url)
 }

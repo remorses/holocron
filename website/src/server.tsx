@@ -18,6 +18,7 @@ import { deployApp } from './deploy-api.ts'
 import { aiLogoApp } from './ai-logo.ts'
 import { configOverrideApp } from './config-override-api.ts'
 import { dashboardApp } from './dashboard.tsx'
+import { stripeWebhookApp } from './lib/stripe-webhook.ts'
 import { approveDevice, denyDevice } from './actions.tsx'
 import { getAuth, getSession, requireSession } from './db.ts'
 import { AuthPage, HolocronLogo } from './components/auth-page.tsx'
@@ -284,6 +285,7 @@ export const app = new Spiceflow({ tracer: trace.getTracer('holocron') })
   .use(authApp)
   .use(dashboardApp)
   .use(apiApp)
+  .use(stripeWebhookApp)
   .use(deployApp)
   .use(aiLogoApp)
   .use(configOverrideApp)
