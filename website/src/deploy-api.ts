@@ -23,6 +23,7 @@ import { env, waitUntil } from 'cloudflare:workers'
 import { ulid } from 'ulid'
 import { unzipSync } from 'fflate'
 import { getDb } from './db.ts'
+import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
 import { buildProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
 import { buildDeployEmailHtml, buildDeployEmailSubject, type DeployEmailData } from './deploy-email.tsx'
 
@@ -95,6 +96,48 @@ export const deployApp = new Spiceflow()
       const auth = await resolveCreateDeployAuth(request, body.projectId)
       const db = getDb()
 
+      const branch = auth.type === 'github-oidc' ? auth.branch : body.branch || 'main'
+      const isPreview = auth.type === 'github-oidc' ? auth.preview : body.preview ?? false
+
+      // ── Subscription gating ─────────────────────────────────────────
+      // Previews require a subscription; production gets 1 free deploy. Gate
+      // here in the create step so blocked deploys never waste blob uploads.
+      // Batch the two independent reads (active subscription + production deploy
+      // count) into a single D1 round-trip instead of two sequential queries.
+      const [activeSubscription, deployCountRows] = await db.batch([
+        db.query.subscription.findFirst({
+          where: { projectId: auth.projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
+          columns: { id: true },
+        }),
+        db
+          .select({ count: orm.count() })
+          .from(schema.deployment)
+          .where(
+            orm.and(
+              orm.eq(schema.deployment.projectId, auth.projectId),
+              orm.eq(schema.deployment.status, 'active'),
+              orm.eq(schema.deployment.preview, false),
+            ),
+          ),
+      ] as const)
+      const productionDeployCount = deployCountRows[0]?.count ?? 0
+      const decision = canDeploy({
+        isPreview,
+        hasActiveSubscription: !!activeSubscription,
+        productionDeployCount,
+        // Re-deploying the same project's production pointer is fine for the
+        // first free deploy; a brand-new production deploy with the pointer
+        // already set is the 2nd one, which canDeploy blocks via the count.
+        isRefinalizeOfActive: false,
+      })
+      if (!decision.allowed) {
+        const upgradeUrl = `${new URL(request.url).origin}/dashboard/projects/${auth.projectId}/billing`
+        throw json(
+          { error: decision.reason, code: decision.code, upgradeUrl },
+          { status: 402 },
+        )
+      }
+
       const deploymentId = ulid()
       const version = ulid()
 
@@ -104,8 +147,8 @@ export const deployApp = new Spiceflow()
         projectId: auth.projectId,
         version,
         status: 'uploading',
-        branch: auth.type === 'github-oidc' ? auth.branch : body.branch || 'main',
-        preview: auth.type === 'github-oidc' ? auth.preview : body.preview ?? false,
+        branch,
+        preview: isPreview,
         files: JSON.stringify(body.files),
         triggeredByUserId: auth.userId ?? null,
         githubActor: auth.type === 'github-oidc' ? auth.githubActor ?? null : null,

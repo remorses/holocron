@@ -8,8 +8,9 @@
 // full row after streaming via waitUntil so it survives after the response closes.
 //
 // Unauthenticated requests are rate-limited by IP via the CHAT_RATE_LIMITER
-// binding (10 req / 60s). The rate limiter also applies to invalid API keys
-// so spamming bogus keys can't bypass the IP limit.
+// binding (5 req / 60s). The rate limiter also applies to invalid API keys
+// so spamming bogus keys can't bypass the IP limit. When the limit is hit we
+// yield a friendly notice chunk (rendered as a card) instead of a raw 429.
 
 import { streamText, type ModelMessage, type UIMessageChunk } from 'ai'
 import { env, waitUntil } from 'cloudflare:workers'
@@ -18,7 +19,8 @@ import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import { createWorkersAI } from 'workers-ai-provider'
 import type { WorkersAI } from 'workers-ai-provider'
-import { validateApiKey } from './db.ts'
+import { validateApiKey, getProjectSubscription } from './db.ts'
+import { shouldShowTempAiNotice } from './lib/billing-rules.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
 import { NOTICE_USAGE_LIMIT_REACHED, type UsageCounter } from './usage-counter-do.ts'
 
@@ -49,6 +51,17 @@ export type HolocronChatNoticeChunk = {
 
 export type HolocronChatChunk = UIMessageChunk | HolocronChatNoticeChunk
   | { type: 'model-messages'; messages: ModelMessage[] }
+
+// Shown in the chat UI (as a yellow notice card) when an unauthenticated
+// caller hits the per-IP rate limit. Nudges them to add a HOLOCRON_KEY for
+// higher limits instead of surfacing a raw 429 error.
+const NOTICE_RATE_LIMIT_REACHED = {
+  type: 'notice',
+  code: 'HOLOCRON_RATE_LIMIT_REACHED',
+  title: 'Rate limit reached',
+  message: 'Too many AI chat requests. Wait a minute and try again, or add a HOLOCRON_KEY for higher limits.',
+  command: 'npx -y @holocron.so/cli keys create --name production --project <projectId>',
+} as const satisfies HolocronChatNoticeChunk
 
 const chatRequestSchema = z.object({
   messages: z.array(z.any()),
@@ -118,7 +131,10 @@ export const gatewayApp = new Spiceflow()
         const ip = request.headers.get('cf-connecting-ip') || 'unknown'
         const { success } = await env.CHAT_RATE_LIMITER.limit({ key: ip })
         if (!success) {
-          throw new Response('Rate limit exceeded. Try again later, or add a HOLOCRON_KEY for higher limits.', { status: 429 })
+          // Yield a friendly notice (rendered as a card in the chat UI) instead
+          // of throwing a raw 429 that would surface as a generic error.
+          yield NOTICE_RATE_LIMIT_REACHED
+          return
         }
         if (authHeader) {
           throw new Response('Missing or invalid API key. Use a holo_xxx key in the Authorization header.', { status: 401 })
@@ -129,17 +145,23 @@ export const gatewayApp = new Spiceflow()
       const messages: ModelMessage[] = body.messages
       const pageSlug = body.pageSlug ?? ''
 
-      // ── Authenticated: check monthly usage limit via DO ──────────────
-      if (authResult) {
-        const stub = getUsageStub(authResult.orgId)
-        const { allowed } = await stub.checkLimit({
-          sinceMs: getMonthStartMs(),
-          limit: MONTHLY_REQUEST_LIMIT,
-        })
-        if (!allowed) {
-          yield NOTICE_USAGE_LIMIT_REACHED
-          return
-        }
+      // ── Authenticated: usage limit (DO) + subscription (D1) ──────────
+      // These hit two different systems (Durable Object RPC vs D1), so they
+      // can't be batched together — run them concurrently with Promise.all
+      // and check the usage limit first for the early return.
+      const [limitCheck, subscriptionResult] = authResult
+        ? await Promise.all([
+            getUsageStub(authResult.orgId).checkLimit({
+              sinceMs: getMonthStartMs(),
+              limit: MONTHLY_REQUEST_LIMIT,
+            }),
+            getProjectSubscription(authResult.projectId),
+          ])
+        : [null, null]
+
+      if (limitCheck && !limitCheck.allowed) {
+        yield NOTICE_USAGE_LIMIT_REACHED
+        return
       }
       const filesPromise = (() => {
         if (body.docsPages) return Promise.resolve(body.docsPages)
@@ -157,7 +179,15 @@ export const gatewayApp = new Spiceflow()
       const modelName = usesTemporaryModel ? TEMPORARY_MODEL : DEFAULT_MODEL
       const modelId = ALLOWED_MODELS[modelName] ?? ALLOWED_MODELS[DEFAULT_MODEL]!
 
-      if (usesTemporaryModel) {
+      // Subscribed projects never see the upgrade nag. Unauthenticated callers
+      // (no API key → no project to bill) still see it. Resolved above
+      // concurrently with the usage-limit check.
+      const showTempNotice = shouldShowTempAiNotice({
+        authenticated: !!authResult,
+        hasActiveSubscription: !!subscriptionResult,
+      })
+
+      if (showTempNotice) {
         yield {
           type: 'notice',
           code: 'HOLOCRON_TEMPORARY_AI_MODEL',
