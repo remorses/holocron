@@ -76,6 +76,10 @@ export const verification = s.sqliteTable('verification', {
 export const org = s.sqliteTable('org', {
   id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
   name: s.text('name').notNull(),
+  /** Stripe customer id — one customer per org, set once on first checkout.
+   *  Single source of truth; reused for every checkout/portal call so we never
+   *  create duplicate Stripe customers. */
+  stripeCustomerId: s.text('stripe_customer_id'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
 })
@@ -172,6 +176,35 @@ export const deployment = s.sqliteTable('deployment', {
   s.index('deployment_subdomain_idx').on(table.subdomain),
 ])
 
+// ── Subscriptions (one paid subscription unlocks one project/site) ──
+
+export const subscription = s.sqliteTable('subscription', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  /** Stripe subscription id (sub_...). Unique → idempotent upsert key for webhooks. */
+  subscriptionId: s.text('subscription_id').notNull().unique(),
+  /** Billing identity. The Stripe customer lives on the org, not the project. */
+  orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
+  /** The SITE this subscription unlocks. Gating (deploy limits, AI notice) keys off this. */
+  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
+  /** Stripe customer id, denormalized from org for convenience. */
+  customerId: s.text('customer_id'),
+  /** Stripe price id (price_...). */
+  priceId: s.text('price_id').notNull(),
+  /** Stripe product id (prod_...). */
+  productId: s.text('product_id'),
+  /** active | trialing | past_due | canceled | incomplete | ... (Stripe status). */
+  status: s.text('status').notNull(),
+  /** Billing interval: "month" | "year". */
+  interval: s.text('interval', { enum: ['month', 'year'] }),
+  currentPeriodEnd: epochMs('current_period_end'),
+  cancelAtPeriodEnd: s.integer('cancel_at_period_end', { mode: 'boolean' }).default(false),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+  updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  s.index('subscription_org_id_idx').on(table.orgId),
+  s.index('subscription_project_id_idx').on(table.projectId),
+])
+
 // ── API keys (one key per project, key alone identifies the project) ─
 
 export const apiKey = s.sqliteTable('api_key', {
@@ -207,7 +240,7 @@ export const deviceCode = s.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, orgInvitation, apiKey, deviceCode, project, deployment },
+  { user, session, account, verification, org, orgMember, orgInvitation, apiKey, deviceCode, project, deployment, subscription },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -229,6 +262,7 @@ export const relations = defineRelations(
       invitations: r.many.orgInvitation(),
       keys: r.many.apiKey(),
       projects: r.many.project(),
+      subscriptions: r.many.subscription(),
       users: r.many.user({
         from: r.org.id.through(r.orgMember.orgId),
         to: r.user.id.through(r.orgMember.userId),
@@ -253,10 +287,15 @@ export const relations = defineRelations(
       org: r.one.org({ from: r.project.orgId, to: r.org.id }),
       keys: r.many.apiKey(),
       deployments: r.many.deployment(),
+      subscriptions: r.many.subscription(),
     },
     deployment: {
       project: r.one.project({ from: r.deployment.projectId, to: r.project.projectId }),
       triggeredByUser: r.one.user({ from: r.deployment.triggeredByUserId, to: r.user.id }),
+    },
+    subscription: {
+      org: r.one.org({ from: r.subscription.orgId, to: r.org.id }),
+      project: r.one.project({ from: r.subscription.projectId, to: r.project.projectId }),
     },
   }),
 )

@@ -17,11 +17,13 @@
     "generate": "drizzle-kit generate && tsx scripts/flatten-migrations.ts ./drizzle",
     "flatten": "tsx scripts/flatten-migrations.ts ./drizzle"
   },
+  "dependencies": {
+    "drizzle-orm": "1.0.0-beta.21",
+    "ulid": "^3.0.2"
+  },
   "devDependencies": {
     "@types/node": "^25.6.0",
     "drizzle-kit": "1.0.0-beta.21",
-    "drizzle-orm": "1.0.0-beta.21",
-    "typescript": "^6.0.2",
-    "ulid": "^3.0.2"
+    "typescript": "^6.0.2"
   }
 }
