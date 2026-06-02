@@ -54,7 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
-import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction } from './dashboard-actions.ts'
+import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, updateProjectNameAction, deleteProjectAction } from './dashboard-actions.ts'
 import { openBillingPortal, startCheckout } from './actions.tsx'
 import type { dashboardApp } from './dashboard.tsx'
 
@@ -415,6 +415,7 @@ export function ProjectTabBar({ projectId, currentTab }: { projectId: string; cu
     { label: 'API Keys', href: `${base}/keys`, active: currentTab === 'keys' },
     { label: 'Billing', href: `${base}/billing`, active: currentTab === 'billing' },
     { label: 'Members', href: `${base}/members`, active: currentTab === 'members' },
+    { label: 'Settings', href: `${base}/settings`, active: currentTab === 'settings' },
     { label: 'Assistant', href: `${base}/assistant`, active: currentTab === 'assistant', comingSoon: true },
     { label: 'Analytics', href: `${base}/analytics`, active: currentTab === 'analytics', comingSoon: true },
   ]
@@ -874,6 +875,108 @@ export function AcceptInviteButton({ invitationId }: { invitationId: string }) {
       <Button onClick={handleAccept} loading={loading}>
         Join organization
       </Button>
+    </div>
+  )
+}
+
+// ── Settings Form (rename project) ──────────────────────────────────
+
+export function SettingsForm({ projectId, initialName }: { projectId: string; initialName: string }) {
+  const [name, setName] = useState(initialName)
+  const [loading, setLoading] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSave() {
+    if (!name.trim()) return
+    setLoading(true)
+    setError(null)
+    setSaved(false)
+    try {
+      await updateProjectNameAction({ projectId, name: name.trim() })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update name')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium">Site name</label>
+      <div className="flex gap-2">
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="My Docs"
+          className="max-w-sm"
+        />
+        <Button onClick={handleSave} loading={loading} disabled={name.trim() === initialName}>
+          {saved ? 'Saved' : 'Save'}
+        </Button>
+      </div>
+      {error && <div className="text-sm text-destructive">{error}</div>}
+      <div className="text-xs text-muted-foreground">
+        Display name for this site. Also set automatically from the <code className="font-mono font-semibold">name</code> field in docs.json on each deploy.
+      </div>
+    </div>
+  )
+}
+
+// ── Delete Project Button ───────────────────────────────────────────
+
+export function DeleteProjectButton({ projectId, projectName }: { projectId: string; projectName: string }) {
+  const [confirming, setConfirming] = useState(false)
+  const [confirmText, setConfirmText] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleDelete() {
+    setLoading(true)
+    setError(null)
+    try {
+      await deleteProjectAction({ projectId })
+    } catch (e) {
+      // redirect throws, so if we get here it's an actual error
+      setError(e instanceof Error ? e.message : 'Failed to delete project')
+      setLoading(false)
+    }
+  }
+
+  if (!confirming) {
+    return (
+      <div>
+        <Button variant="destructive" size="sm" onClick={() => setConfirming(true)}>
+          Delete this site
+        </Button>
+      </div>
+    )
+  }
+
+  const canDelete = confirmText === projectName
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="text-sm text-muted-foreground">
+        Type <strong>{projectName}</strong> to confirm deletion. This will permanently remove the site, all deployments, and API keys.
+      </div>
+      <div className="flex gap-2 items-center">
+        <Input
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={projectName}
+          className="max-w-48"
+        />
+        <Button variant="destructive" size="sm" onClick={handleDelete} loading={loading} disabled={!canDelete}>
+          Confirm delete
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => { setConfirming(false); setConfirmText('') }}>
+          Cancel
+        </Button>
+      </div>
+      {error && <div className="text-sm text-destructive">{error}</div>}
     </div>
   )
 }

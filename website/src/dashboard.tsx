@@ -43,6 +43,8 @@ import {
   CreateApiKeyButton,
   InviteButton,
   UpgradeBanner,
+  SettingsForm,
+  DeleteProjectButton,
 } from './dashboard-components.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
@@ -601,6 +603,96 @@ export const dashboardApp = new Spiceflow()
           <div className="flex flex-col gap-6">
             <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
             <BillingPanel projectId={project.projectId} subscription={subscription} />
+          </div>
+        </main>
+      </>
+    )
+  })
+
+  // ── Settings tab ────────────────────────────────────────────────────
+
+  .loader('/dashboard/projects/:projectId/settings', async ({ request, params }) => {
+    const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+      where: { projectId: params.projectId },
+    }))
+    return { project }
+  })
+
+  .page('/dashboard/projects/:projectId/settings', async ({ loaderData }) => {
+    const { project } = loaderData
+    const siteUrl = project.subdomain
+      ? `https://${project.subdomain}-site.holocron.so`
+      : null
+
+    return (
+      <>
+        <ProjectTabBar projectId={project.projectId} currentTab="settings" />
+        <div className="border-t border-border" />
+        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
+          <div className="flex flex-col gap-8">
+            <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+
+            {/* Rename */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">General</h2>
+              <Frame className="w-full">
+                <div className="rounded-xl border bg-background p-4">
+                  <SettingsForm projectId={project.projectId} initialName={project.name} />
+                </div>
+              </Frame>
+            </section>
+
+            {/* Read-only project info */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Project Info</h2>
+              <Frame className="w-full">
+                <div className="rounded-xl border bg-background p-4">
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-sm">
+                    <dt className="text-muted-foreground">Project ID</dt>
+                    <dd className="font-mono text-xs">{project.projectId}</dd>
+                    {siteUrl && (
+                      <>
+                        <dt className="text-muted-foreground">Subdomain</dt>
+                        <dd className="font-mono text-xs">{project.subdomain}</dd>
+                      </>
+                    )}
+                    {project.githubOwner && project.githubRepo && (
+                      <>
+                        <dt className="text-muted-foreground">GitHub</dt>
+                        <dd>
+                          <a
+                            href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm"
+                          >
+                            {project.githubOwner}/{project.githubRepo} ↗
+                          </a>
+                        </dd>
+                      </>
+                    )}
+                    <dt className="text-muted-foreground">Default Branch</dt>
+                    <dd className="font-mono text-xs">{project.defaultBranch || 'main'}</dd>
+                  </dl>
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    GitHub repository and subdomain are set automatically from verified GitHub Actions deployments and cannot be changed manually.
+                  </div>
+                </div>
+              </Frame>
+            </section>
+
+            {/* Danger zone */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-destructive uppercase tracking-wider">Danger Zone</h2>
+              <Frame className="w-full">
+                <div className="rounded-xl border border-destructive/20 bg-background p-4 flex flex-col gap-3">
+                  <div className="text-sm text-muted-foreground">
+                    Permanently delete this site and all its deployments, API keys, and subscription data. This action cannot be undone.
+                  </div>
+                  <DeleteProjectButton projectId={project.projectId} projectName={project.name} />
+                </div>
+              </Frame>
+            </section>
           </div>
         </main>
       </>

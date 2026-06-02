@@ -10,7 +10,9 @@
 'use server'
 
 import { ulid } from 'ulid'
+import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
+import { env } from 'cloudflare:workers'
 import { getActionRequest, redirect } from 'spiceflow'
 import { getDb, requireSession, generateApiKey, hashApiKey } from './db.ts'
 
@@ -139,4 +141,55 @@ export async function createOrgAction({ name }: {
   ])
 
   return { orgId }
+}
+
+// ── Update Project Name ─────────────────────────────────────────────
+
+export async function updateProjectNameAction({ projectId, name }: {
+  projectId: string
+  name: string
+}): Promise<{ ok: true }> {
+  if (!name.trim()) throw new Error('Name is required')
+  if (!projectId) throw new Error('Project ID is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  const db = getDb()
+  await db.update(schema.project)
+    .set({ name: name.trim(), updatedAt: Date.now() })
+    .where(orm.eq(schema.project.projectId, projectId))
+
+  return { ok: true }
+}
+
+// ── Delete Project ──────────────────────────────────────────────────
+
+export async function deleteProjectAction({ projectId }: {
+  projectId: string
+}): Promise<never> {
+  if (!projectId) throw new Error('Project ID is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  const db = getDb()
+
+  // Load all deployments to clean up KV site-info entries
+  const deployments = await db.query.deployment.findMany({
+    where: { projectId },
+    columns: { subdomain: true },
+  })
+
+  // Delete site-info KV entries so the hosting worker stops serving pages
+  const kvDeletes = deployments
+    .filter((d) => d.subdomain)
+    .map((d) => env.SITES_KV.delete(`site-info:${d.subdomain}`))
+  if (kvDeletes.length > 0) await Promise.all(kvDeletes)
+
+  // Delete the project row; cascades to deployments, api_keys, subscriptions
+  await db.delete(schema.project)
+    .where(orm.eq(schema.project.projectId, projectId))
+
+  throw redirect('/dashboard')
 }
