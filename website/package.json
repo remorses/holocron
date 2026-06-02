@@ -23,8 +23,8 @@
     "secrets": "pnpm run secrets:preview && pnpm run secrets:prod",
     "secrets:preview": "sigillo run -c preview --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview",
     "secrets:prod": "sigillo run -c prod --mount .env.prod --mount-format env -- wrangler secret bulk .env.prod",
-    "deployment": "CLOUDFLARE_ENV=preview sigillo run -c preview --command 'pnpm db:migrate:preview && vite build && wrangler deploy --env preview && pnpm --dir ../og-worker deployment'",
-    "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && vite build && wrangler deploy && pnpm --dir ../og-worker deployment:prod'"
+    "deployment": "CLOUDFLARE_ENV=preview sigillo run -c preview --command 'pnpm db:migrate:preview && rm -rf dist && vite build && wrangler deploy --env preview && pnpm --dir ../og-worker deployment'",
+    "deployment:prod": "sigillo run -c prod --command 'pnpm db:migrate:prod && rm -rf dist && vite build && wrangler deploy && pnpm --dir ../og-worker deployment:prod'"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

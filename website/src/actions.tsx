@@ -6,7 +6,7 @@
 import { getActionRequest, parseFormData, redirect } from 'spiceflow'
 import { router } from 'spiceflow/react'
 import { z } from 'zod'
-import { getAuth, getBaseUrl, getDb, ensureOrg, getProjectSubscription, requireSession } from './db.ts'
+import { getAuth, getBaseUrl, getDb, getProjectSubscription, requireSession } from './db.ts'
 import { getOrCreateStripeCustomer, getProPriceId, getStripe } from './lib/stripe.ts'
 import type { BillingInterval } from './lib/billing-rules.ts'
 
@@ -40,19 +40,26 @@ const checkoutSchema = z.object({
 })
 const portalSchema = z.object({ projectId: z.string().min(1) })
 
-/** Resolve the caller's session + org and verify they own the project.
- *  Returns the org + the docs return path for that project's billing tab. */
+/** Resolve the caller's session and verify they are an admin of the project's org.
+ *  Billing opens the Stripe customer portal for the whole org, so plain members
+ *  must not be able to view invoices, change payment methods, or cancel plans. */
 async function resolveBillingContext(projectId: string) {
   const actionRequest = getActionRequest()
   const session = await requireSession(actionRequest)
-  const org = await ensureOrg(session.userId, session.user.name)
   const db = getDb()
   const project = await db.query.project.findFirst({
-    where: { projectId, orgId: org.id },
+    where: { projectId },
   })
-  if (!project) throw new Error('Project not found in your org')
+  if (!project) throw new Error('Project not found')
+
+  const membership = await db.query.orgMember.findFirst({
+    where: { userId: session.userId, orgId: project.orgId },
+  })
+  if (!membership) throw new Error('Not a member of this organization')
+  if (membership.role !== 'admin') throw new Error('Only admins can manage billing')
+
   const returnUrl = new URL(`/dashboard/projects/${projectId}/billing`, getBaseUrl()).toString()
-  return { session, org, returnUrl }
+  return { session, orgId: project.orgId, returnUrl }
 }
 
 /** Start a Stripe Checkout for a project subscription. If the project already
@@ -62,9 +69,9 @@ async function resolveBillingContext(projectId: string) {
 export async function startCheckout(formData: FormData) {
   const { projectId, interval } = parseFormData(checkoutSchema, formData)
   const billingInterval: BillingInterval = interval === 'monthly' ? 'monthly' : 'yearly'
-  const { session, org, returnUrl } = await resolveBillingContext(projectId)
+  const { session, orgId, returnUrl } = await resolveBillingContext(projectId)
 
-  const customerId = await getOrCreateStripeCustomer({ orgId: org.id, email: session.user.email })
+  const customerId = await getOrCreateStripeCustomer({ orgId, email: session.user.email })
   if (customerId instanceof Error) throw customerId
 
   const stripe = getStripe()
@@ -86,8 +93,8 @@ export async function startCheckout(formData: FormData) {
     cancel_url: returnUrl,
     allow_promotion_codes: true,
     client_reference_id: projectId,
-    metadata: { orgId: org.id, projectId },
-    subscription_data: { metadata: { orgId: org.id, projectId } },
+    metadata: { orgId, projectId },
+    subscription_data: { metadata: { orgId, projectId } },
   })
   if (!checkout.url) throw new Error('Checkout session has no URL')
   throw redirect(checkout.url)
@@ -96,9 +103,9 @@ export async function startCheckout(formData: FormData) {
 /** Open the Stripe Billing Portal for managing an existing subscription. */
 export async function openBillingPortal(formData: FormData) {
   const { projectId } = parseFormData(portalSchema, formData)
-  const { org, returnUrl } = await resolveBillingContext(projectId)
+  const { orgId, returnUrl } = await resolveBillingContext(projectId)
 
-  const customerId = await getOrCreateStripeCustomer({ orgId: org.id, email: null })
+  const customerId = await getOrCreateStripeCustomer({ orgId, email: null })
   if (customerId instanceof Error) throw customerId
 
   const stripe = getStripe()

@@ -19,6 +19,7 @@ import {
   getDb,
   requireManagementAuth,
   ensureOrg,
+  requireSession,
   getOrgsForUser,
   generateApiKey,
   hashApiKey,
@@ -58,6 +59,51 @@ const ProjectResponse = createSelectSchema(schema.project, {
   updatedAt: epochMsField,
 })
 
+async function requireAdminSessionForProject(request: Request, projectId: string) {
+  const session = await requireSession(request)
+  const db = getDb()
+  const project = await db.query.project.findFirst({ where: { projectId } })
+  if (!project) throw json({ error: 'project not found' }, { status: 404 })
+
+  const membership = await db.query.orgMember.findFirst({
+    where: { userId: session.userId, orgId: project.orgId },
+  })
+  if (!membership) throw json({ error: 'not a member of this organization' }, { status: 403 })
+  if (membership.role !== 'admin') throw json({ error: 'only admins can manage API keys' }, { status: 403 })
+
+  return { db, orgId: project.orgId }
+}
+
+async function requireAdminSessionForOrg(request: Request) {
+  const session = await requireSession(request)
+  const org = await ensureOrg(session.userId, session.user.name)
+  const db = getDb()
+  const membership = await db.query.orgMember.findFirst({
+    where: { userId: session.userId, orgId: org.id },
+  })
+  if (!membership || membership.role !== 'admin') {
+    throw json({ error: 'only admins can manage API keys' }, { status: 403 })
+  }
+
+  return { db, orgId: org.id }
+}
+
+async function requireAdminSessionForKey(request: Request, keyId: string) {
+  const session = await requireSession(request)
+  const db = getDb()
+  const key = await db.query.apiKey.findFirst({ where: { id: keyId } })
+  if (!key) throw json({ error: 'key not found' }, { status: 404 })
+
+  const membership = await db.query.orgMember.findFirst({
+    where: { userId: session.userId, orgId: key.orgId },
+  })
+  if (!membership || membership.role !== 'admin') {
+    throw json({ error: 'only admins can manage API keys' }, { status: 403 })
+  }
+
+  return { db, key }
+}
+
 
 
 // ── App ─────────────────────────────────────────────────────────────────
@@ -88,30 +134,15 @@ export const apiApp = new Spiceflow()
     detail: {
       summary: 'Create API key',
       description:
-        'Creates a new `holo_xxx` API key scoped to a project. The full key is returned only in this response; it is never stored in plain text.',
+        'Creates a new `holo_xxx` API key scoped to a project. Requires a signed-in org admin. The full key is returned only in this response; it is never stored in plain text.',
       tags: ['API Keys'],
     },
     response: {
       200: ApiKeyCreatedResponse,
     },
     async handler({ request }) {
-      const auth = await requireManagementAuth(request)
-
       const body = await request.json()
-
-      // A project-scoped API key may only create keys for its own project.
-      if (auth.type === 'api-key' && body.projectId !== auth.projectId) {
-        throw json({ error: 'API key cannot create keys for another project' }, { status: 403 })
-      }
-
-      // Validate project belongs to this org
-      const db = getDb()
-      const proj = await db.query.project.findFirst({
-        where: { projectId: body.projectId, orgId: auth.orgId },
-      })
-      if (!proj) {
-        throw json({ error: 'project not found in this org' }, { status: 404 })
-      }
+      const { db, orgId } = await requireAdminSessionForProject(request, body.projectId)
 
       const { fullKey, prefix } = generateApiKey()
       const hash = await hashApiKey(fullKey)
@@ -119,7 +150,7 @@ export const apiApp = new Spiceflow()
 
       await db.insert(schema.apiKey).values({
         id,
-        orgId: auth.orgId,
+        orgId,
         projectId: body.projectId,
         name: body.name,
         prefix,
@@ -136,7 +167,7 @@ export const apiApp = new Spiceflow()
     detail: {
       summary: 'List API keys',
       description:
-        'Lists API keys for the caller. A signed-in session lists every key in the org; a project-scoped API key lists only keys for its own project. Only the prefix is returned, not the full secret.',
+        'Lists API keys for the signed-in admin\'s org. Only the prefix is returned, not the full secret.',
       tags: ['API Keys'],
     },
     response: {
@@ -145,14 +176,9 @@ export const apiApp = new Spiceflow()
       }),
     },
     async handler({ request }) {
-      const auth = await requireManagementAuth(request)
-
-      const db = getDb()
+      const { db, orgId } = await requireAdminSessionForOrg(request)
       const keys = await db.query.apiKey.findMany({
-        // API keys are scoped to their own project; sessions see the whole org.
-        where: auth.type === 'api-key'
-          ? { orgId: auth.orgId, projectId: auth.projectId }
-          : { orgId: auth.orgId },
+        where: { orgId },
         orderBy: { createdAt: 'desc' },
       })
 
@@ -176,6 +202,7 @@ export const apiApp = new Spiceflow()
     }),
     detail: {
       summary: 'Delete API key',
+      description: 'Deletes an API key. Requires a signed-in org admin.',
       tags: ['API Keys'],
     },
     response: {
@@ -183,21 +210,11 @@ export const apiApp = new Spiceflow()
       404: ErrorResponse,
     },
     async handler({ request, params }) {
-      const auth = await requireManagementAuth(request)
-
-      const db = getDb()
-      // API keys may only delete keys within their own project; sessions
-      // may delete any key in the org.
-      const conditions = [
-        orm.eq(schema.apiKey.id, params.id),
-        orm.eq(schema.apiKey.orgId, auth.orgId),
-      ]
-      if (auth.type === 'api-key') {
-        conditions.push(orm.eq(schema.apiKey.projectId, auth.projectId))
-      }
+      const { db, key } = await requireAdminSessionForKey(request, params.id)
       const deleted = await db
         .delete(schema.apiKey)
-        .where(orm.and(...conditions))
+        .where(orm.eq(schema.apiKey.id, key.id))
+        .limit(1)
         .returning({ id: schema.apiKey.id })
 
       if (deleted.length === 0) {
