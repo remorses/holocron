@@ -10,8 +10,13 @@
         "default": "dark"
     },
     "icons": { "library": "lucide" },
+    "knownPaths": ["/dashboard", "/login"],
     "navbar": {
         "links": [
+            {
+                "label": "Dashboard",
+                "href": "/dashboard"
+            },
             {
                 "type": "github",
                 "href": "https://github.com/remorses/holocron"
@@ -166,6 +171,11 @@
                         ]
                     }
                 ]
+            },
+            {
+                "tab": "Pricing",
+                "icon": "credit-card",
+                "pages": ["docs/pricing"]
             },
             {
                 "tab": "API Reference",
