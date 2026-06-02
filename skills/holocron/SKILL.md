@@ -534,6 +534,11 @@ docs.jsonc ───►│  Vite Plugin  │──────► Build Output
 
 ## Agent rules
 
+- **Always place MDX pages inside the Holocron `pagesDir`.** Before creating or
+  editing any docs page, read the project's `vite.config.ts` (or `vite.config.mts`)
+  to find the `pagesDir` option passed to the Holocron plugin. If `pagesDir` is not
+  set, it defaults to the project root. All `.mdx` and `.md` page files must live
+  inside that directory; files outside it are invisible to the navigation and build.
 - Prefer the latest fetched docs over anything remembered from previous sessions.
 - Keep rule-like project behavior in this skill so agents see it even before
   fetching the full docs.
