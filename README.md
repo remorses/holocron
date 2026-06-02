@@ -109,7 +109,7 @@ node dist/rsc/index.js
 |------|----------|----------|
 | **Hosting** | Cloud only | Self-hosted, or [holocron.so](/docs/deploy/holocron) managed hosting |
 | **Build** | Cloud build on push | Local `vite build`, standard CI |
-| **Pricing** | Starts at $150/mo | Free, open source (MIT) |
+| **Pricing** | Starts at $150/mo | Free, open source ([MIT](./LICENSE)) |
 | **Git workflow** | Mintlify-managed deploys | Standard git: PRs, branches, diffs |
 | **Config** | `docs.json` | Same `docs.json` (compatible) |
 | **Components** | Proprietary MDX set | Same components, open source |
@@ -269,4 +269,4 @@ Full documentation at **[holocron.so](https://holocron.so)**.
 
 ## License
 
-MIT
+[MIT](./LICENSE). If you use Holocron for your docs, please keep the "Powered by Holocron" footer link. It helps others discover the project.

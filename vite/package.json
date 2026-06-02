@@ -10,6 +10,7 @@
     "url": "https://github.com/remorses/holocron",
     "directory": "vite"
   },
+  "license": "MIT",
   "homepage": "https://holocron.so",
   "bugs": "https://github.com/remorses/holocron/issues",
   "keywords": [
