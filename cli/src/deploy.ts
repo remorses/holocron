@@ -88,7 +88,23 @@ deployCli
       },
     })
     if (createRes instanceof Error) {
-      output.error(logger.error(`Failed to create deployment: ${createRes.message}`))
+      // The server returns 402 with { error, code: 'SUBSCRIPTION_REQUIRED',
+      // upgradeUrl } when a deploy exceeds the free plan (previews, or a 2nd
+      // production deploy). Surface a clear, actionable message instead of a
+      // generic "Failed to create deployment".
+      const value = (createRes as { value?: unknown }).value
+      const detail =
+        value && typeof value === 'object'
+          ? (value as { error?: string; code?: string; upgradeUrl?: string })
+          : undefined
+      if (detail?.code === 'SUBSCRIPTION_REQUIRED') {
+        output.error(logger.error(detail.error ?? 'A Holocron Pro subscription is required for this deployment.'))
+        if (detail.upgradeUrl) {
+          output.error(logger.error(`Subscribe to continue: ${c.bold(detail.upgradeUrl)}`))
+        }
+        return proc.exit(1)
+      }
+      output.error(logger.error(`Failed to create deployment: ${detail?.error ?? createRes.message}`))
       return proc.exit(1)
     }
     const { deploymentId, version, existingHashes } = createRes
