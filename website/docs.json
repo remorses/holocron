@@ -130,13 +130,7 @@
                             "docs/deploy/build-output",
                             "docs/deploy/base-path"
                         ]
-                    }
-                ]
-            },
-            {
-                "tab": "Components",
-                "icon": "blocks",
-                "groups": [
+                    },
                     {
                         "group": "Components",
                         "icon": "blocks",
