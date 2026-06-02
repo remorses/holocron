@@ -54,6 +54,7 @@ import {
   TableRow,
 } from './components/ui/table.tsx'
 import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction } from './dashboard-actions.ts'
+import { openBillingPortal, startCheckout } from './actions.tsx'
 import type { dashboardApp } from './dashboard.tsx'
 
 type DashboardApp = typeof dashboardApp
@@ -383,6 +384,7 @@ export function ProjectTabBar({ projectId, currentTab }: { projectId: string; cu
   const tabs: Tab[] = [
     { label: 'Overview', href: base, active: currentTab === 'overview' },
     { label: 'API Keys', href: `${base}/keys`, active: currentTab === 'keys' },
+    { label: 'Billing', href: `${base}/billing`, active: currentTab === 'billing' },
     { label: 'Members', href: `${base}/members`, active: currentTab === 'members' },
     { label: 'Assistant', href: `${base}/assistant`, active: currentTab === 'assistant', comingSoon: true },
     { label: 'Analytics', href: `${base}/analytics`, active: currentTab === 'analytics', comingSoon: true },
@@ -484,6 +486,110 @@ export function ComingSoon({ title }: { title: string }) {
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <div className="text-lg font-medium text-muted-foreground">{title}</div>
       <div className="mt-2 text-sm text-muted-foreground/60">This feature is coming soon.</div>
+    </div>
+  )
+}
+
+// ── Billing ─────────────────────────────────────────────────────────
+
+export type BillingSubscription = {
+  status: string
+  interval: 'month' | 'year' | null
+  currentPeriodEnd: number | null
+  cancelAtPeriodEnd: boolean
+}
+
+const PRO_FEATURES = [
+  'Unlimited production deployments',
+  'Preview deployments for every branch and PR',
+  'Hosted AI chat assistant for your docs',
+  'Analytics (coming soon)',
+]
+
+function FeatureList() {
+  return (
+    <ul className="flex flex-col gap-2">
+      {PRO_FEATURES.map((feature) => (
+        <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
+          <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+          <span>{feature}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export function BillingPanel({
+  projectId,
+  subscription,
+}: {
+  projectId: string
+  subscription: BillingSubscription | null
+}) {
+  if (subscription) {
+    const renews = subscription.currentPeriodEnd
+      ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
+      : null
+    return (
+      <div className="flex max-w-xl flex-col gap-5 rounded-xl border border-border bg-background p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-base font-semibold">Holocron Pro</h2>
+            <div className="text-sm text-muted-foreground">
+              {subscription.interval === 'year' ? 'Billed yearly' : 'Billed monthly'}
+              {' · '}
+              <span className="capitalize">{subscription.status}</span>
+            </div>
+          </div>
+          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            Active
+          </span>
+        </div>
+        <FeatureList />
+        {renews && (
+          <div className="text-xs text-muted-foreground">
+            {subscription.cancelAtPeriodEnd
+              ? `Cancels on ${renews}.`
+              : `Renews on ${renews}.`}
+          </div>
+        )}
+        <form action={openBillingPortal}>
+          <input type="hidden" name="projectId" value={projectId} />
+          <Button type="submit" variant="outline" loadingText="Opening...">
+            Manage subscription
+          </Button>
+        </form>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex max-w-xl flex-col gap-5 rounded-xl border border-border bg-background p-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-base font-semibold">Holocron Pro</h2>
+        <div className="flex items-baseline gap-1">
+          <span className="text-3xl font-bold tracking-tight">$99</span>
+          <span className="text-sm text-muted-foreground">/ month</span>
+        </div>
+        <div className="text-xs text-muted-foreground">or $990 / year — 2 months free</div>
+      </div>
+      <FeatureList />
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <form action={startCheckout} className="flex-1">
+          <input type="hidden" name="projectId" value={projectId} />
+          <input type="hidden" name="interval" value="monthly" />
+          <Button type="submit" className="w-full" loadingText="Redirecting...">
+            Subscribe monthly
+          </Button>
+        </form>
+        <form action={startCheckout} className="flex-1">
+          <input type="hidden" name="projectId" value={projectId} />
+          <input type="hidden" name="interval" value="yearly" />
+          <Button type="submit" variant="outline" className="w-full" loadingText="Redirecting...">
+            Subscribe yearly
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

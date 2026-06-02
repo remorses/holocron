@@ -16,7 +16,7 @@
 import { Spiceflow, redirect } from 'spiceflow'
 import { Link, router } from 'spiceflow/react'
 import type * as React from 'react'
-import { getDb, getSession, requireSession } from './db.ts'
+import { getDb, getSession, getProjectSubscription, requireSession } from './db.ts'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import { cn, timeAgo } from './lib/utils.ts'
 import { Button } from './components/ui/button.tsx'
@@ -38,6 +38,7 @@ import {
   MembersTable,
   ComingSoon,
   AcceptInviteButton,
+  BillingPanel,
   CreateApiKeyButton,
   InviteButton,
 } from './dashboard-components.tsx'
@@ -547,6 +548,42 @@ export const dashboardApp = new Spiceflow()
                 </Table>
               </Frame>
             )}
+          </div>
+        </main>
+      </>
+    )
+  })
+
+  // ── Billing tab ─────────────────────────────────────────────────────
+
+  .loader('/dashboard/projects/:projectId/billing', async ({ request, params }) => {
+    const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+      where: { projectId: params.projectId },
+    }))
+    const subscription = await getProjectSubscription(project.projectId)
+    return {
+      project,
+      subscription: subscription
+        ? {
+            status: subscription.status,
+            interval: subscription.interval,
+            currentPeriodEnd: subscription.currentPeriodEnd,
+            cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+          }
+        : null,
+    }
+  })
+
+  .page('/dashboard/projects/:projectId/billing', async ({ loaderData }) => {
+    const { project, subscription } = loaderData
+    return (
+      <>
+        <ProjectTabBar projectId={project.projectId} currentTab="billing" />
+        <div className="border-t border-border" />
+        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
+          <div className="flex flex-col gap-6">
+            <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+            <BillingPanel projectId={project.projectId} subscription={subscription} />
           </div>
         </main>
       </>
