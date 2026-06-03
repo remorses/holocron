@@ -761,7 +761,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         const rootRoutes = new Set(['/', withBaseRoute(site.base, '/')])
         const pathname = url.pathname.replace(/\/+$/, '') || '/'
         if (rootRoutes.has(pathname)) {
-          throw redirect(new URL(withBaseRoute(site.base, firstPage!.href), request.url).href, { status: 307 })
+          const dest = new URL(withBaseRoute(site.base, firstPage!.href), request.url)
+          dest.search = url.search
+          dest.hash = url.hash
+          throw redirect(dest.href, { status: 307 })
         }
       }
       response.status = 404
@@ -942,7 +945,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     const firstMarkdownPath = hrefToMarkdownPath(firstPage.href)
     for (const route of new Set(['/index.md', '/index.mdx', withBaseRoute(site.base, '/index.md'), withBaseRoute(site.base, '/index.mdx')])) {
       app = app.get(route, ({ request }: { request: Request }) => {
-        return Response.redirect(new URL(withBaseRoute(site.base, firstMarkdownPath), request.url), 307)
+        const url = new URL(request.url)
+        const dest = new URL(withBaseRoute(site.base, firstMarkdownPath), url.origin)
+        dest.search = url.search
+        dest.hash = url.hash
+        return Response.redirect(dest.href, 307)
       })
     }
   }
