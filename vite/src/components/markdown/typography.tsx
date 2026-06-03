@@ -11,7 +11,7 @@ import { Link } from 'spiceflow/react'
 import { cn } from '../../lib/css-vars.ts'
 import { useHolocronData } from '../../router.ts'
 import { slugify } from '../../lib/toc-tree.ts'
-import { stripOriginIfSameHost } from './shared.tsx'
+import { isExternalHref, stripOriginIfSameHost } from './shared.tsx'
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -112,14 +112,6 @@ export function P({ children, className }: { children: React.ReactNode; classNam
       {children}
     </div>
   )
-}
-
-// A link is external if it has an explicit protocol AND points to a different
-// origin than the current site. Same-origin absolute URLs get client navigation.
-function isExternalHref(href: string, origin: string): boolean {
-  if (!/^(https?:)?\/\//.test(href)) return false
-  if (origin && href.startsWith(origin)) return false
-  return true
 }
 
 export function A({ href, children }: { href: string; children: React.ReactNode }) {

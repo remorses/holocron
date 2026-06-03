@@ -3,10 +3,11 @@
 /** Mintlify-compatible Badge component using Holocron color tokens. */
 
 import React from 'react'
+import { Link } from 'spiceflow/react'
 import { cn } from '../../lib/css-vars.ts'
 import { useHolocronData } from '../../router.ts'
 import { Icon } from '../icon.tsx'
-import { isExternalHref, renderCompatIcon } from './shared.tsx'
+import { isExternalHref, renderCompatIcon, stripOriginIfSameHost } from './shared.tsx'
 
 export function Badge({
   children,
@@ -58,7 +59,10 @@ export function Badge({
     const content = <>{leading}{children}{trailing || (iconColor && icon ? <Icon icon={String(icon)} iconType={iconType} size={iconSize} color={iconColor} /> : null)}</>
     if (href && !disabled) {
       const external = isExternalHref(href, site.origin)
-      return <a className={badgeClass} href={href} onClick={onClick} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>{content}</a>
+      if (external) {
+        return <a className={badgeClass} href={href} onClick={onClick} target='_blank' rel='noopener noreferrer'>{content}</a>
+      }
+      return <Link className={badgeClass} href={stripOriginIfSameHost(href, site.origin)} onClick={onClick}>{content}</Link>
     }
     if (onClick && !disabled) {
       return <button type='button' className={badgeClass} onClick={onClick}>{content}</button>
