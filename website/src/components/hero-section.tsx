@@ -73,6 +73,7 @@ export function HeroSection() {
             enableMask: false,
             fluidStrength: 0.2,
             fluidCurl: 80,
+            minLuminance: 0.35,
           }}
         />
       </div>
@@ -124,7 +125,7 @@ export function HeroSection() {
           <Button asChild variant='ghost' size='lg' className='no-underline gap-2'>
             {/* External URL → plain <a>; spiceflow's Link only types internal routes. */}
             <a href='https://github.com/remorses/holocron' target='_blank' rel='noopener noreferrer'>
-              GitHub ↗
+              GitHub Repo ↗
             </a>
           </Button>
         </div>
