@@ -129,8 +129,7 @@
     "zustand": "^5.0.12"
   },
   "optionalDependencies": {
-    "dialkit": "^1.2.0",
-    "motion": "^12.40.0"
+    "dialkit": "^1.2.0"
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
