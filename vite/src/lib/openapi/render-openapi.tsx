@@ -1,11 +1,13 @@
 /**
- * OpenAPI endpoint renderer — client component.
+ * OpenAPI endpoint renderer — server component.
+ *
+ * Renders as RSC so that safe-mdx markdown parsing (remark-frontmatter, etc.)
+ * stays server-side and never enters the client bundle. Interactive children
+ * like Expandable are already 'use client' boundaries.
  *
  * Two gap levels: gap-(--prose-gap) between sections, gap-3 within.
  * text-sm set once at root, not repeated on every element.
  */
-
-'use client'
 
 import React from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
