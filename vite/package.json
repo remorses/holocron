@@ -82,7 +82,6 @@
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.32.2",
-    "@fastify/deepmerge": "^3.2.1",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@holocron.so/cli": "workspace:^",
@@ -101,7 +100,6 @@
     "dedent": "^1.7.2",
     "fflate": "^0.8.2",
     "github-slugger": "^2.0.0",
-    "image-size": "^2.0.2",
     "mdast-heading-id": "^2.0.0",
     "mdast-util-frontmatter": "^2.0.1",
     "mdast-util-gfm": "^3.1.0",
