@@ -530,6 +530,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     switchers,
     base: providers.base,
     icons: { icons: {} },
+    origin: '', // Populated per-request in buildLoaderSite from request.url
   }
   const sharedIconRefs = collectIconRefs({ config, navigation })
   const firstPage = findFirstPage(site)
@@ -588,12 +589,14 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   async function buildLoaderSite(
     slug: string | undefined,
     effectiveConfig: HolocronConfig,
+    origin: string,
   ): Promise<HolocronSiteData> {
     const pageIconRefs = slug ? await providers.getPageIconRefs(slug) : []
     const { resolveIconSvgs } = await import('./lib/resolve-icons.ts')
     return {
       ...buildVisibleSiteData({ ...site, config: effectiveConfig }),
       icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])),
+      origin,
     }
   }
 
@@ -612,6 +615,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   const loaderFn = async ({ request }: { request: Request }): Promise<HolocronLoaderData> => {
     const slug = slugFromRequest(request)
     const showPanel = shouldShowConfigPanel(request)
+    const origin = new URL(request.url).origin
 
     // Run page lookup, MDX source check, and config override fetch in parallel.
     // The override fetch only does work when the cookie is present; otherwise
@@ -624,7 +628,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
     if (!currentPage || !hasMdx) {
       return {
-        site: await buildLoaderSite(undefined, effectiveConfig),
+        site: await buildLoaderSite(undefined, effectiveConfig, origin),
         currentPageHref: undefined,
         currentPageTitle: undefined,
         currentPageDescription: undefined,
@@ -642,7 +646,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
 
     return {
-      site: await buildLoaderSite(slug, effectiveConfig),
+      site: await buildLoaderSite(slug, effectiveConfig, origin),
       currentPageHref: currentPage.href,
       currentPageTitle: currentPage.title,
       currentPageDescription: currentPage.description ?? effectiveConfig.description,

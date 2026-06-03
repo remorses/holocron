@@ -9,7 +9,9 @@ import React, { Children, isValidElement } from 'react'
 import { Link } from 'spiceflow/react'
 
 import { cn } from '../../lib/css-vars.ts'
+import { useHolocronData } from '../../router.ts'
 import { slugify } from '../../lib/toc-tree.ts'
+import { stripOriginIfSameHost } from './shared.tsx'
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -112,18 +114,21 @@ export function P({ children, className }: { children: React.ReactNode; classNam
   )
 }
 
-// Must NOT use `typeof window` branching — that causes hydration mismatches
-// because server and client disagree on the result for relative paths.
-// A link is external only if it has an explicit protocol or protocol-relative prefix.
-function isExternalHref(href: string): boolean {
-  return /^(https?:)?\/\//.test(href)
+// A link is external if it has an explicit protocol AND points to a different
+// origin than the current site. Same-origin absolute URLs get client navigation.
+function isExternalHref(href: string, origin: string): boolean {
+  if (!/^(https?:)?\/\//.test(href)) return false
+  if (origin && href.startsWith(origin)) return false
+  return true
 }
 
 export function A({ href, children }: { href: string; children: React.ReactNode }) {
-  const external = isExternalHref(href)
+  const { site } = useHolocronData()
+  const external = isExternalHref(href, site.origin)
+  const resolvedHref = external ? href : stripOriginIfSameHost(href, site.origin)
   return (
     <Link
-      href={href}
+      href={resolvedHref}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener noreferrer' : undefined}
       style={{

@@ -23,6 +23,10 @@ export type HolocronSiteData = {
   }
   base: string
   icons: IconAtlas
+  /** Request origin (e.g. `https://docs.mysite.com`). Used to detect
+   *  same-host absolute URLs so they get client-side navigation instead
+   *  of opening in a new tab. */
+  origin: string
 }
 
 /** A top-level tab rendered in the tab bar. */

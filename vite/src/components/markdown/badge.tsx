@@ -4,6 +4,7 @@
 
 import React from 'react'
 import { cn } from '../../lib/css-vars.ts'
+import { useHolocronData } from '../../router.ts'
 import { Icon } from '../icon.tsx'
 import { isExternalHref, renderCompatIcon } from './shared.tsx'
 
@@ -41,6 +42,7 @@ export function Badge({
   onClick?: () => void
   className?: string
 }) {
+  const { site } = useHolocronData()
   const sizeClass = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]'
     : size === 'sm' ? 'px-2 py-0.5 text-[11px]'
     : size === 'lg' ? 'px-3 py-1 text-[13px]'
@@ -55,7 +57,7 @@ export function Badge({
     const badgeClass = cn('inline-flex w-fit self-start items-center gap-1 border', sizeClass, shapeClass, variantClass, disabled && 'opacity-50', (href || onClick) && !disabled && 'cursor-pointer transition-opacity hover:opacity-80', className)
     const content = <>{leading}{children}{trailing || (iconColor && icon ? <Icon icon={String(icon)} iconType={iconType} size={iconSize} color={iconColor} /> : null)}</>
     if (href && !disabled) {
-      const external = isExternalHref(href)
+      const external = isExternalHref(href, site.origin)
       return <a className={badgeClass} href={href} onClick={onClick} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>{content}</a>
     }
     if (onClick && !disabled) {
