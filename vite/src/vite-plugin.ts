@@ -256,6 +256,19 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // imports like `safe-mdx/client` must resolve through our package too.
       const zoomEntry = nodeRequire.resolve('react-medium-image-zoom')
       const zoomDir = path.dirname(zoomEntry)
+      // acorn ships both CJS (dist/acorn.js) and ESM (dist/acorn.mjs). Some
+      // transitive deps use require("acorn") (e.g. acorn-jsx) while others use
+      // ESM imports (e.g. micromark-extension-mdxjs). Without an alias, both
+      // copies end up in the RSC bundle (~230KB each). Force the ESM entry.
+      // Gracefully skip if the .mjs file doesn't exist (future acorn versions
+      // may restructure their dist layout).
+      const acornMjs = (() => {
+        try {
+          const mjs = path.join(path.dirname(nodeRequire.resolve('acorn')), 'acorn.mjs')
+          if (fs.existsSync(mjs)) return mjs
+        } catch {}
+        return null
+      })()
       const next: Pick<UserConfig, 'resolve' | 'build' | 'define'> = {
         // When running under `holocron deploy` (HOLOCRON_DEPLOY=1), write
         // build output to dist/.holocron so deploy artifacts don't collide
@@ -269,6 +282,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             { find: /^react-medium-image-zoom$/, replacement: zoomEntry },
             { find: /^react-medium-image-zoom\/dist\/styles\.css$/, replacement: path.join(zoomDir, 'styles.css') },
             { find: /^yaml$/, replacement: yamlBrowserEntry },
+            ...(acornMjs ? [{ find: /^acorn$/, replacement: acornMjs }] : []),
           ],
           dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
           tsconfigPaths: true,
