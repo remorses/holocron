@@ -1,5 +1,32 @@
 # @holocron.so/vite
 
+## 0.18.0
+
+1. **Build summary with actionable tips** — after all individual warnings are logged, the build now prints a final summary at the end:
+
+   ```
+   ▲ holocron found 3 invalid internal links across 2 pages. Fix them or add paths to knownPaths in docs.json.
+   ▲ holocron 2 pages with MDX errors. Fix the syntax issues in the pages listed above.
+   ```
+
+   The broken links summary includes a link to the docs page explaining `knownPaths`.
+
+2. **`HOLOCRON_TOKEN` accepted as env var alias for `HOLOCRON_KEY`** — the Vite plugin, deploy command, and AI chat auth now check both `HOLOCRON_TOKEN` and `HOLOCRON_KEY` (first defined wins). Useful when your CI already has a `HOLOCRON_TOKEN` secret.
+
+3. **Fixed OpenAPI renderer CJS crash in dev** — `render-openapi.tsx` was incorrectly marked `'use client'`, pulling `safe-mdx` and its transitive chain (`remark-frontmatter` -> `micromark-extension-frontmatter` -> `fault` -> `format`) into the client bundle. The `format` package (CJS-only, last updated 2013) caused:
+
+   ```
+   The requested module "format/format.js" does not provide an export named "default"
+   ```
+
+   The fix removes the `'use client'` directive so the OpenAPI renderer stays server-side.
+
+4. **Trimmed Prism syntax highlighting bundle (891 KB -> 471 KB)** — removed ~170 obscure languages (Agda, ABAP, Bro, GAP, etc.), keeping ~130 popular ones. If you need a removed language, open an issue.
+
+5. **Deduplicated acorn in RSC bundle (180 KB saved)** — acorn ships both CJS and ESM entries. Some transitive deps use `require("acorn")` while others use ESM imports, causing both copies to end up in the bundle. A resolve alias now forces all acorn imports to the ESM entry. RSC bundle: 3,998 KB -> 3,818 KB.
+
+6. **Removed dead dependencies** — dropped `@fastify/deepmerge`, `image-size`, and `motion` from the package. These were unused leftovers that added install weight.
+
 ## 0.17.1
 
 1. **Fixed OpenAPI double-framed code panels** — when an operation defined multiple named request body or response examples, `RequestExample` and `ResponseExample` wrapped them in a `CodeGroup` inside a `CodeCard`, producing a double frame. Now they render as a single tabbed panel with each example as a named tab.

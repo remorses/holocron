@@ -1,3 +1,7 @@
+## 0.15.1
+
+1. **`HOLOCRON_TOKEN` accepted as env var alias for `HOLOCRON_KEY`** — deploy and all API commands now check both `HOLOCRON_TOKEN` and `HOLOCRON_KEY` (first defined wins). Useful when your CI already has a `HOLOCRON_TOKEN` secret and you don't want to rename it.
+
 ## 0.15.0
 
 1. **Clear deploy error when a subscription is required** — when a deploy exceeds the free plan (a preview deploy, or a 2nd production deploy on the free tier), the server returns a `SUBSCRIPTION_REQUIRED` error. The CLI now surfaces the server's actionable message plus the upgrade URL instead of a generic `Failed to create deployment`:
