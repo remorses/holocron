@@ -30,14 +30,16 @@ export function HeroSection() {
     <div className='relative mt-4 lg:mt-8 mb-6 lg:mb-10 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden'>
       <VideoBackgroundShader
         src='/hero-bg.mp4'
-        className='absolute inset-0 w-full h-full dark:opacity-60 opacity-40'
+        className='absolute inset-0 w-full h-full'
+        canvasClassName='dark:opacity-60 opacity-40'
+        dotStyle='ascii'
         dotColor='#8da4ff'
-        dotSize={6}
+        dotSize={11}
         minDotSize={1}
         dotMargin={1}
         animSpeed={3}
         gamma={0.8}
-        fluidStrength={0.2}
+        fluidStrength={0.6}
         fluidCurl={80}
         minLuminance={0.35}
       />

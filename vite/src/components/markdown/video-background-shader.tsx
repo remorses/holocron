@@ -386,6 +386,9 @@ const DISPLAY_FRAG = /* glsl */ `
   uniform float dotAlphaMultiplier;
   uniform bool dotsEnabled;
   uniform float minLuminance;
+  uniform int dotStyle;
+  uniform sampler2D uCharAtlas;
+  uniform float charCount;
   varying vec2 vUv;
 
   float random(vec2 st) {
@@ -455,8 +458,7 @@ const DISPLAY_FRAG = /* glsl */ `
     vec3 videoGammaCorrected = pow(video.rgb, vec3(gamma));
     vec3 scaledDye = dye.rgb * fluidStrength;
     scaledDye = pow(scaledDye + 0.001, vec3(0.7));
-    vec3 blendedColor = videoGammaCorrected + scaledDye;
-    float luminance = max(dot(blendedColor, vec3(0.299, 0.587, 0.114)), minLuminance);
+    float luminance = max(dot(videoGammaCorrected + scaledDye, vec3(0.299, 0.587, 0.114)), minLuminance);
 
     if (enableMask) {
       vec4 mask = texture2D(uMask, vUv);
@@ -466,6 +468,26 @@ const DISPLAY_FRAG = /* glsl */ `
 
     if (!dotsEnabled) {
       gl_FragColor = vec4(dotColor, luminance * dotAlphaMultiplier);
+      return;
+    }
+
+    // ASCII mode: sample character glyph from a font atlas texture.
+    // Characters are ordered by visual weight in the atlas. Luminance picks
+    // the base index; per-cell random jitter adds variety so neighboring
+    // cells at similar brightness show different characters.
+    if (dotStyle == 1) {
+      // Per-cell hash that changes over time: each cell shifts character
+      // ~3 times/sec with a discrete jump (floor quantizes so it doesn't flicker)
+      float r = random(cellIndex + floor(time * 3.0));
+      float idx = luminance * (charCount - 1.0) + (r - 0.5) * 5.0;
+      idx = clamp(idx, 0.0, charCount - 1.0);
+      float ci = floor(idx);
+      vec2 cellPos = clamp(gridPos / gridCellSize, vec2(0.01), vec2(0.99));
+      vec2 atlasUv = vec2((ci + cellPos.x) / charCount, cellPos.y);
+      float charMask = texture2D(uCharAtlas, atlasUv).r;
+      float luminanceCutoff = smoothstep(0.0, 0.05, luminance);
+      float finalAlpha = charMask * luminance * luminanceCutoff * dotAlphaMultiplier;
+      gl_FragColor = vec4(dotColor, finalAlpha);
       return;
     }
 
@@ -513,12 +535,18 @@ export interface VideoShaderConfig {
   /** Minimum luminance floor (0-1). Dots appear even in dark video areas
    *  when this is above 0. Higher = more dots everywhere. Default 0. */
   minLuminance?: number
+  /** Render style: 'dots' (circle grid) or 'ascii' (character grid). Default 'dots'. */
+  dotStyle?: 'dots' | 'ascii'
+  /** Characters for ASCII mode, ordered lightest to heaviest. Default ' .:-~=+x?$%#@MW'. */
+  chars?: string
+  /** CSS font for ASCII mode. Must be monospaced. Default 'monospace'. */
+  charFont?: string
 }
 
 const DEFAULT_CONFIG: Required<Omit<VideoShaderConfig, 'src'>> = {
   maskSrc: '',
   dotsEnabled: true,
-  dotSize: 8,
+  dotSize: 6,
   minDotSize: 1,
   dotMargin: 0,
   dotColor: '#5b7cff',
@@ -535,6 +563,9 @@ const DEFAULT_CONFIG: Required<Omit<VideoShaderConfig, 'src'>> = {
   fluidPressureIterations: 1,
   fluidStrength: 0.15,
   minLuminance: 0,
+  dotStyle: 'dots',
+  chars: ' .:-~=+x?$%#@MW',
+  charFont: 'monospace',
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -547,6 +578,35 @@ function hexToRgbNormalized(hex: string): { r: number; g: number; b: number } {
     g: Number.parseInt(result[2]!, 16) / 255,
     b: Number.parseInt(result[3]!, 16) / 255,
   }
+}
+
+/** Render characters onto a single-row texture atlas using Canvas 2D.
+ *  Each character occupies a square cell. Returns the GL texture + count. */
+function createCharAtlas(gl: WebGLRenderingContext, chars: string, font: string): { texture: WebGLTexture; count: number } {
+  const cellSize = 64 // px per character in the atlas (internal resolution)
+  const atlasCanvas = document.createElement('canvas')
+  atlasCanvas.width = chars.length * cellSize
+  atlasCanvas.height = cellSize
+  const ctx = atlasCanvas.getContext('2d')!
+  ctx.fillStyle = 'black'
+  ctx.fillRect(0, 0, atlasCanvas.width, atlasCanvas.height)
+  ctx.fillStyle = 'white'
+  ctx.font = `900 ${Math.floor(cellSize * 0.85)}px ${font}`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  for (let i = 0; i < chars.length; i++) {
+    ctx.fillText(chars[i]!, (i + 0.5) * cellSize, cellSize * 0.52)
+  }
+  const texture = gl.createTexture()!
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlasCanvas)
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  return { texture, count: chars.length }
 }
 
 // ─── Engine ────────────────────────────────────────────────────────────────
@@ -621,6 +681,9 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
     img.src = config.maskSrc
   }
 
+  // Character atlas for ASCII mode (created once, tiny texture ~Npx × 64px)
+  const charAtlas = createCharAtlas(gl, config.chars, config.charFont)
+
   // Full-screen quad (shared by all programs via fixed attrib locations)
   const quad = createQuadBuffers(gl)
   bindQuad(gl, quad)
@@ -669,6 +732,8 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   gl.uniform1i(displayP.loc('enableMask'), config.enableMask ? 1 : 0)
   gl.uniform1i(displayP.loc('dotsEnabled'), config.dotsEnabled ? 1 : 0)
   gl.uniform1f(displayP.loc('minLuminance'), config.minLuminance)
+  gl.uniform1i(displayP.loc('dotStyle'), config.dotStyle === 'ascii' ? 1 : 0)
+  gl.uniform1f(displayP.loc('charCount'), charAtlas.count)
 
   // ── Fluid simulation step ──
 
@@ -732,7 +797,7 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
     velocity.swap()
 
     setTexture(gl, splatP, 'uTarget', dye.read.texture, 0)
-    gl.uniform3f(splatP.loc('color'), dotRgb.r * 0.3, dotRgb.g * 0.3, dotRgb.b * 0.3)
+    gl.uniform3f(splatP.loc('color'), dotRgb.r * 0.8, dotRgb.g * 0.8, dotRgb.b * 0.8)
     drawPass(gl, dye.write)
     dye.swap()
   }
@@ -789,6 +854,7 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
     setTexture(gl, displayP, 'uDye', dye.read.texture, 0)
     setTexture(gl, displayP, 'uVideo', videoTex, 1)
     setTexture(gl, displayP, 'uMask', maskTex, 2)
+    setTexture(gl, displayP, 'uCharAtlas', charAtlas.texture, 3)
     drawPass(gl, null)
   }
 
@@ -835,6 +901,7 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
     disposeDoubleFBO(gl, pressure)
     gl.deleteTexture(videoTex)
     gl.deleteTexture(maskTex)
+    gl.deleteTexture(charAtlas.texture)
     gl.deleteBuffer(quad.positionBuffer)
     gl.deleteBuffer(quad.uvBuffer)
     if (canvas.parentElement) {
@@ -876,6 +943,9 @@ export interface VideoBackgroundShaderProps extends Omit<VideoShaderConfig, 'src
   /** Content rendered over the video background. */
   children?: ReactNode
   className?: string
+  /** Extra classes applied only to the canvas container (not gradients or children).
+   *  Useful for light/dark opacity: `canvasClassName="dark:opacity-60 opacity-40"` */
+  canvasClassName?: string
   /** Show top gradient overlay fading into page background. Default true. */
   fadeTop?: boolean
   /** Show bottom gradient overlay fading into page background. Default true. */
@@ -885,6 +955,7 @@ export interface VideoBackgroundShaderProps extends Omit<VideoShaderConfig, 'src
 export function VideoBackgroundShader({
   children,
   className,
+  canvasClassName,
   src,
   fadeTop = true,
   fadeBottom = true,
@@ -923,7 +994,7 @@ export function VideoBackgroundShader({
       {/* WebGL canvas container */}
       <div
         ref={containerRef}
-        className='absolute inset-0 w-full h-full z-0 overflow-hidden'
+        className={cn('absolute inset-0 w-full h-full z-0 overflow-hidden', canvasClassName)}
         style={{
           opacity: canvasReady ? 1 : 0,
           transition: fadeTransition,
