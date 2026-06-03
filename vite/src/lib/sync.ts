@@ -920,7 +920,7 @@ function resolveInlineImports({
       let parsedNodes: import('mdast').RootContent[] | undefined
       if (importedMdast) {
         const cloned = structuredClone(importedMdast)
-        parsedNodes = buildSplicedNodes(cloned, relFromPageNorm)
+        parsedNodes = buildSplicedNodes(cloned, relFromPageNorm, { importDir, pagesDir })
       }
 
       result.set(sourceKey, {
@@ -993,7 +993,7 @@ function resolveInlineImports({
 
       let parsedNodes: import('mdast').RootContent[] | undefined
       if (nestedMdast) {
-        parsedNodes = buildSplicedNodes(structuredClone(nestedMdast), relFromPageNorm)
+        parsedNodes = buildSplicedNodes(structuredClone(nestedMdast), relFromPageNorm, { importDir, pagesDir })
       }
 
       result.set(sourceKey, {

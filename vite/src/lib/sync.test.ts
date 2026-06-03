@@ -1978,4 +1978,66 @@ Content here.
     // /setup.md#installation → strips to /setup → exists → no warning
     expect(warnings).toHaveLength(0)
   })
+
+  test('no false broken link when imported file outside pagesDir links back into pagesDir', async () => {
+    // Setup: pagesDir is a subdirectory of project root.
+    // A README.md at the project root is imported by index.mdx inside pagesDir.
+    // README.md has a relative link to a file inside pagesDir (./website/src/openapi.md).
+    // After URL rewriting, the link should resolve to /openapi, not /website/src/openapi.
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-sync-test-'))
+    const pagesDir = path.join(root, 'website', 'src')
+    const publicDir = path.join(root, 'public')
+    const distDir = path.join(root, 'dist')
+    fs.mkdirSync(pagesDir, { recursive: true })
+    fs.mkdirSync(publicDir, { recursive: true })
+    fs.mkdirSync(distDir, { recursive: true })
+
+    // Config file at project root
+    fs.writeFileSync(path.join(root, 'holocron.jsonc'), JSON.stringify({
+      navigation: [{ group: 'Docs', pages: ['index', 'openapi'] }],
+    }))
+
+    // README.md at project root with a relative link back into pagesDir
+    fs.writeFileSync(path.join(root, 'README.md'), `# Project README
+
+See [OpenAPI docs](./website/src/openapi.md) for the API reference.
+`)
+
+    // index.mdx imports README.md
+    fs.writeFileSync(path.join(pagesDir, 'index.mdx'), `---
+title: Home
+---
+
+import Readme from "../../README.md"
+
+<Readme />
+`)
+
+    // openapi.mdx is a real page
+    fs.writeFileSync(path.join(pagesDir, 'openapi.mdx'), `---
+title: OpenAPI Reference
+---
+
+API docs here.
+`)
+
+    const project: TmpProject = { root, pagesDir, publicDir, distDir }
+    projects.push(project)
+
+    const config = readConfig({ root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    const result = await syncNavigation({
+      config,
+      pagesDir,
+      publicDir,
+      projectRoot: root,
+      distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    // The link ./website/src/openapi.md from README.md should resolve to /openapi → no warning
+    expect(warnings).toHaveLength(0)
+    // Verify the rewritten MDX content has the correct absolute slug path
+    expect(result.mdxContent.index).toContain('[OpenAPI docs](/openapi)')
+  })
 })

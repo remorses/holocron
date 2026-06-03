@@ -54,6 +54,18 @@ export type InlineImportEntry = {
   parsedNodes?: RootContent[]
 }
 
+/**
+ * Context for resolving link URLs to slug paths when the imported file
+ * lives outside pagesDir. Without this, links that traverse above pagesDir
+ * and back (e.g. `../../website/src/openapi`) produce bogus paths.
+ */
+export type SplicedNodesContext = {
+  /** Absolute directory of the imported file */
+  importDir: string
+  /** Absolute pagesDir path */
+  pagesDir: string
+}
+
 export type RemarkInlineImportsOptions = {
   /** Map from raw import source string to resolved import info.
    *  Only .md/.mdx imports should be included; .tsx/.ts are left alone. */
@@ -145,13 +157,17 @@ function parseAndRewriteImportedContent(entry: InlineImportEntry): RootContent[]
  * - resolveInlineImports (sync.ts) to pre-build nodes during sync
  * - parseAndRewriteImportedContent (above) as fallback in the remark plugin
  */
-export function buildSplicedNodes(mdast: Root, relativeDir: string): RootContent[] {
+export function buildSplicedNodes(
+  mdast: Root,
+  relativeDir: string,
+  context?: SplicedNodesContext,
+): RootContent[] {
   // Strip frontmatter — it belongs to the imported file, not the parent
   mdast.children = mdast.children.filter((node) => node.type !== 'yaml')
 
   // Rewrite relative URLs in images, links, JSX src/href, and import sources
   if (relativeDir !== '' && relativeDir !== './') {
-    rewriteRelativeUrls(mdast, relativeDir)
+    rewriteRelativeUrls(mdast, relativeDir, context)
     rewriteRelativeImportSources(mdast, relativeDir)
   }
 
@@ -165,7 +181,7 @@ export function buildSplicedNodes(mdast: Root, relativeDir: string): RootContent
  * Only rewrites relative paths (starting with ./ or ../). Absolute paths
  * (starting with /) and external URLs (http://, https://) are left alone.
  */
-function rewriteRelativeUrls(tree: Root, relativeDir: string) {
+function rewriteRelativeUrls(tree: Root, relativeDir: string, context?: SplicedNodesContext) {
   visit(tree, (node) => {
     // Markdown image: ![alt](./img.png)
     if (node.type === 'image') {
@@ -174,7 +190,16 @@ function rewriteRelativeUrls(tree: Root, relativeDir: string) {
     }
 
     // Markdown link: [text](./other.md)
+    // When the imported file is outside pagesDir, try converting to an
+    // absolute slug path so the link checker and browser both resolve correctly.
     if (node.type === 'link') {
+      if (context) {
+        const slugPath = resolveToSlugPath(node.url, context.importDir, context.pagesDir)
+        if (slugPath !== undefined) {
+          node.url = slugPath
+          return
+        }
+      }
       node.url = resolveRelativeUrl(node.url, relativeDir)
       return
     }
@@ -186,6 +211,13 @@ function rewriteRelativeUrls(tree: Root, relativeDir: string) {
         if (attr.type !== 'mdxJsxAttribute') continue
         if (attr.name !== 'src' && attr.name !== 'href') continue
         if (typeof attr.value === 'string') {
+          if (attr.name === 'href' && context) {
+            const slugPath = resolveToSlugPath(attr.value, context.importDir, context.pagesDir)
+            if (slugPath !== undefined) {
+              attr.value = slugPath
+              continue
+            }
+          }
           attr.value = resolveRelativeUrl(attr.value, relativeDir)
         }
       }
@@ -208,6 +240,48 @@ function resolveRelativeUrl(url: string, relativeDir: string): string {
     return './' + joined
   }
   return joined
+}
+
+/**
+ * Resolve a relative URL to an absolute slug path if the target file lives
+ * inside pagesDir. Returns undefined when the URL is not relative, or when the
+ * resolved target is outside pagesDir (caller should fall back to the standard
+ * `resolveRelativeUrl` in that case).
+ *
+ * This fixes the "imported README links back into pagesDir" bug: when a file
+ * outside pagesDir (e.g. repo-root README.md) has a relative link like
+ * `./website/src/openapi.md`, the standard `resolveRelativeUrl` joins it with
+ * the relativeDir (`../../`) producing `../../website/src/openapi.md`. That
+ * path is technically correct on the filesystem but wrong from the slug/URL
+ * perspective. This function instead resolves to `/openapi` directly.
+ */
+function resolveToSlugPath(
+  url: string,
+  importDir: string,
+  pagesDir: string,
+): string | undefined {
+  if (!url) return undefined
+  if (!url.startsWith('./') && !url.startsWith('../')) return undefined
+
+  // Split off hash/query before resolving filesystem path
+  const fragIdx = url.search(/[#?]/)
+  const pathPart = fragIdx === -1 ? url : url.slice(0, fragIdx)
+  const fragment = fragIdx === -1 ? '' : url.slice(fragIdx)
+
+  // Resolve to absolute filesystem path from the imported file's directory
+  const absTarget = path.resolve(importDir, pathPart)
+  const rel = path.relative(pagesDir, absTarget).replace(/\\/g, '/')
+
+  // Only handle targets that land inside pagesDir
+  if (rel.startsWith('..') || path.isAbsolute(rel)) return undefined
+
+  // Strip .md/.mdx extension to get the slug
+  let slug = rel.replace(/\.mdx?$/, '')
+  // Normalize index pages
+  if (slug.endsWith('/index')) slug = slug.slice(0, -6)
+  if (slug === 'index') slug = ''
+
+  return '/' + slug + fragment
 }
 
 /**
