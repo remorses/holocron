@@ -1,5 +1,11 @@
 # @holocron.so/vite
 
+## 0.18.2
+
+1. **Fixed false broken link warnings for imported files outside pagesDir** — when a markdown file outside `pagesDir` (e.g., a repo-root `README.md`) is imported into a page and contains relative links back to pages, those links are now correctly resolved to absolute slug paths instead of raw filesystem-relative paths. Previously all relative links in such imported files showed as broken even when the target page existed.
+
+   For example, a `README.md` at the repo root imported via `import Readme from '../../README.md'` that contains `[OpenAPI](./website/src/openapi.md)` now resolves to `/openapi` instead of the unresolvable `../../website/src/openapi`. Hash fragments and query strings are preserved through the conversion.
+
 ## 0.18.1
 
 1. **Restored `motion` as optional dependency** — `motion` was accidentally removed in 0.18.0. Added it back as an optional dependency so user projects that import it don't break.
