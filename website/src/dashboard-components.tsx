@@ -879,6 +879,33 @@ export function AcceptInviteButton({ invitationId }: { invitationId: string }) {
   )
 }
 
+// ── Grant GitHub Org Access ──────────────────────────────────────────
+
+export function GrantOrgAccessButton() {
+  const [loading, setLoading] = useState(false)
+
+  async function handleGrant() {
+    setLoading(true)
+    try {
+      await authClient.linkSocial({
+        provider: 'github',
+        scopes: ['read:org'],
+        callbackURL: window.location.href,
+      })
+    } catch {
+      // The linkSocial call redirects to GitHub, so we only reach here on error
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Button variant="outline" onClick={handleGrant} loading={loading}>
+      <BuildingIcon className="size-4" />
+      Grant org access
+    </Button>
+  )
+}
+
 // ── Settings Form (rename project) ──────────────────────────────────
 
 export function SettingsForm({ projectId, initialName }: { projectId: string; initialName: string }) {

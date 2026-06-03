@@ -44,8 +44,6 @@ export function getAuth() {
       github: {
         clientId: env.GITHUB_CLIENT_ID,
         clientSecret: env.GITHUB_CLIENT_SECRET,
-        scope: ['read:org'],
-        prompt: 'consent',
       },
     },
     plugins: [

@@ -327,7 +327,7 @@ async function requireGitHubOrgAdmin({
 }): Promise<void> {
   if (!accessToken) {
     throw json(
-      { error: `cannot verify org membership for ${org}. sign in again at holocron.so to grant the required permissions.` },
+      { error: `cannot verify org membership for ${org}. go to holocron.so dashboard, open your project Settings tab, and click "Grant org access" to authorize organization permissions.` },
       { status: 403 },
     )
   }
@@ -351,7 +351,7 @@ async function requireGitHubOrgAdmin({
 
   if (res.status === 401 || res.status === 403) {
     throw json(
-      { error: `cannot verify org membership for ${org}. sign in again at holocron.so to grant the read:org permission.` },
+      { error: `cannot verify org membership for ${org}. go to holocron.so dashboard, open your project Settings tab, and click "Grant org access" to authorize organization permissions.` },
       { status: 403 },
     )
   }

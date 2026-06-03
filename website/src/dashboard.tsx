@@ -44,6 +44,7 @@ import {
   UpgradeBanner,
   SettingsForm,
   DeleteProjectButton,
+  GrantOrgAccessButton,
 } from './dashboard-components.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
@@ -668,6 +669,19 @@ export const dashboardApp = new Spiceflow()
                   <div className="mt-3 text-xs text-muted-foreground">
                     GitHub repository and subdomain are set automatically from verified GitHub Actions deployments and cannot be changed manually.
                   </div>
+                </div>
+              </Frame>
+            </section>
+
+            {/* GitHub org access */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">GitHub Organization Access</h2>
+              <Frame className="w-full">
+                <div className="rounded-xl border bg-background p-4 flex flex-col gap-3">
+                  <div className="text-sm text-muted-foreground">
+                    Deploying from a GitHub organization repo requires additional permissions. If your deploy fails with an org membership error, grant Holocron access to your GitHub organizations.
+                  </div>
+                  <GrantOrgAccessButton />
                 </div>
               </Frame>
             </section>
