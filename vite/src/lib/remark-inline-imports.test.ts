@@ -331,6 +331,195 @@ import Section from './snippets/section.mdx'
     expect(result.markdown).toMatch(/from\s+['"]\.\/lib\/utils['"]/)
   })
 
+  test('rewrites .md links with anchor fragments', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./docs/intro.md', {
+        content: 'See [installation](./setup.md#installation) and [the config section](../config.md#advanced).',
+        absPath: '/project/docs/intro.md',
+        relativeDir: './docs/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Intro from './docs/intro.md'
+
+<Intro />
+`, imports)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import Intro from './docs/intro.md'
+
+      See [installation](./docs/setup.md#installation) and [the config section](./config.md#advanced).
+      "
+    `)
+  })
+
+  test('leaves bare anchor links unchanged', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./snippets/nav.md', {
+        content: 'Jump to [top](#top) or [overview](#overview).',
+        absPath: '/project/snippets/nav.md',
+        relativeDir: './snippets/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Nav from './snippets/nav.md'
+
+<Nav />
+`, imports)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import Nav from './snippets/nav.md'
+
+      Jump to [top](#top) or [overview](#overview).
+      "
+    `)
+  })
+
+  test('rewrites deeply nested relative paths (../../)', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./guides/advanced/tuning.md', {
+        content: 'See [intro](../../intro.md) and [basic setup](../basic/setup.md).\n\n![arch](../../images/arch.png)',
+        absPath: '/project/guides/advanced/tuning.md',
+        relativeDir: './guides/advanced/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Tuning from './guides/advanced/tuning.md'
+
+<Tuning />
+`, imports)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import Tuning from './guides/advanced/tuning.md'
+
+      See [intro](./intro.md) and [basic setup](./guides/basic/setup.md).
+
+      ![arch](./images/arch.png)
+      "
+    `)
+  })
+
+  test('rewrites links from deeply nested relativeDir', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./a/b/c/snippet.md', {
+        content: 'Go to [sibling](./other.md) or [parent](../parent.md).',
+        absPath: '/project/a/b/c/snippet.md',
+        relativeDir: './a/b/c/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Snippet from './a/b/c/snippet.md'
+
+<Snippet />
+`, imports)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import Snippet from './a/b/c/snippet.md'
+
+      Go to [sibling](./a/b/c/other.md) or [parent](./a/b/parent.md).
+      "
+    `)
+  })
+
+  test('rewrites links with query strings', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./snippets/links.md', {
+        content: 'See [raw source](./example.md?raw) and [component](./widget.tsx?inline).',
+        absPath: '/project/snippets/links.md',
+        relativeDir: './snippets/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Links from './snippets/links.md'
+
+<Links />
+`, imports)
+
+    // query strings are part of the URL and get joined with relativeDir
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import Links from './snippets/links.md'
+
+      See [raw source](./snippets/example.md?raw) and [component](./snippets/widget.tsx?inline).
+      "
+    `)
+  })
+
+  test('handles mix of .md links, external links, and absolute links', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./docs/overview.md', {
+        content: 'Read [setup](./setup.md), visit [GitHub](https://github.com), check [API](/api/ref), and see [config](./config.md#options).',
+        absPath: '/project/docs/overview.md',
+        relativeDir: './docs/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Overview from './docs/overview.md'
+
+<Overview />
+`, imports)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import Overview from './docs/overview.md'
+
+      Read [setup](./docs/setup.md), visit [GitHub](https://github.com), check [API](/api/ref), and see [config](./docs/config.md#options).
+      "
+    `)
+  })
+
+  test('rewrites JSX href linking to .md files', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./snippets/card.md', {
+        content: '<Card href="./details.md">Details</Card>\n\n<a href="../other.md#section">Other page</a>',
+        absPath: '/project/snippets/card.md',
+        relativeDir: './snippets/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import CardSnippet from './snippets/card.md'
+
+<CardSnippet />
+`, imports)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import CardSnippet from './snippets/card.md'
+
+      <Card href="./snippets/details.md">Details</Card>
+
+      <a href="./other.md#section">Other page</a>
+      "
+    `)
+  })
+
+  test('does not rewrite mailto: and tel: links', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['./snippets/contact.md', {
+        content: 'Email [us](mailto:hi@example.com) or call [support](tel:+1234567890).',
+        absPath: '/project/snippets/contact.md',
+        relativeDir: './snippets/',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Contact from './snippets/contact.md'
+
+<Contact />
+`, imports)
+
+    expect(result.markdown).toMatchInlineSnapshot(`
+      "import Contact from './snippets/contact.md'
+
+      Email [us](mailto:hi@example.com) or call [support](tel:+1234567890).
+      "
+    `)
+  })
+
   test('does not inline when no usages found (import kept as dead code)', () => {
     const imports = new Map<string, InlineImportEntry>([
       ['./snippets/unused.md', {
