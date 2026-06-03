@@ -1,5 +1,9 @@
 # @holocron.so/vite
 
+## 0.18.1
+
+1. **Restored `motion` as optional dependency** — `motion` was accidentally removed in 0.18.0. Added it back as an optional dependency so user projects that import it don't break.
+
 ## 0.18.0
 
 1. **Build summary with actionable tips** — after all individual warnings are logged, the build now prints a final summary at the end:
