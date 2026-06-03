@@ -402,7 +402,7 @@ export async function syncNavigation({
   }
 
   // 4d. Validate internal links — warn about links pointing to non-existent pages.
-  validateInternalLinks({
+  const brokenLinkStats = validateInternalLinks({
     navigation,
     pageInternalLinks,
     redirects: config.redirects,
@@ -418,6 +418,24 @@ export async function syncNavigation({
     pageInternalLinks,
   })
   saveImageCache({ distDir, cache: imageCache })
+
+  // 6. Log build summary tips for broken links and MDX errors so agents
+  //    and users see actionable next steps at the end of the build output.
+  //    mdxContentErrors includes both parse errors and safe-mdx render errors.
+  if (brokenLinkStats.brokenLinkCount > 0) {
+    logger.warn('')
+    logger.warn(formatHolocronWarning(
+      `found ${colors.yellow(String(brokenLinkStats.brokenLinkCount))} invalid internal link${brokenLinkStats.brokenLinkCount === 1 ? '' : 's'} across ${colors.yellow(String(brokenLinkStats.affectedPageCount))} page${brokenLinkStats.affectedPageCount === 1 ? '' : 's'}. ` +
+      `Fix them or add paths to ${colors.cyan('knownPaths')} in docs.json. See ${colors.cyan('https://holocron.so/docs/create/broken-links')}`,
+    ))
+  }
+  if (mdxContentErrors.size > 0) {
+    logger.warn('')
+    logger.warn(formatHolocronWarning(
+      `${colors.yellow(String(mdxContentErrors.size))} page${mdxContentErrors.size === 1 ? '' : 's'} with MDX errors. ` +
+      `Fix the syntax issues in the pages listed above.`,
+    ))
+  }
 
   return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedImageDepPaths: [...allImportedImageDepPaths], parsedCount, cachedCount }
 }
@@ -663,7 +681,7 @@ function validateInternalLinks({
   pageInternalLinks: Record<string, InternalLink[]>
   redirects: HolocronConfig['redirects']
   knownPaths: string[]
-}): void {
+}): { brokenLinkCount: number; affectedPageCount: number } {
   const pageIndex = buildPageIndex(navigation)
   // Build a set of all known hrefs (pages + redirect sources)
   const knownHrefs = new Set<string>()
@@ -692,6 +710,9 @@ function validateInternalLinks({
     }
   }
 
+  let brokenLinkCount = 0
+  const pagesWithBrokenLinks = new Set<string>()
+
   for (const [slug, links] of Object.entries(pageInternalLinks)) {
     const source = slug === 'index' ? '/' : `/${slug}`
     const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
@@ -702,6 +723,9 @@ function validateInternalLinks({
       if (knownHrefs.has(resolved)) continue
       if (knownPathPrefixes.some((prefix) => resolved.startsWith(prefix))) continue
 
+      brokenLinkCount++
+      pagesWithBrokenLinks.add(slug)
+
       const location = line
         ? ` ${colors.cyan(source)}:${colors.yellow(String(line))}`
         : ` ${colors.cyan(source)}`
@@ -710,6 +734,8 @@ function validateInternalLinks({
       ))
     }
   }
+
+  return { brokenLinkCount, affectedPageCount: pagesWithBrokenLinks.size }
 }
 
 /**
