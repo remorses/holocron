@@ -1,11 +1,11 @@
-// Full-bleed hero with DottedVideoBackground (Three.js fluid sim), serif title,
-// and centered CTA. Breaks out of the Above column constraint via w-screen + negative margin.
+// Full-bleed hero with VideoBackgroundShader, serif title, and centered CTA.
+// Breaks out of the Above column constraint via w-screen + negative margin.
 'use client'
 
 import { useEffect, useState } from 'react'
 import { Link } from 'spiceflow/react'
 import { Button } from './ui/button.tsx'
-import { DottedVideoBackground } from './dotted-video-background.tsx'
+import { VideoBackgroundShader } from '@holocron.so/vite/mdx'
 
 const HERO_FONT = "'IvarText', serif"
 
@@ -17,85 +17,29 @@ function GitHubIcon({ className }: { className?: string }) {
   )
 }
 
-const TOP_GRADIENT = [
-  'linear-gradient(to bottom,',
-  'var(--background) 0%,',
-  'color-mix(in srgb, var(--background) 90%, transparent) 10%,',
-  'color-mix(in srgb, var(--background) 70%, transparent) 22%,',
-  'color-mix(in srgb, var(--background) 40%, transparent) 40%,',
-  'color-mix(in srgb, var(--background) 15%, transparent) 60%,',
-  'transparent 80%)',
-].join(' ')
-
-const BOTTOM_GRADIENT = [
-  'linear-gradient(to top,',
-  'var(--background) 0%,',
-  'color-mix(in srgb, var(--background) 85%, transparent) 15%,',
-  'color-mix(in srgb, var(--background) 50%, transparent) 35%,',
-  'color-mix(in srgb, var(--background) 20%, transparent) 55%,',
-  'transparent 75%)',
-].join(' ')
-
 export function HeroSection() {
   const [fontsReady, setFontsReady] = useState(false)
-  const [canvasReady, setCanvasReady] = useState(false)
 
   useEffect(() => {
-    // Safety timeout: show everything after 3s even if events never fire
-    const timeout = setTimeout(() => {
-      setFontsReady(true)
-      setCanvasReady(true)
-    }, 3000)
+    const timeout = setTimeout(() => setFontsReady(true), 3000)
     document.fonts.ready.then(() => setFontsReady(true))
     return () => clearTimeout(timeout)
   }, [])
 
   return (
     <div className='relative mt-4 lg:mt-8 mb-6 lg:mb-10 w-screen ml-[calc(-50vw+50%)] flex flex-col items-center overflow-hidden'>
-      {/* Three.js dotted video background + gradient overlays fade in together */}
-      <div
-        className='absolute inset-0 w-full h-full z-0 overflow-hidden dark:opacity-60 opacity-40'
-        style={{
-          opacity: canvasReady ? 1 : 0,
-          transition: 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
-        }}
-      >
-        <DottedVideoBackground
-          className='w-full h-full'
-          onReady={() => setCanvasReady(true)}
-          config={{
-            dotColor: '#8da4ff',
-            dotSize: 6,
-            minDotSize: 1,
-            dotMargin: 1,
-            animSpeed: 3,
-            gamma: 0.8,
-            enableMask: false,
-            fluidStrength: 0.2,
-            fluidCurl: 80,
-            minLuminance: 0.35,
-          }}
-        />
-      </div>
-
-      {/* Top gradient overlay */}
-      <div
-        className='absolute top-0 inset-x-0 h-[60%] z-[1] pointer-events-none'
-        style={{
-          background: TOP_GRADIENT,
-          opacity: canvasReady ? 1 : 0,
-          transition: 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
-        }}
-      />
-
-      {/* Bottom gradient overlay */}
-      <div
-        className='absolute bottom-0 inset-x-0 h-[40%] z-[1] pointer-events-none'
-        style={{
-          background: BOTTOM_GRADIENT,
-          opacity: canvasReady ? 1 : 0,
-          transition: 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
-        }}
+      <VideoBackgroundShader
+        src='/hero-bg.mp4'
+        className='absolute inset-0 w-full h-full dark:opacity-60 opacity-40'
+        dotColor='#8da4ff'
+        dotSize={6}
+        minDotSize={1}
+        dotMargin={1}
+        animSpeed={3}
+        gamma={0.8}
+        fluidStrength={0.2}
+        fluidCurl={80}
+        minLuminance={0.35}
       />
 
       {/* Foreground content */}

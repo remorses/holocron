@@ -20,6 +20,7 @@ export const SAFE_MDX_COMPONENT_NAMES = [
   'Frame', 'Prompt', 'ParamField', 'ResponseField', 'Steps', 'Step', 'Tile', 'Tooltip', 'Update',
   'View', 'Panel', 'CodeCard', 'RequestExample', 'ResponseExample', 'Tree', 'Color', 'Icon', 'Marquee',
   'Logo', 'Markdown', 'Visibility',
+  'VideoBackgroundShader',
   'TableOfContentsPanel', 'HolocronAIAssistantWidget', 'HolocronPageNavRow', 'OpenAPIEndpoint',
 ] as const
 

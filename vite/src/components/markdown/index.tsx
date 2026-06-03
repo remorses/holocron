@@ -69,6 +69,7 @@ export { Accordion, AccordionGroup } from './accordion.tsx'
 export { Mermaid } from './mermaid.tsx'
 
 export { Aside, FullWidth, Above, Hero } from './markers.tsx'
+export { VideoBackgroundShader } from './video-background-shader.tsx'
 
 export {
   Callout,

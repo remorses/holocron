@@ -76,6 +76,9 @@ export { Marquee } from './components/markdown/marquee.tsx'
 // Mermaid
 export { Mermaid } from './components/markdown/mermaid.tsx'
 
+// Video background
+export { VideoBackgroundShader, type VideoBackgroundShaderProps } from './components/markdown/video-background-shader.tsx'
+
 // Icons
 export { Icon } from './components/icon.tsx'
 

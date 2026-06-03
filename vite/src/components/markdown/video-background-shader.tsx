@@ -1,30 +1,24 @@
+'use client'
+
 /**
- * Dotted video background effect.
- * Renders a video through a dot-grid shader using raw WebGL.
- * Includes a 2D Navier-Stokes fluid simulation for interactive mouse trails.
+ * VideoBackgroundShader — full-screen video background rendered through a
+ * dot-grid shader with interactive 2D Navier-Stokes fluid simulation.
  *
- * Shader approach adapted from antimetal.com's hero effect:
- * - Video texture is sampled per grid cell
- * - Luminance drives dot radius (bright = big dot, dark = invisible)
- * - Fluid dye is additively blended with the video before luminance calc
- * - Mouse movement creates splats in the fluid sim
+ * Uses raw WebGL (zero runtime dependencies). Video luminance drives dot
+ * radius: bright = big dot, dark = invisible (unless minLuminance is set).
+ * Mouse movement creates fluid splats that blend with the video.
  *
- * Uses raw WebGL instead of Three.js to avoid pulling in a ~365 KB library
- * for what is essentially a full-screen quad with custom shaders. Typed
- * helpers (GpuProgram, FBO, DoubleFBO) keep the code readable while adding
- * zero runtime dependency.
+ * Future: `dotStyle` prop will add alternative render modes (e.g. 'ascii')
+ * using different characters to mimic video pixel shapes.
  *
- * No 'use client' directive here: this module is only imported by
- * hero-section.tsx which is already 'use client'. Adding a second
- * boundary causes @vitejs/plugin-rsc to wrap the import in React.lazy(),
- * turning it into a dynamic chunk that misses SSR modulepreload hints
- * and loads ~600ms late.
+ * Usage in MDX:
+ *   <VideoBackgroundShader src="/hero-bg.mp4" dotColor="#8da4ff" dotSize={6}>
+ *     # My heading
+ *   </VideoBackgroundShader>
  */
 
-import { useEffect, useRef } from 'react'
-import { preload } from 'react-dom'
-
-const VIDEO_SRC = '/hero-bg.mp4'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { cn } from '../../lib/css-vars.ts'
 
 // ─── WebGL typed helpers ───────────────────────────────────────────────────
 //
@@ -495,8 +489,9 @@ const DISPLAY_FRAG = /* glsl */ `
 
 // ─── Config ────────────────────────────────────────────────────────────────
 
-export interface DottedVideoConfig {
-  videoSource?: string
+export interface VideoShaderConfig {
+  /** Video source path. Required. */
+  src: string
   maskSrc?: string
   dotsEnabled?: boolean
   dotSize?: number
@@ -520,8 +515,7 @@ export interface DottedVideoConfig {
   minLuminance?: number
 }
 
-const DEFAULT_CONFIG: Required<DottedVideoConfig> = {
-  videoSource: '/hero-bg.mp4',
+const DEFAULT_CONFIG: Required<Omit<VideoShaderConfig, 'src'>> = {
   maskSrc: '',
   dotsEnabled: true,
   dotSize: 8,
@@ -557,9 +551,7 @@ function hexToRgbNormalized(hex: string): { r: number; g: number; b: number } {
 
 // ─── Engine ────────────────────────────────────────────────────────────────
 
-function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideoConfig & { onReady?: () => void }) {
-  const config = { ...DEFAULT_CONFIG, ...userConfig }
-
+function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<VideoShaderConfig, 'src'>> & { src: string; onReady?: () => void }) {
   const width = container.clientWidth
   const height = container.clientHeight
   const dpr = Math.min(2, window.devicePixelRatio || 1)
@@ -574,9 +566,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
 
   // premultipliedAlpha: false because the display shader outputs non-premultiplied
   // color (vec4(dotColor, finalAlpha) where dotColor is NOT pre-multiplied by alpha).
-  // Three.js handled this with gl.BLEND(SRC_ALPHA, ONE_MINUS_SRC_ALPHA) which
-  // premultiplies during compositing; setting premultipliedAlpha: false is simpler
-  // and tells the browser to handle the conversion during canvas compositing.
   const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: false })!
 
   // Enable float texture extensions for fluid sim FBOs
@@ -599,7 +588,7 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
 
   // Video element
   const video = document.createElement('video')
-  video.src = config.videoSource
+  video.src = config.src
   video.loop = false
   video.muted = true
   video.playsInline = true
@@ -684,7 +673,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
   // ── Fluid simulation step ──
 
   function stepFluid(dt: number) {
-    // Advect velocity
     gl.useProgram(advectionP.program)
     gl.uniform1f(advectionP.loc('dt'), dt)
     setTexture(gl, advectionP, 'uVelocity', velocity.read.texture, 0)
@@ -693,7 +681,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     drawPass(gl, velocity.write)
     velocity.swap()
 
-    // Advect dye
     gl.useProgram(advectionP.program)
     setTexture(gl, advectionP, 'uVelocity', velocity.read.texture, 0)
     setTexture(gl, advectionP, 'uSource', dye.read.texture, 1)
@@ -701,12 +688,10 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     drawPass(gl, dye.write)
     dye.swap()
 
-    // Curl
     gl.useProgram(curlP.program)
     setTexture(gl, curlP, 'uVelocity', velocity.read.texture, 0)
     drawPass(gl, curlFBO)
 
-    // Vorticity confinement
     gl.useProgram(vorticityP.program)
     setTexture(gl, vorticityP, 'uVelocity', velocity.read.texture, 0)
     setTexture(gl, vorticityP, 'uCurl', curlFBO.texture, 1)
@@ -714,12 +699,10 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     drawPass(gl, velocity.write)
     velocity.swap()
 
-    // Divergence
     gl.useProgram(divergenceP.program)
     setTexture(gl, divergenceP, 'uVelocity', velocity.read.texture, 0)
     drawPass(gl, divergenceFBO)
 
-    // Pressure solve (Jacobi iterations)
     gl.useProgram(pressureP.program)
     setTexture(gl, pressureP, 'uDivergence', divergenceFBO.texture, 1)
     for (let i = 0; i < config.fluidPressureIterations; i++) {
@@ -728,7 +711,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
       pressure.swap()
     }
 
-    // Gradient subtract
     gl.useProgram(gradientSubtractP.program)
     setTexture(gl, gradientSubtractP, 'uPressure', pressure.read.texture, 0)
     setTexture(gl, gradientSubtractP, 'uVelocity', velocity.read.texture, 1)
@@ -742,7 +724,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     gl.useProgram(splatP.program)
     gl.uniform1f(splatP.loc('aspectRatio'), width / height)
 
-    // Splat velocity
     setTexture(gl, splatP, 'uTarget', velocity.read.texture, 0)
     gl.uniform2f(splatP.loc('point'), x / width, 1.0 - y / height)
     gl.uniform3f(splatP.loc('color'), dx * 5000, -dy * 5000, 0)
@@ -750,7 +731,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     drawPass(gl, velocity.write)
     velocity.swap()
 
-    // Splat dye (use dot color for the trail)
     setTexture(gl, splatP, 'uTarget', dye.read.texture, 0)
     gl.uniform3f(splatP.loc('color'), dotRgb.r * 0.3, dotRgb.g * 0.3, dotRgb.b * 0.3)
     drawPass(gl, dye.write)
@@ -770,7 +750,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     const dy = y - lastMouseY
     lastMouseX = x
     lastMouseY = y
-
     if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
       splat(x, y, dx * 0.01, dy * 0.01)
     }
@@ -784,7 +763,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
   let lastTime = performance.now()
   const startTime = performance.now()
 
-  // Start video playback
   video.play().catch(() => {
     const tryPlay = () => {
       video.play().catch(() => {})
@@ -795,21 +773,17 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
 
   function animate() {
     animId = requestAnimationFrame(animate)
-
     const now = performance.now()
-    const dt = Math.min((now - lastTime) / 1000, 0.033) // cap at ~30fps dt
+    const dt = Math.min((now - lastTime) / 1000, 0.033)
     lastTime = now
 
-    // Upload current video frame to the video texture
     if (video.readyState >= video.HAVE_CURRENT_DATA) {
       gl.bindTexture(gl.TEXTURE_2D, videoTex)
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video)
     }
 
-    // Step fluid simulation
     stepFluid(dt)
 
-    // Render final display to screen
     gl.useProgram(displayP.program)
     gl.uniform1f(displayP.loc('time'), (now - startTime) / 1000)
     setTexture(gl, displayP, 'uDye', dye.read.texture, 0)
@@ -846,7 +820,6 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     resizeObserver.disconnect()
     video.pause()
     video.src = ''
-
     advectionP.dispose(gl)
     divergenceP.dispose(gl)
     curlP.dispose(gl)
@@ -855,22 +828,18 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
     gradientSubtractP.dispose(gl)
     splatP.dispose(gl)
     displayP.dispose(gl)
-
     disposeDoubleFBO(gl, velocity)
     disposeDoubleFBO(gl, dye)
     disposeFBO(gl, divergenceFBO)
     disposeFBO(gl, curlFBO)
     disposeDoubleFBO(gl, pressure)
-
     gl.deleteTexture(videoTex)
     gl.deleteTexture(maskTex)
     gl.deleteBuffer(quad.positionBuffer)
     gl.deleteBuffer(quad.uvBuffer)
-
     if (canvas.parentElement) {
       canvas.parentElement.removeChild(canvas)
     }
-
     const loseContext = gl.getExtension('WEBGL_lose_context')
     if (loseContext) loseContext.loseContext()
   }
@@ -878,36 +847,125 @@ function createDottedVideoEngine(container: HTMLElement, userConfig: DottedVideo
   return { cleanup, canvas, video }
 }
 
+// ─── Gradient helpers ──────────────────────────────────────────────────────
+
+const TOP_GRADIENT = [
+  'linear-gradient(to bottom,',
+  'var(--background) 0%,',
+  'color-mix(in srgb, var(--background) 90%, transparent) 10%,',
+  'color-mix(in srgb, var(--background) 70%, transparent) 22%,',
+  'color-mix(in srgb, var(--background) 40%, transparent) 40%,',
+  'color-mix(in srgb, var(--background) 15%, transparent) 60%,',
+  'transparent 80%)',
+].join(' ')
+
+const BOTTOM_GRADIENT = [
+  'linear-gradient(to top,',
+  'var(--background) 0%,',
+  'color-mix(in srgb, var(--background) 85%, transparent) 15%,',
+  'color-mix(in srgb, var(--background) 50%, transparent) 35%,',
+  'color-mix(in srgb, var(--background) 20%, transparent) 55%,',
+  'transparent 75%)',
+].join(' ')
+
 // ─── React component ───────────────────────────────────────────────────────
 
-export function DottedVideoBackground({
-  className = '',
-  config,
-  onReady,
-}: {
+export interface VideoBackgroundShaderProps extends Omit<VideoShaderConfig, 'src'> {
+  /** Video source path (required). */
+  src: string
+  /** Content rendered over the video background. */
+  children?: ReactNode
   className?: string
-  config?: Partial<DottedVideoConfig>
-  onReady?: () => void
-}) {
-  // React 19: emits <link rel="preload" as="video"> into SSR HTML so the
-  // browser starts downloading the video before any JS executes.
-  preload(VIDEO_SRC, { as: 'video' })
+  /** Show top gradient overlay fading into page background. Default true. */
+  fadeTop?: boolean
+  /** Show bottom gradient overlay fading into page background. Default true. */
+  fadeBottom?: boolean
+}
 
+export function VideoBackgroundShader({
+  children,
+  className,
+  src,
+  fadeTop = true,
+  fadeBottom = true,
+  ...config
+}: VideoBackgroundShaderProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const [canvasReady, setCanvasReady] = useState(false)
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    const engine = createDottedVideoEngine(container, {
+    // Safety timeout: show content after 3s even if video never loads
+    const timeout = setTimeout(() => setCanvasReady(true), 3000)
+
+    const engine = createVideoShaderEngine(container, {
+      ...DEFAULT_CONFIG,
       ...config,
-      onReady,
+      src,
+      onReady() {
+        clearTimeout(timeout)
+        setCanvasReady(true)
+      },
     })
 
     return () => {
+      clearTimeout(timeout)
       engine.cleanup()
     }
   }, [])
 
-  return <div ref={containerRef} className={className} />
+  const fadeTransition = 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)'
+
+  return (
+    <div className={cn('relative flex flex-col items-center overflow-hidden', className)}>
+      {/* WebGL canvas container */}
+      <div
+        ref={containerRef}
+        className='absolute inset-0 w-full h-full z-0 overflow-hidden'
+        style={{
+          opacity: canvasReady ? 1 : 0,
+          transition: fadeTransition,
+        }}
+      />
+
+      {/* Top gradient overlay */}
+      {fadeTop && (
+        <div
+          className='absolute top-0 inset-x-0 h-[60%] z-[1] pointer-events-none'
+          style={{
+            background: TOP_GRADIENT,
+            opacity: canvasReady ? 1 : 0,
+            transition: fadeTransition,
+          }}
+        />
+      )}
+
+      {/* Bottom gradient overlay */}
+      {fadeBottom && (
+        <div
+          className='absolute bottom-0 inset-x-0 h-[40%] z-[1] pointer-events-none'
+          style={{
+            background: BOTTOM_GRADIENT,
+            opacity: canvasReady ? 1 : 0,
+            transition: fadeTransition,
+          }}
+        />
+      )}
+
+      {/* Foreground content */}
+      {children && (
+        <div
+          className='relative z-[2] flex flex-col items-center justify-center text-center w-full px-5 py-16 sm:py-24 gap-6'
+          style={{
+            opacity: canvasReady ? 1 : 0,
+            transition: 'opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
+          }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  )
 }
