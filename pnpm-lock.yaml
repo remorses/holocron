@@ -245,9 +245,6 @@ importers:
       '@cloudflare/vite-plugin':
         specifier: ^1.32.2
         version: 1.32.2(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))(workerd@1.20260526.1)(wrangler@4.95.0(@cloudflare/workers-types@4.20260531.1))
-      '@fastify/deepmerge':
-        specifier: ^3.2.1
-        version: 3.2.1
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -302,9 +299,6 @@ importers:
       github-slugger:
         specifier: ^2.0.0
         version: 2.0.0
-      image-size:
-        specifier: ^2.0.2
-        version: 2.0.2
       mdast-heading-id:
         specifier: ^2.0.0
         version: 2.0.0
@@ -412,9 +406,6 @@ importers:
       dialkit:
         specifier: ^1.2.0
         version: 1.2.0(motion@12.40.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      motion:
-        specifier: ^12.40.0
-        version: 12.40.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
 
   website:
     dependencies:
@@ -1434,9 +1425,6 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
-
-  '@fastify/deepmerge@3.2.1':
-    resolution: {integrity: sha512-N5Oqvltoa2r9z1tbx4xjky0oRR60v+T47Ic4J1ukoVQcptLOrIdRnCSdTGmOmajZuHVKlTnfcmrjyqsGEW1ztA==}
 
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
@@ -4309,11 +4297,6 @@ packages:
   image-q@4.0.0:
     resolution: {integrity: sha512-PfJGVgIfKQJuq3s0tTDOKtztksibuUEbJQIYT3by6wctQo+Rdlh7ef4evJ5NCdxY4CfMbvFkocEwbl4BF8RlJw==}
 
-  image-size@2.0.2:
-    resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
-    engines: {node: '>=16.x'}
-    hasBin: true
-
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
@@ -6565,8 +6548,6 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.4':
     optional: true
-
-  '@fastify/deepmerge@3.2.1': {}
 
   '@floating-ui/core@1.7.5':
     dependencies:
@@ -9356,8 +9337,6 @@ snapshots:
   image-q@4.0.0:
     dependencies:
       '@types/node': 16.9.1
-
-  image-size@2.0.2: {}
 
   inherits@2.0.4: {}
 
