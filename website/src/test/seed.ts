@@ -61,6 +61,16 @@ export async function seedOrg(
   return orgId
 }
 
+/** Add an existing user to an existing org with a given role (default member). */
+export async function seedMembership(
+  orgId: string,
+  userId: string,
+  role: 'admin' | 'member' = 'member',
+): Promise<void> {
+  const db = getDb()
+  await db.insert(schema.orgMember).values({ id: ulid(), orgId, userId, role })
+}
+
 /** Insert a project in an org. Returns the projectId. */
 export async function seedProject(
   orgId: string,

@@ -7,6 +7,12 @@
 // never read or mutate another project's data — even within the same org.
 // Session (bearer) auth retains full org access.
 //
+// Key ADMINISTRATION was later locked down in commit 97c8956c: creating,
+// listing, and deleting keys now requires a signed-in ADMIN session. A holo_
+// key can still read its own project (/projects, /me) and deploy, but it can
+// no longer mint or delete keys — so a leaked deploy key can't become a
+// persistence mechanism. These tests assert that boundary (key admin → 401).
+//
 // Requests go through the type-safe `createSpiceflowFetch(app)` client instead
 // of raw `app.handle()` + Request. Paths, params, request bodies, AND the 200
 // response shapes are all checked at compile time against the `app` type — so a
@@ -21,6 +27,7 @@ import { app } from './server.tsx'
 import {
   seedUserWithSession,
   seedOrg,
+  seedMembership,
   seedProject,
   seedApiKey,
   bearer,
@@ -74,51 +81,36 @@ describe('API key — project scoped', () => {
     expect(body.projects.map((p) => p.projectId)).toEqual([projectA])
   })
 
-  test("GET /api/v0/keys lists only the key's project keys", async () => {
+  test('GET /api/v0/keys is rejected for an API key (admin session only)', async () => {
     const user = await seedUserWithSession()
     const orgId = await seedOrg(user.userId)
     const projectA = await seedProject(orgId)
-    const projectB = await seedProject(orgId)
     const keyA = await seedApiKey(orgId, projectA, { name: 'A key' })
-    await seedApiKey(orgId, projectB, { name: 'B key' })
 
-    const body = await f('/api/v0/keys', { headers: bearer(keyA.fullKey) })
-    if (body instanceof Error) throw body
-    // Only project A's keys (keyA itself), never project B's.
-    expect(body.keys.map((k) => k.name)).toEqual(['A key'])
+    // Locked down in 97c8956c: enumerating keys needs an admin session, so a
+    // leaked deploy key can't discover the org's other keys.
+    expectError(await f('/api/v0/keys', { headers: bearer(keyA.fullKey) }), 401)
   })
 
-  test('POST /api/v0/keys for its own project succeeds', async () => {
+  test('POST /api/v0/keys is rejected for an API key (no self-minting)', async () => {
     const user = await seedUserWithSession()
     const orgId = await seedOrg(user.userId)
     const projectA = await seedProject(orgId)
     const key = await seedApiKey(orgId, projectA)
 
-    const body = await f('/api/v0/keys', {
-      method: 'POST',
-      body: { name: 'new', projectId: projectA },
-      headers: bearer(key.fullKey),
-    })
-    if (body instanceof Error) throw body
-    expect(body.key.startsWith('holo_')).toBe(true)
+    // A leaked key must not mint replacement keys for persistence, even for
+    // its own project. Key creation requires an admin session.
+    expectError(
+      await f('/api/v0/keys', {
+        method: 'POST',
+        body: { name: 'new', projectId: projectA },
+        headers: bearer(key.fullKey),
+      }),
+      401,
+    )
   })
 
-  test('POST /api/v0/keys for ANOTHER project in the same org → 403', async () => {
-    const user = await seedUserWithSession()
-    const orgId = await seedOrg(user.userId)
-    const projectA = await seedProject(orgId)
-    const projectB = await seedProject(orgId)
-    const keyA = await seedApiKey(orgId, projectA)
-
-    const result = await f('/api/v0/keys', {
-      method: 'POST',
-      body: { name: 'evil', projectId: projectB },
-      headers: bearer(keyA.fullKey),
-    })
-    expectError(result, 403)
-  })
-
-  test("DELETE another project's key → 404 (not deleted)", async () => {
+  test('DELETE /api/v0/keys/:id is rejected for an API key (no self-deletion)', async () => {
     const user = await seedUserWithSession()
     const orgId = await seedOrg(user.userId)
     const projectA = await seedProject(orgId)
@@ -126,13 +118,15 @@ describe('API key — project scoped', () => {
     const keyA = await seedApiKey(orgId, projectA)
     const keyB = await seedApiKey(orgId, projectB)
 
-    const result = await f('/api/v0/keys/:id', {
-      method: 'DELETE',
-      params: { id: keyB.keyId },
-      headers: bearer(keyA.fullKey),
-    })
-    expectError(result, 404)
-    // keyB still exists
+    expectError(
+      await f('/api/v0/keys/:id', {
+        method: 'DELETE',
+        params: { id: keyB.keyId },
+        headers: bearer(keyA.fullKey),
+      }),
+      401,
+    )
+    // keyB still exists — the API key could not delete it.
     const row = await env.DB.prepare('SELECT COUNT(*) as c FROM api_key WHERE id = ?')
       .bind(keyB.keyId)
       .first<{ c: number }>()
@@ -230,5 +224,49 @@ describe('session auth — full org access', () => {
     if (body instanceof Error) throw body
     expect(body.name).toBe('made-by-session')
     expect(body.projectId).toBeTruthy()
+  })
+
+  test('admin session can create, list, and delete API keys', async () => {
+    const user = await seedUserWithSession()
+    const orgId = await seedOrg(user.userId)
+    const projectA = await seedProject(orgId)
+
+    const created = await f('/api/v0/keys', {
+      method: 'POST',
+      body: { name: 'ci', projectId: projectA },
+      headers: bearer(user.sessionToken),
+    })
+    if (created instanceof Error) throw created
+    expect(created.key.startsWith('holo_')).toBe(true)
+
+    const listed = await f('/api/v0/keys', { headers: bearer(user.sessionToken) })
+    if (listed instanceof Error) throw listed
+    expect(listed.keys.map((k) => k.name)).toContain('ci')
+
+    const deleted = await f('/api/v0/keys/:id', {
+      method: 'DELETE',
+      params: { id: created.id },
+      headers: bearer(user.sessionToken),
+    })
+    if (deleted instanceof Error) throw deleted
+    expect(deleted.deleted).toBe(true)
+  })
+
+  test('non-admin member session cannot manage keys (403)', async () => {
+    const admin = await seedUserWithSession()
+    const orgId = await seedOrg(admin.userId)
+    const projectA = await seedProject(orgId)
+
+    const member = await seedUserWithSession()
+    await seedMembership(orgId, member.userId, 'member')
+
+    expectError(
+      await f('/api/v0/keys', {
+        method: 'POST',
+        body: { name: 'nope', projectId: projectA },
+        headers: bearer(member.sessionToken),
+      }),
+      403,
+    )
   })
 })
