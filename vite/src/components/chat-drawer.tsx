@@ -13,7 +13,7 @@
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { decodeFederationPayload, useRouterState } from 'spiceflow/react'
+import { decodeFederationPayload } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
 import type { ChatMessage, ChatModelMessage, ChatPart } from '../lib/chat-store.ts'
 import { CHAT_INPUT_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
@@ -58,7 +58,6 @@ function ChatDrawerInner() {
   const errorMessage = chatState((s) => s.errorMessage)
   const draftText = chatState((s) => s.draftText)
   const { currentPageHref, site } = useHolocronData()
-  const { pathname } = useRouterState()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   // Prefix API calls with the Vite base path so they work when mounted at e.g. /docs
   const basePath = site.base === '/' ? '' : `/${site.base.replace(/^\/+|\/+$/g, '')}`
@@ -251,15 +250,19 @@ function ChatDrawerInner() {
     }
   }, [drawerState])
 
-  // Auto-close drawer when the user navigates to a different page
-  // (e.g. clicking a link in an AI chat response).
-  const prevPathnameRef = useRef(pathname)
+  // Auto-close drawer when any link is clicked (internal navigation,
+  // hash links, external links). Uses a document-level click listener
+  // so every <a> in the page is covered without per-component wiring.
   useEffect(() => {
-    if (prevPathnameRef.current !== pathname && chatState.getState().drawerState === 'open') {
+    if (drawerState !== 'open') return
+    function onClickLink(e: MouseEvent) {
+      const anchor = (e.target as HTMLElement)?.closest?.('a')
+      if (!anchor) return
       chatState.setState({ drawerState: 'closed' })
     }
-    prevPathnameRef.current = pathname
-  }, [pathname])
+    document.addEventListener('click', onClickLink)
+    return () => document.removeEventListener('click', onClickLink)
+  }, [drawerState])
 
   const isOpen = drawerState === 'open'
 
