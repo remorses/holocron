@@ -143,6 +143,70 @@ The tag groups are hoisted to the tab's top level so they render as separate sid
 
 The `"..."` entry only expands endpoints you did **not** already reference explicitly, so you can pin a few important endpoints up top and let the rest fall in afterward. Only one `"..."` is allowed per tab.
 
+## Controlling which routes appear in the spec
+
+Holocron documents every operation in your OpenAPI spec. If your API has **internal routes** (admin endpoints, webhook receivers, internal service calls) that should not appear in the public docs, exclude them from the spec itself rather than trying to filter them in `docs.json`.
+
+Most frameworks let you mark routes as hidden at the route definition level so they are omitted from the generated spec.
+
+### Spiceflow
+
+Add `hide: true` to the route's `detail` object:
+
+```ts
+import { Spiceflow } from 'spiceflow'
+import { openapi } from 'spiceflow/openapi'
+import { z } from 'zod'
+
+const app = new Spiceflow()
+  .use(openapi({ path: '/openapi.json' }))
+
+  // This route appears in the spec
+  .route({
+    method: 'GET',
+    path: '/api/v0/projects',
+    detail: {
+      summary: 'List projects',
+      tags: ['Projects'],
+    },
+    response: { 200: z.object({ projects: z.array(z.string()) }) },
+    async handler() {
+      return { projects: [] }
+    },
+  })
+
+  // This route is hidden from the spec
+  .route({
+    method: 'POST',
+    path: '/api/v0/keys',
+    detail: {
+      hide: true,
+      summary: 'Create API key',
+      tags: ['Internal'],
+    },
+    request: z.object({ name: z.string() }),
+    async handler() {
+      return { id: '123' }
+    },
+  })
+```
+
+<Aside>
+<Tip>
+A good rule of thumb: if a route requires **session auth** or **internal tokens** that your API consumers never have, hide it from the spec. Only document routes that work with the auth method your users actually use (e.g. API keys).
+</Tip>
+</Aside>
+
+### Other frameworks
+
+Most OpenAPI generators support similar exclusion mechanisms:
+
+- **Hono** (`@hono/zod-openapi`): omit the route from the OpenAPI app, or don't register it with `createRoute`
+- **FastAPI**: set `include_in_schema=False` on the route decorator
+- **Express** (`swagger-jsdoc`): omit the JSDoc `@openapi` annotation from the route
+
+The key idea is the same: your OpenAPI spec should only contain routes your API consumers can actually call. Internal, admin, or webhook routes belong in a separate spec or no spec at all.
+
 ## How pages are generated
 
 In **dedicated mode**, Holocron reads the spec and creates one page per operation (path + method). Pages are grouped by the `tags` field on each operation. The sidebar shows tag groups with individual endpoint pages.

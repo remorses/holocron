@@ -143,6 +143,7 @@ export const gatewayApp = new Spiceflow()
     method: 'POST',
     path: '/api/chat',
     request: chatRequestSchema,
+    detail: { hide: true },
     async *handler({ request }): AsyncGenerator<HolocronChatChunk> {
       const authHeader = request.headers.get('authorization')
       const authResult = await validateApiKey(authHeader)

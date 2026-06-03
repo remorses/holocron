@@ -132,6 +132,7 @@ export const apiApp = new Spiceflow()
       projectId: z.string().min(1).describe('Project ULID the key is scoped to.'),
     }),
     detail: {
+      hide: true,
       summary: 'Create API key',
       description:
         'Creates a new `holo_xxx` API key scoped to a project. Requires a signed-in org admin. The full key is returned only in this response; it is never stored in plain text.',
@@ -165,6 +166,7 @@ export const apiApp = new Spiceflow()
     method: 'GET',
     path: '/api/v0/keys',
     detail: {
+      hide: true,
       summary: 'List API keys',
       description:
         'Lists API keys for the signed-in admin\'s org. Only the prefix is returned, not the full secret.',
@@ -201,6 +203,7 @@ export const apiApp = new Spiceflow()
       id: z.string().describe('Key ULID.'),
     }),
     detail: {
+      hide: true,
       summary: 'Delete API key',
       description: 'Deletes an API key. Requires a signed-in org admin.',
       tags: ['API Keys'],
@@ -232,6 +235,7 @@ export const apiApp = new Spiceflow()
     path: '/api/v0/keys/validate',
     request: z.object({ key: z.string().min(1) }),
     detail: {
+      hide: true,
       summary: 'Validate API key',
       description:
         'Checks if a `holo_xxx` key is valid and returns the associated org. Used internally by the AI gateway.',
@@ -406,6 +410,7 @@ export const apiApp = new Spiceflow()
       orgId: z.string().min(1).optional().describe('Target org ID. If omitted, uses the default org (auto-created if needed).'),
     }),
     detail: {
+      hide: true,
       summary: 'Create project',
       description: 'Creates a new project in the caller\'s org (auto-created if needed). Pass orgId to target a specific org. Requires a signed-in session; project-scoped API keys cannot create sibling projects.',
       tags: ['Projects'],
@@ -449,6 +454,7 @@ export const apiApp = new Spiceflow()
     path: '/api/v0/register-deployment',
     request: z.object({}).optional(),
     detail: {
+      hide: true,
       summary: 'Register deployment',
       description:
         'Registers a project via GitHub Actions OIDC. JWT is verified against GitHub JWKS; owner/repo are derived from the token claims. Called automatically by the Holocron Vite plugin at build time.',
