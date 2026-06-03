@@ -30,7 +30,7 @@
     'calt' 1;
 }
 
-.slot-page ::selection {
+::selection {
   background: color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
