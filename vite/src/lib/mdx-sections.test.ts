@@ -105,7 +105,7 @@ Body
     `)
   })
 
-  test('injects HolocronAIAssistantWidget as per-section Aside if no aside exists in the first section', () => {
+  test('injects HolocronAIAssistantWidget as full Aside when no aside exists anywhere', () => {
     const mdx = `Intro
 
 ## Section
