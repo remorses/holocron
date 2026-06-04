@@ -616,8 +616,8 @@ function createCharAtlas(gl: WebGLRenderingContext, chars: string, font: string)
 // ─── Engine ────────────────────────────────────────────────────────────────
 
 function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<VideoShaderConfig, 'src'>> & { src: string; onReady?: () => void }) {
-  const width = container.clientWidth
-  const height = container.clientHeight
+  let width = container.clientWidth
+  let height = container.clientHeight
   const dpr = Math.min(2, window.devicePixelRatio || 1)
 
   // Canvas + WebGL context
@@ -876,16 +876,16 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   // ── Resize ──
 
   function onResize() {
-    const w = container.clientWidth
-    const h = container.clientHeight
-    canvas.width = w * dpr
-    canvas.height = h * dpr
-    canvas.style.width = w + 'px'
-    canvas.style.height = h + 'px'
+    width = container.clientWidth
+    height = container.clientHeight
+    canvas.width = width * dpr
+    canvas.height = height * dpr
+    canvas.style.width = width + 'px'
+    canvas.style.height = height + 'px'
     gl.useProgram(displayP.program)
-    gl.uniform2f(displayP.loc('videoResolution'), w, h)
+    gl.uniform2f(displayP.loc('videoResolution'), width, height)
     gl.useProgram(splatP.program)
-    gl.uniform1f(splatP.loc('aspectRatio'), w / h)
+    gl.uniform1f(splatP.loc('aspectRatio'), width / height)
   }
 
   const resizeObserver = new ResizeObserver(onResize)
@@ -965,6 +965,9 @@ export interface VideoBackgroundShaderProps extends Omit<VideoShaderConfig, 'src
   fadeTop?: boolean
   /** Show bottom gradient overlay fading into page background. Default true. */
   fadeBottom?: boolean
+  /** Maximum width for the shader canvas in pixels. Prevents the shader from
+   *  stretching too wide on ultra-wide monitors. Default 2200. */
+  maxWidth?: number
 }
 
 export function VideoBackgroundShader({
@@ -974,6 +977,7 @@ export function VideoBackgroundShader({
   src,
   fadeTop = true,
   fadeBottom = true,
+  maxWidth = 2200,
   ...config
 }: VideoBackgroundShaderProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1011,6 +1015,8 @@ export function VideoBackgroundShader({
         ref={containerRef}
         className={cn('absolute inset-0 w-full h-full z-0 overflow-hidden', canvasClassName)}
         style={{
+          maxWidth,
+          margin: '0 auto',
           opacity: canvasReady ? 1 : 0,
           transition: fadeTransition,
         }}
