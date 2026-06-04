@@ -741,3 +741,7 @@ Single-line form produces bare phrasing children (no `<P>` wrapper, no `editoria
 ### New MDX pages must be added to docs.json navigation
 
 After creating a new `.mdx` file, add its slug to `docs.json` (or `docs.jsonc` / `holocron.jsonc`) navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.
+
+## Changesets
+
+This repo uses changesets for versioning. Load the `changesets` skill and add a `.changeset/*.md` file for every user-facing change (new feature or fix) to a public package. See `.changeset/readme.md` for conventions.
