@@ -985,7 +985,12 @@ export function VideoBackgroundShader({
       clearTimeout(timeout)
       engine.cleanup()
     }
-  }, [])
+  }, [src, config.dotStyle, config.dotColor, config.dotSize, config.dotMargin,
+    config.minDotSize, config.dotAlphaMultiplier, config.gridLayout,
+    config.dotsEnabled, config.animSpeed, config.gamma, config.loopAt,
+    config.fluidCurl, config.fluidStrength, config.fluidSplatRadius,
+    config.minLuminance, config.chars, config.charFont,
+    config.enableMask, config.maskSrc])
 
   const fadeTransition = 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)'
 
