@@ -110,6 +110,11 @@
                         "pages": ["docs/changelog-tab"]
                     },
                     {
+                        "group": "MCP",
+                        "icon": "cpu",
+                        "pages": ["docs/mcp-tools", "docs/mcp-export"]
+                    },
+                    {
                         "group": "AI-Readable Docs",
                         "icon": "bot",
                         "pages": [

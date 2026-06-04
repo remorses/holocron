@@ -1,0 +1,220 @@
+---
+title: MCP Tools
+description: Generate documentation pages from MCP tool and resource definitions.
+icon: cpu
+---
+
+# MCP Tools
+
+Holocron generates documentation pages from [MCP](https://modelcontextprotocol.io) (Model Context Protocol) tool and resource definitions. Point a tab at a **local definition file** or a **remote MCP server URL** and Holocron creates a page for each tool and resource, with parameter docs, example requests, and annotation badges.
+
+## Basic setup
+
+Add an MCP tab to your `docs.json` navigation. The `mcp` field accepts either a **local JSON file path** or a **remote MCP server URL**:
+
+```json
+{
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [{ "group": "Getting Started", "pages": ["index"] }]
+      },
+      {
+        "tab": "MCP Tools",
+        "mcp": "mcp-tools.json"
+      }
+    ]
+  }
+}
+```
+
+Or connect directly to a live MCP server:
+
+```json
+{
+  "tab": "MCP Tools",
+  "mcp": "https://api.example.com/mcp"
+}
+```
+
+When using a remote URL, Holocron connects via [Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) at build time, calls `tools/list`, `resources/list`, and `prompts/list`, and generates the same pages as the local file approach.
+
+For local files, place the JSON at the project root. If you set `pagesDir`, Holocron checks `pagesDir` first, then falls back to the project root.
+
+### Exporting from an existing MCP server
+
+If you already have a running MCP server, you can generate the definition file with a simple script. See [Exporting MCP definitions](/docs/mcp-export) for a ready-to-use TypeScript script.
+
+## Definition file format
+
+The local file uses the **exact same shape** returned by the MCP SDK's `tools/list`, `resources/list`, and `prompts/list` responses. If you already have an MCP server, you can export its definitions directly. The file is a JSON object with three optional arrays:
+
+```json
+{
+  "serverUrl": "https://api.example.com/mcp",
+  "tools": [
+    {
+      "name": "query_database",
+      "description": "Execute a read-only SQL query.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "SQL query to execute",
+            "example": "SELECT * FROM users LIMIT 10"
+          },
+          "database": {
+            "type": "string",
+            "enum": ["production", "staging"]
+          }
+        },
+        "required": ["query", "database"]
+      }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "db://schema/users",
+      "name": "Users Table Schema",
+      "description": "Database schema for the users table.",
+      "mimeType": "application/sql"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "explain_query",
+      "description": "Break down what a SQL query does",
+      "arguments": [
+        { "name": "query", "description": "The SQL query to explain", "required": true }
+      ]
+    }
+  ]
+}
+```
+
+The `serverUrl` field is optional. It stores the live MCP server URL for future AI chat integration.
+
+### Tool fields
+
+Each tool object supports these fields:
+
+<ResponseField name="name" type="string" required>
+Unique identifier for the tool. Used as the page slug (converted to kebab-case).
+</ResponseField>
+
+<ResponseField name="description" type="string">
+Human-readable description. Rendered as Markdown on the tool page.
+</ResponseField>
+
+<ResponseField name="inputSchema" type="object" required>
+JSON Schema defining the tool's parameters. Each property becomes a documented field with type, description, default, and enum values.
+</ResponseField>
+
+<ResponseField name="outputSchema" type="object">
+JSON Schema defining the tool's return value. When present, a **Response** section and a response example appear on the page.
+</ResponseField>
+
+<ResponseField name="annotations" type="object">
+Behavioral hints rendered as colored badges on the tool page. See [annotations](#annotations) below.
+</ResponseField>
+
+<ResponseField name="execution" type="object">
+Execution hints. When `taskSupport` is `"optional"` or `"required"`, a **long-running** badge appears.
+</ResponseField>
+
+### Resource fields
+
+<ResponseField name="uri" type="string" required>
+The resource URI (e.g. `db://schema/users`, `config://app/settings`).
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+Display name for the resource.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+Human-readable description rendered as Markdown.
+</ResponseField>
+
+<ResponseField name="mimeType" type="string">
+MIME type badge shown next to the URI (e.g. `application/json`, `application/sql`).
+</ResponseField>
+
+## What gets generated
+
+**Tool pages** show the tool name with a `TOOL` badge, the description, input parameters as a field list (with types, required markers, defaults, and enum values), and a request example in the right sidebar showing the JSON-RPC `tools/call` shape with sampled values from the schema.
+
+When a tool defines `outputSchema`, a **Response** field list and a `<ResponseExample>` code block also appear.
+
+**Resource pages** show the resource name with a `RES` badge, the URI, MIME type, and description.
+
+Tools and resources are auto-grouped into **Tools** and **Resources** sidebar groups. Pages appear under `/mcp/` by default (e.g. `/mcp/query-database`, `/mcp/resources/users-table-schema`).
+
+### Example input generation
+
+Holocron generates realistic example values from the JSON Schema using this priority:
+
+1. `example` field on the property
+2. `examples[0]`
+3. `enum[0]`
+4. `default` value
+5. Type-based fallback (`"string"`, `0`, `true`, `"user@example.com"` for `format: "email"`, etc.)
+
+Add `example` values to your `inputSchema` properties for the best documentation experience.
+
+## Annotations
+
+MCP tool annotations are behavioral hints rendered as colored badges with tooltips:
+
+| Badge | Annotation | Meaning |
+|-------|-----------|---------|
+| **read-only** | `readOnlyHint: true` | Tool does not modify its environment |
+| **idempotent** | `idempotentHint: true` | Repeated calls with same args have no additional effect |
+| **destructive** | `destructiveHint: true` | Tool may perform destructive updates |
+| **closed-world** | `openWorldHint: false` | Tool operates in a closed domain (e.g. memory), not open like web search |
+| **long-running** | `execution.taskSupport: "optional" \| "required"` | Tool supports long-running async tasks |
+
+Hover over any badge to see its description.
+
+## Custom base path
+
+By default, generated pages appear under `/mcp/`. Change the prefix with `base`:
+
+```json
+{
+  "tab": "MCP Tools",
+  "mcp": "mcp-tools.json",
+  "base": "/tools"
+}
+```
+
+Now tool pages render at `/tools/query-database` instead. A **leading slash is optional**: `"/tools"` and `"tools"` behave the same. Set `base` to `""` for no prefix.
+
+## Mixing guides with tool pages
+
+Like OpenAPI, you can interleave hand-written MDX pages with auto-generated tool pages using **selective mode**. Add a `groups` or `pages` array to the tab:
+
+```json
+{
+  "tab": "MCP Tools",
+  "mcp": "mcp-tools.json",
+  "groups": [
+    {
+      "group": "Getting Started",
+      "pages": ["mcp/overview", "mcp/authentication"]
+    },
+    {
+      "group": "Database",
+      "pages": ["query_database", "..."]
+    }
+  ]
+}
+```
+
+Each page entry is either a normal MDX slug or a **tool name** (matched against the definition file). The special `"..."` entry expands all remaining tools and resources not already listed.
+
+## HMR in development
+
+During `npx vite dev`, editing the MCP definition file **hot-reloads** the generated tool pages. Add a new tool to the JSON, save, and the new page is immediately routable without restarting the dev server.

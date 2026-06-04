@@ -1,0 +1,70 @@
+---
+title: Exporting MCP Definitions
+description: Download tool and resource definitions from a running MCP server into a JSON file.
+icon: download
+---
+
+# Exporting MCP Definitions
+
+If you have a running MCP server and want to generate a local definition file for Holocron, use this script. It connects to the server, fetches all tools, resources, and prompts, and writes them to a JSON file.
+
+## Script
+
+Save this as `scripts/export-mcp.ts` in your project:
+
+```ts
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import fs from 'node:fs'
+
+const url = process.argv[2]
+if (!url) {
+  console.error('Usage: npx tsx scripts/export-mcp.ts <MCP_SERVER_URL>')
+  process.exit(1)
+}
+
+const client = new Client({ name: 'holocron-export', version: '1.0.0' })
+const transport = new StreamableHTTPClientTransport(new URL(url))
+
+await client.connect(transport)
+console.log('Connected to', url)
+
+const [toolsResult, resourcesResult, promptsResult] = await Promise.all([
+  client.listTools().catch(() => ({ tools: [] })),
+  client.listResources().catch(() => ({ resources: [] })),
+  client.listPrompts().catch(() => ({ prompts: [] })),
+])
+
+const output = {
+  serverUrl: url,
+  tools: toolsResult.tools ?? [],
+  resources: resourcesResult.resources ?? [],
+  prompts: promptsResult.prompts ?? [],
+}
+
+await client.close()
+
+const outPath = 'mcp-tools.json'
+fs.writeFileSync(outPath, JSON.stringify(output, null, 2) + '\n')
+console.log(`Wrote ${output.tools.length} tools, ${output.resources.length} resources, ${output.prompts.length} prompts to ${outPath}`)
+```
+
+## Usage
+
+Install the MCP SDK, then run the script with your server URL:
+
+```bash
+npm install @modelcontextprotocol/sdk
+npx tsx scripts/export-mcp.ts https://your-mcp-server.com/mcp
+```
+
+This creates `mcp-tools.json` at the project root, ready to use in your `docs.json`:
+
+```json
+{
+  "tab": "MCP Tools",
+  "mcp": "mcp-tools.json"
+}
+```
+
+Re-run the script whenever your MCP server's tools change and commit the updated file.
