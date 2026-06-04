@@ -87,3 +87,6 @@ export {
 // re-exported here for convenience so the MDX component map can import
 // everything from one place.
 export { TableOfContentsPanel } from '../toc-panel.tsx'
+
+// MCP tool/resource renderers
+export { MCPTool, MCPResource } from '../../lib/mcp/render-mcp.tsx'

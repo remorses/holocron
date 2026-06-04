@@ -22,6 +22,7 @@ export const SAFE_MDX_COMPONENT_NAMES = [
   'Logo', 'Markdown', 'Visibility',
   'VideoBackgroundShader',
   'TableOfContentsPanel', 'HolocronAIAssistantWidget', 'HolocronPageNavRow', 'OpenAPIEndpoint',
+  'MCPTool', 'MCPResource',
 ] as const
 
 export type SafeMdxComponentName = (typeof SAFE_MDX_COMPONENT_NAMES)[number]

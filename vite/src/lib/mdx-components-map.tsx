@@ -85,6 +85,7 @@ import type { SafeMdxComponentName } from './mdx-component-names.ts'
 
 import { SidebarAssistant, PageNavRow } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
+import { MCPTool, MCPResource } from './mcp/render-mcp.tsx'
 
 function ImageWithProps(props: {
   src: string
@@ -219,6 +220,8 @@ export const mdxComponents = {
   HolocronAIAssistantWidget: SidebarAssistant,
   HolocronPageNavRow: PageNavRow,
   OpenAPIEndpoint,
+  MCPTool,
+  MCPResource,
 } satisfies Record<SafeMdxComponentName | `${string}.${string}`, unknown>
 
 
