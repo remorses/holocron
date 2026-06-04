@@ -20,9 +20,17 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { remark } from 'remark'
+import remarkMdx from 'remark-mdx'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
+import { toMarkdown } from 'mdast-util-to-markdown'
+import { mdxToMarkdown } from 'mdast-util-mdx'
+import type { Root } from 'mdast'
 import type { ConfigNavGroup } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
+import { buildSplicedNodes } from '../remark-inline-imports.ts'
 import { logger, formatHolocronWarning } from '../logger.ts'
 import { parseChangelogSource } from './parse-source.ts'
 import { fetchGitHubReleases, type GitHubRelease } from './github-releases.ts'
@@ -30,22 +38,39 @@ import { fetchGitHubReleases, type GitHubRelease } from './github-releases.ts'
 /** Try to resolve a page slug to an on-disk MDX/MD file, probing pagesDir
  *  first, then projectRoot. Returns the absolute path or undefined. */
 function resolveContentFile(slug: string, pagesDir: string, projectRoot: string): string | undefined {
+  // If slug already has an extension, probe it directly
+  const hasExt = /\.mdx?$/.test(slug)
   for (const dir of [pagesDir, projectRoot]) {
-    for (const ext of ['.mdx', '.md']) {
-      const abs = path.join(dir, slug + ext)
+    if (hasExt) {
+      const abs = path.join(dir, slug)
       if (fs.existsSync(abs)) return abs
+    } else {
+      for (const ext of ['.mdx', '.md']) {
+        const abs = path.join(dir, slug + ext)
+        if (fs.existsSync(abs)) return abs
+      }
     }
   }
   return undefined
 }
 
-/** Read an MDX file and strip its YAML frontmatter block (if any), returning
- *  only the body content. */
-function readContentBody(filePath: string): string {
+/** Read an MDX file, parse it, strip frontmatter, rewrite relative URLs
+ *  so they resolve correctly from the changelog page's context, and
+ *  serialize back to an MDX string. */
+function readAndRewriteContent(filePath: string, changelogSlug: string, pagesDir: string): string {
   const raw = fs.readFileSync(filePath, 'utf-8')
-  // Strip leading frontmatter (--- ... ---)
-  const fmMatch = raw.match(/^\s*---\r?\n[\s\S]*?\r?\n---\r?\n?/)
-  return fmMatch ? raw.slice(fmMatch[0].length).trim() : raw.trim()
+  const processor = remark().use(remarkMdx).use(remarkFrontmatter, ['yaml']).use(remarkGfm)
+  const mdast = processor.runSync(processor.parse(raw)) as Root
+
+  const importDir = path.dirname(filePath)
+  // Compute relative path from the changelog page's directory to the
+  // intro file's directory so relative URLs get rewritten correctly.
+  const changelogDir = path.dirname(path.join(pagesDir, changelogSlug))
+  const relativeDir = path.relative(changelogDir, importDir).replace(/\\/g, '/')
+  const relDirNorm = relativeDir === '' ? './' : (relativeDir.startsWith('.') ? relativeDir : './' + relativeDir) + '/'
+
+  const nodes = buildSplicedNodes(mdast, relDirNorm, { importDir, pagesDir })
+  return toMarkdown({ type: 'root', children: nodes }, { extensions: [mdxToMarkdown()] }).trim()
 }
 
 export const changelogProvider: VirtualTabProvider = {
@@ -68,7 +93,7 @@ export const changelogProvider: VirtualTabProvider = {
     if (tab.initialContent) {
       const contentPath = resolveContentFile(tab.initialContent, pagesDir, projectRoot)
       if (contentPath) {
-        initialContentBody = readContentBody(contentPath)
+        initialContentBody = readAndRewriteContent(contentPath, slug, pagesDir)
       } else {
         logger.warn(
           formatHolocronWarning(
