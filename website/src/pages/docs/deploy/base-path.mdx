@@ -42,7 +42,7 @@ The deploy prints a URL like:
 https://docs-base-my-docs-remorses-site.holocron.so
 ```
 
-Base-path deployments get their own subdomain (`{base}-base-{project}-site.holocron.so`) so they coexist with root deployments on the same project. Your docs are accessible at `https://docs-base-my-docs-remorses-site.holocron.so/docs/`.
+Base-path deployments get their own subdomain so they coexist with root deployments on the same project. The format is `{base}-{hash}-base-{project}-site.holocron.so`. Your docs are accessible at the printed URL under the `/docs/` path.
 
 See [Holocron Deploy](/docs/deploy/holocron) for all authentication options (API key, session login, GitHub Actions OIDC).
 
