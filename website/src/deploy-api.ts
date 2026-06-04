@@ -200,7 +200,7 @@ export const deployApp = new Spiceflow()
       deploymentId: z.string(),
     }),
     detail: {
-      summary: 'Upload deployment files (zip batch)',
+      summary: 'Upload files',
       tags: ['Deploy'],
     },
     response: {

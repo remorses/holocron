@@ -577,6 +577,17 @@ docs.jsonc ───►│  Vite Plugin  │──────► Build Output
 ```
 ````
 
+## OpenAPI summaries
+
+OpenAPI operation `summary` fields become sidebar titles. The sidebar is only
+230px wide, so summaries must be **short**: 2-3 words, ideally under 20
+characters. Use the same concise style as page `sidebarTitle` fields.
+
+- **Verb + noun** pattern: `List users`, `Create order`, `Get me`, `Upload files`.
+- Drop qualifiers, parentheticals, and implementation details. `Upload deployment files (zip batch)` becomes `Upload files`.
+- Never repeat the tag/group name in the summary. If the tag is `Deploy`, the summary should not start with "Deploy".
+- If the summary reads well as a sidebar label at 230px, it is short enough.
+
 ## Agent rules
 
 - **Always place MDX pages inside the Holocron `pagesDir`.** Before creating or

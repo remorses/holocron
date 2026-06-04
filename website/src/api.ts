@@ -270,7 +270,7 @@ export const apiApp = new Spiceflow()
     method: 'GET',
     path: '/api/v0/me',
     detail: {
-      summary: 'Current caller info',
+      summary: 'Get me',
       description:
         'For a signed-in session, returns the user, all orgs they belong to, and projects per org. For a project-scoped API key, returns only the key\'s org and its single project (no user identity).',
       tags: ['Account'],
