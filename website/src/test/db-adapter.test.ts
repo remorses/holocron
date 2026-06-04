@@ -56,7 +56,7 @@ describe('sqlite-proxy D1 adapter', () => {
     expect(found!.id).toBe('test-user-1')
     expect(found!.name).toBe('Alice')
     expect(found!.email).toBe('alice@adapter-test.local')
-    expect(found!.id).toBe(inserted.id)
+    expect(found!.id).toBe(inserted!.id)
   })
 
   // ── findMany — multiple rows ─────────────────────────────────────
@@ -92,8 +92,8 @@ describe('sqlite-proxy D1 adapter', () => {
       .where(orm.eq(schema.user.id, 'test-user-select'))
 
     expect(rows).toHaveLength(1)
-    expect(rows[0].id).toBe('test-user-select')
-    expect(rows[0].name).toBe('SelectTest')
+    expect(rows[0]!.id).toBe('test-user-select')
+    expect(rows[0]!.name).toBe('SelectTest')
   })
 
   // ── findFirst with relations (with:) ─────────────────────────────
@@ -117,8 +117,8 @@ describe('sqlite-proxy D1 adapter', () => {
     })
 
     expect(member).toBeDefined()
-    expect(member!.org.name).toBe('RelOrg')
-    expect(member!.user.name).toBe('RelUser')
+    expect(member!.org!.name).toBe('RelOrg')
+    expect(member!.user!.name).toBe('RelUser')
   })
 
   // ── db.batch — mixed queries ─────────────────────────────────────
@@ -143,7 +143,7 @@ describe('sqlite-proxy D1 adapter', () => {
 
     expect(foundUser).toBeDefined()
     expect(foundUser!.name).toBe('BatchUser')
-    expect(orgCount[0].count).toBe(1)
+    expect(orgCount[0]!.count).toBe(1)
   })
 
   // ── db.batch — findFirst with NO results (the #2721 bug) ─────────
@@ -198,8 +198,8 @@ describe('sqlite-proxy D1 adapter', () => {
     })
 
     expect(member).toBeDefined()
-    expect(member!.org.name).toBe('AtomicOrg')
-    expect(member!.user.name).toBe('Atomic')
+    expect(member!.org!.name).toBe('AtomicOrg')
+    expect(member!.user!.name).toBe('Atomic')
   })
 
   // ── update + returning ────────────────────────────────────────────
@@ -218,8 +218,8 @@ describe('sqlite-proxy D1 adapter', () => {
       .limit(1)
       .returning()
 
-    expect(updated.name).toBe('After')
-    expect(updated.id).toBe('test-user-update')
+    expect(updated!.name).toBe('After')
+    expect(updated!.id).toBe('test-user-update')
   })
 
   // ── delete + returning ────────────────────────────────────────────
@@ -237,7 +237,7 @@ describe('sqlite-proxy D1 adapter', () => {
       .limit(1)
       .returning()
 
-    expect(deleted.id).toBe('test-user-delete')
+    expect(deleted!.id).toBe('test-user-delete')
 
     const gone = await db.query.user.findFirst({
       where: { id: 'test-user-delete' },
@@ -258,7 +258,7 @@ describe('sqlite-proxy D1 adapter', () => {
       .from(schema.user)
       .where(orm.like(schema.user.email, '%@adapter-test.local'))
 
-    expect(row.count).toBe(2)
+    expect(row!.count).toBe(2)
   })
 
   // ── db.batch — the exact deploy-api.ts pattern that was crashing ──
@@ -290,7 +290,7 @@ describe('sqlite-proxy D1 adapter', () => {
     ] as const)
 
     expect(activeSubscription).toBeUndefined()
-    expect(deployCountRows[0].count).toBe(0)
+    expect(deployCountRows[0]!.count).toBe(0)
   })
 
   // ── db.batch — findMany returning rows ────────────────────────────
@@ -309,7 +309,7 @@ describe('sqlite-proxy D1 adapter', () => {
     ] as const)
 
     expect(users.length).toBeGreaterThanOrEqual(2)
-    expect(users[0].name < users[1].name).toBe(true)
+    expect(users[0]!.name < users[1]!.name).toBe(true)
   })
 
   // ── db.batch — findMany returning empty ───────────────────────────
@@ -375,8 +375,8 @@ describe('sqlite-proxy D1 adapter', () => {
     ] as const)
 
     expect(inserted).toHaveLength(1)
-    expect(inserted[0].id).toBe('test-user-bret')
-    expect(inserted[0].name).toBe('BatchRet')
+    expect(inserted[0]!.id).toBe('test-user-bret')
+    expect(inserted[0]!.name).toBe('BatchRet')
   })
 
   // ── orm.inArray filter ────────────────────────────────────────────
@@ -421,8 +421,8 @@ describe('sqlite-proxy D1 adapter', () => {
     ] as const)
 
     expect(member).toBeDefined()
-    expect(member!.org.name).toBe('BatchRelOrg')
-    expect(member!.user.name).toBe('BatchRel')
+    expect(member!.org!.name).toBe('BatchRelOrg')
+    expect(member!.user!.name).toBe('BatchRel')
     expect(member!.role).toBe('admin')
   })
 
@@ -479,8 +479,8 @@ describe('sqlite-proxy D1 adapter', () => {
       .where(orm.eq(schema.user.id, 'test-user-sql'))
 
     expect(rows).toHaveLength(1)
-    expect(rows[0].id).toBe('test-user-sql')
-    expect(rows[0].upper).toBe('SQLTEST')
-    expect(rows[0].len).toBe('sql@adapter-test.local'.length)
+    expect(rows[0]!.id).toBe('test-user-sql')
+    expect(rows[0]!.upper).toBe('SQLTEST')
+    expect(rows[0]!.len).toBe('sql@adapter-test.local'.length)
   })
 })
