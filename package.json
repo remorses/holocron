@@ -19,9 +19,6 @@
     "pnpm": {
         "onlyBuiltDependencies": [
             "sharp"
-        ],
-        "patchedDependencies": {
-            "drizzle-orm@1.0.0-beta.21": "patches/drizzle-orm@1.0.0-beta.21.patch"
-        }
+        ]
     }
 }
