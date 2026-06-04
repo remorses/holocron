@@ -88,5 +88,3 @@ export {
 // everything from one place.
 export { TableOfContentsPanel } from '../toc-panel.tsx'
 
-// MCP tool/resource renderers
-export { MCPTool, MCPResource } from '../../lib/mcp/render-mcp.tsx'

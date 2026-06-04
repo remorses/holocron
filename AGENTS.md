@@ -362,8 +362,10 @@ When adding a new component that users can use directly in MDX (no import needed
 **2. Register the component** in three files (TypeScript will error if any is missing):
 
 - `vite/src/lib/mdx-component-names.ts` — add the name to `SAFE_MDX_COMPONENT_NAMES` array
-- `vite/src/components/markdown/index.tsx` — add the barrel export
+- `vite/src/components/markdown/index.tsx` — add the barrel export (only for `'use client'` components; see warning below)
 - `vite/src/lib/mdx-components-map.tsx` — import from barrel, add to `mdxComponents` object
+
+**Never re-export server-only components through `markdown/index.tsx`.** That barrel has `'use client'` at the top. Any module re-exported through it becomes part of the client bundle. Components that import `safe-mdx`, `safe-mdx/parse`, remark plugins, or mdast utilities (like `render-schema.tsx`, `render-openapi.tsx`, `render-mcp.tsx`) must stay server-only. Import them directly in `mdx-components-map.tsx` instead of going through the barrel. This is the same pattern used for `OpenAPIEndpoint`, `MCPTool`, and `MCPResource`.
 
 **3. Add a usage example** to `example/src/index.mdx` (or another example page) so the component is exercised in the dev fixture.
 
