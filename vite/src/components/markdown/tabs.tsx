@@ -177,8 +177,14 @@ export function Tabs({
       >
         {/* `<Tab>` children render their inner content; any other element
             (e.g. a `<CodeBlock>` passed directly by RequestExample) renders
-            the element itself so highlighting and props are preserved. */}
-        {activeTab?.type === Tab ? activeTab.props.children : activeTab}
+            the element itself so highlighting and props are preserved.
+            Strip `title` from non-Tab elements because the tab bar already
+            shows it — keeping it on the CodeBlock would duplicate the label. */}
+        {activeTab?.type === Tab
+          ? activeTab.props.children
+          : activeTab && isValidElement(activeTab) && (activeTab.props as any).title
+            ? React.cloneElement(activeTab as React.ReactElement<any>, { title: undefined })
+            : activeTab}
       </div>
     </div>
   )
