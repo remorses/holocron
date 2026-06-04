@@ -81,6 +81,9 @@ type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 export type ProcessMdxOptions = {
   /** Options for the normalizeMdx pipeline (e.g. prepend plugins). */
   normalizeMdxOptions?: NormalizeMdxOptions
+  /** Page slug — forwarded to normalizeMdx so relative links are resolved
+   *  to absolute /paths at build time. */
+  slug?: string
 }
 
 export function processMdx(
@@ -89,7 +92,11 @@ export function processMdx(
   source?: string,
   options?: ProcessMdxOptions,
 ): HolocronMdxParseError | ProcessedMdx {
-  const normalized = normalizeMdx(content, source, options?.normalizeMdxOptions)
+  const normOpts: NormalizeMdxOptions = {
+    ...options?.normalizeMdxOptions,
+    ...(options?.slug != null && { slug: options.slug }),
+  }
+  const normalized = normalizeMdx(content, source, normOpts)
   if (normalized instanceof Error) return normalized
   const normalizedContent = normalized.content
   const frontmatter = parsePageFrontmatter(content)

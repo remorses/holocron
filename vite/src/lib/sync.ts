@@ -208,9 +208,12 @@ export async function syncNavigation({
       const inlineImportMap = inlineResult.imports
       for (const p of inlineResult.imageDepPaths) allImportedImageDepPaths.add(p)
 
-      const processMdxOptions: ProcessMdxOptions | undefined = inlineImportMap.size > 0
-        ? { normalizeMdxOptions: { prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]] } }
-        : undefined
+      const processMdxOptions: ProcessMdxOptions = {
+        slug,
+        ...(inlineImportMap.size > 0 && {
+          normalizeMdxOptions: { prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]] },
+        }),
+      }
 
       const processed = processMdx(virtualMdx, config.icons.library, pageSource, processMdxOptions)
       if (processed instanceof Error) return handleParseError(slug, processed)
@@ -290,7 +293,7 @@ export async function syncNavigation({
       if (oldPageIconRefs[slug]) {
         pageIconRefs[slug] = oldPageIconRefs[slug]
       } else {
-        const reprocessed = processMdx(cachedMdx, config.icons.library, pageSource)
+        const reprocessed = processMdx(cachedMdx, config.icons.library, pageSource, { slug })
         if (reprocessed instanceof Error) return handleParseError(slug, reprocessed)
         pageIconRefs[slug] = reprocessed.iconRefs
       }
@@ -308,13 +311,14 @@ export async function syncNavigation({
 
     // Cache miss — full processing.
     // inlineImportMap was already resolved above (for cache key computation).
-    const processMdxOptions: ProcessMdxOptions | undefined = inlineImportMap.size > 0
-      ? {
+    const processMdxOptions: ProcessMdxOptions = {
+      slug,
+      ...(inlineImportMap.size > 0 && {
         normalizeMdxOptions: {
           prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]],
         },
-      }
-      : undefined
+      }),
+    }
 
     const processed = processMdx(content, config.icons.library, pageSource, processMdxOptions)
     if (processed instanceof Error) return handleParseError(slug, processed)

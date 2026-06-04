@@ -29,6 +29,10 @@ export type NormalizeMdxOptions = {
   /** Remark plugins to run before the standard pipeline (e.g. remarkInlineImports).
    *  Each entry is [plugin, options] or just plugin. */
   prependPlugins?: Array<[any, any] | any>
+  /** Page slug (e.g. "guides/setup/index"). When provided, relative links
+   *  (./foo, ../bar) are resolved to absolute /paths at build time. This
+   *  eliminates trailing-slash ambiguity for index.mdx pages. */
+  slug?: string
 }
 
 /**
@@ -56,8 +60,12 @@ export function normalizeMdx(content: string, source?: string, options?: Normali
     }
   }
 
+  const slugDir = options?.slug
+    ? options.slug.includes('/') ? options.slug.slice(0, options.slug.lastIndexOf('/')) : ''
+    : undefined
+
   processor
-    .use(remarkStripMdExtensions)
+    .use(remarkRewriteLinks, { slugDir })
     .use(remarkHeadings as never)
     .use(remarkCodeGroup)
     .use(remarkDetailsToggle)
@@ -108,46 +116,93 @@ function trySync<T>(fn: () => T, mdxSource: string, source?: string): HolocronMd
 }
 
 /**
- * Strip .md/.mdx extensions from internal links so they resolve to page
- * slugs instead of raw markdown files. Handles markdown links [text](url),
- * reference-style definitions [id]: /path.md, and JSX href attributes.
+ * Rewrite internal links in the mdast tree:
  *
- * Only strips from local paths. External URLs are left alone.
- * Only strips from the path portion — query strings and hash fragments
- * that contain ".md" are preserved.
+ * 1. Strip .md/.mdx extensions so links resolve to page slugs.
+ * 2. When `slugDir` is provided, resolve relative paths (./foo, ../bar)
+ *    to absolute /paths. This eliminates trailing-slash ambiguity for
+ *    index.mdx pages where the browser might resolve ./foo differently
+ *    depending on whether the URL has a trailing slash.
+ *
+ * Handles markdown links [text](url), reference-style definitions
+ * [id]: /path.md, and JSX href attributes. External URLs, anchor-only
+ * links, and import sources are left alone.
  */
-function remarkStripMdExtensions() {
+function remarkRewriteLinks(_opts?: { slugDir?: string }) {
+  const slugDir = _opts?.slugDir
   return (tree: Root) => {
-    walkStripMd(tree.children)
+    walkRewriteLinks(tree.children, slugDir)
   }
 }
 
-function stripMdExtLocal(url: string): string {
-  if (!url || isExternalUrl(url)) return url
-  return stripMdExtFromPath(url)
+/** Check if a URL is a relative page href that should be resolved to absolute.
+ *  Matches ./foo, ../bar, and bare relative paths like `foo` or `bar/baz`.
+ *  Excludes absolute paths, anchors, external URLs, and protocol schemes. */
+function isRelativePageHref(url: string): boolean {
+  if (url.startsWith('./') || url.startsWith('../')) return true
+  if (url.startsWith('/') || url.startsWith('#') || isExternalUrl(url)) return false
+  // Exclude unknown protocol schemes (e.g. custom:foo)
+  return !/^[a-z][a-z0-9+.-]*:/i.test(url)
 }
 
-function walkStripMd(nodes: RootContent[]) {
+function rewriteLinkUrl(url: string, slugDir: string | undefined): string {
+  if (!url || isExternalUrl(url) || url.startsWith('#')) return url
+  // Strip .md/.mdx extension first
+  url = stripMdExtFromPath(url)
+  // Resolve relative paths to absolute when slug context is available
+  if (slugDir != null && isRelativePageHref(url)) {
+    url = resolveRelativeToAbsolute(url, slugDir)
+  }
+  return url
+}
+
+/**
+ * Resolve a relative URL (./foo or ../bar) to an absolute /path using
+ * the page's slug directory as the base. Preserves hash fragments and
+ * query strings.
+ */
+function resolveRelativeToAbsolute(url: string, slugDir: string): string {
+  // Split off hash/query before resolving
+  const fragIdx = url.search(/[?#]/)
+  const pathPart = fragIdx === -1 ? url : url.slice(0, fragIdx)
+  const suffix = fragIdx === -1 ? '' : url.slice(fragIdx)
+
+  const base = slugDir ? `/${slugDir}` : ''
+  const segments = (base + '/' + pathPart).split('/').filter(Boolean)
+  const stack: string[] = []
+  for (const seg of segments) {
+    if (seg === '.') continue
+    if (seg === '..') {
+      stack.pop()
+      continue
+    }
+    stack.push(seg)
+  }
+  const resolved = '/' + stack.join('/')
+  return resolved + suffix
+}
+
+function walkRewriteLinks(nodes: RootContent[], slugDir: string | undefined) {
   for (const node of nodes) {
     if (node.type === 'link') {
-      node.url = stripMdExtLocal(node.url)
+      node.url = rewriteLinkUrl(node.url, slugDir)
     }
     // Reference-style link definitions: [id]: /path.md
     if (node.type === 'definition') {
-      node.url = stripMdExtLocal(node.url)
+      node.url = rewriteLinkUrl(node.url, slugDir)
     }
     // JSX elements with href attribute
     if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
       const jsxNode = node as { attributes?: Array<{ type: string; name: string; value: unknown }> }
       for (const attr of jsxNode.attributes ?? []) {
         if (attr.type === 'mdxJsxAttribute' && attr.name === 'href' && typeof attr.value === 'string') {
-          attr.value = stripMdExtLocal(attr.value)
+          attr.value = rewriteLinkUrl(attr.value, slugDir)
         }
       }
     }
     const children = Reflect.get(node, 'children')
     if (Array.isArray(children)) {
-      walkStripMd(children)
+      walkRewriteLinks(children, slugDir)
     }
   }
 }

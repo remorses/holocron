@@ -1700,8 +1700,8 @@ See [home](/) and [nonexistent](./does-not-exist).
     const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
     // /quickstart does not exist → should warn
     expect(warnings.some((w) => w.includes('/quickstart'))).toBe(true)
-    // ./does-not-exist from getting-started → should warn
-    expect(warnings.some((w) => w.includes('./does-not-exist'))).toBe(true)
+    // ./does-not-exist from getting-started → resolved to /does-not-exist → should warn
+    expect(warnings.some((w) => w.includes('/does-not-exist'))).toBe(true)
     // Only 2 broken links total (the two non-existent ones)
     expect(warnings).toHaveLength(2)
   })
