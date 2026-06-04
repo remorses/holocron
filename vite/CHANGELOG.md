@@ -1,5 +1,55 @@
 # @holocron.so/vite
 
+## 0.19.0
+
+1. **MCP documentation tabs** — auto-generate documentation pages from MCP (Model Context Protocol) definitions. Point a tab at a local JSON file or a remote Streamable HTTP MCP server:
+
+   ```jsonc
+   {
+     "tab": "MCP",
+     "mcp": "mcp-tools.json",
+     "base": "mcp"
+   }
+   ```
+
+   Each tool becomes a page with its input schema rendered as a parameter field list and a sampled JSON-RPC request example in the sidebar. Resources get their own pages with URI and MIME type. Supports selective mode with `"..."` rest expansion to interleave custom MDX pages with auto-generated ones, same as OpenAPI tabs.
+
+2. **Changelog `initialContent` field** — prepend custom MDX content above auto-generated release entries in changelog tabs:
+
+   ```jsonc
+   {
+     "tab": "Changelog",
+     "changelog": "https://github.com/owner/repo",
+     "initialContent": "changelog/intro"
+   }
+   ```
+
+   The referenced file goes through the same URL rewriting pipeline as inline `.md` imports, so relative image paths and links resolve correctly.
+
+3. **OpenAPI multi-status response examples** — the Response panel now shows examples for every response status, not just the first 2xx. When multiple statuses have examples, tab titles are prefixed with the status code for clarity. Closes #98
+
+4. **OpenAPI spec HMR** — editing a local `.yaml` or `.json` OpenAPI spec now triggers an automatic re-sync so generated API reference pages update without restarting the dev server.
+
+5. **VideoBackgroundShader MDX component** — a WebGL-powered dotted video background available directly in MDX as `<VideoBackgroundShader>`. Supports `dotStyle="ascii"` for an ASCII character atlas effect, configurable dot size, color, and fade gradients. Includes proper resource cleanup and async guard for mask image loading.
+
+6. **Same-origin absolute URLs treated as internal links** — absolute URLs pointing to the same site are now handled as internal navigations with client-side routing instead of triggering full page reloads.
+
+7. **Stripped HTTP method from OpenAPI sidebar labels** — the sidebar already shows a colored method badge (GET, POST, etc.), so the text label now omits the method to avoid redundancy. Operations with a `summary` or `operationId` are unchanged.
+
+8. **Fixed nested list spacing** — added gap spacing inside `<Li>` so nested lists are properly spaced.
+
+9. **Fixed duplicate title in code blocks inside Tabs** — code blocks nested inside `<Tabs>` no longer show the panel title twice.
+
+10. **Fixed HMR race condition** — concurrent `syncNavigation` calls during rapid file saves are now serialized, preventing interleaved state corruption.
+
+11. **Fixed AI widget aside overlap** — the synthetic AI chat widget aside now only uses `full` mode when the page has no other asides, preventing layout collisions.
+
+12. **Fixed query string and hash preservation on redirects** — root and markdown-index redirects now carry through query parameters and hash fragments.
+
+13. **Fixed sidebar layout shift** — removed font weight change on active sidebar items that caused text to shift.
+
+14. **Fixed AI chat drawer close behavior** — the chat drawer now closes on any link click, not just pathname changes.
+
 ## 0.18.2
 
 1. **Fixed false broken link warnings for imported files outside pagesDir** — when a markdown file outside `pagesDir` (e.g., a repo-root `README.md`) is imported into a page and contains relative links back to pages, those links are now correctly resolved to absolute slug paths instead of raw filesystem-relative paths. Previously all relative links in such imported files showed as broken even when the target page existed.
