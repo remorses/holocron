@@ -60,8 +60,9 @@ export function normalizeMdx(content: string, source?: string, options?: Normali
     }
   }
 
-  const slugDir = options?.slug
-    ? options.slug.includes('/') ? options.slug.slice(0, options.slug.lastIndexOf('/')) : ''
+  const slug = options?.slug?.replace(/^\/+/, '') // strip leading / if passed
+  const slugDir = slug != null
+    ? slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
     : undefined
 
   processor
