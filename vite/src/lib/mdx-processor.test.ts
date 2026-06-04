@@ -900,6 +900,13 @@ After installing, configure your project.
     expect(result.description).toMatchInlineSnapshot(`"Check the getting started guide for more information."`)
   })
 
+  test('handles hard line breaks without concatenating words', () => {
+    const result = processMdx(`First line  
+Second line in the same paragraph.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"First line Second line in the same paragraph."`)
+  })
+
   test('joins multiple paragraphs into one description', () => {
     const result = processMdx(`First paragraph here.
 

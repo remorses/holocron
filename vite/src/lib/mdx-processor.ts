@@ -655,6 +655,11 @@ function extractText(children: readonly (PhrasingContent | RootContent)[]): stri
       if (child.type === 'text' || child.type === 'inlineCode') {
         return child.value
       }
+      // Hard line breaks (two trailing spaces + newline) should produce a
+      // space so adjacent words don't concatenate in extracted text.
+      if (child.type === 'break') {
+        return ' '
+      }
       const nestedChildren = Reflect.get(child, 'children')
       if (Array.isArray(nestedChildren)) {
         return extractText(nestedChildren)
