@@ -105,11 +105,20 @@ export const deployApp = new Spiceflow()
       // here in the create step so blocked deploys never waste blob uploads.
       // Batch the two independent reads (active subscription + production deploy
       // count) into a single D1 round-trip instead of two sequential queries.
-      const [activeSubscription, deployCountRows] = await db.batch([
-        db.query.subscription.findFirst({
-          where: { projectId: auth.projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
-          columns: { id: true },
-        }),
+      // NOTE: uses plain db.select() instead of db.query.findFirst() because
+      // drizzle-orm 1.x D1 batch crashes in mapRelationalRow when findFirst
+      // returns no results (the result mapper accesses .id on undefined).
+      const [subscriptionRows, deployCountRows] = await db.batch([
+        db
+          .select({ id: schema.subscription.id })
+          .from(schema.subscription)
+          .where(
+            orm.and(
+              orm.eq(schema.subscription.projectId, auth.projectId),
+              orm.inArray(schema.subscription.status, [...ACTIVE_SUBSCRIPTION_STATUSES]),
+            ),
+          )
+          .limit(1),
         db
           .select({ count: orm.count() })
           .from(schema.deployment)
@@ -121,6 +130,7 @@ export const deployApp = new Spiceflow()
             ),
           ),
       ] as const)
+      const activeSubscription = subscriptionRows[0]
       const productionDeployCount = deployCountRows[0]?.count ?? 0
       const decision = canDeploy({
         isPreview,
@@ -130,6 +140,7 @@ export const deployApp = new Spiceflow()
         // first free deploy; a brand-new production deploy with the pointer
         // already set is the 2nd one, which canDeploy blocks via the count.
         isRefinalizeOfActive: false,
+        hasBasePath: !!body.basePath,
       })
       if (!decision.allowed) {
         const upgradeUrl = `${new URL(request.url).origin}/dashboard/projects/${auth.projectId}/billing`
