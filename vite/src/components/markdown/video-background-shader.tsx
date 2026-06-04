@@ -458,7 +458,9 @@ const DISPLAY_FRAG = /* glsl */ `
     vec3 videoGammaCorrected = pow(video.rgb, vec3(gamma));
     vec3 scaledDye = dye.rgb * fluidStrength;
     scaledDye = pow(scaledDye + 0.001, vec3(0.7));
-    float luminance = max(dot(videoGammaCorrected + scaledDye, vec3(0.299, 0.587, 0.114)), minLuminance);
+    float videoLuminance = dot(videoGammaCorrected + scaledDye, vec3(0.299, 0.587, 0.114));
+    float dyeLuminance = dot(dye.rgb, vec3(0.299, 0.587, 0.114));
+    float luminance = max(max(videoLuminance, dyeLuminance), minLuminance);
 
     if (enableMask) {
       vec4 mask = texture2D(uMask, vUv);
@@ -562,7 +564,7 @@ const DEFAULT_CONFIG: Required<Omit<VideoShaderConfig, 'src'>> = {
   fluidSplatRadius: 0.006,
   fluidPressureIterations: 1,
   fluidStrength: 0.15,
-  minLuminance: 0,
+  minLuminance: 0.2,
   dotStyle: 'dots',
   chars: ' .:-~=+x?$%#@A',
   charFont: 'monospace',
@@ -606,6 +608,8 @@ function createCharAtlas(gl: WebGLRenderingContext, chars: string, font: string)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  atlasCanvas.width = 0
+  atlasCanvas.height = 0
   return { texture, count: chars.length }
 }
 
@@ -671,18 +675,24 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   const videoTex = createEmptyTexture(gl)
 
   // Mask texture (only load image when mask is actually enabled to avoid 404s)
+  let disposed = false
   const maskTex = createEmptyTexture(gl)
   if (config.enableMask && config.maskSrc) {
     const img = new Image()
     img.onload = () => {
+      if (disposed) return
       gl.bindTexture(gl.TEXTURE_2D, maskTex)
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
     }
     img.src = config.maskSrc
   }
 
-  // Character atlas for ASCII mode (created once, tiny texture ~Npx × 64px)
-  const charAtlas = createCharAtlas(gl, config.chars, config.charFont)
+  // Character atlas for ASCII mode. Dots mode binds a 1x1 texture so the shader
+  // setup stays linear without paying the Canvas 2D atlas cost for normal dots.
+  const charAtlas =
+    config.dotStyle === 'ascii'
+      ? createCharAtlas(gl, config.chars, config.charFont)
+      : { texture: createEmptyTexture(gl), count: 1 }
 
   // Full-screen quad (shared by all programs via fixed attrib locations)
   const quad = createQuadBuffers(gl)
@@ -828,10 +838,13 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   let lastTime = performance.now()
   const startTime = performance.now()
 
+  let tryPlay: (() => void) | undefined
+
   video.play().catch(() => {
-    const tryPlay = () => {
+    tryPlay = () => {
       video.play().catch(() => {})
-      document.removeEventListener('click', tryPlay)
+      if (tryPlay) document.removeEventListener('click', tryPlay)
+      tryPlay = undefined
     }
     document.addEventListener('click', tryPlay)
   })
@@ -881,8 +894,10 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   // ── Cleanup ──
 
   function cleanup() {
+    disposed = true
     cancelAnimationFrame(animId)
     container.removeEventListener('mousemove', onMouseMove)
+    if (tryPlay) document.removeEventListener('click', tryPlay)
     resizeObserver.disconnect()
     video.pause()
     video.src = ''
@@ -985,12 +1000,7 @@ export function VideoBackgroundShader({
       clearTimeout(timeout)
       engine.cleanup()
     }
-  }, [src, config.dotStyle, config.dotColor, config.dotSize, config.dotMargin,
-    config.minDotSize, config.dotAlphaMultiplier, config.gridLayout,
-    config.dotsEnabled, config.animSpeed, config.gamma, config.loopAt,
-    config.fluidCurl, config.fluidStrength, config.fluidSplatRadius,
-    config.minLuminance, config.chars, config.charFont,
-    config.enableMask, config.maskSrc])
+  }, [src, ...Object.values(config)])
 
   const fadeTransition = 'opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1)'
 
