@@ -128,7 +128,7 @@ export function processMdx(
   return {
     normalizedContent,
     title: frontmatter.title || headings[0]?.text || 'Untitled',
-    description: frontmatter.description,
+    description: frontmatter.description ?? extractDescriptionFromMdast(mdast),
     icon: typeof frontmatter.icon === 'string' && frontmatter.icon !== '' ? frontmatter.icon : undefined,
     frontmatter,
     iconRefs,
@@ -605,6 +605,39 @@ function copyJsxAttrsExcept(node: JsxNode, attrNames: string[]): NonNullable<Jsx
   return (node.attributes ?? []).filter((attr) => {
     return !(attr.type === 'mdxJsxAttribute' && attr.name && attrNameSet.has(attr.name))
   })
+}
+
+/* ── Description extraction ─────────────────────────────────────────── */
+
+const MAX_DESCRIPTION_LENGTH = 160
+
+/**
+ * Extract an auto-generated page description from the mdast tree.
+ * Walks top-level paragraph nodes, extracts their plain text, joins them,
+ * and truncates at ~160 chars on a word boundary.
+ *
+ * Skips headings, code blocks, JSX elements, images, thematic breaks, etc.
+ * Returns `undefined` if no paragraph text is found.
+ */
+export function extractDescriptionFromMdast(mdast: Root): string | undefined {
+  const paragraphTexts: string[] = []
+
+  for (const node of mdast.children) {
+    if (node.type !== 'paragraph') continue
+    const text = extractText(node.children).trim()
+    if (text) paragraphTexts.push(text)
+  }
+
+  const joined = paragraphTexts.join(' ').replace(/\s+/g, ' ').trim()
+  if (!joined) return undefined
+
+  if (joined.length <= MAX_DESCRIPTION_LENGTH) return joined
+
+  // Truncate at word boundary
+  const truncated = joined.slice(0, MAX_DESCRIPTION_LENGTH)
+  const lastSpace = truncated.lastIndexOf(' ')
+  const cutPoint = lastSpace > 0 ? lastSpace : MAX_DESCRIPTION_LENGTH
+  return truncated.slice(0, cutPoint) + '...'
 }
 
 /* ── Heading text extraction ────────────────────────────────────────── */

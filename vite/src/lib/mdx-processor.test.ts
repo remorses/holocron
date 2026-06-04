@@ -807,6 +807,110 @@ See [guide][g] and [setup][s].
   })
 })
 
+describe('auto-generated description', () => {
+  test('extracts description from first paragraphs when no frontmatter description', () => {
+    const result = processMdx(`# Getting Started
+
+Welcome to the docs. This is the first paragraph with useful information.
+
+This is the second paragraph with more details.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"Welcome to the docs. This is the first paragraph with useful information. This is the second paragraph with more details."`)
+  })
+
+  test('frontmatter description takes precedence over auto-generated', () => {
+    const result = processMdx(`---
+title: My Page
+description: Explicit description from frontmatter
+---
+
+This paragraph text should be ignored because frontmatter description exists.
+`)
+    expect(result.description).toBe('Explicit description from frontmatter')
+  })
+
+  test('skips headings and only uses paragraph text', () => {
+    const result = processMdx(`# Main Title
+
+## Subtitle
+
+The actual content starts here.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"The actual content starts here."`)
+  })
+
+  test('skips code blocks', () => {
+    const result = processMdx(`\`\`\`bash
+npm install holocron
+\`\`\`
+
+After installing, configure your project.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"After installing, configure your project."`)
+  })
+
+  test('includes inline code in description', () => {
+    const result = processMdx(`Use the \`holocron\` CLI to scaffold your project quickly.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"Use the holocron CLI to scaffold your project quickly."`)
+  })
+
+  test('includes bold and italic as plain text', () => {
+    const result = processMdx(`This is **bold text** and *italic text* in a paragraph.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"This is bold text and italic text in a paragraph."`)
+  })
+
+  test('truncates long text at word boundary with ellipsis', () => {
+    const result = processMdx(`This is a very long paragraph that contains a lot of words and should be truncated at approximately one hundred and sixty characters so that the meta description tag does not exceed the recommended length for search engine optimization purposes and displays nicely in search results.
+`)
+    expect(result.description!.length).toBeLessThanOrEqual(163) // 160 + '...'
+    expect(result.description!.endsWith('...')).toBe(true)
+    expect(result.description).toMatchInlineSnapshot(`"This is a very long paragraph that contains a lot of words and should be truncated at approximately one hundred and sixty characters so that the meta..."`)
+  })
+
+  test('short text has no ellipsis', () => {
+    const result = processMdx(`A short paragraph.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"A short paragraph."`)
+    expect(result.description!.endsWith('...')).toBe(false)
+  })
+
+  test('returns undefined when no paragraphs exist', () => {
+    const result = processMdx(`# Only Headings
+
+## Another Heading
+
+### Third Heading
+`)
+    expect(result.description).toBeUndefined()
+  })
+
+  test('returns undefined for JSX-only content', () => {
+    const result = processMdx(`<Card title="Hello">
+  Content inside card
+</Card>
+`)
+    expect(result.description).toBeUndefined()
+  })
+
+  test('extracts link text without URL', () => {
+    const result = processMdx(`Check the [getting started guide](/quickstart) for more information.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"Check the getting started guide for more information."`)
+  })
+
+  test('joins multiple paragraphs into one description', () => {
+    const result = processMdx(`First paragraph here.
+
+Second paragraph here.
+
+Third paragraph here.
+`)
+    expect(result.description).toMatchInlineSnapshot(`"First paragraph here. Second paragraph here. Third paragraph here."`)
+  })
+})
+
 describe('getPageRendering', () => {
   test('defaults to ssr when the field is absent', () => {
     expect(getPageRendering(parsePageFrontmatter('---\ntitle: X\n---\n'))).toBe('ssr')
