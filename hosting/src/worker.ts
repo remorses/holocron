@@ -185,7 +185,13 @@ export default {
           `import { fetchHandler } from "./ssr/index.js";`,
           `export default {`,
           `  async fetch(request, env, ctx) {`,
-          `    return fetchHandler(request, env, ctx);`,
+          `    try {`,
+          `      return await fetchHandler(request, env, ctx);`,
+          `    } catch (err) {`,
+          `      const msg = err instanceof Error ? err.stack || err.message : String(err);`,
+          `      console.error("Dynamic Worker uncaught error:", msg);`,
+          `      return new Response("DW error: " + msg, { status: 500 });`,
+          `    }`,
           `  }`,
           `};`,
         ].join('\n')
@@ -197,7 +203,12 @@ export default {
         // (Google Fonts, remote images, OG images, AI chat proxy).
         return {
           compatibilityDate: '2026-05-11',
-          compatibilityFlags: ['nodejs_compat'],
+          // global_fetch_strictly_public: routes the Dynamic Worker's fetch()
+          // calls through Cloudflare's public edge instead of treating them as
+          // same-zone subrequests. Without this, fetch('https://holocron.so/...')
+          // returns 520 because the hosting worker and holocron-website are on
+          // the same zone and Cloudflare blocks the cross-worker subrequest.
+          compatibilityFlags: ['nodejs_compat', 'global_fetch_strictly_public'],
           mainModule: '__dw_entry.js',
           modules: {
             '__dw_entry.js': wrapperJs,
@@ -209,7 +220,13 @@ export default {
       const response = await worker.getEntrypoint().fetch(request)
 
       if (!response.ok && response.status >= 500) {
-        console.error(`Dynamic Worker returned ${response.status} for ${request.url}`)
+        const [logStream, returnStream] = response.body ? response.body.tee() : [null, null]
+        const errorBody = logStream ? await new Response(logStream).text() : ''
+        console.error(`Dynamic Worker returned ${response.status} for ${request.url}`, errorBody.slice(0, 2000))
+        return new Response(returnStream, {
+          status: response.status,
+          headers: response.headers,
+        })
       }
 
       return response

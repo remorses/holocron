@@ -3,7 +3,7 @@
   "name": "holocron-hosting",
   "main": "src/worker.ts",
   "compatibility_date": "2026-05-11",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 
   // ── Production (top-level) ──────────────────────────────────────────
   "worker_loaders": [{ "binding": "LOADER" }],
@@ -20,6 +20,7 @@
   "kv_namespaces": [
     { "binding": "SITES_KV", "id": "b8814a26150b44b583854867c0bb9e53" }
   ],
+  "observability": { "enabled": true },
   "workers_dev": true,
   // Route: catch all *-site.holocron.so requests (production hosted docs)
   "routes": [
