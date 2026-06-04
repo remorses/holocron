@@ -2,7 +2,7 @@
 // Opens the browser for the user to approve, polls until approved, saves the token.
 // Requires a TTY terminal — fails fast in non-interactive environments.
 
-import { goke, isAgent } from 'goke'
+import { goke } from 'goke'
 import * as clack from '@clack/prompts'
 import { stringify } from 'yaml'
 import { getBaseUrl, setServerAuth, clearServerAuth, getSessionToken, normalizeUrl, loginHint } from './config.ts'
@@ -15,7 +15,7 @@ export const loginCli = goke()
 loginCli
   .command('login', 'Authenticate with Holocron via browser login')
   .action(async (_options, { console: output, process: proc }) => {
-    if (isAgent || !process.stdin.isTTY) {
+    if (!process.stdin.isTTY) {
       output.error(logger.error('Login requires an interactive terminal (device flow opens a browser)'))
       output.error(logger.error('Run `holocron login` in a TTY terminal, e.g. via tmux'))
       return proc.exit(1)
