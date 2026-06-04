@@ -29,7 +29,7 @@ export default defineConfig({
 
 ## Step 3: Keep your docs.json
 
-Your existing `docs.json` usually works as-is. Holocron's schema accepts unknown Mintlify fields, and the runtime ignores fields it does not consume, like `integrations`, `analytics`, or Mintlify-specific API playground settings.
+Your existing `docs.json` usually works as-is. Holocron's schema accepts unknown Mintlify fields and silently ignores anything it does not consume, like Mintlify-specific API playground settings. Analytics integrations (`integrations` field) work out of the box.
 
 ## Step 4: Run it
 
@@ -44,7 +44,7 @@ Your site should render at `http://localhost:5173`.
 - **Navigation structure**: tabs, groups, pages, anchors, versions, dropdowns, products
 - **MDX components**: Accordions, Cards, Callouts, Steps, Tabs, Code Groups, Expandables, and more
 - **Frontmatter fields**: `title`, `description`, `icon`, `sidebarTitle`, `tag`, `hidden`, `deprecated`
-- **Config fields**: `colors`, `logo`, `favicon`, `navbar`, `footer`, `redirects`, `appearance`, `fonts`, `banner`
+- **Config fields**: `colors`, `logo`, `favicon`, `navbar`, `footer`, `redirects`, `appearance`, `fonts`, `banner`, `integrations`
 - **OpenAPI tabs**: `{ "tab": "API Reference", "openapi": "openapi.json" }` generates pages from your spec
 
 ## What is different
@@ -54,7 +54,7 @@ Your site should render at `http://localhost:5173`.
 | Hosting | Mintlify cloud | Self-hosted (Node.js or Cloudflare Workers) |
 | Build | Cloud build on push | Local `vite build` |
 | API playground | Interactive playground | Read-only API reference |
-| Analytics | Built-in dashboard | Bring your own |
+| Analytics | Built-in dashboard | Same `integrations` field (GA4, PostHog, Plausible, etc.) |
 | Custom domains | Dashboard setting | Your hosting provider |
 | Search | Algolia/built-in | Orama (local, built-in) |
 

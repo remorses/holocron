@@ -100,7 +100,7 @@ The schema is generated from the Zod definitions in `vite/src/schema.ts`.
 
 ## Passthrough behavior
 
-Holocron's schema accepts unknown fields. Any fields from Mintlify that Holocron does not consume, like `integrations`, `analytics`, or `api.playground`, are accepted without errors and ignored at runtime. This means you can usually use a Mintlify `docs.json` without stripping unknown fields.
+Holocron's schema accepts unknown fields. Any Mintlify-specific fields that Holocron does not consume, like `api.playground`, are accepted without errors and silently ignored. This means you can use a Mintlify `docs.json` without stripping unknown fields.
 
 ## Config normalization
 
