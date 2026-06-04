@@ -38,7 +38,7 @@ export function HeroSection({}) {
         // minDotSize={1}
         // dotMargin={1}
         // animSpeed={3}
-        chars= ' .:-~=+?$'
+        chars= ' .:-~=holocron'
         // gamma={0.8}
         // fluidStrength={0.6}
         // fluidCurl={80}
