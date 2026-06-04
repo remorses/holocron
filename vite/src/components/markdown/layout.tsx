@@ -64,8 +64,10 @@ export function List({ children }: { children: React.ReactNode }) {
 
 // Li has no vertical padding — the parent ul/ol uses `gap-(--list-gap)`
 // for inter-item spacing so first/last items get zero edge space.
+// Inner div owns flex layout so nested lists get spacing from the text
+// above them, while <li> keeps display:list-item for the ::marker.
 export function Li({ children }: { children: React.ReactNode }) {
-  return <li className='ps-1'>{children}</li>
+  return <li className='ps-1'><div className='flex flex-col gap-(--list-gap)'>{children}</div></li>
 }
 
 /** Styled blockquote for `> quoted text` in MDX. Left border accent,
