@@ -232,6 +232,20 @@ export function operationTitle(op: ExtractedOperation): string {
   return `${op.method.toUpperCase()} ${op.path}`
 }
 
+/** Sidebar-specific title for an operation.
+ *  The method is already shown as a colored badge in the sidebar, so it should
+ *  not be repeated in the text label. */
+export function operationSidebarTitle(op: ExtractedOperation): string {
+  if (op.operation.summary) return op.operation.summary
+  if (op.operation.operationId) {
+    return op.operation.operationId
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_-]/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+  return op.path
+}
+
 /** Pretty-print a tag name (converts kebab/snake to Title Case). */
 export function tagDisplayName(
   tag: string,

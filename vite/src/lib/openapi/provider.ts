@@ -71,7 +71,7 @@ export const openapiProvider: VirtualTabProvider = {
     // nothing to generate.
     if (allOps.length === 0) return { groups: tab.groups, mdxContent }
 
-    const { operationSlug, operationTitle, tagDisplayName } = await import('./process.ts')
+    const { operationSlug, operationTitle, operationSidebarTitle, tagDisplayName } = await import('./process.ts')
     const { generateCurl } = await import('./curl-generator.ts')
 
     /** Compute the virtual slug for an operation (shared by both modes). */
@@ -105,6 +105,7 @@ export const openapiProvider: VirtualTabProvider = {
         op,
         doc,
         title: operationTitle(op),
+        sidebarTitle: operationSidebarTitle(op),
         curl: generateCurl(op),
       })
       return slug
@@ -279,11 +280,13 @@ function buildEndpointMdx({
   op,
   doc,
   title,
+  sidebarTitle,
   curl,
 }: {
   op: ExtractedOperation
   doc: DereferencedDocument
   title: string
+  sidebarTitle: string
   curl: string
 }): string {
   const params = op.parameters.map((p) => ({
@@ -391,6 +394,8 @@ function buildEndpointMdx({
   return buildVirtualPageMdx({
     frontmatter: {
       title,
+      // Sidebar already shows a method badge, so strip the method from the label.
+      ...(sidebarTitle !== title ? { sidebarTitle } : {}),
       // Flatten markdown to plain text for the page <meta> description.
       description: plainText(op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
       api: `${op.method.toUpperCase()} ${op.path}`,
