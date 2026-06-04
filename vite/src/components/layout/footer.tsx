@@ -7,7 +7,7 @@
  */
 
 import React from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { getDefaultTypeIcon } from '../../lib/collect-icons.ts'
 import { cn } from '../../lib/css-vars.ts'
 import { getGeneratedLogoUrl } from '../../lib/generated-logo.tsx'

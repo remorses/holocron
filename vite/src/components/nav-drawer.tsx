@@ -10,7 +10,7 @@
 
 import React, { useEffect, useSyncExternalStore, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'spiceflow/react'
+import { Link } from './link.tsx'
 import { chatState } from '../lib/chat-state.ts'
 import { CloseIcon } from './chat-icons.tsx'
 import { SideNav } from './layout/side-nav.tsx'

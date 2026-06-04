@@ -3,7 +3,7 @@
 /** Mintlify-compatible Badge component using Holocron color tokens. */
 
 import React from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { cn } from '../../lib/css-vars.ts'
 import { useHolocronData } from '../../router.ts'
 import { Icon } from '../icon.tsx'

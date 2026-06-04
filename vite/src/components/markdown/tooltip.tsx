@@ -3,7 +3,7 @@
 /** Mintlify-compatible Tooltip component with simple hover behavior. */
 
 import React from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { cn } from '../../lib/css-vars.ts'
 
 export function Tooltip({

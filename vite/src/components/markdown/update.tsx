@@ -3,7 +3,7 @@
 /** Mintlify-compatible changelog Update component. */
 
 import React from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { slugify } from '../../lib/toc-tree.ts'
 import { Badge } from './badge.tsx'
 

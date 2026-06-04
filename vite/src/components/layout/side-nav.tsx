@@ -8,7 +8,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { flushSync } from 'react-dom'
-import { Link, router, useRouterState } from 'spiceflow/react'
+import { router, useRouterState } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'

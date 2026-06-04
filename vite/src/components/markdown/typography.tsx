@@ -6,7 +6,7 @@
  */
 
 import React, { Children, isValidElement } from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 
 import { cn } from '../../lib/css-vars.ts'
 import { useHolocronData } from '../../router.ts'

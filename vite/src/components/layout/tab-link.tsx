@@ -6,7 +6,7 @@
  */
 
 import React from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import type { TabItem } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
 

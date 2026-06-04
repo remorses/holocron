@@ -3,7 +3,7 @@
 import React from 'react'
 import type { RootContent } from 'mdast'
 import { SafeMdxRenderer } from 'safe-mdx'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { logMdxError } from '../../lib/logger.ts'
 
 function BannerP({ children }: { children: React.ReactNode }) {

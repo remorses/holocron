@@ -17,7 +17,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from './link.tsx'
 import { useActiveTocState, notifyHeadingClick } from '../hooks/use-active-toc.ts'
 import { cn } from '../lib/css-vars.ts'
 import { useHolocronData } from '../router.ts'

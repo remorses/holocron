@@ -6,7 +6,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, hasVisibleSidebarEntries } from '../../navigation.ts'
 import { notifyHeadingClick } from '../../hooks/use-active-toc.ts'
 import type { SearchState } from '../../lib/search.ts'

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'spiceflow/react'
+import { Link } from './link.tsx'
 import { chatState } from '../lib/chat-state.ts'
 import { CHAT_INPUT_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'

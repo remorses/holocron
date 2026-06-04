@@ -465,6 +465,25 @@ Combined SHA covers page content + all imported file contents (recursive) + all 
 
 MDX files are loaded lazily via `import.meta.glob('?raw')`. Content stays on disk until a page is requested. At request time, the MDX is parsed with `safe-mdx`, split into sections, and rendered with the editorial components.
 
+## Link component — always use `vite/src/components/link.tsx`, never `spiceflow/react`
+
+**Never import `Link` from `spiceflow/react` in holocron components.** Always use the holocron wrapper at `vite/src/components/link.tsx` instead.
+
+Spiceflow's built-in `Link` has a `hasBasePrefix` check that gives false positives when the Vite `base` path collides with a page slug prefix. For example, with `base: '/docs'` and a page slug `docs/quickstart`, the href `/docs/quickstart` looks like the base is already applied, but the actual route is `/docs/docs/quickstart`. Spiceflow skips prepending the base, producing a broken link.
+
+The holocron `Link` wrapper bypasses this by reading `import.meta.env.BASE_URL` and unconditionally prepending it to root-relative hrefs, then passing `rawHref` to spiceflow's Link so it doesn't double-apply.
+
+```tsx
+// WRONG — will break with base path
+import { Link } from 'spiceflow/react'
+
+// CORRECT — always works
+import { Link } from '../link.tsx'       // from layout/ or markdown/
+import { Link } from './link.tsx'        // from components/
+```
+
+If you need `router` or `useRouterState` from spiceflow, import those separately from `spiceflow/react` but always get `Link` from the holocron wrapper.
+
 ## `useSyncExternalStore` — all callbacks must be stable references
 
 Every argument passed to `useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)` **must be a stable function reference**. If any callback is an inline arrow or a new closure on every render, React re-subscribes on every render — causing performance bugs and potential infinite loops.

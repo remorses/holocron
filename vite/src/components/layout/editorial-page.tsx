@@ -10,7 +10,7 @@
 
 
 import React, { Fragment } from 'react'
-import { Link } from 'spiceflow/react'
+import { Link } from '../link.tsx'
 import { useHolocronData } from '../../router.ts'
 import {
   buildDropdownItems,
