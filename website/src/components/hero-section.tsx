@@ -17,7 +17,7 @@ function GitHubIcon({ className }: { className?: string }) {
   )
 }
 
-export function HeroSection() {
+export function HeroSection({}) {
   const [fontsReady, setFontsReady] = useState(false)
 
   useEffect(() => {
