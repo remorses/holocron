@@ -6,6 +6,10 @@ icon: slash
 
 # Subpath Hosting
 
+<Note>
+Subpath hosting is a **Pro** feature. [See pricing](/docs/pricing) for details.
+</Note>
+
 Host your documentation at a subpath on your existing domain, like `yoursite.com/docs`, instead of a separate subdomain. This keeps your docs and product on the same domain for a seamless user experience and better SEO.
 
 ## Why host at a subpath
@@ -35,10 +39,10 @@ This builds your site with all routes and assets prefixed under `/docs/` and dep
 The deploy prints a URL like:
 
 ```txt
-https://my-docs-remorses-site.holocron.so
+https://docs-base-my-docs-remorses-site.holocron.so
 ```
 
-Your docs are accessible at `https://my-docs-remorses-site.holocron.so/docs/`.
+Base-path deployments get their own subdomain (`{base}-base-{project}-site.holocron.so`) so they coexist with root deployments on the same project. Your docs are accessible at `https://docs-base-my-docs-remorses-site.holocron.so/docs/`.
 
 See [Holocron Deploy](/docs/deploy/holocron) for all authentication options (API key, session login, GitHub Actions OIDC).
 
@@ -47,14 +51,14 @@ See [Holocron Deploy](/docs/deploy/holocron) for all authentication options (API
 After deploying, configure your framework or web server to forward requests under `/docs/*` to the deployed holocron.so URL. The user's browser sees `yoursite.com/docs/quickstart`, but the content is served from holocron.so.
 
 ```
-┌──────────────────────┐       ┌──────────────────────────────────────┐
-│  yoursite.com        │       │  holocron.so hosting                 │
-│                      │       │                                      │
-│  /           → home  │       │                                      │
-│  /pricing    → page  │       │                                      │
-│  /docs/*     → proxy ├──────►│  my-docs-remorses-site.holocron.so   │
-│                      │       │  serves /docs/* routes               │
-└──────────────────────┘       └──────────────────────────────────────┘
+┌──────────────────────┐       ┌──────────────────────────────────────────────┐
+│  yoursite.com        │       │  holocron.so hosting                        │
+│                      │       │                                              │
+│  /           → home  │       │                                              │
+│  /pricing    → page  │       │                                              │
+│  /docs/*     → proxy ├──────►│  docs-base-my-docs-remorses-site.holocron.so │
+│                      │       │  serves /docs/* routes                       │
+└──────────────────────┘       └──────────────────────────────────────────────┘
 ```
 
 Choose your framework below for the specific rewrite or proxy configuration.
@@ -65,7 +69,7 @@ Add a rewrite in `next.config.js` to forward `/docs` requests to your deployed U
 
 ```js
 // next.config.js
-const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+const DOCS_URL = 'https://docs-base-my-docs-remorses-site.holocron.so'
 
 module.exports = {
   async rewrites() {
@@ -92,11 +96,11 @@ Add rewrites to your `vercel.json`:
   "rewrites": [
     {
       "source": "/docs",
-      "destination": "https://my-docs-remorses-site.holocron.so/docs"
+      "destination": "https://docs-base-my-docs-remorses-site.holocron.so/docs"
     },
     {
       "source": "/docs/:path*",
-      "destination": "https://my-docs-remorses-site.holocron.so/docs/:path*"
+      "destination": "https://docs-base-my-docs-remorses-site.holocron.so/docs/:path*"
     }
   ]
 }
@@ -110,7 +114,7 @@ Create a splat resource route at `app/routes/docs.$.ts`. A resource route has no
 
 ```ts
 // app/routes/docs.$.ts
-const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+const DOCS_URL = 'https://docs-base-my-docs-remorses-site.holocron.so'
 
 export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url)
@@ -148,7 +152,7 @@ Create a server route at `app/routes/docs/$.ts`. TanStack Start uses `createAPIF
 // app/routes/docs/$.ts
 import { createAPIFileRoute } from '@tanstack/react-start/api'
 
-const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+const DOCS_URL = 'https://docs-base-my-docs-remorses-site.holocron.so'
 
 function proxy(request: Request) {
   const url = new URL(request.url)
@@ -180,7 +184,7 @@ export default {
     const url = new URL(request.url)
 
     if (url.pathname === '/docs' || url.pathname.startsWith('/docs/')) {
-      const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+      const DOCS_URL = 'https://docs-base-my-docs-remorses-site.holocron.so'
       const proxyUrl = new URL(url.pathname + url.search, DOCS_URL)
       const proxyReq = new Request(proxyUrl, request)
       proxyReq.headers.set('X-Forwarded-Host', url.hostname)
@@ -199,7 +203,7 @@ Add a `location` block to your Nginx config:
 
 ```nginx
 location /docs/ {
-    proxy_pass https://my-docs-remorses-site.holocron.so/docs/;
+    proxy_pass https://docs-base-my-docs-remorses-site.holocron.so/docs/;
     proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Real-IP $remote_addr;
@@ -220,7 +224,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware')
 app.use(
   '/docs',
   createProxyMiddleware({
-    target: 'https://my-docs-remorses-site.holocron.so',
+    target: 'https://docs-base-my-docs-remorses-site.holocron.so',
     changeOrigin: true,
   }),
 )

@@ -26,6 +26,19 @@ import { unzipSync } from 'fflate'
 import { getDb } from './db.ts'
 import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
 import { buildProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
+
+/** Build a subdomain for a base-path deployment.
+ *  Format: `{sanitized-base}-base-{project-subdomain}`.
+ *  e.g. basePath="/docs/" + project="my-docs-remorses" → "docs-base-my-docs-remorses" */
+export function buildBasePathSubdomain(basePath: string, projectSubdomain: string): string {
+  // "/docs/" → "docs", "/api/v2/" → "api-v2"
+  const sanitized = sanitizeForDns(basePath.replace(/^\/|\/$/g, '')) || 'base'
+  const full = `${sanitized}-base-${projectSubdomain}`
+  if (full.length <= 63) return full
+  const fixedLen = '-base-'.length + projectSubdomain.length
+  const maxBaseLen = 63 - fixedLen
+  return `${sanitized.slice(0, Math.max(1, maxBaseLen)).replace(/-$/, '')}-base-${projectSubdomain}`.slice(0, 63)
+}
 import { buildDeployEmailHtml, buildDeployEmailSubject, type DeployEmailData } from './deploy-email.tsx'
 
 // ── Subdomain helpers ───────────────────────────────────────────────
@@ -369,11 +382,16 @@ export const deployApp = new Spiceflow()
         manifest[filePath] = entry
       }
 
-      // Compute subdomains and batch D1 updates
+      // Compute subdomains and batch D1 updates.
+      // Base-path deploys get a distinct subdomain ({base}-base-{project}) so they
+      // coexist with root deploys on the same project without overriding each other.
       const projectSubdomain = buildProjectSubdomain(proj)
+      const baseSubdomain = deploy.basePath
+        ? buildBasePathSubdomain(deploy.basePath, projectSubdomain)
+        : projectSubdomain
       const deploySubdomain = isProduction
-        ? projectSubdomain
-        : buildPreviewSubdomain(branch, projectSubdomain)
+        ? baseSubdomain
+        : buildPreviewSubdomain(branch, baseSubdomain)
 
       const batchStatements = [
         db.update(schema.deployment)
@@ -383,12 +401,19 @@ export const deployApp = new Spiceflow()
               orm.eq(schema.deployment.projectId, deploy.projectId),
               orm.eq(schema.deployment.status, 'active'),
               orm.eq(schema.deployment.branch, branch),
+              // Only supersede deploys with the same basePath so root and
+              // base-path deployments coexist independently.
+              deploy.basePath
+                ? orm.eq(schema.deployment.basePath, deploy.basePath)
+                : orm.isNull(schema.deployment.basePath),
             ),
           ),
         db.update(schema.deployment)
           .set({ status: 'active', subdomain: deploySubdomain })
           .where(orm.eq(schema.deployment.id, deploy.id)),
-        ...(isProduction ? [
+        // Only update project.currentDeploymentId for root production deploys.
+        // Base-path deploys are secondary and shouldn't override the main pointer.
+        ...(isProduction && !deploy.basePath ? [
           db.update(schema.project)
             .set({
               subdomain: projectSubdomain,
