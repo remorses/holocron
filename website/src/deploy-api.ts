@@ -28,26 +28,19 @@ import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
 import { buildProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
 
 /** Build a subdomain for a base-path deployment.
- *  Format: `{sanitized-base}-{hash}-base-{project-subdomain}`.
- *  The hash is derived from the raw basePath so paths that sanitize identically
- *  (e.g. /api/v2/, /api_v2/, /api--v2/) get distinct subdomains.
- *  e.g. basePath="/docs/" + project="my-docs-remorses" → "docs-1a2b3c-base-my-docs-remorses" */
+ *  Format: `{sanitized-base}-base-{project-subdomain}`.
+ *  e.g. basePath="/docs/" + project="my-docs-remorses" → "docs-base-my-docs-remorses" */
 export function buildBasePathSubdomain(basePath: string, projectSubdomain: string): string {
   // "/docs/" → "docs", "/api/v2/" → "api-v2"
   const sanitized = sanitizeForDns(basePath.replace(/^\/|\/$/g, '')) || 'base'
-  // djb2 hash of the raw basePath for deterministic uniqueness
-  const hashNum = [...basePath].reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0)
-  const hashSuffix = Math.abs(hashNum).toString(36).slice(0, 6)
-  const full = `${sanitized}-${hashSuffix}-base-${projectSubdomain}`
+  const full = `${sanitized}-base-${projectSubdomain}`
   if (full.length <= 63) return full
-  // Truncate the sanitized part to fit, keeping hash + base + project intact
-  const fixedLen = hashSuffix.length + 1 + '-base-'.length + projectSubdomain.length
+  const fixedLen = '-base-'.length + projectSubdomain.length
   const maxBaseLen = 63 - fixedLen
   if (maxBaseLen < 1) {
-    return `${sanitized.slice(0, 4)}-${hashSuffix}-base-${projectSubdomain}`.slice(0, 63)
+    return `${sanitized.slice(0, 4)}-base-${projectSubdomain}`.slice(0, 63)
   }
-  const truncated = sanitized.slice(0, maxBaseLen).replace(/-$/, '')
-  return `${truncated}-${hashSuffix}-base-${projectSubdomain}`
+  return `${sanitized.slice(0, maxBaseLen).replace(/-$/, '')}-base-${projectSubdomain}`
 }
 import { buildDeployEmailHtml, buildDeployEmailSubject, type DeployEmailData } from './deploy-email.tsx'
 
