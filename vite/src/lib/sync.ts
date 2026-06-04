@@ -28,6 +28,7 @@ import {
   type HolocronConfig,
 } from '../config.ts'
 import { processVirtualTabs } from './virtual-tab-provider.ts'
+import { virtualPageDir } from './virtual-page-mdx.ts'
 import { openapiProvider } from './openapi/provider.ts'
 import { changelogProvider } from './changelog/provider.ts'
 import { mcpProvider } from './mcp/provider.ts'
@@ -202,7 +203,7 @@ export async function syncNavigation({
       // Virtual pages with .md/.mdx imports (e.g. changelog initialContent)
       // go through the same inline import pipeline as real pages. The virtual
       // page's directory is computed from pagesDir + slug dirname.
-      const virtualMdxDir = path.join(pagesDir, slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : '')
+      const virtualMdxDir = virtualPageDir(pagesDir, slug)
       const inlineResult = resolveInlineImports({ content: virtualMdx, mdxDir: virtualMdxDir, pagesDir, projectRoot, publicDir })
       const inlineImportMap = inlineResult.imports
       for (const p of inlineResult.imageDepPaths) allImportedImageDepPaths.add(p)

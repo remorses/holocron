@@ -8,6 +8,17 @@
  * fragile string-joining (and so the frontmatter escaping stays in one place).
  */
 
+import path from 'node:path'
+
+/** Compute the virtual directory for a virtual page slug.
+ *  A virtual page at slug `changelog` lives in `pagesDir/`.
+ *  A virtual page at slug `releases/notes` lives in `pagesDir/releases/`.
+ *  Used by both the changelog provider (to compute import paths) and
+ *  sync.ts (to resolve inline imports from that virtual directory). */
+export function virtualPageDir(pagesDir: string, slug: string): string {
+  return path.join(pagesDir, slug.includes('/') ? path.dirname(slug) : '')
+}
+
 /** A frontmatter value. Strings are quoted + escaped; numbers/booleans are
  *  emitted raw. `undefined` keys are skipped. */
 export type FrontmatterValue = string | number | boolean | undefined

@@ -301,10 +301,7 @@ function rewriteRelativeImportSources(tree: Root, relativeDir: string) {
     const estree = esmNode.data?.estree
     if (!estree) continue
 
-    // Collect edits with exact character ranges, then apply back-to-front
-    // so earlier edits don't shift the offsets of later ones.
-    const edits: Array<{ start: number; end: number; text: string }> = []
-
+    let valueChanged = false
     for (const stmt of estree.body ?? []) {
       if (stmt.type !== 'ImportDeclaration') continue
       const source = stmt.source
@@ -314,28 +311,28 @@ function rewriteRelativeImportSources(tree: Root, relativeDir: string) {
       const rewritten = resolveRelativeUrl(source.value, relativeDir)
       if (rewritten === source.value) continue
 
-      // Use range if available (remark-mdx provides [start, end] offsets)
-      if (Array.isArray(source.range) && source.range.length === 2) {
-        edits.push({
-          start: source.range[0],
-          end: source.range[1],
-          text: JSON.stringify(rewritten),
-        })
-      }
-
+      // Update the estree AST node
+      const oldValue = source.value
       source.value = rewritten
       if (source.raw) {
         source.raw = JSON.stringify(rewritten)
       }
-    }
 
-    // Apply edits to node.value from end to start so offsets stay valid
-    if (edits.length > 0 && typeof esmNode.value === 'string') {
-      let value = esmNode.value as string
-      for (const edit of edits.sort((a, b) => b.start - a.start)) {
-        value = value.slice(0, edit.start) + edit.text + value.slice(edit.end)
+      // Update the raw text via string replacement. Avoids range-based
+      // editing which can produce corrupted output when estree ranges
+      // don't match the esmNode.value coordinate system.
+      if (typeof esmNode.value === 'string') {
+        // Match the old source as a quoted string literal (single or double quotes)
+        const escaped = oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        esmNode.value = esmNode.value.replace(
+          new RegExp(`(['"])${escaped}\\1`),
+          (match: string) => {
+            const quote = match[0]
+            return `${quote}${rewritten}${quote}`
+          },
+        )
+        valueChanged = true
       }
-      esmNode.value = value
     }
   }
 }

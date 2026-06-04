@@ -24,7 +24,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { ConfigNavGroup } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
-import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
+import { buildVirtualPageMdx, virtualPageDir } from '../virtual-page-mdx.ts'
 import { logger, formatHolocronWarning } from '../logger.ts'
 import { parseChangelogSource } from './parse-source.ts'
 import { fetchGitHubReleases, type GitHubRelease } from './github-releases.ts'
@@ -72,10 +72,7 @@ export const changelogProvider: VirtualTabProvider = {
     if (tab.initialContent) {
       const contentPath = resolveContentFile(tab.initialContent, pagesDir, projectRoot)
       if (contentPath) {
-        // Compute the relative path from the virtual page's directory to the
-        // initialContent file. The virtual page lives at `pagesDir/<slug>`, so
-        // its directory is `pagesDir/<dirname(slug)>`.
-        const virtualDir = path.join(pagesDir, slug.includes('/') ? path.dirname(slug) : '')
+        const virtualDir = virtualPageDir(pagesDir, slug)
         const rel = path.relative(virtualDir, contentPath).replace(/\\/g, '/')
         initialContentImportPath = rel.startsWith('.') ? rel : './' + rel
       } else {

@@ -10,6 +10,12 @@
         "tab": "Changelog",
         "changelog": "https://github.com/acme/widgets",
         "initialContent": "changelog-intro"
+      },
+      {
+        "tab": "Releases",
+        "base": "releases/notes",
+        "changelog": "https://github.com/acme/widgets",
+        "initialContent": "changelog-intro"
       }
     ]
   }

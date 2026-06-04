@@ -59,6 +59,21 @@ test.describe("changelog fixture", () => {
     expect(html).toContain("Changelog Hero");
   });
 
+  test("custom base: initialContent import resolves correctly", async ({ request }) => {
+    const res = await request.get("/releases/notes", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    expect(res.ok()).toBe(true);
+    const html = await res.text();
+    // Same initialContent file as /changelog, but the virtual page lives at
+    // a nested slug (releases/notes). The import path must resolve correctly
+    // from the virtual page's directory (pagesDir/releases/).
+    expect(html).toContain("changelog-hero");
+    expect(html).toContain("Changelog Hero");
+    // Releases should also render.
+    expect(html).toContain("v2.0.0");
+  });
+
   test("changelog tab is reachable from the tab bar", async ({ request }) => {
     const res = await request.get("/", { headers: { "sec-fetch-dest": "document" } });
     const html = await res.text();
