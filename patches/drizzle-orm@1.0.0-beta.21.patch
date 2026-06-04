@@ -1,0 +1,24 @@
+diff --git a/d1/session.cjs b/d1/session.cjs
+index 0a8c94162b70d11ab7198a1bb2f6f7a10a178a49..8d7cb08fbdb2373227e23466d6f327ea108c04d5 100644
+--- a/d1/session.cjs
++++ b/d1/session.cjs
+@@ -168,6 +168,7 @@ var D1PreparedQuery = class extends __sqlite_core_session_ts.SQLitePreparedQuery
+ 	mapGetResult(result, isFromBatch) {
+ 		if (isFromBatch) result = this.isRqbV2Query ? result.results[0] : d1ToRawMapping(result.results)[0];
+ 		if (!this.fields && !this.customResultMapper) return result;
++		if (!result) return undefined;
+ 		if (this.customResultMapper) return this.customResultMapper([result]);
+ 		return (0, __utils_ts.mapResultRow)(this.fields, result, this.joinsNotNullableMap);
+ 	}
+diff --git a/d1/session.js b/d1/session.js
+index 5782fbb08f0d4b91dd9fe5384b1290851ee5898c..dda2ea432ddfe07d8b44a00ced1c5b8fa5d08791 100644
+--- a/d1/session.js
++++ b/d1/session.js
+@@ -166,6 +166,7 @@ var D1PreparedQuery = class extends SQLitePreparedQuery$1 {
+ 	mapGetResult(result, isFromBatch) {
+ 		if (isFromBatch) result = this.isRqbV2Query ? result.results[0] : d1ToRawMapping(result.results)[0];
+ 		if (!this.fields && !this.customResultMapper) return result;
++		if (!result) return undefined;
+ 		if (this.customResultMapper) return this.customResultMapper([result]);
+ 		return mapResultRow(this.fields, result, this.joinsNotNullableMap);
+ 	}
