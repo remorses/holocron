@@ -1,0 +1,131 @@
+{
+  "serverUrl": "https://api.example.com/mcp",
+  "tools": [
+    {
+      "name": "query_database",
+      "description": "Execute a read-only SQL query against the production database. Returns rows matching the query as JSON objects.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "SQL query to execute. Must be a SELECT statement.",
+            "example": "SELECT * FROM users WHERE active = true LIMIT 10"
+          },
+          "database": {
+            "type": "string",
+            "enum": ["production", "staging", "analytics"],
+            "description": "Target database to query"
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Query timeout in seconds",
+            "default": 30
+          }
+        },
+        "required": ["query", "database"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": { "type": "object" },
+            "description": "Matching rows from the query"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Total number of rows returned",
+            "example": 42
+          }
+        }
+      },
+      "annotations": {
+        "title": "Query Database",
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "send_notification",
+      "description": "Send a push notification to a user's device.",
+      "execution": {
+        "taskSupport": "optional"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The user ID to send the notification to"
+          },
+          "title": {
+            "type": "string",
+            "description": "Notification title",
+            "example": "New message"
+          },
+          "body": {
+            "type": "string",
+            "description": "Notification body text"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["low", "normal", "high"],
+            "default": "normal",
+            "description": "Delivery priority"
+          }
+        },
+        "required": ["userId", "title", "body"]
+      }
+    },
+    {
+      "name": "get_weather",
+      "description": "Get current weather information for a location.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "City name or zip code",
+            "example": "San Francisco"
+          },
+          "units": {
+            "type": "string",
+            "enum": ["metric", "imperial"],
+            "default": "metric",
+            "description": "Temperature unit system"
+          }
+        },
+        "required": ["location"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "db://schema/users",
+      "name": "Users Table Schema",
+      "description": "The database schema definition for the users table, including column types and constraints.",
+      "mimeType": "application/sql"
+    },
+    {
+      "uri": "config://app/settings",
+      "name": "App Settings",
+      "description": "Current application configuration settings.",
+      "mimeType": "application/json"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "explain_query",
+      "description": "Break down what a SQL query does step by step",
+      "arguments": [
+        { "name": "query", "description": "The SQL query to explain", "required": true }
+      ]
+    }
+  ]
+}
