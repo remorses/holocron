@@ -351,100 +351,247 @@ second paragraph
 })
 
 describe('normalizeMdx relative link resolution', () => {
-  test('resolves ./foo to absolute path when slug is provided', () => {
+  // ── slugDir derivation from slug ──────────────────────────────────
+  // slug: "index"                    → slugDir: ""
+  // slug: "getting-started"          → slugDir: ""
+  // slug: "docs/index"              → slugDir: "docs"
+  // slug: "docs/getting-started"    → slugDir: "docs"
+  // slug: "guides/setup/index"      → slugDir: "guides/setup"
+  // slug: "a/b/c/page"             → slugDir: "a/b/c"
+
+  // ── Root-level pages (slugDir = "") ───────────────────────────────
+
+  test('root index: ./foo → /foo', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [intro](./intro) and [setup](./setup).',
+      'See [x](./foo).',
       undefined,
-      { slug: 'guides/getting-started/index' },
+      { slug: 'index' },
     ))
-    expect(content).toContain('[intro](/guides/getting-started/intro)')
-    expect(content).toContain('[setup](/guides/getting-started/setup)')
+    expect(content).toContain('[x](/foo)')
   })
 
-  test('resolves ../foo from nested slug', () => {
+  test('root index: bare foo → /foo', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [overview](../overview).',
+      'See [x](foo).',
+      undefined,
+      { slug: 'index' },
+    ))
+    expect(content).toContain('[x](/foo)')
+  })
+
+  test('root index: foo/bar → /foo/bar', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](foo/bar).',
+      undefined,
+      { slug: 'index' },
+    ))
+    expect(content).toContain('[x](/foo/bar)')
+  })
+
+  test('top-level page: ./foo → /foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./foo).',
+      undefined,
+      { slug: 'getting-started' },
+    ))
+    expect(content).toContain('[x](/foo)')
+  })
+
+  test('top-level page: ../foo clamps to /foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](../foo).',
+      undefined,
+      { slug: 'getting-started' },
+    ))
+    expect(content).toContain('[x](/foo)')
+  })
+
+  // ── One-level nesting (slugDir = "docs") ──────────────────────────
+
+  test('docs/index: ./foo → /docs/foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./foo).',
+      undefined,
+      { slug: 'docs/index' },
+    ))
+    expect(content).toContain('[x](/docs/foo)')
+  })
+
+  test('docs/index: bare foo → /docs/foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](foo).',
+      undefined,
+      { slug: 'docs/index' },
+    ))
+    expect(content).toContain('[x](/docs/foo)')
+  })
+
+  test('docs/index: ../foo → /foo (up one level)', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](../foo).',
+      undefined,
+      { slug: 'docs/index' },
+    ))
+    expect(content).toContain('[x](/foo)')
+  })
+
+  test('docs/getting-started: ./foo → /docs/foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./foo).',
+      undefined,
+      { slug: 'docs/getting-started' },
+    ))
+    expect(content).toContain('[x](/docs/foo)')
+  })
+
+  test('docs/getting-started: ../foo → /foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](../foo).',
+      undefined,
+      { slug: 'docs/getting-started' },
+    ))
+    expect(content).toContain('[x](/foo)')
+  })
+
+  // ── Two-level nesting (slugDir = "guides/setup") ──────────────────
+
+  test('guides/setup/index: ./foo → /guides/setup/foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./foo).',
       undefined,
       { slug: 'guides/setup/index' },
     ))
-    expect(content).toContain('[overview](/guides/overview)')
+    expect(content).toContain('[x](/guides/setup/foo)')
   })
 
-  test('resolves deep ../../../ paths', () => {
+  test('guides/setup/index: ../foo → /guides/foo', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [root](../../intro).',
+      'See [x](../foo).',
       undefined,
-      { slug: 'a/b/page' },
+      { slug: 'guides/setup/index' },
     ))
-    expect(content).toContain('[root](/intro)')
+    expect(content).toContain('[x](/guides/foo)')
   })
 
-  test('preserves hash and query after resolution', () => {
+  test('guides/setup/index: ../../foo → /foo', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [install](./quickstart#install) and [api](../api?v=2).',
+      'See [x](../../foo).',
+      undefined,
+      { slug: 'guides/setup/index' },
+    ))
+    expect(content).toContain('[x](/foo)')
+  })
+
+  test('guides/setup/index: bare foo → /guides/setup/foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](foo).',
+      undefined,
+      { slug: 'guides/setup/index' },
+    ))
+    expect(content).toContain('[x](/guides/setup/foo)')
+  })
+
+  test('a/b/c/page: ./foo → /a/b/c/foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./foo).',
+      undefined,
+      { slug: 'a/b/c/page' },
+    ))
+    expect(content).toContain('[x](/a/b/c/foo)')
+  })
+
+  test('a/b/c/page: ../../foo → /a/foo', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](../../foo).',
+      undefined,
+      { slug: 'a/b/c/page' },
+    ))
+    expect(content).toContain('[x](/a/foo)')
+  })
+
+  // ── Hash/query preservation ───────────────────────────────────────
+
+  test('preserves hash fragment after resolution', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./quickstart#install).',
       undefined,
       { slug: 'docs/guide/index' },
     ))
-    expect(content).toContain('[install](/docs/guide/quickstart#install)')
-    expect(content).toContain('[api](/docs/api?v=2)')
+    expect(content).toContain('[x](/docs/guide/quickstart#install)')
   })
 
-  test('resolves relative JSX href attributes', () => {
+  test('preserves query string after resolution', () => {
     const { content } = expectSuccess(normalizeMdx(
-      '<Card href="./quickstart">Get Started</Card>',
+      'See [x](../api?v=2).',
+      undefined,
+      { slug: 'docs/guide/index' },
+    ))
+    expect(content).toContain('[x](/docs/api?v=2)')
+  })
+
+  test('preserves both hash and query', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./page?tab=1#section).',
+      undefined,
+      { slug: 'docs/index' },
+    ))
+    expect(content).toContain('[x](/docs/page?tab=1#section)')
+  })
+
+  // ── .md/.mdx extension stripping + resolution combined ───────────
+
+  test('strips .md and resolves in one pass', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./guide.md) and [y](../api/overview.mdx#auth).',
+      undefined,
+      { slug: 'docs/setup/index' },
+    ))
+    expect(content).toContain('[x](/docs/setup/guide)')
+    expect(content).toContain('[y](/docs/api/overview#auth)')
+    expect(content).not.toContain('.md')
+  })
+
+  test('strips .md from bare relative with hash', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](guide.md#install).',
+      undefined,
+      { slug: 'docs/index' },
+    ))
+    expect(content).toContain('[x](/docs/guide#install)')
+  })
+
+  // ── JSX href attributes ───────────────────────────────────────────
+
+  test('resolves JSX href with ./prefix', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      '<Card href="./quickstart">Go</Card>',
       undefined,
       { slug: 'docs/index' },
     ))
     expect(content).toContain('href="/docs/quickstart"')
   })
 
-  test('does not touch absolute paths', () => {
+  test('resolves JSX href with bare path', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [guide](/getting-started).',
+      '<a href="quickstart">Go</a>',
       undefined,
       { slug: 'docs/index' },
     ))
-    expect(content).toContain('[guide](/getting-started)')
+    expect(content).toContain('href="/docs/quickstart"')
   })
 
-  test('does not touch external URLs', () => {
+  test('resolves JSX href with ../', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [docs](https://example.com/./path).',
+      '<Tile href="../overview">Go</Tile>',
       undefined,
-      { slug: 'docs/index' },
+      { slug: 'docs/guides/index' },
     ))
-    expect(content).toContain('https://example.com/./path')
+    expect(content).toContain('href="/docs/overview"')
   })
 
-  test('leaves relative links unchanged when no slug provided', () => {
-    const { content } = expectSuccess(normalizeMdx(
-      'See [intro](./intro) and [parent](../parent).',
-    ))
-    expect(content).toContain('[intro](./intro)')
-    expect(content).toContain('[parent](../parent)')
-  })
+  // ── Reference-style definitions ───────────────────────────────────
 
-  test('resolves from top-level slug (no directory)', () => {
-    const { content } = expectSuccess(normalizeMdx(
-      'See [other](./other).',
-      undefined,
-      { slug: 'index' },
-    ))
-    expect(content).toContain('[other](/other)')
-  })
-
-  test('strips .md extension and resolves relative in one pass', () => {
-    const { content } = expectSuccess(normalizeMdx(
-      'See [guide](./guide.md) and [api](../api/overview.mdx#auth).',
-      undefined,
-      { slug: 'docs/setup/index' },
-    ))
-    expect(content).toContain('[guide](/docs/setup/guide)')
-    expect(content).toContain('[api](/docs/api/overview#auth)')
-    expect(content).not.toContain('.md')
-  })
-
-  test('resolves reference-style relative definitions', () => {
+  test('resolves reference-style relative definition', () => {
     const { content } = expectSuccess(normalizeMdx(
       `See [guide][g].
 
@@ -455,32 +602,51 @@ describe('normalizeMdx relative link resolution', () => {
     expect(content).toContain('[g]: /docs/guide#install')
   })
 
-  test('resolves bare relative links (no ./ prefix)', () => {
+  // ── Links that should NOT be rewritten ────────────────────────────
+
+  test('does not touch absolute paths', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [foo](foo) and [bar](bar/baz).',
+      'See [x](/getting-started).',
       undefined,
       { slug: 'docs/index' },
     ))
-    expect(content).toContain('[foo](/docs/foo)')
-    expect(content).toContain('[bar](/docs/bar/baz)')
+    expect(content).toContain('[x](/getting-started)')
   })
 
-  test('resolves bare relative links with .md extension', () => {
+  test('does not touch external URLs', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [guide](guide.md#install).',
+      'See [x](https://example.com/./path).',
       undefined,
       { slug: 'docs/index' },
     ))
-    expect(content).toContain('[guide](/docs/guide#install)')
+    expect(content).toContain('https://example.com/./path')
   })
 
-  test('does not resolve anchor-only links', () => {
+  test('does not touch mailto links', () => {
     const { content } = expectSuccess(normalizeMdx(
-      'See [section](#install).',
+      'See [x](mailto:test@example.com).',
       undefined,
       { slug: 'docs/index' },
     ))
-    expect(content).toContain('[section](#install)')
+    expect(content).toContain('mailto:test@example.com')
+  })
+
+  test('does not touch anchor-only links', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](#install).',
+      undefined,
+      { slug: 'docs/index' },
+    ))
+    expect(content).toContain('[x](#install)')
+  })
+
+  test('leaves relative links as-is when no slug provided', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [a](./intro) and [b](../parent) and [c](bare).',
+    ))
+    expect(content).toContain('[a](./intro)')
+    expect(content).toContain('[b](../parent)')
+    expect(content).toContain('[c](bare)')
   })
 })
 
