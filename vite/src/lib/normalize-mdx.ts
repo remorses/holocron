@@ -60,7 +60,7 @@ export function normalizeMdx(content: string, source?: string, options?: Normali
     }
   }
 
-  const slug = options?.slug?.replace(/^\/+/, '') // strip leading / if passed
+  const slug = options?.slug?.replace(/^\/+/, '').replace(/\/+$/, '') // normalize leading/trailing /
   const slugDir = slug != null
     ? slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
     : undefined

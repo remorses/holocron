@@ -649,6 +649,24 @@ describe('normalizeMdx relative link resolution', () => {
     expect(content).toContain('[x](/docs/foo)')
   })
 
+  test('handles slug with trailing slash', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./foo).',
+      undefined,
+      { slug: 'docs/index/' },
+    ))
+    expect(content).toContain('[x](/docs/foo)')
+  })
+
+  test('handles slug with both leading and trailing slashes', () => {
+    const { content } = expectSuccess(normalizeMdx(
+      'See [x](./foo).',
+      undefined,
+      { slug: '/docs/guide/' },
+    ))
+    expect(content).toContain('[x](/docs/foo)')
+  })
+
   test('leaves relative links as-is when no slug provided', () => {
     const { content } = expectSuccess(normalizeMdx(
       'See [a](./intro) and [b](../parent) and [c](bare).',
