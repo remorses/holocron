@@ -405,6 +405,9 @@ export const deployApp = new Spiceflow()
               orm.eq(schema.deployment.projectId, deploy.projectId),
               orm.eq(schema.deployment.status, 'active'),
               orm.eq(schema.deployment.branch, branch),
+              // Only supersede deploys with the same preview flag so a preview
+              // deploy on "main" never accidentally kills the production deploy.
+              orm.eq(schema.deployment.preview, deploy.preview ?? false),
               // Only supersede deploys with the same basePath so root and
               // base-path deployments coexist independently.
               deploy.basePath

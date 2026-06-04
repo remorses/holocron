@@ -253,8 +253,6 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npx -y @holocron.so/cli deploy --base-path /docs
-        env:
-          HOLOCRON_KEY: ${{ secrets.HOLOCRON_KEY }}
 ```
 
 ## Self-hosted base path

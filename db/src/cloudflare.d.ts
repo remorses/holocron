@@ -6,6 +6,7 @@ interface D1Result<T = unknown> { results: T[]; success: boolean; meta: unknown 
 interface D1PreparedStatement {
   bind(...values: unknown[]): D1PreparedStatement
   all<T = unknown>(): Promise<D1Result<T>>
+  raw<T = unknown[]>(): Promise<T[]>
   run(): Promise<D1Result>
 }
 interface D1Database {

@@ -9,7 +9,9 @@ import * as schema from './schema.ts'
 export { schema }
 
 async function queryD1(sql: string, params: any[], method: string) {
-  const endpoint = method === 'values' ? 'raw' : 'query'
+  // sqlite-proxy expects rows as positional arrays, so always use 'raw'
+  // endpoint for reads. 'query' returns objects which break mapResultRow.
+  const endpoint = method === 'run' ? 'query' : 'raw'
   const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID!}/d1/database/${process.env.CLOUDFLARE_DATABASE_ID!}/${endpoint}`,
     {
