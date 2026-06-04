@@ -147,10 +147,15 @@ Rules:
 across all tabs. Use them for GitHub, Changelog, Discord, or other external
 links.
 
-**Tab order.** In `navigation.tabs`, list tabs that point to local pages first
-(groups, pages, OpenAPI, changelog) and tabs that link out to external URLs
-(`href`) last. Mixing external link tabs in between local tabs looks messy;
-keeping external links at the end reads cleaner.
+**Progressive disclosure in navigation.** Order groups, pages, and tabs the way
+a reader would read them top-to-bottom. Start with introductory content (getting
+started, quickstart), then core concepts and guides, then advanced topics and
+reference material last. The reader should never need to jump ahead to
+understand the current section.
+
+**Tab order.** In `navigation.tabs`, list documentation and guides first, then
+API reference, then changelog. Tabs that link out to external URLs (`href`) go
+last. This guides the reader from concepts to reference.
 
 ## Icons
 

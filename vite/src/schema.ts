@@ -245,12 +245,22 @@ export const groupSchema: z.ZodType<GroupInput> = z
         .describe(
           dedent`
             The pages in the group. Each entry is either a string slug
-            pointing at an MDX file, or a nested group object
+            pointing at an MDX file, or a nested group object. Order pages
+            following progressive disclosure: start with introductory
+            content, then core concepts, then advanced topics
           `,
         )
     },
   })
-  .describe('A sidebar group containing pages and/or nested groups')
+  .describe(
+    dedent`
+      A sidebar group containing pages and/or nested groups. Order groups
+      following progressive disclosure: introductory groups first (getting
+      started, quickstart), then core concept groups, then advanced or
+      reference groups last. Readers should be able to read top-to-bottom
+      without needing to jump ahead
+    `,
+  )
   .meta({ id: 'groupSchema' })
 
 /* ── Tab variants ─────────────────────────────────────────────────────── */
@@ -573,9 +583,11 @@ const navigationGlobalSchema = z
 const navigationTabsObjectSchema = z.object({
   tabs: z.array(tabSchema).describe(
     dedent`
-      The tabs rendered in the tab bar. Order tabs that point to local pages
-      first (groups, pages, OpenAPI, changelog) and tabs that link out to
-      external URLs (\`href\`) last. This keeps the navigation looking clean
+      The tabs rendered in the tab bar. Order tabs following progressive
+      disclosure: documentation and guides first, then API reference, then
+      changelog. Tabs that link out to external URLs (\`href\`) go last.
+      This keeps the navigation looking clean and guides the reader from
+      concepts to reference
     `,
   ),
   global: navigationGlobalSchema.optional(),

@@ -452,7 +452,7 @@
               "items": {
                 "$ref": "#/definitions/tabSchema"
               },
-              "description": "The tabs rendered in the tab bar. Order tabs that point to local pages\nfirst (groups, pages, OpenAPI, changelog) and tabs that link out to\nexternal URLs (`href`) last. This keeps the navigation looking clean"
+              "description": "The tabs rendered in the tab bar. Order tabs following progressive\ndisclosure: documentation and guides first, then API reference, then\nchangelog. Tabs that link out to external URLs (`href`) go last.\nThis keeps the navigation looking clean and guides the reader from\nconcepts to reference"
             },
             "global": {
               "type": "object",
@@ -1098,7 +1098,7 @@
               }
             ]
           },
-          "description": "The pages in the group. Each entry is either a string slug\npointing at an MDX file, or a nested group object"
+          "description": "The pages in the group. Each entry is either a string slug\npointing at an MDX file, or a nested group object. Order pages\nfollowing progressive disclosure: start with introductory\ncontent, then core concepts, then advanced topics"
         }
       },
       "required": [
@@ -1106,7 +1106,7 @@
         "pages"
       ],
       "additionalProperties": false,
-      "description": "A sidebar group containing pages and/or nested groups"
+      "description": "A sidebar group containing pages and/or nested groups. Order groups\nfollowing progressive disclosure: introductory groups first (getting\nstarted, quickstart), then core concept groups, then advanced or\nreference groups last. Readers should be able to read top-to-bottom\nwithout needing to jump ahead"
     },
     "anchorSchema": {
       "type": "object",
