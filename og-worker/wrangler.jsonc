@@ -3,7 +3,7 @@
   "name": "holocron-og",
   "main": "src/index.tsx",
   "compatibility_date": "2026-04-14",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 
   "assets": {
     "directory": "./public",
