@@ -78,17 +78,14 @@ export async function loginWithDeviceFlow(options: {
       }),
     })
 
-    if (pollRes.ok) {
-      const result = await readJson<{ access_token?: string }>(pollRes)
-      if (result.access_token) {
-        spinner.stop('Approved!')
-        return { accessToken: result.access_token }
-      }
+    // Read the body exactly once — Response.body can only be consumed once.
+    const pollBody = await readJson<{ access_token?: string; error?: string }>(pollRes)
+
+    if (pollRes.ok && pollBody.access_token) {
+      spinner.stop('Approved!')
+      return { accessToken: pollBody.access_token }
     }
 
-    const pollBody = await readJson<{ error?: string }>(pollRes).catch(
-      (): { error?: string } => ({}),
-    )
     if (pollBody.error === 'expired_token') {
       spinner.stop('Code expired')
       clack.log.error('Device code expired. Try again.')
