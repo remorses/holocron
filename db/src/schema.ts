@@ -170,6 +170,10 @@ export const deployment = s.sqliteTable('deployment', {
    *  (`https://github.com/{actor}.png`) in the deployment history UI.
    *  Also set for session auth if we know the user's GitHub username from their account. */
   githubActor: s.text('github_actor'),
+  /** Base path prefix for subpath deploys (e.g. "/docs/"). When set, the Vite build
+   *  uses this as `base` so all routes and assets are prefixed. The hosting worker
+   *  strips this prefix before looking up assets in the manifest. Null for root deploys. */
+  basePath: s.text('base_path'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
   s.index('deployment_project_id_idx').on(table.projectId),

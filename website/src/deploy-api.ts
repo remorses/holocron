@@ -80,6 +80,7 @@ export const deployApp = new Spiceflow()
       branch: z.string().max(200).optional().describe('Branch name for preview deployments. Defaults to "main".'),
       preview: z.boolean().optional().describe('Force preview deployment (e.g. from a PR). Never updates production pointer.'),
       name: z.string().trim().min(1).max(200).optional().describe('Site name from docs.json. Updates the project name if provided.'),
+      basePath: z.string().max(200).regex(/^\/[a-z0-9\-_/]*\/$/, 'Base path must start and end with / and contain only lowercase letters, numbers, hyphens, underscores, and slashes').optional().describe('Base path prefix for subpath deploys (e.g. "/docs/"). Requires Pro subscription.'),
     }),
     detail: {
       summary: 'Create deployment',
@@ -153,6 +154,7 @@ export const deployApp = new Spiceflow()
         files: JSON.stringify(body.files),
         triggeredByUserId: auth.userId ?? null,
         githubActor: auth.type === 'github-oidc' ? auth.githubActor ?? null : null,
+        basePath: body.basePath ?? null,
       })
 
       // Bump project.updatedAt so the project list is ordered by last deploy activity.
@@ -416,6 +418,7 @@ export const deployApp = new Spiceflow()
           projectId: deploy.projectId,
           version: deploy.version,
           manifest,
+          ...(deploy.basePath ? { basePath: deploy.basePath } : {}),
         }),
       )
 

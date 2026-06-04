@@ -37,9 +37,18 @@ export function canDeploy(opts: {
   hasActiveSubscription: boolean
   productionDeployCount: number
   isRefinalizeOfActive: boolean
+  hasBasePath?: boolean
 }): DeployDecision {
   if (opts.hasActiveSubscription) return { allowed: true }
   if (opts.isRefinalizeOfActive) return { allowed: true }
+
+  if (opts.hasBasePath) {
+    return {
+      allowed: false,
+      code: 'SUBSCRIPTION_REQUIRED',
+      reason: 'Base path deployments require a Holocron Pro subscription. Deploy with --base-path to host docs at a subpath like /docs on your domain.',
+    }
+  }
 
   if (opts.isPreview) {
     return {

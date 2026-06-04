@@ -29,6 +29,10 @@ type SiteInfo = {
   version: string
   subdomain: string
   manifest: Manifest
+  /** Base path prefix for subpath deploys (e.g. "/docs/"). When set, asset
+   *  lookups strip this prefix from the URL pathname before consulting the
+   *  manifest. Null/undefined for root deploys. */
+  basePath?: string
 }
 
 /** Extract the subdomain from the request hostname.
@@ -55,8 +59,8 @@ async function resolveSite(
   if (!kvData) return null
 
   try {
-    const parsed = JSON.parse(kvData) as { projectId: string; version: string; manifest: Manifest }
-    return { projectId: parsed.projectId, version: parsed.version, subdomain, manifest: parsed.manifest }
+    const parsed = JSON.parse(kvData) as { projectId: string; version: string; manifest: Manifest; basePath?: string }
+    return { projectId: parsed.projectId, version: parsed.version, subdomain, manifest: parsed.manifest, basePath: parsed.basePath }
   } catch {
     return null
   }
@@ -71,7 +75,13 @@ async function serveAsset(
   request: Request,
 ): Promise<Response | null> {
   const url = new URL(request.url)
-  const pathname = url.pathname
+  let pathname = url.pathname
+
+  // Strip base path prefix so asset lookups match manifest keys.
+  // e.g. base="/docs/", request="/docs/assets/style.css" → pathname="/assets/style.css"
+  if (site.basePath && pathname.startsWith(site.basePath)) {
+    pathname = '/' + pathname.slice(site.basePath.length)
+  }
 
   // The manifest maps "assets/..." paths. Browser requests "/assets/style.css",
   // the manifest key is "assets/assets/style.css" (CLI prefix convention).
