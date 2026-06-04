@@ -118,6 +118,9 @@ export type SyncResult = {
    *  files. Used by the dev server to watch for image changes and trigger
    *  re-sync so updated dimensions/placeholders are picked up. */
   importedImageDepPaths: string[]
+  /** Absolute paths of local files read by virtual tab providers (e.g. OpenAPI
+   *  spec files). Watched by the dev server so edits trigger re-sync + HMR. */
+  providerWatchPaths: string[]
   parsedCount: number
   cachedCount: number
 }
@@ -354,7 +357,7 @@ export async function syncNavigation({
   }
 
   // 2b. Process virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages
-  await processVirtualTabs({
+  const { watchPaths: providerWatchPaths } = await processVirtualTabs({
     config,
     projectRoot,
     pagesDir,
@@ -437,7 +440,7 @@ export async function syncNavigation({
     ))
   }
 
-  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedImageDepPaths: [...allImportedImageDepPaths], parsedCount, cachedCount }
+  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths, parsedCount, cachedCount }
 }
 
 /* ── Image processing helper ─────────────────────────────────────────── */

@@ -44,6 +44,9 @@ export type VirtualTabResult = {
   groups: ConfigNavGroup[]
   /** slug → virtual MDX string */
   mdxContent: Record<string, string>
+  /** Absolute paths of local files the provider read (e.g. OpenAPI spec files).
+   *  The dev server watches these so edits trigger re-sync + HMR. */
+  watchPaths?: string[]
 }
 
 export type VirtualTabProvider = {
@@ -90,9 +93,10 @@ export async function processVirtualTabs({
   pagesDir: string
   mdxContent: Record<string, string>
   providers: VirtualTabProvider[]
-}): Promise<void> {
+}): Promise<{ watchPaths: string[] }> {
   // Shared slug registry for cross-provider collision detection
   const claimedSlugs = new Map<string, string>()
+  const watchPaths: string[] = []
 
   for (const tab of config.navigation.tabs) {
     const claimers = providers.filter((p) => p.claims(tab))
@@ -126,6 +130,7 @@ export async function processVirtualTabs({
     }
 
     const result = await provider.generate({ tab, projectRoot, pagesDir })
+    if (result.watchPaths) watchPaths.push(...result.watchPaths)
 
     // Centralized slug collision detection across all providers
     for (const slug of Object.keys(result.mdxContent)) {
@@ -167,4 +172,5 @@ export async function processVirtualTabs({
     // groups (read from tab.groups) with spliced endpoint pages.
     tab.groups = result.groups
   }
+  return { watchPaths }
 }

@@ -34,6 +34,7 @@ export const openapiProvider: VirtualTabProvider = {
     const specPaths = Array.isArray(tab.openapi) ? tab.openapi! : [tab.openapi!]
     const slugPrefix = tab.base ?? 'api'
     const mdxContent: Record<string, string> = {}
+    const watchPaths: string[] = []
 
     const allOps: OpWithDoc[] = []
     // Per-spec lookup so the `specfile METHOD /path` form can target a spec.
@@ -55,6 +56,7 @@ export const openapiProvider: VirtualTabProvider = {
           : `\n  - ${inRoot}`
         throw new Error(`[holocron] OpenAPI spec not found:${locations}`)
       }
+      watchPaths.push(resolvedPath)
 
       const processed = await processOpenAPISpec(resolvedPath)
       const specMap = new Map<string, OpWithDoc>()
@@ -69,7 +71,7 @@ export const openapiProvider: VirtualTabProvider = {
     // Spec has no operations. In selective mode the tab may still carry
     // hand-written MDX groups, so preserve them; in dedicated mode there is
     // nothing to generate.
-    if (allOps.length === 0) return { groups: tab.groups, mdxContent }
+    if (allOps.length === 0) return { groups: tab.groups, mdxContent, watchPaths }
 
     const { operationSlug, operationTitle, operationSidebarTitle, tagDisplayName } = await import('./process.ts')
     const { generateCurl } = await import('./curl-generator.ts')
@@ -262,16 +264,16 @@ export const openapiProvider: VirtualTabProvider = {
           return p
         }
 
-        return { groups: hoisted, mdxContent }
+        return { groups: hoisted, mdxContent, watchPaths }
       }
 
-      return { groups, mdxContent }
+      return { groups, mdxContent, watchPaths }
     }
 
     // ── Dedicated mode: auto-group every endpoint by its first tag ────────
     const groups = buildTagGroups(allOps)
 
-    return { groups, mdxContent }
+    return { groups, mdxContent, watchPaths }
   },
 }
 

@@ -652,6 +652,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       for (const imgPath of syncResult.importedImageDepPaths) {
         server.watcher.add(imgPath)
       }
+      // Watch files read by virtual tab providers (e.g. OpenAPI spec files)
+      // so edits trigger re-sync + HMR.
+      for (const watchPath of syncResult.providerWatchPaths) {
+        server.watcher.add(watchPath)
+      }
     },
 
     // hotUpdate — per-environment HMR hook.
@@ -674,6 +679,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
       const isTrackedImageDep = syncResult.importedImageDepPaths.includes(ctx.file)
+      const isProviderWatchPath = syncResult.providerWatchPaths.includes(ctx.file)
       // Holocron injects `src/styles/globals.css` directly from source into the
       // dev module graph, so editing it must reach the CSS-update path below.
       // Without this flag the early-return guard drops the event and styles only
@@ -700,7 +706,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep && !isGlobalsCss) {
+      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep && !isProviderWatchPath && !isGlobalsCss) {
         return
       }
 
@@ -734,6 +740,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
         pendingSync = pendingSync.catch(() => {}).then(doSync)
         await pendingSync
+        // After re-sync, watch any new provider paths (e.g. a newly-added
+        // OpenAPI spec) so future edits also trigger HMR.
+        for (const watchPath of syncResult.providerWatchPaths) {
+          ctx.server.watcher.add(watchPath)
+        }
         // `rsc:update` refreshes the server-rendered page tree, but the root
         // loader still derives its `site` payload from these async provider
         // modules. Return them from the client hook too so Vite refreshes the
@@ -758,18 +769,17 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         RESOLVED_MODULES,
       ])
 
-      if (isMdx || isTrackedImageDep) {
+      if (isMdx || isTrackedImageDep || isProviderWatchPath) {
         if (ctx.type !== 'update') {
           resolvedIds.add(RESOLVED_MDX)
         }
         if (changedSlug) {
           resolvedIds.add(RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(changedSlug))
         }
-        // When an imported .md/.mdx file or its image dependency changes,
-        // invalidate ALL per-page MDX modules because the changed content
-        // is inlined into the importing page's MDX. Without this, the
-        // importing page's virtual module stays cached with stale content.
-        if (isTrackedImageDep || !changedSlug || !syncResult.mdxContent[changedSlug]) {
+        // When an imported .md/.mdx file, image dependency, or provider source
+        // file (e.g. OpenAPI spec) changes, invalidate ALL per-page MDX modules
+        // because the changed content affects virtual pages generated from it.
+        if (isTrackedImageDep || isProviderWatchPath || !changedSlug || !syncResult.mdxContent[changedSlug]) {
           for (const slug of Object.keys(syncResult.mdxContent)) {
             resolvedIds.add(RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(slug))
           }
