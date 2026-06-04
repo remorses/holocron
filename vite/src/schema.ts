@@ -392,6 +392,56 @@ const tabWithChangelogSchema = tabBaseSchema.extend({
     ),
 })
 
+const tabWithMCPSchema = tabBaseSchema.extend({
+  mcp: z
+    .string()
+    .describe(
+      dedent`
+        Path to a local MCP definition JSON file, or URL of a Streamable
+        HTTP MCP server endpoint. When a local file, the JSON must contain
+        \`tools\`, \`resources\`, and/or \`prompts\` arrays matching the
+        MCP specification shapes. Each tool becomes a generated page with
+        its input schema rendered as a parameter list. Example:
+        \`"mcp-tools.json"\` or \`"https://api.example.com/mcp"\`
+      `,
+    ),
+  base: z
+    .string()
+    .optional()
+    .describe(
+      dedent`
+        Slug prefix for generated MCP pages. Defaults to \`"mcp"\`. Set to
+        \`""\` for no prefix. A leading slash is allowed and ignored, so
+        \`"/tools"\` behaves the same as \`"tools"\`
+      `,
+    ),
+  groups: z
+    .array(groupSchema)
+    .optional()
+    .describe(
+      dedent`
+        Optional sidebar groups for selective mode. When set, tools are
+        NOT auto-grouped. List page entries explicitly: normal slugs
+        render MDX pages, while tool names render the auto-generated tool
+        page. Use the special \`"..."\` entry to expand all remaining
+        tools/resources at that position
+      `,
+    ),
+  get pages() {
+    return z
+      .array(z.union([z.string(), groupSchema]))
+      .optional()
+      .describe(
+        dedent`
+          Optional flat page list for selective mode. Same rules as
+          \`groups\` but without a group wrapper. Mix MDX slugs with
+          tool names. Add a \`"..."\` entry to auto-include all remaining
+          tools and resources after your intro pages
+        `,
+      )
+  },
+})
+
 export const tabSchema = z
   .union([
     tabWithGroupsSchema,
@@ -399,13 +449,15 @@ export const tabSchema = z
     tabWithHrefSchema,
     tabWithOpenAPISchema,
     tabWithChangelogSchema,
+    tabWithMCPSchema,
   ])
   .describe(
     dedent`
       A top-level tab in the navigation. Either contains sidebar groups, a
       flat list of pages, a link-only tab, an OpenAPI spec for
-      auto-generated API reference pages, or a changelog generated from a
-      GitHub releases page
+      auto-generated API reference pages, a changelog generated from a
+      GitHub releases page, or an MCP server definition for auto-generated
+      tool and resource documentation pages
     `,
   )
   .meta({ id: 'tabSchema' })

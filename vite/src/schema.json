@@ -932,9 +932,72 @@
             "changelog"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tab": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The name of the tab"
+            },
+            "icon": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
+            },
+            "hidden": {
+              "description": "Whether the tab is hidden by default",
+              "type": "boolean"
+            },
+            "align": {
+              "description": "Tab alignment in the navigation",
+              "type": "string",
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
+            "mcp": {
+              "type": "string",
+              "description": "Path to a local MCP definition JSON file, or URL of a Streamable\nHTTP MCP server endpoint. When a local file, the JSON must contain\n`tools`, `resources`, and/or `prompts` arrays matching the\nMCP specification shapes. Each tool becomes a generated page with\nits input schema rendered as a parameter list. Example:\n`\"mcp-tools.json\"` or `\"https://api.example.com/mcp\"`"
+            },
+            "base": {
+              "description": "Slug prefix for generated MCP pages. Defaults to `\"mcp\"`. Set to\n`\"\"` for no prefix. A leading slash is allowed and ignored, so\n`\"/tools\"` behaves the same as `\"tools\"`",
+              "type": "string"
+            },
+            "groups": {
+              "description": "Optional sidebar groups for selective mode. When set, tools are\nNOT auto-grouped. List page entries explicitly: normal slugs\nrender MDX pages, while tool names render the auto-generated tool\npage. Use the special `\"...\"` entry to expand all remaining\ntools/resources at that position",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/groupSchema"
+              }
+            },
+            "pages": {
+              "description": "Optional flat page list for selective mode. Same rules as\n`groups` but without a group wrapper. Mix MDX slugs with\ntool names. Add a `\"...\"` entry to auto-include all remaining\ntools and resources after your intro pages",
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/definitions/groupSchema"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "tab",
+            "mcp"
+          ],
+          "additionalProperties": false
         }
       ],
-      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, or a changelog generated from a\nGitHub releases page"
+      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, a changelog generated from a\nGitHub releases page, or an MCP server definition for auto-generated\ntool and resource documentation pages"
     },
     "iconSchema": {
       "anyOf": [

@@ -466,6 +466,21 @@ function normalizeTabsAndAnchors(
       continue
     }
 
+    // MCP tab → store the mcp source path/URL so sync.ts can pick it up.
+    // The MCP provider reads the definition file or connects to the server
+    // and generates pages for each tool and resource.
+    if (raw.mcp) {
+      const mcp = raw.mcp as string
+      const base = normalizeBaseSlug(raw.base as string | undefined)
+      const groups: ConfigNavGroup[] = raw.groups
+        ? (raw.groups as ConfigNavGroup[]).map(normalizeGroup)
+        : raw.pages
+          ? [{ group: '', pages: (raw.pages as ConfigNavPageEntry[]).map(normalizePageEntry) }]
+          : []
+      tabs.push({ tab: name, ...tabExtras, groups, mcp, ...(base !== undefined && { base }) })
+      continue
+    }
+
     // Changelog tab → store the changelog source URL so sync.ts can pick it
     // up. The changelog provider fetches the repository's releases and
     // generates a single page; groups are filled in by the provider.

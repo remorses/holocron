@@ -89,6 +89,7 @@
     "@iconify-json/fa6-regular": "^1.2.4",
     "@iconify-json/fa6-solid": "^1.2.4",
     "@iconify-json/lucide": "^1.2.101",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@orama/orama": "^3.1.18",
     "@scalar/json-magic": "^0.12.8",
     "@scalar/openapi-upgrader": "^0.2.6",
