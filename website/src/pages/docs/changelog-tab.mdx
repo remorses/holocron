@@ -49,6 +49,20 @@ By default the page is served at `/changelog`. Change it with `base`:
 
 Now the page is served at `/releases`. A **leading slash is optional**: `"/releases"` and `"releases"` behave the same.
 
+## Custom intro content
+
+Use `initialContent` to prepend custom MDX content above the release entries. Point it at an MDX file (resolved from your pages directory):
+
+```json
+{
+  "tab": "Changelog",
+  "changelog": "https://github.com/owner/repo",
+  "initialContent": "changelog/intro"
+}
+```
+
+The referenced file's body (everything after the frontmatter) is spliced into the top of the generated changelog page. This is useful for adding an `<Above>` hero section, an introduction paragraph, or any custom component before the release entries start.
+
 ## Rate limits
 
 Holocron calls the public GitHub releases API at build time. Unauthenticated requests are limited to 60 per hour. Set a `GITHUB_TOKEN` (or `GH_TOKEN`) environment variable to raise the limit; Holocron sends it as a bearer token when present.

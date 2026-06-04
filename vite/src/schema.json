@@ -921,6 +921,10 @@
             "base": {
               "description": "Slug for the generated changelog page. Defaults to `\"changelog\"`,\nso the page is served at `/changelog`. A leading slash is allowed\nand ignored, so `\"/docs/changelog\"` behaves the same as\n`\"docs/changelog\"`",
               "type": "string"
+            },
+            "initialContent": {
+              "description": "Path to an MDX file whose content is prepended above the\nauto-generated changelog entries. Use this to add a custom hero\nsection, introduction, or `<Above>` block at the top of the\nchangelog page. The path is resolved relative to pagesDir (or\nproject root), e.g. `\"changelog/intro\"`",
+              "type": "string"
             }
           },
           "required": [

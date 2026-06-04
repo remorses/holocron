@@ -168,7 +168,7 @@
             },
             {
                 "tab": "Pricing",
-                "icon": "credit-card",
+                "icon": "dollar-sign",
                 "pages": ["docs/pricing"]
             },
             {
@@ -180,7 +180,8 @@
             {
                 "tab": "Changelog",
                 "icon": "newspaper",
-                "changelog": "https://github.com/remorses/holocron"
+                "changelog": "https://github.com/remorses/holocron",
+                "initialContent": "changelog/intro"
             }
         ]
     }

@@ -472,7 +472,15 @@ function normalizeTabsAndAnchors(
     if (raw.changelog) {
       const changelog = raw.changelog as string
       const base = normalizeBaseSlug(raw.base as string | undefined)
-      tabs.push({ tab: name, ...tabExtras, groups: [], changelog, ...(base !== undefined && { base }) })
+      const initialContent = raw.initialContent as string | undefined
+      tabs.push({
+        tab: name,
+        ...tabExtras,
+        groups: [],
+        changelog,
+        ...(base !== undefined && { base }),
+        ...(initialContent !== undefined && { initialContent }),
+      })
       continue
     }
 

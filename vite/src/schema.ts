@@ -378,6 +378,18 @@ const tabWithChangelogSchema = tabBaseSchema.extend({
         \`"docs/changelog"\`
       `,
     ),
+  initialContent: z
+    .string()
+    .optional()
+    .describe(
+      dedent`
+        Path to an MDX file whose content is prepended above the
+        auto-generated changelog entries. Use this to add a custom hero
+        section, introduction, or \`<Above>\` block at the top of the
+        changelog page. The path is resolved relative to pagesDir (or
+        project root), e.g. \`"changelog/intro"\`
+      `,
+    ),
 })
 
 export const tabSchema = z

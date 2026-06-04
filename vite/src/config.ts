@@ -68,6 +68,9 @@ export type ConfigNavTab = NavTabBase & {
    *  present, a single changelog page is generated from the repository's
    *  releases. Set by normalize when the raw tab has `changelog`. */
   changelog?: string
+  /** Path to an MDX file whose content is prepended above the auto-generated
+   *  changelog entries. Resolved relative to pagesDir or project root. */
+  initialContent?: string
   /** Slug prefix for generated virtual pages. For OpenAPI tabs this is the
    *  endpoint-page prefix (defaults to `"api"`, `""` for no prefix). For
    *  changelog tabs this is the single page slug (defaults to `"changelog"`). */

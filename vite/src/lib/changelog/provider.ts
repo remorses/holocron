@@ -10,21 +10,49 @@
  * hidden, and a right-side `<Aside full>` notice explains the page is
  * generated from the GitHub releases page.
  *
+ * When `tab.initialContent` is set, the referenced MDX file's content
+ * (stripped of frontmatter) is prepended above the Update entries so users
+ * can add a custom hero, intro, or `<Above>` section at the top.
+ *
  * Tests can point the fetch at a local mock server via the
  * HOLOCRON_CHANGELOG_API_URL environment variable.
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
 import type { ConfigNavGroup } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
+import { logger, formatHolocronWarning } from '../logger.ts'
 import { parseChangelogSource } from './parse-source.ts'
 import { fetchGitHubReleases, type GitHubRelease } from './github-releases.ts'
+
+/** Try to resolve a page slug to an on-disk MDX/MD file, probing pagesDir
+ *  first, then projectRoot. Returns the absolute path or undefined. */
+function resolveContentFile(slug: string, pagesDir: string, projectRoot: string): string | undefined {
+  for (const dir of [pagesDir, projectRoot]) {
+    for (const ext of ['.mdx', '.md']) {
+      const abs = path.join(dir, slug + ext)
+      if (fs.existsSync(abs)) return abs
+    }
+  }
+  return undefined
+}
+
+/** Read an MDX file and strip its YAML frontmatter block (if any), returning
+ *  only the body content. */
+function readContentBody(filePath: string): string {
+  const raw = fs.readFileSync(filePath, 'utf-8')
+  // Strip leading frontmatter (--- ... ---)
+  const fmMatch = raw.match(/^\s*---\r?\n[\s\S]*?\r?\n---\r?\n?/)
+  return fmMatch ? raw.slice(fmMatch[0].length).trim() : raw.trim()
+}
 
 export const changelogProvider: VirtualTabProvider = {
   name: 'changelog',
   claims: (tab) => !!tab.changelog,
 
-  async generate({ tab }): Promise<VirtualTabResult> {
+  async generate({ tab, projectRoot, pagesDir }): Promise<VirtualTabResult> {
     const source = parseChangelogSource(tab.changelog!)
     const slug = tab.base ?? 'changelog'
     const title = tab.tab || 'Changelog'
@@ -35,10 +63,27 @@ export const changelogProvider: VirtualTabProvider = {
       baseUrl: process.env.HOLOCRON_CHANGELOG_API_URL,
     })
 
+    // Resolve optional initialContent MDX file
+    let initialContentBody: string | undefined
+    if (tab.initialContent) {
+      const contentPath = resolveContentFile(tab.initialContent, pagesDir, projectRoot)
+      if (contentPath) {
+        initialContentBody = readContentBody(contentPath)
+      } else {
+        logger.warn(
+          formatHolocronWarning(
+            `Changelog initialContent "${tab.initialContent}" not found. ` +
+            `Looked in "${pagesDir}" and "${projectRoot}".`,
+          ),
+        )
+      }
+    }
+
     const mdx = buildChangelogMdx({
       title,
       releasesUrl: source.releasesUrl,
       releases,
+      initialContentBody,
     })
 
     const groups: ConfigNavGroup[] = [{ group: '', pages: [slug] }]
@@ -51,10 +96,12 @@ function buildChangelogMdx({
   title,
   releasesUrl,
   releases,
+  initialContentBody,
 }: {
   title: string
   releasesUrl: string
   releases: GitHubRelease[] | null
+  initialContentBody?: string
 }): string {
   // Right-column notice explaining the page is auto-generated.
   const aside = [
@@ -65,20 +112,28 @@ function buildChangelogMdx({
     '</Note>',
   ].join('\n')
 
-  let body: string
+  const bodyParts: string[] = []
+
+  // Prepend custom initial content above the Update entries
+  if (initialContentBody) {
+    bodyParts.push(initialContentBody)
+  }
+
   if (releases === null) {
-    body = [
-      '<Warning>',
-      '',
-      `Could not load releases from [GitHub](${releasesUrl}). This is usually a transient`,
-      'network or rate-limit issue. The changelog will appear once the releases can be fetched again.',
-      '',
-      '</Warning>',
-    ].join('\n')
+    bodyParts.push(
+      [
+        '<Warning>',
+        '',
+        `Could not load releases from [GitHub](${releasesUrl}). This is usually a transient`,
+        'network or rate-limit issue. The changelog will appear once the releases can be fetched again.',
+        '',
+        '</Warning>',
+      ].join('\n'),
+    )
   } else if (releases.length === 0) {
-    body = `No releases have been published yet. See the [releases page](${releasesUrl}).`
+    bodyParts.push(`No releases have been published yet. See the [releases page](${releasesUrl}).`)
   } else {
-    body = releases.map(renderRelease).join('\n\n')
+    bodyParts.push(releases.map(renderRelease).join('\n\n'))
   }
 
   return buildVirtualPageMdx({
@@ -88,7 +143,7 @@ function buildChangelogMdx({
       mode: 'center',
     },
     aside,
-    body,
+    body: bodyParts.join('\n\n'),
   })
 }
 
