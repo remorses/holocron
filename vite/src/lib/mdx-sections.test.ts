@@ -105,7 +105,7 @@ Body
     `)
   })
 
-  test('injects HolocronAIAssistantWidget as <Aside full> if no aside exists in the first section', () => {
+  test('injects HolocronAIAssistantWidget as per-section Aside if no aside exists in the first section', () => {
     const mdx = `Intro
 
 ## Section
@@ -427,6 +427,110 @@ Billing runs on Stripe.
       ## Plans
 
       Plans table.
+
+      --- SECTION 2 ---
+
+      [CONTENT]
+      ## What Pro unlocks
+
+      --- SECTION 3 ---
+
+      [CONTENT]
+      ### Preview deployments
+
+      Every branch gets a preview URL.
+
+      [ASIDE]
+      <Aside>
+        <Tip>
+          Preview deployments are automatic.
+        </Tip>
+      </Aside>
+
+      --- SECTION 4 ---
+
+      [CONTENT]
+      ## Subscribe
+
+      Manage billing from the dashboard.
+
+      [ASIDE]
+      <Aside>
+        <Note>
+          Billing runs on Stripe.
+        </Note>
+      </Aside>"
+    `)
+  })
+
+  test('heading-first page with NO intro aside keeps per-section asides scoped', () => {
+    // The <Aside> is under ## Plans, NOT in the intro. The synthetic AI widget
+    // aside must NOT be <Aside full> or it creates a full-aside range that
+    // sweeps all per-section asides to the top.
+    const mdx = `# Pricing
+
+Holocron is free to start.
+
+## Plans
+
+<Aside>
+<Info>
+Subscriptions are per site.
+</Info>
+</Aside>
+
+Plans table.
+
+## What Pro unlocks
+
+### Preview deployments
+
+Every branch gets a preview URL.
+
+<Aside>
+<Tip>
+Preview deployments are automatic.
+</Tip>
+</Aside>
+
+## Subscribe
+
+Manage billing from the dashboard.
+
+<Aside>
+<Note>
+Billing runs on Stripe.
+</Note>
+</Aside>
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      # Pricing
+
+      Holocron is free to start.
+
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Plans
+
+      Plans table.
+
+      [ASIDE]
+      <Aside>
+        <Info>
+          Subscriptions are per site.
+        </Info>
+      </Aside>
 
       --- SECTION 2 ---
 

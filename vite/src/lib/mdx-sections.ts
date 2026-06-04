@@ -150,13 +150,21 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
         asideNode.children.unshift(...injectedNodes)
       }
     } else {
-      const fullAsideNode: FlowJsxNode = {
+      // Check if any <Aside> exists anywhere in the page. If so, use a
+      // regular per-section <Aside> so per-section asides stay scoped.
+      // If no asides exist at all, use <Aside full> so the AI widget
+      // spans the whole page.
+      const hasAnyAside = children.some(isAsideNode)
+      const syntheticAside: FlowJsxNode = {
         type: 'mdxJsxFlowElement',
         name: 'Aside',
-        attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }],
+        attributes: hasAnyAside ? [] : [{ type: 'mdxJsxAttribute', name: 'full', value: null }],
         children: [...injectedNodes],
       }
-      children.unshift(fullAsideNode)
+      // Insert after the leading heading (if any) so it lands in the first
+      // section's body, not before the heading.
+      const insertAt = children[0] && isHeadingNode(children[0]) ? 1 : 0
+      children.splice(insertAt, 0, syntheticAside)
     }
   }
 
