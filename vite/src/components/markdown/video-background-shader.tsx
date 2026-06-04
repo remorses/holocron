@@ -564,7 +564,7 @@ const DEFAULT_CONFIG: Required<Omit<VideoShaderConfig, 'src'>> = {
   fluidStrength: 0.15,
   minLuminance: 0,
   dotStyle: 'dots',
-  chars: ' .:-~=+x?$%#@MW',
+  chars: ' .:-~=+x?$%#@A',
   charFont: 'monospace',
 }
 

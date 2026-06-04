@@ -34,14 +34,15 @@ export function HeroSection() {
         canvasClassName='dark:opacity-60 opacity-40'
         dotStyle='ascii'
         dotColor='#8da4ff'
-        dotSize={11}
-        minDotSize={1}
-        dotMargin={1}
-        animSpeed={3}
-        gamma={0.8}
-        fluidStrength={0.6}
-        fluidCurl={80}
-        minLuminance={0.35}
+        dotSize={10}
+        // minDotSize={1}
+        // dotMargin={1}
+        // animSpeed={3}
+        chars= ' .:-~=+?$'
+        // gamma={0.8}
+        // fluidStrength={0.6}
+        // fluidCurl={80}
+        //         minLuminance={0.15}
       />
 
       {/* Foreground content */}
