@@ -7,7 +7,7 @@ icon: credit-card
 
 # Pricing
 
-Holocron is **free to start**. Create a site, write your docs, and get a built-in **AI chat assistant** out of the box. When you need the full model and unlimited preview deployments, **Holocron Pro** has you covered.
+Holocron is **free to start**. Create a site, write your docs, and get a built-in **AI chat assistant** out of the box. When you need the full model and unlimited preview deployments, **Holocron Pro** has you covered. [Subscribe from your dashboard](/dashboard).
 
 ## Plans
 
@@ -20,7 +20,8 @@ Subscriptions are **per site**. You only pay for sites you actively maintain.
 | | **Free** | **Pro** |
 | --- | --- | --- |
 | Hosted AI chat | Trial only | Full model, 50,000 credits / month |
-| Preview deployments | 1 production only | Unlimited, every branch and PR |
+| Preview deployments | 1 trial deployment | Unlimited, every branch and PR |
+| Subpath hosting | — | Host at `/docs` on your domain |
 | Analytics | — | Coming soon |
 | Price | $0 | **$99 / month** |
 
@@ -34,13 +35,25 @@ The built-in **AI assistant** answers questions about your docs using your conte
 
 ### Unlimited preview deployments
 
-On the **Free** plan you get a single production deployment so you can see your site live. **Pro** removes the limit: every push to your default branch publishes a new version, and every branch or pull request gets its **own preview URL**. Review docs changes in context before they reach production, the same way you review code.
+On the **Free** plan you get a single trial deployment so you can see your site live. **Pro** removes the limit: every push to your default branch publishes a new version, and every branch or pull request gets its **own unique deployment URL** via GitHub Actions OIDC. Review docs changes in context before they reach production, the same way you review code.
 
 <Aside>
 <Tip>
-Previews are created automatically from PR branches via **GitHub Actions**.
+Deployments are authenticated via **GitHub Actions OIDC**, no API keys needed for CI.
 </Tip>
 </Aside>
+
+### Subpath hosting
+
+Deploy your docs at a **subpath on your own domain**, like `yoursite.com/docs`, instead of a separate subdomain. Google indexes the content under your main domain, which strengthens your site's overall SEO authority. Users stay on one domain with a seamless experience, and you keep full control over the URL structure.
+
+Deploy with a single flag:
+
+```bash
+npx -y @holocron.so/cli deploy --base-path /docs
+```
+
+Then add a [reverse proxy or rewrite](/docs/deploy/base-path) in your framework to forward `/docs/*` to the deployed URL. Guides are available for Next.js, Vercel, Cloudflare Workers, Nginx, and Express.
 
 ## Subscribe
 

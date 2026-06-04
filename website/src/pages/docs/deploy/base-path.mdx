@@ -1,12 +1,261 @@
 ---
-title: Base Path
-description: Serve docs under a subpath like /docs.
+title: Subpath Hosting
+description: Host your docs at a subpath like /docs on your own domain.
 icon: slash
 ---
 
-# Base Path
+# Subpath Hosting
 
-If you want to serve your docs under a subpath (e.g. `https://example.com/docs/`), configure Vite's `base` option:
+Host your documentation at a subpath on your existing domain, like `yoursite.com/docs`, instead of a separate subdomain. This keeps your docs and product on the same domain for a seamless user experience and better SEO.
+
+## Why host at a subpath
+
+**SEO authority.** Search engines treat subdomains as separate sites. Hosting docs at `yoursite.com/docs` instead of `docs.yoursite.com` means all search ranking authority stays on your main domain.
+
+**Unified experience.** Users never leave your domain. Navigation between your product and documentation feels like one site.
+
+**Professional branding.** A single domain looks cleaner than a mix of subdomains. Share `yoursite.com/docs/quickstart` instead of `docs.yoursite.com/quickstart`.
+
+## Deploy with a base path
+
+<Aside>
+<Info>
+Subpath hosting requires a **Holocron Pro** subscription. [Subscribe from your dashboard](/dashboard).
+</Info>
+</Aside>
+
+Add `--base-path` to your deploy command. The path is the subpath prefix where your docs will live:
+
+```bash
+HOLOCRON_KEY=holo_xxx npx -y @holocron.so/cli deploy --base-path /docs
+```
+
+This builds your site with all routes and assets prefixed under `/docs/` and deploys it to your holocron.so URL. Your deployed site serves pages at `/docs/quickstart`, `/docs/api-reference`, etc.
+
+The deploy prints a URL like:
+
+```txt
+https://my-docs-remorses-site.holocron.so
+```
+
+Your docs are accessible at `https://my-docs-remorses-site.holocron.so/docs/`.
+
+See [Holocron Deploy](/docs/deploy/holocron) for all authentication options (API key, session login, GitHub Actions OIDC).
+
+## Connect to your domain
+
+After deploying, configure your framework or web server to forward requests under `/docs/*` to the deployed holocron.so URL. The user's browser sees `yoursite.com/docs/quickstart`, but the content is served from holocron.so.
+
+```
+┌──────────────────────┐       ┌──────────────────────────────────────┐
+│  yoursite.com        │       │  holocron.so hosting                 │
+│                      │       │                                      │
+│  /           → home  │       │                                      │
+│  /pricing    → page  │       │                                      │
+│  /docs/*     → proxy ├──────►│  my-docs-remorses-site.holocron.so   │
+│                      │       │  serves /docs/* routes               │
+└──────────────────────┘       └──────────────────────────────────────┘
+```
+
+Choose your framework below for the specific rewrite or proxy configuration.
+
+### Next.js
+
+Add a rewrite in `next.config.js` to forward `/docs` requests to your deployed URL:
+
+```js
+// next.config.js
+const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+
+module.exports = {
+  async rewrites() {
+    return [
+      {
+        source: '/docs',
+        destination: `${DOCS_URL}/docs`,
+      },
+      {
+        source: '/docs/:path*',
+        destination: `${DOCS_URL}/docs/:path*`,
+      },
+    ]
+  },
+}
+```
+
+### Vercel
+
+Add rewrites to your `vercel.json`:
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/docs",
+      "destination": "https://my-docs-remorses-site.holocron.so/docs"
+    },
+    {
+      "source": "/docs/:path*",
+      "destination": "https://my-docs-remorses-site.holocron.so/docs/:path*"
+    }
+  ]
+}
+```
+
+This works for any Vercel-hosted frontend, regardless of framework.
+
+### React Router
+
+Create a splat resource route at `app/routes/docs.$.ts`. A resource route has no default export, so React Router treats it as a pure server endpoint. The `loader` handles GET requests and `action` handles everything else:
+
+```ts
+// app/routes/docs.$.ts
+const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+
+export async function loader({ request }: { request: Request }) {
+  const url = new URL(request.url)
+  const target = new URL(url.pathname + url.search, DOCS_URL)
+  return fetch(target, {
+    headers: {
+      'X-Forwarded-Host': url.hostname,
+    },
+  })
+}
+
+export async function action({ request }: { request: Request }) {
+  const url = new URL(request.url)
+  const target = new URL(url.pathname + url.search, DOCS_URL)
+  return fetch(target, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+  })
+}
+```
+
+Also add `app/routes/docs._index.ts` so bare `/docs` is handled:
+
+```ts
+// app/routes/docs._index.ts
+export { loader, action } from './docs.$.ts'
+```
+
+### TanStack Start
+
+Create a server route at `app/routes/docs/$.ts`. TanStack Start uses `createAPIFileRoute` from `@tanstack/react-start/api` for server-only routes that return raw `Response` objects. The file path `docs/$.ts` maps to the `/docs/$` catch-all:
+
+```ts
+// app/routes/docs/$.ts
+import { createAPIFileRoute } from '@tanstack/react-start/api'
+
+const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+
+function proxy(request: Request) {
+  const url = new URL(request.url)
+  const target = new URL(url.pathname + url.search, DOCS_URL)
+  return fetch(target, {
+    method: request.method,
+    headers: { 'X-Forwarded-Host': url.hostname },
+    body: request.method !== 'GET' && request.method !== 'HEAD'
+      ? request.body
+      : undefined,
+  })
+}
+
+export const APIRoute = createAPIFileRoute('/docs/$')({
+  GET: ({ request }) => proxy(request),
+  POST: ({ request }) => proxy(request),
+})
+```
+
+The `_splat` param captures everything after `/docs/`, but since the proxy forwards `url.pathname` directly, it works without parsing it.
+
+### Cloudflare Workers
+
+Create a Cloudflare Worker that proxies `/docs` requests:
+
+```js
+export default {
+  async fetch(request) {
+    const url = new URL(request.url)
+
+    if (url.pathname === '/docs' || url.pathname.startsWith('/docs/')) {
+      const DOCS_URL = 'https://my-docs-remorses-site.holocron.so'
+      const proxyUrl = new URL(url.pathname + url.search, DOCS_URL)
+      const proxyReq = new Request(proxyUrl, request)
+      proxyReq.headers.set('X-Forwarded-Host', url.hostname)
+      return fetch(proxyReq)
+    }
+
+    // Pass through to your origin for everything else
+    return fetch(request)
+  },
+}
+```
+
+### Nginx
+
+Add a `location` block to your Nginx config:
+
+```nginx
+location /docs/ {
+    proxy_pass https://my-docs-remorses-site.holocron.so/docs/;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+
+location = /docs {
+    return 301 /docs/;
+}
+```
+
+### Express
+
+Use `http-proxy-middleware` in your Express app:
+
+```js
+const { createProxyMiddleware } = require('http-proxy-middleware')
+
+app.use(
+  '/docs',
+  createProxyMiddleware({
+    target: 'https://my-docs-remorses-site.holocron.so',
+    changeOrigin: true,
+  }),
+)
+```
+
+## GitHub Actions
+
+Use `--base-path` in your CI workflow the same way:
+
+```yaml
+name: Deploy docs
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx -y @holocron.so/cli deploy --base-path /docs
+        env:
+          HOLOCRON_KEY: ${{ secrets.HOLOCRON_KEY }}
+```
+
+## Self-hosted base path
+
+If you self-host your docs (Node.js, Cloudflare Workers, Docker), configure Vite's `base` option directly instead of using `--base-path`:
 
 ```ts
 // vite.config.ts
@@ -19,24 +268,4 @@ export default defineConfig({
 })
 ```
 
-## What it affects
-
-- Holocron registers base-prefixed page routes (e.g. `/docs/quickstart`) and currently also keeps root routes available
-- Static assets load from `/docs/assets/...`
-- AI routes are available at `/docs/llms.txt` and `/docs/docs.zip`; root `/llms.txt` and `/docs.zip` remain available too
-- Internal links and navigation are base-aware
-- The sitemap uses the base path in URLs
-
-## Reverse proxy setup
-
-When using a base path, your reverse proxy must forward requests under `/docs/` to the Holocron server:
-
-```nginx
-location /docs/ {
-    proxy_pass http://localhost:3000/docs/;
-}
-```
-
-## Custom entry with base path
-
-If using a [custom entry](/docs/custom-entry), Holocron's docs routes are base-aware. Your custom routes are controlled by your own Spiceflow app, so prefix them explicitly if they should also live under the same base path.
+Then set up a reverse proxy in front of your self-hosted server pointing `/docs/*` to the docs server.
