@@ -345,7 +345,8 @@ test.describe.serial('OpenAPI spec HMR @dev', () => {
       { timeout: 30_000 },
     )
 
-    // Append a new endpoint to the spec
+    // Append a new endpoint to the spec. Re-write with a unique comment on
+    // each poll iteration so chokidar reliably fires a change event.
     const newEndpoint = `
   /ping:
     get:
@@ -370,7 +371,6 @@ test.describe.serial('OpenAPI spec HMR @dev', () => {
     await expect
       .poll(
         async () => {
-          // Write spec with a unique comment to force a fresh file change event
           fs.writeFileSync(specPath, `${originalSpec}\n${newEndpoint}\n# hmr ${Date.now()}\n`)
           const res = await request.get('/api/get-ping')
           return res.ok()
