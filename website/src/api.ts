@@ -25,6 +25,7 @@ import {
   hashApiKey,
 } from './db.ts'
 import { gatewayApp } from './gateway.ts'
+import { deployApp } from './deploy-api.ts'
 import { resolveGithubOidcDeployAuth } from './deploy-auth.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
@@ -110,6 +111,7 @@ async function requireAdminSessionForKey(request: Request, keyId: string) {
 
 export const apiApp = new Spiceflow()
   .use(gatewayApp)
+  .use(deployApp)
   .use(
     openapi({
       path: '/openapi.json',
@@ -117,7 +119,7 @@ export const apiApp = new Spiceflow()
         title: 'Holocron API',
         version: '0.1.0',
         description:
-          'Management API for Holocron organizations and API keys.',
+          'API for deploying docs sites, managing organizations, and API keys.',
       },
     }),
   )

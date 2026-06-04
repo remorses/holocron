@@ -18,11 +18,12 @@ curl https://holocron.so/api/v0/projects \
   -H "Authorization: Bearer holo_xxxxxxxx"
 ```
 
-The same key works across the whole API: the management endpoints listed below
-(`/api/v0/keys`, `/api/v0/projects`, `/api/v0/me`), deploys (read from
-`HOLOCRON_KEY` by the CLI and CI), and the AI chat gateway (`POST /api/chat`).
+The same key works across the whole API: the management endpoints
+(`/api/v0/projects`, `/api/v0/me`), the deploy pipeline
+(`/api/v0/deployments`), and the AI chat gateway (`POST /api/chat`).
 A key only ever acts on its own project; it cannot read or modify other projects
-in your org. Creating new projects requires signing in with the CLI or dashboard.
+in your org. Creating new projects and managing API keys requires signing in
+with the CLI or dashboard.
 
 <Warning>
 Treat API keys like passwords. Never commit them to git or embed them in

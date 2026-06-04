@@ -14,7 +14,6 @@ import { z } from 'zod'
 import { env } from 'cloudflare:workers'
 import { app as holocronApp } from '@holocron.so/vite/app'
 import { apiApp } from './api.ts'
-import { deployApp } from './deploy-api.ts'
 import { aiLogoApp } from './ai-logo.ts'
 import { configOverrideApp } from './config-override-api.ts'
 import { dashboardApp } from './dashboard.tsx'
@@ -286,7 +285,6 @@ export const app = new Spiceflow({ tracer: trace.getTracer('holocron') })
   .use(dashboardApp)
   .use(apiApp)
   .use(stripeWebhookApp)
-  .use(deployApp)
   .use(aiLogoApp)
   .use(configOverrideApp)
   .get('/api/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
