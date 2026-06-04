@@ -199,11 +199,7 @@ async function runBuild(cwd: string): Promise<Error | void> {
   } catch {
     return new Error('Build failed')
   }
-  // Reload .env — user build steps may have written HOLOCRON_KEY or HOLOCRON_BRANCH
-  try {
-    const { config } = await import('dotenv')
-    config({ path: path.resolve(cwd, '.env'), override: true })
-  } catch { /* dotenv not available or .env missing */ }
+
 }
 
 type BuildFile = { relativePath: string; absPath: string; size: number; hash: string }

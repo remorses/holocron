@@ -51,7 +51,6 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.0.0",
-    "dotenv": "^17.4.2",
     "fflate": "^0.8.2",
     "goke": "^6.10.0",
     "spiceflow": "1.26.0-rsc.4",
