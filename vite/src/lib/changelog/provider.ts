@@ -26,6 +26,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import { mdxToMarkdown } from 'mdast-util-mdx'
+import { gfmToMarkdown } from 'mdast-util-gfm'
 import type { Root } from 'mdast'
 import type { ConfigNavGroup } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
@@ -70,7 +71,7 @@ function readAndRewriteContent(filePath: string, changelogSlug: string, pagesDir
   const relDirNorm = relativeDir === '' ? './' : (relativeDir.startsWith('.') ? relativeDir : './' + relativeDir) + '/'
 
   const nodes = buildSplicedNodes(mdast, relDirNorm, { importDir, pagesDir })
-  return toMarkdown({ type: 'root', children: nodes }, { extensions: [mdxToMarkdown()] }).trim()
+  return toMarkdown({ type: 'root', children: nodes }, { extensions: [gfmToMarkdown(), mdxToMarkdown()] }).trim()
 }
 
 export const changelogProvider: VirtualTabProvider = {
