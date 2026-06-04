@@ -30,6 +30,7 @@ deployCli
   .command('deploy', 'Build and deploy your docs site to holocron.so')
   .option('--project [projectId]', 'Project ID (only needed with session auth, not with HOLOCRON_KEY)')
   .option('--branch [name]', 'Branch name for preview deployments (auto-detected from git/CI env)')
+  .option('--base-path [path]', 'Serve docs under a subpath (e.g. /docs). Requires Pro subscription.')
   .action(async (options, { console: output, process: proc }) => {
     const cwd = proc.cwd
     const nonInteractive = isAgent || !process.stdin.isTTY
@@ -47,6 +48,19 @@ deployCli
       return proc.exit(1)
     }
     const { safeFetch, auth } = deployClient
+
+    // ── Base path normalization ───────────────────────────────────────────
+    let basePath: string | undefined
+    if (options.basePath) {
+      // Normalize: ensure leading and trailing slash, e.g. "docs" → "/docs/"
+      let bp = options.basePath
+      if (!bp.startsWith('/')) bp = '/' + bp
+      if (!bp.endsWith('/')) bp = bp + '/'
+      basePath = bp
+      output.log(logger.step(`Base path: ${c.bold(basePath)}`))
+      // Set env var so the Vite plugin picks it up during build
+      process.env.HOLOCRON_BASE_PATH = basePath
+    }
 
     // ── Build ─────────────────────────────────────────────────────────────
     const buildErr = await runBuild(cwd)
@@ -85,6 +99,7 @@ deployCli
         ...(isPullRequest && { preview: true }),
         ...(projectId && { projectId }),
         ...(siteName && { name: siteName }),
+        ...(basePath && { basePath }),
       },
     })
     if (createRes instanceof Error) {

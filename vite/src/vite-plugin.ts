@@ -274,7 +274,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         } catch {}
         return null
       })()
-      const next: Pick<UserConfig, 'resolve' | 'build' | 'define'> = {
+      // When deploying with --base-path, inject the base path into Vite's config
+      // so all routes and assets are prefixed. Only applied during deploy builds.
+      const deployBasePath = process.env.HOLOCRON_DEPLOY === '1'
+        ? process.env.HOLOCRON_BASE_PATH
+        : undefined
+
+      const next: Pick<UserConfig, 'resolve' | 'build' | 'define' | 'base'> = {
+        // When deploying with --base-path, set Vite's base option so all
+        // routes and asset URLs are prefixed (e.g. /docs/assets/style.css).
+        ...(deployBasePath && { base: deployBasePath }),
         // When running under `holocron deploy` (HOLOCRON_DEPLOY=1), write
         // build output to dist/.holocron so deploy artifacts don't collide
         // with a normal `vite build` (which targets Cloudflare/Node differently).
