@@ -1,5 +1,5 @@
 /**
- * Generate sample values from JSON Schema / OpenAPI schema objects.
+ * Generate sample values from JSON Schema objects.
  *
  * Produces realistic example values for request/response bodies by
  * walking the schema tree. Handles objects, arrays, primitives, enums,

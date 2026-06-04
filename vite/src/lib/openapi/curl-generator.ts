@@ -7,7 +7,7 @@
 
 import type { OpenAPIV3 } from 'openapi-types'
 import type { ExtractedOperation } from './process.ts'
-import { sample } from './sample.ts'
+import { sample } from '../sample.ts'
 
 function quote(s: string): string {
   return `"${s.replace(/"/g, '\\"')}"`
