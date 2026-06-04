@@ -289,7 +289,7 @@ function NavPageLink({
         <span className='ml-auto inline-flex items-center gap-1'>
           {typeof frontmatter.api === 'string' && <MethodBadge method={frontmatter.api.split(' ')[0]!} />}
           {frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}
-          {frontmatter.tag && typeof frontmatter.api !== 'string' && <NavBadge label={frontmatter.tag} />}
+          {frontmatter.tag && typeof frontmatter.api !== 'string' && <NavBadge label={String(frontmatter.tag)} color={frontmatter.tagColor ? String(frontmatter.tagColor) : undefined} />}
         </span>
       </Link>
       <ExpandableContainer open={showToc} animate={animate}>
