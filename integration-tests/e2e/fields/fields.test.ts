@@ -1,17 +1,17 @@
 import { expect, test } from "../helpers/test.ts";
 
 test.describe("site-wide description meta", () => {
-  test("<meta name='description'> falls back to root config.description", async ({
+  test("<meta name='description'> uses generated page description when frontmatter is missing", async ({
     request,
   }) => {
-    // `expanded-child.mdx` has no `description` in frontmatter, so the site
-    // description should be used.
+    // `expanded-child.mdx` has no `description` in frontmatter, so Holocron
+    // derives a page description from the first body paragraph.
     const response = await request.get("/expanded-child", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
     expect(html).toMatch(
-      /<meta[^>]*name="description"[^>]*content="A fixture that wires every previously-ignored config field through to runtime\."/,
+      /<meta[^>]*name="description"[^>]*content="This page belongs to a group with expanded: true\. Its sidebar link is rendered inside the initial SSR HTML without any client interaction\."/,
     );
   });
 

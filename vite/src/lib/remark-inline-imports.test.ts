@@ -309,6 +309,31 @@ import Section from './snippets/section.mdx'
     expect(result.markdown).toMatch(/export const path = ['"]\.\/badge['"]/)
   })
 
+  test('rewrites import sources in imported files with frontmatter offsets', () => {
+    const imports = new Map<string, InlineImportEntry>([
+      ['../intro.mdx', {
+        content: `---
+title: Intro
+---
+
+import { Hero } from './components/hero.tsx'
+
+<Hero />`,
+        absPath: '/project/intro.mdx',
+        relativeDir: '../',
+      }],
+    ])
+
+    const result = runInlineImports(`
+import Intro from '../intro.mdx'
+
+<Intro />
+`, imports)
+
+    expect(result.markdown).toContain("import { Hero } from '../components/hero.tsx'")
+    expect(result.markdown).not.toContain("./components/hero.tsx'../components/hero.tsx")
+  })
+
   test('rewrites relative import sources in inlined .mdx content', () => {
     const imports = new Map<string, InlineImportEntry>([
       ['./snippets/section.mdx', {

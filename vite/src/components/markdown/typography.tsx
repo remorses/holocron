@@ -115,9 +115,10 @@ export function P({ children, className }: { children: React.ReactNode; classNam
 }
 
 export function A({ href, children }: { href: string; children: React.ReactNode }) {
-  const { site } = useHolocronData()
-  const external = isExternalHref(href, site.origin)
-  const resolvedHref = external ? href : stripOriginIfSameHost(href, site.origin)
+  const data = useHolocronData()
+  const origin = data?.site?.origin
+  const external = isExternalHref(href, origin)
+  const resolvedHref = external || !origin ? href : stripOriginIfSameHost(href, origin)
   return (
     <Link
       href={resolvedHref}

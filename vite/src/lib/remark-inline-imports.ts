@@ -297,11 +297,10 @@ function resolveToSlugPath(
 function rewriteRelativeImportSources(tree: Root, relativeDir: string) {
   for (const node of tree.children) {
     if (node.type !== 'mdxjsEsm') continue
-    const esmNode = node as any
-    const estree = esmNode.data?.estree
+    const estree = node.data ? Reflect.get(node.data, 'estree') : undefined
     if (!estree) continue
 
-    let valueChanged = false
+    const edits: Array<{ start: number; end: number; value: string }> = []
     for (const stmt of estree.body ?? []) {
       if (stmt.type !== 'ImportDeclaration') continue
       const source = stmt.source
@@ -312,26 +311,31 @@ function rewriteRelativeImportSources(tree: Root, relativeDir: string) {
       if (rewritten === source.value) continue
 
       // Update the estree AST node
-      const oldValue = source.value
+      const raw = typeof source.raw === 'string' ? source.raw : undefined
       source.value = rewritten
       if (source.raw) {
         source.raw = JSON.stringify(rewritten)
       }
 
-      // Update the raw text via string replacement. Avoids range-based
-      // editing which can produce corrupted output when estree ranges
-      // don't match the esmNode.value coordinate system.
-      if (typeof esmNode.value === 'string') {
-        // Match the old source as a quoted string literal (single or double quotes)
-        const escaped = oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        esmNode.value = esmNode.value.replace(
-          new RegExp(`(['"])${escaped}\\1`),
-          (match: string) => {
-            const quote = match[0]
-            return `${quote}${rewritten}${quote}`
-          },
-        )
-        valueChanged = true
+      // estree ranges are absolute in the original MDX document. mdxjsEsm.value
+      // starts at node.position.start.offset, so convert to local offsets before
+      // editing the raw ESM text.
+      // Editing by range is the only precise way to avoid touching identical
+      // string literals in nearby exports.
+      if (Array.isArray(source.range)) {
+        const offset = node.position?.start.offset ?? 0
+        const quote = raw?.[0] === '"' ? '"' : "'"
+        edits.push({
+          start: source.range[0] - offset,
+          end: source.range[1] - offset,
+          value: `${quote}${rewritten}${quote}`,
+        })
+      }
+    }
+
+    if (edits.length > 0) {
+      for (const edit of edits.sort((a, b) => b.start - a.start)) {
+        node.value = node.value.slice(0, edit.start) + edit.value + node.value.slice(edit.end)
       }
     }
   }
