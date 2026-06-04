@@ -213,6 +213,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   /** Resolved absolute path to a user CSS file (global.css or style.css at root).
    *  Injected as an import in the app entry so user styles override holocron defaults. */
   let userCssPath: string | undefined
+  // Serialize HMR syncs so two rapid file changes don't run concurrent
+  // syncNavigation calls. Vite's watcher fires onFileChange with .catch()
+  // (fire-and-forget), so overlapping hotUpdate calls can race on the
+  // shared config object and produce "MDX file not found" errors.
+  let pendingSync: Promise<void> = Promise.resolve()
 
   const holocronPlugin: Plugin = {
     name: 'holocron',
@@ -715,16 +720,20 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // the shared config/syncResult is already fresh.
       let clientHotModules: NonNullable<ReturnType<typeof this.environment.moduleGraph.getModuleById>>[] = []
       if (this.environment.name === 'client') {
-        if (isConfig) {
-          config = readConfig({ root, configPath: options.configPath })
+        const doSync = async () => {
+          if (isConfig) {
+            config = readConfig({ root, configPath: options.configPath })
+          }
+          syncResult = await syncNavigation({
+            config,
+            pagesDir,
+            publicDir: publicDirPath,
+            projectRoot: root,
+            distDir: distDirPath,
+          })
         }
-        syncResult = await syncNavigation({
-          config,
-          pagesDir,
-          publicDir: publicDirPath,
-          projectRoot: root,
-          distDir: distDirPath,
-        })
+        pendingSync = pendingSync.catch(() => {}).then(doSync)
+        await pendingSync
         // `rsc:update` refreshes the server-rendered page tree, but the root
         // loader still derives its `site` payload from these async provider
         // modules. Return them from the client hook too so Vite refreshes the
