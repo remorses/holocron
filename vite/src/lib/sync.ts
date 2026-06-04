@@ -196,10 +196,22 @@ export async function syncNavigation({
   async function enrichPageUncached(slug: string): Promise<NavPage> {
     const pageSource = slug === 'index' ? '/' : `/${slug}`
 
-    // Virtual pages (e.g. from OpenAPI) already have content in mdxContent
+    // Virtual pages (e.g. from OpenAPI, changelog) already have content in mdxContent
     const virtualMdx = mdxContent[slug]
     if (virtualMdx) {
-      const processed = processMdx(virtualMdx, config.icons.library, pageSource)
+      // Virtual pages with .md/.mdx imports (e.g. changelog initialContent)
+      // go through the same inline import pipeline as real pages. The virtual
+      // page's directory is computed from pagesDir + slug dirname.
+      const virtualMdxDir = path.join(pagesDir, slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : '')
+      const inlineResult = resolveInlineImports({ content: virtualMdx, mdxDir: virtualMdxDir, pagesDir, projectRoot, publicDir })
+      const inlineImportMap = inlineResult.imports
+      for (const p of inlineResult.imageDepPaths) allImportedImageDepPaths.add(p)
+
+      const processMdxOptions: ProcessMdxOptions | undefined = inlineImportMap.size > 0
+        ? { normalizeMdxOptions: { prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]] } }
+        : undefined
+
+      const processed = processMdx(virtualMdx, config.icons.library, pageSource, processMdxOptions)
       if (processed instanceof Error) return handleParseError(slug, processed)
       // Store the NORMALIZED content back so the served MDX has Holocron's
       // authoring sugar applied (e.g. <CodeGroup> → <Tabs>/<Tab> for the
@@ -208,7 +220,18 @@ export async function syncNavigation({
       mdxContent[slug] = processed.normalizedContent
       pageIconRefs[slug] = processed.iconRefs
       if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
-      const errors = validateAndReportMdx({ markdown: processed.normalizedContent, mdast: processed.mdast, source: pageSource })
+      // Resolve imports (.tsx components) so virtual:holocron-modules has them.
+      if (processed.importSources.length > 0) {
+        pageImportSources[slug] = processed.importSources
+        pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
+      }
+      const errors = validateAndReportMdx({
+        markdown: processed.normalizedContent,
+        mdast: processed.mdast,
+        modules: createPlaceholderModules(pageImports[slug] ?? []),
+        baseUrl: getMdxBaseUrl({ slug, pagesDir, projectRoot }),
+        source: pageSource,
+      })
       if (errors.length > 0) {
         mdxContentErrors.add(slug)
       }

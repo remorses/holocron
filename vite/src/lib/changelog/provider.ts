@@ -10,9 +10,11 @@
  * hidden, and a right-side `<Aside full>` notice explains the page is
  * generated from the GitHub releases page.
  *
- * When `tab.initialContent` is set, the referenced MDX file's content
- * (stripped of frontmatter) is prepended above the Update entries so users
- * can add a custom hero, intro, or `<Above>` section at the top.
+ * When `tab.initialContent` is set, the virtual MDX emits an inline import
+ * of the referenced file (`import _Intro from './path.mdx'`) and renders
+ * `<_Intro />` above the release entries. The existing `resolveInlineImports`
+ * + `remarkInlineImports` pipeline in sync.ts handles frontmatter stripping,
+ * URL rewriting, and node splicing; no custom processing is needed here.
  *
  * Tests can point the fetch at a local mock server via the
  * HOLOCRON_CHANGELOG_API_URL environment variable.
@@ -20,18 +22,9 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { remark } from 'remark'
-import remarkMdx from 'remark-mdx'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import { toMarkdown } from 'mdast-util-to-markdown'
-import { mdxToMarkdown } from 'mdast-util-mdx'
-import { gfmToMarkdown } from 'mdast-util-gfm'
-import type { Root } from 'mdast'
 import type { ConfigNavGroup } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
-import { buildSplicedNodes } from '../remark-inline-imports.ts'
 import { logger, formatHolocronWarning } from '../logger.ts'
 import { parseChangelogSource } from './parse-source.ts'
 import { fetchGitHubReleases, type GitHubRelease } from './github-releases.ts'
@@ -55,25 +48,6 @@ function resolveContentFile(slug: string, pagesDir: string, projectRoot: string)
   return undefined
 }
 
-/** Read an MDX file, parse it, strip frontmatter, rewrite relative URLs
- *  so they resolve correctly from the changelog page's context, and
- *  serialize back to an MDX string. */
-function readAndRewriteContent(filePath: string, changelogSlug: string, pagesDir: string): string {
-  const raw = fs.readFileSync(filePath, 'utf-8')
-  const processor = remark().use(remarkMdx).use(remarkFrontmatter, ['yaml']).use(remarkGfm)
-  const mdast = processor.runSync(processor.parse(raw)) as Root
-
-  const importDir = path.dirname(filePath)
-  // Compute relative path from the changelog page's directory to the
-  // intro file's directory so relative URLs get rewritten correctly.
-  const changelogDir = path.dirname(path.join(pagesDir, changelogSlug))
-  const relativeDir = path.relative(changelogDir, importDir).replace(/\\/g, '/')
-  const relDirNorm = relativeDir === '' ? './' : (relativeDir.startsWith('.') ? relativeDir : './' + relativeDir) + '/'
-
-  const nodes = buildSplicedNodes(mdast, relDirNorm, { importDir, pagesDir })
-  return toMarkdown({ type: 'root', children: nodes }, { extensions: [gfmToMarkdown(), mdxToMarkdown()] }).trim()
-}
-
 export const changelogProvider: VirtualTabProvider = {
   name: 'changelog',
   claims: (tab) => !!tab.changelog,
@@ -89,12 +63,21 @@ export const changelogProvider: VirtualTabProvider = {
       baseUrl: process.env.HOLOCRON_CHANGELOG_API_URL,
     })
 
-    // Resolve optional initialContent MDX file
-    let initialContentBody: string | undefined
+    // Resolve optional initialContent MDX file. Instead of reading and
+    // rewriting the file ourselves, we emit an inline .mdx import in the
+    // virtual MDX. The existing resolveInlineImports + remarkInlineImports
+    // pipeline handles everything: frontmatter stripping, URL rewriting,
+    // node splicing, and .tsx import discovery.
+    let initialContentImportPath: string | undefined
     if (tab.initialContent) {
       const contentPath = resolveContentFile(tab.initialContent, pagesDir, projectRoot)
       if (contentPath) {
-        initialContentBody = readAndRewriteContent(contentPath, slug, pagesDir)
+        // Compute the relative path from the virtual page's directory to the
+        // initialContent file. The virtual page lives at `pagesDir/<slug>`, so
+        // its directory is `pagesDir/<dirname(slug)>`.
+        const virtualDir = path.join(pagesDir, slug.includes('/') ? path.dirname(slug) : '')
+        const rel = path.relative(virtualDir, contentPath).replace(/\\/g, '/')
+        initialContentImportPath = rel.startsWith('.') ? rel : './' + rel
       } else {
         logger.warn(
           formatHolocronWarning(
@@ -109,7 +92,7 @@ export const changelogProvider: VirtualTabProvider = {
       title,
       releasesUrl: source.releasesUrl,
       releases,
-      initialContentBody,
+      initialContentImportPath,
     })
 
     const groups: ConfigNavGroup[] = [{ group: '', pages: [slug] }]
@@ -122,12 +105,15 @@ function buildChangelogMdx({
   title,
   releasesUrl,
   releases,
-  initialContentBody,
+  initialContentImportPath,
 }: {
   title: string
   releasesUrl: string
   releases: GitHubRelease[] | null
-  initialContentBody?: string
+  /** Relative path to the initialContent .mdx file (e.g. './changelog-intro.mdx').
+   *  When set, the virtual MDX emits a default import and renders <_ChangelogIntro />
+   *  above the release entries. The inline import pipeline handles the rest. */
+  initialContentImportPath?: string
 }): string {
   // Right-column notice explaining the page is auto-generated.
   const aside = [
@@ -140,9 +126,12 @@ function buildChangelogMdx({
 
   const bodyParts: string[] = []
 
-  // Prepend custom initial content above the Update entries
-  if (initialContentBody) {
-    bodyParts.push(initialContentBody)
+  // Emit an inline .mdx import so the existing remarkInlineImports pipeline
+  // handles frontmatter stripping, URL rewriting, and node splicing.
+  const imports: string[] = []
+  if (initialContentImportPath) {
+    imports.push(`import _ChangelogIntro from '${initialContentImportPath}'`)
+    bodyParts.push('<_ChangelogIntro />')
   }
 
   if (releases === null) {
@@ -168,6 +157,7 @@ function buildChangelogMdx({
       description: `Release notes for ${title}.`,
       mode: 'center',
     },
+    imports,
     aside,
     body: bodyParts.join('\n\n'),
   })

@@ -49,6 +49,16 @@ test.describe("changelog fixture", () => {
     await expect(label).toContainText("2026");
   });
 
+  test("renders JSX component from initialContent import", async ({ request }) => {
+    const res = await request.get("/changelog", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await res.text();
+    // The ChangelogHero component from the initialContent MDX file should render.
+    expect(html).toContain("changelog-hero");
+    expect(html).toContain("Changelog Hero");
+  });
+
   test("changelog tab is reachable from the tab bar", async ({ request }) => {
     const res = await request.get("/", { headers: { "sec-fetch-dest": "document" } });
     const html = await res.text();

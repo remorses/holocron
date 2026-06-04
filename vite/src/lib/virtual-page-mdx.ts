@@ -30,6 +30,8 @@ function frontmatterLine(key: string, value: Exclude<FrontmatterValue, undefined
  *   <frontmatter>
  *   ---
  *
+ *   import ...         (only when `imports` is provided)
+ *
  *   <Aside full>      (only when `aside` is provided)
  *   <aside content>
  *   </Aside>
@@ -38,10 +40,14 @@ function frontmatterLine(key: string, value: Exclude<FrontmatterValue, undefined
  */
 export function buildVirtualPageMdx({
   frontmatter,
+  imports,
   aside,
   body,
 }: {
   frontmatter: Record<string, FrontmatterValue>
+  /** Raw import declaration lines to place after frontmatter. MDX requires
+   *  imports before any non-import content. */
+  imports?: string[]
   aside?: string
   body: string
 }): string {
@@ -50,6 +56,10 @@ export function buildVirtualPageMdx({
     .map(([key, value]) => frontmatterLine(key, value))
 
   const parts: string[] = ['---', ...fmLines, '---', '']
+
+  if (imports && imports.length > 0) {
+    parts.push(...imports, '')
+  }
 
   if (aside !== undefined) {
     parts.push('<Aside full>', '', aside.trim(), '', '</Aside>', '')
