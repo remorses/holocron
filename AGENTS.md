@@ -474,10 +474,6 @@ Spiceflow's built-in `Link` has a `hasBasePrefix` check that gives false positiv
 The holocron `Link` wrapper bypasses this by reading `import.meta.env.BASE_URL` and unconditionally prepending it to root-relative hrefs, then passing `rawHref` to spiceflow's Link so it doesn't double-apply.
 
 ```tsx
-// WRONG — will break with base path
-import { Link } from 'spiceflow/react'
-
-// CORRECT — always works
 import { Link } from '../link.tsx'       // from layout/ or markdown/
 import { Link } from './link.tsx'        // from components/
 ```
