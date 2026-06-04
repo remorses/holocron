@@ -1,0 +1,1327 @@
+{
+  "server": {
+    "name": "mintlify-admin-mcp",
+    "version": "1.0.0"
+  },
+  "protocolVersion": "2025-03-26",
+  "tools": [
+    {
+      "name": "read",
+      "description": "Read the full MDX content of a single page on the current branch. Reflects in-session edits made via edit_page/write_page, not just the published version. `path` is the page href (e.g. \"/quickstart\" or \"guides/setup\"), with or without a leading slash or trailing .mdx. Returns `{ content, filePath }` on success, or `{ error: \"read_failed\", reason }` on failure (`reason` carries the human-readable diagnostic such as \"No valid pageId found for page\" or a hocuspocus connection error).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "search",
+      "description": "Find lines matching a substring or regex across every page on the current branch. Returns { matches, truncated } where each match is { path, lineNumber, line }, sorted by path. Reflects in-session edits: pages edited in this session are scanned even before indexing catches up. `query` is treated as a literal fixed string by default; pass `regex: true` for regex syntax. `caseSensitive` defaults to false. `limit` caps results (default 100, max 500). The response is bounded to 30KB — `truncated: true` indicates results were dropped and you should refine the query.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "caseSensitive": {
+            "type": "boolean"
+          },
+          "regex": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 500
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_nodes",
+      "description": "List navigation nodes with optional filters over the current branch nav tree. `parentId: null` returns root-level nodes; a string returns direct children of that node; omit for no filter. `recursive: true` extends the parent filter to all descendants of `parentId` — pair with `parentId: null` (or omit) to dump the entire tree in a single call. `type` accepts a single type or array (e.g. \"group\"). `language`, `version`, and `tab` are scope filters: a node passes only if its ancestor chain (including itself) contains a matching division node — filtering by a value not present in the tree returns empty. `limit` defaults to 500 (max 500). `cursor` is an opaque pagination token returned as `nextCursor`, stable across inserts. Returns { nodes, nextCursor } where nextCursor is null when exhausted.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "tab",
+                  "dropdown",
+                  "anchor",
+                  "language",
+                  "product",
+                  "version",
+                  "item",
+                  "page",
+                  "group"
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/properties/type/anyOf/0"
+                }
+              }
+            ]
+          },
+          "language": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "tab": {
+            "type": "string"
+          },
+          "dropdown": {
+            "type": "string"
+          },
+          "anchor": {
+            "type": "string"
+          },
+          "product": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "recursive": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 500
+          },
+          "cursor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_session_state",
+      "description": "Get current session state including branch name, edited files, and nav diff",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "diff",
+      "description": "Returns the list of changes between current session and main.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "edit_page",
+      "description": "String-replace edit on a page Y.Doc body. Use this for MDX content edits only — do NOT use it to change frontmatter fields (`title`, `sidebarTitle`, `description`, `icon`, `tag`, `canonical`, `og:*`, `keywords`, `noindex`, `hidden`, etc.); those round-trip through structured node metadata and must be set via `update_node` with `data.type='page'`. For the site-level `description` in `docs.json`, use `update_config`. Edits are broadcast live to connected collaborators: plain inline-text edits inside a single paragraph stream character-by-character (typing effect); structural edits apply atomically. The returned `mode` reports which path ran (`inline-stream` or `rebuild`).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "oldString": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000000
+          },
+          "newString": {
+            "type": "string",
+            "maxLength": 1000000
+          },
+          "replaceAll": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path",
+          "oldString",
+          "newString"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {},
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "write_page",
+      "description": "Full overwrite of a page Y.Doc content",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000000
+          }
+        },
+        "required": [
+          "path",
+          "content"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "create_node",
+      "description": "Insert a node into the navigation tree under `parentId` (null = root). `order` is clamped into siblings and defaults to append. `data` is discriminated by `type`: `page` seeds a Y.Doc from `{ path, content }` (MDX is validated), while `group`, `tab`, `anchor`, `version`, `language`, and `product` take their own name-shaped fields. Parent/child compatibility is enforced against an allowed-children table (e.g. groups cannot contain tabs; pages have no children).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "data": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "page"
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000000
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sidebarTitle": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "style": {
+                            "type": "string",
+                            "enum": [
+                              "brands",
+                              "duotone",
+                              "light",
+                              "regular",
+                              "sharp-duotone-solid",
+                              "sharp-light",
+                              "sharp-regular",
+                              "sharp-solid",
+                              "sharp-thin",
+                              "solid",
+                              "thin"
+                            ]
+                          },
+                          "name": {
+                            "$ref": "#/properties/data/anyOf/0/properties/icon/anyOf/0"
+                          },
+                          "library": {
+                            "type": "string",
+                            "enum": [
+                              "fontawesome",
+                              "lucide",
+                              "tabler"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "noindex": {
+                    "type": "boolean"
+                  },
+                  "tag": {
+                    "type": "string"
+                  },
+                  "keywords": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "related": {
+                    "anyOf": [
+                      {
+                        "type": "boolean",
+                        "const": false
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "path",
+                  "content"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "group"
+                  },
+                  "group": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "icon": {
+                    "$ref": "#/properties/data/anyOf/0/properties/icon"
+                  }
+                },
+                "required": [
+                  "type",
+                  "group"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "tab"
+                  },
+                  "tab": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "href": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type",
+                  "tab"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "anchor"
+                  },
+                  "anchor": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "href": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "icon": {
+                    "$ref": "#/properties/data/anyOf/0/properties/icon"
+                  }
+                },
+                "required": [
+                  "type",
+                  "anchor"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "version"
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type",
+                  "version"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "language"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "cn",
+                      "zh",
+                      "zh-Hans",
+                      "zh-Hant",
+                      "es",
+                      "fr",
+                      "fr-CA",
+                      "fr-ca",
+                      "ja",
+                      "jp",
+                      "ja-jp",
+                      "pt",
+                      "pt-BR",
+                      "de",
+                      "ko",
+                      "it",
+                      "ru",
+                      "ro",
+                      "cs",
+                      "id",
+                      "ar",
+                      "tr",
+                      "hi",
+                      "sv",
+                      "no",
+                      "da",
+                      "lv",
+                      "nl",
+                      "uk",
+                      "vi",
+                      "pl",
+                      "uz",
+                      "he",
+                      "ca",
+                      "fi",
+                      "hu"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "language"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "product"
+                  },
+                  "product": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "href": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type",
+                  "product"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "parentId",
+          "data"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {},
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "update_node",
+      "description": "Update a navigation node's properties in place by nodeId — no repositioning. `data` is a discriminated union on `type` carrying partial, type-specific fields that are merged into existing `node.data`. For `type:'page'`, this is the correct tool for editing the page's frontmatter (`title`, `sidebarTitle`, `description`, `icon`, `tag`, `canonical`, `og:title`, `og:url`, `keywords`, `noindex`, `hidden`, `deprecated`, etc.) — the merged fields are serialized back into the MDX `---` block on save; do not use `edit_page` for these. `data.type` must match the stored node type. Immutable fields (`href`/`pageId` on pages, internal flags) are rejected — use `move_node` to rename a page path. Page updates emit an `update` pending action with source `metadata`; structural node updates emit an `update-navigation` action. Emits `editor_nav_updated`. Examples: set a page's frontmatter description (`{type:'page', description:'…'}`), rename a group (`{type:'group', group:'New Name'}`), change a tab icon, set a version as default.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "data": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "page"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sidebarTitle": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "style": {
+                            "type": "string",
+                            "enum": [
+                              "brands",
+                              "duotone",
+                              "light",
+                              "regular",
+                              "sharp-duotone-solid",
+                              "sharp-light",
+                              "sharp-regular",
+                              "sharp-solid",
+                              "sharp-thin",
+                              "solid",
+                              "thin"
+                            ]
+                          },
+                          "name": {
+                            "$ref": "#/properties/data/anyOf/0/properties/icon/anyOf/0"
+                          },
+                          "library": {
+                            "type": "string",
+                            "enum": [
+                              "fontawesome",
+                              "lucide",
+                              "tabler"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "iconType": {
+                    "type": "string",
+                    "enum": [
+                      "brands",
+                      "duotone",
+                      "light",
+                      "regular",
+                      "sharp-duotone-solid",
+                      "sharp-light",
+                      "sharp-regular",
+                      "sharp-solid",
+                      "sharp-thin",
+                      "solid",
+                      "thin"
+                    ]
+                  },
+                  "tag": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "canonical": {
+                    "type": "string"
+                  },
+                  "og:title": {
+                    "type": "string"
+                  },
+                  "og:url": {
+                    "type": "string"
+                  },
+                  "keywords": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mode": {
+                    "type": "string"
+                  },
+                  "noindex": {
+                    "type": "boolean"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "public": {
+                    "type": "boolean"
+                  },
+                  "isPublic": {
+                    "type": "boolean"
+                  },
+                  "deprecated": {
+                    "type": "boolean"
+                  },
+                  "hideFooterPagination": {
+                    "type": "boolean"
+                  },
+                  "hideApiMarker": {
+                    "type": "boolean"
+                  },
+                  "robots": {
+                    "type": "string"
+                  },
+                  "playground": {
+                    "type": "string",
+                    "enum": [
+                      "interactive",
+                      "simple",
+                      "none",
+                      "auth"
+                    ]
+                  },
+                  "timestamp": {
+                    "type": "boolean"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "contentType": {
+                    "type": "string"
+                  },
+                  "authMethod": {
+                    "type": "string"
+                  },
+                  "auth": {
+                    "type": "string"
+                  },
+                  "groups": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "related": {
+                    "anyOf": [
+                      {
+                        "type": "boolean",
+                        "const": false
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "group"
+                  },
+                  "group": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "icon": {
+                    "$ref": "#/properties/data/anyOf/0/properties/icon"
+                  },
+                  "tag": {
+                    "type": "string"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "public": {
+                    "type": "boolean"
+                  },
+                  "expanded": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "tab"
+                  },
+                  "tab": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "icon": {
+                    "$ref": "#/properties/data/anyOf/0/properties/icon"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "align": {
+                    "type": "string",
+                    "enum": [
+                      "start",
+                      "end"
+                    ]
+                  },
+                  "href": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "anchor"
+                  },
+                  "anchor": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "icon": {
+                    "$ref": "#/properties/data/anyOf/0/properties/icon"
+                  },
+                  "color": {
+                    "type": "object",
+                    "properties": {
+                      "light": {
+                        "type": "string"
+                      },
+                      "dark": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "href": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "version"
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "default": {
+                    "type": "boolean"
+                  },
+                  "tag": {
+                    "type": "string"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "language"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "cn",
+                      "zh",
+                      "zh-Hans",
+                      "zh-Hant",
+                      "es",
+                      "fr",
+                      "fr-CA",
+                      "fr-ca",
+                      "ja",
+                      "jp",
+                      "ja-jp",
+                      "pt",
+                      "pt-BR",
+                      "de",
+                      "ko",
+                      "it",
+                      "ru",
+                      "ro",
+                      "cs",
+                      "id",
+                      "ar",
+                      "tr",
+                      "hi",
+                      "sv",
+                      "no",
+                      "da",
+                      "lv",
+                      "nl",
+                      "uk",
+                      "vi",
+                      "pl",
+                      "uz",
+                      "he",
+                      "ca",
+                      "fi",
+                      "hu"
+                    ]
+                  },
+                  "default": {
+                    "type": "boolean"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "product"
+                  },
+                  "product": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "$ref": "#/properties/data/anyOf/0/properties/icon"
+                  },
+                  "color": {
+                    "$ref": "#/properties/data/anyOf/3/properties/color"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "href": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "dropdown"
+                  },
+                  "dropdown": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "icon": {
+                    "$ref": "#/properties/data/anyOf/0/properties/icon"
+                  },
+                  "color": {
+                    "$ref": "#/properties/data/anyOf/3/properties/color"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "href": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "nodeId",
+          "data"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "delete_node",
+      "description": "Remove a node and all its descendants from the navigation tree by `nodeId`. For page descendants in the removed set, the hocuspocus room, document S3 blob, and baseline (Redis + S3) are cleaned up. `redirect` is only valid when the target itself is a page; when set, appends `{source, destination, permanent: true}` to `docsConfig.redirects`. Returns `{ deletedNodeIds }`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "redirect": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "nodeId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "move_node",
+      "description": "Reposition a node in the navigation tree by nodeId. `parentId: null` moves to root; omit to keep the current parent. `order` is 0-based among the new siblings; omit to append. At least one of `parentId` or `order` is required. Parent/child compatibility is enforced against the allowed-children table. Cross-boundary moves (across version, tab, language, or product ancestors) are allowed; the response flags them via `crossedBoundary`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "nodeId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "update_config",
+      "description": "Update any top-level `docs.json` field except `navigation` (use the navigation tree tools for that). This is the ONLY way to change the site-level `description` (the SEO/social description for the whole docs site) — do not use `edit_page` (which targets page body) or `update_node` (which targets a single page's frontmatter description). `op` selects the operation: `set` ({ docsConfig }) shallow-merges any partial `docs.json` (e.g. `{ theme, name, description, colors, logo, favicon, api, appearance, background, navbar, footer, fonts, search, contextual, banner, interaction, errors, seo, styling, integrations, metadata, ... }` — see https://www.mintlify.com/docs.json); `add_redirect` ({ redirect: { source, destination, permanent? } }) appends to `redirects` (rejects on duplicate source); `remove_redirect` ({ source }) removes by source (rejects if missing). `set` rejects `navigation` and `$schema` keys. The merged config is validated against the @mintlify/validation schema — any violation rejects the call with no partial writes. Returns { diff: { before, after } } scoped to the changed top-level keys.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "add_redirect",
+              "remove_redirect",
+              "set"
+            ]
+          },
+          "redirect": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              },
+              "destination": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              },
+              "permanent": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "source",
+              "destination"
+            ],
+            "additionalProperties": false
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "docsConfig": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_branches",
+      "description": "List all git branches available for this deployment before or after checkout. Optionally filter with `query` to only return matching branch names. Returns `{ branches, total, deployBranch }`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "checkout",
+      "description": "Bind the session to a git branch and open hocuspocus rooms. Required before editor branch tools; deployment-level operations (workflows, deployment, members, billing, integrations, analytics) are reached via `execute` and do not require checkout. Calling again switches the session to the new branch. Pass `branch` to work on a specific branch — if it already exists in git, the session attaches to it as-is; if not, it is created from `from` (defaults to the deploy branch). Omit `branch` to auto-generate a fresh `admin-mcp/<slug>-<sha>` branch from `from` (uses `slug` when provided, otherwise the session id). Returns `{ branchName, sessionId, baseBranch, baseSha, created, editorUrl, toolkit }`. `toolkit` groups the tools you should load next (`explore`, `editContent`, `editNavigation`, `editConfig`, `codemode`, `ship`) so you can call them without further discovery. Surface `editorUrl` to the user so they can follow along in the dashboard editor as the agent works.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Specific branch to bind to. If it exists in git the session attaches to it without creating a branch; if not, it is created from `from`. Cannot be the deploy branch. Omit to auto-generate a fresh `admin-mcp/<slug>-<7-char-sha>` branch."
+          },
+          "from": {
+            "type": "string",
+            "description": "Base branch to fork from when creating a new branch. Defaults to the deployment's configured deploy branch (typically `main`). The new branch is created at this branch's latest commit."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Human-readable slug used to name an auto-generated branch as `admin-mcp/<slug>-<7-char-base-sha>`. Ignored when `branch` is provided. If omitted and `branch` is also omitted, the branch is auto-named `admin-mcp/<sessionTokenPrefix>` and is not human-recognizable. Use a stable, kebab-case slug (e.g. `add-tips-page`)."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "save",
+      "description": "Flush branch to git. With mode=\"pr\" (default) opens a PR if none exists, otherwise commits to the existing PR branch. With mode=\"commit\" commits directly to the branch without opening a PR.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "pr",
+              "commit"
+            ]
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "discard_session",
+      "description": "End the session without creating a PR",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "execute",
+      "description": "Run TypeScript/JavaScript against the Admin MCP dashboard SDK inside a sandboxed Cloudflare isolate. The script body has access to top-level namespace proxies (workflows, deployment, members, billing, integrations, analytics) plus console. No outbound fetch, no bindings, no secrets. The OAuth scopes on the calling token gate each individual SDK call through the gateway. **Return semantics**: the script is wrapped in an async function and the value of the LAST expression statement becomes the result — `await workflows.listWorkflows();` on its own line works, but a bare `return X;` at top level is dropped (no enclosing function), and `export default async function() { return X; }` returns the function object, not `X`. To return a structured value either end with an expression (`({ a, b });` or just `x`) or assign to a variable and reference it on the last line. Returns a tagged-union envelope: { ok: true, result, logs, truncated, durationMs } | { ok: false, error: { code, message }, logs, truncated, durationMs }. `truncated: true` signals the result or logs hit the size cap. Error codes: unauthorized, invalid_json, invalid_request, misconfigured, timeout (30s wall-clock), sandbox_error (anything thrown inside the script), execution_failed (worker plumbing failure).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100000
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "search_operations",
+      "description": "Lexical (BM25) search over the Admin MCP code-mode SDK. Use this to find the right SDK method for a task before writing an `execute` script. `query` is matched against method names, namespaces, parameter names, and JSDoc descriptions (camelCase tokens like `createWorkflow` are split, so `create workflow` also matches). Returns up to `limit` hits (default 5, max 20), each `{ operationId, namespace, method, requiredScope, description, inputSchema, score }`. `inputSchema` is the full JSON Schema for the method’s parameters — no extra lookup needed before calling `execute`. Returns `{ hits: [] }` when nothing matches.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 20
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ],
+  "downloadedAt": "2026-06-04T12:44:06.329Z"
+}
