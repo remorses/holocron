@@ -604,10 +604,11 @@ export const dashboardApp = new Spiceflow()
   // ── Settings tab ────────────────────────────────────────────────────
 
   .loader('/dashboard/projects/:projectId/settings', async ({ request, params }) => {
+    const { env } = await import('cloudflare:workers')
     const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
       where: { projectId: params.projectId },
     }))
-    return { project }
+    return { project, githubClientId: env.GITHUB_CLIENT_ID }
   })
 
   .page('/dashboard/projects/:projectId/settings', async ({ loaderData }) => {
@@ -681,7 +682,7 @@ export const dashboardApp = new Spiceflow()
                   <div className="text-sm text-muted-foreground">
                     Deploying from a GitHub organization repo requires additional permissions. If your deploy fails with an org membership error, grant Holocron access to your GitHub organizations.
                   </div>
-                  <GrantOrgAccessButton />
+                  <GrantOrgAccessButton githubClientId={loaderData.githubClientId} />
                 </div>
               </Frame>
             </section>

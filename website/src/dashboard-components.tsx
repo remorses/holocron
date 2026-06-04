@@ -881,28 +881,22 @@ export function AcceptInviteButton({ invitationId }: { invitationId: string }) {
 
 // ── Grant GitHub Org Access ──────────────────────────────────────────
 
-export function GrantOrgAccessButton() {
-  const [loading, setLoading] = useState(false)
-
-  async function handleGrant() {
-    setLoading(true)
-    try {
-      await authClient.linkSocial({
-        provider: 'github',
-        scopes: ['read:org'],
-        callbackURL: window.location.href,
-      })
-    } catch {
-      // The linkSocial call redirects to GitHub, so we only reach here on error
-      setLoading(false)
-    }
-  }
+export function GrantOrgAccessButton({ githubClientId }: { githubClientId: string }) {
+  // GitHub doesn't support prompt=consent, so re-triggering the OAuth flow
+  // won't show the authorization screen if the app was already authorized.
+  // Instead, link directly to the GitHub settings page for this OAuth app
+  // where the user can grant/revoke per-org access.
+  const settingsUrl = `https://github.com/settings/connections/applications/${githubClientId}`
 
   return (
-    <Button variant="outline" onClick={handleGrant} loading={loading}>
-      <BuildingIcon className="size-4" />
-      Grant org access
-    </Button>
+    <div>
+      <Button variant="outline" asChild>
+        <a href={settingsUrl} target="_blank" rel="noopener noreferrer">
+          <BuildingIcon className="size-4" />
+          Grant org access
+        </a>
+      </Button>
+    </div>
   )
 }
 
