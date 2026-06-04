@@ -366,14 +366,16 @@ function buildEndpointMdx({
     requestExampleBlocks.push(...exampleCodeBlocks(requestBody.examples))
   }
 
-  // Response example: prefer the first 2xx response that defines examples,
-  // otherwise the first response with any example at all.
-  const responseWithExamples =
-    responses.find((r) => /^2\d\d$/.test(r.status) && r.examples.length > 0)
-    ?? responses.find((r) => r.examples.length > 0)
-  const responseExampleBlocks = responseWithExamples
-    ? exampleCodeBlocks(responseWithExamples.examples)
-    : []
+  // Response examples: collect ALL statuses that define examples, not just one.
+  // When multiple statuses have examples, prefix tab titles with the status code
+  // so the user can distinguish e.g. "201 — Success" from "401 — Unauthorized".
+  const responsesWithExamples = responses.filter((r) => r.examples.length > 0)
+  const prefixStatus = responsesWithExamples.length > 1
+  const responseExampleBlocks = responsesWithExamples.flatMap((r) =>
+    prefixStatus
+      ? exampleCodeBlocks(r.examples.map((ex) => ({ ...ex, name: `${r.status} — ${ex.name}` })))
+      : exampleCodeBlocks(r.examples),
+  )
 
   const wrap = (tag: string, blocks: string[]): string[] => {
     return [`<${tag}>`, '', ...blocks, '', `</${tag}>`]

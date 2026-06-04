@@ -245,6 +245,117 @@ paths:
     }
   })
 
+  test('shows all response statuses with examples, prefixed by status code', async () => {
+    const SPEC_MULTI = `
+openapi: "3.0.3"
+info: { title: Multi API, version: "1.0.0" }
+tags: [{ name: items }]
+paths:
+  /items:
+    post:
+      tags: [items]
+      summary: Create item
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              examples:
+                Success A: { value: { id: "item_1", name: "A" } }
+                Success B: { value: { id: "item_2", name: "B" } }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                No token: { value: { code: "unauthorized", message: "Missing token" } }
+                Bad token: { value: { code: "unauthorized", message: "Invalid token" } }
+        "204":
+          description: No Content
+`
+    const exDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-openapi-multi-'))
+    fs.writeFileSync(path.join(exDir, 'api.yaml'), SPEC_MULTI)
+    try {
+      const config = {
+        navigation: {
+          tabs: [{ tab: 'API', openapi: 'api.yaml', groups: [{ group: '', pages: ['...'] }] } as ConfigNavTab],
+        },
+      }
+      const mdxContent: Record<string, string> = {}
+      await processVirtualTabs({
+        config,
+        projectRoot: exDir,
+        pagesDir: exDir,
+        mdxContent,
+        providers: [openapiProvider],
+      })
+      const mdx = mdxContent['api/post-items']
+      expect(mdx).toBeDefined()
+      // Both 201 and 401 examples should be present
+      expect(mdx).toContain('item_1')
+      expect(mdx).toContain('item_2')
+      expect(mdx).toContain('Missing token')
+      expect(mdx).toContain('Invalid token')
+      // Tab titles should be prefixed with status code since multiple statuses
+      expect(mdx).toContain('title="201 — Success A"')
+      expect(mdx).toContain('title="201 — Success B"')
+      expect(mdx).toContain('title="401 — No token"')
+      expect(mdx).toContain('title="401 — Bad token"')
+      // 204 has no examples, so no 204 tab title in the ResponseExample
+      expect(mdx).not.toContain('title="204')
+    } finally {
+      fs.rmSync(exDir, { recursive: true, force: true })
+    }
+  })
+
+  test('single-status response examples have no status prefix', async () => {
+    const SPEC_SINGLE = `
+openapi: "3.0.3"
+info: { title: Single API, version: "1.0.0" }
+tags: [{ name: orders }]
+paths:
+  /orders:
+    get:
+      tags: [orders]
+      summary: List orders
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              examples:
+                Page 1: { value: { orders: [{ id: "a" }] } }
+                Empty: { value: { orders: [] } }
+        "500":
+          description: Internal error
+`
+    const exDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-openapi-single-'))
+    fs.writeFileSync(path.join(exDir, 'api.yaml'), SPEC_SINGLE)
+    try {
+      const config = {
+        navigation: {
+          tabs: [{ tab: 'API', openapi: 'api.yaml', groups: [{ group: '', pages: ['...'] }] } as ConfigNavTab],
+        },
+      }
+      const mdxContent: Record<string, string> = {}
+      await processVirtualTabs({
+        config,
+        projectRoot: exDir,
+        pagesDir: exDir,
+        mdxContent,
+        providers: [openapiProvider],
+      })
+      const mdx = mdxContent['api/get-orders']
+      expect(mdx).toBeDefined()
+      // Only one status has examples, so no status prefix
+      expect(mdx).toContain('title="Page 1"')
+      expect(mdx).toContain('title="Empty"')
+      expect(mdx).not.toContain('200 —')
+    } finally {
+      fs.rmSync(exDir, { recursive: true, force: true })
+    }
+  })
+
   test('is idempotent across re-syncs (dev-server HMR regression)', async () => {
     // The config object persists across dev-server re-syncs and the provider
     // mutates tab.groups in place. Running twice on the SAME config must yield
