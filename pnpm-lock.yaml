@@ -32,9 +32,6 @@ importers:
       '@clack/prompts':
         specifier: ^1.0.0
         version: 1.5.0
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
       fflate:
         specifier: ^0.8.2
         version: 0.8.2
@@ -431,11 +428,11 @@ importers:
         specifier: ^6.0.149
         version: 6.0.149(zod@4.4.3)
       better-auth:
-        specifier: ^1.6.14
+        specifier: 1.6.14
         version: 1.6.14(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))(next@16.2.6(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.7(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)))
       better-auth-drizzle-adapter:
-        specifier: ^1.0.0
-        version: 1.0.0(better-auth@1.6.14(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))(next@16.2.6(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.7(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))))(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))
+        specifier: ^1.0.3
+        version: 1.0.3(better-auth@1.6.14(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))(next@16.2.6(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.7(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))))(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -3362,8 +3359,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  better-auth-drizzle-adapter@1.0.0:
-    resolution: {integrity: sha512-vZidIG9aNaHcOARrkbpN6J+ouu+i0Bs+rzxrK4/9qRDDJvPTfmsvlMTrwF69ZFkDUdm08xq52ljL0UmgFhmVtw==}
+  better-auth-drizzle-adapter@1.0.3:
+    resolution: {integrity: sha512-9S2ioxNxt5QgvlZvjDtDE4PPILBrkBug2X1KFTab1h7ubyAj/Dp2Yqe+VObx1zE5Sa5+24kf6bjHhIzBr2aS8Q==}
     peerDependencies:
       better-auth: '>=1.6.0'
       drizzle-orm: '>=1.0.0-beta.1'
@@ -3931,10 +3928,6 @@ packages:
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-
-  dotenv@17.4.2:
-    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
-    engines: {node: '>=12'}
 
   drizzle-kit@1.0.0-beta.21:
     resolution: {integrity: sha512-qG1vkkXPhz9GJ6RZhM/DvzL5jeDNYn35cyGeFA0+8iZQ6GTP4FhbOltNDHh/8XNmcI89b40lXJuH1PdxaA7zdQ==}
@@ -8763,7 +8756,7 @@ snapshots:
   baseline-browser-mapping@2.10.33:
     optional: true
 
-  better-auth-drizzle-adapter@1.0.0(better-auth@1.6.14(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))(next@16.2.6(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.7(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))))(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3)):
+  better-auth-drizzle-adapter@1.0.3(better-auth@1.6.14(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))(next@16.2.6(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.7(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))))(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3)):
     dependencies:
       better-auth: 1.6.14(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(drizzle-orm@1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3))(next@16.2.6(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.7(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.11(@types/node@25.9.1)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)))
       drizzle-orm: 1.0.0-beta.21(@cloudflare/workers-types@4.20260531.1)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(mssql@11.0.1(@azure/core-client@1.10.1))(sql.js@1.14.1)(zod@4.4.3)
@@ -9289,8 +9282,6 @@ snapshots:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
       domhandler: 5.0.3
-
-  dotenv@17.4.2: {}
 
   drizzle-kit@1.0.0-beta.21:
     dependencies:
