@@ -565,7 +565,9 @@ The `integration-tests` fixtures do NOT use tuistory — their e2e harness spawn
 
 ## Deployments
 
-**Always deploy preview first, then production.** Never go straight to production.
+**Never deploy unless the user explicitly asks to deploy.** Do not deploy after making changes, fixing bugs, or finishing a task. Wait for the user to say "deploy" or similar.
+
+When deploying, **always deploy preview first, then production.** Never go straight to production.
 
 ```bash
 # 1. Deploy preview (runs migration + build + deploy)

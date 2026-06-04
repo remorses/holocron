@@ -125,7 +125,10 @@ const authApp = new Spiceflow()
       }
 
       const auth = getAuth()
-      const device = await auth.api.deviceVerify({ query: { user_code: userCode } }).catch(() => null)
+      // Pass request headers so better-auth can claim the device code for the
+      // authenticated session. Without headers, the subsequent approve/deny call
+      // fails with "Device code has not been claimed by a verifying session".
+      const device = await auth.api.deviceVerify({ query: { user_code: userCode }, headers: request.headers }).catch(() => null)
       if (!device) {
         return (
           <AuthPage
