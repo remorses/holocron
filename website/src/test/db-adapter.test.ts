@@ -292,4 +292,195 @@ describe('sqlite-proxy D1 adapter', () => {
     expect(activeSubscription).toBeUndefined()
     expect(deployCountRows[0].count).toBe(0)
   })
+
+  // ── db.batch — findMany returning rows ────────────────────────────
+
+  test('batch with findMany returning rows', async () => {
+    await db.insert(schema.user).values([
+      { id: 'test-user-bfm1', name: 'BatchFM1', email: 'bfm1@adapter-test.local' },
+      { id: 'test-user-bfm2', name: 'BatchFM2', email: 'bfm2@adapter-test.local' },
+    ])
+
+    const [users] = await db.batch([
+      db.query.user.findMany({
+        where: { email: { like: '%@adapter-test.local' } },
+        orderBy: { name: 'asc' },
+      }),
+    ] as const)
+
+    expect(users.length).toBeGreaterThanOrEqual(2)
+    expect(users[0].name < users[1].name).toBe(true)
+  })
+
+  // ── db.batch — findMany returning empty ───────────────────────────
+
+  test('batch with findMany returning empty array', async () => {
+    const [empty] = await db.batch([
+      db.query.user.findMany({
+        where: { email: 'no-one-has-this@adapter-test.local' },
+      }),
+    ] as const)
+
+    expect(empty).toEqual([])
+  })
+
+  // ── db.batch — mixed findFirst: some match, some don't ────────────
+
+  test('batch with multiple findFirst, some match some miss', async () => {
+    await db.insert(schema.user).values({
+      id: 'test-user-mix',
+      name: 'MixUser',
+      email: 'mix@adapter-test.local',
+    })
+
+    const [found, notFound, found2] = await db.batch([
+      db.query.user.findFirst({ where: { id: 'test-user-mix' } }),
+      db.query.user.findFirst({ where: { id: 'ghost-id-999' } }),
+      db.query.user.findFirst({ where: { email: 'mix@adapter-test.local' } }),
+    ] as const)
+
+    expect(found).toBeDefined()
+    expect(found!.name).toBe('MixUser')
+    expect(notFound).toBeUndefined()
+    expect(found2).toBeDefined()
+    expect(found2!.id).toBe('test-user-mix')
+  })
+
+  // ── db.batch — findMany with orderBy ──────────────────────────────
+
+  test('batch with findMany + orderBy preserves order', async () => {
+    await db.insert(schema.user).values([
+      { id: 'test-user-ord-z', name: 'Zara', email: 'zara@adapter-test.local' },
+      { id: 'test-user-ord-a', name: 'Alice', email: 'alice-ord@adapter-test.local' },
+      { id: 'test-user-ord-m', name: 'Mike', email: 'mike@adapter-test.local' },
+    ])
+
+    const [users] = await db.batch([
+      db.query.user.findMany({
+        where: { id: { like: 'test-user-ord-%' } },
+        orderBy: { name: 'asc' },
+      }),
+    ] as const)
+
+    expect(users.map((u) => u.name)).toEqual(['Alice', 'Mike', 'Zara'])
+  })
+
+  // ── db.batch — insert with returning ──────────────────────────────
+
+  test('batch with insert returning', async () => {
+    const [inserted] = await db.batch([
+      db.insert(schema.user)
+        .values({ id: 'test-user-bret', name: 'BatchRet', email: 'bret@adapter-test.local' })
+        .returning(),
+    ] as const)
+
+    expect(inserted).toHaveLength(1)
+    expect(inserted[0].id).toBe('test-user-bret')
+    expect(inserted[0].name).toBe('BatchRet')
+  })
+
+  // ── orm.inArray filter ────────────────────────────────────────────
+
+  test('orm.inArray in SQL builder query', async () => {
+    await db.insert(schema.user).values([
+      { id: 'test-user-in1', name: 'In1', email: 'in1@adapter-test.local' },
+      { id: 'test-user-in2', name: 'In2', email: 'in2@adapter-test.local' },
+      { id: 'test-user-in3', name: 'In3', email: 'in3@adapter-test.local' },
+    ])
+
+    const rows = await db
+      .select({ id: schema.user.id, name: schema.user.name })
+      .from(schema.user)
+      .where(orm.inArray(schema.user.id, ['test-user-in1', 'test-user-in3']))
+      .orderBy(schema.user.name)
+
+    expect(rows).toHaveLength(2)
+    expect(rows.map((r) => r.name)).toEqual(['In1', 'In3'])
+  })
+
+  // ── db.batch — relational findFirst with results ──────────────────
+
+  test('batch with relational findFirst that returns a row', async () => {
+    await db.insert(schema.user).values({
+      id: 'test-user-brel',
+      name: 'BatchRel',
+      email: 'brel@adapter-test.local',
+    })
+    await db.insert(schema.org).values({ id: 'test-org-brel', name: 'BatchRelOrg' })
+    await db.insert(schema.orgMember).values({
+      orgId: 'test-org-brel',
+      userId: 'test-user-brel',
+      role: 'admin',
+    })
+
+    const [member] = await db.batch([
+      db.query.orgMember.findFirst({
+        where: { userId: 'test-user-brel' },
+        with: { org: true, user: true },
+      }),
+    ] as const)
+
+    expect(member).toBeDefined()
+    expect(member!.org.name).toBe('BatchRelOrg')
+    expect(member!.user.name).toBe('BatchRel')
+    expect(member!.role).toBe('admin')
+  })
+
+  // ── null column preservation ──────────────────────────────────────
+
+  test('null column values are preserved through raw() path', async () => {
+    // user.image is nullable, defaults to null
+    await db.insert(schema.user).values({
+      id: 'test-user-null',
+      name: 'NullTest',
+      email: 'null@adapter-test.local',
+    })
+
+    const found = await db.query.user.findFirst({
+      where: { id: 'test-user-null' },
+    })
+
+    expect(found).toBeDefined()
+    expect(found!.image).toBeNull()
+    expect(found!.name).toBe('NullTest')
+  })
+
+  test('null values preserved in batch findFirst', async () => {
+    await db.insert(schema.user).values({
+      id: 'test-user-bnull',
+      name: 'BatchNull',
+      email: 'bnull@adapter-test.local',
+    })
+
+    const [found] = await db.batch([
+      db.query.user.findFirst({ where: { id: 'test-user-bnull' } }),
+    ] as const)
+
+    expect(found).toBeDefined()
+    expect(found!.image).toBeNull()
+  })
+
+  // ── computed/aliased columns with orm.sql ──────────────────────────
+
+  test('computed columns with orm.sql template', async () => {
+    await db.insert(schema.user).values({
+      id: 'test-user-sql',
+      name: 'SqlTest',
+      email: 'sql@adapter-test.local',
+    })
+
+    const rows = await db
+      .select({
+        id: schema.user.id,
+        upper: orm.sql<string>`upper(${schema.user.name})`,
+        len: orm.sql<number>`length(${schema.user.email})`,
+      })
+      .from(schema.user)
+      .where(orm.eq(schema.user.id, 'test-user-sql'))
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].id).toBe('test-user-sql')
+    expect(rows[0].upper).toBe('SQLTEST')
+    expect(rows[0].len).toBe('sql@adapter-test.local'.length)
+  })
 })

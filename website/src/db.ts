@@ -1,6 +1,8 @@
 // Worker-level database client, auth, and session helpers.
 //
-// getDb() creates a drizzle-orm/d1 client bound to env.DB.
+// getDb() creates a drizzle-orm/sqlite-proxy client bound to env.DB.
+// Uses sqlite-proxy instead of drizzle-orm/d1 to avoid the batch findFirst
+// crash (drizzle-team/drizzle-orm#2721).
 // getAuth() creates a BetterAuth instance with GitHub social login + device flow.
 //
 // Performance: org lookups are memoized via Cache API. API key validation
@@ -10,7 +12,7 @@
 // and new users are immediately visible.
 
 import { env } from 'cloudflare:workers'
-import { drizzle } from 'drizzle-orm/d1'
+import { drizzle } from 'drizzle-orm/sqlite-proxy'
 import * as schema from 'db/schema'
 import { betterAuth } from 'better-auth/minimal'
 import { deviceAuthorization, bearer } from 'better-auth/plugins'
@@ -22,8 +24,30 @@ import { ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
 
 // ── Drizzle client via D1 ───────────────────────────────────────────
 
+function d1ToRawRows(results: Record<string, unknown>[]) {
+  return results.map((row) => Object.keys(row).map((k) => row[k]))
+}
+
 export function getDb() {
-  return drizzle(env.DB, { schema, relations: schema.relations })
+  return drizzle(
+    async (sql, params, method) => {
+      const stmt = env.DB.prepare(sql).bind(...params)
+      if (method === 'run') { await stmt.run(); return { rows: [] as any[] } }
+      const rows = await stmt.raw()
+      if (method === 'get') return { rows: rows[0] as any }
+      return { rows: rows as any[] }
+    },
+    async (queries) => {
+      const stmts = queries.map((q) => env.DB.prepare(q.sql).bind(...q.params))
+      const results = await env.DB.batch(stmts)
+      return results.map((r, i) => {
+        const rows = d1ToRawRows(r.results as Record<string, unknown>[])
+        if (queries[i]!.method === 'get') return { rows: rows[0] as any }
+        return { rows: rows as any[] }
+      })
+    },
+    { schema, relations: schema.relations },
+  )
 }
 
 // ── BetterAuth ──────────────────────────────────────────────────────
