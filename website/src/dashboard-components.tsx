@@ -96,8 +96,8 @@ export function UpgradeBanner({ projectId, isBillingPage }: { projectId: string 
   if (!projectId || hasSubscription !== false) return null
 
   return (
-    <div className="sticky top-0 z-10 border-b border-primary/20 bg-primary/5">
-    <div className="mx-auto flex max-w-(--content-max-width) items-center justify-between gap-4 py-2.5">
+    <div className="sticky top-0 border-b border-primary/20 bg-primary/5">
+    <div className="mx-auto flex max-w-(--content-max-width) items-center justify-between gap-4 px-6 py-2.5">
       <div className="flex items-center gap-2 text-sm">
         <span className="font-medium text-primary">Ship docs faster with Pro</span>
         <span className="hidden sm:inline text-muted-foreground">

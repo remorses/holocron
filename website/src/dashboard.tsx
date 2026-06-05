@@ -228,7 +228,7 @@ export const dashboardApp = new Spiceflow()
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <UpgradeBanner projectId={projectId} isBillingPage={request.parsedUrl.pathname.endsWith('/billing')} />
         {/* Navbar */}
-        <header className="border-b border-border">
+        <header className="border-b border-border bg-background relative z-10">
           <div className="mx-auto flex max-w-(--content-max-width) items-center justify-between px-6 py-4 border-x border-border relative">
             <GridDot position="bl" />
             <GridDot position="br" />
@@ -242,14 +242,16 @@ export const dashboardApp = new Spiceflow()
           </div>
         </header>
 
-        {/* Content area with sidebar */}
-        <div className="isolate grow relative flex max-w-(--content-max-width) mx-auto w-full border-x border-border">
+        {/* Content area with sidebar — outer div is full-width with bg so it covers the sticky banner on scroll at the edges */}
+        <div className="isolate grow relative z-10 bg-background flex flex-col">
+        <div className="grow flex max-w-(--content-max-width) mx-auto w-full border-x border-border">
           <GridDot position="tl" />
           <GridDot position="tr" />
           <DashboardSidebar currentProjectId={projectId} />
           <div className="flex-1 flex flex-col min-w-0">
             {children}
           </div>
+        </div>
         </div>
       </div>
     )
