@@ -1,5 +1,21 @@
 # @holocron.so/vite
 
+## 0.20.0
+
+1. **Auto-generate `<meta name="description">` from page body text** — pages without an explicit `description` in YAML frontmatter now get a meta description extracted from the first paragraphs of the MDX content, truncated at ~160 characters on a word boundary. Headings, code blocks, and JSX elements are skipped. Frontmatter `description` always takes precedence. No extra MDX parsing needed; reuses the mdast tree already produced during the build.
+
+2. **Resolve relative MDX links to absolute paths at build time** — relative markdown links like `[guide](./getting-started)` are now resolved to absolute paths during the build so they work correctly regardless of the page's nesting depth. The `.md` and `.mdx` extensions are stripped automatically.
+
+3. **Subpath hosting support** — when deploying with `--base-path /docs`, the Vite plugin reads `HOLOCRON_BASE_PATH` at build time and injects it as Vite's `base` config, so all routes and assets get the subpath prefix without touching the user's `vite.config.ts`.
+
+4. **AI chat drawer improvements** — the sidebar AI widget now morphs into the full chat drawer using the View Transitions API with blur cross-fade. Copy/regenerate footer buttons appear on all assistant messages, and the footer visibility gap between submitting a prompt and receiving a response is fixed.
+
+5. **Fixed `VideoBackgroundShader` crash from culled `texelSize` uniform** — on GPUs that strip inactive uniforms during shader linking, the splat program threw "Unknown uniform: texelSize". The splat program is now excluded from the `texelSize` setup loop since its fragment shader never uses it.
+
+6. **Fixed inlined MDX imports with overlapping export/import paths** — when an imported `.mdx` partial contained both an exported string constant and an import with the same relative path, only the actual import source is rewritten now; nearby exported constants keep their original value.
+
+7. **Fixed base path link collision** — replaced spiceflow's built-in `Link` with the holocron wrapper in components that were still using it, preventing broken links when the Vite `base` path collides with a page slug prefix.
+
 ## 0.19.0
 
 1. **MCP documentation tabs** — auto-generate documentation pages from MCP (Model Context Protocol) definitions. Point a tab at a local JSON file or a remote Streamable HTTP MCP server:

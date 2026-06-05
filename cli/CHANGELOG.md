@@ -1,3 +1,19 @@
+## 0.16.0
+
+1. **New `--base-path` flag for `holocron deploy`** — deploy your docs at a subpath on your own domain instead of a separate subdomain:
+
+   ```bash
+   npx -y @holocron.so/cli deploy --base-path /docs
+   ```
+
+   The flag sets Vite's `base` option at build time so all routes and assets are prefixed under the given path. Configure a rewrite or reverse proxy in your framework to forward `/docs/*` requests to the deployed holocron.so URL. Requires a Holocron Pro subscription.
+
+2. **Fixed device flow login on some servers** — the poll response body was being read twice (once for success check, once for error handling). The second read silently failed, masking expired-token and access-denied errors. Now the body is read once and both branches reference the same parsed object.
+
+3. **Allow `holocron login` from AI agent contexts** — removed the `isAgent` guard that blocked login inside agent terminals. The device flow only needs a browser, not interactive stdin. The PTY requirement for the spinner output is already covered by the existing `isTTY` check.
+
+4. **Removed `dotenv` dependency** — the CLI gets `HOLOCRON_KEY` from CI env vars or sigillo, not `.env` files, so the dynamic dotenv import was unnecessary.
+
 ## 0.15.1
 
 1. **`HOLOCRON_TOKEN` accepted as env var alias for `HOLOCRON_KEY`** — deploy and all API commands now check both `HOLOCRON_TOKEN` and `HOLOCRON_KEY` (first defined wins). Useful when your CI already has a `HOLOCRON_TOKEN` secret and you don't want to rename it.
