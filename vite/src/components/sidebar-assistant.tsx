@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useRef, useMemo, useCallback, useEffect, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from './link.tsx'
 import { chatState } from '../lib/chat-state.ts'
-import { CHAT_INPUT_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
+import { CHAT_CONTAINER_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import { collectAllPages, isVisibleNavPage } from '../navigation.ts'
 import {
@@ -119,12 +119,27 @@ export function ChatInput({
 
 // ── Sidebar assistant (wraps ChatInput with muted header) ────────────
 
+/**
+ * Hide all children of an element so the VT old-snapshot is a clean
+ * solid-color rectangle (the widget's bg-accent background). Returns a
+ * cleanup function that restores visibility.
+ */
+export function hideChildrenForSnapshot(el: HTMLElement | null): (() => void) | void {
+  if (!el) return
+  const children = Array.from(el.children) as HTMLElement[]
+  for (const child of children) child.style.visibility = 'hidden'
+  return () => {
+    for (const child of children) child.style.visibility = ''
+  }
+}
+
 export function SidebarAssistant() {
   // Local state so the widget keeps its value even after the drawer
   // submits and clears draftText. We sync TO the store on every change
   // so the drawer can read it, but never read back from the store.
   const [inputValue, setInputValue] = useState('')
   const drawerState = chatState((s) => s.drawerState)
+  const widgetRef = useRef<HTMLDivElement>(null)
 
   const {site } = useHolocronData()
   const handleChange = (value: string) => {
@@ -135,9 +150,10 @@ export function SidebarAssistant() {
   const handleSubmit = () => {
     const text = inputValue.trim()
     if (!text) return
-    withViewTransition(() => {
-      chatState.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
-    })
+    withViewTransition(
+      () => { chatState.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' }) },
+      () => hideChildrenForSnapshot(widgetRef.current),
+    )
   }
 
   const handleFocus = () => {
@@ -145,9 +161,10 @@ export function SidebarAssistant() {
     // This keeps the sidebar input SSR-safe in the RSC page shell while
     // preserving the "reopen existing chat" behavior on the client.
     if (chatState.getState().messages.length > 0) {
-      withViewTransition(() => {
-        chatState.setState({ drawerState: 'open' })
-      })
+      withViewTransition(
+        () => { chatState.setState({ drawerState: 'open' }) },
+        () => hideChildrenForSnapshot(widgetRef.current),
+      )
     }
   }
 
@@ -157,10 +174,11 @@ export function SidebarAssistant() {
   // textarea is visible — the view transition already captured the old
   // snapshot before this state update commits.
   const isDrawerOpen = drawerState === 'open'
-  const vtName = isDrawerOpen ? 'none' : CHAT_INPUT_VT_NAME
+  const vtName = isDrawerOpen ? 'none' : CHAT_CONTAINER_VT_NAME
 
   return (
     <div
+      ref={widgetRef}
       className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
       style={{
         viewTransitionName: vtName,

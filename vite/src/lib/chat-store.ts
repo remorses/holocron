@@ -71,18 +71,33 @@ export const chatStore = createStore<ChatState>(() => ({
  * Only one element should have this name at a time — the sidebar owns it
  * when the drawer is closed, the drawer footer owns it when open.
  */
-export const CHAT_INPUT_VT_NAME = 'holocron-chat-input'
+export const CHAT_CONTAINER_VT_NAME = 'holocron-chat-container'
 
 /**
  * Wrap a DOM mutation in the browser's View Transitions API.
  * Falls back to immediate execution when the API is unavailable.
  * Uses flushSync so React commits synchronously inside the transition callback.
+ *
+ * `prepare` runs BEFORE the browser captures the old snapshot. Use it to
+ * hide content inside the transitioning element so the old snapshot is a
+ * clean solid-color rectangle — avoids stretched/distorted content during
+ * the morph. Return a cleanup function to restore DOM after the VT.
  */
-export function withViewTransition(fn: () => void): void {
+export function withViewTransition(
+  fn: () => void,
+  prepare?: () => (() => void) | void,
+): void {
   if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-    ;(document as any).startViewTransition(() => {
+    const cleanup = prepare?.()
+    const vt = (document as any).startViewTransition(() => {
       flushSync(fn)
+      // Restore DOM inside the callback — after old snapshot is taken,
+      // before new snapshot. Doesn't matter visually since the element
+      // is either hidden (sidebar when opening) or removed (drawer when closing).
+      cleanup?.()
     })
+    // Safety: also restore on transition skip/error
+    vt.finished?.catch?.(() => cleanup?.())
   } else {
     fn()
   }

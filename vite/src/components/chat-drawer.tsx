@@ -16,13 +16,13 @@ import { createPortal } from 'react-dom'
 import { decodeFederationPayload } from 'spiceflow/react'
 import { chatState } from '../lib/chat-state.ts'
 import type { ChatMessage, ChatModelMessage, ChatPart } from '../lib/chat-store.ts'
-import { CHAT_INPUT_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
+import { CHAT_CONTAINER_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import {
   ChatMessages,
   ChatLoadingDots,
 } from './chat-message.tsx'
-import { ChatInput } from './sidebar-assistant.tsx'
+import { ChatInput, hideChildrenForSnapshot } from './sidebar-assistant.tsx'
 import { TrashIcon, CloseIcon } from './chat-icons.tsx'
 
 // ── ChatDrawer ───────────────────────────────────────────────────────
@@ -59,6 +59,7 @@ function ChatDrawerInner() {
   const draftText = chatState((s) => s.draftText)
   const { currentPageHref, site } = useHolocronData()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const drawerPanelRef = useRef<HTMLDivElement>(null)
   // Prefix API calls with the Vite base path so they work when mounted at e.g. /docs
   const basePath = site.base === '/' ? '' : `/${site.base.replace(/^\/+|\/+$/g, '')}`
 
@@ -217,9 +218,10 @@ function ChatDrawerInner() {
   // ── Close ──────────────────────────────────────────────────────
 
   const handleClose = useCallback(() => {
-    withViewTransition(() => {
-      chatState.setState({ drawerState: 'closed' })
-    })
+    withViewTransition(
+      () => { chatState.setState({ drawerState: 'closed' }) },
+      () => hideChildrenForSnapshot(drawerPanelRef.current),
+    )
   }, [])
 
   // ── Draft auto-submit (sidebar → drawer handoff) ───────────────
@@ -289,31 +291,27 @@ function ChatDrawerInner() {
         }}
       />
 
-      {/* Drawer panel — scales in-place instead of sliding from right.
-       * scale(0.95) + opacity start per Emil design-eng principles:
-       * nothing appears from scale(0), ease-out gives instant feedback. */}
+      {/* Drawer panel — the View Transitions API morphs the sidebar widget
+       * container into this panel (position + size + border-radius interpolation).
+       * No manual transform/opacity transitions needed; VT handles the animation.
+       * The panel owns the VT name when open; the sidebar widget owns it when closed. */}
       <div
+        ref={drawerPanelRef}
         style={{
           position: 'fixed',
           right: 16,
           top: 16,
           bottom: 16,
           width: 'min(440px, calc(100vw - 32px))',
-          transform: isOpen ? 'scale(1)' : 'scale(0.95)',
-          opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
-          // Delay the panel entrance so the textarea morph plays first (300ms).
-          // On close (isOpen=false) no delay — panel fades out immediately.
-          transition: isOpen
-            ? 'transform 250ms cubic-bezier(0.23, 1, 0.32, 1) 200ms, opacity 250ms cubic-bezier(0.23, 1, 0.32, 1) 200ms'
-            : 'transform 200ms cubic-bezier(0.23, 1, 0.32, 1), opacity 200ms cubic-bezier(0.23, 1, 0.32, 1)',
-          transformOrigin: 'bottom right',
+          visibility: isOpen ? 'visible' : 'hidden',
           background: 'var(--background)',
           borderRadius: 'var(--radius-3xl)',
-          display: 'flex',
+          display: isOpen ? 'flex' : 'none',
           flexDirection: 'column',
           overflow: 'hidden',
-        }}
+          viewTransitionName: isOpen ? CHAT_CONTAINER_VT_NAME : 'none',
+        } as React.CSSProperties}
       >
         {/* Top bar */}
         <div
@@ -422,7 +420,6 @@ function ChatDrawerInner() {
         <div style={{ flexShrink: 0 }}>
           <div
             className='m-3 rounded-2xl bg-accent px-0.5 pt-0.5 pb-0.5'
-            style={{ viewTransitionName: isOpen ? CHAT_INPUT_VT_NAME : 'none' } as React.CSSProperties}
           >
             <ChatInput
               value={draftText}
