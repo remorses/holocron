@@ -56,7 +56,6 @@ export function ChatMessages({
 }) {
   if (messages.length === 0) return null
   let noticeRendered = false
-  const lastAssistantIdx = messages.findLastIndex((m) => m.role === 'assistant')
   return (
     <div className='text-[14px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {messages.map((message, i) => {
@@ -75,9 +74,11 @@ export function ChatMessages({
                       }
                       return <ChatPartRenderer key={partIndex} part={part} allParts={message.parts} />
                     })}
-                    {/* Footer: copy + regenerate. Hidden only on the last
-                        assistant message while still generating. */}
-                    {!(i === lastAssistantIdx && isGenerating) && (
+                    {/* Footer: copy + regenerate. Hidden only on the
+                        currently-streaming assistant message (last in the
+                        array while isGenerating). Previous completed
+                        assistants always keep their footer visible. */}
+                    {!(isGenerating && i === messages.length - 1) && (
                       <ChatAssistantFooter
                         parts={message.parts}
                         onRegenerate={onRegenerate ? () => onRegenerate(i) : undefined}

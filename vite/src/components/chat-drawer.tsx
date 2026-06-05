@@ -168,13 +168,15 @@ function ChatDrawerInner() {
 
   // ── Regenerate ──────────────────────────────────────────────────
   //
-  // Deletes the last assistant message and resubmits the last user
-  // message. modelMessages is trimmed back to before the last user turn
-  // so handleSubmit re-appends a clean user message + history.
-
   // Regenerate from a specific assistant message index.
   // Finds the user message just before it, trims everything from that
-  // point onward, and resubmits.
+  // point onward in both messages and modelMessages, then resubmits.
+  //
+  // modelMessages can diverge from messages (stopped generation, failed
+  // requests), so we align by matching user text content rather than
+  // counting positions. This avoids accidentally keeping the response
+  // being regenerated in the model's history.
+
   const handleRegenerate = useCallback((assistantMsgIndex: number) => {
     if (chatState.getState().isGenerating) return
     const msgs = chatState.getState().messages
@@ -193,17 +195,25 @@ function ChatDrawerInner() {
       .trim()
     if (!userText) return
 
-    // Trim modelMessages: count how many user messages appear from
-    // index 0..userIdx (inclusive), then cut modelMessages to keep
-    // only the turns before that user message.
-    const userMsgCount = msgs.slice(0, userIdx + 1).filter((m) => m.role === 'user').length
+    // Trim modelMessages: find the model user message whose content
+    // matches userText and cut everything from that point onward.
+    // If no match is found (diverged history), wipe modelMessages
+    // entirely so we never risk including stale assistant answers.
     const model = chatState.getState().modelMessages
     let cut = 0
-    let seenUsers = 0
-    for (let j = 0; j < model.length; j++) {
-      if (model[j]?.role === 'user') seenUsers++
-      if (seenUsers >= userMsgCount) break
-      cut = j + 1
+    for (let j = model.length - 1; j >= 0; j--) {
+      const m = model[j]
+      if (m?.role !== 'user') continue
+      const mText = typeof m.content === 'string'
+        ? m.content.trim()
+        : Array.isArray(m.content)
+          ? m.content
+            .filter((p: any) => p.type === 'text')
+            .map((p: any) => p.text)
+            .join('\n')
+            .trim()
+          : ''
+      if (mText === userText) { cut = j; break }
     }
     const trimmedModel = model.slice(0, cut)
 
