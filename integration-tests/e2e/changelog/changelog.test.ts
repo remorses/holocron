@@ -49,17 +49,22 @@ test.describe("changelog fixture", () => {
     await expect(label).toContainText("2026");
   });
 
-  test("renders JSX component from initialContent import", async ({ request }) => {
+  test("initialContent with frontmatter renders prose and JSX", async ({ request }) => {
     const res = await request.get("/changelog", {
       headers: { "sec-fetch-dest": "document" },
     });
+    expect(res.ok()).toBe(true);
     const html = await res.text();
-    // The ChangelogHero component from the initialContent MDX file should render.
+    // `changelog-intro.mdx` starts with frontmatter, then imports a TSX component.
+    // This catches regressions where ESTree document offsets corrupt rewritten
+    // import sources after the intro gets inlined into the virtual changelog page.
+    expect(html).not.toContain("Could not parse import/exports with acorn");
     expect(html).toContain("changelog-hero");
     expect(html).toContain("Changelog Hero");
+    expect(html).toContain("What's new. All releases are published on GitHub.");
   });
 
-  test("custom base: initialContent import resolves correctly", async ({ request }) => {
+  test("custom base: initialContent with frontmatter resolves correctly", async ({ request }) => {
     const res = await request.get("/releases/notes", {
       headers: { "sec-fetch-dest": "document" },
     });
@@ -68,9 +73,11 @@ test.describe("changelog fixture", () => {
     // Same initialContent file as /changelog, but the virtual page lives at
     // a nested slug (releases/notes). The import path must resolve correctly
     // from the virtual page's directory (pagesDir/releases/).
+    expect(html).not.toContain("Could not parse import/exports with acorn");
     expect(html).toContain("changelog-hero");
     expect(html).toContain("Changelog Hero");
-    // Releases should also render.
+    expect(html).toContain("What's new. All releases are published on GitHub.");
+    // Releases should still render after the inlined intro content.
     expect(html).toContain("v2.0.0");
   });
 
