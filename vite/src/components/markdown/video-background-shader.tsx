@@ -713,7 +713,10 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
 
   const texelX = 1 / simW
   const texelY = 1 / simH
-  for (const p of [advectionP, divergenceP, curlP, vorticityP, pressureP, gradientSubtractP, splatP]) {
+  // NB: splatP is excluded — SPLAT_FRAG only reads vUv, so the GLSL linker
+  // strips texelSize as an inactive uniform on some drivers, which would make
+  // loc('texelSize') throw ("Unknown uniform: texelSize").
+  for (const p of [advectionP, divergenceP, curlP, vorticityP, pressureP, gradientSubtractP]) {
     gl.useProgram(p.program)
     gl.uniform2f(p.loc('texelSize'), texelX, texelY)
   }
