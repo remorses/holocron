@@ -119,11 +119,7 @@ export function ChatInput({
 
 // ── Sidebar assistant (wraps ChatInput with muted header) ────────────
 
-/**
- * Hide all children of an element so the VT old-snapshot is a clean
- * solid-color rectangle (the widget's bg-accent background). Returns a
- * cleanup function that restores visibility.
- */
+/** Hide children so the VT snapshot is a solid-color rectangle. */
 export function hideChildrenForSnapshot(el: HTMLElement | null): (() => void) | void {
   if (!el) return
   const children = Array.from(el.children) as HTMLElement[]

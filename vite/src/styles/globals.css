@@ -516,40 +516,14 @@
   background-color: var(--background);
 }
 
-/* ── View transition: chat container morph (sidebar widget ↔ drawer panel) ─
- *
- * The sidebar assistant widget and the drawer panel share one VT name
- * (holocron-chat-container). The browser morphs position, size, and
- * border-radius between them — a layout animation without framer-motion.
- *
- * The old/new pseudo-elements are images of the captured snapshots.
- * By default they maintain their original aspect ratio, which means the
- * height doesn't visually grow during the morph — the group box animates
- * size but the snapshot images stay their original dimensions and just
- * cross-fade. Setting width/height to 100% makes the snapshots stretch
- * to fill the group at every animation frame, so the widget content
- * visually expands into the drawer. overflow:clip hides content that
- * doesn't fit during the intermediate sizes.
- * (ref: jakearchibald.com/2024/view-transitions-handling-aspect-ratio-changes)
- *
- * Easing: strong ease-out per Emil design-eng skill. Starts fast,
- * gives instant feedback. Duration under 300ms (Emil's hard rule for
- * UI animations). 280ms group morph, 200ms cross-fade.
- */
+/* ── View transition: sidebar widget ↔ drawer panel morph ──────────── */
 ::view-transition-group(holocron-chat-container) {
   animation-duration: 280ms;
   animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
   overflow: clip;
 }
 
-/* Stretch snapshots to fill the morphing group box at every frame.
- * Without this, old/new images keep their original dimensions and
- * just cross-fade inside the growing/shrinking group — no visual
- * height change.
- *
- * Custom keyframes add blur during the cross-fade to mask the
- * imperfect mid-morph content (per Emil design-eng skill: "blur
- * bridges the visual gap by blending the two states together"). */
+/* Stretch snapshots to fill group; blur cross-fade masks mid-morph distortion */
 ::view-transition-old(holocron-chat-container) {
   width: 100%;
   height: 100%;

@@ -306,10 +306,7 @@ function ChatDrawerInner() {
         }}
       />
 
-      {/* Drawer panel — the View Transitions API morphs the sidebar widget
-       * container into this panel (position + size + border-radius interpolation).
-       * No manual transform/opacity transitions needed; VT handles the animation.
-       * The panel owns the VT name when open; the sidebar widget owns it when closed. */}
+      {/* Drawer panel — VT morphs sidebar widget into this panel */}
       <div
         ref={drawerPanelRef}
         style={{
