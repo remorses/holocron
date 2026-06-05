@@ -52,7 +52,7 @@ export function ChatMessages({
 }: {
   messages: ChatMessage[]
   isGenerating?: boolean
-  onRegenerate?: () => void
+  onRegenerate?: (messageIndex: number) => void
 }) {
   if (messages.length === 0) return null
   let noticeRendered = false
@@ -75,12 +75,12 @@ export function ChatMessages({
                       }
                       return <ChatPartRenderer key={partIndex} part={part} allParts={message.parts} />
                     })}
-                    {/* Footer shows on the last assistant message once
-                        generation is done — copy as markdown + regenerate. */}
-                    {i === lastAssistantIdx && !isGenerating && (
+                    {/* Footer: copy + regenerate. Hidden only on the last
+                        assistant message while still generating. */}
+                    {!(i === lastAssistantIdx && isGenerating) && (
                       <ChatAssistantFooter
                         parts={message.parts}
-                        onRegenerate={onRegenerate}
+                        onRegenerate={onRegenerate ? () => onRegenerate(i) : undefined}
                       />
                     )}
                   </div>

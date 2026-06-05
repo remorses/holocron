@@ -172,32 +172,47 @@ function ChatDrawerInner() {
   // message. modelMessages is trimmed back to before the last user turn
   // so handleSubmit re-appends a clean user message + history.
 
-  const handleRegenerate = useCallback(() => {
+  // Regenerate from a specific assistant message index.
+  // Finds the user message just before it, trims everything from that
+  // point onward, and resubmits.
+  const handleRegenerate = useCallback((assistantMsgIndex: number) => {
     if (chatState.getState().isGenerating) return
     const msgs = chatState.getState().messages
-    const lastUserIdx = msgs.findLastIndex((m) => m.role === 'user')
-    if (lastUserIdx === -1) return
-    const lastUserText = (msgs[lastUserIdx]?.parts ?? [])
+
+    // Find the user message that precedes this assistant message
+    let userIdx = -1
+    for (let j = assistantMsgIndex - 1; j >= 0; j--) {
+      if (msgs[j]?.role === 'user') { userIdx = j; break }
+    }
+    if (userIdx === -1) return
+
+    const userText = (msgs[userIdx]?.parts ?? [])
       .filter((part) => part.type === 'text')
       .map((part) => part.text)
       .join('\n')
       .trim()
-    if (!lastUserText) return
+    if (!userText) return
 
-    // Trim modelMessages: drop trailing turns until we have removed the
-    // last user message, leaving the history just before that user turn.
+    // Trim modelMessages: count how many user messages appear from
+    // index 0..userIdx (inclusive), then cut modelMessages to keep
+    // only the turns before that user message.
+    const userMsgCount = msgs.slice(0, userIdx + 1).filter((m) => m.role === 'user').length
     const model = chatState.getState().modelMessages
-    let cut = model.length
-    while (cut > 0 && model[cut - 1]?.role !== 'user') cut--
-    if (cut > 0) cut-- // drop the last user message itself
+    let cut = 0
+    let seenUsers = 0
+    for (let j = 0; j < model.length; j++) {
+      if (model[j]?.role === 'user') seenUsers++
+      if (seenUsers >= userMsgCount) break
+      cut = j + 1
+    }
     const trimmedModel = model.slice(0, cut)
 
     chatState.setState({
-      messages: msgs.slice(0, lastUserIdx),
+      messages: msgs.slice(0, userIdx),
       modelMessages: trimmedModel,
     })
 
-    void handleSubmit(lastUserText)
+    void handleSubmit(userText)
   }, [handleSubmit])
 
   // ── Clear / new chat ───────────────────────────────────────────
