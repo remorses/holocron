@@ -386,32 +386,15 @@ Use `Note` for neutral supporting information.
 Single-line form can produce bare phrasing children without paragraph wrapping,
 which changes styling.
 
-## Leaf JSX elements inside containers — single-line to avoid P wrapping
+## Leaf elements — single-line to avoid P wrapping
 
-The multi-line rule above applies to **container** components whose children are
-prose (paragraphs, lists, callouts). For **leaf elements** like `<h1>`, `<h2>`,
-`<span>`, or `<div>` that contain short inline text, use **single-line form**
-instead. Otherwise the MDX parser wraps the text in a paragraph node, which
-renders as `<div class="editorial-prose">` inside the element.
+For **leaf elements** like `<h1>`, `<span>`, `<div>` with short inline text,
+use **single-line form**. Multi-line makes the parser wrap text in a paragraph
+node, adding an unwanted `editorial-prose` div inside the element.
 
 ```mdx
-<!-- ✅ Single-line — text stays inline, no P wrapper -->
-<Above>
 <h1 className='text-6xl font-bold'>Launching Playwriter</h1>
-</Above>
-
-<!-- ❌ Multi-line — text gets wrapped in editorial-prose div inside the h1 -->
-<Above>
-    <h1 className='text-6xl font-bold'>
-        Launching Playwriter
-    </h1>
-</Above>
 ```
-
-The MDX parser treats any element with content on separate lines as a **flow
-element** (`mdxJsxFlowElement`), which wraps bare text children in paragraph
-nodes. Single-line keeps it as a **text element** (`mdxJsxTextElement`) with
-inline children.
 
 ## Aside content
 
