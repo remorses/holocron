@@ -220,4 +220,41 @@ describe('MDX paragraph rendering — full production pipeline', () => {
     `)
     expect(html).toMatchInlineSnapshot(`"<div><div class="editorial-prose">Inner paragraph text</div></div>"`)
   })
+
+  it('h1 with className inside Above — multi-line form wraps text in P (flow element pitfall)', () => {
+    const { html, mdast } = renderMdx(dedent`
+      <Above>
+          <h1 className='w-full my-14 text-6xl font-bold text-balance leading-tight'>
+              Launching Playwriter
+          </h1>
+      </Above>
+    `)
+    // The MDX parser treats <h1> as mdxJsxFlowElement. Flow elements wrap
+    // bare text children in paragraph nodes → P component → editorial-prose div.
+    // This is a known MDX parser behavior, NOT a safe-mdx or Holocron bug.
+    const aboveNode = mdast.children.find(
+      (n) => n.type === 'mdxJsxFlowElement' && n.name === 'Above',
+    )
+    const h1Node = aboveNode?.children?.[0] as any
+    expect(h1Node?.type).toBe('mdxJsxFlowElement')
+    expect(h1Node?.name).toBe('h1')
+    // Text is wrapped in a paragraph node by the parser
+    expect(h1Node?.children?.[0]?.type).toBe('paragraph')
+
+    // The rendered HTML shows editorial-prose div INSIDE the h1 — bad
+    expect(html).toMatchInlineSnapshot(
+      `"<div><h1 class="w-full my-14 text-6xl font-bold text-balance leading-tight" id="launching-playwriter"><div class="editorial-prose">Launching Playwriter</div></h1></div>"`,
+    )
+  })
+
+  it('h1 with className inside Above — single-line form keeps text inline (no P wrapper)', () => {
+    // Workaround: put content on the same line as the opening/closing tags
+    const { html } = renderMdx(dedent`
+      <Above>
+          <h1 className='w-full my-14 text-6xl font-bold text-balance leading-tight'>Launching Playwriter</h1>
+      </Above>
+    `)
+    // Single-line JSX produces mdxJsxTextElement with bare text children — no paragraph wrapper
+    expect(html).toMatchInlineSnapshot(`"<div><h1 class="w-full my-14 text-6xl font-bold text-balance leading-tight" id="launching-playwriter">Launching Playwriter</h1></div>"`)
+  })
 })
