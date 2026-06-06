@@ -251,7 +251,7 @@ export function EditorialPage({
                     </Link>
                   )
                   return iconOnly ? (
-                    <NavTooltip key={link.href} label={link.label}>{linkEl}</NavTooltip>
+                    <NavTooltip key={link.href} label={link.label} position='below'>{linkEl}</NavTooltip>
                   ) : (
                     linkEl
                   )

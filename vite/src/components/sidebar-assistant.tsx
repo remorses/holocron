@@ -223,7 +223,7 @@ function ChevronRightIcon() {
   )
 }
 
-export function NavTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+export function NavTooltip({ label, children, position = 'above' }: { label: string; children: React.ReactNode; position?: 'above' | 'below' }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLSpanElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0 })
@@ -232,10 +232,12 @@ export function NavTooltip({ label, children }: { label: string; children: React
     if (!open || !triggerRef.current) return
     const rect = triggerRef.current.getBoundingClientRect()
     setPos({
-      top: rect.top + window.scrollY - 6,
-      left: rect.left + rect.width / 2 + window.scrollX,
+      top: position === 'below'
+        ? rect.bottom + 6
+        : rect.top - 6,
+      left: rect.left + rect.width / 2,
     })
-  }, [open])
+  }, [open, position])
 
   return (
     <span
@@ -247,7 +249,7 @@ export function NavTooltip({ label, children }: { label: string; children: React
       {children}
       {open && typeof document !== 'undefined' && createPortal(
         <span
-          className='fixed -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border-subtle bg-card px-2 py-1 text-[11px] text-foreground shadow-md pointer-events-none'
+          className={`fixed -translate-x-1/2 whitespace-nowrap rounded-md border border-border-subtle bg-card px-2 py-1 text-[11px] text-foreground shadow-md pointer-events-none ${position === 'below' ? '' : '-translate-y-full'}`}
           role='tooltip'
           style={{ top: pos.top, left: pos.left, zIndex: 300 }}
         >

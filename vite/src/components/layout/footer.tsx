@@ -119,7 +119,7 @@ export function Footer() {
   )
 
   return (
-    <footer className='border-border bg-background' style={{ borderTop: '1px var(--grid-line-style, solid) var(--border)' }}>
+    <footer className='bg-background'>
       <div className='mx-auto w-full max-w-full px-(--mobile-padding) py-10 lg:max-w-(--grid-max-width) lg:px-0'>
         {fewColumns && hasLinks ? (
           /* ≤2 columns: logo on left, link columns on right, single row */
