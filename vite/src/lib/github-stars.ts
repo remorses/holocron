@@ -119,6 +119,16 @@ async function fetchFromGitHub(owner: string, repo: string): Promise<number | nu
  * and footer socials. Returns a deduped list (by owner/repo) preserving
  * the original href so the client can match links by URL.
  */
+/**
+ * Canonical key for a GitHub repo URL. Used to key the stars map so
+ * different URLs pointing at the same repo (e.g. /repo vs /repo/releases)
+ * resolve to the same star count.
+ */
+export function getGitHubRepoKey(url: string): string | null {
+  const repo = parseGitHubRepo(url)
+  return repo ? `${repo.owner}/${repo.repo}`.toLowerCase() : null
+}
+
 export function collectGitHubUrls(config: {
   navbar: { links: Array<{ type?: string; href: string }>; primary?: { type?: string; href?: string } }
   footer: { socials: Record<string, string> }
@@ -137,13 +147,13 @@ export function collectGitHubUrls(config: {
     urls.push(footerGitHub)
   }
   // Dedupe by owner/repo
-  const seen = new Map<string, string>()
-  for (const url of urls) {
-    const repo = parseGitHubRepo(url)!
-    const key = `${repo.owner}/${repo.repo}`.toLowerCase()
-    if (!seen.has(key)) seen.set(key, url)
-  }
-  return [...seen.values()]
+  const seen = new Set<string>()
+  return urls.filter((url) => {
+    const key = getGitHubRepoKey(url)!
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 /**
@@ -161,8 +171,9 @@ export function createGitHubStarsPromise(
     try {
       const entries = await Promise.all(
         urls.map(async (url) => {
+          const key = getGitHubRepoKey(url)!
           const stars = await fetchGitHubStars(url)
-          return stars !== null ? ([url, stars] as const) : null
+          return stars !== null ? ([key, stars] as const) : null
         }),
       )
       return Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, number]>)

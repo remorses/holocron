@@ -276,6 +276,7 @@ export function EditorialPage({
               >
                 <Icon icon={primary.icon} size={14} />
                 <span>{primary.label}</span>
+                {primary.type === 'github' && githubStars && <GitHubStars starsPromise={githubStars} href={primary.href} />}
               </Link>
             )}
             {/* Theme toggle — hidden when appearance.strict is true */}

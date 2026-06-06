@@ -10,11 +10,12 @@
  */
 
 import React, { Suspense, use } from 'react'
-import { formatStarCount } from '../../lib/github-stars.ts'
+import { formatStarCount, getGitHubRepoKey } from '../../lib/github-stars.ts'
 
 function StarCount({ starsPromise, href }: { starsPromise: Promise<Record<string, number>>; href: string }) {
   const starsMap = use(starsPromise)
-  const count = starsMap[href]
+  const key = getGitHubRepoKey(href)
+  const count = key ? starsMap[key] : undefined
   if (count === undefined) return null
   return (
     <span className='inline-flex items-center gap-0.5 text-xs tabular-nums text-muted-foreground'>

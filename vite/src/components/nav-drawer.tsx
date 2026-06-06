@@ -199,6 +199,7 @@ function NavDrawerInner() {
                 >
                   <Icon icon={primary.icon} size={14} />
                   <span>{primary.label}</span>
+                  {primary.type === 'github' && githubStars && <GitHubStars starsPromise={githubStars} href={primary.href} />}
                 </Link>
               )}
             </div>
