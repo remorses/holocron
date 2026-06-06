@@ -158,13 +158,18 @@ export function createGitHubStarsPromise(
   const urls = collectGitHubUrls(config)
   if (urls.length === 0) return undefined
   return (async () => {
-    const entries = await Promise.all(
-      urls.map(async (url) => {
-        const stars = await fetchGitHubStars(url)
-        return stars !== null ? ([url, stars] as const) : null
-      }),
-    )
-    return Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, number]>)
+    try {
+      const entries = await Promise.all(
+        urls.map(async (url) => {
+          const stars = await fetchGitHubStars(url)
+          return stars !== null ? ([url, stars] as const) : null
+        }),
+      )
+      return Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, number]>)
+    } catch (err) {
+      console.error('[holocron] failed to fetch GitHub stars:', err)
+      return {}
+    }
   })()
 }
 
