@@ -76,56 +76,79 @@ export function Footer() {
   const logo = siteLogo
   const logoLinkHref = logo.href || '/'
 
+  const fewColumns = links.length <= 2
+
+  const linkColumns = links.map((column, i) => (
+    <div key={i} className='flex flex-col gap-2'>
+      {column.header && (
+        <div className='text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-1'>
+          {column.header}
+        </div>
+      )}
+      {column.items.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          target={item.href.startsWith('http') ? '_blank' : undefined}
+          rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+          className='no-underline text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground'
+        >
+          {item.label}
+        </Link>
+      ))}
+    </div>
+  ))
+
+  const socialIcons = hasSocials && (
+    <div className='flex items-center gap-3'>
+      {Object.entries(socials).map(([platform, url]) => (
+        <Link
+          key={platform}
+          href={url}
+          target='_blank'
+          rel='noopener noreferrer'
+          aria-label={platform}
+          className='no-underline text-muted-foreground transition-colors duration-150 hover:text-foreground'
+        >
+          <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
+        </Link>
+      ))}
+    </div>
+  )
+
   return (
     <footer className='border-border bg-background' style={{ borderTop: '1px var(--grid-line-style, solid) var(--border)' }}>
       <div className='mx-auto w-full max-w-full px-(--mobile-padding) py-10 lg:max-w-(--grid-max-width) lg:px-0'>
-        {/* Top row: logo + social icons */}
-        <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-          <Link href={logoLinkHref} className='no-underline flex items-center'>
-            <Logo />
-          </Link>
-          {hasSocials && (
-            <div className='flex items-center gap-3'>
-              {Object.entries(socials).map(([platform, url]) => (
-                <Link
-                  key={platform}
-                  href={url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  aria-label={platform}
-                  className='no-underline text-muted-foreground transition-colors duration-150 hover:text-foreground'
-                >
-                  <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
+        {fewColumns && hasLinks ? (
+          /* ≤2 columns: logo on left, link columns on right, single row */
+          <>
+            <div className='flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between'>
+              <div className='flex flex-col gap-4'>
+                <Link href={logoLinkHref} className='no-underline flex items-center'>
+                  <Logo />
                 </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Link columns */}
-        {hasLinks && (
-          <div className='mt-8 grid grid-cols-2 gap-8 sm:grid-cols-4'>
-            {links.map((column, i) => (
-              <div key={i} className='flex flex-col gap-2'>
-                {column.header && (
-                  <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1'>
-                    {column.header}
-                  </div>
-                )}
-                {column.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    target={item.href.startsWith('http') ? '_blank' : undefined}
-                    rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className='no-underline text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground'
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {socialIcons}
               </div>
-            ))}
-          </div>
+              <div className='flex gap-12'>
+                {linkColumns}
+              </div>
+            </div>
+          </>
+        ) : (
+          /* ≥3 columns: logo row on top, link columns below with space-between */
+          <>
+            <div className='flex flex-col items-center gap-4'>
+              <Link href={logoLinkHref} className='no-underline flex items-center'>
+                <Logo />
+              </Link>
+              {socialIcons}
+            </div>
+            {hasLinks && (
+              <div className='mt-8 flex flex-wrap justify-between gap-8'>
+                {linkColumns}
+              </div>
+            )}
+          </>
         )}
       </div>
     </footer>
