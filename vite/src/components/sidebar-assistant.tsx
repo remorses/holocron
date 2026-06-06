@@ -7,6 +7,7 @@ import { chatState } from '../lib/chat-state.ts'
 import { CHAT_CONTAINER_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
 import { useHolocronData } from '../router.ts'
 import { collectAllPages, isVisibleNavPage } from '../navigation.ts'
+import { cn } from '../lib/css-vars.ts'
 import {
   InfoCircleIcon,
   ArrowUpIcon,
@@ -261,6 +262,7 @@ export function NavTooltip({ label, children }: { label: string; children: React
 export function PageNavRow() {
   const { site, currentPageHref } = useHolocronData()
   const [copied, setCopied] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const { prevPage, nextPage } = useMemo(() => {
     const allPages = collectAllPages(site.navigation).filter(isVisibleNavPage)
@@ -272,7 +274,8 @@ export function PageNavRow() {
   }, [site.navigation, currentPageHref])
 
   const handleCopyMd = useCallback(async () => {
-    if (copied) return
+    if (copied || isLoading) return
+    setIsLoading(true)
     try {
       // For `/` or paths ending with `/`, append `index.md` instead of `.md`
       // so the request hits the correct server route (e.g. `/index.md`).
@@ -288,15 +291,20 @@ export function PageNavRow() {
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy markdown:', err)
+    } finally {
+      setIsLoading(false)
     }
-  }, [copied])
+  }, [copied, isLoading])
 
   return (
     <div className='hidden lg:flex items-center gap-1.5 w-full'>
       <button
         type='button'
         onClick={handleCopyMd}
-        className='inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer'
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer',
+          isLoading && 'opacity-50 animate-pulse',
+        )}
         title='Copy page as Markdown'
       >
         <span>{copied ? 'Copied' : 'Copy as Markdown'}</span>
