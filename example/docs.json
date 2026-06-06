@@ -103,5 +103,36 @@
         { "anchor": "npm", "href": "https://www.npmjs.com/package/playwriter", "icon": "package", "placement": "tabs" }
       ]
     }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/remorses/playwriter",
+      "x": "https://x.com/__morse"
+    },
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          { "label": "Features", "href": "https://example.com/features" },
+          { "label": "Pricing", "href": "https://example.com/pricing" },
+          { "label": "Docs", "href": "https://example.com/docs" }
+        ]
+      },
+      {
+        "header": "Legal",
+        "items": [
+          { "label": "Terms", "href": "https://example.com/terms" },
+          { "label": "Privacy", "href": "https://example.com/privacy" }
+        ]
+      },
+      {
+        "header": "Company",
+        "items": [
+          { "label": "About", "href": "https://example.com/about" },
+          { "label": "Blog", "href": "https://example.com/blog" },
+          { "label": "Careers", "href": "https://example.com/careers" }
+        ]
+      }
+    ]
   }
 }

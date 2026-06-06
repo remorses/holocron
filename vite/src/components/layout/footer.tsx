@@ -135,9 +135,9 @@ export function Footer() {
             </div>
           </>
         ) : (
-          /* ≥3 columns: logo row on top, link columns below with space-between */
+          /* ≥3 columns: logo + socials on left, link columns below with space-between */
           <>
-            <div className='flex flex-col items-center gap-4'>
+            <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
               <Link href={logoLinkHref} className='no-underline flex items-center'>
                 <Logo />
               </Link>
