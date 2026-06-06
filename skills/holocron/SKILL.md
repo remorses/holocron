@@ -386,16 +386,6 @@ Use `Note` for neutral supporting information.
 Single-line form can produce bare phrasing children without paragraph wrapping,
 which changes styling.
 
-## Leaf elements — single-line to avoid P wrapping
-
-For **leaf elements** like `<h1>`, `<span>`, `<div>` with short inline text,
-use **single-line form**. Multi-line makes the parser wrap text in a paragraph
-node, adding an unwanted `editorial-prose` div inside the element.
-
-```mdx
-<h1 className='text-6xl font-bold'>Launching Playwriter</h1>
-```
-
 ## Aside content
 
 `Aside` is positioning-only and has no visual frame. Always wrap visible content

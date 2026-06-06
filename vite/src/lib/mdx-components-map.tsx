@@ -3,7 +3,7 @@
  * Maps MDX element names and mdast nodes to editorial components.
  */
 
-import { Children, Fragment, type ReactNode } from 'react'
+import { Children, Fragment, isValidElement, type ReactNode } from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
 import type { PhrasingContent, Root, RootContent } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
@@ -146,8 +146,37 @@ function isPhrasingContent(node: MyRootContent): node is PhrasingContent {
     || node.type === 'text'
 }
 
+// Native JSX headings (<h1 className='...'>text</h1>) rendered through the
+// component map. When written multi-line in MDX, the parser wraps text in
+// paragraph nodes → P component → editorial-prose div. These overrides unwrap
+// P children so heading text renders inline without the prose wrapper.
+// Markdown # headings are intercepted by renderNode before reaching these.
+function createJsxHeading(Tag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') {
+  return function JsxHeading({ children, ...props }: Record<string, any>) {
+    return <Tag {...props}>{unwrapPChildren(children)}</Tag>
+  }
+}
+
+/** Strip P (editorial-prose) wrappers from React children. When the MDX parser
+ *  wraps text inside a flow element in a paragraph node, safe-mdx renders it
+ *  as <P> → <div class="editorial-prose">. This extracts the inner content. */
+function unwrapPChildren(children: ReactNode): ReactNode {
+  return Children.map(children, (child) => {
+    if (isValidElement(child) && child.type === P) {
+      return child.props.children
+    }
+    return child
+  })
+}
+
 export const mdxComponents = {
   p: P,
+  h1: createJsxHeading('h1'),
+  h2: createJsxHeading('h2'),
+  h3: createJsxHeading('h3'),
+  h4: createJsxHeading('h4'),
+  h5: createJsxHeading('h5'),
+  h6: createJsxHeading('h6'),
   Heading,
   a: A,
   code: Code,
@@ -274,6 +303,7 @@ export function renderNode(
       </SectionHeading>
     )
   }
+
   if (node.type === 'code') {
     const lang = node.lang || 'bash'
     const isDiagram = lang === 'diagram'

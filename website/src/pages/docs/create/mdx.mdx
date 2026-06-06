@@ -82,24 +82,4 @@ Use `Note` for neutral information.
 
 This is an MDX parser limitation. Multi-line form gets proper paragraph wrapping; single-line form produces bare inline text.
 
-## Leaf elements inside containers
-
-The multi-line rule above applies to **container** components whose children are prose. For **leaf elements** like `<h1>`, `<span>`, or `<div>` with short inline text, use **single-line form** instead. Otherwise the parser wraps the text in a paragraph node, adding unwanted `editorial-prose` styling inside the element.
-
-```mdx
-<!-- ✅ Single-line — text stays inline -->
-<Above>
-<h1 className='text-6xl font-bold'>Launching Playwriter</h1>
-</Above>
-```
-
-```mdx
-<!-- ❌ Multi-line — "Launching Playwriter" gets wrapped in a paragraph div -->
-<Above>
-    <h1 className='text-6xl font-bold'>
-        Launching Playwriter
-    </h1>
-</Above>
-```
-
-The MDX parser treats elements with content on separate lines as **flow elements**, which wrap bare text in paragraph nodes. Single-line keeps it as a **text element** with inline children.
+Native heading elements (`<h1>` through `<h6>`) are an exception: Holocron automatically unwraps the paragraph wrapper so both multi-line and single-line forms produce the same clean output.
