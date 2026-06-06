@@ -31,6 +31,7 @@ import { BannerDismiss } from './banner-dismiss.tsx'
 import { ChatDrawer } from '../chat-drawer.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
 import { NavDrawer } from '../nav-drawer.tsx'
+import { GitHubStars } from './github-stars.tsx'
 import {
   DEFAULT_SIDEBAR_WIDTH,
   buildGridTokenStyle,
@@ -116,7 +117,7 @@ export function EditorialPage({
   /** Mintlify-compatible page mode from MDX frontmatter. */
   mode?: PageMode
 }) {
-  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel } = useHolocronData()
+  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const siteLogo = getResolvedLogo(site)
@@ -235,6 +236,7 @@ export function EditorialPage({
               <div className='flex items-center gap-3'>
                 {headerLinks.map((link) => {
                   const iconOnly = !!link.icon
+                  const hasStars = link.type === 'github' && githubStars
                   const linkEl = (
                     <Link
                       key={link.href}
@@ -245,7 +247,8 @@ export function EditorialPage({
                       className='no-underline flex items-center gap-1.5 text-muted-foreground transition-colors duration-150 hover:text-foreground'
                     >
                       <Icon icon={link.icon} size={16} />
-                      {!iconOnly && (
+                      {hasStars && <GitHubStars starsPromise={githubStars} href={link.href} />}
+                      {!iconOnly && !hasStars && (
                         <span className='text-sm'>{link.label}</span>
                       )}
                     </Link>

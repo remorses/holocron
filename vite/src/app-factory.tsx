@@ -62,6 +62,7 @@ import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
 import { holocronUrl, getHolocronApiKey } from './lib/holocron-url.ts'
+import { fetchGitHubStars, parseGitHubRepo } from './lib/github-stars.ts'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -153,6 +154,13 @@ export type HolocronLoaderData = {
   currentPageFrontmatter: PageFrontmatter | undefined
   /** Whether the config customization panel should be shown. */
   showConfigPanel: boolean
+  /**
+   * Non-blocking promise that resolves to a map of GitHub repo URLs → star
+   * counts. Passed as an unresolved promise so it streams via RSC flight
+   * without blocking the initial page render. Client components use
+   * `React.use()` inside a Suspense boundary to read the resolved value.
+   */
+  githubStars?: Promise<Record<string, number>>
 }
 
 type MdxParseErrorInfo = {
@@ -533,6 +541,47 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     origin: '', // Populated per-request in buildLoaderSite from request.url
   }
   const sharedIconRefs = collectIconRefs({ config, navigation })
+
+  // Collect unique GitHub repo URLs from navbar links, primary CTA, and
+  // footer socials. We fetch star counts for these repos once and reuse the
+  // promise across all loader responses so it never blocks page rendering.
+  const githubUrls: string[] = []
+  for (const link of config.navbar.links) {
+    if (link.type === 'github' && link.href && parseGitHubRepo(link.href)) {
+      githubUrls.push(link.href)
+    }
+  }
+  if (config.navbar.primary?.type === 'github' && config.navbar.primary.href && parseGitHubRepo(config.navbar.primary.href)) {
+    githubUrls.push(config.navbar.primary.href)
+  }
+  const footerGitHub = config.footer.socials.github
+  if (footerGitHub && parseGitHubRepo(footerGitHub)) {
+    githubUrls.push(footerGitHub)
+  }
+  // Dedupe by owner/repo
+  const uniqueRepos = new Map<string, string>()
+  for (const url of githubUrls) {
+    const repo = parseGitHubRepo(url)!
+    const key = `${repo.owner}/${repo.repo}`.toLowerCase()
+    if (!uniqueRepos.has(key)) uniqueRepos.set(key, url)
+  }
+
+  // Start the fetch eagerly (don't await). The same promise is reused for
+  // every request. In-memory + CF Cache API caching inside fetchGitHubStars
+  // means this only hits the GitHub API once per hour.
+  const githubStarsPromise: Promise<Record<string, number>> | undefined =
+    uniqueRepos.size > 0
+      ? (async () => {
+          const entries = await Promise.all(
+            [...uniqueRepos.entries()].map(async ([, url]) => {
+              const stars = await fetchGitHubStars(url)
+              return stars !== null ? ([url, stars] as const) : null
+            }),
+          )
+          return Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, number]>)
+        })()
+      : undefined
+
   const firstPage = findFirstPage(site)
   const hrefToSlug = buildHrefToSlugMap(slugs)
   const absoluteUrlBase = (() => {
@@ -642,6 +691,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         headRobots: 'noindex',
         currentPageFrontmatter: undefined,
         showConfigPanel: showPanel,
+        githubStars: githubStarsPromise,
       }
     }
 
@@ -660,6 +710,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       headRobots: getPageRobots(currentPage.frontmatter),
       currentPageFrontmatter: currentPage.frontmatter,
       showConfigPanel: showPanel,
+      githubStars: githubStarsPromise,
     }
   }
 

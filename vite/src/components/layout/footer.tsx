@@ -13,6 +13,7 @@ import { cn } from '../../lib/css-vars.ts'
 import { getGeneratedLogoUrl } from '../../lib/generated-logo.tsx'
 import { holocronUrl } from '../../lib/holocron-url.ts'
 import { useHolocronData } from '../../router.ts'
+import { GitHubStars } from './github-stars.tsx'
 import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
 import { NavTooltip } from '../sidebar-assistant.tsx'
@@ -66,7 +67,7 @@ export function Logo({ className, alt, style, text, ...props }: LogoProps) {
 }
 
 export function Footer() {
-  const { site } = useHolocronData()
+  const { site, githubStars } = useHolocronData()
   const siteConfig = site.config
   const siteLogo = getResolvedLogo(site)
   const { socials, links } = siteConfig.footer
@@ -109,9 +110,10 @@ export function Footer() {
             target='_blank'
             rel='noopener noreferrer'
             aria-label={socialPlatformLabel(platform)}
-            className='no-underline text-muted-foreground transition-colors duration-150 hover:text-foreground'
+            className='no-underline flex items-center gap-1.5 text-muted-foreground transition-colors duration-150 hover:text-foreground'
           >
             <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
+            {platform === 'github' && githubStars && <GitHubStars starsPromise={githubStars} href={url} />}
           </Link>
         </NavTooltip>
       ))}

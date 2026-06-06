@@ -25,6 +25,7 @@ import {
   buildVersionItems,
 } from '../site-data.ts'
 import { TabLink } from './layout/tab-link.tsx'
+import { GitHubStars } from './layout/github-stars.tsx'
 
 // Module-level stable callbacks for useSyncExternalStore (see AGENTS.md rules)
 const emptySubscribe = () => () => {}
@@ -41,7 +42,7 @@ export function NavDrawer() {
 
 function NavDrawerInner() {
   const isOpen = chatState((s) => s.navDrawerOpen)
-  const { site, currentPageHref, activeVersionHref, activeDropdownHref, activeTabHref } =
+  const { site, currentPageHref, activeVersionHref, activeDropdownHref, activeTabHref, githubStars } =
     useHolocronData()
 
   const primary = site.config.navbar?.primary
@@ -182,7 +183,11 @@ function NavDrawerInner() {
                   style={{ fontSize: '13px' }}
                 >
                   <Icon icon={link.icon} size={16} />
-                  <span>{link.label}</span>
+                  {link.type === 'github' && githubStars ? (
+                    <GitHubStars starsPromise={githubStars} href={link.href} />
+                  ) : (
+                    <span>{link.label}</span>
+                  )}
                 </Link>
               ))}
               {!!primary?.href && (
