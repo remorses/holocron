@@ -936,21 +936,18 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
 
 const TOP_GRADIENT = [
   'linear-gradient(to bottom,',
-  'var(--background) 0%,',
-  'color-mix(in srgb, var(--background) 90%, transparent) 10%,',
-  'color-mix(in srgb, var(--background) 70%, transparent) 22%,',
-  'color-mix(in srgb, var(--background) 40%, transparent) 40%,',
-  'color-mix(in srgb, var(--background) 15%, transparent) 60%,',
-  'transparent 80%)',
+  'color-mix(in srgb, var(--background) 70%, transparent) 0%,',
+  'color-mix(in srgb, var(--background) 50%, transparent) 20%,',
+  'color-mix(in srgb, var(--background) 50%, transparent) 40%,',
+  'transparent 55%)',
 ].join(' ')
 
 const BOTTOM_GRADIENT = [
   'linear-gradient(to top,',
-  'var(--background) 0%,',
-  'color-mix(in srgb, var(--background) 85%, transparent) 15%,',
-  'color-mix(in srgb, var(--background) 50%, transparent) 35%,',
-  'color-mix(in srgb, var(--background) 20%, transparent) 55%,',
-  'transparent 75%)',
+  'color-mix(in srgb, var(--background) 70%, transparent) 0%,',
+  'color-mix(in srgb, var(--background) 50%, transparent) 20%,',
+  'color-mix(in srgb, var(--background) 50%, transparent) 40%,',
+  'transparent 55%)',
 ].join(' ')
 
 // ─── React component ───────────────────────────────────────────────────────
