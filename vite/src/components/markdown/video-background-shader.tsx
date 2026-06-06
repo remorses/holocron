@@ -1025,7 +1025,7 @@ export function VideoBackgroundShader({
       {/* Top gradient overlay */}
       {fadeTop && (
         <div
-          className='absolute top-0 inset-x-0 h-[60%] z-[1] pointer-events-none'
+          className='absolute top-0 inset-x-0 h-[15%] z-[1] pointer-events-none'
           style={{
             background: TOP_GRADIENT,
             opacity: canvasReady ? 1 : 0,
@@ -1037,7 +1037,7 @@ export function VideoBackgroundShader({
       {/* Bottom gradient overlay */}
       {fadeBottom && (
         <div
-          className='absolute bottom-0 inset-x-0 h-[40%] z-[1] pointer-events-none'
+          className='absolute bottom-0 inset-x-0 h-[12%] z-[1] pointer-events-none'
           style={{
             background: BOTTOM_GRADIENT,
             opacity: canvasReady ? 1 : 0,
