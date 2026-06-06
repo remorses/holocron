@@ -112,6 +112,62 @@ async function fetchFromGitHub(owner: string, repo: string): Promise<number | nu
   }
 }
 
+// ── Config extraction ────────────────────────────────────────────────────
+
+/**
+ * Collect unique GitHub repo URLs from navbar links, navbar primary CTA,
+ * and footer socials. Returns a deduped list (by owner/repo) preserving
+ * the original href so the client can match links by URL.
+ */
+export function collectGitHubUrls(config: {
+  navbar: { links: Array<{ type?: string; href: string }>; primary?: { type?: string; href?: string } }
+  footer: { socials: Record<string, string> }
+}): string[] {
+  const urls: string[] = []
+  for (const link of config.navbar.links) {
+    if (link.type === 'github' && link.href && parseGitHubRepo(link.href)) {
+      urls.push(link.href)
+    }
+  }
+  if (config.navbar.primary?.type === 'github' && config.navbar.primary.href && parseGitHubRepo(config.navbar.primary.href)) {
+    urls.push(config.navbar.primary.href)
+  }
+  const footerGitHub = config.footer.socials.github
+  if (footerGitHub && parseGitHubRepo(footerGitHub)) {
+    urls.push(footerGitHub)
+  }
+  // Dedupe by owner/repo
+  const seen = new Map<string, string>()
+  for (const url of urls) {
+    const repo = parseGitHubRepo(url)!
+    const key = `${repo.owner}/${repo.repo}`.toLowerCase()
+    if (!seen.has(key)) seen.set(key, url)
+  }
+  return [...seen.values()]
+}
+
+/**
+ * Start fetching star counts for all GitHub URLs found in the config.
+ * Returns a promise (don't await — pass through RSC flight for streaming)
+ * that resolves to a map of URL → star count. Returns undefined if no
+ * GitHub URLs are configured.
+ */
+export function createGitHubStarsPromise(
+  config: Parameters<typeof collectGitHubUrls>[0],
+): Promise<Record<string, number>> | undefined {
+  const urls = collectGitHubUrls(config)
+  if (urls.length === 0) return undefined
+  return (async () => {
+    const entries = await Promise.all(
+      urls.map(async (url) => {
+        const stars = await fetchGitHubStars(url)
+        return stars !== null ? ([url, stars] as const) : null
+      }),
+    )
+    return Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, number]>)
+  })()
+}
+
 // ── Main entry point ─────────────────────────────────────────────────────
 
 /**
