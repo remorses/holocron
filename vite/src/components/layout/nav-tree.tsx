@@ -285,7 +285,7 @@ function NavPageLink({
         }}
       >
         <Icon icon={page.icon} size={12} />
-        <span>{frontmatter.sidebarTitle ?? page.title}</span>
+        <span className='font-medium'>{frontmatter.sidebarTitle ?? page.title}</span>
         <span className='ml-auto inline-flex items-center gap-1'>
           {typeof frontmatter.api === 'string' && <MethodBadge method={frontmatter.api.split(' ')[0]!} />}
           {frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}
