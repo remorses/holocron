@@ -8,13 +8,14 @@
 
 import React from 'react'
 import { Link } from '../link.tsx'
-import { getDefaultTypeIcon } from '../../lib/collect-icons.ts'
+import { getDefaultTypeIcon, socialPlatformLabel } from '../../lib/collect-icons.ts'
 import { cn } from '../../lib/css-vars.ts'
 import { getGeneratedLogoUrl } from '../../lib/generated-logo.tsx'
 import { holocronUrl } from '../../lib/holocron-url.ts'
 import { useHolocronData } from '../../router.ts'
 import { getResolvedLogo } from '../../site-data.ts'
 import { Icon } from '../icon.tsx'
+import { NavTooltip } from '../sidebar-assistant.tsx'
 
 export type LogoProps = Omit<React.ComponentProps<'img'>, 'src' | 'alt'> & {
   alt?: string
@@ -102,16 +103,17 @@ export function Footer() {
   const socialIcons = hasSocials && (
     <div className='flex items-center gap-3'>
       {Object.entries(socials).map(([platform, url]) => (
-        <Link
-          key={platform}
-          href={url}
-          target='_blank'
-          rel='noopener noreferrer'
-          aria-label={platform}
-          className='no-underline text-muted-foreground transition-colors duration-150 hover:text-foreground'
-        >
-          <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
-        </Link>
+        <NavTooltip key={platform} label={socialPlatformLabel(platform)}>
+          <Link
+            href={url}
+            target='_blank'
+            rel='noopener noreferrer'
+            aria-label={socialPlatformLabel(platform)}
+            className='no-underline text-muted-foreground transition-colors duration-150 hover:text-foreground'
+          >
+            <Icon icon={getDefaultTypeIcon(platform, site.config.icons.library) || 'link'} size={16} />
+          </Link>
+        </NavTooltip>
       ))}
     </div>
   )

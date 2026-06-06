@@ -93,6 +93,32 @@ export function getDefaultTypeIcon(type: string, library: IconLibrary): string |
   return TYPE_ICONS_BY_LIBRARY[library][type]
 }
 
+const SOCIAL_LABELS: Record<string, string> = {
+  github: 'GitHub',
+  x: 'X',
+  twitter: 'Twitter',
+  discord: 'Discord',
+  slack: 'Slack',
+  linkedin: 'LinkedIn',
+  youtube: 'YouTube',
+  hacker_news: 'Hacker News',
+  reddit: 'Reddit',
+  podcast: 'Podcast',
+  medium: 'Medium',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  mastodon: 'Mastodon',
+  bluesky: 'Bluesky',
+  twitch: 'Twitch',
+  threads: 'Threads',
+  tiktok: 'TikTok',
+}
+
+/** Human-readable label for a social platform key. Falls back to capitalized key. */
+export function socialPlatformLabel(platform: string): string {
+  return SOCIAL_LABELS[platform] || platform.charAt(0).toUpperCase() + platform.slice(1)
+}
+
 function buildIconRef({ library, name, style }: { library: IconLibrary; name: string; style?: string }): IconRef {
   if (library === 'fontawesome') {
     return style ? `fontawesome:${style}:${name}` : `fontawesome:${name}`

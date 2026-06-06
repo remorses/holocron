@@ -23,6 +23,7 @@ import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
 import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon } from '../icon.tsx'
+import { NavTooltip } from '../sidebar-assistant.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { ConfigPanel } from '../config-panel.tsx'
 import { Footer, Logo, PoweredBy } from './footer.tsx'
@@ -233,7 +234,8 @@ export function EditorialPage({
             {headerLinks && headerLinks.length > 0 && (
               <div className='flex items-center gap-3'>
                 {headerLinks.map((link) => {
-                  return (
+                  const iconOnly = !!link.icon
+                  const linkEl = (
                     <Link
                       key={link.href}
                       href={link.href}
@@ -243,10 +245,15 @@ export function EditorialPage({
                       className='no-underline flex items-center gap-1.5 text-muted-foreground transition-colors duration-150 hover:text-foreground'
                     >
                       <Icon icon={link.icon} size={16} />
-                      {!link.icon && (
+                      {!iconOnly && (
                         <span className='text-sm'>{link.label}</span>
                       )}
                     </Link>
+                  )
+                  return iconOnly ? (
+                    <NavTooltip key={link.href} label={link.label}>{linkEl}</NavTooltip>
+                  ) : (
+                    linkEl
                   )
                 })}
               </div>
