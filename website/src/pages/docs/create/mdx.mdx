@@ -82,4 +82,8 @@ Use `Note` for neutral information.
 
 This is an MDX parser limitation. Multi-line form gets proper paragraph wrapping; single-line form produces bare inline text.
 
-Native heading elements (`<h1>` through `<h6>`) are an exception: Holocron automatically unwraps the paragraph wrapper so both multi-line and single-line forms produce the same clean output.
+Native heading elements (`<h1>` through `<h6>`) are auto-fixed: Holocron unwraps the paragraph wrapper so both multi-line and single-line forms produce the same clean output. For other leaf-like elements (`<span>`, `<div>`, or custom components), use **single-line form** to avoid the wrapper:
+
+```mdx
+<MyBanner className='text-xl'>Short announcement text</MyBanner>
+```

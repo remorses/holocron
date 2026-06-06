@@ -386,6 +386,14 @@ Use `Note` for neutral supporting information.
 Single-line form can produce bare phrasing children without paragraph wrapping,
 which changes styling.
 
+Native headings (`h1`-`h6`) are auto-fixed; Holocron unwraps the paragraph
+wrapper regardless of form. For other leaf-like elements (`<span>`, `<div>`,
+or custom uppercase components), use **single-line form** to avoid the wrapper.
+
+```mdx
+<MyBanner className='text-xl'>Short announcement text</MyBanner>
+```
+
 ## Aside content
 
 `Aside` is positioning-only and has no visual frame. Always wrap visible content
