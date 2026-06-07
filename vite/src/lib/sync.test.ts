@@ -2041,3 +2041,354 @@ API docs here.
     expect(result.mdxContent.index).toContain('[OpenAPI docs](/openapi)')
   })
 })
+
+describe('broken asset warnings', () => {
+  test('warns about missing local images', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+![screenshot](./missing-image.png)
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings.some((w) => w.includes('missing-image.png'))).toBe(true)
+    expect(warnings).toHaveLength(1)
+  })
+
+  test('does not warn for existing images', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+![screenshot](./exists.png)
+`,
+      },
+    ))
+    // Create the image file
+    fs.writeFileSync(path.join(project.pagesDir, 'exists.png'), 'fake-png-data')
+
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('does not warn for images in publicDir', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+![logo](/logo.png)
+`,
+      },
+    ))
+    // Create the image in publicDir
+    fs.writeFileSync(path.join(project.publicDir, 'logo.png'), 'fake-png-data')
+
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('warns about missing video and audio files', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+<video src="./demo.mp4" />
+<audio src="./podcast.mp3" />
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings.some((w) => w.includes('demo.mp4'))).toBe(true)
+    expect(warnings.some((w) => w.includes('podcast.mp3'))).toBe(true)
+    expect(warnings).toHaveLength(2)
+  })
+
+  test('does not warn for remote images', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+![remote](https://example.com/image.png)
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('warns about broken og:image in frontmatter', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+"og:image": ./missing-og.png
+---
+
+Some content.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings.some((w) => w.includes('missing-og.png'))).toBe(true)
+  })
+
+  test('does not warn about remote og:image in frontmatter', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+"og:image": https://example.com/og.png
+---
+
+Some content.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('warns about both body images and frontmatter og:image', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+"og:image": ./missing-og.png
+---
+
+![body](./missing-body.png)
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    // Both body image AND frontmatter og:image should warn
+    expect(warnings.some((w) => w.includes('missing-body.png'))).toBe(true)
+    expect(warnings.some((w) => w.includes('missing-og.png'))).toBe(true)
+    expect(warnings).toHaveLength(2)
+  })
+
+  test('does not warn for images with query params when file exists', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+![versioned](./photo.png?v=2)
+`,
+      },
+    ))
+    // Create the image file (without query string)
+    fs.writeFileSync(path.join(project.pagesDir, 'photo.png'), 'fake-png-data')
+
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('warns about missing JSX Image src', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+<Image src="./nonexistent.jpg" alt="broken" />
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings.some((w) => w.includes('nonexistent.jpg'))).toBe(true)
+  })
+
+  test('warns about missing absolute image path', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+![hero](/images/hero.png)
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings.some((w) => w.includes('/images/hero.png'))).toBe(true)
+  })
+})

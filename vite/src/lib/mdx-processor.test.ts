@@ -807,6 +807,134 @@ See [guide][g] and [setup][s].
   })
 })
 
+describe('asset refs collection', () => {
+  test('collects markdown image refs with line numbers', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+![screenshot](./screenshot.png)
+
+Some text here.
+
+![hero](/images/hero.jpg)
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    expect(result.assetRefs).toMatchInlineSnapshot(`
+      [
+        {
+          "line": 5,
+          "src": "./screenshot.png",
+        },
+        {
+          "line": 9,
+          "src": "/images/hero.jpg",
+        },
+      ]
+    `)
+  })
+
+  test('collects JSX Image and video refs', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+<Image src="./photo.webp" alt="photo" />
+
+<video src="./demo.mp4" />
+
+<audio src="/sounds/alert.mp3" />
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    expect(result.assetRefs.map((r) => r.src)).toMatchInlineSnapshot(`
+      [
+        "./photo.webp",
+        "./demo.mp4",
+        "/sounds/alert.mp3",
+      ]
+    `)
+  })
+
+  test('excludes remote URLs from asset refs', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+![remote](https://example.com/image.png)
+
+<video src="https://cdn.example.com/video.mp4" />
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    expect(result.assetRefs).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('deduplicates asset refs by src', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+![first](./image.png)
+
+![second](./image.png)
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    expect(result.assetRefs).toHaveLength(1)
+    expect(result.assetRefs[0]!.src).toBe('./image.png')
+  })
+
+  test('collects LazyVideo and source element refs', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+<LazyVideo src="./lazy.mp4" />
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    expect(result.assetRefs.map((r) => r.src)).toMatchInlineSnapshot(`
+      [
+        "./lazy.mp4",
+      ]
+    `)
+  })
+
+  test('excludes data URIs and blob URLs', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+![inline](data:image/png;base64,iVBORw0KGgo=)
+
+<img src="blob:https://example.com/12345" />
+
+<img src="#sprite-id" />
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    expect(result.assetRefs).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('collects video poster attribute', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+<video poster="./poster.jpg" src="https://cdn.example.com/video.mp4" />
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    expect(result.assetRefs.map((r) => r.src)).toMatchInlineSnapshot(`
+      [
+        "./poster.jpg",
+      ]
+    `)
+  })
+})
+
 describe('auto-generated description', () => {
   test('extracts description from first paragraphs when no frontmatter description', () => {
     const result = processMdx(`# Getting Started

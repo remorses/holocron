@@ -37,6 +37,15 @@ export type InternalLink = {
   line?: number
 }
 
+/** A local asset reference (image, video, audio) found in MDX content.
+ *  Used for broken-asset validation at build time. */
+export type AssetRef = {
+  /** The raw src as written in MDX (e.g. './screenshot.png', '/videos/demo.mp4') */
+  src: string
+  /** 1-based line number in the MDX source, if available */
+  line?: number
+}
+
 export type ProcessedMdx = {
   normalizedContent: string
   title: string
@@ -50,6 +59,9 @@ export type ProcessedMdx = {
   headings: NavHeading[]
   /** All image srcs that need build-time processing */
   imageSrcs: string[]
+  /** All local asset references (images + media) with line numbers, for
+   *  broken-asset validation. Remote URLs are excluded. */
+  assetRefs: AssetRef[]
   /** Internal links (relative/absolute paths within the site) for broken-link
    *  validation. External URLs, anchors-only, and protocol links are excluded. */
   internalLinks: InternalLink[]
@@ -112,6 +124,7 @@ export function processMdx(
   }
 
   const imageSrcs = collectImageSrcs(mdast)
+  const assetRefs = collectAssetRefs(mdast)
   const internalLinks = collectInternalLinks(mdast)
 
   // Extract local import sources (relative/absolute paths) from MDX import
@@ -141,6 +154,7 @@ export function processMdx(
     iconRefs,
     headings,
     imageSrcs,
+    assetRefs,
     internalLinks,
     importSources,
     importBindings,
@@ -288,6 +302,70 @@ function collectImageSrcs(root: Root): string[] {
 
   walk(root.children)
   return [...new Set(srcs)]
+}
+
+/* ── Asset ref collection (images + media with line numbers) ─────────── */
+
+/** JSX element names that carry a `src` attribute pointing to local assets. */
+const JSX_ASSET_ELEMENTS = new Set([
+  'Image', 'img',
+  'video', 'Video', 'LazyVideo',
+  'audio', 'Audio',
+  'source',
+])
+
+/** Check if an asset src is a non-local URL that should be skipped.
+ *  Matches http(s), data:, blob:, hash-only (#id), and protocol-relative (//) URLs. */
+function isNonLocalAssetSrc(src: string): boolean {
+  if (!src) return true
+  if (src.startsWith('#') || src.startsWith('//')) return true
+  // Match any scheme: http:, https:, data:, blob:, javascript:, etc.
+  return /^[a-z][a-z0-9+.-]*:/i.test(src)
+}
+
+/**
+ * Walk the mdast tree and collect local asset references (images, video,
+ * audio) with line numbers. Remote/data/blob URLs are excluded. Used for
+ * broken-asset validation at build time.
+ */
+function collectAssetRefs(root: Root): AssetRef[] {
+  const refs: AssetRef[] = []
+  const seen = new Set<string>()
+
+  function add(src: string, line?: number) {
+    if (isNonLocalAssetSrc(src)) return
+    if (seen.has(src)) return
+    seen.add(src)
+    refs.push({ src, line })
+  }
+
+  function walk(nodes: RootContent[]) {
+    for (const node of nodes) {
+      // Markdown images: ![alt](src)
+      if (node.type === 'image' && node.url) {
+        add(node.url, node.position?.start?.line)
+      }
+      // JSX elements with src: <Image>, <img>, <video>, <audio>, <source>, <LazyVideo>
+      if (isJsxElement(node) && JSX_ASSET_ELEMENTS.has(node.name ?? '')) {
+        const src = getJsxAttrValue(node, 'src')
+        if (src) {
+          add(src, node.position?.start?.line)
+        }
+        // Also check poster attribute (video poster images)
+        const poster = getJsxAttrValue(node, 'poster')
+        if (poster) {
+          add(poster, node.position?.start?.line)
+        }
+      }
+      const children = Reflect.get(node, 'children')
+      if (Array.isArray(children)) {
+        walk(children)
+      }
+    }
+  }
+
+  walk(root.children)
+  return refs
 }
 
 /* ── Internal link collection ────────────────────────────────────────── */

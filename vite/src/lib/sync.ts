@@ -17,7 +17,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink, type ProcessMdxOptions } from './mdx-processor.ts'
+import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink, type AssetRef, type ProcessMdxOptions } from './mdx-processor.ts'
 import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from './remark-inline-imports.ts'
 import { visit } from 'unist-util-visit'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
@@ -68,6 +68,9 @@ const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
+const MEDIA_EXTENSIONS = new Set(['.mp4', '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.mov', '.avi', '.mkv', '.flac', '.aac'])
+/** All local asset extensions (images + media) for broken-asset validation. */
+const LOCAL_ASSET_EXTENSIONS = new Set([...IMAGE_EXTENSIONS, ...MEDIA_EXTENSIONS])
 
 function redirectSourceToSlug(source: string): string | undefined {
   if (source.includes(':') || source.includes('*')) return undefined
@@ -158,6 +161,7 @@ export async function syncNavigation({
   const oldPageIconRefs = oldMdxCache.pageIconRefs
   const oldPageImportSources = oldMdxCache.pageImportSources
   const oldPageInternalLinks = oldMdxCache.pageInternalLinks
+  const oldPageAssetRefs = oldMdxCache.pageAssetRefs
   const imageCache = loadImageCache({ distDir })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
@@ -172,6 +176,8 @@ export async function syncNavigation({
   const pageImports: Record<string, ResolvedImport[]> = {}
   /** Internal links per page slug (for broken-link validation after nav is built) */
   const pageInternalLinks: Record<string, InternalLink[]> = {}
+  /** Local asset references per page slug (for broken-asset validation) */
+  const pageAssetRefs: Record<string, AssetRef[]> = {}
   /** Image files referenced by imported .md/.mdx (for HMR watching) */
   const allImportedImageDepPaths = new Set<string>()
   const mdxContentErrors = new Set<string>()
@@ -225,6 +231,7 @@ export async function syncNavigation({
       mdxContent[slug] = processed.normalizedContent
       pageIconRefs[slug] = processed.iconRefs
       if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
+      if (processed.assetRefs.length > 0) pageAssetRefs[slug] = processed.assetRefs
       // Resolve imports (.tsx components) so virtual:holocron-modules has them.
       if (processed.importSources.length > 0) {
         pageImportSources[slug] = processed.importSources
@@ -328,6 +335,9 @@ export async function syncNavigation({
       // Restore cached internal links for broken-link validation
       const cachedLinks = oldPageInternalLinks[slug]
       if (cachedLinks && cachedLinks.length > 0) pageInternalLinks[slug] = cachedLinks
+      // Restore cached asset refs for broken-asset validation
+      const cachedAssets = oldPageAssetRefs[slug]
+      if (cachedAssets && cachedAssets.length > 0) pageAssetRefs[slug] = cachedAssets
       // Restore cached raw import sources, then resolve fresh against the
       // current filesystem. This ensures newly-created files are picked up
       // without re-parsing the MDX.
@@ -365,9 +375,15 @@ export async function syncNavigation({
     // pipeline as MDX content images so relative paths like ./screenshot.png
     // get copied to public and rewritten to a servable URL.
     // Images already in public/ are NOT copied (needsCopy: false from resolveImagePath).
+    // Also track these as asset refs for broken-asset validation.
+    // Build a merged asset refs array: body refs first, then frontmatter refs.
+    const mergedAssetRefs = [...processed.assetRefs]
     for (const fmKey of ['og:image', 'twitter:image'] as const) {
       const src = processed.frontmatter[fmKey]
       if (!src || typeof src !== 'string' || src.startsWith('http://') || src.startsWith('https://')) continue
+      if (!mergedAssetRefs.some((r) => r.src === src)) {
+        mergedAssetRefs.push({ src, line: undefined })
+      }
       const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
       if (resolved?.needsCopy) {
         processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir })}`
@@ -381,6 +397,7 @@ export async function syncNavigation({
 
     pageIconRefs[slug] = processed.iconRefs
     if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
+    if (mergedAssetRefs.length > 0) pageAssetRefs[slug] = mergedAssetRefs
     // Cache raw import sources (for future cache hits) and resolve fresh
     pageImportSources[slug] = processed.importSources
     pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
@@ -482,6 +499,14 @@ export async function syncNavigation({
     knownPaths: config.knownPaths,
   })
 
+  // 4e. Validate local asset references — warn about images/media pointing to non-existent files.
+  const brokenAssetStats = validateLocalAssets({
+    pageAssetRefs,
+    pagesDir,
+    publicDir,
+    projectRoot,
+  })
+
   // 5. Write caches
   writeCache(cachePath, navigation)
   writeMdxCache(mdxCachePath, {
@@ -489,6 +514,7 @@ export async function syncNavigation({
     pageIconRefs,
     pageImportSources,
     pageInternalLinks,
+    pageAssetRefs,
   })
   saveImageCache({ distDir, cache: imageCache })
 
@@ -500,6 +526,13 @@ export async function syncNavigation({
     logger.warn(formatHolocronWarning(
       `found ${colors.yellow(String(brokenLinkStats.brokenLinkCount))} invalid internal link${brokenLinkStats.brokenLinkCount === 1 ? '' : 's'} across ${colors.yellow(String(brokenLinkStats.affectedPageCount))} page${brokenLinkStats.affectedPageCount === 1 ? '' : 's'}. ` +
       `Fix them or add paths to ${colors.cyan('knownPaths')} in docs.json. See ${colors.cyan('https://holocron.so/docs/create/broken-links')}`,
+    ))
+  }
+  if (brokenAssetStats.brokenAssetCount > 0) {
+    logger.warn('')
+    logger.warn(formatHolocronWarning(
+      `found ${colors.yellow(String(brokenAssetStats.brokenAssetCount))} broken asset reference${brokenAssetStats.brokenAssetCount === 1 ? '' : 's'} across ${colors.yellow(String(brokenAssetStats.affectedPageCount))} page${brokenAssetStats.affectedPageCount === 1 ? '' : 's'}. ` +
+      `Check that image, video, and audio file paths are correct.`,
     ))
   }
   if (mdxContentErrors.size > 0) {
@@ -623,12 +656,18 @@ function resolveImagePath({
 }
 
 async function fetchRemoteImageBuffer(src: string): Promise<Buffer | undefined> {
-  const response = await fetch(src)
+  const response = await fetch(src, { signal: AbortSignal.timeout(5_000) })
   if (!response.ok) {
+    logger.warn(formatHolocronWarning(
+      `failed to fetch remote image ${src}: HTTP ${response.status}`,
+    ))
     return undefined
   }
   const contentType = response.headers.get('content-type')
   if (contentType && !contentType.startsWith('image/')) {
+    logger.warn(formatHolocronWarning(
+      `failed to fetch remote image ${src}: unexpected content-type "${contentType}"`,
+    ))
     return undefined
   }
   return Buffer.from(await response.arrayBuffer())
@@ -851,6 +890,94 @@ function resolveInternalHref(href: string, slugDir: string): string | undefined 
   }
 
   return resolved || '/'
+}
+
+/* ── Local asset validation ───────────────────────────────────────────── */
+
+/**
+ * Validate that local asset references (images, video, audio) in MDX pages
+ * point to existing files. Logs a warning for each broken reference.
+ *
+ * Resolution rules (same as resolveImagePath):
+ * - Relative paths (./img.png, ../x.jpg): resolve from pagesDir + slugDir
+ * - Absolute paths (/images/x.png): try publicDir first, then projectRoot
+ * - Remote URLs (http/https) are already excluded by collectAssetRefs
+ */
+function validateLocalAssets({
+  pageAssetRefs,
+  pagesDir,
+  publicDir,
+  projectRoot,
+}: {
+  pageAssetRefs: Record<string, AssetRef[]>
+  pagesDir: string
+  publicDir: string
+  projectRoot: string
+}): { brokenAssetCount: number; affectedPageCount: number } {
+  let brokenAssetCount = 0
+  const pagesWithBrokenAssets = new Set<string>()
+
+  for (const [slug, refs] of Object.entries(pageAssetRefs)) {
+    const source = slug === 'index' ? '/' : `/${slug}`
+    const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
+    const mdxDir = path.join(pagesDir, slugDir)
+
+    for (const { src, line } of refs) {
+      if (resolveLocalAssetPath({ src, mdxDir, publicDir, projectRoot })) continue
+
+      brokenAssetCount++
+      pagesWithBrokenAssets.add(slug)
+
+      const location = line
+        ? ` ${colors.cyan(source)}:${colors.yellow(String(line))}`
+        : ` ${colors.cyan(source)} (frontmatter)`
+      logger.warn(formatHolocronWarning(
+        `broken asset${location} → ${colors.yellow(src)} (file not found)`,
+      ))
+    }
+  }
+
+  return { brokenAssetCount, affectedPageCount: pagesWithBrokenAssets.size }
+}
+
+/**
+ * Check if a local asset path resolves to an existing file. Supports both
+ * image and media extensions. Same resolution logic as resolveImagePath but
+ * uses the broader LOCAL_ASSET_EXTENSIONS set.
+ *
+ * Strips query strings and hash fragments before filesystem checks so
+ * paths like `./image.png?v=1` or `./photo.jpg#crop` resolve correctly.
+ */
+function resolveLocalAssetPath({
+  src,
+  mdxDir,
+  publicDir,
+  projectRoot,
+}: {
+  src: string
+  mdxDir: string
+  publicDir: string
+  projectRoot: string
+}): boolean {
+  // Strip query/hash before filesystem resolution
+  const pathPart = src.split(/[?#]/, 1)[0]!
+  if (!pathPart) return true
+
+  const isAbsolute = pathPart.startsWith('/')
+  const ext = path.extname(pathPart).toLowerCase()
+  // Only validate files with known asset extensions. Unknown extensions
+  // (e.g. .pdf, .zip) are not assets and should not trigger warnings.
+  if (ext && !LOCAL_ASSET_EXTENSIONS.has(ext)) return true
+
+  if (!isAbsolute) {
+    const filePath = path.resolve(mdxDir, pathPart)
+    return fs.existsSync(filePath)
+  }
+
+  // Absolute path — try publicDir first, then projectRoot
+  if (fs.existsSync(path.join(publicDir, pathPart))) return true
+  if (fs.existsSync(path.join(projectRoot, pathPart))) return true
+  return false
 }
 
 /* ── Inline import resolution ────────────────────────────────────────── */
@@ -1163,6 +1290,9 @@ type MdxCacheEnvelope = {
   /** Internal links per page for broken-link validation. Cached so we can
    *  validate links on cache hits without re-parsing MDX. */
   pageInternalLinks: Record<string, InternalLink[]>
+  /** Local asset refs per page for broken-asset validation. Cached so we can
+   *  validate asset paths on cache hits without re-parsing MDX. */
+  pageAssetRefs: Record<string, AssetRef[]>
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -1195,10 +1325,11 @@ type MdxCacheData = {
   pageIconRefs: Record<string, IconRef[]>
   pageImportSources: Record<string, string[]>
   pageInternalLinks: Record<string, InternalLink[]>
+  pageAssetRefs: Record<string, AssetRef[]>
 }
 
 function readMdxCache(cachePath: string): MdxCacheData {
-  const empty: MdxCacheData = { content: {}, pageIconRefs: {}, pageImportSources: {}, pageInternalLinks: {} }
+  const empty: MdxCacheData = { content: {}, pageIconRefs: {}, pageImportSources: {}, pageInternalLinks: {}, pageAssetRefs: {} }
   if (!fs.existsSync(cachePath)) return empty
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
@@ -1209,6 +1340,7 @@ function readMdxCache(cachePath: string): MdxCacheData {
         pageIconRefs: envelope.pageIconRefs ?? {},
         pageImportSources: envelope.pageImportSources ?? {},
         pageInternalLinks: envelope.pageInternalLinks ?? {},
+        pageAssetRefs: envelope.pageAssetRefs ?? {},
       }
     }
     return empty
@@ -1229,6 +1361,7 @@ function writeMdxCache(
     pageIconRefs: data.pageIconRefs,
     pageImportSources: data.pageImportSources,
     pageInternalLinks: data.pageInternalLinks,
+    pageAssetRefs: data.pageAssetRefs,
   }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
