@@ -243,6 +243,7 @@ function renderMdxPage({
   loaderData,
   bannerJsx,
   ogImageUrl,
+  requestUrl,
   modules,
   pagesDirPrefix,
   preParsedMdast,
@@ -254,6 +255,8 @@ function renderMdxPage({
   loaderData: HolocronLoaderData
   bannerJsx: React.ReactNode | undefined
   ogImageUrl: string
+  /** Request URL used to resolve relative og:image / twitter:image paths to absolute URLs */
+  requestUrl: URL
   /** Pre-resolved modules for MDX import statements (from resolveModules) */
   modules?: EagerModules
   /** Pages directory prefix for resolving relative imports */
@@ -265,8 +268,10 @@ function renderMdxPage({
 }) {
   const pageSeoMeta = getPageSeoMeta(loaderData.currentPageFrontmatter)
   const pageKeywords = serializeKeywords(loaderData.currentPageFrontmatter?.keywords)
-  const pageOgImage = pageSeoMeta['og:image'] ?? ogImageUrl
-  const pageTwitterImage = pageSeoMeta['twitter:image'] ?? pageOgImage
+  // Resolve relative image URLs to absolute — social crawlers need full URLs
+  const resolveUrl = (url: string) => /^https?:\/\//.test(url) ? url : new URL(url, requestUrl.origin).toString()
+  const pageOgImage = resolveUrl(pageSeoMeta['og:image'] ?? ogImageUrl)
+  const pageTwitterImage = resolveUrl(pageSeoMeta['twitter:image'] ?? pageOgImage)
   const pageOgDescription = pageSeoMeta['og:description'] ?? loaderData.currentPageDescription
   const pageTwitterDescription = pageSeoMeta['twitter:description'] ?? loaderData.currentPageDescription
   const pageOgTitle = pageSeoMeta['og:title'] ?? loaderData.headTitle
@@ -858,7 +863,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         if (visitor.errors.length > 0) devRenderErrors = visitor.errors
       }
 
-      return renderMdxPage({ site: loaderData.site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast, devRenderErrors })
+      return renderMdxPage({ site: loaderData.site, slug, pageMdx, loaderData, bannerJsx, ogImageUrl, requestUrl, modules, pagesDirPrefix: providers.pagesDirPrefix, preParsedMdast, devRenderErrors })
     }
   }
 
