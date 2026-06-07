@@ -71,6 +71,25 @@ tag: New
 | `twitter:description` | string | Twitter card description |
 | `twitter:image` | string | Twitter card image |
 
+## Open Graph image
+
+By default, Holocron **auto-generates an OG image** for every page using the page title, description, and site favicon. This works out of the box with no configuration needed.
+
+To use a **custom image** instead, set `og:image` in the page frontmatter. Both absolute URLs and relative paths work; relative paths are resolved to absolute URLs automatically.
+
+```mdx
+---
+title: Getting Started
+"og:image": /images/getting-started-og.png
+"og:image:width": 1200
+"og:image:height": 630
+---
+```
+
+Place the image file in your `public/` folder (e.g. `public/images/getting-started-og.png`). The recommended size is **1200x630** pixels.
+
+You can also override the Twitter card image separately with `twitter:image`. If not set, it falls back to `og:image`.
+
 ## Sidebar title
 
 Use `sidebarTitle` to show a **shorter label** in the sidebar while keeping a longer, more descriptive `title` for SEO and browser tabs.
