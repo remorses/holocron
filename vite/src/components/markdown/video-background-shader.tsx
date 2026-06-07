@@ -461,11 +461,11 @@ const DISPLAY_FRAG = /* glsl */ `
     vec4 video = texture2D(uVideo, centerUv);
     vec4 dye = texture2D(uDye, centerUv);
     vec3 videoGammaCorrected = pow(video.rgb, vec3(gamma));
-    float videoLuminance = dot(videoGammaCorrected, vec3(0.299, 0.587, 0.114));
+    vec3 scaledDye = dye.rgb * fluidStrength;
+    scaledDye = pow(scaledDye + 0.001, vec3(0.7));
+    float videoLuminance = dot(videoGammaCorrected + scaledDye, vec3(0.299, 0.587, 0.114));
     float dyeLuminance = dot(dye.rgb, vec3(0.299, 0.587, 0.114));
-    float fluidLuminance = smoothstep(0.0, 1.0, dyeLuminance) * fluidStrength;
-    float luminance = max(videoLuminance, minLuminance);
-    luminance += fluidLuminance * (1.0 - luminance);
+    float luminance = max(max(videoLuminance, dyeLuminance), minLuminance);
 
     if (enableMask) {
       vec4 mask = texture2D(uMask, vUv);
