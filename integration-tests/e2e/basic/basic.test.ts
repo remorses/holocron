@@ -403,3 +403,82 @@ test("@build RSC entry contains listen() guard", () => {
   expect(code).toContain(".listen(");
   expect(code).toContain("import.meta.main");
 });
+
+// @build — verifies that virtual modules are emitted as separate,
+// deterministically-named chunks in the RSC build output. This enables
+// multi-tenant deployments by swapping these files post-build.
+test.describe("@build deterministic RSC chunk names", () => {
+  function getRscAssetsDir(): string | null {
+    const runId = process.env["E2E_RUN_ID"];
+    if (!runId) return null;
+    const fixtureRoot = path.resolve(import.meta.dirname, "../../fixtures/basic");
+    const sanitized = runId.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
+    const assetsDir = path.join(fixtureRoot, ".e2e-dist", sanitized, "rsc/assets");
+    return fs.existsSync(assetsDir) ? assetsDir : null;
+  }
+
+  test("emits holocron-data.js with no content hash", () => {
+    const assetsDir = getRscAssetsDir();
+    if (!assetsDir) return; // dev mode
+    expect(fs.existsSync(path.join(assetsDir, "holocron-data.js"))).toBe(true);
+  });
+
+  test("holocron-data.js contains config, navigation, and MDX loader", () => {
+    const assetsDir = getRscAssetsDir();
+    if (!assetsDir) return;
+    const code = fs.readFileSync(path.join(assetsDir, "holocron-data.js"), "utf-8");
+    // Config: getConfig function
+    expect(code).toContain("getConfig");
+    // Navigation: getNavigationData with enriched page objects
+    expect(code).toContain("getNavigationData");
+    expect(code).toContain("Getting Started");
+    // MDX loader: slug list and lazy import map
+    expect(code).toContain("getMdxSlugs");
+    expect(code).toContain("getMdxSource");
+    // Modules map
+    expect(code).toContain("getModules");
+  });
+
+  test("emits per-page MDX chunks with deterministic slug-based names", () => {
+    const assetsDir = getRscAssetsDir();
+    if (!assetsDir) return;
+    const files = fs.readdirSync(assetsDir);
+    const pageChunks = files.filter((f) => f.startsWith("holocron-page-")).sort();
+    // The basic fixture has 3 pages: index, getting-started, markdown-page
+    expect(pageChunks).toEqual([
+      "holocron-page-getting-started.js",
+      "holocron-page-index.js",
+      "holocron-page-markdown-page.js",
+    ]);
+  });
+
+  test("holocron-data.js imports page chunks by deterministic name", () => {
+    const assetsDir = getRscAssetsDir();
+    if (!assetsDir) return;
+    const code = fs.readFileSync(path.join(assetsDir, "holocron-data.js"), "utf-8");
+    expect(code).toContain("holocron-page-getting-started.js");
+    expect(code).toContain("holocron-page-index.js");
+    expect(code).toContain("holocron-page-markdown-page.js");
+  });
+
+  test("page chunk contains the raw MDX content for that page", () => {
+    const assetsDir = getRscAssetsDir();
+    if (!assetsDir) return;
+    const code = fs.readFileSync(path.join(assetsDir, "holocron-page-getting-started.js"), "utf-8");
+    expect(code).toContain("Getting Started");
+    expect(code).toContain("npm install @holocron.so/vite");
+  });
+
+  test("stable chunk does not contain virtual module data", () => {
+    const assetsDir = getRscAssetsDir();
+    if (!assetsDir) return;
+    const files = fs.readdirSync(assetsDir);
+    const stableChunk = files.find((f) => f.startsWith("holocron-stable-") && f.endsWith(".js"));
+    if (!stableChunk) return;
+    const code = fs.readFileSync(path.join(assetsDir, stableChunk), "utf-8");
+    // Virtual module markers should NOT be in the stable chunk
+    expect(code).not.toContain("virtual:holocron-config");
+    expect(code).not.toContain("virtual:holocron-navigation");
+    expect(code).not.toContain("virtual:holocron-mdx\n");
+  });
+});

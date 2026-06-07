@@ -164,6 +164,14 @@ const STABLE_GROUP = {
   priority: 20,
 }
 
+// Virtual module data: separate chunk with stable name for multi-tenant swapping.
+// Excludes virtual:holocron-mdx-page/* (per-page chunks stay individual).
+const HOLOCRON_DATA_GROUP = {
+  name: 'holocron-data',
+  test: /\0virtual:holocron-(?:config|navigation|mdx(?!-page)|modules)/,
+  priority: 30,
+}
+
 function addCodeSplittingGroups(config: UserConfig, groups: Array<{ name: string; test: RegExp; priority: number }>) {
   config.build ??= {}
   config.build.rolldownOptions ??= {}
@@ -899,7 +907,30 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // content-addressable dedup for holocron deploy.
       // RSC-only — SSR is self-contained and not dynamically imported.
       if (name === 'rsc') {
-        addCodeSplittingGroups(config, [STABLE_GROUP])
+        addCodeSplittingGroups(config, [HOLOCRON_DATA_GROUP, STABLE_GROUP])
+
+        // Deterministic names: holocron-data.js + holocron-page-{slug}.js
+        config.build ??= {}
+        config.build.rolldownOptions ??= {}
+        const output = config.build.rolldownOptions.output ??= {}
+        if (!Array.isArray(output)) {
+          const existingChunkFileNames = output.chunkFileNames
+          output.chunkFileNames = (chunkInfo) => {
+            if (chunkInfo.name === 'holocron-data') {
+              return 'assets/holocron-data.js'
+            }
+            const mdxPageId = chunkInfo.moduleIds.find((id) => id.includes('\0virtual:holocron-mdx-page/'))
+            if (mdxPageId) {
+              const slug = decodeURIComponent(mdxPageId.split('\0virtual:holocron-mdx-page/')[1] ?? '')
+              const safeName = slug.replace(/\//g, '--')
+              return `assets/holocron-page-${safeName}.js`
+            }
+            if (typeof existingChunkFileNames === 'function') {
+              return existingChunkFileNames(chunkInfo)
+            }
+            return existingChunkFileNames ?? 'assets/[name]-[hash].js'
+          }
+        }
       }
 
       if (name === 'rsc' || name === 'ssr') {
