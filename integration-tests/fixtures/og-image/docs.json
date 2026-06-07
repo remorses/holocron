@@ -12,7 +12,9 @@
         "group": "Guides",
         "pages": [
           "index",
-          "getting-started"
+          "getting-started",
+          "custom-og-public",
+          "custom-og-relative"
         ]
       }
     ]
