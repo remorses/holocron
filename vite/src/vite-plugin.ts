@@ -915,10 +915,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         addCodeSplittingGroups(config, [HOLOCRON_DATA_GROUP, STABLE_GROUP])
 
         // Deterministic names: holocron-data.js + holocron-page-{slug}.js
+        // Disable minification and internal export renaming so the data
+        // chunk keeps readable names for manual post-build editing.
         config.build ??= {}
+        config.build.minify = false
         config.build.rolldownOptions ??= {}
         const output = config.build.rolldownOptions.output ??= {}
         if (!Array.isArray(output)) {
+          // Keep original export names across chunk boundaries
+          ;(output as any).minifyInternalExports = false
           const existingChunkFileNames = output.chunkFileNames
           output.chunkFileNames = (chunkInfo) => {
             if (chunkInfo.name === 'holocron-data') {
