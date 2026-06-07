@@ -316,7 +316,7 @@ const JSX_ASSET_ELEMENTS = new Set([
 
 /** Check if an asset src is a non-local URL that should be skipped.
  *  Matches http(s), data:, blob:, hash-only (#id), and protocol-relative (//) URLs. */
-function isNonLocalAssetSrc(src: string): boolean {
+export function isNonLocalAssetSrc(src: string): boolean {
   if (!src) return true
   if (src.startsWith('#') || src.startsWith('//')) return true
   // Match any scheme: http:, https:, data:, blob:, javascript:, etc.
@@ -346,13 +346,15 @@ function collectAssetRefs(root: Root): AssetRef[] {
         add(node.url, node.position?.start?.line)
       }
       // JSX elements with src: <Image>, <img>, <video>, <audio>, <source>, <LazyVideo>
+      // Use getStaticJsxStringAttr to skip JSX expressions like src={logo}
+      // which are runtime values, not static file paths.
       if (isJsxElement(node) && JSX_ASSET_ELEMENTS.has(node.name ?? '')) {
-        const src = getJsxAttrValue(node, 'src')
+        const src = getStaticJsxStringAttr(node, 'src')
         if (src) {
           add(src, node.position?.start?.line)
         }
         // Also check poster attribute (video poster images)
-        const poster = getJsxAttrValue(node, 'poster')
+        const poster = getStaticJsxStringAttr(node, 'poster')
         if (poster) {
           add(poster, node.position?.start?.line)
         }

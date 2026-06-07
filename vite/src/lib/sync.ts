@@ -17,7 +17,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
-import { processMdx, rewriteMdxImages, type ResolvedImage, type InternalLink, type AssetRef, type ProcessMdxOptions } from './mdx-processor.ts'
+import { processMdx, rewriteMdxImages, isNonLocalAssetSrc, type ResolvedImage, type InternalLink, type AssetRef, type ProcessMdxOptions } from './mdx-processor.ts'
 import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from './remark-inline-imports.ts'
 import { visit } from 'unist-util-visit'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
@@ -67,7 +67,7 @@ function collectAllPagesFromTab(tab: NavTab): NavPage[] {
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
 
-const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.avif', '.ico'])
 const MEDIA_EXTENSIONS = new Set(['.mp4', '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.mov', '.avi', '.mkv', '.flac', '.aac'])
 /** All local asset extensions (images + media) for broken-asset validation. */
 const LOCAL_ASSET_EXTENSIONS = new Set([...IMAGE_EXTENSIONS, ...MEDIA_EXTENSIONS])
@@ -282,7 +282,7 @@ export async function syncNavigation({
     const frontmatterImageDeps: string[] = []
     for (const fmKey of ['og:image', 'twitter:image'] as const) {
       const src = rawFrontmatter[fmKey]
-      if (!src || typeof src !== 'string' || src.startsWith('http://') || src.startsWith('https://')) continue
+      if (!src || typeof src !== 'string' || isNonLocalAssetSrc(src)) continue
       const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
       if (resolved) {
         frontmatterImageDeps.push(resolved.filePath)
@@ -380,7 +380,7 @@ export async function syncNavigation({
     const mergedAssetRefs = [...processed.assetRefs]
     for (const fmKey of ['og:image', 'twitter:image'] as const) {
       const src = processed.frontmatter[fmKey]
-      if (!src || typeof src !== 'string' || src.startsWith('http://') || src.startsWith('https://')) continue
+      if (!src || typeof src !== 'string' || isNonLocalAssetSrc(src)) continue
       if (!mergedAssetRefs.some((r) => r.src === src)) {
         mergedAssetRefs.push({ src, line: undefined })
       }
@@ -617,6 +617,9 @@ type ResolvedImagePath = {
  * - Relative (./img.png, ../x.jpg): resolve from MDX dir → needs copy
  * - Absolute (/images/x.png): try publicDir first (no copy), then projectRoot (needs copy)
  * - External (https://...): already filtered out by mdx-processor
+ *
+ * Strips query strings and hash fragments before filesystem checks so
+ * paths like `./og.png?v=1` resolve correctly.
  */
 function resolveImagePath({
   src,
@@ -629,11 +632,15 @@ function resolveImagePath({
   publicDir: string
   projectRoot: string
 }): ResolvedImagePath | undefined {
-  const isAbsolute = src.startsWith('/')
+  // Strip query/hash before filesystem resolution
+  const cleanSrc = src.split(/[?#]/, 1)[0]!
+  if (!cleanSrc) return undefined
+
+  const isAbsolute = cleanSrc.startsWith('/')
 
   if (!isAbsolute) {
     // Relative path — resolve from MDX file's directory
-    const filePath = path.resolve(mdxDir, src)
+    const filePath = path.resolve(mdxDir, cleanSrc)
     if (fs.existsSync(filePath) && isImageFile(filePath)) {
       return { filePath, needsCopy: true }
     }
@@ -641,13 +648,13 @@ function resolveImagePath({
   }
 
   // Absolute path — try publicDir first (no copy needed)
-  const publicPath = path.join(publicDir, src)
+  const publicPath = path.join(publicDir, cleanSrc)
   if (fs.existsSync(publicPath) && isImageFile(publicPath)) {
     return { filePath: publicPath, needsCopy: false }
   }
 
   // Fallback: try project root (some users use / to mean project root)
-  const rootPath = path.join(projectRoot, src)
+  const rootPath = path.join(projectRoot, cleanSrc)
   if (fs.existsSync(rootPath) && isImageFile(rootPath)) {
     return { filePath: rootPath, needsCopy: true }
   }

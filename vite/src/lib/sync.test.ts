@@ -2234,6 +2234,37 @@ Some content.
     expect(warnings.some((w) => w.includes('missing-og.png'))).toBe(true)
   })
 
+  test('does not warn about data URI og:image in frontmatter', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+      },
+      {
+        index: `---
+title: Home
+"og:image": "data:image/png;base64,iVBORw0KGgo="
+---
+
+Some content.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken asset') && msg.includes('file not found'))
+    expect(warnings).toHaveLength(0)
+  })
+
   test('does not warn about remote og:image in frontmatter', async () => {
     const project = tracked(createProject(
       {

@@ -902,6 +902,25 @@ title: Test
     `)
   })
 
+  test('skips JSX expression src values (not static strings)', () => {
+    const result = processMdx(`---
+title: Test
+---
+
+<Image src={logo} alt="dynamic" />
+
+<Image src="./static.png" alt="static" />
+`)
+    expect(result).not.toBeInstanceOf(Error)
+    if (result instanceof Error) return
+    // Only the static string should be collected, not the JSX expression
+    expect(result.assetRefs.map((r) => r.src)).toMatchInlineSnapshot(`
+      [
+        "./static.png",
+      ]
+    `)
+  })
+
   test('excludes data URIs and blob URLs', () => {
     const result = processMdx(`---
 title: Test
