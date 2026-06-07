@@ -163,7 +163,7 @@ function createJsxHeading(Tag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') {
 function unwrapPChildren(children: ReactNode): ReactNode {
   return Children.map(children, (child) => {
     if (isValidElement(child) && child.type === P) {
-      return child.props.children
+      return (child.props as { children?: ReactNode }).children
     }
     return child
   })
