@@ -221,6 +221,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   /** Resolved absolute path to a user CSS file (global.css or style.css at root).
    *  Injected as an import in the app entry so user styles override holocron defaults. */
   let userCssPath: string | undefined
+  let isBuild = false
   // Serialize HMR syncs so two rapid file changes don't run concurrent
   // syncNavigation calls. Vite's watcher fires onFileChange with .catch()
   // (fire-and-forget), so overlapping hotUpdate calls can race on the
@@ -337,7 +338,8 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       // Clean stale build env folders so old artifacts never leak into
       // a fresh build. Preserve holocron-*.json caches for incremental builds.
-      if (resolved.command === 'build') {
+      isBuild = resolved.command === 'build'
+      if (isBuild) {
         for (const sub of ['client', 'rsc', 'ssr', 'package.json']) {
           try {
             fs.rmSync(path.join(distDirPath, sub), { recursive: true, force: true })
@@ -449,7 +451,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (options.virtualModules?.config) {
           return options.virtualModules.config
         }
-        if (!configFilePath) {
+        // In build mode, serialize the already-parsed config as JSON so the
+        // virtual module has zero runtime imports (no normalizer/logger/icons).
+        // In dev mode, import raw config + parse at runtime for HMR.
+        if (!configFilePath || isBuild) {
           return [
             `export const base = ${JSON.stringify(viteBase)}`,
             `const config = ${JSON.stringify(config)}`,
