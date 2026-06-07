@@ -33,6 +33,7 @@ import { openapiProvider } from './openapi/provider.ts'
 import { changelogProvider } from './changelog/provider.ts'
 import { mcpProvider } from './mcp/provider.ts'
 import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
+import { parseFrontmatterObject } from './frontmatter.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { extractImports, type EagerModules } from 'safe-mdx/parse'
 import type { Root } from 'mdast'
@@ -266,20 +267,47 @@ export async function syncNavigation({
     const inlineResult = resolveInlineImports({ content, mdxDir, pagesDir, projectRoot, publicDir })
     const inlineImportMap = inlineResult.imports
     for (const p of inlineResult.imageDepPaths) allImportedImageDepPaths.add(p)
+
+    // Resolve og:image / twitter:image frontmatter paths early so their
+    // file hashes are part of the cache key. Without this, editing the OG
+    // image file without touching the MDX would be a false cache hit.
+    const rawFrontmatter = parseFrontmatterObject(content)
+    const frontmatterImageDeps: string[] = []
+    for (const fmKey of ['og:image', 'twitter:image'] as const) {
+      const src = rawFrontmatter[fmKey]
+      if (!src || typeof src !== 'string' || src.startsWith('http://') || src.startsWith('https://')) continue
+      const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
+      if (resolved) {
+        frontmatterImageDeps.push(resolved.filePath)
+        allImportedImageDepPaths.add(resolved.filePath)
+      } else {
+        logger.warn(formatHolocronWarning(`frontmatter ${fmKey} references "${src}" but the file was not found`))
+      }
+    }
+
     let sha = gitBlobSha(content)
+    const shaParts: string[] = []
     if (inlineImportMap.size > 0) {
       // Combine page SHA with imported file SHAs + image dep SHAs so
       // changes to imported files OR their referenced images invalidate
       // the cache.
-      const parts = [...inlineImportMap.values()]
-        .map((e) => `${e.absPath}:${gitBlobSha(e.content)}`)
-        .sort()
+      shaParts.push(
+        ...[...inlineImportMap.values()]
+          .map((e) => `${e.absPath}:${gitBlobSha(e.content)}`),
+      )
       for (const imgPath of inlineResult.imageDepPaths) {
         try {
-          parts.push(`img:${imgPath}:${crypto.createHash('sha1').update(fs.readFileSync(imgPath)).digest('hex')}`)
+          shaParts.push(`img:${imgPath}:${crypto.createHash('sha1').update(fs.readFileSync(imgPath)).digest('hex')}`)
         } catch { /* ignore missing files */ }
       }
-      sha = gitBlobSha(sha + '\n' + parts.join('\n'))
+    }
+    for (const imgPath of frontmatterImageDeps) {
+      try {
+        shaParts.push(`fm-img:${imgPath}:${crypto.createHash('sha1').update(fs.readFileSync(imgPath)).digest('hex')}`)
+      } catch { /* ignore missing files */ }
+    }
+    if (shaParts.length > 0) {
+      sha = gitBlobSha(sha + '\n' + shaParts.sort().join('\n'))
     }
 
     // Cache hit — MDX unchanged and all imported files unchanged
