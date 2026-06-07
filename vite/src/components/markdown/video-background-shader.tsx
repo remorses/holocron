@@ -395,6 +395,11 @@ const DISPLAY_FRAG = /* glsl */ `
     return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
   }
 
+  vec4 premultipliedDotColor(float alpha) {
+    float a = clamp(alpha, 0.0, 1.0);
+    return vec4(dotColor * a, a);
+  }
+
   void main() {
     vec2 gridPos;
     vec2 cellCenter;
@@ -456,11 +461,11 @@ const DISPLAY_FRAG = /* glsl */ `
     vec4 video = texture2D(uVideo, centerUv);
     vec4 dye = texture2D(uDye, centerUv);
     vec3 videoGammaCorrected = pow(video.rgb, vec3(gamma));
-    vec3 scaledDye = dye.rgb * fluidStrength;
-    scaledDye = pow(scaledDye + 0.001, vec3(0.7));
-    float videoLuminance = dot(videoGammaCorrected + scaledDye, vec3(0.299, 0.587, 0.114));
+    float videoLuminance = dot(videoGammaCorrected, vec3(0.299, 0.587, 0.114));
     float dyeLuminance = dot(dye.rgb, vec3(0.299, 0.587, 0.114));
-    float luminance = max(max(videoLuminance, dyeLuminance), minLuminance);
+    float fluidLuminance = smoothstep(0.0, 1.0, dyeLuminance) * fluidStrength;
+    float luminance = max(videoLuminance, minLuminance);
+    luminance += fluidLuminance * (1.0 - luminance);
 
     if (enableMask) {
       vec4 mask = texture2D(uMask, vUv);
@@ -468,8 +473,10 @@ const DISPLAY_FRAG = /* glsl */ `
       luminance = luminance * maskAlpha;
     }
 
+    luminance = clamp(luminance, 0.0, 1.0);
+
     if (!dotsEnabled) {
-      gl_FragColor = vec4(dotColor, luminance * dotAlphaMultiplier);
+      gl_FragColor = premultipliedDotColor(luminance * dotAlphaMultiplier);
       return;
     }
 
@@ -489,7 +496,7 @@ const DISPLAY_FRAG = /* glsl */ `
       float charMask = texture2D(uCharAtlas, atlasUv).r;
       float luminanceCutoff = smoothstep(0.0, 0.05, luminance);
       float finalAlpha = charMask * luminance * luminanceCutoff * dotAlphaMultiplier;
-      gl_FragColor = vec4(dotColor, finalAlpha);
+      gl_FragColor = premultipliedDotColor(finalAlpha);
       return;
     }
 
@@ -507,7 +514,7 @@ const DISPLAY_FRAG = /* glsl */ `
     float luminanceCutoff = smoothstep(0.0, 0.1, luminance);
     float finalAlpha = dotMask * luminance * luminanceCutoff * dotAlphaMultiplier;
 
-    gl_FragColor = vec4(dotColor, finalAlpha);
+    gl_FragColor = premultipliedDotColor(finalAlpha);
   }
 `
 
@@ -628,9 +635,10 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   canvas.style.height = height + 'px'
   container.appendChild(canvas)
 
-  // premultipliedAlpha: false because the display shader outputs non-premultiplied
-  // color (vec4(dotColor, finalAlpha) where dotColor is NOT pre-multiplied by alpha).
-  const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: false })!
+  // premultipliedAlpha: true (default) because iOS Safari's compositor ignores the
+  // premultipliedAlpha flag and always composites as premultiplied. The display
+  // shader pre-multiplies RGB by alpha so compositing is correct on all browsers.
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true })!
 
   // Enable float texture extensions for fluid sim FBOs
   const halfFloatExt = gl.getExtension('OES_texture_half_float')
@@ -1047,7 +1055,7 @@ export function VideoBackgroundShader({
       )}
 
       {/* Foreground content */}
-      {children && (
+      {Boolean(children) && (
         <div
           className='relative z-[2] flex flex-col items-center justify-center text-center w-full px-5 py-16 sm:py-24 gap-6'
           style={{
