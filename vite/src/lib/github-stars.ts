@@ -51,7 +51,9 @@ export function formatStarCount(count: number): string {
 
 type CacheEntry = { stars: number; fetchedAt: number }
 
-const memoryCache = new Map<string, CacheEntry>()
+// Persist across HMR reloads so we don't re-fetch on every file save
+const memoryCache: Map<string, CacheEntry> =
+  ((globalThis as any).__holocron_stars_cache ??= new Map<string, CacheEntry>())
 
 function getCacheKey(owner: string, repo: string): string {
   return `${owner}/${repo}`.toLowerCase()
@@ -97,11 +99,15 @@ async function putToCfCache(owner: string, repo: string, stars: number): Promise
 
 async function fetchFromGitHub(owner: string, repo: string): Promise<number | null> {
   try {
+    const headers: Record<string, string> = {
+      accept: 'application/vnd.github.v3+json',
+      'user-agent': 'holocron-docs',
+    }
+    const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN
+    if (token) headers.authorization = `Bearer ${token}`
+
     const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-      headers: {
-        accept: 'application/vnd.github.v3+json',
-        'user-agent': 'holocron-docs',
-      },
+      headers,
       signal: AbortSignal.timeout(5_000),
     })
     if (!res.ok) return null

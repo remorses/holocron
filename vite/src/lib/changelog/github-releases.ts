@@ -38,7 +38,10 @@ const GITHUB_API_VERSION = '2022-11-28'
 const PER_PAGE = 100
 const CACHE_TTL_MS = 60_000
 
-const cache = new Map<string, { at: number; releases: GitHubRelease[] }>()
+// Persist across HMR reloads so dev-server re-syncs don't hit the GitHub API
+// repeatedly and trigger rate limits (60 req/hour unauthenticated).
+const cache: Map<string, { at: number; releases: GitHubRelease[] }> =
+  ((globalThis as any).__holocron_releases_cache ??= new Map())
 
 export type FetchReleasesOptions = {
   owner: string
