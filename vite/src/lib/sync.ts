@@ -336,7 +336,15 @@ export async function syncNavigation({
     // Resolve og:image / twitter:image frontmatter paths through the same
     // pipeline as MDX content images so relative paths like ./screenshot.png
     // get copied to public and rewritten to a servable URL.
-    resolveFrontmatterImagePaths({ frontmatter: processed.frontmatter, mdxDir, publicDir, projectRoot, imageOutputDir })
+    // Images already in public/ are NOT copied (needsCopy: false from resolveImagePath).
+    for (const fmKey of ['og:image', 'twitter:image'] as const) {
+      const src = processed.frontmatter[fmKey]
+      if (!src || typeof src !== 'string' || src.startsWith('http://') || src.startsWith('https://')) continue
+      const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
+      if (resolved?.needsCopy) {
+        processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir })}`
+      }
+    }
 
     // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
     const finalMdx = resolvedImages.size > 0
@@ -600,43 +608,6 @@ async function fetchRemoteImageBuffer(src: string): Promise<Buffer | undefined> 
 
 function isImageFile(filePath: string): boolean {
   return IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())
-}
-
-/**
- * Resolve og:image and twitter:image frontmatter values through the same
- * path resolution pipeline as MDX content images. Relative paths (./x.png)
- * and absolute paths (/images/x.png) are resolved to servable public URLs.
- * External URLs (https://...) are left as-is. Mutates frontmatter in place.
- */
-function resolveFrontmatterImagePaths({
-  frontmatter,
-  mdxDir,
-  publicDir,
-  projectRoot,
-  imageOutputDir,
-}: {
-  frontmatter: Record<string, any>
-  mdxDir: string
-  publicDir: string
-  projectRoot: string
-  imageOutputDir: string
-}) {
-  const imageKeys = ['og:image', 'twitter:image'] as const
-  for (const key of imageKeys) {
-    const src = frontmatter[key]
-    if (!src || typeof src !== 'string') continue
-    if (src.startsWith('http://') || src.startsWith('https://')) continue
-
-    const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
-    if (!resolved) continue
-
-    if (resolved.needsCopy) {
-      const destName = copyToPublic({ filePath: resolved.filePath, imageOutputDir })
-      frontmatter[key] = `/_holocron/images/${destName}`
-    }
-    // If needsCopy is false, the file is already in publicDir and the
-    // absolute path (e.g. /og-image.jpg) will be served by Vite as-is.
-  }
 }
 
 /** Copy image to public/_holocron/images/<hash>-<name>.ext, returns dest filename */
