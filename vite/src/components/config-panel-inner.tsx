@@ -199,9 +199,9 @@ export default function ConfigPanelInner({
 
   return (
     <>
-      <DialRoot position='top-right' defaultOpen={initialOpen} theme='system' productionEnabled />
+      <DialRoot position='top-left' defaultOpen={initialOpen} theme='system' productionEnabled />
       {saveError && (
-        <div className='fixed right-3 top-14 z-50 max-w-72 rounded-md border border-red/20 bg-background px-3 py-2 text-xs text-red'>
+        <div className='fixed left-3 top-14 z-50 max-w-72 rounded-md border border-red/20 bg-background px-3 py-2 text-xs text-red'>
           {saveError}
         </div>
       )}
