@@ -670,7 +670,21 @@ export async function processDeferredProviders({
 }): Promise<{ watchPaths: string[] }> {
   // Work against a clone so provider mutations (tab.groups, mdxContent)
   // don't affect the live syncResult if this run is aborted mid-flight.
+  // structuredClone drops non-enumerable properties, so we manually copy
+  // authoredGroups (the snapshot of original selective-mode groups) onto
+  // the cloned tabs so processVirtualTabs can restore them correctly.
   const clonedConfig = structuredClone(config)
+  for (let i = 0; i < config.navigation.tabs.length; i++) {
+    const authored = (config.navigation.tabs[i] as any)?.authoredGroups
+    if (authored && clonedConfig.navigation.tabs[i]) {
+      Object.defineProperty(clonedConfig.navigation.tabs[i], 'authoredGroups', {
+        value: structuredClone(authored),
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      })
+    }
+  }
   const localMdxContent: Record<string, string> = { ...syncResult.mdxContent }
 
   const { watchPaths: providerWatchPaths } = await processVirtualTabs({
