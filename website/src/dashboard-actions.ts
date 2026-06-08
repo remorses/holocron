@@ -195,39 +195,81 @@ export async function deleteProjectAction({ projectId }: {
 }
 
 // ── Google Search Console ───────────────────────────────────────────
-
+// All OAuth proxy calls happen server-side to avoid CORS issues and to keep
+// Google tokens out of the browser. The client only ever sees the consent URL
+// and a readKey for completing the flow.
+//
 // TODO: Replace with our own OAuth proxy URL once GCP app is approved.
 // Framer's open-source OAuth proxy worker source:
 // https://github.com/framer/plugin-oauth (MIT license)
 // Vendor this into our own CF Worker when we have our own GCP OAuth app.
+
 const GSC_OAUTH_PROXIES: Record<string, string> = {
   'framer-gsc-plugin': 'https://oauth.fetch.tools/google-search-console-plugin',
 }
 
 const DEFAULT_GSC_APP_ID = 'framer-gsc-plugin'
 
-export async function connectGscAction({ projectId, accessToken, refreshToken, expiresIn, idToken }: {
+function getProxyUrl(appId: string): string {
+  const url = GSC_OAUTH_PROXIES[appId]
+  if (!url) throw new Error(`Unknown OAuth app: ${appId}`)
+  return url
+}
+
+/** Step 1: Start OAuth flow. Returns consent URL for the browser to open,
+ *  plus a readKey for completing the flow server-side via completeGscOAuthAction. */
+export async function startGscOAuthAction({ projectId }: {
   projectId: string
-  accessToken: string
-  refreshToken?: string
-  expiresIn: number
-  idToken?: string
-}): Promise<{ ok: true }> {
+}): Promise<{ url: string; readKey: string }> {
   if (!projectId) throw new Error('Project ID is required')
-  if (!accessToken) throw new Error('Access token is required')
 
   const session = await authenticateRequest()
   await requireProjectMembership(session.userId, projectId, { adminOnly: true })
 
+  // TODO: Replace with our own OAuth proxy authorize endpoint
+  const proxyUrl = getProxyUrl(DEFAULT_GSC_APP_ID)
+  const res = await fetch(`${proxyUrl}/authorize`, { method: 'POST' })
+  if (!res.ok) throw new Error('Failed to start OAuth flow')
+
+  return await res.json() as { url: string; readKey: string }
+}
+
+/** Step 2: Complete OAuth flow. Server polls the proxy for tokens (no tokens
+ *  ever touch the browser), stores them, and returns the list of GSC sites. */
+export async function completeGscOAuthAction({ projectId, readKey }: {
+  projectId: string
+  readKey: string
+}): Promise<{ sites: Array<{ siteUrl: string; permissionLevel: string }> }> {
+  if (!projectId) throw new Error('Project ID is required')
+  if (!readKey) throw new Error('Read key is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  // TODO: Replace with our own OAuth proxy poll endpoint
+  const proxyUrl = getProxyUrl(DEFAULT_GSC_APP_ID)
+
+  // Poll for tokens (user may still be completing consent)
+  let tokens: { access_token: string; expires_in: number; refresh_token?: string } | null = null
+  for (let i = 0; i < 40; i++) {
+    const pollRes = await fetch(`${proxyUrl}/poll?readKey=${readKey}`, { method: 'POST' })
+    if (pollRes.status === 200) {
+      tokens = await pollRes.json() as any
+      break
+    }
+    await new Promise(r => setTimeout(r, 1500))
+  }
+  if (!tokens) throw new Error('OAuth timed out — please try again')
+
   const db = getDb()
-  const expiresAt = Date.now() + expiresIn * 1000
+  const expiresAt = Date.now() + tokens.expires_in * 1000
 
   // Upsert: replace existing connection for this project
   await db.insert(schema.gscConnection).values({
     projectId,
     oauthAppId: DEFAULT_GSC_APP_ID,
-    accessToken,
-    refreshToken: refreshToken || null,
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token || null,
     expiresAt,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -235,14 +277,21 @@ export async function connectGscAction({ projectId, accessToken, refreshToken, e
     target: schema.gscConnection.projectId,
     set: {
       oauthAppId: DEFAULT_GSC_APP_ID,
-      accessToken,
-      refreshToken: refreshToken || null,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token || null,
       expiresAt,
       updatedAt: Date.now(),
     },
   })
 
-  return { ok: true }
+  // Fetch available GSC sites with the fresh token
+  const sitesRes = await fetch('https://searchconsole.googleapis.com/webmasters/v3/sites', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  })
+  if (!sitesRes.ok) throw new Error('Failed to fetch Google Search Console sites')
+
+  const data = await sitesRes.json() as { siteEntry?: Array<{ siteUrl: string; permissionLevel: string }> }
+  return { sites: data.siteEntry || [] }
 }
 
 export async function disconnectGscAction({ projectId }: {
@@ -288,7 +337,7 @@ export async function listGscSitesAction({ projectId }: {
   if (!projectId) throw new Error('Project ID is required')
 
   const session = await authenticateRequest()
-  await requireProjectMembership(session.userId, projectId)
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
 
   const db = getDb()
   const connection = await db.query.gscConnection.findFirst({
@@ -300,8 +349,7 @@ export async function listGscSitesAction({ projectId }: {
 
   // Refresh token if expired
   if (expiresAt && expiresAt < Date.now() && refreshToken) {
-    const proxyUrl = GSC_OAUTH_PROXIES[connection.oauthAppId]
-    if (!proxyUrl) throw new Error(`Unknown OAuth app: ${connection.oauthAppId}`)
+    const proxyUrl = getProxyUrl(connection.oauthAppId)
 
     const refreshRes = await fetch(
       `${proxyUrl}/refresh?code=${encodeURIComponent(refreshToken)}`,

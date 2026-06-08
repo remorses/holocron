@@ -700,7 +700,7 @@ export const dashboardApp = new Spiceflow()
               <Frame className="w-full">
                 <div className="rounded-xl border bg-background p-4 flex flex-col gap-3">
                   <div className="text-sm text-muted-foreground">
-                    Connect Google Search Console to view search analytics for your docs site.
+                    Connect Google Search Console to track search performance for your docs site.
                   </div>
                   <ConnectGscButton
                     projectId={project.projectId}

@@ -54,7 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
-import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, updateProjectNameAction, deleteProjectAction, connectGscAction, disconnectGscAction, listGscSitesAction, selectGscSiteAction } from './dashboard-actions.ts'
+import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, updateProjectNameAction, deleteProjectAction, startGscOAuthAction, completeGscOAuthAction, disconnectGscAction, listGscSitesAction, selectGscSiteAction } from './dashboard-actions.ts'
 import { openBillingPortal, startCheckout } from './actions.tsx'
 import type { dashboardApp } from './dashboard.tsx'
 
@@ -1003,15 +1003,14 @@ export function DeleteProjectButton({ projectId, projectName }: { projectId: str
 }
 
 // ── Google Search Console Connection ────────────────────────────────
-// TODO: Replace Framer OAuth proxy URL with our own once GCP app is approved.
-// The proxy base URL, authorize/poll/refresh endpoints are all Framer-specific.
+// OAuth proxy calls happen server-side (startGscOAuthAction, completeGscOAuthAction)
+// to avoid CORS issues and keep Google tokens out of the browser.
 // Framer's open-source OAuth proxy worker: https://github.com/framer/plugin-oauth (MIT)
-// GSC plugin that uses it: https://github.com/framer/plugins/tree/main/plugins/google-search-console
+// GSC plugin reference: https://github.com/framer/plugins/tree/main/plugins/google-search-console
 
-const GSC_OAUTH_PROXY = 'https://oauth.fetch.tools/google-search-console-plugin'
 const GSC_PENDING_KEY = 'holocron-gsc-pending'
 
-/** Strip ugly GSC prefixes for display: "sc-domain:example.com" → "example.com",
+/** Strip GSC prefixes for display: "sc-domain:example.com" → "example.com",
  *  "https://example.com/" → "example.com" */
 function displayGscSiteUrl(siteUrl: string): string {
   if (siteUrl.startsWith('sc-domain:')) return siteUrl.slice('sc-domain:'.length)
@@ -1044,7 +1043,7 @@ export function ConnectGscButton({ projectId, connection }: {
     const pending = localStorage.getItem(GSC_PENDING_KEY)
     if (!pending) return
 
-    let parsed: { readKey: string; projectId: string }
+    let parsed: { readKey: string; projectId: string; createdAt: number }
     try {
       parsed = JSON.parse(pending)
     } catch {
@@ -1052,43 +1051,27 @@ export function ConnectGscButton({ projectId, connection }: {
       return
     }
 
-    // Only complete if this is the same project
+    // Only complete if this is the same project and not expired (5 min)
     if (parsed.projectId !== projectId) return
+    if (Date.now() - parsed.createdAt > 5 * 60 * 1000) {
+      localStorage.removeItem(GSC_PENDING_KEY)
+      return
+    }
 
-    localStorage.removeItem(GSC_PENDING_KEY)
-    completePendingAuth(parsed.readKey)
+    completeOAuth(parsed.readKey)
   }, [projectId])
 
-  async function completePendingAuth(readKey: string) {
+  async function completeOAuth(readKey: string) {
     setLoading(true)
     setError(null)
     try {
-      // Poll until tokens are available (they should be ready immediately
-      // since user already completed consent before navigating back)
-      let tokens: { access_token: string; expires_in: number; refresh_token?: string; id_token?: string } | null = null
-      for (let i = 0; i < 20; i++) {
-        // TODO: Replace with our own OAuth proxy poll endpoint
-        const pollRes = await fetch(`${GSC_OAUTH_PROXY}/poll?readKey=${readKey}`, { method: 'POST' })
-        if (pollRes.status === 200) {
-          tokens = await pollRes.json() as any
-          break
-        }
-        await new Promise(r => setTimeout(r, 1500))
-      }
-      if (!tokens) throw new Error('Failed to retrieve tokens from Google')
+      // Server polls the OAuth proxy and stores tokens — they never touch the browser
+      const { sites } = await completeGscOAuthAction({ projectId, readKey })
 
-      await connectGscAction({
-        projectId,
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        expiresIn: tokens.expires_in,
-        idToken: tokens.id_token,
-      })
-
+      // Only clear pending key on success
+      localStorage.removeItem(GSC_PENDING_KEY)
       setConnected(true)
 
-      // Auto-fetch sites after connecting
-      const { sites } = await listGscSitesAction({ projectId })
       if (sites.length === 1) {
         await selectGscSiteAction({ projectId, siteUrl: sites[0]!.siteUrl })
         setSiteUrl(sites[0]!.siteUrl)
@@ -1106,21 +1089,21 @@ export function ConnectGscButton({ projectId, connection }: {
     setLoading(true)
     setError(null)
     try {
-      // TODO: Replace with our own OAuth proxy authorize endpoint
-      const authorizeRes = await fetch(`${GSC_OAUTH_PROXY}/authorize`, { method: 'POST' })
-      if (!authorizeRes.ok) throw new Error('Failed to start OAuth flow')
+      // Server calls the OAuth proxy (avoids CORS) and returns the consent URL
+      const { url, readKey } = await startGscOAuthAction({ projectId })
 
-      const { url, readKey } = await authorizeRes.json() as { url: string; readKey: string }
-
-      // Store pending auth so we can complete it when user returns
-      localStorage.setItem(GSC_PENDING_KEY, JSON.stringify({ readKey, projectId }))
+      // Store pending auth so we can resume if user navigates away
+      localStorage.setItem(GSC_PENDING_KEY, JSON.stringify({
+        readKey,
+        projectId,
+        createdAt: Date.now(),
+      }))
 
       // Open Google consent in a new tab
       window.open(url, '_blank')
 
-      // Poll for tokens while user is in the other tab
-      await completePendingAuth(readKey)
-      localStorage.removeItem(GSC_PENDING_KEY)
+      // Server-side poll for tokens while user is in the other tab
+      await completeOAuth(readKey)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to connect')
       setLoading(false)
