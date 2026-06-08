@@ -234,10 +234,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   /** Abort controller for the current background provider processing run.
    *  Aborted on re-sync so stale provider results don't overwrite fresh nav. */
   let backgroundProviderAbort: AbortController | null = null
-  /** Persistent set of provider watch paths. Survives re-syncs so that
-   *  provider file edits are recognized even during the window between a
-   *  fast sync (which returns providerWatchPaths: []) and background completion. */
-  const knownProviderWatchPaths = new Set<string>()
+
 
   /** Start background virtual tab provider processing (OpenAPI, changelog, MCP).
    *  Cancels any previous run. When done, patches syncResult with the new
@@ -264,7 +261,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       // Watch newly-discovered provider paths (e.g. OpenAPI spec files)
       for (const watchPath of watchPaths) {
-        knownProviderWatchPaths.add(watchPath)
         server.watcher.add(watchPath)
       }
 
@@ -759,7 +755,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // Watch files read by virtual tab providers (e.g. OpenAPI spec files)
       // so edits trigger re-sync + HMR.
       for (const watchPath of syncResult.providerWatchPaths) {
-        knownProviderWatchPaths.add(watchPath)
         server.watcher.add(watchPath)
       }
     },
@@ -784,7 +779,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
       const isTrackedImageDep = syncResult.importedImageDepPaths.includes(ctx.file)
-      const isProviderWatchPath = knownProviderWatchPaths.has(ctx.file)
+      const isProviderWatchPath = syncResult.providerWatchPaths.includes(ctx.file)
       // Holocron injects `src/styles/globals.css` directly from source into the
       // dev module graph, so editing it must reach the CSS-update path below.
       // Without this flag the early-return guard drops the event and styles only
@@ -839,6 +834,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           if (isConfig) {
             config = readConfig({ root, configPath: options.configPath })
           }
+          // Preserve provider watch paths across deferred re-syncs so the
+          // hotUpdate hook still recognizes provider file edits (e.g. OpenAPI
+          // spec) during the window before background providers finish.
+          const prevProviderWatchPaths = syncResult.providerWatchPaths
           syncResult = await syncNavigation({
             config,
             pagesDir,
@@ -847,6 +846,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             distDir: distDirPath,
             deferProviders: true,
           })
+          if (syncResult.providerWatchPaths.length === 0) {
+            syncResult.providerWatchPaths = prevProviderWatchPaths
+          }
         }
         pendingSync = pendingSync.catch(() => {}).then(doSync)
         await pendingSync
@@ -857,7 +859,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         // After re-sync, watch any new provider paths (e.g. a newly-added
         // OpenAPI spec) so future edits also trigger HMR.
         for (const watchPath of syncResult.providerWatchPaths) {
-          knownProviderWatchPaths.add(watchPath)
           ctx.server.watcher.add(watchPath)
         }
         // `rsc:update` refreshes the server-rendered page tree, but the root
