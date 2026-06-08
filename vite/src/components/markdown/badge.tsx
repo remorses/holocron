@@ -5,7 +5,7 @@
 import React from 'react'
 import { Link } from '../link.tsx'
 import { cn } from '../../lib/css-vars.ts'
-import { useHolocronData } from '../../router.ts'
+import { useHolocronDataSafe } from '../../router.ts'
 import { Icon } from '../icon.tsx'
 import { isExternalHref, renderCompatIcon, stripOriginIfSameHost } from './shared.tsx'
 
@@ -43,7 +43,8 @@ export function Badge({
   onClick?: () => void
   className?: string
 }) {
-  const { site } = useHolocronData()
+  const data = useHolocronDataSafe()
+  const site = data?.site
   const sizeClass = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]'
     : size === 'sm' ? 'px-2 py-0.5 text-[11px]'
     : size === 'lg' ? 'px-3 py-1 text-[13px]'
@@ -58,11 +59,11 @@ export function Badge({
     const badgeClass = cn('inline-flex w-fit self-start items-center gap-1 border', sizeClass, shapeClass, variantClass, disabled && 'opacity-50', (href || onClick) && !disabled && 'cursor-pointer transition-opacity hover:opacity-80', className)
     const content = <>{leading}{children}{trailing || (iconColor && icon ? <Icon icon={String(icon)} iconType={iconType} size={iconSize} color={iconColor} /> : null)}</>
     if (href && !disabled) {
-      const external = isExternalHref(href, site.origin)
+      const external = isExternalHref(href, site?.origin)
       if (external) {
         return <a className={badgeClass} href={href} onClick={onClick} target='_blank' rel='noopener noreferrer'>{content}</a>
       }
-      return <Link className={badgeClass} href={stripOriginIfSameHost(href, site.origin)} onClick={onClick}>{content}</Link>
+      return <Link className={badgeClass} href={stripOriginIfSameHost(href, site?.origin)} onClick={onClick}>{content}</Link>
     }
     if (onClick && !disabled) {
       return <button type='button' className={badgeClass} onClick={onClick}>{content}</button>

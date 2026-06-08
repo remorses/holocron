@@ -9,7 +9,7 @@ import React, { Children, isValidElement } from 'react'
 import { Link } from '../link.tsx'
 
 import { cn } from '../../lib/css-vars.ts'
-import { useHolocronData } from '../../router.ts'
+import { useHolocronDataSafe } from '../../router.ts'
 import { slugify } from '../../lib/toc-tree.ts'
 import { isExternalHref, stripOriginIfSameHost } from './shared.tsx'
 
@@ -115,7 +115,7 @@ export function P({ children, className }: { children: React.ReactNode; classNam
 }
 
 export function A({ href, children }: { href: string; children: React.ReactNode }) {
-  const data = useHolocronData()
+  const data = useHolocronDataSafe()
   const origin = data?.site?.origin
   const external = isExternalHref(href, origin)
   const resolvedHref = external || !origin ? href : stripOriginIfSameHost(href, origin)

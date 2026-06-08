@@ -12,7 +12,7 @@ import React from 'react'
 import type { ConfigIcon } from '../config.ts'
 import { iconToRefs, isEmoji, isUrl } from '../lib/collect-icons.ts'
 import type { IconAtlas } from '../lib/resolve-icons.ts'
-import { useHolocronData } from '../router.ts'
+import { useHolocronDataSafe } from '../router.ts'
 
 export type IconProps = {
   icon: ConfigIcon | undefined
@@ -48,8 +48,8 @@ function renderLibraryIcon(
 }
 
 export function Icon({ icon, size = 16, className, iconType, color }: IconProps): React.ReactElement | null {
-  const { site } = useHolocronData()
-  const iconAtlas = site.icons
+  const data = useHolocronDataSafe()
+  const iconAtlas = data?.site?.icons
   const colorStyle = color ? { color } : undefined
 
   if (!icon) return null
@@ -89,9 +89,10 @@ export function Icon({ icon, size = 16, className, iconType, color }: IconProps)
     }
   }
 
+  const defaultLibrary = data?.site?.config?.icons?.library ?? 'lucide'
   const ref = iconToRefs(icon, {
-    defaultLibrary: site.config.icons.library,
+    defaultLibrary,
     iconType,
   })[0]
-  return ref ? renderLibraryIcon(iconAtlas, ref, size, className, colorStyle) : null
+  return ref && iconAtlas ? renderLibraryIcon(iconAtlas, ref, size, className, colorStyle) : null
 }

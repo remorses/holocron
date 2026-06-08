@@ -1,0 +1,144 @@
+/**
+ * Chat widget CSS — single source for both paths:
+ *
+ * 1. Holocron integration: imported by globals.css (@import '../chat/chat.css')
+ *    Tailwind directives below are ignored because globals.css already has its
+ *    own @import "tailwindcss" with full project scanning.
+ *
+ * 2. Standalone widget: fed to Tailwind CLI as input to produce a self-contained
+ *    CSS bundle. scripts/bundle-chat-css.ts runs the CLI and embeds the output
+ *    into chat-css-bundle.ts as a string constant for shadow DOM injection.
+ */
+
+/* ── Tailwind directives (for standalone widget CSS generation) ───────
+ * source(none) disables auto-detection; @source "." scans only chat/ files.
+ * When imported by globals.css these are harmless (already have tailwindcss). */
+@import "tailwindcss/preflight" layer(base);
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+@source ".";
+
+/* Map CSS custom properties to Tailwind theme tokens */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-yellow: var(--yellow);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+  --radius-3xl: var(--radius-3xl);
+
+  --font-code: var(--font-code);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Custom utility classes (from editorial.css, needed in shadow DOM) ── */
+.no-bleed {
+  --bleed: 0px;
+}
+
+.code-font-size {
+  font-size: var(--code-font-size, 0.875em);
+}
+
+/* ── View transition: sidebar widget ↔ drawer panel morph ──────────── */
+::view-transition-group(holocron-chat-container) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: clip;
+}
+
+::view-transition-old(holocron-chat-container) {
+  width: 100%;
+  height: 100%;
+  animation: chat-morph-exit 200ms ease both;
+}
+
+::view-transition-new(holocron-chat-container) {
+  width: 100%;
+  height: 100%;
+  animation: chat-morph-enter 200ms ease both;
+}
+
+@keyframes chat-morph-exit {
+  from { opacity: 1; filter: blur(0); }
+  to   { opacity: 0; filter: blur(4px); }
+}
+
+@keyframes chat-morph-enter {
+  from { opacity: 0; filter: blur(4px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(holocron-chat-container),
+  ::view-transition-old(holocron-chat-container),
+  ::view-transition-new(holocron-chat-container) {
+    animation-duration: 0ms;
+  }
+}
+
+/* ── Loading dots animation ──────────────────────────────────────────── */
+@keyframes holocron-chat-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Default CSS variable values for standalone widget ────────────────
+ * :host applies inside shadow DOM; :where(.holocron-chat) applies when
+ * imported via globals.css in the non-shadow holocron path. Both use
+ * zero specificity so host/user overrides always win. */
+:host,
+:where(.holocron-chat) {
+  color: var(--foreground);
+  background-color: var(--background);
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --card: #ffffff;
+  --border: #e5e5e5;
+  --border-subtle: #e5e5e5;
+  --destructive: #ef4444;
+  --radius-sm: 6px;
+  --radius-3xl: 24px;
+  --font-code: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --code-font-size: 0.9em;
+  --prose-gap: 16px;
+  --chat-highlight: #6b21a8;
+  --chat-error: #f97316;
+  --yellow: #eab308;
+}
+
+/* Dark mode via .dark class on the shadow host element.
+ * ChatShadowHost applies .dark based on the theme prop:
+ * 'dark' → always, 'system' → follows prefers-color-scheme,
+ * 'light' → never. */
+:host(.dark),
+:where(.holocron-chat.dark) {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #262626;
+  --card: #0a0a0a;
+  --border: #262626;
+  --border-subtle: #262626;
+  --destructive: #f87171;
+  --chat-highlight: #d8b4fe;
+  --chat-error: #fdba74;
+  --yellow: #facc15;
+}

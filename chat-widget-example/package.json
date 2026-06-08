@@ -1,0 +1,27 @@
+{
+  "name": "chat-widget-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tuistory -- vite dev",
+    "build": "vite build",
+    "start": "node dist/rsc/index.js"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    "./src/*": "./src/*"
+  },
+  "dependencies": {
+    "@holocron.so/vite": "workspace:^",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "spiceflow": "1.26.0-rsc.5",
+    "vite": "^8.0.10"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.9.3"
+  }
+}

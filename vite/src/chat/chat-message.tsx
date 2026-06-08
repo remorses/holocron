@@ -15,9 +15,9 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import type { ChatMessage, ChatPart } from '../lib/chat-store.ts'
+import type { ChatMessage, ChatPart } from './chat-store.ts'
 import { CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
-import { NavTooltip } from './sidebar-assistant.tsx'
+import { NavTooltip } from './chat-input.tsx'
 import { ShowMore } from './show-more.tsx'
 
 // ── User message ─────────────────────────────────────────────────────

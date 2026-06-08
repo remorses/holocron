@@ -30,7 +30,7 @@ export function isExternalHref(href: string | undefined, origin?: string): boole
  *  can handle it as a relative path for client-side navigation.
  *  External and relative URLs are returned unchanged. Preserves
  *  search params and hash. */
-export function stripOriginIfSameHost(href: string, origin: string): string {
+export function stripOriginIfSameHost(href: string, origin: string | undefined): string {
   if (!origin || !isAbsoluteHttpHref(href)) return href
   try {
     const url = new URL(href, origin)

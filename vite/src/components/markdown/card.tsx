@@ -5,7 +5,7 @@
 import React from 'react'
 import { Link } from '../link.tsx'
 import { cn } from '../../lib/css-vars.ts'
-import { useHolocronData } from '../../router.ts'
+import { useHolocronDataSafe } from '../../router.ts'
 import { isExternalHref, renderCompatIcon, stripOriginIfSameHost } from './shared.tsx'
 
 function resolveColumns(cols: number | undefined) {
@@ -45,8 +45,8 @@ export function Card({
   className?: string
   children?: React.ReactNode
 }) {
-  const { site } = useHolocronData()
-  const external = isExternalHref(href, site.origin)
+  const data = useHolocronDataSafe()
+  const external = isExternalHref(href, data?.site?.origin)
   const showArrow = arrow ?? external
   const content = (
     <div className={cn('group/card relative flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4 transition-colors duration-150', href && !disabled && 'hover:bg-accent', horizontal && 'flex-row items-center', disabled && 'opacity-50', className)}>
@@ -65,7 +65,7 @@ export function Card({
     return <Component>{content}</Component>
   }
   if (external) return <a href={href} target='_blank' rel='noopener noreferrer' className='no-underline'>{content}</a>
-  return <Link href={stripOriginIfSameHost(href, site.origin)} className='no-underline'>{content}</Link>
+  return <Link href={stripOriginIfSameHost(href, data?.site?.origin)} className='no-underline'>{content}</Link>
 }
 
 export function Columns({ cols, children }: { cols?: number; children: React.ReactNode }) {

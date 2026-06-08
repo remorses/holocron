@@ -41,7 +41,6 @@ export type ChatMessage = {
 
 export type ChatState = {
   drawerState: DrawerState
-  navDrawerOpen: boolean
   isGenerating: boolean
   messages: ChatMessage[]
   /** AI SDK ModelMessage history sent back verbatim on the next request. */
@@ -56,7 +55,6 @@ export type ChatState = {
 
 export const chatStore = createStore<ChatState>(() => ({
   drawerState: 'closed',
-  navDrawerOpen: false,
   isGenerating: false,
   messages: [],
   modelMessages: [],

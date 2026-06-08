@@ -8,21 +8,21 @@
  * be serialized to localStorage).
  *
  * Pure CSS transitions — no Radix, no framer-motion.
- * Portals to <body> to sit above navbar stacking context.
+ * Portal target comes from chatWidgetStore (document.body for holocron,
+ * shadow mount container for standalone widget).
  */
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { decodeFederationPayload } from 'spiceflow/react'
-import { chatState } from '../lib/chat-state.ts'
-import type { ChatMessage, ChatModelMessage, ChatPart } from '../lib/chat-store.ts'
-import { CHAT_CONTAINER_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
-import { useHolocronData } from '../router.ts'
+import { useStore } from 'zustand'
+import { chatStore, CHAT_CONTAINER_VT_NAME, withViewTransition } from './chat-store.ts'
+import { chatWidgetStore } from './chat-widget-store.ts'
+import { submitChat } from './chat-submit.ts'
 import {
   ChatMessages,
   ChatLoadingDots,
 } from './chat-message.tsx'
-import { ChatInput, hideChildrenForSnapshot } from './sidebar-assistant.tsx'
+import { ChatInput, hideChildrenForSnapshot } from './chat-input.tsx'
 import { TrashIcon, CloseIcon } from './chat-icons.tsx'
 
 // ── ChatDrawer ───────────────────────────────────────────────────────
@@ -31,18 +31,10 @@ import { TrashIcon, CloseIcon } from './chat-icons.tsx'
 const emptySubscribe = () => () => {}
 const getTrue = () => true as const
 const getFalse = () => false as const
-const getBody = () => document.body
 const getNull = () => null
 
-function appendAssistantPart(messages: ChatMessage[], part: ChatPart): ChatMessage[] {
-  const lastMessage = messages.at(-1)
-  if (lastMessage?.role === 'assistant') {
-    return [
-      ...messages.slice(0, -1),
-      { role: 'assistant', parts: [...lastMessage.parts, part] },
-    ]
-  }
-  return [...messages, { role: 'assistant', parts: [part] }]
+function getPortalTarget(): HTMLElement | null {
+  return chatWidgetStore.getState().portalTarget || document.body
 }
 
 export function ChatDrawer() {
@@ -52,25 +44,18 @@ export function ChatDrawer() {
 }
 
 function ChatDrawerInner() {
-  const drawerState = chatState((s) => s.drawerState)
-  const isGenerating = chatState((s) => s.isGenerating)
-  const messages = chatState((s) => s.messages)
-  const errorMessage = chatState((s) => s.errorMessage)
-  const draftText = chatState((s) => s.draftText)
-  const { currentPageHref, site } = useHolocronData()
+  const drawerState = useStore(chatStore, (s) => s.drawerState)
+  const isGenerating = useStore(chatStore, (s) => s.isGenerating)
+  const messages = useStore(chatStore, (s) => s.messages)
+  const errorMessage = useStore(chatStore, (s) => s.errorMessage)
+  const draftText = useStore(chatStore, (s) => s.draftText)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const drawerPanelRef = useRef<HTMLDivElement>(null)
-  // Prefix API calls with the Vite base path so they work when mounted at e.g. /docs
-  const basePath = site.base === '/' ? '' : `/${site.base.replace(/^\/+|\/+$/g, '')}`
-
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [])
 
   /** Scroll the last user message to the top of the scroll area so the
    *  response streams in below it, matching fumabase's chat UX. */
   const scrollToLastUserMessage = useCallback(() => {
-    const msgs = chatState.getState().messages
+    const msgs = chatStore.getState().messages
     const lastUserIdx = msgs.findLastIndex((m) => m.role === 'user')
     if (lastUserIdx === -1) return
     const el = document.querySelector(`[data-message-id="msg-${lastUserIdx}"]`)
@@ -83,87 +68,15 @@ function ChatDrawerInner() {
 
   const handleSubmit = useCallback(
     async (text?: string) => {
-      const submitText = text || chatState.getState().draftText.trim()
-      if (!submitText) return
-      if (chatState.getState().isGenerating) return
-
-      const modelMessages = chatState.getState().modelMessages
-      const nextUserMessage: ChatMessage = { role: 'user', parts: [{ type: 'text', text: submitText }] }
-
-      const controller = new AbortController()
-      chatState.setState((s) => ({
-        isGenerating: true,
-        // Keep the existing conversation, append the new user message.
-        messages: [...s.messages, nextUserMessage],
-        draftText: '',
-        pendingSubmit: false,
-        errorMessage: null,
-        abortController: controller,
-      }))
-
-      setTimeout(scrollToLastUserMessage, 0)
-
-      try {
-        const response = await fetch(`${basePath}/holocron-api/chat`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            modelMessages,
-            message: submitText,
-            currentSlug: currentPageHref || '/',
-          }),
-          signal: controller.signal,
-        })
-
-        if (!response.ok) {
-          const errorBody = await response.json().catch(() => undefined)
-          chatState.setState({
-            errorMessage: typeof errorBody?.error === 'string'
-              ? errorBody.error
-              : `Chat request failed: ${response.status} ${response.statusText}`,
-          })
-          return
-        }
-
-        const decoded = await decodeFederationPayload<{
-          stream: AsyncIterable<ChatPart | { type: 'model-messages'; messages: ChatModelMessage[] }>
-        }>(response)
-
-        for await (const part of decoded.stream) {
-          if (part.type === 'model-messages') {
-            chatState.setState({ modelMessages: part.messages })
-            continue
-          }
-          chatState.setState((s) => ({
-            messages: appendAssistantPart(s.messages, part),
-          }))
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          // User clicked stop — keep whatever parts arrived
-        } else {
-          console.error('Chat error:', error)
-          chatState.setState({
-            errorMessage:
-              error instanceof Error
-                ? error.message
-                : 'An unexpected error occurred',
-          })
-        }
-      } finally {
-        chatState.setState({
-          isGenerating: false,
-          abortController: null,
-        })
-      }
+      await submitChat(text, scrollToLastUserMessage)
     },
-    [currentPageHref, basePath, scrollToBottom, scrollToLastUserMessage],
+    [scrollToLastUserMessage],
   )
 
   // ── Stop ────────────────────────────────────────────────────────
 
   const handleStop = useCallback(() => {
-    chatState.getState().abortController?.abort()
+    chatStore.getState().abortController?.abort()
   }, [])
 
   // ── Regenerate ──────────────────────────────────────────────────
@@ -178,8 +91,8 @@ function ChatDrawerInner() {
   // being regenerated in the model's history.
 
   const handleRegenerate = useCallback((assistantMsgIndex: number) => {
-    if (chatState.getState().isGenerating) return
-    const msgs = chatState.getState().messages
+    if (chatStore.getState().isGenerating) return
+    const msgs = chatStore.getState().messages
 
     // Find the user message that precedes this assistant message
     let userIdx = -1
@@ -199,7 +112,7 @@ function ChatDrawerInner() {
     // matches userText and cut everything from that point onward.
     // If no match is found (diverged history), wipe modelMessages
     // entirely so we never risk including stale assistant answers.
-    const model = chatState.getState().modelMessages
+    const model = chatStore.getState().modelMessages
     let cut = 0
     for (let j = model.length - 1; j >= 0; j--) {
       const m = model[j]
@@ -217,7 +130,7 @@ function ChatDrawerInner() {
     }
     const trimmedModel = model.slice(0, cut)
 
-    chatState.setState({
+    chatStore.setState({
       messages: msgs.slice(0, userIdx),
       modelMessages: trimmedModel,
     })
@@ -229,7 +142,7 @@ function ChatDrawerInner() {
 
   const handleClear = useCallback(() => {
     handleStop()
-    chatState.setState({
+    chatStore.setState({
       isGenerating: false,
       abortController: null,
       messages: [],
@@ -244,7 +157,7 @@ function ChatDrawerInner() {
 
   const handleClose = useCallback(() => {
     withViewTransition(
-      () => { chatState.setState({ drawerState: 'closed' }) },
+      () => { chatStore.setState({ drawerState: 'closed' }) },
       () => hideChildrenForSnapshot(drawerPanelRef.current),
     )
   }, [])
@@ -255,7 +168,7 @@ function ChatDrawerInner() {
 
   useEffect(() => {
     if (drawerState !== 'open') return
-    const { pendingSubmit, draftText } = chatState.getState()
+    const { pendingSubmit, draftText } = chatStore.getState()
     if (pendingSubmit && draftText.trim()) {
       void handleSubmit(draftText.trim())
     }
@@ -285,7 +198,7 @@ function ChatDrawerInner() {
     function onClickLink(e: MouseEvent) {
       const anchor = (e.target as HTMLElement)?.closest?.('a')
       if (!anchor) return
-      chatState.setState({ drawerState: 'closed' })
+      chatStore.setState({ drawerState: 'closed' })
     }
     document.addEventListener('click', onClickLink)
     return () => document.removeEventListener('click', onClickLink)
@@ -293,8 +206,8 @@ function ChatDrawerInner() {
 
   const isOpen = drawerState === 'open'
 
-  // Portal to <body> so the drawer sits outside all stacking contexts
-  const portalTarget = useSyncExternalStore(emptySubscribe, getBody, getNull)
+  // Portal target from widget store (reactive), fallback to document.body
+  const portalTarget = useSyncExternalStore(chatWidgetStore.subscribe, getPortalTarget, getNull)
   if (!portalTarget) return null
 
   return createPortal(
@@ -441,11 +354,16 @@ function ChatDrawerInner() {
          * morphs the chat input from the sidebar position to here. */}
         <div style={{ flexShrink: 0 }}>
           <div
-            className='m-3 rounded-2xl bg-accent px-0.5 pt-0.5 pb-0.5'
+            style={{
+              margin: '12px',
+              borderRadius: '16px',
+              background: 'var(--accent)',
+              padding: '2px',
+            }}
           >
             <ChatInput
               value={draftText}
-              onChange={(v) => chatState.setState({ draftText: v })}
+              onChange={(v) => chatStore.setState({ draftText: v })}
               onSubmit={handleSubmit}
               onStop={handleStop}
               isGenerating={isGenerating}

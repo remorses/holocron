@@ -23,6 +23,17 @@ export { router }
 
 export const href = router.href
 
-/** Typed per-request loader data. */
+/** Typed per-request loader data. Throws if called outside a holocron app. */
 export const useHolocronData = () =>
 	useLoaderData() as HolocronLoaderData
+
+/** Safe variant that returns undefined instead of throwing when called
+ * outside a holocron app (e.g. chat response components rendered via
+ * RSC federation in a standalone widget consumer). */
+export function useHolocronDataSafe(): HolocronLoaderData | undefined {
+	try {
+		return useLoaderData() as HolocronLoaderData
+	} catch {
+		return undefined
+	}
+}
