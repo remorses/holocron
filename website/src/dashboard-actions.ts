@@ -263,24 +263,28 @@ export async function completeGscOAuthAction({ projectId, readKey }: {
 
   const db = getDb()
   const expiresAt = Date.now() + tokens.expires_in * 1000
+  const now = Date.now()
 
-  // Upsert: replace existing connection for this project
+  // Upsert: replace existing connection for this project.
+  // Only overwrite refreshToken if Google sent a new one — Framer's proxy
+  // uses access_type=online so refresh tokens may be absent on re-auth.
   await db.insert(schema.gscConnection).values({
     projectId,
     oauthAppId: DEFAULT_GSC_APP_ID,
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token || null,
     expiresAt,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
+    createdAt: now,
+    updatedAt: now,
   }).onConflictDoUpdate({
     target: schema.gscConnection.projectId,
     set: {
       oauthAppId: DEFAULT_GSC_APP_ID,
       accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token || null,
+      // Preserve existing refresh token if Google didn't send a new one
+      ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
       expiresAt,
-      updatedAt: Date.now(),
+      updatedAt: now,
     },
   })
 
@@ -320,6 +324,12 @@ export async function selectGscSiteAction({ projectId, siteUrl }: {
   const session = await authenticateRequest()
   await requireProjectMembership(session.userId, projectId, { adminOnly: true })
 
+  // Validate that the siteUrl is actually available for this Google account
+  const { sites } = await fetchGscSites(projectId)
+  if (!sites.some(s => s.siteUrl === siteUrl)) {
+    throw new Error('Selected site is not available for this Google account')
+  }
+
   const db = getDb()
   await db.update(schema.gscConnection)
     .set({ siteUrl, updatedAt: Date.now() })
@@ -329,16 +339,10 @@ export async function selectGscSiteAction({ projectId, siteUrl }: {
   return { ok: true }
 }
 
-/** Fetches GSC sites using stored tokens. Refreshes access token if expired.
+/** Internal helper: fetches GSC sites using stored tokens, refreshing if expired.
+ *  No auth check — callers must verify permissions before calling.
  *  TODO: Replace Framer proxy refresh endpoint with our own once GCP app is approved. */
-export async function listGscSitesAction({ projectId }: {
-  projectId: string
-}): Promise<{ sites: Array<{ siteUrl: string; permissionLevel: string }> }> {
-  if (!projectId) throw new Error('Project ID is required')
-
-  const session = await authenticateRequest()
-  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
-
+async function fetchGscSites(projectId: string): Promise<{ sites: Array<{ siteUrl: string; permissionLevel: string }> }> {
   const db = getDb()
   const connection = await db.query.gscConnection.findFirst({
     where: { projectId },
@@ -376,4 +380,15 @@ export async function listGscSitesAction({ projectId }: {
 
   const data = await sitesRes.json() as { siteEntry?: Array<{ siteUrl: string; permissionLevel: string }> }
   return { sites: data.siteEntry || [] }
+}
+
+export async function listGscSitesAction({ projectId }: {
+  projectId: string
+}): Promise<{ sites: Array<{ siteUrl: string; permissionLevel: string }> }> {
+  if (!projectId) throw new Error('Project ID is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  return fetchGscSites(projectId)
 }

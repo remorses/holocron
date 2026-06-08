@@ -703,6 +703,7 @@ export const dashboardApp = new Spiceflow()
                     Connect Google Search Console to track search performance for your docs site.
                   </div>
                   <ConnectGscButton
+                    key={project.projectId}
                     projectId={project.projectId}
                     connection={loaderData.gscConnection}
                   />
