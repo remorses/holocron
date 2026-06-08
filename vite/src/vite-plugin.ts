@@ -7,6 +7,7 @@
  *   export default defineConfig({ plugins: [holocron()] })
  */
 
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
@@ -915,10 +916,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         addCodeSplittingGroups(config, [HOLOCRON_DATA_GROUP, STABLE_GROUP])
 
         // Deterministic names: holocron-data.js + holocron-page-{slug}.js
-        // Disable minification and internal export renaming so the data
-        // chunk keeps readable names for manual post-build editing.
         config.build ??= {}
-        config.build.minify = false
         config.build.rolldownOptions ??= {}
         const output = config.build.rolldownOptions.output ??= {}
         if (!Array.isArray(output)) {
@@ -932,8 +930,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             const mdxPageId = chunkInfo.moduleIds.find((id) => id.includes('\0virtual:holocron-mdx-page/'))
             if (mdxPageId) {
               const slug = decodeURIComponent(mdxPageId.split('\0virtual:holocron-mdx-page/')[1] ?? '')
-              const safeName = slug.replace(/\//g, '--')
-              return `assets/holocron-page-${safeName}.js`
+              const readable = slug.replace(/\//g, '--')
+              const hash = createHash('sha256').update(slug).digest('hex').slice(0, 8)
+              return `assets/holocron-page-${readable}-${hash}.js`
             }
             if (typeof existingChunkFileNames === 'function') {
               return existingChunkFileNames(chunkInfo)

@@ -443,28 +443,32 @@ test.describe("@build deterministic RSC chunk names", () => {
     const assetsDir = getRscAssetsDir();
     if (!assetsDir) return;
     const files = fs.readdirSync(assetsDir);
+    // Each page chunk is named holocron-page-{slug}-{hash8}.js
     const pageChunks = files.filter((f) => f.startsWith("holocron-page-")).sort();
-    // The basic fixture has 3 pages: index, getting-started, markdown-page
-    expect(pageChunks).toEqual([
-      "holocron-page-getting-started.js",
-      "holocron-page-index.js",
-      "holocron-page-markdown-page.js",
-    ]);
+    expect(pageChunks).toHaveLength(3);
+    expect(pageChunks).toEqual(expect.arrayContaining([
+      expect.stringMatching(/^holocron-page-getting-started-[0-9a-f]{8}\.js$/),
+      expect.stringMatching(/^holocron-page-index-[0-9a-f]{8}\.js$/),
+      expect.stringMatching(/^holocron-page-markdown-page-[0-9a-f]{8}\.js$/),
+    ]));
   });
 
   test("holocron-data.js imports page chunks by deterministic name", () => {
     const assetsDir = getRscAssetsDir();
     if (!assetsDir) return;
     const code = fs.readFileSync(path.join(assetsDir, "holocron-data.js"), "utf-8");
-    expect(code).toContain("holocron-page-getting-started.js");
-    expect(code).toContain("holocron-page-index.js");
-    expect(code).toContain("holocron-page-markdown-page.js");
+    expect(code).toMatch(/holocron-page-getting-started-[0-9a-f]{8}\.js/);
+    expect(code).toMatch(/holocron-page-index-[0-9a-f]{8}\.js/);
+    expect(code).toMatch(/holocron-page-markdown-page-[0-9a-f]{8}\.js/);
   });
 
   test("page chunk contains the raw MDX content for that page", () => {
     const assetsDir = getRscAssetsDir();
     if (!assetsDir) return;
-    const code = fs.readFileSync(path.join(assetsDir, "holocron-page-getting-started.js"), "utf-8");
+    const files = fs.readdirSync(assetsDir);
+    const gsChunk = files.find((f) => f.startsWith("holocron-page-getting-started-"));
+    expect(gsChunk).toBeTruthy();
+    const code = fs.readFileSync(path.join(assetsDir, gsChunk!), "utf-8");
     expect(code).toContain("Getting Started");
     expect(code).toContain("npm install @holocron.so/vite");
   });
