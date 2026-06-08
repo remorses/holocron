@@ -5,7 +5,7 @@
 'use client'
 
 import './strada-client.ts'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLoaderData } from 'spiceflow/react'
 import {
   ArrowRightIcon,
@@ -37,7 +37,7 @@ import {
   DialogTitle,
 } from './components/ui/dialog.tsx'
 import { Frame } from './components/ui/frame.tsx'
-import { Input } from './components/ui/input.tsx'
+import { Input, NativeSelect } from './components/ui/input.tsx'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -54,7 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
-import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, updateProjectNameAction, deleteProjectAction } from './dashboard-actions.ts'
+import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, updateProjectNameAction, deleteProjectAction, connectGscAction, disconnectGscAction, listGscSitesAction, selectGscSiteAction } from './dashboard-actions.ts'
 import { openBillingPortal, startCheckout } from './actions.tsx'
 import type { dashboardApp } from './dashboard.tsx'
 
@@ -995,6 +995,252 @@ export function DeleteProjectButton({ projectId, projectName }: { projectId: str
         </Button>
         <Button variant="outline" size="sm" onClick={() => { setConfirming(false); setConfirmText('') }}>
           Cancel
+        </Button>
+      </div>
+      {error && <div className="text-sm text-destructive">{error}</div>}
+    </div>
+  )
+}
+
+// ── Google Search Console Connection ────────────────────────────────
+// TODO: Replace Framer OAuth proxy URL with our own once GCP app is approved.
+// The proxy base URL, authorize/poll/refresh endpoints are all Framer-specific.
+// Framer's open-source OAuth proxy worker: https://github.com/framer/plugin-oauth (MIT)
+// GSC plugin that uses it: https://github.com/framer/plugins/tree/main/plugins/google-search-console
+
+const GSC_OAUTH_PROXY = 'https://oauth.fetch.tools/google-search-console-plugin'
+const GSC_PENDING_KEY = 'holocron-gsc-pending'
+
+/** Strip ugly GSC prefixes for display: "sc-domain:example.com" → "example.com",
+ *  "https://example.com/" → "example.com" */
+function displayGscSiteUrl(siteUrl: string): string {
+  if (siteUrl.startsWith('sc-domain:')) return siteUrl.slice('sc-domain:'.length)
+  try {
+    return new URL(siteUrl).hostname
+  } catch {
+    return siteUrl
+  }
+}
+
+interface GscConnectionInfo {
+  siteUrl: string | null
+  googleEmail: string | null
+  oauthAppId: string
+}
+
+export function ConnectGscButton({ projectId, connection }: {
+  projectId: string
+  connection: GscConnectionInfo | null
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [connected, setConnected] = useState(!!connection)
+  const [siteUrl, setSiteUrl] = useState(connection?.siteUrl || null)
+  const [sites, setSites] = useState<Array<{ siteUrl: string; permissionLevel: string }> | null>(null)
+  const [loadingSites, setLoadingSites] = useState(false)
+
+  // On mount, check if we're returning from Google consent and need to complete the flow
+  useEffect(() => {
+    const pending = localStorage.getItem(GSC_PENDING_KEY)
+    if (!pending) return
+
+    let parsed: { readKey: string; projectId: string }
+    try {
+      parsed = JSON.parse(pending)
+    } catch {
+      localStorage.removeItem(GSC_PENDING_KEY)
+      return
+    }
+
+    // Only complete if this is the same project
+    if (parsed.projectId !== projectId) return
+
+    localStorage.removeItem(GSC_PENDING_KEY)
+    completePendingAuth(parsed.readKey)
+  }, [projectId])
+
+  async function completePendingAuth(readKey: string) {
+    setLoading(true)
+    setError(null)
+    try {
+      // Poll until tokens are available (they should be ready immediately
+      // since user already completed consent before navigating back)
+      let tokens: { access_token: string; expires_in: number; refresh_token?: string; id_token?: string } | null = null
+      for (let i = 0; i < 20; i++) {
+        // TODO: Replace with our own OAuth proxy poll endpoint
+        const pollRes = await fetch(`${GSC_OAUTH_PROXY}/poll?readKey=${readKey}`, { method: 'POST' })
+        if (pollRes.status === 200) {
+          tokens = await pollRes.json() as any
+          break
+        }
+        await new Promise(r => setTimeout(r, 1500))
+      }
+      if (!tokens) throw new Error('Failed to retrieve tokens from Google')
+
+      await connectGscAction({
+        projectId,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresIn: tokens.expires_in,
+        idToken: tokens.id_token,
+      })
+
+      setConnected(true)
+
+      // Auto-fetch sites after connecting
+      const { sites } = await listGscSitesAction({ projectId })
+      if (sites.length === 1) {
+        await selectGscSiteAction({ projectId, siteUrl: sites[0]!.siteUrl })
+        setSiteUrl(sites[0]!.siteUrl)
+      } else if (sites.length > 0) {
+        setSites(sites)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to complete connection')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleConnect() {
+    setLoading(true)
+    setError(null)
+    try {
+      // TODO: Replace with our own OAuth proxy authorize endpoint
+      const authorizeRes = await fetch(`${GSC_OAUTH_PROXY}/authorize`, { method: 'POST' })
+      if (!authorizeRes.ok) throw new Error('Failed to start OAuth flow')
+
+      const { url, readKey } = await authorizeRes.json() as { url: string; readKey: string }
+
+      // Store pending auth so we can complete it when user returns
+      localStorage.setItem(GSC_PENDING_KEY, JSON.stringify({ readKey, projectId }))
+
+      // Open Google consent in a new tab
+      window.open(url, '_blank')
+
+      // Poll for tokens while user is in the other tab
+      await completePendingAuth(readKey)
+      localStorage.removeItem(GSC_PENDING_KEY)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to connect')
+      setLoading(false)
+    }
+  }
+
+  async function handleDisconnect() {
+    setLoading(true)
+    setError(null)
+    try {
+      await disconnectGscAction({ projectId })
+      setConnected(false)
+      setSiteUrl(null)
+      setSites(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to disconnect')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading && !connected) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        Connecting to Google Search Console...
+      </div>
+    )
+  }
+
+  if (connected) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-sm">
+          <div className={`size-2 rounded-full ${siteUrl ? 'bg-green-500' : 'bg-yellow-500'}`} />
+          <span className="text-muted-foreground">
+            {siteUrl ? `Connected: ${displayGscSiteUrl(siteUrl)}` : 'Connected, no site selected'}
+          </span>
+        </div>
+
+        {/* Site selector — shown when sites are loaded or a site is already selected */}
+        {(sites && sites.length > 0) || siteUrl ? (
+          <div className="flex items-center gap-2">
+            <NativeSelect
+              value={siteUrl || ''}
+              onChange={async (e) => {
+                const url = e.target.value
+                if (!url) return
+                setError(null)
+                try {
+                  await selectGscSiteAction({ projectId, siteUrl: url })
+                  setSiteUrl(url)
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Failed to select site')
+                }
+              }}
+              className="max-w-xs"
+            >
+              {!siteUrl && <option value="">Select a property...</option>}
+              {(sites || []).map((site) => (
+                <option key={site.siteUrl} value={site.siteUrl}>
+                  {displayGscSiteUrl(site.siteUrl)}
+                </option>
+              ))}
+              {/* Keep current selection visible even if sites haven't been re-fetched */}
+              {siteUrl && !sites?.some(s => s.siteUrl === siteUrl) && (
+                <option value={siteUrl}>{displayGscSiteUrl(siteUrl)}</option>
+              )}
+            </NativeSelect>
+            {!sites && (
+              <Button variant="outline" size="sm" onClick={async () => {
+                setLoadingSites(true)
+                setError(null)
+                try {
+                  const { sites: fetched } = await listGscSitesAction({ projectId })
+                  setSites(fetched)
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : 'Failed to load sites')
+                } finally {
+                  setLoadingSites(false)
+                }
+              }} loading={loadingSites}>
+                Change
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div>
+            <Button variant="outline" size="sm" onClick={async () => {
+              setLoadingSites(true)
+              setError(null)
+              try {
+                const { sites: fetched } = await listGscSitesAction({ projectId })
+                setSites(fetched)
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Failed to load sites')
+              } finally {
+                setLoadingSites(false)
+              }
+            }} loading={loadingSites}>
+              Choose site
+            </Button>
+          </div>
+        )}
+
+        <div>
+          <Button variant="outline" size="sm" onClick={handleDisconnect} loading={loading}>
+            Disconnect
+          </Button>
+        </div>
+        {error && <div className="text-sm text-destructive">{error}</div>}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div>
+        <Button variant="outline" onClick={handleConnect} loading={loading}>
+          <LinkIcon className="size-4" />
+          Connect Google Search Console
         </Button>
       </div>
       {error && <div className="text-sm text-destructive">{error}</div>}

@@ -193,3 +193,139 @@ export async function deleteProjectAction({ projectId }: {
 
   throw redirect('/dashboard')
 }
+
+// ── Google Search Console ───────────────────────────────────────────
+
+// TODO: Replace with our own OAuth proxy URL once GCP app is approved.
+// Framer's open-source OAuth proxy worker source:
+// https://github.com/framer/plugin-oauth (MIT license)
+// Vendor this into our own CF Worker when we have our own GCP OAuth app.
+const GSC_OAUTH_PROXIES: Record<string, string> = {
+  'framer-gsc-plugin': 'https://oauth.fetch.tools/google-search-console-plugin',
+}
+
+const DEFAULT_GSC_APP_ID = 'framer-gsc-plugin'
+
+export async function connectGscAction({ projectId, accessToken, refreshToken, expiresIn, idToken }: {
+  projectId: string
+  accessToken: string
+  refreshToken?: string
+  expiresIn: number
+  idToken?: string
+}): Promise<{ ok: true }> {
+  if (!projectId) throw new Error('Project ID is required')
+  if (!accessToken) throw new Error('Access token is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  const db = getDb()
+  const expiresAt = Date.now() + expiresIn * 1000
+
+  // Upsert: replace existing connection for this project
+  await db.insert(schema.gscConnection).values({
+    projectId,
+    oauthAppId: DEFAULT_GSC_APP_ID,
+    accessToken,
+    refreshToken: refreshToken || null,
+    expiresAt,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }).onConflictDoUpdate({
+    target: schema.gscConnection.projectId,
+    set: {
+      oauthAppId: DEFAULT_GSC_APP_ID,
+      accessToken,
+      refreshToken: refreshToken || null,
+      expiresAt,
+      updatedAt: Date.now(),
+    },
+  })
+
+  return { ok: true }
+}
+
+export async function disconnectGscAction({ projectId }: {
+  projectId: string
+}): Promise<{ ok: true }> {
+  if (!projectId) throw new Error('Project ID is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  const db = getDb()
+  await db.delete(schema.gscConnection)
+    .where(orm.eq(schema.gscConnection.projectId, projectId))
+    .limit(1)
+
+  return { ok: true }
+}
+
+export async function selectGscSiteAction({ projectId, siteUrl }: {
+  projectId: string
+  siteUrl: string
+}): Promise<{ ok: true }> {
+  if (!projectId) throw new Error('Project ID is required')
+  if (!siteUrl) throw new Error('Site URL is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  const db = getDb()
+  await db.update(schema.gscConnection)
+    .set({ siteUrl, updatedAt: Date.now() })
+    .where(orm.eq(schema.gscConnection.projectId, projectId))
+    .limit(1)
+
+  return { ok: true }
+}
+
+/** Fetches GSC sites using stored tokens. Refreshes access token if expired.
+ *  TODO: Replace Framer proxy refresh endpoint with our own once GCP app is approved. */
+export async function listGscSitesAction({ projectId }: {
+  projectId: string
+}): Promise<{ sites: Array<{ siteUrl: string; permissionLevel: string }> }> {
+  if (!projectId) throw new Error('Project ID is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId)
+
+  const db = getDb()
+  const connection = await db.query.gscConnection.findFirst({
+    where: { projectId },
+  })
+  if (!connection) throw new Error('No Google Search Console connection found')
+
+  let { accessToken, refreshToken, expiresAt } = connection
+
+  // Refresh token if expired
+  if (expiresAt && expiresAt < Date.now() && refreshToken) {
+    const proxyUrl = GSC_OAUTH_PROXIES[connection.oauthAppId]
+    if (!proxyUrl) throw new Error(`Unknown OAuth app: ${connection.oauthAppId}`)
+
+    const refreshRes = await fetch(
+      `${proxyUrl}/refresh?code=${encodeURIComponent(refreshToken)}`,
+      { method: 'POST' },
+    )
+    if (!refreshRes.ok) throw new Error('Failed to refresh Google token')
+
+    const refreshData = await refreshRes.json() as { access_token: string; expires_in: number }
+    accessToken = refreshData.access_token
+    const newExpiresAt = Date.now() + refreshData.expires_in * 1000
+
+    // Update stored tokens
+    await db.update(schema.gscConnection)
+      .set({ accessToken, expiresAt: newExpiresAt, updatedAt: Date.now() })
+      .where(orm.eq(schema.gscConnection.projectId, projectId))
+      .limit(1)
+  }
+
+  // Fetch sites from Google
+  const sitesRes = await fetch('https://searchconsole.googleapis.com/webmasters/v3/sites', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!sitesRes.ok) throw new Error('Failed to fetch Google Search Console sites')
+
+  const data = await sitesRes.json() as { siteEntry?: Array<{ siteUrl: string; permissionLevel: string }> }
+  return { sites: data.siteEntry || [] }
+}

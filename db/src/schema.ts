@@ -224,6 +224,32 @@ export const apiKey = s.sqliteTable('api_key', {
   s.index('api_key_project_id_idx').on(table.projectId),
 ])
 
+// ── Google Search Console connection (one per project) ──────────────
+// Stores OAuth tokens obtained via an external OAuth proxy (e.g. Framer's
+// plugin-oauth worker). The oauthAppId tracks which proxy was used so we
+// can swap to our own GCP app later without breaking existing connections.
+
+export const gscConnection = s.sqliteTable('gsc_connection', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }).unique(),
+  /** Identifies which OAuth proxy issued the tokens (e.g. "framer-gsc-plugin").
+   *  TODO: Replace with our own GCP OAuth app id once approved. */
+  oauthAppId: s.text('oauth_app_id').notNull(),
+  /** Google account email, populated after first successful API call. */
+  googleEmail: s.text('google_email'),
+  /** The GSC property URL the user selected (e.g. "sc-domain:example.com"
+   *  or "https://example.com/"). Null until user picks one. */
+  siteUrl: s.text('site_url'),
+  accessToken: s.text('access_token').notNull(),
+  refreshToken: s.text('refresh_token'),
+  /** When the access_token expires (epoch ms). */
+  expiresAt: epochMs('expires_at'),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+  updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  s.index('gsc_connection_project_id_idx').on(table.projectId),
+])
+
 // ── Device flow (BetterAuth device authorization plugin) ────────────
 
 export const deviceCode = s.sqliteTable('device_code', {
@@ -244,7 +270,7 @@ export const deviceCode = s.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, orgInvitation, apiKey, deviceCode, project, deployment, subscription },
+  { user, session, account, verification, org, orgMember, orgInvitation, apiKey, deviceCode, project, deployment, subscription, gscConnection },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -292,6 +318,10 @@ export const relations = defineRelations(
       keys: r.many.apiKey(),
       deployments: r.many.deployment(),
       subscriptions: r.many.subscription(),
+      gscConnection: r.one.gscConnection({ from: r.project.projectId, to: r.gscConnection.projectId }),
+    },
+    gscConnection: {
+      project: r.one.project({ from: r.gscConnection.projectId, to: r.project.projectId }),
     },
     deployment: {
       project: r.one.project({ from: r.deployment.projectId, to: r.project.projectId }),
