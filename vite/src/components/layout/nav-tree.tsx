@@ -13,6 +13,7 @@ import type { SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from '../markdown/icons.tsx'
 import { ExpandableContainer } from '../markdown/expandable-container.tsx'
 import { Icon } from '../icon.tsx'
+import { cn } from '../../lib/css-vars.ts'
 import { NavBadge, MethodBadge } from './nav-badge.tsx'
 
 type SidebarTreeContextValue = {
@@ -268,6 +269,10 @@ function NavPageLink({
   // A single heading is not useful as a TOC — treat it like a page without sections.
   const showToc = page.headings.length > 1 && (isSearchActive || isActive)
 
+  // When a badge is present, truncate the title so the badge + title never overflow
+  // the sidebar width. Without a badge, text wraps normally.
+  const hasBadge = typeof frontmatter.api === 'string' || frontmatter.deprecated || (frontmatter.tag && typeof frontmatter.api !== 'string')
+
   return (
     <div className='flex flex-col'>
       <Link
@@ -285,7 +290,7 @@ function NavPageLink({
         }}
       >
         <Icon icon={page.icon} size={12} />
-        <span className='font-medium'>{frontmatter.sidebarTitle ?? page.title}</span>
+        <span className={cn('font-medium', hasBadge && 'truncate min-w-0')}>{frontmatter.sidebarTitle ?? page.title}</span>
         <span className='ml-auto inline-flex items-center gap-1'>
           {typeof frontmatter.api === 'string' && <MethodBadge method={frontmatter.api.split(' ')[0]!} />}
           {frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}

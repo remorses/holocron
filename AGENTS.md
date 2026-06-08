@@ -86,6 +86,10 @@ This enriched tree is written to `dist/holocron-cache.json` after each sync. On 
 
 Types are intentionally kept close to docs.json to minimize transformations. Utility functions (`getTabs`, `getActiveGroups`, `findPage`, `buildSidebarTree`) take the tree directly as input.
 
+### Sidebar nav items must never cause horizontal scroll
+
+The left sidebar (`SideNav` / `nav-tree.tsx`) must never overflow horizontally. When a `NavPageLink` has a badge (API method, deprecated, custom tag), the title `<span>` gets `truncate min-w-0` so it ellipsizes instead of pushing the sidebar wider. Without a badge, the title wraps normally. Never remove this truncation guard; it prevents the sidebar from scrolling horizontally on long titles with badges.
+
 ## Styling
 
 ### CSS variable convention — shadcn superset
