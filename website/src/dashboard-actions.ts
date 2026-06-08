@@ -203,6 +203,11 @@ export async function deleteProjectAction({ projectId }: {
 // Framer's open-source OAuth proxy worker source:
 // https://github.com/framer/plugin-oauth (MIT license)
 // Vendor this into our own CF Worker when we have our own GCP OAuth app.
+//
+// NOTE: The open-source repo hardcodes access_type=online, but the live
+// deployment at oauth.fetch.tools uses access_type=offline + prompt=consent.
+// This means refresh tokens work fine. Scopes granted by the live proxy:
+// userinfo.profile, webmasters (read/write), indexing.
 
 const GSC_OAUTH_PROXIES: Record<string, string> = {
   'framer-gsc-plugin': 'https://oauth.fetch.tools/google-search-console-plugin',
