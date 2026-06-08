@@ -42,7 +42,9 @@
   --font-code: var(--font-code);
 }
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Shadow DOM: :host-context(.dark) lets children match the host's .dark class.
+ * Also keep .dark ancestor match for the non-shadow holocron integration path. */
+@custom-variant dark (&:where(:host-context(.dark), :host-context(.dark) *, .dark, .dark *));
 
 /* ── Custom utility classes (from editorial.css, needed in shadow DOM) ── */
 .no-bleed {

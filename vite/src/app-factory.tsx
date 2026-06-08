@@ -1238,9 +1238,17 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   }
 
   // /holocron-api/chat — only registered when assistant is enabled
+  // CORS headers for cross-origin widget use
+  const chatCorsHeaders = {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'POST, OPTIONS',
+    'access-control-allow-headers': 'content-type',
+  }
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
+    // OPTIONS preflight for CORS
+    app = app.options(chatRoute, async () => new Response(null, { status: 204, headers: chatCorsHeaders }))
     if (!site.config.assistant.enabled) {
-      app = app.post(chatRoute, async () => new Response('Assistant is disabled', { status: 404 }))
+      app = app.post(chatRoute, async () => new Response('Assistant is disabled', { status: 404, headers: chatCorsHeaders }))
       continue
     }
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
@@ -1423,7 +1431,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         }
       }
 
-      return await encodeFederationPayload({ stream: generateParts() })
+      const response = await encodeFederationPayload({ stream: generateParts() })
+      for (const [key, value] of Object.entries(chatCorsHeaders)) {
+        response.headers.set(key, value)
+      }
+      return response
     })
   }
 

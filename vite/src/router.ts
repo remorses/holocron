@@ -33,7 +33,16 @@ export const useHolocronData = () =>
 export function useHolocronDataSafe(): HolocronLoaderData | undefined {
 	try {
 		return useLoaderData() as HolocronLoaderData
-	} catch {
-		return undefined
+	} catch (error) {
+		// Only swallow the known missing-context error from standalone widget
+		// rendering. Rethrow everything else (thenables from React.use,
+		// real route errors, etc.) so Suspense and error boundaries still work.
+		if (
+			error instanceof Error &&
+			error.message.includes('FlightDataContext is missing')
+		) {
+			return undefined
+		}
+		throw error
 	}
 }

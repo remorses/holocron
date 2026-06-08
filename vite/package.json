@@ -49,6 +49,10 @@
       "browser": "./dist/prism.js",
       "default": "./dist/prism.js"
     },
+    "./chat": {
+      "types": "./dist/chat/index.d.ts",
+      "default": "./dist/chat/index.js"
+    },
     "./src/*": "./src/*",
     "./dist/*": "./dist/*"
   },
@@ -75,7 +79,8 @@
   "scripts": {
     "generate-schema": "tsx scripts/generate-schema.ts",
     "bundle-prism": "tsx scripts/bundle-prism.ts",
-    "build": "pnpm generate-schema && pnpm bundle-prism && tsc && chmod +x dist/bin.js",
+    "bundle-chat-css": "tsx scripts/bundle-chat-css.ts",
+    "build": "pnpm generate-schema && pnpm bundle-prism && pnpm bundle-chat-css && tsc && chmod +x dist/bin.js",
     "typecheck": "tsc",
     "test": "vitest --run",
     "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
@@ -132,6 +137,7 @@
     "motion": "^12.40.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
     "@types/mdast": "^4.0.4",
     "@types/node": "^25.9.2",
     "@types/prismjs": "^1.26.6",

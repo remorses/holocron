@@ -1,154 +1,51 @@
 'use client'
 
-import React, { useState, useRef, useMemo, useCallback, useEffect, type RefObject } from 'react'
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from './link.tsx'
-import { chatState } from '../lib/chat-state.ts'
-import { CHAT_CONTAINER_VT_NAME, withViewTransition } from '../lib/chat-store.ts'
+import { useSyncExternalStore } from 'react'
+import { chatStore, CHAT_CONTAINER_VT_NAME, withViewTransition, type ChatState } from '../chat/chat-store.ts'
+
+function useChatStore<T>(selector: (s: ChatState) => T): T {
+  return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
+}
 import { useHolocronData } from '../router.ts'
 import { collectAllPages, isVisibleNavPage } from '../navigation.ts'
 import { cn } from '../lib/css-vars.ts'
 import {
   InfoCircleIcon,
-  ArrowUpIcon,
-  StopSquareIcon,
   CopyIcon,
   CheckIcon,
-} from './chat-icons.tsx'
+} from '../chat/chat-icons.tsx'
 
-// ── Reusable chat input (textarea + send/stop button) ────────────────
-//
-// Used by SidebarAssistant (in the right aside) and by the ChatDrawer
-// footer. Same visual: bg-background rounded card with textarea and
-// arrow-up send button that toggles to a square stop button during
-// generation.
+// Re-export from chat/ so existing consumers don't break
+export { ChatInput, hideChildrenForSnapshot, NavTooltip } from '../chat/chat-input.tsx'
+export type { ChatInputProps } from '../chat/chat-input.tsx'
 
-export type ChatInputProps = {
-  value: string
-  onChange: (value: string) => void
-  onSubmit: () => void
-  onStop?: () => void
-  onFocus?: () => void
-  isGenerating?: boolean
-  placeholder?: string
-  disabled?: boolean
-  autoFocus?: boolean
-  className?: string
-  textClassName?: string
-  textareaRef?: React.RefObject<HTMLTextAreaElement | null>
-}
-
-export function ChatInput({
-  value,
-  onChange,
-  onSubmit,
-  onStop,
-  onFocus,
-  isGenerating,
-  placeholder = 'How can I help?',
-  disabled,
-  autoFocus,
-  className,
-  textClassName,
-  textareaRef,
-}: ChatInputProps) {
-  const localRef = useRef<HTMLTextAreaElement>(null)
-  const inputRef = textareaRef || localRef
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if (isGenerating) {
-        onStop?.()
-      } else if (value.trim()) {
-        onSubmit()
-      }
-    }
-  }
-
-  const handleButtonClick = () => {
-    if (isGenerating) {
-      onStop?.()
-    } else {
-      onSubmit()
-    }
-  }
-
-  return (
-    <div className={`bg-background rounded-xl p-2 flex flex-col gap-1.5 ${className || ''}`}>
-      <textarea
-        ref={inputRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onFocus={onFocus}
-        placeholder={placeholder}
-        disabled={disabled}
-        autoFocus={autoFocus}
-        rows={1}
-        className={`w-full resize-none border-0 bg-transparent leading-5 text-foreground placeholder:text-muted-foreground/75 outline-none [field-sizing:content] min-h-5 max-h-40 ${textClassName || 'text-sm'}`}
-      />
-      <div className='flex items-center justify-end' onClick={() => inputRef.current?.focus()}>
-        {isGenerating ? (
-          <button
-            type='button'
-            onClick={handleButtonClick}
-            className='flex items-center justify-center w-6 h-6 rounded-md transition-colors bg-foreground/[0.06] text-muted-foreground/50 hover:bg-foreground/[0.12]'
-            aria-label='Stop generating'
-          >
-            <StopSquareIcon />
-          </button>
-        ) : (
-          <button
-            type='button'
-            onClick={handleButtonClick}
-            disabled={disabled || !value.trim()}
-            className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
-              value.trim()
-                ? 'bg-foreground text-background'
-                : 'bg-foreground/[0.06] text-muted-foreground/50'
-            }`}
-            aria-label='Send message'
-          >
-            <ArrowUpIcon />
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
+// Import for local use
+import { ChatInput, hideChildrenForSnapshot } from '../chat/chat-input.tsx'
 
 // ── Sidebar assistant (wraps ChatInput with muted header) ────────────
-
-/** Hide children so the VT snapshot is a solid-color rectangle. */
-export function hideChildrenForSnapshot(el: HTMLElement | null): (() => void) | void {
-  if (!el) return
-  const children = Array.from(el.children) as HTMLElement[]
-  for (const child of children) child.style.visibility = 'hidden'
-  return () => {
-    for (const child of children) child.style.visibility = ''
-  }
-}
 
 export function SidebarAssistant() {
   // Local state so the widget keeps its value even after the drawer
   // submits and clears draftText. We sync TO the store on every change
   // so the drawer can read it, but never read back from the store.
   const [inputValue, setInputValue] = useState('')
-  const drawerState = chatState((s) => s.drawerState)
+  const drawerState = useChatStore((s) => s.drawerState)
   const widgetRef = useRef<HTMLDivElement>(null)
 
   const {site } = useHolocronData()
   const handleChange = (value: string) => {
     setInputValue(value)
-    chatState.setState({ draftText: value })
+    chatStore.setState({ draftText: value })
   }
 
   const handleSubmit = () => {
     const text = inputValue.trim()
     if (!text) return
     withViewTransition(
-      () => { chatState.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' }) },
+      () => { chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' }) },
       () => hideChildrenForSnapshot(widgetRef.current),
     )
   }
@@ -157,9 +54,9 @@ export function SidebarAssistant() {
     // Read the store lazily on focus instead of subscribing during render.
     // This keeps the sidebar input SSR-safe in the RSC page shell while
     // preserving the "reopen existing chat" behavior on the client.
-    if (chatState.getState().messages.length > 0) {
+    if (chatStore.getState().messages.length > 0) {
       withViewTransition(
-        () => { chatState.setState({ drawerState: 'open' }) },
+        () => { chatStore.setState({ drawerState: 'open' }) },
         () => hideChildrenForSnapshot(widgetRef.current),
       )
     }
@@ -223,43 +120,7 @@ function ChevronRightIcon() {
   )
 }
 
-export function NavTooltip({ label, children, position = 'above' }: { label: string; children: React.ReactNode; position?: 'above' | 'below' }) {
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef<HTMLSpanElement>(null)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
-
-  useEffect(() => {
-    if (!open || !triggerRef.current) return
-    const rect = triggerRef.current.getBoundingClientRect()
-    setPos({
-      top: position === 'below'
-        ? rect.bottom + 6
-        : rect.top - 6,
-      left: rect.left + rect.width / 2,
-    })
-  }, [open, position])
-
-  return (
-    <span
-      ref={triggerRef}
-      className='inline-flex'
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      {children}
-      {open && typeof document !== 'undefined' && createPortal(
-        <span
-          className={`fixed -translate-x-1/2 whitespace-nowrap rounded-md border border-border-subtle bg-card px-2 py-1 text-[11px] text-foreground shadow-md pointer-events-none ${position === 'below' ? '' : '-translate-y-full'}`}
-          role='tooltip'
-          style={{ top: pos.top, left: pos.left, zIndex: 300 }}
-        >
-          {label}
-        </span>,
-        document.body,
-      )}
-    </span>
-  )
-}
+import { NavTooltip } from '../chat/chat-input.tsx'
 
 export function PageNavRow() {
   const { site, currentPageHref } = useHolocronData()

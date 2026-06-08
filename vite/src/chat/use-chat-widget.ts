@@ -6,16 +6,15 @@
  * Provides a simple API for external consumers to control the chat.
  */
 
-import { useCallback } from 'react'
-import { useStore } from 'zustand'
+import { useCallback, useSyncExternalStore } from 'react'
 import { chatStore } from './chat-store.ts'
 import { chatWidgetStore } from './chat-widget-store.ts'
 
 export function useChatWidget() {
-  const isOpen = useStore(chatStore, (s) => s.drawerState === 'open')
-  const isGenerating = useStore(chatStore, (s) => s.isGenerating)
-  const messages = useStore(chatStore, (s) => s.messages)
-  const config = useStore(chatWidgetStore, (s) => s)
+  const isOpen = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().drawerState === 'open', () => false)
+  const isGenerating = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().isGenerating, () => false)
+  const messages = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().messages, () => [])
+  const config = useSyncExternalStore(chatWidgetStore.subscribe, () => chatWidgetStore.getState(), () => chatWidgetStore.getState())
 
   const open = useCallback(() => {
     chatStore.setState({ drawerState: 'open' })

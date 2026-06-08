@@ -11,8 +11,12 @@
 import React, { useEffect, useSyncExternalStore, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from './link.tsx'
-import { chatState } from '../lib/chat-state.ts'
-import { CloseIcon } from './chat-icons.tsx'
+import { navStore, type NavState } from '../lib/nav-store.ts'
+
+function useNavStore<T>(selector: (s: NavState) => T): T {
+  return useSyncExternalStore(navStore.subscribe, () => selector(navStore.getState()), () => selector(navStore.getState()))
+}
+import { CloseIcon } from '../chat/chat-icons.tsx'
 import { SideNav } from './layout/side-nav.tsx'
 import { NavSelect } from './layout/nav-select.tsx'
 import { Icon } from './icon.tsx'
@@ -41,7 +45,7 @@ export function NavDrawer() {
 }
 
 function NavDrawerInner() {
-  const isOpen = chatState((s) => s.navDrawerOpen)
+  const isOpen = useNavStore((s) => s.navDrawerOpen)
   const { site, currentPageHref, activeVersionHref, activeDropdownHref, activeTabHref, githubStars } =
     useHolocronData()
 
@@ -52,7 +56,7 @@ function NavDrawerInner() {
   const tabs = buildTabItems(site)
 
   const handleClose = useCallback(() => {
-    chatState.setState({ navDrawerOpen: false })
+    navStore.setState({ navDrawerOpen: false })
   }, [])
 
   // Close on page navigation

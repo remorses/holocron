@@ -28,7 +28,7 @@ import { ThemeToggle } from '../theme-toggle.tsx'
 import { ConfigPanel } from '../config-panel.tsx'
 import { Footer, Logo, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner-dismiss.tsx'
-import { ChatDrawer } from '../chat-drawer.tsx'
+import { HolocronChatBridge } from '../holocron-chat-bridge.tsx'
 import { MobileBar } from '../mobile-bar.tsx'
 import { NavDrawer } from '../nav-drawer.tsx'
 import { GitHubStars } from './github-stars.tsx'
@@ -468,7 +468,7 @@ export function EditorialPage({
       </div>
 
       {/* AI assistant drawer — slides in from right when activated */}
-      {enableAssistant && <ChatDrawer />}
+      {enableAssistant && <HolocronChatBridge />}
 
       {/* Mobile navigation drawer (lg:hidden) */}
       {showLeftNav && <NavDrawer />}

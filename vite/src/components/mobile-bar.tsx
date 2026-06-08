@@ -6,8 +6,9 @@
  * "Menu" (right) opens the navigation drawer.
  */
 
-import { chatState } from '../lib/chat-state.ts'
-import { MenuIcon } from './chat-icons.tsx'
+import { chatStore } from '../chat/chat-store.ts'
+import { navStore } from '../lib/nav-store.ts'
+import { MenuIcon } from '../chat/chat-icons.tsx'
 
 export function MobileBar({ enableAssistant = true }: { enableAssistant?: boolean }) {
   return (
@@ -15,7 +16,7 @@ export function MobileBar({ enableAssistant = true }: { enableAssistant?: boolea
       {enableAssistant ? (
         <button
           type='button'
-          onClick={() => chatState.setState({ drawerState: 'open' })}
+          onClick={() => chatStore.setState({ drawerState: 'open' })}
           style={{
             fontSize: '13px',
             fontWeight: 500,
@@ -31,7 +32,7 @@ export function MobileBar({ enableAssistant = true }: { enableAssistant?: boolea
       ) : <div />}
       <button
         type='button'
-        onClick={() => chatState.setState({ navDrawerOpen: true })}
+        onClick={() => navStore.setState({ navDrawerOpen: true })}
         style={{
           display: 'flex',
           alignItems: 'center',

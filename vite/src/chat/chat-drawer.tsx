@@ -14,8 +14,11 @@
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { useStore } from 'zustand'
 import { chatStore, CHAT_CONTAINER_VT_NAME, withViewTransition } from './chat-store.ts'
+
+function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T): T {
+  return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
+}
 import { chatWidgetStore } from './chat-widget-store.ts'
 import { submitChat } from './chat-submit.ts'
 import {
@@ -44,11 +47,11 @@ export function ChatDrawer() {
 }
 
 function ChatDrawerInner() {
-  const drawerState = useStore(chatStore, (s) => s.drawerState)
-  const isGenerating = useStore(chatStore, (s) => s.isGenerating)
-  const messages = useStore(chatStore, (s) => s.messages)
-  const errorMessage = useStore(chatStore, (s) => s.errorMessage)
-  const draftText = useStore(chatStore, (s) => s.draftText)
+  const drawerState = useChatStore((s) => s.drawerState)
+  const isGenerating = useChatStore((s) => s.isGenerating)
+  const messages = useChatStore((s) => s.messages)
+  const errorMessage = useChatStore((s) => s.errorMessage)
+  const draftText = useChatStore((s) => s.draftText)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const drawerPanelRef = useRef<HTMLDivElement>(null)
 

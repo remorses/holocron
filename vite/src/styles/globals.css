@@ -523,7 +523,6 @@
   overflow: clip;
 }
 
-/* Stretch snapshots to fill group; blur cross-fade masks mid-morph distortion */
 ::view-transition-old(holocron-chat-container) {
   width: 100%;
   height: 100%;

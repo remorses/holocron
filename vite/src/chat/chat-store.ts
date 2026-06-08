@@ -1,6 +1,11 @@
+'use client'
+
 /**
  * Chat store — vanilla zustand state shared by the chat drawer, sidebar
  * widget, and mobile nav without depending on React hooks.
+ *
+ * Marked 'use client' because withViewTransition imports flushSync from
+ * react-dom which is not available in the RSC server environment.
  */
 
 import { createStore } from 'zustand'
