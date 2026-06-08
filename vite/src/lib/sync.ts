@@ -143,6 +143,7 @@ export async function syncNavigation({
   projectRoot,
   distDir,
   logParseErrors = true,
+  deferProviders = false,
 }: {
   config: HolocronConfig
   pagesDir: string
@@ -150,6 +151,12 @@ export async function syncNavigation({
   projectRoot: string
   distDir: string
   logParseErrors?: boolean
+  /** When true, skip virtual tab providers (OpenAPI, changelog, MCP) during
+   *  sync. Provider tabs remain in the navigation but with empty groups.
+   *  The caller runs `processDeferredProviders()` in the background and
+   *  triggers HMR when providers finish. Production builds should always
+   *  use false (the default). */
+  deferProviders?: boolean
 }): Promise<SyncResult> {
   // 1. Load caches from previous build
   const cachePath = path.join(distDir, CACHE_FILENAME)
@@ -362,22 +369,13 @@ export async function syncNavigation({
     if (processed instanceof Error) return handleParseError(slug, processed)
     parsedCount++
 
-    const resolvedImages = await resolveAndProcessImages({
-      imageSrcs: processed.imageSrcs,
-      mdxDir,
-      publicDir,
-      projectRoot,
-      imageCache,
-      imageOutputDir,
-    })
-
-    // Resolve og:image / twitter:image frontmatter paths through the same
-    // pipeline as MDX content images so relative paths like ./screenshot.png
-    // get copied to public and rewritten to a servable URL.
-    // Images already in public/ are NOT copied (needsCopy: false from resolveImagePath).
-    // Also track these as asset refs for broken-asset validation.
-    // Build a merged asset refs array: body refs first, then frontmatter refs.
+    let finalMdx: string
     const mergedAssetRefs = [...processed.assetRefs]
+
+    // Resolve og:image / twitter:image frontmatter paths synchronously in
+    // both deferred and blocking modes. copyToPublic is just a file copy
+    // (no sharp), so it's fast and keeps frontmatter URLs correct in the
+    // navigation cache written at the end of sync.
     for (const fmKey of ['og:image', 'twitter:image'] as const) {
       const src = processed.frontmatter[fmKey]
       if (!src || typeof src !== 'string' || isNonLocalAssetSrc(src)) continue
@@ -390,8 +388,17 @@ export async function syncNavigation({
       }
     }
 
+    const resolvedImages = await resolveAndProcessImages({
+      imageSrcs: processed.imageSrcs,
+      mdxDir,
+      publicDir,
+      projectRoot,
+      imageCache,
+      imageOutputDir,
+    })
+
     // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
-    const finalMdx = resolvedImages.size > 0
+    finalMdx = resolvedImages.size > 0
       ? rewriteMdxImages(processed.mdast, resolvedImages)
       : processed.normalizedContent
 
@@ -443,14 +450,40 @@ export async function syncNavigation({
     }
   }
 
-  // 2b. Process virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages
-  const { watchPaths: providerWatchPaths } = await processVirtualTabs({
-    config,
-    projectRoot,
-    pagesDir,
-    mdxContent,
-    providers: [openapiProvider, changelogProvider, mcpProvider],
-  })
+  // 2b. Process virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages.
+  // In dev mode with deferProviders, skip this step so the sync returns fast.
+  // The caller runs processDeferredProviders() in the background to fill in
+  // provider pages and trigger HMR when ready.
+  const providers = [openapiProvider, changelogProvider, mcpProvider]
+  let providerWatchPaths: string[] = []
+  if (!deferProviders) {
+    const result = await processVirtualTabs({
+      config,
+      projectRoot,
+      pagesDir,
+      mdxContent,
+      providers,
+    })
+    providerWatchPaths = result.watchPaths
+  } else {
+    // Empty out provider-claimed tabs so enrichment doesn't encounter
+    // provider-specific entries like "..." or "GET /users" that only
+    // the provider knows how to resolve. Snapshot authored groups first
+    // so processDeferredProviders can restore them later.
+    for (const tab of config.navigation.tabs) {
+      if (providers.some((p) => p.claims(tab))) {
+        if (!tab.authoredGroups) {
+          Object.defineProperty(tab, 'authoredGroups', {
+            value: structuredClone(tab.groups),
+            enumerable: false,
+            writable: true,
+            configurable: true,
+          })
+        }
+        tab.groups = []
+      }
+    }
+  }
 
   // 3. Walk config and enrich the shared navigation tree.
   const { navigation, switchers } = await buildEnrichedNavigation({ config, enrichPage })
@@ -507,7 +540,7 @@ export async function syncNavigation({
     projectRoot,
   })
 
-  // 5. Write caches
+  // 5. Write caches.
   writeCache(cachePath, navigation)
   writeMdxCache(mdxCachePath, {
     content: filterErroredMdxContent({ content: mdxContent, mdxContentErrors }),
@@ -543,7 +576,11 @@ export async function syncNavigation({
     ))
   }
 
-  return { navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports, importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths, parsedCount, cachedCount }
+  return {
+    navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports,
+    importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths,
+    parsedCount, cachedCount,
+  }
 }
 
 /* ── Image processing helper ─────────────────────────────────────────── */
@@ -601,6 +638,137 @@ async function resolveAndProcessImages({
     }
   }
   return resolvedImages
+}
+
+/* ── Deferred provider processing ────────────────────────────────────── */
+
+/**
+ * Run virtual tab providers (OpenAPI, changelog, MCP) in the background
+ * and patch the live syncResult when done.
+ *
+ * Called by the dev server after the fast initial sync returns. Runs
+ * processVirtualTabs(), enriches the generated virtual pages, rebuilds
+ * the navigation tree, and patches syncResult in place. The caller then
+ * invalidates virtual modules and sends `rsc:update`.
+ */
+export async function processDeferredProviders({
+  config,
+  projectRoot,
+  pagesDir,
+  publicDir,
+  syncResult,
+  signal,
+}: {
+  config: HolocronConfig
+  projectRoot: string
+  pagesDir: string
+  publicDir: string
+  syncResult: SyncResult
+  signal?: AbortSignal
+}): Promise<{ watchPaths: string[] }> {
+  const { watchPaths: providerWatchPaths } = await processVirtualTabs({
+    config,
+    projectRoot,
+    pagesDir,
+    mdxContent: syncResult.mdxContent,
+    providers: [openapiProvider, changelogProvider, mcpProvider],
+  })
+
+  if (signal?.aborted) return { watchPaths: [] }
+
+  // Re-enrich the navigation tree now that provider tabs have groups + virtual pages.
+  // The enrichPage function reads from syncResult.mdxContent which processVirtualTabs
+  // already populated with virtual page content.
+  // For non-virtual pages, reuse the already-enriched NavPage from the initial sync.
+  const existingPages = buildPageIndex(syncResult.navigation)
+  const pageIconRefs: Record<string, IconRef[]> = {}
+  const pageImports: Record<string, ResolvedImport[]> = {}
+
+  // Dedup enrichPage calls — same slug may appear in multiple groups
+  const enrichCache = new Map<string, Promise<NavPage>>()
+
+  function enrichPage(slug: string): Promise<NavPage> {
+    const cached = enrichCache.get(slug)
+    if (cached) return cached
+    const promise = enrichPageInner(slug)
+    enrichCache.set(slug, promise)
+    return promise
+  }
+
+  async function enrichPageInner(slug: string): Promise<NavPage> {
+    // Non-virtual page — reuse from initial sync
+    const existing = existingPages.get(slug)
+    if (existing) return existing
+
+    // Check if we have MDX content: either virtual (from processVirtualTabs)
+    // or a real MDX file that was in a provider tab's authored groups and
+    // wasn't enriched during the initial sync (because provider tabs were emptied).
+    let mdxSource = syncResult.mdxContent[slug]
+    let mdxDir = virtualPageDir(pagesDir, slug)
+
+    if (!mdxSource) {
+      // Real MDX file that wasn't processed yet — read from disk
+      const mdxPath = resolveMdxPath(pagesDir, slug)
+      if (!mdxPath) {
+        throw new Error(`[processDeferredProviders] page "${slug}" not found in nav, mdxContent, or disk`)
+      }
+      mdxSource = fs.readFileSync(mdxPath, 'utf-8')
+      mdxDir = path.dirname(mdxPath)
+    }
+
+    const pageSource = slug === 'index' ? '/' : `/${slug}`
+    const inlineResult = resolveInlineImports({ content: mdxSource, mdxDir, pagesDir, projectRoot, publicDir })
+    const inlineImportMap = inlineResult.imports
+
+    const processMdxOptions: ProcessMdxOptions = {
+      slug,
+      ...(inlineImportMap.size > 0 && {
+        normalizeMdxOptions: { prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]] },
+      }),
+    }
+
+    const processed = processMdx(mdxSource, config.icons.library, pageSource, processMdxOptions)
+    if (processed instanceof Error) {
+      return {
+        slug,
+        href: slugToHref(slug),
+        title: titleFromSlug(slug),
+        gitSha: 'error',
+        headings: [],
+        frontmatter: {},
+      }
+    }
+
+    syncResult.mdxContent[slug] = processed.normalizedContent
+    pageIconRefs[slug] = processed.iconRefs
+    if (processed.importSources.length > 0) {
+      pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
+    }
+
+    return {
+      slug,
+      href: slugToHref(slug),
+      title: processed.title,
+      description: processed.description,
+      gitSha: `virtual:${slug}`,
+      headings: processed.headings,
+      frontmatter: processed.frontmatter,
+    }
+  }
+
+  const { navigation, switchers } = await buildEnrichedNavigation({ config, enrichPage })
+
+  if (signal?.aborted) return { watchPaths: [] }
+
+  // Patch syncResult in place so the vite plugin's virtual modules pick up
+  // the new navigation tree, MDX content, and provider metadata.
+  syncResult.navigation = navigation
+  syncResult.switchers = switchers
+  syncResult.providerWatchPaths = providerWatchPaths
+  Object.assign(syncResult.pageIconRefs, pageIconRefs)
+  Object.assign(syncResult.pageImports, pageImports)
+
+  return { watchPaths: providerWatchPaths }
 }
 
 /* ── Image path resolution ───────────────────────────────────────────── */
@@ -1373,6 +1541,11 @@ function writeMdxCache(
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
 
+/**
+ * Patch the MDX cache on disk with updated content for specific slugs.
+ * Called after background image processing completes so that subsequent
+ * syncs see cache hits with correct image dimensions/placeholders.
+ */
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
 function resolveMdxPath(pagesDir: string, slug: string): string | undefined {

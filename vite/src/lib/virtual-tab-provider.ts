@@ -94,9 +94,12 @@ export async function processVirtualTabs({
   mdxContent: Record<string, string>
   providers: VirtualTabProvider[]
 }): Promise<{ watchPaths: string[] }> {
-  // Shared slug registry for cross-provider collision detection
-  const claimedSlugs = new Map<string, string>()
   const watchPaths: string[] = []
+
+  // Collect (tab, provider) pairs and snapshot authored groups BEFORE
+  // parallel execution so each provider starts from the original config.
+  type ClaimedTab = { tab: ConfigNavTab; provider: VirtualTabProvider }
+  const claimedTabs: ClaimedTab[] = []
 
   for (const tab of config.navigation.tabs) {
     const claimers = providers.filter((p) => p.claims(tab))
@@ -129,10 +132,26 @@ export async function processVirtualTabs({
       })
     }
 
-    const result = await provider.generate({ tab, projectRoot, pagesDir })
+    claimedTabs.push({ tab, provider })
+  }
+
+  // Run all providers in parallel — each tab is independent (different
+  // tab object, different slug namespace). Providers that do network I/O
+  // (changelog GitHub fetch, MCP remote fetch) or heavy CPU (OpenAPI spec
+  // parsing) all overlap instead of running sequentially.
+  const results = await Promise.all(
+    claimedTabs.map(async ({ tab, provider }) => {
+      const result = await provider.generate({ tab, projectRoot, pagesDir })
+      return { tab, provider, result }
+    }),
+  )
+
+  // Merge results sequentially — slug collision detection and mdxContent
+  // writes must be serialized to detect conflicts correctly.
+  const claimedSlugs = new Map<string, string>()
+  for (const { tab, provider, result } of results) {
     if (result.watchPaths) watchPaths.push(...result.watchPaths)
 
-    // Centralized slug collision detection across all providers
     for (const slug of Object.keys(result.mdxContent)) {
       const existing = claimedSlugs.get(slug)
       if (existing) {
@@ -143,10 +162,7 @@ export async function processVirtualTabs({
       }
       claimedSlugs.set(slug, `${provider.name} (tab "${tab.tab}")`)
 
-      // Warn if a generated slug shadows a real MDX file on disk. The virtual
-      // page wins (enrichPageUncached checks mdxContent[slug] first), so a
-      // same-named on-disk page would silently never render. Centralized here
-      // so every provider gets the check uniformly.
+      // Warn if a generated slug shadows a real MDX file on disk.
       for (const ext of ['.mdx', '.md']) {
         if (
           fs.existsSync(path.join(pagesDir, slug + ext)) ||
@@ -163,13 +179,7 @@ export async function processVirtualTabs({
       }
     }
 
-    // Merge virtual MDX into the shared content map
     Object.assign(mdxContent, result.mdxContent)
-
-    // Set the tab's groups to the provider's result. In "dedicated" mode this
-    // replaces the empty placeholder groups with auto-generated tag groups.
-    // In "selective" mode the provider has already merged the user-authored
-    // groups (read from tab.groups) with spliced endpoint pages.
     tab.groups = result.groups
   }
   return { watchPaths }

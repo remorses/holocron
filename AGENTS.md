@@ -201,6 +201,34 @@ SVG icons rendered **inline** (as `<svg>` elements in the DOM) inherit `currentC
 
 Use `logger` and the formatting helpers from `vite/src/lib/logger.ts` for Holocron build/plugin logs. Do not call `console.log`, `console.warn`, or `console.error` directly in the Vite plugin or its build-time helpers.
 
+## Dev HMR — `rsc:update` and background tasks
+
+`rsc:update` is a **spiceflow convention**. Spiceflow's browser client (`entry.client.tsx`) registers a HMR listener for this custom event. When it fires, the client calls `router.refresh()` which re-fetches the RSC flight payload from the server and reconciles the new React tree into the existing DOM without a full page reload. The call is debounced at 80ms to coalesce rapid saves. Spiceflow only listens for `rsc:update`; it never sends it. Plugins like holocron send it via `server.environments.client?.hot.send({ type: 'custom', event: 'rsc:update', data: { file } })`.
+
+### How holocron triggers updates
+
+The `hotUpdate` hook in `vite-plugin.ts` handles all file changes (MDX, config, images, provider specs, CSS, importable `.tsx/.ts` files). It returns `[]` in all environments to suppress Vite's default HMR, then manually invalidates virtual modules and sends `rsc:update`. This is necessary because `ctx.modules` contains raw `.mdx/.jsonc` entries that the RSC plugin would try to transform as JS and fail.
+
+**Two waves of `rsc:update` per change:**
+
+1. **Immediate** — after `syncNavigation()` completes. Content and images are ready.
+2. **Deferred** — when background provider processing finishes, virtual modules are invalidated and another `rsc:update` fires so provider pages appear.
+
+### Sync-blocking providers
+
+These run inside `syncNavigation()` via `processVirtualTabs()` and block the sync until done. They run in parallel with each other (`Promise.all`) but the sync waits for all of them before building the navigation tree.
+
+1. **OpenAPI spec processing** — parses the spec, generates one virtual MDX page per endpoint. The spec file is watched for edits.
+2. **Changelog (GitHub releases)** — fetches releases from GitHub API, generates a changelog page with `<Update>` entries. 5s timeout, never throws.
+3. **MCP (Model Context Protocol)** — loads MCP definitions from local JSON or remote server, generates pages for tools and resources.
+
+### Background tasks in dev
+
+1. **Virtual tab providers** — runs after every sync with `deferProviders: true`. OpenAPI, changelog, and MCP providers run via `processDeferredProviders()` in the background. During the initial fast sync, provider-claimed tabs have their groups emptied (authored groups are snapshotted first). When the background task finishes, it restores the groups, enriches virtual pages, rebuilds the navigation tree, and sends `rsc:update`. This means provider pages appear a moment after the dev server starts instead of blocking startup.
+2. **GitHub star counts** — fetched at request time during navbar rendering, not during sync. 3-layer cache (in-memory 1h → Cloudflare Cache API 1h → GitHub API fallback). Never blocks rendering.
+
+Syncs are serialized via a `pendingSync` Promise chain.
+
 ## Important CSS variables — grid geometry
 
 Source of truth: `vite/src/lib/sidebar-widths.ts` (`GRID_TOKENS` + `buildGridTokenStyle()`).

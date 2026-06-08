@@ -16,7 +16,7 @@ import type { Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
-import { syncNavigation, type SyncResult } from './lib/sync.ts'
+import { syncNavigation, processDeferredProviders, type SyncResult } from './lib/sync.ts'
 import { colors, formatHolocronStep, formatHolocronSuccess, formatHolocronWarning, logger } from './lib/logger.ts'
 import { hasHolocronApiKey, HOLOCRON_API_KEY_ENV_NAMES } from './lib/holocron-url.ts'
 
@@ -228,6 +228,77 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   // (fire-and-forget), so overlapping hotUpdate calls can race on the
   // shared config object and produce "MDX file not found" errors.
   let pendingSync: Promise<void> = Promise.resolve()
+  /** Reference to the Vite dev server, stored in configureServer for
+   *  background provider processing to invalidate modules + trigger HMR. */
+  let viteServer: import('vite').ViteDevServer | undefined
+  /** Abort controller for the current background provider processing run.
+   *  Aborted on re-sync so stale provider results don't overwrite fresh nav. */
+  let backgroundProviderAbort: AbortController | null = null
+
+  /** Start background virtual tab provider processing (OpenAPI, changelog, MCP).
+   *  Cancels any previous run. When done, patches syncResult with the new
+   *  navigation tree and MDX content, invalidates virtual modules, and
+   *  sends rsc:update so provider pages appear in the browser. */
+  function startBackgroundProviderProcessing() {
+    if (!viteServer) return
+
+    backgroundProviderAbort?.abort()
+    const abort = new AbortController()
+    backgroundProviderAbort = abort
+    const server = viteServer
+
+    processDeferredProviders({
+      config,
+      projectRoot: root,
+      pagesDir,
+      publicDir: publicDirPath,
+      syncResult,
+      signal: abort.signal,
+    }).then(({ watchPaths }) => {
+      if (abort.signal.aborted) return
+
+      // Watch newly-discovered provider paths (e.g. OpenAPI spec files)
+      for (const watchPath of watchPaths) {
+        server.watcher.add(watchPath)
+      }
+
+      // Invalidate all virtual modules so the next request picks up
+      // the new navigation tree, MDX content, and import map.
+      for (const resolvedId of [RESOLVED_CONFIG, RESOLVED_NAVIGATION, RESOLVED_MDX, RESOLVED_APP, RESOLVED_MODULES]) {
+        for (const envName of ['rsc', 'ssr', 'client'] as const) {
+          const env = server.environments[envName]
+          if (!env) continue
+          const mod = env.moduleGraph.getModuleById(resolvedId)
+          if (mod) env.moduleGraph.invalidateModule(mod)
+        }
+      }
+
+      // Invalidate per-page MDX modules for newly generated virtual pages
+      for (const slug of Object.keys(syncResult.mdxContent)) {
+        const resolvedId = RESOLVED_MDX_PAGE_PREFIX + encodeURIComponent(slug)
+        for (const envName of ['rsc', 'ssr', 'client'] as const) {
+          const env = server.environments[envName]
+          if (!env) continue
+          const mod = env.moduleGraph.getModuleById(resolvedId)
+          if (mod) env.moduleGraph.invalidateModule(mod)
+        }
+      }
+
+      server.environments.client?.hot.send({
+        type: 'custom',
+        event: 'rsc:update',
+        data: { file: 'deferred-providers' },
+      })
+
+      logger.info(formatHolocronSuccess('background provider processing complete'))
+    }).catch((err) => {
+      if (!abort.signal.aborted) {
+        logger.warn(formatHolocronWarning(
+          `background provider processing failed: ${err instanceof Error ? err.message : String(err)}`,
+        ))
+      }
+    })
+  }
 
   const holocronPlugin: Plugin = {
     name: 'holocron',
@@ -364,18 +435,21 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      // Sync MDX + process images at build time. The returned navigation
-      // tree contains pre-processed MDX (paths rewritten, dimensions injected).
+      // Sync MDX + process images. In dev mode, virtual tab providers
+      // (OpenAPI, changelog, MCP) are deferred to a background task so the
+      // dev server starts immediately. Provider pages appear once the
+      // background task finishes and triggers HMR.
       syncResult = await syncNavigation({
         config,
         pagesDir,
         publicDir: publicDirPath,
         projectRoot: root,
         distDir: distDirPath,
-        logParseErrors: resolved.command !== 'build',
+        logParseErrors: !isBuild,
+        deferProviders: !isBuild,
       })
 
-      if (resolved.command === 'build') {
+      if (isBuild) {
         const firstParseError = Object.values(syncResult.mdxParseErrors)[0]
         if (firstParseError) throw new Error(firstParseError.message)
       }
@@ -649,6 +723,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
 
     configureServer(server) {
+      viteServer = server
       // Holocron's globals.css is injected from the package's own `src/` (see
       // HOLOCRON_GLOBALS_CSS_PATH). When the package is consumed normally it
       // lives under node_modules, which chokidar ignores by default, so edits
@@ -680,6 +755,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       for (const watchPath of syncResult.providerWatchPaths) {
         server.watcher.add(watchPath)
       }
+      // Kick off background provider processing now that we have the
+      // server reference for module invalidation + HMR.
+      startBackgroundProviderProcessing()
     },
 
     // hotUpdate — per-environment HMR hook.
@@ -749,6 +827,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // the shared config/syncResult is already fresh.
       let clientHotModules: NonNullable<ReturnType<typeof this.environment.moduleGraph.getModuleById>>[] = []
       if (this.environment.name === 'client') {
+        // Abort any in-flight background provider processing — a new sync
+        // will produce fresh deferred tasks that supersede the old ones.
+        backgroundProviderAbort?.abort()
+
         const doSync = async () => {
           if (isConfig) {
             config = readConfig({ root, configPath: options.configPath })
@@ -759,10 +841,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             publicDir: publicDirPath,
             projectRoot: root,
             distDir: distDirPath,
+            deferProviders: true,
           })
         }
         pendingSync = pendingSync.catch(() => {}).then(doSync)
         await pendingSync
+
+        // Start background provider processing for newly deferred tasks.
+        startBackgroundProviderProcessing()
+
         // After re-sync, watch any new provider paths (e.g. a newly-added
         // OpenAPI spec) so future edits also trigger HMR.
         for (const watchPath of syncResult.providerWatchPaths) {
