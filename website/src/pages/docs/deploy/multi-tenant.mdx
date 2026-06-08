@@ -1,0 +1,217 @@
+---
+title: Multi-Tenant Deployment
+description: Build once, deploy many tenants instantly by swapping data chunks.
+icon: layers
+---
+
+Holocron's build output splits into three layers: **framework code** (shared, stable), **site data** (config, navigation, MDX loaders), and **page content** (one file per page). For multi-tenant platforms, you build once and swap only the data and page layers per tenant.
+
+This means deployments go from minutes to milliseconds. The framework chunk is uploaded once and reused across all tenants via content-addressable storage.
+
+## Build output anatomy
+
+```
+dist/rsc/assets/
+├── holocron-stable-{hash}.js           # framework + components (shared)
+├── holocron-data.js                    # config, navigation, MDX loaders (per tenant)
+├── holocron-page-index-{hash}.js       # page content (per tenant)
+├── holocron-page-getting-started-{hash}.js
+└── ...fonts, icons, runtime
+```
+
+| Layer | Changes per tenant? | Naming | Size |
+|---|---|---|---|
+| `holocron-stable-{hash}.js` | No | Content-hashed | ~2-6 MB |
+| `holocron-data.js` | Yes | Deterministic, no hash | ~5-50 KB |
+| `holocron-page-{slug}-{hash}.js` | Yes | Deterministic per slug | ~1-10 KB each |
+| Client JS/CSS | No | Content-hashed | ~3-10 MB |
+
+The **stable chunk** contains all React, spiceflow, MDX components (accordion, tabs, code blocks, OpenAPI renderer, etc.). Tree shaking does not remove unused components because the MDX component registry imports everything unconditionally; the bundler can't know which component names appear in MDX content.
+
+## Pipeline overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  1. Build once                                                          │
+│     npx vite build                                                      │
+│     ► produces dist/ with stable chunks + template data                 │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+         ┌───────────────────────────┼───────────────────────────┐
+         ▼                           ▼                           ▼
+┌─────────────────┐     ┌─────────────────┐         ┌─────────────────┐
+│  Tenant A       │     │  Tenant B       │         │  Tenant C       │
+│                 │     │                 │         │                 │
+│  generateData() │     │  generateData() │         │  generateData() │
+│  ► data.js      │     │  ► data.js      │         │  ► data.js      │
+│  ► page chunks  │     │  ► page chunks  │         │  ► page chunks  │
+└────────┬────────┘     └────────┬────────┘         └────────┬────────┘
+         │                       │                           │
+         ▼                       ▼                           ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Deploy (content-addressable)                                           │
+│  Shared stable chunk uploaded once. Only data.js + pages per tenant.    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Generating tenant data
+
+Use `generateHolocronData` to produce the data chunk and page chunks for a tenant without running a full Vite build.
+
+```ts
+import {
+  normalizeConfig,
+  generateHolocronData,
+} from '@holocron.so/vite'
+import fs from 'node:fs'
+import path from 'node:path'
+
+// 1. Load and normalize the tenant's docs.json
+const raw = JSON.parse(fs.readFileSync('./tenant-a/docs.json', 'utf-8'))
+const config = normalizeConfig(raw)
+
+// 2. Collect all page slugs from the config navigation
+const slugs = collectSlugsFromConfig(config)
+
+// 3. Generate data chunk + page chunks
+const result = await generateHolocronData({
+  config,
+  getMdxSource: async (slug) => {
+    return fs.readFileSync(`./tenant-a/pages/${slug}.mdx`, 'utf-8')
+  },
+  slugs,
+  base: '/',
+})
+
+// 4. Write to the deploy directory (copy dist/ first, then overwrite)
+const assetsDir = './deploy/tenant-a/rsc/assets'
+fs.writeFileSync(path.join(assetsDir, 'holocron-data.js'), result.dataChunkSource)
+
+for (const [slug, chunk] of result.pageChunks) {
+  fs.writeFileSync(path.join(assetsDir, chunk.filename), chunk.source)
+}
+```
+
+<Aside>
+
+<Note>
+`generateHolocronData` is pure computation. It doesn't touch the filesystem, Vite, or git. You provide the config object and an async MDX loader; it returns JS source strings.
+</Note>
+
+</Aside>
+
+### Loading MDX from a database or API
+
+The `getMdxSource` callback can load content from anywhere. For a CMS-backed platform:
+
+```ts
+const result = await generateHolocronData({
+  config,
+  getMdxSource: async (slug) => {
+    const row = await db.query('SELECT content FROM pages WHERE slug = ?', [slug])
+    return row.content
+  },
+  slugs,
+})
+```
+
+### Collecting slugs from config
+
+The config navigation tree contains all page slugs. Walk it to collect them:
+
+```ts
+function collectSlugsFromConfig(config) {
+  const slugs = []
+  for (const tab of config.navigation.tabs) {
+    for (const group of tab.groups) {
+      walkGroup(group, slugs)
+    }
+  }
+  return slugs
+}
+
+function walkGroup(group, slugs) {
+  for (const entry of group.pages) {
+    if (typeof entry === 'string') {
+      slugs.push(entry)
+    } else if ('pages' in entry) {
+      walkGroup(entry, slugs)
+    }
+  }
+}
+```
+
+## Deploying with content-addressable uploads
+
+Holocron's deploy API uses **content-addressable storage**: each file is SHA-256 hashed, and only new hashes are uploaded. This is what makes multi-tenant deployments fast.
+
+### First tenant deploy
+
+All files are new. The stable chunk (~5 MB), client assets (~5 MB), data chunk, and page chunks are all uploaded.
+
+### Subsequent tenant deploys
+
+The stable chunk and client assets already exist in storage (same hashes). Only the tenant-specific `holocron-data.js` and `holocron-page-*.js` files are new. A typical tenant deploy uploads **50-100 KB** instead of 10+ MB.
+
+```ts
+import { createHash } from 'node:crypto'
+
+// Collect all files from the deploy directory
+const files = collectFiles('./deploy/tenant-a')
+
+// Hash each file
+const manifest = files.map(f => ({
+  path: f.relativePath,
+  hash: createHash('sha256').update(f.content).digest('hex'),
+}))
+
+// POST to create deployment — server returns which hashes already exist
+const { deploymentId, existingHashes } = await api.createDeployment({ files: manifest })
+
+// Upload only new files
+const newFiles = files.filter(f => !existingHashes.includes(f.hash))
+await api.uploadFiles(deploymentId, newFiles)
+
+// Finalize — site goes live instantly
+await api.finalizeDeployment(deploymentId)
+```
+
+## Per-tenant deploy directory
+
+The simplest approach: copy the full `dist/` from the template build, then overwrite just the data files.
+
+```ts
+import { cpSync, writeFileSync } from 'node:fs'
+
+// Copy the template build
+cpSync('./dist', `./deploys/${tenantId}`, { recursive: true })
+
+// Overwrite data layer with tenant-specific content
+const assetsDir = `./deploys/${tenantId}/rsc/assets`
+
+// Remove the template data files
+for (const f of readdirSync(assetsDir)) {
+  if (f === 'holocron-data.js' || f.startsWith('holocron-page-')) {
+    unlinkSync(path.join(assetsDir, f))
+  }
+}
+
+// Write tenant data files
+writeFileSync(path.join(assetsDir, 'holocron-data.js'), result.dataChunkSource)
+for (const [, chunk] of result.pageChunks) {
+  writeFileSync(path.join(assetsDir, chunk.filename), chunk.source)
+}
+```
+
+## What each export does
+
+| Export | Purpose |
+|---|---|
+| `normalizeConfig(raw)` | Parse a raw docs.json object into a `HolocronConfig` |
+| `parseConfigSource(jsonString)` | Parse a JSON/JSONC string into a `HolocronConfig` |
+| `generateHolocronData(opts)` | Produce `holocron-data.js` + page chunk sources |
+| `buildNavigationData(opts)` | Build the enriched navigation tree (used internally by `generateHolocronData`) |
+| `processMdx(content, library)` | Process a single MDX string into normalized content + metadata |
+| `collectIconRefs(opts)` | Collect all icon refs needed for the icon atlas |
+
+All functions are importable from `@holocron.so/vite`.

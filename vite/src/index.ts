@@ -27,6 +27,12 @@ export type {
 export { holocronConfigSchema } from './schema.ts'
 export type { HolocronConfigRaw } from './schema.ts'
 export { normalize as normalizeConfig } from './lib/normalize-config.ts'
+export { parseConfigSource } from './config.ts'
+
+/* ── MDX processing + icon collection (for multi-tenant pipelines) ─── */
+
+export { processMdx, type ProcessedMdx } from './lib/mdx-processor.ts'
+export { collectIconRefs, type IconRef } from './lib/collect-icons.ts'
 
 /* ── Enriched navigation types ───────────────────────────────────────── */
 
@@ -47,8 +53,8 @@ export {
   collectAllPages,
   buildPageIndex,
 } from './navigation.ts'
-export { buildNavigationData } from './build-navigation-data.ts'
-export type { HolocronNavigationData } from './build-navigation-data.ts'
+export { buildNavigationData, generateHolocronData } from './build-navigation-data.ts'
+export type { HolocronNavigationData, GenerateHolocronDataResult } from './build-navigation-data.ts'
 export { TableOfContentsPanel } from './components/toc-panel.tsx'
 
 /* ── Typed client router + loader data ───────────────────────────────── */

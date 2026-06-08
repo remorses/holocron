@@ -133,7 +133,8 @@
                             "docs/deploy/node",
                             "docs/deploy/cloudflare",
                             "docs/deploy/build-output",
-                            "docs/deploy/base-path"
+                            "docs/deploy/base-path",
+                            "docs/deploy/multi-tenant"
                         ]
                     },
                     {
