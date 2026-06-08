@@ -700,6 +700,8 @@ export async function processDeferredProviders({
   const existingPages = buildPageIndex(syncResult.navigation)
   const pageIconRefs: Record<string, IconRef[]> = {}
   const pageImports: Record<string, ResolvedImport[]> = {}
+  const mdxParseErrors: Record<string, HolocronMdxParseError> = {}
+  const newImageDepPaths: string[] = []
   const imageCache = loadImageCache({ distDir })
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
@@ -750,6 +752,8 @@ export async function processDeferredProviders({
 
     const processed = processMdx(mdxSource, clonedConfig.icons.library, pageSource, processMdxOptions)
     if (processed instanceof Error) {
+      logger.error(formatHolocronError(`failed to parse ${processed.source ?? slug}\n\n${processed.reason}\n\n${processed.codeFrame}\n`))
+      mdxParseErrors[slug] = processed
       return {
         slug,
         href: slugToHref(slug),
@@ -758,6 +762,24 @@ export async function processDeferredProviders({
         headings: [],
         frontmatter: {},
       }
+    }
+
+    // Resolve og:image / twitter:image frontmatter paths for real MDX pages.
+    // copyToPublic is just a file copy (no sharp), fast and keeps URLs correct.
+    if (isRealFile) {
+      for (const fmKey of ['og:image', 'twitter:image'] as const) {
+        const src = processed.frontmatter[fmKey]
+        if (!src || typeof src !== 'string' || isNonLocalAssetSrc(src)) continue
+        const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
+        if (resolved?.needsCopy) {
+          processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir })}`
+        }
+      }
+    }
+
+    // Track imported .md/.mdx image deps for HMR
+    if (inlineResult.imageDepPaths.length > 0) {
+      newImageDepPaths.push(...inlineResult.imageDepPaths)
     }
 
     // Process images for real MDX pages (virtual pages rarely have local images)
@@ -803,6 +825,13 @@ export async function processDeferredProviders({
   syncResult.providerWatchPaths = providerWatchPaths
   Object.assign(syncResult.pageIconRefs, pageIconRefs)
   Object.assign(syncResult.pageImports, pageImports)
+  Object.assign(syncResult.mdxParseErrors, mdxParseErrors)
+  if (newImageDepPaths.length > 0) {
+    const existing = new Set(syncResult.importedImageDepPaths)
+    for (const p of newImageDepPaths) {
+      if (!existing.has(p)) syncResult.importedImageDepPaths.push(p)
+    }
+  }
   saveImageCache({ distDir, cache: imageCache })
 
   return { watchPaths: providerWatchPaths }

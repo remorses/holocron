@@ -198,6 +198,11 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
         pageHrefs,
       }
     })
+    // Filter out content tabs with no pages. This happens during deferred
+    // provider processing: provider tabs have empty groups until the background
+    // task finishes. Without this filter, multiple empty tabs would share
+    // href '/' and the active-tab comparison would highlight all of them.
+    .filter((t) => t.pageHrefs && t.pageHrefs.length > 0)
 
   // Only anchors explicitly placed in tabs go into the tab bar
   const tabAnchors: TabItem[] = site.config.navigation.anchors
