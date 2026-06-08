@@ -656,6 +656,7 @@ export async function processDeferredProviders({
   projectRoot,
   pagesDir,
   publicDir,
+  distDir,
   syncResult,
   signal,
 }: {
@@ -663,26 +664,32 @@ export async function processDeferredProviders({
   projectRoot: string
   pagesDir: string
   publicDir: string
+  distDir: string
   syncResult: SyncResult
   signal?: AbortSignal
 }): Promise<{ watchPaths: string[] }> {
+  // Work against a clone so provider mutations (tab.groups, mdxContent)
+  // don't affect the live syncResult if this run is aborted mid-flight.
+  const clonedConfig = structuredClone(config)
+  const localMdxContent: Record<string, string> = { ...syncResult.mdxContent }
+
   const { watchPaths: providerWatchPaths } = await processVirtualTabs({
-    config,
+    config: clonedConfig,
     projectRoot,
     pagesDir,
-    mdxContent: syncResult.mdxContent,
+    mdxContent: localMdxContent,
     providers: [openapiProvider, changelogProvider, mcpProvider],
   })
 
   if (signal?.aborted) return { watchPaths: [] }
 
   // Re-enrich the navigation tree now that provider tabs have groups + virtual pages.
-  // The enrichPage function reads from syncResult.mdxContent which processVirtualTabs
-  // already populated with virtual page content.
   // For non-virtual pages, reuse the already-enriched NavPage from the initial sync.
   const existingPages = buildPageIndex(syncResult.navigation)
   const pageIconRefs: Record<string, IconRef[]> = {}
   const pageImports: Record<string, ResolvedImport[]> = {}
+  const imageCache = loadImageCache({ distDir })
+  const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
   // Dedup enrichPage calls — same slug may appear in multiple groups
   const enrichCache = new Map<string, Promise<NavPage>>()
@@ -703,8 +710,9 @@ export async function processDeferredProviders({
     // Check if we have MDX content: either virtual (from processVirtualTabs)
     // or a real MDX file that was in a provider tab's authored groups and
     // wasn't enriched during the initial sync (because provider tabs were emptied).
-    let mdxSource = syncResult.mdxContent[slug]
+    let mdxSource = localMdxContent[slug]
     let mdxDir = virtualPageDir(pagesDir, slug)
+    let isRealFile = false
 
     if (!mdxSource) {
       // Real MDX file that wasn't processed yet — read from disk
@@ -714,6 +722,7 @@ export async function processDeferredProviders({
       }
       mdxSource = fs.readFileSync(mdxPath, 'utf-8')
       mdxDir = path.dirname(mdxPath)
+      isRealFile = true
     }
 
     const pageSource = slug === 'index' ? '/' : `/${slug}`
@@ -727,7 +736,7 @@ export async function processDeferredProviders({
       }),
     }
 
-    const processed = processMdx(mdxSource, config.icons.library, pageSource, processMdxOptions)
+    const processed = processMdx(mdxSource, clonedConfig.icons.library, pageSource, processMdxOptions)
     if (processed instanceof Error) {
       return {
         slug,
@@ -739,7 +748,23 @@ export async function processDeferredProviders({
       }
     }
 
-    syncResult.mdxContent[slug] = processed.normalizedContent
+    // Process images for real MDX pages (virtual pages rarely have local images)
+    let finalMdx = processed.normalizedContent
+    if (isRealFile && processed.imageSrcs.length > 0) {
+      const resolvedImages = await resolveAndProcessImages({
+        imageSrcs: processed.imageSrcs,
+        mdxDir,
+        publicDir,
+        projectRoot,
+        imageCache,
+        imageOutputDir,
+      })
+      if (resolvedImages.size > 0) {
+        finalMdx = rewriteMdxImages(processed.mdast, resolvedImages)
+      }
+    }
+
+    localMdxContent[slug] = finalMdx
     pageIconRefs[slug] = processed.iconRefs
     if (processed.importSources.length > 0) {
       pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
@@ -750,23 +775,24 @@ export async function processDeferredProviders({
       href: slugToHref(slug),
       title: processed.title,
       description: processed.description,
-      gitSha: `virtual:${slug}`,
+      gitSha: isRealFile ? gitBlobSha(mdxSource) : `virtual:${slug}`,
       headings: processed.headings,
       frontmatter: processed.frontmatter,
     }
   }
 
-  const { navigation, switchers } = await buildEnrichedNavigation({ config, enrichPage })
+  const { navigation, switchers } = await buildEnrichedNavigation({ config: clonedConfig, enrichPage })
 
   if (signal?.aborted) return { watchPaths: [] }
 
-  // Patch syncResult in place so the vite plugin's virtual modules pick up
-  // the new navigation tree, MDX content, and provider metadata.
+  // All work done without abort — patch live syncResult atomically.
   syncResult.navigation = navigation
   syncResult.switchers = switchers
+  syncResult.mdxContent = localMdxContent
   syncResult.providerWatchPaths = providerWatchPaths
   Object.assign(syncResult.pageIconRefs, pageIconRefs)
   Object.assign(syncResult.pageImports, pageImports)
+  saveImageCache({ distDir, cache: imageCache })
 
   return { watchPaths: providerWatchPaths }
 }
