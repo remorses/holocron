@@ -668,11 +668,10 @@ export async function processDeferredProviders({
   syncResult: SyncResult
   signal?: AbortSignal
 }): Promise<{ watchPaths: string[] }> {
-  // Work against a clone so provider mutations (tab.groups, mdxContent)
-  // don't affect the live syncResult if this run is aborted mid-flight.
-  // structuredClone drops non-enumerable properties, so we manually copy
-  // authoredGroups (the snapshot of original selective-mode groups) onto
-  // the cloned tabs so processVirtualTabs can restore them correctly.
+  // Clone config so provider mutations (tab.groups, authoredGroups) don't
+  // corrupt the live config if this run is aborted mid-flight and a new
+  // sync starts. structuredClone drops non-enumerable properties, so we
+  // manually copy authoredGroups onto the cloned tabs.
   const clonedConfig = structuredClone(config)
   for (let i = 0; i < config.navigation.tabs.length; i++) {
     const authored = (config.navigation.tabs[i] as any)?.authoredGroups
@@ -685,13 +684,12 @@ export async function processDeferredProviders({
       })
     }
   }
-  const localMdxContent: Record<string, string> = { ...syncResult.mdxContent }
 
   const { watchPaths: providerWatchPaths } = await processVirtualTabs({
     config: clonedConfig,
     projectRoot,
     pagesDir,
-    mdxContent: localMdxContent,
+    mdxContent: syncResult.mdxContent,
     providers: [openapiProvider, changelogProvider, mcpProvider],
   })
 
@@ -724,7 +722,7 @@ export async function processDeferredProviders({
     // Check if we have MDX content: either virtual (from processVirtualTabs)
     // or a real MDX file that was in a provider tab's authored groups and
     // wasn't enriched during the initial sync (because provider tabs were emptied).
-    let mdxSource = localMdxContent[slug]
+    let mdxSource = syncResult.mdxContent[slug]
     let mdxDir = virtualPageDir(pagesDir, slug)
     let isRealFile = false
 
@@ -778,7 +776,7 @@ export async function processDeferredProviders({
       }
     }
 
-    localMdxContent[slug] = finalMdx
+    syncResult.mdxContent[slug] = finalMdx
     pageIconRefs[slug] = processed.iconRefs
     if (processed.importSources.length > 0) {
       pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
@@ -799,10 +797,9 @@ export async function processDeferredProviders({
 
   if (signal?.aborted) return { watchPaths: [] }
 
-  // All work done without abort — patch live syncResult atomically.
+  // All work done without abort — patch live syncResult.
   syncResult.navigation = navigation
   syncResult.switchers = switchers
-  syncResult.mdxContent = localMdxContent
   syncResult.providerWatchPaths = providerWatchPaths
   Object.assign(syncResult.pageIconRefs, pageIconRefs)
   Object.assign(syncResult.pageImports, pageImports)
