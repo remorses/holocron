@@ -9,7 +9,10 @@
     "./package.json": "./package.json",
     ".": "./src/mdx-video.tsx",
     "./vite": "./src/vite-plugin.ts",
-    "./src/*": "./src/*"
+    "./src/*": {
+      "types": "./src/*.tsx",
+      "default": "./src/*.tsx"
+    }
   },
   "dependencies": {
     "@remotion/player": "4.0.473",
@@ -22,13 +25,13 @@
   },
   "peerDependencies": {
     "spiceflow": "1.26.0-rsc.5",
-    "@vitejs/plugin-react": ">=4"
+    "@vitejs/plugin-react": ">=6"
   },
   "devDependencies": {
     "@types/react": "^19",
-    "@vitejs/plugin-react": "^4",
+    "@vitejs/plugin-react": "^6.0.1",
     "typescript": "^6.0.2",
-    "vite": "^7",
+    "vite": "^8.0.10",
     "vitest": "^4.1.8"
   }
 }
