@@ -465,18 +465,21 @@ function Centered({ children }: { children: ReactNode }) {
   )
 }
 
-/** Stub for <Background> — extracted during splitting, should never render.
- *  If safe-mdx encounters it in leftover nodes, it renders nothing. */
-function BackgroundStub() {
-  return null
+/** <Background> is a structural wrapper extracted during section splitting.
+ *  When rendered (in the background pass), it passes through its children
+ *  so the actual background component (e.g. <MeshGradientBg>) renders.
+ *  In the content pass, Background nodes are already stripped from the tree
+ *  so this component won't appear there. */
+function BackgroundPassthrough({ children }: { children?: ReactNode }) {
+  return <>{children}</>
 }
 
 function buildVideoMdxComponents(
   userComponents?: Record<string, any>,
 ): Record<string, any> {
   return {
-    // Marker stub (Background is extracted during splitting)
-    Background: BackgroundStub,
+    // Passthrough: renders children so <MeshGradientBg> inside <Background> works
+    Background: BackgroundPassthrough,
 
     // Enter/exit animations
     FadeIn,
