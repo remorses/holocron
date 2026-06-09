@@ -46,6 +46,19 @@ import {
   useVideoConfig,
 } from 'remotion'
 
+// ---------------------------------------------------------------------------
+// Background — real component that self-positions as an absolute layer
+//
+// Works both in MDX and when imported from TSX components. Renders its
+// children in a full-frame AbsoluteFill behind sibling content. In Remotion
+// all layout is absolute, so this naturally layers behind content that
+// comes after it in DOM order.
+// ---------------------------------------------------------------------------
+
+export function Background({ children }: { children?: ReactNode }) {
+  return <AbsoluteFill>{children}</AbsoluteFill>
+}
+
 const FONT_SANS =
   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif'
 const FONT_MONO =

@@ -13,7 +13,7 @@
 
 import { Player, type PlayerRef } from '@remotion/player'
 import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { AbsoluteFill, Sequence, Series, useDelayRender } from 'remotion'
+import { AbsoluteFill, Series, useDelayRender } from 'remotion'
 import { renderInBrowser } from './render-client'
 
 /**
@@ -66,30 +66,18 @@ function SuspenseFallback() {
 interface SectionProps {
   heading: string | null
   durationInFrames: number
-  backgroundJsx: ReactNode
-  contentJsx: ReactNode
+  jsx: ReactNode
 }
 
 function VideoComposition({
   sections,
-  globalBgJsx,
   totalDuration,
 }: {
   sections: SectionProps[]
-  globalBgJsx: ReactNode
   totalDuration: number
 }) {
   return (
     <AbsoluteFill style={{ background: '#050505' }}>
-      {/* Global backgrounds span entire composition */}
-      {globalBgJsx && (
-        <Sequence from={0} durationInFrames={totalDuration}>
-          <Suspense fallback={<SuspenseFallback />}>
-            {globalBgJsx}
-          </Suspense>
-        </Sequence>
-      )}
-
       {/* Sequential sections */}
       <Series>
         {sections.map((section, i) => (
@@ -100,8 +88,9 @@ function VideoComposition({
             name={section.heading || `Section ${i}`}
           >
             <Suspense fallback={<SuspenseFallback />}>
+              {/* Background components inside jsx self-position as AbsoluteFill
+                  layers behind content via DOM order (rendered first = behind). */}
               <AbsoluteFill style={{ background: '#050505' }}>
-                {section.backgroundJsx}
                 <AbsoluteFill
                   style={{
                     display: 'flex',
@@ -112,7 +101,7 @@ function VideoComposition({
                     gap: 'clamp(1rem, 2vw, 2.5rem)',
                   }}
                 >
-                  {section.contentJsx}
+                  {section.jsx}
                 </AbsoluteFill>
               </AbsoluteFill>
             </Suspense>
@@ -125,18 +114,16 @@ function VideoComposition({
 
 export function PlayerPage({
   sections,
-  globalBgJsx,
   totalDuration,
 }: {
   sections: SectionProps[]
-  globalBgJsx: ReactNode
   totalDuration: number
 }) {
   // Stable component function that reads latest props from a ref.
   // Created once so its identity never changes between renders.
   // Remotion Player doesn't remount when component identity is stable.
-  const propsRef = useRef({ sections, globalBgJsx, totalDuration })
-  propsRef.current = { sections, globalBgJsx, totalDuration }
+  const propsRef = useRef({ sections, totalDuration })
+  propsRef.current = { sections, totalDuration }
 
   const [Component] = useState(() => () => (
     <VideoComposition {...propsRef.current} />

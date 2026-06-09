@@ -1,32 +1,38 @@
 /**
  * Client-side rendering entry point.
- * Renders any Remotion composition entirely in the browser using WebCodecs.
- *
- * When allowHtmlInCanvas is true, the scaffold's layoutsubtree canvas sets
- * visibility:visible (required by Chrome's paint pipeline), which makes the
- * rendering composition visible on the page. We inject a <style> that pushes
- * the scaffold wrapper offscreen so the user never sees it.
+ * Renders any Remotion composition entirely in the browser using WebCodecs
+ * via @remotion/web-renderer's renderMediaOnWeb().
  */
 
 import { renderMediaOnWeb } from '@remotion/web-renderer'
 
 /**
- * Hide the web-renderer scaffold during export. The scaffold wrapper uses
+ * Cover the web-renderer scaffold during export. The scaffold wrapper has
  * position:fixed + visibility:hidden + z-index:-9999, but allowHtmlInCanvas
- * sets visibility:visible on an inner canvas, making it peek through.
- * Moving the wrapper offscreen with translate keeps Chrome's paint pipeline
- * happy (element is still "visible" in the CSS sense) while hiding it from
- * the viewport.
+ * sets visibility:visible on the inner layoutsubtree canvas, which can
+ * make it peek through on the page.
+ *
+ * Do NOT modify the scaffold wrapper's own styles (translate, clip-path,
+ * width/height, opacity). All of those break Chrome's drawElementImage
+ * paint pipeline and produce black frames in the exported video. The
+ * layout subtree canvas must remain at full size, in its original position,
+ * with normal visibility for the capture to work.
+ *
+ * Instead we place an opaque overlay on top (z-index:-9998, one above the
+ * scaffold's -9999) that visually hides the rendering without touching
+ * the scaffold's layout or paint properties.
  */
-function injectScaffoldHider(): () => void {
-  const style = document.createElement('style')
-  style.textContent = `
-    body > div[style*="z-index: -9999"] {
-      translate: -200vw 0 !important;
-    }
-  `
-  document.head.appendChild(style)
-  return () => style.remove()
+function injectScaffoldCover(): () => void {
+  const cover = document.createElement('div')
+  cover.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'z-index:-9998',
+    'background:#050505',
+    'pointer-events:none',
+  ].join(';')
+  document.body.appendChild(cover)
+  return () => cover.remove()
 }
 
 export async function renderInBrowser(options: {
@@ -38,7 +44,7 @@ export async function renderInBrowser(options: {
   onProgress?: (progress: number) => void
   signal?: AbortSignal
 }) {
-  const removeHider = injectScaffoldHider()
+  const removeCover = injectScaffoldCover()
 
   try {
     const { getBlob } = await renderMediaOnWeb({
@@ -64,6 +70,6 @@ export async function renderInBrowser(options: {
 
     return getBlob()
   } finally {
-    removeHider()
+    removeCover()
   }
 }

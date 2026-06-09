@@ -91,23 +91,14 @@ function parseHeadingDuration(
 export interface MdxSection {
   heading: string | null
   nodes: RootContent[]
-  backgrounds: RootContent[]
   durationInFrames: number
 }
 
 export interface SplitResult {
-  globals: { backgrounds: RootContent[] }
   sections: MdxSection[]
   frontmatter: VideoFrontmatter
   /** ESM import nodes from the document, needed by SafeMdxRenderer to resolve modules */
   imports: RootContent[]
-}
-
-function isJsxElement(node: RootContent, name: string): boolean {
-  return (
-    (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') &&
-    (node as any).name === name
-  )
 }
 
 function extractHeadingText(node: RootContent): string {
@@ -125,7 +116,6 @@ export function splitIntoSections(mdast: Root): SplitResult {
   const framesPerBeat = fps / (bpm / 60)
   const defaultDuration = Math.round(DEFAULT_SECTION_BEATS * framesPerBeat)
 
-  const globals: SplitResult['globals'] = { backgrounds: [] }
   const sections: MdxSection[] = []
   const imports: RootContent[] = []
   let current: MdxSection | null = null
@@ -147,19 +137,9 @@ export function splitIntoSections(mdast: Root): SplitResult {
       current = {
         heading: parsed.label,
         nodes: [],
-        backgrounds: [],
         durationInFrames: parsed.durationInFrames ?? defaultDuration,
       }
       sections.push(current)
-      continue
-    }
-
-    if (isJsxElement(node, 'Background')) {
-      if (beforeFirstHeading) {
-        globals.backgrounds.push(node)
-      } else if (current) {
-        current.backgrounds.push(node)
-      }
       continue
     }
 
@@ -168,7 +148,6 @@ export function splitIntoSections(mdast: Root): SplitResult {
         current = {
           heading: null,
           nodes: [],
-          backgrounds: [],
           durationInFrames: defaultDuration,
         }
         sections.push(current)
@@ -180,7 +159,7 @@ export function splitIntoSections(mdast: Root): SplitResult {
     }
   }
 
-  return { globals, sections, frontmatter, imports }
+  return { sections, frontmatter, imports }
 }
 
 /** Calculate total composition duration: simple sum since no transitions */
