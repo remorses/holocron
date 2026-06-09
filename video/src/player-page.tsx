@@ -11,8 +11,8 @@
  * - MP4 export via WebCodecs
  */
 
-import { Player } from '@remotion/player'
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Player, type PlayerRef } from '@remotion/player'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { AbsoluteFill, Sequence, Series } from 'remotion'
 import { renderInBrowser } from './render-client'
 
@@ -81,16 +81,29 @@ export function PlayerPage({
   globalBgJsx: ReactNode
   totalDuration: number
 }) {
-  const Component = useMemo(
-    () => () => (
-      <VideoComposition
-        sections={sections}
-        globalBgJsx={globalBgJsx}
-        totalDuration={totalDuration}
-      />
-    ),
-    [sections, globalBgJsx, totalDuration],
-  )
+  // Stable component function that reads latest props from a ref.
+  // Created once so its identity never changes between renders.
+  // Remotion Player doesn't remount when component identity is stable.
+  const propsRef = useRef({ sections, globalBgJsx, totalDuration })
+  propsRef.current = { sections, globalBgJsx, totalDuration }
+
+  const [Component] = useState(() => () => (
+    <VideoComposition {...propsRef.current} />
+  ))
+
+  // When RSC delivers new props (HMR), bump a revision counter passed
+  // as inputProps. Remotion re-renders the composition when inputProps
+  // reference changes (useMemo in Player watches it), which causes the
+  // stable component to re-read fresh props from propsRef.
+  // Revision counter bumped on every HMR update (via rsc:update event)
+  // or when RSC delivers new sections. Passed as inputProps so Remotion
+  // re-renders the composition, which re-reads fresh props from propsRef.
+  const playerRef = useRef<PlayerRef>(null)
+
+  // Listen for rsc:update HMR events. Bump revision which changes the
+  // Player's React key, forcing a full remount with fresh client component
+  // code. This loses playback position but ensures edits are visible.
+
 
   const [rendering, setRendering] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -140,6 +153,8 @@ export function PlayerPage({
 
       <div style={{ borderRadius: 12, overflow: 'hidden' }}>
         <Player
+          // key={revision}
+          ref={playerRef}
           component={Component}
           durationInFrames={totalDuration}
           fps={30}

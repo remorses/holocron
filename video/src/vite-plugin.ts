@@ -84,11 +84,11 @@ export function video(options: VideoPluginOptions): PluginOption[] {
         const walkDir = (dir: string) => {
           if (!fs.existsSync(dir)) return
           for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-            if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.')) continue
+            if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'e2e' || entry.name === 'test-results' || entry.name.startsWith('.')) continue
             const fullPath = path.join(dir, entry.name)
             if (entry.isDirectory()) {
               walkDir(fullPath)
-            } else if (/\.(tsx|jsx)$/.test(entry.name)) {
+            } else if (/\.(tsx?|jsx?)$/.test(entry.name) && !/\.(test|spec|config)\./.test(entry.name)) {
               const relPath = './' + path.relative(root, fullPath).replace(/\\/g, '/')
               const absPath = fullPath.replace(/\\/g, '/')
               const varName = `__mod${i++}`
@@ -116,6 +116,56 @@ export function video(options: VideoPluginOptions): PluginOption[] {
           `export { app }`,
         ].join('\n')
       }
+    },
+
+    // HMR for file changes in the project.
+    //
+    // For ALL handled files (MDX + user .tsx/.ts), we:
+    // 1. Invalidate virtual modules in all environments so the RSC server
+    //    re-executes the page handler with fresh imports on next request
+    // 2. Send rsc:update so the client re-fetches the RSC flight payload
+    // 3. Return [] to suppress Vite's default HMR which would either
+    //    fail on raw MDX or trigger SSR "program reload" → full page reload
+    //
+    // For user .tsx files on the client env, we let the default handling
+    // run (React Fast Refresh) so the browser module is also updated.
+    hotUpdate(ctx) {
+      const isMdx = ctx.file === entryPath
+      const isUserFile = /\.[jt]sx?$/.test(ctx.file)
+        && !ctx.file.includes('node_modules')
+        && ctx.file.startsWith(root)
+
+      if (!isMdx && !isUserFile) return
+
+      const virtualIds = isMdx
+        ? [RESOLVED_APP, RESOLVED_MDX, RESOLVED_MODULES]
+        : [RESOLVED_APP, RESOLVED_MODULES]
+
+      // Invalidate virtual modules in ALL environments
+      for (const env of Object.values(ctx.server.environments)) {
+        for (const resolvedId of virtualIds) {
+          const mod = env.moduleGraph.getModuleById(resolvedId)
+          if (mod) {
+            env.moduleGraph.invalidateModule(mod)
+          }
+        }
+      }
+
+      // Send rsc:update so the client re-fetches the RSC payload
+      if (this.environment.name === 'client') {
+        ctx.server.environments.client?.hot.send({
+          type: 'custom',
+          event: 'rsc:update',
+          data: { file: ctx.file },
+        })
+      }
+
+      // Client env for user files: let default handling run (Fast Refresh).
+      // All other cases: return [] to suppress default HMR.
+      if (isUserFile && this.environment.name === 'client') {
+        return
+      }
+      return []
     },
   }
 
