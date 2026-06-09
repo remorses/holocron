@@ -24,11 +24,31 @@
  */
 
 import { type ReactNode, useMemo, Fragment } from 'react'
-import { SafeMdxRenderer } from 'safe-mdx'
-import { mdxParse, resolveModules, type EagerModules, type LazyGlob } from 'safe-mdx/parse'
-import YAML from 'yaml'
+import { SafeMdxRenderer, type SafeMdxError } from 'safe-mdx'
+import { mdxParse, type EagerModules } from 'safe-mdx/parse'
+import {
+  splitIntoSections,
+  calculateTotalDuration,
+  type MdxSection,
+  type SplitResult,
+  type VideoFrontmatter,
+} from './mdx-parse'
+import { logMdxError } from './logger'
+import {
+  MeshGradientBg,
+  BlurReveal,
+  MaskedSlideReveal,
+  StaggeredFadeUp,
+  TerminalSimulator,
+  GlassCodeBlock,
+  ShimmerSweep,
+  SpringPopIn,
+  AnimatedChart,
+  FeaturePill,
+} from './components'
 
-export { resolveModules, mdxParse, type EagerModules, type LazyGlob }
+export { splitIntoSections, calculateTotalDuration, createMdxComposition }
+export type { MdxSection, SplitResult, VideoFrontmatter, EagerModules, SafeMdxError }
 
 // Inline mdast types to avoid requiring @types/mdast as a dependency
 type RootContent = any
@@ -43,195 +63,10 @@ import {
   useVideoConfig,
 } from 'remotion'
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DEFAULT_FPS = 30
-const DEFAULT_BPM = 120 // 120 bpm = 2 beats/sec = 15 frames/beat at 30fps
-const DEFAULT_SECTION_BEATS = 10 // 10 beats = 150 frames at defaults
-
 const FONT_SANS =
   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif'
 const FONT_MONO =
   '"SF Mono", ui-monospace, SFMono-Regular, "Cascadia Code", monospace'
-
-// ---------------------------------------------------------------------------
-// Frontmatter parsing
-// ---------------------------------------------------------------------------
-
-export interface VideoFrontmatter {
-  fps: number
-  bpm: number
-}
-
-/** Parse YAML frontmatter from mdast. Extracts fps, bpm, and any extra fields. */
-function parseFrontmatter(mdast: Root): VideoFrontmatter {
-  const result: VideoFrontmatter = { fps: DEFAULT_FPS, bpm: DEFAULT_BPM }
-  for (const node of mdast.children) {
-    if (node.type !== 'yaml') continue
-    const text = (node as any).value as string
-    if (!text) continue
-    const parsed = YAML.parse(text)
-    if (parsed && typeof parsed === 'object') {
-      if (typeof parsed.fps === 'number' && parsed.fps > 0) result.fps = parsed.fps
-      if (typeof parsed.bpm === 'number' && parsed.bpm > 0) result.bpm = parsed.bpm
-    }
-  }
-  return result
-}
-
-// ---------------------------------------------------------------------------
-// Duration parsing from heading text
-//
-// Headings can include duration=VALUE at the end:
-//   # Opening duration=2s       → 2 seconds → 2 * fps frames
-//   # Opening duration=60       → 60 frames (bare number)
-//   # Opening duration=60fps    → 60 frames (explicit)
-//   # Opening duration=4beats   → 4 beats → 4 * framesPerBeat
-//
-// The duration= part is stripped from the heading label.
-// ---------------------------------------------------------------------------
-
-const DURATION_RE = /\s+duration=(\d+(?:\.\d+)?)(s|fps|beats?)?\s*$/i
-
-interface ParsedHeading {
-  label: string
-  durationInFrames: number | null
-}
-
-function parseHeadingDuration(
-  rawText: string,
-  fps: number,
-  bpm: number,
-): ParsedHeading {
-  const match = rawText.match(DURATION_RE)
-  if (!match) return { label: rawText.trim(), durationInFrames: null }
-
-  const value = Number(match[1])
-  const unit = (match[2] || '').toLowerCase()
-  const label = rawText.slice(0, match.index).trim()
-  const framesPerBeat = fps / (bpm / 60)
-
-  let frames: number
-  if (unit === 's') {
-    frames = Math.round(value * fps)
-  } else if (unit === 'beat' || unit === 'beats') {
-    frames = Math.round(value * framesPerBeat)
-  } else {
-    // bare number or "fps" suffix → frames
-    frames = Math.round(value)
-  }
-
-  return { label: label || 'Untitled', durationInFrames: frames }
-}
-
-// ---------------------------------------------------------------------------
-// Section splitting
-// ---------------------------------------------------------------------------
-
-export interface MdxSection {
-  /** Heading text for debugging / sequence naming */
-  heading: string | null
-  /** Content nodes to render via safe-mdx */
-  nodes: RootContent[]
-  /** <Background> nodes scoped to this section */
-  backgrounds: RootContent[]
-  /** Duration in frames */
-  durationInFrames: number
-}
-
-export interface SplitResult {
-  /** <Background> nodes placed before the first heading (span full composition) */
-  globals: { backgrounds: RootContent[] }
-  sections: MdxSection[]
-  frontmatter: VideoFrontmatter
-}
-
-function isJsxElement(node: RootContent, name: string): boolean {
-  return (
-    (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') &&
-    (node as any).name === name
-  )
-}
-
-function extractHeadingText(node: RootContent): string {
-  if (node.type !== 'heading') return ''
-  const parts: string[] = []
-  for (const child of (node as any).children || []) {
-    if (child.type === 'text') parts.push(child.value)
-  }
-  return parts.join('') || 'Untitled'
-}
-
-export function splitIntoSections(mdast: Root): SplitResult {
-  const frontmatter = parseFrontmatter(mdast)
-  const { fps, bpm } = frontmatter
-  const framesPerBeat = fps / (bpm / 60)
-  const defaultDuration = Math.round(DEFAULT_SECTION_BEATS * framesPerBeat)
-
-  const globals: SplitResult['globals'] = { backgrounds: [] }
-  const sections: MdxSection[] = []
-  let current: MdxSection | null = null
-  let beforeFirstHeading = true
-
-  for (const node of mdast.children) {
-    // Skip frontmatter and ESM imports at the document level
-    if (node.type === 'yaml' || node.type === 'toml' || node.type === 'mdxjsEsm') {
-      continue
-    }
-
-    // Heading starts a new section
-    if (node.type === 'heading') {
-      beforeFirstHeading = false
-      const rawText = extractHeadingText(node)
-      const parsed = parseHeadingDuration(rawText, fps, bpm)
-      current = {
-        heading: parsed.label,
-        nodes: [],
-        backgrounds: [],
-        durationInFrames: parsed.durationInFrames ?? defaultDuration,
-      }
-      sections.push(current)
-      continue
-    }
-
-    // <Background> extraction
-    if (isJsxElement(node, 'Background')) {
-      if (beforeFirstHeading) {
-        globals.backgrounds.push(node)
-      } else if (current) {
-        current.backgrounds.push(node)
-      }
-      continue
-    }
-
-    // Regular content nodes
-    if (beforeFirstHeading) {
-      // Content before first heading: create an implicit section
-      if (!current) {
-        current = {
-          heading: null,
-          nodes: [],
-          backgrounds: [],
-          durationInFrames: defaultDuration,
-        }
-        sections.push(current)
-        beforeFirstHeading = false
-      }
-      current.nodes.push(node)
-    } else if (current) {
-      current.nodes.push(node)
-    }
-  }
-
-  return { globals, sections, frontmatter }
-}
-
-/** Calculate total composition duration: simple sum since no transitions */
-export function calculateTotalDuration(sections: MdxSection[]): number {
-  return sections.reduce((sum, s) => sum + s.durationInFrames, 0)
-}
 
 // ---------------------------------------------------------------------------
 // Enter/exit animation components
@@ -481,6 +316,18 @@ function buildVideoMdxComponents(
     // Passthrough: renders children so <MeshGradientBg> inside <Background> works
     Background: BackgroundPassthrough,
 
+    // Built-in visual components (always available in MDX without import)
+    MeshGradientBg,
+    BlurReveal,
+    MaskedSlideReveal,
+    StaggeredFadeUp,
+    TerminalSimulator,
+    GlassCodeBlock,
+    ShimmerSweep,
+    SpringPopIn,
+    AnimatedChart,
+    FeaturePill,
+
     // Enter/exit animations
     FadeIn,
     FadeOut,
@@ -677,21 +524,26 @@ function buildVideoMdxComponents(
 
 function SectionRenderer({
   section,
+  imports,
   components,
   markdown,
   scope,
   modules,
   baseUrl,
+  onError,
 }: {
   section: MdxSection
+  imports: RootContent[]
   components: Record<string, any>
   markdown: string
   scope?: Record<string, any>
   modules?: EagerModules
   baseUrl?: string
+  onError?: (error: SafeMdxError) => void
 }) {
-  const syntheticBgRoot: Root = { type: 'root', children: section.backgrounds }
-  const syntheticRoot: Root = { type: 'root', children: section.nodes }
+  // Prepend import nodes so SafeMdxRenderer can resolve module bindings
+  const syntheticBgRoot: Root = { type: 'root', children: [...imports, ...section.backgrounds] }
+  const syntheticRoot: Root = { type: 'root', children: [...imports, ...section.nodes] }
 
   return (
     <AbsoluteFill style={{ background: '#050505' }}>
@@ -704,6 +556,7 @@ function SectionRenderer({
           scope={scope}
           modules={modules}
           baseUrl={baseUrl}
+          onError={onError}
         />
       )}
 
@@ -725,6 +578,7 @@ function SectionRenderer({
           scope={scope}
           modules={modules}
           baseUrl={baseUrl}
+          onError={onError}
         />
       </AbsoluteFill>
     </AbsoluteFill>
@@ -746,6 +600,8 @@ export interface MdxVideoProps {
   modules?: EagerModules
   /** Base URL for resolving relative imports (e.g. './') */
   baseUrl?: string
+  /** Called for each safe-mdx render error (missing components, invalid expressions, etc.) */
+  onError?: (error: SafeMdxError) => void
 }
 
 function MdxVideo({
@@ -754,8 +610,9 @@ function MdxVideo({
   scope,
   modules,
   baseUrl,
+  onError,
 }: MdxVideoProps) {
-  const { globals, sections, allComponents, totalDuration } = useMemo(() => {
+  const { globals, sections, imports, allComponents, totalDuration } = useMemo(() => {
     const ast = mdxParse(mdx)
     const result = splitIntoSections(ast)
     const total = calculateTotalDuration(result.sections)
@@ -778,11 +635,12 @@ function MdxVideo({
         <Sequence from={0} durationInFrames={totalDuration}>
           <SafeMdxRenderer
             markdown={mdx}
-            mdast={{ type: 'root', children: globals.backgrounds } as Root}
+            mdast={{ type: 'root', children: [...imports, ...globals.backgrounds] } as Root}
             components={allComponents}
             scope={scope}
             modules={modules}
             baseUrl={baseUrl}
+            onError={onError}
           />
         </Sequence>
       )}
@@ -798,11 +656,13 @@ function MdxVideo({
           >
             <SectionRenderer
               section={section}
+              imports={imports}
               components={allComponents}
               markdown={mdx}
               scope={scope}
               modules={modules}
               baseUrl={baseUrl}
+              onError={onError}
             />
           </Series.Sequence>
         ))}
@@ -818,7 +678,7 @@ function MdxVideo({
 // Call at module scope or in an async init function, not inside render.
 // ---------------------------------------------------------------------------
 
-export function createMdxComposition(props: MdxVideoProps): {
+function createMdxComposition(props: MdxVideoProps): {
   /** Stable component reference for <Player component={...}> */
   Component: React.FC
   /** Total duration in frames across all sections */
@@ -828,6 +688,11 @@ export function createMdxComposition(props: MdxVideoProps): {
   const result = splitIntoSections(ast)
   const durationInFrames = calculateTotalDuration(result.sections)
 
+  const handleError = (error: SafeMdxError) => {
+    logMdxError(error)
+    props.onError?.(error)
+  }
+
   const Component = () => (
     <MdxVideo
       mdx={props.mdx}
@@ -835,6 +700,7 @@ export function createMdxComposition(props: MdxVideoProps): {
       scope={props.scope}
       modules={props.modules}
       baseUrl={props.baseUrl}
+      onError={handleError}
     />
   )
 

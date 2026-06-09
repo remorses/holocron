@@ -6,10 +6,12 @@
  * is visible directly in the test file for easy debugging.
  */
 
+import React from 'react'
 import { describe, expect, test } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { mdxParse } from 'safe-mdx/parse'
-import { splitIntoSections, calculateTotalDuration } from './mdx-video'
+import { MdastToJsx } from 'safe-mdx'
+import { splitIntoSections, calculateTotalDuration } from './mdx-parse'
 
 // Helper: parse MDX and split into sections in one call
 function split(mdx: string) {
@@ -244,5 +246,144 @@ Content
     const bgNode = result.sections[0].backgrounds[0]
     expect(bgNode.name).toBe('Background')
     expect(bgNode.children.length).toBeGreaterThan(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Module resolution via safe-mdx MdastToJsx
+// ---------------------------------------------------------------------------
+
+describe('safe-mdx module resolution', () => {
+  // Base components map (element overrides safe-mdx needs)
+  const baseComponents = {
+    p: ({ children }: { children?: React.ReactNode }) => <p>{children}</p>,
+    h1: ({ children }: { children?: React.ReactNode }) => <h1>{children}</h1>,
+  }
+
+  test('named import: component renders from modules', () => {
+    function MyBadge({ label }: { label: string }) {
+      return <span className="badge">{label}</span>
+    }
+
+    const code = `
+import { MyBadge } from './components'
+
+<MyBadge label="Hello" />
+`
+    const mdast = mdxParse(code)
+    const visitor = new MdastToJsx({
+      markdown: code,
+      mdast,
+      components: baseComponents,
+      modules: {
+        './components.tsx': { MyBadge },
+      },
+      baseUrl: './',
+    })
+    const result = visitor.run()
+    const html = renderToStaticMarkup(result)
+    expect(html).toMatchInlineSnapshot(`"<span class="badge">Hello</span>"`)
+    expect(visitor.errors).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('named import: data values available in expressions', () => {
+    const ITEMS = ['apple', 'banana', 'cherry']
+
+    const code = `
+import { ITEMS } from './data'
+
+There are {ITEMS.length} items.
+`
+    const mdast = mdxParse(code)
+    const visitor = new MdastToJsx({
+      markdown: code,
+      mdast,
+      components: baseComponents,
+      modules: {
+        './data.tsx': { ITEMS },
+      },
+      baseUrl: './',
+      evaluateOptions: { functions: true },
+    })
+    const result = visitor.run()
+    const html = renderToStaticMarkup(result)
+    expect(html).toMatchInlineSnapshot(`"<p>There are 3 items.</p>"`)
+    expect(visitor.errors).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('named import: data passed as prop to component', () => {
+    function ItemList({ items }: { items: string[] }) {
+      return <ul>{items.map((i) => <li key={i}>{i}</li>)}</ul>
+    }
+    const MY_DATA = ['one', 'two']
+
+    const code = `
+import { ItemList, MY_DATA } from './components'
+
+<ItemList items={MY_DATA} />
+`
+    const mdast = mdxParse(code)
+    const visitor = new MdastToJsx({
+      markdown: code,
+      mdast,
+      components: baseComponents,
+      modules: {
+        './components.tsx': { ItemList, MY_DATA },
+      },
+      baseUrl: './',
+    })
+    const result = visitor.run()
+    const html = renderToStaticMarkup(result)
+    expect(html).toMatchInlineSnapshot(`"<ul><li>one</li><li>two</li></ul>"`)
+    expect(visitor.errors).toMatchInlineSnapshot(`[]`)
+  })
+
+  test('unresolved import: produces error, does not crash', () => {
+    const code = `
+import { Missing } from './nonexistent'
+
+<Missing />
+`
+    const mdast = mdxParse(code)
+    const visitor = new MdastToJsx({
+      markdown: code,
+      mdast,
+      components: baseComponents,
+      modules: {},
+      baseUrl: './',
+    })
+    const result = visitor.run()
+    renderToStaticMarkup(result)
+    expect(visitor.errors.length).toBeGreaterThan(0)
+    expect(visitor.errors[0].message).toContain('Unresolved import')
+  })
+
+  test('multiple imports from different files', () => {
+    function Card({ title }: { title: string }) {
+      return <div className="card">{title}</div>
+    }
+    const CONFIG = { theme: 'dark' }
+
+    const code = `
+import { Card } from './ui'
+import { CONFIG } from './config'
+
+<Card title={CONFIG.theme} />
+`
+    const mdast = mdxParse(code)
+    const visitor = new MdastToJsx({
+      markdown: code,
+      mdast,
+      components: baseComponents,
+      modules: {
+        './ui.tsx': { Card },
+        './config.tsx': { CONFIG },
+      },
+      baseUrl: './',
+    })
+    const result = visitor.run()
+    const html = renderToStaticMarkup(result)
+    expect(html).toMatchInlineSnapshot(`"<div class="card">dark</div>"`)
+    expect(visitor.errors).toMatchInlineSnapshot(`[]`)
   })
 })

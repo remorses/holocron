@@ -3,10 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
     "test": "vitest run"
+  },
+  "exports": {
+    "./vite": "./src/vite-plugin.ts",
+    "./src/*": "./src/*"
   },
   "dependencies": {
     "@remotion/player": "4.0.473",
@@ -17,11 +18,13 @@
     "safe-mdx": "^1.11.1",
     "yaml": "^2.9.0"
   },
+  "peerDependencies": {
+    "spiceflow": "1.26.0-rsc.5",
+    "@vitejs/plugin-react": ">=4"
+  },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.2",
     "@types/react": "^19",
     "@vitejs/plugin-react": "^4",
-    "tailwindcss": "^4.3.0",
     "typescript": "^6.0.2",
     "vite": "^7",
     "vitest": "^4.1.8"
