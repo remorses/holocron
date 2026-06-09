@@ -1,19 +1,14 @@
 /**
  * Client-side rendering entry point.
- * Renders the Holocron video entirely in the browser using WebCodecs.
+ * Renders any Remotion composition entirely in the browser using WebCodecs.
  *
  * When allowHtmlInCanvas is true, the scaffold's layoutsubtree canvas sets
  * visibility:visible (required by Chrome's paint pipeline), which makes the
  * rendering composition visible on the page. We inject a <style> that pushes
  * the scaffold wrapper offscreen so the user never sees it.
- *
- * Usage: import { renderInBrowser } from './render-client'
- *        const blob = await renderInBrowser()
- *        // download blob as .mp4
  */
 
 import { renderMediaOnWeb } from '@remotion/web-renderer'
-import { HolocronVideo } from './holocron-video'
 
 /**
  * Hide the web-renderer scaffold during export. The scaffold wrapper uses
@@ -34,7 +29,12 @@ function injectScaffoldHider(): () => void {
   return () => style.remove()
 }
 
-export async function renderInBrowser(options?: {
+export async function renderInBrowser(options: {
+  component: React.FC
+  durationInFrames: number
+  fps?: number
+  width?: number
+  height?: number
   onProgress?: (progress: number) => void
   signal?: AbortSignal
 }) {
@@ -43,12 +43,12 @@ export async function renderInBrowser(options?: {
   try {
     const { getBlob } = await renderMediaOnWeb({
       composition: {
-        component: HolocronVideo,
-        durationInFrames: 1230,
-        fps: 30,
-        width: 1920,
-        height: 1080,
-        id: 'HolocronVideo',
+        component: options.component,
+        durationInFrames: options.durationInFrames,
+        fps: options.fps ?? 30,
+        width: options.width ?? 1920,
+        height: options.height ?? 1080,
+        id: 'MdxVideo',
         calculateMetadata: null,
       },
       inputProps: {},
@@ -56,9 +56,9 @@ export async function renderInBrowser(options?: {
       videoCodec: 'h264',
       videoBitrate: 'high',
       allowHtmlInCanvas: true,
-      signal: options?.signal,
+      signal: options.signal,
       onProgress: ({ progress }) => {
-        options?.onProgress?.(progress)
+        options.onProgress?.(progress)
       },
     })
 
@@ -66,18 +66,4 @@ export async function renderInBrowser(options?: {
   } finally {
     removeHider()
   }
-}
-
-/** Download the rendered video as a file */
-export async function renderAndDownload(filename = 'holocron.mp4') {
-  const blob = await renderInBrowser({
-    onProgress: (p) => console.log(`Rendering: ${Math.round(p * 100)}%`),
-  })
-
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }

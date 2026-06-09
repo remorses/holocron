@@ -1,7 +1,6 @@
 /**
- * Vite entry point. Renders two Players side by side:
- * 1. The original hand-coded Holocron video composition
- * 2. An MDX-driven version using the mdx-video framework
+ * Vite entry point. Renders the MDX-driven Holocron video in a <Player>
+ * with controls and an "Export MP4" button for client-side rendering.
  *
  * No Remotion Studio, no Webpack, no remotion.config.ts needed.
  */
@@ -9,7 +8,6 @@
 import { Player } from '@remotion/player'
 import { useCallback, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { HolocronVideo } from './holocron-video'
 import {
   MeshGradientBg,
   BlurReveal,
@@ -21,7 +19,6 @@ import {
   FeaturePill,
   ShimmerSweep,
   SpringPopIn,
-  FadeIn as FadeInComp,
   type TerminalLine,
 } from './components'
 import { createMdxComposition, resolveModules, mdxParse } from './mdx-video'
@@ -35,7 +32,7 @@ const lazyGlob = import.meta.glob<Record<string, any>>([
 ])
 
 // ---------------------------------------------------------------------------
-// Data for the MDX video (same as holocron-video.tsx)
+// Data for the MDX video
 // ---------------------------------------------------------------------------
 
 const CREATE_LINES: TerminalLine[] = [
@@ -254,12 +251,12 @@ async function initMdxComposition() {
   })
 }
 
-function App({ mdxComp }: { mdxComp: { Component: React.FC; durationInFrames: number } }) {
+function App({ composition }: { composition: { Component: React.FC; durationInFrames: number } }) {
   const [rendering, setRendering] = useState(false)
   const [progress, setProgress] = useState(0)
   const abortRef = useRef<AbortController | null>(null)
 
-  const { Component: MdxComp, durationInFrames: mdxDuration } = mdxComp
+  const { Component, durationInFrames } = composition
 
   const handleExport = useCallback(async () => {
     setRendering(true)
@@ -269,6 +266,8 @@ function App({ mdxComp }: { mdxComp: { Component: React.FC; durationInFrames: nu
 
     try {
       const blob = await renderInBrowser({
+        component: Component,
+        durationInFrames,
         onProgress: (p) => setProgress(p),
         signal: controller.signal,
       })
@@ -289,53 +288,28 @@ function App({ mdxComp }: { mdxComp: { Component: React.FC; durationInFrames: nu
       setRendering(false)
       abortRef.current = null
     }
-  }, [])
+  }, [Component, durationInFrames])
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort()
   }, [])
 
   return (
-    <div className="mx-auto max-w-[1800px] px-5 py-10">
-      <h1 className="mb-8 text-2xl font-semibold tracking-tight text-white">
+    <div className="mx-auto max-w-[960px] px-5 py-10">
+      <h1 className="mb-5 text-2xl font-semibold tracking-tight text-white">
         Holocron Video
       </h1>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Original hand-coded version */}
-        <div>
-          <h2 className="mb-3 text-sm font-medium text-zinc-500 uppercase tracking-wider">
-            Hand-coded ({1230} frames)
-          </h2>
-          <Player
-            component={HolocronVideo}
-            durationInFrames={1230}
-            fps={30}
-            compositionWidth={1920}
-            compositionHeight={1080}
-            controls
-            style={{ width: '100%' }}
-            className="rounded-xl overflow-hidden"
-          />
-        </div>
-
-        {/* MDX-driven version */}
-        <div>
-          <h2 className="mb-3 text-sm font-medium text-zinc-500 uppercase tracking-wider">
-            MDX-driven ({mdxDuration} frames)
-          </h2>
-          <Player
-            component={MdxComp}
-            durationInFrames={mdxDuration}
-            fps={30}
-            compositionWidth={1920}
-            compositionHeight={1080}
-            controls
-            style={{ width: '100%' }}
-            className="rounded-xl overflow-hidden"
-          />
-        </div>
-      </div>
+      <Player
+        component={Component}
+        durationInFrames={durationInFrames}
+        fps={30}
+        compositionWidth={1920}
+        compositionHeight={1080}
+        controls
+        style={{ width: '100%' }}
+        className="rounded-xl overflow-hidden"
+      />
 
       <div className="mt-5 flex items-center gap-4">
         {rendering ? (
@@ -370,7 +344,7 @@ function App({ mdxComp }: { mdxComp: { Component: React.FC; durationInFrames: nu
             <svg className="size-4" viewBox="0 0 16 16" fill="none">
               <path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12v1h10v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Export MP4 (Hand-coded)
+            Export MP4
           </button>
         )}
       </div>
@@ -378,6 +352,6 @@ function App({ mdxComp }: { mdxComp: { Component: React.FC; durationInFrames: nu
   )
 }
 
-initMdxComposition().then((mdxComp) => {
-  createRoot(document.getElementById('root')!).render(<App mdxComp={mdxComp} />)
+initMdxComposition().then((composition) => {
+  createRoot(document.getElementById('root')!).render(<App composition={composition} />)
 })
