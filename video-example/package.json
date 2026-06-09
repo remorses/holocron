@@ -1,0 +1,21 @@
+{
+  "name": "video-example",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "holocron-video": "workspace:^",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "remotion": "4.0.473",
+    "@remotion/player": "4.0.473",
+    "spiceflow": "1.26.0-rsc.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4",
+    "vite": "^7",
+    "typescript": "^6.0.2"
+  }
+}
