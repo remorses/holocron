@@ -1,8 +1,13 @@
+'use client'
+
 /**
  * Adapted remocn components for the Holocron video presentation.
  * Ported from https://github.com/kapishdima/remocn registry components.
- * Stripped of "use client" directives (Remotion doesn't use RSC).
  * All components use dark theme by default to match the Apple keynote aesthetic.
+ *
+ * Must be 'use client' because they use Remotion hooks (useCurrentFrame,
+ * useVideoConfig, spring, interpolate) which only work inside the Player
+ * render context on the client.
  */
 
 import type { ReactNode } from 'react'

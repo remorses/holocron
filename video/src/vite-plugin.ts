@@ -11,9 +11,17 @@
 
 import path from 'node:path'
 import fs from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import type { Plugin, PluginOption } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import react from '@vitejs/plugin-react'
+
+// Resolve the package src/ directory from this file's location.
+// Used for resolve.alias so the RSC module runner can resolve relative
+// imports from app.tsx (same pattern as @holocron.so/vite).
+const __srcDir = fileURLToPath(new URL('.', import.meta.url))
+const APP_SRC_PATH = path.join(__srcDir, 'app.tsx')
+
 const VIRTUAL_APP = 'virtual:egaki-app'
 const RESOLVED_APP = '\0' + VIRTUAL_APP
 
@@ -100,9 +108,11 @@ export function video(options: VideoPluginOptions): PluginOption[] {
       }
 
       if (id === RESOLVED_APP) {
-        // Spiceflow entry: import the framework's app and re-export
+        // Spiceflow entry: import the framework's app from its absolute
+        // source path so the RSC module runner resolves relative imports
+        // (./mdx-parse.ts etc.) from the correct filesystem directory.
         return [
-          `import { app } from '${PKG_NAME}/src/app'`,
+          `import { app } from ${JSON.stringify(APP_SRC_PATH)}`,
           `export { app }`,
         ].join('\n')
       }

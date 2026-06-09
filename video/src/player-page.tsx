@@ -1,20 +1,95 @@
-/**
- * Client component: handles all MDX processing and Remotion rendering.
- * Modules are eagerly imported (no async), so the Player renders immediately.
- */
-
 'use client'
 
+/**
+ * Client component: Remotion Player wrapper + MP4 export UI.
+ *
+ * Receives pre-rendered JSX sections from the server (via RSC flight).
+ * All MDX processing (parsing, module resolution, safe-mdx rendering)
+ * is done server-side in app.tsx. This component only handles:
+ * - Wrapping sections in Remotion's Series/Sequence composition
+ * - Rendering the Player
+ * - MP4 export via WebCodecs
+ */
+
 import { Player } from '@remotion/player'
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { eagerModules } from 'virtual:egaki-modules'
-import { createMdxComposition } from './mdx-video'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
+import { AbsoluteFill, Sequence, Series } from 'remotion'
 import { renderInBrowser } from './render-client'
 
-export function PlayerPage({ mdxSource }: { mdxSource: string }) {
-  const { Component, durationInFrames } = useMemo(
-    () => createMdxComposition({ mdx: mdxSource, modules: eagerModules, baseUrl: './' }),
-    [mdxSource],
+interface SectionProps {
+  heading: string | null
+  durationInFrames: number
+  backgroundJsx: ReactNode
+  contentJsx: ReactNode
+}
+
+function VideoComposition({
+  sections,
+  globalBgJsx,
+  totalDuration,
+}: {
+  sections: SectionProps[]
+  globalBgJsx: ReactNode
+  totalDuration: number
+}) {
+  return (
+    <AbsoluteFill style={{ background: '#050505' }}>
+      {/* Global backgrounds span entire composition */}
+      {globalBgJsx && (
+        <Sequence from={0} durationInFrames={totalDuration}>
+          {globalBgJsx}
+        </Sequence>
+      )}
+
+      {/* Sequential sections */}
+      <Series>
+        {sections.map((section, i) => (
+          <Series.Sequence
+            key={i}
+            durationInFrames={section.durationInFrames}
+            // @ts-ignore — name prop exists on Series.Sequence
+            name={section.heading || `Section ${i}`}
+          >
+            <AbsoluteFill style={{ background: '#050505' }}>
+              {section.backgroundJsx}
+              <AbsoluteFill
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '5% 8%',
+                  gap: 'clamp(1rem, 2vw, 2.5rem)',
+                }}
+              >
+                {section.contentJsx}
+              </AbsoluteFill>
+            </AbsoluteFill>
+          </Series.Sequence>
+        ))}
+      </Series>
+    </AbsoluteFill>
+  )
+}
+
+export function PlayerPage({
+  sections,
+  globalBgJsx,
+  totalDuration,
+}: {
+  sections: SectionProps[]
+  globalBgJsx: ReactNode
+  totalDuration: number
+}) {
+  const Component = useMemo(
+    () => () => (
+      <VideoComposition
+        sections={sections}
+        globalBgJsx={globalBgJsx}
+        totalDuration={totalDuration}
+      />
+    ),
+    [sections, globalBgJsx, totalDuration],
   )
 
   const [rendering, setRendering] = useState(false)
@@ -30,7 +105,7 @@ export function PlayerPage({ mdxSource }: { mdxSource: string }) {
     try {
       const blob = await renderInBrowser({
         component: Component,
-        durationInFrames,
+        durationInFrames: totalDuration,
         onProgress: (p) => setProgress(p),
         signal: controller.signal,
       })
@@ -51,7 +126,7 @@ export function PlayerPage({ mdxSource }: { mdxSource: string }) {
       setRendering(false)
       abortRef.current = null
     }
-  }, [Component, durationInFrames])
+  }, [Component, totalDuration])
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort()
@@ -66,7 +141,7 @@ export function PlayerPage({ mdxSource }: { mdxSource: string }) {
       <div style={{ borderRadius: 12, overflow: 'hidden' }}>
         <Player
           component={Component}
-          durationInFrames={durationInFrames}
+          durationInFrames={totalDuration}
           fps={30}
           compositionWidth={1920}
           compositionHeight={1080}

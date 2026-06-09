@@ -6,6 +6,8 @@
     "test": "vitest run"
   },
   "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/mdx-video.tsx",
     "./vite": "./src/vite-plugin.ts",
     "./src/*": "./src/*"
   },
