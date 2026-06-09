@@ -28,7 +28,9 @@ import { renderInBrowser } from './render-client'
 function SuspenseFallback() {
   const { delayRender, continueRender } = useDelayRender()
   useEffect(() => {
-    const handle = delayRender('Waiting for section to unsuspend')
+    const handle = delayRender('Waiting for section to unsuspend', {
+      timeoutInMilliseconds: 10 * 60 * 1000,
+    })
     return () => continueRender(handle)
   }, [delayRender, continueRender])
 
