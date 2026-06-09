@@ -12,9 +12,54 @@
  */
 
 import { Player, type PlayerRef } from '@remotion/player'
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { AbsoluteFill, Sequence, Series } from 'remotion'
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { AbsoluteFill, Sequence, Series, useDelayRender } from 'remotion'
 import { renderInBrowser } from './render-client'
+
+/**
+ * Remotion-aware Suspense fallback. When a section suspends (throws a promise),
+ * this component calls delayRender() to prevent Remotion from taking a
+ * screenshot of the incomplete frame. When the suspended component resolves
+ * and this fallback unmounts, continueRender() fires and rendering proceeds.
+ *
+ * This is the same pattern Remotion uses internally in <Composition> (see
+ * packages/core/src/Composition.tsx in the Remotion source).
+ */
+function SuspenseFallback() {
+  const { delayRender, continueRender } = useDelayRender()
+  useEffect(() => {
+    const handle = delayRender('Waiting for section to unsuspend')
+    return () => continueRender(handle)
+  }, [delayRender, continueRender])
+
+  // delayRender is a no-op in the Player, so this loading UI is only
+  // visible during preview. During export, rendering pauses until the
+  // suspended component resolves, then this fallback unmounts before
+  // the screenshot is taken.
+  return (
+    <AbsoluteFill
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#050505',
+      }}
+    >
+      <span
+        style={{
+          fontSize: 48,
+          fontWeight: 500,
+          color: '#52525b',
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        Loading…
+      </span>
+    </AbsoluteFill>
+  )
+}
 
 interface SectionProps {
   heading: string | null
@@ -37,7 +82,9 @@ function VideoComposition({
       {/* Global backgrounds span entire composition */}
       {globalBgJsx && (
         <Sequence from={0} durationInFrames={totalDuration}>
-          {globalBgJsx}
+          <Suspense fallback={<SuspenseFallback />}>
+            {globalBgJsx}
+          </Suspense>
         </Sequence>
       )}
 
@@ -50,21 +97,23 @@ function VideoComposition({
             // @ts-ignore — name prop exists on Series.Sequence
             name={section.heading || `Section ${i}`}
           >
-            <AbsoluteFill style={{ background: '#050505' }}>
-              {section.backgroundJsx}
-              <AbsoluteFill
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '5% 8%',
-                  gap: 'clamp(1rem, 2vw, 2.5rem)',
-                }}
-              >
-                {section.contentJsx}
+            <Suspense fallback={<SuspenseFallback />}>
+              <AbsoluteFill style={{ background: '#050505' }}>
+                {section.backgroundJsx}
+                <AbsoluteFill
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '5% 8%',
+                    gap: 'clamp(1rem, 2vw, 2.5rem)',
+                  }}
+                >
+                  {section.contentJsx}
+                </AbsoluteFill>
               </AbsoluteFill>
-            </AbsoluteFill>
+            </Suspense>
           </Series.Sequence>
         ))}
       </Series>
