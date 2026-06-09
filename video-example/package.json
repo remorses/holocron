@@ -2,8 +2,10 @@
   "name": "video-example",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "test-e2e": "playwright test"
   },
   "dependencies": {
     "holocron-video": "workspace:^",
@@ -14,6 +16,7 @@
     "spiceflow": "1.26.0-rsc.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@vitejs/plugin-react": "^6.0.1",
     "vite": "^8.0.10",
     "typescript": "^6.0.2"
