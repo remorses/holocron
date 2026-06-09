@@ -305,7 +305,7 @@ function ToolPreviewContainer({
 
 function Highlight({ children }: { children: React.ReactNode }) {
   return (
-    <span className='dark:text-purple-300 text-purple-800'>{children}</span>
+    <span className='text-purple-800 dark:text-purple-300'>{children}</span>
   )
 }
 
@@ -320,7 +320,7 @@ function ErrorPreview({ error }: { error: string }) {
         <span>
           Error:{' '}
           <span
-            className='dark:text-orange-300 text-orange-500'
+            className='text-orange-500 dark:text-orange-300'
             style={{ whiteSpace: 'pre-line' }}
           >
             {truncated}

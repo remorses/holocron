@@ -42,9 +42,36 @@
   --font-code: var(--font-code);
 }
 
-/* Shadow DOM: :host-context(.dark) lets children match the host's .dark class.
- * Also keep .dark ancestor match for the non-shadow holocron integration path. */
-@custom-variant dark (&:where(:host-context(.dark), :host-context(.dark) *, .dark, .dark *));
+/* Shadow DOM: `:host(.dark) &` lets dark: utilities match when the host
+ * element has .dark. Regular `.dark &` path kept for the non-shadow
+ * holocron integration where globals.css handles it. */
+@custom-variant dark (:host(.dark) &, &:where(.dark, .dark *));
+
+/* ── Thin scrollbars ─────────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 25%, transparent) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 25%, transparent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted-foreground) 65%, transparent);
+}
 
 /* ── Custom utility classes (from editorial.css, needed in shadow DOM) ── */
 .no-bleed {
