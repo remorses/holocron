@@ -6,6 +6,7 @@ bpm: 120
 import { FeatureGrid } from './components'
 import { CREATE_LINES, DEPLOY_LINES, DOCS_JSON_CODE, FEATURES } from './data'
 import { AsyncStats } from './async-stats'
+import Tagline from './tagline.mdx'
 
 # Opening duration=3.3s
 
@@ -19,15 +20,15 @@ import { AsyncStats } from './async-stats'
 
 # Tagline duration=2.8s
 
+some text
+
+## another duration=2s
+
 <Background>
 <MeshGradientBg colors={['#6366f1', '#8b5cf6', '#06b6d4', '#3b82f6']} speed={0.3} />
 </Background>
 
-<FadeIn duration={15}>
-  <FadeOut duration={15}>
-    <MaskedSlideReveal text="Beautiful docs from MDX." fontSize={64} />
-  </FadeOut>
-</FadeIn>
+<Tagline />
 
 # Create duration=9.5s
 

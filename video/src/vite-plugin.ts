@@ -88,12 +88,21 @@ export function video(options: VideoPluginOptions): PluginOption[] {
             const fullPath = path.join(dir, entry.name)
             if (entry.isDirectory()) {
               walkDir(fullPath)
-            } else if (/\.(tsx?|jsx?)$/.test(entry.name) && !/\.(test|spec|config)\./.test(entry.name)) {
+            } else if (/\.(tsx?|jsx?|mdx?)$/.test(entry.name) && !/\.(test|spec|config)\./.test(entry.name)) {
+              // Skip the main entry file to avoid circular imports
+              if (fullPath === entryPath) continue
+              const isMdx = /\.mdx?$/.test(entry.name)
               const relPath = './' + path.relative(root, fullPath).replace(/\\/g, '/')
               const absPath = fullPath.replace(/\\/g, '/')
               const varName = `__mod${i++}`
-              imports.push(`import * as ${varName} from ${JSON.stringify(absPath)}`)
-              entries.push(`  ${JSON.stringify(relPath)}: ${varName}`)
+              if (isMdx) {
+                // MDX/MD files loaded as raw strings for server-side rendering
+                imports.push(`import ${varName} from ${JSON.stringify(absPath + '?raw')}`)
+                entries.push(`  ${JSON.stringify(relPath)}: { default: ${varName} }`)
+              } else {
+                imports.push(`import * as ${varName} from ${JSON.stringify(absPath)}`)
+                entries.push(`  ${JSON.stringify(relPath)}: ${varName}`)
+              }
             }
           }
         }
@@ -130,14 +139,24 @@ export function video(options: VideoPluginOptions): PluginOption[] {
     // For user .tsx files on the client env, we let the default handling
     // run (React Fast Refresh) so the browser module is also updated.
     hotUpdate(ctx) {
-      const isMdx = ctx.file === entryPath
+      const isEntryMdx = ctx.file === entryPath
+      const isImportedMdx = /\.mdx?$/.test(ctx.file)
+        && ctx.file !== entryPath
+        && !ctx.file.includes('node_modules')
+        && ctx.file.startsWith(root)
       const isUserFile = /\.[jt]sx?$/.test(ctx.file)
         && !ctx.file.includes('node_modules')
         && ctx.file.startsWith(root)
+      const isCss = /\.css$/.test(ctx.file)
+        && !ctx.file.includes('node_modules')
+        && ctx.file.startsWith(root)
 
-      if (!isMdx && !isUserFile) return
+      if (!isEntryMdx && !isImportedMdx && !isUserFile && !isCss) return
 
-      const virtualIds = isMdx
+      // Entry MDX change: invalidate all three virtual modules.
+      // Imported MDX or user file change: invalidate app + modules
+      // (the imported MDX raw string is inside virtual:egaki-modules).
+      const virtualIds = isEntryMdx
         ? [RESOLVED_APP, RESOLVED_MDX, RESOLVED_MODULES]
         : [RESOLVED_APP, RESOLVED_MODULES]
 
@@ -160,9 +179,10 @@ export function video(options: VideoPluginOptions): PluginOption[] {
         })
       }
 
-      // Client env for user files: let default handling run (Fast Refresh).
+      // Client env for user .tsx/.css files: let default handling run
+      // (React Fast Refresh for tsx, native CSS HMR for css).
       // All other cases: return [] to suppress default HMR.
-      if (isUserFile && this.environment.name === 'client') {
+      if ((isUserFile || isCss) && this.environment.name === 'client') {
         return
       }
       return []

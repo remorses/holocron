@@ -20,7 +20,8 @@
 import type { ReactNode } from 'react'
 import { Spiceflow } from 'spiceflow'
 import { SafeMdxRenderer } from 'safe-mdx'
-import { mdxParse } from 'safe-mdx/parse'
+import { mdxParse, extractImports, resolveModulePath } from 'safe-mdx/parse'
+import type { EagerModules } from 'safe-mdx/parse'
 import mdxSource from 'virtual:egaki-mdx'
 import { eagerModules } from 'virtual:egaki-modules'
 import { splitIntoSections, calculateTotalDuration } from './mdx-parse.ts'
@@ -30,6 +31,7 @@ import { PlayerPage } from './player-page.tsx'
 // as references in the RSC flight payload. Hooks run on the client inside
 // Remotion's Player render loop.
 import {
+  Background,
   FadeIn, FadeOut, ZoomIn, ZoomOut,
   SlideIn, SlideOut, BlurIn, BlurOut, Animate,
   MeshGradientBg, BlurReveal, MaskedSlideReveal, StaggeredFadeUp,
@@ -49,13 +51,9 @@ const FONT_SANS =
 const FONT_MONO =
   '"SF Mono", ui-monospace, SFMono-Regular, "Cascadia Code", monospace'
 
-function BackgroundPassthrough({ children }: { children?: ReactNode }) {
-  return <>{children}</>
-}
-
 function buildVideoMdxComponents(): Record<string, any> {
   return {
-    Background: BackgroundPassthrough,
+    Background,
 
     // Built-in visual components
     MeshGradientBg, BlurReveal, MaskedSlideReveal, StaggeredFadeUp,
@@ -161,9 +159,40 @@ function buildVideoMdxComponents(): Record<string, any> {
 export const app = new Spiceflow()
   .page('/', async () => {
     const ast = mdxParse(mdxSource)
+    const components = buildVideoMdxComponents()
+
+    // Render imported .mdx/.md files into React components so safe-mdx can
+    // resolve `import Intro from './intro.mdx'` and render `<Intro />` via
+    // React composition. Each imported MDX gets its own SafeMdxRenderer pass
+    // with the same components map, preserving AST positions and avoiding
+    // the complexity of AST splicing.
+    const moduleKeys = Object.keys(eagerModules)
+    const mergedModules: EagerModules = { ...eagerModules }
+    const imports = extractImports(ast)
+    for (const imp of imports) {
+      if (!/\.mdx?$/.test(imp.source)) continue
+      const key = resolveModulePath(imp.source, './', moduleKeys)
+      if (!key || !mergedModules[key]) continue
+      const rawContent = mergedModules[key].default
+      if (typeof rawContent !== 'string') continue
+      const importedAst = mdxParse(rawContent)
+      const renderedJsx = (
+        <SafeMdxRenderer
+          markdown={rawContent}
+          mdast={importedAst}
+          components={components}
+          modules={mergedModules}
+          baseUrl="./"
+          onError={(e) => console.warn('[egaki] imported MDX:', e.message)}
+        />
+      )
+      // Replace the raw string module with a component that returns the
+      // pre-rendered JSX. safe-mdx reads mod.default for default imports.
+      mergedModules[key] = { default: () => renderedJsx }
+    }
+
     const result = splitIntoSections(ast)
     const totalDuration = calculateTotalDuration(result.sections)
-    const components = buildVideoMdxComponents()
 
     // Extract import nodes (mdxjsEsm) from the full mdast. Section splitting
     // drops them, but SafeMdxRenderer needs them to resolve imported components
@@ -175,7 +204,7 @@ export const app = new Spiceflow()
         markdown={mdxSource}
         mdast={{ type: 'root', children: [...importNodes, ...nodes] }}
         components={components}
-        modules={eagerModules}
+        modules={mergedModules}
         baseUrl="./"
         onError={(e) => console.warn('[egaki] MDX:', e.message)}
       />
@@ -184,20 +213,12 @@ export const app = new Spiceflow()
     const sections = result.sections.map((section) => ({
       heading: section.heading,
       durationInFrames: section.durationInFrames,
-      backgroundJsx: section.backgrounds.length > 0
-        ? renderNodes(section.backgrounds)
-        : null,
-      contentJsx: renderNodes(section.nodes),
+      jsx: renderNodes(section.nodes),
     }))
-
-    const globalBgJsx = result.globals.backgrounds.length > 0
-      ? renderNodes(result.globals.backgrounds)
-      : null
 
     return (
       <PlayerPage
         sections={sections}
-        globalBgJsx={globalBgJsx}
         totalDuration={totalDuration}
       />
     )
