@@ -24,6 +24,7 @@ import {
 import { createMdxComposition, resolveModules, mdxParse } from './mdx-video'
 import { renderInBrowser } from './render-client'
 import './styles.css'
+import HOLOCRON_MDX from './holocron.mdx?raw'
 
 // Vite glob for resolving import statements inside MDX strings.
 // Keys are relative paths like './components.tsx' that safe-mdx can match.
@@ -92,110 +93,6 @@ const FEATURES = [
 ]
 
 // ---------------------------------------------------------------------------
-// MDX source for the video
-// ---------------------------------------------------------------------------
-
-const EXAMPLE_MDX = `---
-fps: 30
-bpm: 120
----
-
-import { FeaturePill } from './components'
-
-# Opening duration=3.3s
-
-<Background>
-<MeshGradientBg colors={['#6366f1', '#8b5cf6', '#06b6d4', '#3b82f6']} speed={0.3} />
-</Background>
-
-<BlurIn duration={30}>
-  <BlurReveal text="Holocron" />
-</BlurIn>
-
-# Tagline duration=2.8s
-
-<Background>
-<MeshGradientBg colors={['#6366f1', '#8b5cf6', '#06b6d4', '#3b82f6']} speed={0.3} />
-</Background>
-
-<FadeIn duration={15}>
-  <FadeOut duration={15}>
-    <MaskedSlideReveal text="Beautiful docs from MDX." fontSize={64} />
-  </FadeOut>
-</FadeIn>
-
-# Create duration=9.5s
-
-<Background>
-<MeshGradientBg colors={['#4f46e5', '#7c3aed', '#0891b2', '#2563eb']} speed={0.2} blur={120} />
-</Background>
-
-<FadeIn duration={15}>
-  <FadeOut duration={15}>
-    <TerminalSimulator lines={createLines} title="~/projects" />
-  </FadeOut>
-</FadeIn>
-
-# Configure duration=6.7s
-
-<Background>
-<MeshGradientBg colors={['#7c3aed', '#6366f1', '#2dd4bf', '#3b82f6']} speed={0.2} blur={120} />
-</Background>
-
-<FadeIn duration={12}>
-  <FadeOut duration={15}>
-    <GlassCodeBlock code={docsJsonCode} title="docs.json" width={780} height={520} fontSize={16} staggerFrames={3} />
-  </FadeOut>
-</FadeIn>
-
-# Features duration=5.3s
-
-<Background>
-<MeshGradientBg colors={['#8b5cf6', '#06b6d4', '#6366f1', '#ec4899']} speed={0.25} blur={120} />
-</Background>
-
-<FadeIn duration={12}>
-  <FadeOut duration={15}>
-    <FeatureGrid features={features} />
-  </FadeOut>
-</FadeIn>
-
-# Analytics duration=6s
-
-<Background>
-<MeshGradientBg colors={['#6366f1', '#06b6d4', '#8b5cf6', '#3b82f6']} speed={0.2} blur={120} />
-</Background>
-
-<FadeIn duration={15}>
-  <FadeOut duration={15}>
-    <AnimatedChart sweepDuration={130} />
-  </FadeOut>
-</FadeIn>
-
-# Deploy duration=6.7s
-
-<Background>
-<MeshGradientBg colors={['#059669', '#0891b2', '#6366f1', '#2563eb']} speed={0.2} blur={120} />
-</Background>
-
-<FadeIn duration={15}>
-  <FadeOut duration={15}>
-    <TerminalSimulator lines={deployLines} title="~/my-docs" />
-  </FadeOut>
-</FadeIn>
-
-# Closing duration=3.3s
-
-<Background>
-<MeshGradientBg colors={['#6366f1', '#8b5cf6', '#06b6d4', '#3b82f6']} speed={0.3} />
-</Background>
-
-<FadeIn duration={15}>
-  <ShimmerSweep text="holocron.so" fontSize={88} fontWeight={700} baseColor="#3f3f46" shineColor="#fafafa" />
-</FadeIn>
-`
-
-// ---------------------------------------------------------------------------
 // FeatureGrid — wraps FeaturePill in a grid (since MDX can't do loops)
 // ---------------------------------------------------------------------------
 
@@ -223,11 +120,11 @@ function FeatureGrid({ features }: { features: typeof FEATURES }) {
 // Resolve MDX imports at startup, then create the composition.
 // This is async because import.meta.glob returns lazy loaders.
 async function initMdxComposition() {
-  const mdast = mdxParse(EXAMPLE_MDX)
+  const mdast = mdxParse(HOLOCRON_MDX)
   const modules = await resolveModules({ glob: lazyGlob, mdast, baseUrl: './' })
 
   return createMdxComposition({
-    mdx: EXAMPLE_MDX,
+    mdx: HOLOCRON_MDX,
     components: {
       MeshGradientBg,
       BlurReveal,
