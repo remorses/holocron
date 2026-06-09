@@ -12,7 +12,9 @@
     "@remotion/web-renderer": "4.0.473",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "remotion": "4.0.473"
+    "remotion": "4.0.473",
+    "safe-mdx": "^1.11.1",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
