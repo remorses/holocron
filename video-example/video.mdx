@@ -5,6 +5,7 @@ bpm: 120
 
 import { FeatureGrid } from './components'
 import { CREATE_LINES, DEPLOY_LINES, DOCS_JSON_CODE, FEATURES } from './data'
+import { AsyncStats } from './async-stats'
 
 # Opening duration=3.3s
 
@@ -76,7 +77,7 @@ some text
 
 <FadeIn duration={15}>
   <FadeOut duration={15}>
-    <AnimatedChart sweepDuration={130} />
+    <AsyncStats />
   </FadeOut>
 </FadeIn>
 
