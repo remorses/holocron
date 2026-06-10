@@ -211,6 +211,7 @@ export const app = new Spiceflow()
         components={components}
         modules={mergedModules}
         baseUrl="./"
+        addMarkdownLineNumbers
         onError={(e) => console.warn('[egaki] MDX:', e.message)}
       />
     )

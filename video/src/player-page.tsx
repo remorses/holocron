@@ -16,6 +16,7 @@ import { Suspense, useCallback, useEffect, useRef, useSyncExternalStore, useStat
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
 import { renderInBrowser } from './render-client'
 import { egakiSDK } from './sdk'
+import { LayoutEditor } from './layout-editor.tsx'
 
 // Module-level stable callbacks for useSyncExternalStore (never re-subscribes)
 const subscribeNoop = () => () => {}
@@ -145,6 +146,7 @@ export function PlayerPage({
   ))
 
   const playerRef = useRef<PlayerRef>(null)
+  const playerContainerRef = useRef<HTMLDivElement>(null)
 
   // Register the composition with the SDK so agents can call
   // window.egakiSDK.seekTo() / .screenshot() / .export() via Playwriter.
@@ -168,9 +170,22 @@ export function PlayerPage({
   // and true on the client synchronously during hydration (no useEffect tick).
   const mounted = useSyncExternalStore(subscribeNoop, getClientMounted, getServerMounted)
 
+  const [editing, setEditing] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
   const [rendering, setRendering] = useState(false)
   const [progress, setProgress] = useState(0)
   const abortRef = useRef<AbortController | null>(null)
+
+  // Force pause while editing — catches play via spacebar, API calls, etc.
+  useEffect(() => {
+    if (!editing) return
+    const player = playerRef.current
+    if (!player) return
+    if (player.isPlaying()) player.pause()
+    const onPlay = () => player.pause()
+    player.addEventListener('play', onPlay)
+    return () => player.removeEventListener('play', onPlay)
+  }, [editing])
 
   const handleExport = useCallback(async () => {
     setRendering(true)
@@ -214,9 +229,10 @@ export function PlayerPage({
         Video Preview
       </h1>
 
-      <div style={{ borderRadius: 12, overflow: 'hidden' }}>
+      <div ref={playerContainerRef} style={{ borderRadius: 12, overflow: 'hidden' }}>
         {mounted ? (
           <Player
+            key={resetKey}
             ref={playerRef}
             component={Component}
             durationInFrames={totalDuration}
@@ -224,6 +240,8 @@ export function PlayerPage({
             compositionWidth={1920}
             compositionHeight={1080}
             controls
+            clickToPlay={!editing}
+            spaceKeyToPlayOrPause
             style={{ width: '100%' }}
           />
         ) : (
@@ -283,6 +301,14 @@ export function PlayerPage({
             Export MP4
           </button>
         )}
+
+        <LayoutEditor
+          playerContainerRef={playerContainerRef}
+          playerRef={playerRef}
+          editing={editing}
+          onEditingChange={setEditing}
+          onReset={() => setResetKey((k) => k + 1)}
+        />
       </div>
     </div>
   )

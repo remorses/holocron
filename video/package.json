@@ -18,6 +18,7 @@
     "@remotion/media": "4.0.475",
     "@remotion/player": "4.0.475",
     "@remotion/web-renderer": "4.0.475",
+    "moveable": "^0.53.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "remotion": "4.0.475",
