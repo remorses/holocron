@@ -137,6 +137,14 @@ function VideoComposition({
                     justifyContent: 'center',
                     padding: '5% 8%',
                     gap: 'clamp(1rem, 2vw, 2.5rem)',
+                    // Force Chrome GPU compositing for subpixel text rendering.
+                    // Without this, Chrome snaps text positions to whole pixels
+                    // causing visible stutter on slow translate/scale animations.
+                    // Not supported by the web-renderer canvas export, but the
+                    // canvas renderer doesn't have Chrome's pixel snapping issue.
+                    // See: https://remotion.dev/docs/troubleshooting/subpixel-rendering
+                    perspective: '1000px',
+                    willChange: 'transform',
                   }}
                 >
                   {section.jsx}
