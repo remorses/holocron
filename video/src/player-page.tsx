@@ -15,6 +15,7 @@ import { Player, type PlayerRef } from '@remotion/player'
 import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
 import { renderInBrowser } from './render-client'
+import { egakiSDK } from './sdk'
 
 /**
  * Remotion-aware Suspense fallback. When a section suspends (throws a promise),
@@ -130,13 +131,19 @@ export function PlayerPage({
     <VideoComposition {...propsRef.current} />
   ))
 
-  // When RSC delivers new props (HMR), bump a revision counter passed
-  // as inputProps. Remotion re-renders the composition when inputProps
-  // reference changes (useMemo in Player watches it), which causes the
-  // stable component to re-read fresh props from propsRef.
-  // Revision counter bumped on every HMR update (via rsc:update event)
-  // or when RSC delivers new sections. Passed as inputProps so Remotion
-  // re-renders the composition, which re-reads fresh props from propsRef.
+  // Register the composition with the SDK so agents can call
+  // window.egakiSDK.screenshot() / .export() via Playwriter.
+  useEffect(() => {
+    egakiSDK.register({
+      component: Component,
+      totalDuration,
+      fps: 30,
+      width: 1920,
+      height: 1080,
+      sectionCount: sections.length,
+    })
+  }, [Component, totalDuration, sections.length])
+
   const playerRef = useRef<PlayerRef>(null)
 
   // Listen for rsc:update HMR events. Bump revision which changes the
