@@ -12,10 +12,16 @@
  */
 
 import { Player, type PlayerRef } from '@remotion/player'
-import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useSyncExternalStore, useState, type ReactNode } from 'react'
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
+import { Audio } from '@remotion/media'
 import { renderInBrowser } from './render-client'
 import { egakiSDK } from './sdk'
+
+// Module-level stable callbacks for useSyncExternalStore (never re-subscribes)
+const subscribeNoop = () => () => {}
+const getClientMounted = () => true
+const getServerMounted = () => false
 
 /**
  * Remotion-aware Suspense fallback. When a section suspends (throws a promise),
@@ -73,12 +79,16 @@ interface SectionProps {
 function VideoComposition({
   sections,
   totalDuration,
+  soundtrack,
 }: {
   sections: SectionProps[]
   totalDuration: number
+  soundtrack?: string
 }) {
   return (
     <AbsoluteFill style={{ background: '#050505' }}>
+      {/* Soundtrack plays for the entire composition, behind all sections */}
+      {soundtrack && <Audio src={soundtrack} />}
       {/* Sequential sections */}
       <Series>
         {sections.map((section, i) => (
@@ -117,22 +127,26 @@ function VideoComposition({
 export function PlayerPage({
   sections,
   totalDuration,
+  soundtrack,
 }: {
   sections: SectionProps[]
   totalDuration: number
+  soundtrack?: string
 }) {
   // Stable component function that reads latest props from a ref.
   // Created once so its identity never changes between renders.
   // Remotion Player doesn't remount when component identity is stable.
-  const propsRef = useRef({ sections, totalDuration })
-  propsRef.current = { sections, totalDuration }
+  const propsRef = useRef({ sections, totalDuration, soundtrack })
+  propsRef.current = { sections, totalDuration, soundtrack }
 
   const [Component] = useState(() => () => (
     <VideoComposition {...propsRef.current} />
   ))
 
+  const playerRef = useRef<PlayerRef>(null)
+
   // Register the composition with the SDK so agents can call
-  // window.egakiSDK.screenshot() / .export() via Playwriter.
+  // window.egakiSDK.seekTo() / .screenshot() / .export() via Playwriter.
   useEffect(() => {
     egakiSDK.register({
       component: Component,
@@ -141,15 +155,17 @@ export function PlayerPage({
       width: 1920,
       height: 1080,
       sectionCount: sections.length,
+      playerRef,
     })
   }, [Component, totalDuration, sections.length])
 
-  const playerRef = useRef<PlayerRef>(null)
-
-  // Listen for rsc:update HMR events. Bump revision which changes the
-  // Player's React key, forcing a full remount with fresh client component
-  // code. This loses playback position but ensures edits are visible.
-
+  // Defer Player mount to client only. Remotion's Player and all composition
+  // components (Series, AbsoluteFill, Audio, Video) use React context provided
+  // by Player at runtime. During SSR there's no Remotion context, so hooks like
+  // useCurrentFrame/useVideoConfig crash with "Cannot read properties of null
+  // (reading 'useContext')". useSyncExternalStore returns false on the server
+  // and true on the client synchronously during hydration (no useEffect tick).
+  const mounted = useSyncExternalStore(subscribeNoop, getClientMounted, getServerMounted)
 
   const [rendering, setRendering] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -198,17 +214,20 @@ export function PlayerPage({
       </h1>
 
       <div style={{ borderRadius: 12, overflow: 'hidden' }}>
-        <Player
-          // key={revision}
-          ref={playerRef}
-          component={Component}
-          durationInFrames={totalDuration}
-          fps={30}
-          compositionWidth={1920}
-          compositionHeight={1080}
-          controls
-          style={{ width: '100%' }}
-        />
+        {mounted ? (
+          <Player
+            ref={playerRef}
+            component={Component}
+            durationInFrames={totalDuration}
+            fps={30}
+            compositionWidth={1920}
+            compositionHeight={1080}
+            controls
+            style={{ width: '100%' }}
+          />
+        ) : (
+          <div style={{ aspectRatio: '16/9', background: '#050505' }} />
+        )}
       </div>
 
       <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>

@@ -39,6 +39,15 @@ export type {
 // Composition registration — PlayerPage calls this on mount
 // ---------------------------------------------------------------------------
 
+interface PlayerHandle {
+  seekTo: (frame: number) => void
+  getCurrentFrame: () => number
+  play: () => void
+  pause: () => void
+  toggle: () => void
+  isPlaying: () => boolean
+}
+
 interface CompositionConfig {
   component: React.FC
   totalDuration: number
@@ -46,6 +55,7 @@ interface CompositionConfig {
   width: number
   height: number
   sectionCount: number
+  playerRef: { current: PlayerHandle | null }
 }
 
 // ---------------------------------------------------------------------------
@@ -106,6 +116,10 @@ export interface CompositionInfo {
   sectionCount: number
   /** Duration in seconds */
   durationSeconds: number
+  /** Current frame the player is on */
+  currentFrame: number
+  /** Whether the player is currently playing */
+  isPlaying: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -152,9 +166,58 @@ class EgakiSDK {
     return this.config
   }
 
-  /** Returns metadata about the current composition. */
+  private getPlayer(): PlayerHandle {
+    const player = this.getConfig().playerRef.current
+    if (!player) {
+      throw new Error(
+        'egakiSDK: player ref is null. The <Player> component has not mounted yet.',
+      )
+    }
+    return player
+  }
+
+  // -------------------------------------------------------------------------
+  // Player controls
+  // -------------------------------------------------------------------------
+
+  /** Seek the player to a specific frame (0-indexed). */
+  seekTo(frame: number) {
+    this.getPlayer().seekTo(frame)
+  }
+
+  /** Returns the frame number the player is currently displaying. */
+  getCurrentFrame(): number {
+    return this.getPlayer().getCurrentFrame()
+  }
+
+  /** Start playback. */
+  play() {
+    this.getPlayer().play()
+  }
+
+  /** Pause playback. */
+  pause() {
+    this.getPlayer().pause()
+  }
+
+  /** Toggle play/pause. */
+  toggle() {
+    this.getPlayer().toggle()
+  }
+
+  /** Whether the player is currently playing. */
+  isPlaying(): boolean {
+    return this.getPlayer().isPlaying()
+  }
+
+  // -------------------------------------------------------------------------
+  // Info
+  // -------------------------------------------------------------------------
+
+  /** Returns metadata about the current composition and player state. */
   getInfo(): CompositionInfo {
     const c = this.getConfig()
+    const player = c.playerRef.current
     return {
       totalDuration: c.totalDuration,
       fps: c.fps,
@@ -162,7 +225,20 @@ class EgakiSDK {
       height: c.height,
       sectionCount: c.sectionCount,
       durationSeconds: c.totalDuration / c.fps,
+      currentFrame: player?.getCurrentFrame() ?? 0,
+      isPlaying: player?.isPlaying() ?? false,
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // Rendering
+  // -------------------------------------------------------------------------
+
+  /** Screenshot whatever frame the player is currently showing. */
+  async screenshotCurrentFrame(
+    options: Omit<ScreenshotOptions, 'frame'> = {},
+  ): Promise<string> {
+    return this.screenshot({ ...options, frame: this.getCurrentFrame() })
   }
 
   /** Render a single frame and return a data URL string. */
