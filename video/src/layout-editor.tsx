@@ -9,11 +9,26 @@
  * attribute, then serialized as structured text for an agent to apply.
  *
  * Keyboard: Esc = select parent (deselect at root), Ctrl+Z = undo.
+ *
+ * Bug-fix notes (from oracle review, commit 1158b916):
+ * - Undo stores a snapshot of the previous ElementChange so restoring
+ *   doesn't delete the change entirely (was: changesRef.current.delete).
+ * - attachMoveable uses a generation counter ref to guard against stale
+ *   async import resolutions (race between disable/new-select and import).
+ * - Text edit keydown uses a named handler removed in the blur cleanup.
+ * - finishTextEdit() is extracted and called from the !editing cleanup
+ *   effect so toggling editing off mid-text-edit cleans up properly.
+ * - Moveable instance is destroyed on unmount via a dedicated useEffect.
+ * - Clipboard "Copied!" timeout is tracked in a ref and cleared on unmount.
+ * - Moveable constructor cast cleaned up (kept hand-written interfaces
+ *   because react-moveable types are not installed as a dependency).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 // ── Moveable types ─────────────────────────────────────────────────────
+// Hand-written because react-moveable (which moveable re-exports types
+// from) is not installed. These cover the subset we use.
 
 interface MoveableEvent { target: HTMLElement | SVGElement; transform: string }
 
@@ -31,6 +46,10 @@ interface MoveableInstance {
   destroy(): void
 }
 
+interface MoveableConstructor {
+  new(parent: HTMLElement, opts: Record<string, unknown>): MoveableInstance
+}
+
 // ── Types ──────────────────────────────────────────────────────────────
 
 type ElementKind = 'text' | 'image' | 'video' | 'audio' | 'code' | 'svg' | 'canvas' | 'element'
@@ -46,6 +65,19 @@ interface ElementChange {
   originalTextContent: string | null
   textPreview: string
   tagName: string
+}
+
+interface UndoEntry {
+  el: HTMLElement
+  transform: string
+  position: string
+  /** Snapshot of the ElementChange before this action, or null if none existed */
+  prevChange: ElementChange | null
+}
+
+export interface SectionMeta {
+  heading: string | null
+  durationInFrames: number
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -94,13 +126,45 @@ function hasChange(c: ElementChange): boolean {
     || c.textContent !== null
 }
 
+function cloneChange(c: ElementChange): ElementChange {
+  return { ...c }
+}
+
+/** Derive which section the current frame falls in */
+function getCurrentSection(frame: number, sections: SectionMeta[]): SectionMeta | null {
+  let acc = 0
+  for (const s of sections) {
+    if (frame < acc + s.durationInFrames) return s
+    acc += s.durationInFrames
+  }
+  return sections.length > 0 ? sections[sections.length - 1]! : null
+}
+
 // ── Serialization ──────────────────────────────────────────────────────
 
-function serializeChanges(changes: Map<HTMLElement, ElementChange>): string {
+function serializeChanges(
+  changes: Map<HTMLElement, ElementChange>,
+  currentFrame: number | null,
+  fps: number,
+  sections: SectionMeta[],
+): string {
   const entries = Array.from(changes.values()).filter(hasChange)
   if (entries.length === 0) return ''
 
   const parts: string[] = ['## Layout changes\n']
+
+  // Frame + section context
+  if (currentFrame !== null) {
+    const seconds = (currentFrame / fps).toFixed(1)
+    parts.push(`Current frame: ${currentFrame} (${seconds}s at ${fps}fps)`)
+
+    const section = getCurrentSection(currentFrame, sections)
+    if (section?.heading) {
+      parts.push(`Section: "${section.heading}"`)
+    }
+    parts.push('')
+  }
+
   for (const c of entries) {
     const line = c.mdxLine !== null ? ` (line ${c.mdxLine})` : ''
     const text = c.kind === 'text' && c.textPreview ? `: "${c.textPreview}"` : ''
@@ -143,12 +207,14 @@ function ToolbarButton({ onClick, active, children, title }: {
 
 // ── Main component ─────────────────────────────────────────────────────
 
-export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditingChange, onReset }: {
+export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditingChange, onReset, sections, fps }: {
   playerContainerRef: React.RefObject<HTMLElement | null>
-  playerRef: React.RefObject<{ addEventListener: (name: any, cb: any) => void; removeEventListener: (name: any, cb: any) => void } | null>
+  playerRef: React.RefObject<{ getCurrentFrame: () => number; addEventListener: (name: any, cb: any) => void; removeEventListener: (name: any, cb: any) => void } | null>
   editing: boolean
   onEditingChange: (editing: boolean) => void
   onReset: () => void
+  sections: SectionMeta[]
+  fps: number
 }) {
   const [selectedEl, setSelectedEl] = useState<HTMLElement | null>(null)
   const [changesCount, setChangesCount] = useState(0)
@@ -157,7 +223,11 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
   const moveableRef = useRef<MoveableInstance | null>(null)
   const changesRef = useRef<Map<HTMLElement, ElementChange>>(new Map())
   const textEditRef = useRef<HTMLElement | null>(null)
-  const undoStack = useRef<{ el: HTMLElement; transform: string; position: string }[]>([])
+  const undoStack = useRef<UndoEntry[]>([])
+  /** Generation counter to guard against stale async import resolutions */
+  const moveableGenRef = useRef(0)
+  /** Timeout ID for the "Copied!" indicator reset */
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const getPlayer = useCallback((): HTMLElement | null => {
     return playerContainerRef.current?.querySelector('.__remotion-player') as HTMLElement | null
@@ -191,16 +261,38 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
     return n
   }
 
+  // ── Finish text editing (extracted so it can be called from !editing cleanup) ──
+
+  const finishTextEdit = useCallback(() => {
+    const target = textEditRef.current
+    if (!target) return
+    target.contentEditable = 'false'
+    target.style.outline = ''
+    target.style.outlineOffset = ''
+    const c = changesRef.current.get(target)
+    if (c && target.textContent !== c.originalTextContent) {
+      c.textContent = target.textContent ?? ''
+    }
+    textEditRef.current = null
+    setChangesCount(countChanges())
+  }, [])
+
   // ── Attach Moveable (drag + scale, all via transform) ──
 
   const attachMoveable = useCallback(async (target: HTMLElement) => {
     moveableRef.current?.destroy()
+    moveableRef.current = null
     const container = playerContainerRef.current
 
+    // Increment generation before the async import
+    const gen = ++moveableGenRef.current
+
     const mod = await import('moveable')
-    const Cls = mod.default as unknown as {
-      new(parent: HTMLElement, opts: Record<string, unknown>): MoveableInstance
-    }
+
+    // Bail if editing was disabled or a newer selection happened during import
+    if (moveableGenRef.current !== gen) return
+
+    const Cls = mod.default as unknown as MoveableConstructor
     const m = new Cls(container ?? document.body, {
       target,
       draggable: true,
@@ -233,7 +325,13 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
 
     m.on('dragStart', ({ target: el }) => {
       const htmlEl = el as HTMLElement
-      undoStack.current.push({ el: htmlEl, transform: htmlEl.style.transform, position: htmlEl.style.position })
+      const existing = changesRef.current.get(htmlEl)
+      undoStack.current.push({
+        el: htmlEl,
+        transform: htmlEl.style.transform,
+        position: htmlEl.style.position,
+        prevChange: existing ? cloneChange(existing) : null,
+      })
     })
 
     m.on('drag', ({ target: el, transform }) => {
@@ -249,7 +347,13 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
 
     m.on('scaleStart', ({ target: el }) => {
       const htmlEl = el as HTMLElement
-      undoStack.current.push({ el: htmlEl, transform: htmlEl.style.transform, position: htmlEl.style.position })
+      const existing = changesRef.current.get(htmlEl)
+      undoStack.current.push({
+        el: htmlEl,
+        transform: htmlEl.style.transform,
+        position: htmlEl.style.position,
+        prevChange: existing ? cloneChange(existing) : null,
+      })
     })
 
     m.on('scale', ({ target: el, scale, drag }) => {
@@ -273,11 +377,31 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
 
   const handleDoubleClick = useCallback((e: MouseEvent) => {
     if (!editing) return
-    const target = findTarget(e.target as HTMLElement)
+    const player = getPlayer()
+    if (!player?.contains(e.target as Node)) return
+
+    // For text editing, try the actual clicked element first (the leaf text
+    // node), then walk up. findTarget walks up to a selectable parent which
+    // is often a container div — that fails isTextElement because it has
+    // children. We want the innermost text-bearing element.
+    let target: HTMLElement | null = null
+    let cur: HTMLElement | null = e.target as HTMLElement
+    while (cur && player.contains(cur)) {
+      if (isTextElement(cur)) { target = cur; break }
+      cur = cur.parentElement
+    }
+    // Fall back to selectable parent if no leaf text found
+    if (!target) target = findTarget(e.target as HTMLElement)
     if (!target || !isTextElement(target)) return
+
     e.preventDefault()
     e.stopPropagation()
 
+    // Invalidate any in-flight attachMoveable async imports so they bail
+    // after resolving. A double-click fires click→click→dblclick; the second
+    // click starts attachMoveable whose import may resolve after we enter
+    // text edit mode, causing a __CROACT__ null error in Moveable's renderer.
+    moveableGenRef.current++
     moveableRef.current?.destroy()
     moveableRef.current = null
     textEditRef.current = target
@@ -297,20 +421,16 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
     window.getSelection()?.removeAllRanges()
     window.getSelection()?.addRange(range)
 
+    // Named handler so we can remove it in cleanup
+    const onEscapeKey = (ke: KeyboardEvent) => { if (ke.key === 'Escape') target.blur() }
+
     const finish = () => {
-      target.contentEditable = 'false'
-      target.style.outline = ''
-      target.style.outlineOffset = ''
-      textEditRef.current = null
-      const c = changesRef.current.get(target)
-      if (c && target.textContent !== c.originalTextContent) {
-        c.textContent = target.textContent ?? ''
-      }
-      setChangesCount(countChanges())
+      target.removeEventListener('keydown', onEscapeKey)
+      finishTextEdit()
     }
     target.addEventListener('blur', finish, { once: true })
-    target.addEventListener('keydown', (ke) => { if (ke.key === 'Escape') target.blur() })
-  }, [editing, findTarget])
+    target.addEventListener('keydown', onEscapeKey)
+  }, [editing, findTarget, finishTextEdit])
 
   // ── Click to select ──
 
@@ -342,7 +462,12 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
         if (entry) {
           entry.el.style.transform = entry.transform
           entry.el.style.position = entry.position
-          changesRef.current.delete(entry.el)
+          // Restore previous change snapshot instead of deleting entirely
+          if (entry.prevChange) {
+            changesRef.current.set(entry.el, entry.prevChange)
+          } else {
+            changesRef.current.delete(entry.el)
+          }
           setChangesCount(countChanges())
           if (selectedEl === entry.el) void attachMoveable(entry.el)
         }
@@ -398,23 +523,55 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
     }
   }, [editing, handleClick, handleDoubleClick])
 
+  // ── Cleanup when editing is toggled off ──
+
   useEffect(() => {
     if (!editing) {
+      // Increment generation to invalidate any in-flight attachMoveable
+      moveableGenRef.current++
       moveableRef.current?.destroy()
       moveableRef.current = null
       setSelectedEl(null)
+      // Clean up any active text edit
+      finishTextEdit()
     }
-  }, [editing])
+  }, [editing, finishTextEdit])
+
+  // ── Destroy moveable on unmount ──
+
+  useEffect(() => {
+    return () => {
+      moveableRef.current?.destroy()
+      moveableRef.current = null
+    }
+  }, [])
+
+  // ── Clear copied timeout on unmount ──
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current !== null) {
+        clearTimeout(copiedTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // ── Actions ──
 
   const handleCopy = useCallback(async () => {
-    const text = serializeChanges(changesRef.current)
+    const currentFrame = playerRef.current?.getCurrentFrame() ?? null
+    const text = serializeChanges(changesRef.current, currentFrame, fps, sections)
     if (!text) return
     await navigator.clipboard.writeText(text)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }, [])
+    if (copiedTimeoutRef.current !== null) {
+      clearTimeout(copiedTimeoutRef.current)
+    }
+    copiedTimeoutRef.current = setTimeout(() => {
+      setCopied(false)
+      copiedTimeoutRef.current = null
+    }, 2000)
+  }, [playerRef, fps, sections])
 
   const handleReset = useCallback(() => {
     moveableRef.current?.destroy()

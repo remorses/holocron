@@ -16,7 +16,7 @@ import { Suspense, useCallback, useEffect, useRef, useSyncExternalStore, useStat
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
 import { renderInBrowser } from './render-client'
 import { egakiSDK } from './sdk'
-import { LayoutEditor } from './layout-editor.tsx'
+import { LayoutEditor, type SectionMeta } from './layout-editor.tsx'
 
 // Module-level stable callbacks for useSyncExternalStore (never re-subscribes)
 const subscribeNoop = () => () => {}
@@ -308,6 +308,8 @@ export function PlayerPage({
           editing={editing}
           onEditingChange={setEditing}
           onReset={() => setResetKey((k) => k + 1)}
+          sections={sections}
+          fps={30}
         />
       </div>
     </div>
