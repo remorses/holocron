@@ -31,7 +31,33 @@ player-page.tsx (client)
 
 **Animation wrappers** (`mdx-video.tsx`): `FadeIn`, `FadeOut`, `ZoomIn`, `ZoomOut`, `SlideIn`, `SlideOut`, `BlurIn`, `BlurOut`, and `<Animate enter="fadeIn" exit="zoomOut">` shorthand.
 
-**Media components**: `<Video>` and `<Audio>` from `@remotion/media` are available in MDX. `soundtrack` frontmatter field plays audio for the entire composition.
+**Media components**: `<Video>` and `<Audio>` from `@remotion/media` are available in MDX.
+
+## Preamble — composition-level content
+
+Content **before the first `#` heading** in the MDX file is the **preamble**. It is rendered at the Remotion composition level, outside the `<Series>` that sequences sections. This means preamble content persists across all sections for the entire video duration, and renders in the background behind the section content (earlier DOM order = behind).
+
+Use the preamble for:
+- **Soundtracks**: `<Audio src="/music.mp3" />` plays for the full video
+- **Ambient background video**: `<Video src="/bg.mp4" />` loops behind all sections
+- **Global background color or image**: a `<Background>` with `<MeshGradientBg>` or a static color that shows behind every section without repeating it in each one
+- **Persistent overlays**: watermarks, logos, or any element that should never disappear between sections
+
+```mdx
+---
+fps: 30
+bpm: 120
+---
+
+<Audio src="/soundtrack.mp3" />
+<Video src="/ambient-bg.mp4" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+# First Section duration=5s
+
+This content appears on top of the ambient background video.
+```
+
+Content inside sections (after a heading) is scoped to that section's `Series.Sequence` and only visible during that section's duration. Preamble content has no such scoping; it renders for the entire composition and sits behind the sections in z-order.
 
 ## Client-side rendering constraints
 

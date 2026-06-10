@@ -45,6 +45,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion'
+import { Audio, Video } from '@remotion/media'
 
 // ---------------------------------------------------------------------------
 // Background — real component that self-positions as an absolute layer
@@ -279,4 +280,6 @@ export {
   SpringPopIn,
   AnimatedChart,
   FeaturePill,
+  Audio,
+  Video,
 }

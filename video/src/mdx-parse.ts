@@ -32,7 +32,7 @@ export interface VideoFrontmatter {
   bpm: number
 }
 
-/** Parse YAML frontmatter from mdast. Extracts fps, bpm, and any extra fields. */
+/** Parse YAML frontmatter from mdast. Extracts fps, bpm. */
 function parseFrontmatter(mdast: Root): VideoFrontmatter {
   const result: VideoFrontmatter = { fps: DEFAULT_FPS, bpm: DEFAULT_BPM }
   for (const node of mdast.children) {
@@ -99,6 +99,11 @@ export interface SplitResult {
   frontmatter: VideoFrontmatter
   /** ESM import nodes from the document, needed by SafeMdxRenderer to resolve modules */
   imports: RootContent[]
+  /** Content nodes before the first heading. Rendered at composition level,
+   *  outside the Series, spanning the full video duration. Use for soundtracks,
+   *  ambient background videos, or any component that should persist across
+   *  all sections. */
+  preamble: RootContent[]
 }
 
 function extractHeadingText(node: RootContent): string {
@@ -118,6 +123,7 @@ export function splitIntoSections(mdast: Root): SplitResult {
 
   const sections: MdxSection[] = []
   const imports: RootContent[] = []
+  const preamble: RootContent[] = []
   let current: MdxSection | null = null
   let beforeFirstHeading = true
 
@@ -143,23 +149,17 @@ export function splitIntoSections(mdast: Root): SplitResult {
       continue
     }
 
+    // Content before the first heading goes into the preamble, which is
+    // rendered at composition level (outside Series) so it spans the
+    // full video duration.
     if (beforeFirstHeading) {
-      if (!current) {
-        current = {
-          heading: null,
-          nodes: [],
-          durationInFrames: defaultDuration,
-        }
-        sections.push(current)
-        beforeFirstHeading = false
-      }
-      current.nodes.push(node)
+      preamble.push(node)
     } else if (current) {
       current.nodes.push(node)
     }
   }
 
-  return { sections, frontmatter, imports }
+  return { sections, frontmatter, imports, preamble }
 }
 
 /** Calculate total composition duration: simple sum since no transitions */

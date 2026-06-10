@@ -14,7 +14,6 @@
 import { Player, type PlayerRef } from '@remotion/player'
 import { Suspense, useCallback, useEffect, useRef, useSyncExternalStore, useState, type ReactNode } from 'react'
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
-import { Audio } from '@remotion/media'
 import { renderInBrowser } from './render-client'
 import { egakiSDK } from './sdk'
 
@@ -79,16 +78,18 @@ interface SectionProps {
 function VideoComposition({
   sections,
   totalDuration,
-  soundtrack,
+  preamble,
 }: {
   sections: SectionProps[]
   totalDuration: number
-  soundtrack?: string
+  preamble?: ReactNode
 }) {
   return (
     <AbsoluteFill style={{ background: '#050505' }}>
-      {/* Soundtrack plays for the entire composition, behind all sections */}
-      {soundtrack && <Audio src={soundtrack} />}
+      {/* Preamble: MDX content before the first heading. Rendered at
+          composition level so it persists across all sections. Runs in the
+          background behind the Series (earlier DOM order = behind). */}
+      {preamble}
       {/* Sequential sections */}
       <Series>
         {sections.map((section, i) => (
@@ -127,17 +128,17 @@ function VideoComposition({
 export function PlayerPage({
   sections,
   totalDuration,
-  soundtrack,
+  preamble,
 }: {
   sections: SectionProps[]
   totalDuration: number
-  soundtrack?: string
+  preamble?: ReactNode
 }) {
   // Stable component function that reads latest props from a ref.
   // Created once so its identity never changes between renders.
   // Remotion Player doesn't remount when component identity is stable.
-  const propsRef = useRef({ sections, totalDuration, soundtrack })
-  propsRef.current = { sections, totalDuration, soundtrack }
+  const propsRef = useRef({ sections, totalDuration, preamble })
+  propsRef.current = { sections, totalDuration, preamble }
 
   const [Component] = useState(() => () => (
     <VideoComposition {...propsRef.current} />

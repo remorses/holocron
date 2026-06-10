@@ -37,6 +37,7 @@ import {
   MeshGradientBg, BlurReveal, MaskedSlideReveal, StaggeredFadeUp,
   TerminalSimulator, GlassCodeBlock, ShimmerSweep, SpringPopIn,
   AnimatedChart, FeaturePill,
+  Audio, Video,
 } from './mdx-video.tsx'
 
 // ---------------------------------------------------------------------------
@@ -59,6 +60,10 @@ function buildVideoMdxComponents(): Record<string, any> {
     MeshGradientBg, BlurReveal, MaskedSlideReveal, StaggeredFadeUp,
     TerminalSimulator, GlassCodeBlock, ShimmerSweep, SpringPopIn,
     AnimatedChart, FeaturePill,
+
+    // Remotion media components (from @remotion/media, NOT remotion —
+    // the web-renderer only supports @remotion/media components)
+    Audio, Video,
 
     // Enter/exit animations
     FadeIn, FadeOut, ZoomIn, ZoomOut,
@@ -216,10 +221,17 @@ export const app = new Spiceflow()
       jsx: renderNodes(section.nodes),
     }))
 
+    // Preamble: content before the first heading, rendered at composition
+    // level (outside Series) so it spans the full video duration.
+    const preamble = result.preamble.length > 0
+      ? renderNodes(result.preamble)
+      : undefined
+
     return (
       <PlayerPage
         sections={sections}
         totalDuration={totalDuration}
+        preamble={preamble}
       />
     )
   })
