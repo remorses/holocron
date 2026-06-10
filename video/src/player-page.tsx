@@ -93,6 +93,7 @@ function VideoComposition({
               <AbsoluteFill style={{ background: '#050505' }}>
                 <AbsoluteFill
                   style={{
+                    zIndex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',

@@ -56,7 +56,7 @@ import {
 // ---------------------------------------------------------------------------
 
 export function Background({ children }: { children?: ReactNode }) {
-  return <AbsoluteFill>{children}</AbsoluteFill>
+  return <AbsoluteFill style={{ zIndex: 0 }}>{children}</AbsoluteFill>
 }
 
 const FONT_SANS =
