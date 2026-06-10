@@ -15,9 +15,12 @@ import './styles.css'
 import { Player, type PlayerRef } from '@remotion/player'
 import { Suspense, useCallback, useEffect, useRef, useSyncExternalStore, useState, type ReactNode } from 'react'
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
+import { TransitionSeries, linearTiming } from '@remotion/transitions'
+import { fade } from '@remotion/transitions/fade'
 import { renderInBrowser } from './render-client'
 import { egakiSDK } from './sdk'
 import { LayoutEditor, type SectionMeta } from './layout-editor.tsx'
+import { SharedRegistryProvider, SharedAnimationLayer } from './mdx-video.tsx'
 
 // Module-level stable callbacks for useSyncExternalStore (never re-subscribes)
 const subscribeNoop = () => () => {}
@@ -97,7 +100,39 @@ function SuspenseFallback() {
 interface SectionProps {
   heading: string | null
   durationInFrames: number
+  /** Transition overlap with the NEXT section, in frames. 0 = hard cut. */
+  transitionFrames: number
   jsx: ReactNode
+}
+
+function SectionContent({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<SuspenseFallback />}>
+      <AbsoluteFill style={{ background: '#050505' }}>
+        <AbsoluteFill
+          style={{
+            zIndex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '5% 8%',
+            gap: 'clamp(1rem, 2vw, 2.5rem)',
+            // Force Chrome GPU compositing for subpixel text rendering.
+            // Without this, Chrome snaps text positions to whole pixels
+            // causing visible stutter on slow translate/scale animations.
+            // Not supported by the web-renderer canvas export, but the
+            // canvas renderer doesn't have Chrome's pixel snapping issue.
+            // See: https://remotion.dev/docs/troubleshooting/subpixel-rendering
+            perspective: '1000px',
+            willChange: 'transform',
+          }}
+        >
+          {children}
+        </AbsoluteFill>
+      </AbsoluteFill>
+    </Suspense>
+  )
 }
 
 function VideoComposition({
@@ -109,51 +144,67 @@ function VideoComposition({
   totalDuration: number
   preamble?: ReactNode
 }) {
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // Check if any section uses transitions
+  const hasTransitions = sections.some((s) => s.transitionFrames > 0)
+
   return (
-    <AbsoluteFill style={{ background: '#050505' }}>
-      {/* Preamble: MDX content before the first heading. Rendered at
-          composition level so it persists across all sections. Runs in the
-          background behind the Series (earlier DOM order = behind). */}
-      {preamble}
-      {/* Sequential sections */}
-      <Series>
-        {sections.map((section, i) => (
-          <Series.Sequence
-            key={i}
-            durationInFrames={section.durationInFrames}
-            // @ts-ignore — name prop exists on Series.Sequence
-            name={section.heading || `Section ${i}`}
-          >
-            <Suspense fallback={<SuspenseFallback />}>
-              {/* Background components inside jsx self-position as AbsoluteFill
-                  layers behind content via DOM order (rendered first = behind). */}
-              <AbsoluteFill style={{ background: '#050505' }}>
-                <AbsoluteFill
-                  style={{
-                    zIndex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '5% 8%',
-                    gap: 'clamp(1rem, 2vw, 2.5rem)',
-                    // Force Chrome GPU compositing for subpixel text rendering.
-                    // Without this, Chrome snaps text positions to whole pixels
-                    // causing visible stutter on slow translate/scale animations.
-                    // Not supported by the web-renderer canvas export, but the
-                    // canvas renderer doesn't have Chrome's pixel snapping issue.
-                    // See: https://remotion.dev/docs/troubleshooting/subpixel-rendering
-                    perspective: '1000px',
-                    willChange: 'transform',
-                  }}
+    <AbsoluteFill ref={rootRef} style={{ background: '#050505' }}>
+      <SharedRegistryProvider rootRef={rootRef}>
+        {/* Preamble: MDX content before the first heading. Rendered at
+            composition level so it persists across all sections. */}
+        {preamble}
+
+        {hasTransitions ? (
+          // TransitionSeries: sections with transitions use fade crossfade
+          // during the overlap window. Shared elements handle their own
+          // FLIP animation independently.
+          <TransitionSeries>
+            {sections.flatMap((section, i) => {
+              const elements: ReactNode[] = []
+              elements.push(
+                <TransitionSeries.Sequence
+                  key={`seq-${i}`}
+                  durationInFrames={section.durationInFrames}
+                  // @ts-ignore — name prop
+                  name={section.heading || `Section ${i}`}
                 >
-                  {section.jsx}
-                </AbsoluteFill>
-              </AbsoluteFill>
-            </Suspense>
-          </Series.Sequence>
-        ))}
-      </Series>
+                  <SectionContent>{section.jsx}</SectionContent>
+                </TransitionSeries.Sequence>
+              )
+              // Add a transition AFTER this section if it has transitionFrames
+              if (section.transitionFrames > 0 && i < sections.length - 1) {
+                elements.push(
+                  <TransitionSeries.Transition
+                    key={`trans-${i}`}
+                    presentation={fade()}
+                    timing={linearTiming({ durationInFrames: section.transitionFrames })}
+                  />
+                )
+              }
+              return elements
+            })}
+          </TransitionSeries>
+        ) : (
+          // No transitions: use plain Series for efficiency
+          <Series>
+            {sections.map((section, i) => (
+              <Series.Sequence
+                key={i}
+                durationInFrames={section.durationInFrames}
+                // @ts-ignore — name prop
+                name={section.heading || `Section ${i}`}
+              >
+                <SectionContent>{section.jsx}</SectionContent>
+              </Series.Sequence>
+            ))}
+          </Series>
+        )}
+
+        {/* Animation layer for Shared elements — above the Series */}
+        <SharedAnimationLayer />
+      </SharedRegistryProvider>
     </AbsoluteFill>
   )
 }
@@ -193,6 +244,8 @@ export function PlayerPage({
       playerRef,
     })
   }, [Component, totalDuration, sections.length])
+
+
 
   // Defer Player mount to client only. Remotion's Player and all composition
   // components (Series, AbsoluteFill, Audio, Video) use React context provided
@@ -256,9 +309,9 @@ export function PlayerPage({
   }, [])
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen bg-black px-5 py-10'>
-      {/* Player — centered vertically */}
-      <div ref={playerContainerRef} className='w-full max-w-[960px] rounded-xl overflow-hidden'>
+    <div className='flex flex-col items-center justify-center min-h-screen bg-black'>
+      {/* Player — full width */}
+      <div ref={playerContainerRef} className='w-full overflow-hidden'>
         {mounted ? (
           <Player
             key={resetKey}
