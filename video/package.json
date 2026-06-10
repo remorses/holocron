@@ -18,11 +18,13 @@
     "@remotion/media": "4.0.475",
     "@remotion/player": "4.0.475",
     "@remotion/web-renderer": "4.0.475",
+    "@tailwindcss/vite": "^4.2.2",
     "moveable": "^0.53.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "remotion": "4.0.475",
     "safe-mdx": "^1.11.1",
+    "tailwindcss": "^4.3.0",
     "yaml": "^2.9.0"
   },
   "peerDependencies": {

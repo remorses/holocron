@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url'
 import type { Plugin, PluginOption } from 'vite'
 import { spiceflowPlugin } from 'spiceflow/vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 // Resolve the package src/ directory from this file's location.
 // Used for resolve.alias so the RSC module runner can resolve relative
@@ -231,6 +232,7 @@ export function video(options: VideoPluginOptions): PluginOption[] {
   return [
     videoPlugin,
     rscPackagePlugin,
+    tailwindcss(),
     spiceflowPlugin({ entry: VIRTUAL_APP }),
     react(),
   ]

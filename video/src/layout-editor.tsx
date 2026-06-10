@@ -194,13 +194,12 @@ function ToolbarButton({ onClick, active, children, title }: {
   return (
     <button
       type='button' onClick={onClick} title={title}
-      style={{
-        padding: '6px 12px', fontSize: '13px', fontWeight: 500,
-        border: '1px solid', borderColor: active ? '#6366f1' : 'rgba(128,128,128,0.3)',
-        borderRadius: '6px', background: active ? '#6366f1' : 'rgba(0,0,0,0.6)',
-        color: active ? '#fff' : '#e5e5e5', cursor: 'pointer',
-        whiteSpace: 'nowrap', transition: 'all 150ms',
-      }}
+      className={[
+        'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors cursor-pointer',
+        active
+          ? 'bg-sky-200 text-sky-950'
+          : 'text-zinc-300 hover:bg-white/10',
+      ].join(' ')}
     >{children}</button>
   )
 }
@@ -413,7 +412,7 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
 
     target.contentEditable = 'true'
     target.focus()
-    target.style.outline = '2px solid #6366f1'
+    target.style.outline = '2px solid #7dd3fc'
     target.style.outlineOffset = '2px'
 
     const range = document.createRange()
@@ -438,14 +437,29 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
     if (!editing || textEditRef.current) return
     if ((e.target as HTMLElement).closest('[data-layout-editor-toolbar]')) return
     if ((e.target as HTMLElement).className?.includes?.('moveable-')) return
-    if (!playerContainerRef.current?.contains(e.target as Node)) return
+
+    // Click outside player container → deselect
+    if (!playerContainerRef.current?.contains(e.target as Node)) {
+      if (selectedEl) {
+        moveableRef.current?.destroy()
+        moveableRef.current = null
+        setSelectedEl(null)
+      }
+      return
+    }
+
     const target = findTarget(e.target as HTMLElement)
     if (target) {
       e.preventDefault()
       e.stopPropagation()
       void attachMoveable(target)
+    } else if (selectedEl) {
+      // Clicked inside player but not on a selectable element → deselect
+      moveableRef.current?.destroy()
+      moveableRef.current = null
+      setSelectedEl(null)
     }
-  }, [editing, findTarget, attachMoveable, playerContainerRef])
+  }, [editing, selectedEl, findTarget, attachMoveable, playerContainerRef])
 
   // ── Keyboard: Esc (select parent / deselect), Ctrl+Z (undo) ──
 
@@ -586,17 +600,14 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
   const info = selectedEl ? changesRef.current.get(selectedEl) : null
 
   return (
-    <div data-layout-editor-toolbar style={{
-      display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0',
-      fontFamily: 'system-ui, -apple-system, sans-serif', color: '#e5e5e5', fontSize: '13px',
-    }}>
+    <div data-layout-editor-toolbar className='flex items-center gap-1.5 text-[13px]'>
       <ToolbarButton onClick={() => onEditingChange(!editing)} active={editing}
         title={editing ? 'Exit editing mode' : 'Edit layout — click to select, drag to move, corners to scale, double-click text to edit'}>
         {editing ? '✦ Editing' : '✦ Edit Layout'}
       </ToolbarButton>
 
       {editing && info && (
-        <span style={{ opacity: 0.7, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span className='text-zinc-500 max-w-[200px] truncate'>
           {info.kind}{info.mdxLine !== null ? ` :${info.mdxLine}` : ''}
         </span>
       )}
@@ -613,7 +624,7 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
       )}
 
       {editing && !selectedEl && (
-        <span style={{ opacity: 0.5, fontStyle: 'italic' }}>Click an element in the player</span>
+        <span className='text-zinc-600 italic'>Click an element</span>
       )}
     </div>
   )

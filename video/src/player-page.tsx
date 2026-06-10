@@ -11,6 +11,7 @@
  * - MP4 export via WebCodecs
  */
 
+import './styles.css'
 import { Player, type PlayerRef } from '@remotion/player'
 import { Suspense, useCallback, useEffect, useRef, useSyncExternalStore, useState, type ReactNode } from 'react'
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
@@ -22,6 +23,29 @@ import { LayoutEditor, type SectionMeta } from './layout-editor.tsx'
 const subscribeNoop = () => () => {}
 const getClientMounted = () => true
 const getServerMounted = () => false
+
+function ToolbarSeparator() {
+  return <div className='w-px h-4 bg-white/15' />
+}
+
+function DownloadIcon() {
+  return (
+    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' />
+      <polyline points='7 10 12 15 17 10' />
+      <line x1='12' y1='15' x2='12' y2='3' />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <line x1='18' y1='6' x2='6' y2='18' />
+      <line x1='6' y1='6' x2='18' y2='18' />
+    </svg>
+  )
+}
 
 /**
  * Remotion-aware Suspense fallback. When a section suspends (throws a promise),
@@ -224,12 +248,9 @@ export function PlayerPage({
   }, [])
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '40px 20px' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 600, color: '#fff', marginBottom: 20 }}>
-        Video Preview
-      </h1>
-
-      <div ref={playerContainerRef} style={{ borderRadius: 12, overflow: 'hidden' }}>
+    <div className='flex flex-col items-center justify-center min-h-screen bg-black px-5 py-10'>
+      {/* Player — centered vertically */}
+      <div ref={playerContainerRef} className='w-full max-w-[960px] rounded-xl overflow-hidden'>
         {mounted ? (
           <Player
             key={resetKey}
@@ -245,41 +266,30 @@ export function PlayerPage({
             style={{ width: '100%' }}
           />
         ) : (
-          <div style={{ aspectRatio: '16/9', background: '#050505' }} />
+          <div className='aspect-video bg-[#050505]' />
         )}
       </div>
 
-      <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* Floating toolbar — fixed at bottom center */}
+      <div className='fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-[#1c1c1c] border border-white/10 px-2 py-1.5 shadow-2xl'>
         {rendering ? (
           <>
             <button
               onClick={handleCancel}
-              style={{
-                padding: '10px 20px',
-                borderRadius: 12,
-                border: '1px solid rgba(239,68,68,0.3)',
-                background: 'rgba(239,68,68,0.05)',
-                color: '#f87171',
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 500,
-              }}
+              className='flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer'
             >
+              <XIcon />
               Cancel
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 128, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+            <ToolbarSeparator />
+            <div className='flex items-center gap-2.5 px-2'>
+              <div className='w-24 h-1 rounded-full bg-white/10 overflow-hidden'>
                 <div
-                  style={{
-                    width: `${Math.round(progress * 100)}%`,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: '#6366f1',
-                    transition: 'width 0.3s',
-                  }}
+                  className='h-full rounded-full bg-sky-400 transition-[width] duration-300'
+                  style={{ width: `${Math.round(progress * 100)}%` }}
                 />
               </div>
-              <span style={{ fontSize: 14, color: '#71717a', fontVariantNumeric: 'tabular-nums' }}>
+              <span className='text-[13px] text-zinc-500 tabular-nums'>
                 {Math.round(progress * 100)}%
               </span>
             </div>
@@ -287,20 +297,14 @@ export function PlayerPage({
         ) : (
           <button
             onClick={handleExport}
-            style={{
-              padding: '10px 24px',
-              borderRadius: 12,
-              background: '#6366f1',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 500,
-              border: 'none',
-            }}
+            className='flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium text-sky-950 bg-sky-200 hover:bg-sky-100 transition-colors cursor-pointer'
           >
+            <DownloadIcon />
             Export MP4
           </button>
         )}
+
+        <ToolbarSeparator />
 
         <LayoutEditor
           playerContainerRef={playerContainerRef}
