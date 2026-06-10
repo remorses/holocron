@@ -228,6 +228,57 @@ playwriter -s 1 -e 'console.log(await state.page.evaluate(() => window.egakiSDK.
 // { totalDuration: 450, fps: 30, width: 1920, height: 1080, sectionCount: 3, durationSeconds: 15, currentFrame: 0, isPlaying: false }
 ```
 
+### Get element position
+
+Maps a DOM element's position to composition coordinates (1920×1080 space). Returns pixels and percentages. The Player scales the composition to fit the viewport; this method accounts for that scale factor.
+
+```js
+// Seek to a specific frame, then get the position of an element
+playwriter -s 1 -e "$(cat <<'EOF'
+const pos = await state.page.evaluate(() => {
+  window.egakiSDK.seekTo(0)
+  const el = document.querySelector('.hero-logo')
+  return window.egakiSDK.getElementPosition(el)
+})
+console.log(pos)
+// { x: 810, y: 440, width: 300, height: 200,
+//   xPercent: 42.19, yPercent: 40.74, widthPercent: 15.63, heightPercent: 18.52,
+//   centerX: 960, centerY: 540, centerXPercent: 50, centerYPercent: 50 }
+EOF
+)"
+```
+
+**Layout transition between scenes.** Capture an element's position in scene 1, then use those coordinates to position the same element in scene 2 so it appears to stay in place (or animate from the old position to a new one).
+
+```js
+// 1. Seek to the last frame of scene 1, capture the logo position
+// 2. Seek to the first frame of scene 2, capture the same element
+// 3. The delta tells you how to animate the transition
+playwriter -s 1 -e "$(cat <<'EOF'
+const info = await state.page.evaluate(() => window.egakiSDK.getInfo())
+const fps = info.fps
+
+// Scene 1 ends at frame 149 (5s at 30fps), scene 2 starts at 150
+const scene1Pos = await state.page.evaluate(() => {
+  window.egakiSDK.seekTo(149)
+  return window.egakiSDK.getElementPosition(document.querySelector('.product-card'))
+})
+
+const scene2Pos = await state.page.evaluate(() => {
+  window.egakiSDK.seekTo(150)
+  return window.egakiSDK.getElementPosition(document.querySelector('.product-card'))
+})
+
+console.log('Scene 1 position:', scene1Pos.xPercent + '%', scene1Pos.yPercent + '%')
+console.log('Scene 2 position:', scene2Pos.xPercent + '%', scene2Pos.yPercent + '%')
+console.log('Delta:', {
+  dx: scene2Pos.x - scene1Pos.x,
+  dy: scene2Pos.y - scene1Pos.y,
+})
+EOF
+)"
+```
+
 ### SDK methods
 
 **Player controls** (synchronous, no await needed inside evaluate):
@@ -235,6 +286,10 @@ playwriter -s 1 -e 'console.log(await state.page.evaluate(() => window.egakiSDK.
 - **`getCurrentFrame()`** — returns the frame the player is currently displaying
 - **`play()`** / **`pause()`** / **`toggle()`** — playback control
 - **`isPlaying()`** — returns boolean
+
+**Element position** (synchronous):
+
+**`getElementPosition(element)`** — maps a DOM element to composition coordinates. Returns `{ x, y, width, height, centerX, centerY }` in composition pixels, plus `*Percent` variants (0-100) for all six values. Useful for matching element positions across scenes to build layout transition animations.
 
 **Rendering** (async, returns data URL strings):
 

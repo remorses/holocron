@@ -242,6 +242,7 @@ export function PlayerPage({
       height: 1080,
       sectionCount: sections.length,
       playerRef,
+      playerContainerRef,
     })
   }, [Component, totalDuration, sections.length])
 
