@@ -33,6 +33,35 @@ player-page.tsx (client)
 
 **Media components**: `<Video>` and `<Audio>` from `@remotion/media` are available in MDX.
 
+## Animation utilities — `springFromDuration`, `dspring`, and `EASE` presets
+
+Always use `springFromDuration()` or `dspring()` instead of raw `spring({ config: { damping, stiffness, mass } })`. The physics parameters are hard to reason about; `(duration, bounce)` is intuitive and matches Framer Motion's API.
+
+```tsx
+import { spring } from 'remotion'
+import { springFromDuration, dspring, EASE } from 'holocron-video'
+
+// springFromDuration returns a config object for Remotion's spring()
+const scale = spring({ frame, fps, config: springFromDuration(0.5, 0.3) })
+
+// dspring is the shorthand that calls spring() internally
+const opacity = dspring(frame, fps, 0.6, 0.25)  // 600ms, subtle bounce
+const pop = dspring(frame, fps, 0.4)              // 400ms, no bounce
+
+// EASE presets for interpolate()
+const x = interpolate(frame, [0, 30], [0, 100], {
+  easing: EASE.apple,  // the Apple 75% influence S-curve
+  extrapolateLeft: 'clamp',
+  extrapolateRight: 'clamp',
+})
+```
+
+**`bounce` parameter**: 0 = no overshoot (critically damped), 0.25 = subtle Apple-like, 0.5 = playful, 1 = maximum bounce.
+
+**`EASE` presets**: `apple` (tight S-curve), `enterFast` (arrive with momentum), `exitSlow` (leave with gravity), `snappy` (social media punch), `cinematic` (luxurious slow).
+
+Never use raw `spring({ config: { damping: 15, stiffness: 150 } })` in new code. Convert to `springFromDuration(duration, bounce)` instead.
+
 ## Preamble — composition-level content
 
 Content **before the first `#` heading** in the MDX file is the **preamble**. It is rendered at the Remotion composition level, outside the `<Series>` that sequences sections. This means preamble content persists across all sections for the entire video duration, and renders in the background behind the section content (earlier DOM order = behind).
@@ -231,6 +260,10 @@ playwriter -s 1 -e 'console.log(await state.page.evaluate(() => window.egakiSDK.
 **`getInfo()`** — returns `{ totalDuration, fps, width, height, sectionCount, durationSeconds, currentFrame, isPlaying }`.
 
 All option types are re-exported from `@remotion/web-renderer`. See Remotion docs for full details on each parameter.
+
+## Docs
+
+- **[Lottie to Remotion conversion](docs/lottie-to-remotion.md)**: how to read a Lottie JSON file and reproduce its animations using Remotion's `interpolate()` and `Easing.bezier()`. Covers the full keyframe/easing model, field mapping, overshoot, hold keyframes, per-segment easing, and a conversion algorithm.
 
 ## Key files
 
