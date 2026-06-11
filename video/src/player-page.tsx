@@ -15,12 +15,9 @@ import './styles.css'
 import { Player, type PlayerRef } from '@remotion/player'
 import { Suspense, useCallback, useEffect, useRef, useSyncExternalStore, useState, type ReactNode } from 'react'
 import { AbsoluteFill, Series, useDelayRender } from 'remotion'
-import { TransitionSeries, linearTiming } from '@remotion/transitions'
-import { fade } from '@remotion/transitions/fade'
 import { renderInBrowser } from './render-client'
 import { egakiSDK } from './sdk'
 import { LayoutEditor, type SectionMeta } from './layout-editor.tsx'
-import { SharedRegistryProvider, SharedAnimationLayer } from './mdx-video.tsx'
 
 // Module-level stable callbacks for useSyncExternalStore (never re-subscribes)
 const subscribeNoop = () => () => {}
@@ -105,36 +102,6 @@ interface SectionProps {
   jsx: ReactNode
 }
 
-function SectionContent({ children }: { children: ReactNode }) {
-  return (
-    <Suspense fallback={<SuspenseFallback />}>
-      <AbsoluteFill style={{ background: '#050505' }}>
-        <AbsoluteFill
-          style={{
-            zIndex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '5% 8%',
-            gap: 'clamp(1rem, 2vw, 2.5rem)',
-            // Force Chrome GPU compositing for subpixel text rendering.
-            // Without this, Chrome snaps text positions to whole pixels
-            // causing visible stutter on slow translate/scale animations.
-            // Not supported by the web-renderer canvas export, but the
-            // canvas renderer doesn't have Chrome's pixel snapping issue.
-            // See: https://remotion.dev/docs/troubleshooting/subpixel-rendering
-            perspective: '1000px',
-            willChange: 'transform',
-          }}
-        >
-          {children}
-        </AbsoluteFill>
-      </AbsoluteFill>
-    </Suspense>
-  )
-}
-
 function VideoComposition({
   sections,
   totalDuration,
@@ -144,67 +111,51 @@ function VideoComposition({
   totalDuration: number
   preamble?: ReactNode
 }) {
-  const rootRef = useRef<HTMLDivElement>(null)
-
-  // Check if any section uses transitions
-  const hasTransitions = sections.some((s) => s.transitionFrames > 0)
-
   return (
-    <AbsoluteFill ref={rootRef} style={{ background: '#050505' }}>
-      <SharedRegistryProvider rootRef={rootRef}>
-        {/* Preamble: MDX content before the first heading. Rendered at
-            composition level so it persists across all sections. */}
-        {preamble}
-
-        {hasTransitions ? (
-          // TransitionSeries: sections with transitions use fade crossfade
-          // during the overlap window. Shared elements handle their own
-          // FLIP animation independently.
-          <TransitionSeries>
-            {sections.flatMap((section, i) => {
-              const elements: ReactNode[] = []
-              elements.push(
-                <TransitionSeries.Sequence
-                  key={`seq-${i}`}
-                  durationInFrames={section.durationInFrames}
-                  // @ts-ignore — name prop
-                  name={section.heading || `Section ${i}`}
+    <AbsoluteFill style={{ background: '#050505' }}>
+      {/* Preamble: MDX content before the first heading. Rendered at
+          composition level so it persists across all sections. Runs in the
+          background behind the Series (earlier DOM order = behind). */}
+      {preamble}
+      {/* Sequential sections */}
+      <Series>
+        {sections.map((section, i) => (
+          <Series.Sequence
+            key={i}
+            durationInFrames={section.durationInFrames}
+            // @ts-ignore — name prop exists on Series.Sequence
+            name={section.heading || `Section ${i}`}
+          >
+            <Suspense fallback={<SuspenseFallback />}>
+              {/* Background components inside jsx self-position as AbsoluteFill
+                  layers behind content via DOM order (rendered first = behind). */}
+              <AbsoluteFill style={{ background: '#050505' }}>
+                <AbsoluteFill
+                  style={{
+                    zIndex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '5% 8%',
+                    gap: 'clamp(1rem, 2vw, 2.5rem)',
+                    // Force Chrome GPU compositing for subpixel text rendering.
+                    // Without this, Chrome snaps text positions to whole pixels
+                    // causing visible stutter on slow translate/scale animations.
+                    // Not supported by the web-renderer canvas export, but the
+                    // canvas renderer doesn't have Chrome's pixel snapping issue.
+                    // See: https://remotion.dev/docs/troubleshooting/subpixel-rendering
+                    perspective: '1000px',
+                    willChange: 'transform',
+                  }}
                 >
-                  <SectionContent>{section.jsx}</SectionContent>
-                </TransitionSeries.Sequence>
-              )
-              // Add a transition AFTER this section if it has transitionFrames
-              if (section.transitionFrames > 0 && i < sections.length - 1) {
-                elements.push(
-                  <TransitionSeries.Transition
-                    key={`trans-${i}`}
-                    presentation={fade()}
-                    timing={linearTiming({ durationInFrames: section.transitionFrames })}
-                  />
-                )
-              }
-              return elements
-            })}
-          </TransitionSeries>
-        ) : (
-          // No transitions: use plain Series for efficiency
-          <Series>
-            {sections.map((section, i) => (
-              <Series.Sequence
-                key={i}
-                durationInFrames={section.durationInFrames}
-                // @ts-ignore — name prop
-                name={section.heading || `Section ${i}`}
-              >
-                <SectionContent>{section.jsx}</SectionContent>
-              </Series.Sequence>
-            ))}
-          </Series>
-        )}
-
-        {/* Animation layer for Shared elements — above the Series */}
-        <SharedAnimationLayer />
-      </SharedRegistryProvider>
+                  {section.jsx}
+                </AbsoluteFill>
+              </AbsoluteFill>
+            </Suspense>
+          </Series.Sequence>
+        ))}
+      </Series>
     </AbsoluteFill>
   )
 }
@@ -326,6 +277,53 @@ export function PlayerPage({
             clickToPlay={!editing}
             spaceKeyToPlayOrPause
             style={{ width: '100%' }}
+            errorFallback={({ error }) => (
+              <AbsoluteFill
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#050505',
+                  padding: '5% 8%',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    maxWidth: '80%',
+                    textAlign: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 48,
+                      fontWeight: 600,
+                      color: '#ef4444',
+                      fontFamily:
+                        '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    Render Error
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 24,
+                      fontWeight: 400,
+                      color: '#a1a1aa',
+                      fontFamily:
+                        'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {error.message}
+                  </span>
+                </div>
+              </AbsoluteFill>
+            )}
           />
         ) : (
           <div className='aspect-video bg-[#050505]' />
