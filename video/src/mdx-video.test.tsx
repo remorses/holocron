@@ -29,6 +29,7 @@ function summarize(mdx: string) {
     sections: sections.map((s) => ({
       heading: s.heading,
       durationInFrames: s.durationInFrames,
+      transitionFrames: s.transitionFrames,
       nodes: s.nodes.length,
     })),
   }
@@ -60,16 +61,19 @@ Goodbye
             "durationInFrames": 150,
             "heading": "Intro",
             "nodes": 1,
+            "transitionFrames": 0,
           },
           {
             "durationInFrames": 150,
             "heading": "Middle",
             "nodes": 1,
+            "transitionFrames": 0,
           },
           {
             "durationInFrames": 150,
             "heading": "End",
             "nodes": 1,
+            "transitionFrames": 0,
           },
         ],
       }
@@ -125,8 +129,8 @@ Content
     expect(result.sections[0].durationInFrames).toBe(60)
   })
 
-  test('background before first heading creates implicit section', () => {
-    const result = summarize(`
+  test('background before first heading goes to preamble, not a section', () => {
+    const result = split(`
 <Background>
 <MeshGradientBg colors={['#6366f1']} />
 </Background>
@@ -135,11 +139,10 @@ Content
 
 Content
     `)
-    // Background is now a regular node, creates an implicit first section
-    expect(result.sections).toHaveLength(2)
-    expect(result.sections[0].heading).toBe(null)
-    expect(result.sections[0].nodes).toBe(1) // the <Background> node
-    expect(result.sections[1].heading).toBe('Scene')
+    // Content before the first heading goes to preamble, not an implicit section
+    expect(result.sections).toHaveLength(1)
+    expect(result.sections[0].heading).toBe('Scene')
+    expect(result.preamble.length).toBeGreaterThan(0)
   })
 
   test('background after heading is a regular content node', () => {
@@ -192,17 +195,60 @@ Content
     expect(result.sections[0].heading).toBe('Scene')
   })
 
-  test('content before first heading creates implicit section', () => {
+  test('transition in heading (frames)', () => {
     const result = summarize(`
+# Scene 1 duration=5s transition=20
+
+Content
+
+# Scene 2 duration=3s
+
+More content
+    `)
+    expect(result.sections[0].heading).toBe('Scene 1')
+    expect(result.sections[0].durationInFrames).toBe(150) // 5s * 30fps
+    expect(result.sections[0].transitionFrames).toBe(20)
+    expect(result.sections[1].transitionFrames).toBe(0)
+  })
+
+  test('transition in heading (seconds)', () => {
+    const result = summarize(`
+# Intro duration=3s transition=0.5s
+
+Content
+
+# Outro duration=3s
+
+More
+    `)
+    expect(result.sections[0].transitionFrames).toBe(15) // 0.5s * 30fps
+  })
+
+  test('calculateTotalDuration subtracts transition overlaps', () => {
+    const { sections } = split(`
+# A duration=100 transition=20
+
+x
+
+# B duration=200
+
+y
+    `)
+    // 100 + 200 - 20 = 280
+    expect(calculateTotalDuration(sections)).toBe(280)
+  })
+
+  test('content before first heading goes to preamble', () => {
+    const result = split(`
 Some orphan content
 
 # Scene
 
 More content
     `)
-    expect(result.sections).toHaveLength(2)
-    expect(result.sections[0].heading).toBe(null)
-    expect(result.sections[0].nodes).toBeGreaterThan(0)
+    expect(result.sections).toHaveLength(1)
+    expect(result.sections[0].heading).toBe('Scene')
+    expect(result.preamble.length).toBeGreaterThan(0)
   })
 })
 

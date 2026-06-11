@@ -219,6 +219,7 @@ export const app = new Spiceflow()
     const sections = result.sections.map((section) => ({
       heading: section.heading,
       durationInFrames: section.durationInFrames,
+      transitionFrames: section.transitionFrames,
       jsx: renderNodes(section.nodes),
     }))
 

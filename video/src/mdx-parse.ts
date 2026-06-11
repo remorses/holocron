@@ -52,36 +52,47 @@ function parseFrontmatter(mdast: Root): VideoFrontmatter {
 // Duration parsing from heading text
 // ---------------------------------------------------------------------------
 
-const DURATION_RE = /\s+duration=(\d+(?:\.\d+)?)(s|fps|beats?)?\s*$/i
+const HEADING_PROP_RE = /\s+(duration|transition)=(\d+(?:\.\d+)?)(s|fps|beats?)?/gi
 
 interface ParsedHeading {
   label: string
   durationInFrames: number | null
+  /** Transition overlap with the NEXT section, in frames. 0 = hard cut. */
+  transitionFrames: number | null
 }
 
-function parseHeadingDuration(
+function parseHeadingProps(
   rawText: string,
   fps: number,
   bpm: number,
 ): ParsedHeading {
-  const match = rawText.match(DURATION_RE)
-  if (!match) return { label: rawText.trim(), durationInFrames: null }
-
-  const value = Number(match[1])
-  const unit = (match[2] || '').toLowerCase()
-  const label = rawText.slice(0, match.index).trim()
+  let label = rawText
+  let durationInFrames: number | null = null
+  let transitionFrames: number | null = null
   const framesPerBeat = fps / (bpm / 60)
 
-  let frames: number
-  if (unit === 's') {
-    frames = Math.round(value * fps)
-  } else if (unit === 'beat' || unit === 'beats') {
-    frames = Math.round(value * framesPerBeat)
-  } else {
-    frames = Math.round(value)
-  }
+  // Strip all key=value props from the heading text
+  label = label.replace(HEADING_PROP_RE, (match, key, value, unit) => {
+    const v = Number(value)
+    const u = (unit || '').toLowerCase()
+    let frames: number
+    if (u === 's') {
+      frames = Math.round(v * fps)
+    } else if (u === 'beat' || u === 'beats') {
+      frames = Math.round(v * framesPerBeat)
+    } else {
+      frames = Math.round(v)
+    }
 
-  return { label: label || 'Untitled', durationInFrames: frames }
+    if (key.toLowerCase() === 'duration') {
+      durationInFrames = frames
+    } else if (key.toLowerCase() === 'transition') {
+      transitionFrames = frames
+    }
+    return ''
+  }).trim()
+
+  return { label: label || 'Untitled', durationInFrames, transitionFrames }
 }
 
 // ---------------------------------------------------------------------------
@@ -92,6 +103,8 @@ export interface MdxSection {
   heading: string | null
   nodes: RootContent[]
   durationInFrames: number
+  /** Transition overlap with the NEXT section, in frames. 0 = hard cut. */
+  transitionFrames: number
 }
 
 export interface SplitResult {
@@ -139,11 +152,12 @@ export function splitIntoSections(mdast: Root): SplitResult {
     if (node.type === 'heading') {
       beforeFirstHeading = false
       const rawText = extractHeadingText(node)
-      const parsed = parseHeadingDuration(rawText, fps, bpm)
+      const parsed = parseHeadingProps(rawText, fps, bpm)
       current = {
         heading: parsed.label,
         nodes: [],
         durationInFrames: parsed.durationInFrames ?? defaultDuration,
+        transitionFrames: parsed.transitionFrames ?? 0,
       }
       sections.push(current)
       continue
@@ -162,7 +176,16 @@ export function splitIntoSections(mdast: Root): SplitResult {
   return { sections, frontmatter, imports, preamble }
 }
 
-/** Calculate total composition duration: simple sum since no transitions */
+/** Calculate total composition duration, subtracting transition overlaps. */
 export function calculateTotalDuration(sections: MdxSection[]): number {
-  return sections.reduce((sum, s) => sum + s.durationInFrames, 0)
+  let total = 0
+  for (const s of sections) {
+    total += s.durationInFrames
+  }
+  // Each section's transitionFrames creates an overlap with the next section,
+  // reducing total duration by that amount.
+  for (const s of sections) {
+    total -= s.transitionFrames
+  }
+  return total
 }
