@@ -597,20 +597,12 @@ export function LayoutEditor({ playerContainerRef, playerRef, editing, onEditing
     onReset()
   }, [onReset])
 
-  const info = selectedEl ? changesRef.current.get(selectedEl) : null
-
   return (
     <div data-layout-editor-toolbar className='flex items-center gap-1.5 text-[13px]'>
       <ToolbarButton onClick={() => onEditingChange(!editing)} active={editing}
         title={editing ? 'Exit editing mode' : 'Edit layout — click to select, drag to move, corners to scale, double-click text to edit'}>
         {editing ? '✦ Editing' : '✦ Edit Layout'}
       </ToolbarButton>
-
-      {editing && info && (
-        <span className='text-zinc-500 max-w-[200px] truncate'>
-          {info.kind}{info.mdxLine !== null ? ` :${info.mdxLine}` : ''}
-        </span>
-      )}
 
       {editing && changesCount > 0 && (
         <>
