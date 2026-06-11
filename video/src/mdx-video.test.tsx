@@ -432,6 +432,336 @@ import { CONFIG } from './config'
 })
 
 // ---------------------------------------------------------------------------
+// keyframes() — animation interpolation
+// ---------------------------------------------------------------------------
+
+import { keyframes, fromLottieProperty, extractLottieDimensionEasing } from './mdx-video'
+
+describe('keyframes', () => {
+  test('single keyframe returns its value', () => {
+    expect(keyframes(0, [{ time: 0, value: 42 }])).toBe(42)
+    expect(keyframes(100, [{ time: 0, value: 42 }])).toBe(42)
+  })
+
+  test('linear interpolation between two keyframes', () => {
+    const kfs = [
+      { time: 0, value: 0 },
+      { time: 100, value: 100 },
+    ] as const
+    expect(keyframes(0, [...kfs])).toBe(0)
+    expect(keyframes(50, [...kfs])).toBe(50)
+    expect(keyframes(100, [...kfs])).toBe(100)
+  })
+
+  test('clamps outside keyframe range', () => {
+    const kfs = [
+      { time: 10, value: 0 },
+      { time: 20, value: 100 },
+    ]
+    expect(keyframes(0, kfs)).toBe(0)
+    expect(keyframes(30, kfs)).toBe(100)
+  })
+
+  test('bezier easing changes interpolation curve', () => {
+    const linear = [
+      { time: 0, value: 0 },
+      { time: 100, value: 100 },
+    ]
+    const eased = [
+      { time: 0, value: 0, easing: [0.8, 0, 1, 1] as [number, number, number, number] },
+      { time: 100, value: 100 },
+    ]
+    const linearMid = keyframes(50, linear)
+    const easedMid = keyframes(50, eased)
+    // Strong ease-in at midpoint should be well below linear
+    expect(linearMid).toBe(50)
+    expect(easedMid).toBeLessThan(40)
+    // But endpoints should be the same
+    expect(keyframes(0, eased)).toBe(0)
+    expect(keyframes(100, eased)).toBe(100)
+  })
+
+  test('overshoot with y > 1', () => {
+    const kfs = [
+      { time: 0, value: 0, easing: [0.34, 1.56, 0.64, 1] as [number, number, number, number] },
+      { time: 100, value: 100 },
+    ]
+    // With overshoot easing, some intermediate frame should exceed 100
+    const values = Array.from({ length: 101 }, (_, i) => keyframes(i, kfs))
+    const max = Math.max(...values)
+    expect(max).toBeGreaterThan(100)
+    // Endpoints should still be correct
+    expect(values[0]).toBe(0)
+    expect(values[100]).toBe(100)
+  })
+
+  test('hold keyframe (step function)', () => {
+    const kfs = [
+      { time: 0, value: 0, hold: true },
+      { time: 30, value: 100 },
+      { time: 60, value: 200 },
+    ]
+    expect(keyframes(0, kfs)).toBe(0)
+    expect(keyframes(15, kfs)).toBe(0)
+    expect(keyframes(29, kfs)).toBe(0)
+    expect(keyframes(30, kfs)).toBe(100)
+    expect(keyframes(45, kfs)).toBe(150)
+  })
+
+  test('multi-keyframe sequence', () => {
+    const kfs = [
+      { time: 0, value: 0 },
+      { time: 50, value: 100 },
+      { time: 100, value: 0 },
+    ]
+    expect(keyframes(0, kfs)).toBe(0)
+    expect(keyframes(25, kfs)).toBe(50)
+    expect(keyframes(50, kfs)).toBe(100)
+    expect(keyframes(75, kfs)).toBe(50)
+    expect(keyframes(100, kfs)).toBe(0)
+  })
+
+  test('per-segment easing in multi-keyframe', () => {
+    const linear = [
+      { time: 0, value: 0 },
+      { time: 50, value: 100 },
+      { time: 100, value: 0 },
+    ]
+    const eased = [
+      { time: 0, value: 0, easing: [0.8, 0, 1, 1] as [number, number, number, number] },
+      { time: 50, value: 100, easing: [0.8, 0, 1, 1] as [number, number, number, number] },
+      { time: 100, value: 0 },
+    ]
+    // Midpoints of each segment: linear gives 50, strong ease-in gives much less
+    expect(keyframes(25, linear)).toBe(50)
+    expect(keyframes(25, eased)).toBeLessThan(40)
+  })
+
+  test('vector keyframes return arrays', () => {
+    const kfs = [
+      { time: 0, value: [0, 0] },
+      { time: 100, value: [200, 400] },
+    ]
+    const result = keyframes(50, kfs)
+    expect(result).toEqual([100, 200])
+  })
+
+  test('vector keyframes clamp at boundaries', () => {
+    const kfs = [
+      { time: 10, value: [0, 100] },
+      { time: 20, value: [50, 200] },
+    ]
+    expect(keyframes(0, kfs)).toEqual([0, 100])
+    expect(keyframes(30, kfs)).toEqual([50, 200])
+  })
+
+  test('vector hold keyframe', () => {
+    const kfs = [
+      { time: 0, value: [10, 20], hold: true },
+      { time: 30, value: [100, 200] },
+    ]
+    expect(keyframes(0, kfs)).toEqual([10, 20])
+    expect(keyframes(15, kfs)).toEqual([10, 20])
+    expect(keyframes(30, kfs)).toEqual([100, 200])
+  })
+
+  test('dimensionEasing overrides per-dimension', () => {
+    const kfs = [
+      { time: 0, value: [0, 0], easing: [0, 0, 1, 1] as [number, number, number, number] },
+      { time: 100, value: [100, 100] },
+    ]
+    // Without dimension easing, both dimensions are linear
+    const linear = keyframes(50, kfs) as number[]
+    expect(linear[0]).toBeCloseTo(50, 0)
+    expect(linear[1]).toBeCloseTo(50, 0)
+
+    // With dimension easing overriding dim 1 with strong ease-in
+    const withDimEasing = keyframes(50, kfs, {
+      dimensionEasing: [undefined, [0.8, 0, 1, 1]],
+    }) as number[]
+    // Dim 0 stays linear (uses keyframe easing which is linear)
+    expect(withDimEasing[0]).toBeCloseTo(50, 0)
+    // Dim 1 uses strong ease-in, should be well below 50
+    expect(withDimEasing[1]).toBeLessThan(40)
+  })
+
+  test('empty keyframes throws', () => {
+    expect(() => keyframes(0, [])).toThrow('at least one keyframe')
+  })
+})
+
+describe('fromLottieProperty', () => {
+  test('static scalar property', () => {
+    const result = fromLottieProperty({ a: 0, k: 50 })
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "time": 0,
+          "value": 50,
+        },
+      ]
+    `)
+  })
+
+  test('static vector property', () => {
+    const result = fromLottieProperty({ a: 0, k: [100, 200] })
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "time": 0,
+          "value": [
+            100,
+            200,
+          ],
+        },
+      ]
+    `)
+  })
+
+  test('animated scalar property', () => {
+    const result = fromLottieProperty({
+      a: 1,
+      k: [
+        { t: 0, s: [0], o: { x: [0.333], y: [0] }, i: { x: [0.667], y: [1] } },
+        { t: 30, s: [100] },
+      ],
+    })
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "easing": [
+            0.333,
+            0,
+            0.667,
+            1,
+          ],
+          "time": 0,
+          "value": 0,
+        },
+        {
+          "time": 30,
+          "value": 100,
+        },
+      ]
+    `)
+  })
+
+  test('animated scalar with hold', () => {
+    const result = fromLottieProperty({
+      a: 1,
+      k: [
+        { t: 0, s: [50], h: 1 },
+        { t: 30, s: [100] },
+      ],
+    })
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "hold": true,
+          "time": 0,
+          "value": 50,
+        },
+        {
+          "time": 30,
+          "value": 100,
+        },
+      ]
+    `)
+  })
+
+  test('animated vector property', () => {
+    const result = fromLottieProperty({
+      a: 1,
+      k: [
+        { t: 0, s: [100, 200], o: { x: [0.5, 0.3], y: [0, 0.2] }, i: { x: [0.5, 0.7], y: [1, 0.8] } },
+        { t: 60, s: [500, 400] },
+      ],
+    })
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "easing": [
+            0.5,
+            0,
+            0.5,
+            1,
+          ],
+          "time": 0,
+          "value": [
+            100,
+            200,
+          ],
+        },
+        {
+          "time": 60,
+          "value": [
+            500,
+            400,
+          ],
+        },
+      ]
+    `)
+  })
+
+  test('roundtrip: fromLottieProperty -> keyframes produces correct values', () => {
+    const kfs = fromLottieProperty({
+      a: 1,
+      k: [
+        { t: 0, s: [0], o: { x: [0], y: [0] }, i: { x: [1], y: [1] } },
+        { t: 100, s: [200] },
+      ],
+    }) as any
+    // Linear easing (o={0,0} i={1,1}), so midpoint should be 100
+    expect(keyframes(50, kfs)).toBe(100)
+    expect(keyframes(0, kfs)).toBe(0)
+    expect(keyframes(100, kfs)).toBe(200)
+  })
+})
+
+describe('extractLottieDimensionEasing', () => {
+  test('returns undefined for scalar properties', () => {
+    const result = extractLottieDimensionEasing(
+      { a: 1, k: [{ t: 0, s: [0], o: { x: [0.5], y: [0] }, i: { x: [0.5], y: [1] } }, { t: 30, s: [100] }] },
+      0,
+    )
+    expect(result).toBeUndefined()
+  })
+
+  test('returns per-dimension curves for vector properties', () => {
+    const result = extractLottieDimensionEasing(
+      {
+        a: 1,
+        k: [
+          { t: 0, s: [0, 0], o: { x: [0.3, 0.5], y: [0, 0.2] }, i: { x: [0.7, 0.8], y: [1, 0.9] } },
+          { t: 30, s: [100, 200] },
+        ],
+      },
+      0,
+    )
+    expect(result).toMatchInlineSnapshot(`
+      [
+        [
+          0.3,
+          0,
+          0.7,
+          1,
+        ],
+        [
+          0.5,
+          0.2,
+          0.8,
+          0.9,
+        ],
+      ]
+    `)
+  })
+
+  test('returns undefined for static properties', () => {
+    expect(extractLottieDimensionEasing({ a: 0, k: [100, 200] }, 0)).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
 // MDX file imports — React composition approach
 // ---------------------------------------------------------------------------
 
