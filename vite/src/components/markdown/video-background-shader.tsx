@@ -579,14 +579,37 @@ const DEFAULT_CONFIG: Required<Omit<VideoShaderConfig, 'src'>> = {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function hexToRgbNormalized(hex: string): { r: number; g: number; b: number } {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!result) return { r: 1, g: 1, b: 1 }
-  return {
-    r: Number.parseInt(result[1]!, 16) / 255,
-    g: Number.parseInt(result[2]!, 16) / 255,
-    b: Number.parseInt(result[3]!, 16) / 255,
+/** Parse any common CSS color into normalized RGBA (0-1).
+ *  Supports: #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(). */
+function parseColorNormalized(color: string): { r: number; g: number; b: number; a: number } {
+  const trimmed = color.trim()
+
+  // rgb(r, g, b) or rgba(r, g, b, a) — values 0-255, alpha 0-1
+  const rgbMatch = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)$/i.exec(trimmed)
+  if (rgbMatch) {
+    return {
+      r: Number(rgbMatch[1]) / 255,
+      g: Number(rgbMatch[2]) / 255,
+      b: Number(rgbMatch[3]) / 255,
+      a: rgbMatch[4] != null ? Number(rgbMatch[4]) : 1,
+    }
   }
+
+  // Hex formats: #rgb, #rgba, #rrggbb, #rrggbbaa
+  const s = trimmed.replace(/^#/, '')
+  let r = 1, g = 1, b = 1, a = 1
+  if (s.length === 3 || s.length === 4) {
+    r = Number.parseInt(s[0]! + s[0]!, 16) / 255
+    g = Number.parseInt(s[1]! + s[1]!, 16) / 255
+    b = Number.parseInt(s[2]! + s[2]!, 16) / 255
+    if (s.length === 4) a = Number.parseInt(s[3]! + s[3]!, 16) / 255
+  } else if (s.length === 6 || s.length === 8) {
+    r = Number.parseInt(s.slice(0, 2), 16) / 255
+    g = Number.parseInt(s.slice(2, 4), 16) / 255
+    b = Number.parseInt(s.slice(4, 6), 16) / 255
+    if (s.length === 8) a = Number.parseInt(s.slice(6, 8), 16) / 255
+  }
+  return { r, g, b, a }
 }
 
 /** Render characters onto a single-row texture atlas using Canvas 2D.
@@ -737,7 +760,7 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   gl.uniform1f(splatP.loc('radius'), config.fluidSplatRadius)
 
   const gridLayoutIndex = { straight: 0, radial: 1, 'alternating-grid': 2 }[config.gridLayout] || 0
-  const dotRgb = hexToRgbNormalized(config.dotColor)
+  const dotRgba = parseColorNormalized(config.dotColor)
 
   gl.useProgram(displayP.program)
   gl.uniform1f(displayP.loc('fluidStrength'), config.fluidStrength)
@@ -748,8 +771,9 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   gl.uniform1f(displayP.loc('animSpeed'), config.animSpeed)
   gl.uniform1f(displayP.loc('gamma'), config.gamma)
   gl.uniform1i(displayP.loc('gridLayout'), gridLayoutIndex)
-  gl.uniform3f(displayP.loc('dotColor'), dotRgb.r, dotRgb.g, dotRgb.b)
-  gl.uniform1f(displayP.loc('dotAlphaMultiplier'), config.dotAlphaMultiplier)
+  gl.uniform3f(displayP.loc('dotColor'), dotRgba.r, dotRgba.g, dotRgba.b)
+  // Multiply explicit dotAlphaMultiplier with alpha parsed from the hex color
+  gl.uniform1f(displayP.loc('dotAlphaMultiplier'), config.dotAlphaMultiplier * dotRgba.a)
   gl.uniform1i(displayP.loc('enableMask'), config.enableMask ? 1 : 0)
   gl.uniform1i(displayP.loc('dotsEnabled'), config.dotsEnabled ? 1 : 0)
   gl.uniform1f(displayP.loc('minLuminance'), config.minLuminance)
@@ -818,7 +842,7 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
     velocity.swap()
 
     setTexture(gl, splatP, 'uTarget', dye.read.texture, 0)
-    gl.uniform3f(splatP.loc('color'), dotRgb.r * 0.8, dotRgb.g * 0.8, dotRgb.b * 0.8)
+    gl.uniform3f(splatP.loc('color'), dotRgba.r * 0.8, dotRgba.g * 0.8, dotRgba.b * 0.8)
     drawPass(gl, dye.write)
     dye.swap()
   }
