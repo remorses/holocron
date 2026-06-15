@@ -59,6 +59,8 @@ export function getAuth() {
     secret: env.BETTER_AUTH_SECRET,
     database: drizzleAdapter(db, { provider: 'sqlite' }),
     session: {
+      expiresIn: 60 * 60 * 24 * 365, // 1 year — CLI device-flow tokens should last long
+      updateAge: 60 * 60 * 24, // refresh expiry every 1 day of activity
       cookieCache: {
         enabled: true,
         maxAge: 5 * 60,
