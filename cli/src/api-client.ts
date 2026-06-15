@@ -64,6 +64,20 @@ export function getApiClient() {
   return createSessionClient(baseUrl, token)
 }
 
+/** Create an API client that accepts either an API key (HOLOCRON_KEY) or a session
+ *  token. Use this for read-only endpoints that support both auth methods. */
+export function getManagementClient() {
+  const baseUrl = getBaseUrl()
+  const apiKey = getHolocronApiKey()
+  if (apiKey) return createApiKeyClient(baseUrl, apiKey)
+
+  const token = getSessionToken(baseUrl)
+  if (token) return createSessionClient(baseUrl, token)
+
+  const envNames = HOLOCRON_API_KEY_ENV_NAMES.join(' or ')
+  throw new Error(`Not authenticated. Set ${envNames} or run ${loginHint(baseUrl)} first.`)
+}
+
 export type DeployAuth =
   | { type: 'apikey'; key: string; baseUrl: string }
   | { type: 'session'; token: string; baseUrl: string }

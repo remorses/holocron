@@ -442,6 +442,126 @@ export const apiApp = new Spiceflow()
     },
   })
 
+  // ── Subscriptions ────────────────────────────────────────────────────
+
+  .route({
+    method: 'GET',
+    path: '/api/v0/subscriptions/:projectId',
+    params: z.object({
+      projectId: z.string().describe('Project ULID.'),
+    }),
+    detail: {
+      hide: true,
+      summary: 'Get project subscription',
+      description: 'Returns the active subscription for a project, or null if none.',
+      tags: ['Subscriptions'],
+    },
+    response: {
+      200: z.object({
+        subscription: z.object({
+          subscriptionId: z.string(),
+          status: z.string(),
+          interval: z.enum(['month', 'year']).nullable(),
+          currentPeriodEnd: epochMsField().nullable(),
+          cancelAtPeriodEnd: z.boolean(),
+        }).nullable(),
+      }),
+    },
+    async handler({ request, params }) {
+      const auth = await requireManagementAuth(request)
+      const db = getDb()
+      const { projectId } = params
+
+      // Verify the caller has access to this project's org
+      const project = await db.query.project.findFirst({ where: { projectId } })
+      if (!project) throw json({ error: 'project not found' }, { status: 404 })
+
+      if (auth.type === 'session') {
+        const membership = await db.query.orgMember.findFirst({
+          where: { userId: auth.userId, orgId: project.orgId },
+        })
+        if (!membership) throw json({ error: 'not a member of this organization' }, { status: 403 })
+      } else if (auth.type === 'api-key' && auth.projectId !== projectId) {
+        throw json({ error: 'API key is scoped to a different project' }, { status: 403 })
+      }
+
+      const { getProjectSubscription } = await import('./db.ts')
+      const subscription = await getProjectSubscription(projectId)
+      return { subscription }
+    },
+  })
+
+  .route({
+    method: 'POST',
+    path: '/api/v0/subscriptions/checkout',
+    request: z.object({
+      projectId: z.string().min(1).describe('Project ULID to subscribe.'),
+      interval: z.enum(['monthly', 'yearly']).describe('Billing interval.'),
+    }),
+    detail: {
+      hide: true,
+      summary: 'Create checkout session',
+      description: 'Creates a Stripe Checkout session for subscribing a project. Returns the checkout URL. If the project already has an active subscription, returns a billing portal URL instead.',
+      tags: ['Subscriptions'],
+    },
+    response: {
+      200: z.object({
+        url: z.string().describe('Stripe Checkout or Billing Portal URL.'),
+        alreadySubscribed: z.boolean().describe('True when redirecting to portal instead of checkout.'),
+      }),
+      403: ErrorResponse,
+      404: ErrorResponse,
+    },
+    async handler({ request }) {
+      const session = await requireSession(request)
+      const body = await request.json()
+      const db = getDb()
+
+      const project = await db.query.project.findFirst({ where: { projectId: body.projectId } })
+      if (!project) throw json({ error: 'project not found' }, { status: 404 })
+
+      const membership = await db.query.orgMember.findFirst({
+        where: { userId: session.userId, orgId: project.orgId },
+      })
+      if (!membership) throw json({ error: 'not a member of this organization' }, { status: 403 })
+      if (membership.role !== 'admin') throw json({ error: 'only admins can manage billing' }, { status: 403 })
+
+      const { getOrCreateStripeCustomer, getProPriceId, getStripe } = await import('./lib/stripe.ts')
+      const { getProjectSubscription, getBaseUrl } = await import('./db.ts')
+      const customerId = await getOrCreateStripeCustomer({ orgId: project.orgId, email: session.user.email })
+      if (customerId instanceof Error) throw customerId
+
+      const stripe = getStripe()
+      const returnUrl = new URL(`/dashboard/projects/${body.projectId}/billing`, getBaseUrl()).toString()
+
+      // If already subscribed, return billing portal instead
+      const existing = await getProjectSubscription(body.projectId)
+      if (existing) {
+        const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: returnUrl })
+        return { url: portal.url, alreadySubscribed: true }
+      }
+
+      const billingInterval: 'monthly' | 'yearly' = body.interval === 'monthly' ? 'monthly' : 'yearly'
+      const priceId = await getProPriceId(billingInterval)
+      if (priceId instanceof Error) throw priceId
+
+      const checkout = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        customer: customerId,
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: returnUrl,
+        cancel_url: returnUrl,
+        allow_promotion_codes: true,
+        client_reference_id: body.projectId,
+        metadata: { orgId: project.orgId, projectId: body.projectId },
+        subscription_data: { metadata: { orgId: project.orgId, projectId: body.projectId } },
+      })
+      if (!checkout.url) throw new Error('Checkout session has no URL')
+
+      return { url: checkout.url, alreadySubscribed: false }
+    },
+  })
+
   // ── Deployment registration (OIDC only, called at build time) ──
 
   // Called by the holocron vite plugin during `vite build` in GitHub Actions.

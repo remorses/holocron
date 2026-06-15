@@ -9,6 +9,7 @@ import { keysCli } from './keys.ts'
 import { projectsCli } from './projects.ts'
 import { createCli } from './create.ts'
 import { deployCli } from './deploy.ts'
+import { subscribeCli } from './subscribe.ts'
 
 export const cli = goke('holocron')
   .option('--api-url [url]', 'Holocron API URL (default: https://holocron.so)')
@@ -22,6 +23,7 @@ export const cli = goke('holocron')
   .use(projectsCli)
   .use(createCli)
   .use(deployCli)
+  .use(subscribeCli)
 
 cli.help()
 cli.version(packageJson.version)
