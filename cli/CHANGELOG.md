@@ -1,3 +1,23 @@
+## 0.17.0
+
+1. **New `holocron subscribe` command** — subscribe a project to Holocron Pro directly from the CLI. Opens Stripe Checkout in the browser. Prompts interactively for project and billing interval when flags are omitted:
+
+   ```bash
+   # Interactive mode
+   holocron subscribe
+
+   # Non-interactive
+   holocron subscribe --project <projectId> --interval yearly
+   ```
+
+   If the project already has an active subscription, opens the Stripe billing portal instead.
+
+2. **New `holocron subscription status` command** — check the current subscription state for a project. Works with both session auth and API key auth (`HOLOCRON_KEY`):
+
+   ```bash
+   holocron subscription status --project <projectId>
+   ```
+
 ## 0.16.0
 
 1. **New `--base-path` flag for `holocron deploy`** — deploy your docs at a subpath on your own domain instead of a separate subdomain:

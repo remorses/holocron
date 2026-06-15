@@ -1,5 +1,33 @@
 # @holocron.so/vite
 
+## 0.21.0
+
+1. **Standalone ChatWidget with shadow DOM isolation** — the AI chat component is now available as a drop-in widget via `@holocron.so/vite/chat`. It renders inside a shadow DOM host so styles don't leak in or out. Supports a `theme` prop (`'light'` | `'dark'` | `'auto'`), a zustand-based `useChatWidget()` hook for programmatic control, and works outside of holocron sites as a standalone component.
+
+2. **GitHub star count in navbar and footer** — links pointing to GitHub repos now automatically show the star count (e.g. "3.6k stars"). Stars are fetched server-side with a 3-layer cache (in-memory 1h, Cloudflare Cache API 1h, GitHub API fallback) and streamed to the client via RSC flight so the page renders instantly without blocking.
+
+3. **Broken asset detection at build time** — local image, video, and audio references in MDX are validated during the build. Missing files produce warnings with page source and line number. Covers markdown images, JSX `<Image>`, `<img>`, `<video>`, `<audio>`, `<source>`, `poster` attributes, and frontmatter `og:image`/`twitter:image` paths. Remote image fetches now have a 5-second timeout to prevent builds from hanging.
+
+4. **`generateHolocronData` for multi-tenant pipelines** — new export for building holocron data programmatically outside the Vite plugin, useful for multi-tenant hosting platforms that serve many doc sites from a single deployment.
+
+5. **Deferred virtual tab providers in dev** — OpenAPI, changelog, and MCP providers now run in the background instead of blocking dev server startup. Doc pages are available immediately; provider-generated pages appear a moment later via `rsc:update`. Build mode is unchanged.
+
+6. **Resolve relative `og:image` and `twitter:image` URLs to absolute** — social crawlers (Twitter, Discord, Slack, LinkedIn) require absolute URLs. Relative paths like `/images/my-og.png` in frontmatter are now resolved against the request origin automatically. Frontmatter image paths also go through the image pipeline for cache-busted hashing.
+
+7. **Footer layout improvements** — sites with 2 or fewer link columns now render them inline with the logo on the same row. Sites with 3+ columns center the logo above. Footer group titles are smaller and more refined.
+
+8. **Tooltips on navbar and footer icons** — icon-only navbar links and footer social icons now show a tooltip on hover with the link label or platform name.
+
+9. **Auto-unwrap `<p>` from native JSX headings in MDX** — multi-line `<h1>`, `<h2>`, etc. in MDX no longer get wrapped in an `editorial-prose` div. Both single-line and multi-line JSX headings now produce identical clean output.
+
+10. **Fixed Safari `VideoBackgroundShader` compositing** — premultiplied shader color output before WebGL canvas compositing so low-opacity dots and ASCII glyphs fade correctly in Safari.
+
+11. **Fixed slug collision in page chunk names** — pages with similar slugs (e.g. `api/users` vs `api--users`) no longer collide. Chunk filenames now include a short hash suffix.
+
+12. **Fixed sidebar horizontal overflow** — nav items with badges (API method, deprecated, custom tags) now truncate the title instead of pushing the sidebar wider.
+
+13. **Deterministic named RSC chunks** — virtual modules emit stable chunk names for better caching across builds.
+
 ## 0.20.0
 
 1. **Auto-generate `<meta name="description">` from page body text** — pages without an explicit `description` in YAML frontmatter now get a meta description extracted from the first paragraphs of the MDX content, truncated at ~160 characters on a word boundary. Headings, code blocks, and JSX elements are skipped. Frontmatter `description` always takes precedence. No extra MDX parsing needed; reuses the mdast tree already produced during the build.
