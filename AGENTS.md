@@ -610,6 +610,28 @@ The user-facing apps wrap their dev server with `tuistory --` in `package.json`.
 
 The `integration-tests` fixtures do NOT use tuistory — their e2e harness spawns Vite directly (detached process groups + log-file piping) and tuistory would interfere with teardown.
 
+## Subscriptions
+
+Holocron Pro is a per-site subscription ($99/month or $990/year). It unlocks the full AI chat model, unlimited preview deployments, and subpath hosting (`--base-path`). Free sites get one trial deployment and a limited AI model. See https://holocron.so/docs/pricing for details.
+
+Subscribe a project from the CLI:
+
+```bash
+# Interactive (prompts for project and interval)
+holocron subscribe
+
+# Non-interactive
+holocron subscribe --project <projectId> --interval yearly
+```
+
+Check subscription status (works with both session auth and `HOLOCRON_KEY`):
+
+```bash
+holocron subscription status --project <projectId>
+```
+
+The `subscribe` command creates a Stripe Checkout session via `POST /api/v0/subscriptions/checkout` and opens it in the browser. If the project already has an active subscription, it opens the Stripe billing portal instead.
+
 ## Deployments
 
 **Never deploy unless the user explicitly asks to deploy.** Do not deploy after making changes, fixing bugs, or finishing a task. Wait for the user to say "deploy" or similar.
