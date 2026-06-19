@@ -49,16 +49,49 @@ function extractSubdomain(hostname: string): string | undefined {
   return undefined
 }
 
+/** Check if a hostname belongs to holocron's own infrastructure. */
+function isHolocronHostname(hostname: string): boolean {
+  return hostname === 'holocron.so'
+    || hostname.endsWith('.holocron.so')
+    || hostname === 'holocron.live'
+    || hostname.endsWith('.holocron.live')
+    || hostname === 'holocronsites.com'
+    || hostname.endsWith('.holocronsites.com')
+}
+
 /** Resolve a custom domain to a project subdomain via KV.
  *  KV key: "custom-domain:{hostname}" → subdomain string.
- *  Written by the domain API when a custom domain is added,
- *  and updated by deploy finalize when a new production deploy goes live. */
+ *  Written by the domain API when a custom domain becomes active,
+ *  updated by deploy finalize, and lazily repaired by resolveCustomDomainFromD1
+ *  on first routed request if KV is missing (e.g. Cloudflare validated the
+ *  hostname before the status endpoint was polled). */
 async function resolveCustomDomain(hostname: string): Promise<string | null> {
   const subdomain = await env.SITES_KV.get(
     `custom-domain:${hostname}`,
     { type: 'text', cacheTtl: 60 },
   )
   return subdomain || null
+}
+
+/** D1 fallback for custom domain resolution when KV has no entry.
+ *  If the request reached this worker through Cloudflare SSL for SaaS,
+ *  Cloudflare already validated DNS ownership. We just need the project
+ *  subdomain to serve the site. Writes KV so subsequent requests are fast. */
+async function resolveCustomDomainFromD1(hostname: string): Promise<string | null> {
+  const row = await env.DB.prepare(`
+    SELECT p.subdomain AS subdomain
+    FROM domain d
+    INNER JOIN project p ON p.project_id = d.project_id
+    WHERE d.hostname = ?
+      AND p.subdomain IS NOT NULL
+    LIMIT 1
+  `).bind(hostname).first<{ subdomain: string }>()
+
+  if (!row?.subdomain) return null
+
+  // Write KV so subsequent requests skip the D1 query
+  await env.SITES_KV.put(`custom-domain:${hostname}`, row.subdomain)
+  return row.subdomain
 }
 
 /** Resolve site info from KV. Written at deploy finalize time.
@@ -165,8 +198,14 @@ export default {
       // Custom domain: look up hostname in KV to resolve the project subdomain.
       // Custom domains CNAME to cname.holocron.so; Cloudflare SSL for SaaS
       // routes them to this worker via the fallback origin.
-      if (!subdomain) {
+      // KV is the fast path; D1 is the fallback for first-request after
+      // Cloudflare validates the hostname (before the status endpoint is polled).
+      if (!subdomain && !isHolocronHostname(url.hostname)) {
         subdomain = await resolveCustomDomain(url.hostname) ?? undefined
+
+        if (!subdomain) {
+          subdomain = await resolveCustomDomainFromD1(url.hostname) ?? undefined
+        }
       }
 
       if (!subdomain) {
@@ -201,7 +240,22 @@ export default {
           throw new Error(`No ssr/index.js found for site ${site.subdomain} v${site.version}`)
         }
 
+        // Polyfill `caches` with a no-op implementation. Dynamic Workers don't
+        // support the Cache API — calling any method on it throws
+        // "Cache API is not yet supported for dynamically-loaded workers."
+        // Older holocron builds call `caches.open()` / `caches.default` without
+        // try/catch, so we stub it here to prevent 500s on deployed sites.
         const wrapperJs = [
+          `var noopCache = {`,
+          `  match() { return Promise.resolve(undefined); },`,
+          `  put() { return Promise.resolve(); },`,
+          `  delete() { return Promise.resolve(false); },`,
+          `  keys() { return Promise.resolve([]); },`,
+          `};`,
+          `globalThis.caches = {`,
+          `  open() { return Promise.resolve(noopCache); },`,
+          `  get default() { return noopCache; },`,
+          `};`,
           `import { fetchHandler } from "./ssr/index.js";`,
           `export default {`,
           `  async fetch(request, env, ctx) {`,
