@@ -53,6 +53,14 @@ export type HolocronPluginOptions = {
   entry?: string
   /** Override virtual module source code for runtime-backed experiments. */
   virtualModules?: HolocronVirtualModules
+  /**
+   * Enable stable code-splitting groups for deploy deduplication.
+   * When true (default), framework and vendor code is grouped into a
+   * `holocron-stable` chunk and virtual module data into `holocron-data`,
+   * maximizing content-addressable KV dedup across deploys.
+   * Set to false to let Rolldown use its default splitting strategy.
+   */
+  codeSplitting?: boolean
 }
 
 const VIRTUAL_CONFIG = 'virtual:holocron-config'
@@ -1005,7 +1013,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // so the RSC entry only contains virtual modules (~20KB). Maximizes
       // content-addressable dedup for holocron deploy.
       // RSC-only — SSR is self-contained and not dynamically imported.
-      if (name === 'rsc') {
+      // Only enabled during holocron deploy (HOLOCRON_DEPLOY=1) by default;
+      // the stable chunk is only useful for content-addressable KV dedup.
+      // Users can force it on/off with the codeSplitting option.
+      const enableCodeSplitting = options.codeSplitting ?? (process.env.HOLOCRON_DEPLOY === '1')
+      if (name === 'rsc' && enableCodeSplitting) {
         addCodeSplittingGroups(config, [HOLOCRON_DATA_GROUP, STABLE_GROUP])
 
         // Deterministic names: holocron-data.js + holocron-page-{slug}.js
