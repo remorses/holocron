@@ -1,7 +1,7 @@
 // Domain management API routes: add, list, status, remove custom domains.
 //
 // Custom domains use Cloudflare SSL for SaaS. Users CNAME their domain to
-// acme.holocron.so, Cloudflare terminates SSL and routes to the hosting worker.
+// cname.holocron.so, Cloudflare terminates SSL and routes to the hosting worker.
 // The hosting worker resolves "custom-domain:{hostname}" in KV to find the
 // project subdomain, then serves the site via the normal site-info flow.
 //
@@ -114,7 +114,7 @@ export const domainApp = new Spiceflow()
     }),
     detail: {
       summary: 'Add custom domain',
-      description: 'Register a custom domain for a deployed project. Requires a Pro subscription. The domain must be CNAMEd to acme.holocron.so for SSL provisioning.',
+      description: 'Register a custom domain for a deployed project. Requires a Pro subscription. The domain must be CNAMEd to cname.holocron.so for SSL provisioning.',
       tags: ['Domains'],
     },
     response: {

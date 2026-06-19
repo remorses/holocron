@@ -1,5 +1,5 @@
 // Cloudflare SSL for SaaS client for custom hostname management.
-// All custom domains CNAME to acme.holocron.so (the fallback origin).
+// All custom domains CNAME to cname.holocron.so (the fallback origin).
 // Cloudflare terminates SSL and routes traffic to the hosting worker.
 // The hosting worker resolves the hostname via KV to the project subdomain.
 //
@@ -73,7 +73,7 @@ export type CustomHostnameResult = {
 }
 
 /** The single CNAME target all custom domains should point to. */
-export const CNAME_TARGET = 'acme.holocron.so'
+export const CNAME_TARGET = 'cname.holocron.so'
 
 async function cfFetch(path: string, init?: RequestInit): Promise<any> {
   const zoneId = env.CLOUDFLARE_HOSTING_ZONE_ID
@@ -99,7 +99,7 @@ async function cfFetch(path: string, init?: RequestInit): Promise<any> {
 
 /** Register a custom hostname with Cloudflare SSL for SaaS.
  *  SSL is provisioned via HTTP DCV (domain control validation)
- *  once the user's CNAME is pointing to acme.holocron.so. */
+ *  once the user's CNAME is pointing to cname.holocron.so. */
 export async function createCustomHostname(hostname: string): Promise<CustomHostnameResult> {
   const data = await cfFetch('/custom_hostnames', {
     method: 'POST',

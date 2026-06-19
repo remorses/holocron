@@ -252,7 +252,7 @@ export const gscConnection = s.sqliteTable('gsc_connection', {
 
 // ── Custom domains (Cloudflare SSL for SaaS) ────────────────────────
 // Each domain is a custom hostname registered via the Cloudflare API.
-// Users CNAME their domain to acme.holocron.so; Cloudflare terminates
+// Users CNAME their domain to cname.holocron.so; Cloudflare terminates
 // SSL and routes to the hosting worker. The hosting worker looks up
 // "custom-domain:{hostname}" in KV to resolve the project subdomain.
 // Only projects with an active subscription can add custom domains.

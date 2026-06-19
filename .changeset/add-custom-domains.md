@@ -29,4 +29,4 @@ holocron domain remove --project <projectId> --hostname docs.mycompany.com
 - `GET /api/v0/domains/:projectId/:domainId/status` — check status
 - `DELETE /api/v0/domains/:projectId/:domainId` — remove domain
 
-All custom domains CNAME to `acme.holocron.so`. SSL certificates are provisioned automatically by Cloudflare once DNS is configured. The KV mapping is only activated when both hostname and SSL validation are complete, preventing domain front-running.
+All custom domains CNAME to `cname.holocron.so`. SSL certificates are provisioned automatically by Cloudflare once DNS is configured. The KV mapping is only activated when both hostname and SSL validation are complete, preventing domain front-running.

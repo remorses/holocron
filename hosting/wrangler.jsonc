@@ -24,13 +24,16 @@
   "workers_dev": true,
   // Routes:
   //   *-site.holocron.so/* — production hosted docs
-  //   acme.holocron.so/*   — custom domain fallback origin (Cloudflare SSL for SaaS).
-  //     Custom domains CNAME to acme.holocron.so. Cloudflare terminates SSL and
-  //     routes traffic here. The worker resolves "custom-domain:{hostname}" in KV.
-  //     Requires a proxied DNS A record for acme.holocron.so in the CF dashboard.
+  //   cname.holocron.so/*  — direct requests to fallback origin (returns 404, expected)
+  //   */*                  — catches custom domain traffic via Cloudflare SSL for SaaS.
+  //     Custom domains CNAME to cname.holocron.so (the fallback origin). Cloudflare
+  //     terminates SSL and routes to this zone, but the Host header is the customer's
+  //     domain, not cname.holocron.so. The */* route catches these requests.
+  //     The worker resolves "custom-domain:{hostname}" in KV.
   "routes": [
     { "pattern": "*-site.holocron.so/*", "zone_name": "holocron.so" },
-    { "pattern": "acme.holocron.so/*", "zone_name": "holocron.so" }
+    { "pattern": "cname.holocron.so/*", "zone_name": "holocron.so" },
+    { "pattern": "*/*", "zone_name": "holocron.so" }
   ],
 
   // ── Preview ─────────────────────────────────────────────────────────

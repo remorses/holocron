@@ -163,7 +163,7 @@ export default {
       let subdomain = extractSubdomain(url.hostname)
 
       // Custom domain: look up hostname in KV to resolve the project subdomain.
-      // Custom domains CNAME to acme.holocron.so; Cloudflare SSL for SaaS
+      // Custom domains CNAME to cname.holocron.so; Cloudflare SSL for SaaS
       // routes them to this worker via the fallback origin.
       if (!subdomain) {
         subdomain = await resolveCustomDomain(url.hostname) ?? undefined
