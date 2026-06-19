@@ -22,10 +22,15 @@
   ],
   "observability": { "enabled": true },
   "workers_dev": true,
-  // Route: catch all *-site.holocron.so requests (production hosted docs)
+  // Route: catch all *-site.holocron.so requests (production hosted docs).
   "routes": [
     { "pattern": "*-site.holocron.so/*", "zone_name": "holocron.so" }
   ],
+  // acme.holocron.so is the fallback origin for Cloudflare SSL for SaaS.
+  // Custom domains CNAME to acme.holocron.so. Cloudflare terminates SSL and
+  // routes traffic here. The worker resolves "custom-domain:{hostname}" in KV.
+  // Wrangler manages the DNS record automatically via custom_domains.
+  "custom_domains": ["acme.holocron.so"],
 
   // ── Preview ─────────────────────────────────────────────────────────
   // Bindings are NOT inherited — must duplicate everything here.

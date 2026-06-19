@@ -36,7 +36,8 @@ type SiteInfo = {
 }
 
 /** Extract the subdomain from the request hostname.
- *  Matches both *-site.holocron.so and *-site-preview.holocron.so. */
+ *  Matches both *-site.holocron.so and *-site-preview.holocron.so.
+ *  Returns undefined for custom domains (caller handles KV lookup). */
 function extractSubdomain(hostname: string): string | undefined {
   // Check preview first (longer suffix, more specific)
   if (hostname.endsWith(PREVIEW_SITE_SUFFIX)) {
@@ -46,6 +47,18 @@ function extractSubdomain(hostname: string): string | undefined {
     return hostname.slice(0, -SITE_SUFFIX.length) || undefined
   }
   return undefined
+}
+
+/** Resolve a custom domain to a project subdomain via KV.
+ *  KV key: "custom-domain:{hostname}" → subdomain string.
+ *  Written by the domain API when a custom domain is added,
+ *  and updated by deploy finalize when a new production deploy goes live. */
+async function resolveCustomDomain(hostname: string): Promise<string | null> {
+  const subdomain = await env.SITES_KV.get(
+    `custom-domain:${hostname}`,
+    { type: 'text', cacheTtl: 60 },
+  )
+  return subdomain || null
 }
 
 /** Resolve site info from KV. Written at deploy finalize time.
@@ -147,7 +160,14 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
       const url = new URL(request.url)
-      const subdomain = extractSubdomain(url.hostname)
+      let subdomain = extractSubdomain(url.hostname)
+
+      // Custom domain: look up hostname in KV to resolve the project subdomain.
+      // Custom domains CNAME to acme.holocron.so; Cloudflare SSL for SaaS
+      // routes them to this worker via the fallback origin.
+      if (!subdomain) {
+        subdomain = await resolveCustomDomain(url.hostname) ?? undefined
+      }
 
       if (!subdomain) {
         return new Response('Not found', { status: 404 })

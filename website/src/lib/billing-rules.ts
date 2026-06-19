@@ -69,6 +69,19 @@ export function canDeploy(opts: {
   return { allowed: true }
 }
 
+/** Custom domains require an active subscription because they cost money
+ *  (Cloudflare SSL for SaaS per-hostname charges). */
+export function canAddDomain(opts: {
+  hasActiveSubscription: boolean
+}): DeployDecision {
+  if (opts.hasActiveSubscription) return { allowed: true }
+  return {
+    allowed: false,
+    code: 'SUBSCRIPTION_REQUIRED',
+    reason: 'Custom domains require a Holocron Pro subscription.',
+  }
+}
+
 /** The AI chat shows a "temporary model" nag to push users toward a paid plan.
  *  Subscribed projects never see it. Unauthenticated callers (no API key) still
  *  see it because they have no project to bill. */

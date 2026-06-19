@@ -73,6 +73,8 @@
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
       "HOLOCRON_TOKEN",
+      "CLOUDFLARE_HOSTING_API_TOKEN",
+      "CLOUDFLARE_HOSTING_ZONE_ID"
     ]
   },
 
@@ -138,6 +140,8 @@
           "STRIPE_SECRET_KEY",
           "STRIPE_WEBHOOK_SECRET",
           "HOLOCRON_TOKEN",
+          "CLOUDFLARE_HOSTING_API_TOKEN",
+          "CLOUDFLARE_HOSTING_ZONE_ID"
         ]
       }
     }

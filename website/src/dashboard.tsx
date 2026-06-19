@@ -46,6 +46,7 @@ import {
   DeleteProjectButton,
   GrantOrgAccessButton,
   ConnectGscButton,
+  CustomDomainsSection,
 } from './dashboard-components.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
@@ -277,7 +278,7 @@ export const dashboardApp = new Spiceflow()
   // ── Project overview tab ───────────────────────────────────────────
 
   .loader('/dashboard/projects/:projectId', async ({ request, params }) => {
-    const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+    const { project, db } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
       where: { projectId: params.projectId },
       with: {
         deployments: {
@@ -288,7 +289,13 @@ export const dashboardApp = new Spiceflow()
       },
     }))
 
+    const activeDomains = await db.query.domain.findMany({
+      where: { projectId: params.projectId, status: 'active' },
+      columns: { hostname: true },
+    })
+
     return {
+      activeDomains: activeDomains.map((d) => d.hostname),
       project: {
         ...project,
         deployments: project.deployments.map((d) => ({
@@ -373,6 +380,24 @@ export const dashboardApp = new Spiceflow()
                             >
                               {project.githubOwner}/{project.githubRepo} ↗
                             </a>
+                          </dd>
+                        </>
+                      )}
+                      {loaderData.activeDomains.length > 0 && (
+                        <>
+                          <dt className="text-muted-foreground">Custom Domains</dt>
+                          <dd className="flex flex-col gap-1">
+                            {loaderData.activeDomains.map((hostname: string) => (
+                              <a
+                                key={hostname}
+                                href={`https://${hostname}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline text-sm"
+                              >
+                                {hostname} ↗
+                              </a>
+                            ))}
                           </dd>
                         </>
                       )}
@@ -611,11 +636,32 @@ export const dashboardApp = new Spiceflow()
     const { project, db } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
       where: { projectId: params.projectId },
     }))
-    const gscConnection = await db.query.gscConnection.findFirst({
-      where: { projectId: params.projectId },
-      columns: { siteUrl: true, googleEmail: true, oauthAppId: true },
-    })
-    return { project, githubClientId: env.GITHUB_CLIENT_ID, gscConnection: gscConnection || null }
+    const [gscConnection, domains, subscription] = await Promise.all([
+      db.query.gscConnection.findFirst({
+        where: { projectId: params.projectId },
+        columns: { siteUrl: true, googleEmail: true, oauthAppId: true },
+      }),
+      db.query.domain.findMany({
+        where: { projectId: params.projectId },
+        orderBy: { createdAt: 'desc' },
+      }),
+      getProjectSubscription(params.projectId),
+    ])
+    const { CNAME_TARGET } = await import('./lib/cloudflare.ts')
+    return {
+      project,
+      githubClientId: env.GITHUB_CLIENT_ID,
+      gscConnection: gscConnection || null,
+      domains: domains.map((d) => ({
+        id: d.id,
+        hostname: d.hostname,
+        status: d.status,
+        sslStatus: d.sslStatus ?? null,
+        cnameTarget: CNAME_TARGET,
+        createdAt: d.createdAt,
+      })),
+      hasSubscription: !!subscription,
+    }
   })
 
   .page('/dashboard/projects/:projectId/settings', async ({ loaderData }) => {
@@ -706,6 +752,20 @@ export const dashboardApp = new Spiceflow()
                     key={project.projectId}
                     projectId={project.projectId}
                     connection={loaderData.gscConnection}
+                  />
+                </div>
+              </Frame>
+            </section>
+
+            {/* Custom Domains */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Custom Domains</h2>
+              <Frame className="w-full">
+                <div className="rounded-xl border bg-background p-4 flex flex-col gap-3">
+                  <CustomDomainsSection
+                    projectId={project.projectId}
+                    domains={loaderData.domains}
+                    hasSubscription={loaderData.hasSubscription}
                   />
                 </div>
               </Frame>

@@ -26,6 +26,7 @@ import {
 } from './db.ts'
 import { gatewayApp } from './gateway.ts'
 import { deployApp } from './deploy-api.ts'
+import { domainApp } from './domain-api.ts'
 import { resolveGithubOidcDeployAuth } from './deploy-auth.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
@@ -112,6 +113,7 @@ async function requireAdminSessionForKey(request: Request, keyId: string) {
 export const apiApp = new Spiceflow()
   .use(gatewayApp)
   .use(deployApp)
+  .use(domainApp)
   .use(
     openapi({
       path: '/openapi.json',

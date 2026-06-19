@@ -15,13 +15,17 @@ import {
   CopyIcon,
   FolderIcon,
   FolderOpenIcon,
+  GlobeIcon,
   KeyIcon,
   LinkIcon,
+  LoaderIcon,
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
   PlusIcon,
+  RefreshCwIcon,
   SunIcon,
+  Trash2Icon,
   UserPlusIcon,
 } from 'lucide-react'
 import { createAuthClient } from 'better-auth/react'
@@ -54,7 +58,8 @@ import {
   TableHeader,
   TableRow,
 } from './components/ui/table.tsx'
-import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, updateProjectNameAction, deleteProjectAction, startGscOAuthAction, completeGscOAuthAction, disconnectGscAction, listGscSitesAction, selectGscSiteAction } from './dashboard-actions.ts'
+import { acceptInviteAction, createApiKeyAction, createInviteAction, createOrgAction, updateProjectNameAction, deleteProjectAction, startGscOAuthAction, completeGscOAuthAction, disconnectGscAction, listGscSitesAction, selectGscSiteAction, addDomainAction, refreshDomainStatusAction, removeDomainAction } from './dashboard-actions.ts'
+import type { DomainInfo } from './dashboard-actions.ts'
 import { openBillingPortal, startCheckout } from './actions.tsx'
 import type { dashboardApp } from './dashboard.tsx'
 
@@ -1228,5 +1233,271 @@ export function ConnectGscButton({ projectId, connection }: {
       </div>
       {error && <div className="text-sm text-destructive">{error}</div>}
     </div>
+  )
+}
+
+// ── Custom Domains ──────────────────────────────────────────────────
+
+export function CustomDomainsSection({ projectId, domains: initialDomains, hasSubscription }: {
+  projectId: string
+  domains: DomainInfo[]
+  hasSubscription: boolean
+}) {
+  const [domains, setDomains] = useState(initialDomains)
+  const [addOpen, setAddOpen] = useState(false)
+
+  function handleDomainAdded(domain: DomainInfo) {
+    setDomains((prev) => [domain, ...prev])
+  }
+
+  function handleDomainRemoved(domainId: string) {
+    setDomains((prev) => prev.filter((d) => d.id !== domainId))
+  }
+
+  function handleDomainUpdated(updated: DomainInfo) {
+    setDomains((prev) => prev.map((d) => d.id === updated.id ? updated : d))
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="text-sm text-muted-foreground">
+        Point your own domain at this site. Requires a Pro subscription.
+      </div>
+
+      {!hasSubscription && (
+        <div className="text-sm text-yellow-600 bg-yellow-500/10 rounded-lg px-3 py-2">
+          Custom domains require a Holocron Pro subscription. Upgrade from the Billing tab.
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={() => setAddOpen(true)} disabled={!hasSubscription}>
+          <GlobeIcon className="size-4" />
+          Add domain
+        </Button>
+      </div>
+
+      <AddDomainDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        projectId={projectId}
+        onAdded={handleDomainAdded}
+      />
+
+      {domains.length > 0 && (
+        <Frame className="w-full">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Domain</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>SSL</TableHead>
+                <TableHead className="w-24" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {domains.map((d) => (
+                <DomainRow
+                  key={d.id}
+                  domain={d}
+                  projectId={projectId}
+                  onUpdated={handleDomainUpdated}
+                  onRemoved={handleDomainRemoved}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </Frame>
+      )}
+    </div>
+  )
+}
+
+function StatusBadge({ status, variant }: { status: string; variant: 'hostname' | 'ssl' }) {
+  const isActive = status === 'active'
+  const isPending = status === 'pending' || status === 'pending_validation' || status === 'initializing'
+
+  return (
+    <span className={cn(
+      'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-none',
+      isActive && 'bg-green-500/10 text-green-600',
+      isPending && 'bg-yellow-500/10 text-yellow-600',
+      !isActive && !isPending && 'bg-muted text-muted-foreground',
+    )}>
+      {status || (variant === 'ssl' ? 'pending' : 'unknown')}
+    </span>
+  )
+}
+
+function DomainRow({ domain, projectId, onUpdated, onRemoved }: {
+  domain: DomainInfo
+  projectId: string
+  onUpdated: (d: DomainInfo) => void
+  onRemoved: (id: string) => void
+}) {
+  const [refreshing, setRefreshing] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    setError(null)
+    try {
+      const updated = await refreshDomainStatusAction({ projectId, domainId: domain.id })
+      onUpdated(updated)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to refresh')
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  async function handleRemove() {
+    if (!confirm(`Remove ${domain.hostname}? This will stop serving your site on this domain.`)) return
+    setRemoving(true)
+    setError(null)
+    try {
+      await removeDomainAction({ projectId, domainId: domain.id })
+      onRemoved(domain.id)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to remove')
+      setRemoving(false)
+    }
+  }
+
+  return (
+    <>
+      <TableRow>
+        <TableCell>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium">{domain.hostname}</span>
+            {domain.status !== 'active' && (
+              <span className="text-[11px] text-muted-foreground font-mono">
+                CNAME → {domain.cnameTarget}
+              </span>
+            )}
+          </div>
+        </TableCell>
+        <TableCell>
+          <StatusBadge status={domain.status} variant="hostname" />
+        </TableCell>
+        <TableCell>
+          <StatusBadge status={domain.sslStatus || 'pending'} variant="ssl" />
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center gap-1 justify-end">
+            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={refreshing} title="Refresh status">
+              {refreshing ? <LoaderIcon className="size-3.5 animate-spin" /> : <RefreshCwIcon className="size-3.5" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleRemove} disabled={removing} title="Remove domain">
+              <Trash2Icon className="size-3.5 text-destructive" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+      {error && (
+        <TableRow>
+          <TableCell colSpan={4}>
+            <div className="text-xs text-destructive">{error}</div>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  )
+}
+
+function AddDomainDialog({ open, onOpenChange, projectId, onAdded }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  projectId: string
+  onAdded: (domain: DomainInfo) => void
+}) {
+  const [hostname, setHostname] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [created, setCreated] = useState<DomainInfo | null>(null)
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setHostname('')
+      setError(null)
+      setCreated(null)
+    }
+    onOpenChange(nextOpen)
+  }
+
+  async function handleAdd() {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await addDomainAction({ projectId, hostname })
+      setCreated(result)
+      onAdded(result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to add domain')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogPopup>
+        <DialogHeader>
+          <DialogTitle>{created ? 'Domain added' : 'Add custom domain'}</DialogTitle>
+          <DialogDescription>
+            {created
+              ? 'Configure your DNS to point to Holocron.'
+              : 'Enter the domain you want to use for this docs site.'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 pb-2">
+          {error && (
+            <div className="text-sm text-destructive mb-3">{error}</div>
+          )}
+          {created ? (
+            <div className="flex flex-col gap-3">
+              <div className="text-sm">
+                Add this CNAME record at your DNS provider:
+              </div>
+              <div className="rounded-lg border border-border bg-muted/50 p-3 font-mono text-xs flex flex-col gap-1">
+                <div><span className="text-muted-foreground">Type: </span>CNAME</div>
+                <div><span className="text-muted-foreground">Name: </span>{created.hostname}</div>
+                <div><span className="text-muted-foreground">Value: </span>{created.cnameTarget}</div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                SSL certificates are provisioned automatically once DNS is configured.
+                Use the refresh button to check status.
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <Input
+                placeholder="docs.mycompany.com"
+                value={hostname}
+                onChange={(e) => setHostname(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && hostname.trim()) {
+                    e.preventDefault()
+                    handleAdd()
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+          )}
+          <DialogFooter variant="bare" className="mt-4">
+            <DialogClose render={<Button variant="outline" />}>
+              {created ? 'Done' : 'Cancel'}
+            </DialogClose>
+            {!created && (
+              <Button onClick={handleAdd} loading={loading} disabled={!hostname.trim()}>
+                Add domain
+              </Button>
+            )}
+          </DialogFooter>
+        </div>
+      </DialogPopup>
+    </Dialog>
   )
 }

@@ -187,6 +187,24 @@ export async function deleteProjectAction({ projectId }: {
     .map((d) => env.SITES_KV.delete(`site-info:${d.subdomain}`))
   if (kvDeletes.length > 0) await Promise.all(kvDeletes)
 
+  // Clean up custom domains: delete from Cloudflare + KV
+  const domains = await db.query.domain.findMany({
+    where: { projectId },
+  })
+  if (domains.length > 0) {
+    const { deleteCustomHostname } = await import('./lib/cloudflare.ts')
+    await Promise.all(
+      domains.map(async (d) => {
+        await env.SITES_KV.delete(`custom-domain:${d.hostname}`)
+        if (d.cloudflareId) {
+          await deleteCustomHostname(d.cloudflareId).catch((err) => {
+            console.error(`Failed to delete Cloudflare custom hostname ${d.hostname}:`, err)
+          })
+        }
+      }),
+    )
+  }
+
   // Delete the project row; cascades to deployments, api_keys, subscriptions
   await db.delete(schema.project)
     .where(orm.eq(schema.project.projectId, projectId))
@@ -396,4 +414,186 @@ export async function listGscSitesAction({ projectId }: {
   await requireProjectMembership(session.userId, projectId, { adminOnly: true })
 
   return fetchGscSites(projectId)
+}
+
+// ── Custom Domains ──────────────────────────────────────────────────
+
+export type DomainInfo = {
+  id: string
+  hostname: string
+  status: string
+  sslStatus: string | null
+  cnameTarget: string
+  createdAt: number
+}
+
+export async function addDomainAction({ projectId, hostname }: {
+  projectId: string
+  hostname: string
+}): Promise<DomainInfo> {
+  if (!projectId) throw new Error('Project ID is required')
+  if (!hostname?.trim()) throw new Error('Hostname is required')
+
+  const session = await authenticateRequest()
+  const { project } = await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  const db = getDb()
+  const { ACTIVE_SUBSCRIPTION_STATUSES, canAddDomain } = await import('./lib/billing-rules.ts')
+
+  const activeSubscription = await db.query.subscription.findFirst({
+    where: { projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
+  })
+  const decision = canAddDomain({ hasActiveSubscription: !!activeSubscription })
+  if (!decision.allowed) throw new Error(decision.reason)
+
+  const normalized = hostname.trim().toLowerCase().replace(/\.$/, '')
+
+  // Validate hostname format
+  if (normalized.includes('/') || normalized.includes(':') || normalized.includes(' ')) {
+    throw new Error('Enter a hostname, not a URL.')
+  }
+  if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/.test(normalized)) {
+    throw new Error('Invalid hostname format.')
+  }
+  const blockedSuffixes = ['.holocron.so', '.holocron.live', '.holocronsites.com']
+  for (const suffix of blockedSuffixes) {
+    if (normalized.endsWith(suffix) || normalized === suffix.slice(1)) {
+      throw new Error(`${suffix} hostnames cannot be registered as custom domains.`)
+    }
+  }
+
+  // Check DB uniqueness
+  const existing = await db.query.domain.findFirst({ where: { hostname: normalized } })
+  if (existing) throw new Error(`Domain "${normalized}" is already in use.`)
+
+  const { createCustomHostname, deleteCustomHostname, CNAME_TARGET } = await import('./lib/cloudflare.ts')
+
+  // Check Cloudflare uniqueness
+  const { getCustomHostname } = await import('./lib/cloudflare.ts')
+  const cfExisting = await getCustomHostname(normalized).catch(() => null)
+  if (cfExisting?.id) throw new Error(`Domain "${normalized}" is already configured in Cloudflare.`)
+
+  // Insert pending DB row
+  const domainId = ulid()
+  const now = Date.now()
+  await db.insert(schema.domain).values({
+    id: domainId,
+    projectId,
+    hostname: normalized,
+    status: 'pending',
+    createdAt: now,
+    updatedAt: now,
+  })
+
+  let cfResult
+  try {
+    cfResult = await createCustomHostname(normalized)
+  } catch (err) {
+    await db.delete(schema.domain).where(orm.eq(schema.domain.id, domainId)).limit(1)
+    throw err
+  }
+
+  const cfStatus = cfResult.status || 'pending'
+  const cfSslStatus = cfResult.ssl?.status || null
+  try {
+    await db.update(schema.domain)
+      .set({ cloudflareId: cfResult.id, status: cfStatus, sslStatus: cfSslStatus, updatedAt: Date.now() })
+      .where(orm.eq(schema.domain.id, domainId))
+      .limit(1)
+  } catch (err) {
+    await deleteCustomHostname(cfResult.id).catch(() => {})
+    await db.delete(schema.domain).where(orm.eq(schema.domain.id, domainId)).limit(1).catch(() => {})
+    throw err
+  }
+
+  // Write KV mapping only if already fully active
+  if (cfStatus === 'active' && cfSslStatus === 'active' && project.subdomain) {
+    await env.SITES_KV.put(`custom-domain:${normalized}`, project.subdomain)
+  }
+
+  return {
+    id: domainId,
+    hostname: normalized,
+    status: cfStatus,
+    sslStatus: cfSslStatus ?? null,
+    cnameTarget: CNAME_TARGET,
+    createdAt: now,
+  }
+}
+
+export async function refreshDomainStatusAction({ projectId, domainId }: {
+  projectId: string
+  domainId: string
+}): Promise<DomainInfo> {
+  if (!projectId) throw new Error('Project ID is required')
+  if (!domainId) throw new Error('Domain ID is required')
+
+  const session = await authenticateRequest()
+  const { project } = await requireProjectMembership(session.userId, projectId)
+
+  const db = getDb()
+  const domainRow = await db.query.domain.findFirst({
+    where: { id: domainId, projectId },
+  })
+  if (!domainRow) throw new Error('Domain not found')
+
+  const { refreshCustomHostname, CNAME_TARGET } = await import('./lib/cloudflare.ts')
+
+  let status = domainRow.status
+  let sslStatus = domainRow.sslStatus
+  if (domainRow.cloudflareId) {
+    const cfResult = await refreshCustomHostname(domainRow.cloudflareId).catch(() => null)
+    if (cfResult) {
+      status = cfResult.status || status
+      sslStatus = cfResult.ssl?.status || sslStatus
+      await db.update(schema.domain)
+        .set({ status, sslStatus, updatedAt: Date.now() })
+        .where(orm.eq(schema.domain.id, domainRow.id))
+        .limit(1)
+
+      // Sync KV mapping
+      const key = `custom-domain:${domainRow.hostname}`
+      if (status === 'active' && sslStatus === 'active' && project.subdomain) {
+        await env.SITES_KV.put(key, project.subdomain)
+      } else {
+        await env.SITES_KV.delete(key)
+      }
+    }
+  }
+
+  return {
+    id: domainRow.id,
+    hostname: domainRow.hostname,
+    status,
+    sslStatus: sslStatus ?? null,
+    cnameTarget: CNAME_TARGET,
+    createdAt: domainRow.createdAt,
+  }
+}
+
+export async function removeDomainAction({ projectId, domainId }: {
+  projectId: string
+  domainId: string
+}): Promise<{ ok: true }> {
+  if (!projectId) throw new Error('Project ID is required')
+  if (!domainId) throw new Error('Domain ID is required')
+
+  const session = await authenticateRequest()
+  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+
+  const db = getDb()
+  const domainRow = await db.query.domain.findFirst({
+    where: { id: domainId, projectId },
+  })
+  if (!domainRow) throw new Error('Domain not found')
+
+  if (domainRow.cloudflareId) {
+    const { deleteCustomHostname } = await import('./lib/cloudflare.ts')
+    await deleteCustomHostname(domainRow.cloudflareId)
+  }
+
+  await env.SITES_KV.delete(`custom-domain:${domainRow.hostname}`)
+  await db.delete(schema.domain).where(orm.eq(schema.domain.id, domainRow.id)).limit(1)
+
+  return { ok: true }
 }

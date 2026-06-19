@@ -250,6 +250,31 @@ export const gscConnection = s.sqliteTable('gsc_connection', {
   s.index('gsc_connection_project_id_idx').on(table.projectId),
 ])
 
+// ── Custom domains (Cloudflare SSL for SaaS) ────────────────────────
+// Each domain is a custom hostname registered via the Cloudflare API.
+// Users CNAME their domain to acme.holocron.so; Cloudflare terminates
+// SSL and routes to the hosting worker. The hosting worker looks up
+// "custom-domain:{hostname}" in KV to resolve the project subdomain.
+// Only projects with an active subscription can add custom domains.
+
+export const domain = s.sqliteTable('domain', {
+  id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
+  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
+  /** The custom hostname, e.g. "docs.mycompany.com". Unique across all projects. */
+  hostname: s.text('hostname').notNull().unique(),
+  /** Cloudflare custom hostname ID (from POST /custom_hostnames response).
+   *  Needed for PATCH/DELETE calls to manage the hostname lifecycle. */
+  cloudflareId: s.text('cloudflare_id'),
+  /** Hostname status from Cloudflare: pending, active, moved, deleted, etc. */
+  status: s.text('status').notNull().default('pending'),
+  /** SSL certificate status: initializing, pending_validation, active, etc. */
+  sslStatus: s.text('ssl_status'),
+  createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
+  updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
+}, (table) => [
+  s.index('domain_project_id_idx').on(table.projectId),
+])
+
 // ── Device flow (BetterAuth device authorization plugin) ────────────
 
 export const deviceCode = s.sqliteTable('device_code', {
@@ -270,7 +295,7 @@ export const deviceCode = s.sqliteTable('device_code', {
 // ── Relations (v2 API) ──────────────────────────────────────────────
 
 export const relations = defineRelations(
-  { user, session, account, verification, org, orgMember, orgInvitation, apiKey, deviceCode, project, deployment, subscription, gscConnection },
+  { user, session, account, verification, org, orgMember, orgInvitation, apiKey, deviceCode, project, deployment, subscription, gscConnection, domain },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -319,9 +344,13 @@ export const relations = defineRelations(
       deployments: r.many.deployment(),
       subscriptions: r.many.subscription(),
       gscConnection: r.one.gscConnection({ from: r.project.projectId, to: r.gscConnection.projectId }),
+      domains: r.many.domain(),
     },
     gscConnection: {
       project: r.one.project({ from: r.gscConnection.projectId, to: r.project.projectId }),
+    },
+    domain: {
+      project: r.one.project({ from: r.domain.projectId, to: r.project.projectId }),
     },
     deployment: {
       project: r.one.project({ from: r.deployment.projectId, to: r.project.projectId }),

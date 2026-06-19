@@ -454,6 +454,23 @@ export const deployApp = new Spiceflow()
         }),
       )
 
+      // Update custom domain KV entries so custom domains resolve to the latest
+      // production subdomain. Only for root production deploys (not base-path).
+      // Only update domains where both hostname AND SSL are active; pending
+      // domains should not have KV entries to prevent front-running.
+      if (isProduction && !deploy.basePath) {
+        const domains = await db.query.domain.findMany({
+          where: { projectId: deploy.projectId, status: 'active', sslStatus: 'active' },
+        })
+        if (domains.length > 0) {
+          await Promise.all(
+            domains.map((d) =>
+              env.SITES_KV.put(`custom-domain:${d.hostname}`, deploySubdomain),
+            ),
+          )
+        }
+      }
+
       const requestHost = new URL(request.url).hostname
       const isPreviewEnv = requestHost.startsWith('preview.')
       const siteSuffix = isPreviewEnv ? '-site-preview.holocron.so' : '-site.holocron.so'
