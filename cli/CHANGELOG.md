@@ -1,3 +1,23 @@
+## 0.18.0
+
+1. **Custom domain support** — point your own domain (e.g. `docs.mycompany.com`) at your Holocron-deployed docs site. Cloudflare SSL for SaaS handles certificate provisioning automatically. Custom domains require a Pro subscription.
+
+   ```bash
+   # Add a custom domain
+   holocron domain add --project <projectId> --hostname docs.mycompany.com
+
+   # List domains
+   holocron domain list --project <projectId>
+
+   # Check DNS/SSL status
+   holocron domain status --project <projectId>
+
+   # Remove a domain
+   holocron domain remove --project <projectId> --hostname docs.mycompany.com
+   ```
+
+   All custom domains CNAME to `cname.holocron.so`. SSL certificates are provisioned automatically once DNS is configured. The hosting worker activates the mapping only when both hostname and SSL validation are complete, preventing domain front-running.
+
 ## 0.17.0
 
 1. **New `holocron subscribe` command** — subscribe a project to Holocron Pro directly from the CLI. Opens Stripe Checkout in the browser. Prompts interactively for project and billing interval when flags are omitted:
