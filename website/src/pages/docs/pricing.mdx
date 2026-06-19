@@ -21,6 +21,7 @@ Subscriptions are **per site**. You only pay for sites you actively maintain.
 | --- | --- | --- |
 | Hosted AI chat | Trial only | Full model, 50,000 credits / month |
 | Preview deployments | 1 trial deployment | Unlimited, every branch and PR |
+| Custom domains | — | Point your own domain at your docs |
 | Subpath hosting (`--base-path`) | — | Host docs at `/docs` on your domain |
 | Analytics | — | Coming soon |
 | Price | $0 | **$99 / month** |
@@ -42,6 +43,10 @@ On the **Free** plan you get a single trial deployment so you can see your site 
 Deployments are authenticated via **GitHub Actions OIDC**, no API keys needed for CI.
 </Tip>
 </Aside>
+
+### Custom domains
+
+Serve your docs on **your own domain** like `docs.mycompany.com`. Add a CNAME record pointing to `cname.holocron.so`, register the domain in your dashboard settings, and Holocron handles SSL certificates automatically. Custom domains work alongside subpath hosting, so you can choose the URL structure that fits your brand.
 
 ### Subpath hosting
 
