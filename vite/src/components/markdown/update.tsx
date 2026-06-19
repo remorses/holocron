@@ -4,7 +4,7 @@
 
 import React from 'react'
 import { Link } from '../link.tsx'
-import { slugify } from '../../lib/toc-tree.ts'
+import { slug } from 'github-slugger'
 import { Badge } from './badge.tsx'
 
 export function Update({
@@ -40,7 +40,7 @@ export function Update({
   // consecutive updates. Without zeroing the first row's top padding, the
   // first Update sits ~32px below the page content top, misaligning it with
   // a sticky `<Aside full>` (e.g. the AI widget) that starts at the top.
-  const id = idProp ? slugify(idProp) : slugify(label)
+  const id = idProp ? slug(idProp) : slug(label)
   return (
     <div
       id={id}

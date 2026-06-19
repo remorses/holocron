@@ -78,7 +78,8 @@ import {
   Marquee,
   VideoBackgroundShader,
 } from '../components/markdown/index.tsx'
-import { slugify, extractText } from './toc-tree.ts'
+import { slug } from 'github-slugger'
+import { extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
 import { parseCodeMeta, metaBool, type BleedMode } from './code-meta.ts'
 import type { SafeMdxComponentName } from './mdx-component-names.ts'
@@ -265,7 +266,7 @@ export function renderNode(
   if (node.type === 'heading') {
     const heading = node
     const text = extractText(heading.children)
-    const id = slugify(text)
+    const id = slug(text)
     const level = Math.min(heading.depth - 1, 3)
     return (
       <SectionHeading key={id} id={id} level={level}>
@@ -294,7 +295,7 @@ export function renderNode(
         inlineChildren.push(child)
       }
     }
-    const id = getAttributeString(node, 'id') ?? slugify(extractText(inlineChildren))
+    const id = getAttributeString(node, 'id') ?? slug(extractText(inlineChildren))
     return (
       <SectionHeading key={id} id={id} level={level}>
         {inlineChildren.map((child, i) => {

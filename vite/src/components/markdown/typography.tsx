@@ -10,7 +10,7 @@ import { Link } from '../link.tsx'
 
 import { cn } from '../../lib/css-vars.ts'
 import { useHolocronDataSafe } from '../../router.ts'
-import { slugify } from '../../lib/toc-tree.ts'
+import { slug } from 'github-slugger'
 import { isExternalHref, stripOriginIfSameHost } from './shared.tsx'
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
@@ -90,7 +90,7 @@ export function Heading({
   children: React.ReactNode
 }) {
   const resolvedLevel = normalizeHeadingLevel(level)
-  const headingId = id || slugify(Children.toArray(children).map((child) => extractTextFromReactNode(child)).join(''))
+  const headingId = id || slug(Children.toArray(children).map((child) => extractTextFromReactNode(child)).join(''))
 
   if (noAnchor) {
     const tag = headingTagByLevel[resolvedLevel] || 'h4'

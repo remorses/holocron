@@ -1,33 +1,37 @@
 import { describe, test, expect } from 'vitest'
 import {
-  slugify,
   extractText,
   generateTocTree,
 } from './toc-tree.ts'
+import { slug } from 'github-slugger'
 import { mdxParse } from 'safe-mdx/parse'
 import type { PhrasingContent } from 'mdast'
 
-/* ── slugify ─────────────────────────────────────────────────────────── */
+/* ── slug (github-slugger) ───────────────────────────────────────────── */
 
-describe('slugify', () => {
+describe('slug', () => {
   test('lowercases and replaces spaces with hyphens', () => {
-    expect(slugify('Getting Started')).toBe('getting-started')
+    expect(slug('Getting Started')).toBe('getting-started')
   })
 
   test('strips special characters', () => {
-    expect(slugify('What is this? (FAQ)')).toBe('what-is-this-faq')
+    expect(slug('What is this? (FAQ)')).toBe('what-is-this-faq')
   })
 
-  test('collapses multiple hyphens', () => {
-    expect(slugify('one - two --- three')).toBe('one-two-three')
+  test('preserves consecutive hyphens', () => {
+    expect(slug('one - two --- three')).toBe('one---two-----three')
+  })
+
+  test('heading with plus sign preserves double hyphens', () => {
+    expect(slug('Install CLI + skill')).toBe('install-cli--skill')
   })
 
   test('handles empty string', () => {
-    expect(slugify('')).toBe('')
+    expect(slug('')).toBe('')
   })
 
   test('handles already-slugified text', () => {
-    expect(slugify('already-slugified')).toBe('already-slugified')
+    expect(slug('already-slugified')).toBe('already-slugified')
   })
 })
 

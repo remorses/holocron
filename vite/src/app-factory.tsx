@@ -34,7 +34,7 @@ import { P, SectionHeading } from './components/markdown/typography.tsx'
 import { Danger, Warning } from './components/markdown/callout.tsx'
 import { CodeBlock } from './components/markdown/code-block.tsx'
 import { extractParseErrorInfo, HolocronMdxParseError } from './lib/logger.ts'
-import { slugify } from './lib/toc-tree.ts'
+import { slug } from 'github-slugger'
 import { NotFound } from './components/not-found.tsx'
 import {
   findPage,
@@ -360,7 +360,7 @@ function renderMdxPage({
     // start with one. Only the first section gets the heading.
     const content = (shouldInjectH1 && i === 0) ? (
       <>
-        <SectionHeading id={slugify(loaderData.currentPageTitle!)} level={1}>
+        <SectionHeading id={slug(loaderData.currentPageTitle!)} level={1}>
           {loaderData.currentPageTitle}
         </SectionHeading>
         {renderedContent}

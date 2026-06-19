@@ -5,6 +5,7 @@
  */
 
 import type { Root, Heading, PhrasingContent } from 'mdast'
+import { slug } from 'github-slugger'
 
 /* ── TOC tree types ──────────────────────────────────────────────────── */
 
@@ -21,16 +22,6 @@ export type TocTreeNode = {
 }
 
 /* ── Helper functions ────────────────────────────────────────────────── */
-
-/** Slugify heading text for anchor IDs */
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
 
 /** Extract plain text from mdast phrasing content */
 export function extractText(children: PhrasingContent[]): string {
@@ -59,7 +50,7 @@ export function generateTocTree(mdast: Root): TocTreeNode[] {
     })
     .map((heading) => {
       const text = extractText(heading.children)
-      const id = slugify(text)
+      const id = slug(text)
       return { label: text, href: `#${id}`, depth: heading.depth }
     })
 
