@@ -570,21 +570,38 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     return `> ${buildAgentDocsDirective(site.base)}\n\n${stripVisibilityForAgents(mdx)}`
   }
 
+  /** Resolve a root-relative href with the site base path. External and
+   *  protocol-relative URLs pass through unchanged. */
+  function resolveHrefWithBase(href: string): string {
+    if (!href.startsWith('/') || /^\/\//.test(href)) return href
+    return withBaseRoute(site.base, href)
+  }
+
   /** Collect all external/navigation links from the site config, deduped by href.
    *  Used to surface navbar, anchor, and footer links in sitemap.xml and llms.txt
-   *  so AI agents and crawlers can discover the same links humans see in the UI. */
+   *  so AI agents and crawlers can discover the same links humans see in the UI.
+   *  Root-relative hrefs are resolved with the site base path so agents see the
+   *  same URLs humans get in the browser. */
   function collectSiteLinks(): Array<{ label: string; href: string }> {
     const seen = new Set<string>()
     const links: Array<{ label: string; href: string }> = []
     function add(label: string, href: string) {
-      if (!href || seen.has(href)) return
-      seen.add(href)
-      links.push({ label, href })
+      const resolved = resolveHrefWithBase(href)
+      if (!resolved || seen.has(resolved)) return
+      seen.add(resolved)
+      links.push({ label, href: resolved })
     }
     // Anchors (GitHub, Blog, etc. in tab bar or sidebar)
     for (const anchor of site.config.navigation.anchors) {
       if (anchor.hidden) continue
       add(anchor.anchor, anchor.href)
+    }
+    // Link-only dropdowns/products (visible in the header select)
+    for (const dropdown of site.config.navigation.dropdowns) {
+      if (dropdown.hidden) continue
+      if (dropdown.href && !dropdown.navigation) {
+        add(dropdown.dropdown, dropdown.href)
+      }
     }
     // Navbar links
     for (const link of site.config.navbar.links) {
@@ -614,6 +631,12 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       }
     }
     return links
+  }
+
+  /** Escape a string for use inside an XML comment. XML comments cannot
+   *  contain `--` and must not end with `-`. */
+  function escapeXmlComment(value: string): string {
+    return value.replaceAll('--', '- -').replace(/-$/, '- ')
   }
 
   function buildLlmsTxt(origin: string): string {
@@ -979,7 +1002,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         .map((href: string) => `  <url><loc>${url.origin}${withBaseRoute(site.base, href)}</loc></url>`)
         .join('\n')
       const siteLinks = collectSiteLinks()
-      const linkComments = siteLinks.map((l) => `<!-- Link: ${l.label} ${l.href} -->`)
+      const linkComments = siteLinks.map((l) => `<!-- Link: ${escapeXmlComment(`${l.label} ${l.href}`)} -->`)
       const xml = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<!-- To get the raw markdown content of any page, append .md to the URL. -->',
