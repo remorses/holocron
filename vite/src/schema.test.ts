@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { z } from 'zod'
 import { holocronConfigSchema } from './schema.ts'
+import { validateConfig } from './config.ts'
 import { parseJsonc } from './lib/jsonc.ts'
 
 /* ── Validation of existing example configs ──────────────────────────── */
@@ -170,6 +171,41 @@ describe('holocronConfigSchema validation', () => {
       icons: { library: 'lucide' },
     })
     expect(result.success).toBe(true)
+  })
+})
+
+/* ── validateConfig logs warnings without throwing ───────────────────── */
+
+describe('validateConfig', () => {
+  test('logs warnings for invalid fields but does not throw', () => {
+    const warnings: string[] = []
+    const originalWarn = console.warn
+    console.warn = (...args: unknown[]) => warnings.push(args.map(String).join(' '))
+
+    try {
+      // Invalid: empty name + bad hex color
+      validateConfig({ name: '', colors: { primary: 'red' } })
+    } finally {
+      console.warn = originalWarn
+    }
+
+    expect(warnings.length).toBeGreaterThanOrEqual(2)
+    expect(warnings.some((w) => w.includes('"name"'))).toBe(true)
+    expect(warnings.some((w) => w.includes('"colors.primary"'))).toBe(true)
+  })
+
+  test('logs nothing for a valid config', () => {
+    const warnings: string[] = []
+    const originalWarn = console.warn
+    console.warn = (...args: unknown[]) => warnings.push(args.map(String).join(' '))
+
+    try {
+      validateConfig({ name: 'My Docs' })
+    } finally {
+      console.warn = originalWarn
+    }
+
+    expect(warnings).toEqual([])
   })
 })
 

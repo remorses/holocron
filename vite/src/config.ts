@@ -32,8 +32,10 @@ import type {
   integrationsSchema,
   layoutSchema,
 } from './schema.ts'
+import { holocronConfigSchema } from './schema.ts'
 import { parseJsonc } from './lib/jsonc.ts'
 import { normalize } from './lib/normalize-config.ts'
+import { formatConfigIssue, logger } from './lib/logger.ts'
 
 /* ── Types derived from Zod (schema.ts = source of truth) ────────────── */
 
@@ -188,6 +190,19 @@ function parseConfigObject(raw: string): Record<string, unknown> {
   return Object.fromEntries(Object.entries(parsed))
 }
 
+/**
+ * Validate the raw config object against the Zod schema and log any issues
+ * as warnings. Never throws — validation is informational only so existing
+ * sites keep working even if their config has minor schema mismatches.
+ */
+export function validateConfig(raw: Record<string, unknown>): void {
+  const result = holocronConfigSchema.safeParse(raw)
+  if (result.success) return
+  for (const issue of result.error.issues) {
+    logger.warn(formatConfigIssue(issue))
+  }
+}
+
 export function parseConfigSource(raw: string): HolocronConfig {
   return normalize(parseConfigObject(raw))
 }
@@ -209,7 +224,9 @@ export function readConfig({
     const resolved = path.resolve(root, configPath)
     if (fs.existsSync(resolved)) {
       const raw = fs.readFileSync(resolved, 'utf-8')
-      return parseConfigSource(raw)
+      const parsed = parseConfigObject(raw)
+      validateConfig(parsed)
+      return normalize(parsed)
     }
     throw new Error(`Config file not found at: ${resolved}`)
   }
@@ -218,7 +235,9 @@ export function readConfig({
     const filePath = path.join(root, name)
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      return parseConfigSource(raw)
+      const parsed = parseConfigObject(raw)
+      validateConfig(parsed)
+      return normalize(parsed)
     }
   }
   throw new Error(

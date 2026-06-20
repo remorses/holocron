@@ -72,6 +72,17 @@ export function logMdxError(error: SafeMdxError, source?: string): void {
   }
 }
 
+/* ── Config schema validation warnings ───────────────────────────────── */
+
+/**
+ * Format a single Zod issue for terminal output.
+ * Example: `▲ holocron config issue at "colors.primary": Invalid hex color`
+ */
+export function formatConfigIssue(issue: { path: PropertyKey[]; message: string }): string {
+  const pathStr = issue.path.length > 0 ? issue.path.map(String).join('.') : '(root)'
+  return formatHolocronWarning(`config issue at ${colors.cyan(`"${pathStr}"`)}: ${issue.message}`)
+}
+
 /* ── Code frame for parse errors ────────────────────────────────────── */
 
 const FRAME_CONTEXT_LINES = 3

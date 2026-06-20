@@ -391,6 +391,7 @@ title: Home
     expect(mdxCache.pageImportSources).toMatchObject({ index: [] })
     expect(warn.mock.calls.map(([message]) => String(message).replace(/\x1b\[[0-9;]*m/g, ''))).toMatchInlineSnapshot(`
       [
+        "▲ holocron config issue at "name": Invalid input: expected string, received undefined",
         "▲ holocron MDX /:7 Unsupported jsx component Caption",
         "",
         "▲ holocron 1 page with MDX errors. Fix the syntax issues in the pages listed above.",
