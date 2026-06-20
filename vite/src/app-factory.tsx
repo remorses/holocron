@@ -34,7 +34,7 @@ import { P, SectionHeading } from './components/markdown/typography.tsx'
 import { Danger, Warning } from './components/markdown/callout.tsx'
 import { CodeBlock } from './components/markdown/code-block.tsx'
 import { extractParseErrorInfo, HolocronMdxParseError } from './lib/logger.ts'
-import { slug } from 'github-slugger'
+import { slug as githubSlug } from 'github-slugger'
 import { NotFound } from './components/not-found.tsx'
 import {
   findPage,
@@ -360,7 +360,7 @@ function renderMdxPage({
     // start with one. Only the first section gets the heading.
     const content = (shouldInjectH1 && i === 0) ? (
       <>
-        <SectionHeading id={slug(loaderData.currentPageTitle!)} level={1}>
+        <SectionHeading id={githubSlug(loaderData.currentPageTitle!)} level={1}>
           {loaderData.currentPageTitle}
         </SectionHeading>
         {renderedContent}
@@ -570,6 +570,52 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     return `> ${buildAgentDocsDirective(site.base)}\n\n${stripVisibilityForAgents(mdx)}`
   }
 
+  /** Collect all external/navigation links from the site config, deduped by href.
+   *  Used to surface navbar, anchor, and footer links in sitemap.xml and llms.txt
+   *  so AI agents and crawlers can discover the same links humans see in the UI. */
+  function collectSiteLinks(): Array<{ label: string; href: string }> {
+    const seen = new Set<string>()
+    const links: Array<{ label: string; href: string }> = []
+    function add(label: string, href: string) {
+      if (!href || seen.has(href)) return
+      seen.add(href)
+      links.push({ label, href })
+    }
+    // Anchors (GitHub, Blog, etc. in tab bar or sidebar)
+    for (const anchor of site.config.navigation.anchors) {
+      if (anchor.hidden) continue
+      add(anchor.anchor, anchor.href)
+    }
+    // Navbar links
+    for (const link of site.config.navbar.links) {
+      add(link.label, link.href)
+    }
+    // Navbar primary CTA
+    if (site.config.navbar.primary) {
+      add(site.config.navbar.primary.label, site.config.navbar.primary.href)
+    }
+    // Footer socials
+    const socialLabels: Record<string, string> = {
+      x: 'X', github: 'GitHub', discord: 'Discord', twitter: 'Twitter',
+      'x-twitter': 'X', linkedin: 'LinkedIn', youtube: 'YouTube',
+      slack: 'Slack', facebook: 'Facebook', instagram: 'Instagram',
+      'hacker-news': 'Hacker News', medium: 'Medium', telegram: 'Telegram',
+      bluesky: 'Bluesky', threads: 'Threads', reddit: 'Reddit',
+      podcast: 'Podcast', website: 'Website', 'earth-americas': 'Website',
+    }
+    for (const [platform, url] of Object.entries(site.config.footer.socials)) {
+      if (!url) continue
+      add(socialLabels[platform] ?? platform, url)
+    }
+    // Footer link columns
+    for (const col of site.config.footer.links) {
+      for (const item of col.items) {
+        add(item.label, item.href)
+      }
+    }
+    return links
+  }
+
   function buildLlmsTxt(origin: string): string {
     const basePath = withBaseRoute(site.base, '/') === '/' ? '' : withBaseRoute(site.base, '/').replace(/\/$/, '')
     const baseUrl = `${origin}${basePath}`
@@ -578,6 +624,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       .filter((page) => isIndexablePage(page.frontmatter))
       .map((page) => `- [${escapeMarkdownText(page.title)}](${baseUrl}${hrefToMarkdownPath(page.href)})`)
       .join('\n')
+
+    const siteLinks = collectSiteLinks()
+    const linksSection = siteLinks.length > 0
+      ? `\n\n## Links\n\n${siteLinks.map((l) => `- [${escapeMarkdownText(l.label)}](${l.href})`).join('\n')}`
+      : ''
 
     return dedent`
       # ${escapeMarkdownText(site.config.name)}
@@ -601,7 +652,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       You can also fetch individual markdown pages directly:
 
       ${pageLinks}
-    `
+    ` + linksSection
   }
 
   async function buildLoaderSite(
@@ -927,11 +978,14 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const urls = hrefs
         .map((href: string) => `  <url><loc>${url.origin}${withBaseRoute(site.base, href)}</loc></url>`)
         .join('\n')
+      const siteLinks = collectSiteLinks()
+      const linkComments = siteLinks.map((l) => `<!-- Link: ${l.label} ${l.href} -->`)
       const xml = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<!-- To get the raw markdown content of any page, append .md to the URL. -->',
         `<!-- Example: ${url.origin}${withBaseRoute(site.base, '/getting-started.md')} -->`,
         `<!-- To download all docs as a zip of .md files: ${url.origin}${withBaseRoute(site.base, '/docs.zip')} -->`,
+        ...linkComments,
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
         urls,
         '</urlset>',
