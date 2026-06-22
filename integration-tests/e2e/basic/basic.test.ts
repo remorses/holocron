@@ -246,9 +246,10 @@ test.describe("agent-facing docs", () => {
     expect(text).toContain("docs.zip");
 
     // Pages are separated by frontmatter blocks with title and url
+    // URLs are YAML-quoted since they contain colons
     expect(text).toContain("title: Welcome to Test Docs");
     expect(text).toContain("title: Getting Started");
-    expect(text).toContain("url: http://localhost:");
+    expect(text).toMatch(/url: "http:\/\/localhost:/);
 
     // Full page content is included (not just links)
     expect(text).toContain("## Overview");

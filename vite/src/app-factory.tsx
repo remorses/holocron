@@ -693,24 +693,45 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       This file contains the full content of all documentation pages. For a compact index, see [llms.txt](${baseUrl}/llms.txt). To download all pages as a zip, use [docs.zip](${baseUrl}/docs.zip).
     `
 
+    // Fetch all page sources in parallel (same pattern as docs.zip)
+    const entries = await Promise.all(
+      pages.map(async (page) => ({ page, mdx: await providers.getMdxSource(page.slug) })),
+    )
+
     const sections: string[] = [header]
-    for (const page of pages) {
-      const mdx = await providers.getMdxSource(page.slug)
+    for (const { page, mdx } of entries) {
       if (mdx === undefined) continue
-      const stripped = stripVisibilityForAgents(mdx)
+      const body = stripLeadingFrontmatter(stripVisibilityForAgents(mdx))
       const pageSection = [
         '---',
-        `title: ${page.title}`,
-        `url: ${baseUrl}${hrefToMarkdownPath(page.href)}`,
-        ...(page.description ? [`description: ${page.description}`] : []),
+        `title: ${yamlString(page.title)}`,
+        `url: ${yamlString(`${baseUrl}${hrefToMarkdownPath(page.href)}`)}`,
+        ...(page.description ? [`description: ${yamlString(page.description)}`] : []),
         '---',
         '',
-        stripped,
+        body,
       ].join('\n')
       sections.push(pageSection)
     }
 
     return sections.join('\n\n')
+  }
+
+  /** Quote a string for safe YAML frontmatter output. Only quotes when the
+   *  value contains characters that would break unquoted YAML scalars. */
+  function yamlString(value: string): string {
+    if (/[:\n"'#{}[\],&*?|>!%@`]/.test(value) || value.startsWith(' ') || value.endsWith(' ')) {
+      return JSON.stringify(value)
+    }
+    return value
+  }
+
+  /** Strip leading YAML frontmatter (---\n...\n---) from markdown so the
+   *  generated llms-full.txt frontmatter doesn't duplicate the original. */
+  function stripLeadingFrontmatter(markdown: string): string {
+    const s = markdown.charCodeAt(0) === 0xfeff ? markdown.slice(1) : markdown
+    const match = s.match(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)\r?\n?/)
+    return match ? s.slice(match[0].length).trimStart() : markdown
   }
 
   async function buildLoaderSite(
