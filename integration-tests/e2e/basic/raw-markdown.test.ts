@@ -319,6 +319,7 @@ test.describe("docs.zip", () => {
     const files = unzipSync(new Uint8Array(buffer));
     const indexMd = strFromU8(files["index.md"]!);
     expect(indexMd).toContain("Agent-readable docs index: /llms.txt");
+    expect(indexMd).toContain("llms-full.txt");
     expect(indexMd).toContain("## Overview");
   });
 

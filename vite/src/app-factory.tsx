@@ -563,7 +563,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   function buildAgentDocsDirective(base: string): string {
     const basePath = base === '/' ? '' : base.replace(/\/$/, '')
-    return `Agent-readable docs index: ${basePath}/llms.txt. Download ${basePath}/docs.zip to grep all markdown files locally.`
+    return `Agent-readable docs index: ${basePath}/llms.txt. Full docs in one file: ${basePath}/llms-full.txt. Download ${basePath}/docs.zip to grep all markdown files locally.`
   }
 
   function buildMarkdownSource(mdx: string): string {
@@ -676,6 +676,41 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       ${pageLinks}
     ` + linksSection
+  }
+
+  async function buildLlmsFullTxt(origin: string): Promise<string> {
+    const basePath = withBaseRoute(site.base, '/') === '/' ? '' : withBaseRoute(site.base, '/').replace(/\/$/, '')
+    const baseUrl = `${origin}${basePath}`
+    const description = escapeMarkdownText(site.config.description || `Documentation and usage guide for ${site.config.name}.`)
+
+    const pages = collectAllPages(site.navigation).filter((page) => isIndexablePage(page.frontmatter))
+
+    const header = dedent`
+      # ${escapeMarkdownText(site.config.name)}
+
+      > ${description}
+
+      This file contains the full content of all documentation pages. For a compact index, see [llms.txt](${baseUrl}/llms.txt). To download all pages as a zip, use [docs.zip](${baseUrl}/docs.zip).
+    `
+
+    const sections: string[] = [header]
+    for (const page of pages) {
+      const mdx = await providers.getMdxSource(page.slug)
+      if (mdx === undefined) continue
+      const stripped = stripVisibilityForAgents(mdx)
+      const pageSection = [
+        '---',
+        `title: ${page.title}`,
+        `url: ${baseUrl}${hrefToMarkdownPath(page.href)}`,
+        ...(page.description ? [`description: ${page.description}`] : []),
+        '---',
+        '',
+        stripped,
+      ].join('\n')
+      sections.push(pageSection)
+    }
+
+    return sections.join('\n\n')
   }
 
   async function buildLoaderSite(
@@ -1029,6 +1064,21 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     app = app.get(llmsTxtRoute, ({ request }: { request: Request }) => {
       const url = new URL(request.url)
       return new Response(buildLlmsTxt(url.origin), {
+        headers: {
+          'content-type': 'text/markdown; charset=utf-8',
+          'cache-control': 's-maxage=300, stale-while-revalidate=86400',
+          'x-content-type-options': 'nosniff',
+        },
+      })
+    })
+  }
+
+  // /llms-full.txt — full content of every page in one file, separated by frontmatter blocks.
+  // Pages are in docs.json navigation order so the output mirrors the site structure.
+  for (const llmsFullRoute of new Set(['/llms-full.txt', withBaseRoute(site.base, '/llms-full.txt')])) {
+    app = app.get(llmsFullRoute, async ({ request }: { request: Request }) => {
+      const url = new URL(request.url)
+      return new Response(await buildLlmsFullTxt(url.origin), {
         headers: {
           'content-type': 'text/markdown; charset=utf-8',
           'cache-control': 's-maxage=300, stale-while-revalidate=86400',

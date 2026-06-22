@@ -233,16 +233,39 @@ test.describe("agent-facing docs", () => {
     expect(text).toContain("/markdown-page.md)");
   });
 
-  test("points HTML and markdown pages back to llms.txt", async ({ request }) => {
+  test("serves llms-full.txt with full page content separated by frontmatter", async ({ request }) => {
+    const response = await request.get("/llms-full.txt");
+
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("text/markdown");
+
+    const text = await response.text();
+    // Header
+    expect(text).toContain("# Test Docs");
+    expect(text).toContain("llms.txt");
+    expect(text).toContain("docs.zip");
+
+    // Pages are separated by frontmatter blocks with title and url
+    expect(text).toContain("title: Welcome to Test Docs");
+    expect(text).toContain("title: Getting Started");
+    expect(text).toContain("url: http://localhost:");
+
+    // Full page content is included (not just links)
+    expect(text).toContain("## Overview");
+  });
+
+  test("points HTML and markdown pages back to llms.txt and llms-full.txt", async ({ request }) => {
     const htmlResponse = await request.get("/getting-started", {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await htmlResponse.text();
     expect(html).toContain("Agent-readable docs index: /llms.txt");
+    expect(html).toContain("llms-full.txt");
 
     const mdResponse = await request.get("/getting-started.md");
     const md = await mdResponse.text();
-    expect(md.startsWith("> Agent-readable docs index: /llms.txt.")).toBe(true);
+    expect(md).toContain("Agent-readable docs index: /llms.txt");
+    expect(md).toContain("llms-full.txt");
   });
 });
 

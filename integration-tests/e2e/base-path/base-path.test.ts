@@ -29,6 +29,7 @@ test.describe("raw markdown under base path", () => {
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
     expect(body).toContain("Agent-readable docs index: /docs/llms.txt");
+    expect(body).toContain("/docs/llms-full.txt");
     expect(body).toContain("# Introduction");
   });
 

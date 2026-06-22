@@ -1,23 +1,27 @@
 ---
 title: llms.txt
-description: An agent-readable index of all documentation pages.
+description: Agent-readable docs index and full-content endpoint for AI agents.
 icon: list
 ---
 
 # llms.txt
 
-Holocron generates a `/llms.txt` file that serves as an index of all documentation pages. This is the primary discovery endpoint for AI agents.
+Holocron generates two agent-facing text files automatically:
 
-## What it contains
+- **`/llms.txt`** — lightweight index with page titles and `.md` URLs
+- **`/llms-full.txt`** — full content of every page concatenated into one file
 
-The file lists:
-- The site name and description
-- A link to `/docs.zip` for bulk download
-- Every page with its title and `.md` URL
+Both follow the [llms.txt spec](https://llmstxt.org/).
 
-Agents can read this file to understand the site structure and then fetch individual pages as Markdown.
+## /llms.txt
 
-## Example output
+The index file lists the site name, description, a link to `/docs.zip` for bulk download, and every page with its title and `.md` URL. Agents read this to discover the site structure and then fetch individual pages.
+
+```bash
+curl https://your-docs-site.com/llms.txt
+```
+
+### Example output
 
 ````
 # My Docs
@@ -45,10 +49,45 @@ You can also fetch individual markdown pages directly:
 - [Deployment](https://example.com/deploy.md)
 ````
 
-## Usage
+## /llms-full.txt
+
+The full-content file includes every page's markdown body in a single response. Pages appear in the same order as your `docs.json` navigation and are separated by frontmatter blocks containing the page title, URL, and description.
 
 ```bash
-curl https://your-docs-site.com/llms.txt
+curl https://your-docs-site.com/llms-full.txt
 ```
 
-The route is available at both `/llms.txt` and under your base path if configured.
+This is useful for agents that want to ingest the entire documentation set in one request without downloading a zip or making per-page requests.
+
+### Example output
+
+````
+# My Docs
+
+> Documentation and usage guide for My Docs.
+
+This file contains the full content of all documentation pages. For a compact index, see llms.txt. To download all pages as a zip, use docs.zip.
+
+---
+title: Getting Started
+url: https://example.com/getting-started.md
+description: Learn how to set up My Docs.
+---
+
+# Getting Started
+
+Follow these steps to get started...
+
+---
+title: Authentication
+url: https://example.com/guides/auth.md
+---
+
+# Authentication
+
+Configure authentication for your API...
+````
+
+## Base path
+
+Both routes are available at the root (`/llms.txt`, `/llms-full.txt`) and under your base path if configured (e.g. `/docs/llms.txt`, `/docs/llms-full.txt`).
