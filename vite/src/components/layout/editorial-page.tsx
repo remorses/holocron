@@ -22,7 +22,7 @@ import {
 import { SideNav } from './side-nav.tsx'
 import { TabLink } from './tab-link.tsx'
 import { NavSelect, type NavSelectItem } from './nav-select.tsx'
-import { Icon } from '../icon.tsx'
+import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavTooltip } from '../sidebar-assistant.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
 import { ConfigPanel } from '../config-panel.tsx'
@@ -246,7 +246,7 @@ export function EditorialPage({
                       aria-label={link.label}
                       className='no-underline flex items-center gap-1.5 text-muted-foreground transition-colors duration-150 hover:text-foreground'
                     >
-                      <Icon icon={link.icon} size={16} />
+                      <Icon icon={link.icon} size={16} color={resolveIconColor(link.iconColor)} />
                       {hasStars && <GitHubStars starsPromise={githubStars} href={link.href} />}
                       {!iconOnly && !hasStars && (
                         <span className='text-sm'>{link.label}</span>
@@ -274,7 +274,7 @@ export function EditorialPage({
                 aria-label={primary.label}
                 className='slot-navbar-primary no-underline inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-border-subtle text-muted-foreground transition-colors duration-150 hover:text-foreground hover:border-muted-foreground'
               >
-                <Icon icon={primary.icon} size={14} />
+                <Icon icon={primary.icon} size={14} color={resolveIconColor(primary.iconColor)} />
                 <span>{primary.label}</span>
                 {primary.type === 'github' && githubStars && <GitHubStars starsPromise={githubStars} href={primary.href} />}
               </Link>

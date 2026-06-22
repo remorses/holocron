@@ -93,6 +93,71 @@ curl -s https://holocron.so/schemas/lucide-icons.json | jq '.enum[:10]'
 curl -s https://holocron.so/schemas/fontawesome-icons.json | jq '.enum[:10]'
 ```
 
+## Icon colors
+
+Add `iconColor` to give icons a distinct color. This works everywhere icons are supported: page frontmatter, groups, tabs, anchors, navbar links, and dropdowns.
+
+**Named colors** use the built-in editorial palette, which adapts to light and dark mode automatically:
+
+| Color | Example |
+|-------|---------|
+| `green` | `"iconColor": "green"` |
+| `blue` | `"iconColor": "blue"` |
+| `red` | `"iconColor": "red"` |
+| `purple` | `"iconColor": "purple"` |
+| `orange` | `"iconColor": "orange"` |
+| `yellow` | `"iconColor": "yellow"` |
+| `pink` | `"iconColor": "pink"` |
+
+You can also pass any **CSS color string** directly (hex, rgb, hsl):
+
+```json
+{ "iconColor": "#e11d48" }
+```
+
+### In frontmatter
+
+```mdx
+---
+title: Authentication
+icon: lock
+iconColor: green
+---
+```
+
+### In docs.json
+
+Works on groups, tabs, anchors, navbar links, and dropdowns:
+
+```json
+{
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "API Reference",
+        "icon": "code",
+        "iconColor": "blue",
+        "groups": [...]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Discord",
+          "href": "https://discord.gg/example",
+          "icon": "message-circle",
+          "iconColor": "purple"
+        }
+      ]
+    }
+  }
+}
+```
+
+### Desaturation
+
+Sidebar page icons with a color are **desaturated 30%** by default. They go to full saturation when the page is **active** or on **hover**. This keeps the sidebar visually clean while still showing color.
+
 ## Icon consistency
 
 When adding icons, apply them **consistently across all siblings** at the same level. Inconsistent

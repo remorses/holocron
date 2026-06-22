@@ -72,6 +72,7 @@
   --orange: #c2410c;
   --red: #b91c1c;
   --purple: #7e22ce;
+  --pink: #db2777;
 
   /* Font stacks */
   --font-sans:
@@ -194,6 +195,7 @@
     --orange: #fb923c;
     --red: #fca5a5;
     --purple: #c4b5fd;
+    --pink: #f9a8d4;
   }
 }
 }

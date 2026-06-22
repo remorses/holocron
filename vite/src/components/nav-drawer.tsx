@@ -19,7 +19,7 @@ function useNavStore<T>(selector: (s: NavState) => T): T {
 import { CloseIcon } from '../chat/chat-icons.tsx'
 import { SideNav } from './layout/side-nav.tsx'
 import { NavSelect } from './layout/nav-select.tsx'
-import { Icon } from './icon.tsx'
+import { Icon, resolveIconColor } from './icon.tsx'
 import { ThemeToggle } from './theme-toggle.tsx'
 import { useHolocronData } from '../router.ts'
 import {
@@ -186,7 +186,7 @@ function NavDrawerInner() {
                   className='no-underline flex items-center gap-2 text-muted-foreground transition-colors duration-150 hover:text-foreground'
                   style={{ fontSize: '13px' }}
                 >
-                  <Icon icon={link.icon} size={16} />
+                  <Icon icon={link.icon} size={16} color={resolveIconColor(link.iconColor)} />
                   {link.type === 'github' && githubStars ? (
                     <GitHubStars starsPromise={githubStars} href={link.href} />
                   ) : (
@@ -201,7 +201,7 @@ function NavDrawerInner() {
                   rel={primary.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                   className='no-underline inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-border-subtle text-muted-foreground transition-colors duration-150 hover:text-foreground hover:border-muted-foreground'
                 >
-                  <Icon icon={primary.icon} size={14} />
+                  <Icon icon={primary.icon} size={14} color={resolveIconColor(primary.iconColor)} />
                   <span>{primary.label}</span>
                   {primary.type === 'github' && githubStars && <GitHubStars starsPromise={githubStars} href={primary.href} />}
                 </Link>

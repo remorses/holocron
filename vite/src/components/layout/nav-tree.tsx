@@ -12,7 +12,7 @@ import { notifyHeadingClick } from '../../hooks/use-active-toc.ts'
 import type { SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from '../markdown/icons.tsx'
 import { ExpandableContainer } from '../markdown/expandable-container.tsx'
-import { Icon } from '../icon.tsx'
+import { Icon, resolveIconColor } from '../icon.tsx'
 import { cn } from '../../lib/css-vars.ts'
 import { NavBadge, MethodBadge } from './nav-badge.tsx'
 
@@ -278,7 +278,7 @@ function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className={`flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
           opacity: isDimmed ? 0.45 : 1,
           color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
@@ -289,7 +289,22 @@ function NavPageLink({
           boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
         }}
       >
-        <Icon icon={page.icon} size={12} />
+        {page.icon && (() => {
+          const iconColor = resolveIconColor(frontmatter.iconColor)
+          return iconColor ? (
+            <span
+              className={cn(
+                'inline-flex transition-[filter] duration-150',
+                !isActive && '[filter:saturate(0.7)]',
+                !isActive && 'group-hover:[filter:saturate(1)]',
+              )}
+            >
+              <Icon icon={page.icon} size={12} color={iconColor} />
+            </span>
+          ) : (
+            <Icon icon={page.icon} size={12} />
+          )
+        })()}
         <span className={cn('font-medium', hasBadge && 'truncate min-w-0')}>{frontmatter.sidebarTitle ?? page.title}</span>
         <span className='ml-auto inline-flex items-center gap-1'>
           {typeof frontmatter.api === 'string' && <MethodBadge method={frontmatter.api.split(' ')[0]!} />}

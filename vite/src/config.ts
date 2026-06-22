@@ -97,6 +97,7 @@ export type ConfigNavbarLink = {
   href: string
   type?: string
   icon?: ConfigIcon
+  iconColor?: string
 }
 
 /** The navbar primary CTA button (right of navbar). Normalized: label
@@ -109,6 +110,7 @@ export type ConfigNavbarPrimary = {
   href: string
   type?: string
   icon?: ConfigIcon
+  iconColor?: string
 }
 
 export type FooterLinkItem = { label: string; href: string }
@@ -125,6 +127,7 @@ export type ConfigVersionItem = {
 export type ConfigDropdownItem = {
   dropdown: string
   icon?: ConfigIcon
+  iconColor?: string
   hidden?: boolean
   href?: string
   navigation?: { tabs: ConfigNavTab[]; anchors: ConfigAnchor[] }

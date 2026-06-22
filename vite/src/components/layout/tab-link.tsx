@@ -8,7 +8,7 @@
 import React from 'react'
 import { Link } from '../link.tsx'
 import type { TabItem } from '../../site-data.ts'
-import { Icon } from '../icon.tsx'
+import { Icon, resolveIconColor } from '../icon.tsx'
 
 export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
   const isExternal = tab.href.startsWith('http')
@@ -59,7 +59,7 @@ export function TabLink({ tab, isActive }: { tab: TabItem; isActive: boolean }) 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <Icon icon={tab.icon} size={14} />
+      <Icon icon={tab.icon} size={14} color={resolveIconColor(tab.iconColor)} />
       {tab.label}
       {isExternal && <span className='opacity-50'>↗</span>}
       {indicator}

@@ -18,6 +18,10 @@
       "description": "Icon name from the configured icon library (e.g. \"rocket\", \"home\")",
       "type": "string"
     },
+    "iconColor": {
+      "description": "Color for the sidebar icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Icons are desaturated 30% by default and go to full saturation on hover and when the page is active.",
+      "type": "string"
+    },
     "sidebarTitle": {
       "description": "Override the title shown in the sidebar navigation. Use this to keep the sidebar label short while using a longer, SEO-friendly title in the title field for search engines and browser tabs.",
       "type": "string"

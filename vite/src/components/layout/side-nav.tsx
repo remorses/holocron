@@ -16,7 +16,7 @@ import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } 
 import { useHolocronData } from '../../router.ts'
 import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys, type SidebarAnchor } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
-import { Icon } from '../icon.tsx'
+import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 
 const SEARCH_SHORTCUT_HINT = '/'
@@ -304,7 +304,7 @@ function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
               transition: 'color 0.15s',
             }}
           >
-            <Icon icon={anchor.icon} size={12} />
+            <Icon icon={anchor.icon} size={12} color={resolveIconColor(anchor.iconColor)} />
             <span>{anchor.label}</span>
             {isExternal && <span className='ml-auto mr-3 opacity-50'>↗</span>}
           </Link>

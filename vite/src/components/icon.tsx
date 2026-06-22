@@ -47,6 +47,26 @@ function renderLibraryIcon(
   )
 }
 
+/** Map named colors to their CSS variable references. Uses the editorial
+ *  semantic palette defined in globals.css (dark-mode-aware). */
+const NAMED_ICON_COLORS: Record<string, string> = {
+  green: 'var(--green)',
+  blue: 'var(--blue)',
+  red: 'var(--red)',
+  purple: 'var(--purple)',
+  orange: 'var(--orange)',
+  yellow: 'var(--yellow)',
+  pink: 'var(--pink)',
+}
+
+/** Resolve an iconColor value to a CSS color string.
+ *  Named colors (green, blue, etc.) map to CSS variables; anything else
+ *  (hex, rgb, etc.) passes through as-is. */
+export function resolveIconColor(iconColor: string | undefined): string | undefined {
+  if (!iconColor) return undefined
+  return NAMED_ICON_COLORS[iconColor] ?? iconColor
+}
+
 export function Icon({ icon, size = 16, className, iconType, color }: IconProps): React.ReactElement | null {
   const data = useHolocronDataSafe()
   const iconAtlas = data?.site?.icons

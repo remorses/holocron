@@ -34,6 +34,7 @@ export type TabItem = {
   label: string
   href: string
   icon?: NavIcon
+  iconColor?: string
   align?: 'start' | 'end'
   /** All page hrefs belonging to this tab (for active tab matching). */
   pageHrefs?: string[]
@@ -44,6 +45,7 @@ export type SidebarAnchor = {
   label: string
   href: string
   icon?: NavIcon
+  iconColor?: string
 }
 
 /** A link in the top navbar (icon-only typically). */
@@ -51,6 +53,7 @@ export type HeaderLink = {
   label: string
   href: string
   icon?: NavIcon
+  iconColor?: string
   type?: string
 }
 
@@ -64,6 +67,7 @@ export type VersionSelectItem = {
 export type DropdownSelectItem = {
   label: string
   icon?: ConfigIcon
+  iconColor?: string
   href: string
   external?: boolean
   pageHrefs: string[]
@@ -194,6 +198,7 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
         label: t.tab,
         href: firstPage?.href || '/',
         icon: t.icon,
+        iconColor: t.iconColor,
         align: t.align,
         pageHrefs,
       }
@@ -207,7 +212,7 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
   // Only anchors explicitly placed in tabs go into the tab bar
   const tabAnchors: TabItem[] = site.config.navigation.anchors
     .filter((a) => !a.hidden && a.placement === 'tabs')
-    .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon }))
+    .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon, iconColor: a.iconColor }))
 
   // When tab-placed anchors exist but there are no explicit content tabs,
   // add an implicit "Docs" tab so the user can navigate back to docs content.
@@ -230,7 +235,7 @@ export function buildTabItems(site: HolocronSiteData): TabItem[] {
 export function buildSidebarAnchors(site: HolocronSiteData): SidebarAnchor[] {
   return site.config.navigation.anchors
     .filter((a) => !a.hidden && a.placement !== 'tabs')
-    .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon }))
+    .map((a) => ({ label: a.anchor, href: a.href, icon: a.icon, iconColor: a.iconColor }))
 }
 
 export function buildHeaderLinks(site: HolocronSiteData): HeaderLink[] {
@@ -238,6 +243,7 @@ export function buildHeaderLinks(site: HolocronSiteData): HeaderLink[] {
     href: link.href,
     label: link.label,
     icon: link.icon,
+    iconColor: link.iconColor,
     type: link.type,
   }))
 }
@@ -334,6 +340,7 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
         return {
           label: d.dropdown,
           ...(d.icon && { icon: d.icon }),
+          ...(d.iconColor && { iconColor: d.iconColor }),
           href: d.href,
           ...(isExternalHref(d.href) && { external: true }),
           pageHrefs: [],
@@ -345,6 +352,7 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
       return {
         label: d.dropdown,
         ...(d.icon && { icon: d.icon }),
+        ...(d.iconColor && { iconColor: d.iconColor }),
         href: firstHref,
         pageHrefs,
       }

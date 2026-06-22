@@ -177,11 +177,18 @@ export const faviconSchema = z
 
 /* ── Anchor ───────────────────────────────────────────────────────────── */
 
+export const iconColorSchema = z
+  .string()
+  .optional()
+  .describe('Color for the icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Icons with a color are desaturated 30% by default and go to full saturation on hover and when active.')
+  .meta({ id: 'iconColorSchema' })
+
 export const anchorSchema = z
   .object({
     anchor: z.string().min(1).describe('The name of the anchor'),
     href: z.string().describe('A valid path or external link'),
     icon: iconSchema.optional(),
+    iconColor: iconColorSchema,
     hidden: z
       .boolean()
       .optional()
@@ -209,6 +216,7 @@ export type PageEntryInput = string | GroupInput
 export type GroupInput = {
   group: string
   icon?: z.input<typeof iconSchema>
+  iconColor?: string
   pages: PageEntryInput[]
   hidden?: boolean
   root?: string
@@ -220,6 +228,7 @@ export const groupSchema: z.ZodType<GroupInput> = z
   .object({
     group: z.string().min(1).describe('The name of the group'),
     icon: iconSchema.optional(),
+    iconColor: iconColorSchema,
     hidden: z
       .boolean()
       .optional()
@@ -271,6 +280,7 @@ export const tabBaseSchema = z
   .object({
     tab: z.string().min(1).describe('The name of the tab'),
     icon: iconSchema.optional(),
+    iconColor: iconColorSchema,
     hidden: z
       .boolean()
       .optional()
@@ -518,6 +528,7 @@ export const dropdownSchema = z
   .object({
     dropdown: z.string().min(1).describe('Display name of the dropdown item'),
     icon: iconSchema.optional(),
+    iconColor: iconColorSchema,
     hidden: z
       .boolean()
       .optional()
@@ -546,6 +557,7 @@ export const productSchema = z
       .optional()
       .describe('Description of the product'),
     icon: iconSchema.optional(),
+    iconColor: iconColorSchema,
     href: z
       .string()
       .optional()
@@ -699,6 +711,7 @@ const navbarLinkSchema = z
         'Alias for `href` for Mintlify compatibility',
       ),
     icon: iconSchema.optional(),
+    iconColor: iconColorSchema,
   })
   .describe('A link rendered in the top navbar')
   .meta({ id: 'navbarLinkSchema' })
@@ -724,6 +737,7 @@ const navbarPrimarySchema = z
       .optional()
       .describe('Alias for `href` for Mintlify compatibility'),
     icon: iconSchema.optional(),
+    iconColor: iconColorSchema,
   })
   .describe('The primary CTA button rendered at the right of the navbar')
   .meta({ id: 'navbarPrimarySchema' })

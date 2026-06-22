@@ -13,7 +13,7 @@
   "navbar": {
     "links": [
       { "type": "github", "href": "https://github.com/remorses/playwriter" },
-      { "label": "Blog", "icon": "rss", "href": "https://example.com/blog" }
+      { "label": "Blog", "icon": "rss", "iconColor": "orange", "href": "https://example.com/blog" }
     ],
     "primary": {
       "type": "button",
@@ -56,12 +56,14 @@
           {
             "tab": "API Reference",
             "icon": "code",
+            "iconColor": "blue",
             "openapi": "api.yaml",
             "pages": ["api-authentication", "..."]
           },
           {
             "tab": "Blog",
             "icon": "rss",
+            "iconColor": "orange",
             "groups": [
               {
                 "group": "Posts",
@@ -77,6 +79,7 @@
           {
             "tab": "Changelog",
             "icon": "newspaper",
+            "iconColor": "green",
             "changelog": "https://github.com/remorses/playwriter"
           }
         ]
@@ -99,8 +102,8 @@
     "global": {
       "anchors": [
         { "anchor": "GitHub", "href": "https://github.com/remorses/playwriter", "icon": "github", "placement": "sidebar" },
-        { "anchor": "Discord", "href": "https://discord.gg/example", "icon": "message-circle", "placement": "sidebar" },
-        { "anchor": "npm", "href": "https://www.npmjs.com/package/playwriter", "icon": "package", "placement": "tabs" }
+        { "anchor": "Discord", "href": "https://discord.gg/example", "icon": "message-circle", "iconColor": "purple", "placement": "sidebar" },
+        { "anchor": "npm", "href": "https://www.npmjs.com/package/playwriter", "icon": "package", "iconColor": "red", "placement": "tabs" }
       ]
     }
   },

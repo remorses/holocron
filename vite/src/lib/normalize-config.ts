@@ -561,11 +561,13 @@ function normalizeNavbar(raw: unknown, defaultLibrary: IconLibrary): HolocronCon
         : type && getDefaultTypeIcon(type, defaultLibrary)
           ? getDefaultTypeIcon(type, defaultLibrary)
           : undefined
+    const iconColor = typeof link.iconColor === 'string' ? link.iconColor : undefined
     return {
       label,
       href,
       ...(type !== undefined && { type }),
       ...(icon !== undefined && { icon }),
+      ...(iconColor !== undefined && { iconColor }),
     }
   })
 
@@ -588,6 +590,7 @@ function normalizeNavbar(raw: unknown, defaultLibrary: IconLibrary): HolocronCon
         : type && getDefaultTypeIcon(type, defaultLibrary)
           ? getDefaultTypeIcon(type, defaultLibrary)
           : undefined
+    const primaryIconColor = typeof rawPrimary.iconColor === 'string' ? rawPrimary.iconColor : undefined
     primary = {
       label:
         (typeof rawPrimary.label === 'string' && rawPrimary.label) ||
@@ -600,6 +603,7 @@ function normalizeNavbar(raw: unknown, defaultLibrary: IconLibrary): HolocronCon
         '',
       ...(type !== undefined && { type }),
       ...(icon !== undefined && { icon }),
+      ...(primaryIconColor !== undefined && { iconColor: primaryIconColor }),
     }
   }
 

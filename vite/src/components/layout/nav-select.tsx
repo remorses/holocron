@@ -7,13 +7,14 @@
 
 import React, { useCallback } from 'react'
 import { router } from 'spiceflow/react'
-import { Icon } from '../icon.tsx'
+import { Icon, resolveIconColor } from '../icon.tsx'
 import type { ConfigIcon } from '../../config.ts'
 
 export type NavSelectItem = {
   label: string
   href: string
   icon?: ConfigIcon
+  iconColor?: string
   tag?: string
   external?: boolean
 }
@@ -73,7 +74,7 @@ export function NavSelect({ items, activeHref, className, ariaLabel }: NavSelect
         ))}
       </select>
       {activeItem?.icon && (
-        <Icon icon={activeItem.icon} size={14} />
+        <Icon icon={activeItem.icon} size={14} color={resolveIconColor(activeItem.iconColor)} />
       )}
       <span className='text-xs text-current'>{activeLabel}</span>
       {/* Inline SVG — data-URI SVGs can't inherit currentColor */}
