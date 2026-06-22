@@ -49,8 +49,52 @@ Tabs also support `hidden: true`:
 }
 ```
 
+Hidden tabs behave differently from hidden pages:
+
+| Behavior | Hidden page (`frontmatter`) | Hidden tab |
+|---|---|---|
+| Visible in sidebar | No | No |
+| Visible in tab bar | N/A | No |
+| Accessible by URL | Yes | Yes |
+| In sitemap.xml | **No** | **Yes** |
+| In llms.txt | **No** | **Yes** |
+| `robots: noindex` | **Yes** | **No** |
+
+Hidden **pages** are excluded from search engine indexing. Hidden **tabs** keep all their pages fully indexed; only the UI navigation is removed. This makes hidden tabs the right choice when you want content discoverable by search engines but not shown in the site navigation.
+
+### SEO-only content
+
+Use hidden tabs to publish SEO content that search engines can index without cluttering navigation. This is useful for programmatically generated pages, keyword-targeted landing pages, or AI-generated content:
+
+```json
+{
+  "navigation": {
+    "tabs": [
+      { "tab": "Docs", "groups": [...] },
+      {
+        "tab": "SEO",
+        "hidden": true,
+        "groups": [
+          {
+            "group": "Topics",
+            "pages": [
+              "seo/how-to-authenticate",
+              "seo/best-practices",
+              "seo/troubleshooting-errors"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Pages in the hidden tab are rendered at their normal URLs, included in `sitemap.xml` and `llms.txt`, and indexed by search engines. Users who land on these pages via search can still navigate the site normally; the tab just does not appear in the tab bar or sidebar.
+
 ## Use cases
 
+- **SEO content** that search engines should index but does not belong in the main navigation
 - **Internal pages** that are linked from external tools but should not clutter the sidebar
 - **Beta documentation** shared via direct link before it is publicly visible
 - **Legacy pages** kept alive for old bookmarks without promoting them in navigation

@@ -53,6 +53,17 @@ Tabs split the sidebar into multiple top-level areas. Each tab has its own set o
 
 Clicking a tab switches the sidebar content. The tab bar appears below the navbar.
 
+### Tab options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tab` | string | Tab label in the tab bar |
+| `groups` | array | Sidebar groups inside the tab |
+| `pages` | array | Flat page list (no groups wrapper) |
+| `icon` | string | Icon displayed next to the tab label |
+| `hidden` | boolean | Hide from tab bar and sidebar but keep pages indexed for SEO. See [hidden tabs](/docs/organize/hidden-pages#hidden-tabs) |
+| `align` | `"start"` \| `"end"` | Tab alignment in the tab bar |
+
 ### Link-only tabs
 
 A tab can be an external link instead of a content section:
