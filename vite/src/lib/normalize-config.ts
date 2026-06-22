@@ -68,6 +68,7 @@ function normalizeGroup(group: ConfigNavGroup): ConfigNavGroup {
   return {
     group: group.group,
     ...(group.icon !== undefined && { icon: group.icon }),
+    ...(group.iconColor !== undefined && { iconColor: group.iconColor }),
     ...(group.hidden !== undefined && { hidden: group.hidden }),
     ...(group.root !== undefined && { root: normalizePageSlug(group.root) }),
     ...(group.tag !== undefined && { tag: group.tag }),
@@ -254,12 +255,14 @@ function normalizeDropdowns(rawDropdowns: unknown[], defaultLibrary: IconLibrary
       defaultLibrary,
     })
     const href = typeof obj.href === 'string' ? obj.href : undefined
+    const iconColor = typeof obj.iconColor === 'string' ? obj.iconColor : undefined
 
     // Link-only dropdown (has href, no content)
     if (href && !obj.tabs && !obj.groups && !obj.pages) {
       const item: ConfigDropdownItem = {
         dropdown: name,
         ...(icon !== undefined && { icon }),
+        ...(iconColor !== undefined && { iconColor }),
         ...(obj.hidden === true && { hidden: true }),
         href,
       }
@@ -275,6 +278,7 @@ function normalizeDropdowns(rawDropdowns: unknown[], defaultLibrary: IconLibrary
     const item: ConfigDropdownItem = {
       dropdown: name,
       ...(icon !== undefined && { icon }),
+      ...(iconColor !== undefined && { iconColor }),
       ...(obj.hidden === true && { hidden: true }),
       ...(href ? { href } : {}),
       navigation: nav,
@@ -428,8 +432,10 @@ function normalizeTabsAndAnchors(
 
     const hidden = raw.hidden as boolean | undefined
     const align = raw.align as ('start' | 'end') | undefined
+    const iconColor = typeof raw.iconColor === 'string' ? raw.iconColor : undefined
     const extras = {
       ...(icon !== undefined && { icon }),
+      ...(iconColor !== undefined && { iconColor }),
       ...(hidden !== undefined && { hidden }),
     }
     const tabExtras = {

@@ -19,7 +19,7 @@
       "type": "string"
     },
     "iconColor": {
-      "description": "Color for the sidebar icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Icons are desaturated 30% by default and go to full saturation on hover and when the page is active.",
+      "description": "Color for the sidebar icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Sidebar page icons with a color are desaturated by default and become fully saturated on hover or when the page is active.",
       "type": "string"
     },
     "sidebarTitle": {

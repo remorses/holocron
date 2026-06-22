@@ -180,7 +180,7 @@ export const faviconSchema = z
 export const iconColorSchema = z
   .string()
   .optional()
-  .describe('Color for the icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Icons with a color are desaturated 30% by default and go to full saturation on hover and when active.')
+  .describe('Color for the icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Sidebar page icons with a color are desaturated by default and become fully saturated on hover or when the page is active.')
   .meta({ id: 'iconColorSchema' })
 
 export const anchorSchema = z

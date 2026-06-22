@@ -30,7 +30,7 @@ export const pageFrontmatterSchema = z.object({
   title: z.string().optional().describe('The page title displayed in the sidebar, browser tab, and heading'),
   description: z.string().optional().describe('Page description used for SEO meta tags and search indexing'),
   icon: z.string().optional().describe('Icon name from the configured icon library (e.g. "rocket", "home")'),
-  iconColor: z.string().optional().describe('Color for the sidebar icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Icons are desaturated 30% by default and go to full saturation on hover and when the page is active.'),
+  iconColor: z.string().optional().describe('Color for the sidebar icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Sidebar page icons with a color are desaturated by default and become fully saturated on hover or when the page is active.'),
   sidebarTitle: z.string().optional().describe('Override the title shown in the sidebar navigation. Use this to keep the sidebar label short while using a longer, SEO-friendly title in the title field for search engines and browser tabs.'),
   tag: z.string().optional().describe('Badge label displayed next to the page title in the sidebar'),
   mode: pageModeSchema
