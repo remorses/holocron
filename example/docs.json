@@ -101,7 +101,7 @@
     ],
     "global": {
       "anchors": [
-        { "anchor": "GitHub", "href": "https://github.com/remorses/playwriter", "icon": "github", "placement": "sidebar" },
+        { "anchor": "GitHub", "href": "https://github.com/remorses/playwriter", "icon": "github", "iconColor": "green", "placement": "sidebar" },
         { "anchor": "Discord", "href": "https://discord.gg/example", "icon": "message-circle", "iconColor": "purple", "placement": "sidebar" },
         { "anchor": "npm", "href": "https://www.npmjs.com/package/playwriter", "icon": "package", "iconColor": "red", "placement": "tabs" }
       ]
