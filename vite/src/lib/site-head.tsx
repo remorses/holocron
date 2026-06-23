@@ -114,6 +114,19 @@ export function buildFontHeadState(config: HolocronConfig): FontHeadState {
   }
 }
 
+export function buildColorStyles(config: HolocronConfig): string[] {
+  const colorStyles: string[] = []
+  if (config.colors._hasUserColors) {
+    const lightBrand = config.colors.dark ?? config.colors.primary
+    // When the user doesn't set colors.light, auto-derive a lighter variant
+    // for dark mode via color-mix. 40% of the original + 60% white ≈ Tailwind 200 scale.
+    const darkBrand = config.colors.light ?? `color-mix(in oklch, ${config.colors.primary} 40%, white)`
+    colorStyles.push(`:root:root { --primary: ${lightBrand}; }`)
+    colorStyles.push(`:root.dark { --primary: ${darkBrand}; }`)
+  }
+  return colorStyles
+}
+
 export function SiteHead({ config, titleOverride }: { config: HolocronConfig; titleOverride?: string }) {
   const { light: faviconLight, dark: faviconDark } = config.favicon
   const hasBoth =
@@ -126,15 +139,7 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
   // colors.light = used for emphasis in dark mode.
   // Colors → override link accent + brand primary when user configured colors.
   // Track presence via a flag so users can intentionally set black (#000000).
-  const colorStyles: string[] = []
-  if (config.colors._hasUserColors) {
-    const lightBrand = config.colors.dark ?? config.colors.primary
-    // When the user doesn't set colors.light, auto-derive a lighter variant
-    // for dark mode via color-mix. 40% of the original + 60% white ≈ Tailwind 200 scale.
-    const darkBrand = config.colors.light ?? `color-mix(in oklch, ${config.colors.primary} 40%, white)`
-    colorStyles.push(`:root:root { --primary: ${lightBrand}; }`)
-    colorStyles.push(`:root.dark { --primary: ${darkBrand}; }`)
-  }
+  const colorStyles = buildColorStyles(config)
 
   const fontHead = buildFontHeadState(config)
 
@@ -285,7 +290,7 @@ export function buildAnalyticsScripts(
   // Plausible — single deferred script with data-domain.
   // Supports self-hosted instances via `server` field.
   if (integrations.plausible?.domain) {
-    const plausible = integrations.plausible as { domain: string; server?: string }
+    const plausible = integrations.plausible
     const host = plausible.server
       ? `https://${plausible.server.replace(/^https?:\/\//, '').replace(/\/+$/, '')}`
       : 'https://plausible.io'

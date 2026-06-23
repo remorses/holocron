@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest'
 import { normalize } from './normalize-config.ts'
-import { buildFontHeadState, buildAnalyticsScripts } from './site-head.tsx'
+import { buildFontHeadState, buildAnalyticsScripts, buildColorStyles } from './site-head.tsx'
 
 describe('SiteHead fonts', () => {
   test('does not emit third-party font links for the default font stack', () => {
@@ -21,6 +21,19 @@ describe('SiteHead fonts', () => {
     expect(state.stylesheetLinks).toMatchInlineSnapshot(`
       [
         "https://fonts.googleapis.com/css2?family=Inter&display=swap",
+      ]
+    `)
+  })
+})
+
+describe('SiteHead colors', () => {
+  test('derives light and dark primary tokens from configured primary color', () => {
+    const styles = buildColorStyles(normalize({ name: 'Docs', colors: { primary: '#ff5500' } }))
+
+    expect(styles).toMatchInlineSnapshot(`
+      [
+        ":root:root { --primary: #ff5500; }",
+        ":root.dark { --primary: color-mix(in oklch, #ff5500 40%, white); }",
       ]
     `)
   })
@@ -195,14 +208,14 @@ describe('buildAnalyticsScripts', () => {
 
   test('Plausible uses custom server when provided', () => {
     const result = buildAnalyticsScripts({
-      plausible: { domain: 'docs.example.com', server: 'plausible.example.com' } as any,
+      plausible: { domain: 'docs.example.com', server: 'plausible.example.com' },
     })
     expect(result.srcScripts[0]!.src).toBe('https://plausible.example.com/js/script.js')
   })
 
   test('Plausible strips protocol from server if provided', () => {
     const result = buildAnalyticsScripts({
-      plausible: { domain: 'docs.example.com', server: 'https://plausible.example.com/' } as any,
+      plausible: { domain: 'docs.example.com', server: 'https://plausible.example.com/' },
     })
     expect(result.srcScripts[0]!.src).toBe('https://plausible.example.com/js/script.js')
   })
