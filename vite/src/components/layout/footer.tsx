@@ -93,7 +93,7 @@ export function Footer() {
           href={item.href}
           target={item.href.startsWith('http') ? '_blank' : undefined}
           rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-          className='no-underline text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground'
+          className='no-underline text-xs text-muted-foreground transition-colors duration-150 hover:text-foreground'
         >
           {item.label}
         </Link>
