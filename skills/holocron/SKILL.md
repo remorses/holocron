@@ -570,13 +570,7 @@ Use ASCII diagrams frequently in MDX pages. Always use the **`diagram`** languag
 - Never exceed 94 characters per line.
 - Prefer a **varied, organic layout**. Mix plain text labels, boxes for major components, and directional arrows.
 - All connections must use **directional arrows**. Never use plain lines without an arrowhead.
-- Verify alignment by counting characters precisely.
-- **Always run `holocron diagrams fix` after creating or editing a diagram.** This command auto-fixes misaligned box borders, padding, and bottom borders. It handles all Unicode box-drawing styles (light, heavy, double, rounded).
-
-```bash
-npx -y @holocron.so/cli diagrams fix path/to/file.mdx --dry-run  # preview
-npx -y @holocron.so/cli diagrams fix path/to/file.mdx            # fix in-place
-```
+- Verify alignment by running `npx -y @holocron.so/cli diagrams fix <file>` (see dedicated section below).
 
 ````mdx
 ```diagram
@@ -596,6 +590,23 @@ docs.jsonc ───►│  Vite Plugin  │──────► Build Output
                   holocron-config holocron-config
 ```
 ````
+
+## Always run `diagrams fix` after editing diagrams
+
+LLMs cannot count characters reliably. Every time you create or edit a diagram in an MDX page, you **must** run the alignment fixer before committing. This is not optional.
+
+```bash
+npx -y @holocron.so/cli diagrams fix path/to/file.mdx
+```
+
+The command:
+- Fixes box alignment (padding, border widths, junctions) in-place
+- Reports how many lines were changed
+- Exits with code 1 if any lines exceed max width (94 cols by default)
+
+If the output says "No changes", the diagram was already correct. If it reports width violations, shorten the offending lines manually and re-run.
+
+**Do not skip this step.** Even if the diagram looks correct in your editor, run the command. Off-by-one padding errors are invisible to LLMs but obvious to humans in monospace fonts.
 
 ## OpenAPI summaries
 

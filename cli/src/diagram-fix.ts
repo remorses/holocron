@@ -616,6 +616,18 @@ export function fixDiagramsInText(text: string): string {
 // CLI command
 // ─────────────────────────────────────────────────────────────
 
+/** Count how many lines differ between two strings. */
+function countChangedLines(before: string, after: string): number {
+  const a = before.split('\n')
+  const b = after.split('\n')
+  let changed = 0
+  const len = Math.max(a.length, b.length)
+  for (let i = 0; i < len; i++) {
+    if (a[i] !== b[i]) changed++
+  }
+  return changed
+}
+
 export const diagramsCli = goke()
 
 diagramsCli
@@ -698,13 +710,12 @@ diagramsCli
       const fixed = fixDiagramsInText(content)
       if (options.dryRun) {
         output.log(fixed)
+      } else if (fixed !== content) {
+        const changedLines = countChangedLines(content, fixed)
+        fs.writeFileSync(filePath, fixed, 'utf-8')
+        output.log(logger.success(`Fixed: ${file} (${changedLines} line${changedLines === 1 ? '' : 's'} changed)`))
       } else {
-        if (fixed !== content) {
-          fs.writeFileSync(filePath, fixed, 'utf-8')
-          output.log(logger.success(`Fixed: ${file}`))
-        } else {
-          output.log(logger.info(`No changes: ${file}`))
-        }
+        output.log(logger.info(`No changes: ${file}`))
       }
 
       // After fixing, report width violations
