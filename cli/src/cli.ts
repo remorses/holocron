@@ -11,6 +11,7 @@ import { createCli } from './create.ts'
 import { deployCli } from './deploy.ts'
 import { subscribeCli } from './subscribe.ts'
 import { domainCli } from './domains.ts'
+import { diagramsCli } from './diagram-fix.ts'
 
 export const cli = goke('holocron')
   .option('--api-url [url]', 'Holocron API URL (default: https://holocron.so)')
@@ -26,6 +27,7 @@ export const cli = goke('holocron')
   .use(deployCli)
   .use(subscribeCli)
   .use(domainCli)
+  .use(diagramsCli)
 
 cli.help()
 cli.version(packageJson.version)
