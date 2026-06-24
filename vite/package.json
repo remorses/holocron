@@ -123,7 +123,7 @@
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
     "safe-mdx": "^1.11.1",
-    "spiceflow": "1.26.0-rsc.5",
+    "spiceflow": "1.26.0-rsc.7",
     "string-dedent": "^3.0.2",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
