@@ -78,6 +78,9 @@ const RESOLVED_MDX_PAGE_PREFIX = '\0' + VIRTUAL_MDX_PAGE_PREFIX
 const VIRTUAL_MODULES = 'virtual:holocron-modules'
 const RESOLVED_MODULES = '\0' + VIRTUAL_MODULES
 
+const VIRTUAL_PROVIDER_PREFIX = 'virtual:holocron-provider/'
+const RESOLVED_PROVIDER_PREFIX = '\0' + VIRTUAL_PROVIDER_PREFIX
+
 const VIRTUAL_APP = 'virtual:holocron-app'
 const RESOLVED_APP = '\0' + VIRTUAL_APP
 
@@ -208,6 +211,95 @@ function getPluginName(plugin: PluginOption): string | undefined {
   }
   const maybeName = Reflect.get(plugin, 'name')
   return typeof maybeName === 'string' ? maybeName : undefined
+}
+
+import type { CustomTabProvider } from './lib/runtime-provider.ts'
+import type { ConfigNavTab } from './config.ts'
+
+/**
+ * Load custom provider files from tabs with a `provider` field.
+ *
+ * Static providers (static: true in tab config) are imported at sync time
+ * so their generate() can run during the build. Runtime providers (default)
+ * are NOT imported here — they're loaded via Vite virtual modules at
+ * request time.
+ *
+ * For static providers, the file is imported via `import()` which requires
+ * the runtime to support TS (tsx, bun). Runtime providers avoid this
+ * requirement since Vite bundles them.
+ */
+async function loadCustomProviders(
+  config: HolocronConfig,
+  projectRoot: string,
+): Promise<Array<{ tab: ConfigNavTab; provider: CustomTabProvider }>> {
+  const results: Array<{ tab: ConfigNavTab; provider: CustomTabProvider }> = []
+
+  for (const tab of config.navigation.tabs) {
+    if (!tab.provider) continue
+
+    const isStatic = tab.static === true
+
+    // Runtime providers: create a placeholder provider. The real provider
+    // code is loaded via virtual:holocron-provider/ at request time.
+    if (!isStatic) {
+      const providerName = path.basename(tab.provider, path.extname(tab.provider))
+      results.push({
+        tab,
+        provider: {
+          name: providerName,
+          static: false,
+          // generate() is never called at sync time for runtime providers.
+          // The real implementation comes from the bundled virtual module.
+          async generate() {
+            throw new Error(`Runtime provider "${providerName}" should not be called at sync time`)
+          },
+        },
+      })
+      continue
+    }
+
+    // Static providers: import at sync time
+    const absPath = path.isAbsolute(tab.provider)
+      ? tab.provider
+      : path.resolve(projectRoot, tab.provider)
+
+    if (!fs.existsSync(absPath)) {
+      logger.warn(
+        formatHolocronWarning(
+          `Provider file "${tab.provider}" not found for tab "${tab.tab}". ` +
+          `Resolved to "${absPath}".`,
+        ),
+      )
+      continue
+    }
+
+    try {
+      const mod = await import(pathToFileURL(absPath).href)
+      const provider = (mod.default ?? mod) as CustomTabProvider
+
+      if (!provider.name || typeof provider.generate !== 'function') {
+        logger.warn(
+          formatHolocronWarning(
+            `Provider file "${tab.provider}" must default-export an object with ` +
+            `{ name: string, generate: Function }. Skipping tab "${tab.tab}".`,
+          ),
+        )
+        continue
+      }
+
+      // Force static mode since the tab config says so
+      results.push({ tab, provider: { ...provider, static: true } })
+    } catch (err) {
+      logger.warn(
+        formatHolocronWarning(
+          `Failed to import provider "${tab.provider}" for tab "${tab.tab}": ` +
+          `${err instanceof Error ? err.message : String(err)}`,
+        ),
+      )
+    }
+  }
+
+  return results
 }
 
 export function holocron(options: HolocronPluginOptions = {}): PluginOption {
@@ -445,6 +537,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
+      // Load custom provider files referenced by `provider` field in tab config.
+      // Each file is dynamically imported and its default export is used as the
+      // provider. Static providers are processed during sync; runtime providers
+      // are stored for request-time handling.
+      const customProviders = await loadCustomProviders(config, root)
+
       // Sync MDX + process images. In dev mode, virtual tab providers
       // (OpenAPI, changelog, MCP) are deferred to a background task so the
       // dev server starts immediately. Provider pages appear once the
@@ -457,6 +555,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         distDir: distDirPath,
         logParseErrors: !isBuild,
         deferProviders: false,
+        customProviders,
       })
 
       if (isBuild) {
@@ -509,6 +608,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (id.startsWith(VIRTUAL_MDX_PAGE_PREFIX)) {
         return RESOLVED_MDX_PAGE_PREFIX + id.slice(VIRTUAL_MDX_PAGE_PREFIX.length)
       }
+      if (id.startsWith(VIRTUAL_PROVIDER_PREFIX)) {
+        return RESOLVED_PROVIDER_PREFIX + id.slice(VIRTUAL_PROVIDER_PREFIX.length)
+      }
       if (id === VIRTUAL_MODULES) {
         return RESOLVED_MODULES
       }
@@ -558,12 +660,39 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (options.virtualModules?.navigation) {
           return options.virtualModules.navigation
         }
-        return [
+        // Generate runtime tab entries. For built-in providers (outrank),
+        // we use providerName for registry lookup. For custom providers
+        // (user files), we import via a virtual module so Vite bundles
+        // the provider code into the server output.
+        const lines: string[] = []
+        const entryParts: string[] = []
+        let providerIdx = 0
+
+        for (const [tabName, provider] of syncResult.runtimeTabs) {
+          const configTab = config.navigation.tabs.find((t) => t.tab === tabName)
+          if (configTab?.provider) {
+            // Custom provider: import via virtual module so Vite bundles it
+            const absPath = path.isAbsolute(configTab.provider)
+              ? configTab.provider
+              : path.resolve(root, configTab.provider)
+            const virtualId = VIRTUAL_PROVIDER_PREFIX + encodeURIComponent(absPath)
+            const varName = `__customProvider_${providerIdx++}`
+            lines.push(`import ${varName} from ${JSON.stringify(virtualId)}`)
+            entryParts.push(`{ tabName: ${JSON.stringify(tabName)}, provider: ${varName} }`)
+          } else {
+            // Built-in provider: look up by name at runtime
+            entryParts.push(`{ tabName: ${JSON.stringify(tabName)}, providerName: ${JSON.stringify(provider.name)} }`)
+          }
+        }
+
+        lines.push(
           `const navigation = ${JSON.stringify(syncResult.navigation)}`,
           `const switchers = ${JSON.stringify(syncResult.switchers)}`,
           `const mdxParseErrors = ${JSON.stringify(syncResult.mdxParseErrors)}`,
+          `export const runtimeTabEntries = [${entryParts.join(', ')}]`,
           `export function getNavigationData() { return { navigation, switchers, mdxParseErrors } }`,
-        ].join('\n')
+        )
+        return lines.join('\n')
       }
       if (id === RESOLVED_MDX) {
         if (options.virtualModules?.mdx) {
@@ -615,6 +744,14 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           throw new Error(`[holocron] missing virtual MDX page for slug "${slug}"`)
         }
         return `export default ${JSON.stringify(markdown)}`
+      }
+      // virtual:holocron-provider/<encoded-path> → re-exports the user's file.
+      // This indirection lets Vite bundle the provider into the server output.
+      if (id.startsWith(RESOLVED_PROVIDER_PREFIX)) {
+        const encodedPath = id.slice(RESOLVED_PROVIDER_PREFIX.length)
+        const absPath = decodeURIComponent(encodedPath)
+        this.addWatchFile(absPath)
+        return `export { default } from ${JSON.stringify(pathToFileURL(absPath).href)}`
       }
       if (id === RESOLVED_MODULES) {
         // Build the lazy import map from import paths collected during MDX
@@ -846,6 +983,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           // hotUpdate hook still recognizes provider file edits (e.g. OpenAPI
           // spec) during the window before background providers finish.
           const prevProviderWatchPaths = syncResult.providerWatchPaths
+          const freshCustomProviders = await loadCustomProviders(config, root)
           syncResult = await syncNavigation({
             config,
             pagesDir,
@@ -853,6 +991,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             projectRoot: root,
             distDir: distDirPath,
             deferProviders: true,
+            customProviders: freshCustomProviders,
           })
           if (syncResult.providerWatchPaths.length === 0) {
             syncResult.providerWatchPaths = prevProviderWatchPaths

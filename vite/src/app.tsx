@@ -6,7 +6,7 @@
 
 import { createHolocronApp, type HolocronApp } from './app-factory.tsx'
 import { base, getConfig } from 'virtual:holocron-config'
-import { getNavigationData } from 'virtual:holocron-navigation'
+import { getNavigationData, runtimeTabEntries } from 'virtual:holocron-navigation'
 import { getMdxSlugs, getMdxSource, getPageIconRefs } from 'virtual:holocron-mdx'
 import { getModules, pagesDirPrefix } from 'virtual:holocron-modules'
 
@@ -19,5 +19,6 @@ export const app = await createHolocronApp({
   getPageIconRefs,
   getModules,
   pagesDirPrefix,
+  runtimeTabs: runtimeTabEntries,
 })
 export type App = HolocronApp
