@@ -74,6 +74,12 @@ export type ConfigNavTab = NavTabBase & {
    *  tool/resource pages are auto-generated from the MCP definition. Set by
    *  normalize when the raw tab has `mcp`. */
   mcp?: string
+  /** Path to a custom provider file (resolved relative to project root).
+   *  The file default-exports a CustomTabProvider. */
+  provider?: string
+  /** When true, the custom provider runs at build time (full enrichment).
+   *  When false/omitted, the provider runs at request time (cached). */
+  static?: boolean
   /** Path to an MDX file whose content is prepended above the auto-generated
    *  changelog entries. Resolved relative to pagesDir or project root. */
   initialContent?: string

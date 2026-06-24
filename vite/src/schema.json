@@ -1013,9 +1013,58 @@
             "mcp"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tab": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The name of the tab"
+            },
+            "icon": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
+            },
+            "iconColor": {
+              "$ref": "#/definitions/iconColorSchema"
+            },
+            "hidden": {
+              "description": "Whether the tab is hidden by default",
+              "type": "boolean"
+            },
+            "align": {
+              "description": "Tab alignment in the navigation",
+              "type": "string",
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
+            "provider": {
+              "type": "string",
+              "description": "Path to a file that default-exports a CustomTabProvider object.\nThe provider's generate() function produces navigation groups and\nMDX page content from an external source. Example:\n`\"./providers/blog.ts\"`"
+            },
+            "base": {
+              "description": "Slug prefix for generated pages. Defaults to the provider's name.\nA leading slash is allowed and ignored",
+              "type": "string"
+            },
+            "static": {
+              "description": "When true, the provider runs at build time (like OpenAPI/changelog).\nContent goes through the full enrichment pipeline. When false\n(default), the provider runs at request time and the result is\ncached. Runtime mode skips build-time image optimization but\nserves fresh content without rebuilds",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "tab",
+            "provider"
+          ],
+          "additionalProperties": false
         }
       ],
-      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, a changelog generated from a\nGitHub releases page, or an MCP server definition for auto-generated\ntool and resource documentation pages"
+      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, a changelog generated from a\nGitHub releases page, an MCP server definition for auto-generated\ntool and resource documentation pages, or a custom provider file\nthat generates pages from an external source"
     },
     "iconSchema": {
       "anyOf": [

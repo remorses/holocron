@@ -462,6 +462,40 @@ const tabWithMCPSchema = tabBaseSchema.extend({
   },
 })
 
+const tabWithProviderSchema = tabBaseSchema.extend({
+  provider: z
+    .string()
+    .describe(
+      dedent`
+        Path to a file that default-exports a CustomTabProvider object.
+        The provider's generate() function produces navigation groups and
+        MDX page content from an external source. Example:
+        \`"./providers/blog.ts"\`
+      `,
+    ),
+  base: z
+    .string()
+    .optional()
+    .describe(
+      dedent`
+        Slug prefix for generated pages. Defaults to the provider's name.
+        A leading slash is allowed and ignored
+      `,
+    ),
+  static: z
+    .boolean()
+    .optional()
+    .describe(
+      dedent`
+        When true, the provider runs at build time (like OpenAPI/changelog).
+        Content goes through the full enrichment pipeline. When false
+        (default), the provider runs at request time and the result is
+        cached. Runtime mode skips build-time image optimization but
+        serves fresh content without rebuilds
+      `,
+    ),
+})
+
 export const tabSchema = z
   .union([
     tabWithGroupsSchema,
@@ -470,14 +504,16 @@ export const tabSchema = z
     tabWithOpenAPISchema,
     tabWithChangelogSchema,
     tabWithMCPSchema,
+    tabWithProviderSchema,
   ])
   .describe(
     dedent`
       A top-level tab in the navigation. Either contains sidebar groups, a
       flat list of pages, a link-only tab, an OpenAPI spec for
       auto-generated API reference pages, a changelog generated from a
-      GitHub releases page, or an MCP server definition for auto-generated
-      tool and resource documentation pages
+      GitHub releases page, an MCP server definition for auto-generated
+      tool and resource documentation pages, or a custom provider file
+      that generates pages from an external source
     `,
   )
   .meta({ id: 'tabSchema' })

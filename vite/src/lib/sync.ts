@@ -26,12 +26,14 @@ import { buildEnrichedNavigation } from './enrich-navigation.ts'
 import type { IconRef } from './collect-icons.ts'
 import {
   type HolocronConfig,
+  type ConfigNavTab,
 } from '../config.ts'
-import { processVirtualTabs } from './virtual-tab-provider.ts'
+import { processVirtualTabs, type VirtualTabProvider } from './virtual-tab-provider.ts'
 import { virtualPageDir } from './virtual-page-mdx.ts'
 import { openapiProvider } from './openapi/provider.ts'
 import { changelogProvider } from './changelog/provider.ts'
 import { mcpProvider } from './mcp/provider.ts'
+import type { CustomTabProvider } from './runtime-provider.ts'
 import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { parseFrontmatterObject } from './frontmatter.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
@@ -127,6 +129,11 @@ export type SyncResult = {
   /** Absolute paths of local files read by virtual tab providers (e.g. OpenAPI
    *  spec files). Watched by the dev server so edits trigger re-sync + HMR. */
   providerWatchPaths: string[]
+  /** Tab names claimed by runtime providers (e.g. Outrank, custom providers
+   *  with static: false). These tabs have empty groups at build time; their
+   *  content is fetched at request time. app-factory registers catch-all routes.
+   *  The actual provider objects are imported via virtual modules, not stored here. */
+  runtimeTabNames: Set<string>
   parsedCount: number
   cachedCount: number
 }
@@ -144,6 +151,7 @@ export async function syncNavigation({
   distDir,
   logParseErrors = true,
   deferProviders = false,
+  customProviders = [],
 }: {
   config: HolocronConfig
   pagesDir: string
@@ -157,6 +165,9 @@ export async function syncNavigation({
    *  triggers HMR when providers finish. Production builds should always
    *  use false (the default). */
   deferProviders?: boolean
+  /** Static custom providers loaded from user files (tab.provider with
+   *  static: true). Processed at build time alongside built-in providers. */
+  customProviders?: Array<{ tab: ConfigNavTab; provider: CustomTabProvider }>
 }): Promise<SyncResult> {
   // 1. Load caches from previous build
   const cachePath = path.join(distDir, CACHE_FILENAME)
@@ -450,11 +461,30 @@ export async function syncNavigation({
     }
   }
 
-  // 2b. Process virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages.
+  // 2b-i. Identify runtime tabs (request-time content).
+  // Runtime providers have tab.provider with static !== true. The real
+  // provider code loads via virtual module at request time, not here.
+  const runtimeTabNames = new Set<string>()
+  for (const tab of config.navigation.tabs) {
+    if (tab.provider && tab.static !== true) {
+      runtimeTabNames.add(tab.tab)
+    }
+  }
+
+  // 2b-ii. Adapt static custom providers to VirtualTabProvider interface
+  // for processVirtualTabs. Only static providers (already imported by
+  // loadStaticCustomProviders) appear here.
+  const staticCustomProviders: VirtualTabProvider[] = customProviders.map(({ tab, provider }) => ({
+    name: provider.name,
+    claims: (t: ConfigNavTab) => t === tab,
+    generate: (ctx: { tab: ConfigNavTab; projectRoot: string; pagesDir: string }) => provider.generate(ctx),
+  }))
+
+  // 2b-iii. Process build-time virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages.
   // In dev mode with deferProviders, skip this step so the sync returns fast.
   // The caller runs processDeferredProviders() in the background to fill in
   // provider pages and trigger HMR when ready.
-  const providers = [openapiProvider, changelogProvider, mcpProvider]
+  const providers = [openapiProvider, changelogProvider, mcpProvider, ...staticCustomProviders]
   let providerWatchPaths: string[] = []
   if (!deferProviders) {
     const result = await processVirtualTabs({
@@ -579,7 +609,7 @@ export async function syncNavigation({
   return {
     navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports,
     importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths,
-    parsedCount, cachedCount,
+    runtimeTabNames, parsedCount, cachedCount,
   }
 }
 

@@ -8,10 +8,12 @@ declare module 'virtual:holocron-config' {
 
 declare module 'virtual:holocron-navigation' {
   import type { Navigation, NavVersionItem, NavDropdownItem } from './navigation.ts'
-  export function getNavigationData(): Promise<{
+  import type { RuntimeTabEntry } from './app-factory.tsx'
+  export const runtimeTabEntries: RuntimeTabEntry[]
+  export function getNavigationData(): {
     navigation: Navigation
     switchers: { versions: NavVersionItem[]; dropdowns: NavDropdownItem[] }
-  }>
+  }
 }
 
 declare module 'virtual:holocron-mdx' {

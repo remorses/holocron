@@ -60,3 +60,8 @@ export { TableOfContentsPanel } from './components/toc-panel.tsx'
 /* ── Typed client router + loader data ───────────────────────────────── */
 
 export type { HolocronApp, HolocronLoaderData } from './app-factory.tsx'
+
+/* ── Custom tab provider interface ───────────────────────────────────── */
+
+export type { CustomTabProvider } from './lib/runtime-provider.ts'
+export type { VirtualTabResult } from './lib/virtual-tab-provider.ts'

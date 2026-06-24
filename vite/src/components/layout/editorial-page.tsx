@@ -350,8 +350,13 @@ export function EditorialPage({
         <div
           className={contentGridClass}
           style={sections ? {
-            /* N auto rows for sections + 1fr spacer + auto footer → pushes footer to bottom */
-            gridTemplateRows: `repeat(${sections.length}, auto) 1fr auto`,
+            /* N auto rows for sections + 1 flexible footer row.
+               minmax(max-content, 1fr) ensures the footer row stretches to
+               fill remaining height on short pages, with content pinned to
+               the bottom via justify-end. Using a single row instead of
+               "spacer + footer" avoids an extra gap-y-(--section-gap) gap
+               that was pushing the footer below the viewport. */
+            gridTemplateRows: `repeat(${sections.length}, auto) minmax(max-content, 1fr)`,
           } : undefined}
         >
           {sections ? (
@@ -430,11 +435,12 @@ export function EditorialPage({
                   </Fragment>
                 )
               })}
-              {/* Spacer row: 1fr track pushes footer to bottom when grid stretches */}
-              <div style={{ gridRow: sections.length + 1 }} className='lg:col-[1]' />
+              {/* Footer row: minmax(max-content, 1fr) stretches this row to
+                  fill remaining height. justify-end pins the footer content
+                  to the bottom of that stretched row. */}
               <div
-                className='slot-main lg:col-[1]'
-                style={{ gridRow: sections.length + 2 }}
+                className='slot-main flex flex-col justify-end lg:col-[1]'
+                style={{ gridRow: sections.length + 1 }}
               >
                 <ContentFooter />
               </div>

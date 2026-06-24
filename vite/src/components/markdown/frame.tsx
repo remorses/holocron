@@ -46,7 +46,7 @@ export function Frame({
       >
         <div
           aria-hidden='true'
-          className='absolute inset-0 opacity-50'
+          className='absolute inset-0 opacity-20'
           data-component-part='frame-background-pattern'
           style={{
             backgroundImage: 'linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)',
@@ -55,7 +55,7 @@ export function Frame({
           }}
         />
         <div
-          className='relative flex w-full justify-center overflow-hidden rounded-xl bg-background'
+          className='relative flex flex-col w-full items-center overflow-hidden rounded-xl bg-background'
           data-component-part='frame-content'
         >
           {children}

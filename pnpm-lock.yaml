@@ -268,6 +268,19 @@ importers:
         specifier: ^4.85.0
         version: 4.95.0(@cloudflare/workers-types@4.20260531.1)
 
+  outrank:
+    dependencies:
+      '@holocron.so/vite':
+        specifier: workspace:^
+        version: link:../vite
+    devDependencies:
+      '@types/node':
+        specifier: ^25.9.2
+        version: 25.9.2
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+
   vite:
     dependencies:
       '@cloudflare/vite-plugin':

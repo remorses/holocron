@@ -1,0 +1,16 @@
+{
+  "name": "Runtime Provider Test",
+  "icons": { "library": "lucide" },
+  "colors": { "primary": "#0969da" },
+  "navigation": [
+    {
+      "tab": "Docs",
+      "pages": ["index"]
+    },
+    {
+      "tab": "Blog",
+      "provider": "./providers/mock-blog.ts",
+      "base": "blog"
+    }
+  ]
+}

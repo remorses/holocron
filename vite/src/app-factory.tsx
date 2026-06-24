@@ -43,6 +43,7 @@ import {
   buildHrefToSlugMap,
   type NavHeading,
   type NavPage,
+  type NavGroup,
   type Navigation,
   type NavVersionItem,
   type NavDropdownItem,
@@ -72,9 +73,24 @@ import {
   resolveActiveTabHref,
   resolveActiveVersionHref,
 } from './site-data.ts'
-import type { HolocronConfig } from './config.ts'
+import type { HolocronConfig, ConfigNavTab, ConfigNavGroup } from './config.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
 import { resolveConfigOverride, shouldShowConfigPanel } from './lib/config-override.ts'
+import {
+  type CustomTabProvider,
+  resolveRuntimeContent,
+  mergeRuntimeNavigation,
+} from './lib/runtime-provider.ts'
+import { runtimeCache } from './lib/runtime-cache.ts'
+
+/* ── Runtime provider registry ────────────────────────────────────────── */
+
+/** Entry for a runtime-provider tab. Each entry carries the provider
+ *  object directly (imported via virtual module by vite-plugin). */
+export type RuntimeTabEntry = {
+  tabName: string
+  provider: CustomTabProvider
+}
 
 /* ── Server-only page lookup (uses parsePageFrontmatter → zod/yaml) ── */
 
@@ -180,7 +196,7 @@ type HolocronNavigationData = {
 type HolocronProviders = {
   base: string
   getConfig(): Promise<HolocronConfig>
-  getNavigationData(): Promise<HolocronNavigationData>
+  getNavigationData(): HolocronNavigationData | Promise<HolocronNavigationData>
   getMdxSlugs(): Promise<string[]>
   getMdxSource(slug: string): Promise<string | undefined>
   getPageIconRefs(slug: string): Promise<IconRef[]>
@@ -190,6 +206,9 @@ type HolocronProviders = {
   /** Pages directory relative to root with ./ prefix and trailing slash.
    *  E.g. './pages/' or './' when pagesDir is the project root. */
   pagesDirPrefix?: string
+  /** Runtime provider tabs (e.g. Outrank). Serialized as tab index → provider
+   *  name pairs from sync, reconstructed in app.tsx. */
+  runtimeTabs?: RuntimeTabEntry[]
 }
 
 /* ── Shared helpers ──────────────────────────────────────────────────── */
@@ -547,6 +566,14 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   }
   const sharedIconRefs = collectIconRefs({ config, navigation })
 
+  // Reconstruct runtime tab Map from serialized entries.
+  const runtimeTabs = new Map<string, CustomTabProvider>()
+  if (providers.runtimeTabs) {
+    for (const { tabName, provider } of providers.runtimeTabs) {
+      runtimeTabs.set(tabName, provider)
+    }
+  }
+
   // Start fetching GitHub star counts eagerly (don't await). The same
   // promise is reused for every loader response so it never blocks rendering.
   const githubStarsPromise = createGitHubStarsPromise(config)
@@ -741,11 +768,72 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   ): Promise<HolocronSiteData> {
     const pageIconRefs = slug ? await providers.getPageIconRefs(slug) : []
     const { resolveIconSvgs } = await import('./lib/resolve-icons.ts')
+
+    // Merge runtime provider navigation into the site data so the sidebar
+    // shows runtime pages (e.g. Outrank blog articles). On cache hit this
+    // is just a Map lookup + shallow array clone.
+    let effectiveSite = site
+    if (runtimeTabs.size > 0) {
+      const { tabs: mergedConfigTabs, pageTitles } = await mergeRuntimeNavigation(
+        effectiveConfig.navigation.tabs,
+        runtimeTabs,
+        runtimeCache,
+      )
+      const mergedNavTabs = enrichRuntimeTabs(site.navigation, mergedConfigTabs, pageTitles)
+      effectiveSite = {
+        ...site,
+        config: { ...effectiveConfig, navigation: { ...effectiveConfig.navigation, tabs: mergedConfigTabs } },
+        navigation: mergedNavTabs,
+      }
+    }
+
     return {
-      ...buildVisibleSiteData({ ...site, config: effectiveConfig }),
+      ...buildVisibleSiteData({ ...effectiveSite, config: effectiveConfig }),
       icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])),
       origin,
     }
+  }
+
+  /** Enrich runtime tab groups into NavTab format for the sidebar.
+   *  Static tabs pass through unchanged. Runtime tabs get their groups
+   *  rebuilt from the cached ConfigNavGroup[] into NavGroup[]. */
+  function enrichRuntimeTabs(
+    baseNav: Navigation,
+    mergedConfigTabs: ConfigNavTab[],
+    pageTitles: Record<string, string>,
+  ): Navigation {
+    return baseNav.map((navTab, i) => {
+      const configTab = mergedConfigTabs[i]
+      if (!configTab || !runtimeTabs.has(configTab.tab)) return navTab
+      const groups = configTab.groups.map((g) => enrichRuntimeGroup(g, pageTitles))
+      return { ...navTab, groups }
+    })
+  }
+
+  function enrichRuntimeGroup(g: ConfigNavGroup, pageTitles: Record<string, string>): NavGroup {
+    return {
+      group: g.group,
+      pages: g.pages.map((entry): NavPage | NavGroup => {
+        if (typeof entry === 'string') {
+          return {
+            slug: entry,
+            href: slugToHref(entry),
+            title: pageTitles[entry] ?? titleFromSlug(entry),
+            gitSha: '',
+            headings: [],
+            frontmatter: {},
+          }
+        }
+        return enrichRuntimeGroup(entry, pageTitles)
+      }),
+    }
+  }
+
+  /** Derive a human-readable title from a slug. Used as a fallback when
+   *  frontmatter title is missing. */
+  function titleFromSlug(slug: string): string {
+    const last = slug.split('/').pop() || slug
+    return last.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
   }
 
   function slugFromRequest(request: Request): string {
@@ -774,17 +862,22 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       resolveConfigOverride(request, site.config),
     ])
 
+    // Use enriched site (with runtime tab pages populated) for tab
+    // resolution so the tab bar highlights correctly for all pages,
+    // including runtime provider pages that aren't in the static nav.
+    const enrichedSite = await buildLoaderSite(slug, effectiveConfig, origin)
+
     if (!currentPage || !hasMdx) {
       return {
-        site: await buildLoaderSite(undefined, effectiveConfig, origin),
+        site: enrichedSite,
         currentPageHref: undefined,
         currentPageTitle: undefined,
         currentPageDescription: undefined,
         currentHeadings: [],
         ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(site, firstPage.href) : [],
-        activeTabHref: resolveActiveTabHref(site, firstPage?.href),
-        activeVersionHref: resolveActiveVersionHref(site, firstPage?.href),
-        activeDropdownHref: resolveActiveDropdownHref(site, firstPage?.href),
+        activeTabHref: resolveActiveTabHref(enrichedSite, '/' + slug),
+        activeVersionHref: resolveActiveVersionHref(enrichedSite, '/' + slug),
+        activeDropdownHref: resolveActiveDropdownHref(enrichedSite, '/' + slug),
         notFoundPath: '/' + slug,
         headTitle: `Page not found — ${effectiveConfig.name}`,
         headRobots: 'noindex',
@@ -795,15 +888,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
 
     return {
-      site: await buildLoaderSite(slug, effectiveConfig, origin),
+      site: enrichedSite,
       currentPageHref: currentPage.href,
       currentPageTitle: currentPage.title,
       currentPageDescription: currentPage.description ?? effectiveConfig.description,
       currentHeadings: currentPage.headings,
       ancestorGroupKeys: collectAncestorGroupKeys(site, currentPage.href),
-      activeTabHref: resolveActiveTabHref(site, currentPage.href),
-      activeVersionHref: resolveActiveVersionHref(site, currentPage.href),
-      activeDropdownHref: resolveActiveDropdownHref(site, currentPage.href),
+      activeTabHref: resolveActiveTabHref(enrichedSite, currentPage.href),
+      activeVersionHref: resolveActiveVersionHref(enrichedSite, currentPage.href),
+      activeDropdownHref: resolveActiveDropdownHref(enrichedSite, currentPage.href),
       notFoundPath: undefined,
       headTitle: `${currentPage.title} — ${effectiveConfig.name}`,
       headRobots: getPageRobots(currentPage.frontmatter),
@@ -1613,6 +1706,101 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     for (const route of new Set([pageHref, withBaseRoute(site.base, pageHref)])) {
       app = app.loader(route, loaderFn).layout(route, layoutFn)
       app = isStatic ? app.staticPage(route, pageHandler) : app.page(route, pageHandler)
+    }
+  }
+
+  // Runtime provider catch-all routes (e.g. /blog/* for Outrank).
+  // These must be registered AFTER the per-slug routes so static pages take
+  // priority, and BEFORE the wildcard fallback so runtime pages don't 404.
+  if (runtimeTabs.size > 0) {
+    const runtimePageHandler = async ({ params, request }: { params: Record<string, string>; request: Request }) => {
+      const wildcard = params['*'] ?? ''
+      const url = new URL(request.url)
+      const strippedSlug = stripBaseFromSlug(url.pathname, site.base)
+
+      const result = await resolveRuntimeContent(strippedSlug, runtimeTabs, config.navigation.tabs, runtimeCache)
+      if (!result) {
+        // Not found in any runtime provider — fall through to 404
+        return null
+      }
+
+      const { mdx: pageMdx } = result
+      const pageHref = slugToHref(strippedSlug)
+
+      // Extract title from frontmatter for the page
+      const frontmatter = parsePageFrontmatter(pageMdx)
+      const pageTitle = frontmatter.title || titleFromSlug(strippedSlug)
+      const ogImageUrl = buildOgImageUrl({
+        title: pageTitle,
+        description: frontmatter.description ?? config.description,
+        siteName: config.name,
+        pageLabel: `${url.host}${pageHref}`,
+      })
+
+      // Parse MDX
+      const pageSource = `/${strippedSlug}`
+      const preParsedMdast = parsePageMdx(pageMdx, pageSource)
+      if (preParsedMdast instanceof Error) {
+        return renderMdxParseErrorPage({ slug: strippedSlug, error: preParsedMdast, bannerJsx: null })
+      }
+
+      // Resolve MDX import statements (runtime pages typically have none, but support it)
+      const lazyGlob = providers.getModules?.()
+      const modules = lazyGlob && Object.keys(lazyGlob).length > 0
+        ? await resolveModules({
+            glob: lazyGlob,
+            mdast: preParsedMdast,
+            baseUrl: (providers.pagesDirPrefix || './') + (strippedSlug.includes('/') ? strippedSlug.slice(0, strippedSlug.lastIndexOf('/') + 1) : ''),
+          })
+        : undefined
+
+      // Build a minimal loader data for rendering. Use the enriched site
+      // (with runtime tab pages populated) for active-tab resolution so the
+      // tab bar highlights the correct tab for runtime provider pages.
+      const effectiveConfig = await resolveConfigOverride(request, site.config)
+      const enrichedSite = await buildLoaderSite(strippedSlug, effectiveConfig, url.origin)
+      const loaderData: HolocronLoaderData = {
+        site: enrichedSite,
+        currentPageHref: pageHref,
+        currentPageTitle: pageTitle,
+        currentPageDescription: frontmatter.description,
+        currentHeadings: [], // Runtime pages don't have pre-extracted headings
+        ancestorGroupKeys: [],
+        activeTabHref: resolveActiveTabHref(enrichedSite, pageHref),
+        activeVersionHref: resolveActiveVersionHref(enrichedSite, pageHref),
+        activeDropdownHref: resolveActiveDropdownHref(enrichedSite, pageHref),
+        notFoundPath: undefined,
+        headTitle: `${pageTitle} — ${effectiveConfig.name}`,
+        headRobots: getPageRobots(frontmatter),
+        currentPageFrontmatter: frontmatter,
+        showConfigPanel: shouldShowConfigPanel(request),
+        githubStars: githubStarsPromise,
+      }
+
+      const bannerJsx = getBannerJsx(loaderData.site, request)
+
+      return renderMdxPage({
+        site: loaderData.site,
+        slug: strippedSlug,
+        pageMdx,
+        loaderData,
+        bannerJsx,
+        ogImageUrl,
+        requestUrl: url,
+        modules,
+        pagesDirPrefix: providers.pagesDirPrefix,
+        preParsedMdast,
+        devRenderErrors: undefined,
+      })
+    }
+
+    for (const [tabName, provider] of runtimeTabs) {
+      const configTab = config.navigation.tabs.find((t) => t.tab === tabName)
+      const base = configTab?.base ?? provider.name
+      const pattern = base ? `/${base}/*` : '/*'
+      for (const route of new Set([pattern, withBaseRoute(site.base, pattern)])) {
+        app = app.loader(route, loaderFn).layout(route, layoutFn).page(route, runtimePageHandler)
+      }
     }
   }
 
