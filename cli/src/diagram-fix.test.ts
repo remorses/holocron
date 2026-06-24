@@ -580,18 +580,6 @@ describe('fixDiagramLines — complex scenarios', () => {
     `)
   })
 
-  // BUG: The fixer only corrects box 1. Boxes 2 and 3 are completely untouched —
-  // their content lines pass through with the original misalignment. This happens
-  // because fixing box 1 changes the character count before boxes 2/3, so their
-  // left │ borders shift to wrong display columns. extractBoxContent can't find
-  // left │ at the expected leftCol and skips those lines. validateDiagram also
-  // misses this because it only checks right border alignment.
-  //
-  // Visual proof: compare input line 1 vs output line 1. Box 1 (Browser) gets
-  // fixed: │ moves from col 17 to col 15. But the extra 2 chars become spaces,
-  // pushing box 2 (Server) and box 3 (Database) content lines right. Their │
-  // positions no longer match the top border ┌ columns. The bottom border row
-  // (└──┘) is unchanged because it has no │ borders to fix.
   test('3-column layout with misaligned borders across all boxes', () => {
     const input = [
       '┌──────────────┐   ┌──────────────┐   ┌──────────────┐',
@@ -608,10 +596,10 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-      │  Browser     │     │  Server     │   │  Database      │
-      │              │    │              │   │              │
-      │  React app   │  │  Spiceflow     │   │  PostgreSQL  │
-      │  Components  │     │  Routes    │   │  Tables        │
+      │  Browser     │   │  Server      │   │  Database    │   
+      │              │   │              │   │              │ 
+      │  React app   │   │  Spiceflow   │   │  PostgreSQL  │ 
+      │  Components  │   │  Routes      │   │  Tables      │  
       └──────────────┘   └──────────────┘   └──────────────┘"
     `)
   })
@@ -688,20 +676,6 @@ describe('fixDiagramLines — complex scenarios', () => {
     `)
   })
 
-  // BUG: The bottom side-by-side Pass/Fail boxes have two issues:
-  //
-  // 1. Line "│ Pass   │   │ Fail │": box 1's right │ moved from col 10 to col 9,
-  //    adding an extra space. Box 2's left │ shifts from col 12 to col 13 (2 cols
-  //    off from top border ┌ at col 11). The inter-box gap becomes 3 spaces instead
-  //    of the 1 space in the top border. Box 2's content is not fixed at all.
-  //
-  // 2. Line "│ handler│ │ handler│  ": this line happens to work because box 1's
-  //    content was already at the right width, so the splice didn't shift anything.
-  //    Box 2's │ at col 11 and col 20 match the top border.
-  //
-  // Root cause: spliceLine preserves suffix at the same character index, but the
-  // display column shifts when the segment width changes. Boxes that share a line
-  // with a previously-fixed box get their left borders displaced.
   test('boxes connected by vertical lines with ┬/┴ junctions at wrong columns', () => {
     const input = [
       '┌──────────────────┐',
@@ -738,7 +712,7 @@ describe('fixDiagramLines — complex scenarios', () => {
           ┌────┴────┐
           ▼         ▼
       ┌────────┐ ┌────────┐
-      │ Pass   │   │ Fail │
+      │ Pass   │ │ Fail   │
       │ handler│ │ handler│  
       └────────┘ └────────┘"
     `)

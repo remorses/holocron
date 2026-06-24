@@ -181,24 +181,51 @@ export function findBoxes(lines: string[]): Box[] {
 
       // Scan down from ┌ for └ at same leftCol.
       // Allow │, ├, or any left-border char on the way down.
+      // Also search ±3 cols to tolerate displaced left borders in
+      // side-by-side box layouts where agents miscount spacing.
       let blChar: string | undefined
       let bottomRow = -1
       for (let r = row + 1; r < lines.length; r++) {
-        const hit = charAtDisplayCol(lines[r], leftCol)
-        if (!hit) break
-        if (isBottomLeft(hit.char)) {
-          blChar = hit.char
-          bottomRow = r
-          break
+        let foundBorder = false
+        for (let off = 0; off <= 3; off++) {
+          const cols = off === 0 ? [leftCol] : [leftCol + off, leftCol - off]
+          for (const col of cols) {
+            if (col < 0) continue
+            const hit = charAtDisplayCol(lines[r], col)
+            if (!hit) continue
+            if (isBottomLeft(hit.char)) {
+              blChar = hit.char
+              bottomRow = r
+              foundBorder = true
+              break
+            }
+            if (isLeftBorder(hit.char)) {
+              foundBorder = true
+              break
+            }
+          }
+          if (foundBorder) break
         }
-        if (!isLeftBorder(hit.char)) break
+        if (blChar) break
+        if (!foundBorder) break
       }
       if (!blChar || bottomRow < 0) continue
 
       // Find ┘ on the bottom row by scanning right from └.
       // It might be at the wrong column (misaligned), that's fine.
+      // Search ±3 cols for └ to tolerate displaced bottom-left corners.
       const bottomGrid = charGrid(lines[bottomRow])
-      const blCellIdx = bottomGrid.findIndex((c) => c.displayCol === leftCol)
+      let blCellIdx = bottomGrid.findIndex((c) => c.displayCol === leftCol && isBottomLeft(c.char))
+      if (blCellIdx < 0) {
+        for (let off = 1; off <= 3; off++) {
+          for (const col of [leftCol + off, leftCol - off]) {
+            const idx = bottomGrid.findIndex((c) => c.displayCol === col && isBottomLeft(c.char))
+            if (idx >= 0) { blCellIdx = idx; break }
+          }
+          if (blCellIdx >= 0) break
+        }
+      }
+      if (blCellIdx < 0) blCellIdx = bottomGrid.findIndex((c) => c.displayCol === leftCol)
       let brChar: string | undefined
       for (let bj = blCellIdx + 1; bj < bottomGrid.length; bj++) {
         const ch = bottomGrid[bj].char
@@ -214,8 +241,17 @@ export function findBoxes(lines: string[]): Box[] {
       const hChar = grid[ci + 1]?.char || '─'
       let vChar = '│'
       if (row + 1 < lines.length && row + 1 < bottomRow) {
-        const firstContent = charAtDisplayCol(lines[row + 1], leftCol)
-        if (firstContent && isVBorder(firstContent.char)) vChar = firstContent.char
+        // Search ±3 cols for the vertical border char on the first content line
+        for (let off = 0; off <= 3; off++) {
+          const cols = off === 0 ? [leftCol] : [leftCol + off, leftCol - off]
+          let found = false
+          for (const col of cols) {
+            if (col < 0) continue
+            const firstContent = charAtDisplayCol(lines[row + 1], col)
+            if (firstContent && isVBorder(firstContent.char)) { vChar = firstContent.char; found = true; break }
+          }
+          if (found) break
+        }
       }
 
       boxes.push({
@@ -277,10 +313,29 @@ function extractBoxContent(
   line: string,
   leftCol: number,
   expectedRightCol: number,
-): { leftBorder: string; content: string; rightBorder: string; rightCol: number } | undefined {
+): { leftBorder: string; content: string; rightBorder: string; rightCol: number; leftCol: number } | undefined {
   const grid = charGrid(line)
 
-  const leftCell = grid.find((c) => c.displayCol === leftCol && isLeftBorder(c.char))
+  // Find the left-border char closest to leftCol, searching outward.
+  // Use a small max offset (±3) to avoid grabbing a │ from an adjacent box.
+  // Prefer RIGHT (content shifted inward) before LEFT at each offset,
+  // because LLM diagrams typically add extra spacing between side-by-side boxes.
+  let leftCell: Cell | undefined
+  const maxLeftOffset = 3
+  for (let offset = 0; offset <= maxLeftOffset; offset++) {
+    const candidates = offset === 0
+      ? [leftCol]
+      : [leftCol + offset, leftCol - offset]
+    for (const col of candidates) {
+      if (col < 0) continue
+      const cell = grid.find((c) => c.displayCol === col && isLeftBorder(c.char))
+      if (cell) {
+        leftCell = cell
+        break
+      }
+    }
+    if (leftCell) break
+  }
   if (!leftCell) return undefined
 
   // Find the right-border char closest to expectedRightCol, searching outward.
@@ -293,7 +348,7 @@ function extractBoxContent(
       ? [expectedRightCol]
       : [expectedRightCol - offset, expectedRightCol + offset]
     for (const col of candidates) {
-      if (col <= leftCol) continue
+      if (col <= leftCell.displayCol) continue
       const cell = grid.find((c) => c.displayCol === col && isRightBorder(c.char))
       if (cell) {
         rightCell = cell
@@ -311,6 +366,7 @@ function extractBoxContent(
     content,
     rightBorder: rightCell.char,
     rightCol: rightCell.displayCol,
+    leftCol: leftCell.displayCol,
   }
 }
 
@@ -377,9 +433,18 @@ export function fixDiagramLines(inputLines: string[]): string[] {
     const innerWidth = rightCol - leftCol - 1
 
     // Fix bottom border — splice only this box's column range.
-    // First find where the existing └ and ┘ are on the bottom line.
+    // Search ±3 cols for └ to tolerate displaced bottom-left corners.
     const bottomGrid = charGrid(lines[bottomRow])
-    const blCell = bottomGrid.find((c) => c.displayCol === leftCol && isBottomLeft(c.char))
+    let blCell = bottomGrid.find((c) => c.displayCol === leftCol && isBottomLeft(c.char))
+    if (!blCell) {
+      for (let off = 1; off <= 3; off++) {
+        for (const col of [leftCol + off, leftCol - off]) {
+          const cell = bottomGrid.find((c) => c.displayCol === col && isBottomLeft(c.char))
+          if (cell) { blCell = cell; break }
+        }
+        if (blCell) break
+      }
+    }
     if (blCell) {
       // Find the actual ┘ by scanning right from └
       let actualBrCol = -1
@@ -391,12 +456,15 @@ export function fixDiagramLines(inputLines: string[]): string[] {
         if (!isHBorder(bottomGrid[i].char)) break
       }
       if (actualBrCol >= 0) {
-        const junctions = collectJunctions(lines[bottomRow], leftCol, actualBrCol)
+        const junctions = collectJunctions(lines[bottomRow], blCell.displayCol, actualBrCol)
         const segment = buildBorderSegment(corners[2], corners[3], hChar, innerWidth, junctions)
-        // Splice at the wider of actual vs target range to preserve suffix
+        // Splice from the leftmost of expected vs actual position to the
+        // rightmost of actual vs expected, padding both sides.
+        const spliceStart = Math.min(leftCol, blCell.displayCol)
         const spliceEnd = Math.max(actualBrCol, rightCol)
+        const prefixGap = leftCol > spliceStart ? ' '.repeat(leftCol - spliceStart) : ''
         const extraGap = spliceEnd > rightCol ? ' '.repeat(spliceEnd - rightCol) : ''
-        lines[bottomRow] = spliceLine(lines[bottomRow], leftCol, spliceEnd, segment + extraGap)
+        lines[bottomRow] = spliceLine(lines[bottomRow], spliceStart, spliceEnd, prefixGap + segment + extraGap)
       }
     }
 
@@ -425,11 +493,15 @@ export function fixDiagramLines(inputLines: string[]): string[] {
         segment = extracted.leftBorder + trimmedContent + ' '.repeat(padding) + extracted.rightBorder
       }
 
-      // Splice at the wider of actual vs target range so we don't shift
-      // content that comes after this box on the same line.
+      // Splice from the leftmost of expected vs actual left border to the
+      // rightmost of actual vs expected right border. This ensures displaced
+      // left borders (common in side-by-side boxes) get consumed by the splice.
+      // Extra spaces pad both sides to preserve suffix positions.
+      const spliceStart = Math.min(leftCol, extracted.leftCol)
       const spliceEnd = Math.max(extracted.rightCol, rightCol)
+      const prefixGap = leftCol > spliceStart ? ' '.repeat(leftCol - spliceStart) : ''
       const extraGap = spliceEnd > rightCol ? ' '.repeat(spliceEnd - rightCol) : ''
-      lines[r] = spliceLine(lines[r], leftCol, spliceEnd, segment + extraGap)
+      lines[r] = spliceLine(lines[r], spliceStart, spliceEnd, prefixGap + segment + extraGap)
     }
   }
 
