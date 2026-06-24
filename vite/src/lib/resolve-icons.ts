@@ -36,6 +36,11 @@ const FONT_AWESOME_SETS = {
 
 type FontAwesomeStyle = keyof typeof FONT_AWESOME_SETS
 
+/** Lucide default stroke-width is 2 in a 24×24 viewBox. At small render
+ *  sizes (12–14px in sidebar/tabs) this produces very thin 1px strokes.
+ *  Bumping to 2.5 keeps the icon legible without looking heavy. */
+const LUCIDE_STROKE_WIDTH = '3'
+
 function resolveLucide(name: string): IconAtlasEntry | null {
   // Aliases like `home` → `house` — resolve before the lookup.
   const parent = lucideIcons.aliases?.[name]?.parent
@@ -43,7 +48,7 @@ function resolveLucide(name: string): IconAtlasEntry | null {
   const icon = lucideIcons.icons[key]
   if (!icon) return null
   return {
-    body: icon.body,
+    body: icon.body.replace(/stroke-width="2"/g, `stroke-width="${LUCIDE_STROKE_WIDTH}"`),
     width: lucideIcons.width ?? LUCIDE_DEFAULT_WIDTH,
     height: lucideIcons.height ?? LUCIDE_DEFAULT_HEIGHT,
   }
