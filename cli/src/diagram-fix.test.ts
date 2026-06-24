@@ -930,11 +930,10 @@ describe('fixDiagramLines — complex scenarios', () => {
     `)
   })
 
-  // BUG: When content overflows the box width, the fixer moves the right │ to the
-  // top border's ┐ column but leaves the overflowing text intact. The result is
-  // the │ lands in the middle of the text, and trailing spaces pad to where the
-  // original │ was. The fixer should ideally flag this as an error since it can't
-  // shrink text, but instead it silently produces a malformed box.
+  // BUG: When content overflows the box width, the fixer cannot shrink the text.
+  // It emits a segment wider than the box: the content stays intact, the right │
+  // is placed at the original (far-right) position, and the box remains
+  // misaligned. validateDiagram will report this as a remaining alignment issue.
   test('content text longer than box width — overflows right border', () => {
     const input = [
       '┌──────────┐',
@@ -1027,9 +1026,9 @@ describe('fixDiagramLines — complex scenarios', () => {
   })
 
   // BUG: Same overflow issue as the single-line test but repeated across every
-  // content line. The fixer moves right │ to col 5 (matching ┐) which lands
-  // inside the text. Each line gets massive trailing whitespace padding to fill
-  // up to where the original far-right │ was.
+  // content line. The fixer cannot shrink overlong content, so each line's right
+  // │ stays at the far-right original position. Trailing whitespace pads to
+  // preserve suffix positions. validateDiagram reports these as alignment issues.
   test('box where every content line overflows — fixer cannot shrink text', () => {
     const input = [
       '┌────┐',

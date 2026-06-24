@@ -542,11 +542,27 @@ export function validateDiagram(text: string, opts?: { maxWidth?: number }): Dia
   for (const box of boxes) {
     const { topRow, bottomRow, leftCol, rightCol } = box
 
-    // Check bottom border: find └ at leftCol, scan right for ┘.
-    // The ┘ must be at rightCol (same as ┐ on the top border).
+    // Check bottom border: find └ near leftCol (±3 tolerance), scan right for ┘.
+    // Report if └ is displaced or ┘ is not at rightCol.
     const bottomGrid = charGrid(lines[bottomRow])
-    const blCell = bottomGrid.find((c) => c.displayCol === leftCol && isBottomLeft(c.char))
+    let blCell = bottomGrid.find((c) => c.displayCol === leftCol && isBottomLeft(c.char))
+    if (!blCell) {
+      for (let off = 1; off <= 3; off++) {
+        for (const col of [leftCol + off, leftCol - off]) {
+          const cell = bottomGrid.find((c) => c.displayCol === col && isBottomLeft(c.char))
+          if (cell) { blCell = cell; break }
+        }
+        if (blCell) break
+      }
+    }
     if (blCell) {
+      if (blCell.displayCol !== leftCol) {
+        issues.push({
+          line: bottomRow + 1,
+          col: blCell.displayCol + 1,
+          message: `Bottom └ at col ${blCell.displayCol}, expected ${leftCol} (matching ┌)`,
+        })
+      }
       let brCol = -1
       for (let i = blCell.charIndex + 1; i < bottomGrid.length; i++) {
         if (isBottomRight(bottomGrid[i].char)) {
@@ -562,18 +578,30 @@ export function validateDiagram(text: string, opts?: { maxWidth?: number }): Dia
           message: `Bottom ┘ at col ${brCol}, expected ${rightCol} (matching ┐)`,
         })
       }
+    } else {
+      issues.push({
+        line: bottomRow + 1,
+        col: leftCol + 1,
+        message: `Missing bottom └ near col ${leftCol}`,
+      })
     }
 
-    // Check content lines: the char at rightCol should be a right-border char.
+    // Check content lines: left border at leftCol, right border at rightCol.
     for (let r = topRow + 1; r < bottomRow; r++) {
-      const rightHit = charAtDisplayCol(lines[r], rightCol)
-      if (!rightHit || !isRightBorder(rightHit.char)) {
-        const extracted = extractBoxContent(lines[r], leftCol, rightCol)
-        const actualCol = extracted?.rightCol ?? -1
+      const extracted = extractBoxContent(lines[r], leftCol, rightCol)
+      if (!extracted) continue
+      if (extracted.leftCol !== leftCol) {
         issues.push({
           line: r + 1,
-          col: rightCol + 1,
-          message: `Right │ at col ${actualCol}, expected ${rightCol}`,
+          col: extracted.leftCol + 1,
+          message: `Left │ at col ${extracted.leftCol}, expected ${leftCol}`,
+        })
+      }
+      if (extracted.rightCol !== rightCol) {
+        issues.push({
+          line: r + 1,
+          col: extracted.rightCol + 1,
+          message: `Right │ at col ${extracted.rightCol}, expected ${rightCol}`,
         })
       }
     }
@@ -745,13 +773,14 @@ diagramsCli
       }
 
       const fixed = fixDiagramsInText(input)
-      // After fixing alignment, check for width violations (can't auto-fix)
-      const widthIssues = validateDiagramsInText(fixed, { maxWidth }).filter((i) => i.message.includes('exceeds max'))
+      // After fixing, check for any remaining issues (width violations,
+      // overflow content that couldn't be shrunk, etc.)
+      const remainingIssues = validateDiagramsInText(fixed, { maxWidth })
       output.log(fixed)
-      if (widthIssues.length > 0) {
+      if (remainingIssues.length > 0) {
         output.error('')
-        reportIssues(widthIssues)
-        output.error(logger.error(`${widthIssues.length} line(s) exceed max width ${maxWidth}. Shorten content manually.`))
+        reportIssues(remainingIssues)
+        output.error(logger.error(`${remainingIssues.length} issue(s) remaining after fix. Manual intervention needed.`))
         return proc.exit(1)
       }
       return
@@ -790,15 +819,15 @@ diagramsCli
         output.log(logger.info(`No changes: ${file}`))
       }
 
-      // After fixing, report width violations
-      const widthIssues = validateDiagramsInText(fixed, { maxWidth }).filter((i) => i.message.includes('exceeds max'))
-      if (widthIssues.length > 0) {
-        totalIssues += reportIssues(widthIssues, file)
+      // After fixing, report any remaining issues (width, alignment, overflow)
+      const remainingIssues = validateDiagramsInText(fixed, { maxWidth })
+      if (remainingIssues.length > 0) {
+        totalIssues += reportIssues(remainingIssues, file)
       }
     }
 
     if (totalIssues > 0) {
-      output.error(logger.error(`${totalIssues} issue(s) remaining. Lines exceeding max width ${maxWidth} must be shortened manually.`))
+      output.error(logger.error(`${totalIssues} issue(s) remaining after fix. Manual intervention needed.`))
       return proc.exit(1)
     }
     if (options.check) {
