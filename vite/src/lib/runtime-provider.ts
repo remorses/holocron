@@ -26,6 +26,7 @@ import type { ConfigNavGroup, ConfigNavTab } from '../config.ts'
 import type { RuntimeCache } from './runtime-cache.ts'
 import type { VirtualTabResult } from './virtual-tab-provider.ts'
 import { logger, formatHolocronWarning } from './logger.ts'
+import { parseFrontmatterObject } from './frontmatter.ts'
 
 /**
  * Unified provider interface for custom tab providers.
@@ -54,9 +55,6 @@ export type CustomTabProvider = {
   }): Promise<VirtualTabResult>
 }
 
-/** Backwards-compatible alias. Internal code uses this for runtime providers. */
-export type RuntimeVirtualTabProvider = CustomTabProvider
-
 const DEFAULT_TTL_MS = 60 * 60 * 1000 // 1 hour
 
 /** Cache key for a runtime provider's full result. */
@@ -68,6 +66,9 @@ function cacheKey(providerName: string, tabName: string): string {
 type CachedResult = {
   groups: ConfigNavGroup[]
   mdxContent: Record<string, string>
+  /** Extracted frontmatter titles keyed by slug. Used by the sidebar
+   *  enrichment so runtime pages show real titles, not slug-derived ones. */
+  pageTitles: Record<string, string>
 }
 
 /**
@@ -77,6 +78,11 @@ type CachedResult = {
  * in-flight generate() call instead of duplicating work.
  */
 const inflight = new Map<string, Promise<CachedResult>>()
+
+/** Monotonic version counter. Incremented on every cache miss (provider
+ *  regeneration). Used by mergeRuntimeNavigation to detect when the cached
+ *  merged navigation is still valid. */
+let cacheVersion = 0
 
 export async function resolveRuntimeResult(
   provider: CustomTabProvider,
@@ -95,11 +101,21 @@ export async function resolveRuntimeResult(
   const promise = (async (): Promise<CachedResult> => {
     try {
       const result = await provider.generate({ tab: { tab: tabInfo.tab, base: tabInfo.base } as ConfigNavTab })
+      // Extract titles from MDX frontmatter so sidebar shows real titles
+      const pageTitles: Record<string, string> = {}
+      for (const [slug, mdx] of Object.entries(result.mdxContent)) {
+        const fm = parseFrontmatterObject(mdx)
+        if (typeof fm.title === 'string') {
+          pageTitles[slug] = fm.title
+        }
+      }
       const toCache: CachedResult = {
         groups: result.groups,
         mdxContent: result.mdxContent,
+        pageTitles,
       }
       await cache.set(key, toCache, ttl)
+      cacheVersion++
       return toCache
     } catch (err) {
       logger.warn(
@@ -107,7 +123,7 @@ export async function resolveRuntimeResult(
           `Runtime provider "${provider.name}" failed for tab "${tabInfo.tab}": ${err instanceof Error ? err.message : String(err)}`,
         ),
       )
-      return { groups: [], mdxContent: {} }
+      return { groups: [], mdxContent: {}, pageTitles: {} }
     }
   })()
 
@@ -141,21 +157,40 @@ export async function resolveRuntimeContent(
   return undefined
 }
 
+export type MergedRuntimeNavigation = {
+  tabs: ConfigNavTab[]
+  /** Frontmatter titles from all runtime providers, keyed by slug. */
+  pageTitles: Record<string, string>
+}
+
+/** Memoized merge result. Reused when no provider has regenerated since
+ *  the last merge (cacheVersion unchanged). */
+let lastMerge: { version: number; result: MergedRuntimeNavigation } | null = null
+
 /**
  * Merge runtime provider navigation into the base config tabs.
- * Uses tab name for matching (stable across clones).
+ * Returns the merged tabs + extracted page titles for sidebar enrichment.
+ * On cache hit (no provider regenerated), returns the previous result
+ * without cloning or awaiting.
  */
 export async function mergeRuntimeNavigation(
   baseTabs: ConfigNavTab[],
   runtimeTabs: Map<string, CustomTabProvider>,
   cache: RuntimeCache,
-): Promise<ConfigNavTab[]> {
-  if (runtimeTabs.size === 0) return baseTabs
+): Promise<MergedRuntimeNavigation> {
+  if (runtimeTabs.size === 0) return { tabs: baseTabs, pageTitles: {} }
+
+  // Fast path: if no provider regenerated since last merge, reuse result.
+  if (lastMerge && lastMerge.version === cacheVersion) {
+    return lastMerge.result
+  }
 
   const merged = baseTabs.map((tab) => {
     if (!runtimeTabs.has(tab.tab)) return tab
     return { ...tab }
   })
+
+  const allTitles: Record<string, string> = {}
 
   await Promise.all(
     merged.map(async (tab, idx) => {
@@ -163,8 +198,11 @@ export async function mergeRuntimeNavigation(
       if (!provider) return
       const result = await resolveRuntimeResult(provider, { tab: tab.tab, base: tab.base }, cache)
       merged[idx] = { ...tab, groups: result.groups }
+      Object.assign(allTitles, result.pageTitles)
     }),
   )
 
-  return merged
+  const mergeResult: MergedRuntimeNavigation = { tabs: merged, pageTitles: allTitles }
+  lastMerge = { version: cacheVersion, result: mergeResult }
+  return mergeResult
 }

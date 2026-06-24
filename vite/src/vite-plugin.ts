@@ -217,48 +217,22 @@ import type { CustomTabProvider } from './lib/runtime-provider.ts'
 import type { ConfigNavTab } from './config.ts'
 
 /**
- * Load custom provider files from tabs with a `provider` field.
+ * Load static custom provider files (static: true in tab config).
  *
- * Static providers (static: true in tab config) are imported at sync time
- * so their generate() can run during the build. Runtime providers (default)
- * are NOT imported here — they're loaded via Vite virtual modules at
- * request time.
- *
- * For static providers, the file is imported via `import()` which requires
- * the runtime to support TS (tsx, bun). Runtime providers avoid this
- * requirement since Vite bundles them.
+ * Only static providers are imported at sync time so their generate() can
+ * run during the build. Runtime providers (static: false, the default) are
+ * loaded via Vite virtual modules at request time and don't need import()
+ * here.
  */
-async function loadCustomProviders(
+async function loadStaticCustomProviders(
   config: HolocronConfig,
   projectRoot: string,
 ): Promise<Array<{ tab: ConfigNavTab; provider: CustomTabProvider }>> {
   const results: Array<{ tab: ConfigNavTab; provider: CustomTabProvider }> = []
 
   for (const tab of config.navigation.tabs) {
-    if (!tab.provider) continue
+    if (!tab.provider || tab.static !== true) continue
 
-    const isStatic = tab.static === true
-
-    // Runtime providers: create a placeholder provider. The real provider
-    // code is loaded via virtual:holocron-provider/ at request time.
-    if (!isStatic) {
-      const providerName = path.basename(tab.provider, path.extname(tab.provider))
-      results.push({
-        tab,
-        provider: {
-          name: providerName,
-          static: false,
-          // generate() is never called at sync time for runtime providers.
-          // The real implementation comes from the bundled virtual module.
-          async generate() {
-            throw new Error(`Runtime provider "${providerName}" should not be called at sync time`)
-          },
-        },
-      })
-      continue
-    }
-
-    // Static providers: import at sync time
     const absPath = path.isAbsolute(tab.provider)
       ? tab.provider
       : path.resolve(projectRoot, tab.provider)
@@ -287,7 +261,6 @@ async function loadCustomProviders(
         continue
       }
 
-      // Force static mode since the tab config says so
       results.push({ tab, provider: { ...provider, static: true } })
     } catch (err) {
       logger.warn(
@@ -537,11 +510,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      // Load custom provider files referenced by `provider` field in tab config.
-      // Each file is dynamically imported and its default export is used as the
-      // provider. Static providers are processed during sync; runtime providers
-      // are stored for request-time handling.
-      const customProviders = await loadCustomProviders(config, root)
+      // Load static custom provider files (static: true in tab config).
+      // Runtime providers are loaded via virtual modules at request time.
+      const customProviders = await loadStaticCustomProviders(config, root)
 
       // Sync MDX + process images. In dev mode, virtual tab providers
       // (OpenAPI, changelog, MCP) are deferred to a background task so the
@@ -660,29 +631,24 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (options.virtualModules?.navigation) {
           return options.virtualModules.navigation
         }
-        // Generate runtime tab entries. For built-in providers (outrank),
-        // we use providerName for registry lookup. For custom providers
-        // (user files), we import via a virtual module so Vite bundles
-        // the provider code into the server output.
+        // Generate runtime tab entries. Each provider is imported via virtual
+        // module so Vite bundles the user's provider file into the server output.
         const lines: string[] = []
         const entryParts: string[] = []
         let providerIdx = 0
 
-        for (const [tabName, provider] of syncResult.runtimeTabs) {
+        for (const tabName of syncResult.runtimeTabNames) {
           const configTab = config.navigation.tabs.find((t) => t.tab === tabName)
-          if (configTab?.provider) {
-            // Custom provider: import via virtual module so Vite bundles it
-            const absPath = path.isAbsolute(configTab.provider)
-              ? configTab.provider
-              : path.resolve(root, configTab.provider)
-            const virtualId = VIRTUAL_PROVIDER_PREFIX + encodeURIComponent(absPath)
-            const varName = `__customProvider_${providerIdx++}`
-            lines.push(`import ${varName} from ${JSON.stringify(virtualId)}`)
-            entryParts.push(`{ tabName: ${JSON.stringify(tabName)}, provider: ${varName} }`)
-          } else {
-            // Built-in provider: look up by name at runtime
-            entryParts.push(`{ tabName: ${JSON.stringify(tabName)}, providerName: ${JSON.stringify(provider.name)} }`)
-          }
+          if (!configTab?.provider) continue
+
+          const absPath = path.isAbsolute(configTab.provider)
+            ? configTab.provider
+            : path.resolve(root, configTab.provider)
+          const importPath = VIRTUAL_PROVIDER_PREFIX + encodeURIComponent(absPath)
+
+          const varName = `__runtimeProvider_${providerIdx++}`
+          lines.push(`import { default as ${varName} } from ${JSON.stringify(importPath)}`)
+          entryParts.push(`{ tabName: ${JSON.stringify(tabName)}, provider: ${varName} }`)
         }
 
         lines.push(
@@ -983,7 +949,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           // hotUpdate hook still recognizes provider file edits (e.g. OpenAPI
           // spec) during the window before background providers finish.
           const prevProviderWatchPaths = syncResult.providerWatchPaths
-          const freshCustomProviders = await loadCustomProviders(config, root)
+          const freshCustomProviders = await loadStaticCustomProviders(config, root)
           syncResult = await syncNavigation({
             config,
             pagesDir,

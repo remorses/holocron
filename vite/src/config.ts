@@ -74,9 +74,6 @@ export type ConfigNavTab = NavTabBase & {
    *  tool/resource pages are auto-generated from the MCP definition. Set by
    *  normalize when the raw tab has `mcp`. */
   mcp?: string
-  /** Outrank Blog API key — when present, articles are fetched at request
-   *  time (not build time) and cached. Each article becomes a page. */
-  outrank?: string
   /** Path to a custom provider file (resolved relative to project root).
    *  The file default-exports a CustomTabProvider. */
   provider?: string

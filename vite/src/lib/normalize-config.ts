@@ -444,7 +444,7 @@ function normalizeTabsAndAnchors(
     }
 
     // Link-only tab → convert to anchor
-    if (typeof raw.href === 'string' && !raw.groups && !raw.pages && !raw.openapi && !raw.changelog && !raw.outrank && !raw.provider) {
+    if (typeof raw.href === 'string' && !raw.groups && !raw.pages && !raw.openapi && !raw.changelog && !raw.provider) {
       const placement = raw.placement === 'sidebar' ? 'sidebar' : 'tabs'
       anchors.push({
         anchor: name,
@@ -500,22 +500,6 @@ function normalizeTabsAndAnchors(
         groups: [],
         provider,
         ...(isStatic && { static: true as const }),
-        ...(base !== undefined && { base }),
-      })
-      continue
-    }
-
-    // Outrank tab → store the API key so the runtime provider can fetch
-    // articles at request time. Groups start empty and are populated
-    // dynamically from the cached Outrank API response.
-    if (raw.outrank) {
-      const outrank = raw.outrank as string
-      const base = normalizeBaseSlug(raw.base as string | undefined)
-      tabs.push({
-        tab: name,
-        ...tabExtras,
-        groups: [],
-        outrank,
         ...(base !== undefined && { base }),
       })
       continue

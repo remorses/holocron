@@ -496,29 +496,6 @@ const tabWithProviderSchema = tabBaseSchema.extend({
     ),
 })
 
-const tabWithOutrankSchema = tabBaseSchema.extend({
-  outrank: z
-    .string()
-    .describe(
-      dedent`
-        Outrank Blog API key (or env var reference like \`$OUTRANK_API_KEY\`).
-        Articles are fetched from the Outrank API at request time and cached.
-        Each article becomes a page in this tab, grouped by tag. The content
-        refreshes automatically when the cache expires (default: 1 hour)
-      `,
-    ),
-  base: z
-    .string()
-    .optional()
-    .describe(
-      dedent`
-        Slug prefix for generated blog pages. Defaults to \`"blog"\`.
-        A leading slash is allowed and ignored, so \`"/posts"\` behaves
-        the same as \`"posts"\`
-      `,
-    ),
-})
-
 export const tabSchema = z
   .union([
     tabWithGroupsSchema,
@@ -527,7 +504,6 @@ export const tabSchema = z
     tabWithOpenAPISchema,
     tabWithChangelogSchema,
     tabWithMCPSchema,
-    tabWithOutrankSchema,
     tabWithProviderSchema,
   ])
   .describe(
@@ -536,8 +512,8 @@ export const tabSchema = z
       flat list of pages, a link-only tab, an OpenAPI spec for
       auto-generated API reference pages, a changelog generated from a
       GitHub releases page, an MCP server definition for auto-generated
-      tool and resource documentation pages, or an Outrank blog integration
-      that fetches articles at request time
+      tool and resource documentation pages, or a custom provider file
+      that generates pages from an external source
     `,
   )
   .meta({ id: 'tabSchema' })

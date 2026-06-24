@@ -33,7 +33,6 @@ import { virtualPageDir } from './virtual-page-mdx.ts'
 import { openapiProvider } from './openapi/provider.ts'
 import { changelogProvider } from './changelog/provider.ts'
 import { mcpProvider } from './mcp/provider.ts'
-import { outrankProvider } from './outrank/provider.ts'
 import type { CustomTabProvider } from './runtime-provider.ts'
 import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { parseFrontmatterObject } from './frontmatter.ts'
@@ -131,10 +130,10 @@ export type SyncResult = {
    *  spec files). Watched by the dev server so edits trigger re-sync + HMR. */
   providerWatchPaths: string[]
   /** Tab names claimed by runtime providers (e.g. Outrank, custom providers
-   *  with static: false). Keyed by tab name for stable identity across clones.
-   *  These tabs have empty groups at build time; their content is fetched at
-   *  request time. app-factory registers catch-all routes. */
-  runtimeTabs: Map<string, CustomTabProvider>
+   *  with static: false). These tabs have empty groups at build time; their
+   *  content is fetched at request time. app-factory registers catch-all routes.
+   *  The actual provider objects are imported via virtual modules, not stored here. */
+  runtimeTabNames: Set<string>
   parsedCount: number
   cachedCount: number
 }
@@ -166,9 +165,8 @@ export async function syncNavigation({
    *  triggers HMR when providers finish. Production builds should always
    *  use false (the default). */
   deferProviders?: boolean
-  /** Custom providers loaded from user files (via `provider` field in tab config).
-   *  Static providers are processed at build time alongside built-in ones.
-   *  Runtime providers are returned in `runtimeTabs` for request-time handling. */
+  /** Static custom providers loaded from user files (tab.provider with
+   *  static: true). Processed at build time alongside built-in providers. */
   customProviders?: Array<{ tab: ConfigNavTab; provider: CustomTabProvider }>
 }): Promise<SyncResult> {
   // 1. Load caches from previous build
@@ -463,38 +461,26 @@ export async function syncNavigation({
     }
   }
 
-  // 2b-i. Identify runtime vs static custom providers.
-  // Built-in runtime providers (outrank) are detected by field presence.
-  // Custom providers come from the `customProviders` parameter (loaded by
-  // vite-plugin from user files). Static custom providers are adapted to
-  // VirtualTabProvider and injected into processVirtualTabs. Runtime custom
-  // providers are stored in runtimeTabs for request-time handling.
-  const runtimeTabs = new Map<string, CustomTabProvider>()
-  const staticCustomProviders: VirtualTabProvider[] = []
-
-  // Check built-in runtime providers (outrank)
+  // 2b-i. Identify runtime tabs (request-time content).
+  // Runtime providers have tab.provider with static !== true. The real
+  // provider code loads via virtual module at request time, not here.
+  const runtimeTabNames = new Set<string>()
   for (const tab of config.navigation.tabs) {
-    if (tab.outrank) {
-      runtimeTabs.set(tab.tab, outrankProvider)
+    if (tab.provider && tab.static !== true) {
+      runtimeTabNames.add(tab.tab)
     }
   }
 
-  // Check custom providers from user files
-  for (const { tab, provider } of customProviders) {
-    if (provider.static === false) {
-      // Runtime: request-time generation + caching
-      runtimeTabs.set(tab.tab, provider)
-    } else {
-      // Static (default): build-time generation via processVirtualTabs
-      staticCustomProviders.push({
-        name: provider.name,
-        claims: (t) => t === tab,
-        generate: (ctx) => provider.generate(ctx),
-      })
-    }
-  }
+  // 2b-ii. Adapt static custom providers to VirtualTabProvider interface
+  // for processVirtualTabs. Only static providers (already imported by
+  // loadStaticCustomProviders) appear here.
+  const staticCustomProviders: VirtualTabProvider[] = customProviders.map(({ tab, provider }) => ({
+    name: provider.name,
+    claims: (t: ConfigNavTab) => t === tab,
+    generate: (ctx: { tab: ConfigNavTab; projectRoot: string; pagesDir: string }) => provider.generate(ctx),
+  }))
 
-  // 2b-ii. Process build-time virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages.
+  // 2b-iii. Process build-time virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages.
   // In dev mode with deferProviders, skip this step so the sync returns fast.
   // The caller runs processDeferredProviders() in the background to fill in
   // provider pages and trigger HMR when ready.
@@ -623,7 +609,7 @@ export async function syncNavigation({
   return {
     navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports,
     importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths,
-    runtimeTabs, parsedCount, cachedCount,
+    runtimeTabNames, parsedCount, cachedCount,
   }
 }
 

@@ -77,7 +77,7 @@ import type { HolocronConfig, ConfigNavTab, ConfigNavGroup } from './config.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
 import { resolveConfigOverride, shouldShowConfigPanel } from './lib/config-override.ts'
 import {
-  type RuntimeVirtualTabProvider,
+  type CustomTabProvider,
   resolveRuntimeContent,
   mergeRuntimeNavigation,
 } from './lib/runtime-provider.ts'
@@ -85,22 +85,11 @@ import { runtimeCache } from './lib/runtime-cache.ts'
 
 /* ── Runtime provider registry ────────────────────────────────────────── */
 
-/** Entry for a runtime-provider tab. Tab is identified by its `tab` name
- *  string. Built-in providers use `providerName` for registry lookup.
- *  Custom providers pass the `provider` object directly (imported in the
- *  virtual module). */
+/** Entry for a runtime-provider tab. Each entry carries the provider
+ *  object directly (imported via virtual module by vite-plugin). */
 export type RuntimeTabEntry = {
   tabName: string
-  providerName?: string
-  provider?: RuntimeVirtualTabProvider
-}
-
-// All runtime providers, keyed by name. Used by app.tsx to reconstruct the
-// runtimeTabs Map from the serialized entries.
-import { outrankProvider } from './lib/outrank/provider.ts'
-
-const runtimeProviderRegistry: Record<string, RuntimeVirtualTabProvider> = {
-  outrank: outrankProvider,
+  provider: CustomTabProvider
 }
 
 /* ── Server-only page lookup (uses parsePageFrontmatter → zod/yaml) ── */
@@ -577,15 +566,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   }
   const sharedIconRefs = collectIconRefs({ config, navigation })
 
-  // Reconstruct runtime tab Map from serialized entries (keyed by tab name
-  // for stable identity across clones in mergeRuntimeNavigation).
-  const runtimeTabs = new Map<string, RuntimeVirtualTabProvider>()
+  // Reconstruct runtime tab Map from serialized entries.
+  const runtimeTabs = new Map<string, CustomTabProvider>()
   if (providers.runtimeTabs) {
-    for (const entry of providers.runtimeTabs) {
-      const provider = entry.provider ?? (entry.providerName ? runtimeProviderRegistry[entry.providerName] : undefined)
-      if (provider) {
-        runtimeTabs.set(entry.tabName, provider)
-      }
+    for (const { tabName, provider } of providers.runtimeTabs) {
+      runtimeTabs.set(tabName, provider)
     }
   }
 
@@ -789,12 +774,12 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     // is just a Map lookup + shallow array clone.
     let effectiveSite = site
     if (runtimeTabs.size > 0) {
-      const mergedConfigTabs = await mergeRuntimeNavigation(
+      const { tabs: mergedConfigTabs, pageTitles } = await mergeRuntimeNavigation(
         effectiveConfig.navigation.tabs,
         runtimeTabs,
         runtimeCache,
       )
-      const mergedNavTabs = enrichRuntimeTabs(site.navigation, mergedConfigTabs)
+      const mergedNavTabs = enrichRuntimeTabs(site.navigation, mergedConfigTabs, pageTitles)
       effectiveSite = {
         ...site,
         config: { ...effectiveConfig, navigation: { ...effectiveConfig.navigation, tabs: mergedConfigTabs } },
@@ -815,17 +800,17 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   function enrichRuntimeTabs(
     baseNav: Navigation,
     mergedConfigTabs: ConfigNavTab[],
+    pageTitles: Record<string, string>,
   ): Navigation {
     return baseNav.map((navTab, i) => {
       const configTab = mergedConfigTabs[i]
       if (!configTab || !runtimeTabs.has(configTab.tab)) return navTab
-      // Convert ConfigNavGroup[] to NavGroup[] with recursive support
-      const groups = configTab.groups.map(enrichRuntimeGroup)
+      const groups = configTab.groups.map((g) => enrichRuntimeGroup(g, pageTitles))
       return { ...navTab, groups }
     })
   }
 
-  function enrichRuntimeGroup(g: ConfigNavGroup): NavGroup {
+  function enrichRuntimeGroup(g: ConfigNavGroup, pageTitles: Record<string, string>): NavGroup {
     return {
       group: g.group,
       pages: g.pages.map((entry): NavPage | NavGroup => {
@@ -833,19 +818,20 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           return {
             slug: entry,
             href: slugToHref(entry),
-            title: runtimeTitleFromSlug(entry),
+            title: pageTitles[entry] ?? titleFromSlug(entry),
             gitSha: '',
             headings: [],
             frontmatter: {},
           }
         }
-        // Nested group — recurse
-        return enrichRuntimeGroup(entry)
+        return enrichRuntimeGroup(entry, pageTitles)
       }),
     }
   }
 
-  function runtimeTitleFromSlug(slug: string): string {
+  /** Derive a human-readable title from a slug. Used as a fallback when
+   *  frontmatter title is missing. */
+  function titleFromSlug(slug: string): string {
     const last = slug.split('/').pop() || slug
     return last.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
   }
@@ -876,17 +862,22 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       resolveConfigOverride(request, site.config),
     ])
 
+    // Use enriched site (with runtime tab pages populated) for tab
+    // resolution so the tab bar highlights correctly for all pages,
+    // including runtime provider pages that aren't in the static nav.
+    const enrichedSite = await buildLoaderSite(slug, effectiveConfig, origin)
+
     if (!currentPage || !hasMdx) {
       return {
-        site: await buildLoaderSite(undefined, effectiveConfig, origin),
+        site: enrichedSite,
         currentPageHref: undefined,
         currentPageTitle: undefined,
         currentPageDescription: undefined,
         currentHeadings: [],
         ancestorGroupKeys: firstPage ? collectAncestorGroupKeys(site, firstPage.href) : [],
-        activeTabHref: resolveActiveTabHref(site, firstPage?.href),
-        activeVersionHref: resolveActiveVersionHref(site, firstPage?.href),
-        activeDropdownHref: resolveActiveDropdownHref(site, firstPage?.href),
+        activeTabHref: resolveActiveTabHref(enrichedSite, '/' + slug),
+        activeVersionHref: resolveActiveVersionHref(enrichedSite, '/' + slug),
+        activeDropdownHref: resolveActiveDropdownHref(enrichedSite, '/' + slug),
         notFoundPath: '/' + slug,
         headTitle: `Page not found — ${effectiveConfig.name}`,
         headRobots: 'noindex',
@@ -897,15 +888,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
 
     return {
-      site: await buildLoaderSite(slug, effectiveConfig, origin),
+      site: enrichedSite,
       currentPageHref: currentPage.href,
       currentPageTitle: currentPage.title,
       currentPageDescription: currentPage.description ?? effectiveConfig.description,
       currentHeadings: currentPage.headings,
       ancestorGroupKeys: collectAncestorGroupKeys(site, currentPage.href),
-      activeTabHref: resolveActiveTabHref(site, currentPage.href),
-      activeVersionHref: resolveActiveVersionHref(site, currentPage.href),
-      activeDropdownHref: resolveActiveDropdownHref(site, currentPage.href),
+      activeTabHref: resolveActiveTabHref(enrichedSite, currentPage.href),
+      activeVersionHref: resolveActiveVersionHref(enrichedSite, currentPage.href),
+      activeDropdownHref: resolveActiveDropdownHref(enrichedSite, currentPage.href),
       notFoundPath: undefined,
       headTitle: `${currentPage.title} — ${effectiveConfig.name}`,
       headRobots: getPageRobots(currentPage.frontmatter),
@@ -1738,7 +1729,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
       // Extract title from frontmatter for the page
       const frontmatter = parsePageFrontmatter(pageMdx)
-      const pageTitle = frontmatter.title || runtimeTitleFromSlug(strippedSlug)
+      const pageTitle = frontmatter.title || titleFromSlug(strippedSlug)
       const ogImageUrl = buildOgImageUrl({
         title: pageTitle,
         description: frontmatter.description ?? config.description,
@@ -1763,18 +1754,21 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           })
         : undefined
 
-      // Build a minimal loader data for rendering
+      // Build a minimal loader data for rendering. Use the enriched site
+      // (with runtime tab pages populated) for active-tab resolution so the
+      // tab bar highlights the correct tab for runtime provider pages.
       const effectiveConfig = await resolveConfigOverride(request, site.config)
+      const enrichedSite = await buildLoaderSite(strippedSlug, effectiveConfig, url.origin)
       const loaderData: HolocronLoaderData = {
-        site: await buildLoaderSite(strippedSlug, effectiveConfig, url.origin),
+        site: enrichedSite,
         currentPageHref: pageHref,
         currentPageTitle: pageTitle,
         currentPageDescription: frontmatter.description,
         currentHeadings: [], // Runtime pages don't have pre-extracted headings
         ancestorGroupKeys: [],
-        activeTabHref: resolveActiveTabHref(site, pageHref),
-        activeVersionHref: resolveActiveVersionHref(site, pageHref),
-        activeDropdownHref: resolveActiveDropdownHref(site, pageHref),
+        activeTabHref: resolveActiveTabHref(enrichedSite, pageHref),
+        activeVersionHref: resolveActiveVersionHref(enrichedSite, pageHref),
+        activeDropdownHref: resolveActiveDropdownHref(enrichedSite, pageHref),
         notFoundPath: undefined,
         headTitle: `${pageTitle} — ${effectiveConfig.name}`,
         headRobots: getPageRobots(frontmatter),

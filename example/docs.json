@@ -81,6 +81,12 @@
             "icon": "newspaper",
             "iconColor": "green",
             "changelog": "https://github.com/remorses/playwriter"
+          },
+          {
+            "tab": "Guides",
+            "icon": "book-open",
+            "provider": "./providers/mock-guides.ts",
+            "base": "guides"
           }
         ]
       },

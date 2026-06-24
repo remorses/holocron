@@ -1044,51 +1044,6 @@
                 "end"
               ]
             },
-            "outrank": {
-              "type": "string",
-              "description": "Outrank Blog API key (or env var reference like `$OUTRANK_API_KEY`).\nArticles are fetched from the Outrank API at request time and cached.\nEach article becomes a page in this tab, grouped by tag. The content\nrefreshes automatically when the cache expires (default: 1 hour)"
-            },
-            "base": {
-              "description": "Slug prefix for generated blog pages. Defaults to `\"blog\"`.\nA leading slash is allowed and ignored, so `\"/posts\"` behaves\nthe same as `\"posts\"`",
-              "type": "string"
-            }
-          },
-          "required": [
-            "tab",
-            "outrank"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "tab": {
-              "type": "string",
-              "minLength": 1,
-              "description": "The name of the tab"
-            },
-            "icon": {
-              "allOf": [
-                {
-                  "$ref": "#/definitions/iconSchema"
-                }
-              ]
-            },
-            "iconColor": {
-              "$ref": "#/definitions/iconColorSchema"
-            },
-            "hidden": {
-              "description": "Whether the tab is hidden by default",
-              "type": "boolean"
-            },
-            "align": {
-              "description": "Tab alignment in the navigation",
-              "type": "string",
-              "enum": [
-                "start",
-                "end"
-              ]
-            },
             "provider": {
               "type": "string",
               "description": "Path to a file that default-exports a CustomTabProvider object.\nThe provider's generate() function produces navigation groups and\nMDX page content from an external source. Example:\n`\"./providers/blog.ts\"`"
@@ -1109,7 +1064,7 @@
           "additionalProperties": false
         }
       ],
-      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, a changelog generated from a\nGitHub releases page, an MCP server definition for auto-generated\ntool and resource documentation pages, or an Outrank blog integration\nthat fetches articles at request time"
+      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, a changelog generated from a\nGitHub releases page, an MCP server definition for auto-generated\ntool and resource documentation pages, or a custom provider file\nthat generates pages from an external source"
     },
     "iconSchema": {
       "anyOf": [
@@ -1638,14 +1593,6 @@
         "enabled": {
           "description": "Whether to show the AI chat assistant. When `false`, the sidebar\nwidget, chat drawer, mobile \"Ask AI\" button, and the chat API\nendpoint are all disabled. Defaults to `true`",
           "type": "boolean"
-        },
-        "url": {
-          "description": "URL of a Flue agent deployment. When set, the chat widget talks\ndirectly to this Flue agent instead of using the holocron-hosted\nAI chat. The URL should point to the Flue app's base URL where\n`/agents/:name/:id` routes are mounted.\nExample: `\"https://my-agent.workers.dev\"`",
-          "type": "string"
-        },
-        "agent": {
-          "description": "Name of the Flue agent to use. Only relevant when `url` is set.\nDefaults to `\"docs-chat\"`",
-          "type": "string"
         }
       },
       "additionalProperties": false,
