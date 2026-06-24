@@ -87,6 +87,7 @@
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.32.2",
+    "@flue/sdk": "^0.8.0",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@holocron.so/cli": "workspace:^",

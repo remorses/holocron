@@ -10,6 +10,9 @@
   "icons": {
     "library": "lucide"
   },
+  "assistant": {
+    "url": "https://holocron-chat.remorses.workers.dev"
+  },
   "navbar": {
     "links": [
       { "type": "github", "href": "https://github.com/remorses/playwriter" },

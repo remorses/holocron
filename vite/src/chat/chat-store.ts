@@ -14,11 +14,6 @@ import { flushSync } from 'react-dom'
 
 export type DrawerState = 'closed' | 'open'
 
-/** Opaque AI SDK ModelMessage JSON. Holocron keeps this separate from the
- *  custom render messages so tool history can be resumed without lossy
- *  conversion through UI-only parts. */
-export type ChatModelMessage = Record<string, unknown>
-
 /** Superset of AI SDK message parts used by the drawer.
  *  Text parts can carry server-rendered JSX for display, while the plain
  *  `text` field remains serializable and is sent back in future requests. */
@@ -48,8 +43,10 @@ export type ChatState = {
   drawerState: DrawerState
   isGenerating: boolean
   messages: ChatMessage[]
-  /** AI SDK ModelMessage history sent back verbatim on the next request. */
-  modelMessages: ChatModelMessage[]
+  /** Flue agent instance ID for session continuity. Generated per-visitor. */
+  sessionId: string
+  /** Last Flue stream offset for reconnection after page close. */
+  streamOffset: string
   /** Shared textarea value — single source of truth for both sidebar widget and drawer input. */
   draftText: string
   /** When true, the drawer auto-submits draftText on open (user pressed Enter in sidebar). */
@@ -62,7 +59,8 @@ export const chatStore = createStore<ChatState>(() => ({
   drawerState: 'closed',
   isGenerating: false,
   messages: [],
-  modelMessages: [],
+  sessionId: '',
+  streamOffset: '',
   draftText: '',
   pendingSubmit: false,
   abortController: null,

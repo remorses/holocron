@@ -8,6 +8,7 @@
     "start": "node dist/rsc/index.js"
   },
   "dependencies": {
+    "@flue/sdk": "^0.8.1",
     "@holocron.so/vite": "workspace:^",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
