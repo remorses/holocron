@@ -1,0 +1,105 @@
+---
+title: Bleed
+description: Let content extend beyond the prose column for more visual impact.
+icon: expand
+---
+
+# Bleed
+
+Bleed lets content extend beyond the prose column into the page margins. This gives images, videos, code blocks, and embeds more breathing room without changing the overall grid layout.
+
+## How it works
+
+Holocron defines a `--bleed` CSS variable that controls how far content extends past the prose column. It is **0px on mobile** and **32px on desktop** (≥ 1080px). The `.bleed` CSS class applies negative left and right margins equal to `--bleed`, making the element wider than its parent.
+
+```diagram
+  Mobile (< 1080px)                      Desktop (≥ 1080px)
+
+  ┌──────────────────────┐            ┌──────────────────────────────┐
+  │ prose column         │            │       prose column           │
+  │ ┌──────────────────┐ │         ┌──┼──────────────────────────────┼──┐
+  │ │ bleed element    │ │         │  │  bleed element extends       │  │
+  │ │ (same width)     │ │         │  │  past both edges ◄──────────►│  │
+  │ └──────────────────┘ │         └──┼──────────────────────────────┼──┘
+  └──────────────────────┘            └──────────────────────────────┘
+```
+
+## Default bleed behavior
+
+Some elements bleed automatically:
+
+- **Code blocks** bleed into the right margin by default so code text lines up with the prose left edge. You can control this with the `bleed` meta option (see [Code Blocks](/docs/create/code#bleed)).
+- **Images** are wrapped in a `<Bleed>` component automatically and extend into both margins.
+
+## Adding bleed to any element
+
+Wrap any content in a `div` with `className="bleed"` to make it extend into the margins. This is useful for **videos, iframes, embeds, and large visuals** that benefit from extra width.
+
+### YouTube embed
+
+```mdx
+<div className='bleed'>
+<iframe
+  width="100%"
+  height="400"
+  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+  title="Video title"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  style={{ borderRadius: '8px' }}
+/>
+</div>
+```
+
+### Framed video
+
+Combine `bleed` with `Frame` for a captioned video that extends into the margins:
+
+```mdx
+<Frame caption="Product demo" className='bleed'>
+  <video src="/videos/demo.mp4" controls width="100%" />
+</Frame>
+```
+
+### Wide image
+
+Images already bleed by default, but if you have a custom image layout (like a side-by-side comparison), wrap it:
+
+```mdx
+<div className='bleed'>
+  <Columns cols={2}>
+    <img src="/images/before.png" alt="Before" />
+    <img src="/images/after.png" alt="After" />
+  </Columns>
+</div>
+```
+
+## `no-bleed` — keeping content inside containers
+
+Container components like **Callout**, **Accordion**, **Expandable**, **Panel**, **Steps**, and **Card** apply the `no-bleed` class automatically. This sets `--bleed: 0px` for all descendants so code blocks, lists, and images stay inside the container frame.
+
+You can also use `no-bleed` yourself on any wrapper:
+
+```mdx
+<div className='no-bleed'>
+  Code blocks and images inside here will not bleed.
+</div>
+```
+
+## Overriding `--bleed` in custom CSS
+
+Change the bleed distance globally in your `style.css`:
+
+```css
+/* style.css */
+:root {
+  --bleed: 0px;
+
+  @variant lg {
+    --bleed: 48px; /* wider bleed on desktop */
+  }
+}
+```
+
+Set `--bleed: 0px` at all breakpoints to disable bleed entirely.

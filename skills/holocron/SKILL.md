@@ -43,6 +43,7 @@ When the user asks about a specific workflow, fetch the matching page directly:
 - **Node deploy**: https://holocron.so/docs/deploy/node.md
 - **Holocron deploy**: https://holocron.so/docs/deploy/holocron.md
 - **AI assistant docs**: https://holocron.so/docs/ai/assistant.md
+- **Bleed**: https://holocron.so/docs/customize/bleed.md
 
 ```bash
 curl -fsSL https://holocron.so/docs/quickstart.md
@@ -600,6 +601,44 @@ characters. Use the same concise style as page `sidebarTitle` fields.
 - Drop qualifiers, parentheticals, and implementation details. `Upload deployment files (zip batch)` becomes `Upload files`.
 - Never repeat the tag/group name in the summary. If the tag is `Deploy`, the summary should not start with "Deploy".
 - If the summary reads well as a sidebar label at 230px, it is short enough.
+
+## Bleed — making content wider than the prose column
+
+Use `className="bleed"` on any wrapper to extend content into the page margins.
+This is essential for **videos, iframes, YouTube embeds, images, and large
+visuals** that look cramped at prose column width. Always wrap these in a bleed
+div so they get more breathing room.
+
+```mdx
+<div className='bleed'>
+<iframe
+  width="100%"
+  height="400"
+  src="https://www.youtube.com/embed/VIDEO_ID"
+  title="Video title"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  style={{ borderRadius: '8px' }}
+/>
+</div>
+```
+
+**Rules:**
+
+- **Always wrap YouTube embeds, videos, and large images** in `<div className='bleed'>`.
+  Without bleed, they sit at prose width which wastes screen space and looks narrow.
+- **Frame + bleed** work together: `<Frame caption="Demo" className='bleed'>` gives
+  you a captioned frame that extends into the margins.
+- **Code blocks** bleed right by default. Use `bleed=true` in the fence meta for
+  both-side bleed, or `bleed=false` to disable.
+- **`no-bleed`** is applied automatically inside containers (Callout, Accordion,
+  Card, Panel, Steps, etc.) so nested content stays inside the frame. You can also
+  add `className="no-bleed"` to any wrapper to disable bleed for descendants.
+- Bleed is **0px on mobile**, **32px on desktop** (≥ 1080px). Override in custom CSS
+  via the `--bleed` variable.
+
+See https://holocron.so/docs/customize/bleed.md for the full reference.
 
 ## Agent rules
 
