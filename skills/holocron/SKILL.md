@@ -571,6 +571,12 @@ Use ASCII diagrams frequently in MDX pages. Always use the **`diagram`** languag
 - Prefer a **varied, organic layout**. Mix plain text labels, boxes for major components, and directional arrows.
 - All connections must use **directional arrows**. Never use plain lines without an arrowhead.
 - Verify alignment by counting characters precisely.
+- **Always run `holocron diagrams fix` after creating or editing a diagram.** This command auto-fixes misaligned box borders, padding, and bottom borders. It handles all Unicode box-drawing styles (light, heavy, double, rounded).
+
+```bash
+npx -y @holocron.so/cli diagrams fix path/to/file.mdx --dry-run  # preview
+npx -y @holocron.so/cli diagrams fix path/to/file.mdx            # fix in-place
+```
 
 ````mdx
 ```diagram
@@ -602,41 +608,12 @@ characters. Use the same concise style as page `sidebarTitle` fields.
 - Never repeat the tag/group name in the summary. If the tag is `Deploy`, the summary should not start with "Deploy".
 - If the summary reads well as a sidebar label at 230px, it is short enough.
 
-## Bleed — making content wider than the prose column
+## Bleed — extending content past the prose column
 
-Use `className="bleed"` on any wrapper to extend content into the page margins.
-This is essential for **videos, iframes, YouTube embeds, images, and large
-visuals** that look cramped at prose column width. Always wrap these in a bleed
-div so they get more breathing room.
-
-```mdx
-<div className='bleed'>
-<iframe
-  width="100%"
-  height="400"
-  src="https://www.youtube.com/embed/VIDEO_ID?controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3"
-  title="Video title"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  style={{ borderRadius: '8px' }}
-/>
-</div>
-```
-
-**Rules:**
-
-- **Always wrap YouTube embeds, videos, and large images** in `<div className='bleed'>`.
-  Without bleed, they sit at prose width which wastes screen space and looks narrow.
-- **Frame + bleed** work together: `<Frame caption="Demo" className='bleed'>` gives
-  you a captioned frame that extends into the margins.
-- **Code blocks** bleed right by default. Use `bleed=true` in the fence meta for
-  both-side bleed, or `bleed=false` to disable.
-- **`no-bleed`** is applied automatically inside containers (Callout, Accordion,
-  Card, Panel, Steps, etc.) so nested content stays inside the frame. You can also
-  add `className="no-bleed"` to any wrapper to disable bleed for descendants.
-- Bleed is **0px on mobile**, **32px on desktop** (≥ 1080px). Override in custom CSS
-  via the `--bleed` variable.
+Always wrap **YouTube embeds, videos, and large images** in `<div className='bleed'>`
+so they extend into both page margins instead of sitting at narrow prose width.
+`<Frame>` also accepts `className='bleed'`. Containers like Callout, Card, and
+Accordion apply `no-bleed` automatically to keep descendants inside their frame.
 
 See https://holocron.so/docs/customize/bleed.md for the full reference.
 
@@ -653,5 +630,7 @@ See https://holocron.so/docs/customize/bleed.md for the full reference.
 - All ASCII diagrams in MDX pages must use the `diagram` language hint on the
   code fence (` ```diagram `). This renders them with proper styling on the
   website instead of plain monospace.
+- After creating or editing any diagram, run `npx -y @holocron.so/cli diagrams fix <file>`
+  to auto-fix alignment. LLMs cannot count characters reliably.
 - Never pipe curl or `--help` output through `head`, `tail`, or any truncation
   command. Always read the full output.
