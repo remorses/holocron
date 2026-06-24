@@ -484,6 +484,607 @@ describe('fixDiagramLines — real-world diagrams', () => {
 })
 
 // ─────────────────────────────────────────────────────────────
+// Complex scenarios — real-world misalignment patterns
+// ─────────────────────────────────────────────────────────────
+
+describe('fixDiagramLines — complex scenarios', () => {
+  test('large 4-box vertical pipeline with wrong padding on several lines', () => {
+    const input = [
+      '┌───────────────────────────────────────┐',
+      '│  1. Parse config                        │',
+      '│     ► reads docs.json               │',
+      '│     ► validates schema                  │',
+      '└───────────────────┬───────────────────┘',
+      '                    │',
+      '                    ▼',
+      '┌───────────────────────────────────────┐',
+      '│  2. Sync navigation tree                │',
+      '│     ► walks MDX pages              │',
+      '│     ► computes git SHAs              │',
+      '│     ► enriches metadata                 │',
+      '└───────────────────┬───────────────────┘',
+      '                    │',
+      '                    ▼',
+      '┌───────────────────────────────────────┐',
+      '│  3. Process MDX                       │',
+      '│     ► remark plugins              │',
+      '│     ► section splitting                 │',
+      '└───────────────────┬───────────────────┘',
+      '                    │',
+      '                    ▼',
+      '┌───────────────────────────────────────┐',
+      '│  4. Render pages                        │',
+      '│     ► safe-mdx                    │',
+      '│     ► editorial components              │',
+      '└───────────────────────────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌───────────────────────────────────────┐
+      │  1. Parse config                      │  
+      │     ► reads docs.json                 │
+      │     ► validates schema                │  
+      └───────────────────┬───────────────────┘
+                          │
+                          ▼
+      ┌───────────────────────────────────────┐
+      │  2. Sync navigation tree              │  
+      │     ► walks MDX pages                 │
+      │     ► computes git SHAs               │
+      │     ► enriches metadata               │  
+      └───────────────────┬───────────────────┘
+                          │
+                          ▼
+      ┌───────────────────────────────────────┐
+      │  3. Process MDX                       │
+      │     ► remark plugins                  │
+      │     ► section splitting               │  
+      └───────────────────┬───────────────────┘
+                          │
+                          ▼
+      ┌───────────────────────────────────────┐
+      │  4. Render pages                      │  
+      │     ► safe-mdx                        │
+      │     ► editorial components            │  
+      └───────────────────────────────────────┘"
+    `)
+  })
+
+  test('wide box where some lines overflow and others are too short', () => {
+    const input = [
+      '┌──────────────────────────────────────────────────────────────────────────┐',
+      '│  This is a very long description that should fit perfectly inside box    │',
+      '│  Short line          │',
+      '│  Another medium-length line that is close                               │',
+      '│  Tiny│',
+      '│  Last line with extra padding way too far right                                │',
+      '└──────────────────────────────────────────────────────────────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────────────────────────────────────────────────────────────────────┐
+      │  This is a very long description that should fit perfectly inside box    │
+      │  Short line                                                              │
+      │  Another medium-length line that is close                                │
+      │  Tiny                                                                    │
+      │  Last line with extra padding way too far right                          │      
+      └──────────────────────────────────────────────────────────────────────────┘"
+    `)
+  })
+
+  // BUG: The fixer only corrects box 1's right border but cannot fix boxes 2 and 3
+  // because their left │ borders on content lines are at wrong display columns (shifted
+  // by the input's own misalignment). extractBoxContent fails to find a left border at
+  // the expected leftCol, so it skips those lines. validateDiagram also misses this
+  // because it only checks right borders, not left border alignment.
+  test('3-column layout with misaligned borders across all boxes', () => {
+    const input = [
+      '┌──────────────┐   ┌──────────────┐   ┌──────────────┐',
+      '│  Browser       │   │  Server     │   │  Database      │',
+      '│               │   │              │   │              │',
+      '│  React app  │   │  Spiceflow     │   │  PostgreSQL  │',
+      '│  Components    │   │  Routes    │   │  Tables        │',
+      '└──────────────┘   └──────────────┘   └──────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+      │  Browser     │     │  Server     │   │  Database      │
+      │              │    │              │   │              │
+      │  React app   │  │  Spiceflow     │   │  PostgreSQL  │
+      │  Components  │     │  Routes    │   │  Tables        │
+      └──────────────┘   └──────────────┘   └──────────────┘"
+    `)
+  })
+
+  test('3-level nested boxes with misalignment at each level', () => {
+    const input = [
+      '┌────────────────────────────────────────────┐',
+      '│  Outer container                              │',
+      '│  ┌────────────────────────────────────┐     │',
+      '│  │  Middle layer                        │   │',
+      '│  │  ┌──────────────────────────┐      │   │',
+      '│  │  │  Innermost box              │    │   │',
+      '│  │  │  with content             │    │   │',
+      '│  │  └──────────────────────────┘      │   │',
+      '│  └────────────────────────────────────┘     │',
+      '└────────────────────────────────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌────────────────────────────────────────────┐
+      │  Outer container                           │   
+      │  ┌────────────────────────────────────┐    │ 
+      │  │  Middle layer                      │    │ 
+      │  │  ┌──────────────────────────┐      │    │
+      │  │  │  Innermost box           │      │    │
+      │  │  │  with content            │      │    │
+      │  │  └──────────────────────────┘      │    │
+      │  └────────────────────────────────────┘    │ 
+      └────────────────────────────────────────────┘"
+    `)
+  })
+
+  test('box with mixed tree structure, arrows, and inconsistent right borders', () => {
+    const input = [
+      '┌─────────────────────────────────────────┐',
+      '│  Project structure                         │',
+      '│  src/                                    │',
+      '│  ├── components/                           │',
+      '│  │   ├── Button.tsx                    │',
+      '│  │   ├── Card.tsx                          │',
+      '│  │   └── Modal.tsx                     │',
+      '│  ├── lib/                                  │',
+      '│  │   └── utils.ts                      │',
+      '│  └── index.ts                              │',
+      '│                                          │',
+      '│  ► Build output: dist/                     │',
+      '│  ▼ Deploy target: Cloudflare           │',
+      '└─────────────────────────────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌─────────────────────────────────────────┐
+      │  Project structure                      │   
+      │  src/                                   │ 
+      │  ├── components/                        │   
+      │  │   ├── Button.tsx                     │
+      │  │   ├── Card.tsx                       │   
+      │  │   └── Modal.tsx                      │
+      │  ├── lib/                               │   
+      │  │   └── utils.ts                       │
+      │  └── index.ts                           │   
+      │                                         │ 
+      │  ► Build output: dist/                  │   
+      │  ▼ Deploy target: Cloudflare            │
+      └─────────────────────────────────────────┘"
+    `)
+  })
+
+  // BUG: The bottom side-by-side boxes (Pass/Fail) have a similar issue to the
+  // 3-column test. After fixing box 1's right border, the spacing between boxes
+  // changes and box 2's left border column no longer matches what findBoxes
+  // detected from the top border. Content lines for box 2 aren't fully fixed.
+  test('boxes connected by vertical lines with ┬/┴ junctions at wrong columns', () => {
+    const input = [
+      '┌──────────────────┐',
+      '│  Input Handler     │',
+      '└────────┬─────────┘',
+      '         │',
+      '         ▼',
+      '┌──────────────────┐',
+      '│  Validator       │',
+      '└────────┬─────────┘',
+      '         │',
+      '    ┌────┴────┐',
+      '    ▼         ▼',
+      '┌────────┐ ┌────────┐',
+      '│ Pass     │ │ Fail │',
+      '│ handler│ │ handler  │',
+      '└────────┘ └────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────────────┐
+      │  Input Handler   │  
+      └────────┬─────────┘
+               │
+               ▼
+      ┌──────────────────┐
+      │  Validator       │
+      └────────┬─────────┘
+               │
+          ┌────┴────┐
+          ▼         ▼
+      ┌────────┐ ┌────────┐
+      │ Pass   │   │ Fail │
+      │ handler│ │ handler│  
+      └────────┘ └────────┘"
+    `)
+  })
+
+  test('heavy border ┏━┓ diagram with multiple misaligned content lines', () => {
+    const input = [
+      '┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓',
+      '┃  Authentication Flow              ┃',
+      '┃                               ┃',
+      '┃  1. User submits credentials      ┃',
+      '┃  2. Server validates          ┃',
+      '┃  3. JWT token issued              ┃',
+      '┃  4. Client stores token       ┃',
+      '┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+      ┃  Authentication Flow          ┃    
+      ┃                               ┃
+      ┃  1. User submits credentials  ┃    
+      ┃  2. Server validates          ┃
+      ┃  3. JWT token issued          ┃    
+      ┃  4. Client stores token       ┃
+      ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+    `)
+  })
+
+  test('rounded corner ╭─╮ with bottom border too narrow', () => {
+    const input = [
+      '╭──────────────────────────────╮',
+      '│  Deployment Pipeline           │',
+      '│                              │',
+      '│  ► lint ► test ► build       │',
+      '│  ► deploy ► verify             │',
+      '╰────────────────────╯',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "╭──────────────────────────────╮
+      │  Deployment Pipeline         │  
+      │                              │
+      │  ► lint ► test ► build       │
+      │  ► deploy ► verify           │  
+      ╰──────────────────────────────╯"
+    `)
+  })
+
+  test('box with horizontal divider ├──┤ too short plus misaligned content', () => {
+    const input = [
+      '┌────────────────────────────┐',
+      '│  Header Section              │',
+      '│  Subtitle text            │',
+      '├──────────────────┤',
+      '│  Body content                │',
+      '│  More body text           │',
+      '│  Final paragraph             │',
+      '├──────────────────┤',
+      '│  Footer                   │',
+      '└────────────────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌────────────────────────────┐
+      │  Header Section            │  
+      │  Subtitle text             │
+      ├────────────────────────────┤
+      │  Body content              │  
+      │  More body text            │
+      │  Final paragraph           │  
+      ├────────────────────────────┤
+      │  Footer                    │
+      └────────────────────────────┘"
+    `)
+  })
+
+  test('multiple diagrams in one markdown file with different issues', () => {
+    const input = dedent`
+      # Architecture Overview
+
+      Request flow:
+
+      ${'```'}
+      ┌────────────┐
+      │  Client       │
+      └──────┬─────┘
+             │
+             ▼
+      ┌────────────┐
+      │  Server    │
+      └────────────┘
+      ${'```'}
+
+      Database schema:
+
+      ${'```'}
+      ┌──────────────────┐
+      │  users table        │
+      │  ├── id          │
+      │  ├── name           │
+      │  └── email       │
+      └──────────────────┘
+      ${'```'}
+    `
+
+    const fixed = fixDiagramsInText(input)
+
+    expect(fixed).toMatchInlineSnapshot('\n' + `
+      "# Architecture Overview
+
+      Request flow:
+
+      \`\`\`
+      ┌────────────┐
+      │  Client    │   
+      └──────┬─────┘
+             │
+             ▼
+      ┌────────────┐
+      │  Server    │
+      └────────────┘
+      \`\`\`
+
+      Database schema:
+
+      \`\`\`
+      ┌──────────────────┐
+      │  users table     │   
+      │  ├── id          │
+      │  ├── name        │   
+      │  └── email       │
+      └──────────────────┘
+      \`\`\`"
+    `)
+  })
+
+  test('box where bottom border is wider than top border', () => {
+    const input = [
+      '┌────────────────┐',
+      '│  API Gateway     │',
+      '│  /api/v1       │',
+      '└──────────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌────────────────┐
+      │  API Gateway   │  
+      │  /api/v1       │
+      └────────────────┘      "
+    `)
+  })
+
+  test('empty lines between boxes with standalone │ connectors', () => {
+    const input = [
+      '┌──────────────────┐',
+      '│  Step 1: Init      │',
+      '└────────┬─────────┘',
+      '         │',
+      '',
+      '         │',
+      '         ▼',
+      '┌──────────────────┐',
+      '│  Step 2: Process │',
+      '└────────┬─────────┘',
+      '         │',
+      '',
+      '',
+      '         │',
+      '         ▼',
+      '┌──────────────────┐',
+      '│  Step 3: Done      │',
+      '└──────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────────────┐
+      │  Step 1: Init    │  
+      └────────┬─────────┘
+               │
+
+               │
+               ▼
+      ┌──────────────────┐
+      │  Step 2: Process │
+      └────────┬─────────┘
+               │
+
+
+               │
+               ▼
+      ┌──────────────────┐
+      │  Step 3: Done    │  
+      └──────────────────┘"
+    `)
+  })
+
+  // BUG: When content overflows the box width, the fixer moves the right │ to the
+  // top border's ┐ column but leaves the overflowing text intact. The result is
+  // the │ lands in the middle of the text, and trailing spaces pad to where the
+  // original │ was. The fixer should ideally flag this as an error since it can't
+  // shrink text, but instead it silently produces a malformed box.
+  test('content text longer than box width — overflows right border', () => {
+    const input = [
+      '┌──────────┐',
+      '│ This text is way too long for the box │',
+      '└──────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────┐
+      │ This text is way too long for the box│                             
+      └──────────┘"
+    `)
+  })
+
+  // BUG: When a content line has no right │ at all, extractBoxContent returns
+  // undefined and the fixer skips it entirely. The line passes through unchanged
+  // with no border, while other lines get fixed. The box is left in an
+  // inconsistent state.
+  test('content has no right border at all — missing │', () => {
+    const input = [
+      '┌──────────────────┐',
+      '│ This line just trails off without a border',
+      '│ Normal line       │',
+      '└──────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────────────┐
+      │ This line just trails off without a border
+      │ Normal line      │ 
+      └──────────────────┘"
+    `)
+  })
+
+  test('text on a connector line between boxes — covers the arrow', () => {
+    const input = [
+      '┌────────────┐',
+      '│  Source     │',
+      '└──────┬─────┘',
+      '   some debug text covering the connector line',
+      '       ▼',
+      '┌────────────┐',
+      '│  Target     │',
+      '└────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    // Text on connector lines is not inside any box, so the fixer ignores it.
+    // The boxes themselves get fixed independently. This is correct behavior —
+    // the fixer only operates on box content, not free-floating text.
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌────────────┐
+      │  Source    │ 
+      └──────┬─────┘
+         some debug text covering the connector line
+             ▼
+      ┌────────────┐
+      │  Target    │ 
+      └────────────┘"
+    `)
+  })
+
+  test('label text between boxes overlapping with vertical connector', () => {
+    const input = [
+      '┌────────────┐',
+      '│  Step A     │',
+      '└──────┬─────┘',
+      '       │ this label extends past the box',
+      '       ▼',
+      '┌────────────┐',
+      '│  Step B    │',
+      '└────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    // The │ on the label line is a standalone connector, not part of any box.
+    // The fixer leaves it and the trailing text untouched. Correct behavior.
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌────────────┐
+      │  Step A    │ 
+      └──────┬─────┘
+             │ this label extends past the box
+             ▼
+      ┌────────────┐
+      │  Step B    │
+      └────────────┘"
+    `)
+  })
+
+  // BUG: Same overflow issue as the single-line test but repeated across every
+  // content line. The fixer moves right │ to col 5 (matching ┐) which lands
+  // inside the text. Each line gets massive trailing whitespace padding to fill
+  // up to where the original far-right │ was.
+  test('box where every content line overflows — fixer cannot shrink text', () => {
+    const input = [
+      '┌────┐',
+      '│ Authentication middleware validates JWT tokens │',
+      '│ Rate limiter checks request quotas per API key │',
+      '│ Router dispatches to correct handler function  │',
+      '└────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌────┐
+      │ Authentication middleware validates JWT tokens│                                            
+      │ Rate limiter checks request quotas per API key│                                            
+      │ Router dispatches to correct handler function│                                            
+      └────┘"
+    `)
+  })
+
+  test('arrow line replaced by text — no │ between boxes', () => {
+    const input = [
+      '┌──────────────────┐',
+      '│  Request Handler  │',
+      '└──────────────────┘',
+      '  sends response back to client via HTTP',
+      '┌──────────────────┐',
+      '│  Response Builder │',
+      '└──────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    // Plain text between boxes is outside any box scope. The fixer treats each
+    // box independently and leaves the text line untouched. Correct behavior.
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────────────┐
+      │  Request Handler │ 
+      └──────────────────┘
+        sends response back to client via HTTP
+      ┌──────────────────┐
+      │  Response Builder│ 
+      └──────────────────┘"
+    `)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
 // Markdown integration — code block extraction
 // ─────────────────────────────────────────────────────────────
 

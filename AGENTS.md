@@ -760,6 +760,21 @@ takumi is the library used to generate images for example for og images
 if needed read docs with `curl https://takumi.kane.tw/llms-full.txt`
 
 
+## diagram-fix tests — `'\n' +` prefix for inline snapshots
+
+`cli/src/diagram-fix.test.ts` requires all `.toMatchInlineSnapshot()` calls to use the `'\n' + ` prefix so multiline diagram snapshots start on a fresh line and stay visually aligned with the box-drawing characters. See the comment at the top of the file.
+
+**vitest -u breaks this convention.** When you run `vitest -u` to update snapshots, it replaces the `'\n' + \`` format with a bare backtick. You must write the snapshot content manually with the `'\n' + \`` prefix. Never use `vitest -u` on this file; instead, run tests once to see the expected output in the diff, then manually write the snapshot with the correct format.
+
+```ts
+// correct format
+expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+  "┌──────┐
+  │ text │
+  └──────┘"
+`)
+```
+
 ## testing remark plugins
 
 remark plugins are very useful to change the AST of the mdx, for example to convert <img> tags into our own image component with support for placeholder and static non layout shift size props.
@@ -814,6 +829,63 @@ Single-line form produces bare phrasing children (no `<P>` wrapper, no `editoria
 ### New MDX pages must be added to docs.json navigation
 
 After creating a new `.mdx` file, add its slug to `docs.json` (or `docs.jsonc` / `holocron.jsonc`) navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.
+
+## Flue chat agent (`flue-chat/`)
+
+The `flue-chat/` workspace package is a Flue agent deployed as a separate Cloudflare Worker at `holocron-chat.remorses.workers.dev`. It powers the AI chat for holocron docs sites via `@flue/sdk`.
+
+### Flue docs
+
+- Cloudflare deploy guide: https://flueframework.com/docs/ecosystem/deploy/cloudflare/
+- Agent API: https://flueframework.com/docs/api/agent-api/
+- Streaming protocol: https://flueframework.com/docs/api/streaming-protocol/
+- SDK overview: https://flueframework.com/docs/sdk/overview/
+- SDK agents: https://flueframework.com/docs/sdk/agents/
+- SDK events: https://flueframework.com/docs/sdk/events/
+- Sandboxes (just-bash): https://flueframework.com/docs/guide/sandboxes/
+- Project layout: https://flueframework.com/docs/guide/project-layout/
+- Flue source: https://github.com/withastro/flue
+
+### Reading Flue source code
+
+```bash
+bunx opensrc path withastro/flue
+# cached at: ~/.opensrc/repos/github.com/withastro/flue/main
+
+# Key source directories:
+# packages/runtime/src/   — agent runtime, DO wiring, sandbox
+# packages/sdk/src/       — HTTP client (createFlueClient, agents.invoke)
+# packages/cli/src/       — build + dev CLI
+# examples/cloudflare/    — reference cloudflare agent example
+```
+
+### Agent definition
+
+The agent lives at `.flue/agents/docs-chat.ts`. It uses `createAgent()` (not `defineAgent`) from `@flue/runtime`. The default virtual sandbox (just-bash) gives the agent grep, glob, read, and bash tools.
+
+### Build and deploy
+
+```bash
+cd flue-chat
+npx flue build --target cloudflare
+npx wrangler deploy --config dist/holocron_chat/wrangler.json
+```
+
+`flue dev --target cloudflare` starts a local dev server but requires `flue build` first because the CLI generates DO class wrappers via Vite. For local development, build then run `wrangler dev --config dist/holocron_chat/wrangler.json`.
+
+### How the chat flows
+
+1. Browser sends `{ message, visitorId, currentSlug }` to `/holocron-api/chat`
+2. `app-factory.tsx` proxy checks `site.config.assistant.url`:
+   - **Set** (custom agent): calls `generatePartsFromFlue()` which uses `@flue/sdk` `client.agents.invoke()` directly
+   - **Not set** (default): calls `generatePartsFromGateway()` which forwards to `holocron.so/api/chat`
+3. Gateway (`website/src/gateway.ts`) validates API key, checks usage, calls the Flue agent via `@flue/sdk`, maps events to `HolocronChatChunk`
+4. Flue events (`text_delta`, `message_end`, `tool_execution_start`, `tool_execution_end`) are mapped to `ChatPart` types (`text`, `tool-call`, `tool-result`)
+5. Text parts are RSC-rendered via `safe-mdx` (`ChatRenderNodes`)
+
+### Wrangler migrations
+
+The Flue CLI generates DO class names from agent file names: `.flue/agents/docs-chat.ts` becomes class `DocsChat`. Keep `wrangler.jsonc` migrations in sync with the generated names. The `FlueRegistry` DO is always required.
 
 ## Changesets
 
