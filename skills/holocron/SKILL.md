@@ -614,7 +614,7 @@ div so they get more breathing room.
 <iframe
   width="100%"
   height="400"
-  src="https://www.youtube.com/embed/VIDEO_ID"
+  src="https://www.youtube.com/embed/VIDEO_ID?controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3"
   title="Video title"
   frameBorder="0"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
