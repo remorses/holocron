@@ -1,3 +1,11 @@
+// Convention: all .toMatchInlineSnapshot() calls must use the '\n' + prefix
+// before the template literal so multiline snapshots start on a fresh line
+// and stay visually aligned. Example:
+//   expect(x).toMatchInlineSnapshot('\n' + `
+//     "line 1
+//     line 2"
+//   `)
+
 import { describe, test, expect } from 'vitest'
 import dedent from 'string-dedent'
 import {
