@@ -741,7 +741,11 @@ function normalizeSeo(raw: unknown): HolocronConfig['seo'] {
 function normalizeAssistant(raw: unknown): HolocronConfig['assistant'] {
   if (!raw || typeof raw !== 'object') return { enabled: true }
   const obj = raw as Record<string, unknown>
-  return { enabled: obj.enabled !== false }
+  return {
+    enabled: obj.enabled !== false,
+    ...(typeof obj.url === 'string' ? { url: obj.url } : {}),
+    ...(typeof obj.agent === 'string' ? { agent: obj.agent } : {}),
+  }
 }
 
 function normalizeIntegrations(raw: unknown): HolocronConfig['integrations'] {

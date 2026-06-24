@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "holocron-chat",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "FlueRegistry",
+        "DocsChat"
+      ]
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  },
+  "main": ".flue-vite/_entry.ts",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DocsChat",
+        "class_name": "DocsChat"
+      },
+      {
+        "name": "FLUE_REGISTRY",
+        "class_name": "FlueRegistry"
+      }
+    ]
+  }
+}

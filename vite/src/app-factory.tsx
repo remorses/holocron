@@ -58,6 +58,7 @@ import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
 import { SiteHead, THEME_SCRIPT, GtmNoscript } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
+import type { AttachedAgentEvent } from '@flue/sdk'
 import { ChatRenderNodes } from './lib/chat-render.tsx'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
@@ -511,38 +512,37 @@ function parsePageMdx(markdown: string, source: string): HolocronMdxParseError |
   }
 }
 
+/** Extract plain text from a Flue LlmAssistantMessage. */
+function extractFlueAssistantText(message: unknown): string {
+  if (!message || typeof message !== 'object') return ''
+  const msg = message as any
+  if (msg.role !== 'assistant' || !Array.isArray(msg.content)) return ''
+  return msg.content
+    .filter((c: any) => c.type === 'text')
+    .map((c: any) => c.text)
+    .join('')
+}
+
 function parseChatRequestBody(value: unknown): {
-  modelMessages: Record<string, unknown>[]
   message: string
+  visitorId: string
+  chatSessionId: string
   currentSlug: string
 } {
-  if (!isRecord(value) || !Array.isArray(value.modelMessages) || typeof value.message !== 'string' || typeof value.currentSlug !== 'string') {
+  if (!isRecord(value) || typeof value.message !== 'string' || typeof value.currentSlug !== 'string') {
     throw new Error('Invalid chat request body')
   }
 
   return {
-    modelMessages: value.modelMessages.filter(isRecord),
     message: value.message,
+    visitorId: typeof value.visitorId === 'string' ? value.visitorId : crypto.randomUUID(),
+    chatSessionId: typeof value.chatSessionId === 'string' ? value.chatSessionId : crypto.randomUUID(),
     currentSlug: value.currentSlug,
   }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
-}
-
-function getToolArgs(input: unknown): Record<string, unknown> {
-  return isRecord(input) ? input : {}
-}
-
-function getToolOutput(output: unknown): { stdout?: string; stderr?: string } {
-  if (!isRecord(output)) {
-    return {}
-  }
-  return {
-    ...(typeof output.stdout === 'string' ? { stdout: output.stdout } : {}),
-    ...(typeof output.stderr === 'string' ? { stderr: output.stderr } : {}),
-  }
 }
 
 function isHolocronLoaderData(value: unknown): value is HolocronLoaderData {
@@ -1494,179 +1494,198 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
       const body = parseChatRequestBody(await request.json())
+      const customAgentUrl = site.config.assistant?.url
+      const customAgentName = site.config.assistant?.agent || 'docs-chat'
 
-      // Build system prompt
-      const allPages = collectAllPages(site.navigation)
-      const pageIndex = allPages
-        .map((p) => `<page path="/docs/${p.slug}.mdx" title="${p.title}" />`)
-        .join('\n')
-      const currentPageSlug = slugs.find((slug) => {
-        const href = slugToHref(slug)
-        return href === body.currentSlug || slug === body.currentSlug
-      })
-      const currentPage = currentPageSlug
-        ? allPages.find((p) => p.slug === currentPageSlug)
-        : undefined
-      const currentPageMdx = currentPageSlug
-        ? ((await providers.getMdxSource(currentPageSlug)) ?? '')
-        : ''
+      // Build personalized context from the site's navigation and current page.
+      // This data was previously in the system prompt; now it's prepended to
+      // the user message since the Flue invoke API only accepts { message }.
+      async function buildChatContext(currentSlug: string): Promise<string> {
+        const allPages = collectAllPages(site.navigation)
+        const pageIndex = allPages
+          .map((p) => `<page path="/docs/${p.slug}.mdx" title="${p.title}" />`)
+          .join('\n')
+        const currentPageSlug = slugs.find((slug) => {
+          const href = slugToHref(slug)
+          return href === currentSlug || slug === currentSlug
+        })
+        const currentPage = currentPageSlug
+          ? allPages.find((p) => p.slug === currentPageSlug)
+          : undefined
+        const currentPageMdx = currentPageSlug
+          ? ((await providers.getMdxSource(currentPageSlug)) ?? '')
+          : ''
 
-      const systemPrompt = dedent`
-        You are a documentation assistant for ${site.config.name || 'this site'}.
+        const parts: string[] = []
+        parts.push(`<site_name>${site.config.name || 'this site'}</site_name>`)
+        parts.push(`<current_page>`)
+        parts.push(`<path>${currentSlug}</path>`)
+        parts.push(`<title>${currentPage?.title || ''}</title>`)
+        parts.push(`<description>${currentPage?.description || ''}</description>`)
+        parts.push(`<content>`)
+        parts.push(currentPageMdx.slice(0, 4000))
+        parts.push(`</content>`)
+        parts.push(`</current_page>`)
+        parts.push(`<pages>`)
+        parts.push(pageIndex)
+        parts.push(`</pages>`)
+        return parts.join('\n')
+      }
 
-        ## Tone
-        - Behave like a real human in a messenger app: short, direct, casual
-        - Be extremely concise; no fluff, no filler, no repeating the question back
-        - Use bullet points over paragraphs
-        - Only include code examples when specifically asked or when a short snippet is the fastest way to answer
-
-        ## Answering
-        - Link to docs pages instead of explaining things already documented
-        - When a docs page covers the topic, just link it with a one-line summary
-        - Use the bash tool to search and read docs files before answering
-        - First grep for likely terms: grep -rn "term" /docs/
-        - Then read the best match: cat /docs/slug.mdx
-
-        ## Links
-        - Render markdown links with absolute paths starting with /
-        - Convert file paths to page paths: remove /docs/ prefix, remove .mdx extension, remove trailing /index
-        - /docs/index.mdx -> [Home](/)
-        - /docs/quickstart.mdx -> [Quickstart](/quickstart)
-        - /docs/guide/index.mdx -> [Guide](/guide)
-        - /docs/api/overview.mdx -> [API](/api/overview)
-        - NEVER include the site origin, base URL, or domain in links
-        - NEVER use bare relative paths like "docs/foo" without a leading slash
-
-        ## Formatting
-        - NEVER use XML <think> tags or any thinking/reasoning tags in your response; output only the final answer directly
-        - NEVER wrap the entire response in a single code block
-
-        <current_page>
-        <path>${body.currentSlug}</path>
-        <title>${currentPage?.title || ''}</title>
-        <description>${currentPage?.description || ''}</description>
-        <content>
-        ${currentPageMdx.slice(0, 4000)}
-        </content>
-        </current_page>
-
-        <pages>
-        ${pageIndex}
-        </pages>
-      `
-
-      const messages = [
-        { role: 'system' as const, content: systemPrompt },
-        ...body.modelMessages,
-        { role: 'user' as const, content: body.message },
-      ]
-
-      // Points to the hosted Holocron chat route. It owns model selection,
-      // quota checks, docs.zip fetching, and AI SDK streaming.
-      const chatUrl = new URL(holocronUrl('/api/chat'))
-      const useInlineDocs = isLocalhostUrl(request.url)
-      const apiKey = getHolocronApiKey()
-      let textBuffer = ''
-      const toolNames = new Map<string, string>()
+      // Render a text chunk as MDX via safe-mdx for RSC flight payload.
+      function renderTextPart(text: string) {
+        let jsx: React.ReactNode
+        try {
+          const mdast = mdxParse(text)
+          jsx = <ChatRenderNodes markdown={text} nodes={mdast.children} />
+        } catch {
+          jsx = <P className='whitespace-pre-wrap'>{text}</P>
+        }
+        return { type: 'text' as const, jsx, text }
+      }
 
       async function* generateParts() {
-        // Uses `any` — vite is the framework package and must not depend on the
-        // website. The chat endpoint shape is validated at runtime by the server.
+        if (customAgentUrl) {
+          // ── Custom agent mode: call user's Flue agent directly ──────
+          yield* generatePartsFromFlue(customAgentUrl, customAgentName, body, request)
+        } else {
+          // ── Default mode: forward to holocron.so gateway (auth + billing) ──
+          yield* generatePartsFromGateway(body, request)
+        }
+      }
+
+      // Custom agent: call Flue agent via @flue/sdk, map events to ChatPart.
+      async function* generatePartsFromFlue(
+        agentUrl: string,
+        agentName: string,
+        body: { message: string; visitorId: string; chatSessionId: string; currentSlug: string },
+        request: Request,
+      ) {
+        const { createFlueClient } = await import('@flue/sdk')
+        const client = createFlueClient({ baseUrl: agentUrl })
+        const instanceId = body.chatSessionId
+
+        // Prepend personalized site context to the user message
+        const context = await buildChatContext(body.currentSlug)
+        const messageText = `${context}\n\n${body.message}`
+
+        const agentStream = client.agents.invoke(agentName, instanceId, {
+          mode: 'stream',
+          payload: { message: messageText },
+          signal: request.signal,
+        })
+
+        let textBuffer = ''
+
+        try {
+          for await (const event of agentStream) {
+            switch (event.type) {
+              case 'text_delta':
+                textBuffer += event.text ?? ''
+                break
+
+              case 'message_end': {
+                const text = extractFlueAssistantText(event.message) || textBuffer
+                if (text.trim()) yield renderTextPart(text)
+                textBuffer = ''
+                break
+              }
+
+              case 'tool_execution_start':
+                yield {
+                  type: 'tool-call' as const,
+                  toolCallId: event.toolCallId ?? '',
+                  toolName: event.toolName ?? 'bash',
+                  args: (event.args ?? {}) as Record<string, unknown>,
+                }
+                break
+
+              case 'tool_execution_end': {
+                const result = event.result
+                const output = typeof result === 'string' ? result : JSON.stringify(result ?? '')
+                yield {
+                  type: 'tool-result' as const,
+                  toolCallId: event.toolCallId ?? '',
+                  toolName: event.toolName ?? 'bash',
+                  output: output.slice(0, 500),
+                  ...(event.isError ? { error: output } : {}),
+                }
+                break
+              }
+
+              case 'idle':
+                break
+
+              default:
+                break
+            }
+            if (event.type === 'idle') break
+          }
+        } catch (err) {
+          // Flue can reject with "Request is malformed" when the previous
+          // session's DO is still processing an aborted submission. Surface
+          // as a tool-result error so the client can recover gracefully.
+          const msg = err instanceof Error ? err.message : String(err)
+          yield { type: 'tool-result' as const, toolCallId: 'flue-error', toolName: 'flue', output: '', error: msg }
+        }
+
+        // Flush remaining text buffer
+        if (textBuffer.trim()) yield renderTextPart(textBuffer)
+      }
+
+      // Default: forward to holocron.so gateway which handles auth, billing,
+      // and Flue agent invocation. Maps gateway chunks to RSC-rendered ChatPart.
+      async function* generatePartsFromGateway(
+        body: { message: string; visitorId: string; chatSessionId: string; currentSlug: string },
+        request: Request,
+      ) {
+        const chatUrl = new URL(holocronUrl('/api/chat'))
+        const useInlineDocs = isLocalhostUrl(request.url)
+        const apiKey = getHolocronApiKey()
+
         const chatFetch = createSpiceflowFetch<any>(chatUrl.origin, {
           headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
         })
         const docsPayload = useInlineDocs
           ? {
-              docsPages: {
-                // Page MDX content
-                ...Object.fromEntries(
-                  (await Promise.all(slugs.map(async (slug) => {
-                    const mdx = await providers.getMdxSource(slug)
-                    return mdx === undefined ? undefined : [`/docs/${slug}.mdx`, buildMarkdownSource(mdx)] as const
-                  }))).filter((page) => page !== undefined),
-                ),
-
-              },
+              docsPages: Object.fromEntries(
+                (await Promise.all(slugs.map(async (slug) => {
+                  const mdx = await providers.getMdxSource(slug)
+                  return mdx === undefined ? undefined : [`/docs/${slug}.mdx`, buildMarkdownSource(mdx)] as const
+                }))).filter((page) => page !== undefined),
+              ),
             }
           : { docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString() }
-        const uiStream = await chatFetch('/api/chat', {
+
+        // Prepend personalized site context to the message for the gateway
+        const context = await buildChatContext(body.currentSlug)
+        const messageText = `${context}\n\n${body.message}`
+
+        const chatStream = await chatFetch('/api/chat', {
           method: 'POST',
           body: {
-            messages,
+            message: messageText,
+            visitorId: body.visitorId,
+            chatSessionId: body.chatSessionId,
+            currentSlug: body.currentSlug,
             ...docsPayload,
-            skillUrls: [],
-            pageSlug: body.currentSlug,
           },
         })
 
-        if (uiStream instanceof Error) {
-          yield { type: 'tool-result' as const, toolCallId: 'holocron-chat', toolName: 'holocron-chat', output: '', error: uiStream.message }
+        if (chatStream instanceof Error) {
+          yield { type: 'tool-result' as const, toolCallId: 'holocron-chat', toolName: 'holocron-chat', output: '', error: chatStream.message }
           return
         }
 
-        for await (const chunk of uiStream) {
-          if (chunk.type === 'notice') {
+        for await (const chunk of chatStream) {
+          if (chunk.type === 'notice' || chunk.type === 'tool-call' || chunk.type === 'tool-result') {
             yield chunk
             continue
           }
 
-          if (chunk.type === 'text-delta') {
-            textBuffer += chunk.delta
-            continue
-          }
-
-          if (chunk.type === 'text-end') {
-            if (textBuffer.trim()) {
-              let jsx: React.ReactNode
-              try {
-                const mdast = mdxParse(textBuffer)
-                jsx = (
-                  <ChatRenderNodes
-                    markdown={textBuffer}
-                    nodes={mdast.children}
-                  />
-                )
-              } catch {
-                jsx = <P className='whitespace-pre-wrap'>{textBuffer}</P>
-              }
-              yield { type: 'text' as const, jsx, text: textBuffer }
-            }
-            textBuffer = ''
-            continue
-          }
-
-          if (chunk.type === 'tool-input-available') {
-            toolNames.set(chunk.toolCallId, chunk.toolName)
-            yield {
-              type: 'tool-call' as const,
-              toolCallId: chunk.toolCallId,
-              toolName: chunk.toolName,
-              args: getToolArgs(chunk.input),
-            }
-            continue
-          }
-
-          if (chunk.type === 'tool-output-available') {
-            const rawOutput = getToolOutput(chunk.output)
-            yield {
-              type: 'tool-result' as const,
-              toolCallId: chunk.toolCallId,
-              toolName: toolNames.get(chunk.toolCallId) || 'bash',
-              output: (rawOutput.stdout || '').slice(0, 500),
-              ...(rawOutput.stderr ? { error: rawOutput.stderr } : {}),
-            }
-            continue
-          }
-
-          if (chunk.type === 'model-messages') {
-            yield {
-              type: 'model-messages' as const,
-              messages: [
-                ...body.modelMessages,
-                { role: 'user', content: body.message },
-                ...chunk.messages,
-              ],
-            }
+          if (chunk.type === 'text') {
+            const text: string = (chunk as any).text ?? ''
+            if (text.trim()) yield renderTextPart(text)
             continue
           }
         }

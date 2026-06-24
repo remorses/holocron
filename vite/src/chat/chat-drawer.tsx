@@ -85,13 +85,9 @@ function ChatDrawerInner() {
   // ── Regenerate ──────────────────────────────────────────────────
   //
   // Regenerate from a specific assistant message index.
-  // Finds the user message just before it, trims everything from that
-  // point onward in both messages and modelMessages, then resubmits.
-  //
-  // modelMessages can diverge from messages (stopped generation, failed
-  // requests), so we align by matching user text content rather than
-  // counting positions. This avoids accidentally keeping the response
-  // being regenerated in the model's history.
+  // Finds the user message just before it, trims the local UI messages
+  // from that point onward, and resubmits. Flue manages session state
+  // server-side so we only trim the local display messages.
 
   const handleRegenerate = useCallback((assistantMsgIndex: number) => {
     if (chatStore.getState().isGenerating) return
@@ -111,31 +107,8 @@ function ChatDrawerInner() {
       .trim()
     if (!userText) return
 
-    // Trim modelMessages: find the model user message whose content
-    // matches userText and cut everything from that point onward.
-    // If no match is found (diverged history), wipe modelMessages
-    // entirely so we never risk including stale assistant answers.
-    const model = chatStore.getState().modelMessages
-    let cut = 0
-    for (let j = model.length - 1; j >= 0; j--) {
-      const m = model[j]
-      if (m?.role !== 'user') continue
-      const mText = typeof m.content === 'string'
-        ? m.content.trim()
-        : Array.isArray(m.content)
-          ? m.content
-            .filter((p: any) => p.type === 'text')
-            .map((p: any) => p.text)
-            .join('\n')
-            .trim()
-          : ''
-      if (mText === userText) { cut = j; break }
-    }
-    const trimmedModel = model.slice(0, cut)
-
     chatStore.setState({
       messages: msgs.slice(0, userIdx),
-      modelMessages: trimmedModel,
     })
 
     void handleSubmit(userText)
@@ -149,7 +122,8 @@ function ChatDrawerInner() {
       isGenerating: false,
       abortController: null,
       messages: [],
-      modelMessages: [],
+      sessionId: '',
+      streamOffset: '',
       draftText: '',
       pendingSubmit: false,
       errorMessage: null,

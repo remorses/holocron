@@ -906,6 +906,27 @@ export const assistantSchema = z
           endpoint are all disabled. Defaults to \`true\`
         `,
       ),
+    url: z
+      .string()
+      .optional()
+      .describe(
+        dedent`
+          URL of a Flue agent deployment. When set, the chat widget talks
+          directly to this Flue agent instead of using the holocron-hosted
+          AI chat. The URL should point to the Flue app's base URL where
+          \`/agents/:name/:id\` routes are mounted.
+          Example: \`"https://my-agent.workers.dev"\`
+        `,
+      ),
+    agent: z
+      .string()
+      .optional()
+      .describe(
+        dedent`
+          Name of the Flue agent to use. Only relevant when \`url\` is set.
+          Defaults to \`"docs-chat"\`
+        `,
+      ),
   })
   .describe('AI chat assistant settings')
   .meta({ id: 'assistantSchema' })
